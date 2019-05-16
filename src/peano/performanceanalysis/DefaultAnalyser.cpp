@@ -394,7 +394,7 @@ void peano::performanceanalysis::DefaultAnalyser::minuteNumberOfBackgroundTasks(
 }
 
 
-void peano::performanceanalysis::DefaultAnalyser::beginProcessingBackgroundJobs() {
+/*void peano::performanceanalysis::DefaultAnalyser::beginProcessingBackgroundJobs() {
 #if defined(PerformanceAnalysisBackgroundJobs)
   int tid = tarch::multicore::Core::getInstance().get_num_thread();
   //std::thread::id currId= std::this_thread::get_id();
@@ -433,4 +433,4 @@ void peano::performanceanalysis::DefaultAnalyser::endProcessingBackgroundJobs() 
      }
   }
 #endif
-}
+}*/

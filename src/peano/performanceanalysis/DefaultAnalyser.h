@@ -157,8 +157,8 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange);
     virtual void minuteNumberOfBackgroundTasks(int taskCount);
 
-    virtual void beginProcessingBackgroundJobs();
-    virtual void endProcessingBackgroundJobs();
+/*    virtual void beginProcessingBackgroundJobs();
+    virtual void endProcessingBackgroundJobs(); */
 
     virtual void enable(bool value);
 };
