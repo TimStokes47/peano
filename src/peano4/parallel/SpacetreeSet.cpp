@@ -355,30 +355,26 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::prefetch() {
 // @todo Could be tasks for its own. Two different task types though?
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewTreesAndRerunClones(peano4::grid::TraversalObserver& observer) {
   for (auto& p: _spacetrees) {
-	if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
-		// @todo Debug
-      logInfo( "exchangeDataBetweenNewTreesAndRerunClones()", "tree " << p._id << " is new so initialise it through clone" );
+	  if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
+      logInfo( "exchangeDataBetweenNewTreesAndRerunClones()", "tree " << p._id << " is new. Initialise it through clone" );
       if (Node::getInstance().getRank(p._masterId)==tarch::mpi::Rank::getInstance().getRank()) {
-  		// @todo Debug
-        logInfo( "exchangeDataBetweenNewTreesAndRerunClones()", "parent tree " << p._masterId << " is local" );
+        logDebug( "exchangeDataBetweenNewTreesAndRerunClones()", "parent tree " << p._masterId << " is local" );
         const int outStack = Node::getOutputStackNumberForSplitMergeDataExchange(p._id);
         const int inStack  = Node::getInputStackNumberForSplitMergeDataExchange(p._masterId);
-		// @todo Debug
-        logInfo( "exchangeDataBetweenNewTreesAndRerunClones()", "clone parent's stack " << outStack << " into " << inStack << " and reverse order (make it a stream): " << getSpacetree(p._masterId)._vertexStack[outStack].size() << " entries");
+        logDebug( "exchangeDataBetweenNewTreesAndRerunClones()", "clone parent's stack " << outStack << " into " << inStack << " and reverse order (make it a stream): " << getSpacetree(p._masterId)._vertexStack[outStack].size() << " entries");
         p._vertexStack[inStack].clone( getSpacetree(p._masterId)._vertexStack[outStack] );
         p._vertexStack[inStack].reverse();
       }
 
-      // @todo Debug
-      logInfo( "exchangeDataBetweenNewTreesAndRerunClones()", "run tree " << p._id << " in dry mode (data exchange only)" );
+      logDebug( "exchangeDataBetweenNewTreesAndRerunClones()", "run tree " << p._id << " in dry mode (data exchange only)" );
       peano4::grid::TraversalObserver* localObserver = observer.clone( p._id );
       p.traverse(*localObserver,true);
       delete localObserver;
-	}
+	  }
   }
 
   for (auto& p: _spacetrees) {
-	if (p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
+	  if (p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
       for (auto& stack: p._vertexStack) {
     	if (Node::isSplitMergeOutputStackNumber(stack.first)) {
     	  stack.second.clear();
@@ -439,8 +435,8 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
       dataExchangeTasks.push_back( new DataExchangeTask(
         p, *this
       ));
-      logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
-	}
+      logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
+    }
   }
   logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "trigger " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
 
@@ -584,48 +580,40 @@ void peano4::parallel::SpacetreeSet::mergeStatistics() {
 
 
 void peano4::parallel::SpacetreeSet::cleanUpTrees() {
-  std::set< int > childrenThatShouldMerge;
-
   for (auto p = _spacetrees.begin(); p!=_spacetrees.end(); ) {
   	if (
-	  p->_coarseningHasBeenVetoed
-	  and
-	  not p->mayJoinWithMaster()
-	  and
-	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
+      p->getGridStatistics().getCoarseningHasBeenVetoed()
+      and
+      not p->mayJoinWithMaster()
     ) {
-      logInfo( "traverse(Observer)", "can't join tree " << p->_id << " with its master tree " << p->_masterId );
-      std::set< int > children = peano4::parallel::Node::getInstance().getChildren( p->_id );
-      childrenThatShouldMerge.insert( children.begin(), children.end() );
+  	  if (p->_id!=0) {
+        logInfo( "traverse(Observer)", "can't join tree " << p->_id << " with its master tree " << p->_masterId << ". Domain decomposition vetoes coarsening (would destroy MPI topology), but worker tree is not degenerated, i.e. hosts refined subgrid: " << p->toString());
+  	  }
     }
-  	/*
-    #ifdef Parallel
   	else if (
-	  p->_coarseningHasBeenVetoed
-	  and
-	  p->mayMove()
-	  and
-	  peano4::parallel::Node::getInstance().getChildren( p->_id ).empty()
-	  and
-	  peano4::parallel::Node::getInstance().getRank( p->_masterId ) != peano4::parallel::Node::getInstance().getRank( p->_id )
+      p->getGridStatistics().getCoarseningHasBeenVetoed()
+      and
+      p->mayJoinWithMaster()
     ) {
-  	  move( p->_id, peano4::parallel::Node::getInstance().getRank( p->_masterId ) );
-  	}
-    #endif
-*/
+      logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
+      join(p->_id);
+#ifdef Parallel
+      assertion(false); // muss in Join implementiert sein
+#endif
+    }
     else if (
-	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
-	  and
-	  p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0
-	)  {
+      p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
+	    and
+	    p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0
+	  )  {
       logInfo( "traverse(Observer)", "tree " << p->_id << " is degenerated as it does not hold any local cells. Remove" );
       Node::getInstance().deregisterId(p->_id);
       p = _spacetrees.erase(p);
       p--;
     }
-	else if (
-	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Joined
-	)  {
+    else if (
+	    p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Joined
+	  )  {
       logInfo( "traverse(Observer)", "tree " << p->_id << " has joined, so remove" );
 
       // Has to be a reference. Otherwise, access to the iterator copies the
@@ -656,23 +644,8 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       Node::getInstance().deregisterId(p->_id);
       p = _spacetrees.erase(p);
       p--;
-	}
-
-	p++;
-  }
-
-
-  for (auto& p: _spacetrees ) {
-  	if (
-      childrenThatShouldMerge.count(p._id)==1
-	  and
-	  p.mayJoinWithMaster()
-  	  and
-	  getSpacetree(p._masterId).mayJoinWithWorker()
-    ) {
-  	  logInfo( "traverse(Observer)", "trigger join of tree " << p._id << " with its master tree " << p._masterId << " to enable further grid erases");
-  	  join(p._id);
-  	}
+	  }
+  	p++;
   }
 }
 

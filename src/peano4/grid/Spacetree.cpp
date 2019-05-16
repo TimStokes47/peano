@@ -167,8 +167,6 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
 
   _splittedCells.clear();
 
-  _coarseningHasBeenVetoed = false;
-
   const bool isFirstTraversal = _spacetreeState==SpacetreeState::NewRoot;
   GridVertex vertices[TwoPowerD];
   dfor2(k)
@@ -581,15 +579,15 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
   else if (
     vertex.getState()==GridVertex::State::EraseTriggered
   ) {
-	if ( vertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() ) {
+    if ( vertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() ) {
       logDebug( "updateVertexAfterLoad(...)", "vertex " << vertex.toString() << " may not be erased on tree " << _id << " as it is father of further refined vertices. Unroll flag" );
-	  vertex.setState( GridVertex::State::Refined );
-	  _coarseningHasBeenVetoed = true;
- 	}
-	else {
+      vertex.setState( GridVertex::State::Refined );
+	    _statistics.setCoarseningHasBeenVetoed(true);
+ 	  }
+	  else {
       logDebug( "updateVertexAfterLoad(...)", "erase vertex " << vertex.toString() << " outside of domain on tree " << _id );
       vertex.setState( GridVertex::State::Erasing );
-	}
+    }
   }
 
   // has to be here. Don't want to interfere with state splitting
@@ -1177,6 +1175,8 @@ void peano4::grid::Spacetree::clearStatistics() {
 
   _statistics.setNumberOfLocalUnrefinedCells( 0 );
   _statistics.setNumberOfRemoteUnrefinedCells( 0 );
+
+  _statistics.setCoarseningHasBeenVetoed(false);
 
   _statistics.setStationarySweeps( _statistics.getStationarySweeps()+1 );
   if (_statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin+1) {

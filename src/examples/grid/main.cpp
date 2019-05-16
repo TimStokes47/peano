@@ -126,10 +126,17 @@ void runMultithreaded() {
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
   }
 
-  // @todo _coarseningHasBeenVetoed in Spacetree.h raus -> ist jetzt in Statistics
+  while (
+    not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
+  ) {
+    #if PeanoDebug>0
+    emptyObserver.startNewSnapshot(true);
+    #endif
+    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+  }
+
   // @todo Join wieder einfuehren
-  // @todo Muesste man auch mal woanders instantiieren, also auf einem anderen Rank
-  // @todo Schauen, ob er jetzt auch joined
+  // @todo MPI
   while (
     not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3-5,0)
   ) {

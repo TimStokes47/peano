@@ -685,7 +685,7 @@ class peano4::grid::Spacetree {
     bool maySplit() const;
 
     // @tood Remove. Should be in statistics
-    bool _coarseningHasBeenVetoed;
+//    bool _coarseningHasBeenVetoed;
 
     /**
      * @return Id of splitting tree or -1 if there's none.
