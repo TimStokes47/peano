@@ -46,6 +46,7 @@ namespace peano4 {
 class peano4::grid::Spacetree {
   private:
     static const int InvalidRank;
+    static const int RankOfCellWitchWillBeJoined;
     static const int NumberOfStationarySweepsToWaitAtLeastTillJoin;
 
     static tarch::logging::Log  _log;
@@ -81,22 +82,14 @@ class peano4::grid::Spacetree {
        * splitting.
        */
       NewFromSplit,
-	  Running,
-	  /**
-	   * Join has been triggered for this tree. Nothing is happening yet. It is
-	   * only the worker that updates all adjacency lists. These updates
-	   * however are not yet given to the master.
-	   */
-	  JoinTriggered,
-	  /**
-	   * Merge the actual data into the master.
-	   */
-	  Joining,
-	  /**
-	   * Joined means that this tree is basically dead and should be cleaned
-	   * up.
-	   */
-	  Joined
+      Running,
+      /**
+       * Join has been triggered for this tree. Nothing is happening yet. It is
+	     * only the worker that updates all adjacency lists. These updates
+	     * however are not yet given to the master.
+	     */
+  	  JoinTriggered,
+  	  Joining
     };
 
     static std::string toString( SpacetreeState state );
@@ -212,8 +205,8 @@ class peano4::grid::Spacetree {
 
     void descend(
       const AutomatonState& state,
-	  GridVertex            vertices[TwoPowerD],
-	  TraversalObserver&    observer
+	    GridVertex            vertices[TwoPowerD],
+      TraversalObserver&    observer
     );
 
     /**
@@ -266,6 +259,11 @@ class peano4::grid::Spacetree {
      */
     bool isSpacetreeNodeLocal(
 	  GridVertex            vertices[TwoPowerD]
+    ) const;
+
+    bool isSpacetreeNodeOwnedByTree(
+    GridVertex            vertices[TwoPowerD],
+    int                   id
     ) const;
 
     /**
@@ -349,13 +347,20 @@ class peano4::grid::Spacetree {
     void updateVertexAfterLoad(
       GridVertex&                               vertex,
       GridVertex                                fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch,
-	  TraversalObserver&                        observer
+      const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch,
+      TraversalObserver&                        observer
     );
 
     void sendOutVertexToSplittingTrees(
       GridVertex&                               vertex,
-	  TraversalObserver&                        observer
+      TraversalObserver&                        observer
+    );
+
+    // @todo
+    void sendOutVertexToMergingMasterTree(
+      GridVertex&                               vertex,
+      GridVertex                                coarseGridVertices[TwoPowerD],
+      TraversalObserver&                        observer
     );
 
     /**
@@ -377,7 +382,8 @@ class peano4::grid::Spacetree {
     ) const;
 
     /**
-     * @see splitOrMoveNode()
+     * @see splitOrJoinNode() For both the usage and a description how we
+     *   hijack the routine.
      */
     std::vector<int>  _splittedCells;
 
@@ -411,8 +417,10 @@ class peano4::grid::Spacetree {
      * are do be done anymore. Because it might happen that I have just done
      * exactly 9 splits for example (2d) and thus, the parent of these 9
      * guys should go to the remote node, too.
+     *
+     * @todo Comment on join
      */
-    void splitOrMoveNode(
+    void splitOrJoinNode(
       GridVertex                                vertex[TwoPowerD],
       GridVertex                                fineGridVertices[TwoPowerD]
     );
@@ -528,9 +536,9 @@ class peano4::grid::Spacetree {
      */
     GridVertex createHangingVertex(
       GridVertex                                   fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
-	  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
+      const tarch::la::Vector<Dimensions,double>&  x,
+      int                                          level,
+      const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
     ) const;
 
     /**

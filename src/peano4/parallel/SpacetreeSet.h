@@ -92,8 +92,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     /**
      *
      * @see split()
+     * @see exchangeDataBetweenNewTreesAndRerunClones()
      */
-    void traverseTrees(peano4::grid::TraversalObserver& observer);
+    void traverseNonMergingExistingTrees(peano4::grid::TraversalObserver& observer);
 
     /**
      * <h2> Forks </h2>
@@ -114,6 +115,15 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     void createNewTrees(const std::set< std::pair<int,int> >& newTrees);
 
     void exchangeDataBetweenNewTreesAndRerunClones(peano4::grid::TraversalObserver& observer);
+
+    /**
+     * Counterpart to exchangeDataBetweenNewTreesAndRerunClones(), i.e.
+     * counterpart to the dry run. We assume the merging worker has already
+     * traversed its grid. Therefore, all data which has to be streamed is
+     * already in the respective queues. We thus can copy them over and
+     * issue the traversal of the master tree.
+     */
+    void exchangeDataBetweenMergingTreesAndTraverseMaster(const std::set<int>& trees, peano4::grid::TraversalObserver& observer);
 
     /**
      * Adds a new spacetree to the set. The responsibility goes over to the
@@ -147,6 +157,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * that realises this split.
      */
     std::set<std::pair<int,int> > getLocalSplittingRanks() const;
+    std::set<int>                 getLocalRanksMergingWithWorkers() const;
 
     SpacetreeSet();
     SpacetreeSet(const SpacetreeSet& ) = delete;
