@@ -911,34 +911,29 @@ void peano4::grid::Spacetree::loadVertices(
 		  fineGridStatesState.getH()
 	    );
 
-    if ( _spacetreeState==SpacetreeState::NewFromSplit ) {
-      const int stackNumber = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( _masterId );
+    VertexType type  = getVertexType(coarseGridVertices,vertexPositionWithinPatch);
+    int  stackNumber = PeanoCurve::getVertexReadStackNumber(fineGridStatesState,vertexIndex);
 
-      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = _vertexStack[stackNumber].pop();
-
+    // reset to persistent, as new vertex already has been generated
+    if ( not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New ) {
+      type = VertexType::Persistent;
       logDebug(
         "loadVertices(...)",
-        "took vertex " << fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString() << " from split/merge input stream" << stackNumber
+        "reset stack flag for local vertex " << vertexPositionWithinPatch << " from new/hanging to persistent"
       );
     }
-    else {
-      VertexType type  = getVertexType(coarseGridVertices,vertexPositionWithinPatch);
-      int  stackNumber = PeanoCurve::getVertexReadStackNumber(fineGridStatesState,vertexIndex);
 
-      // reset to persistent, as new vertex already has been generated
-      if ( not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New ) {
-        type = VertexType::Persistent;
-        logDebug(
-          "loadVertices(...)",
-          "reset stack flag for local vertex " << vertexPositionWithinPatch << " from new/hanging to persistent"
-		    );
-      }
-
-      switch (type) {
+    switch (type) {
         case VertexType::New:
-          logDebug( "loadVertices(...)", "stack no=" << stackNumber );
           assertion( PeanoCurve::isInOutStack(stackNumber) );
-          fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createNewPersistentVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
+          if ( _spacetreeState==SpacetreeState::NewFromSplit ) {
+            const int stackNumber = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( _masterId );
+            fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = _vertexStack[stackNumber].pop();
+          }
+          else {
+            fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createNewPersistentVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
+            sendOutVertexToSplittingTrees(fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],observer);
+          }
     	  break;
         case VertexType::Hanging:
       	  fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createHangingVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
@@ -947,16 +942,33 @@ void peano4::grid::Spacetree::loadVertices(
           {
             logDebug( "readVertices(...)", "read vertex from stack " << stackNumber );
 
-            assertion3( not _vertexStack[stackNumber].empty(), stackNumber, vertexIndex, vertexPositionWithinPatch );
-            fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ]  = _vertexStack[stackNumber].pop();
+            if (
+              _spacetreeState==SpacetreeState::NewFromSplit
+              and
+              PeanoCurve::isInOutStack(stackNumber)
+            ) {
+              const int stackNumber = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( _masterId );
+              fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = _vertexStack[stackNumber].pop();
+            }
+            else if (
+              _spacetreeState!=SpacetreeState::NewFromSplit
+              and
+              PeanoCurve::isInOutStack(stackNumber)
+            ) {
+              assertion3( not _vertexStack[stackNumber].empty(), stackNumber, vertexIndex, vertexPositionWithinPatch );
+              fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ]  = _vertexStack[stackNumber].pop();
 
-            if ( PeanoCurve::isInOutStack(stackNumber) ) {
               updateVertexAfterLoad(
                 fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],
                 coarseGridVertices,
                 vertexPositionWithinPatch,
                 observer
               );
+              sendOutVertexToSplittingTrees(fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],observer);
+            }
+            else {
+              assertion3( not _vertexStack[stackNumber].empty(), stackNumber, vertexIndex, vertexPositionWithinPatch );
+              fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ]  = _vertexStack[stackNumber].pop();
             }
           }
           break;
@@ -964,10 +976,22 @@ void peano4::grid::Spacetree::loadVertices(
           {
             logDebug( "readVertices(...)", "read vertex from stack " << stackNumber );
 
-            assertion3( not _vertexStack[stackNumber].empty(), stackNumber, vertexIndex, vertexPositionWithinPatch );
-            fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ]  = _vertexStack[stackNumber].pop();
+            if (
+              _spacetreeState==SpacetreeState::NewFromSplit
+              and
+              PeanoCurve::isInOutStack(stackNumber)
+            ) {
+              const int stackNumber = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( _masterId );
+              fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = _vertexStack[stackNumber].pop();
+            }
+            else if (
+              _spacetreeState!=SpacetreeState::NewFromSplit
+              and
+              PeanoCurve::isInOutStack(stackNumber)
+            ) {
+              assertion3( not _vertexStack[stackNumber].empty(), stackNumber, vertexIndex, vertexPositionWithinPatch );
+              fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ]  = _vertexStack[stackNumber].pop();
 
-            if ( PeanoCurve::isInOutStack(stackNumber) ) {
               updateVertexAfterLoad(
                 fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],
                 coarseGridVertices,
@@ -975,32 +999,36 @@ void peano4::grid::Spacetree::loadVertices(
                 observer
               );
               fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].setState(GridVertex::Delete);
+              sendOutVertexToSplittingTrees(fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],observer);
+            }
+            else {
+              assertion3( not _vertexStack[stackNumber].empty(), stackNumber, vertexIndex, vertexPositionWithinPatch );
+              fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ]  = _vertexStack[stackNumber].pop();
             }
           }
           break;
-      }
-      logDebug(
-        "loadVertices(...)",
-  	    "handled " << toString(type) << " vertex " << vertexIndex << " at " << vertexPositionWithinPatch << ": " <<
-        fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString()
-      );
+    }
+    logDebug(
+      "loadVertices(...)",
+  	  "handled " << toString(type) << " vertex " << vertexIndex << " at " << vertexPositionWithinPatch << ": " <<
+      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString()
+    );
 
-      sendOutVertexToSplittingTrees(fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],observer);
-      sendOutVertexToMergingMasterTree(
+    // @todo Das gehoert aber dann auch net hier rein
+    sendOutVertexToMergingMasterTree(
         fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],
         coarseGridVertices, observer
-      );
-    }
+    );
 
-    assertionNumericalEquals3(
+    assertionNumericalEquals4(
       fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getX(), x,
       fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString(),
-      fineGridStatesState.toString(), vertexIndex
+      fineGridStatesState.toString(), vertexIndex, toString()
     );
-    assertionEquals3(
+    assertionEquals4(
       fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getLevel(), fineGridStatesState.getLevel(),
       fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString(),
-      fineGridStatesState.toString(), vertexIndex
+      fineGridStatesState.toString(), vertexIndex, toString()
     );
   }
 

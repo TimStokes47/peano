@@ -81,7 +81,7 @@ void runMultithreaded() {
 
   examples::grid::MyObserver emptyObserver;
 
-  for (int i=0; i<3; i++) {
+  for (int i=0; i<1; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     #if PeanoDebug>0
     emptyObserver.startNewSnapshot(true);
