@@ -356,13 +356,6 @@ class peano4::grid::Spacetree {
       TraversalObserver&                        observer
     );
 
-    // @todo
-    void sendOutVertexToMergingMasterTree(
-      GridVertex&                               vertex,
-      GridVertex                                coarseGridVertices[TwoPowerD],
-      TraversalObserver&                        observer
-    );
-
     /**
      * Routine should be const, but we cannot make it const. At least not with
      * parallelism.
@@ -373,7 +366,7 @@ class peano4::grid::Spacetree {
      */
     GridTraversalEvent createEnterCellTraversalEvent(
       GridVertex              fineGridVertices[TwoPowerD],
-	  const AutomatonState&   state
+      const AutomatonState&   state
     ) const;
 
     GridTraversalEvent createLeaveCellTraversalEvent(
@@ -421,6 +414,11 @@ class peano4::grid::Spacetree {
      * @todo Comment on join
      */
     void splitOrJoinNode(
+      GridVertex                                vertex[TwoPowerD],
+      GridVertex                                fineGridVertices[TwoPowerD]
+    );
+
+    void mergeNodeWithWorker(
       GridVertex                                vertex[TwoPowerD],
       GridVertex                                fineGridVertices[TwoPowerD]
     );

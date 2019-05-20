@@ -206,16 +206,32 @@ void peano4::parallel::SpacetreeSet::TraverseTask::prefetch() {
 
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseMaster(const std::set<int>& trees, peano4::grid::TraversalObserver& observer) {
   for (auto& masterTreeId: trees ) {
-    peano4::grid::Spacetree& tree = getSpacetree(masterTreeId);
-    // ueber alle Kinder drueber gehen
-    for (auto worker: tree._joining) {
-      // todo Debug
-      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "tree " << worker << " is merging (partially) into tree " << masterTreeId );
+    peano4::grid::Spacetree& masterTree = getSpacetree(masterTreeId);
 
+    // ueber alle Kinder drueber gehen
+    for (auto workerTreeId: masterTree._joining) {
+      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "tree " << workerTreeId << " is merging (partially) into tree " << masterTreeId );
+
+      const int masterTreeStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(workerTreeId);
+      const int workerTreeStack = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange(masterTreeId);
+      // @todo Debug
+      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "copy stack " << workerTreeStack << " from tree " << workerTreeId << " into " << masterTreeStack );
+
+      peano4::grid::Spacetree& workerTree = getSpacetree(workerTreeId);
+
+      assertion( masterTree._vertexStack[masterTreeStack].empty() );
+
+      masterTree._vertexStack[masterTreeStack].clone( workerTree._vertexStack[workerTreeStack] );
+      masterTree._vertexStack[masterTreeStack].reverse();
+
+      workerTree._vertexStack[workerTreeStack].clear();
+
+      // @todo Debug
+      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "reversed all " << masterTree._vertexStack[masterTreeStack].size() << " entries" );
     }
     // todo Debug
-    logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "issue task to traverse tree " << tree._id << " in state " << peano4::grid::Spacetree::toString(tree._spacetreeState) );
-    tree.traverse(observer,true);
+    logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "issue task to traverse tree " << masterTree._id << " in state " << peano4::grid::Spacetree::toString(masterTree._spacetreeState) );
+    masterTree.traverse(observer,true);
   }
 /*
       if (Node::getInstance().getRank(p._masterId)==tarch::mpi::Rank::getInstance().getRank()) {
@@ -608,9 +624,12 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
   traverseNonMergingExistingTrees(observer);
 
-  exchangeDataBetweenNewTreesAndRerunClones(observer);
-
   exchangeDataBetweenMergingTreesAndTraverseMaster(mergingTrees,observer);
+
+  // @todo
+  // Leert offensichtlich alles fusion Stacks. Sollte es aber net. Das ist nicht sauber!
+  // Sobald das sauber ist, kann man die beiden exchange Dinger wieder vertauschen
+  exchangeDataBetweenNewTreesAndRerunClones(observer);
 
   mergeStatistics();
 
