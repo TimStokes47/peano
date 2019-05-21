@@ -116,6 +116,17 @@ bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(
 }
 
 
+bool peano4::grid::Spacetree::areAllVerticesRefined(
+  GridVertex            vertices[TwoPowerD]
+) const {
+  bool result = true;
+  dfor2(k)
+    result &= (vertices[kScalar].getState()==GridVertex::State::Refined);
+  enddforx
+  return result;
+}
+
+
 bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
   GridVertex            vertices[TwoPowerD]
 ) const {
@@ -1626,12 +1637,8 @@ void peano4::grid::Spacetree::splitOrJoinNode(
   if (not _splitTriggered.empty()) {
     bool isSplitCandidate =
       isSpacetreeNodeLocal(fineGridVertices) and
-      isSpacetreeNodeLocal(coarseGridVertices);
-
-    xxxx Da gibt es keine Regularitaetsannahme, d.h. auch auf dem groebsten Level
-    xxxx koennen Haengende Knoten sein
-    xxxx Man muesste auch jetzt gleich Veto-Marker setzen, so dass der Vater net
-    xxxx was wegcoarsen kann
+      isSpacetreeNodeLocal(coarseGridVertices) and
+      areAllVerticesRefined(coarseGridVertices);
 
     if (isSpacetreeNodeRefined(fineGridVertices)) {
       assertion1( _splittedCells.size()>=ThreePowerD, _splittedCells.size() );

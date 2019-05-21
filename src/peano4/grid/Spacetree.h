@@ -258,12 +258,16 @@ class peano4::grid::Spacetree {
      * remote rank, but it still is technically local.
      */
     bool isSpacetreeNodeLocal(
-	  GridVertex            vertices[TwoPowerD]
+	    GridVertex            vertices[TwoPowerD]
     ) const;
 
     bool isSpacetreeNodeOwnedByTree(
-    GridVertex            vertices[TwoPowerD],
-    int                   id
+      GridVertex            vertices[TwoPowerD],
+      int                   id
+    ) const;
+
+    bool areAllVerticesRefined(
+      GridVertex            vertices[TwoPowerD]
     ) const;
 
     /**
