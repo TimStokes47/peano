@@ -43,6 +43,8 @@ class tarch::multicore::RecursiveSemaphore {
      */
     void enterCriticalSection();
 
+    bool tryEnterCriticalSection();
+
     /**
      * Tells the semaphore that it is about to leave.
      */
