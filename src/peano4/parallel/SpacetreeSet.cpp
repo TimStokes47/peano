@@ -227,11 +227,15 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
       logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "copy stack " << workerTreeStack << " from tree " << workerTreeId << " into " << masterTreeStack );
 
       peano4::grid::Spacetree& workerTree = getSpacetree(workerTreeId);
+      // @todo Raus
+      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "top element on stack = " << workerTree._vertexStack[workerTreeStack].top().toString() );
 
       assertion( masterTree._vertexStack[masterTreeStack].empty() );
 
       masterTree._vertexStack[masterTreeStack].clone( workerTree._vertexStack[workerTreeStack] );
+      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "top element on stack = " << masterTree._vertexStack[masterTreeStack].top().toString() );
       masterTree._vertexStack[masterTreeStack].reverse();
+      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "top element on stack = " << masterTree._vertexStack[masterTreeStack].top().toString() );
 
       workerTree._vertexStack[workerTreeStack].clear();
 

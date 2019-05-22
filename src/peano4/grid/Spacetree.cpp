@@ -250,6 +250,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
 	    case SpacetreeState::JoinTriggered:
 	      _spacetreeState = SpacetreeState::Joining;
 	      logDebug( "traverse(...)", "switched tree " << _id << " into joining" );
+	      assertion( _vertexStack[ peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange( _masterId ) ].empty() );
 	      break;
       case SpacetreeState::Joining:
         _spacetreeState = SpacetreeState::Running;
@@ -703,18 +704,6 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
 ) {
   logTraceInWith2Arguments( "updateVertexBeforeStore()", vertex.toString(), _id );
 
-  #if PeanoDebug>0
-  if (
-      (_id==5 or _id==2 or _id==4)
-    and
-    tarch::la::equals( vertex.getX(0), 4.0/9.0 )
-    and
-    tarch::la::equals( vertex.getX(1), 3.0/9.0 )
-  ) {
-    logError( "updateVertexBeforeStore(...)", _id << " starts to study vertex " << vertex.toString() );
-  }
-  #endif
-
   if ( vertex.getState()==GridVertex::State::New ) {
     vertex.setState( GridVertex::State::Unrefined );
   }
@@ -1077,7 +1066,8 @@ std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& 
   const bool isLocalVertex =
 	  calledByReceivingProcess ?
       isVertexAdjacentToLocalSpacetree(vertex,true,false) :
-      isVertexAdjacentToLocalSpacetree(vertex,false,true);
+	  // @todo zweites Argument entfernen
+      isVertexAdjacentToLocalSpacetree(vertex,false,false);
 
   std::set<int> neighbourIds;
   for (int i=0; i<TwoPowerD; i++) {
@@ -1203,20 +1193,6 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
   logTraceInWith2Arguments( "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString(), _id );
 
   std::set<int> outRanks = getAdjacentDomainIds(vertex,false);
-
-#if PeanoDebug>0
-if (
-  (_id==5 or _id==2 or _id==4)
-  and
-  tarch::la::equals( vertex.getX(0), 4.0/9.0 )
-  and
-  tarch::la::equals( vertex.getX(1), 3.0/9.0 )
-) {
-  for (auto p: outRanks)
-    logError( "updateVertexBeforeStore(...)", "- " << _id << " sends to " << p );
-}
-#endif
-
 
   for (auto p: outRanks) {
     //
@@ -1752,11 +1728,13 @@ void peano4::grid::Spacetree::splitOrJoinCell(
   // @todo Hier kommt die Strategie rein
     and _splittedCells.empty()
   ) {
+	  // @todo Debug
     logInfo( "splitOrJoinCell(...)", "decided to merge cell into master" );
 
     for (int i=0; i<TwoPowerD; i++) {
       assertion2(fineGridVertices[i].getState()!=GridVertex::State::HangingVertex,fineGridVertices[i].toString(),_id);
       fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
+      logInfo( "splitOrJoinCell(...)", "- " << fineGridVertices[i].toString() );
     }
 
     updateVertexRanksWithinCell( fineGridVertices, RankOfCellWitchWillBeJoined );
@@ -1773,12 +1751,15 @@ void peano4::grid::Spacetree::splitOrJoinCell(
     and
     not isSpacetreeNodeLocal(coarseGridVertices)
   ) {
+	  // @todo Docu warum wir hier invertieren muessen -> weil ja auch der Stream invertiert wird
+//    for (int i=TwoPowerD-1; i>=0; i--) {
     for (int i=0; i<TwoPowerD; i++) {
       fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
 
       const int stack = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange( _masterId );
       logDebug( "splitOrJoinCell(...)", "stream vertex " << fineGridVertices[i].toString() << " to master " << _masterId << " through stack " << stack );
       _vertexStack[stack].push( fineGridVertices[i] );
+      logDebug( "splitOrJoinCell(...)", "stack size=" << _vertexStack[stack].size() );
 
       // reset the 'local' adjacency entries
       fineGridVertices[i].setAdjacentRanks(TwoPowerD-1-i,
@@ -1821,6 +1802,15 @@ void peano4::grid::Spacetree::mergeCellFromWorkerWithMaster(
           assertionEquals2(fineGridVertices[i].getAdjacentRanks(TwoPowerD-1-i),worker,fineGridVertices[i].toString(),receivedVertex.toString());
           fineGridVertices[i].setAdjacentRanks(TwoPowerD-1-i,_id);
         }
+      }
+    }
+    else {
+      logDebug( "mergeCellFromWorkerWithMaster(...)", "merging cell did not meet criteria: " << isSpacetreeNodeLocal(coarseGridVertices) << " x " << isSpacetreeNodeOwnedByTree(fineGridVertices,worker) );
+      for (int i=0; i<TwoPowerD; i++) {
+        logDebug( "mergeCellFromWorkerWithMaster(...)", "- " << coarseGridVertices[i].toString() );
+      }
+      for (int i=0; i<TwoPowerD; i++) {
+        logDebug( "mergeCellFromWorkerWithMaster(...)", "- " << fineGridVertices[i].toString() );
       }
     }
   }
