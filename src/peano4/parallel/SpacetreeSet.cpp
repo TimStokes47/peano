@@ -359,29 +359,28 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       #if PeanoDebug>0
       const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange(_spacetree._id);
 
-      // @todo raus
       if (
-    		  targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
-    		          or
-    		          targetTree._vertexStack[ comparisonStackForTarget ].empty()
-      ) {}
+        targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
+    	or
+    	targetTree._vertexStack[ comparisonStackForTarget ].empty()
+      ) {
+      }
       else {
-       	while ( not targetTree._vertexStack[ targetStack ].empty() ) {
-    	    logError( "DataExchangeTask::run()", "target=" << targetTree._vertexStack[ targetStack ].pop().toString() );
-        }
-        while ( not targetTree._vertexStack[ comparisonStackForTarget ].empty() ) {
-          logError( "DataExchangeTask::run()", "compare=" << targetTree._vertexStack[ comparisonStackForTarget ].pop().toString() );
+       	while (
+          not targetTree._vertexStack[ targetStack ].empty()
+		  or
+		  not targetTree._vertexStack[ comparisonStackForTarget ].empty()
+       	) {
+       	  if (not targetTree._vertexStack[ targetStack ].empty()) {
+    	    logError( "DataExchangeTask::run()", "outgoing stack from tree " << _spacetree._id << ": " << targetTree._vertexStack[ targetStack ].pop().toString() );
+       	  }
+          if (not targetTree._vertexStack[ comparisonStackForTarget ].empty() ) {
+            logError( "DataExchangeTask::run()", "comparison stack on tree "<< targetTree._id << " from " << _spacetree._id << "'s point of view: " << targetTree._vertexStack[ comparisonStackForTarget ].pop().toString() );
+          }
         }
 
-        assertion6(
-    		  (
-          targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
-          or
-          targetTree._vertexStack[ comparisonStackForTarget ].empty()
-		      )
-          // todo raus
-          and false
-          ,
+        assertion7( false,
+          "tree stacks have to have exactly the same size unless we are in a splitting situation (where one stack is empty)",
           targetTree._vertexStack[ targetStack ].size(),
           targetTree._vertexStack[ comparisonStackForTarget ].size(),
           targetStack, comparisonStackForTarget, targetTree._id, _spacetree._id
