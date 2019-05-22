@@ -261,6 +261,9 @@ class peano4::grid::Spacetree {
 	    GridVertex            vertices[TwoPowerD]
     ) const;
 
+    /**
+     * This is a tricky one.
+     */
     bool isSpacetreeNodeOwnedByTree(
       GridVertex            vertices[TwoPowerD],
       int                   id
@@ -268,6 +271,15 @@ class peano4::grid::Spacetree {
 
     bool areAllVerticesRefined(
       GridVertex            vertices[TwoPowerD]
+    ) const;
+
+    bool areAllVerticesUnrefined(
+      GridVertex            vertices[TwoPowerD]
+    ) const;
+
+    bool cellIsMergeCandidate(
+      GridVertex  coarseGridVertices[TwoPowerD],
+      GridVertex  fineGridVertices[TwoPowerD]
     ) const;
 
     /**
@@ -379,7 +391,7 @@ class peano4::grid::Spacetree {
     ) const;
 
     /**
-     * @see splitOrJoinNode() For both the usage and a description how we
+     * @see splitOrJoinCell() For both the usage and a description how we
      *   hijack the routine.
      */
     std::vector<int>  _splittedCells;
@@ -417,12 +429,12 @@ class peano4::grid::Spacetree {
      *
      * @todo Comment on join
      */
-    void splitOrJoinNode(
+    void splitOrJoinCell(
       GridVertex                                vertex[TwoPowerD],
       GridVertex                                fineGridVertices[TwoPowerD]
     );
 
-    void mergeNodeWithWorker(
+    void mergeCellFromWorkerWithMaster(
       GridVertex                                vertex[TwoPowerD],
       GridVertex                                fineGridVertices[TwoPowerD]
     );

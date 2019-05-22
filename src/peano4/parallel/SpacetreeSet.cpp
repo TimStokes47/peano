@@ -208,8 +208,17 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
   for (auto& masterTreeId: trees ) {
     peano4::grid::Spacetree& masterTree = getSpacetree(masterTreeId);
 
+    #if PeanoDebug>0
+    // Set will be empty after traversal, so we have to backup it
+    std::set<int> backupOfJoiningTrees;
+    #endif
+
     // ueber alle Kinder drueber gehen
     for (auto workerTreeId: masterTree._joining) {
+      #if PeanoDebug>0
+      backupOfJoiningTrees.insert(workerTreeId);
+      #endif
+
       logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "tree " << workerTreeId << " is merging (partially) into tree " << masterTreeId );
 
       const int masterTreeStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(workerTreeId);
@@ -232,6 +241,13 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
     // todo Debug
     logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "issue task to traverse tree " << masterTree._id << " in state " << peano4::grid::Spacetree::toString(masterTree._spacetreeState) );
     masterTree.traverse(observer,true);
+
+    #if PeanoDebug>0
+    for (auto workerTreeId: backupOfJoiningTrees) {
+      const int masterTreeStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(workerTreeId);
+      assertion( masterTree._vertexStack[masterTreeStack].empty() );
+    }
+    #endif
   }
 /*
       if (Node::getInstance().getRank(p._masterId)==tarch::mpi::Rank::getInstance().getRank()) {
@@ -350,28 +366,28 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
     		          targetTree._vertexStack[ comparisonStackForTarget ].empty()
       ) {}
       else {
-    	while ( not targetTree._vertexStack[ targetStack ].empty() ) {
-    	  logError( "DataExchangeTask::run()", targetTree._vertexStack[ targetStack ].pop().toString() );
-    	}
-    	while ( not targetTree._vertexStack[ comparisonStackForTarget ].empty() ) {
-    	  logError( "DataExchangeTask::run()", targetTree._vertexStack[ comparisonStackForTarget ].pop().toString() );
-    	}
+       	while ( not targetTree._vertexStack[ targetStack ].empty() ) {
+    	    logError( "DataExchangeTask::run()", "target=" << targetTree._vertexStack[ targetStack ].pop().toString() );
+        }
+        while ( not targetTree._vertexStack[ comparisonStackForTarget ].empty() ) {
+          logError( "DataExchangeTask::run()", "compare=" << targetTree._vertexStack[ comparisonStackForTarget ].pop().toString() );
+        }
 
-      assertion6(
+        assertion6(
     		  (
-        targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
-        or
-        targetTree._vertexStack[ comparisonStackForTarget ].empty()
-		)
-		// todo raus
-		and
-		false,
-        targetTree._vertexStack[ targetStack ].size(),
-        targetTree._vertexStack[ comparisonStackForTarget ].size(),
-        targetStack, comparisonStackForTarget, targetTree._id, _spacetree._id
-      );
-      }
-      #endif
+          targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
+          or
+          targetTree._vertexStack[ comparisonStackForTarget ].empty()
+		      )
+          // todo raus
+          and false
+          ,
+          targetTree._vertexStack[ targetStack ].size(),
+          targetTree._vertexStack[ comparisonStackForTarget ].size(),
+          targetStack, comparisonStackForTarget, targetTree._id, _spacetree._id
+        );
+     }
+     #endif
 
       _spacetree._vertexStack[sourceStack->first].clear();
 
@@ -672,7 +688,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       p->mayJoinWithMaster()
       // @todo Wieder raus
       and
-      p->_id==6
+      p->_id==5
     ) {
       logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
       join(p->_id);
