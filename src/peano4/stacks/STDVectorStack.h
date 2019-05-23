@@ -24,7 +24,7 @@ namespace peano4 {
     enum class IOMode {
       None,
       MPISend,
-	  MPIReceive
+      MPIReceive
     };
   }
 }
@@ -137,6 +137,7 @@ class peano4::stacks::STDVectorStack<double> {
     void startReceive(int rank, int tag, int numberOfElements);
     void finishSendOrReceive();
     void reverse();
+    std::string toString() const;
 };
 
 
@@ -498,6 +499,19 @@ class peano4::stacks::STDVectorStack {
 
     void reverse() {
       std::reverse(std::begin(_data), std::end(_data));
+    }
+
+    std::string toString() const {
+      std::ostringstream msg;
+      msg << "(";
+      msg << "size:" << size();
+      #if PeanoDebug>0
+      for (auto& p: _data) {
+        msg << "," << p.toString();
+      }
+      #endif
+      msg << ")";
+      return msg.str();
     }
 };
 

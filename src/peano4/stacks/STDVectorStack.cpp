@@ -266,3 +266,17 @@ void peano4::stacks::STDVectorStack<double>::finishSendOrReceive() {
 void peano4::stacks::STDVectorStack<double>::reverse() {
   std::reverse(std::begin(_data), std::end(_data));
 }
+
+
+std::string peano4::stacks::STDVectorStack<double>::toString() const {
+  std::ostringstream msg;
+  msg << "(";
+  msg << "size:" << size();
+  #if PeanoDebug>0
+  for (auto& p: _data) {
+    msg << "," << p;
+  }
+  #endif
+  msg << ")";
+  return msg.str();
+}
