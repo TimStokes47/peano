@@ -160,11 +160,11 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
 
   if ( _bandwidthTasksAreProcessed.compare_and_swap(true,false) ) {
-    hasProcessedJobs |= processJobs(internal::HighBandwidthTasksJobClassNumber,std::numeric_limits<int>::max());
-	_bandwidthTasksAreProcessed = false;
+    hasProcessedJobs |= processJobs(internal::HighBandwidthTasksJobClassNumber,std::numeric_limits<int>::max(), false /* isCalledOnMasterThread */);
+    _bandwidthTasksAreProcessed = false;
   }
 
-  hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
+  hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs, false /* isCalledOnMasterThread */);
 
   if ( hasProcessedJobs or rescheduleThisConsumer ) {
     enqueue();
@@ -272,7 +272,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 
   switch (job->getJobType()) {
 	case JobType::ProcessImmediately:
-	  while (job->run()) {};
+	  while (job->run(false)) {};
 	  delete job;
 	  break;
     case JobType::BandwidthBoundTask:
@@ -361,7 +361,7 @@ bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int p
  * by the background jobs (if processJobs() is called in a while loop) and
  * should actually use further tasks instead.
  */
-bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int priorities) {
+bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
   if (internal::getJobQueue(jobClass).jobs.empty() ) {
     return false;
   }
@@ -393,7 +393,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int 
       	  prefetchedTask->prefetchData();
         }
 
-        bool reschedule = myTask->run();
+        bool reschedule = myTask->run(isCalledOnMasterThread);
         if (reschedule) {
           rescheduledJobs.push_back( myTask );
         }

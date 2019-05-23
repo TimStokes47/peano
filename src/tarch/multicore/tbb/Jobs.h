@@ -156,7 +156,7 @@ namespace tarch {
              _semaphore(semaphore) {
             }
 
-            bool run() override {
+            bool run(bool runOnMasterThread) override {
               bool result = _functor();
               if (!result) _semaphore.fetch_and_add(-1);
               return result;
@@ -176,7 +176,7 @@ namespace tarch {
              _semaphore(semaphore) {
             }
 
-            bool run() override {
+            bool run(bool runOnMasterThread) override {
               bool result = _functor();
               if (!result) _semaphore.fetch_and_add(-1);
               return result;
@@ -290,7 +290,7 @@ namespace tarch {
         	}
 
             ::tbb::task* execute() {
-              while ( _job->run() ) {}
+              while ( _job->run(false) ) {}
               delete _job;
               return nullptr;
             }
