@@ -458,7 +458,7 @@ namespace tarch {
         *                        something negative, all jobs of the class are
         *                        done, i.e. I ignore priorities.
         */
-       bool processJobs(int jobClass, int maxNumberOfJobs = std::numeric_limits<int>::max(), int priorities = -1 );
+       bool processJobs(int jobClass, int maxNumberOfJobs = std::numeric_limits<int>::max(), int priorities = -1, bool isCalledOnMasterThread = true );
 
        /**
         * This operation is often used when a system is waiting for some jobs

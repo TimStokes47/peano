@@ -145,7 +145,7 @@ int tarch::multicore::jobs::getNumberOfPendingJobs() {
 
 
 
-bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int priorities) {
+bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
   return false;
 }
 
