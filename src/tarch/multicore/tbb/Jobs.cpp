@@ -247,7 +247,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 
   switch (job->getJobType()) {
 	case JobType::ProcessImmediately:
-	  while (job->run()) {};
+	  while (job->run(false)) {};
 	  delete job;
 	  break;
     case JobType::BandwidthBoundTask:
@@ -368,7 +368,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int 
       	  prefetchedTask->prefetchData();
         }
 
-        bool reschedule = myTask->run();
+        bool reschedule = myTask->run(isCalledOnMasterThread);
         if (reschedule) {
           rescheduledJobs.push_back( myTask );
         }

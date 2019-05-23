@@ -69,7 +69,7 @@ tarch::multicore::jobs::GenericJobWithCopyOfFunctor::GenericJobWithCopyOfFunctor
 }
 
 
-bool tarch::multicore::jobs::GenericJobWithCopyOfFunctor::run() {
+bool tarch::multicore::jobs::GenericJobWithCopyOfFunctor::run(bool runOnMasterThread) {
   return _functor();
 }
 
@@ -84,7 +84,7 @@ tarch::multicore::jobs::GenericJobWithoutCopyOfFunctor::GenericJobWithoutCopyOfF
 }
 
 
-bool tarch::multicore::jobs::GenericJobWithoutCopyOfFunctor::run() {
+bool tarch::multicore::jobs::GenericJobWithoutCopyOfFunctor::run(bool runOnMasterThread) {
   return _functor();
 }
 
@@ -115,7 +115,7 @@ bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
     while ( !backgroundJobs.empty() ) {
       Job* p = backgroundJobs.front();
       backgroundJobs.pop();
-      while (p->run()) {};
+      while (p->run(true)) {};
       delete p;
     }
     return true;
@@ -129,7 +129,7 @@ int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
 
 
 void tarch::multicore::jobs::spawn(Job*  job) {
-  while( job->run() ) {};
+  while( job->run(true) ) {};
   delete job;
 }
 

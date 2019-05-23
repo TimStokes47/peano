@@ -29,12 +29,12 @@ namespace tarch {
     namespace jobs {
        enum class JobType {
          Job,
-		 /**
-		  * It does not really make sense to specify this flag by a user.
-		  * But it is used internally if background threads are disabled.
-		  */
-		 ProcessImmediately,
-		 BandwidthBoundTask,
+         /**
+          * It does not really make sense to specify this flag by a user.
+          * But it is used internally if background threads are disabled.
+          */
+         ProcessImmediately,
+         BandwidthBoundTask,
          BackgroundTask
        };
 
@@ -74,7 +74,7 @@ namespace tarch {
     	    */
     	   Job( JobType jobType, int jobClass, int priority );
 
-           virtual bool run() = 0;
+           virtual bool run(bool runOnMasterThread) = 0;
 
            /**
             * This operation is called prior to run(). We try to make it as
@@ -160,7 +160,7 @@ namespace tarch {
          public:
            GenericJobWithCopyOfFunctor( const std::function<bool()>& functor, JobType jobType, int jobClass, int priority );
 
-           bool run() override;
+           bool run(bool runOnMasterThread) override;
 
            virtual ~GenericJobWithCopyOfFunctor();
        };
@@ -178,7 +178,7 @@ namespace tarch {
          public:
            GenericJobWithoutCopyOfFunctor(std::function<bool()>& functor, JobType jobType, int jobClass, int priority );
 
-           bool run() override;
+           bool run(bool runOnMasterThread) override;
 
            virtual ~GenericJobWithoutCopyOfFunctor();
        };
@@ -200,7 +200,7 @@ namespace tarch {
     	   }
 
 
-           bool run() override {
+           bool run(bool runOnMasterThread) override {
              return (*_functor)();
            }
 
