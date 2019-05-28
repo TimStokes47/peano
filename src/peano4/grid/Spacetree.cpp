@@ -1418,6 +1418,12 @@ void peano4::grid::Spacetree::descend(
         fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)]
       ));
     }
+    // @todo Doku: Man darf net ueber eine andere Partition druebercoarsen
+    else if (
+      not isSpacetreeNodeLocal(fineGridVertices) and isSpacetreeNodeLocal(vertices)
+    ) {
+      markVerticesAroundParentOfForkedCell(vertices);
+    }
 
     //
     // DFS
@@ -1648,23 +1654,10 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
 }
 
 
-// @todo Das stimmt evtl. net. Auf jeden Fall schaut das Splitting komisch aus
 bool peano4::grid::Spacetree::cellIsMergeCandidate(
   GridVertex  coarseGridVertices[TwoPowerD],
   GridVertex  fineGridVertices[TwoPowerD]
 ) const {
-  // @todo remove
-  if (isSpacetreeNodeLocal(fineGridVertices)
-      and
-      not isSpacetreeNodeLocal(coarseGridVertices)
-  ) {
-    logDebug( "cellIsMergeCandidate(...)", "might merge=" << areAllVerticesUnrefined(fineGridVertices) );
-    for (int i=0; i<TwoPowerD; i++) {
-      logDebug( "cellIsMergeCandidate(...)", "- " << fineGridVertices[i].toString() );
-    }
-  }
-
-
   return isSpacetreeNodeLocal(fineGridVertices)
     and
     not isSpacetreeNodeLocal(coarseGridVertices)
@@ -1738,7 +1731,7 @@ void peano4::grid::Spacetree::splitOrJoinCell(
 
     for (int i=0; i<TwoPowerD; i++) {
       assertion2(fineGridVertices[i].getState()!=GridVertex::State::HangingVertex,fineGridVertices[i].toString(),_id);
-      fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
+//      fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
       logDebug( "splitOrJoinCell(...)", "- " << fineGridVertices[i].toString() );
     }
 
@@ -1757,7 +1750,7 @@ void peano4::grid::Spacetree::splitOrJoinCell(
     not isSpacetreeNodeLocal(coarseGridVertices)
   ) {
     for (int i=0; i<TwoPowerD; i++) {
-      fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
+      //fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
 
       const int stack = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange( _masterId );
       logDebug( "splitOrJoinCell(...)", "stream vertex " << fineGridVertices[i].toString() << " to master " << _masterId << " through stack " << stack << " as " << i << "th vertex of cell");
@@ -1798,12 +1791,14 @@ void peano4::grid::Spacetree::mergeCellFromWorkerWithMaster(
         assertionVectorNumericalEquals4(fineGridVertices[i].getX(),receivedVertex.getX(),fineGridVertices[i].toString(),receivedVertex.toString(),_id,_vertexStack[stack].toString());
 //        assertion3(receivedVertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),fineGridVertices[i].toString(),receivedVertex.toString(),_id)
 
+/*
         fineGridVertices[i].setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(true);
         fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
 
         // @todo Das ist zu spaet?
         coarseGridVertices[i].setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(true);
         coarseGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
+*/
 
         // @todo Hier docu
         if (receivedVertex.getAdjacentRanks(TwoPowerD-1-i)==RankOfCellWitchWillBeJoined) {
@@ -1965,12 +1960,6 @@ bool peano4::grid::Spacetree::mayJoinWithMaster() const {
 	 and _joinTriggered.empty()
 	 and _joining.empty();
   return mandatoryCriteria;
-
-// @todo Remove
-// @todo Update documentation
-//  bool degeneratedTree = _statistics.getNumberOfLocalRefinedCells()==0;
-//
-//  return mandatoryCriteria and degeneratedTree;
 }
 
 

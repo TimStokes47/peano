@@ -364,13 +364,16 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       #if PeanoDebug>0
       const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange(_spacetree._id);
       
-      assertion6(
+      assertion9(
         targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
         or
         targetTree._vertexStack[ comparisonStackForTarget ].empty(),
+        targetTree._vertexStack[ targetStack ].size(),
+        targetTree._vertexStack[ comparisonStackForTarget ].size(),
         targetTree._vertexStack[ targetStack ].toString(),
         targetTree._vertexStack[ comparisonStackForTarget ].toString(),
-        targetStack, comparisonStackForTarget, targetTree._id, _spacetree._id
+        targetStack, comparisonStackForTarget, targetTree._id, _spacetree._id,
+        "target stack is what I have already sent over"
       );
       #endif
 
