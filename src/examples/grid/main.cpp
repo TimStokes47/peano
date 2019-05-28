@@ -135,7 +135,6 @@ void runMultithreaded() {
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
   }
 
-  // @todo Join wieder einfuehren
   // @todo MPI
   while (
     not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3-5,0)
@@ -155,7 +154,7 @@ void runMultithreaded() {
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
   }
 
-  for (int i=0; i<30; i++) {
+  for (int i=0; i<50; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
     #if PeanoDebug>0

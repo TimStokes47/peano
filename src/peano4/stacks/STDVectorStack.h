@@ -213,8 +213,13 @@ class peano4::stacks::STDVectorStack {
      */
     void  clone( const STDVectorStack<T>&  data ) {
       assertionEquals( _currentElement, 0 );
+      _data.clear();
       _currentElement = data._currentElement;
-      _data           = data._data;
+      //_data           = data._data;
+      _data.resize(_currentElement);
+      for (int n = 0; n<_currentElement; n++) {
+        _data[n] = data._data[n];
+      }
     }
 
 
@@ -503,11 +508,13 @@ class peano4::stacks::STDVectorStack {
 
     std::string toString() const {
       std::ostringstream msg;
-      msg << "(";
-      msg << "size:" << size();
+      msg << "(size:" << size()
+          << ",current-element:" << _currentElement;
       #if PeanoDebug>0
+      int entry = 0;
       for (auto& p: _data) {
-        msg << "," << p.toString();
+        msg << ",#" << entry << ":" << p.toString();
+        entry++;
       }
       #endif
       msg << ")";

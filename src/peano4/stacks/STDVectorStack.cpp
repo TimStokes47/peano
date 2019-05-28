@@ -37,7 +37,10 @@ peano4::stacks::STDVectorStack<double>&  peano4::stacks::STDVectorStack<double>:
 void peano4::stacks::STDVectorStack<double>::clone( const STDVectorStack<double>&  data ) {
   assertionEquals( _currentElement, 0 );
   _currentElement = data._currentElement;
-  _data           = data._data;
+  _data.resize(_currentElement);
+  for (int n = 0; n<_currentElement; n++) {
+    _data[n] = data._data[n];
+  }
 }
 
 
@@ -270,11 +273,13 @@ void peano4::stacks::STDVectorStack<double>::reverse() {
 
 std::string peano4::stacks::STDVectorStack<double>::toString() const {
   std::ostringstream msg;
-  msg << "(";
-  msg << "size:" << size();
+  msg << "(size:" << size()
+      << ",current-element:" << _currentElement;
   #if PeanoDebug>0
+  int entry = 0;
   for (auto& p: _data) {
-    msg << "," << p;
+    msg << ",#" << entry << ":" << p;
+    entry++;
   }
   #endif
   msg << ")";

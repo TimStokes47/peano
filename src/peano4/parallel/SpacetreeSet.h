@@ -102,6 +102,12 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * If we are forking, we first have to establish the new (forked) trees
      * before we issue any data transer. Otherwise, the xxx
      *
+     * <h2> Multithreading </h2>
+     *
+     * If we run this routine in debug mode, then I do all data exchange
+     * sequentially. Otherwise, it is close to impossible to read the
+     * assertion messages.
+     *
      * @param newTrees This set holds all indices of local ids that are down as
      *          splitting before we issue the traversal preceding this function
      *          call.

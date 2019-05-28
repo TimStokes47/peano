@@ -1249,9 +1249,14 @@ void peano4::grid::Spacetree::clearStatistics() {
 
   _statistics.setCoarseningHasBeenVetoed(false);
 
-  _statistics.setStationarySweeps( _statistics.getStationarySweeps()+1 );
-  if (_statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin+1) {
-    _statistics.setStationarySweeps( NumberOfStationarySweepsToWaitAtLeastTillJoin+1 );
+  if (_spacetreeState==SpacetreeState::Running) {
+    _statistics.setStationarySweeps( _statistics.getStationarySweeps()+1 );
+    if (_statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin+1) {
+      _statistics.setStationarySweeps( NumberOfStationarySweepsToWaitAtLeastTillJoin+1 );
+    }
+  }
+  else {
+    _statistics.setStationarySweeps( 0 );
   }
 }
 
@@ -1734,7 +1739,7 @@ void peano4::grid::Spacetree::splitOrJoinCell(
     for (int i=0; i<TwoPowerD; i++) {
       assertion2(fineGridVertices[i].getState()!=GridVertex::State::HangingVertex,fineGridVertices[i].toString(),_id);
       fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
-      logInfo( "splitOrJoinCell(...)", "- " << fineGridVertices[i].toString() );
+      logDebug( "splitOrJoinCell(...)", "- " << fineGridVertices[i].toString() );
     }
 
     updateVertexRanksWithinCell( fineGridVertices, RankOfCellWitchWillBeJoined );
@@ -1751,21 +1756,19 @@ void peano4::grid::Spacetree::splitOrJoinCell(
     and
     not isSpacetreeNodeLocal(coarseGridVertices)
   ) {
-	  // @todo Docu warum wir hier invertieren muessen -> weil ja auch der Stream invertiert wird
-//    for (int i=TwoPowerD-1; i>=0; i--) {
     for (int i=0; i<TwoPowerD; i++) {
       fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
 
       const int stack = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange( _masterId );
-      logDebug( "splitOrJoinCell(...)", "stream vertex " << fineGridVertices[i].toString() << " to master " << _masterId << " through stack " << stack );
+      logDebug( "splitOrJoinCell(...)", "stream vertex " << fineGridVertices[i].toString() << " to master " << _masterId << " through stack " << stack << " as " << i << "th vertex of cell");
       _vertexStack[stack].push( fineGridVertices[i] );
-      logDebug( "splitOrJoinCell(...)", "stack size=" << _vertexStack[stack].size() );
 
       // reset the 'local' adjacency entries
       fineGridVertices[i].setAdjacentRanks(TwoPowerD-1-i,
         fineGridVertices[i].getAdjacentRanks(TwoPowerD-1-i)==RankOfCellWitchWillBeJoined ?
         _masterId : fineGridVertices[i].getAdjacentRanks(TwoPowerD-1-i)
       );
+      logDebug( "splitOrJoinCell(...)", "updated into " << fineGridVertices[i].toString() );
     }
   }
 }
@@ -1781,12 +1784,18 @@ void peano4::grid::Spacetree::mergeCellFromWorkerWithMaster(
       and
       isSpacetreeNodeOwnedByTree(fineGridVertices,worker)
     ) {
+      logDebug( "mergeCellFromWorkerWithMaster(...)", "cell from worker " << worker << " is to be merged into master " << _id );
       for (int i=0; i<TwoPowerD; i++) {
         const int  stack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( worker );
-        logDebug( "mergeCellFromWorkerWithMaster(...)", "receive vertex " << fineGridVertices[i].toString() << " from worker " << worker << " on tree " << _id << " through stack " << stack );
         GridVertex receivedVertex = _vertexStack[stack].pop();
 
-        assertionVectorNumericalEquals3(fineGridVertices[i].getX(),receivedVertex.getX(),fineGridVertices[i].toString(),receivedVertex.toString(),_id);
+        logDebug(
+          "mergeCellFromWorkerWithMaster(...)",
+          "received vertex " << receivedVertex.toString() << " for local vertex " <<
+          fineGridVertices[i].toString() << " from worker " << worker << " on tree " << _id << " through stack " << stack
+        );
+
+        assertionVectorNumericalEquals4(fineGridVertices[i].getX(),receivedVertex.getX(),fineGridVertices[i].toString(),receivedVertex.toString(),_id,_vertexStack[stack].toString());
 //        assertion3(receivedVertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),fineGridVertices[i].toString(),receivedVertex.toString(),_id)
 
         fineGridVertices[i].setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(true);
@@ -1796,12 +1805,16 @@ void peano4::grid::Spacetree::mergeCellFromWorkerWithMaster(
         coarseGridVertices[i].setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(true);
         coarseGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
 
-
         // @todo Hier docu
         if (receivedVertex.getAdjacentRanks(TwoPowerD-1-i)==RankOfCellWitchWillBeJoined) {
           assertionEquals2(fineGridVertices[i].getAdjacentRanks(TwoPowerD-1-i),worker,fineGridVertices[i].toString(),receivedVertex.toString());
           fineGridVertices[i].setAdjacentRanks(TwoPowerD-1-i,_id);
         }
+
+        logDebug(
+          "mergeCellFromWorkerWithMaster(...)",
+          "updated local vertex: " << fineGridVertices[i].toString()
+        );
       }
     }
     else {

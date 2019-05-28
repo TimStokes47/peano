@@ -223,24 +223,25 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
 
       const int masterTreeStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(workerTreeId);
       const int workerTreeStack = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange(masterTreeId);
-      // @todo Debug
-      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "copy stack " << workerTreeStack << " from tree " << workerTreeId << " into " << masterTreeStack );
 
       peano4::grid::Spacetree& workerTree = getSpacetree(workerTreeId);
-      // @todo Raus
-      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "top element on stack = " << workerTree._vertexStack[workerTreeStack].top().toString() );
+
+      logDebug(
+        "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)",
+        "copy stack " << workerTreeStack << " from tree " << workerTreeId << " into " << masterTreeStack << " on tree " << masterTreeId << ": "
+        << workerTree._vertexStack[workerTreeStack].toString()
+      );
 
       assertion( masterTree._vertexStack[masterTreeStack].empty() );
-
       masterTree._vertexStack[masterTreeStack].clone( workerTree._vertexStack[workerTreeStack] );
-      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "top element on stack = " << masterTree._vertexStack[masterTreeStack].top().toString() );
       masterTree._vertexStack[masterTreeStack].reverse();
-      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "top element on stack = " << masterTree._vertexStack[masterTreeStack].top().toString() );
-
       workerTree._vertexStack[workerTreeStack].clear();
+      logDebug(
+        "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)",
+        "target stack now is: " << masterTree._vertexStack[masterTreeStack].toString()
+      );
 
-      // @todo Debug
-      logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "reversed all " << masterTree._vertexStack[masterTreeStack].size() << " entries" );
+      logDebug( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "reversed all " << masterTree._vertexStack[masterTreeStack].size() << " entries" );
     }
     // todo Debug
     logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "issue task to traverse tree " << masterTree._id << " in state " << peano4::grid::Spacetree::toString(masterTree._spacetreeState) );
@@ -362,35 +363,16 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
 
       #if PeanoDebug>0
       const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange(_spacetree._id);
-
-      if (
+      
+      assertion6(
         targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
-    	or
-    	targetTree._vertexStack[ comparisonStackForTarget ].empty()
-      ) {
-      }
-      else {
-       	while (
-          not targetTree._vertexStack[ targetStack ].empty()
-		  or
-		  not targetTree._vertexStack[ comparisonStackForTarget ].empty()
-       	) {
-       	  if (not targetTree._vertexStack[ targetStack ].empty()) {
-    	    logError( "DataExchangeTask::run()", "outgoing stack from tree " << _spacetree._id << ": " << targetTree._vertexStack[ targetStack ].pop().toString() );
-       	  }
-          if (not targetTree._vertexStack[ comparisonStackForTarget ].empty() ) {
-            logError( "DataExchangeTask::run()", "comparison stack on tree "<< targetTree._id << " from " << _spacetree._id << "'s point of view: " << targetTree._vertexStack[ comparisonStackForTarget ].pop().toString() );
-          }
-        }
-
-        assertion7( false,
-          "tree stacks have to have exactly the same size unless we are in a splitting situation (where one stack is empty)",
-          targetTree._vertexStack[ targetStack ].size(),
-          targetTree._vertexStack[ comparisonStackForTarget ].size(),
-          targetStack, comparisonStackForTarget, targetTree._id, _spacetree._id
-        );
-     }
-     #endif
+        or
+        targetTree._vertexStack[ comparisonStackForTarget ].empty(),
+        targetTree._vertexStack[ targetStack ].toString(),
+        targetTree._vertexStack[ comparisonStackForTarget ].toString(),
+        targetStack, comparisonStackForTarget, targetTree._id, _spacetree._id
+      );
+      #endif
 
       _spacetree._vertexStack[sourceStack->first].clear();
 
@@ -515,8 +497,15 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
   }
   logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "trigger " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
 
+  #if PeanoDebug>0
+  for (auto& p: dataExchangeTasks) {
+    p->run();
+    delete p;
+  }
+  #else
   static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees" );
   peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
+  #endif
 }
 
 
