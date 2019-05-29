@@ -154,8 +154,8 @@ void runMultithreaded() {
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
   }
 
-  for (int i=0; i<50; i++) {
-	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+  for (int i=0; i<100; i++) {
+    tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
     #if PeanoDebug>0
     emptyObserver.startNewSnapshot(true);

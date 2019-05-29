@@ -152,6 +152,17 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     void join(int treeId);
 
+    /**
+     * <h2> Merge process </h2>
+     *
+     * We make the worker first of all decide whether to merge or not. A
+     * worker has the control/knowledge whether to join or not. When a rank
+     * wants to join, we first of all run the workers. Then, all data is the
+     * join buffers. After that, we sweep through the masters to take up the
+     * data. So we may not merge both the worker and the master into their
+     * workers at the same time. If we did so, we'd not be able to run all
+     * the merging trees in parallel.
+     */
     void cleanUpTrees();
 
     void mergeStatistics();

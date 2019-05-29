@@ -681,15 +681,6 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       p->mayJoinWithMaster()
       and
       getSpacetree(p->_masterId).mayJoinWithWorker()
-
-//      @todo
- //     Master darf net seinerseits schon joinen, denn sonst gibt es keine klare, eindeutige Traversalreihenfolge mehr
-
-	  // @todo raus
-/*
-	  and
-	  (p->_id==1 or   p->_id==2 or p->_id==3 or p->_id==4)
-*/
     ) {
       logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
       join(p->_id);
@@ -704,14 +695,6 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       p = _spacetrees.erase(p);
       p--;
     }
-
-  	// @todo Raus
-    if (
-      p->_id==3
-    ) {
-      logInfo( "traverse(Observer)", "p=3: " << p->toString() );
-    }
-
   	p++;
   }
 }

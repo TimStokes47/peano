@@ -203,6 +203,21 @@ class peano4::grid::Spacetree {
       GridVertex            coarseGridVertices[TwoPowerD]
     ) const;
 
+    /**
+     *
+     *
+     * <h2> Veto coarsening </h2>
+     *
+     * The routine markVerticesAroundParentOfForkedCell() is used in this routine
+     * to ensure that we don't erase the grid over a worker domain. We have to do
+     * this both on the master and the worker. The worker invokes the veto
+     * coarsening when it comes from a coarse remote tree and runs into local fine
+     * grid cell. The master does it the other way round: It sets the vetos if
+     * we hit a remote cell out from the local tree. In both cases, the bottom-up
+     * analysis of the flag ensures that the information propagates all the way up
+     * the grid hierarchies.
+     *
+     */
     void descend(
       const AutomatonState& state,
 	    GridVertex            vertices[TwoPowerD],
@@ -434,6 +449,20 @@ class peano4::grid::Spacetree {
       GridVertex                                fineGridVertices[TwoPowerD]
     );
 
+    /**
+     *
+     * <h2> Merge process </h2>
+     *
+     * If we receive a remote cell, then this cell is not refined. In this case
+     * the (former) workers holds all the valid adjacency data: We might on a
+     * master receive a cell right from the middle of the worker's domain where
+     * the master has no clue about any adjacency. So we have to copy over the
+     * (former) worker's adjacency data.
+     *
+     * As we also receive hanging vertices from the worker, we can safely (and
+     * pretty naively) copy over the adjacency. THe first non-hanging vertex
+     * will bring in the right adjacency information.
+     */
     void mergeCellFromWorkerWithMaster(
       GridVertex                                vertex[TwoPowerD],
       GridVertex                                fineGridVertices[TwoPowerD]
