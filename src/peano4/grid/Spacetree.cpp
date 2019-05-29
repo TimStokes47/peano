@@ -218,9 +218,8 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
        0                                                 // level
        #endif
     );
-    if (_id==0) {
-      vertices[kScalar].setAdjacentRanks(TwoPowerD-1-kScalar,_id);
-    }
+    // The global master rank
+    vertices[kScalar].setAdjacentRanks(TwoPowerD-1-kScalar,0);
     logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
 
@@ -1465,7 +1464,6 @@ void peano4::grid::Spacetree::descend(
       fineGridVertices
     );
 
-
     //
     // Store vertices
     //
@@ -1726,9 +1724,7 @@ void peano4::grid::Spacetree::splitOrJoinCell(
   // @todo Hier kommt die Strategie rein
     and _splittedCells.empty()
   ) {
-    logInfo( "splitOrJoinCell(...)", "decided to merge cell into master" );
-
-    Kann jetzt natuerlich sein, dass man was reinmerged, wovon man bisher keine Ahnung hat. Deshalb sind dann die Adjazenzlisten falsch
+    logInfo( "splitOrJoinCell(...)", "decided to merge cell from tree " << _id << " into master " << _masterId );
 
     for (int i=0; i<TwoPowerD; i++) {
       assertion2(fineGridVertices[i].getState()!=GridVertex::State::HangingVertex,fineGridVertices[i].toString(),_id);
@@ -1751,6 +1747,10 @@ void peano4::grid::Spacetree::splitOrJoinCell(
     and
     not isSpacetreeNodeLocal(coarseGridVertices)
   ) {
+    // @todo Raus
+    if (_id==2)
+      logInfo( "splitOrJoinCell(...)", "merge cell at " << fineGridVertices[0].toString() << " from tree " << _id << " into master " << _masterId );
+
     logDebug( "splitOrJoinCell(...)", "merge cell at " << fineGridVertices[0].toString() << " from tree " << _id << " into master " << _masterId );
     for (int i=0; i<TwoPowerD; i++) {
       //fineGridVertices[i].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
@@ -1767,6 +1767,19 @@ void peano4::grid::Spacetree::splitOrJoinCell(
       logDebug( "splitOrJoinCell(...)", "updated into " << fineGridVertices[i].toString() );
     }
   }
+#if PeanoDebug>0
+  else if (
+    _spacetreeState==SpacetreeState::Joining
+    and
+    _id==2
+/*
+    and
+    fineGridVertices[0].getLevel()==1
+*/
+  ) {
+    logInfo( "splitOrJoinCell(...)", "merge cell at " << fineGridVertices[0].toString() << " from tree " << _id << " into master " << _masterId );
+  }
+#endif
 }
 
 
@@ -1784,6 +1797,14 @@ void peano4::grid::Spacetree::mergeCellFromWorkerWithMaster(
       bool transferredCell = false;
       for (int i=0; i<TwoPowerD; i++) {
         const int  stack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( worker );
+
+        // @todo raus
+        logInfo(
+          "mergeCellFromWorkerWithMaster(...)",
+          "received vertex for local vertex " <<
+          fineGridVertices[i].toString() << " from worker " << worker << " on tree " << _id << " through stack " << stack
+        );
+
         assertion5( not _vertexStack[stack].empty(), worker, _id, i, fineGridVertices[i].toString(), coarseGridVertices[i].toString() );
         GridVertex receivedVertex = _vertexStack[stack].pop();
 
@@ -1809,7 +1830,7 @@ void peano4::grid::Spacetree::mergeCellFromWorkerWithMaster(
         // @todo Hier docu
         if (receivedVertex.getAdjacentRanks(TwoPowerD-1-i)==RankOfCellWitchWillBeJoined) {
           assertionEquals2(fineGridVertices[i].getAdjacentRanks(TwoPowerD-1-i),worker,fineGridVertices[i].toString(),receivedVertex.toString());
-          fineGridVertices[i].setAdjacentRanks(TwoPowerD-1-i,_id);
+          fineGridVertices[i].setAdjacentRanks( receivedVertex.getAdjacentRanks() );
           transferredCell = true;
         }
 
@@ -1820,6 +1841,7 @@ void peano4::grid::Spacetree::mergeCellFromWorkerWithMaster(
       }
 
       if (transferredCell) {
+        updateVertexRanksWithinCell(fineGridVertices,_id);
         logInfo(
           "mergeCellFromWorkerWithMaster(...)",
           "updated local vertex as this is a merged cell: " << fineGridVertices[0].toString()
