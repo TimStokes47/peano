@@ -243,8 +243,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
 
       logDebug( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "reversed all " << masterTree._vertexStack[masterTreeStack].size() << " entries" );
     }
-    // todo Debug
-    logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "issue task to traverse tree " << masterTree._id << " in state " << peano4::grid::Spacetree::toString(masterTree._spacetreeState) );
+    logDebug( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "issue task to traverse tree " << masterTree._id << " in state " << peano4::grid::Spacetree::toString(masterTree._spacetreeState) );
     masterTree.traverse(observer,true);
 
     #if PeanoDebug>0
@@ -479,7 +478,6 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewTreesAndRerunClones(p
         }
       }
 //
-      // @todo Continue here
     }
   }
 */
@@ -673,17 +671,17 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       and
       not p->mayJoinWithMaster()
     ) {
-  	  if (p->_id!=0) {
-        logInfo( "traverse(Observer)", "can't join tree " << p->_id << " with its master tree " << p->_masterId << ". Domain decomposition vetoes coarsening (would destroy MPI topology), but worker tree is not degenerated, i.e. hosts refined subgrid: " << p->toString());
+  	  if (p->_id!=0 and p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running) {
+        logInfo( "traverse(Observer)", "can't join tree " << p->_id << " with its master tree " << p->_masterId << ". Domain decomposition vetoes coarsening (would destroy MPI topology), but worker tree is not ready to be merged: " << p->toString());
   	  }
     }
   	else if (
       p->getGridStatistics().getCoarseningHasBeenVetoed()
       and
       p->mayJoinWithMaster()
-      // @todo Wieder raus
-      and
-      p->_id==5
+	  // @todo raus
+	  and
+	  (/*p->_id==1 or p->_id==2 or p->_id==3 or */  p->_id==4)
     ) {
       logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
       join(p->_id);
@@ -740,8 +738,6 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
   }
   assertion(tree!=nullptr);
 
-// @todo Hier bin ich mir net sicher
-//  assertion2( tree->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running, fatherId, tree->toString());
   assertion2(
     tree->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
     or
