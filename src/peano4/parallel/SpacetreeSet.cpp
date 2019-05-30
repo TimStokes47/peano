@@ -244,7 +244,10 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
       logDebug( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "reversed all " << masterTree._vertexStack[masterTreeStack].size() << " entries" );
     }
     logDebug( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "issue task to traverse tree " << masterTree._id << " in state " << peano4::grid::Spacetree::toString(masterTree._spacetreeState) );
-    masterTree.traverse(observer,true);
+
+    peano4::grid::TraversalObserver* localObserver = observer.clone( masterTree._id );
+    masterTree.traverse( *localObserver, true );
+    delete localObserver;
 
     #if PeanoDebug>0
     for (auto workerTreeId: backupOfJoiningTrees) {
@@ -414,7 +417,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::prefetch() {
 // @todo Could be tasks for its own. Two different task types though?
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewTreesAndRerunClones(peano4::grid::TraversalObserver& observer) {
   for (auto& p: _spacetrees) {
-	  if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
+	if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
       logInfo( "exchangeDataBetweenNewTreesAndRerunClones()", "tree " << p._id << " is new. Initialise it through clone" );
       if (Node::getInstance().getRank(p._masterId)==tarch::mpi::Rank::getInstance().getRank()) {
         logDebug( "exchangeDataBetweenNewTreesAndRerunClones()", "parent tree " << p._masterId << " is local" );
@@ -429,7 +432,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewTreesAndRerunClones(p
       peano4::grid::TraversalObserver* localObserver = observer.clone( p._id );
       p.traverse(*localObserver,true);
       delete localObserver;
-	  }
+	}
   }
 
   for (auto& p: _spacetrees) {
