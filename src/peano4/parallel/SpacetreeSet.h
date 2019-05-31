@@ -134,13 +134,19 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     /**
      * Adds a new spacetree to the set. The responsibility goes over to the
      * set. The operation clones the original spacetree handed in into a new
-     * spacetree with the id id.
+     * spacetree with the id newTreeId.
      *
-     * <h2> Implementation </h2>
+     * <h2> Local node </h2>
      *
-     * Logically, the passed spacetree is const as we do not change it.
-     * Technically, we may not make it const. We invoke MPI sends on its
-     * stacks. Therefore, it is just a reference.
+     * If the new tree will be a local tree, we simply add a new tree object.
+     * The Spacetree's constructor takes care of all the "cloning". Clone here
+     * means a setup. We traverse this tree afterwards separately to stream all
+     * data in.
+     *
+     * <h2> Distributed memory <h2>
+     *
+     * In a distributed memory environment, we have to break up the creation
+     * into a set of sends forth and back through TreeManagementMessages.
      */
     void addSpacetree( int masterId, int newTreeId );
 
