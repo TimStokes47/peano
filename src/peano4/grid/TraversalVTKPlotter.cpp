@@ -4,6 +4,8 @@
 
 #include "peano4/utils/Loop.h"
 
+#include "tarch/mpi/Rank.h"
+
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
 #include "tarch/multicore/Core.h"
@@ -16,6 +18,10 @@ tarch::logging::Log  peano4::grid::TraversalVTKPlotter::_log( "peano4::grid::Tra
 
 
 int peano4::grid::TraversalVTKPlotter::_counter(0);
+
+#ifdef Parallel
+int peano4::grid::TraversalVTKPlotter::_plotterMessageTag = tarch::mpi::Rank::reserveFreeTag( "peano4::grid::TraversalVTKPlotter" );
+#endif
 
 
 peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filename, int treeId ):
@@ -61,6 +67,21 @@ void peano4::grid::TraversalVTKPlotter::endTraversal(
 }
 
 
+std::string peano4::grid::TraversalVTKPlotter::getFilename( int spacetreeId ) const {
+  std::string currentFile = _filename;
+
+  // we run serially
+  if (spacetreeId==-1) {
+    currentFile += "-" + std::to_string( _counter );
+  }
+  else {
+    currentFile += "-" + std::to_string(spacetreeId) + "-" + std::to_string( _counter );
+  }
+
+  return currentFile;
+}
+
+
 void peano4::grid::TraversalVTKPlotter::closeFile() {
   if (_writer!=nullptr) {
     _vertexWriter->close();
@@ -78,20 +99,9 @@ void peano4::grid::TraversalVTKPlotter::closeFile() {
     _spacetreeIdWriter = nullptr;
     _coreWriter        = nullptr;
 
-    std::string currentFile = _filename;
-
-    // we run serially
-    if (_spacetreeId==-1) {
-      currentFile += "-" + std::to_string( _counter );
-    }
-    else {
-      currentFile += "-" + std::to_string(_spacetreeId) + "-" + std::to_string( _counter );
-    }
-    _writer->writeToFile( currentFile );
+    _writer->writeToFile( getFilename( _spacetreeId ) );
     delete _writer;
     _writer = nullptr;
-
-    logInfo( "endTraversal(...)", "wrote to file " << currentFile );
   }
 }
 
@@ -138,12 +148,14 @@ void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
   static tarch::multicore::BooleanSemaphore semaphore;
   tarch::multicore::Lock lock(semaphore);
 
-  std::string newFile = _filename + "-" + std::to_string(spacetreeId) + "-" + std::to_string( _counter );
+  std::string newFile = getFilename( spacetreeId );
   _clonedSpacetreeIds.push_back( newFile );
-  assertion1( _writer!=nullptr, _spacetreeId );
-  _writer->writeMetaDataFileForParallelSnapshot(
-     _filename + "-" + std::to_string( _counter ),
-    _clonedSpacetreeIds
+  // avoid typical invocation for same id twice in a row
+  assertion2(
+    _clonedSpacetreeIds.size()<=1 or
+    _clonedSpacetreeIds[0]!=_clonedSpacetreeIds[1],
+    spacetreeId,
+    _clonedSpacetreeIds[0]
   );
 }
 
@@ -151,11 +163,11 @@ void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
 peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int spacetreeId) {
   peano4::grid::TraversalVTKPlotter* result = new peano4::grid::TraversalVTKPlotter(
     _filename,
-	spacetreeId
+    spacetreeId
   );
 
   if (_spacetreeId!=-1) {
-	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
+    assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
   }
   else {
     updateMetaFile(spacetreeId);
@@ -168,8 +180,51 @@ peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int s
 void peano4::grid::TraversalVTKPlotter::startNewSnapshot(bool isParallelRun) {
   _counter++;
 
-  _timeSeriesWriter.addSnapshot( _filename + "-" + std::to_string( _counter ), _counter, isParallelRun );
-  _timeSeriesWriter.writeFile( _filename );
+/*
+*/
+
+  if ( tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
+    #ifdef Parallel
+assertionMsg(false,"not there yet; should use the new classes");
+/*
+    Kann net funktionieren, weil es ja noch gar net losgegnagen ist
+
+    assertion(isParallelRun);
+    for (int rank=0; rank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
+      if (rank!=tarch::mpi::Rank::getGlobalMasterRank()) {
+        int entries;
+        MPI_Recv( &entries, 1, MPI_INT, rank, _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE );
+        logInfo( "startNewSnapshot(...)", "will receive " << entries << " snapshots from rank " << rank);
+      }
+    }
+*/
+    #endif
+
+    if ( not _clonedSpacetreeIds.empty() ) {
+      assertion1( _writer!=nullptr, _spacetreeId );
+      _writer->writeMetaDataFileForParallelSnapshot(
+         _filename + "-" + std::to_string( _counter ),
+        _clonedSpacetreeIds
+      );
+
+      _timeSeriesWriter.addSnapshot( _filename + "-" + std::to_string( _counter ), _counter, isParallelRun );
+      _timeSeriesWriter.writeFile( _filename );
+    }
+  }
+  else {
+    #ifdef Parallel
+    assertion(isParallelRun);
+    int entries = _clonedSpacetreeIds.size();
+    MPI_Send( &entries, 1, MPI_INT, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
+    for (auto& p: _clonedSpacetreeIds) {
+      entries = p.length();
+      MPI_Send( &entries, 1, MPI_INT, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
+      MPI_Send( p.data(), entries, MPI_CHAR, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
+    }
+    #else
+    assertionMsg( false, "should never enter" );
+    #endif
+  }
 
   _clonedSpacetreeIds.clear();
 }

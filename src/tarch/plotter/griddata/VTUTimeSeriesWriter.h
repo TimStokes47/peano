@@ -31,7 +31,8 @@ class tarch::plotter::griddata::VTUTimeSeriesWriter {
     VTUTimeSeriesWriter();
 
     /**
-     * Add a new snapshot. Please pass full name incl. extension.
+     * Add a new snapshot. Please pass full name incl. extension. This
+     * operation should only be invoked on the global master rank, i.e. rank 0.
      */
     void addSnapshot(const std::string& snapshotFileName, double time, bool parallelRun);
 

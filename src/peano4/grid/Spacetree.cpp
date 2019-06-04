@@ -228,10 +228,14 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
   _root.setInverted( not _root.getInverted() );
 
   if (calledFromSpacetreeSet) {
+    _hasSplit.clear();
+    _hasSplit.insert(_splitting.begin(), _splitting.end() );
     _splitting.clear();
     _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
     _splitTriggered.clear();
 
+    _hasJoined.clear();
+    _hasJoined.insert( _joining.begin(), _joining.end() );
     _joining.clear();
 	  _joining.insert( _joinTriggered.begin(), _joinTriggered.end() );
 	  _joinTriggered.clear();
@@ -423,15 +427,6 @@ peano4::grid::Spacetree::FaceType peano4::grid::Spacetree::getFaceType(
 }
 
 
-std::set<int> peano4::grid::Spacetree::getSplittingTreeIds() const {
-  std::set<int> result;
-  for (auto p: _splitting) {
-	result.insert(p.first);
-  }
-  return result;
-}
-
-
 peano4::grid::Spacetree::VertexType peano4::grid::Spacetree::getVertexType(
   GridVertex                         coarseGridVertices[TwoPowerD],
   tarch::la::Vector<Dimensions,int>  position,
@@ -618,9 +613,9 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
   if (
     not isVertexAdjacentToLocalSpacetree(vertex,true,true)
     and
-	not vertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep()
-	and
-	vertex.getState()==GridVertex::State::Refined
+    not vertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep()
+    and
+    vertex.getState()==GridVertex::State::Refined
   ) {
 	logDebug( "updateVertexAfterLoad(GridVertex&)", "would like to erase " << vertex.toString() << " in spacetree " << _id );
     vertex.setState( GridVertex::State::EraseTriggered );
@@ -1862,7 +1857,9 @@ void peano4::grid::Spacetree::split(int newSpacetreeId, int cells) {
 
 std::string peano4::grid::Spacetree::toString() const {
   std::ostringstream msg;
-  msg << "(" << toString(_spacetreeState)
+  msg << "(id=" << _id
+      << ",master=" << _masterId
+      << ",state=" << toString(_spacetreeState)
       << ",statistics=" << _statistics.toString();
   if (_joinTriggered.empty()) {
     msg << ",no-join-triggered-with-any-tree";
@@ -1903,6 +1900,17 @@ std::string peano4::grid::Spacetree::toString() const {
       msg << "(" << p.first << "," << p.second << ")";
     }
 	  msg << "}";
+  }
+  msg << ",stacks:";
+  bool allStackAreEmpty = true;
+  for (auto& p: _vertexStack) {
+    if (not p.second.empty()) {
+      msg << "(" << p.first << "," << p.second.size() << ")";
+      allStackAreEmpty = false;
+    }
+  }
+  if (allStackAreEmpty) {
+    msg << "all-empty";
   }
   msg << ")";
   return msg.str();

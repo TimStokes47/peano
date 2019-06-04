@@ -39,7 +39,6 @@ Peano4Core_SOURCES = peano4/peano.cpp \
   peano4/grid/TraversalVTKPlotter.cpp \
   peano4/grid/tests/SpacetreeTest.cpp \
   peano4/parallel/Node.cpp \
-  peano4/parallel/IntegerMessage.cpp \
   peano4/parallel/SpacetreeSet.cpp \
   peano4/parallel/StartTraversalMessage.cpp \
   peano4/parallel/Tasks.cpp \
@@ -105,6 +104,8 @@ Tarch_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/plotter/pointdata/vtk/VTKBinaryFileWriter_PointDataWriter.cpp \
  tarch/mpi/Rank.cpp \
  tarch/mpi/mpi.cpp \
+ tarch/mpi/IntegerMessage.cpp \
+ tarch/mpi/StringMessage.cpp \
  tarch/logging/CommandLineLogger.cpp \
  tarch/logging/Log.cpp \
  tarch/logging/LogFilterFileReader.cpp \

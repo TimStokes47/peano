@@ -1,29 +1,25 @@
 #include "mpi.h"
+#include "StringMessage.h"
 
 #include <sstream>
 
 
-std::string tarch::mpi::StringTools::convert(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& value ) {
+std::string tarch::mpi::StringTools::convert(const tarch::mpi::StringMessage& value ) {
   std::ostringstream result;
-
-  std::string::size_type i=0;
-  while (i<MPI_MAX_NAME_STRING && value( static_cast<int>(i) )!=0 ) {
-    result << static_cast<char>(value( static_cast<int>(i) ));
-    i++;
+  for (int i=0; i<value._length; i++) {
+    result << static_cast<char>(value._data[i]);
   }
-
   return result.str();
 }
 
 
-tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> tarch::mpi::StringTools::convert( const std::string& value ) {
-  tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> result;
-  assertion( value.length() <= MPI_MAX_NAME_STRING );
-  std::string::size_type i=0;
-  while (i<value.length()) {
-    result( static_cast<int>(i) ) = value.at( static_cast<int>(i) );
-    i++;
+tarch::mpi::StringMessage tarch::mpi::StringTools::convert(const std::string& value ) {
+  tarch::mpi::StringMessage result;
+
+  result._length = value.length();
+  for (int i=0; i<value.length(); i++) {
+    result.setData(i, static_cast<short int>(value.data()[i]));
   }
-  result( static_cast<int>(i) ) = 0;
+
   return result;
 }

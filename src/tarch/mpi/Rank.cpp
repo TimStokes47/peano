@@ -8,6 +8,8 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
+#include "tarch/mpi/IntegerMessage.h"
+#include "tarch/mpi/StringMessage.h"
 
 /**
  * For the machine name. If it doesn't work, switch it off in the file
@@ -272,6 +274,9 @@ void tarch::mpi::Rank::shutdown() {
   #ifdef Parallel
   assertion( _rank!=-1 );
 
+  IntegerMessage::shutdownDatatype();
+  StringMessage::shutdownDatatype();
+
   MPI_Barrier( _communicator );
   MPI_Finalize();
   _communicator = MPI_COMM_WORLD;
@@ -361,6 +366,8 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
     return false;
   }
 
+  IntegerMessage::initDatatype();
+  StringMessage::initDatatype();
   #endif
 
   _initIsCalled = true;

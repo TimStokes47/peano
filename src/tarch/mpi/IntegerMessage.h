@@ -1,6 +1,7 @@
-#ifndef _PEANO4_PARALLEL_INTEGERMESSAGE_H
-#define _PEANO4_PARALLEL_INTEGERMESSAGE_H
+#ifndef _TARCH_MPI_INTEGERMESSAGE_H
+#define _TARCH_MPI_INTEGERMESSAGE_H
 
+#include "mpi.h"
 #include "config.h"
 #include "peano4/utils/Globals.h"
 #ifdef Parallel
@@ -13,8 +14,8 @@
 #include <string>
 #include <iostream>
 
-namespace peano4 {
-   namespace parallel {
+namespace tarch {
+   namespace mpi {
       class IntegerMessage;
       class IntegerMessagePacked;
    }
@@ -28,13 +29,13 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/02/2019 12:32
+ * @date   04/06/2019 21:30
  */
-class peano4::parallel::IntegerMessage { 
+class tarch::mpi::IntegerMessage { 
    
    public:
       
-      typedef peano4::parallel::IntegerMessagePacked Packed;
+      typedef tarch::mpi::IntegerMessagePacked Packed;
       
       struct PersistentRecords {
          /**
@@ -146,9 +147,9 @@ class peano4::parallel::IntegerMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/02/2019 12:32
+ * @date   04/06/2019 21:30
  */
-class peano4::parallel::IntegerMessagePacked { 
+class tarch::mpi::IntegerMessagePacked { 
    
    public:
       

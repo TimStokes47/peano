@@ -118,7 +118,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * @see exchangeDataBetweenTrees() for details.
      * @see split() For a description of the overall split process.
      */
-    void createNewTrees(const std::set< std::pair<int,int> >& newTrees);
+    void createNewTrees();
 
     void exchangeDataBetweenNewTreesAndRerunClones(peano4::grid::TraversalObserver& observer);
 
@@ -174,13 +174,14 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     void mergeStatistics();
 
     /**
-     * Runs through all local trees and gets the ids of all the splitting
-     * ranks from the local trees. We have to call this routine in-between
-     * the iteration that adds this rank as split-triggered and the routine
-     * that realises this split.
+     * I need this routine for technical reasons: Prior to the sweep of trees,
+     * I have to identify all of those trees which wanna merge with their
+     * workers. This is an analysis I have to do before I actually traverse
+     * any worker. Because of this traversal, more trees might denote their
+     * workers as joining, so if I query the joining field after the traversal,
+     * I intermix newly joining and old joining ranks.
      */
-    std::set<std::pair<int,int> > getLocalSplittingRanks() const;
-    std::set<int>                 getLocalRanksMergingWithWorkers() const;
+    std::set<int>                 getLocalTreesMergingWithWorkers() const;
 
     SpacetreeSet();
     SpacetreeSet(const SpacetreeSet& ) = delete;

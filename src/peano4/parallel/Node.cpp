@@ -1,7 +1,7 @@
 #include "Node.h"
 #include "StartTraversalMessage.h"
 #include "TreeManagementMessage.h"
-#include "IntegerMessage.h"
+
 
 #include "peano4/grid/Spacetree.h"
 #include "peano4/grid/PeanoCurve.h"
@@ -24,7 +24,6 @@ void peano4::parallel::Node::initMPIDatatypes() {
   #ifdef Parallel
   StartTraversalMessage::initDatatype();
   TreeManagementMessage::initDatatype();
-  IntegerMessage::initDatatype();
 
   peano4::grid::AutomatonState::initDatatype();
   peano4::grid::GridVertex::initDatatype();
@@ -36,7 +35,6 @@ void peano4::parallel::Node::shutdownMPIDatatypes() {
   #ifdef Parallel
   StartTraversalMessage::shutdownDatatype();
   TreeManagementMessage::shutdownDatatype();
-  IntegerMessage::shutdownDatatype();
 
   peano4::grid::AutomatonState::shutdownDatatype();
   peano4::grid::GridVertex::shutdownDatatype();

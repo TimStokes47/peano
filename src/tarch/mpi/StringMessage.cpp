@@ -1,86 +1,125 @@
-#include "peano4/parallel/IntegerMessage.h"
+#include "tarch/mpi/StringMessage.h"
 
-peano4::parallel::IntegerMessage::PersistentRecords::PersistentRecords() {
+tarch::mpi::StringMessage::PersistentRecords::PersistentRecords() {
    
 }
 
 
-peano4::parallel::IntegerMessage::IntegerMessage() {
+tarch::mpi::StringMessage::StringMessage() {
    
 }
 
 
-peano4::parallel::IntegerMessage::IntegerMessage(const PersistentRecords& persistentRecords):
+tarch::mpi::StringMessage::StringMessage(const PersistentRecords& persistentRecords):
 _persistentRecords() {
    
 }
 
 
-peano4::parallel::IntegerMessage::IntegerMessage(const int& value):
-_value(value) {
+tarch::mpi::StringMessage::StringMessage(const int& length, const tarch::la::Vector<MPI_MAX_NAME_STRING,short int>& data):
+_length(length),
+_data(data) {
    
 }
 
-peano4::parallel::IntegerMessage::~IntegerMessage() { }
+tarch::mpi::StringMessage::~StringMessage() { }
 
 
- int peano4::parallel::IntegerMessage::getValue() const  {
-   return _value;
+ int tarch::mpi::StringMessage::getLength() const  {
+   return _length;
 }
 
 
 
- void peano4::parallel::IntegerMessage::setValue(const int& value)  {
-   _value = value;
+ void tarch::mpi::StringMessage::setLength(const int& length)  {
+   _length = length;
+}
+
+
+
+ tarch::la::Vector<MPI_MAX_NAME_STRING,short int> tarch::mpi::StringMessage::getData() const  {
+   return _data;
+}
+
+
+
+ void tarch::mpi::StringMessage::setData(const tarch::la::Vector<MPI_MAX_NAME_STRING,short int>& data)  {
+   _data = (data);
+}
+
+
+
+ short int tarch::mpi::StringMessage::getData(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<MPI_MAX_NAME_STRING);
+   return _data[elementIndex];
+   
+}
+
+
+
+ void tarch::mpi::StringMessage::setData(int elementIndex, const short int& data)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<MPI_MAX_NAME_STRING);
+   _data[elementIndex]= data;
+   
 }
 
 
 
 
-std::string peano4::parallel::IntegerMessage::toString() const {
+std::string tarch::mpi::StringMessage::toString() const {
    std::ostringstream stringstr;
    toString(stringstr);
    return stringstr.str();
 }
 
-void peano4::parallel::IntegerMessage::toString (std::ostream& out) const {
+void tarch::mpi::StringMessage::toString (std::ostream& out) const {
    out << "("; 
-   out << "value:" << getValue();
+   out << "length:" << getLength();
+   out << ",";
+   out << "data:[";
+   for (int i = 0; i < MPI_MAX_NAME_STRING-1; i++) {
+      out << getData(i) << ",";
+   }
+   out << getData(MPI_MAX_NAME_STRING-1) << "]";
    out <<  ")";
 }
 
 
-peano4::parallel::IntegerMessage::PersistentRecords peano4::parallel::IntegerMessage::getPersistentRecords() const {
+tarch::mpi::StringMessage::PersistentRecords tarch::mpi::StringMessage::getPersistentRecords() const {
    return _persistentRecords;
 }
 
-peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert() const{
-   return IntegerMessagePacked(
-      getValue()
+tarch::mpi::StringMessagePacked tarch::mpi::StringMessage::convert() const{
+   return StringMessagePacked(
+      getLength(),
+      getData()
    );
 }
 
 #ifdef Parallel
-   tarch::logging::Log peano4::parallel::IntegerMessage::_log( "peano4::parallel::IntegerMessage" );
+   tarch::logging::Log tarch::mpi::StringMessage::_log( "tarch::mpi::StringMessage" );
    
-   MPI_Datatype peano4::parallel::IntegerMessage::Datatype = 0;
-   MPI_Datatype peano4::parallel::IntegerMessage::FullDatatype = 0;
+   MPI_Datatype tarch::mpi::StringMessage::Datatype = 0;
+   MPI_Datatype tarch::mpi::StringMessage::FullDatatype = 0;
    
    
-   void peano4::parallel::IntegerMessage::initDatatype() {
+   void tarch::mpi::StringMessage::initDatatype() {
       {
-         IntegerMessage dummyIntegerMessage[16];
+         StringMessage dummyStringMessage[16];
          
          #ifdef MPI2
-         const int Attributes = 1;
+         const int Attributes = 2;
          #else
-         const int Attributes = 1+2;
+         const int Attributes = 2+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
               MPI_LB,
             #endif
-              MPI_INT		 //value
+              MPI_INT		 //length
+            , MPI_SHORT		 //data
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -91,7 +130,8 @@ peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert
             #ifndef MPI2
             1, // lower bound
             #endif
-              1		 //value
+              1		 //length
+            , MPI_MAX_NAME_STRING		 //data
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -102,17 +142,23 @@ peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert
          int       currentAddress = -1;
          #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &disp[currentAddress]);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &disp[currentAddress]);
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]._value))), 		&disp[currentAddress] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._length))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]._value))), 		&disp[currentAddress] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._length))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._data[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._data[0]))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[1]))), &disp[currentAddress]);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[1]))), &disp[currentAddress]);
          #endif
          for (int i=1; i<Attributes; i++) {
          
@@ -120,9 +166,9 @@ peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert
          }
          MPI_Aint base;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &base);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
          #endif
          for (int i=0; i<Attributes; i++) {
          
@@ -133,29 +179,30 @@ peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert
          MPI_Datatype tmpType; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[1]))), &typeExtent);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &IntegerMessage::Datatype );
-         MPI_Type_commit( &IntegerMessage::Datatype );
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &StringMessage::Datatype );
+         MPI_Type_commit( &StringMessage::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerMessage::Datatype);
-         MPI_Type_commit( &IntegerMessage::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessage::Datatype);
+         MPI_Type_commit( &StringMessage::Datatype );
          #endif
          
       }
       {
-         IntegerMessage dummyIntegerMessage[16];
+         StringMessage dummyStringMessage[16];
          
          #ifdef MPI2
-         const int Attributes = 1;
+         const int Attributes = 2;
          #else
-         const int Attributes = 1+2;
+         const int Attributes = 2+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
               MPI_LB,
             #endif
-              MPI_INT		 //value
+              MPI_INT		 //length
+            , MPI_SHORT		 //data
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -166,7 +213,8 @@ peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert
             #ifndef MPI2
             1, // lower bound
             #endif
-              1		 //value
+              1		 //length
+            , MPI_MAX_NAME_STRING		 //data
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -177,17 +225,23 @@ peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert
          int       currentAddress = -1;
          #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &disp[currentAddress]);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &disp[currentAddress]);
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]._value))), 		&disp[currentAddress] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._length))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]._value))), 		&disp[currentAddress] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._length))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._data[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._data[0]))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[1]))), &disp[currentAddress]);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[1]))), &disp[currentAddress]);
          #endif
          for (int i=1; i<Attributes; i++) {
          
@@ -195,9 +249,9 @@ peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert
          }
          MPI_Aint base;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &base);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
          #endif
          for (int i=0; i<Attributes; i++) {
          
@@ -208,13 +262,13 @@ peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert
          MPI_Datatype tmpType; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[1]))), &typeExtent);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &IntegerMessage::FullDatatype );
-         MPI_Type_commit( &IntegerMessage::FullDatatype );
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &StringMessage::FullDatatype );
+         MPI_Type_commit( &StringMessage::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerMessage::FullDatatype);
-         MPI_Type_commit( &IntegerMessage::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessage::FullDatatype);
+         MPI_Type_commit( &StringMessage::FullDatatype );
          #endif
          
       }
@@ -222,13 +276,13 @@ peano4::parallel::IntegerMessagePacked peano4::parallel::IntegerMessage::convert
    }
    
    
-   void peano4::parallel::IntegerMessage::shutdownDatatype() {
-      MPI_Type_free( &IntegerMessage::Datatype );
-      MPI_Type_free( &IntegerMessage::FullDatatype );
+   void tarch::mpi::StringMessage::shutdownDatatype() {
+      MPI_Type_free( &StringMessage::Datatype );
+      MPI_Type_free( &StringMessage::FullDatatype );
       
    }
    
-   void peano4::parallel::IntegerMessage::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode) {
+   void tarch::mpi::StringMessage::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode) {
       // ============================= 
 // start injected snippet/aspect 
 // ============================= 
@@ -238,7 +292,7 @@ switch (mode) {
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::mpi::Rank::getInstance().getCommunicator()); 
        if  (result!=MPI_SUCCESS) { 
          std::ostringstream msg; 
-         msg << "was not able to send message peano4::parallel::IntegerMessage " 
+         msg << "was not able to send message tarch::mpi::StringMessage " 
              << toString() 
              << " to node " << destination 
              << ": " << tarch::mpi::MPIReturnValueToString(result); 
@@ -261,7 +315,7 @@ switch (mode) {
        ); 
        if  (result!=MPI_SUCCESS) {  
          std::ostringstream msg;  
-         msg << "was not able to send message peano4::parallel::IntegerMessage "  
+         msg << "was not able to send message tarch::mpi::StringMessage "  
              << toString() 
              << " to node " << destination 
              << ": " << tarch::mpi::MPIReturnValueToString(result);  
@@ -274,7 +328,7 @@ switch (mode) {
          result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
            std::ostringstream msg; 
-           msg << "testing for finished send task for peano4::parallel::IntegerMessage " 
+           msg << "testing for finished send task for tarch::mpi::StringMessage " 
                << toString() 
                << " sent to node " << destination 
                << " failed: " << tarch::mpi::MPIReturnValueToString(result); 
@@ -286,7 +340,7 @@ switch (mode) {
            (!triggeredTimeoutWarning) 
          ) { 
            tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
-             "peano4::parallel::IntegerMessage", 
+             "tarch::mpi::StringMessage", 
              "send(int)", destination,tag,1 
            ); 
            triggeredTimeoutWarning = true; 
@@ -296,7 +350,7 @@ switch (mode) {
            (clock()>timeOutShutdown) 
          ) { 
            tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
-             "peano4::parallel::IntegerMessage", 
+             "tarch::mpi::StringMessage", 
              "send(int)", destination,tag,1 
            ); 
          } 
@@ -318,7 +372,7 @@ switch (mode) {
    
    
    
-   void peano4::parallel::IntegerMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode) {
+   void tarch::mpi::StringMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode) {
       // ============================= 
 // start injected snippet/aspect 
 // ============================= 
@@ -329,7 +383,7 @@ switch (mode) {
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessage from node " 
+        msg << "failed to start to receive tarch::mpi::StringMessage from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -349,7 +403,7 @@ switch (mode) {
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessage from node " 
+        msg << "failed to start to receive tarch::mpi::StringMessage from rank " 
              << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -363,7 +417,7 @@ switch (mode) {
           (!triggeredTimeoutWarning) 
         ) { 
           tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
-            "peano4::parallel::IntegerMessage", 
+            "tarch::mpi::StringMessage", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
@@ -373,7 +427,7 @@ switch (mode) {
           (clock()>timeOutShutdown) 
         ) { 
           tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
-            "peano4::parallel::IntegerMessage", 
+            "tarch::mpi::StringMessage", 
             "receive(int)", source,tag,1 
           ); 
         } 
@@ -381,7 +435,7 @@ switch (mode) {
         result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
         if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
-          msg << "testing for finished receive task for peano4::parallel::IntegerMessage failed: " 
+          msg << "testing for finished receive task for tarch::mpi::StringMessage failed: " 
               << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
@@ -397,7 +451,7 @@ switch (mode) {
       int result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
        if (result!=MPI_SUCCESS) { 
         std::ostringstream msg; 
-        msg << "testing for finished receive task for peano4::parallel::IntegerMessage failed: " 
+        msg << "testing for finished receive task for tarch::mpi::StringMessage failed: " 
             << tarch::mpi::MPIReturnValueToString(result); 
         _log.error("receive(int)", msg.str() ); 
       } 
@@ -410,7 +464,7 @@ switch (mode) {
           (!triggeredTimeoutWarning) 
         ) { 
           tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
-            "peano4::parallel::IntegerMessage", 
+            "tarch::mpi::StringMessage", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
@@ -420,7 +474,7 @@ switch (mode) {
           (clock()>timeOutShutdown) 
         ) { 
           tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
-            "peano4::parallel::IntegerMessage", 
+            "tarch::mpi::StringMessage", 
             "receive(int)", source,tag,1 
           ); 
         } 
@@ -428,7 +482,7 @@ switch (mode) {
         result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
-          msg << "testing for finished receive task for peano4::parallel::IntegerMessage failed: " 
+          msg << "testing for finished receive task for tarch::mpi::StringMessage failed: " 
               << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
@@ -436,7 +490,7 @@ switch (mode) {
       result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessage from node " 
+        msg << "failed to start to receive tarch::mpi::StringMessage from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -453,7 +507,7 @@ switch (mode) {
    
    
    
-   bool peano4::parallel::IntegerMessage::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
+   bool tarch::mpi::StringMessage::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
       MPI_Status status;
       int  flag        = 0;
       MPI_Iprobe(
@@ -474,7 +528,7 @@ switch (mode) {
       
    }
    
-   int peano4::parallel::IntegerMessage::getSenderRank() const {
+   int tarch::mpi::StringMessage::getSenderRank() const {
       assertion( _senderDestinationRank!=-1 );
       return _senderDestinationRank;
       
@@ -482,87 +536,126 @@ switch (mode) {
 #endif
 
 
-peano4::parallel::IntegerMessagePacked::PersistentRecords::PersistentRecords() {
+tarch::mpi::StringMessagePacked::PersistentRecords::PersistentRecords() {
    
 }
 
 
-peano4::parallel::IntegerMessagePacked::IntegerMessagePacked() {
+tarch::mpi::StringMessagePacked::StringMessagePacked() {
    
 }
 
 
-peano4::parallel::IntegerMessagePacked::IntegerMessagePacked(const PersistentRecords& persistentRecords):
+tarch::mpi::StringMessagePacked::StringMessagePacked(const PersistentRecords& persistentRecords):
 _persistentRecords() {
    
 }
 
 
-peano4::parallel::IntegerMessagePacked::IntegerMessagePacked(const int& value):
-_value(value) {
+tarch::mpi::StringMessagePacked::StringMessagePacked(const int& length, const tarch::la::Vector<MPI_MAX_NAME_STRING,short int>& data):
+_length(length),
+_data(data) {
    
 }
 
-peano4::parallel::IntegerMessagePacked::~IntegerMessagePacked() { }
+tarch::mpi::StringMessagePacked::~StringMessagePacked() { }
 
 
- int peano4::parallel::IntegerMessagePacked::getValue() const  {
-   return _value;
+ int tarch::mpi::StringMessagePacked::getLength() const  {
+   return _length;
 }
 
 
 
- void peano4::parallel::IntegerMessagePacked::setValue(const int& value)  {
-   _value = value;
+ void tarch::mpi::StringMessagePacked::setLength(const int& length)  {
+   _length = length;
+}
+
+
+
+ tarch::la::Vector<MPI_MAX_NAME_STRING,short int> tarch::mpi::StringMessagePacked::getData() const  {
+   return _data;
+}
+
+
+
+ void tarch::mpi::StringMessagePacked::setData(const tarch::la::Vector<MPI_MAX_NAME_STRING,short int>& data)  {
+   _data = (data);
+}
+
+
+
+ short int tarch::mpi::StringMessagePacked::getData(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<MPI_MAX_NAME_STRING);
+   return _data[elementIndex];
+   
+}
+
+
+
+ void tarch::mpi::StringMessagePacked::setData(int elementIndex, const short int& data)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<MPI_MAX_NAME_STRING);
+   _data[elementIndex]= data;
+   
 }
 
 
 
 
-std::string peano4::parallel::IntegerMessagePacked::toString() const {
+std::string tarch::mpi::StringMessagePacked::toString() const {
    std::ostringstream stringstr;
    toString(stringstr);
    return stringstr.str();
 }
 
-void peano4::parallel::IntegerMessagePacked::toString (std::ostream& out) const {
+void tarch::mpi::StringMessagePacked::toString (std::ostream& out) const {
    out << "("; 
-   out << "value:" << getValue();
+   out << "length:" << getLength();
+   out << ",";
+   out << "data:[";
+   for (int i = 0; i < MPI_MAX_NAME_STRING-1; i++) {
+      out << getData(i) << ",";
+   }
+   out << getData(MPI_MAX_NAME_STRING-1) << "]";
    out <<  ")";
 }
 
 
-peano4::parallel::IntegerMessagePacked::PersistentRecords peano4::parallel::IntegerMessagePacked::getPersistentRecords() const {
+tarch::mpi::StringMessagePacked::PersistentRecords tarch::mpi::StringMessagePacked::getPersistentRecords() const {
    return _persistentRecords;
 }
 
-peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert() const{
-   return IntegerMessage(
-      getValue()
+tarch::mpi::StringMessage tarch::mpi::StringMessagePacked::convert() const{
+   return StringMessage(
+      getLength(),
+      getData()
    );
 }
 
 #ifdef Parallel
-   tarch::logging::Log peano4::parallel::IntegerMessagePacked::_log( "peano4::parallel::IntegerMessagePacked" );
+   tarch::logging::Log tarch::mpi::StringMessagePacked::_log( "tarch::mpi::StringMessagePacked" );
    
-   MPI_Datatype peano4::parallel::IntegerMessagePacked::Datatype = 0;
-   MPI_Datatype peano4::parallel::IntegerMessagePacked::FullDatatype = 0;
+   MPI_Datatype tarch::mpi::StringMessagePacked::Datatype = 0;
+   MPI_Datatype tarch::mpi::StringMessagePacked::FullDatatype = 0;
    
    
-   void peano4::parallel::IntegerMessagePacked::initDatatype() {
+   void tarch::mpi::StringMessagePacked::initDatatype() {
       {
-         IntegerMessagePacked dummyIntegerMessagePacked[16];
+         StringMessagePacked dummyStringMessagePacked[16];
          
          #ifdef MPI2
-         const int Attributes = 1;
+         const int Attributes = 2;
          #else
-         const int Attributes = 1+2;
+         const int Attributes = 2+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
               MPI_LB,
             #endif
-              MPI_INT		 //value
+              MPI_INT		 //length
+            , MPI_SHORT		 //data
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -573,7 +666,8 @@ peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert
             #ifndef MPI2
             1, // lower bound
             #endif
-              1		 //value
+              1		 //length
+            , MPI_MAX_NAME_STRING		 //data
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -584,17 +678,23 @@ peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert
          int       currentAddress = -1;
          #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &disp[currentAddress]);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &disp[currentAddress]);
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]._value))), 		&disp[currentAddress] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._length))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]._value))), 		&disp[currentAddress] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._length))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._data[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._data[0]))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[1]))), &disp[currentAddress]);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[1]))), &disp[currentAddress]);
          #endif
          for (int i=1; i<Attributes; i++) {
          
@@ -602,9 +702,9 @@ peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert
          }
          MPI_Aint base;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &base);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
          #endif
          for (int i=0; i<Attributes; i++) {
          
@@ -615,29 +715,30 @@ peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert
          MPI_Datatype tmpType; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[1]))), &typeExtent);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &IntegerMessagePacked::Datatype );
-         MPI_Type_commit( &IntegerMessagePacked::Datatype );
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &StringMessagePacked::Datatype );
+         MPI_Type_commit( &StringMessagePacked::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerMessagePacked::Datatype);
-         MPI_Type_commit( &IntegerMessagePacked::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessagePacked::Datatype);
+         MPI_Type_commit( &StringMessagePacked::Datatype );
          #endif
          
       }
       {
-         IntegerMessagePacked dummyIntegerMessagePacked[16];
+         StringMessagePacked dummyStringMessagePacked[16];
          
          #ifdef MPI2
-         const int Attributes = 1;
+         const int Attributes = 2;
          #else
-         const int Attributes = 1+2;
+         const int Attributes = 2+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
               MPI_LB,
             #endif
-              MPI_INT		 //value
+              MPI_INT		 //length
+            , MPI_SHORT		 //data
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -648,7 +749,8 @@ peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert
             #ifndef MPI2
             1, // lower bound
             #endif
-              1		 //value
+              1		 //length
+            , MPI_MAX_NAME_STRING		 //data
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -659,17 +761,23 @@ peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert
          int       currentAddress = -1;
          #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &disp[currentAddress]);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &disp[currentAddress]);
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]._value))), 		&disp[currentAddress] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._length))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]._value))), 		&disp[currentAddress] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._length))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._data[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._data[0]))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[1]))), &disp[currentAddress]);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[1]))), &disp[currentAddress]);
          #endif
          for (int i=1; i<Attributes; i++) {
          
@@ -677,9 +785,9 @@ peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert
          }
          MPI_Aint base;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &base);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
          #endif
          for (int i=0; i<Attributes; i++) {
          
@@ -690,13 +798,13 @@ peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert
          MPI_Datatype tmpType; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[1]))), &typeExtent);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &IntegerMessagePacked::FullDatatype );
-         MPI_Type_commit( &IntegerMessagePacked::FullDatatype );
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &StringMessagePacked::FullDatatype );
+         MPI_Type_commit( &StringMessagePacked::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerMessagePacked::FullDatatype);
-         MPI_Type_commit( &IntegerMessagePacked::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessagePacked::FullDatatype);
+         MPI_Type_commit( &StringMessagePacked::FullDatatype );
          #endif
          
       }
@@ -704,13 +812,13 @@ peano4::parallel::IntegerMessage peano4::parallel::IntegerMessagePacked::convert
    }
    
    
-   void peano4::parallel::IntegerMessagePacked::shutdownDatatype() {
-      MPI_Type_free( &IntegerMessagePacked::Datatype );
-      MPI_Type_free( &IntegerMessagePacked::FullDatatype );
+   void tarch::mpi::StringMessagePacked::shutdownDatatype() {
+      MPI_Type_free( &StringMessagePacked::Datatype );
+      MPI_Type_free( &StringMessagePacked::FullDatatype );
       
    }
    
-   void peano4::parallel::IntegerMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode) {
+   void tarch::mpi::StringMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode) {
       // ============================= 
 // start injected snippet/aspect 
 // ============================= 
@@ -720,7 +828,7 @@ switch (mode) {
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::mpi::Rank::getInstance().getCommunicator()); 
        if  (result!=MPI_SUCCESS) { 
          std::ostringstream msg; 
-         msg << "was not able to send message peano4::parallel::IntegerMessagePacked " 
+         msg << "was not able to send message tarch::mpi::StringMessagePacked " 
              << toString() 
              << " to node " << destination 
              << ": " << tarch::mpi::MPIReturnValueToString(result); 
@@ -743,7 +851,7 @@ switch (mode) {
        ); 
        if  (result!=MPI_SUCCESS) {  
          std::ostringstream msg;  
-         msg << "was not able to send message peano4::parallel::IntegerMessagePacked "  
+         msg << "was not able to send message tarch::mpi::StringMessagePacked "  
              << toString() 
              << " to node " << destination 
              << ": " << tarch::mpi::MPIReturnValueToString(result);  
@@ -756,7 +864,7 @@ switch (mode) {
          result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
            std::ostringstream msg; 
-           msg << "testing for finished send task for peano4::parallel::IntegerMessagePacked " 
+           msg << "testing for finished send task for tarch::mpi::StringMessagePacked " 
                << toString() 
                << " sent to node " << destination 
                << " failed: " << tarch::mpi::MPIReturnValueToString(result); 
@@ -768,7 +876,7 @@ switch (mode) {
            (!triggeredTimeoutWarning) 
          ) { 
            tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
-             "peano4::parallel::IntegerMessagePacked", 
+             "tarch::mpi::StringMessagePacked", 
              "send(int)", destination,tag,1 
            ); 
            triggeredTimeoutWarning = true; 
@@ -778,7 +886,7 @@ switch (mode) {
            (clock()>timeOutShutdown) 
          ) { 
            tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
-             "peano4::parallel::IntegerMessagePacked", 
+             "tarch::mpi::StringMessagePacked", 
              "send(int)", destination,tag,1 
            ); 
          } 
@@ -800,7 +908,7 @@ switch (mode) {
    
    
    
-   void peano4::parallel::IntegerMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode) {
+   void tarch::mpi::StringMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode) {
       // ============================= 
 // start injected snippet/aspect 
 // ============================= 
@@ -811,7 +919,7 @@ switch (mode) {
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessagePacked from node " 
+        msg << "failed to start to receive tarch::mpi::StringMessagePacked from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -831,7 +939,7 @@ switch (mode) {
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessagePacked from node " 
+        msg << "failed to start to receive tarch::mpi::StringMessagePacked from rank " 
              << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -845,7 +953,7 @@ switch (mode) {
           (!triggeredTimeoutWarning) 
         ) { 
           tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
-            "peano4::parallel::IntegerMessagePacked", 
+            "tarch::mpi::StringMessagePacked", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
@@ -855,7 +963,7 @@ switch (mode) {
           (clock()>timeOutShutdown) 
         ) { 
           tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
-            "peano4::parallel::IntegerMessagePacked", 
+            "tarch::mpi::StringMessagePacked", 
             "receive(int)", source,tag,1 
           ); 
         } 
@@ -863,7 +971,7 @@ switch (mode) {
         result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
         if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
-          msg << "testing for finished receive task for peano4::parallel::IntegerMessagePacked failed: " 
+          msg << "testing for finished receive task for tarch::mpi::StringMessagePacked failed: " 
               << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
@@ -879,7 +987,7 @@ switch (mode) {
       int result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
        if (result!=MPI_SUCCESS) { 
         std::ostringstream msg; 
-        msg << "testing for finished receive task for peano4::parallel::IntegerMessagePacked failed: " 
+        msg << "testing for finished receive task for tarch::mpi::StringMessagePacked failed: " 
             << tarch::mpi::MPIReturnValueToString(result); 
         _log.error("receive(int)", msg.str() ); 
       } 
@@ -892,7 +1000,7 @@ switch (mode) {
           (!triggeredTimeoutWarning) 
         ) { 
           tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
-            "peano4::parallel::IntegerMessagePacked", 
+            "tarch::mpi::StringMessagePacked", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
@@ -902,7 +1010,7 @@ switch (mode) {
           (clock()>timeOutShutdown) 
         ) { 
           tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
-            "peano4::parallel::IntegerMessagePacked", 
+            "tarch::mpi::StringMessagePacked", 
             "receive(int)", source,tag,1 
           ); 
         } 
@@ -910,7 +1018,7 @@ switch (mode) {
         result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
-          msg << "testing for finished receive task for peano4::parallel::IntegerMessagePacked failed: " 
+          msg << "testing for finished receive task for tarch::mpi::StringMessagePacked failed: " 
               << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
@@ -918,7 +1026,7 @@ switch (mode) {
       result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessagePacked from node " 
+        msg << "failed to start to receive tarch::mpi::StringMessagePacked from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -935,7 +1043,7 @@ switch (mode) {
    
    
    
-   bool peano4::parallel::IntegerMessagePacked::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
+   bool tarch::mpi::StringMessagePacked::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
       MPI_Status status;
       int  flag        = 0;
       MPI_Iprobe(
@@ -956,7 +1064,7 @@ switch (mode) {
       
    }
    
-   int peano4::parallel::IntegerMessagePacked::getSenderRank() const {
+   int tarch::mpi::StringMessagePacked::getSenderRank() const {
       assertion( _senderDestinationRank!=-1 );
       return _senderDestinationRank;
       

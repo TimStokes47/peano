@@ -14,6 +14,9 @@
 #include "tarch/plotter/griddata/VTUTimeSeriesWriter.h"
 
 
+#include "../config.h"
+
+
 namespace peano4 {
   namespace grid {
     class TraversalVTKPlotter;
@@ -28,11 +31,16 @@ namespace peano4 {
  * as a discontinuous unstructured mesh. It is not particular sophisticated.
  *
  * The plotter can write whole time series. For this, you have to invoke
- * startNewSnapshot() prior to each plot.
+ * startNewSnapshot() prior to each plot. It is the latter which also ensures
+ * that parallel plots in an MPI environment do work.
  */
 class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver {
   protected:
     static tarch::logging::Log  _log;
+
+    #ifdef Parallel
+    static int _plotterMessageTag;
+    #endif
 
     const std::string                                                                _filename;
     const int                                                                        _spacetreeId;
@@ -56,7 +64,15 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*  _coreWriter;
     tarch::plotter::griddata::VTUTimeSeriesWriter                                    _timeSeriesWriter;
 
+    /**
+     * Whenever I clone this observer, it enters its filename into this vector.
+     * This way, I know per rank which trees have written something. Whenever I
+     * dump a time series file, this thing is cleared as we restart to "collect"
+     * dumps.
+     */
     std::vector<std::string>                                                         _clonedSpacetreeIds;
+
+    std::string getFilename( int spacetreeId ) const;
   public:
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file
@@ -67,46 +83,52 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     TraversalVTKPlotter( const std::string& filename, int treeId=-1 );
     virtual ~TraversalVTKPlotter();
 
-	void beginTraversal(
+    void beginTraversal(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;
 
-	void endTraversal(
+    void endTraversal(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;
 
-	void enterCell(
+    void enterCell(
       const GridTraversalEvent&  event
     ) override;
 
-	void leaveCell(
+    void leaveCell(
       const GridTraversalEvent&  event
     ) override;
 
-	/**
-	 * This is the main plotter. In the parallel case, I will have to check
-	 * whether I'm on the global rank as well.
-	 *
-	 * <h2> Thread safety </h2>
-	 *
-	 * As clone() might be called by multiple threads in parallel, I need some
-	 * semaphore mechanism.
-	 *
-	 * <h2> Inheriting </h2>
-	 *
-	 * If you inherit from the plotter, please call updateMetaFile() whenever
-	 * you clone. However, do this only on spacetreeId==-1, i.e. on the
-	 * original observer.
-	 */
-	TraversalObserver* clone(int spacetreeId) override;
+/**
+ * This is the main plotter. In the parallel case, I will have to check
+ * whether I'm on the global rank as well.
+ *
+ * <h2> Thread safety </h2>
+ *
+ * As clone() might be called by multiple threads in parallel, I need some
+ * semaphore mechanism.
+ *
+ * <h2> Inheriting </h2>
+ *
+ * If you inherit from the plotter, please call updateMetaFile() whenever
+ * you clone. However, do this only on spacetreeId==-1, i.e. on the
+ * original observer.
+     */
+    TraversalObserver* clone(int spacetreeId) override;
 
-	/**
-	 * @return Name of the meta file that has to link to all of the actual data files
-	 */
-	void startNewSnapshot(bool isParallelRun);
-	std::vector< GridControlEvent > getGridControlEvents() override;
+    /**
+     * This routine has to be called prior to the traversal call on the
+     * spacetree set. In an MPI environment, it has to be called on all
+     * ranks.
+     */
+    void startNewSnapshot(bool isParallelRun);
+
+    /**
+     * Obviously empty for this particular observer.
+     */
+    std::vector< GridControlEvent > getGridControlEvents() override;
 };
 
 #endif

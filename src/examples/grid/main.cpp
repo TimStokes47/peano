@@ -197,16 +197,16 @@ void runParallel() {
     for (int i=0; i<50; i++) {
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
-      if (i==2) {
+      if (i==3) {
         peano4::parallel::SpacetreeSet::getInstance().split(
           0,
-		  peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/2/3,
-		  std::min(1,tarch::mpi::Rank::getInstance().getNumberOfRanks()-1)
-		);
+          peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/2/3,
+          std::min(1,tarch::mpi::Rank::getInstance().getNumberOfRanks()-1)
+        );
         peano4::parallel::SpacetreeSet::getInstance().split(
           0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/2/3,
-		  std::min(1,tarch::mpi::Rank::getInstance().getNumberOfRanks()-1)
-		);
+          std::min(1,tarch::mpi::Rank::getInstance().getNumberOfRanks()-1)
+        );
       }
 
       #if PeanoDebug>0
@@ -225,12 +225,16 @@ void runParallel() {
     }
   }
   else {
-	while (peano4::parallel::Node::getInstance().continueToRun()) {
+    while (peano4::parallel::Node::getInstance().continueToRun()) {
       assertionEquals( peano4::parallel::Node::getInstance().getCurrentProgramStep(), 14 );
 
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+
+      #if PeanoDebug>0
+      emptyObserver.startNewSnapshot(true);
+      #endif
       peano4::parallel::SpacetreeSet::getInstance().traverse(emptyObserver);
-	}
+    }
   }
 }
 

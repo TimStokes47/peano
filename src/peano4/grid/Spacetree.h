@@ -163,6 +163,7 @@ class peano4::grid::Spacetree {
     typedef std::map< int, int >  SplitSpecification;
     SplitSpecification   _splitTriggered;
     SplitSpecification   _splitting;
+    SplitSpecification   _hasSplit;
 
     constexpr static int NoJoin = -1;
     /**
@@ -171,6 +172,7 @@ class peano4::grid::Spacetree {
      */
     std::set< int >      _joinTriggered;
     std::set< int >      _joining;
+    std::set< int >      _hasJoined;
 
     std::map< int, peano4::stacks::GridVertexStack >    _vertexStack;
 
@@ -691,10 +693,10 @@ class peano4::grid::Spacetree {
      */
     Spacetree(
       int newId,
-	  int masterId,
-	  const tarch::la::Vector<Dimensions,double>&  offset,
-	  const tarch::la::Vector<Dimensions,double>&  width,
-	  bool  traversalInverted
+      int masterId,
+      const tarch::la::Vector<Dimensions,double>&  offset,
+      const tarch::la::Vector<Dimensions,double>&  width,
+      bool  traversalInverted
 	);
 
     /**
@@ -760,11 +762,6 @@ class peano4::grid::Spacetree {
     void traverse(TraversalObserver& observer, bool calledFromSpacetreeSet = false);
 
     GridStatistics getGridStatistics() const;
-
-    /**
-     * @return Ids of ranks that are locally labelled as splitting
-     */
-    std::set<int> getSplittingTreeIds() const;
 
     std::string toString() const;
 

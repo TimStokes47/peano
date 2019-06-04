@@ -63,7 +63,7 @@ peano4::grid::TraversalObserver* examples::grid::MyObserver::clone(int spacetree
   MyObserver* result = new MyObserver( spacetreeId, _iterationCounter );
 
   if (_spacetreeId!=-1) {
-	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
+    assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
   }
   else {
     updateMetaFile(spacetreeId);
