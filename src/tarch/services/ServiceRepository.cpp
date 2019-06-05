@@ -51,7 +51,7 @@ bool tarch::services::ServiceRepository::hasService( Service* service ) const {
 void tarch::services::ServiceRepository::receiveDanglingMessages() {
   tarch::multicore::RecursiveLock lock(Service::receiveDanglingMessagesSemaphore, false);
   
-  if(lock.try_lock()) {
+  if(lock.tryLock()) {
     for (
         ServiceContainer::iterator p = _services.begin();
         p != _services.end();

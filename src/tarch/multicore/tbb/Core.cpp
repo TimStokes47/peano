@@ -32,7 +32,7 @@ void tarch::multicore::Core::pinThreads(bool value) {
   _pinningObserver->observe(value);
 }
 
-int tarch::multicore::Core::get_num_thread() {
+int tarch::multicore::Core::getThreadNum() {
   return _threadIdMapper.getThreadId();
 }
 
@@ -44,9 +44,6 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
 
 
 void tarch::multicore::Core::shutDown() {
-#if defined(SharedTBB) && defined(Parallel)
-//  tarch::multicore::PerformanceMonitor::getInstance().stop();
-#endif
   jobs::terminateAllPendingBackgroundConsumerJobs();
 
   if (_pinningObserver!=nullptr) {

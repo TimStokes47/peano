@@ -45,7 +45,7 @@ class tarch::multicore::Core {
     ::tbb::global_control*      _globalStackSizeControl;
 
     PinningObserver*             _pinningObserver;
-    ThreadIdMapper				_threadIdMapper;
+    ThreadIdMapper		 _threadIdMapper;
   public:
     /**
  *   * @see Core header in super directory
@@ -112,7 +112,7 @@ class tarch::multicore::Core {
 
     void pinThreads(bool value);
 
-    int get_num_thread();
+    int getThreadNum();
 };
 
 

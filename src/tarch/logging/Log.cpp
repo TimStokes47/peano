@@ -117,7 +117,7 @@ std::string tarch::logging::Log::getMachineInformation() const {
   #endif
   
   #if defined (SharedTBB) || defined (SharedOMP)
-  message << ", core:"<<tarch::multicore::getCPUNumber()<<", tid:"<<tarch::multicore::Core::getInstance().get_num_thread();
+  message << ", core:"<<tarch::multicore::getCPUNumber()<<", tid:"<<tarch::multicore::Core::getInstance().getThreadNum();
   #endif
 
   return message.str();

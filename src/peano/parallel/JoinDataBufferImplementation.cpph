@@ -121,17 +121,6 @@ void peano::parallel::JoinDataBufferImplementation<DataType>::releaseMessages() 
   logTraceInWith4Arguments( "releaseMessages()", _currentElement, _totalNumberOfElements, _rank, _tag );
 
   #ifdef Parallel
-  /*if (_currentElement>0) {
-    const int result = MPI_Send(
-      _sendBuffer, _currentElement, _mpiDatatype, _rank, _tag,
-      tarch::parallel::Node::getInstance().getCommunicator()
-    );
-    if (result!=MPI_SUCCESS) {
-      logError( "releaseMessages()", "send of " << _currentElement << " message(s) failed: " << tarch::parallel::MPIReturnValueToString(result) );
-    }
-    logDebug( "releaseMessages()", "sent " << _currentElement << " message(s) to rank " << _rank );
-    _currentElement = 0;
-  }*/
   if (_currentElement>0) {
     MPI_Request * sendRequestHandle = new MPI_Request();
     int          flag = 0;  

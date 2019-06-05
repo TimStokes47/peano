@@ -80,13 +80,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
           p != ranks.end();
           p++
         ) {
-          if (
-              #ifdef noBoundaryExchangeWithGlobalMaster
-              !tarch::parallel::Node::getInstance().isGlobalMaster() &&
-              *p != tarch::parallel::Node::getInstance().getGlobalMasterRank() &&
-              #endif
-              !_state.isForkTriggeredForRank(*p) && !_state.isJoiningRank(*p)
-          ) {
+          if ( !_state.isForkTriggeredForRank(*p) && !_state.isJoiningRank(*p) ) {
             Vertex copy = _fineGridVertices[positionInVertexArray];
             _eventHandle.prepareSendToNeighbour(
               copy,

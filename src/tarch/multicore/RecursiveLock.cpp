@@ -19,7 +19,7 @@ tarch::multicore::RecursiveLock::~RecursiveLock() {
 }
 
 
-bool tarch::multicore::RecursiveLock::try_lock() {
+bool tarch::multicore::RecursiveLock::tryLock() {
   _lockIsAquired = _semaphore.tryEnterCriticalSection();
   return _lockIsAquired;
 }

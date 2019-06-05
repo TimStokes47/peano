@@ -4,7 +4,6 @@
 #include "peano/CommunicationSpecification.h"
 
 
-
 #include <set>
 
 
@@ -207,6 +206,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           workerState,
           state
         );
+
         peano::performanceanalysis::Analysis::getInstance().endToReceiveDataFromWorker(currentWorker);
       }
 

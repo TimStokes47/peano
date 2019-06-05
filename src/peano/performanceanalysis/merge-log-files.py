@@ -45,9 +45,7 @@ while timeStamp<sys.float_info.max:
       firstLineInCurrentFile = inputFiles[rank][0]
       m = re.search( searchPattern, firstLineInCurrentFile )
       if (m):
-        print m.group(1)
         currentTimeStamp       = float(m.group(1))
-        #print currentTimeStamp
         if currentTimeStamp < timeStamp:
           timeStamp                 = currentTimeStamp
           rankWithSmallestTimeStamp = rank
