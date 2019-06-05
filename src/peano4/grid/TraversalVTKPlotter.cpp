@@ -177,7 +177,7 @@ peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int s
 }
 
 
-void peano4::grid::TraversalVTKPlotter::startNewSnapshot(bool isParallelRun) {
+void peano4::grid::TraversalVTKPlotter::beginTraversalOnRank(bool isParallelRun) {
   _counter++;
 
 /*
@@ -227,6 +227,11 @@ assertionMsg(false,"not there yet; should use the new classes");
   }
 
   _clonedSpacetreeIds.clear();
+}
+
+
+void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
+  //_counter++;
 }
 
 

@@ -121,9 +121,11 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     /**
      * This routine has to be called prior to the traversal call on the
      * spacetree set. In an MPI environment, it has to be called on all
-     * ranks.
+     * ranks. So it is different to beginTraversal(). beginTraversal()
+     * is invoked per thread/per tree, while this one per rank.
      */
-    void startNewSnapshot(bool isParallelRun);
+    void beginTraversalOnRank(bool isParallelRun);
+    void endTraversalOnRank(bool isParallelRun);
 
     /**
      * Obviously empty for this particular observer.

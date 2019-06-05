@@ -48,9 +48,12 @@ void runSerial() {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
     #if PeanoDebug>0
-	emptyObserver.startNewSnapshot(false);
+	  emptyObserver.beginTraversalOnRank(false);
     #endif
     spacetree.traverse( emptyObserver );
+    #if PeanoDebug>0
+    emptyObserver.endTraversalOnRank(false);
+    #endif
 
     logInfo( "runSerial(...)", "refined vertices = " << spacetree.getGridStatistics().getNumberOfRefinedVertices() );
     logInfo( "runSerial(...)", "unrefined vertices = " << spacetree.getGridStatistics().getNumberOfUnrefinedVertices() );
@@ -68,161 +71,119 @@ void runSerial() {
 }
 
 
-void runMultithreaded() {
-  peano4::parallel::SpacetreeSet::getInstance().init(
-#if Dimensions==2
-    {0.0, 0.0},
-    {1.0, 1.0}
-#else
-    {0.0, 0.0, 0.0},
-    {1.0, 1.0, 1.0}
-#endif
-  );
+void updateDomainDecomposition() {
+  static int phase = 0;
 
-  examples::grid::MyObserver emptyObserver;
-
-  for (int i=0; i<1; i++) {
-	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-    #if PeanoDebug>0
-    emptyObserver.startNewSnapshot(true);
-    #endif
-    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-
-    logInfo( "runMultithreaded(...)", "refined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefinedVertices() );
-    logInfo( "runMultithreaded(...)", "unrefined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfUnrefinedVertices() );
-    logInfo( "runMultithreaded(...)", "refining vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefiningVertices() );
-    logInfo( "runMultithreaded(...)", "erasing vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfErasingVertices() );
-    logInfo( "runMultithreaded(...)", "local unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells());
-    logInfo( "runMultithreaded(...)", "local refined cell= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalRefinedCells() );
-    logInfo( "runMultithreaded(...)", "remote unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-    logInfo( "runMultithreaded(...)", "remote refined cells= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
+  if (phase==0) {
+    if (
+      peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>9
+      and
+      peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
+      and
+      peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
+    ) {
+      phase++;
+    }
   }
-
-  peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
-  peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
-
-  #if PeanoDebug>0
-  emptyObserver.startNewSnapshot(true);
-  #endif
-  peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-
-  while (
-    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4==0
-	or
-    not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4,0)
+  else if (
+    phase==1
+//    and
+//    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4>0
   ) {
-    #if PeanoDebug>0
-    emptyObserver.startNewSnapshot(true);
-    #endif
-    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+    /*
+    if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4,0) ) {
+      phase++;
+    }
+    */
   }
 
-  while (
-    not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
-  ) {
-    #if PeanoDebug>0
-    emptyObserver.startNewSnapshot(true);
-    #endif
-    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-  }
+/*
+    while (
+      not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
+    ) {
+      #if PeanoDebug>0
+      emptyObserver.startNewSnapshot(true);
+      #endif
+      peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+    }
 
-  while (
-    not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
-  ) {
-    #if PeanoDebug>0
-    emptyObserver.startNewSnapshot(true);
-    #endif
-    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-  }
+    while (
+      not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
+    ) {
+      #if PeanoDebug>0
+      emptyObserver.startNewSnapshot(true);
+      #endif
+      peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+    }
 
-  // @todo MPI
-  while (
-    not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3-5,0)
-  ) {
-    #if PeanoDebug>0
-    emptyObserver.startNewSnapshot(true);
-    #endif
-    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-  }
+    // @todo MPI
+    while (
+      not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3-5,0)
+    ) {
+      #if PeanoDebug>0
+      emptyObserver.startNewSnapshot(true);
+      #endif
+      peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+    }
 
-  while (
-    not peano4::parallel::SpacetreeSet::getInstance().split(1,10,0)
-  ) {
-    #if PeanoDebug>0
-    emptyObserver.startNewSnapshot(true);
-    #endif
-    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-  }
+    while (
+      not peano4::parallel::SpacetreeSet::getInstance().split(1,10,0)
+    ) {
+      #if PeanoDebug>0
+      emptyObserver.beginTraversalOnRank(true);
+      #endif
+      peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+    }
 
-  for (int i=0; i<100; i++) {
-    tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+*/
 
-    #if PeanoDebug>0
-    emptyObserver.startNewSnapshot(true);
-    #endif
-    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-
-    logInfo( "runMultithreaded(...)", "refined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefinedVertices() );
-    logInfo( "runMultithreaded(...)", "unrefined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfUnrefinedVertices() );
-    logInfo( "runMultithreaded(...)", "refining vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefiningVertices() );
-    logInfo( "runMultithreaded(...)", "erasing vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfErasingVertices() );
-    logInfo( "runMultithreaded(...)", "local unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells());
-    logInfo( "runMultithreaded(...)", "local refined cell = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalRefinedCells() );
-    logInfo( "runMultithreaded(...)", "remote unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-    logInfo( "runMultithreaded(...)", "remote refined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
-  }
-
-
-  peano4::grid::TraversalVTKPlotter plotterObserver( "grid-multithreaded" );
-  peano4::parallel::SpacetreeSet::getInstance().traverse( plotterObserver );
 }
 
 
 void runParallel() {
   peano4::parallel::SpacetreeSet::getInstance().init(
-	  #if Dimensions==2
-	    {0.0, 0.0},
-	    {1.0, 1.0}
-	  #else
-	    {0.0, 0.0, 0.0},
-	    {1.0, 1.0, 1.0}
+    #if Dimensions==2
+    {0.0, 0.0},
+    {1.0, 1.0}
+    #else
+    {0.0, 0.0, 0.0},
+    {1.0, 1.0, 1.0}
     #endif
   );
 
   examples::grid::MyObserver emptyObserver;
 
+  for (int i=0; i<100; i++) {
+	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+    #if PeanoDebug>0
+    emptyObserver.beginTraversalOnRank(true);
+    #endif
+    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+    #if PeanoDebug>0
+    emptyObserver.endTraversalOnRank(true);
+    #endif
+
+    logInfo( "runParallel(...)", "refined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefinedVertices() );
+    logInfo( "runParallel(...)", "unrefined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfUnrefinedVertices() );
+    logInfo( "runParallel(...)", "refining vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefiningVertices() );
+    logInfo( "runParallel(...)", "erasing vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfErasingVertices() );
+    logInfo( "runParallel(...)", "local unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells());
+    logInfo( "runParallel(...)", "local refined cell= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalRefinedCells() );
+    logInfo( "runParallel(...)", "remote unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+    logInfo( "runParallel(...)", "remote refined cells= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
+
+    updateDomainDecomposition();
+  }
+
+  peano4::grid::TraversalVTKPlotter plotterObserver( "grid-parallel" );
+  peano4::parallel::SpacetreeSet::getInstance().traverse( plotterObserver );
+}
+
+
+/*
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     peano4::parallel::Node::getInstance().setNextProgramStep(14);
 
-    for (int i=0; i<50; i++) {
-      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-
-      if (i==3) {
-        peano4::parallel::SpacetreeSet::getInstance().split(
-          0,
-          peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/2/3,
-          std::min(1,tarch::mpi::Rank::getInstance().getNumberOfRanks()-1)
-        );
-        peano4::parallel::SpacetreeSet::getInstance().split(
-          0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/2/3,
-          std::min(1,tarch::mpi::Rank::getInstance().getNumberOfRanks()-1)
-        );
-      }
-
-      #if PeanoDebug>0
-      emptyObserver.startNewSnapshot(true);
-      #endif
-      peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-
-      logInfo( "runParallel(...)", "refined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefinedVertices() );
-      logInfo( "runParallel(...)", "unrefined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfUnrefinedVertices() );
-      logInfo( "runParallel(...)", "refining vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefiningVertices() );
-      logInfo( "runParallel(...)", "erasing vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfErasingVertices() );
-      logInfo( "runParallel(...)", "local unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells());
-      logInfo( "runParallel(...)", "local refined cell = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalRefinedCells() );
-      logInfo( "runParallel(...)", "remote unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-      logInfo( "runParallel(...)", "remote refined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
-    }
   }
   else {
     while (peano4::parallel::Node::getInstance().continueToRun()) {
@@ -231,12 +192,17 @@ void runParallel() {
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
       #if PeanoDebug>0
-      emptyObserver.startNewSnapshot(true);
+      emptyObserver.beginTraversalOnRank(true);
       #endif
       peano4::parallel::SpacetreeSet::getInstance().traverse(emptyObserver);
+      #if PeanoDebug>0
+      emptyObserver.endTraversalOnRank(true);
+      #endif
     }
   }
 }
+
+*/
 
 
 int main(int argc, char** argv) {
@@ -261,15 +227,8 @@ int main(int argc, char** argv) {
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
   runTests();
-  #if defined(Parallel)
-  if (tarch::mpi::Rank::getInstance().getNumberOfRanks()==1) {
-    runMultithreaded();
-  }
-  else {
-    runParallel();
-  }
-  #elif defined(SharedMemoryParallelisation)
-  runMultithreaded();
+  #if defined(Parallel) or defined(SharedMemoryParallelisation)
+  runParallel();
   #else
   runSerial();
   #endif
