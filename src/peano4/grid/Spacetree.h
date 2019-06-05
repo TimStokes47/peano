@@ -294,6 +294,14 @@ class peano4::grid::Spacetree {
       GridVertex            vertices[TwoPowerD]
     ) const;
 
+    /**
+     * Could also be called areAllVerticesPersistent() in the Peano
+     * terminology.
+     */
+    bool areAllVerticesNonHanging(
+      GridVertex            vertices[TwoPowerD]
+    ) const;
+
     bool cellIsMergeCandidate(
       GridVertex  coarseGridVertices[TwoPowerD],
       GridVertex  fineGridVertices[TwoPowerD]
@@ -444,7 +452,10 @@ class peano4::grid::Spacetree {
      * exactly 9 splits for example (2d) and thus, the parent of these 9
      * guys should go to the remote node, too.
      *
-     * @todo Comment on join
+     * <h2> Count down the split counter </h2>
+     *
+     *
+     *
      */
     void splitOrJoinCell(
       GridVertex                                vertex[TwoPowerD],

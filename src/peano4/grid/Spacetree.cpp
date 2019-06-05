@@ -112,6 +112,17 @@ bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(
 }
 
 
+bool peano4::grid::Spacetree::areAllVerticesNonHanging(
+  GridVertex            vertices[TwoPowerD]
+) const {
+  bool result = true;
+  dfor2(k)
+    result &= (vertices[kScalar].getState()!=GridVertex::State::HangingVertex);
+  enddforx
+  return result;
+}
+
+
 bool peano4::grid::Spacetree::areAllVerticesRefined(
   GridVertex            vertices[TwoPowerD]
 ) const {
@@ -1646,11 +1657,24 @@ void peano4::grid::Spacetree::splitOrJoinCell(
   GridVertex  coarseGridVertices[TwoPowerD],
   GridVertex  fineGridVertices[TwoPowerD]
 ) {
+  static int newlyCreatedCells = 0;
+
   if (not _splitTriggered.empty()) {
-    bool isSplitCandidate =
+    const bool isSplitCandidate =
       isSpacetreeNodeLocal(fineGridVertices) and
       isSpacetreeNodeLocal(coarseGridVertices) and
-      areAllVerticesRefined(coarseGridVertices);
+      areAllVerticesNonHanging(fineGridVertices);
+
+    // @todo raus
+#if PeanoDebug>0
+    if (fineGridVertices[0].getLevel()==2) {
+      logError( "splitOrJoin(...)", "a=" << isSpacetreeNodeLocal(fineGridVertices) );
+      logError( "splitOrJoin(...)", "b=" << isSpacetreeNodeLocal(coarseGridVertices) );
+      logError( "splitOrJoin(...)", "c=" << areAllVerticesRefined(coarseGridVertices) );
+      for (int i=0; i<4; i++)
+      logError( "splitOrJoin(...)", "fineGridVertices=" << fineGridVertices[i].toString() );
+    }
+#endif
 
     if (isSpacetreeNodeRefined(fineGridVertices)) {
       assertion1( _splittedCells.size()>=ThreePowerD, _splittedCells.size() );
@@ -1668,7 +1692,8 @@ void peano4::grid::Spacetree::splitOrJoinCell(
         updateVertexRanksWithinCell( fineGridVertices, reducedMarker );
       }
       else {
-        reducedMarker = -1;
+        reducedMarker     = -1;
+        newlyCreatedCells =  0;
       }
 
       _splittedCells.push_back(reducedMarker);
@@ -1679,10 +1704,13 @@ void peano4::grid::Spacetree::splitOrJoinCell(
       if (isSplitCandidate and targetSpacetreeId>=0) {
         updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
 
-        static int newlyCreatedCells = 0;
+        if ( getCellType( fineGridVertices )!=CellType::New ) {
+          updateSplittingCounter( targetSpacetreeId );
+        }
+
         newlyCreatedCells++;
 
-        if ( getCellType( fineGridVertices )!=CellType::New or newlyCreatedCells%ThreePowerD==0) {
+        if ( getCellType( fineGridVertices )!=CellType::New or newlyCreatedCells%ThreePowerD==ThreePowerD-1) {
           updateSplittingCounter( targetSpacetreeId );
           newlyCreatedCells = 0;
         }
