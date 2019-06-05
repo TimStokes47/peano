@@ -343,13 +343,13 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
 }
 
 
-bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities) {
-  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs, priorities);
+bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
+  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs, priorities, isCalledOnMasterThread);
 }
 
 
-bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities ) {
-  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs, priorities);
+bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
+  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs, priorities, isCalledOnMasterThread);
 }
 
 
@@ -426,7 +426,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int 
       result = true;
 
       if (priorities<=0 or myTask->getPriority()==priorities) {
-        bool reschedule = myTask->run();
+        bool reschedule = myTask->run(isCalledOnMasterThread);
         if (reschedule) {
           rescheduledJobs.push_back( myTask );
         }
