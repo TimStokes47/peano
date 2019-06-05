@@ -7,13 +7,25 @@
 #include "tarch/Assertions.h"
 #include "tarch/multicore/tbb/Jobs.h"
 
+#include "peano/performanceanalysis/Analysis.h"
 
 #include <vector>
 #include <limits>
 #include <cmath>
 
+//#include <ittnotify.h>
+#include "tarch/timing/Watch.h"
+
+#ifdef USE_ITAC
+#include "VT.h"
+#endif
 
 
+//__itt_domain* domain = __itt_domain_create("multicore.tbb.jobs");
+//__itt_string_handle* handleTask = __itt_string_handle_create("process_task");
+
+//tarch::logging::Log tarch::multicore::jobs::internal::_log( "tarch::multicore::jobs::internal" );
+//tarch::logging::Log tarch::multicore::jobs::_log( "tarch::multicore::jobs" );
 
 
 tbb::atomic<int>                              tarch::multicore::jobs::internal::_numberOfRunningJobConsumerTasks(0);
@@ -94,6 +106,16 @@ void tarch::multicore::jobs::internal::JobConsumerTask::enqueue() {
 
 
 tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
+
+#ifdef USE_ITAC
+   // static tarch::logging::Log _log( "tarch::multicore::jobs::internal" );
+  /*  static int event_execute = -1;
+    std::string event_execute_name = "execute_consumer";
+    if(event_execute == -1)
+        int ierr = VT_funcdef(event_execute_name.c_str(), VT_NOCLASS, &event_execute);
+    VT_begin(event_execute);*/
+#endif
+
   bool hasProcessedJobs = false;
 
   #if TBB_USE_THREADING_TOOLS>=1
@@ -154,6 +176,9 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize = internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize*0.9;
   }
 
+//#ifdef USE_ITAC
+//  VT_end(event_execute);
+//#endif
   return nullptr;
 }
 
@@ -318,13 +343,13 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
 }
 
 
-bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities) {
-  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs, priorities);
+bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
+  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs, priorities, isCalledOnMasterThread);
 }
 
 
-bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities ) {
-  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs, priorities);
+bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
+  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs, priorities, isCalledOnMasterThread);
 }
 
 

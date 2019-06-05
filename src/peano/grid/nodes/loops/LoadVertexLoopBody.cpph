@@ -102,7 +102,13 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         p++
       ) {
         const int currentNeighbourRank = *p;
-        if ( !_state.isForkingRank(currentNeighbourRank) ) {
+        if (
+          #ifdef noBoundaryExchangeWithGlobalMaster
+          !tarch::parallel::Node::getInstance().isGlobalMaster() &&
+          *p != tarch::parallel::Node::getInstance().getGlobalMasterRank() &&
+          #endif
+          !_state.isForkingRank(currentNeighbourRank)
+        ) {
           const Vertex receivedVertex = peano::parallel::SendReceiveBufferPool::getInstance().getVertex<Vertex>(currentNeighbourRank);
 
           if (peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData()) {

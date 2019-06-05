@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 # ignore object files
 *.o
+=======
+*.[oa]
+>>>>>>> philipp/offloading

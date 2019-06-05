@@ -49,14 +49,17 @@ bool tarch::services::ServiceRepository::hasService( Service* service ) const {
 
 
 void tarch::services::ServiceRepository::receiveDanglingMessages() {
-  tarch::multicore::RecursiveLock lock(Service::receiveDanglingMessagesSemaphore);
-
-  for (
-      ServiceContainer::iterator p = _services.begin();
-      p != _services.end();
-      p++
-  ) {
-    p->_service->receiveDanglingMessages();
+  tarch::multicore::RecursiveLock lock(Service::receiveDanglingMessagesSemaphore, false);
+  
+  if(lock.try_lock()) {
+    for (
+        ServiceContainer::iterator p = _services.begin();
+        p != _services.end();
+        p++
+    ) {
+      p->_service->receiveDanglingMessages();
+    } 
+    lock.free();
   }
 }
 

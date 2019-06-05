@@ -15,6 +15,10 @@
 #include "tarch/parallel/Node.h"
 #endif
 
+#if defined (SharedTBB) || defined (SharedOMP)
+#include "tarch/multicore/Core.h"
+#endif
+
 #include <time.h>
 
 
@@ -110,6 +114,10 @@ std::string tarch::logging::Log::getMachineInformation() const {
   }
   #else
   message << "rank:0";
+  #endif
+  
+  #if defined (SharedTBB) || defined (SharedOMP)
+  message << ", core:"<<tarch::multicore::getCPUNumber()<<", tid:"<<tarch::multicore::Core::getInstance().get_num_thread();
   #endif
 
   return message.str();

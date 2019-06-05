@@ -7,7 +7,7 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
-
+#include "tarch/multicore/Jobs.h"
 
 /**
  * For the machine name. If it doesn't work, switch it off in the file

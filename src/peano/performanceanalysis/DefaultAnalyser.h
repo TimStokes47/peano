@@ -11,6 +11,8 @@
 
 #include "tarch/multicore/BooleanSemaphore.h"
 
+#include <vector>
+
 
 namespace peano {
   namespace performanceanalysis {
@@ -54,6 +56,8 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
 
     tarch::timing::Watch                _concurrencyReportWatch;
     tarch::multicore::BooleanSemaphore  _concurrencyReportSemaphore;
+
+    std::vector<tarch::timing::Watch>	_processBackgroundJobsWatch;
 
     int                                 _currentConcurrencyLevel;
     int                                 _currentPotentialConcurrencyLevel;
@@ -152,6 +156,9 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
 
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange);
     virtual void minuteNumberOfBackgroundTasks(int taskCount);
+
+/*    virtual void beginProcessingBackgroundJobs();
+    virtual void endProcessingBackgroundJobs(); */
 
     virtual void enable(bool value);
 };

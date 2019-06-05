@@ -15,8 +15,10 @@ tarch::multicore::Core::Core():
   _numberOfThreads(1),
   _globalThreadCountControl(nullptr),
   _globalStackSizeControl(nullptr),
-  _pinningObserver(nullptr) {
+  _pinningObserver(nullptr),
+  _threadIdMapper() {
 
+  _threadIdMapper.observe();
   _pinningObserver = new PinningObserver();
 }
 
@@ -30,6 +32,10 @@ void tarch::multicore::Core::pinThreads(bool value) {
   _pinningObserver->observe(value);
 }
 
+int tarch::multicore::Core::get_num_thread() {
+  return _threadIdMapper.getThreadId();
+}
+
 
 tarch::multicore::Core& tarch::multicore::Core::getInstance() {
   static tarch::multicore::Core singleton;
@@ -38,6 +44,9 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
 
 
 void tarch::multicore::Core::shutDown() {
+#if defined(SharedTBB) && defined(Parallel)
+//  tarch::multicore::PerformanceMonitor::getInstance().stop();
+#endif
   jobs::terminateAllPendingBackgroundConsumerJobs();
 
   if (_pinningObserver!=nullptr) {
@@ -88,6 +97,7 @@ void tarch::multicore::Core::configure( int numberOfThreads, int stackSize ) {
 	"set number of threads to " << _numberOfThreads << " at a hardware concurrency of " << std::thread::hardware_concurrency() <<
 	" and a TBB default of " << (tbb::task_scheduler_init::default_num_threads())
   );
+
 }
 
 

@@ -11,6 +11,9 @@ tarch::multicore::RecursiveSemaphore::RecursiveSemaphore() {
 tarch::multicore::RecursiveSemaphore::~RecursiveSemaphore() {
 }
 
+bool tarch::multicore::RecursiveSemaphore::tryEnterCriticalSection() {
+  return true;
+}
 
 void tarch::multicore::RecursiveSemaphore::enterCriticalSection() {
 }

@@ -32,6 +32,8 @@ class tarch::multicore::RecursiveSemaphore {
 
     tbb::recursive_mutex          _recursiveMutex;
 
+
+    bool tryEnterCriticalSection();
     /**
      * Waits until I can enter the critical section.
      */

@@ -5,8 +5,11 @@
 #include "tarch/logging/CommandLineLogger.h"
 
 #include "tarch/multicore/Lock.h"
+#include "tarch/multicore/Core.h"
 
 #include "peano/performanceanalysis/ScorePMacros.h"
+
+#include <thread>
 
 
 tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
@@ -27,6 +30,7 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   _releaseJoinDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _releaseBoundaryDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _concurrencyReportWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _processBackgroundJobsWatch(tarch::multicore::Core::getInstance().getNumberOfThreads()+2, tarch::timing::Watch("peano::performanceanalysis::DefaultAnalyser", "-", false,false)),
   _currentConcurrencyLevel(1),
   _currentPotentialConcurrencyLevel(1),
   _maxConcurrencyLevel(1),
@@ -388,3 +392,45 @@ void peano::performanceanalysis::DefaultAnalyser::minuteNumberOfBackgroundTasks(
     _numberOfSpawnedBackgroundTask = taskCount;
   }
 }
+
+
+/*void peano::performanceanalysis::DefaultAnalyser::beginProcessingBackgroundJobs() {
+#if defined(PerformanceAnalysisBackgroundJobs)
+  int tid = tarch::multicore::Core::getInstance().get_num_thread();
+  //std::thread::id currId= std::this_thread::get_id();
+  //std::cout<<" begin "<<currId<<" to "<<tid<<std::endl;
+
+  if (_isSwitchedOn && !_processBackgroundJobsWatch[tid].isOn()) {
+    _processBackgroundJobsWatch[tid].startTimer();
+    //logInfo(
+    //"beginProcessingBackgroundJobs()",""
+    //);
+  }
+#endif
+}
+
+
+void peano::performanceanalysis::DefaultAnalyser::endProcessingBackgroundJobs() {
+
+#if defined(PerformanceAnalysisBackgroundJobs)
+  int tid = tarch::multicore::Core::getInstance().get_num_thread();
+
+  //std::thread::id currId= std::this_thread::get_id();
+
+  //std::cout<<" end "<<currId<<" to "<<tid<<std::endl;
+
+  if (_isSwitchedOn && _processBackgroundJobsWatch[tid].isOn()) {
+	  _processBackgroundJobsWatch[tid].stopTimer();
+
+    if(_processBackgroundJobsWatch[tid].getCalendarTime()>=0.000001) {
+        logInfo(
+        "endProcessingBackgroundJobs()",
+        "time=" << std::fixed <<
+        	  _processBackgroundJobsWatch[tid].getCalendarTime() <<
+        ", cpu time=" <<
+        	  _processBackgroundJobsWatch[tid].getCPUTime()
+        );
+     }
+  }
+#endif
+}*/

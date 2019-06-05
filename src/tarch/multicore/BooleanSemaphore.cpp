@@ -23,5 +23,8 @@ void tarch::multicore::BooleanSemaphore::enterCriticalSection() {
 void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 }
 
+bool tarch::multicore::BooleanSemaphore::tryEnterCriticalSection() {
+
+}
 
 #endif
