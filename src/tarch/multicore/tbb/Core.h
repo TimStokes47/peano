@@ -14,7 +14,6 @@
 
 #include "tarch/multicore/tbb/PinningObserver.h"
 #include "tarch/multicore/tbb/ThreadIdMapper.h"
-#include "tarch/multicore/tbb/PerformanceMonitor.h"
 
 
 namespace tarch {
