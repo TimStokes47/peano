@@ -469,12 +469,35 @@ class peano4::grid::Spacetree {
      * If we receive a remote cell, then this cell is not refined. In this case
      * the (former) workers holds all the valid adjacency data: We might on a
      * master receive a cell right from the middle of the worker's domain where
-     * the master has no clue about any adjacency. So we have to copy over the
-     * (former) worker's adjacency data.
+     * the master has no clue about any adjacency. So we might think that we can
+     * copy over the (former) worker's adjacency data.
      *
      * As we also receive hanging vertices from the worker, we can safely (and
      * pretty naively) copy over the adjacency. THe first non-hanging vertex
      * will bring in the right adjacency information.
+     *
+     * There is however one tricky special case. Assume that a rank A serves as
+     * master to B and C and both of these workers merge into A. We furthermore
+     * study one vertex in-between B and C. The merge runs as follows:
+     *
+     * - Rank B tells rank C that it will merge its cell into A.
+     * - Rank C tells rank B that it will merge its cell into A.
+     * - Both ranks update their respective local adjacency lists.
+     * - Rank B streams its vertex up to rank A.
+     *
+     * If we now simply copied the adjacency list from B, we'd loose the
+     * information that a cell is adjacent to C. B has already updated its list,
+     * so it is slightly "ahead" of time.
+     *
+     * So for a successful merge, it is important that we actually only reset
+     * the flags of this very cell. We do so through
+     * updateVertexRanksWithinCell(). This logic relies on the fact that we
+     * keep adjacency flags of all vertices which are remote yet just one level
+     * below the current rank. This check, realised in updateVertexBeforeStore(),
+     * ensures we kind of know what we do.
+     *
+     *
+     * @see updateVertexBeforeStore()
      */
     void mergeCellFromWorkerWithMaster(
       GridVertex                                vertex[TwoPowerD],
@@ -542,12 +565,15 @@ class peano4::grid::Spacetree {
      * @param fineVertexPositionWithinPatch Position of vertex within 3x3 or 3x3x3 patch respectively
      *
      * @see updateVertexAfterLoad()
+     * @see mergeCellFromWorkerWithMaster() for an explanation why we have to
+     *         keep all adjacency information that we actually need later for
+     *         merges.
      */
     void updateVertexBeforeStore(
       GridVertex&                               vertex,
       GridVertex                                fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch,
-	  TraversalObserver&                        observer
+      const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch,
+      TraversalObserver&                        observer
     );
 
     static bool restrictToCoarseGrid(

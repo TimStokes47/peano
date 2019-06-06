@@ -149,17 +149,8 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
   for (auto& masterTreeId: trees ) {
     peano4::grid::Spacetree& masterTree = getSpacetree(masterTreeId);
 
-    #if PeanoDebug>0
-    // Set will be empty after traversal, so we have to backup it
-    std::set<int> backupOfJoiningTrees;
-    #endif
-
     // ueber alle Kinder drueber gehen
     for (auto workerTreeId: masterTree._joining) {
-      #if PeanoDebug>0
-      backupOfJoiningTrees.insert(workerTreeId);
-      #endif
-
       logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "tree " << workerTreeId << " is merging (partially) into tree " << masterTreeId );
 
       const int masterTreeStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(workerTreeId);
@@ -191,9 +182,13 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
     delete localObserver;
 
     #if PeanoDebug>0
-    for (auto workerTreeId: backupOfJoiningTrees) {
+    for (auto workerTreeId: masterTree._hasJoined) {
       const int masterTreeStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(workerTreeId);
-      assertion( masterTree._vertexStack[masterTreeStack].empty() );
+      assertion3(
+        masterTree._vertexStack[masterTreeStack].empty(),
+        masterTree._vertexStack[masterTreeStack].toString(),
+        masterTree.toString(), workerTreeId
+      );
     }
     #endif
   }
@@ -230,8 +225,7 @@ void peano4::parallel::SpacetreeSet::traverseNonMergingExistingTrees(peano4::gri
       traverseTasksForRunningTrees.push_back( new TraverseTask(
         p, *this, observer
       ));
-      // @todo Debug
-      logInfo( "traverseNonMergingExistingTrees(TraversalObserver&)", "issue task to traverse tree " << p._id << ": " << p.toString() );
+      logDebug( "traverseNonMergingExistingTrees(TraversalObserver&)", "issue task to traverse tree " << p._id << ": " << p.toString() );
     }
   }
 
@@ -544,6 +538,10 @@ void peano4::parallel::SpacetreeSet::mergeStatistics() {
 
 
 void peano4::parallel::SpacetreeSet::cleanUpTrees() {
+  // @todo Kann ich die auch irgendwie verschicken?
+  // @todo Eigentlich sollte man einfach nur den Master fragen, ob er denn schoen verfeinern konnte
+  static std::set<int> problematicMasters;
+
   for (auto p = _spacetrees.begin(); p!=_spacetrees.end(); ) {
   	if (
       p->getGridStatistics().getCoarseningHasBeenVetoed()
@@ -552,10 +550,15 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
     ) {
   	  if (p->_id!=0 and p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running) {
         logInfo( "traverse(Observer)", "can't join tree " << p->_id << " with its master tree " << p->_masterId << ". Domain decomposition vetoes coarsening (would destroy MPI topology), but worker tree is not ready to be merged: " << p->toString());
+        problematicMasters.insert(p->_id);
   	  }
     }
   	else if (
-      p->getGridStatistics().getCoarseningHasBeenVetoed()
+  	  (
+        p->getGridStatistics().getCoarseningHasBeenVetoed()
+        or
+        problematicMasters.count(p->_masterId)>0
+      )
       and
       p->mayJoinWithMaster()
       and
@@ -563,6 +566,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
     ) {
       logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
       join(p->_id);
+//      problematicMasters.clear();
     }
     else if (
       p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running

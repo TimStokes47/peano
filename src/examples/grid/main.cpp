@@ -76,8 +76,7 @@ void updateDomainDecomposition() {
 
   if (phase==0) {
     if (
-//      peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=9
-      peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>9
+      peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD
       and
       peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
       and
@@ -88,56 +87,49 @@ void updateDomainDecomposition() {
   }
   else if (
     phase==1
-//    and
-//    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4>0
+    and
+    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*2
   ) {
-    /*
-    if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4,0) ) {
+    if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3,0) ) {
       phase++;
     }
-    */
   }
-
-/*
-    while (
-      not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
-    ) {
-      #if PeanoDebug>0
-      emptyObserver.startNewSnapshot(true);
-      #endif
-      peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+  else if (
+    phase==2
+    and
+    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*4
+  ) {
+    if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3/3,0) ) {
+      phase++;
     }
-
-    while (
-      not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
-    ) {
-      #if PeanoDebug>0
-      emptyObserver.startNewSnapshot(true);
-      #endif
-      peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+  }
+  else if (
+    phase==3
+    and
+    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*6
+  ) {
+    if ( not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3/3/3,0) ) {
+      phase++;
     }
-
-    // @todo MPI
-    while (
-      not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3-5,0)
-    ) {
-      #if PeanoDebug>0
-      emptyObserver.startNewSnapshot(true);
-      #endif
-      peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+  }
+  else if (
+    phase==4
+    and
+    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*8
+  ) {
+    if ( not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3/3/3/3,0) ) {
+      phase++;
     }
-
-    while (
-      not peano4::parallel::SpacetreeSet::getInstance().split(1,10,0)
-    ) {
-      #if PeanoDebug>0
-      emptyObserver.beginTraversalOnRank(true);
-      #endif
-      peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
+  }
+  else if (
+    phase==5
+    and
+    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*10
+  ) {
+    if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,10,0) ) {
+      phase++;
     }
-
-*/
-
+  }
 }
 
 
