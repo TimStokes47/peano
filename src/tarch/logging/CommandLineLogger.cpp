@@ -195,6 +195,8 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
 
   if ( getLogTimeStamp() ) {
     std::ostringstream timeStampString;
+    timeStampString.setf(std::ios::fixed);
+    timeStampString.precision(6);
     timeStampString << timestamp;
     result += addSeparators(NumberOfStandardColumnSpaces,timeStampString.str() );
   }

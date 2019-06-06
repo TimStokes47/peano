@@ -1,13 +1,16 @@
 #include "tarch/multicore/Core.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
-
+#include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/multicore/Lock.h"
 
 #ifdef CompilerHasSysinfo
 #include <sched.h>
 #endif
 
-
+#include <sys/sysinfo.h>
+#include <map>
+#include <thread>
 
 int tarch::multicore::getCPUNumber() {
   #ifdef CompilerHasSysinfo
@@ -18,7 +21,14 @@ int tarch::multicore::getCPUNumber() {
   #endif
 }
 
+int tarch::multicore::getNumberOfHWThreads() {
+    static int numHWThreads=-1;
 
+    if(numHWThreads==-1)
+    	numHWThreads = get_nprocs();
+
+	return numHWThreads;
+}
 
 std::thread::id tarch::multicore::getThreadNumber() {
   return std::this_thread::get_id();

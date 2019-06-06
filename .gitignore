@@ -1,2 +1,1 @@
-# ignore object files
-*.o
+*.[oa]

@@ -86,15 +86,15 @@ void peano::performanceanalysis::Analysis::endToReceiveDataFromWorker( int fromR
 }
 
 
-void peano::performanceanalysis::Analysis::beginToReceiveDataFromMaster(int masterRank) {
+void peano::performanceanalysis::Analysis::beginToReceiveDataFromMaster( int masterRank ) {
   assertion( _device!=0 );
-  _device->beginToReceiveDataFromMaster(masterRank);
+  _device->beginToReceiveDataFromMaster( masterRank );
 }
 
 
-void peano::performanceanalysis::Analysis::endToReceiveDataFromMaster(int masterRank) {
+void peano::performanceanalysis::Analysis::endToReceiveDataFromMaster( int masterRank ) {
   assertion( _device!=0 );
-  _device->endToReceiveDataFromMaster(masterRank);
+  _device->endToReceiveDataFromMaster( masterRank );
 }
 
 

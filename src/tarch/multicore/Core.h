@@ -18,6 +18,22 @@ namespace tarch {
      */
     int getCPUNumber();
     std::thread::id getThreadNumber();
+
+    /**
+     * Gives you the number of hardware threads on your system.
+     * This is a wrapper around a UNIX operation and thus might not be
+     * available on all machines - notably not on MAC.
+     */
+     int getNumberOfHWThreads();
+
+     /**
+      * Gives you the number of physical cores on your system.
+      * This is a wrapper around a UNIX operation and thus might not be
+      * available on all machines - notably not on MAC.
+      */
+     int getNumberOfPhysicalCores();
+
+     //int getThreadId();
   }
 }
 

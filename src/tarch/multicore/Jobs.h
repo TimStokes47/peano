@@ -135,6 +135,7 @@ namespace tarch {
             * @see ProcessNormalBackgroundJobsImmediately
             */
            static void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
+           static int getMaxNumberOfRunningBackgroundThreads();
        };
 
 
@@ -476,8 +477,8 @@ namespace tarch {
         *
         * @see processJobs
         */
-       bool processBackgroundJobs(int maxNumberOfJobs = 1, int priorities = -1);
-       bool processHighBandwidthJobs(int maxNumberOfJobs = 1, int priorities = -1);
+       bool processBackgroundJobs(int maxNumberOfJobs = 1, int priorities = -1, bool isCalledOnMasterThread = true);
+       bool processHighBandwidthJobs(int maxNumberOfJobs = 1, int priorities = -1, bool isCalledOnMasterThread = true);
     }
   }
 }

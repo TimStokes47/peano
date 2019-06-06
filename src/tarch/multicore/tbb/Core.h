@@ -13,7 +13,8 @@
 
 
 #include "tarch/multicore/tbb/PinningObserver.h"
-
+#include "tarch/multicore/tbb/ThreadIdMapper.h"
+#include "tarch/multicore/tbb/PerformanceMonitor.h"
 
 
 namespace tarch {
@@ -43,7 +44,8 @@ class tarch::multicore::Core {
     ::tbb::global_control*      _globalThreadCountControl;
     ::tbb::global_control*      _globalStackSizeControl;
 
-    PinningObserver*            _pinningObserver;
+    PinningObserver*             _pinningObserver;
+    ThreadIdMapper		 _threadIdMapper;
   public:
     /**
  *   * @see Core header in super directory
@@ -109,6 +111,8 @@ class tarch::multicore::Core {
     int getNumberOfThreads() const;
 
     void pinThreads(bool value);
+
+    int getThreadNum();
 };
 
 

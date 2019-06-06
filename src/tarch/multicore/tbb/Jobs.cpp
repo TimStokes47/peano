@@ -13,9 +13,6 @@
 #include <cmath>
 
 
-
-
-
 tbb::atomic<int>                              tarch::multicore::jobs::internal::_numberOfRunningJobConsumerTasks(0);
 tarch::multicore::jobs::internal::JobQueue    tarch::multicore::jobs::internal::_pendingJobs[NumberOfJobQueues];
 tbb::atomic<bool>                             tarch::multicore::jobs::internal::_bandwidthTasksAreProcessed(false);
@@ -153,7 +150,6 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;
     internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize = internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize*0.9;
   }
-
   return nullptr;
 }
 
@@ -318,13 +314,13 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
 }
 
 
-bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities) {
-  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs, priorities);
+bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
+  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs, priorities, isCalledOnMasterThread);
 }
 
 
-bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities ) {
-  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs, priorities);
+bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
+  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs, priorities, isCalledOnMasterThread);
 }
 
 

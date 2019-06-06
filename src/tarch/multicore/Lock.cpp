@@ -25,6 +25,10 @@ void tarch::multicore::Lock::lock() {
   _lockIsAquired = true;
 }
 
+bool tarch::multicore::Lock::tryLock() {
+  _lockIsAquired = _semaphore.tryEnterCriticalSection();
+  return _lockIsAquired;
+}
 
 void tarch::multicore::Lock::free() {
   assertion( _lockIsAquired );

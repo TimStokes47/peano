@@ -388,3 +388,4 @@ void peano::performanceanalysis::DefaultAnalyser::minuteNumberOfBackgroundTasks(
     _numberOfSpawnedBackgroundTask = taskCount;
   }
 }
+

@@ -3,7 +3,7 @@
 
 #include "tarch/Assertions.h"
 
-
+#include "tarch/logging/Log.h"
 #include "tarch/multicore/Jobs.h"
 
 
@@ -32,6 +32,9 @@
 namespace tarch {
   namespace multicore {
     namespace jobs {
+
+      extern tarch::logging::Log _log;
+
       /**
        * Helper operation. Plots quite some statistics if code is
        * translated with -DTBB_USE_THREADING_TOOLS.

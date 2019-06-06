@@ -122,15 +122,58 @@ void peano::parallel::JoinDataBufferImplementation<DataType>::releaseMessages() 
 
   #ifdef Parallel
   if (_currentElement>0) {
-    const int result = MPI_Send(
+    MPI_Request * sendRequestHandle = new MPI_Request();
+    int          flag = 0;  
+    clock_t      timeOutWarning   = -1; 
+    clock_t      timeOutShutdown  = -1; 
+    bool         triggeredTimeoutWarning = false;       
+    int result = MPI_Isend(
       _sendBuffer, _currentElement, _mpiDatatype, _rank, _tag,
-      tarch::parallel::Node::getInstance().getCommunicator()
+      tarch::parallel::Node::getInstance().getCommunicator(),
+      sendRequestHandle
     );
     if (result!=MPI_SUCCESS) {
       logError( "releaseMessages()", "send of " << _currentElement << " message(s) failed: " << tarch::parallel::MPIReturnValueToString(result) );
     }
+    result = MPI_Test(sendRequestHandle, &flag, MPI_STATUS_IGNORE );
+    while(!flag) {
+      if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
+      if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+      result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
+      if (result!=MPI_SUCCESS) { 
+        std::ostringstream msg; 
+        msg << "testing for finished send task for peano::JoinDataBufferImplementation::releaseMessages() " 
+            << toString() 
+            << " sent to node " << _rank 
+            << " failed: " << tarch::parallel::MPIReturnValueToString(result); 
+        _log.error("send(int)", msg.str() ); 
+      } 
+      if ( 
+        tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+        (clock()>timeOutWarning) && 
+        (!triggeredTimeoutWarning) 
+      ) { 
+         tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+           "peano::JoinDataBufferImplementation::releaseMessages()", 
+           "send(int)", _rank,_tag,1 
+         ); 
+         triggeredTimeoutWarning = true; 
+       } 
+      if ( 
+         tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+         (clock()>timeOutShutdown) 
+      ) { 
+         tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+           "peano::JoinDataBufferImplementation::releaseMessages()", 
+             "send(int)", _rank,_tag,1 
+           ); 
+       } 
+      tarch::parallel::Node::getInstance().receiveDanglingMessages();    
+    }
     logDebug( "releaseMessages()", "sent " << _currentElement << " message(s) to rank " << _rank );
     _currentElement = 0;
+
+    delete sendRequestHandle;
   }
   #endif
 

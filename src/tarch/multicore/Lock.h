@@ -27,6 +27,7 @@ class tarch::multicore::Lock {
     ~Lock();
 
     void lock();
+    bool tryLock();
     void free();
 };
 

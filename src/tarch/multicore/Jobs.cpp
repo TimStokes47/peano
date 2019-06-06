@@ -22,6 +22,9 @@ void tarch::multicore::jobs::Job::setMaxNumberOfRunningBackgroundThreads(int max
   _maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
 }
 
+int tarch::multicore::jobs::Job::getMaxNumberOfRunningBackgroundThreads() {
+  return _maxNumberOfRunningBackgroundThreads;
+}
 
 tarch::multicore::jobs::JobType tarch::multicore::jobs::Job::getJobType() const {
   return _jobType;

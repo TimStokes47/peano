@@ -25,7 +25,8 @@ class tarch::multicore::RecursiveLock {
   public:
     RecursiveLock( tarch::multicore::RecursiveSemaphore& semaphore, bool aquireLockImmediately = true );
     ~RecursiveLock();
-
+   
+    bool tryLock();
     void lock();
     void free();
 };

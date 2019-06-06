@@ -33,6 +33,7 @@ class tarch::multicore::BooleanSemaphore {
      */
     void leaveCriticalSection();
 
+    bool tryEnterCriticalSection();
     /**
      * You may not copy a semaphore
      */

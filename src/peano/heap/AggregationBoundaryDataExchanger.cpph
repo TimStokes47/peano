@@ -95,7 +95,9 @@ void peano::heap::AbstractAggregationBoundaryDataExchanger<Data,  SendReceiveTas
       Base::_receiveTasks[BufferToBeUnpacked].push_back( SendReceiveTaskType() );
 
       if (sizeOfNextMessage>0) {
+      #ifdef Asserts
         logInfo( "postprocessStartToSendData(...)", "create message with " << sizeOfNextMessage << " entries. First data entry is " << localTask.data()[index] << " from input entry " << index );
+      #endif
         Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(sizeOfNextMessage);
         Base::_receiveTasks[BufferToBeUnpacked].back().wrapData( &(localTask.data()[index]) );
         index += sizeOfNextMessage;

@@ -40,7 +40,7 @@ while timeStamp<sys.float_info.max:
   timeStamp                 = sys.float_info.max
   rankWithSmallestTimeStamp = 0
   for rank in range(0,ranks): 
-    searchPattern          = "([0-9]\.?[0-9]*).*"
+    searchPattern          = "([0-9]+\.[0-9]+).*"
     if len(inputFiles[rank])>0:
       firstLineInCurrentFile = inputFiles[rank][0]
       m = re.search( searchPattern, firstLineInCurrentFile )
@@ -52,7 +52,7 @@ while timeStamp<sys.float_info.max:
       else:
         print "ERROR: line in " + str(rank) + "th intput file does not hold time stamp. Line " + firstLineInCurrentFile
   if timeStamp<sys.float_info.max:
-    print "- t=" + "%.4e"%(timeStamp) + ": take message from rank " + str( rankWithSmallestTimeStamp )
+    print "- t=" + "%.8e"%(timeStamp) + ": take message from rank " + str( rankWithSmallestTimeStamp )
     outputFile.write( inputFiles[rankWithSmallestTimeStamp][0] )
     inputFiles[rankWithSmallestTimeStamp].pop(0)
   

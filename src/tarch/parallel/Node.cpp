@@ -8,7 +8,6 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
-
 /**
  * For the machine name. If it doesn't work, switch it off in the file
  * CompilerSpecificSettings.h.
