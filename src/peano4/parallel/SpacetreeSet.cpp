@@ -538,10 +538,6 @@ void peano4::parallel::SpacetreeSet::mergeStatistics() {
 
 
 void peano4::parallel::SpacetreeSet::cleanUpTrees() {
-  // @todo Kann ich die auch irgendwie verschicken?
-  // @todo Eigentlich sollte man einfach nur den Master fragen, ob er denn schoen verfeinern konnte
-  static std::set<int> problematicMasters;
-
   for (auto p = _spacetrees.begin(); p!=_spacetrees.end(); ) {
   	if (
       p->getGridStatistics().getCoarseningHasBeenVetoed()
@@ -550,15 +546,10 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
     ) {
   	  if (p->_id!=0 and p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running) {
         logInfo( "traverse(Observer)", "can't join tree " << p->_id << " with its master tree " << p->_masterId << ". Domain decomposition vetoes coarsening (would destroy MPI topology), but worker tree is not ready to be merged: " << p->toString());
-        problematicMasters.insert(p->_id);
   	  }
     }
   	else if (
-  	  (
-        p->getGridStatistics().getCoarseningHasBeenVetoed()
-        or
-        problematicMasters.count(p->_masterId)>0
-      )
+      p->getGridStatistics().getCoarseningHasBeenVetoed()
       and
       p->mayJoinWithMaster()
       and
@@ -566,7 +557,19 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
     ) {
       logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
       join(p->_id);
-//      problematicMasters.clear();
+    }
+    else if (
+        // @todo muss ein "has spacetree"
+      p->_masterId>=0
+      and
+      getSpacetree(p->_masterId).getGridStatistics().getCoarseningHasBeenVetoed()
+      and
+      p->mayJoinWithMaster()
+      and
+      getSpacetree(p->_masterId).mayJoinWithWorker()
+    ) {
+      logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to as master struggles to coarsen");
+      join(p->_id);
     }
     else if (
       p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
