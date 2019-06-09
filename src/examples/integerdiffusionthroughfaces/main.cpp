@@ -12,7 +12,7 @@
 #include "peano4/parallel/Node.h"
 
 
-tarch::logging::Log _log("integerdiffusionthroughfaces");
+tarch::logging::Log _log("examples::integerdiffusionthroughfaces");
 
 
 void runTests() {
