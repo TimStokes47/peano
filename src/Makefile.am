@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 # By default, automake does dfs. We need the libs to be built first however.
 # So we add the . explicitly.
 #
-SUBDIRS = . examples/grid examples/integerdiffusionthroughfaces visualisation
+SUBDIRS = . examples/grid examples/integerdiffusionthroughfaces examples/delta visualisation
 
 
 #
