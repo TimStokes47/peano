@@ -2,6 +2,7 @@
 
 //#include "MyMapping.h"
 //#include "CompositeMapping.h"
+#include "PeanoFormatCellDataPlotter.h"
 
 #include "peano4/grid/GridControlEvent.h"
 #include "peano4/grid/GridTraversalEvent.h"
@@ -27,16 +28,15 @@ examples::delta::MyObserver::MyObserver():
   _spacetreeId(-1),
   _iterationCounter(-1),
   _mapping(nullptr) {
-/*
   #if PeanoDebug>0
-  CompositeMapping* mapping = new CompositeMapping();
-  mapping->append( new MyMapping() );
-  mapping->append( new PeanoFormatCellDataPlotter("marker",false));
-  _mapping = mapping;
+//  CompositeMapping* mapping = new CompositeMapping();
+//  mapping->append( new MyMapping() );
+//  mapping->append( new PeanoFormatCellDataPlotter("marker",false));
+//  _mapping = mapping;
+  _mapping = new PeanoFormatCellDataPlotter("marker",false);
   #else
-  _mapping = new MyMapping();
+//  _mapping = new MyMapping();
   #endif
-*/
 }
 
 

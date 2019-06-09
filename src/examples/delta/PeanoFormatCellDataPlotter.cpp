@@ -38,7 +38,8 @@ void examples::delta::PeanoFormatCellDataPlotter::beginTraversal() {
       _fileNamePrefix,
       _counter>0  // bool append
     );
- 	das kann so noch net sein!
+// 	das kann so noch net sein!
+ 	// muessert 10 sein
     _dataWriter      = _writer->createCellDataWriter( "cell-data", 1, 1 );
   }
   _instanceCounter++;
