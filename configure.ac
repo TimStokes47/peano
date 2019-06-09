@@ -138,7 +138,7 @@ AC_ARG_WITH(vtk,
   [ AC_MSG_CHECKING(for vtk)
     case "${withval}" in
       no)    AC_MSG_RESULT(no);                               vtk=false ;;
-      *)     AC_MSG_RESULT(use vtk include path ${withval});  vtk=${withval}  ;;
+      *)     AC_MSG_RESULT(use vtk sources path ${withval});  vtk=${withval}  ;;
     esac ],
   [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
   
@@ -156,8 +156,8 @@ AC_ARG_WITH(hdf5,
   AC_HELP_STRING([--with-hdf5], [enable HDF5 support [default=no, yes]]),
   [ AC_MSG_CHECKING(for hdf5)
     case "${withval}" in
-      no)    AC_MSG_RESULT(no);                       hdf5=false ;;
-      *)     AC_MSG_RESULT(use vtk path ${withval});  hdf5=true  ;;
+      no)    AC_MSG_RESULT(no);                                hdf5=false ;;
+      *)     AC_MSG_RESULT(use hdf5 sources path ${withval});  hdf5=true  ;;
     esac ],
   [ AC_MSG_CHECKING(for hdf5); AC_MSG_RESULT(no); hdf5=false ])
  
@@ -177,6 +177,30 @@ if test "$with_hdf5" = "yes"; then
 fi 
 
 
+
+#
+# Delta
+#
+AC_ARG_WITH(delta,
+  AC_HELP_STRING([--with-delta], [enable Delta [default=no, path to Delta include files]]),
+  [ AC_MSG_CHECKING(for delta)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);                                 delta=false ;;
+      *)     AC_MSG_RESULT(use delta sources path ${withval});  delta=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for delta); AC_MSG_RESULT(no); delta=false ])
+# This whole autotools thing is not very nice: If I wanna use an if ... endif (
+# note the syntax which is different to the present file, then I have to declare
+# the variable as I do in the line below. Otherwise, the if thing is not 
+# "exported". Seems the autoconf and the makefile generator are completely 
+# separate with inconsistent syntax.
+AM_CONDITIONAL([UseDelta],[test "$delta" != false])
+if test "$delta" != false; then
+  AC_DEFINE([UseDelta], [1], [UseDelta])
+  PEANO_CXXFLAGS+=" -I${delta}"
+fi
+
+
 #
 # Export my Peano-specific flags
 #
@@ -189,5 +213,5 @@ AC_SUBST([PEANO_LDFLAGS])
 # Kick out makefiles. I'm not sure but it seems that you have to add the directories to 
 # Makefile.am in the src subdirectories, too
 #
-AC_OUTPUT(Makefile src/Makefile src/examples/grid/Makefile src/examples/integerdiffusionthroughfaces/Makefile src/visualisation/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/examples/grid/Makefile src/examples/integerdiffusionthroughfaces/Makefile src/examples/delta/Makefile src/visualisation/Makefile)
 
