@@ -186,7 +186,7 @@ AC_ARG_WITH(delta,
   [ AC_MSG_CHECKING(for delta)
     case "${withval}" in
       no)    AC_MSG_RESULT(no);                                 delta=false ;;
-      *)     AC_MSG_RESULT(use delta sources path ${withval});  delta=true  ;;
+      *)     AC_MSG_RESULT(use delta sources path ${withval});  delta=${withval}  ;;
     esac ],
   [ AC_MSG_CHECKING(for delta); AC_MSG_RESULT(no); delta=false ])
 # This whole autotools thing is not very nice: If I wanna use an if ... endif (
@@ -198,6 +198,7 @@ AM_CONDITIONAL([UseDelta],[test "$delta" != false])
 if test "$delta" != false; then
   AC_DEFINE([UseDelta], [1], [UseDelta])
   PEANO_CXXFLAGS+=" -I${delta}"
+  PEANO_LDFLAGS+=" -L${delta}/lib"
 fi
 
 
