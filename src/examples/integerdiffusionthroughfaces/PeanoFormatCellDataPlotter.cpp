@@ -149,15 +149,16 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::plotCel
 ) {
   int vertexIndices[TwoPowerD];
 
-  std::pair<int,int> indices = _writer->plotPatch(
+  // As we have only one index per patch, we don't have to convert anything
+  int indices = _writer->plotPatch(
     center - h * 0.5,
 	h
   );
 
   assertion( _dataWriter!=nullptr );
   assertion( _oldDataWriter!=nullptr );
-  _dataWriter->plotCell(indices.second,data.value);
-  _oldDataWriter->plotCell(indices.second,data.oldValue);
+  _dataWriter->plotCell(indices,data.value);
+  _oldDataWriter->plotCell(indices,data.oldValue);
 }
 
 

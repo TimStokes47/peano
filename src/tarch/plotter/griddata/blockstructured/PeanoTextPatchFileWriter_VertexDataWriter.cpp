@@ -81,3 +81,11 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
     _patchCounter = 0;
   }
 }
+
+
+
+int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::getFirstVertexWithinPatch(int index) const {
+  return index * getVerticesPerPatch();
+}
+
+

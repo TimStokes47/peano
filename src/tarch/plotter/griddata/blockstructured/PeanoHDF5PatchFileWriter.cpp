@@ -244,7 +244,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createVerte
 }
 
 
-std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::plotPatch(
+int tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::plotPatch(
   const tarch::la::Vector<2,double>& offset,
   const tarch::la::Vector<2,double>& size
 ) {
@@ -256,17 +256,11 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
   _geometryData.push_back( size(0) );
   _geometryData.push_back( size(1) );
 
-  std::pair<int,int> result(_vertexCounter,_cellCounter);
-  assertion(false);
-/*
-  _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
-  _cellCounter   += std::pow(_numberOfCellsPerAxis,_dimensions);
-*/
-  return result;
+  return -1;
 }
 
 
-std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::plotPatch(
+int tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::plotPatch(
   const tarch::la::Vector<3,double>& offset,
   const tarch::la::Vector<3,double>& size
 ) {
@@ -280,13 +274,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
   _geometryData.push_back( size(1) );
   _geometryData.push_back( size(2) );
 
-  std::pair<int,int> result(_vertexCounter,_cellCounter);
-  assertion(false);
-/*
-  _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
-  _cellCounter   += std::pow(_numberOfCellsPerAxis,_dimensions);
-*/
-  return result;
+  return -1;
 }
 
 

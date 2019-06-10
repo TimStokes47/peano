@@ -32,7 +32,10 @@ void examples::delta::InitData::createCell(
   CellData&                                    coarseData
 )  {
   for (int i=0; i<CellData::DoFsPerCell; i++) {
-	data.value[i] = 0.0;
+	data.valueX[i] = 1.0;
+//	@todo
+//	data.valueY[i] = 2.0;
+//	data.valueZ[i] = 3.0;
   }
 }
 

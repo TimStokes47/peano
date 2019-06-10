@@ -98,6 +98,8 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
          void close() override;
 
          void assignRemainingCellsDefaultValues() override;
+
+         int getFirstCellWithinPatch(int index) const override;
      };
 
      class VertexDataWriter: public tarch::plotter::griddata::blockstructured::PatchWriter::VertexDataWriter {
@@ -135,6 +137,8 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
           * @see close()
           */
          void assignRemainingVerticesDefaultValues() override;
+
+         int getFirstVertexWithinPatch(int index) const override;
      };
 
     PeanoHDF5PatchFileWriter(
@@ -166,12 +170,12 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
     VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData  ) override;
     VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData, double* mapping ) override;
 
-    std::pair<int,int> plotPatch(
+    int plotPatch(
       const tarch::la::Vector<2,double>& offset,
       const tarch::la::Vector<2,double>& size
     ) override;
 
-    std::pair<int,int> plotPatch(
+    int plotPatch(
       const tarch::la::Vector<3,double>& offset,
       const tarch::la::Vector<3,double>& size
     ) override;

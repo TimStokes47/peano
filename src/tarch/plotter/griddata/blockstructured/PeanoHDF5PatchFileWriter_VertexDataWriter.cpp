@@ -184,3 +184,10 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::Vertex
     _data.push_back(0.0);
   }
 }
+
+
+
+int tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter::getFirstVertexWithinPatch(int index) const {
+  return -1;
+}
+

@@ -193,3 +193,10 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDa
   }
 }
 
+
+
+
+int tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::getFirstCellWithinPatch(int index) const {
+  return -1;
+}
+

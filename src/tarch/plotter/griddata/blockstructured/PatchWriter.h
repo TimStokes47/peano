@@ -75,6 +75,8 @@ class tarch::plotter::griddata::blockstructured::PatchWriter {
          * @see close()
          */
         virtual void assignRemainingCellsDefaultValues() = 0;
+
+        virtual int getFirstCellWithinPatch(int index) const = 0;
     };
 
     /**
@@ -101,14 +103,16 @@ class tarch::plotter::griddata::blockstructured::PatchWriter {
          * @see close()
          */
         virtual void assignRemainingVerticesDefaultValues() = 0;
+
+        virtual int getFirstVertexWithinPatch(int index) const = 0;
     };
 
-    virtual std::pair<int,int> plotPatch(
+    virtual int plotPatch(
       const tarch::la::Vector<2,double>& offset,
       const tarch::la::Vector<2,double>& size
     ) = 0;
 
-    virtual std::pair<int,int> plotPatch(
+    virtual int plotPatch(
       const tarch::la::Vector<3,double>& offset,
       const tarch::la::Vector<3,double>& size
     ) = 0;

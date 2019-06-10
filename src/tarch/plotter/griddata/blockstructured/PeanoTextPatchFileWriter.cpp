@@ -110,7 +110,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::createVerte
 }
 
 
-std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::plotPatch(
+int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::plotPatch(
   const tarch::la::Vector<2,double>& offset,
   const tarch::la::Vector<2,double>& size
 ) {
@@ -141,13 +141,12 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFile
 
   _haveWrittenAtLeastOnePatch = true;
 
-  std::pair<int,int> result(_patchCounter,_patchCounter);
   _patchCounter++;
-  return result;
+  return _patchCounter-1;
 }
 
 
-std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::plotPatch(
+int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::plotPatch(
   const tarch::la::Vector<3,double>& offset,
   const tarch::la::Vector<3,double>& size
 ) {
@@ -174,9 +173,8 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFile
 
   _haveWrittenAtLeastOnePatch = true;
 
-  std::pair<int,int> result(_patchCounter,_patchCounter);
   _patchCounter++;
-  return result;
+  return _patchCounter-1;
 }
 
 

@@ -25,7 +25,11 @@ struct examples::delta::CellData {
   tarch::la::Vector<Dimensions,double>   h;
   #endif
 
+  #if PeanoDebug>0
+  static constexpr int DoFsPerAxis = 2;
+  #else
   static constexpr int DoFsPerAxis = 10;
+  #endif
 
   #if Dimensions==2
   static constexpr int DoFsPerCell = DoFsPerAxis * DoFsPerAxis;
@@ -33,7 +37,9 @@ struct examples::delta::CellData {
   static constexpr int DoFsPerCell = DoFsPerAxis * DoFsPerAxis * DoFsPerAxis;
   #endif
 
-  double  value[DoFsPerCell];
+  double  valueX[DoFsPerCell];
+  //double  valueY[DoFsPerCell];
+  //double  valueZ[DoFsPerCell];
 
   std::string toString() const {
     return std::string("(")

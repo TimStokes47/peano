@@ -39,7 +39,8 @@ void examples::delta::PeanoFormatCellDataPlotter::beginTraversal() {
       _counter>0  // bool append
     );
 
-    _dataWriter      = _writer->createCellDataWriter( "cell-data", 1, CellData::DoFsPerCell );
+ 	// @todo 3 quantities, not 1
+    _dataWriter      = _writer->createCellDataWriter( "cell-data", CellData::DoFsPerAxis, 1 );
   }
   _instanceCounter++;
 }
@@ -92,14 +93,19 @@ void examples::delta::PeanoFormatCellDataPlotter::plotCell(
 ) {
   int vertexIndices[TwoPowerD];
 
-  std::pair<int,int> indices = _writer->plotPatch(
+  int patchIndex = _writer->plotPatch(
     center - h * 0.5,
 	h
   );
 
   assertion( _dataWriter!=nullptr );
-  // @todo
-  _dataWriter->plotCell(indices.second,data.value);
+
+  int cellIndex = _dataWriter->getFirstCellWithinPatch(patchIndex);
+
+  dfor(k,CellData::DoFsPerAxis) {
+    _dataWriter->plotCell(cellIndex,data.valueX);
+    cellIndex++;
+  }
 }
 
 

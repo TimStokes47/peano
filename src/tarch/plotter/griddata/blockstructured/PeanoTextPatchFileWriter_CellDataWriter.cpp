@@ -76,3 +76,10 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
     plotCell(-1,0.0);
   }
 }
+
+
+int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::getFirstCellWithinPatch(int index) const {
+  return index * getCellsPerPatch();
+}
+
+

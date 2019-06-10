@@ -184,7 +184,7 @@ void visualisation::input::PeanoTextPatchFileReader::parseVariablesDeclaration( 
     }
 */
 
-    logDebug( "parse()", "Added new variables " << variableName << " with " << numberOfDofs << " dof per axis (Cartesian layout) and " << numberOfUnknowns << " unknowns per dof" );
+    logDebug( "parse()", "added new variables " << variableName << " with " << numberOfDofs << " dof per axis (Cartesian layout) and " << numberOfUnknowns << " unknowns per dof" );
 
     _data[dataSetCounter].data.insert(
       std::pair<visualisation::data::Variable, std::vector<visualisation::data::PatchData>>(
@@ -266,7 +266,7 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
 
 
 void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSetCounter, const std::string& variableName, double* offset, double* size, const std::vector< std::string >& textData ) {
-  logDebug( "parsePatch(...)", "set data of variable " << variableName );
+  logDebug( "parsePatch(...)", "set data of variable " << variableName << " (parse " << textData.size() << " entries)");
 
   if (!_data[dataSetCounter].hasVariable(variableName)) {
     logError( "parsePatch(...)", "no variables for " << variableName << " have been declared. Ignore data set");
@@ -281,6 +281,7 @@ void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSet
     return;
   }
 
+  logError( "parsePatch(...)", "I wanna see " << expectedDataEntries << " x " << key.dofsPerAxis);
   visualisation::data::PatchData newEntry(_dimensions, offset, size, key.dofsPerAxis);
   for (int i=0; i<expectedDataEntries; i++) {
     newEntry.data[i] = std::stod(textData[i]);

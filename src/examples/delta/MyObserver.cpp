@@ -129,15 +129,15 @@ void examples::delta::MyObserver::enterCell(
     data.x = event.getX();
     data.h = event.getH();
     #endif
-    assertionVectorNumericalEquals4(data.x,event.getX(),data.value,event.toString(),data.x,data.h);
-    assertionVectorNumericalEquals4(data.h,event.getH(),data.value,event.toString(),data.x,data.h);
+    assertionVectorNumericalEquals3(data.x,event.getX(),event.toString(),data.x,data.h);
+    assertionVectorNumericalEquals3(data.h,event.getH(),event.toString(),data.x,data.h);
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
   else {
     CellData data;
     data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
-    assertionVectorNumericalEquals4(data.x,event.getX(),data.value,event.toString(),data.x,data.h);
-    assertionVectorNumericalEquals4(data.h,event.getH(),data.value,event.toString(),data.x,data.h);
+    assertionVectorNumericalEquals3(data.x,event.getX(),event.toString(),data.x,data.h);
+    assertionVectorNumericalEquals3(data.h,event.getH(),event.toString(),data.x,data.h);
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
 
@@ -180,8 +180,8 @@ void examples::delta::MyObserver::leaveCell(
 
   logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );
   CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
-  assertionVectorNumericalEquals4(data.x,event.getX(),data.value,data.x,data.h,event.toString());
-  assertionVectorNumericalEquals4(data.h,event.getH(),data.value,data.x,data.h,event.toString());
+  assertionVectorNumericalEquals3(data.x,event.getX(),data.x,data.h,event.toString());
+  assertionVectorNumericalEquals3(data.h,event.getH(),data.x,data.h,event.toString());
 
   if (outCellStack==TraversalObserver::CreateOrDestroyPersistentGridEntity) {
 	  // @todo update
