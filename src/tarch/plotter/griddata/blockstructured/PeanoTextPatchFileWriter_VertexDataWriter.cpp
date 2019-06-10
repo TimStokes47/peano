@@ -14,7 +14,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataW
   _identifier(identifier),
   _numberOfVerticesPerAxis(unknownsPerAxis),
   _numberOfUnknowns(numberOfUnknowns),
-  _patchCounter(0) {
+  _entryCounter(0) {
   _writer._snapshotFileOut << "begin vertex-values \"" << identifier << "\"" << std::endl
                            << "  number-of-unknowns " << _numberOfUnknowns << std::endl
                            << "  number-of-dofs-per-axis " << _numberOfVerticesPerAxis << std::endl;
@@ -37,20 +37,19 @@ int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexD
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, double value ) {
   assertion( !std::isnan(value) );
-  for (int i=0; i<getVerticesPerPatch()*_numberOfUnknowns; i++) {
-    _out << " " << value;
-  }
-  _patchCounter++;
+  assertionEquals(_numberOfUnknowns,1);
+  _out << " " << value;
+  _entryCounter++;
   flushIfPatchIsComplete();
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, double* values ) {
-  for (int i=0; i<getVerticesPerPatch()*_numberOfUnknowns; i++) {
+  for (int i=0; i<_numberOfUnknowns; i++) {
     _out << " " << values[i];
     assertion( !std::isnan(values[i]) );
   }
-  _patchCounter++;
+  _entryCounter++;
   flushIfPatchIsComplete();
 }
 
@@ -60,25 +59,28 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::assignRemainingVerticesDefaultValues() {
-  if (_patchCounter>=getVerticesPerPatch()) {
+/*
+  while (_entryCounter<getVerticesPerPatch()) {
     _out << std::flush;
     _writer._snapshotFileOut << "  begin vertex-values \"" << _identifier << "\"" << std::endl
                  << "    " << _out.rdbuf() << std::endl
                  << "  end vertex-values" << std::endl;
     _out.clear();
-    _patchCounter = 0;
+    _entryCounter = 0;
   }
+*/
+	assertionMsg(false, "not yet implemented" );
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::flushIfPatchIsComplete() {
-  if (_patchCounter>=getVerticesPerPatch()) {
+  if (_entryCounter>=getVerticesPerPatch()) {
     _out << std::flush;
     _writer._snapshotFileOut << "  begin vertex-values \"" << _identifier << "\"" << std::endl
                  << "    " << _out.rdbuf() << std::endl
                  << "  end vertex-values" << std::endl;
     _out.clear();
-    _patchCounter = 0;
+    _entryCounter = 0;
   }
 }
 

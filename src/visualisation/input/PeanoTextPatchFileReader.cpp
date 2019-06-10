@@ -246,6 +246,8 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
         i++;
       }
 
+      logError( "parsePatch(...)", "found " << data.size() << " entries for " << variableName );
+
       addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
 	}
     else if ( tokens[0]=="begin" and tokens[1]=="vertex-values" ) {
@@ -277,7 +279,7 @@ void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSet
 
   const int expectedDataEntries = key.getTotalNumberOfQuantitiesPerPatch();
   if ( textData.size()!=expectedDataEntries ) {
-    logError( "parsePatch(...)", "expected " << expectedDataEntries << " data entries for variable " << variableName << " but got only " << textData.size() << ". Ignore data set");
+    logError( "parsePatch(...)", "expected " << expectedDataEntries << " data entries for variable " << variableName << " but got " << textData.size() << ". Ignore data set");
     return;
   }
 

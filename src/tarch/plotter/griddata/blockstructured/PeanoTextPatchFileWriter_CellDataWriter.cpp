@@ -14,7 +14,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWri
   _identifier(identifier),
   _numberOfCellsPerAxis(unknownsPerAxis),
   _numberOfUnknowns(numberOfUnknowns),
-  _patchCounter(0) {
+  _entryCounter(0) {
   _writer._snapshotFileOut << "begin cell-values \"" << identifier << "\"" << std::endl
                << "  number-of-unknowns " << _numberOfUnknowns << std::endl
                << "  number-of-dofs-per-axis " << _numberOfCellsPerAxis << std::endl;
@@ -37,20 +37,21 @@ int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDat
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, double value ) {
   assertion( !std::isnan(value) );
+  assertionEquals(_numberOfUnknowns,1);
   for (int i=0; i<getCellsPerPatch()*_numberOfUnknowns; i++) {
     _out << " " << value;
   }
-  _patchCounter++;
+  _entryCounter++;
   flushIfPatchIsComplete();
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, double* values ) {
-  for (int i=0; i<getCellsPerPatch()*_numberOfUnknowns; i++) {
+  for (int i=0; i<_numberOfUnknowns; i++) {
     _out << " " << values[i];
     assertion( !std::isnan(values[i]) );
   }
-  _patchCounter++;
+  _entryCounter++;
   flushIfPatchIsComplete();
 }
 
@@ -60,21 +61,19 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::flushIfPatchIsComplete() {
-  if (_patchCounter>=getCellsPerPatch()) {
+  if (_entryCounter>=getCellsPerPatch()) {
     _out << std::flush;
     _writer._snapshotFileOut << "  begin cell-values \"" << _identifier << "\"" << std::endl
                  << "    " << _out.rdbuf() << std::endl
                  << "  end cell-values" << std::endl;
     _out.clear();
-    _patchCounter = 0;
+    _entryCounter = 0;
   }
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::assignRemainingCellsDefaultValues() {
-  while (_patchCounter<getCellsPerPatch()) {
-    plotCell(-1,0.0);
-  }
+	assertionMsg( false, "not implemented" );
 }
 
 

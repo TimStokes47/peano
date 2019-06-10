@@ -50,7 +50,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
         const std::string _identifier;
         const int         _numberOfCellsPerAxis;
         const int         _numberOfUnknowns;
-        int               _patchCounter;
+        int               _entryCounter;
         std::stringstream _out;
 
         void flushIfPatchIsComplete();
@@ -96,7 +96,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
          /**
           * Number of entries written within a patch.
           */
-         int               _patchCounter;
+         int               _entryCounter;
          std::stringstream _out;
 
          void flushIfPatchIsComplete();
