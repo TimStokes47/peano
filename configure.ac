@@ -198,7 +198,6 @@ AM_CONDITIONAL([UseDelta],[test "$delta" != false])
 if test "$delta" != false; then
   AC_DEFINE([UseDelta], [1], [UseDelta])
   PEANO_CXXFLAGS+=" -I${delta}"
-  PEANO_LDFLAGS+=" -L${delta}/lib"
 fi
 
 
