@@ -1,4 +1,4 @@
-#include "PeanoFormatCellDataPlotter.h"
+#include "CompositeMapping.h"
 #include "CellData.h"
 
 #include "peano4/utils/Loop.h"
@@ -8,123 +8,85 @@
 #include "tarch/multicore/Lock.h"
 
 
-tarch::multicore::BooleanSemaphore  examples::delta::PeanoFormatCellDataPlotter::_semaphore;
-int                                 examples::delta::PeanoFormatCellDataPlotter::_instanceCounter(0);
 
 
-examples::delta::PeanoFormatCellDataPlotter::PeanoFormatCellDataPlotter(const std::string&  fileNamePrefix, bool plotThroughoutDescent):
-  _plotThroughoutDescent(plotThroughoutDescent),
-  _fileNamePrefix(fileNamePrefix),
-  _counter(0),
-  _writer(nullptr),
-  _dataWriter(nullptr) {
-  assertionEquals(_instanceCounter,0);
+examples::delta::CompositeMapping::CompositeMapping() {
 }
 
 
-examples::delta::PeanoFormatCellDataPlotter::~PeanoFormatCellDataPlotter() {
-  assertion( _writer == nullptr);
-  assertion( _dataWriter == nullptr);
-}
-
-
-void examples::delta::PeanoFormatCellDataPlotter::beginTraversal() {
-  tarch::multicore::Lock lock(_semaphore);
-  if (_instanceCounter==0) {
-    assertion(_writer==nullptr);
-
- 	_writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
-      Dimensions,
-      _fileNamePrefix,
-      _counter>0  // bool append
-    );
-
-    _dataWriter      = _writer->createCellDataWriter( "cell-data", 1, CellData::DoFsPerCell );
-  }
-  _instanceCounter++;
-}
-
-
-void examples::delta::PeanoFormatCellDataPlotter::endTraversal() {
-  tarch::multicore::Lock lock(_semaphore);
-  _instanceCounter--;
-
-  if (_instanceCounter==0) {
-    assertion( _dataWriter!=nullptr );
-
-    _dataWriter->close();
-
-    std::ostringstream filename;
-    filename << _fileNamePrefix << "-" << _counter;
-    _writer->writeToFile( filename.str() );
-
-    delete _dataWriter;
-    delete _writer;
-
-    _dataWriter    = nullptr;
-    _writer        = nullptr;
-
-    _counter++;
+examples::delta::CompositeMapping::~CompositeMapping() {
+  for (auto& p: _mappings) {
+	delete p;
   }
 }
 
 
-void examples::delta::PeanoFormatCellDataPlotter::createCell(
-  const tarch::la::Vector<Dimensions,double>&  center,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  CellData&                                    data,
-  CellData&                                    coarseData
-)  {}
-
-
-void examples::delta::PeanoFormatCellDataPlotter::destroyCell(
-  const tarch::la::Vector<Dimensions,double>&  center,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  CellData&                                    data,
-  CellData&                                    coarseData
-)  {}
-
-
-void examples::delta::PeanoFormatCellDataPlotter::plotCell(
-  const tarch::la::Vector<Dimensions,double>&  center,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  CellData&                                    data
-) {
-  int vertexIndices[TwoPowerD];
-
-  std::pair<int,int> indices = _writer->plotPatch(
-    center - h * 0.5,
-	h
-  );
-
-  assertion( _dataWriter!=nullptr );
-  // @todo
-  _dataWriter->plotCell(indices.second,data.value);
+void examples::delta::CompositeMapping::append( Mapping* mapping ) {
+  assertion( mapping!=nullptr );
+  _mappings.push_back(mapping);
 }
 
 
-void examples::delta::PeanoFormatCellDataPlotter::touchCellFirstTime(
+void examples::delta::CompositeMapping::beginTraversal() {
+  for (auto& p: _mappings) {
+    p->beginTraversal();
+  }
+}
+
+
+void examples::delta::CompositeMapping::endTraversal() {
+  for (auto& p: _mappings) {
+    p->endTraversal();
+  }
+}
+
+
+void examples::delta::CompositeMapping::createCell(
+  const tarch::la::Vector<Dimensions,double>&  center,
+  const tarch::la::Vector<Dimensions,double>&  h,
+  CellData&                                    data,
+  CellData&                                    coarseData
+)  {
+  for (auto& p: _mappings) {
+    p->createCell(center,h,data,coarseData);
+  }
+}
+
+
+void examples::delta::CompositeMapping::destroyCell(
+  const tarch::la::Vector<Dimensions,double>&  center,
+  const tarch::la::Vector<Dimensions,double>&  h,
+  CellData&                                    data,
+  CellData&                                    coarseData
+)  {
+  for (auto& p: _mappings) {
+    p->destroyCell(center,h,data,coarseData);
+  }
+}
+
+
+void examples::delta::CompositeMapping::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
   CellData&                                    coarseData,
   peano4::datamanagement::CellMarker           marker
 )  {
-  if (_plotThroughoutDescent) {
-    plotCell(center,h,data);
+  for (auto& p: _mappings) {
+    p->touchCellFirstTime(center,h,data,coarseData,marker);
   }
 }
 
 
-void examples::delta::PeanoFormatCellDataPlotter::touchCellLastTime(
+void examples::delta::CompositeMapping::touchCellLastTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
   CellData&                                    coarseData,
   peano4::datamanagement::CellMarker           marker
 )  {
-  if (not _plotThroughoutDescent) {
-    plotCell(center,h,data);
+  for (auto& p: _mappings) {
+    p->touchCellLastTime(center,h,data,coarseData,marker);
   }
 }
 

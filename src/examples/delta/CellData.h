@@ -33,7 +33,7 @@ struct examples::delta::CellData {
   static constexpr int DoFsPerCell = DoFsPerAxis * DoFsPerAxis * DoFsPerAxis;
   #endif
 
-  double  value[DoFsPerAxis];
+  double  value[DoFsPerCell];
 
   std::string toString() const {
     return std::string("(")

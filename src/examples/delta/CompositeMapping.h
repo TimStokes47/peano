@@ -5,7 +5,7 @@
 
 
 #include "Mapping.h"
-
+#include <vector>
 
 namespace examples {
   namespace delta {
@@ -19,7 +19,7 @@ namespace examples {
  */
 class examples::delta::CompositeMapping: public examples::delta::Mapping {
   private:
-
+	std::vector<Mapping*> _mappings;
   public:
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file
@@ -27,8 +27,13 @@ class examples::delta::CompositeMapping: public examples::delta::Mapping {
      *
      * If this guy is ran on the global master,
      */
-    InitData();
-    virtual ~InitData();
+	CompositeMapping();
+    virtual ~CompositeMapping();
+
+	/**
+	 * Append a new mapping. Ownership goes over to the composite.
+	 */
+	void append( Mapping* mapping );
 
 	void beginTraversal() final;
 	void endTraversal() final;
