@@ -113,21 +113,18 @@ class peano4::grid::Spacetree {
     );
 
     static FaceType getFaceType(
-      GridVertex                         vertices[TwoPowerD],
+      GridVertex                         coarseGridVertices[TwoPowerD],
 	  int                                faceNumber
     );
 
     /**
-     * You pass in the fine grid vertices and it gives you back the cell type.
+     * You pass in the vertices and it gives you back the cell type.
      * This routine translates the 2^d vertices of a cell into a cell type.
-     * There's a counterpart for faces, too. For vertices, we need no
-     * counterpart, as the translation is 1:1, i.e. we handle it directly
-     * in one switch statement.
      *
      * @see getFaceType()
      */
     static CellType getCellType(
-      GridVertex                         vertices[TwoPowerD]
+      GridVertex                         coarseGridVertices[TwoPowerD]
     );
 
     int              _id;
@@ -171,6 +168,10 @@ class peano4::grid::Spacetree {
      * the joining rank.
      */
     std::set< int >      _joinTriggered;
+
+    /**
+     * If master: Set of workers that should join
+     */
     std::set< int >      _joining;
     std::set< int >      _hasJoined;
 
@@ -420,6 +421,11 @@ class peano4::grid::Spacetree {
      *   hijack the routine.
      */
     std::vector<int>  _splittedCells;
+
+    /**
+     * Max number of cells we are still allowed to join with the master
+     */
+    int               _maxJoiningCells;
 
     /**
      * We do realise a @f$LR(3^d)@f$ grammar to identify admissible splits.
@@ -756,7 +762,7 @@ class peano4::grid::Spacetree {
      * this tree first is not refined further. We need a couple of sweeps
      * to see whether a tree is refined further or not.
      */
-    void joinWithMaster();
+    void joinWithMaster(int maxCellsToJoin);
     void joinWithWorker(int id);
 
     /**

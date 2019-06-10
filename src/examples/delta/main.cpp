@@ -47,10 +47,12 @@ void runExample() {
     tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 
+/*
     const int SplitEveryKIterations = 5;
     if (i%SplitEveryKIterations==SplitEveryKIterations-1) {
       peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
     }
+*/
 
     logInfo( "main(...)", "refined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefinedVertices() );
     logInfo( "main(...)", "unrefined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfUnrefinedVertices() );
@@ -84,7 +86,7 @@ int main(int argc, char** argv) {
     "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid::Spacetree::create", false
+    "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid", false
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "examples::integerdiffusionthroughfaces::MyObserver", false

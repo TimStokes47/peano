@@ -611,7 +611,9 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
   assertion1( tree->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running, treeId);
   assertion1( tree->mayJoinWithMaster(), treeId );
 
-  tree->joinWithMaster();
+  const int numberOfMaxJoinedCells = std::max(1,tree->getGridStatistics().getNumberOfLocalUnrefinedCells()/2);
+  logDebug( "join(int)", "max=" << numberOfMaxJoinedCells );
+  tree->joinWithMaster( numberOfMaxJoinedCells );
   const int fatherId = tree->_masterId;
 
   tree = nullptr;

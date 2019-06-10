@@ -374,12 +374,20 @@ peano4::grid::Spacetree::CellType peano4::grid::Spacetree::getCellType(
   assertion( not (allVerticesAreDelete and allVerticesAreNew) );
 
   if (allVerticesAreDelete) {
-	 return CellType::Delete;
+    logDebug( "getCellType(...)", "delete cell" );
+    return CellType::Delete;
   }
   else if (allVerticesAreNew) {
+     logDebug( "getCellType(...)", "create new cell" );
 	 return CellType::New;
   }
-  else return CellType::Persistent;
+  else {
+    logDebug( "getCellType(...)", "keep cell" );
+	for (int i=0; i<TwoPowerD; i++) {
+      logDebug( "getCellType(...)", "vertex #" << i << ": " << vertices[i].toString() );
+	}
+	return CellType::Persistent;
+  }
 }
 
 
@@ -1693,10 +1701,8 @@ void peano4::grid::Spacetree::splitOrJoinCell(
     _spacetreeState==SpacetreeState::JoinTriggered
     and
     cellIsMergeCandidate( coarseGridVertices, fineGridVertices )
-  // @todo Hier kommt die Strategie rein
-  // - parametrisiert ueber max Merge cells
-  // - nur welche mit adjazentem Rank (diffusion) vs alle, die moeglich sind
-    and _splittedCells.empty()
+    and
+	_maxJoiningCells>0
   ) {
     logDebug( "splitOrJoinCell(...)", "decided to merge cell from tree " << _id << " into master " << _masterId );
 
@@ -1707,8 +1713,7 @@ void peano4::grid::Spacetree::splitOrJoinCell(
 
     updateVertexRanksWithinCell( fineGridVertices, RankOfCellWitchWillBeJoined );
 
-    // @todo Nur eine Zell max
-    _splittedCells.push_back(-1);
+  	_maxJoiningCells--;
   }
 
 
@@ -1943,11 +1948,16 @@ bool peano4::grid::Spacetree::mayJoinWithMaster() const {
 }
 
 
-void peano4::grid::Spacetree::joinWithMaster() {
+void peano4::grid::Spacetree::joinWithMaster(int maxCellsToJoin) {
   assertion1( mayJoinWithMaster(), _id);
   _spacetreeState = SpacetreeState::JoinTriggered;
   assertion( _splitTriggered.empty() );
   assertion( _splitting.empty() );
+  assertion( _splittedCells.empty() );
+  assertion( _joining.empty() );
+  assertion( maxCellsToJoin>0 );
+
+  _maxJoiningCells = maxCellsToJoin;
 }
 
 
