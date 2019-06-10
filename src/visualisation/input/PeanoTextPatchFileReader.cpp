@@ -283,7 +283,6 @@ void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSet
     return;
   }
 
-  logError( "parsePatch(...)", "I wanna see " << expectedDataEntries << " x " << key.dofsPerAxis);
   visualisation::data::PatchData newEntry(_dimensions, offset, size, key.dofsPerAxis);
   for (int i=0; i<expectedDataEntries; i++) {
     newEntry.data[i] = std::stod(textData[i]);

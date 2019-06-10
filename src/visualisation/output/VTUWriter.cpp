@@ -56,7 +56,7 @@ visualisation::output::VTUWriter::~VTUWriter() {
 #ifdef UseVTK
 vtkSmartPointer<vtkDoubleArray> visualisation::output::VTUWriter::getVTUDataForOnePatch(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data) {
   vtkSmartPointer<vtkDoubleArray> variableArray = vtkSmartPointer<vtkDoubleArray>::New();
-  variableArray->SetNumberOfComponents( variable.getTotalNumberOfDofsPerPatch() );
+  variableArray->SetNumberOfComponents( variable.unknowns );
   variableArray->SetName(variable.name.c_str());
   for(int i = 0; i < variable.getTotalNumberOfDofsPerPatch(); i += variable.unknowns) {
 	variableArray->InsertNextTuple(&(data.data[i]));
@@ -205,11 +205,13 @@ void visualisation::output::VTUWriter::writeFile(const visualisation::data::Vari
   vtkSmartPointer<vtkAppendFilter> appendFilter = vtkSmartPointer<vtkAppendFilter>::New();
   for (auto p: patchData) {
 /*
-	if(patch->hasMappings()) {
-		appendFilter->AddInputData(toUnstructuredGrid(patch));
-	} else {
+	if(variable.hasMappings()) {
+      appendFilter->AddInputData(toUnstructuredGrid(variable,p));
+	}
+	else {
 */
-    appendFilter->AddInputData(toImageData(variable,p));
+      appendFilter->AddInputData(toImageData(variable,p));
+//	}
   }
 
   appendFilter->Update();
