@@ -1,7 +1,7 @@
 #include "MyObserver.h"
 
-//#include "MyMapping.h"
-//#include "CompositeMapping.h"
+#include "InitData.h"
+#include "CompositeMapping.h"
 #include "PeanoFormatCellDataPlotter.h"
 
 #include "peano4/grid/GridControlEvent.h"
@@ -29,13 +29,12 @@ examples::delta::MyObserver::MyObserver():
   _iterationCounter(-1),
   _mapping(nullptr) {
   #if PeanoDebug>0
-//  CompositeMapping* mapping = new CompositeMapping();
-//  mapping->append( new MyMapping() );
-//  mapping->append( new PeanoFormatCellDataPlotter("marker",false));
-//  _mapping = mapping;
-  _mapping = new PeanoFormatCellDataPlotter("marker",false);
+  CompositeMapping* mapping = new CompositeMapping();
+  mapping->append( new InitData() );
+  mapping->append( new PeanoFormatCellDataPlotter("marker",false));
+  _mapping = mapping;
   #else
-//  _mapping = new MyMapping();
+  _mapping = new InitData();
   #endif
 }
 

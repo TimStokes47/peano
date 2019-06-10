@@ -5,7 +5,9 @@ endif
 
 DeltaSources = \
   main.cpp \
+  InitData.cpp \
   MyObserver.cpp \
+  CompositeMapping.cpp \
   PeanoFormatCellDataPlotter.cpp
 
 Delta_debug_CXXFLAGS  = -I$(top_builddir)/src -DPeanoDebug=1 -DDimensions=3
