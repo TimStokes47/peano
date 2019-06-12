@@ -4,12 +4,28 @@
 #include "peano4/utils/Loop.h"
 
 
-#include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
 #include "tarch/multicore/Lock.h"
+#include "delta/ContactPoint.h"
+#include "delta/io/vtk.h"
+#include "delta/contactdetection/filter.h"
+#include "delta/contactdetection/sphere.h"
 
 
+examples::delta::InitData::InitData():
+  _primitive(
+    0.5, 0.5, 0.5, // centre
+    0.2, // radius
+    0.2,0.8, // min/max Z
+    0.001 // h
+  ) {
 
-examples::delta::InitData::InitData() {
+  ::delta::io::writeVTK(
+    _primitive.getNumberOfTriangles(),
+    _primitive.getXCoordinates(),
+    _primitive.getYCoordinates(),
+    _primitive.getZCoordinates(),
+    "geometry.vtk"
+  );
 }
 
 
@@ -31,12 +47,39 @@ void examples::delta::InitData::createCell(
   CellData&                                    data,
   CellData&                                    coarseData
 )  {
-  for (int i=0; i<CellData::DoFsPerCell; i++) {
-	data.valueX[i] = 1.0;
-//	@todo
-//	data.valueY[i] = 2.0;
-//	data.valueZ[i] = 3.0;
+  tarch::la::Vector<Dimensions,double> patchH = (1.0 / CellData::DoFsPerAxis) * h;
+  tarch::la::Vector<Dimensions,double> offset = -0.5 * h + 0.5 * patchH;
+
+  int currentEntry = 0;
+  dfor(i,CellData::DoFsPerAxis) {
+    tarch::la::Vector<Dimensions,double> x = center + offset + tarch::la::multiplyComponents(i.convertScalar<double>(),patchH);
+
+    std::vector<::delta::ContactPoint> contactPoints = ::delta::contactdetection::sphereToTriangle(
+      x(0),x(1),x(2),
+      0.0, // radius. This one is degenerated
+      _primitive.getNumberOfTriangles(),
+      _primitive.getXCoordinates(),
+      _primitive.getYCoordinates(),
+      _primitive.getZCoordinates(),
+      0.4 // epsilon
+    );
+
+
+
+    data.valueX[currentEntry] = 1.0;
+    currentEntry++;
   }
+
+/*
+  ::delta::io::writeVTK(
+    _primitive.getNumberOfTriangles(),
+    _primitive.getXCoordinates(),
+    _primitive.getYCoordinates(),
+    _primitive.getZCoordinates(),
+    "geometry.vtk"
+  );
+*/
+
 }
 
 

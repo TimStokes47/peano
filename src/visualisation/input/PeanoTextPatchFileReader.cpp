@@ -41,7 +41,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
   ifs.close();
 
   if (lines.empty()) {
-	logError( "parse()", "file is empty (or does not exist)" );
+    logError( "parse()", "file is empty (or does not exist)" );
   }
 
   #pragma omp parallel
@@ -246,7 +246,7 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
         i++;
       }
 
-      logError( "parsePatch(...)", "found " << data.size() << " entries for " << variableName );
+      logDebug( "parsePatch(...)", "found " << data.size() << " entries for " << variableName );
 
       addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
 	}

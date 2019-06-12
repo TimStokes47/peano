@@ -19,7 +19,7 @@ namespace examples {
  */
 class examples::delta::CompositeMapping: public examples::delta::Mapping {
   private:
-	std::vector<Mapping*> _mappings;
+    std::vector<Mapping*> _mappings;
   public:
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file
