@@ -102,9 +102,11 @@ void examples::delta::PeanoFormatCellDataPlotter::plotCell(
 
   int cellIndex = _dataWriter->getFirstCellWithinPatch(patchIndex);
 
+  int subCellCounter = 0;
   dfor(k,CellData::DoFsPerAxis) {
-    _dataWriter->plotCell(cellIndex,data.valueX);
+    _dataWriter->plotCell(cellIndex,data.valueX[subCellCounter]);
     cellIndex++;
+    subCellCounter++;
   }
 }
 

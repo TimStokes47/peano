@@ -38,7 +38,7 @@ int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDat
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, double value ) {
   assertion( !std::isnan(value) );
   assertionEquals(_numberOfUnknowns,1);
-  for (int i=0; i<getCellsPerPatch()*_numberOfUnknowns; i++) {
+  for (int i=0; i<_numberOfUnknowns; i++) {
     _out << " " << value;
   }
   _entryCounter++;

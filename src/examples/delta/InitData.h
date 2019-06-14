@@ -6,6 +6,8 @@
 
 #include "Mapping.h"
 
+#include "tarch/logging/Log.h"
+
 #include "delta/primitives/Cylinder.h"
 
 
@@ -21,7 +23,8 @@ namespace examples {
  */
 class examples::delta::InitData: public examples::delta::Mapping {
   private:
-    ::delta::primitives::Cylinder  _primitive;
+    static tarch::logging::Log _log;
+    ::delta::Mesh*             _primitive;
   public:
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file
