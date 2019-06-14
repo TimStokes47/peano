@@ -38,8 +38,8 @@ struct examples::delta::CellData {
   #endif
 
   double  valueX[DoFsPerCell];
-  //double  valueY[DoFsPerCell];
-  //double  valueZ[DoFsPerCell];
+  double  valueY[DoFsPerCell];
+  double  valueZ[DoFsPerCell];
 
   std::string toString() const {
     return std::string("(")

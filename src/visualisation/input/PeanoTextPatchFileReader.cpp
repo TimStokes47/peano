@@ -249,12 +249,12 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
       logDebug( "parsePatch(...)", "found " << data.size() << " entries for " << variableName );
 
       addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
-	}
+    }
     else if ( tokens[0]=="begin" and tokens[1]=="vertex-values" ) {
       std::string variableName = Parser::removeHyphens(tokens[2]);
 
       i++;
-	  std::vector<std::string> data;
+      std::vector<std::string> data;
       while ( text[i].find( "end vertex-values" )==std::string::npos ) {
     	std::vector<std::string> tokens = Parser::tokenise( text[i] );
         data.insert( data.end(), tokens.begin(), tokens.end() );
@@ -262,7 +262,7 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
       }
 
       addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
-	}
+    }
   }
 }
 
@@ -283,7 +283,7 @@ void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSet
     return;
   }
 
-  visualisation::data::PatchData newEntry(_dimensions, offset, size, key.dofsPerAxis);
+  visualisation::data::PatchData newEntry(_dimensions, offset, size, key.dofsPerAxis, key.unknowns);
   for (int i=0; i<expectedDataEntries; i++) {
     newEntry.data[i] = std::stod(textData[i]);
   }

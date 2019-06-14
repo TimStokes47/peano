@@ -40,11 +40,11 @@ void visualisation::filter::SeparateResolutions::apply( visualisation::data::Dat
     const visualisation::data::Variable targetVariable = targetVariables.at(key);
     visualisation::data::PatchData newPatch(
       inputVariable.dimensions,
-	  p.offset,
-	  p.size,
-	  inputVariable.dofsPerAxis
-	);
-    newPatch.copyData(p,inputVariable.dofsPerAxis);
+      p.offset,
+      p.size,
+      inputVariable.dofsPerAxis,inputVariable.unknowns
+    );
+    newPatch.copyData(p,inputVariable.dofsPerAxis,inputVariable.unknowns);
     targetPatchData[ targetVariable ].push_back( newPatch );
   }
 

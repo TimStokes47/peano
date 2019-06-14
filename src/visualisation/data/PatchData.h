@@ -25,10 +25,10 @@ namespace visualisation {
  */
 class visualisation::data::PatchData {
   public:
-	PatchData(int dimensions, double* offset_, double* size_, int dofsPerAxis);
+	  PatchData(int dimensions, double* offset_, double* size_, int dofsPerAxis, int unknownsPerDoF);
 
-	bool samePatch( const PatchData& otherPatch );
-	bool overlaps( const PatchData& otherPatch );
+    bool samePatch( const PatchData& otherPatch );
+    bool overlaps( const PatchData& otherPatch );
 
 	/**
 	 * Free internal dynamic data types
@@ -47,14 +47,14 @@ class visualisation::data::PatchData {
 	 */
 	double size[MaxDimensions];
 
-	/**
-	 * Mapping from variables onto the actual data. We store data as AoS. It
-	 * is furthermore ordered lexicographically, i.e. the x index is the
-	 * fastest running index.
-	 */
-	double* data;
+    /**
+     * Mapping from variables onto the actual data. We store data as AoS. It
+     * is furthermore ordered lexicographically, i.e. the x index is the
+     * fastest running index.
+     */
+    double* data;
 
-	void copyData( const PatchData& otherData, int dofsPerAxis );
+    void copyData( const PatchData& otherData, int dofsPerAxis, int unknownsPerDoF );
 };
 
 #endif

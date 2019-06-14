@@ -17,14 +17,15 @@ void visualisation::filter::Copy::apply( visualisation::data::DataSet& dataSet, 
   for (auto& p: inputData) {
     visualisation::data::PatchData newPatch(
       inputVariable.dimensions,
-	  p.offset,
-	  p.size,
-	  inputVariable.dofsPerAxis
-	);
+      p.offset,
+      p.size,
+      inputVariable.dofsPerAxis,
+      inputVariable.unknowns
+    );
 
-    newPatch.copyData(p,inputVariable.dofsPerAxis);
+    newPatch.copyData(p,inputVariable.dofsPerAxis,inputVariable.unknowns);
 
-	targetData.push_back( newPatch );
+    targetData.push_back( newPatch );
   }
 
   dataSet.add( targetVariable, targetData );

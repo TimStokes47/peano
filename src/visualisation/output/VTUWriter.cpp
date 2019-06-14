@@ -23,6 +23,7 @@
 #include "vtkQuad.h"
 
 #include <vtkSmartPointer.h>
+#include <vtkUnstructuredGridWriter.h>
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkMergeCells.h>
 #endif
@@ -58,8 +59,14 @@ vtkSmartPointer<vtkDoubleArray> visualisation::output::VTUWriter::getVTUDataForO
   vtkSmartPointer<vtkDoubleArray> variableArray = vtkSmartPointer<vtkDoubleArray>::New();
   variableArray->SetNumberOfComponents( variable.unknowns );
   variableArray->SetName(variable.name.c_str());
-  for(int i = 0; i < variable.getTotalNumberOfDofsPerPatch(); i += variable.unknowns) {
-	variableArray->InsertNextTuple(&(data.data[i]));
+  // @todo
+//  variableArray->SetNumberOfTuples( variable.getTotalNumberOfDofsPerPatch() );
+
+  for(int i = 0; i < variable.getTotalNumberOfDofsPerPatch(); i++) {
+    // @todo Raus
+//    logInfo( "getVTUDataForOnePatch(...)", "wrote " << data.data[i*variable.unknowns] << "x" << data.data[i*variable.unknowns+1] << "x" << data.data[i*variable.unknowns+2]);
+    variableArray->InsertNextTuple(&(data.data[i*variable.unknowns]));
+//    variableArray->InsertNextTuple3(data.data[i*variable.unknowns],data.data[i*variable.unknowns+1],data.data[i*variable.unknowns+2]);
   }
   return variableArray;
 }
@@ -76,7 +83,7 @@ vtkSmartPointer<vtkImageData> visualisation::output::VTUWriter::toImageData(cons
   for(int i = 0; i < variable.dimensions; i++) {
     dimensions[i] = variable.getVerticesPerAxisInCartesianMesh();
     offSets[i]    = patchData.offset[i];
-	spacing[i]    = patchData.size[i]/(variable.getVerticesPerAxisInCartesianMesh()-1);
+    spacing[i]    = patchData.size[i]/(variable.getVerticesPerAxisInCartesianMesh()-1);
   }
 
   imageData->SetDimensions(dimensions);
@@ -85,10 +92,10 @@ vtkSmartPointer<vtkImageData> visualisation::output::VTUWriter::toImageData(cons
 
   vtkSmartPointer<vtkDoubleArray> variableArray = getVTUDataForOnePatch(variable,patchData);
   if(variable.type == visualisation::data::PeanoDataType::Cell_Values) {
-	imageData->GetCellData()->AddArray(variableArray);
+    imageData->GetCellData()->AddArray(variableArray);
   }
   else if(variable.type == visualisation::data::PeanoDataType::Vertex_Values) {
-	imageData->GetPointData()->AddArray(variableArray);
+    imageData->GetPointData()->AddArray(variableArray);
   }
 
   return imageData;
@@ -184,10 +191,10 @@ vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::toUnstruc
 
   vtkSmartPointer<vtkDoubleArray> variableArray = getVTUDataForOnePatch(variable,patchData);
   if (variable.type == visualisation::data::PeanoDataType::Cell_Values) {
-	grid->GetCellData()->AddArray(variableArray);
+    grid->GetCellData()->AddArray(variableArray);
   }
   else if(variable.type == visualisation::data::PeanoDataType::Vertex_Values) {
-	grid->GetPointData()->AddArray(variableArray);
+    grid->GetPointData()->AddArray(variableArray);
   }
 
   return grid;
@@ -221,7 +228,7 @@ void visualisation::output::VTUWriter::writeFile(const visualisation::data::Vari
   vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
   std::string outputFileName = _directory + "/" + _outputFileWithoutExtension + "." + writer->GetDefaultFileExtension();
   writer->SetFileName(outputFileName.c_str());
-  writer->SetCompressorTypeToZLib();
+//  writer->SetCompressorTypeToZLib();
   writer->AddInputDataObject( combined );
   writer->Write();
 

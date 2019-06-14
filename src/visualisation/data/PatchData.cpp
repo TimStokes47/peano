@@ -12,14 +12,14 @@
 #include "tarch/la/VectorOperations.h"
 
 
-visualisation::data::PatchData::PatchData(int dimensions_, double* offset_, double* size_, int dofsPerAxis):
+visualisation::data::PatchData::PatchData(int dimensions_, double* offset_, double* size_, int dofsPerAxis, int unknownsPerDoF):
   dimensions(dimensions_) {
   for (int d=0; d<dimensions; d++) {
-	offset[d]    = offset_[d];
-	size[d]      = size_[d];
+    offset[d]    = offset_[d];
+    size[d]      = size_[d];
   }
 
-  int points = tarch::la::aPowI(dimensions,dofsPerAxis);
+  int points = tarch::la::aPowI(dimensions,dofsPerAxis) * unknownsPerDoF;
 
   data = new double[points];
 }
@@ -49,8 +49,8 @@ bool visualisation::data::PatchData::overlaps( const PatchData& otherPatch ) {
 }
 
 
-void visualisation::data::PatchData::copyData( const PatchData& otherData, int dofsPerAxis ) {
-  int points = tarch::la::aPowI(dimensions,dofsPerAxis);
+void visualisation::data::PatchData::copyData( const PatchData& otherData, int dofsPerAxis, int unknownsPerDoF ) {
+  int points = tarch::la::aPowI(dimensions,dofsPerAxis) * unknownsPerDoF;
   for (int i=0; i<points; i++) {
 	data[i] = otherData.data[i];
   }

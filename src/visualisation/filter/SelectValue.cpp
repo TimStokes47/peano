@@ -34,10 +34,11 @@ void visualisation::filter::SelectValue::apply( visualisation::data::DataSet& da
         inputVariable.dimensions,
         p.offset,
   	    p.size,
-        inputVariable.dofsPerAxis
+        inputVariable.dofsPerAxis,
+        inputVariable.unknowns
       );
 
-      newPatch.copyData(p,inputVariable.dofsPerAxis);
+      newPatch.copyData(p,inputVariable.dofsPerAxis,inputVariable.unknowns);
       targetData.push_back( newPatch );
     }
   }

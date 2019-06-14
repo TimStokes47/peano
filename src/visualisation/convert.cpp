@@ -63,8 +63,8 @@ void inspect( std::string filename ) {
     for (auto& p: pp.getVariables()) {
       logInfo( "inspect", "variable " << p.name );
       logInfo( "inspect", "\ttype\t\t\t" << (p.type==visualisation::data::PeanoDataType::Cell_Values ? "cell values" : "vertex values" ));
-	  logInfo( "inspect", "\tdofs per axis\t\t" << p.dofsPerAxis );
-	  logInfo( "inspect", "\tunknowns per dof\t" << p.unknowns );
+      logInfo( "inspect", "\tdofs per axis\t\t" << p.dofsPerAxis );
+      logInfo( "inspect", "\tunknowns per dof\t" << p.unknowns );
     }
   }
 }

@@ -86,18 +86,16 @@ void examples::delta::InitData::createCell(
       );
 
     if (contactPoints.empty()) {
-      data.valueX[currentEntry] = 2.0 * epsilon;
+      data.valueX[currentEntry] = 0.0;
+      data.valueY[currentEntry] = 0.0;
+      data.valueZ[currentEntry] = 0.0;
     }
     else {
-//      data.valueX[currentEntry] = ::delta::eukledianNorm( contactPoints[0].x );
-      data.valueX[currentEntry] = contactPoints[0].distance;
-      assertion4(
-        data.valueX[currentEntry] <= 2.0 * epsilon * 1.1,
-        contactPoints[0].toString(),
-        x,
-        data.valueX[currentEntry],
-        epsilon
-      );
+      //data.valueX[currentEntry] = contactPoints[0].distance;
+      const double distance = contactPoints[0].distance;
+      data.valueX[currentEntry] = distance * contactPoints[0].normal[0];
+      data.valueY[currentEntry] = distance * contactPoints[0].normal[1];
+      data.valueZ[currentEntry] = distance * contactPoints[0].normal[2];
       logDebug( "createCell(...)", "contact for point " << x << ": " << contactPoints[0].toString() );
     }
 

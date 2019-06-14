@@ -39,8 +39,7 @@ void examples::delta::PeanoFormatCellDataPlotter::beginTraversal() {
       _counter>0  // bool append
     );
 
- 	// @todo 3 quantities, not 1
-    _dataWriter      = _writer->createCellDataWriter( "cell-data", CellData::DoFsPerAxis, 1 );
+    _dataWriter      = _writer->createCellDataWriter( "cell-data", CellData::DoFsPerAxis, Dimensions );
   }
   _instanceCounter++;
 }
@@ -103,11 +102,31 @@ void examples::delta::PeanoFormatCellDataPlotter::plotCell(
   int cellIndex = _dataWriter->getFirstCellWithinPatch(patchIndex);
 
   int subCellCounter = 0;
+
   dfor(k,CellData::DoFsPerAxis) {
     _dataWriter->plotCell(cellIndex,data.valueX[subCellCounter]);
+    _dataWriter->plotCell(cellIndex,data.valueY[subCellCounter]);
+    _dataWriter->plotCell(cellIndex,data.valueZ[subCellCounter]);
     cellIndex++;
     subCellCounter++;
   }
+/*
+  subCellCounter = 0;
+  dfor(k,CellData::DoFsPerAxis) {
+    _dataWriter->plotCell(cellIndex,data.valueX[subCellCounter]);
+    subCellCounter++;
+  }
+  subCellCounter = 0;
+  dfor(k,CellData::DoFsPerAxis) {
+    _dataWriter->plotCell(cellIndex,data.valueY[subCellCounter]);
+    subCellCounter++;
+  }
+  subCellCounter = 0;
+  dfor(k,CellData::DoFsPerAxis) {
+    _dataWriter->plotCell(cellIndex,data.valueZ[subCellCounter]);
+    subCellCounter++;
+  }
+*/
 }
 
 

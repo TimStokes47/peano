@@ -45,10 +45,11 @@ void visualisation::filter::Intersection::apply( visualisation::data::DataSet& d
         inputVariable.dimensions,
         p.offset,
         p.size,
-        inputVariable.dofsPerAxis
+        inputVariable.dofsPerAxis,
+        inputVariable.unknowns
       );
 
-      newPatch.copyData(p,inputVariable.dofsPerAxis);
+      newPatch.copyData(p,inputVariable.dofsPerAxis,inputVariable.unknowns);
 
       targetData.push_back( newPatch );
     }
