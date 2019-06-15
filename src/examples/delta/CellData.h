@@ -26,7 +26,7 @@ struct examples::delta::CellData {
   #endif
 
   #if PeanoDebug>0
-  static constexpr int DoFsPerAxis = 2;
+  static constexpr int DoFsPerAxis = 4;
   #else
   static constexpr int DoFsPerAxis = 10;
   #endif

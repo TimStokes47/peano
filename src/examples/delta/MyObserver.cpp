@@ -28,14 +28,16 @@ examples::delta::MyObserver::MyObserver():
   _spacetreeId(-1),
   _iterationCounter(-1),
   _mapping(nullptr) {
-  #if PeanoDebug>0
+//  #if PeanoDebug>0
   CompositeMapping* mapping = new CompositeMapping();
   mapping->append( new InitData() );
   mapping->append( new PeanoFormatCellDataPlotter("marker",false));
   _mapping = mapping;
+/*
   #else
   _mapping = new InitData();
   #endif
+*/
 }
 
 

@@ -7,6 +7,10 @@
 #include "PatchWriter.h"
 #include "../config.h"
 
+
+#include "tarch/logging/Log.h"
+
+
 #include <vector>
 
 

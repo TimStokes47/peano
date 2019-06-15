@@ -11,6 +11,7 @@
 #include "delta/contactdetection/sphere.h"
 #include "delta/math.h"
 #include "delta/primitives/Cube.h"
+#include "delta/primitives/Fault.h"
 
 
 tarch::logging::Log examples::delta::InitData::_log( "examples::delta::InitData" );
@@ -19,12 +20,16 @@ tarch::logging::Log examples::delta::InitData::_log( "examples::delta::InitData"
 examples::delta::InitData::InitData():
   _primitive( nullptr ) {
 
+/*
   _primitive = new ::delta::primitives::Cylinder(
     0.5, 0.5, 0.5, // centre
     0.2, // radius
     0.2,0.8, // min/max Z
     0.1 // h
   );
+*/
+
+  _primitive = new ::delta::primitives::Fault();
 
 /*
   _primitive = new ::delta::primitives::Cube(
