@@ -13,7 +13,7 @@ SUBDIRS = . examples/grid examples/integerdiffusionthroughfaces examples/delta v
 lib_LTLIBRARIES =  libTarch.la libTarch_debug.la libPeano4Core2d.la libPeano4Core2d_debug.la libPeano4Core3d.la libPeano4Core3d_debug.la
 
 
-libTarch_la_CXXFLAGS = -DPeanoDebug=1 $(PEANO_CXXFLAGS)
+libTarch_la_CXXFLAGS = -DPeanoDebug=0 $(PEANO_CXXFLAGS)
 libTarch_debug_la_CXXFLAGS = -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
 
 
