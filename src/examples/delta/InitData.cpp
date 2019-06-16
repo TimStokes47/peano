@@ -70,12 +70,13 @@ void examples::delta::InitData::createCell(
   tarch::la::Vector<Dimensions,double> patchH = (1.0 / CellData::DoFsPerAxis) * h;
   tarch::la::Vector<Dimensions,double> offset = -0.5 * h + 0.5 * patchH;
 
+  const double epsilon = h(0) / CellData::DoFsPerAxis;
+
   int currentEntry = 0;
   // @todo gleich Parallel
   dfor(i,CellData::DoFsPerAxis) {
     tarch::la::Vector<Dimensions,double> x = center + offset + tarch::la::multiplyComponents(i.convertScalar<double>(),patchH);
 
-    const double epsilon = 0.4;
     std::vector<::delta::ContactPoint> contactPoints =
       ::delta::contactdetection::filter(
         ::delta::contactdetection::sphereToTriangle(
