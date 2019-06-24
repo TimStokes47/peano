@@ -82,10 +82,12 @@ void examples::delta::InitData::createCell(
         ::delta::contactdetection::sphereToTriangle(
           x(0),x(1),x(2),
           0.0, // radius. This one is degenerated
+          -1,  // Don't need indices here
           _primitive->getNumberOfTriangles(),
           _primitive->getXCoordinates(),
           _primitive->getYCoordinates(),
           _primitive->getZCoordinates(),
+          nullptr, // not interested in indices here
           epsilon // epsilon
         ),
         epsilon
