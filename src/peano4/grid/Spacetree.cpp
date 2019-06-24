@@ -230,11 +230,12 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
     logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
 
-  observer.beginTraversal( _root.getX(), _root.getH() );
+  // @todo Net ganz richtig, oder?
+  observer.createTemporaryCell( _root.getX(), _root.getH() );
 
   descend(_root,vertices,observer);
 
-  observer.endTraversal( _root.getX(), _root.getH() );
+  observer.destroyTemporaryCell( _root.getX(), _root.getH() );
 
   _root.setInverted( not _root.getInverted() );
 

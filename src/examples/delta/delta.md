@@ -8,7 +8,7 @@ properly:
 
 export LDFLAGS=-L/home/tobias/git/Delta/src/delta
 
-or wereever the libDelta.so file is held. Then, rerun configure with 
+or where ever the libDelta.so file is held. Then, rerun configure with 
 
 ./configure --with-multithreading=cpp --with-delta=/home/tobias/git/Delta/src --with-vtk=/usr/include/vtk-8.2
 

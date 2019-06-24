@@ -28,12 +28,12 @@ class examples::grid::MyObserver: public
     MyObserver(int spacetreeId = -1, int counter=0);
     virtual ~MyObserver();
 
-    void beginTraversal(
+    void createTemporaryCell(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;
 
-    void endTraversal(
+    void destroyTemporaryCell(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;

@@ -38,22 +38,6 @@ class peano4::grid::TraversalObserver {
 	static constexpr int CreateOrDestroyHangingGridEntity    = -2;
 
 	/**
-	 * I call this operation only once per traversal per rank.
-	 * Please note that the object we call beginTraversal() on is usually
-	 * never used directly. Instead, the code calls beginTraversal() and
-	 * then creates observer clones.
-	 */
-	virtual void beginTraversal(
-      const tarch::la::Vector<Dimensions,double>&  x,
-      const tarch::la::Vector<Dimensions,double>&  h
-    ) = 0;
-
-	virtual void endTraversal(
-      const tarch::la::Vector<Dimensions,double>&  x,
-      const tarch::la::Vector<Dimensions,double>&  h
-    ) = 0;
-
-	/**
 	 * Event is invoked per cell. It is however not called for the root cell,
 	 * i.e. for the cell with level 0 that does not have a parent.
 	 */
@@ -119,6 +103,23 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
 	 * important it is. So entry 2 overrules entry 1.
 	 */
 	virtual std::vector< GridControlEvent > getGridControlEvents() = 0;
+
+  /**
+   * We do not really need stack numbers et al here, as everything will
+   * reside on the call stack anyway. If the routine is called on tree
+   * no 0, this operation has to establish the master of the global root
+   * tree (which usually is ill-defined, but the data should be there
+   * anyway).
+   */
+  virtual void createTemporaryCell(
+    const tarch::la::Vector<Dimensions,double>&  x,
+    const tarch::la::Vector<Dimensions,double>&  h
+  ) = 0;
+
+  virtual void destroyTemporaryCell(
+    const tarch::la::Vector<Dimensions,double>&  x,
+    const tarch::la::Vector<Dimensions,double>&  h
+  ) = 0;
 };
 
 #endif

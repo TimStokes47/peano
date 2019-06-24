@@ -12,7 +12,9 @@ Constant: TwoTimesD   hint-value 6;
 class peano4::grid::GridTraversalEvent {
   enum RefinementControl {
     Enter,
-    Leave
+    Leave,
+    MoveToWorker,
+    MoveToMaster
   };
   
   persistent parallelise double         x[Dimensions];

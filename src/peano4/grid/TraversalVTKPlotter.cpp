@@ -53,14 +53,14 @@ void peano4::grid::TraversalVTKPlotter::openFile() {
 }
 
 
-void peano4::grid::TraversalVTKPlotter::beginTraversal(
+void peano4::grid::TraversalVTKPlotter::createTemporaryCell(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
 }
 
 
-void peano4::grid::TraversalVTKPlotter::endTraversal(
+void peano4::grid::TraversalVTKPlotter::destroyTemporaryCell(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
