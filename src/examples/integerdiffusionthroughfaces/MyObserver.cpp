@@ -58,7 +58,7 @@ examples::integerdiffusionthroughfaces::MyObserver::~MyObserver() {
 }
 
 
-void examples::integerdiffusionthroughfaces::MyObserver::createTemporaryCell(
+void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
@@ -86,7 +86,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::createTemporaryCell(
 //
 //
 
-void examples::integerdiffusionthroughfaces::MyObserver::destroyTemporaryCell(
+void examples::integerdiffusionthroughfaces::MyObserver::endTraversal(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
@@ -97,7 +97,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::destroyTemporaryCell(
 
   #if PeanoDebug>4
   for( auto& p: _cellData) {
-	logDebug( "destroyTemporaryCell()", "cell stack (" << p.first.first << "," << p.first.second << "): " << p.second.size() << " entries" );
+	logDebug( "endTraversal()", "cell stack (" << p.first.first << "," << p.first.second << "): " << p.second.size() << " entries" );
   }
   #endif
   assertion( _mapping!=nullptr );

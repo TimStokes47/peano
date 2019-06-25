@@ -6,19 +6,19 @@
 tarch::logging::Log  peano4::grid::EmptyTraversalObserver::_log( "peano4::grid::EmptyTraversalObserver" );
 
 
-void peano4::grid::EmptyTraversalObserver::createTemporaryCell(
+void peano4::grid::EmptyTraversalObserver::beginTraversal(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
-  logInfo( "createTemporaryCell(...)", "begin traversal" );
+  logInfo( "beginTraversal(...)", "begin traversal" );
 }
 
 
-void peano4::grid::EmptyTraversalObserver::destroyTemporaryCell(
+void peano4::grid::EmptyTraversalObserver::endTraversal(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
-  logInfo( "destroyTemporaryCell(...)", "end traversal" );
+  logInfo( "endTraversal(...)", "end traversal" );
 }
 
 

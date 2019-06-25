@@ -111,12 +111,12 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
    * tree (which usually is ill-defined, but the data should be there
    * anyway).
    */
-  virtual void createTemporaryCell(
+  virtual void beginTraversal(
     const tarch::la::Vector<Dimensions,double>&  x,
     const tarch::la::Vector<Dimensions,double>&  h
   ) = 0;
 
-  virtual void destroyTemporaryCell(
+  virtual void endTraversal(
     const tarch::la::Vector<Dimensions,double>&  x,
     const tarch::la::Vector<Dimensions,double>&  h
   ) = 0;

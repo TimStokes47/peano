@@ -83,12 +83,12 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     TraversalVTKPlotter( const std::string& filename, int treeId=-1 );
     virtual ~TraversalVTKPlotter();
 
-    void createTemporaryCell(
+    void beginTraversal(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;
 
-    void destroyTemporaryCell(
+    void endTraversal(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;

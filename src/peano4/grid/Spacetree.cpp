@@ -230,12 +230,11 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
     logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
 
-  // @todo Net ganz richtig, oder?
-  observer.createTemporaryCell( _root.getX(), _root.getH() );
+  observer.beginTraversal( _root.getX(), _root.getH() );
 
   descend(_root,vertices,observer);
 
-  observer.destroyTemporaryCell( _root.getX(), _root.getH() );
+  observer.endTraversal( _root.getX(), _root.getH() );
 
   _root.setInverted( not _root.getInverted() );
 
@@ -1392,16 +1391,16 @@ void peano4::grid::Spacetree::descend(
       }
 
       evaluateGridControlEvents(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices);
-
-      observer.enterCell(createEnterCellTraversalEvent(
-        fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)]
-      ));
     }
     else if (
       not isSpacetreeNodeLocal(fineGridVertices) and isSpacetreeNodeLocal(vertices)
     ) {
       markVerticesAroundParentOfForkedCell(vertices);
     }
+
+    observer.enterCell(createEnterCellTraversalEvent(
+      fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)]
+    ));
 
     //
     // DFS
@@ -1432,11 +1431,9 @@ void peano4::grid::Spacetree::descend(
     //
     // Leave cell
     //
-    if ( isSpacetreeNodeLocal(fineGridVertices) ) {
-      observer.leaveCell(createLeaveCellTraversalEvent(
-        fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)]
-      ));
-    }
+    observer.leaveCell(createLeaveCellTraversalEvent(
+      fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)]
+    ));
 
     splitOrJoinCell(
       vertices,

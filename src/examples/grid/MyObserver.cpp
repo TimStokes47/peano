@@ -23,22 +23,22 @@ examples::grid::MyObserver::~MyObserver() {
 }
 
 
-void examples::grid::MyObserver::createTemporaryCell(
+void examples::grid::MyObserver::beginTraversal(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
   #if PeanoDebug>0
-  TraversalVTKPlotter::createTemporaryCell(x,h);
+  TraversalVTKPlotter::beginTraversal(x,h);
   #endif
 }
 
 
-void examples::grid::MyObserver::destroyTemporaryCell(
+void examples::grid::MyObserver::endTraversal(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
   #if PeanoDebug>0
-  TraversalVTKPlotter::destroyTemporaryCell(x,h);
+  TraversalVTKPlotter::endTraversal(x,h);
   #endif
 }
 

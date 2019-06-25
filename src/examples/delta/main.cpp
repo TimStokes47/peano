@@ -43,11 +43,11 @@ void runExample() {
 
   examples::delta::MyObserver emptyObserver;
 
-  for (int i=0; i<20; i++) {
+  for (int i=0; i<10; i++) {
     tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 
-    const int SplitEveryKIterations = 5;
+    const int SplitEveryKIterations = 50;
     if (i%SplitEveryKIterations==SplitEveryKIterations-1) {
       peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
     }

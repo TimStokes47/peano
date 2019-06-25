@@ -57,7 +57,7 @@ examples::delta::MyObserver::~MyObserver() {
 }
 
 
-void examples::delta::MyObserver::createTemporaryCell(
+void examples::delta::MyObserver::beginTraversal(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
@@ -84,7 +84,7 @@ void examples::delta::MyObserver::createTemporaryCell(
 //
 //
 
-void examples::delta::MyObserver::destroyTemporaryCell(
+void examples::delta::MyObserver::endTraversal(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
@@ -93,7 +93,7 @@ void examples::delta::MyObserver::destroyTemporaryCell(
 
   #if PeanoDebug>4
   for( auto& p: _cellData) {
-	logDebug( "destroyTemporaryCell()", "cell stack (" << p.first.first << "," << p.first.second << "): " << p.second.size() << " entries" );
+    logDebug( "endTraversal()", "cell stack (" << p.first.first << "," << p.first.second << "): " << p.second.size() << " entries" );
   }
   #endif
   assertion( _mapping!=nullptr );

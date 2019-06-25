@@ -53,37 +53,36 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 	Mapping*                                _mapping;
 	FacesDataContainer                      _facesCallStack;
   public:
-	MyObserver();
-	MyObserver(int spacetreeId, int counter, Mapping* mapping);
-	~MyObserver();
+    MyObserver();
+    MyObserver(int spacetreeId, int counter, Mapping* mapping);
+    ~MyObserver();
 
-	void createTemporaryCell(
+    void beginTraversal(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;
 
-	void destroyTemporaryCell(
+    void endTraversal(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;
 
-	void enterCell(
+    void enterCell(
       const peano4::grid::GridTraversalEvent&  event
     ) override;
 
-
-	void leaveCell(
-	  const peano4::grid::GridTraversalEvent&  event
+    void leaveCell(
+	    const peano4::grid::GridTraversalEvent&  event
     ) override;
 
-	/**
-	 * I use the clone to create one observer object per traversal thread. So
-	 * between different spacetrees of one spacetree set, there can be no race
-	 * condition. Yet, the clone() itself could be called in parallel.
-	 */
-	TraversalObserver* clone(int spacetreeId) override;
+  	/**
+  	 * I use the clone to create one observer object per traversal thread. So
+  	 * between different spacetrees of one spacetree set, there can be no race
+  	 * condition. Yet, the clone() itself could be called in parallel.
+  	 */
+  	TraversalObserver* clone(int spacetreeId) override;
 
-	std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
+	  std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
 };
 
 #endif
