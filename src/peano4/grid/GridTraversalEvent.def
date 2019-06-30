@@ -10,12 +10,12 @@ Constant: TwoTimesD   hint-value 6;
 
 
 class peano4::grid::GridTraversalEvent {
-  enum RefinementControl {
-    Enter,
-    Leave,
-    MoveToWorker,
-    MoveToMaster
+  enum CellState {
+    Local,
+    Remote
   };
+  
+  persistent parallelise CellState      cellState;
   
   persistent parallelise double         x[Dimensions];
   persistent parallelise double         h[Dimensions];
@@ -37,5 +37,11 @@ class peano4::grid::GridTraversalEvent {
   persistent parallelise packed int     faceDataTo[TwoTimesD]      from 0 to 7;
 
   persistent parallelise packed int     cellData                   from 0 to 1;
+  
+  #ifdef Parallel
+  persistent parallelise packed int     sendReceiveVertexData[TwoPowerD]  from 0 to 9;
+  persistent parallelise packed int     sendReceiveFaceData[TwoTimesD]    from 0 to 7;
+  persistent parallelise packed int     sendReceiveCellData               from 0 to 1;
+  #endif
 };
 

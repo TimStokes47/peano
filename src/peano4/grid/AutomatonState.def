@@ -35,6 +35,5 @@ class peano4::grid::AutomatonState {
    * currently not supported by DaStGen. So we are prepared for four dimensions
    * but can't do 5d.
    */
-//  persistent packed short int accessNumber[DimensionsTimesTwo] from -16 to 16;
   persistent packed short int accessNumber[DimensionsTimesTwo] from -8 to 8;
 };
