@@ -153,12 +153,12 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int 
 }
 
 
-bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities) {
+bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
   return false;
 }
 
 
-bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities ) {
+bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities, bool isCalledOnMasterThread ) {
   return false;
 }
 
