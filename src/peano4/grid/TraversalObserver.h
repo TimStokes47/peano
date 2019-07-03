@@ -36,6 +36,7 @@ class peano4::grid::TraversalObserver {
 
 	static constexpr int CreateOrDestroyPersistentGridEntity = -1;
 	static constexpr int CreateOrDestroyHangingGridEntity    = -2;
+  static constexpr int NoData                              = -3;
 
 	/**
 	 * Event is invoked per cell. It is however not called for the root cell,

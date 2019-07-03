@@ -56,6 +56,12 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     void closeFile();
     void openFile();
 
+    /**
+     * Does the actual plotting, i.e. all checks/decision making is already done before
+     */
+    void plotCell(
+        const GridTraversalEvent&  event
+    );
   private:
     tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter*                  _writer;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*    _vertexWriter;

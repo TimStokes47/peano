@@ -36,7 +36,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
   std::ifstream ifs(_file);
   std::vector<std::string> lines;
   for (std::string line; std::getline(ifs, line); /**/ ) {
-	lines.push_back(line);
+    lines.push_back(line);
   }
   ifs.close();
 

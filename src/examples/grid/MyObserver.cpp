@@ -55,6 +55,9 @@ void examples::grid::MyObserver::enterCell(
 void examples::grid::MyObserver::leaveCell(
   const peano4::grid::GridTraversalEvent&  event
 ) {
+  #if PeanoDebug>0
+  TraversalVTKPlotter::leaveCell(event);
+  #endif
 }
 
 

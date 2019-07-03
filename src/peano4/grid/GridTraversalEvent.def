@@ -10,38 +10,47 @@ Constant: TwoTimesD   hint-value 6;
 
 
 class peano4::grid::GridTraversalEvent {
-  enum CellState {
-    Local,
-    Remote
-  };
-  
-  persistent parallelise CellState      cellState;
-  
   persistent parallelise double         x[Dimensions];
   persistent parallelise double         h[Dimensions];
   persistent parallelise packed bool    isRefined;
   
   /**
-   * Per vertex, we specify from which stack the vertex comes from and where it
-   * goes to. Therefore, we need two entries per vertex and 2^d entries in 
-   * total. The order of these vertices is very important as all accesses are
-   * stack accesses, i.e. it could be that the upper left vertex is read/written
-   * prior to the lower left vertex.
+   * Per vertex, we specify from which stack the vertex comes from and in which
+   * order the entries are put on the call stack. For the write process when we 
+   * leave a cell, it is the other way round. Therefore, we need two entries 
+   * per vertex and 2^d entries in total. Only for the cell, we don't need two
+   * entries as there's only one cell entry per read/write process.
    *
    * Well too pessimistic upper bound.
    */
-  persistent parallelise packed int     vertexDataFrom[TwoPowerD]  from 0 to 9;
-  persistent parallelise packed int     faceDataFrom[TwoTimesD]    from 0 to 7;
+  persistent parallelise packed int     vertexDataFrom[TwoPowerD]  from -4 to 9;
+  persistent parallelise packed int     vertexDataTo[TwoPowerD]    from -4 to 9;
 
-  persistent parallelise packed int     vertexDataTo[TwoPowerD]    from 0 to 9;
-  persistent parallelise packed int     faceDataTo[TwoTimesD]      from 0 to 7;
+  persistent parallelise packed int     faceDataFrom[TwoTimesD]    from -4 to 7;
+  persistent parallelise packed int     faceDataTo[TwoTimesD]      from -4 to 7;
 
-  persistent parallelise packed int     cellData                   from 0 to 1;
+  persistent parallelise packed int     cellData                   from -4 to 1;
+
+  enum DataExchangeType {
+    ExchangeHorizontally,
+    StreamInOut,
+    ExchangeVerticallyWithMaster,
+    ExchangeVerticallyWithWorker,
+    None
+  };
   
-  #ifdef Parallel
-  persistent parallelise packed int     sendReceiveVertexData[TwoPowerD]  from 0 to 9;
-  persistent parallelise packed int     sendReceiveFaceData[TwoTimesD]    from 0 to 7;
-  persistent parallelise packed int     sendReceiveCellData               from 0 to 1;
-  #endif
+  persistent parallelise packed DataExchangeType     sendReceiveVertexData[TwoPowerD];
+  persistent parallelise packed DataExchangeType     sendReceiveFaceData[TwoTimesD];
+  persistent parallelise packed DataExchangeType     sendReceiveCellData;
+
+  /**
+   * In a parallel environment, we might have to send data to other ranks 
+   * before we store them or merge into our own data just before we hand it
+   * over to the user code. This is denoted by these flags. They actually 
+   * denote ranks.
+   */
+  persistent parallelise int     sendReceiveVertexDataRank[TwoPowerD];
+  persistent parallelise int     sendReceiveFaceDataRank[TwoTimesD];
+  persistent parallelise int     sendReceiveCellDataRank;
 };
 

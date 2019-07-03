@@ -107,6 +107,13 @@ void examples::delta::MyObserver::enterCell(
 ) {
   logTraceInWith1Argument("enterCell(...)",event.toString());
 
+/*
+  assertion2(
+    event.getCellState()==peano4::grid::GridTraversalEvent::CellState::Local,
+    event.toString(), "enterCell()"
+  );
+*/
+
   // @todo
   // Vertex processing -> nop here
   // =============================
@@ -167,6 +174,20 @@ void examples::delta::MyObserver::leaveCell(
 ) {
   logTraceInWith1Argument("leaveCell(...)",event.toString());
 
+/*
+  assertion2(
+    event.getCellState()==peano4::grid::GridTraversalEvent::CellState::Local,
+    event.toString(), "leaveCell"
+  );
+*/
+
+  // @todo
+/*
+  Gibt es einen Overlap? Dann brauchen wir zwei Flags?
+  Wer macht das Mapping von Dataflows auf User-Daten?
+  Hier?
+*/
+
   // @todo Es gibt noch kein inside/outside hier, oder?
   // @todo Enclaves fehlen halt auch noch
   int inCellStack   = peano4::grid::PeanoCurve::CallStack;
@@ -211,15 +232,23 @@ std::vector< peano4::grid::GridControlEvent > examples::delta::MyObserver::getGr
   if (_iterationCounter<8) {
     peano4::grid::GridControlEvent newEvent;
     newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
-#if Dimensions==2
+
+    #if PeanoDebug>0
+    const double minH = 0.1;
+    #else
+    const double minH = 0.02;
+    #endif
+
+    #if Dimensions==2
     newEvent.setOffset( {0.0,0.0} );
     newEvent.setWidth( {0.5,0.5} );
-    newEvent.setH( {0.02,0.02} );
-#elif Dimensions==3
+    newEvent.setH( {minH,minH} );
+    #elif Dimensions==3
     newEvent.setOffset( {0.0,0.0,0.0} );
     newEvent.setWidth( {0.5,0.5,0.5} );
-    newEvent.setH( {0.02,0.02,0.02} );
-#endif
+    newEvent.setH( {minH,minH,minH} );
+    #endif
+
     controlEvents.push_back(newEvent);
   }
 

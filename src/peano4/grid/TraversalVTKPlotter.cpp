@@ -109,15 +109,33 @@ void peano4::grid::TraversalVTKPlotter::closeFile() {
 void peano4::grid::TraversalVTKPlotter::enterCell(
   const GridTraversalEvent&  event
 ) {
-  if (not event.getIsRefined()) {
-    int vertexIndices[TwoPowerD];
+  bool plot = not event.getIsRefined()
+              and
+              event.getCellData()!=TraversalObserver::NoData
+              and
+              (
+                event.getSendReceiveCellData()==GridTraversalEvent::DataExchangeType::ExchangeVerticallyWithMaster
+                or
+                event.getSendReceiveCellData()==GridTraversalEvent::DataExchangeType::None
+              );
 
-    dfor2(k)
+  if (plot) {
+    plotCell(event);
+  }
+}
+
+
+void peano4::grid::TraversalVTKPlotter::plotCell(
+  const GridTraversalEvent&  event
+) {
+  int vertexIndices[TwoPowerD];
+
+  dfor2(k)
       assertion( _vertexWriter!=nullptr );
       vertexIndices[kScalar] = _vertexWriter->plotVertex(
         event.getX() + tarch::la::multiplyComponents( k.convertScalar<double>(), event.getH() ) - event.getH() * 0.5
       );
-    enddforx
+  enddforx
 
 	assertion( _cellWriter!=nullptr );
 	int cellIndex = -1;
@@ -133,9 +151,7 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
     assertion( _coreWriter!=nullptr );
     _spacetreeIdWriter->plotCell(cellIndex,_spacetreeId);
     _coreWriter->plotCell(cellIndex,tarch::multicore::Core::getInstance().getCoreNumber());
-  }
 }
-
 
 
 void peano4::grid::TraversalVTKPlotter::leaveCell(
@@ -180,12 +196,9 @@ peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int s
 void peano4::grid::TraversalVTKPlotter::beginTraversalOnRank(bool isParallelRun) {
   _counter++;
 
-/*
-*/
-
   if ( tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     #ifdef Parallel
-assertionMsg(false,"not there yet; should use the new classes");
+    assertionMsg(false,"not there yet; should use the new classes");
 /*
     Kann net funktionieren, weil es ja noch gar net losgegnagen ist
 

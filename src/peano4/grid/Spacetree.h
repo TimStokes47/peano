@@ -92,10 +92,51 @@ class peano4::grid::Spacetree {
   	  Joining
     };
 
+    enum class CellEventContext {
+      /**
+       * Local means the cell resides on the local tree, is not remote, and is
+       * neither the top level cell shared with the master rank nor a cell
+       * shared with a worker. The whole tree (and thus cell) also is not
+       * involved in any split or join.
+       */
+      Local,
+      /**
+       * This cell is remote. That means it should not hold any data.
+       */
+      Remote,
+      /**
+       * This cell is currently moving to a worker, i.e. our tree is splitting.
+       * If a cell is to be moved to a worker, then we know that it is/has been
+       * inside, and it is not the top level cell of a tree. If we moved the
+       * top level cell, we would destroy the tree topology on the MPI ranks.
+       * As we work with a streaming process here (the old tree streams its
+       * data into the new tree), this state triggers lots of creational
+       * events (destruction of data on the former master).
+       */
+      MovingToWorker,
+      /**
+       * We join only top level cells of workers.
+       */
+      JoiningWithMaster,
+      /**
+       * This routine is called on the master tree if it bumps into the coarsest
+       * cell which is already assigned to a worker.
+       */
+      TopCellOfRemoteWorker,
+      TopCellOfLocalForest,
+      /**
+       * Counterpart of MovingToWorker. We stream in user-defined data when we
+       * touch a cell for the first time, but we basically do nothing when we
+       * leave the cell.
+       */
+      NewFromSplit
+    };
+
     static std::string toString( SpacetreeState state );
     static std::string toString( VertexType type );
     static std::string toString( FaceType type );
     static std::string toString( CellType type );
+    static std::string toString( CellEventContext type );
 
     /**
      * Simple recursive type analysis
@@ -109,13 +150,18 @@ class peano4::grid::Spacetree {
     static VertexType getVertexType(
       GridVertex                         coarseGridVertices[TwoPowerD],
       tarch::la::Vector<Dimensions,int>  position,
-	  int                                dimension = Dimensions-1
+      int                                dimension = Dimensions-1
     );
 
     static FaceType getFaceType(
       GridVertex                         coarseGridVertices[TwoPowerD],
-	  int                                faceNumber
+      int                                faceNumber
     );
+
+    CellEventContext getCellEventContext(
+      GridVertex                         coarseGridVertices[TwoPowerD],
+      GridVertex                         fineGridVertices[TwoPowerD]
+    ) const;
 
     /**
      * You pass in the vertices and it gives you back the cell type.
@@ -261,30 +307,31 @@ class peano4::grid::Spacetree {
      */
     static void refineState(
       const AutomatonState&              coarseGrid,
-	  AutomatonState                     fineGrid[ThreePowerD],
-	  tarch::la::Vector<Dimensions,int>  fineGridPosition = tarch::la::Vector<Dimensions,int>(0),
-	  int                                axis = Dimensions-1
-	);
+      AutomatonState                     fineGrid[ThreePowerD],
+      tarch::la::Vector<Dimensions,int>  fineGridPosition = tarch::la::Vector<Dimensions,int>(0),
+      int                                axis = Dimensions-1
+    );
 
     /**
      * A spacetree node as 2^d adjacent vertices. So there are 2^d integers
      * stored within these vertices that overlap with the current node. They
      * all have to be the same. If they identify the local _id, then the
-     * node is local.
+     * node is local. They are also local if the markers are set to
+     * RankOfCellWitchWillBeJoined. This magic constant identifies cells on a
+     * worker which might join into their master.
      *
      * Throughout the splitting process, an id might be already set to a
-     * remote rank, but it still is technically local.
+     * remote rank, though it still is technically and logically local. So
+     * this routine interprets locality pretty technical and even marks those
+     * cells as non-local (anymore) which still are for another grid sweep or
+     * two.
      */
     bool isSpacetreeNodeLocal(
 	    GridVertex            vertices[TwoPowerD]
     ) const;
 
-    /**
-     * This is a tricky one.
-     */
-    bool isSpacetreeNodeOwnedByTree(
-      GridVertex            vertices[TwoPowerD],
-      int                   id
+    int getTreeOwningSpacetreeNode(
+      GridVertex            vertices[TwoPowerD]
     ) const;
 
     bool areAllVerticesRefined(
@@ -322,9 +369,9 @@ class peano4::grid::Spacetree {
      */
     bool isVertexAdjacentToLocalSpacetree(
       GridVertex  vertex,
-	  bool        splittingIsConsideredLocal,
-	  bool        joiningIsConsideredLocal
-	) const;
+      bool        splittingIsConsideredLocal,
+      bool        joiningIsConsideredLocal
+    ) const;
 
     /**
      * Load the vertices of one cell
@@ -343,18 +390,18 @@ class peano4::grid::Spacetree {
      */
     void loadVertices(
       const AutomatonState&                        fineGridState,
-	  GridVertex                                   coarseGridVertices[TwoPowerD],
-	  GridVertex                                   fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch,
-	  TraversalObserver&                           observer
-	);
+      GridVertex                                   coarseGridVertices[TwoPowerD],
+      GridVertex                                   fineGridVertices[TwoPowerD],
+      const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch,
+      TraversalObserver&                           observer
+    );
 
     void storeVertices(
       const AutomatonState&                        fineGridState,
-	  GridVertex                                   coarseGridVertices[TwoPowerD],
-	  GridVertex                                   fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch,
-	  TraversalObserver&                           observer
+      GridVertex                                   coarseGridVertices[TwoPowerD],
+      GridVertex                                   fineGridVertices[TwoPowerD],
+      const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch,
+      TraversalObserver&                           observer
     );
 
     /**
@@ -399,19 +446,22 @@ class peano4::grid::Spacetree {
     );
 
     /**
-     * Routine should be const, but we cannot make it const. At least not with
-     * parallelism.
+     * Create description of an enter cell traversal.
      *
-     * If the code runs in parallel and if we therefore insert a new cell, then
-     * we increment the number of splits we have to do. The rationale is that
-     * the load balancing made its decision based upon the previous cell count.
+     * We create new entries if we are in a split situation.
+     *
      */
     GridTraversalEvent createEnterCellTraversalEvent(
+      GridVertex              coarseGridVertices[TwoPowerD],
       GridVertex              fineGridVertices[TwoPowerD],
       const AutomatonState&   state
     ) const;
 
+    /**
+     * Create description of a leave cell traversal.
+     */
     GridTraversalEvent createLeaveCellTraversalEvent(
+      GridVertex              coarseGridVertices[TwoPowerD],
       GridVertex              fineGridVertices[TwoPowerD],
       const AutomatonState&   state
     ) const;
