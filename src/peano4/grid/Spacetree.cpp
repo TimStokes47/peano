@@ -384,15 +384,15 @@ peano4::grid::Spacetree::CellType peano4::grid::Spacetree::getCellType(
     return CellType::Delete;
   }
   else if (allVerticesAreNew) {
-     logDebug( "getCellType(...)", "create new cell" );
-	 return CellType::New;
+    logDebug( "getCellType(...)", "create new cell" );
+    return CellType::New;
   }
   else {
     logDebug( "getCellType(...)", "keep cell" );
-	for (int i=0; i<TwoPowerD; i++) {
+    for (int i=0; i<TwoPowerD; i++) {
       logDebug( "getCellType(...)", "vertex #" << i << ": " << vertices[i].toString() );
-	}
-	return CellType::Persistent;
+	  }
+	  return CellType::Persistent;
   }
 }
 
@@ -1465,6 +1465,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
   GridTraversalEvent  event;
 
   CellEventContext context = getCellEventContext(coarseGridVertices,fineGridVertices);
+  logDebug( "createEnterCellTraversalEvent(...)","event context=" << toString(context) );
 
   event.setX( state.getX() + state.getH()*0.5 );
   event.setH( state.getH() );
@@ -1563,6 +1564,8 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
             event.setCellData(stackNumber);
             break;
         }
+        // @todo
+        // falsch
         event.setSendReceiveCellData(GridTraversalEvent::None);
         break;
       case CellEventContext::JoiningWithMaster:
@@ -1608,9 +1611,9 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
           case CellType::Delete:
           case CellType::New:
           case CellType::Persistent:
+            event.setCellData(TraversalObserver::NoData);
             event.setSendReceiveCellData(GridTraversalEvent::StreamInOut);
             event.setSendReceiveCellDataRank( _masterId );
-            event.setCellData(TraversalObserver::NoData);
             break;
         }
         break;
@@ -1631,6 +1634,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
   GridTraversalEvent  event;
 
   CellEventContext context = getCellEventContext(coarseGridVertices,fineGridVertices);
+  logDebug( "createLeaveCellTraversalEvent(...)","event context=" << toString(context) );
 
   event.setX( state.getX() + state.getH()*0.5 );
   event.setH( state.getH() );
@@ -1696,8 +1700,46 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
     CellType   type        = getCellType(fineGridVertices);
     const int  stackNumber = PeanoCurve::getCellWriteStackNumber(state);
 
-    event.setCellData(stackNumber);
-
+    switch (context) {
+      case CellEventContext::NewFromSplit:
+      case CellEventContext::Local:
+        switch (type) {
+          case CellType::New:
+          case CellType::Persistent:
+            event.setCellData(stackNumber);
+            event.setSendReceiveCellData(GridTraversalEvent::None);
+            break;
+          case CellType::Delete:
+            event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
+            break;
+        }
+        event.setSendReceiveCellData(GridTraversalEvent::None);
+        break;
+      case CellEventContext::Remote:
+        event.setCellData(TraversalObserver::NoData);
+        event.setSendReceiveCellData(GridTraversalEvent::None);
+        break;
+      case CellEventContext::MovingToWorker:
+        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
+        event.setSendReceiveCellData( GridTraversalEvent::StreamInOut );
+        event.setSendReceiveCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
+        break;
+      case CellEventContext::JoiningWithMaster:
+        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
+        event.setSendReceiveCellData( GridTraversalEvent::StreamInOut );
+        event.setSendReceiveCellDataRank( _masterId );
+        break;
+      case CellEventContext::TopCellOfRemoteWorker:
+        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
+        event.setSendReceiveCellData( GridTraversalEvent::ExchangeVerticallyWithWorker );
+        event.setSendReceiveCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
+        break;
+      case CellEventContext::TopCellOfLocalForest:
+        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
+        event.setSendReceiveCellData( GridTraversalEvent::ExchangeVerticallyWithMaster );
+        event.setSendReceiveCellDataRank( _masterId );
+        break;
+    }
   }
 
   logTraceOutWith2Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), event.toString() );
@@ -2103,6 +2145,7 @@ std::string peano4::grid::Spacetree::toString( CellEventContext type ) {
     case CellEventContext::JoiningWithMaster: return "joining-with-master";
     case CellEventContext::TopCellOfRemoteWorker: return "top-cell-of-remote-worker";
     case CellEventContext::TopCellOfLocalForest: return "top-cell-of-local-forest";
+    case CellEventContext::NewFromSplit: return "new-from-split";
   }
   return "<undef>";
 }

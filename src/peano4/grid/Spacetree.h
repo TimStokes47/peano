@@ -158,6 +158,23 @@ class peano4::grid::Spacetree {
       int                                faceNumber
     );
 
+    /**
+     * This routine is used by both createEnterCellTraversalEvent() and
+     * createLeaveCellTraversalEvent() to learn why an event is to be
+     * built up. In return, this will allow the create routines to construct
+     * all required and necessary data flow.
+     *
+     * <h2> CellEventContext::NewFromSplit </h2>
+     * <h2> CellEventContext::MovingToWorker </h2>
+     * <h2> CellEventContext::JoiningWithMaster </h2>
+     * <h2> CellEventContext::Local </h2>
+     * <h2> CellEventContext::TopCellOfLocalForest </h2>
+     * <h2> CellEventContext::TopCellOfRemoteWorker </h2>
+     * <h2> CellEventContext::Remote </h2>
+     *
+     *
+     *
+     */
     CellEventContext getCellEventContext(
       GridVertex                         coarseGridVertices[TwoPowerD],
       GridVertex                         fineGridVertices[TwoPowerD]

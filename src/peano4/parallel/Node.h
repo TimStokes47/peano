@@ -241,6 +241,12 @@ class peano4::parallel::Node {
      * (horizontal) and one for up-down and synchronous (forks) data
      * exchanges (vertical and fork/join). The operation allocates
      * tags lazily and thus is not const.
+     *
+     * The nice thing about Peano's new data management is that it is
+     * stack-only. Furthermore, all stack data exchange is triggered via the
+     * spacetree set, i.e. the order of the stacks is known externally, too.
+     * So we effectively do not need that many tags even though we need
+     * different tags per tree pair.
      */
     int getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, bool boundaryDataExchange );
 };

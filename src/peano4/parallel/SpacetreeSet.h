@@ -268,4 +268,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     bool split(int treeId, int cells, int targetRank);
 };
 
+
+#include "SpacetreeSet.cpph"
+
+
 #endif
