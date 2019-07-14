@@ -238,7 +238,14 @@ class peano4::grid::Spacetree {
     std::set< int >      _joining;
     std::set< int >      _hasJoined;
 
-    std::map< int, peano4::stacks::GridVertexStack >    _vertexStack;
+
+    /**
+     * To look up the right stack, we use a combination of tree number (id) and
+     * stack number.
+     */
+    typedef std::pair<int,int>  StackKey;
+
+    static std::map< StackKey, peano4::stacks::GridVertexStack >    _vertexStack;
 
     /**
      * We get these control events when we kick off the traversal and then
@@ -812,14 +819,14 @@ class peano4::grid::Spacetree {
     /**
      * Don't copy a tree as it is tied to some stacks.
      */
-    Spacetree( const Spacetree& ) = delete;
+//    Spacetree( const Spacetree& ) = delete;
 
     /**
      * Don't copy a tree as it is tied to some stacks.
      *
      * Unfortunately, this does not work, as we need it for the vector.
      */
-    Spacetree& operator=( const Spacetree& ) = delete;
+//    Spacetree& operator=( const Spacetree& ) = delete;
 
     /**
      * Join with master. Call this routine only for degenerated trees,
@@ -857,13 +864,13 @@ class peano4::grid::Spacetree {
     void updateSplittingCounter( int treeId );
   public:
     Spacetree(
-	  const tarch::la::Vector<Dimensions,double>&  offset,
-	  const tarch::la::Vector<Dimensions,double>&  width
+      const tarch::la::Vector<Dimensions,double>&  offset,
+      const tarch::la::Vector<Dimensions,double>&  width
     );
 
     ~Spacetree();
 
-    Spacetree( Spacetree&& );
+//    Spacetree( Spacetree&& );
 
     /**
      * @param calledFromSpacetreeSet If you use traverse directly, please do

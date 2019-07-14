@@ -59,10 +59,10 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
 	class DataExchangeTask: public tarch::multicore::Task {
 	  private:
-	    peano4::grid::Spacetree&          _spacetree;
-	    SpacetreeSet&                     _spacetreeSet;
+	    int            _spacetreeId;
+	    SpacetreeSet&  _spacetreeSet;
 	  public:
-	    DataExchangeTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set );
+	    DataExchangeTask( int spacetreeId, SpacetreeSet& set );
 
 	    /**
 	     * I create the copy of the observer, run the traversal on my local
@@ -71,6 +71,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 	    bool run() override;
 
 	    void prefetch() override;
+
+	    template <class Container>
+	    static void triggerExchange( Container& stackContainer, int spacetreeId );
 	};
 
     /**
@@ -80,7 +83,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     void merge(
       const peano4::grid::GridStatistics&   from,
-	  peano4::grid::GridStatistics&         to
+      peano4::grid::GridStatistics&         to
     );
 
     std::list< peano4::grid::Spacetree >  _spacetrees;

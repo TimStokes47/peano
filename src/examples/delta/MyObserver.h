@@ -34,6 +34,7 @@ class examples::delta::MyObserver: public peano4::grid::TraversalObserver {
      * To look up the right stack, we use a combination of tree number (id) and
      * stack number.
      */
+    // @todo Raus. Haben wir ja schon im Spacetree definitionert
     typedef std::pair<int,int>  DataKey;
 
     typedef peano4::stacks::STDVectorStack< CellData >         CellDataContainer;
