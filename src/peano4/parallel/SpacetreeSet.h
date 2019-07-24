@@ -32,37 +32,51 @@ namespace peano4 {
  */
 class peano4::parallel::SpacetreeSet: public tarch::services::Service {
   private:
-	friend class peano4::grid::Spacetree;
+    friend class peano4::grid::Spacetree;
 
-	/**
-	 * Each task triggers the traversal of one specific spacetree. After
-	 * that, we might directly trigger the data exchanges. Yet, this is not a
-	 * good idea as other tasks might linger in the background not have sent
-	 * the data out yet. So we don't to anything here.
-	 */
-	class TraverseTask: public tarch::multicore::Task {
-	  private:
-	    peano4::grid::Spacetree&          _spacetree;
-	    SpacetreeSet&                     _spacetreeSet;
+    /**
+     * Each task triggers the traversal of one specific spacetree. After
+     * that, we might directly trigger the data exchanges. Yet, this is not a
+     * good idea as other tasks might linger in the background not have sent
+     * the data out yet. So we don't to anything here.
+     */
+    class TraverseTask: public tarch::multicore::Task {
+      private:
+        peano4::grid::Spacetree&          _spacetree;
+        SpacetreeSet&                     _spacetreeSet;
         peano4::grid::TraversalObserver&  _observer;
-	  public:
-	    TraverseTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
+      public:
+        TraverseTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
 
-	    /**
-	     * I create the copy of the observer, run the traversal on my local
-	     * tree _spacetree and finally destroy the local observer copy.
-	     */
-	    bool run() override;
+  	    /**
+         * I create the copy of the observer, run the traversal on my local
+         * tree _spacetree and finally destroy the local observer copy.
+         */
+        bool run() override;
+	      void prefetch() override;
+    };
 
-	    void prefetch() override;
-	};
-
+/**
+	 * <h2> Rationale </h2>
+	 *
+	 * I originally planned to merge this task into the data traversal task. The
+	 * idea behind such a merger is that a data exchange right after the data
+	 * traversal increases the concurrency: While one tree already triggers its
+	 * data exchange, others still might run through the grid.
+	 *
+	 * However, this does not work straightforwardly: With my idea of stack-based
+	 * boundary exchange buffers, two communication partners have to have finished
+	 * their traversal before they can exchange data. Otherwise, one input buffer
+	 * of one grid (the one that is still running) might not yet be available when
+	 * the partner tree tries to send its data over.
+	 */
 	class DataExchangeTask: public tarch::multicore::Task {
 	  private:
 	    int            _spacetreeId;
 	    SpacetreeSet&  _spacetreeSet;
+      peano4::grid::TraversalObserver&  _observer;
 	  public:
-	    DataExchangeTask( int spacetreeId, SpacetreeSet& set );
+	    DataExchangeTask( int spacetreeId, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
 
 	    /**
 	     * I create the copy of the observer, run the traversal on my local
@@ -72,8 +86,27 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
 	    void prefetch() override;
 
+	    /**
+	     * This is the kind of routine that does boundary data exchange, i.e.
+	     * send outs in iteration n with the receive and processing of these
+	     * data in traversal n+1. It is thus asynchronous (logically).
+	     *
+	     * Typically, this routine is called by user observers to for their
+	     * user-defined data. We however also use it within the grid to trigger
+	     * the actual vertex data exchange. As these routines all are invoked
+	     * via tasks, this routine is typically invoked by multiple threads
+	     * concurrently.
+	     */
 	    template <class Container>
-	    static void triggerExchange( Container& stackContainer, int spacetreeId );
+	    static void exchangeStacksAsynchronously( Container& stackContainer, int spacetreeId );
+
+	    /**
+	     * Counterpart of exchangeStacksAsynchronously() which directly transfers
+	     * data within a traversal. We use it for synchronous data vertical data
+	     * exchange and for the transfer of data throughout splits and merges.
+	     */
+      template <class Container>
+      static void exchangeStacksSynchronously( Container& stackContainer, int sourceSpacetreeId, int destinationSpacetreeId );
 	};
 
     /**
@@ -90,12 +123,24 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     tarch::multicore::BooleanSemaphore    _semaphore;
 
+    /**
+     * I create/clone one observer per local tree. This is an
+     * on-the-fly process. At the end of the set traversal, we delete all of
+     * clones. Originally, I did this delete right after the creation and the
+     * subsequent traversal. However, we need the observer clone once more for
+     * the data exchange. To avoid reclones, I store all clones in this map and
+     * then delete them en bloc.
+     *
+     * @see deleteClonedObservers
+     */
+    std::map< int, peano4::grid::TraversalObserver* >    _clonedObserver;
+
     peano4::grid::Spacetree& getSpacetree(int id);
 
     /**
      *
      * @see split()
-     * @see exchangeDataBetweenNewTreesAndRerunClones()
+     * @see exchangeDataBetweenExistingAndNewTreesAndRerunClones()
      */
     void traverseNonMergingExistingTrees(peano4::grid::TraversalObserver& observer);
 
@@ -115,7 +160,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      *          splitting before we issue the traversal preceding this function
      *          call.
      */
-    void exchangeDataBetweenTrees();
+    void exchangeDataBetweenTrees(peano4::grid::TraversalObserver&  observer);
 
     /**
      * @see exchangeDataBetweenTrees() for details.
@@ -123,10 +168,15 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     void createNewTrees();
 
-    void exchangeDataBetweenNewTreesAndRerunClones(peano4::grid::TraversalObserver& observer);
+    /**
+     * @see _clonedObserver
+     */
+    void deleteClonedObservers();
+
+    void exchangeDataBetweenExistingAndNewTreesAndRerunClones(peano4::grid::TraversalObserver& observer);
 
     /**
-     * Counterpart to exchangeDataBetweenNewTreesAndRerunClones(), i.e.
+     * Counterpart to exchangeDataBetweenExistingAndNewTreesAndRerunClones(), i.e.
      * counterpart to the dry run. We assume the merging worker has already
      * traversed its grid. Therefore, all data which has to be streamed is
      * already in the respective queues. We thus can copy them over and

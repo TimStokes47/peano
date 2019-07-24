@@ -892,6 +892,7 @@ void peano4::grid::Spacetree::loadVertices(
           assertion( PeanoCurve::isInOutStack(stackNumber) );
           if ( _spacetreeState==SpacetreeState::NewFromSplit ) {
             const int stackNumber = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( _masterId );
+            assertion2( not _vertexStack[ StackKey(_id,stackNumber) ].empty(), _id, stackNumber );
             fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = _vertexStack[ StackKey(_id,stackNumber) ].pop();
           }
           else {
@@ -912,6 +913,7 @@ void peano4::grid::Spacetree::loadVertices(
               PeanoCurve::isInOutStack(stackNumber)
             ) {
               const int stackNumber = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( _masterId );
+              assertion2( not _vertexStack[ StackKey(_id,stackNumber) ].empty(), _id, stackNumber );
               fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = _vertexStack[ StackKey(_id,stackNumber) ].pop();
             }
             else if (
@@ -932,6 +934,7 @@ void peano4::grid::Spacetree::loadVertices(
             }
             else {
               assertion3( not _vertexStack[ StackKey(_id,stackNumber) ].empty(), stackNumber, vertexIndex, vertexPositionWithinPatch );
+              assertion2( not _vertexStack[ StackKey(_id,stackNumber) ].empty(), _id, stackNumber );
               fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ]  = _vertexStack[ StackKey(_id,stackNumber) ].pop();
             }
           }
@@ -946,6 +949,7 @@ void peano4::grid::Spacetree::loadVertices(
               PeanoCurve::isInOutStack(stackNumber)
             ) {
               const int stackNumber = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( _masterId );
+              assertion2( not _vertexStack[ StackKey(_id,stackNumber) ].empty(), _id, stackNumber );
               fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = _vertexStack[ StackKey(_id,stackNumber) ].pop();
             }
             else if (

@@ -326,3 +326,10 @@ std::vector< peano4::grid::GridControlEvent > examples::integerdiffusionthroughf
   return controlEvents;
 }
 
+
+void examples::integerdiffusionthroughfaces::MyObserver::exchangeStacksAsynchronously() {
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::exchangeStacksSynchronously(int destinationTreeId) {
+}

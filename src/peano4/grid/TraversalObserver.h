@@ -121,6 +121,9 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
     const tarch::la::Vector<Dimensions,double>&  x,
     const tarch::la::Vector<Dimensions,double>&  h
   ) = 0;
+
+  virtual void exchangeStacksAsynchronously() = 0;
+  virtual void exchangeStacksSynchronously(int destinationTreeId) = 0;
 };
 
 #endif

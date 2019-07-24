@@ -48,3 +48,10 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::EmptyTraversalObserv
   return std::vector< peano4::grid::GridControlEvent >();
 }
 
+
+void peano4::grid::EmptyTraversalObserver::exchangeStacksAsynchronously() {
+}
+
+
+void peano4::grid::EmptyTraversalObserver::exchangeStacksSynchronously(int destinationTreeId) {
+}

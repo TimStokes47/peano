@@ -343,3 +343,10 @@ std::vector< peano4::grid::GridControlEvent > examples::delta::MyObserver::getGr
   return controlEvents;
 }
 
+
+void examples::delta::MyObserver::exchangeStacksAsynchronously() {
+}
+
+
+void examples::delta::MyObserver::exchangeStacksSynchronously(int destinationTreeId) {
+}

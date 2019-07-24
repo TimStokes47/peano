@@ -55,6 +55,9 @@ class examples::grid::MyObserver: public
     TraversalObserver* clone(int spacetreeId) override;
 
     std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
+
+    void exchangeStacksAsynchronously() override;
+    void exchangeStacksSynchronously(int destinationTreeId) override;
 };
 
 #endif

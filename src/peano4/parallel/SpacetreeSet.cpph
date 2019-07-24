@@ -2,7 +2,25 @@
 
 
 template <class Container>
-void peano4::parallel::SpacetreeSet::DataExchangeTask::triggerExchange( Container& stackContainer, int spacetreeId ) {
+void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksSynchronously( Container& stackContainer, int sourceSpacetreeId, int destinationSpacetreeId ) {
+  const int sourceStack      = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange(destinationSpacetreeId);
+  const int destinationStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(sourceSpacetreeId);
+
+  assertion( peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].empty() );
+  peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].clone( peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(sourceSpacetreeId,sourceStack) ] );
+  peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].reverse();
+  peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(sourceSpacetreeId,sourceStack) ].clear();
+
+  logDebug(
+    "exchangeStacksSynchronously(...)",
+    "stream stack " << sourceStack << " from tree " << sourceSpacetreeId << " into stack " << destinationStack << " from tree " << destinationSpacetreeId <<
+    ": " << peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].toString()
+  );
+}
+
+
+template <class Container>
+void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronously( Container& stackContainer, int spacetreeId ) {
   // Trigger all send and receives required
   // --------------------------------------
   // We exploit all the symmetries
