@@ -28,6 +28,8 @@ class peano4::grid::PeanoCurve {
 	 */
 	static constexpr int NumberOfBaseStacks = 3;
 
+  static constexpr int NumberOfPeriodicBoundaryConditionStacks = Dimensions*2*2;
+
 	/**
 	 * Standard (serial) number of stacks required per spacetree
 	 *
@@ -38,7 +40,7 @@ class peano4::grid::PeanoCurve {
 	 * stack explicitly, i.e. through grid traversal events, then we have
 	 * also to manage the stack explicitly.
 	 */
-	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = NumberOfBaseStacks + Dimensions*2;
+	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = NumberOfBaseStacks + Dimensions*2 + NumberOfPeriodicBoundaryConditionStacks;
 
 	static bool isTraversePositiveAlongAxis(
 	  const AutomatonState&  state,

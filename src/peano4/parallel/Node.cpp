@@ -174,6 +174,35 @@ int peano4::parallel::Node::getInputStackNumberOfBoundaryExchange(int id) {
 }
 
 
+int peano4::parallel::Node::getPeriodicBoundaryNumber(const tarch::la::Vector<TwoPowerD,int>& flags) {
+  int axis = -1;
+  for (int d=0; d<2*Dimensions; d++) {
+    bool allFlagsSet = true;
+    dfor2(k)
+      tarch::la::Vector<Dimensions,int> entry;
+      entry = k;
+      entry( d%Dimensions ) = d/Dimensions;
+      allFlagsSet &= flags( peano4::utils::dLinearised(entry,2) ) == peano4::grid::Spacetree::RankOfPeriodicBoundaryCondition;
+    enddforx
+    if (allFlagsSet) {
+      axis = d;
+    }
+  }
+  assertion1(axis>=0,flags);
+  return axis;
+}
+
+
+int peano4::parallel::Node::getOutputStackNumberOfPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags) {
+  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance - 2*Dimensions + getPeriodicBoundaryNumber(flags);
+}
+
+
+int peano4::parallel::Node::getInputStackNumberOfPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>&  flags) {
+  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance - 4*Dimensions + getPeriodicBoundaryNumber(flags);
+}
+
+
 int peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 2;
 }
@@ -184,15 +213,53 @@ int peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange(int id
 }
 
 
+int  peano4::parallel::Node::getPeriodicBoundaryExchangeInputStackNumberForOutputStack(int outputStackNumber) {
+  assertion( isPeriodicBoundaryExchangeOutputStackNumber(outputStackNumber) );
+  int result = outputStackNumber - 2*Dimensions; // shift
+  if (result>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance - 4*Dimensions + Dimensions) {
+    result -= Dimensions;
+  }
+  else {
+    result += Dimensions;
+  }
+  return result;
+}
+
+
+bool peano4::parallel::Node::isPeriodicBoundaryExchangeOutputStackNumber(int id) {
+  const bool periodicBoundary = id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance - 2*Dimensions
+                            and id<peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance  - 2*Dimensions + 2*Dimensions;
+
+  return periodicBoundary;
+}
+
+
 bool peano4::parallel::Node::isBoundaryExchangeOutputStackNumber(int id) {
-  return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
+  const bool domainBoundary = id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
      and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 0 );
+
+  return domainBoundary;
+/*
+  const bool periodicBoundary = id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance - 2*Dimensions
+                            and id<peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance  - 2*Dimensions + 2*Dimensions;
+
+  return domainBoundary or periodicBoundary;
+*/
 }
 
 
 bool peano4::parallel::Node::isBoundaryExchangeInputStackNumber(int id) {
-  return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
+  const bool domainBoundary = id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
      and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 1 );
+
+  return domainBoundary;
+
+/*
+  const bool periodicBoundary = id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance - 4*Dimensions
+                            and id<peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance  - 4*Dimensions + 2*Dimensions;
+
+  return domainBoundary or periodicBoundary;
+*/
 }
 
 

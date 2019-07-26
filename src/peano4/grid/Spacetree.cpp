@@ -14,6 +14,7 @@
 tarch::logging::Log  peano4::grid::Spacetree::_log( "peano4::grid::Spacetree" );
 const int peano4::grid::Spacetree::InvalidRank(-1);
 const int peano4::grid::Spacetree::RankOfCellWitchWillBeJoined(-2);
+const int peano4::grid::Spacetree::RankOfPeriodicBoundaryCondition(-3);
 const int peano4::grid::Spacetree::NumberOfStationarySweepsToWaitAtLeastTillJoin(2);
 std::map< peano4::grid::Spacetree::StackKey, peano4::stacks::GridVertexStack >    peano4::grid::Spacetree::_vertexStack;
 
@@ -66,27 +67,6 @@ peano4::grid::Spacetree::Spacetree(
 
   logInfo( "Spacetree(...)", "created spacetree " << _id << " with master tree " << masterId );
 }
-
-
-/*
-peano4::grid::Spacetree::Spacetree( Spacetree&& other ):
-  _id(other._id),
-  _spacetreeState( other._spacetreeState ),
-  _root( std::move(other._root) ),
-  _statistics(),
-  _masterId(other._masterId),
-  _splitTriggered(),
-  _splitting(),
-  _joinTriggered(),
-  _joining() {
-
-  ,
-}
-
-  assertion(false);
-//  _vertexStack( std::move(other._vertexStack)) {
-}
-*/
 
 
 peano4::grid::Spacetree::~Spacetree() {
@@ -243,6 +223,18 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
     vertices[kScalar].setAdjacentRanks(TwoPowerD-1-kScalar,0);
     logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
+
+  // @todo Das muss wieder raus bzw richtig gemacht werden
+  //       Und dann ist es natuerlich so, dass ich das dokumentieren muss, dass
+  //       immer zwei Eintraege pro periodische RB gesetzt sein muessen
+  vertices[0].setAdjacentRanks(0,RankOfPeriodicBoundaryCondition);
+  vertices[0].setAdjacentRanks(1,RankOfPeriodicBoundaryCondition);
+  vertices[1].setAdjacentRanks(0,RankOfPeriodicBoundaryCondition);
+  vertices[1].setAdjacentRanks(1,RankOfPeriodicBoundaryCondition);
+  vertices[2].setAdjacentRanks(2,RankOfPeriodicBoundaryCondition);
+  vertices[2].setAdjacentRanks(3,RankOfPeriodicBoundaryCondition);
+  vertices[3].setAdjacentRanks(2,RankOfPeriodicBoundaryCondition);
+  vertices[3].setAdjacentRanks(3,RankOfPeriodicBoundaryCondition);
 
   observer.beginTraversal( _root.getX(), _root.getH() );
 
@@ -1108,8 +1100,12 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
   std::set<int> neighbourIds = getAdjacentDomainIds(vertex,true);
 
   for (auto neighbour: neighbourIds) {
-    assertion1( neighbour>=0, neighbour );
-    const int  inStack  = peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(neighbour);
+    assertion1( neighbour>=0 or neighbour==RankOfPeriodicBoundaryCondition, neighbour );
+    const int  inStack  =
+      neighbour==RankOfPeriodicBoundaryCondition ?
+       peano4::parallel::Node::getInstance().getInputStackNumberOfPeriodicBoundaryExchange(vertex.getAdjacentRanks())
+       :
+       peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(neighbour);
 
     assertion5(
       not _vertexStack[ StackKey(_id,inStack) ].empty(),
@@ -1121,7 +1117,16 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 
     assertion4( vertex.getState()!=GridVertex::State::HangingVertex,   inVertex.toString(), vertex.toString(), _id, neighbour );
     assertion4( inVertex.getState()!=GridVertex::State::HangingVertex, inVertex.toString(), vertex.toString(), _id, neighbour );
-    assertionVectorNumericalEquals4( vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id, neighbour );
+    assertion4(
+      tarch::la::equals(vertex.getX(), inVertex.getX())
+      or
+      (
+        tarch::la::contains(vertex.getAdjacentRanks(),RankOfPeriodicBoundaryCondition)
+        and
+        tarch::la::countEqualEntries(vertex.getX(), inVertex.getX())==Dimensions-1
+      ),
+      inVertex.toString(), vertex.toString(), _id, neighbour
+    );
     assertionEquals4( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id, neighbour );
     assertion4(
       not (vertex.getState()==GridVertex::State::Refined and inVertex.getState()==GridVertex::State::Erasing),
@@ -1136,15 +1141,29 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
     // Merge adjacency lists. The neighbour owns some entries
     //
     for (int i=0; i<TwoPowerD; i++) {
-      if (vertex.getAdjacentRanks(i)==neighbour and neighbour!=InvalidRank) {
-        if (inVertex.getAdjacentRanks(i)!=vertex.getAdjacentRanks(i)) {
-        	logDebug(
+      if (vertex.getAdjacentRanks(i)==neighbour and neighbour!=InvalidRank
+          // falsch. Wir muessen passend spiegeln
+          and
+          neighbour!=RankOfPeriodicBoundaryCondition
+          ) {
+        const int iIn = neighbour==RankOfPeriodicBoundaryCondition ?  : i;
+        if (inVertex.getAdjacentRanks(iIn)!=vertex.getAdjacentRanks(i)) {
+          // @todo Debug
+        	logInfo(
             "receiveAndMergeVertexIfAdjacentToDomainBoundary(...)",
 	          "update " << i << "th entry of adjacency data of vertex " << vertex.toString() <<
 		        " with neighbouring vertex " << inVertex.toString() << " on tree " << _id
 			    );
         }
-        vertex.setAdjacentRanks(i, inVertex.getAdjacentRanks(i));
+/*
+        const int updatedNeighbour =
+          vertex.getAdjacentRanks(i)   != RankOfPeriodicBoundaryCondition or
+          inVertex.getAdjacentRanks(i) != _id
+          ?
+          inVertex.getAdjacentRanks(iIn) : RankOfPeriodicBoundaryCondition;
+        vertex.setAdjacentRanks(i, updatedNeighbour );
+*/
+        vertex.setAdjacentRanks(i, inVertex.getAdjacentRanks(iIn) );
       }
     }
 
@@ -1196,7 +1215,12 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
     //
     // Boundary exchange
     //
-    const int stackNo = peano4::parallel::Node::getInstance().getOutputStackNumberOfBoundaryExchange(p);
+    const int stackNo =
+      p==RankOfPeriodicBoundaryCondition ?
+      peano4::parallel::Node::getInstance().getOutputStackNumberOfPeriodicBoundaryExchange(vertex.getAdjacentRanks())
+      :
+      peano4::parallel::Node::getInstance().getOutputStackNumberOfBoundaryExchange(p);
+
     GridVertex vertexCopy = vertex;
     for (int i=0; i<TwoPowerD; i++) {
       int targetRank = vertexCopy.getAdjacentRanks(i);
@@ -1215,6 +1239,7 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
       vertexCopy.setAdjacentRanks( i, targetRank );
     }
     _vertexStack[ StackKey(_id,stackNo) ].push( vertexCopy );
+
     logDebug(
           "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)",
           "vertex " << vertexCopy.toString() << " on tree " << _id <<

@@ -50,8 +50,8 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronou
     }
   }
 
-  // All local stacks
-  // ----------------
+  // All local boundary stacks
+  // -------------------------
   for (auto sourceStack = stackContainer.begin(); sourceStack != stackContainer.end(); ) {
     if (
       sourceStack->first.first==spacetreeId
@@ -73,8 +73,10 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronou
          ". Copy/clone " << stackContainer[ peano4::grid::Spacetree::StackKey( sourceStack->first.first,sourceStack->first.second) ].size() << " entries"
       );
 
-      assertion3( spacetreeId != targetId, spacetreeId, targetId, targetStack);
-
+      assertion3(
+        peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(targetId,targetStack) ].empty(),
+        targetId,targetStack,spacetreeId
+      );
       peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(targetId,targetStack) ].clone( sourceStack->second );
 
       #if PeanoDebug>0
@@ -108,6 +110,34 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronou
       sourceStack++;
     }
   }
+
+  // All periodic boundary condition stacks
+  // --------------------------------------
+  for (auto& sourceStack: stackContainer ) {
+    if (
+      sourceStack.first.first==spacetreeId
+      and
+      Node::getInstance().isPeriodicBoundaryExchangeOutputStackNumber(sourceStack.first.second)
+      and
+      not sourceStack.second.empty()
+    ) {
+      const int targetStack = Node::getInstance().getPeriodicBoundaryExchangeInputStackNumberForOutputStack(sourceStack.first.second);
+      logDebug(
+         "DataExchangeTask::run()",
+         "map output stream " << sourceStack.first.second << " onto input stream " << targetStack <<
+         " to realise periodic boundary conditions. Copy/clone " << stackContainer[ peano4::grid::Spacetree::StackKey( sourceStack.first.first,sourceStack.first.second) ].size() << " entries"
+      );
+
+      assertion3(
+        peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(sourceStack.first.first,targetStack) ].empty(),
+        sourceStack.first.first,sourceStack.first.second,targetStack
+      );
+      peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(sourceStack.first.first,targetStack) ].clone( sourceStack.second );
+
+      stackContainer[sourceStack.first].clear();
+    }
+  }
+
 
   // Finalise data exchange
   // ----------------------

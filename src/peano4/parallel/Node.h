@@ -20,6 +20,10 @@
 namespace peano4 {
   namespace parallel {
     class Node;
+
+    namespace tests {
+      class NodeTest;
+    }
   }
 }
 
@@ -34,6 +38,8 @@ class peano4::parallel::Node {
   public:
     static constexpr int        Terminate = -2;
   private:
+    friend class peano4::parallel::tests::NodeTest;
+
     /**
      * Logging device.
      */
@@ -102,6 +108,13 @@ class peano4::parallel::Node {
      */
     void registerId(int id, int masterId);
 
+    /**
+     * We enumerate again in the way we always enumerate, i.e. first the face
+     * with the x axis as normal, then the one with the y axis, ... Always
+     * those guys running through the left bottom vertex. And after these d
+     * faces, we enumerate all the opposite faces on the cube.
+     */
+    static int getPeriodicBoundaryNumber(const tarch::la::Vector<TwoPowerD,int>& flags);
   public:
     /**
      * I originally wanted to embed these guys into the singleton's
@@ -175,11 +188,18 @@ class peano4::parallel::Node {
      */
     static int getInputStackNumberOfBoundaryExchange(int id);
 
+    static int getInputStackNumberOfPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
+    static int getOutputStackNumberOfPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
+
     /**
      * See getOutputStackNumberOfBoundaryExchange().
      */
     static bool isBoundaryExchangeOutputStackNumber(int number);
     static bool isBoundaryExchangeInputStackNumber(int number);
+
+    static bool isPeriodicBoundaryExchangeOutputStackNumber(int number);
+    static int  getPeriodicBoundaryExchangeInputStackNumberForOutputStack(int outputStackNumber);
+
 
     /**
      * There are communication stacks and storage stacks. This is

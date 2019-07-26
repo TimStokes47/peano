@@ -44,11 +44,12 @@ namespace peano4 {
  * Represents one tree
  */
 class peano4::grid::Spacetree {
-  private:
+  public:
     static const int InvalidRank;
     static const int RankOfCellWitchWillBeJoined;
+    static const int RankOfPeriodicBoundaryCondition;
     static const int NumberOfStationarySweepsToWaitAtLeastTillJoin;
-
+  private:
     static tarch::logging::Log  _log;
 
     friend class peano4::parallel::SpacetreeSet;
