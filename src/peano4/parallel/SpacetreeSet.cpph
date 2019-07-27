@@ -127,6 +127,10 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronou
          "map output stream " << sourceStack.first.second << " onto input stream " << targetStack <<
          " to realise periodic boundary conditions. Copy/clone " << stackContainer[ peano4::grid::Spacetree::StackKey( sourceStack.first.first,sourceStack.first.second) ].size() << " entries"
       );
+      logDebug(
+         "DataExchangeTask::run()",
+         stackContainer[ peano4::grid::Spacetree::StackKey( sourceStack.first.first,sourceStack.first.second) ].toString()
+      );
 
       assertion3(
         peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(sourceStack.first.first,targetStack) ].empty(),

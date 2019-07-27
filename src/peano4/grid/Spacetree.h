@@ -20,6 +20,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <bitset>
 
 
 namespace peano4 {
@@ -213,6 +214,11 @@ class peano4::grid::Spacetree {
      * Actually, I should introduce a special constructor for this.
      */
     int        _masterId;
+
+    /**
+     * Indicate per axis whether we have periodic boundary conditions.
+     */
+    const std::bitset<Dimensions>      _periodicBC;
 
     /**
      * A split is identified by a tuple of id and cell count which tells the
@@ -806,6 +812,8 @@ class peano4::grid::Spacetree {
      */
     void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex, TraversalObserver& observer );
 
+    void mergeAtDomainBoundary( GridVertex& vertex, const GridVertex& inVertex, TraversalObserver& observer, int neighbour );
+
     /**
      * Only used by SpacetreeSet to create children of the original tree.
      */
@@ -866,7 +874,8 @@ class peano4::grid::Spacetree {
   public:
     Spacetree(
       const tarch::la::Vector<Dimensions,double>&  offset,
-      const tarch::la::Vector<Dimensions,double>&  width
+      const tarch::la::Vector<Dimensions,double>&  width,
+      const std::bitset<Dimensions>&               periodicBC = 0
     );
 
     ~Spacetree();

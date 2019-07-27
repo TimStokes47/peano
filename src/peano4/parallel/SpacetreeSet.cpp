@@ -31,7 +31,8 @@ peano4::parallel::SpacetreeSet&  peano4::parallel::SpacetreeSet::getInstance() {
 
 void peano4::parallel::SpacetreeSet::init(
   const tarch::la::Vector<Dimensions,double>&  offset,
-  const tarch::la::Vector<Dimensions,double>&  width
+  const tarch::la::Vector<Dimensions,double>&  width,
+  const std::bitset<Dimensions>&               periodicBC
 ) {
   assertion4(
     (peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees()==1 and tarch::mpi::Rank::getInstance().getRank()==0)
@@ -42,7 +43,7 @@ void peano4::parallel::SpacetreeSet::init(
   );
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    peano4::grid::Spacetree spacetree( offset, width );
+    peano4::grid::Spacetree spacetree( offset, width, periodicBC );
     _spacetrees.push_back( spacetree );
   }
 }

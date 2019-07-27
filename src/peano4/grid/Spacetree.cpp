@@ -21,12 +21,14 @@ std::map< peano4::grid::Spacetree::StackKey, peano4::stacks::GridVertexStack >  
 
 peano4::grid::Spacetree::Spacetree(
   const tarch::la::Vector<Dimensions,double>&  offset,
-  const tarch::la::Vector<Dimensions,double>&  width
+  const tarch::la::Vector<Dimensions,double>&  width,
+  const std::bitset<Dimensions>&               periodicBC
 ):
   _id(0),
   _spacetreeState( SpacetreeState::NewRoot ),
   _root(),
-  _masterId(-1) {
+  _masterId(-1),
+  _periodicBC(periodicBC) {
   _root.setLevel( 0 );
   _root.setX( offset );
   _root.setH( width );
@@ -55,6 +57,7 @@ peano4::grid::Spacetree::Spacetree(
   _root(),
   _statistics(),
   _masterId(masterId),
+  _periodicBC(0),
   _splitTriggered(),
   _splitting() {
   _root.setLevel( 0 );
@@ -224,17 +227,23 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
     logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
 
-  // @todo Das muss wieder raus bzw richtig gemacht werden
-  //       Und dann ist es natuerlich so, dass ich das dokumentieren muss, dass
-  //       immer zwei Eintraege pro periodische RB gesetzt sein muessen
-  vertices[0].setAdjacentRanks(0,RankOfPeriodicBoundaryCondition);
-  vertices[0].setAdjacentRanks(1,RankOfPeriodicBoundaryCondition);
-  vertices[1].setAdjacentRanks(0,RankOfPeriodicBoundaryCondition);
-  vertices[1].setAdjacentRanks(1,RankOfPeriodicBoundaryCondition);
-  vertices[2].setAdjacentRanks(2,RankOfPeriodicBoundaryCondition);
-  vertices[2].setAdjacentRanks(3,RankOfPeriodicBoundaryCondition);
-  vertices[3].setAdjacentRanks(2,RankOfPeriodicBoundaryCondition);
-  vertices[3].setAdjacentRanks(3,RankOfPeriodicBoundaryCondition);
+  for (int d=0; d<Dimensions; d++) {
+    if (_periodicBC[d]) {
+      dfor2(vertex)
+        dfor2(entries)
+          tarch::la::Vector<Dimensions,int> entry = entries;
+          if ( vertex(d)==0 ) {
+            entry(d) = 0;
+          }
+          else {
+            entry(d) = 1;
+          }
+          vertices[vertexScalar].setAdjacentRanks(peano4::utils::dLinearised(entry,2),RankOfPeriodicBoundaryCondition);
+        enddforx
+        logDebug( "traverse()", "set periodic boundary conditions: " << vertices[vertexScalar].toString() );
+      enddforx
+    }
+  }
 
   observer.beginTraversal( _root.getX(), _root.getH() );
 
@@ -1066,6 +1075,8 @@ std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& 
 		      and
 		      vertex.getAdjacentRanks(i)!=InvalidRank
           and
+          vertex.getAdjacentRanks(i)!=RankOfPeriodicBoundaryCondition
+          and
           vertex.getAdjacentRanks(i)!=RankOfCellWitchWillBeJoined;
 
     // I should not try to receive anything from a node that we just are
@@ -1094,18 +1105,75 @@ std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& 
 }
 
 
+void peano4::grid::Spacetree::mergeAtDomainBoundary( GridVertex& vertex, const GridVertex& inVertex, TraversalObserver& observer, int neighbour ) {
+  assertion4( vertex.getState()!=GridVertex::State::HangingVertex,   inVertex.toString(), vertex.toString(), _id, neighbour );
+  assertion4( inVertex.getState()!=GridVertex::State::HangingVertex, inVertex.toString(), vertex.toString(), _id, neighbour );
+  assertion6(
+    tarch::la::equals(vertex.getX(), inVertex.getX())
+    or
+    (
+      tarch::la::contains(vertex.getAdjacentRanks(),RankOfPeriodicBoundaryCondition)
+      and
+      (_periodicBC.count()>1 or tarch::la::countEqualEntries(vertex.getX(), inVertex.getX())==Dimensions-_periodicBC.count())
+    ),
+    inVertex.toString(), vertex.toString(), _id, neighbour,
+    tarch::la::countEqualEntries(vertex.getX(), inVertex.getX()), _periodicBC
+  );
+  assertionEquals4( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id, neighbour );
+  assertion4(
+    not (vertex.getState()==GridVertex::State::Refined and inVertex.getState()==GridVertex::State::Erasing),
+    inVertex.toString(), vertex.toString(), _id, neighbour
+  );
+  assertion4(
+    not (vertex.getState()==GridVertex::State::Refined and inVertex.getState()==GridVertex::State::Unrefined),
+    inVertex.toString(), vertex.toString(), _id, neighbour
+  );
+
+  //
+  // Merge helper flags
+  //
+  vertex.setIsAntecessorOfRefinedVertexInCurrentTreeSweep( vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep() | inVertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep() );
+
+  //
+  // Update refinement flags
+  //
+  assertion3( vertex.getState() != GridVertex::State::Erasing,  vertex.toString(), inVertex.toString(), _id );
+  assertion3( vertex.getState() != GridVertex::State::Refining, vertex.toString(), inVertex.toString(), _id );
+
+  const bool OnlyNeighbourHasTriggeredRefinement =
+      inVertex.getState()==GridVertex::State::RefinementTriggered &&
+      (vertex.getState()==GridVertex::State::Unrefined or vertex.getState()==GridVertex::State::New or vertex.getState()==GridVertex::State::Delete);
+  const bool OnlyLocalHasTriggeredRefinement =
+      vertex.getState()==GridVertex::State::RefinementTriggered &&
+      (inVertex.getState()==GridVertex::State::Unrefined or inVertex.getState()==GridVertex::State::New or inVertex.getState()==GridVertex::State::Delete);
+  const bool OnlyNeighbourHasTriggeredErase =
+      inVertex.getState()==GridVertex::State::EraseTriggered &&
+      vertex.getState()==GridVertex::State::Refined;
+  const bool OnlyLocalHasTriggeredErase =
+      vertex.getState()==GridVertex::State::EraseTriggered &&
+      inVertex.getState()==GridVertex::State::Refined;
+
+  if (OnlyNeighbourHasTriggeredRefinement || OnlyLocalHasTriggeredRefinement) {
+    vertex.setState( GridVertex::State::RefinementTriggered );
+    logDebug( "receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex )", "set state to " << vertex.toString() << " on tree " << _id << " due to merge with neighbour" );
+  }
+  else if (OnlyNeighbourHasTriggeredErase || OnlyLocalHasTriggeredErase) {
+    vertex.setState( GridVertex::State::EraseTriggered );
+    logDebug( "receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex )", "set state to " << vertex.toString() << " on tree " << _id << " due to merge with neighbour" );
+  }
+  else {
+    assertionEquals4( vertex.getState(), inVertex.getState(),   inVertex.toString(), vertex.toString(), _id, neighbour );
+  }
+}
+
+
 void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex, TraversalObserver& observer ) {
   assertion( _spacetreeState!=SpacetreeState::NewFromSplit );
 
   std::set<int> neighbourIds = getAdjacentDomainIds(vertex,true);
-
   for (auto neighbour: neighbourIds) {
-    assertion1( neighbour>=0 or neighbour==RankOfPeriodicBoundaryCondition, neighbour );
-    const int  inStack  =
-      neighbour==RankOfPeriodicBoundaryCondition ?
-       peano4::parallel::Node::getInstance().getInputStackNumberOfPeriodicBoundaryExchange(vertex.getAdjacentRanks())
-       :
-       peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(neighbour);
+    assertion1( neighbour>=0, neighbour );
+    const int  inStack = peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(neighbour);
 
     assertion5(
       not _vertexStack[ StackKey(_id,inStack) ].empty(),
@@ -1113,41 +1181,17 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
       toString()
     );
 
+    assertion2( not _vertexStack[ StackKey(_id,inStack) ].empty(), _id, inStack );
     GridVertex inVertex = _vertexStack[ StackKey(_id,inStack) ].pop();
 
-    assertion4( vertex.getState()!=GridVertex::State::HangingVertex,   inVertex.toString(), vertex.toString(), _id, neighbour );
-    assertion4( inVertex.getState()!=GridVertex::State::HangingVertex, inVertex.toString(), vertex.toString(), _id, neighbour );
-    assertion4(
-      tarch::la::equals(vertex.getX(), inVertex.getX())
-      or
-      (
-        tarch::la::contains(vertex.getAdjacentRanks(),RankOfPeriodicBoundaryCondition)
-        and
-        tarch::la::countEqualEntries(vertex.getX(), inVertex.getX())==Dimensions-1
-      ),
-      inVertex.toString(), vertex.toString(), _id, neighbour
-    );
-    assertionEquals4( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id, neighbour );
-    assertion4(
-      not (vertex.getState()==GridVertex::State::Refined and inVertex.getState()==GridVertex::State::Erasing),
-      inVertex.toString(), vertex.toString(), _id, neighbour
-    );
-    assertion4(
-      not (vertex.getState()==GridVertex::State::Refined and inVertex.getState()==GridVertex::State::Unrefined),
-      inVertex.toString(), vertex.toString(), _id, neighbour
-    );
+    mergeAtDomainBoundary(vertex,inVertex,observer,neighbour);
 
     //
     // Merge adjacency lists. The neighbour owns some entries
     //
     for (int i=0; i<TwoPowerD; i++) {
-      if (vertex.getAdjacentRanks(i)==neighbour and neighbour!=InvalidRank
-          // falsch. Wir muessen passend spiegeln
-          and
-          neighbour!=RankOfPeriodicBoundaryCondition
-          ) {
-        const int iIn = neighbour==RankOfPeriodicBoundaryCondition ?  : i;
-        if (inVertex.getAdjacentRanks(iIn)!=vertex.getAdjacentRanks(i)) {
+      if (vertex.getAdjacentRanks(i)==neighbour and neighbour!=InvalidRank) {
+        if (inVertex.getAdjacentRanks(i)!=vertex.getAdjacentRanks(i)) {
           // @todo Debug
         	logInfo(
             "receiveAndMergeVertexIfAdjacentToDomainBoundary(...)",
@@ -1163,45 +1207,24 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
           inVertex.getAdjacentRanks(iIn) : RankOfPeriodicBoundaryCondition;
         vertex.setAdjacentRanks(i, updatedNeighbour );
 */
-        vertex.setAdjacentRanks(i, inVertex.getAdjacentRanks(iIn) );
+        vertex.setAdjacentRanks(i, inVertex.getAdjacentRanks(i) );
       }
     }
+  }
 
-    //
-    // Merge helper flags
-    //
-    vertex.setIsAntecessorOfRefinedVertexInCurrentTreeSweep( vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep() | inVertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep() );
-
-    //
-    // Update refinement flags
-    //
-    assertion3( vertex.getState() != GridVertex::State::Erasing,  vertex.toString(), inVertex.toString(), _id );
-    assertion3( vertex.getState() != GridVertex::State::Refining, vertex.toString(), inVertex.toString(), _id );
-
-    const bool OnlyNeighbourHasTriggeredRefinement =
-        inVertex.getState()==GridVertex::State::RefinementTriggered &&
-        (vertex.getState()==GridVertex::State::Unrefined or vertex.getState()==GridVertex::State::New or vertex.getState()==GridVertex::State::Delete);
-    const bool OnlyLocalHasTriggeredRefinement =
-        vertex.getState()==GridVertex::State::RefinementTriggered &&
-        (inVertex.getState()==GridVertex::State::Unrefined or inVertex.getState()==GridVertex::State::New or inVertex.getState()==GridVertex::State::Delete);
-    const bool OnlyNeighbourHasTriggeredErase =
-        inVertex.getState()==GridVertex::State::EraseTriggered &&
-        vertex.getState()==GridVertex::State::Refined;
-    const bool OnlyLocalHasTriggeredErase =
-        vertex.getState()==GridVertex::State::EraseTriggered &&
-        inVertex.getState()==GridVertex::State::Refined;
-
-    if (OnlyNeighbourHasTriggeredRefinement || OnlyLocalHasTriggeredRefinement) {
-      vertex.setState( GridVertex::State::RefinementTriggered );
-      logDebug( "receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex )", "set state to " << vertex.toString() << " on tree " << _id << " due to merge with neighbour" );
-    }
-    else if (OnlyNeighbourHasTriggeredErase || OnlyLocalHasTriggeredErase) {
-      vertex.setState( GridVertex::State::EraseTriggered );
-      logDebug( "receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex )", "set state to " << vertex.toString() << " on tree " << _id << " due to merge with neighbour" );
-    }
-    else {
-      assertionEquals4( vertex.getState(), inVertex.getState(),   inVertex.toString(), vertex.toString(), _id, neighbour );
-    }
+  std::set<int> periodicBCStacks = peano4::parallel::Node::getInstance().getInputStacksForPeriodicBoundaryExchange(vertex.getAdjacentRanks());
+  assertion1(
+    not tarch::la::contains( vertex.getAdjacentRanks(), RankOfPeriodicBoundaryCondition )
+    or
+    not periodicBCStacks.empty(),
+    vertex.toString()
+  );
+  for (auto stackNo: periodicBCStacks) {
+    assertion3( not _vertexStack[ StackKey(_id,stackNo) ].empty(), _id, stackNo, vertex.toString() );
+    GridVertex inVertex = _vertexStack[ StackKey(_id,stackNo) ].pop();
+    // @todo Debug
+    logInfo( "receiveAndMergeVertexIfAdjacentToDomainBoundary(...)", "read periodic BC data from stack " << stackNo << ": " << inVertex.toString() );
+    mergeAtDomainBoundary(vertex,inVertex,observer,_id);
   }
 }
 
@@ -1210,16 +1233,11 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
   logTraceInWith2Arguments( "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString(), _id );
 
   std::set<int> outRanks = getAdjacentDomainIds(vertex,false);
-
   for (auto p: outRanks) {
     //
     // Boundary exchange
     //
-    const int stackNo =
-      p==RankOfPeriodicBoundaryCondition ?
-      peano4::parallel::Node::getInstance().getOutputStackNumberOfPeriodicBoundaryExchange(vertex.getAdjacentRanks())
-      :
-      peano4::parallel::Node::getInstance().getOutputStackNumberOfBoundaryExchange(p);
+    const int stackNo = peano4::parallel::Node::getInstance().getOutputStackNumberOfBoundaryExchange(p);
 
     GridVertex vertexCopy = vertex;
     for (int i=0; i<TwoPowerD; i++) {
@@ -1244,6 +1262,19 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
           "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)",
           "vertex " << vertexCopy.toString() << " on tree " << _id <<
           " goes to tree " << p << " through stack " << stackNo
+    );
+  }
+
+  std::set<int> periodicBCStacks = peano4::parallel::Node::getInstance().getOutputStacksForPeriodicBoundaryExchange(vertex.getAdjacentRanks());
+
+  for (auto stackNo: periodicBCStacks) {
+    _vertexStack[ StackKey(_id,stackNo) ].push( vertex );
+
+    // @todo Debug
+    logInfo(
+      "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)",
+      "vertex " << vertex.toString() << " on tree " << _id <<
+      " goes to stack " << stackNo << " to realise periodic BC"
     );
   }
 
@@ -1369,9 +1400,9 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
   if (erase) {
     for (int i=0; i<TwoPowerD; i++) {
       if (
-		isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
+        isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
         and
-	    fineGridVertices[i].getState()==GridVertex::State::Refined
+        fineGridVertices[i].getState()==GridVertex::State::Refined
       ) {
   	    fineGridVertices[i].setState( GridVertex::State::EraseTriggered );
       }

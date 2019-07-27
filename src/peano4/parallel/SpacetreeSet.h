@@ -253,11 +253,12 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     void receiveDanglingMessages() override;
 
     /**
-     *
+     * @see Spacetree::Spacetree()
      */
     void init(
       const tarch::la::Vector<Dimensions,double>&  offset,
-      const tarch::la::Vector<Dimensions,double>&  width
+      const tarch::la::Vector<Dimensions,double>&  width,
+      const std::bitset<Dimensions>&               periodicBC = 0
     );
 
     /**

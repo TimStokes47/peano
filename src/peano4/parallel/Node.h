@@ -114,7 +114,7 @@ class peano4::parallel::Node {
      * those guys running through the left bottom vertex. And after these d
      * faces, we enumerate all the opposite faces on the cube.
      */
-    static int getPeriodicBoundaryNumber(const tarch::la::Vector<TwoPowerD,int>& flags);
+    static std::bitset<2*Dimensions> getPeriodicBoundaryNumber(const tarch::la::Vector<TwoPowerD,int>& flags);
   public:
     /**
      * I originally wanted to embed these guys into the singleton's
@@ -188,8 +188,8 @@ class peano4::parallel::Node {
      */
     static int getInputStackNumberOfBoundaryExchange(int id);
 
-    static int getInputStackNumberOfPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
-    static int getOutputStackNumberOfPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
+    static std::set<int> getInputStacksForPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
+    static std::set<int> getOutputStacksForPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
 
     /**
      * See getOutputStackNumberOfBoundaryExchange().
