@@ -70,8 +70,7 @@ void runSerial() {
 
 
 void updateDomainDecomposition() {
-//  static int phase = 0;
-  static int phase = -1;
+  static int phase = 0;
 
   if (phase==0) {
     if (
@@ -133,7 +132,7 @@ void updateDomainDecomposition() {
 
 
 void runParallel() {
-  std::bitset<Dimensions> periodicBC = 3;
+  std::bitset<Dimensions> periodicBC = 1;
 
   peano4::parallel::SpacetreeSet::getInstance().init(
     #if Dimensions==2

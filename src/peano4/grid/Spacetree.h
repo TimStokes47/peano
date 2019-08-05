@@ -182,6 +182,11 @@ class peano4::grid::Spacetree {
       GridVertex                         fineGridVertices[TwoPowerD]
     ) const;
 
+    bool isCellSplitCandidate(
+      GridVertex                         coarseGridVertices[TwoPowerD],
+      GridVertex                         fineGridVertices[TwoPowerD]
+    ) const;
+
     /**
      * You pass in the vertices and it gives you back the cell type.
      * This routine translates the 2^d vertices of a cell into a cell type.

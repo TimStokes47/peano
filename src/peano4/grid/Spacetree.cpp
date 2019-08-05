@@ -159,21 +159,27 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
 int peano4::grid::Spacetree::getTreeOwningSpacetreeNode(
   GridVertex            vertices[TwoPowerD]
 ) const {
-  int id = -1;
+  const int NotSetYet = -1;
+  int id = NotSetYet;
   dfor2(k)
     if (
       vertices[kScalar].getState()!=GridVertex::State::HangingVertex
       and
-      isVertexAdjacentToLocalSpacetree(vertices[kScalar],true,true)
+      // letztes Argument hier war true
+      isVertexAdjacentToLocalSpacetree(vertices[kScalar],true,false)
     ) {
-      assertion2(
-        id==-1 or vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==id,
-        id, vertices[kScalar].toString()
+      assertion9(
+        id==NotSetYet
+        or
+        vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==id,
+        id, kScalar, vertices[kScalar].toString(),
+        vertices[0].toString(), vertices[1].toString(), vertices[2].toString(), vertices[3].toString(),
+        _id, toString()
       );
       id = vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1);
     }
   enddforx
-  assertion1(id!=-1 or not isSpacetreeNodeLocal(vertices),id);
+  assertion1(id!=NotSetYet or not isSpacetreeNodeLocal(vertices),id);
   return id;
 }
 
@@ -1192,27 +1198,18 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
     for (int i=0; i<TwoPowerD; i++) {
       if (vertex.getAdjacentRanks(i)==neighbour and neighbour!=InvalidRank) {
         if (inVertex.getAdjacentRanks(i)!=vertex.getAdjacentRanks(i)) {
-          // @todo Debug
-        	logInfo(
+        	logDebug(
             "receiveAndMergeVertexIfAdjacentToDomainBoundary(...)",
 	          "update " << i << "th entry of adjacency data of vertex " << vertex.toString() <<
 		        " with neighbouring vertex " << inVertex.toString() << " on tree " << _id
 			    );
         }
-/*
-        const int updatedNeighbour =
-          vertex.getAdjacentRanks(i)   != RankOfPeriodicBoundaryCondition or
-          inVertex.getAdjacentRanks(i) != _id
-          ?
-          inVertex.getAdjacentRanks(iIn) : RankOfPeriodicBoundaryCondition;
-        vertex.setAdjacentRanks(i, updatedNeighbour );
-*/
         vertex.setAdjacentRanks(i, inVertex.getAdjacentRanks(i) );
       }
     }
   }
 
-  std::set<int> periodicBCStacks = peano4::parallel::Node::getInstance().getInputStacksForPeriodicBoundaryExchange(vertex.getAdjacentRanks());
+  std::set<peano4::parallel::Node::PeriodicBoundaryStackIdentifier> periodicBCStacks = peano4::parallel::Node::getInstance().getInputStacksForPeriodicBoundaryExchange(vertex.getAdjacentRanks());
   assertion1(
     not tarch::la::contains( vertex.getAdjacentRanks(), RankOfPeriodicBoundaryCondition )
     or
@@ -1220,11 +1217,23 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
     vertex.toString()
   );
   for (auto stackNo: periodicBCStacks) {
-    assertion3( not _vertexStack[ StackKey(_id,stackNo) ].empty(), _id, stackNo, vertex.toString() );
-    GridVertex inVertex = _vertexStack[ StackKey(_id,stackNo) ].pop();
-    // @todo Debug
-    logInfo( "receiveAndMergeVertexIfAdjacentToDomainBoundary(...)", "read periodic BC data from stack " << stackNo << ": " << inVertex.toString() );
+    assertion4( not _vertexStack[ StackKey(_id,stackNo.first) ].empty(), _id, stackNo.first, stackNo.second, vertex.toString() );
+    GridVertex inVertex = _vertexStack[ StackKey(_id,stackNo.first) ].pop();
+    logDebug( "receiveAndMergeVertexIfAdjacentToDomainBoundary(...)", "read periodic BC data from stack " << stackNo.first << ": " << inVertex.toString() );
+    logDebug( "receiveAndMergeVertexIfAdjacentToDomainBoundary(...)", "normals of involved symmetry axes: " << stackNo.second );
     mergeAtDomainBoundary(vertex,inVertex,observer,_id);
+
+    dfor2(k)
+      assertion3(
+        vertex.getAdjacentRanks(kScalar)==RankOfPeriodicBoundaryCondition
+        or
+        vertex.getAdjacentRanks(kScalar)==_id
+        or
+        vertex.getAdjacentRanks(kScalar)==InvalidRank
+        ,
+        vertex.toString(), inVertex.toString(), _id
+      );
+    enddforx
   }
 }
 
@@ -1265,16 +1274,14 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
     );
   }
 
-  std::set<int> periodicBCStacks = peano4::parallel::Node::getInstance().getOutputStacksForPeriodicBoundaryExchange(vertex.getAdjacentRanks());
+  std::set<peano4::parallel::Node::PeriodicBoundaryStackIdentifier> periodicBCStacks = peano4::parallel::Node::getInstance().getOutputStacksForPeriodicBoundaryExchange(vertex.getAdjacentRanks());
 
   for (auto stackNo: periodicBCStacks) {
-    _vertexStack[ StackKey(_id,stackNo) ].push( vertex );
-
-    // @todo Debug
-    logInfo(
+    _vertexStack[ StackKey(_id,stackNo.first) ].push( vertex );
+    logDebug(
       "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)",
       "vertex " << vertex.toString() << " on tree " << _id <<
-      " goes to stack " << stackNo << " to realise periodic BC"
+      " goes to stack " << stackNo.first << " to realise periodic BC"
     );
   }
 
@@ -1829,6 +1836,22 @@ bool peano4::grid::Spacetree::cellIsMergeCandidate(
 }
 
 
+bool peano4::grid::Spacetree::isCellSplitCandidate(
+  GridVertex                         coarseGridVertices[TwoPowerD],
+  GridVertex                         fineGridVertices[TwoPowerD]
+) const {
+  bool isOneVertexAdjacentToPeriodicBC = false;
+  dfor2(k)
+    isOneVertexAdjacentToPeriodicBC |= tarch::la::contains(fineGridVertices[kScalar].getAdjacentRanks(),RankOfPeriodicBoundaryCondition);
+  enddforx
+
+  return isSpacetreeNodeLocal(fineGridVertices) and
+    isSpacetreeNodeLocal(coarseGridVertices) and
+    areAllVerticesNonHanging(fineGridVertices) and
+    not isOneVertexAdjacentToPeriodicBC;
+}
+
+
 void peano4::grid::Spacetree::splitOrJoinCell(
   GridVertex  coarseGridVertices[TwoPowerD],
   GridVertex  fineGridVertices[TwoPowerD]
@@ -1836,10 +1859,7 @@ void peano4::grid::Spacetree::splitOrJoinCell(
   static int newlyCreatedCells = 0;
 
   if (not _splitTriggered.empty()) {
-    const bool isSplitCandidate =
-      isSpacetreeNodeLocal(fineGridVertices) and
-      isSpacetreeNodeLocal(coarseGridVertices) and
-      areAllVerticesNonHanging(fineGridVertices);
+    const bool isSplitCandidate = isCellSplitCandidate(coarseGridVertices,fineGridVertices);
 
     if (isSpacetreeNodeRefined(fineGridVertices)) {
       assertion1( _splittedCells.size()>=ThreePowerD, _splittedCells.size() );

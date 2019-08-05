@@ -188,8 +188,22 @@ class peano4::parallel::Node {
      */
     static int getInputStackNumberOfBoundaryExchange(int id);
 
-    static std::set<int> getInputStacksForPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
-    static std::set<int> getOutputStacksForPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
+    /**
+     * A periodic boundary stack is basically a stack (an integer), but I do
+     * augment it by a bitset which identifies which symmetry axis belong to
+     * this stack number. So if we return (23,010), then data goes to stack 23
+     * and it is a stack that does realise periodic boundary conditions along
+     * the y axis.
+     *
+     * The second argument (as sketched above) is of type std::bitset<Dimensions>.
+     * Unfortunately, bitsets do not work properly within the pair type as they
+     * seem not to define the comparison operator properly. So I use an int
+     * here and wrap it into a bitset whenever necessary.
+     */
+    typedef std::pair<int,int> PeriodicBoundaryStackIdentifier;
+
+    static std::set< PeriodicBoundaryStackIdentifier >  getInputStacksForPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
+    static std::set< PeriodicBoundaryStackIdentifier >  getOutputStacksForPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
 
     /**
      * See getOutputStackNumberOfBoundaryExchange().

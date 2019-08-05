@@ -297,6 +297,11 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
 */
 
       logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "run tree " << p._id << " in dry mode (data exchange only): " << p.toString() );
+      if (
+        _clonedObserver.count(p._id)==0 or _clonedObserver[p._id]==nullptr
+      ) {
+        _clonedObserver[p._id] = observer.clone(p._id);
+      }
 
       assertion1( _clonedObserver.count(p._id)==1 and _clonedObserver[p._id]!=nullptr, p._id );
       p.traverse(*_clonedObserver[p._id],true);
