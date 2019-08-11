@@ -366,6 +366,11 @@ class peano4::grid::Spacetree {
 	    GridVertex            vertices[TwoPowerD]
     ) const;
 
+    /**
+     * I may not consider a joining vertex to be local, as the join means that
+     * the vertex still resides on the remote rank. It will be streamed in this
+     * traversal into the local rank, but it will not yet been updated.
+     */
     int getTreeOwningSpacetreeNode(
       GridVertex            vertices[TwoPowerD]
     ) const;
@@ -595,6 +600,25 @@ class peano4::grid::Spacetree {
       GridVertex                                vertex[TwoPowerD],
       GridVertex                                fineGridVertices[TwoPowerD]
     );
+
+    /**
+     *
+     * <h2> Implementation </h2>
+     *
+     * We only remove adjacency information for unrefined outside vertices
+     * and we are very restrictive what we consider to be outside. Indeed,
+     * we consider any vertex still local when we are in a join or fork.
+     * If a vertex is really outside but refined, we wait for the erase to
+     * pass through before we consider erasing any adjacency info.
+     *
+     * @see updateVertexAfterLoad Erases refined vertices outside of local
+     *                            domain.
+     */
+    bool shouldEraseAdjacencyInformation(
+      const GridVertex&                  vertex,
+      GridVertex                         coarseGridVertices[TwoPowerD],
+      tarch::la::Vector<Dimensions,int>  fineVertexPositionWithinPatch
+    ) const;
 
     /**
      *

@@ -15,6 +15,9 @@
 tarch::logging::Log _log("examples::grid");
 
 
+std::bitset<Dimensions> periodicBC = 3;
+
+
 void runTests() {
   #if PeanoDebug>=1
   tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
@@ -97,7 +100,10 @@ void updateDomainDecomposition() {
     and
     peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*4
   ) {
-    if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3/3,0) ) {
+    if ( not peano4::parallel::SpacetreeSet::getInstance().split(
+      periodicBC==0 ? 1 : 0,
+      peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3/3,0)
+    ) {
       phase++;
     }
   }
@@ -132,8 +138,6 @@ void updateDomainDecomposition() {
 
 
 void runParallel() {
-  std::bitset<Dimensions> periodicBC = 1;
-
   peano4::parallel::SpacetreeSet::getInstance().init(
     #if Dimensions==2
     {0.0, 0.0},

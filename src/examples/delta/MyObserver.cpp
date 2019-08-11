@@ -118,6 +118,7 @@ void examples::delta::MyObserver::enterCell(
 ) {
   logTraceInWith1Argument("enterCell(...)",event.toString());
 
+  assertionMsg( false, "ichh hab noch keinen User-Daten-Stack-Austausch realisiert, obwohl ich dafuer ja die Templates eingefuehrt habe" );
 /*
   assertion2(
     event.getCellState()==peano4::grid::GridTraversalEvent::CellState::Local,
