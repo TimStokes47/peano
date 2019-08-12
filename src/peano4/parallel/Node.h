@@ -202,6 +202,12 @@ class peano4::parallel::Node {
      */
     typedef std::pair<int,int> PeriodicBoundaryStackIdentifier;
 
+    /**
+     * Analyses whether/which periodic boundary data exchange is involved. The
+     * routine however does not know/take into account that indeed only tree 0
+     * should do periodic boundary data exchange. It is up to the calling
+     * routine to ensure that stuff is only done on tree 0.
+     */
     static std::set< PeriodicBoundaryStackIdentifier >  getInputStacksForPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
     static std::set< PeriodicBoundaryStackIdentifier >  getOutputStacksForPeriodicBoundaryExchange(const tarch::la::Vector<TwoPowerD,int>& flags);
 
@@ -234,12 +240,6 @@ class peano4::parallel::Node {
      * Otherwise, we destroy our master-worker topology.
      */
     bool hasTreeForkedBefore( int treeId );
-
-    /**
-     * We know for each tree hosted on one particular rank who its children
-     * are. But we only have data on nodes that are local.
-     */
-    std::set< int > getChildren( int treeId );
 
     /**
      * You should call this operation only on the ranks >0 to find out whether

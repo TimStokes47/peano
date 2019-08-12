@@ -330,19 +330,6 @@ bool peano4::parallel::Node::hasTreeForkedBefore( int treeId ) {
 }
 
 
-std::set< int > peano4::parallel::Node::getChildren( int treeId ) {
-  std::set< int > result;
-
-  for (const auto& p: _treeEntries) {
-    if ( p.second.getMaster()==treeId ) {
-      result.insert( p.first);
-    }
-  }
-
-  return result;
-}
-
-
 bool peano4::parallel::Node::continueToRun() {
   #ifdef Parallel
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {

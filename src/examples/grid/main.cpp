@@ -151,7 +151,7 @@ void runParallel() {
 
   examples::grid::MyObserver emptyObserver;
 
-  for (int i=0; i<100; i++) {
+  for (int i=0; i<50; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     #if PeanoDebug>0
     emptyObserver.beginTraversalOnRank(true);

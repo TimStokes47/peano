@@ -156,8 +156,6 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
 }
 
 
-
-// @todo Brauch noch Doku hier
 int peano4::grid::Spacetree::getTreeOwningSpacetreeNode(
   GridVertex            vertices[TwoPowerD]
 ) const {
@@ -176,9 +174,7 @@ int peano4::grid::Spacetree::getTreeOwningSpacetreeNode(
     if (
       vertices[kScalar].getState()!=GridVertex::State::HangingVertex
       and
-      // @todo Ich vermute das ist falsch im letzten Argument. Keine Ahnung
       isVertexAdjacentToLocalSpacetree(vertices[kScalar],true,false)
-//      vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)!=InvalidRank
     ) {
       assertion9(
         id==NotSetYet
@@ -1262,22 +1258,12 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
     }
   }
 
-  // @todo: GetChildren oder so aus Node raus, falls nicht mehr genutzt
-
   std::set<peano4::parallel::Node::PeriodicBoundaryStackIdentifier> periodicBCStacks =
     _id==0 ? peano4::parallel::Node::getInstance().getInputStacksForPeriodicBoundaryExchange(vertex.getAdjacentRanks())
            : std::set<peano4::parallel::Node::PeriodicBoundaryStackIdentifier>();
 
-  // Stimmt net.
-/*  assertion1(
-    not tarch::la::contains( vertex.getAdjacentRanks(), RankOfPeriodicBoundaryCondition )
-    or
-    not periodicBCStacks.empty(),
-    vertex.toString()
-  );*/
   for (auto stackNo: periodicBCStacks) {
     assertion4( not _vertexStack[ StackKey(_id,stackNo.first) ].empty(), _id, stackNo.first, stackNo.second, vertex.toString() );
-    // @todo Darf nur auf dem Globalen Master passieren. Doku!
     assertion4( _id==0, _id, stackNo.first, stackNo.second, vertex.toString() );
     GridVertex inVertex = _vertexStack[ StackKey(_id,stackNo.first) ].pop();
     logDebug( "receiveAndMergeVertexIfAdjacentToDomainBoundary(...)", "read periodic BC data from stack " << stackNo.first << ": " << inVertex.toString() );
@@ -1891,20 +1877,11 @@ bool peano4::grid::Spacetree::cellIsMergeCandidate(
   GridVertex  coarseGridVertices[TwoPowerD],
   GridVertex  fineGridVertices[TwoPowerD]
 ) const {
-  // @todo Docu: Echtes Diffusionsverhalten
-  // @todo oder wieder raus?
-  bool isOneVertexAdjacentToMaster = false;
-  dfor2(k)
-    isOneVertexAdjacentToMaster |= tarch::la::contains( fineGridVertices[kScalar].getAdjacentRanks(), _masterId );
-  enddforx
-
   return isSpacetreeNodeLocal(fineGridVertices)
     and
     not isSpacetreeNodeLocal(coarseGridVertices)
     and
-    areAllVerticesUnrefined(fineGridVertices)
-    and
-    isOneVertexAdjacentToMaster;
+    areAllVerticesUnrefined(fineGridVertices);
 }
 
 
@@ -2052,45 +2029,27 @@ void peano4::grid::Spacetree::mergeCellFromWorkerWithMaster(
           transferredCell = true;
         }
 
-        // @todo Hier weiter
-        //
-        // Problem koennte halt schon sein, dass so Vertices reinkommen, ueber die wir bisher
-        // gar nix wussten. In dem Fall darf ich nicht nur einen Eintrag der Adjazenzliste
-        // ueberschreiben/aktualisieren, sondern muss die komplette Adjazenzliste mit reinnehmen
-        //
-
         logDebug(
           "mergeCellFromWorkerWithMaster(...)",
           "updated local vertex: " << fineGridVertices[i].toString() << " on tree " << _id
         );
 
         if ( not isVertexAdjacentToLocalSpacetree(fineGridVertices[i],true,false) ) {
-          // @todo Debug
-          logInfo(
+          logDebug(
             "mergeCellFromWorkerWithMaster(...)",
             "have to overwrite adjacency information of local vertex " << fineGridVertices[i].toString() << " on tree " << _id
           );
           fineGridVertices[i].setAdjacentRanks( receivedVertex.getAdjacentRanks() );
-          // @todo Bin mir hier net sicher. Doku?
           for (int j=0; j<TwoPowerD; j++) {
-            // @todo Das -2 ist nur aus Worker=Sicht definiert
             fineGridVertices[i].setAdjacentRanks( j,
               fineGridVertices[i].getAdjacentRanks(j)==RankOfCellWitchWillBeJoined ? worker : fineGridVertices[i].getAdjacentRanks(j)
             );
           }
-          // @todo Debug
-          logInfo(
+          logDebug(
             "mergeCellFromWorkerWithMaster(...)",
             "overwrote local adjacency information as vertex used to be a remote one: " << fineGridVertices[i].toString() << " on tree " << _id
           );
         }
-/*
-          for (int i=0; i<TwoPowerD; i++) {
-            fineGridVertices[i].setAdjacentRanks( i,
-              receivedVertex.getAdjacentRanks(i)>=0 ? receivedVertex.getAdjacentRanks(i) : fineGridVertices[i].getAdjacentRanks(i)
-            );
-          }
-*/
       }
 
       if (transferredCell) {
@@ -2245,7 +2204,6 @@ bool peano4::grid::Spacetree::mayJoinWithWorker() const {
     and _splitTriggered.empty()
     and _joining.empty()
     and _splitting.empty()
-    // @todo Sehr agressiv
     and _joinTriggered.empty();
 }
 

@@ -367,9 +367,26 @@ class peano4::grid::Spacetree {
     ) const;
 
     /**
-     * I may not consider a joining vertex to be local, as the join means that
-     * the vertex still resides on the remote rank. It will be streamed in this
-     * traversal into the local rank, but it will not yet been updated.
+     * We run over the @f$ 2^d @f$ adjacent vertices of the cell and look at
+     * each vertex's adjacency list. Usually they should all agree on the who's
+     * gonna own a cell. It is only hanging vertices which we should exclude
+     * from our check. These vertices might carry invalid adjacency lists.
+     *
+     * Other vertices which might hold invalid data are remote vertices. If a
+     * cell adjacent to the local domain changes its owner, the adjacency lists
+     * of the shared vertices all are updated. But those vertices further away,
+     * inside the remote area, are not updated. So we have to ignore these guys.
+     *
+     * The latter data inconsistency leads to the case that we might run
+     * through all @f$ 2^d @f$ vertices and not find a single vertex where we
+     * can be sure that it holds the right data. So we also run a second result
+     * datum (weakID). This one is always updated unless we encounter a hanging
+     * vertex or an invalid id. So we basically cover this second case which
+     * occurs at the vertical interface of two domains: The coarser level is
+     * local, the finer level is remote and thus would not yield any owner.
+     * However, as we do not rebalance (fork) along vertical cuts, we can
+     * trust in the weakId in this case.
+     *
      */
     int getTreeOwningSpacetreeNode(
       GridVertex            vertices[TwoPowerD]
@@ -592,6 +609,20 @@ class peano4::grid::Spacetree {
      * keep adjacency flags of all vertices which are remote yet just one level
      * below the current rank. This check, realised in updateVertexBeforeStore(),
      * ensures we kind of know what we do.
+     *
+     *
+     * <h2> Joins </h2>
+     *
+     * If we join (parts of) a worker into the local partition, it can happen
+     * that the rank receives a vertex that used to be remote before. As a
+     * consequence, the local copy of a vertex holds invalid data whereas the
+     * incoming data holds up-to-date adjacency information. So if a vertex is
+     * remote locally, we take the worker's vertex to deliver accurate adjacency
+     * data. The only alteration we make is that we replace the
+     * RankOfCellWitchWillBeJoined markers with the rank of the worker.
+     * RankOfCellWitchWillBeJoined is used to mark those cells which go to the
+     * worker in the join triggered phase, i.e. it is used only on the worker
+     * and only to prepare a join.
      *
      *
      * @see updateVertexBeforeStore()
@@ -838,6 +869,10 @@ class peano4::grid::Spacetree {
      * it has changed its own entry, we copy this information over. Otherwise, we
      * ignore any updates (there should not be any).
      *
+     * <h2> Periodic boundary conditions </h2>
+     *
+     * Periodic boundary conditions fall back to standard boundary data
+     * exchanges through specialised stacks. They are supported on tree 0 only.
      */
     void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex, TraversalObserver& observer );
 
