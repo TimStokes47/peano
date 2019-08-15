@@ -74,10 +74,10 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronou
       );
 
       assertion3(
-        peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(targetId,targetStack) ].empty(),
+        stackContainer[ peano4::grid::Spacetree::StackKey(targetId,targetStack) ].empty(),
         targetId,targetStack,spacetreeId
       );
-      peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(targetId,targetStack) ].clone( sourceStack->second );
+      stackContainer[ peano4::grid::Spacetree::StackKey(targetId,targetStack) ].clone( sourceStack->second );
 
       #if PeanoDebug>0
       const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange( spacetreeId );
@@ -133,11 +133,10 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronou
       );
 
       assertion3(
-        peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(sourceStack.first.first,targetStack) ].empty(),
+        stackContainer[ peano4::grid::Spacetree::StackKey(sourceStack.first.first,targetStack) ].empty(),
         sourceStack.first.first,sourceStack.first.second,targetStack
       );
-      peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(sourceStack.first.first,targetStack) ].clone( sourceStack.second );
-
+      stackContainer[ peano4::grid::Spacetree::StackKey(sourceStack.first.first,targetStack) ].clone( sourceStack.second );
       stackContainer[sourceStack.first].clear();
     }
   }

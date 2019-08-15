@@ -8,6 +8,7 @@
 #include "peano4/grid/GridTraversalEvent.h"
 #include "peano4/grid/PeanoCurve.h"
 #include "peano4/parallel/Node.h"
+#include "peano4/parallel/SpacetreeSet.h"
 
 
 
@@ -118,7 +119,6 @@ void examples::delta::MyObserver::enterCell(
 ) {
   logTraceInWith1Argument("enterCell(...)",event.toString());
 
-  assertionMsg( false, "ichh hab noch keinen User-Daten-Stack-Austausch realisiert, obwohl ich dafuer ja die Templates eingefuehrt habe" );
 /*
   assertion2(
     event.getCellState()==peano4::grid::GridTraversalEvent::CellState::Local,
@@ -298,7 +298,7 @@ peano4::grid::TraversalObserver* examples::delta::MyObserver::clone(int spacetre
 
 
 std::vector< peano4::grid::GridControlEvent > examples::delta::MyObserver::getGridControlEvents() {
-	// @todoo Das sollte natuerlich auch in mapping raus und muss dann dort u.U. gemerged werden
+	// @todo Das sollte natuerlich auch in mapping raus und muss dann dort u.U. gemerged werden
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
   if (_iterationCounter<8) {
     peano4::grid::GridControlEvent newEvent;
@@ -346,8 +346,10 @@ std::vector< peano4::grid::GridControlEvent > examples::delta::MyObserver::getGr
 
 
 void examples::delta::MyObserver::exchangeStacksAsynchronously() {
+  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronously( _cellData, _spacetreeId );
 }
 
 
 void examples::delta::MyObserver::exchangeStacksSynchronously(int destinationTreeId) {
+  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksSynchronously( _cellData, _spacetreeId, destinationTreeId );
 }

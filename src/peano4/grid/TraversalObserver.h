@@ -122,6 +122,12 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
     const tarch::la::Vector<Dimensions,double>&  h
   ) = 0;
 
+  /**
+   * Traditionally just calls the spacetree set's routines to trigger all data
+   * flow. However, users might also implement their data flow manually here.
+   *
+   * @see peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronously()
+   */
   virtual void exchangeStacksAsynchronously() = 0;
   virtual void exchangeStacksSynchronously(int destinationTreeId) = 0;
 };
