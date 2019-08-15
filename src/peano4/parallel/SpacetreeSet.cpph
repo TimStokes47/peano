@@ -6,7 +6,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksSynchronous
   const int sourceStack      = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange(destinationSpacetreeId);
   const int destinationStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(sourceSpacetreeId);
 
-  assertion( peano4::grid::Spacetree::_vertexStack[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].empty() );
+  assertion( stackContainer[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].empty() );
   stackContainer[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].clone( stackContainer[ peano4::grid::Spacetree::StackKey(sourceSpacetreeId,sourceStack) ] );
   stackContainer[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].reverse();
   stackContainer[ peano4::grid::Spacetree::StackKey(sourceSpacetreeId,sourceStack) ].clear();
