@@ -1,6 +1,10 @@
 if UseDelta
-  bin_PROGRAMS = Delta_debug Delta
+  bin_PROGRAMS = Delta_debug Delta Delta_demo_2d_debug
+else
+  bin_PROGRAMS = Delta_demo_2d_debug
 endif
+
+
 
 #
 # I recommend 
@@ -22,3 +26,9 @@ Delta_SOURCES   = $(DeltaSources)
 Delta_debug_CXXFLAGS  = -I$(top_builddir)/src  $(PEANO_CXXFLAGS) -g3 -O0 -DPeanoDebug=1 -DDimensions=3
 Delta_debug_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS) -lTarch_debug -lPeano4Core3d_debug  -lDelta_debug
 Delta_debug_SOURCES   = $(DeltaSources)
+
+
+Delta_demo_2d_debug_CXXFLAGS  = -I$(top_builddir)/src  $(PEANO_CXXFLAGS) -g3 -O0 -DPeanoDebug=1 -DDimensions=2
+Delta_demo_2d_debug_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS) -lTarch_debug -lPeano4Core2d_debug 
+Delta_demo_2d_debug_SOURCES   = $(DeltaSources)
+

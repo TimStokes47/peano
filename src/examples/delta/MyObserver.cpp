@@ -252,6 +252,7 @@ void examples::delta::MyObserver::leaveCell(
       break;
     case peano4::grid::GridTraversalEvent::StreamInOut:
       {
+        logDebug("leaveCell(...)", "stream cell to tree " << event.getSendReceiveCellDataRank() );
         const int streamTargetStack = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange( event.getSendReceiveCellDataRank() );
         _cellData[ DataKey(_spacetreeId,streamTargetStack ) ].push( _cellData[ DataKey(_spacetreeId,inCellStack) ].top(0) );
       }
@@ -267,12 +268,10 @@ void examples::delta::MyObserver::leaveCell(
   }
 
   if (outCellStack==TraversalObserver::CreateOrDestroyPersistentGridEntity) {
-    logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );
+    logDebug("leaveCell(...)", "destroy cell" );
     CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
     assertionVectorNumericalEquals3(data.x,event.getX(),data.x,data.h,event.toString());
     assertionVectorNumericalEquals3(data.h,event.getH(),data.x,data.h,event.toString());
-
-    // @todo update
     _mapping->destroyCell(
       event.getX(),event.getH(),data,
       _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1)
@@ -305,7 +304,7 @@ std::vector< peano4::grid::GridControlEvent > examples::delta::MyObserver::getGr
     newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
 
     #if PeanoDebug>0
-    const double minH = 0.1;
+    const double minH = 0.3;
     #else
     const double minH = 0.02;
     #endif

@@ -8,7 +8,9 @@
 
 #include "tarch/logging/Log.h"
 
+#if Dimensions==3
 #include "delta/primitives/Cylinder.h"
+#endif
 
 
 namespace examples {
@@ -24,7 +26,15 @@ namespace examples {
 class examples::delta::InitData: public examples::delta::Mapping {
   private:
     static tarch::logging::Log _log;
+
+    /**
+     * We also provide a fake Delta 2d code which we use for debugging.
+     * Usually, one would never translate any user code with Delta with
+     * 2d, so this ifdef is obsolete.
+     */
+    #if Dimensions==3
     ::delta::Mesh*             _primitive;
+    #endif
   public:
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file

@@ -5,6 +5,10 @@
 
 
 #include "tarch/multicore/Lock.h"
+
+
+
+#if Dimensions==3
 #include "delta/ContactPoint.h"
 #include "delta/io/vtk.h"
 #include "delta/contactdetection/filter.h"
@@ -12,22 +16,15 @@
 #include "delta/math.h"
 #include "delta/primitives/Cube.h"
 #include "delta/primitives/Fault.h"
+#endif
 
 
 tarch::logging::Log examples::delta::InitData::_log( "examples::delta::InitData" );
 
 
+#if Dimensions==3
 examples::delta::InitData::InitData():
   _primitive( nullptr ) {
-
-/*
-  _primitive = new ::delta::primitives::Cylinder(
-    0.5, 0.5, 0.5, // centre
-    0.2, // radius
-    0.2,0.8, // min/max Z
-    0.1 // h
-  );
-*/
 
   _primitive = new ::delta::primitives::Fault();
 
@@ -46,10 +43,16 @@ examples::delta::InitData::InitData():
     "geometry.vtk"
   );
 }
+#else
+examples::delta::InitData::InitData() {
+}
+#endif
 
 
 examples::delta::InitData::~InitData() {
+  #if Dimensions==3
   delete _primitive;
+  #endif
 }
 
 
@@ -77,6 +80,7 @@ void examples::delta::InitData::createCell(
   dfor(i,CellData::DoFsPerAxis) {
     tarch::la::Vector<Dimensions,double> x = center + offset + tarch::la::multiplyComponents(i.convertScalar<double>(),patchH);
 
+    #if Dimensions==3
     std::vector<::delta::ContactPoint> contactPoints =
       ::delta::contactdetection::filter(
         ::delta::contactdetection::sphereToTriangle(
@@ -106,6 +110,11 @@ void examples::delta::InitData::createCell(
       data.valueZ[currentEntry] = distance * contactPoints[0].normal[2];
       logDebug( "createCell(...)", "contact for point " << x << ": " << contactPoints[0].toString() );
     }
+    #else
+     data.valueX[currentEntry] = x(0)-0.5;
+     data.valueY[currentEntry] = x(1)-0.5;
+     data.valueZ[currentEntry] = x(2)-0.5;
+    #endif
 
     currentEntry++;
   }
