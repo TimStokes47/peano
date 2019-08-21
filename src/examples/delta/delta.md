@@ -6,6 +6,10 @@
 We assume Delta is built. Before you do anything, ensure your LDFLAGS are set
 properly:
 
+export LDFLAGS=-L/home/tobias/git/Delta/src/delta/.libs
+
+or 
+
 export LDFLAGS=-L/home/tobias/git/Delta/src/delta
 
 or where ever the libDelta.so file is held. Then, rerun configure with 
@@ -14,6 +18,12 @@ or where ever the libDelta.so file is held. Then, rerun configure with
 
 and recompile. As our code tends to link statically, this is it. No need to 
 set any further compile flags.
+
+If you need further troubleshooting, use 
+
+make V=1 
+
+instead of make to see what exactly the build parameters are.
 
 
 ## Run and visualise outcome ##
