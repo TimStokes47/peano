@@ -113,7 +113,7 @@ void examples::delta::InitData::createCell(
     #else
      data.valueX[currentEntry] = x(0)-0.5;
      data.valueY[currentEntry] = x(1)-0.5;
-     data.valueZ[currentEntry] = x(2)-0.5;
+     data.valueZ[currentEntry] = 0.0;
     #endif
 
     currentEntry++;

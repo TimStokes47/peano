@@ -47,7 +47,7 @@ void runExample() {
     tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 
-    const int SplitEveryKIterations = 3;
+    const int SplitEveryKIterations = 30;
     if (i%SplitEveryKIterations==SplitEveryKIterations-1) {
       peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
     }

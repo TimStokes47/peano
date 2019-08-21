@@ -92,10 +92,7 @@ void examples::delta::PeanoFormatCellDataPlotter::plotCell(
 ) {
   int vertexIndices[TwoPowerD];
 
-  int patchIndex = _writer->plotPatch(
-    center - h * 0.5,
-	h
-  );
+  int patchIndex = _writer->plotPatch(center - h * 0.5, h);
 
   assertion( _dataWriter!=nullptr );
 
@@ -106,27 +103,12 @@ void examples::delta::PeanoFormatCellDataPlotter::plotCell(
   dfor(k,CellData::DoFsPerAxis) {
     _dataWriter->plotCell(cellIndex,data.valueX[subCellCounter]);
     _dataWriter->plotCell(cellIndex,data.valueY[subCellCounter]);
+    #if Dimensions==3
     _dataWriter->plotCell(cellIndex,data.valueZ[subCellCounter]);
+    #endif
     cellIndex++;
     subCellCounter++;
   }
-/*
-  subCellCounter = 0;
-  dfor(k,CellData::DoFsPerAxis) {
-    _dataWriter->plotCell(cellIndex,data.valueX[subCellCounter]);
-    subCellCounter++;
-  }
-  subCellCounter = 0;
-  dfor(k,CellData::DoFsPerAxis) {
-    _dataWriter->plotCell(cellIndex,data.valueY[subCellCounter]);
-    subCellCounter++;
-  }
-  subCellCounter = 0;
-  dfor(k,CellData::DoFsPerAxis) {
-    _dataWriter->plotCell(cellIndex,data.valueZ[subCellCounter]);
-    subCellCounter++;
-  }
-*/
 }
 
 

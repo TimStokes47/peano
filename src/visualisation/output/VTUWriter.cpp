@@ -7,6 +7,8 @@
 
 #include "VTUWriter.h"
 
+#include "tarch/Assertions.h"
+
 
 #ifdef UseVTK
 #include "vtkImageData.h"
@@ -63,9 +65,11 @@ vtkSmartPointer<vtkDoubleArray> visualisation::output::VTUWriter::getVTUDataForO
 //  variableArray->SetNumberOfTuples( variable.getTotalNumberOfDofsPerPatch() );
 
   for(int i = 0; i < variable.getTotalNumberOfDofsPerPatch(); i++) {
-    // @todo Raus
-//    logInfo( "getVTUDataForOnePatch(...)", "wrote " << data.data[i*variable.unknowns] << "x" << data.data[i*variable.unknowns+1] << "x" << data.data[i*variable.unknowns+2]);
     variableArray->InsertNextTuple(&(data.data[i*variable.unknowns]));
+    assertion1(variable.unknowns>0,variable.unknowns);
+    for (int j=0; j<variable.unknowns; j++) {
+      assertion( data.data[i*variable.unknowns+j]==data.data[i*variable.unknowns+j] );
+    }
 //    variableArray->InsertNextTuple3(data.data[i*variable.unknowns],data.data[i*variable.unknowns+1],data.data[i*variable.unknowns+2]);
   }
   return variableArray;
