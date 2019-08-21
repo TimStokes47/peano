@@ -282,8 +282,8 @@ void examples::delta::MyObserver::leaveCell(
   else {
     logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );
     CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
-    assertionVectorNumericalEquals3(data.x,event.getX(),data.x,data.h,event.toString());
-    assertionVectorNumericalEquals3(data.h,event.getH(),data.x,data.h,event.toString());
+    assertionVectorNumericalEquals4(data.x,event.getX(),data.x,data.h,event.toString(),_spacetreeId);
+    assertionVectorNumericalEquals4(data.h,event.getH(),data.x,data.h,event.toString(),_spacetreeId);
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
 
