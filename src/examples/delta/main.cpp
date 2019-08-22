@@ -83,13 +83,8 @@ int main(int argc, char** argv) {
     "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
+    "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false // @todo true
   ));
-/*
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid", false
-  ));
-*/
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "examples::integerdiffusionthroughfaces::MyObserver", false
   ));

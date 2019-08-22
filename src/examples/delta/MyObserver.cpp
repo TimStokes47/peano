@@ -182,8 +182,8 @@ void examples::delta::MyObserver::enterCell(
         CellData data = _cellData[ DataKey(_spacetreeId,streamSourceStack) ].pop();
         logDebug("enterCell(...)", "streamed in cell " << data.toString() << " into stack " << outCellStack );
         _cellData[ DataKey(_spacetreeId,outCellStack) ].push( data );
-        // @todo raus
-        logDebug("leaveCell(...)", _cellData[ DataKey(_spacetreeId,outCellStack) ].toString() );
+        assertionVectorNumericalEquals2(data.x,event.getX(),event.toString(),data.toString());
+        assertionVectorNumericalEquals2(data.h,event.getH(),event.toString(),data.toString());
       }
       break;
     case peano4::grid::GridTraversalEvent::ExchangeVerticallyWithMaster:
@@ -197,7 +197,9 @@ void examples::delta::MyObserver::enterCell(
   }
 
 
-  if (inCellStack!=peano4::grid::TraversalObserver::NoData) {
+  if (
+    inCellStack!=peano4::grid::TraversalObserver::NoData
+  ) {
     // @todo Es gibt noch kein inside/outside hier, oder? Was ist remote?
     peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
     assertionNumericalEquals2(
