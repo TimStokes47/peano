@@ -560,14 +560,16 @@ peano4::grid::GridTraversalEvent::~GridTraversalEvent() { }
 
 std::string peano4::grid::GridTraversalEvent::toString(const DataExchangeType& param) {
    switch (param) {
-      case ExchangeHorizontally: return "ExchangeHorizontally";
-      case StreamInOut: return "StreamInOut";
+      case ExchangeHorizontally:         return "ExchangeHorizontally";
+      case StreamIn:                     return "StreamIn";
+      case StreamOut:                    return "StreamOut";
       case ExchangeVerticallyWithMaster: return "ExchangeVerticallyWithMaster";
       case ExchangeVerticallyWithWorker: return "ExchangeVerticallyWithWorker";
-      case None: return "None";
+      case None:                         return "None";
    }
    return "undefined";
 }
+
 
 std::string peano4::grid::GridTraversalEvent::getDataExchangeTypeMapping() {
    return "DataExchangeType(ExchangeHorizontally=0,StreamInOut=1,ExchangeVerticallyWithMaster=2,ExchangeVerticallyWithWorker=3,None=4)";

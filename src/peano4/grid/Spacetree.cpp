@@ -1690,9 +1690,8 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
             event.setCellData(stackNumber);
             break;
         }
-        // @todo
-        // falsch
-        event.setSendReceiveCellData(GridTraversalEvent::None);
+        event.setSendReceiveCellData( GridTraversalEvent::StreamOut );
+        event.setSendReceiveCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
         break;
       case CellEventContext::JoiningWithMaster:
         switch (type) {
@@ -1738,7 +1737,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
           case CellType::New:
           case CellType::Persistent:
             event.setCellData(TraversalObserver::NoData);
-            event.setSendReceiveCellData(GridTraversalEvent::StreamInOut);
+            event.setSendReceiveCellData(GridTraversalEvent::StreamIn);
             event.setSendReceiveCellDataRank( _masterId );
             break;
         }
@@ -1847,12 +1846,11 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
         break;
       case CellEventContext::MovingToWorker:
         event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
-        event.setSendReceiveCellData( GridTraversalEvent::StreamInOut );
-        event.setSendReceiveCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
+        event.setSendReceiveCellData( GridTraversalEvent::None );
         break;
       case CellEventContext::JoiningWithMaster:
         event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
-        event.setSendReceiveCellData( GridTraversalEvent::StreamInOut );
+        event.setSendReceiveCellData( GridTraversalEvent::StreamOut );
         event.setSendReceiveCellDataRank( _masterId );
         break;
       case CellEventContext::TopCellOfRemoteWorker:
