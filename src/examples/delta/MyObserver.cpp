@@ -153,8 +153,10 @@ void examples::delta::MyObserver::enterCell(
     assertionVectorNumericalEquals3(data.x,event.getX(),event.toString(),data.x,data.h);
     assertionVectorNumericalEquals3(data.h,event.getH(),event.toString(),data.x,data.h);
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
+    logDebug("enterCell(...)", "created new cell " << data.toString() );
   }
   else if (inCellStack==peano4::grid::TraversalObserver::NoData) {
+    logDebug("enterCell(...)", "no data loaded from local stacks as this is a remote/non-existing cell" );
   }
   else {
     CellData data;
@@ -176,7 +178,12 @@ void examples::delta::MyObserver::enterCell(
           not _cellData[ DataKey(_spacetreeId,streamSourceStack) ].empty(),
           _spacetreeId,streamSourceStack
         );
-        _cellData[ DataKey(_spacetreeId,outCellStack) ].push( _cellData[ DataKey(_spacetreeId,streamSourceStack) ].pop() );
+        assertion(inCellStack==peano4::grid::TraversalObserver::NoData);
+        CellData data = _cellData[ DataKey(_spacetreeId,streamSourceStack) ].pop();
+        logDebug("enterCell(...)", "streamed in cell " << data.toString() << " into stack " << outCellStack );
+        _cellData[ DataKey(_spacetreeId,outCellStack) ].push( data );
+        // @todo raus
+        logDebug("leaveCell(...)", _cellData[ DataKey(_spacetreeId,outCellStack) ].toString() );
       }
       break;
     case peano4::grid::GridTraversalEvent::ExchangeVerticallyWithMaster:
@@ -281,9 +288,11 @@ void examples::delta::MyObserver::leaveCell(
   }
   else {
     logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );
+    // @todo raus
+    logDebug("leaveCell(...)", _cellData[ DataKey(_spacetreeId,inCellStack) ].toString() );
     CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
-    assertionVectorNumericalEquals4(data.x,event.getX(),data.x,data.h,event.toString(),_spacetreeId);
-    assertionVectorNumericalEquals4(data.h,event.getH(),data.x,data.h,event.toString(),_spacetreeId);
+    assertionVectorNumericalEquals5(data.x,event.getX(),data.x,data.h,event.toString(),_spacetreeId,inCellStack);
+    assertionVectorNumericalEquals5(data.h,event.getH(),data.x,data.h,event.toString(),_spacetreeId,inCellStack);
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
 
