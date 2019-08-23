@@ -23,6 +23,7 @@ struct examples::delta::CellData {
   #if PeanoDebug>0
   tarch::la::Vector<Dimensions,double>   x;
   tarch::la::Vector<Dimensions,double>   h;
+  int                                    spacetreeId;
   #endif
 
   #if PeanoDebug>0
