@@ -33,6 +33,7 @@ class examples::delta::PeanoFormatCellDataPlotter: public examples::delta::Mappi
 
     tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter*                  _writer;
     tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*  _dataWriter;
+    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*  _spacetreeWriter;
 
     void plotCell(
       const tarch::la::Vector<Dimensions,double>&  center,

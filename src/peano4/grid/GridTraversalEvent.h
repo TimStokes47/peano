@@ -37,7 +37,7 @@ class peano4::grid::GridTraversalEvent {
       typedef peano4::grid::GridTraversalEventPacked Packed;
       
       enum DataExchangeType {
-         ExchangeHorizontally = 0, StreamInOut = 1, ExchangeVerticallyWithMaster = 2, ExchangeVerticallyWithWorker = 3, None = 4
+         ExchangeHorizontally = 0, StreamIn = 1, StreamOut = 2, ExchangeVerticallyWithMaster = 3, ExchangeVerticallyWithWorker = 4, None =5
       };
       
       struct PersistentRecords {

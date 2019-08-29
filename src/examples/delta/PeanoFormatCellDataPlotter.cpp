@@ -17,7 +17,8 @@ examples::delta::PeanoFormatCellDataPlotter::PeanoFormatCellDataPlotter(const st
   _fileNamePrefix(fileNamePrefix),
   _counter(0),
   _writer(nullptr),
-  _dataWriter(nullptr) {
+  _dataWriter(nullptr),
+  _spacetreeWriter(nullptr) {
   assertionEquals(_instanceCounter,0);
 }
 
@@ -25,6 +26,7 @@ examples::delta::PeanoFormatCellDataPlotter::PeanoFormatCellDataPlotter(const st
 examples::delta::PeanoFormatCellDataPlotter::~PeanoFormatCellDataPlotter() {
   assertion( _writer == nullptr);
   assertion( _dataWriter == nullptr);
+  assertion( _spacetreeWriter == nullptr);
 }
 
 
@@ -40,6 +42,9 @@ void examples::delta::PeanoFormatCellDataPlotter::beginTraversal() {
     );
 
     _dataWriter      = _writer->createCellDataWriter( "cell-data", CellData::DoFsPerAxis, Dimensions );
+    #if PeanoDebug>0
+    _spacetreeWriter = _writer->createCellDataWriter( "spacetreeId", 1, 1 );
+    #endif
   }
   _instanceCounter++;
 }
@@ -52,6 +57,10 @@ void examples::delta::PeanoFormatCellDataPlotter::endTraversal() {
   if (_instanceCounter==0) {
     assertion( _dataWriter!=nullptr );
 
+    #if PeanoDebug>0
+    _spacetreeWriter->close();
+    #endif
+
     _dataWriter->close();
 
     std::ostringstream filename;
@@ -61,8 +70,9 @@ void examples::delta::PeanoFormatCellDataPlotter::endTraversal() {
     delete _dataWriter;
     delete _writer;
 
-    _dataWriter    = nullptr;
-    _writer        = nullptr;
+    _dataWriter      = nullptr;
+    _spacetreeWriter = nullptr;
+    _writer          = nullptr;
 
     _counter++;
   }
@@ -92,13 +102,16 @@ void examples::delta::PeanoFormatCellDataPlotter::plotCell(
 ) {
   int vertexIndices[TwoPowerD];
 
-  int patchIndex = _writer->plotPatch(
-    center - h * 0.5,
-	h
-  );
+  int patchIndex = _writer->plotPatch(center - h * 0.5, h);
+
+  #if PeanoDebug>0
+  assertion( _spacetreeWriter!=nullptr );
+  int spacetreeCellIndex = _spacetreeWriter->getFirstCellWithinPatch(patchIndex);
+  assertionEquals( spacetreeCellIndex, patchIndex );
+  _spacetreeWriter->plotCell(spacetreeCellIndex,data.spacetreeId);
+  #endif
 
   assertion( _dataWriter!=nullptr );
-
   int cellIndex = _dataWriter->getFirstCellWithinPatch(patchIndex);
 
   int subCellCounter = 0;
@@ -106,27 +119,12 @@ void examples::delta::PeanoFormatCellDataPlotter::plotCell(
   dfor(k,CellData::DoFsPerAxis) {
     _dataWriter->plotCell(cellIndex,data.valueX[subCellCounter]);
     _dataWriter->plotCell(cellIndex,data.valueY[subCellCounter]);
+    #if Dimensions==3
     _dataWriter->plotCell(cellIndex,data.valueZ[subCellCounter]);
+    #endif
     cellIndex++;
     subCellCounter++;
   }
-/*
-  subCellCounter = 0;
-  dfor(k,CellData::DoFsPerAxis) {
-    _dataWriter->plotCell(cellIndex,data.valueX[subCellCounter]);
-    subCellCounter++;
-  }
-  subCellCounter = 0;
-  dfor(k,CellData::DoFsPerAxis) {
-    _dataWriter->plotCell(cellIndex,data.valueY[subCellCounter]);
-    subCellCounter++;
-  }
-  subCellCounter = 0;
-  dfor(k,CellData::DoFsPerAxis) {
-    _dataWriter->plotCell(cellIndex,data.valueZ[subCellCounter]);
-    subCellCounter++;
-  }
-*/
 }
 
 

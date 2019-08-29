@@ -49,10 +49,10 @@ class visualisation::output::VTUWriter: public visualisation::output::Writer {
 	static void writeFile(const std::string& outputFileWithoutExtension, const std::vector<PeanoPatch*>& patches);
 */
   private:
-	static tarch::logging::Log  _log;
+    static tarch::logging::Log  _log;
 
-	const std::string& _outputFileWithoutExtension;
-	const std::string& _directory;
+    const std::string& _outputFileWithoutExtension;
+    const std::string& _directory;
 
     #ifdef UseVTK
     /**

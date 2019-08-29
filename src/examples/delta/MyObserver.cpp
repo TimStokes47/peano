@@ -74,6 +74,7 @@ void examples::delta::MyObserver::beginTraversal(
   #if PeanoDebug>=1
   data.x = x;
   data.h = h;
+  data.spacetreeId = _spacetreeId;
   #endif
   _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
 
@@ -149,19 +150,22 @@ void examples::delta::MyObserver::enterCell(
     #if PeanoDebug>=1
     data.x = event.getX();
     data.h = event.getH();
+    data.spacetreeId = _spacetreeId;
     #endif
     assertionVectorNumericalEquals3(data.x,event.getX(),event.toString(),data.x,data.h);
     assertionVectorNumericalEquals3(data.h,event.getH(),event.toString(),data.x,data.h);
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
+    logDebug("enterCell(...)", "created new cell " << data.toString() );
   }
   else if (inCellStack==peano4::grid::TraversalObserver::NoData) {
+    logDebug("enterCell(...)", "no data loaded from local stacks as this is a remote/non-existing cell" );
   }
   else {
     CellData data;
     assertion2(not _cellData[ DataKey(_spacetreeId,inCellStack) ].empty(),_spacetreeId,event.toString());
     data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
-    assertionVectorNumericalEquals3(data.x,event.getX(),event.toString(),data.x,data.h);
-    assertionVectorNumericalEquals3(data.h,event.getH(),event.toString(),data.x,data.h);
+    assertionVectorNumericalEquals3(data.x,event.getX(),event.toString(),data.toString(),_spacetreeId);
+    assertionVectorNumericalEquals3(data.h,event.getH(),event.toString(),data.toString(),_spacetreeId);
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
 
@@ -169,42 +173,66 @@ void examples::delta::MyObserver::enterCell(
     case peano4::grid::GridTraversalEvent::ExchangeHorizontally:
       assertionMsg( false, "may not happen" );
       break;
-    case peano4::grid::GridTraversalEvent::StreamInOut:
+    case peano4::grid::GridTraversalEvent::StreamIn:
       {
         const int streamSourceStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( event.getSendReceiveCellDataRank() );
         assertion2(
           not _cellData[ DataKey(_spacetreeId,streamSourceStack) ].empty(),
           _spacetreeId,streamSourceStack
         );
-        _cellData[ DataKey(_spacetreeId,outCellStack) ].push( _cellData[ DataKey(_spacetreeId,streamSourceStack) ].pop() );
+        assertion(inCellStack==peano4::grid::TraversalObserver::NoData);
+        CellData data = _cellData[ DataKey(_spacetreeId,streamSourceStack) ].pop();
+        logDebug("enterCell(...)", "streamed in cell " << data.toString() << " into stack " << outCellStack );
+        assertionVectorNumericalEquals2(data.x,event.getX(),event.toString(),data.toString());
+        assertionVectorNumericalEquals2(data.h,event.getH(),event.toString(),data.toString());
+        #if PeanoDebug>=1
+        data.spacetreeId = _spacetreeId;
+        #endif
+        _cellData[ DataKey(_spacetreeId,outCellStack) ].push( data );
       }
       break;
+    case peano4::grid::GridTraversalEvent::StreamOut:
+      logDebug("leaveCell(...)", "cell will be streamed out after the user event");
+      break;
     case peano4::grid::GridTraversalEvent::ExchangeVerticallyWithMaster:
-      assertionMsg( false, "may not happen" );
+      // @todo Should be optional, isn't it?
+//      assertionMsg( false, "may not happen" );
       break;
     case peano4::grid::GridTraversalEvent::ExchangeVerticallyWithWorker:
-      assertionMsg( false, "may not happen" );
+      // @todo Should be optional, isn't it?
+//      assertionMsg( false, "may not happen" );
       break;
     case peano4::grid::GridTraversalEvent::None:
       break;
   }
 
 
-  if (inCellStack!=peano4::grid::TraversalObserver::NoData) {
+  if (
+    inCellStack!=peano4::grid::TraversalObserver::NoData
+  ) {
     // @todo Es gibt noch kein inside/outside hier, oder? Was ist remote?
     peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
-    assertionNumericalEquals2(
-      _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0).h(0)*3.0,
-      _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1).h(0),
-      _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0).toString(),
-      _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1).toString()
-    );
+    // @todo Coarse data stimmt net, oder?
+    if (_spacetreeId==0) {
+     assertionNumericalEquals2(
+       _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0).h(0)*3.0,
+       _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1).h(0),
+       _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0).toString(),
+       _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1).toString()
+      );
+    }
     _mapping->touchCellFirstTime(
       event.getX(), event.getH(),
       _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0),
       _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1),
       marker
     );
+  }
+
+  if (event.getSendReceiveCellData()==peano4::grid::GridTraversalEvent::StreamOut) {
+    logDebug("leaveCell(...)", "stream cell to tree " << event.getSendReceiveCellDataRank() );
+    const int streamTargetStack = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange( event.getSendReceiveCellDataRank() );
+    _cellData[ DataKey(_spacetreeId,streamTargetStack ) ].push( _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0) );
   }
 
   logTraceOutWith1Argument("enterCell(...)",event.toString());
@@ -250,18 +278,17 @@ void examples::delta::MyObserver::leaveCell(
     case peano4::grid::GridTraversalEvent::ExchangeHorizontally:
       assertionMsg( false, "may not happen" );
       break;
-    case peano4::grid::GridTraversalEvent::StreamInOut:
-      {
-        logDebug("leaveCell(...)", "stream cell to tree " << event.getSendReceiveCellDataRank() );
-        const int streamTargetStack = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange( event.getSendReceiveCellDataRank() );
-        _cellData[ DataKey(_spacetreeId,streamTargetStack ) ].push( _cellData[ DataKey(_spacetreeId,inCellStack) ].top(0) );
-      }
+    case peano4::grid::GridTraversalEvent::StreamIn:
+    case peano4::grid::GridTraversalEvent::StreamOut:
+      assertionMsg( false, "may not happen" );
       break;
     case peano4::grid::GridTraversalEvent::ExchangeVerticallyWithMaster:
-      assertionMsg( false, "may not happen" );
+      // @todo Should be optional, isn't it?
+//      assertionMsg( false, "may not happen" );
       break;
     case peano4::grid::GridTraversalEvent::ExchangeVerticallyWithWorker:
-      assertionMsg( false, "may not happen" );
+      // @todo Should be optional, isn't it?
+//      assertionMsg( false, "may not happen" );
       break;
     case peano4::grid::GridTraversalEvent::None:
       break;
@@ -281,9 +308,11 @@ void examples::delta::MyObserver::leaveCell(
   }
   else {
     logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );
+    // @todo raus
+    logDebug("leaveCell(...)", _cellData[ DataKey(_spacetreeId,inCellStack) ].toString() );
     CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
-    assertionVectorNumericalEquals3(data.x,event.getX(),data.x,data.h,event.toString());
-    assertionVectorNumericalEquals3(data.h,event.getH(),data.x,data.h,event.toString());
+    assertionVectorNumericalEquals5(data.x,event.getX(),data.x,data.h,event.toString(),_spacetreeId,inCellStack);
+    assertionVectorNumericalEquals5(data.h,event.getH(),data.x,data.h,event.toString(),_spacetreeId,inCellStack);
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
 
