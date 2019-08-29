@@ -94,14 +94,14 @@ class peano4::grid::Spacetree {
   	  Joining
     };
 
-    enum class CellEventContext {
+    enum class CellEvent {
       /**
        * Local means the cell resides on the local tree, is not remote, and is
        * neither the top level cell shared with the master rank nor a cell
        * shared with a worker. The whole tree (and thus cell) also is not
        * involved in any split or join.
        */
-      Local,
+      NewLocal, PersistentLocal, DeleteLocal,
       /**
        * This cell is remote. That means it should not hold any data.
        */
@@ -115,7 +115,7 @@ class peano4::grid::Spacetree {
        * data into the new tree), this state triggers lots of creational
        * events (destruction of data on the former master).
        */
-      MovingToWorker,
+      MovingNewCellToWorker, MovingPersistentCellToWorker, MovingDeletingCellToWorker,
       /**
        * We join only top level cells of workers.
        */
@@ -138,7 +138,7 @@ class peano4::grid::Spacetree {
     static std::string toString( VertexType type );
     static std::string toString( FaceType type );
     static std::string toString( CellType type );
-    static std::string toString( CellEventContext type );
+    static std::string toString( CellEvent type );
 
     /**
      * Simple recursive type analysis
@@ -166,20 +166,21 @@ class peano4::grid::Spacetree {
      * built up. In return, this will allow the create routines to construct
      * all required and necessary data flow.
      *
-     * <h2> CellEventContext::NewFromSplit </h2>
-     * <h2> CellEventContext::MovingToWorker </h2>
-     * <h2> CellEventContext::JoiningWithMaster </h2>
-     * <h2> CellEventContext::Local </h2>
-     * <h2> CellEventContext::TopCellOfLocalForest </h2>
-     * <h2> CellEventContext::TopCellOfRemoteWorker </h2>
-     * <h2> CellEventContext::Remote </h2>
+     * <h2> CellEvent::NewFromSplit </h2>
+     * <h2> CellEvent::MovingToWorker </h2>
+     * <h2> CellEvent::JoiningWithMaster </h2>
+     * <h2> CellEvent::Local </h2>
+     * <h2> CellEvent::TopCellOfLocalForest </h2>
+     * <h2> CellEvent::TopCellOfRemoteWorker </h2>
+     * <h2> CellEvent::Remote </h2>
      *
      *
      *
      */
-    CellEventContext getCellEventContext(
+    CellEvent getCellEvent(
       GridVertex                         coarseGridVertices[TwoPowerD],
-      GridVertex                         fineGridVertices[TwoPowerD]
+      GridVertex                         fineGridVertices[TwoPowerD],
+      CellType                           type
     ) const;
 
     bool isCellSplitCandidate(

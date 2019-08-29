@@ -47,11 +47,11 @@ void runExample() {
     tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 
-    int SplitEveryKIterations = 3;
+    int SplitEveryKIterations = 6;
     if (i%SplitEveryKIterations==SplitEveryKIterations-1) {
       peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
       // @todo raus
-//      SplitEveryKIterations = 300;
+      SplitEveryKIterations = 300;
     }
 
     logInfo( "main(...)", "refined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefinedVertices() );
