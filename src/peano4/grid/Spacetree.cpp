@@ -1745,7 +1745,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     }
   }
 
-  logTraceOutWith2Arguments( "createEnterCellTraversalEvent(...)", state.toString(), event.toString() );
+  logTraceOutWith3Arguments( "createEnterCellTraversalEvent(...)", state.toString(), event.toString(), toString(context) );
   return event;
 }
 
@@ -1759,7 +1759,6 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
   GridTraversalEvent  event;
 
   CellEventContext context = getCellEventContext(coarseGridVertices,fineGridVertices);
-  logDebug( "createLeaveCellTraversalEvent(...)","event context=" << toString(context) );
 
   event.setX( state.getX() + state.getH()*0.5 );
   event.setH( state.getH() );
@@ -1850,7 +1849,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
         break;
       case CellEventContext::JoiningWithMaster:
         event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
-        event.setSendReceiveCellData( GridTraversalEvent::StreamOut );
+        event.setSendReceiveCellData( GridTraversalEvent::None );
         event.setSendReceiveCellDataRank( _masterId );
         break;
       case CellEventContext::TopCellOfRemoteWorker:
@@ -1866,7 +1865,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
     }
   }
 
-  logTraceOutWith2Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), event.toString() );
+  logTraceOutWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), event.toString(), toString(context) );
   return event;
 }
 
