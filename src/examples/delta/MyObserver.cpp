@@ -333,7 +333,7 @@ std::vector< peano4::grid::GridControlEvent > examples::delta::MyObserver::getGr
     newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
 
     #if PeanoDebug>0
-    const double minH = 0.3;
+    const double minH = 0.1;
     #else
     const double minH = 0.02;
     #endif
