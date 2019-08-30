@@ -6,8 +6,9 @@ tarch::logging::Log peano::geometry::Hexahedron::_log( "peano::geometry::Hexahed
 
 
 bool peano::geometry::Hexahedron::greaterUpToRelativeTolerance(const double& lhs, const double& rhs) {
-  if ( tarch::la::greater( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE ) ) {
-    return true; // is greater  w.r.t. machine precision
+  // --(false)---eps---(false)---rtol---(true)-->
+  if ( tarch::la::smallerEquals( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE ) ) {
+    return false; // is smaller equals w.r.t. machine precision
   } else { // adjust the tolerance to the scale
     const double tolerance =
       tarch::la::NUMERICAL_ZERO_DIFFERENCE *
@@ -17,6 +18,7 @@ bool peano::geometry::Hexahedron::greaterUpToRelativeTolerance(const double& lhs
 }
 
 bool peano::geometry::Hexahedron::smallerUpToRelativeTolerance(const double& lhs, const double& rhs) {
+  // --(true)---eps---(true)---rtol---(false)-->
   if ( tarch::la::smaller( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE ) ) {
       return true; // is smaller  w.r.t. machine precision
   } else { // adjust the absolute tolerance to the scale
@@ -28,8 +30,9 @@ bool peano::geometry::Hexahedron::smallerUpToRelativeTolerance(const double& lhs
 }
 
 bool peano::geometry::Hexahedron::greaterEqualsUpToRelativeTolerance(const double& lhs, const double& rhs) {
-  if ( tarch::la::greaterEquals( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE) ) {
-    return true; // is greater equals  w.r.t. machine precision
+  // --(false)---eps---(false)---rtol---(true)-->
+  if ( tarch::la::smaller( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE) ) {
+    return false; // is smaller  w.r.t. machine precision
   } else { // adjust the tolerance to the scale
     const double tolerance =
         tarch::la::NUMERICAL_ZERO_DIFFERENCE *
@@ -39,6 +42,7 @@ bool peano::geometry::Hexahedron::greaterEqualsUpToRelativeTolerance(const doubl
 }
 
 bool peano::geometry::Hexahedron::smallerEqualsUpToRelativeTolerance(const double& lhs, const double& rhs) {
+  // --(true)---eps---(true)---rtol---(false)-->
   if ( tarch::la::smallerEquals( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE ) ) {
     return true; // is smaller equals w.r.t. machine precision 
   } else { // adjust the absolute tolerance to the scale
