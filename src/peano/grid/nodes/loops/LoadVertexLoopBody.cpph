@@ -334,24 +334,30 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     else if (_fineGridVertices[positionInVertexArray].isInside()) vertexState = peano::geometry::GeometryHelper::Inside;
     else if (_fineGridVertices[positionInVertexArray].isBoundary()) vertexState = peano::geometry::GeometryHelper::Boundary;
 
-    bool  allCellConnectedPointsAreOutside = true;
+    const bool pointWithHEnvironmentIsInside  = _geometry.isCompletelyInside(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),_fineGridVerticesEnumerator.getCellSize());
+    const bool pointIsOutsideOfDomainClosure  = _geometry.isOutsideClosedDomain(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell));
+    const bool pointWithHEnvironmentIsOutside = _geometry.isCompletelyOutside(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),_fineGridVerticesEnumerator.getCellSize());
+
+    bool allCellConnectedPointsAreOutside = pointIsOutsideOfDomainClosure && !pointWithHEnvironmentIsOutside;
+    // TODO(Dominic): Bedingung entnommen aus GeometryHelper. 
     dfor3(k)
-      allCellConnectedPointsAreOutside &=
+      allCellConnectedPointsAreOutside =
+        allCellConnectedPointsAreOutside &&
         _geometry.isOutsideClosedDomain(
           _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell) +
-		  tarch::la::multiplyComponents(
-		    k.convertScalar<double>()-tarch::la::Vector<DIMENSIONS,double>(1.0),
-			_fineGridVerticesEnumerator.getCellSize()
-		  )
+          tarch::la::multiplyComponents(
+            k.convertScalar<double>()-tarch::la::Vector<DIMENSIONS,double>(1.0),
+            _fineGridVerticesEnumerator.getCellSize()
+          )
         );
     enddforx
 
     switch (
       peano::geometry::GeometryHelper::getVertexCommand(
-        _geometry.isCompletelyInside(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),_fineGridVerticesEnumerator.getCellSize()),
-        _geometry.isOutsideClosedDomain(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)),
-        _geometry.isCompletelyOutside(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),_fineGridVerticesEnumerator.getCellSize()),
-		allCellConnectedPointsAreOutside,
+        pointWithHEnvironmentIsInside,
+        pointIsOutsideOfDomainClosure,
+        pointWithHEnvironmentIsOutside,
+        allCellConnectedPointsAreOutside,
         _state.eraseArtificiallyRefinedVerticesOutsideDomain(),
         vertexState
       )
@@ -717,3 +723,4 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     stackNumber
   );
 }
+

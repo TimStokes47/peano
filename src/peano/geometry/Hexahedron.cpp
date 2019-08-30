@@ -6,34 +6,51 @@ tarch::logging::Log peano::geometry::Hexahedron::_log( "peano::geometry::Hexahed
 
 
 bool peano::geometry::Hexahedron::greaterUpToRelativeTolerance(const double& lhs, const double& rhs) {
-  const double tolerance =
-    tarch::la::NUMERICAL_ZERO_DIFFERENCE *
-	tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
-  return tarch::la::greater( lhs, rhs, tolerance );
+  // --(false)---eps---(false)---rtol---(true)-->
+  if ( tarch::la::smallerEquals( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE ) ) {
+    return false; // is smaller equals w.r.t. machine precision
+  } else { // adjust the tolerance to the scale
+    const double tolerance =
+      tarch::la::NUMERICAL_ZERO_DIFFERENCE *
+      tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
+    return tarch::la::greater( lhs, rhs, tolerance );
+  }
 }
 
 bool peano::geometry::Hexahedron::smallerUpToRelativeTolerance(const double& lhs, const double& rhs) {
-  const double tolerance =
-    tarch::la::NUMERICAL_ZERO_DIFFERENCE *
-	tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
-  return tarch::la::smaller( lhs, rhs, tolerance );
+  // --(true)---eps---(true)---rtol---(false)-->
+  if ( tarch::la::smaller( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE ) ) {
+      return true; // is smaller  w.r.t. machine precision
+  } else { // adjust the absolute tolerance to the scale
+    const double tolerance =
+        tarch::la::NUMERICAL_ZERO_DIFFERENCE *
+        tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
+    return tarch::la::smaller( lhs, rhs, tolerance );
+  }
 }
 
 bool peano::geometry::Hexahedron::greaterEqualsUpToRelativeTolerance(const double& lhs, const double& rhs) {
-  const double tolerance =
-    tarch::la::NUMERICAL_ZERO_DIFFERENCE *
-	tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
-  return tarch::la::greaterEquals( lhs, rhs, tolerance );
+  // --(false)---eps---(false)---rtol---(true)-->
+  if ( tarch::la::smaller( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE) ) {
+    return false; // is smaller  w.r.t. machine precision
+  } else { // adjust the tolerance to the scale
+    const double tolerance =
+        tarch::la::NUMERICAL_ZERO_DIFFERENCE *
+        tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
+    return tarch::la::greaterEquals( lhs, rhs, tolerance );
+  }
 }
 
 bool peano::geometry::Hexahedron::smallerEqualsUpToRelativeTolerance(const double& lhs, const double& rhs) {
-  const double tolerance =
-    tarch::la::NUMERICAL_ZERO_DIFFERENCE *
-    std::max(
-      1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs)
-    )
-  );
-  return tarch::la::smallerEquals( lhs, rhs, tolerance );
+  // --(true)---eps---(true)---rtol---(false)-->
+  if ( tarch::la::smallerEquals( lhs, rhs, tarch::la::NUMERICAL_ZERO_DIFFERENCE ) ) {
+    return true; // is smaller equals w.r.t. machine precision 
+  } else { // adjust the absolute tolerance to the scale
+    const double tolerance =
+        tarch::la::NUMERICAL_ZERO_DIFFERENCE *
+        tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
+    return tarch::la::smallerEquals( lhs, rhs, tolerance );
+  }
 }
 
 peano::geometry::Hexahedron::Hexahedron(
@@ -67,8 +84,8 @@ bool peano::geometry::Hexahedron::isInsideOpenHexahedron( const tarch::la::Vecto
   bool result = true;
   for (int d=0; d<DIMENSIONS; d++) {
     assertion( _width(d) >= 0.0 );
-    result &= greaterUpToRelativeTolerance(x(d),_offset(d));
-    result &= smallerUpToRelativeTolerance(x(d),_offset(d)+_width(d));
+    result = result && greaterUpToRelativeTolerance(x(d),_offset(d));
+    result = result && smallerUpToRelativeTolerance(x(d),_offset(d)+_width(d));
   }
   logTraceOutWith1Argument("isInsideOpenHexahedron(...)", result);
   return result;
@@ -80,8 +97,8 @@ bool peano::geometry::Hexahedron::isInsideClosedHexahedron( const tarch::la::Vec
   bool result = true;
   for (int d=0; d<DIMENSIONS; d++) {
     assertion( _width(d) >= 0.0 );
-    result &= !smallerUpToRelativeTolerance(x(d),_offset(d));
-    result &= !greaterUpToRelativeTolerance(x(d),_offset(d)+_width(d));
+    result = result && !smallerUpToRelativeTolerance(x(d),_offset(d));
+    result = result && !greaterUpToRelativeTolerance(x(d),_offset(d)+_width(d));
   }
   logTraceOutWith1Argument("isInsideClosedHexahedron(...)", result);
   return result;
@@ -122,8 +139,8 @@ bool peano::geometry::Hexahedron::isCompletelyOutside( const tarch::la::Vector<D
 
   bool inside = true;
   for (int d=0; d<DIMENSIONS; d++) {
-    inside &= !smallerEqualsUpToRelativeTolerance(x(d),_offset(d)-resolution(d));
-    inside &= !greaterEqualsUpToRelativeTolerance(x(d),_offset(d)+_width(d)+resolution(d));
+    inside = inside && !smallerEqualsUpToRelativeTolerance(x(d),_offset(d)-resolution(d));
+    inside = inside && !greaterEqualsUpToRelativeTolerance(x(d),_offset(d)+_width(d)+resolution(d));
   }
   logDebug( "isCompletelyOutside(...)", x << "x" << resolution << ":" << !inside );
   return !inside;
@@ -141,10 +158,11 @@ bool peano::geometry::Hexahedron::isCompletelyInside( const tarch::la::Vector<DI
       currentPoint0(d) = (i(d)==0) ? x(d)-0.5*resolution(d) : x(d)+0.5*resolution(d);
       currentPoint1(d) = (i(d)==0) ? x(d)-1.0*resolution(d) : x(d)+1.0*resolution(d);
     }
-    result &= isInsideClosedHexahedron(currentPoint0);
-    result &= isInsideClosedHexahedron(currentPoint1);
+    result = result && isInsideClosedHexahedron(currentPoint0);
+    result = result && isInsideClosedHexahedron(currentPoint1);
    enddforx
 
   logTraceOutWith1Argument("isCompletelyInside(...)", result);
   return result;
 }
+
