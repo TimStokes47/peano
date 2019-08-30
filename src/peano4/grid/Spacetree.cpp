@@ -2217,13 +2217,15 @@ peano4::grid::Spacetree::CellEvent peano4::grid::Spacetree::getCellEvent(
 ) const {
   CellEvent result;
 
-  bool parentCellIsLocal = isSpacetreeNodeLocal(coarseGridVertices);
-  bool cellIsLocal       = isSpacetreeNodeLocal(fineGridVertices);
+  bool parentCellIsLocal   = isSpacetreeNodeLocal(coarseGridVertices);
+  bool cellIsLocal         = isSpacetreeNodeLocal(fineGridVertices);
+
+  logTraceInWith6Arguments("getCellEvent(...)",toString(type), parentCellIsLocal, cellIsLocal, getTreeOwningSpacetreeNode(fineGridVertices),_splitting.size(),_id);
 
   if ( cellIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
     result = CellEvent::NewFromSplit;
   }
-  else if ( not cellIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices)>0 ) ) {
+  else if ( not cellIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
     switch (type) {
       case CellType::New:
         result = CellEvent::MovingNewCellToWorker;
@@ -2269,6 +2271,7 @@ peano4::grid::Spacetree::CellEvent peano4::grid::Spacetree::getCellEvent(
     result = CellEvent::Remote;
   }
 
+  logTraceOutWith1Argument("getCellEvent(...)",toString(result));
   return result;
 }
 

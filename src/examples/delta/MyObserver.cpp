@@ -176,9 +176,9 @@ void examples::delta::MyObserver::enterCell(
     case peano4::grid::GridTraversalEvent::StreamIn:
       {
         const int streamSourceStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( event.getSendReceiveCellDataRank() );
-        assertion2(
+        assertion3(
           not _cellData[ DataKey(_spacetreeId,streamSourceStack) ].empty(),
-          _spacetreeId,streamSourceStack
+          _spacetreeId,streamSourceStack,event.toString()
         );
         assertion(inCellStack==peano4::grid::TraversalObserver::NoData);
         CellData data = _cellData[ DataKey(_spacetreeId,streamSourceStack) ].pop();
