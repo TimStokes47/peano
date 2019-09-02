@@ -312,6 +312,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
       for (auto& newWorker: p._hasSplit) {
         if (Node::getInstance().getRank(newWorker.first)!=tarch::mpi::Rank::getInstance().getRank()) {
           #if defined(Parallel)
+/*
           const int target    = Node::getInstance().getRank(newWorker.first);
           const int tag       = Node::getInstance().getGridDataExchangeTag( p._id, newWorker.first, false );
           const int outStack  = Node::getOutputStackNumberForSplitMergeDataExchange(newWorker.first);
@@ -326,6 +327,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
           message.send( target, tag, false, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
           p._vertexStack[outStack].startSend(target,tag);
           p._vertexStack[outStack].finishSendOrReceive();
+*/
           #else
           assertionMsg(false, "should not be called");
           #endif

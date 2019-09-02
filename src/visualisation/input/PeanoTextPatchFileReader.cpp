@@ -247,42 +247,50 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
     if( tokens[0]=="offset" ) {
       logDebug( "parsePatch(...)", "set offset to " << text[i] );
       for(int j = 0; j < _dimensions; j++) {
-    	offset.push_back( std::stod(tokens[j+1]) );
+        offset.push_back( std::stod(tokens[j+1]) );
       }
-	}
+    }
     else if ( tokens[0]=="size" ) {
       logDebug( "parsePatch(...)", "set sizes to " << text[i] );
       for(int j = 0; j < _dimensions; j++) {
-    	size.push_back( std::stod(tokens[j+1]) );
+        size.push_back( std::stod(tokens[j+1]) );
       }
     }
     else if ( tokens[0]=="begin" and tokens[1]=="cell-values") {
       std::string variableName = Parser::removeHyphens(tokens[2]);
 
       i++;
-	  std::vector<std::string> data;
-      while ( text[i].find( "end cell-values" )==std::string::npos ) {
-    	std::vector<std::string> tokens = Parser::tokenise( text[i] );
+      std::vector<std::string> data;
+      while ( i<test.size() and text[i].find( "end cell-values" )==std::string::npos ) {
+        std::vector<std::string> tokens = Parser::tokenise( text[i] );
         data.insert( data.end(), tokens.begin(), tokens.end() );
         i++;
       }
 
-      logDebug( "parsePatch(...)", "found " << data.size() << " entries for " << variableName );
-
-      addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
+      if (i==text.size()) {
+        logError( "parsePatch()", "file " << _file << " is corrupt as begin cell-values is not terminated properly. Quit parsing" );
+      }
+      else {
+        logDebug( "parsePatch(...)", "found " << data.size() << " entries for " << variableName );
+        addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
+      }
     }
     else if ( tokens[0]=="begin" and tokens[1]=="vertex-values" ) {
       std::string variableName = Parser::removeHyphens(tokens[2]);
 
       i++;
       std::vector<std::string> data;
-      while ( text[i].find( "end vertex-values" )==std::string::npos ) {
-    	std::vector<std::string> tokens = Parser::tokenise( text[i] );
+      while ( i<text.size() and text[i].find( "end vertex-values" )==std::string::npos ) {
+        std::vector<std::string> tokens = Parser::tokenise( text[i] );
         data.insert( data.end(), tokens.begin(), tokens.end() );
         i++;
       }
-
-      addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
+      if (i==text.size()) {
+        logError( "parsePatch()", "file " << _file << " is corrupt as begin vertex-values is not terminated properly. Quit parsing" );
+      }
+      else {
+        addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
+      }
     }
   }
 }

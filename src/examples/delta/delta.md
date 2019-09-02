@@ -6,9 +6,10 @@
 We assume Delta is built. Before you do anything, ensure your LDFLAGS are set
 properly:
 
-export LDFLAGS=-L/home/tobias/git/Delta/src/delta/.libs
+export LDFLAGS=-L/home/tobias/git/Delta/src/delta
 
-or where ever the libDelta.so file is held. Then, rerun configure with 
+or where ever you have installed the Delta libraries.
+Then, rerun configure with 
 
 ./configure --with-multithreading=cpp --with-delta=/home/tobias/git/Delta/src --with-vtk=/usr/include/vtk-8.2
 
