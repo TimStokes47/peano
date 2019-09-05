@@ -271,6 +271,67 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   #endif
 }
 
+template<class Data, class SendReceiveTaskType, class VectorContainer>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::freeAllMessagesInDeployBuffer() {
+  logTraceInWith2Arguments( "receiveData(...)", _identifier, _rank );
+
+  assertion( _currentReceiveBuffer>=0 );
+  assertion( _currentReceiveBuffer<=1 );
+
+  const int currentDeployBuffer = 1-_currentReceiveBuffer;
+  assertion2( _receiveTasks[currentDeployBuffer].size()>0, tarch::parallel::Node::getInstance().getRank(), "if the neighbour data buffer is empty, you have perhaps forgotten to call releaseMessages() on the heap in the traversal before" );
+  for(typename std::list<SendReceiveTaskType>::iterator i = _receiveTasks[currentDeployBuffer].begin(); i != _receiveTasks[currentDeployBuffer].end(); ++i) {
+    i->freeMemory();
+  }
+  _receiveTasks[currentDeployBuffer].clear();
+
+  logTraceOutWith1Argument( "receiveData(...)", result.size() );
+}
+
+template<class Data, class SendReceiveTaskType, class VectorContainer>
+VectorContainer  peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::receiveData(
+  const tarch::la::Vector<DIMENSIONS, double>&  position,
+  int                                           level
+) {
+  logTraceInWith4Arguments( "receiveData(...)", _identifier, _rank, position, level );
+
+  assertion( _currentReceiveBuffer>=0 );
+  assertion( _currentReceiveBuffer<=1 );
+
+  const int currentDeployBuffer = 1-_currentReceiveBuffer;
+  typename std::list<SendReceiveTaskType >::iterator readElement = _readDeployBufferInReverseOrder ? --_receiveTasks[currentDeployBuffer].end() : _receiveTasks[currentDeployBuffer].begin();
+
+  assertion2( _receiveTasks[currentDeployBuffer].size()>0, tarch::parallel::Node::getInstance().getRank(), "if the neighbour data buffer is empty, you have perhaps forgotten to call releaseMessages() on the heap in the traversal before" );
+
+  #ifdef Asserts
+  if ( heapStoresVertexSpatialDataForValidation() ) {
+    assertion10(
+      readElement->fits(position,level) | !dataExchangerCommunicatesInBackground(),
+      _readDeployBufferInReverseOrder,
+      level,  position,
+      _receiveTasks[currentDeployBuffer].front().getMetaInformation().toString(),
+      _receiveTasks[currentDeployBuffer].back().getMetaInformation().toString(),
+      tarch::parallel::Node::getInstance().getRank(),
+      _rank,
+      _identifier,
+      dataExchangerCommunicatesInBackground(),
+      "if _readDeployBufferInReverseOrder: take back() element"
+    );
+
+    const int numberOfElementsOfThisEntry = readElement->getMetaInformation().getLength();
+    assertion3(numberOfElementsOfThisEntry >= 0, position, level, numberOfElementsOfThisEntry);
+    assertion3(readElement->data()!=0 || numberOfElementsOfThisEntry==0, position, level, numberOfElementsOfThisEntry);
+  }
+  #endif
+
+  const VectorContainer result(readElement->data(), readElement->data()+readElement->getMetaInformation().getLength());
+
+  readElement->freeMemory();
+  _receiveTasks[currentDeployBuffer].erase(readElement);
+
+  logTraceOutWith1Argument( "receiveData(...)", result.size() );
+  return result;
+}
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::finishedToSendData(bool isTraversalInverted) {

@@ -246,6 +246,18 @@ class peano::heap::BoundaryDataExchanger {
     void releaseSentMessages();
 
     /**
+     * This operation frees all received messages
+     * in the current deploy buffer.
+     *
+     * This operation is designed for some codes that need to drop
+     * all received messages in certain algorithmic steps.
+     * One of these codes is ExaHyPE, which performs
+     * this operation if a time step size in its optimistic
+     * time stepping procedure did violate a numerical stability criterion.
+     */
+    void freeAllMessagesInDeployBuffer();
+
+    /**
      * Exchanger has to know how many messages should be in the receive buffer at least.
      *
      * Keeps track of the logical number of sent messages. If you use fancy
