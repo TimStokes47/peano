@@ -125,6 +125,22 @@ class peano::heap::AbstractHeap {
      */
     virtual void finishedToSendBoundaryData(bool isTraversalInverted) = 0;
 
+    /**
+     * Drop the received boundary data, i.e. free the buffer memory allocated
+     * to store the messages.
+     *
+     * @note This routine must be called manually by the user.
+     * It is not a part of the usual send and receive flow.
+     *
+     * @note This routine must be called after allHeapsStartToSendBoundaryData(...)
+     * has been called. In the latter routine, it is ensured that
+     * all messages are transmitted to the neighbours and further that
+     * an equal number of messages is received from them.
+     * You mapping's beginIteration(...) function is typically a good
+     * place to call this method.
+     */
+    virtual void dropReceivedBoundaryData() = 0;
+
     static void allHeapsStartToSendSynchronousData();
 
     static void allHeapsStartToSendBoundaryData(bool isTraversalInverted);
@@ -132,6 +148,8 @@ class peano::heap::AbstractHeap {
     static void allHeapsFinishedToSendSynchronousData();
 
     static void allHeapsFinishedToSendBoundaryData(bool isTraversalInverted);
+
+    static void allHeapsDropReceivedBoundaryData();
 };
 
 #endif

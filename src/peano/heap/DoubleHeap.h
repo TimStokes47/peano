@@ -202,6 +202,8 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
 
     virtual void finishedToSendBoundaryData(bool isTraversalInverted);
 
+    virtual void dropReceivedBoundaryData();
+
     static DoubleHeap& getInstance();
 
     HeapEntries& getData(int index);

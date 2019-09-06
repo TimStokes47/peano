@@ -60,3 +60,16 @@ void peano::heap::AbstractHeap::allHeapsFinishedToSendBoundaryData(bool isTraver
   }
   logTraceOut( "allHeapsStartToSendSynchronousData()" );
 }
+
+
+void peano::heap::AbstractHeap::allHeapsDropReceivedBoundaryData() {
+  logTraceIn( "allHeapsStartToSendSynchronousData()" );
+  for (
+    std::set< peano::heap::AbstractHeap* >::iterator p = _registeredHeaps.begin();
+    p != _registeredHeaps.end();
+    p++
+  ) {
+    (**p).dropReceivedBoundaryData();
+  }
+  logTraceOut( "allHeapsStartToSendSynchronousData()" );
+}

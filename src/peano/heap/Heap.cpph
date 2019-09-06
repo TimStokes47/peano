@@ -629,6 +629,20 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   logTraceOut( "finishedToSendBoundaryData()" );
 }
 
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::dropReceivedBoundaryData() {
+  logTraceInWith1Argument( "dropReceivedBoundaryData()", _name );
+
+  SCOREP_USER_REGION("peano::heap::Heap::dropReceivedBoundaryData()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
+  #ifdef Parallel
+  for (auto& p: _neighbourDataExchanger) {
+    p.second->freeAllMessagesInDeployBuffer();
+  }
+  #endif
+
+  logTraceOut( "dropReceivedBoundaryData()" );
+}
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 bool peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::validateThatIncomingJoinBuffersAreEmpty() {

@@ -669,6 +669,22 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::dropReceivedBoundaryData() {
+  logTraceInWith1Argument( "dropReceivedBoundaryData()", _name );
+
+  SCOREP_USER_REGION("peano::heap::DoubleHeap::dropReceivedBoundaryData()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
+  #ifdef Parallel
+  for (auto& p: _neighbourDataExchanger) {
+    p.second->freeAllMessagesInDeployBuffer();
+  }
+  #endif
+
+  logTraceOut( "dropReceivedBoundaryData()" );
+}
+
+
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 bool peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::validateThatIncomingJoinBuffersAreEmpty() {
   #ifdef Parallel
   return _joinForkExchanger.validateThatIncomingJoinBuffersAreEmpty();
