@@ -375,6 +375,18 @@ class peano::heap::BoundaryDataExchanger {
     void finishedToSendData(bool isTraversalInverted);
 
     /**
+     * This operation frees all received messages
+     * in the current deploy buffer.
+     *
+     * This operation is designed for some codes that need to drop
+     * all received messages in certain algorithmic steps.
+     * One of these codes is ExaHyPE, which performs
+     * this operation if a time step size in its optimistic
+     * time stepping procedure did violate a numerical stability criterion.
+     */
+    void freeAllMessagesInDeployBuffer();
+
+    /**
      *
      * <h2> Behaviour </h2>
      *

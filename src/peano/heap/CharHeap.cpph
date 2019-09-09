@@ -653,6 +653,22 @@ void peano::heap::CharHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDa
 
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+void peano::heap::CharHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::dropReceivedBoundaryData() {
+  logTraceInWith1Argument( "dropReceivedBoundaryData()", _name );
+
+  SCOREP_USER_REGION("peano::heap::CharHeap::dropReceivedBoundaryData()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
+  #ifdef Parallel
+  for (auto& p: _neighbourDataExchanger) {
+    p.second->freeAllMessagesInDeployBuffer();
+  }
+  #endif
+
+  logTraceOut( "dropReceivedBoundaryData()" );
+}
+
+
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::CharHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::finishedToSendBoundaryData(bool isTraversalInverted) {
   logTraceInWith1Argument( "finishedToSendBoundaryData()", _name );
 

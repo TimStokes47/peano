@@ -271,6 +271,22 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   #endif
 }
 
+template<class Data, class SendReceiveTaskType, class VectorContainer>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::freeAllMessagesInDeployBuffer() {
+  logTraceInWith2Arguments( "freeAllMessagesInDeployBuffer(...)", _identifier, _rank );
+
+  assertion( _currentReceiveBuffer>=0 );
+  assertion( _currentReceiveBuffer<=1 );
+
+  const int currentDeployBuffer = 1-_currentReceiveBuffer;
+  assertion2( _receiveTasks[currentDeployBuffer].size()>0, tarch::parallel::Node::getInstance().getRank(), "if the neighbour data buffer is empty, you have perhaps forgotten to call releaseMessages() on the heap in the traversal before" );
+  for(typename std::list<SendReceiveTaskType>::iterator i = _receiveTasks[currentDeployBuffer].begin(); i != _receiveTasks[currentDeployBuffer].end(); ++i) {
+    i->freeMemory();
+  }
+  _receiveTasks[currentDeployBuffer].clear();
+
+  logTraceOutWith1Argument( "freeAllMessagesInDeployBuffer(...)", result.size() );
+}
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::finishedToSendData(bool isTraversalInverted) {

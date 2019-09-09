@@ -546,6 +546,8 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      */
     virtual void finishedToSendBoundaryData(bool isTraversalInverted);
 
+    virtual void dropReceivedBoundaryData();
+
     /**
      * The HeapData class is a singleton, thus one needs to
      * use the getInstance() method to retrieve the single

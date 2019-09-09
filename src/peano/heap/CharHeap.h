@@ -202,6 +202,8 @@ class peano::heap::CharHeap: public tarch::services::Service, peano::heap::Abstr
 
     virtual void finishedToSendBoundaryData(bool isTraversalInverted);
 
+    virtual void dropReceivedBoundaryData();
+
     static CharHeap& getInstance();
 
     HeapEntries& getData(int index);
