@@ -261,7 +261,7 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
 
       i++;
       std::vector<std::string> data;
-      while ( i<test.size() and text[i].find( "end cell-values" )==std::string::npos ) {
+      while ( i<text.size() and text[i].find( "end cell-values" )==std::string::npos ) {
         std::vector<std::string> tokens = Parser::tokenise( text[i] );
         data.insert( data.end(), tokens.begin(), tokens.end() );
         i++;
