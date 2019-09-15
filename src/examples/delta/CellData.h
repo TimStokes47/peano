@@ -5,6 +5,16 @@
 
 
 #include <string>
+#include "../config.h"
+
+
+#ifdef Parallel
+#include <mpi.h>
+#endif
+
+
+#include "peano4/utils/Globals.h"
+#include "tarch/la/Vector.h"
 
 
 namespace examples {
@@ -42,6 +52,9 @@ struct examples::delta::CellData {
   double  valueY[DoFsPerCell];
   double  valueZ[DoFsPerCell];
 
+  /**
+   * @todo Create empty stub here if Python frontend is used
+   */
   std::string toString() const {
     return std::string("(")
          #if PeanoDebug>0
@@ -50,6 +63,13 @@ struct examples::delta::CellData {
          #endif
          + std::string(")");
   }
+
+  /**
+   * @todo Create empty stub here if Python frontend is used
+   */
+  #ifdef Parallel
+  static MPI_Datatype Datatype;
+  #endif
 };
 
 

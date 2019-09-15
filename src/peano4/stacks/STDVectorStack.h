@@ -15,11 +15,16 @@
 
 namespace peano4 {
   namespace stacks {
+//    template <class T>
+//    concept bool HasMPIDatatype = T::Datatype;
+/*
+    concept bool HasMPIDatatype = requires(T object) {
+      typename T::Datatype;
+    };
+*/
+
     template <class T>
     class STDVectorStack;
-
-    template <>
-    class STDVectorStack<double>;
 
     enum class IOMode {
       None,
@@ -31,121 +36,7 @@ namespace peano4 {
 
 
 /**
- * Vertex Stack Based upon C++'s STD Stack
- *
- * @author Tobias Weinzierl
- * @version $Revision: 1.2 $
- */
-template <>
-class peano4::stacks::STDVectorStack<double> {
-  private:
-    /**
-     * Logging device.
-     */
-    static tarch::logging::Log _log;
-
-    /**
-     * This is the attribute holding all the temporary stacks.
-     */
-    std::vector< double >   _data;
-
-    int                     _currentElement;
-
-  protected:
-    IOMode              _ioMode;
-    int                 _ioRank;
-    int                 _ioTag;
-    MPI_Request*        _ioMPIRequest;
-
-  public:
-    /**
-     * Constructor.
-     *
-     * @see EventStack::EventStack()
-     */
-    STDVectorStack();
-    ~STDVectorStack();
-    STDVectorStack<double>( const STDVectorStack<double>& stack );
-    STDVectorStack<double>&  operator=( const STDVectorStack<double>& stack );
-    void  clone( const STDVectorStack<double>&  data );
-
-
-    /**
-     * This class represents a whole block of the tree. You can access all
-     * element within in random order, or you can pop/push elements. If we
-     * grab a block from the tree, it is logically removed from the main stack.
-     */
-    class PopBlockVertexStackView {
-      protected:
-        /**
-         * Parent is friend
-         */
-        friend class peano4::stacks::STDVectorStack<double>;
-
-        const int                                _size;
-        const int                                _baseElement;
-        peano4::stacks::STDVectorStack<double>*  _stack;
-
-        /**
-         * Constructor
-         */
-        PopBlockVertexStackView(int size, int base, peano4::stacks::STDVectorStack<double>* stack);
-
-      public:
-        int size() const;
-        double get(int index);
-        std::string toString() const;
-    };
-
-    class PushBlockVertexStackView {
-      protected:
-        /**
-         * Parent is friend
-         */
-        friend class peano4::stacks::STDVectorStack<double>;
-
-        /**
-         * Constructor
-         */
-        PushBlockVertexStackView(int size, int base, peano4::stacks::STDVectorStack<double>* stack);
-
-        const int                                _size;
-        const int                                _baseElement;
-        peano4::stacks::STDVectorStack<double>*  _stack;
-      public:
-        int size() const;
-
-        double* set(int index, const double& value);
-
-        #if PeanoDebug>=1
-        double get(int index) const;
-        #endif
-
-        std::string toString() const;
-    };
-
-    bool isSendingOrReceiving() const;
-    double pop();
-    double& top(int shift=0);
-    void push( const double& element );
-    PopBlockVertexStackView  popBlock(int numberOfVertices);
-    PushBlockVertexStackView  pushBlock(int numberOfVertices);
-    int size() const;
-    bool empty() const;
-    void clear();
-    void startSend(int rank, int tag);
-    void startReceive(int rank, int tag, int numberOfElements);
-    void finishSendOrReceive();
-    void reverse();
-    std::string toString() const;
-};
-
-
-
-/**
- * If you use this class, you have to ensure that the type T is generated via
- * DaStGen and that you've called initDatatype on T prior to the first
- * communication call on this stack.
+ * 
  */
 template <class T>
 class peano4::stacks::STDVectorStack {
@@ -406,6 +297,7 @@ class peano4::stacks::STDVectorStack {
      * code still might insert additional elements, i.e. starting does not
      * mean all the data that is to be sent out is already in the container.
      */
+//    void startSend(int rank, int tag) requires HasMPIDatatype<T> {
     void startSend(int rank, int tag) {
       #ifdef Parallel
       assertion( _ioMode==IOMode::None );
@@ -427,6 +319,7 @@ class peano4::stacks::STDVectorStack {
     /**
      * @see startSend()
      */
+//    void startReceive(int rank, int tag, int numberOfElements) requires HasMPIDatatype<T> {
     void startReceive(int rank, int tag, int numberOfElements) {
       #ifdef Parallel
       assertion( _ioMode==IOMode::None );
@@ -440,6 +333,7 @@ class peano4::stacks::STDVectorStack {
 
       assertion( _ioMPIRequest == nullptr );
       _ioMPIRequest = new MPI_Request;
+
       int result = MPI_Irecv( _data.data(), _data.size(), T::Datatype, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
       if  (result!=MPI_SUCCESS) {
         logError( "startReceive(int,int,int)", "was not able to receive " << numberOfElements << " values from node " << rank << " on tag " << tag
@@ -448,7 +342,6 @@ class peano4::stacks::STDVectorStack {
       }
       #endif
     }
-
 
     bool isSendingOrReceiving() const {
    	  return _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive;
@@ -525,6 +418,14 @@ class peano4::stacks::STDVectorStack {
 
 template <class T>
 tarch::logging::Log peano4::stacks::STDVectorStack<T>::_log( "peano4::stacks::STDVectorStack<T>" );
+
+
+template <>
+void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag);
+
+
+template <>
+void peano4::stacks::STDVectorStack<double>::startReceive(int rank, int tag, int numberOfElements);
 
 
 #endif

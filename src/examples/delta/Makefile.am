@@ -12,6 +12,7 @@ endif
 
 DeltaSources = \
   main.cpp \
+  CellData.cpp \
   InitData.cpp \
   MyObserver.cpp \
   CompositeMapping.cpp \
