@@ -58,7 +58,7 @@ AC_PROG_CXX
 #
 # Peano variables
 #
-PEANO_CXXFLAGS="-std=c++11"
+PEANO_CXXFLAGS="-std=c++14 -fconcepts"
 PEANO_LDFLAGS=""
 
 # Think I do not need a C compiler
