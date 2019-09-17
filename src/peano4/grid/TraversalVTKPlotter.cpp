@@ -197,9 +197,9 @@ void peano4::grid::TraversalVTKPlotter::beginTraversalOnRank(bool isParallelRun)
   _counter++;
 
   if ( tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
+    /*
     #ifdef Parallel
     assertionMsg(false,"not there yet; should use the new classes");
-/*
     Kann net funktionieren, weil es ja noch gar net losgegnagen ist
 
     assertion(isParallelRun);
@@ -210,8 +210,8 @@ void peano4::grid::TraversalVTKPlotter::beginTraversalOnRank(bool isParallelRun)
         logInfo( "startNewSnapshot(...)", "will receive " << entries << " snapshots from rank " << rank);
       }
     }
-*/
     #endif
+*/
 
     if ( not _clonedSpacetreeIds.empty() ) {
       assertion1( _writer!=nullptr, _spacetreeId );
