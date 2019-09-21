@@ -545,6 +545,14 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
 }
 
 
+bool peano4::parallel::SpacetreeSet::isLocalSpacetree(int treeId) const {
+  for (auto& p: _spacetrees) {
+    if (p._id==treeId) return true;
+  }
+  return false;
+}
+
+
 bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank) {
   peano4::grid::Spacetree&  tree = getSpacetree( treeId );
 

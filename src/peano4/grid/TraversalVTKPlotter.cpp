@@ -5,6 +5,8 @@
 #include "peano4/utils/Loop.h"
 
 #include "tarch/mpi/Rank.h"
+#include "tarch/mpi/StringMessage.h"
+#include "tarch/mpi/StringTools.h"
 
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
@@ -194,24 +196,30 @@ peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int s
 
 
 void peano4::grid::TraversalVTKPlotter::beginTraversalOnRank(bool isParallelRun) {
+}
+
+
+void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
   _counter++;
 
   if ( tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
-    /*
     #ifdef Parallel
-    assertionMsg(false,"not there yet; should use the new classes");
-    Kann net funktionieren, weil es ja noch gar net losgegnagen ist
-
     assertion(isParallelRun);
+
     for (int rank=0; rank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
       if (rank!=tarch::mpi::Rank::getGlobalMasterRank()) {
         int entries;
         MPI_Recv( &entries, 1, MPI_INT, rank, _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE );
         logInfo( "startNewSnapshot(...)", "will receive " << entries << " snapshots from rank " << rank);
+
+        for (int i=0; i<entries; i++) {
+          tarch::mpi::StringMessage message;
+          message.receive( rank, _plotterMessageTag, false, tarch::mpi::StringMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+          _clonedSpacetreeIds.push_back( tarch::mpi::StringTools::convert(message) );
+        }
       }
     }
     #endif
-*/
 
     if ( not _clonedSpacetreeIds.empty() ) {
       assertion1( _writer!=nullptr, _spacetreeId );
@@ -230,9 +238,8 @@ void peano4::grid::TraversalVTKPlotter::beginTraversalOnRank(bool isParallelRun)
     int entries = _clonedSpacetreeIds.size();
     MPI_Send( &entries, 1, MPI_INT, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
     for (auto& p: _clonedSpacetreeIds) {
-      entries = p.length();
-      MPI_Send( &entries, 1, MPI_INT, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
-      MPI_Send( p.data(), entries, MPI_CHAR, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
+      tarch::mpi::StringMessage message = tarch::mpi::StringTools::convert(p);
+      message.send(tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag, false, tarch::mpi::StringMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
     }
     #else
     assertionMsg( false, "should never enter" );
@@ -240,11 +247,6 @@ void peano4::grid::TraversalVTKPlotter::beginTraversalOnRank(bool isParallelRun)
   }
 
   _clonedSpacetreeIds.clear();
-}
-
-
-void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
-  //_counter++;
 }
 
 

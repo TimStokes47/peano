@@ -107,6 +107,7 @@ Tarch_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/mpi/mpi.cpp \
  tarch/mpi/IntegerMessage.cpp \
  tarch/mpi/StringMessage.cpp \
+ tarch/mpi/StringTools.cpp \
  tarch/logging/CommandLineLogger.cpp \
  tarch/logging/Log.cpp \
  tarch/logging/LogFilterFileReader.cpp \

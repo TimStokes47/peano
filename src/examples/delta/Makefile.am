@@ -24,7 +24,7 @@ Delta_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS) -lTarch -lPeano4Core3d 
 Delta_SOURCES   = $(DeltaSources)
 
 
-Delta_debug_CXXFLAGS  = -I$(top_builddir)/src  $(PEANO_CXXFLAGS) -g3 -O0 -DPeanoDebug=1 -DDimensions=3
+Delta_debug_CXXFLAGS  =  -O0 -I$(top_builddir)/src  $(PEANO_CXXFLAGS) -g3 -DPeanoDebug=1 -DDimensions=3
 Delta_debug_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS) -lTarch_debug -lPeano4Core3d_debug  -lDelta_debug
 Delta_debug_SOURCES   = $(DeltaSources)
 

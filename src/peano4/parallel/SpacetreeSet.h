@@ -322,6 +322,12 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * we thus have to run all 'running' (read non-splitting) trees first.
      */
     bool split(int treeId, int cells, int targetRank);
+
+    /**
+     * Codes hold one spacetree set per rank. With this routine, you can find
+     * out whether a local set contains a particular id.
+     */
+    bool isLocalSpacetree(int treeId) const;
 };
 
 
