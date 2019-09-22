@@ -175,7 +175,7 @@ void examples::delta::MyObserver::enterCell(
       break;
     case peano4::grid::GridTraversalEvent::StreamIn:
       {
-        const int streamSourceStack = peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange( event.getSendReceiveCellDataRank() );
+        const int streamSourceStack = peano4::parallel::Node::getInputStackNumberForVerticalDataExchange( event.getSendReceiveCellDataRank() );
         assertion3(
           not _cellData[ DataKey(_spacetreeId,streamSourceStack) ].empty(),
           _spacetreeId,streamSourceStack,event.toString()
@@ -231,7 +231,7 @@ void examples::delta::MyObserver::enterCell(
 
   if (event.getSendReceiveCellData()==peano4::grid::GridTraversalEvent::StreamOut) {
     logDebug("leaveCell(...)", "stream cell to tree " << event.getSendReceiveCellDataRank() );
-    const int streamTargetStack = peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange( event.getSendReceiveCellDataRank() );
+    const int streamTargetStack = peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange( event.getSendReceiveCellDataRank() );
     _cellData[ DataKey(_spacetreeId,streamTargetStack ) ].push( _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0) );
   }
 
@@ -373,11 +373,5 @@ std::vector< peano4::grid::GridControlEvent > examples::delta::MyObserver::getGr
 }
 
 
-void examples::delta::MyObserver::exchangeStacksAsynchronously() {
-  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronously( _cellData, _spacetreeId );
-}
-
-
-void examples::delta::MyObserver::exchangeStacksSynchronously(int destinationTreeId) {
-  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksSynchronously( _cellData, _spacetreeId, destinationTreeId );
+void examples::delta::MyObserver::exchangeStacksAfterGridSweep() {
 }

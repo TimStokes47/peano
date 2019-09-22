@@ -219,7 +219,8 @@ class peano4::grid::Spacetree {
      * wanna be able to construct a tree first and then to set the master.
      * Actually, I should introduce a special constructor for this.
      */
-    int        _masterId;
+    int            _masterId;
+    std::set<int>  _childrenIds;
 
     /**
      * Indicate per axis whether we have periodic boundary conditions.

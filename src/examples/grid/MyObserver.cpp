@@ -116,9 +116,6 @@ std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGri
 }
 
 
-void examples::grid::MyObserver::exchangeStacksAsynchronously() {
+void examples::grid::MyObserver::exchangeStacksAfterGridSweep() {
 }
 
-
-void examples::grid::MyObserver::exchangeStacksSynchronously(int destinationTreeId) {
-}

@@ -73,42 +73,63 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
 	  class DataExchangeTask: public tarch::multicore::Task {
       private:
-	    int            _spacetreeId;
-	    SpacetreeSet&  _spacetreeSet;
-      peano4::grid::TraversalObserver&  _observer;
-	  public:
-	    DataExchangeTask( int spacetreeId, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
+        peano4::grid::Spacetree&          _spacetree;
+	      SpacetreeSet&  _spacetreeSet;
+        peano4::grid::TraversalObserver&  _observer;
+      public:
+        DataExchangeTask( peano4::grid::Spacetree& spacetree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
 
-	    /**
-	     * I create the copy of the observer, run the traversal on my local
-	     * tree _spacetree and finally destroy the local observer copy.
-	     */
-	    bool run() override;
+        /**
+         * I create the copy of the observer, run the traversal on my local
+         * tree _spacetree and finally destroy the local observer copy.
+         */
+        bool run() override;
+        void prefetch() override;
 
-	    void prefetch() override;
+        /**
+         * This is the kind of routine that does boundary data exchange, i.e.
+         * send outs in iteration n and receives (see counterpart routine), but
+         * the received data is used only in traversal n+1. The whole exchange
+         * thus asynchronous (logically).
+         *
+         * Typically, this routine is called by user observers to for their
+         * user-defined data. We however also use it within the grid to trigger
+         * the actual vertex data exchange. As these routines all are invoked
+         * via tasks, this routine is typically invoked by multiple threads
+         * concurrently.
+         *
+         * @param symmetricDataCardinality If two ranks A and B are adjacent to
+         *   each other, and if A send n entries to B, then B received exactly
+         *   n entries in turn.
+         *
+         * @see finishAllOutstandingSendsAndReceives();
+         */
+        template <class Container>
+        static void exchangeAllHorizontalDataExchangeStacks( Container& stackContainer, int spacetreeId, bool symmetricDataCardinality );
 
-	    /**
-	     * This is the kind of routine that does boundary data exchange, i.e.
-	     * send outs in iteration n with the receive and processing of these
-	     * data in traversal n+1. It is thus asynchronous (logically).
-	     *
-	     * Typically, this routine is called by user observers to for their
-	     * user-defined data. We however also use it within the grid to trigger
-	     * the actual vertex data exchange. As these routines all are invoked
-	     * via tasks, this routine is typically invoked by multiple threads
-	     * concurrently.
-	     */
-	    template <class Container>
-	    static void exchangeStacksAsynchronously( Container& stackContainer, int spacetreeId );
+        template <class Container>
+        static void exchangeAllPeriodicBoundaryDataStacks( Container& stackContainer, int spacetreeId );
 
-	    /**
-	     * Counterpart of exchangeStacksAsynchronously() which directly transfers
-	     * data within a traversal. We use it for synchronous data vertical data
-	     * exchange and for the transfer of data throughout splits and merges.
-	     */
-      template <class Container>
-      static void exchangeStacksSynchronously( Container& stackContainer, int sourceSpacetreeId, int destinationSpacetreeId );
-	};
+        enum class VerticalDataExchangeMode {
+          Running,
+          PrepareDryRunForNewSpacetree
+        };
+
+  	    /**
+         * Counterpart of exchangeStacksAsynchronously() which directly transfers
+         * data within a traversal. We use it for synchronous data vertical data
+         * exchange and for the transfer of data throughout splits and merges.
+         */
+        template <class Container>
+        static void exchangeAllVerticalDataExchangeStacks(
+          Container& stackContainer,
+          int spacetreeId, int parentId, const std::set<int>& childrenIds,
+          VerticalDataExchangeMode mode
+        );
+
+        template <class Container>
+        static void finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId );
+	  };
 
   private:
     /**

@@ -41,6 +41,11 @@ class peano4::parallel::Node {
     friend class peano4::parallel::tests::NodeTest;
 
     /**
+     * The MPI standard specifies that the tag upper bound must be at least 32767.
+     */
+    static constexpr int ReservedMPITagsForDataExchange = 2048;
+
+    /**
      * Logging device.
      */
     static tarch::logging::Log _log;
@@ -54,7 +59,8 @@ class peano4::parallel::Node {
     /**
      * We need one stack for outgoing data, one for incoming
      * (boundary) data. And then we need one in/out stack for
-     * splits and joins.
+     * splits and joins. But this nomenclature is slightly wrong.
+     * We should rather speak of horizontal and vertical data.
      */
     static constexpr int        StacksPerCommunicationPartner = 4;
 
@@ -62,19 +68,13 @@ class peano4::parallel::Node {
 
     int                         _rankOrchestrationTag;
     int                         _treeManagementTag;
+    /**
+     * We do actually reserve ReservedMPITagsForDataExchange tags in one rush,
+     * but this one is the smallest one
+     */
+    int                         _dataExchangeBaseTag;
 
     std::map< int, TreeEntry >  _treeEntries;
-
-    int                         _maxTreesPerRank;
-
-    /**
-     * The base tag (smallest one) used for vertex data exchange. I use
-     * some lazy initialisation, i.e. it is set to -1 a priori and then
-     * set properly upon first usage. The reason is that I otherwise
-     * don't give the user the opportunity to set the maximum number of
-     * threads per rank.
-     */
-    int                         _gridVertexDataExchangeBaseTag;
 
     /**
      * The standard constructor assigns the attributes default values and
@@ -156,7 +156,10 @@ class peano4::parallel::Node {
      *          new rank. So if you move a rank, you have to ensure that
      *          the master is preserved.
      *
-     * @return -1 If there are no ids left anymore
+     * @return -1 If there are no ids left anymore. In principle, we do not
+     *            limit the number of threads at all. However, we have to
+     *            work with a limited number of tags in MPI, so we put a
+     *            cap on the number of trees per node.
      * @see getId(int,int)
      */
     int reserveId(int rank, int forTreeId);
@@ -178,15 +181,20 @@ class peano4::parallel::Node {
      * Hand in a spacetree id and get back the number that we should use to
      * send something to this tree.
      */
-    static int getOutputStackNumberOfBoundaryExchange(int id);
+    static int getOutputStackNumberOfHorizontalDataExchange(int id);
 
-    static int getInputStackNumberForSplitMergeDataExchange(int id);
-    static int getOutputStackNumberForSplitMergeDataExchange(int id);
+    /**
+     * Get the input stack where a tree writes all of its vertical
+     * data to/from when it exchanges information with id. Such vertical
+     * data is multiscale information or split/join data.
+     */
+    static int getInputStackNumberForVerticalDataExchange(int id);
+    static int getOutputStackNumberForVerticalDataExchange(int id);
 
     /**
      * Counterpart of getOutputStackNumberOfBoundaryExchange(int)
      */
-    static int getInputStackNumberOfBoundaryExchange(int id);
+    static int getInputStackNumberOfHorizontalDataExchange(int id);
 
     /**
      * A periodic boundary stack is basically a stack (an integer), but I do
@@ -214,8 +222,11 @@ class peano4::parallel::Node {
     /**
      * See getOutputStackNumberOfBoundaryExchange().
      */
-    static bool isBoundaryExchangeOutputStackNumber(int number);
-    static bool isBoundaryExchangeInputStackNumber(int number);
+    static bool isHorizontalDataExchangeOutputStackNumber(int number);
+    static bool isHorizontalDataExchangeInputStackNumber(int number);
+
+    static bool isVerticalDataExchangeOutputStackNumber(int number);
+    static bool isVerticalDataExchangeInputStackNumber(int number);
 
     static bool isPeriodicBoundaryExchangeOutputStackNumber(int number);
     static int  getPeriodicBoundaryExchangeInputStackNumberForOutputStack(int outputStackNumber);
@@ -227,19 +238,12 @@ class peano4::parallel::Node {
      */
     static bool isStorageStackNumber(int number);
 
-    // @todo Die gibt es eigentlich nimmer
-    static bool isSplitMergeOutputStackNumber(int number);
-    static bool isSplitMergeInputStackNumber(int number);
-
     /**
+     * Gives you back the id of a communication partner, i.e. a spacetree
+     * number, which corresponds to stack number. This works for all kinds
+     * of stacks.
      */
     static int getIdOfExchangeStackNumber(int number);
-
-    /**
-     * Has a tree forked once before? If so, we may not move it between ranks.
-     * Otherwise, we destroy our master-worker topology.
-     */
-    bool hasTreeForkedBefore( int treeId );
 
     /**
      * You should call this operation only on the ranks >0 to find out whether
@@ -261,14 +265,16 @@ class peano4::parallel::Node {
     int getTreeManagementTag() const;
 
     /**
-     * Set in initialisation (or otherwise left to concurrency).
-     */
-    int getMaximumNumberOfTreesPerRank() const;
-
-    /**
      * The shutdown is invoked by peano4::shutdownParallelEnvironment().
      */
     void shutdown();
+
+    enum class ExchangeMode {
+      ReceiveHorizontalData,
+      SendHorizontalData,
+      ReceiveVerticalData,
+      SendVerticalData
+    };
 
     /**
      * I use two tags per spacetree per rank: one for boundary data
@@ -282,7 +288,7 @@ class peano4::parallel::Node {
      * So we effectively do not need that many tags even though we need
      * different tags per tree pair.
      */
-    int getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, bool boundaryDataExchange );
+    int getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange );
 };
 
 #endif

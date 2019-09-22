@@ -128,8 +128,12 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
    *
    * @see peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronously()
    */
-  virtual void exchangeStacksAsynchronously() = 0;
-  virtual void exchangeStacksSynchronously(int destinationTreeId) = 0;
+// @todo Dieser Name ist falsch. Es sollte generell nur ein exchangeStacks geben mit
+//       - dem Vater-Rank
+//       - den Kinder-Ranks
+//       - einem Enum-Mode: BeforeFirstSweep, WhileForking, ...
+//       Gesamte Signatur gibt es schon in exchangeAllVerticalDataExchangeStacks().
+  virtual void exchangeStacksAfterGridSweep() = 0;
 };
 
 #endif

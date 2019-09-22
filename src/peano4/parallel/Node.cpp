@@ -45,13 +45,11 @@ void peano4::parallel::Node::shutdownMPIDatatypes() {
 peano4::parallel::Node::Node():
   _currentProgramStep(UndefProgramStep),
   _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
-  _treeManagementTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ) {
+  _treeManagementTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
+  _dataExchangeBaseTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node", ReservedMPITagsForDataExchange) ) {
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     registerId( 0, -1);
   }
-
-  _maxTreesPerRank               = std::thread::hardware_concurrency()+1;
-  _gridVertexDataExchangeBaseTag = -1;
 }
 
 
@@ -60,14 +58,18 @@ peano4::parallel::Node::~Node() {
 }
 
 
-int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, bool boundaryDataExchange ) {
-  if (_gridVertexDataExchangeBaseTag < 0) {
-    _gridVertexDataExchangeBaseTag = tarch::mpi::Rank::reserveFreeTag("grid-data-exchange", _maxTreesPerRank*_maxTreesPerRank*2 );
+int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange ) {
+  int result  = _dataExchangeBaseTag;
+  result     += getLocalTreeId(sendingTreeId) * 2;
+  switch (exchange) {
+    case ExchangeMode::ReceiveHorizontalData:
+    case ExchangeMode::SendHorizontalData:
+      break;
+    case ExchangeMode::ReceiveVerticalData:
+    case ExchangeMode::SendVerticalData:
+      result += 1;
+      break;
   }
-  int result = _gridVertexDataExchangeBaseTag +
-		       ( (getLocalTreeId(sendingTreeId)*_maxTreesPerRank) + getLocalTreeId(sendingTreeId) )*2;
-
-  if (boundaryDataExchange) result++;
   return result;
 }
 
@@ -103,16 +105,16 @@ int peano4::parallel::Node::getLocalTreeId(int treeId) const {
 
 int peano4::parallel::Node::reserveId(int rank, int forTreeId)  {
   int localThread = 0;
-  // @todo There's a limited number of threads per rank
   int result = -1;
   while (result==-1) {
-	if ( _treeEntries.count( getId(rank,localThread) )==0 ) {
-	  result = getId(rank,localThread);
-	}
-	else {
+    if ( _treeEntries.count( getId(rank,localThread) )==0 ) {
+      assertion(localThread<ReservedMPITagsForDataExchange/2);
+      result = getId(rank,localThread);
+    }
+    else {
       logDebug( "reserveId(int,int)", "local tree " << localThread << " (global id=" << getId(rank,localThread) << ") on rank " << rank << " is already in use" );
-	}
-	localThread++;
+    }
+    localThread++;
   }
 
   registerId( result, forTreeId );
@@ -143,14 +145,8 @@ int peano4::parallel::Node::getNumberOfRegisteredTrees() const {
 }
 
 
-int peano4::parallel::Node::getMaximumNumberOfTreesPerRank() const {
-  return _maxTreesPerRank;
-}
-
-
 void peano4::parallel::Node::deregisterId(int id) {
   assertion1( _treeEntries.count(id)==1, id );
-  assertion1( not hasTreeForkedBefore(id), id );
 
   tarch::multicore::Lock lock(_semaphore);
   _treeEntries.erase(id);
@@ -164,12 +160,12 @@ bool peano4::parallel::Node::isStorageStackNumber(int number) {
 }
 
 
-int peano4::parallel::Node::getOutputStackNumberOfBoundaryExchange(int id) {
+int peano4::parallel::Node::getOutputStackNumberOfHorizontalDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner;
 }
 
 
-int peano4::parallel::Node::getInputStackNumberOfBoundaryExchange(int id) {
+int peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 1;
 }
 
@@ -240,12 +236,12 @@ std::set<peano4::parallel::Node::PeriodicBoundaryStackIdentifier> peano4::parall
 }
 
 
-int peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(int id) {
+int peano4::parallel::Node::getInputStackNumberForVerticalDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 2;
 }
 
 
-int peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange(int id) {
+int peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 3;
 }
 
@@ -280,7 +276,7 @@ bool peano4::parallel::Node::isPeriodicBoundaryExchangeOutputStackNumber(int id)
 }
 
 
-bool peano4::parallel::Node::isBoundaryExchangeOutputStackNumber(int id) {
+bool peano4::parallel::Node::isHorizontalDataExchangeOutputStackNumber(int id) {
   const bool domainBoundary = id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
      and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 0 );
 
@@ -288,7 +284,7 @@ bool peano4::parallel::Node::isBoundaryExchangeOutputStackNumber(int id) {
 }
 
 
-bool peano4::parallel::Node::isBoundaryExchangeInputStackNumber(int id) {
+bool peano4::parallel::Node::isHorizontalDataExchangeInputStackNumber(int id) {
   const bool domainBoundary = id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
      and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 1 );
 
@@ -296,13 +292,13 @@ bool peano4::parallel::Node::isBoundaryExchangeInputStackNumber(int id) {
 }
 
 
-bool peano4::parallel::Node::isSplitMergeOutputStackNumber(int id) {
+bool peano4::parallel::Node::isVerticalDataExchangeOutputStackNumber(int id) {
   return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
      and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 3 );
 }
 
 
-bool peano4::parallel::Node::isSplitMergeInputStackNumber(int id) {
+bool peano4::parallel::Node::isVerticalDataExchangeInputStackNumber(int id) {
   return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
      and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 2 );
 }
@@ -313,39 +309,21 @@ int peano4::parallel::Node::getIdOfExchangeStackNumber(int number) {
 }
 
 
-
-// @todo Should be const
-bool peano4::parallel::Node::hasTreeForkedBefore( int treeId ) {
-  tarch::multicore::Lock lock(_semaphore);
-
-  bool result = false;
-  for (const auto& p: _treeEntries) {
-	  // @todo Falsches Flag
-	  // @todo Master raus. Wir muesseen nur wissen, ob jemand gefork that oder net;
-	  // Wie wird das allerdings wiederum zurueckgesetzt?
-	result |= p.second.getMaster()==treeId;
-  }
-
-  return result;
-}
-
-
 bool peano4::parallel::Node::continueToRun() {
   #ifdef Parallel
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-	for (int i=1; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++ ) {
+    for (int i=1; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++ ) {
       StartTraversalMessage message;
       message.setStepIdentifier(_currentProgramStep);
-      // @todo Switch to logDebug
-      logInfo( "continueToRun()", "send out " << message.toString() << " to rank " << i);
+      logDebug( "continueToRun()", "send out " << message.toString() << " to rank " << i);
       message.send(i,_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-	}
+    }
   }
   else {
-	StartTraversalMessage message;
-	message.receive(tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    StartTraversalMessage message;
+    message.receive(tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
     logInfo( "continueToRun()", "received message " << message.toString() );
-	_currentProgramStep = message.getStepIdentifier();
+    _currentProgramStep = message.getStepIdentifier();
   }
   #endif
   return _currentProgramStep!=Terminate;

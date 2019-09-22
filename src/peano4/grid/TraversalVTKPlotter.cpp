@@ -255,9 +255,5 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::TraversalVTKPlotter:
 }
 
 
-void peano4::grid::TraversalVTKPlotter::exchangeStacksAsynchronously() {
-}
-
-
-void peano4::grid::TraversalVTKPlotter::exchangeStacksSynchronously(int destinationTreeId) {
+void peano4::grid::TraversalVTKPlotter::exchangeStacksAfterGridSweep() {
 }

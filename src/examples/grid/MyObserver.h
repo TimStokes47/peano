@@ -56,8 +56,7 @@ class examples::grid::MyObserver: public
 
     std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
 
-    void exchangeStacksAsynchronously() override;
-    void exchangeStacksSynchronously(int destinationTreeId) override;
+    void exchangeStacksAfterGridSweep() override;
 };
 
 #endif
