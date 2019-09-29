@@ -147,12 +147,11 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
   for (auto& masterTreeId: trees ) {
     peano4::grid::Spacetree& masterTree = getSpacetree(masterTreeId);
 
-    // ueber alle Kinder drueber gehen
     for (auto workerTreeId: masterTree._joining) {
       logInfo( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "tree " << workerTreeId << " is merging (partially) into tree " << masterTreeId );
 
-      // @todo anschauen
-//      DataExchangeTask::exchangeStacksSynchronously( peano4::grid::Spacetree::_vertexStack, workerTreeId, masterTreeId );
+      DataExchangeTask::exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, masterTree._id, masterTree._masterId, masterTree._childrenIds, DataExchangeTask::VerticalDataExchangeMode::ReceiveJoinDataForRunOfMaster );
+      DataExchangeTask::finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, masterTree._id );
 
       assertion1( _clonedObserver.count(workerTreeId)==1 and _clonedObserver[workerTreeId]!=nullptr, workerTreeId );
     }
@@ -165,6 +164,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
     }
     assertion1( _clonedObserver.count(masterTree._id )==1 and _clonedObserver[masterTree._id]!=nullptr, masterTree._id );
     masterTree.traverse( *_clonedObserver[masterTree._id ], true );
+    // @todo Eigentlich Bloedsinn. Also wenn eh alles Stacks sind, dann kann ich es gleich selber machen
     _clonedObserver[masterTree._id]->exchangeStacksAfterGridSweep();
 
     #if PeanoDebug>0

@@ -112,7 +112,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
         enum class VerticalDataExchangeMode {
           Running,
-          PrepareDryRunForNewSpacetree
+          PrepareDryRunForNewSpacetree,
+          ReceiveJoinDataForRunOfMaster
         };
 
   	    /**

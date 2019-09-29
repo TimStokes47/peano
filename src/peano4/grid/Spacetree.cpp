@@ -284,9 +284,11 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
 
     _hasJoined.clear();
     _hasJoined.insert( _joining.begin(), _joining.end() );
+/*
     for (auto& rank: _joining) {
-      _childrenIds.erase(rank);
+      _childrenIds.erase(rank); // das stimmt i.A. nicht!
     }
+*/
     _joining.clear();
 	  _joining.insert( _joinTriggered.begin(), _joinTriggered.end() );
 	  _joinTriggered.clear();
@@ -1945,7 +1947,8 @@ void peano4::grid::Spacetree::splitOrJoinCell(
     logDebug( "splitOrJoinCell(...)", "merge cell at " << fineGridVertices[0].toString() << " from tree " << _id << " into master " << _masterId );
     for (int i=0; i<TwoPowerD; i++) {
       const int stack = peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange( _masterId );
-      logDebug( "splitOrJoinCell(...)", "stream vertex " << fineGridVertices[i].toString() << " to master " << _masterId << " through stack " << stack << " as " << i << "th vertex of cell");
+      // @todo Debug
+      logInfo( "splitOrJoinCell(...)", "stream vertex " << fineGridVertices[i].toString() << " on tree " << _id << " to master " << _masterId << " through stack " << stack << " as " << i << "th vertex of cell");
       _vertexStack[ StackKey(_id,stack) ].push( fineGridVertices[i] );
 
       // reset the 'local' adjacency entries
@@ -1974,7 +1977,7 @@ void peano4::grid::Spacetree::mergeCellFromWorkerWithMaster(
       for (int i=0; i<TwoPowerD; i++) {
         const int  stack = peano4::parallel::Node::getInputStackNumberForVerticalDataExchange( worker );
 
-        assertion5( not _vertexStack[ StackKey(_id,stack) ].empty(), worker, _id, i, fineGridVertices[i].toString(), coarseGridVertices[i].toString() );
+        assertion6( not _vertexStack[ StackKey(_id,stack) ].empty(), worker, _id, stack, i, fineGridVertices[i].toString(), coarseGridVertices[i].toString() );
         GridVertex receivedVertex = _vertexStack[ StackKey(_id,stack) ].pop();
 
         logDebug(
