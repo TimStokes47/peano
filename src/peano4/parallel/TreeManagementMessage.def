@@ -9,7 +9,8 @@ class peano4::parallel::TreeManagementMessage {
   enum Action {
     RequestNewRemoteTree,
     BookedNewRemoteTree,
-    CreateNewRemoteTree
+    CreateNewRemoteTree,
+    RemoveChildTreeFromBooksAsChildBecameEmpty
   };
   persistent        parallelise int     masterSpacetreeId;
   persistent        parallelise int     workerSpacetreeId;

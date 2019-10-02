@@ -108,12 +108,13 @@ std::string peano4::parallel::TreeManagementMessage::toString(const Action& para
       case RequestNewRemoteTree: return "RequestNewRemoteTree";
       case BookedNewRemoteTree: return "BookedNewRemoteTree";
       case CreateNewRemoteTree: return "CreateNewRemoteTree";
+      case RemoveChildTreeFromBooksAsChildBecameEmpty: return "RemoveChildTreeFromBooksAsChildBecameEmpty";
    }
    return "undefined";
 }
 
 std::string peano4::parallel::TreeManagementMessage::getActionMapping() {
-   return "Action(RequestNewRemoteTree=0,BookedNewRemoteTree=1,CreateNewRemoteTree=2)";
+   return "Action(RequestNewRemoteTree=0,BookedNewRemoteTree=1,CreateNewRemoteTree=2,RemoveChildTreeFromBooksAsChildBecameEmpty=3)";
 }
 
 
@@ -654,14 +655,14 @@ _workerSpacetreeId(workerSpacetreeId) {
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 2));
+   assertion(( tmp >= 0 &&  tmp <= 3));
    return (Action) tmp;
 }
 
 
 
  void peano4::parallel::TreeManagementMessagePacked::PersistentRecords::setAction(const Action& action)  {
-   assertion((action >= 0 && action <= 2));
+   assertion((action >= 0 && action <= 3));
    short int mask =  (1 << (2)) - 1;
    mask = static_cast<short int>(mask << (0));
    _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
@@ -736,14 +737,14 @@ peano4::parallel::TreeManagementMessagePacked::~TreeManagementMessagePacked() { 
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 2));
+   assertion(( tmp >= 0 &&  tmp <= 3));
    return (Action) tmp;
 }
 
 
 
  void peano4::parallel::TreeManagementMessagePacked::setAction(const Action& action)  {
-   assertion((action >= 0 && action <= 2));
+   assertion((action >= 0 && action <= 3));
    short int mask =  (1 << (2)) - 1;
    mask = static_cast<short int>(mask << (0));
    _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);

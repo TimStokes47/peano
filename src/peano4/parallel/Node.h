@@ -67,7 +67,8 @@ class peano4::parallel::Node {
     int                         _currentProgramStep;
 
     int                         _rankOrchestrationTag;
-    int                         _treeManagementTag;
+    int                         _blockingTreeManagementTag;
+    int                         _asynchronousTreeManagementTag;
     /**
      * We do actually reserve ReservedMPITagsForDataExchange tags in one rush,
      * but this one is the smallest one
@@ -262,7 +263,17 @@ class peano4::parallel::Node {
 
     int getCurrentProgramStep() const;
 
-    int getTreeManagementTag() const;
+    /**
+     * This one has to be used if you wanna send out a message to another rank
+     * which may not be grabbed by receiveDanglingMessages() in-between. This
+     * is typical an answer to a request.
+     */
+    int getBlockingTreeManagementTag() const;
+
+    /**
+     * Used to invoke an asynchronous service on another rank.
+     */
+    int getAsynchronousTreeManagementTag() const;
 
     /**
      * The shutdown is invoked by peano4::shutdownParallelEnvironment().
