@@ -1,2 +1,147 @@
 \chapter{Installation}
 
+There are two ways to obtain Peano: 
+You can either download one of the archives we provide on the webpage, or you
+can work directly against a repository clone.
+If you work with the archive, type in a 
+\begin{code}
+tar -xzvf myarchive.tar.gz
+\end{code}
+in the directory where you've stored your downloaded file.
+
+
+If you work with the git archive, you have to clone this archive first. 
+I grant access to Peano free of charge.
+However, I ask users to sign up for the software first.
+This way I can report to funding agencies how frequent the software is used, and
+I also have at least some ideas which application areas benefit from the
+software and where it is ran.
+\begin{code}
+git clone https://gitlab.lrz.de/your-login/Peano.git
+git checkout p4
+\end{code}
+
+
+I still maintain the ``old'' Peano in the repository (version 3), and most users
+consider this to be the standard Peano generation.
+For the present document, it is thus important that you manually switch to the
+branch \texttt{p4}.
+
+
+\section{Configure}
+
+Peano relies on the autotools to set up its build environment.
+Change into the project's directory and type in 
+\begin{code}
+./configure --help
+\end{code}
+
+
+\begin{remark}
+ If you clone the repository, i.e.~if you work directly against the git, you
+ will have to create the configure scripts manually. 
+ This can be achived by running the following six commands:  
+ \begin{code}
+ libtoolize; aclocal; autoconf; autoheader; 
+ cp src/config.h.in .; 
+ automake --add-missing
+ \end{code}
+\end{remark}
+
+
+The \texttt{--help} option should give you some information about the available
+variants of Peano.
+In principle, a sole \texttt{./configure} call is sufficient, but you might want
+to adopt your build; notably as the default build is serial and does not bring
+along any support for postprocessing.
+While the help output should be reasonable verbose, I summarise key options
+below:
+
+\begin{center}
+ \begin{tabular}{lp{10cm}}
+  \texttt{--prefix=/mypath} & Will install Peano in \texttt{/mypath}.
+   \\
+  \texttt{--with-multithreading} & Switch on multithreading. By default, we
+  build without multithreading, but a \texttt{--with-multithreading=cpp}, e.g.,
+  makes Peano use the C++ threading model. 
+   \\
+  \texttt{--with-mpi} & Enable the MPI version of Peano. You have to tell the
+  build environment however which compile command to use. Please note that
+  we need a C++ MPI wrapper. So \texttt{--with-mpi=mpcxx} is a typical call. 
+   \\
+  \texttt{--with-vtk} & Inform Peano that VTK is available on the system and
+  that it should build all the visualisation and postprocessing tools that rely
+  upon VTK. You have to pass the directory where the VTK header files are to be
+  found, i.e.~you call something alike \texttt{--with-vtk=/usr/include/vtk-8.1}.
+   \\
+  \texttt{--with-hdf5} & Make Peano support HDF5 output. 
+   \\
+  \texttt{--with-delta} & Configure Peano such that the geometry library
+  $\Delta $ is used. You have to make \texttt{--with-delta=/mydeltasrc} point
+  to the $\Delta $ directory.
+ \end{tabular}
+\end{center}
+
+
+\section{Build}
+
+Once the configuration has been successful, a simple 
+\begin{code}
+make
+\end{code}
+should build the Peano core and some examples.
+
+
+\begin{code}
+make install
+\end{code}
+finally will deploy the Peano files in the directory specified via the
+\texttt{prefix} before.
+
+
+\section{Peano components}
+
+Peano currently is delivered as a set of archives:
+\begin{itemize}
+  \item There is a technical architecture (\texttt{Tarch}) and the actual
+  \texttt{Peano4Core}.
+  \item Each archive variant is available as a release version and as a debug
+  version. The latter is identified by a postfix \texttt{\_debug}.
+  \item Each archive variant is available as 2d build and as 3d build. If you
+  need higher dimensions, you have to build the required libraries manually.
+\end{itemize}
+
+
+Besides these archives, the Peano installation also comes along with a set of
+example applications.
+They are found in the directory \texttt{src/examples}.
+After the build, each hosts at least two variants of the example: a debug
+version and a release version.
+Several examples furthermore come along as 2d and 3d build.
+
+
+
+
+% \subsection*{Further reading}
+% 
+% \begin{itemize}
+%   \item Weinzierl, Tobias and Mehl, Miriam (2011). {\em Peano---A Traversal and
+%   Storage Scheme for Octree-Like Adaptive Cartesian Multiscale Grids}. SIAM
+%   Journal on Scientific Computing 33(5): 2732-2760.
+%   \item Bungartz, Hans-Joachim, Eckhardt, Wolfgang, Weinzierl, Tobias and
+%   Zenger, Christoph (2010). {\em A Precompiler to Reduce the Memory Footprint of
+%   Multiscale PDE Solvers in C++}. Future Generation Computer Systems 26(1): 175-182.
+%   \item Bungartz, Hans-Joachim, Mehl, Miriam, Neckel, Tobias and Weinzierl,
+%   Tobias (2010). {\em The PDE framework Peano applied to fluid dynamics: an efficient
+%   implementation of a parallel multiscale fluid dynamics solver on octree-like adaptive Cartesian grids}. Computational Mechanics 46(1): 103-114.
+%   \item   Weinzierl, Tobias (2009). {\em A Framework for Parallel PDE Solvers on
+%   Multiscale Adaptive Cartesian Grids}. M\"unchen: Verlag Dr. Hut.
+%   \item Bungartz, Hans-Joachim, Mehl, Miriam, Weinzierl, Tobias and Eckhardt,
+%   Wolfgang (2008). {\em DaStGen---A Data Structure Generator for Parallel C++
+%   HPC Software}. In ICCS 2008: Advancing Science through Computation, Part III.
+%   Bubak, van Albada, Sloot and Dongarra, Heidelberg, Berlin: Springer-Verlag.
+%   5103: 213-222.
+%   \item Brenk, Markus, Bungartz, Hans-Joachim, Mehl, Miriam, Muntean, Ioan
+%   Lucian, Neckel, Tobias and Weinzierl, Tobias (2008). {\em Numerical Simulation
+%   of Particle Transport in a Drift Ratchet}. SIAM Journal of Scientific Computing 30(6): 2777-2798.
+% \end{itemize}
