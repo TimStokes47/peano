@@ -51,7 +51,7 @@ PROJECT_BRIEF          =
 # and the maximum width should not exceed 200 pixels. Doxygen will copy the logo
 # to the output directory.
 
-PROJECT_LOGO           = http://www.peano-framework.org/wp-content/uploads/2019/03/Peano-1-298x300.png
+PROJECT_LOGO           = Peano-logo.png
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
 # into which the generated documentation will be written. If a relative path is
@@ -281,7 +281,7 @@ OPTIMIZE_OUTPUT_VHDL   = NO
 # Note that for custom extensions you also need to set FILE_PATTERNS otherwise
 # the files are not read by doxygen.
 
-EXTENSION_MAPPING      = cpph=C
+EXTENSION_MAPPING      = cpph=C++
 
 # If the MARKDOWN_SUPPORT tag is enabled then doxygen pre-processes all comments
 # according to the Markdown format, which allows for more readable
@@ -774,8 +774,8 @@ INPUT_ENCODING         = UTF-8
 # *.md, *.mm, *.dox, *.py, *.f90, *.f, *.for, *.tcl, *.vhd, *.vhdl, *.ucf,
 # *.qsf, *.as and *.js.
 
-#FILE_PATTERNS          = *.cpp *.cpph *.h *.def *.doxys 
-FILE_PATTERNS          = *.h *.def *.doxys
+#FILE_PATTERNS          = *.cpp *.cpph *.h *.def *.doxys *.md
+FILE_PATTERNS          = *.h *.def *.doxys *.md
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.

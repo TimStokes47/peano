@@ -10,15 +10,15 @@
 
 #include "mpi.h"
 
+/*
 
 #ifdef Parallel
-/**
- * I rely on the usleep() method within all messages. Newer versions of
- * Linux/GCC seem not to include the corresponding header automatically
- * through ctime. I thus added this new include.
- */
+// I rely on the usleep() method within all messages. Newer versions of
+// Linux/GCC seem not to include the corresponding header automatically
+// through ctime. I thus added this new include.
 #include <unistd.h>
 #endif
+*/
 
 
 namespace tarch {

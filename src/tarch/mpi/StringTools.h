@@ -11,7 +11,7 @@ namespace tarch {
 
 /**
 
- @namespace "mpi (Parallel Architecture)"
+ @namespace tarch::mpi
 
  <h2> Init MPI </h2>
 
