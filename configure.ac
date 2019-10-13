@@ -58,7 +58,8 @@ AC_PROG_CXX
 #
 # Peano variables
 #
-PEANO_CXXFLAGS="-std=c++14 -fconcepts"
+#PEANO_CXXFLAGS="-std=c++14 -fconcepts"
+PEANO_CXXFLAGS="-std=c++14"
 PEANO_LDFLAGS=""
 
 # Think I do not need a C compiler
