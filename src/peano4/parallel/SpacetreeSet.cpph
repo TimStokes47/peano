@@ -16,10 +16,11 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
         const int sourceRank      = Node::getInstance().getRank( parentId );
         assertion( Node::getInstance().getRank( spacetreeId ) == tarch::mpi::Rank::getInstance().getRank() );
 
+        const int destinationStack = peano4::parallel::Node::getInputStackNumberForVerticalDataExchange(parentId);
+        assertion( stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].empty() );
+
         if (sourceRank==tarch::mpi::Rank::getInstance().getRank()) {
           const int sourceStack      = peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange(spacetreeId);
-          const int destinationStack = peano4::parallel::Node::getInputStackNumberForVerticalDataExchange(parentId);
-          assertion( stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].empty() );
           logDebug(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "move stack " << sourceStack << " from tree " << spacetreeId << " into stack " << destinationStack << " from tree " << parentId <<
@@ -30,7 +31,28 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
           stackContainer[ peano4::grid::Spacetree::StackKey(parentId,sourceStack) ].clear();
         }
         else {
-          assertionMsg( false, "not yet implemented" );
+          // @todo Change back to Debug
+          logInfo(
+            "exchangeAllVerticalDataExchangeStacks(...)",
+            "receive stack " << destinationStack << " from tree " << parentId << " on rank " << sourceRank
+          );
+          const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(
+            sourceRank,
+            tarch::mpi::Rank::getInstance().getRank(),
+            peano4::parallel::Node::ExchangeMode::ReceiveVerticalData
+          );
+          tarch::mpi::IntegerMessage message;
+          message.receive( sourceRank, tag, true, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+          // @todo Change back to Debug
+          logInfo(
+            "exchangeAllVerticalDataExchangeStacks(...)",
+            "receive " << message.getValue() << " entries"
+          );
+          stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].startReceive(
+            sourceRank, tag, message.getValue()
+          );
+          stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].finishSendOrReceive();
+          stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].reverse();
         }
       }
       break;

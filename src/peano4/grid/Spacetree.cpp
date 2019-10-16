@@ -1947,8 +1947,7 @@ void peano4::grid::Spacetree::splitOrJoinCell(
     logDebug( "splitOrJoinCell(...)", "merge cell at " << fineGridVertices[0].toString() << " from tree " << _id << " into master " << _masterId );
     for (int i=0; i<TwoPowerD; i++) {
       const int stack = peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange( _masterId );
-      // @todo Debug
-      logInfo( "splitOrJoinCell(...)", "stream vertex " << fineGridVertices[i].toString() << " on tree " << _id << " to master " << _masterId << " through stack " << stack << " as " << i << "th vertex of cell");
+      logDebug( "splitOrJoinCell(...)", "stream vertex " << fineGridVertices[i].toString() << " on tree " << _id << " to master " << _masterId << " through stack " << stack << " as " << i << "th vertex of cell");
       _vertexStack[ StackKey(_id,stack) ].push( fineGridVertices[i] );
 
       // reset the 'local' adjacency entries

@@ -287,11 +287,15 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
 
       logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree after dry run: " << p.toString() );
     }
+  }
+/*
     else if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running) {
       for (auto& newWorker: p._hasSplit) {
         if (Node::getInstance().getRank(newWorker.first)!=tarch::mpi::Rank::getInstance().getRank()) {
           #if defined(Parallel)
           assertion(false);
+          Da sollte ja gar nix drin seein. Das muss ja ueber den cpph gehen
+*/
 /*
           const int target    = Node::getInstance().getRank(newWorker.first);
           const int tag       = Node::getInstance().getGridDataExchangeTag( p._id, newWorker.first, false );
@@ -308,13 +312,14 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
           p._vertexStack[outStack].startSend(target,tag);
           p._vertexStack[outStack].finishSendOrReceive();
 */
+/*
           #else
           assertionMsg(false, "should not be called");
           #endif
         }
       }
     }
-  }
+*/
 
   for (auto& p: _spacetrees) {
 	  if (p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
