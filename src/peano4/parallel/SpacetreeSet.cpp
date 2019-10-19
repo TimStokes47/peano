@@ -471,10 +471,14 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       logInfo( "traverse(Observer)", "tree " << p->_id << " is degenerated as it does not hold any local cells. Remove" );
       Node::getInstance().deregisterId(p->_id);
 
-      if ( Node::getInstance().getRank(p->_masterId) ) {
+      if ( Node::getInstance().getRank(p->_masterId)!=tarch::mpi::Rank::getInstance().getRank() ) {
         logInfo( "traverse(Observer)", "parent tree " << p->_masterId << " is local on this rank. Remove child reference" );
+        #ifdef Parallel
         TreeManagementMessage message( p->_masterId, p->_id, TreeManagementMessage::Action::RemoveChildTreeFromBooksAsChildBecameEmpty );
         message.send( Node::getInstance().getRank(p->_masterId), Node::getInstance().getAsynchronousTreeManagementTag(), false, TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+        #else
+        assertionMsg( false, "branch may not be entered" );
+        #endif
       }
       else {
         // @todo Debug
