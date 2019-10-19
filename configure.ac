@@ -144,6 +144,7 @@ AC_ARG_WITH(vtk,
   [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
   
 
+AM_CONDITIONAL([UseVTK],[test "$vtk" != false])
 if test "$vtk" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
   PEANO_CXXFLAGS+=" -I${vtk}"

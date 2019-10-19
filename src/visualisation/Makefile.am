@@ -1,6 +1,10 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
-bin_PROGRAMS = convert convert_debug
+if UseVTK
+  bin_PROGRAMS = convert convert_debug
+endif
+
+
 
 convertSources = \
   convert.cpp \
