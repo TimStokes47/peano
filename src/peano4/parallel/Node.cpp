@@ -59,16 +59,19 @@ peano4::parallel::Node::~Node() {
 }
 
 
-int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange ) {
+int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange ) const {
   int result  = _dataExchangeBaseTag;
-  result     += getLocalTreeId(sendingTreeId) * 2;
+
+  result     += 3 * (getLocalTreeId(sendingTreeId) * MaxSpacetreesPerRank + getLocalTreeId(receivingTreeId));
   switch (exchange) {
-    case ExchangeMode::ReceiveHorizontalData:
-    case ExchangeMode::SendHorizontalData:
+    case ExchangeMode::HorizontalData:
+      result += 0;
       break;
-    case ExchangeMode::ReceiveVerticalData:
-    case ExchangeMode::SendVerticalData:
+    case ExchangeMode::ForkJoinData:
       result += 1;
+      break;
+    case ExchangeMode::VerticalData:
+      result += 2;
       break;
   }
   return result;

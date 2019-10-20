@@ -76,7 +76,9 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
         break;
       case peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree:
         {
-          const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(message.getMasterSpacetreeId(),message.getWorkerSpacetreeId(),peano4::parallel::Node::ExchangeMode::ReceiveVerticalData);
+          const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(message.getMasterSpacetreeId(),message.getWorkerSpacetreeId(),peano4::parallel::Node::ExchangeMode::ForkJoinData);
+          // @todo Debug
+          logInfo( "receiveDanglingMessages(...)", "wait for new state on tag " << tag );
           peano4::grid::AutomatonState state;
           state.receive(message.getSenderRank(),tag,false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
           peano4::grid::Spacetree newTree(
@@ -87,7 +89,8 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
             state.getInverted()
           );
           _spacetrees.push_back( std::move(newTree) );
-          logDebug( "receiveDanglingMessages(...)", "created the new tree " << _spacetrees.back().toString() );
+          // @todo Debug
+          logInfo( "receiveDanglingMessages(...)", "created the new tree " << _spacetrees.back().toString() );
         }
         break;
       case peano4::parallel::TreeManagementMessage::Action::BookedNewRemoteTree:
@@ -113,8 +116,10 @@ void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId )
     TreeManagementMessage message(masterId, newTreeId, TreeManagementMessage::CreateNewRemoteTree);
     message.send(targetRank,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
-    const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(masterId,newTreeId,peano4::parallel::Node::ExchangeMode::SendVerticalData);
+    const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(masterId,newTreeId,peano4::parallel::Node::ExchangeMode::ForkJoinData);
     peano4::grid::AutomatonState state = _spacetrees.begin()->_root;
+    // @todo Debug
+    logInfo( "addSpacetree(int,int)", "send state " << state.toString() << " to rank " << targetRank << " via tag " << tag );
     state.send(targetRank,tag,false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
     #else
     assertionMsg( false, "should never enter this branch without -DParallel" );
@@ -234,10 +239,11 @@ peano4::parallel::SpacetreeSet::DataExchangeTask::DataExchangeTask( peano4::grid
 
 
 bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
+	// @todo Klartsellen, dass Vertikal die hoechste Prio haben muss
+  exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, _spacetree._masterId, _spacetree._childrenIds, VerticalDataExchangeMode::Running );
   exchangeAllHorizontalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, true );
   exchangeAllPeriodicBoundaryDataStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
   finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
-  exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, _spacetree._masterId, _spacetree._childrenIds, VerticalDataExchangeMode::Running );
 
   if (
     _spacetreeSet._clonedObserver.count(_spacetree._id )==0
@@ -287,48 +293,16 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
 
       logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree after dry run: " << p.toString() );
     }
-  }
-/*
     else if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running) {
-      for (auto& newWorker: p._hasSplit) {
-        if (Node::getInstance().getRank(newWorker.first)!=tarch::mpi::Rank::getInstance().getRank()) {
-          #if defined(Parallel)
-          assertion(false);
-          Da sollte ja gar nix drin seein. Das muss ja ueber den cpph gehen
-*/
-/*
-          const int target    = Node::getInstance().getRank(newWorker.first);
-          const int tag       = Node::getInstance().getGridDataExchangeTag( p._id, newWorker.first, false );
-          const int outStack  = Node::getOutputStackNumberForSplitMergeDataExchange(newWorker.first);
-          // @todo Debug
-          logInfo(
-            "exchangeDataBetweenExistingAndNewTreesAndRerunClones()",
-            "send stack " << outStack << " for tree " << newWorker.first << " from tree " << p._id << " on tag " << tag <<
-            ". size=" << p._vertexStack[outStack].size()
-          );
-          assertion2(not p._vertexStack[outStack].empty(),p._vertexStack[outStack].toString(),p.toString());
-          tarch::mpi::IntegerMessage message(p._vertexStack[outStack].size());
-          message.send( target, tag, false, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
-          p._vertexStack[outStack].startSend(target,tag);
-          p._vertexStack[outStack].finishSendOrReceive();
-*/
-/*
-          #else
-          assertionMsg(false, "should not be called");
-          #endif
+      if (not p._hasSplit.empty()) {
+        std::set<int> newChildren;
+        for (auto k: p._hasSplit) {
+          newChildren.insert(k.first);
         }
+        DataExchangeTask::exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, newChildren, DataExchangeTask::VerticalDataExchangeMode::SendOutDataForDryRunOfNewSpacetree);
+        DataExchangeTask::finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
       }
     }
-*/
-
-  for (auto& p: _spacetrees) {
-	  if (p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
-      for (auto& stack: p._vertexStack) {
-        if (Node::isVerticalDataExchangeOutputStackNumber(stack.first.second)) {
-    	    stack.second.clear();
-    	  }
-      }
-	  }
   }
 }
 
@@ -459,6 +433,9 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
         // @todo muss ein "has spacetree"
       p->_masterId>=0
       and
+
+	  der Master koennte auch net lokal sein -> Problem
+
       getSpacetree(p->_masterId).getGridStatistics().getCoarseningHasBeenVetoed()
       and
       p->mayJoinWithMaster()

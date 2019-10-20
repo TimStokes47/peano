@@ -61,20 +61,20 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * <h2> Rationale </h2>
      *
      * I originally planned to merge this task into the data traversal task. The
- 	   * idea behind such a merger is that a data exchange right after the data
+     * idea behind such a merger is that a data exchange right after the data
      * traversal increases the concurrency: While one tree already triggers its
      * data exchange, others still might run through the grid.
      *
      * However, this does not work straightforwardly: With my idea of stack-based
- 	   * boundary exchange buffers, two communication partners have to have finished
+     * boundary exchange buffers, two communication partners have to have finished
      * their traversal before they can exchange data. Otherwise, one input buffer
      * of one grid (the one that is still running) might not yet be available when
      * the partner tree tries to send its data over.
      */
-	  class DataExchangeTask: public tarch::multicore::Task {
+    class DataExchangeTask: public tarch::multicore::Task {
       private:
         peano4::grid::Spacetree&          _spacetree;
-	      SpacetreeSet&  _spacetreeSet;
+        SpacetreeSet&  _spacetreeSet;
         peano4::grid::TraversalObserver&  _observer;
       public:
         DataExchangeTask( peano4::grid::Spacetree& spacetree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
@@ -113,6 +113,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
         enum class VerticalDataExchangeMode {
           Running,
           PrepareDryRunForNewSpacetree,
+		  SendOutDataForDryRunOfNewSpacetree,
           ReceiveJoinDataForRunOfMaster
         };
 
@@ -120,6 +121,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
          * Counterpart of exchangeStacksAsynchronously() which directly transfers
          * data within a traversal. We use it for synchronous data vertical data
          * exchange and for the transfer of data throughout splits and merges.
+         *
+         * @param childrenIds Depending on the context, this is either the children or
+         *   the new children that are just about to be kicked off
          */
         template <class Container>
         static void exchangeAllVerticalDataExchangeStacks(

@@ -41,11 +41,6 @@ class peano4::parallel::Node {
     friend class peano4::parallel::tests::NodeTest;
 
     /**
-     * The MPI standard specifies that the tag upper bound must be at least 32767.
-     */
-    static constexpr int ReservedMPITagsForDataExchange = 2048;
-
-    /**
      * Logging device.
      */
     static tarch::logging::Log _log;
@@ -62,7 +57,19 @@ class peano4::parallel::Node {
      * splits and joins. But this nomenclature is slightly wrong.
      * We should rather speak of horizontal and vertical data.
      */
-    static constexpr int        StacksPerCommunicationPartner = 4;
+    static constexpr int        StacksPerCommunicationPartner = 6;
+
+    /**
+     * @todo Das muss ich irgendwo bei der Nummernanfrage checken und dann
+     * aber nicht nur ne assertion einbauen, sondern sowohl eine Warnung als
+     * auch eine Error-Message, denn das kann ja auch im Produktionsbetrieb auftreten
+     */
+    static constexpr int        MaxSpacetreesPerRank = 64;
+
+    /**
+     * The MPI standard specifies that the tag upper bound must be at least 32767.
+     */
+    static constexpr int ReservedMPITagsForDataExchange = MaxSpacetreesPerRank * MaxSpacetreesPerRank * StacksPerCommunicationPartner;
 
     int                         _currentProgramStep;
 
@@ -281,17 +288,15 @@ class peano4::parallel::Node {
     void shutdown();
 
     enum class ExchangeMode {
-      ReceiveHorizontalData,
-      SendHorizontalData,
-      ReceiveVerticalData,
-      SendVerticalData
+      HorizontalData,
+      ForkJoinData,
+	  VerticalData
     };
 
     /**
      * I use two tags per spacetree per rank: one for boundary data
      * (horizontal) and one for up-down and synchronous (forks) data
-     * exchanges (vertical and fork/join). The operation allocates
-     * tags lazily and thus is not const.
+     * exchanges (vertical and fork/join).
      *
      * The nice thing about Peano's new data management is that it is
      * stack-only. Furthermore, all stack data exchange is triggered via the
@@ -299,7 +304,7 @@ class peano4::parallel::Node {
      * So we effectively do not need that many tags even though we need
      * different tags per tree pair.
      */
-    int getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange );
+    int getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange ) const;
 };
 
 #endif
