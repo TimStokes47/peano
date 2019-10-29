@@ -285,8 +285,9 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   }
   _receiveTasks[currentDeployBuffer].clear();
 
-  logTraceOutWith1Argument( "freeAllMessagesInDeployBuffer(...)", result.size() );
+  logTraceOutWith1Argument( "freeAllMessagesInDeployBuffer(...)", _receiveTasks[currentDeployBuffer].size() );
 }
+
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::finishedToSendData(bool isTraversalInverted) {
