@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   02/10/2019 07:32
+ * @date   02/11/2019 12:06
  */
 class peano4::parallel::TreeManagementMessage { 
    
@@ -37,7 +37,7 @@ class peano4::parallel::TreeManagementMessage {
       typedef peano4::parallel::TreeManagementMessagePacked Packed;
       
       enum Action {
-         RequestNewRemoteTree = 0, BookedNewRemoteTree = 1, CreateNewRemoteTree = 2, RemoveChildTreeFromBooksAsChildBecameEmpty = 3
+         RequestNewRemoteTree = 0, CreateNewRemoteTree = 1, RemoveChildTreeFromBooksAsChildBecameEmpty = 2, JoinWithWorker = 3, Acknowledgement = 4
       };
       
       struct PersistentRecords {
@@ -213,7 +213,7 @@ class peano4::parallel::TreeManagementMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   02/10/2019 07:32
+ * @date   02/11/2019 12:06
  */
 class peano4::parallel::TreeManagementMessagePacked { 
    
@@ -227,7 +227,7 @@ class peano4::parallel::TreeManagementMessagePacked {
          
          /** mapping of records:
          || Member 	|| startbit 	|| length
-          |  action	| startbit 0	| #bits 2
+          |  action	| startbit 0	| #bits 3
           */
          short int _packedRecords0;
          

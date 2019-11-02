@@ -106,15 +106,16 @@ peano4::parallel::TreeManagementMessage::~TreeManagementMessage() { }
 std::string peano4::parallel::TreeManagementMessage::toString(const Action& param) {
    switch (param) {
       case RequestNewRemoteTree: return "RequestNewRemoteTree";
-      case BookedNewRemoteTree: return "BookedNewRemoteTree";
       case CreateNewRemoteTree: return "CreateNewRemoteTree";
       case RemoveChildTreeFromBooksAsChildBecameEmpty: return "RemoveChildTreeFromBooksAsChildBecameEmpty";
+      case JoinWithWorker: return "JoinWithWorker";
+      case Acknowledgement: return "Acknowledgement";
    }
    return "undefined";
 }
 
 std::string peano4::parallel::TreeManagementMessage::getActionMapping() {
-   return "Action(RequestNewRemoteTree=0,BookedNewRemoteTree=1,CreateNewRemoteTree=2,RemoveChildTreeFromBooksAsChildBecameEmpty=3)";
+   return "Action(RequestNewRemoteTree=0,CreateNewRemoteTree=1,RemoveChildTreeFromBooksAsChildBecameEmpty=2,JoinWithWorker=3,Acknowledgement=4)";
 }
 
 
@@ -602,12 +603,12 @@ switch (mode) {
 
 
 peano4::parallel::TreeManagementMessagePacked::PersistentRecords::PersistentRecords() {
-   if ((2 >= (8 * sizeof(short int)))) {
+   if ((3 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((2 < (8 * sizeof(short int))));
+   assertion((3 < (8 * sizeof(short int))));
    
 }
 
@@ -616,12 +617,12 @@ peano4::parallel::TreeManagementMessagePacked::PersistentRecords::PersistentReco
 _masterSpacetreeId(masterSpacetreeId),
 _workerSpacetreeId(workerSpacetreeId) {
    setAction(action);
-   if ((2 >= (8 * sizeof(short int)))) {
+   if ((3 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((2 < (8 * sizeof(short int))));
+   assertion((3 < (8 * sizeof(short int))));
    
 }
 
@@ -651,19 +652,19 @@ _workerSpacetreeId(workerSpacetreeId) {
 
 
  peano4::parallel::TreeManagementMessage::Action peano4::parallel::TreeManagementMessagePacked::PersistentRecords::getAction() const  {
-   short int mask =  (1 << (2)) - 1;
+   short int mask =  (1 << (3)) - 1;
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 3));
+   assertion(( tmp >= 0 &&  tmp <= 4));
    return (Action) tmp;
 }
 
 
 
  void peano4::parallel::TreeManagementMessagePacked::PersistentRecords::setAction(const Action& action)  {
-   assertion((action >= 0 && action <= 3));
-   short int mask =  (1 << (2)) - 1;
+   assertion((action >= 0 && action <= 4));
+   short int mask =  (1 << (3)) - 1;
    mask = static_cast<short int>(mask << (0));
    _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
    _packedRecords0 = static_cast<short int>(_packedRecords0 | static_cast<short int>(action) << (0));
@@ -671,36 +672,36 @@ _workerSpacetreeId(workerSpacetreeId) {
 
 
 peano4::parallel::TreeManagementMessagePacked::TreeManagementMessagePacked() {
-   if ((2 >= (8 * sizeof(short int)))) {
+   if ((3 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((2 < (8 * sizeof(short int))));
+   assertion((3 < (8 * sizeof(short int))));
    
 }
 
 
 peano4::parallel::TreeManagementMessagePacked::TreeManagementMessagePacked(const PersistentRecords& persistentRecords):
 _persistentRecords(persistentRecords._masterSpacetreeId, persistentRecords._workerSpacetreeId, persistentRecords.getAction()) {
-   if ((2 >= (8 * sizeof(short int)))) {
+   if ((3 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((2 < (8 * sizeof(short int))));
+   assertion((3 < (8 * sizeof(short int))));
    
 }
 
 
 peano4::parallel::TreeManagementMessagePacked::TreeManagementMessagePacked(const int& masterSpacetreeId, const int& workerSpacetreeId, const Action& action):
 _persistentRecords(masterSpacetreeId, workerSpacetreeId, action) {
-   if ((2 >= (8 * sizeof(short int)))) {
+   if ((3 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((2 < (8 * sizeof(short int))));
+   assertion((3 < (8 * sizeof(short int))));
    
 }
 
@@ -733,19 +734,19 @@ peano4::parallel::TreeManagementMessagePacked::~TreeManagementMessagePacked() { 
 
 
  peano4::parallel::TreeManagementMessage::Action peano4::parallel::TreeManagementMessagePacked::getAction() const  {
-   short int mask =  (1 << (2)) - 1;
+   short int mask =  (1 << (3)) - 1;
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 3));
+   assertion(( tmp >= 0 &&  tmp <= 4));
    return (Action) tmp;
 }
 
 
 
  void peano4::parallel::TreeManagementMessagePacked::setAction(const Action& action)  {
-   assertion((action >= 0 && action <= 3));
-   short int mask =  (1 << (2)) - 1;
+   assertion((action >= 0 && action <= 4));
+   short int mask =  (1 << (3)) - 1;
    mask = static_cast<short int>(mask << (0));
    _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
    _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | static_cast<short int>(action) << (0));

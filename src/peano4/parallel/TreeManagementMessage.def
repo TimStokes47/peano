@@ -8,9 +8,10 @@ Packed-Type: short int;
 class peano4::parallel::TreeManagementMessage {
   enum Action {
     RequestNewRemoteTree,
-    BookedNewRemoteTree,
     CreateNewRemoteTree,
-    RemoveChildTreeFromBooksAsChildBecameEmpty
+    RemoveChildTreeFromBooksAsChildBecameEmpty,
+    JoinWithWorker,
+    Acknowledgement
   };
   persistent        parallelise int     masterSpacetreeId;
   persistent        parallelise int     workerSpacetreeId;
