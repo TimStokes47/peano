@@ -142,6 +142,12 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     static tarch::logging::Log _log;
 
+    enum class SpacetreeSetState {
+      Waiting,
+	  TraverseTreesAndExchangeData
+    };
+
+
     void merge(
       const peano4::grid::GridStatistics&   from,
       peano4::grid::GridStatistics&         to
@@ -150,6 +156,13 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     std::list< peano4::grid::Spacetree >  _spacetrees;
 
     tarch::multicore::BooleanSemaphore    _semaphore;
+
+    /**
+     * The state identifies what the set is doing right now. The flag is for example
+     * used by receiveDanglingMessages() as we may not create new trees or change
+     * tree states while we are running through them or realise their data exchange.
+     */
+    SpacetreeSetState                     _state;
 
     /**
      * I create/clone one observer per local tree. This is an
@@ -191,6 +204,13 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     void exchangeDataBetweenTrees(peano4::grid::TraversalObserver&  observer);
 
     /**
+     * This operation should be called pretty close towards the end of a traversal.
+     * I recommend to invoke it after cleanUpTrees(). It creates new trees and thus
+     * might invoke remote method calls on other ranks. It is thus important that
+     * all the data exchange locally is done - otherwise we might ask another rank
+     * to create a tree for us, while the other rank still waits for boundary data
+     * from our side.
+     *
      * @see exchangeDataBetweenTrees() for details.
      * @see split() For a description of the overall split process.
      */

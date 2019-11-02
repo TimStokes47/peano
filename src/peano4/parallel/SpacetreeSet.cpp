@@ -18,7 +18,8 @@
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
 
 
-peano4::parallel::SpacetreeSet::SpacetreeSet() {
+peano4::parallel::SpacetreeSet::SpacetreeSet():
+  _state( SpacetreeSetState::Waiting) {
   tarch::services::ServiceRepository::getInstance().addService( this, "peano4::parallel::SpacetreeSet" );
 }
 
@@ -55,9 +56,11 @@ peano4::parallel::SpacetreeSet::~SpacetreeSet() {
 
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
   #ifdef Parallel
-  if (peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTag(),true)) {
+  if (
+    peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState(),true)
+  ) {
     peano4::parallel::TreeManagementMessage message;
-    message.receive(MPI_ANY_SOURCE,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    message.receive(MPI_ANY_SOURCE,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     switch ( message.getAction() ) {
       case peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree:
@@ -70,10 +73,24 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << message.getMasterSpacetreeId() );
 
           message.setWorkerSpacetreeId( newSpacetreeId );
-          message.setAction(TreeManagementMessage::Action::BookedNewRemoteTree);
+          message.setAction(TreeManagementMessage::Action::Acknowledgement);
           message.send(message.getSenderRank(),peano4::parallel::Node::getInstance().getBlockingTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
         }
         break;
+      default:
+    	assertionMsg( false, "should not be called" );
+    }
+  }
+
+  if (
+    _state==SpacetreeSetState::Waiting
+    and
+    peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichChangesASpacetreeState(),true)
+  ) {
+    peano4::parallel::TreeManagementMessage message;
+    message.receive(MPI_ANY_SOURCE,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichChangesASpacetreeState(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+
+    switch ( message.getAction() ) {
       case peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree:
         {
           const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(message.getMasterSpacetreeId(),message.getWorkerSpacetreeId(),peano4::parallel::Node::ExchangeMode::ForkJoinData);
@@ -91,15 +108,20 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           _spacetrees.push_back( std::move(newTree) );
           // @todo Debug
           logInfo( "receiveDanglingMessages(...)", "created the new tree " << _spacetrees.back().toString() );
+
+          message.setAction(TreeManagementMessage::Action::Acknowledgement);
+          message.send(message.getSenderRank(),peano4::parallel::Node::getInstance().getBlockingTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
         }
         break;
-      case peano4::parallel::TreeManagementMessage::Action::BookedNewRemoteTree:
+      case peano4::parallel::TreeManagementMessage::Action::Acknowledgement:
         assertionMsg( false, "should only be passed synchronously" );
         break;
       case peano4::parallel::TreeManagementMessage::Action::RemoveChildTreeFromBooksAsChildBecameEmpty:
         logInfo( "receiveDanglingMessages(...)", "learned that remote child tree " << message.getWorkerSpacetreeId() << " of local tree " << message.getMasterSpacetreeId() << " is degenerated thus had been removed" );
         getSpacetree( message.getMasterSpacetreeId() )._childrenIds.erase(message.getWorkerSpacetreeId());
         break;
+      default:
+    	assertionMsg( false, "should not be called" );
     }
   }
   #endif
@@ -114,13 +136,16 @@ void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId )
     const int targetRank = peano4::parallel::Node::getInstance().getRank(newTreeId);
 
     TreeManagementMessage message(masterId, newTreeId, TreeManagementMessage::CreateNewRemoteTree);
-    message.send(targetRank,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    message.send(targetRank,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichChangesASpacetreeState(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(masterId,newTreeId,peano4::parallel::Node::ExchangeMode::ForkJoinData);
     peano4::grid::AutomatonState state = _spacetrees.begin()->_root;
     // @todo Debug
     logInfo( "addSpacetree(int,int)", "send state " << state.toString() << " to rank " << targetRank << " via tag " << tag );
     state.send(targetRank,tag,false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
+
+    message.receive(targetRank,peano4::parallel::Node::getInstance().getBlockingTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    assertion(message.getAction()==TreeManagementMessage::Action::Acknowledgement);
     #else
     assertionMsg( false, "should never enter this branch without -DParallel" );
     #endif
@@ -370,6 +395,8 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
   logInfo( "traverse(TraversalObserver)", "start new grid sweep" );
 
+  _state = SpacetreeSetState::TraverseTreesAndExchangeData;
+
   // Have to extract these first, as there might be more with this flag once
   // we've done our local traversals
   std::set<int>  mergingTrees     = getLocalTreesMergingWithWorkers();
@@ -382,14 +409,19 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   // Leert offensichtlich alles fusion Stacks. Sollte es aber net. Das ist nicht sauber!
   // Sobald das sauber ist, kann man die beiden exchange Dinger wieder vertauschen
   exchangeDataBetweenExistingAndNewTreesAndRerunClones(observer);
+  _state = SpacetreeSetState::Waiting;
 
   mergeStatistics();
 
-  createNewTrees();
+  // Ist jetzt unten gemaess Kommentar. Bitte hier loeschen beizeiten
+//  createNewTrees();
 
+  _state = SpacetreeSetState::TraverseTreesAndExchangeData;
   exchangeDataBetweenTrees(observer);
+  _state = SpacetreeSetState::Waiting;
 
   cleanUpTrees();
+  createNewTrees();
 
   deleteClonedObservers();
 }
@@ -419,6 +451,8 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
         logInfo( "traverse(Observer)", "can't join tree " << p->_id << " with its master tree " << p->_masterId << ". Domain decomposition vetoes coarsening (would destroy MPI topology), but worker tree is not ready to be merged: " << p->toString());
   	  }
     }
+  	// @todo Geht halt net
+/*
   	else if (
       p->getGridStatistics().getCoarseningHasBeenVetoed()
       and
@@ -429,6 +463,9 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
       join(p->_id);
     }
+*/
+  	// @todo Join
+/*
     else if (
         // @todo muss ein "has spacetree"
       p->_masterId>=0
@@ -445,11 +482,14 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to as master struggles to coarsen");
       join(p->_id);
     }
+*/
+  	// @todo Funktioniert auch net
+/*
     else if (
       p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
-	    and
-	    p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0
-	  )  {
+      and
+      p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0
+    )  {
       logInfo( "traverse(Observer)", "tree " << p->_id << " is degenerated as it does not hold any local cells. Remove" );
       Node::getInstance().deregisterId(p->_id);
 
@@ -471,6 +511,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       p = _spacetrees.erase(p);
       p--;
     }
+*/
   	p++;
   }
 }
@@ -541,10 +582,10 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
       #ifdef Parallel
       logDebug( "split(int,int,int)", "request new tree on rank " << targetRank );
       peano4::parallel::TreeManagementMessage message(treeId,-1,peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree);
-      message.send(targetRank,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+      message.send(targetRank,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
       message.receive(targetRank,peano4::parallel::Node::getInstance().getBlockingTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-      assertion(message.getAction()==TreeManagementMessage::Action::BookedNewRemoteTree);
+      assertion(message.getAction()==TreeManagementMessage::Action::Acknowledgement);
       newSpacetreeId = message.getWorkerSpacetreeId();
       #else
       newSpacetreeId = -1;

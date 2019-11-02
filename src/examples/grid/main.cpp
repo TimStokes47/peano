@@ -202,6 +202,11 @@ void runParallel() {
 
       updateDomainDecomposition();
     }
+
+    logInfo( "runParallel(...)", "plot final grid" );
+    peano4::grid::TraversalVTKPlotter plotterObserver( "grid-parallel" );
+    peano4::parallel::SpacetreeSet::getInstance().traverse( plotterObserver );
+    logInfo( "runParallel(...)", "terminated successfully" );
   }
   else { // not the global master
     while (peano4::parallel::Node::getInstance().continueToRun()) {
@@ -218,11 +223,6 @@ void runParallel() {
       #endif
     }
   }
-
-  logInfo( "runParallel(...)", "plot final grid" );
-  peano4::grid::TraversalVTKPlotter plotterObserver( "grid-parallel" );
-  peano4::parallel::SpacetreeSet::getInstance().traverse( plotterObserver );
-  logInfo( "runParallel(...)", "terminated successfully" );
 }
 
 
