@@ -46,7 +46,8 @@ peano4::parallel::Node::Node():
   _currentProgramStep(UndefProgramStep),
   _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
   _blockingTreeManagementTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
-  _asynchronousTreeManagementTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
+  _asynchronousTreeManagementTagWhichChangesSpacetreeState( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
+  _asynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
   _dataExchangeBaseTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node", ReservedMPITagsForDataExchange) ) {
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     registerId( 0, -1);
@@ -345,8 +346,13 @@ int peano4::parallel::Node::getCurrentProgramStep() const {
 }
 
 
-int peano4::parallel::Node::getAsynchronousTreeManagementTag() const {
-  return _asynchronousTreeManagementTag;
+int peano4::parallel::Node::getAsynchronousTreeManagementTagWhichChangesASpacetreeState() const {
+  return _asynchronousTreeManagementTagWhichChangesSpacetreeState;
+}
+
+
+int peano4::parallel::Node::getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState() const {
+  return _asynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState;
 }
 
 
