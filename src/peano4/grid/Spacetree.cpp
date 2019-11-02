@@ -284,26 +284,22 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
 
     _hasJoined.clear();
     _hasJoined.insert( _joining.begin(), _joining.end() );
-/*
-    for (auto& rank: _joining) {
-      _childrenIds.erase(rank); // das stimmt i.A. nicht!
-    }
-*/
-    _joining.clear();
-	  _joining.insert( _joinTriggered.begin(), _joinTriggered.end() );
-	  _joinTriggered.clear();
 
-	  switch (_spacetreeState) {
-	    case SpacetreeState::NewRoot:
-	    case SpacetreeState::NewFromSplit:
-	      _spacetreeState = SpacetreeState::Running;
-	      logDebug( "traverse(...)", "switched tree " << _id << " into running" );
-	      break;
-	    case SpacetreeState::JoinTriggered:
-	      _spacetreeState = SpacetreeState::Joining;
-	      logDebug( "traverse(...)", "switched tree " << _id << " into joining" );
-	      assertion( _vertexStack[ StackKey( _id,peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange( _masterId )) ].empty() );
-	      break;
+    _joining.clear();
+    _joining.insert( _joinTriggered.begin(), _joinTriggered.end() );
+    _joinTriggered.clear();
+
+    switch (_spacetreeState) {
+      case SpacetreeState::NewRoot:
+      case SpacetreeState::NewFromSplit:
+        _spacetreeState = SpacetreeState::Running;
+        logDebug( "traverse(...)", "switched tree " << _id << " into running" );
+        break;
+      case SpacetreeState::JoinTriggered:
+        _spacetreeState = SpacetreeState::Joining;
+        logDebug( "traverse(...)", "switched tree " << _id << " into joining" );
+        assertion( _vertexStack[ StackKey( _id,peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange( _masterId )) ].empty() );
+        break;
       case SpacetreeState::Joining:
         _spacetreeState = SpacetreeState::Running;
         logDebug( "traverse(...)", "switched tree " << _id << " back into running" );
@@ -1046,15 +1042,15 @@ void peano4::grid::Spacetree::loadVertices(
       fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString()
     );
 
-    assertionNumericalEquals4(
+    assertionNumericalEquals5(
       fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getX(), x,
       fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString(),
-      fineGridStatesState.toString(), vertexIndex, toString()
+      fineGridStatesState.toString(), vertexIndex, toString(), _id
     );
-    assertionEquals4(
+    assertionEquals5(
       fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getLevel(), fineGridStatesState.getLevel(),
       fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString(),
-      fineGridStatesState.toString(), vertexIndex, toString()
+      fineGridStatesState.toString(), vertexIndex, toString(), _id
     );
   }
 
