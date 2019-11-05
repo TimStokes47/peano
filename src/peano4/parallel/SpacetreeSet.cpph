@@ -263,8 +263,6 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllHorizontalData
       logInfo( "exchangeStacksAsynchronously(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
       assertion(not Node::getInstance().isHorizontalDataExchangeOutputStackNumber(inStack));
       stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,inStack) ].startReceive(rank,receiveTag,count);
-
-      assertion4( sendTag!=receiveTag, sendTag, receiveTag, spacetreeId, targetId );
     }
   }
 
