@@ -18,6 +18,17 @@ tarch::logging::Log peano4::parallel::tests::NodeTest::_log("peano4::parallel::t
 #endif
 
 
+void peano4::parallel::tests::NodeTest::testTagCalculation() {
+  int tagA = peano4::parallel::Node::getInstance().getGridDataExchangeTag(0,5,peano4::parallel::Node::ExchangeMode::HorizontalData);
+  int tagB = peano4::parallel::Node::getInstance().getGridDataExchangeTag(5,0,peano4::parallel::Node::ExchangeMode::HorizontalData);
+  validateWithParams2(tagA!=tagB, tagA, tagB);
+
+  tagA = peano4::parallel::Node::getInstance().getGridDataExchangeTag(0,1,peano4::parallel::Node::ExchangeMode::HorizontalData);
+  tagB = peano4::parallel::Node::getInstance().getGridDataExchangeTag(1,0,peano4::parallel::Node::ExchangeMode::HorizontalData);
+  validateWithParams2(tagA!=tagB, tagA, tagB);
+}
+
+
 void peano4::parallel::tests::NodeTest::testGetPeriodicBoundaryNumber() {
   #if Dimensions==2
   tarch::la::Vector<TwoPowerD,int>  flags(1);
@@ -31,7 +42,8 @@ void peano4::parallel::tests::NodeTest::testGetPeriodicBoundaryNumber() {
 
 
 void peano4::parallel::tests::NodeTest::run() {
-  testMethod(  testGetPeriodicBoundaryNumber );
+  testMethod( testGetPeriodicBoundaryNumber );
+  testMethod( testTagCalculation );
 }
 
 

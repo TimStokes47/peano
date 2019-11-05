@@ -27,6 +27,7 @@ class peano4::parallel::tests::NodeTest: public tarch::tests::TestCase {
     static tarch::logging::Log _log;
 
     void testGetPeriodicBoundaryNumber();
+    void testTagCalculation();
   public:
     void run() override;
 };

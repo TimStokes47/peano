@@ -255,13 +255,16 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllHorizontalData
       int count     = sourceStack.second.size();
       int inStack   = Node::getInstance().getInputStackNumberOfHorizontalDataExchange(targetId);
 
-      int tag       = Node::getInstance().getGridDataExchangeTag( spacetreeId, targetId, Node::ExchangeMode::HorizontalData );
-      logInfo( "exchangeStacksAsynchronously(...)", "send stack " << sourceStack.first.second << " of tree " << sourceStack.first.first << " to rank " << rank << " with tag " << tag );
-      sourceStack.second.startSend(rank,tag);
+      int sendTag       = Node::getInstance().getGridDataExchangeTag( spacetreeId, targetId, Node::ExchangeMode::HorizontalData );
+      logInfo( "exchangeStacksAsynchronously(...)", "send stack " << sourceStack.first.second << " of tree " << sourceStack.first.first << " to rank " << rank << " with tag " << sendTag );
+      sourceStack.second.startSend(rank,sendTag);
 
-      logInfo( "exchangeStacksAsynchronously(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << tag << " into stack " << inStack );
+      int receiveTag    = Node::getInstance().getGridDataExchangeTag( targetId, spacetreeId, Node::ExchangeMode::HorizontalData );
+      logInfo( "exchangeStacksAsynchronously(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
       assertion(not Node::getInstance().isHorizontalDataExchangeOutputStackNumber(inStack));
-      stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,inStack) ].startReceive(rank,tag,count);
+      stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,inStack) ].startReceive(rank,receiveTag,count);
+
+      assertion4( sendTag!=receiveTag, sendTag, receiveTag, spacetreeId, targetId );
     }
   }
 

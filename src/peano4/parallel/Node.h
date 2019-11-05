@@ -306,6 +306,10 @@ class peano4::parallel::Node {
 	  VerticalData
     };
 
+
+    static std::string toString( ExchangeMode mode );
+
+
     /**
      * I use two tags per spacetree per rank: one for boundary data
      * (horizontal) and one for up-down and synchronous (forks) data
