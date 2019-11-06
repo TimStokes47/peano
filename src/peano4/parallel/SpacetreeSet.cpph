@@ -15,6 +15,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
         for (auto childId: childrenIds) {
           const int destinationRank = Node::getInstance().getRank( childId );
           if ( destinationRank!=tarch::mpi::Rank::getInstance().getRank() ) {
+            #ifdef Parallel
             const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(
               spacetreeId,
 			  childId,
@@ -40,6 +41,9 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
                 destinationRank, tag
               );
             }
+            #else
+            assertionMsg( false, "should never be entered" );
+            #endif
           }
         }
       }
@@ -48,7 +52,8 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
       {
         for (auto childId: childrenIds) {
           const int destinationRank = Node::getInstance().getRank( childId );
-            if ( destinationRank!=tarch::mpi::Rank::getInstance().getRank() ) {
+          if ( destinationRank!=tarch::mpi::Rank::getInstance().getRank() ) {
+            #ifdef Parallel
             const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(
               spacetreeId,
 			  childId,
@@ -74,6 +79,9 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
                 destinationRank, tag
               );
             }
+            #else
+            assertionMsg( false, "should never be entered" );
+            #endif
           }
         }
       }
@@ -98,6 +106,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
           stackContainer[ peano4::grid::Spacetree::StackKey(parentId,sourceStack) ].clear();
         }
         else {
+          #ifdef Parallel
           const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(
             parentId,
             spacetreeId,
@@ -120,6 +129,9 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
           );
           stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].finishSendOrReceive();
           stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].reverse();
+          #else
+          assertionMsg( false, "should never be entered" );
+          #endif
         }
       }
       break;
