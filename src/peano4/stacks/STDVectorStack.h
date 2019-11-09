@@ -343,57 +343,67 @@ class peano4::stacks::STDVectorStack {
       #endif
     }
 
-    bool isSendingOrReceiving() const {
-   	  return _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive;
-    }
 
-
+    /**
+     * If this routine is invoked on a stack which is neither sending or
+     * receiving, then it degenerates to nop. If it is a receiving stack,
+     * then the routine waits until all of the data is literally in. If we
+     * invoke it on a sending stack, the code checks that the send is
+     * complete, i.e. the data is either received or at least somewhere in
+     * the network. After that, it releases the underlying stack, i.e.
+     * clears it. Once this operation has terminated, the stack's state will
+     * be IOMode::None.
+     */
     void finishSendOrReceive() {
       #ifdef Parallel
-      assertion( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive );
-      assertion( _ioMPIRequest!=nullptr );
+      if (_ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive ) {
+        assertion( _ioMPIRequest!=nullptr );
 
-      _ioMode = IOMode::None;
-
-      int          flag = 0;
-      int          result;
-      clock_t      timeOutWarning   = -1;
-      clock_t      timeOutShutdown  = -1;
-      bool         triggeredTimeoutWarning = false;
-      result = MPI_Test( _ioMPIRequest, &flag, MPI_STATUS_IGNORE );
-      while (!flag) {
-        if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
-        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+        int          flag = 0;
+        int          result;
+        clock_t      timeOutWarning   = -1;
+        clock_t      timeOutShutdown  = -1;
+        bool         triggeredTimeoutWarning = false;
         result = MPI_Test( _ioMPIRequest, &flag, MPI_STATUS_IGNORE );
-        if (result!=MPI_SUCCESS) {
-          logError("finishSendOrReceive()", "failed" );
+        while (!flag) {
+          if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+          if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+          result = MPI_Test( _ioMPIRequest, &flag, MPI_STATUS_IGNORE );
+          if (result!=MPI_SUCCESS) {
+            logError("finishSendOrReceive()", "failed" );
+          }
+          if (
+            tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
+            (clock()>timeOutWarning) &&
+            (!triggeredTimeoutWarning)
+          ) {
+            tarch::mpi::Rank::getInstance().writeTimeOutWarning(
+              "peano4::stacks::STDVectorStack<double>",
+              "finishSendOrReceive()", _ioRank,_ioTag, _data.size()
+             );
+             triggeredTimeoutWarning = true;
+          }
+          if (
+            tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
+            (clock()>timeOutShutdown)
+          ) {
+            tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut(
+              "peano4::stacks::STDVectorStack<double>",
+              "finishSendOrReceive()", _ioRank,_ioTag, _data.size()
+            );
+          }
+          tarch::mpi::Rank::getInstance().receiveDanglingMessages();
         }
-        if (
-          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
-          (clock()>timeOutWarning) &&
-          (!triggeredTimeoutWarning)
-        ) {
-          tarch::mpi::Rank::getInstance().writeTimeOutWarning(
-            "peano4::stacks::STDVectorStack<double>",
-            "finishSendOrReceive()", _ioRank,_ioTag, _data.size()
-           );
-           triggeredTimeoutWarning = true;
-         }
-         if (
-           tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
-           (clock()>timeOutShutdown)
-         ) {
-           tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut(
-             "peano4::stacks::STDVectorStack<double>",
-             "finishSendOrReceive()", _ioRank,_ioTag, _data.size()
-           );
-         }
-        tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+        delete _ioMPIRequest;
+        _ioMPIRequest = nullptr;
       }
-      delete _ioMPIRequest;
-      _ioMPIRequest = nullptr;
+      if (_ioMode==IOMode::MPISend ) {
+    	clear();
+      }
+      _ioMode = IOMode::None;
       #endif
     }
+
 
     void reverse() {
       std::reverse(std::begin(_data), std::end(_data));

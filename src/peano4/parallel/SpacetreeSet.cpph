@@ -348,8 +348,6 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::finishAllOutstandingSends
   for (auto& sourceStack: stackContainer) {
     if (
       sourceStack.first.first==spacetreeId
-      and
-      sourceStack.second.isSendingOrReceiving()
     ) {
       sourceStack.second.finishSendOrReceive();
     }
