@@ -30,41 +30,32 @@ void examples::regulargridupscaling::MyObserver::endTraversal(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h
 ) {
-  #if PeanoDebug>0
-  TraversalVTKPlotter::endTraversal(x,h);
-  #endif
 }
 
 
 void examples::regulargridupscaling::MyObserver::enterCell(
-  const peano4::regulargridupscaling::GridTraversalEvent&  event
+  const peano4::grid::GridTraversalEvent&  event
 ) {
-  #if PeanoDebug>0
-  TraversalVTKPlotter::enterCell(event);
-  #endif
 }
 
 
 void examples::regulargridupscaling::MyObserver::leaveCell(
-  const peano4::regulargridupscaling::GridTraversalEvent&  event
+  const peano4::grid::GridTraversalEvent&  event
 ) {
-  #if PeanoDebug>0
-  TraversalVTKPlotter::leaveCell(event);
-  #endif
 }
 
 
-peano4::regulargridupscaling::TraversalObserver* examples::regulargridupscaling::MyObserver::clone(int spacetreeId) {
+peano4::grid::TraversalObserver* examples::regulargridupscaling::MyObserver::clone(int spacetreeId) {
   return new MyObserver( spacetreeId, _iterationCounter );
 }
 
 
-std::vector< peano4::regulargridupscaling::GridControlEvent > examples::regulargridupscaling::MyObserver::getGridControlEvents() {
-  std::vector< peano4::regulargridupscaling::GridControlEvent >  controlEvents;
+std::vector< peano4::grid::GridControlEvent > examples::regulargridupscaling::MyObserver::getGridControlEvents() {
+  std::vector< peano4::grid::GridControlEvent >  controlEvents;
 
   if (_iterationCounter<8) {
-    peano4::regulargridupscaling::GridControlEvent newEvent;
-    newEvent.setRefinementControl( peano4::regulargridupscaling::GridControlEvent::RefinementControl::Refine );
+    peano4::grid::GridControlEvent newEvent;
+    newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
 #if Dimensions==2
     newEvent.setOffset( {0.0,0.0} );
     newEvent.setWidth( {0.5,0.5} );
@@ -78,8 +69,8 @@ std::vector< peano4::regulargridupscaling::GridControlEvent > examples::regularg
   }
 
   if (_iterationCounter>12) {
-    peano4::regulargridupscaling::GridControlEvent newEvent;
-	newEvent.setRefinementControl( peano4::regulargridupscaling::GridControlEvent::RefinementControl::Erase );
+    peano4::grid::GridControlEvent newEvent;
+	newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Erase );
 #if Dimensions==2
 	newEvent.setOffset( {0.01,0.01} );
 	newEvent.setWidth( {0.99,0.99} );

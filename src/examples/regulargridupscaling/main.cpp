@@ -34,8 +34,8 @@ void runTests() {
 
 
 void runSerial() {
-  examples::regulargridupscaling::MyObserver emptyObserver;
-  peano4::grid::Spacetree         spacetree(
+  examples::regulargridupscaling::MyObserver  emptyObserver;
+  peano4::grid::Spacetree                     spacetree(
 #if Dimensions==2
     {0.0, 0.0},
     {1.0, 1.0}
@@ -48,13 +48,7 @@ void runSerial() {
   for (int i=0; i<30; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
-    #if PeanoDebug>0
-	  emptyObserver.beginTraversalOnRank(false);
-    #endif
     spacetree.traverse( emptyObserver );
-    #if PeanoDebug>0
-    emptyObserver.endTraversalOnRank(false);
-    #endif
 
     logInfo( "runSerial(...)", "refined vertices = " << spacetree.getGridStatistics().getNumberOfRefinedVertices() );
     logInfo( "runSerial(...)", "unrefined vertices = " << spacetree.getGridStatistics().getNumberOfUnrefinedVertices() );
@@ -65,10 +59,6 @@ void runSerial() {
     logInfo( "runSerial(...)", "remote unrefined cells = " << spacetree.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
     logInfo( "runSerial(...)", "remote refined cells = " << spacetree.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
-
-
-  peano4::grid::TraversalVTKPlotter plotterObserver( "grid-serial" );
-  spacetree.traverse( plotterObserver );
 }
 
 
@@ -177,19 +167,13 @@ void runParallel() {
     periodicBC
   );
 
-  examples::grid::MyObserver emptyObserver;
+  examples::regulargridupscaling::MyObserver emptyObserver;
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     peano4::parallel::Node::getInstance().setNextProgramStep(14);
     for (int i=0; i<50; i++) {
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-      #if PeanoDebug>0
-      emptyObserver.beginTraversalOnRank(true);
-      #endif
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-      #if PeanoDebug>0
-      emptyObserver.endTraversalOnRank(true);
-      #endif
 
       logInfo( "runParallel(...)", "refined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefinedVertices() );
       logInfo( "runParallel(...)", "unrefined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfUnrefinedVertices() );
@@ -203,9 +187,6 @@ void runParallel() {
       updateDomainDecomposition();
     }
 
-    logInfo( "runParallel(...)", "plot final grid" );
-    peano4::grid::TraversalVTKPlotter plotterObserver( "grid-parallel" );
-    peano4::parallel::SpacetreeSet::getInstance().traverse( plotterObserver );
     logInfo( "runParallel(...)", "terminated successfully" );
   }
   else { // not the global master
@@ -214,13 +195,7 @@ void runParallel() {
 
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
-      #if PeanoDebug>0
-      emptyObserver.beginTraversalOnRank(true);
-      #endif
       peano4::parallel::SpacetreeSet::getInstance().traverse(emptyObserver);
-      #if PeanoDebug>0
-      emptyObserver.endTraversalOnRank(true);
-      #endif
     }
   }
 }
