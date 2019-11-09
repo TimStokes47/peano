@@ -106,9 +106,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
             state.getInverted()
           );
           _spacetrees.push_back( std::move(newTree) );
-          // @todo Debug
-          logInfo( "receiveDanglingMessages(...)", "created the new tree " << _spacetrees.back().toString() );
-
+          logDebug( "receiveDanglingMessages(...)", "created the new tree " << _spacetrees.back().toString() );
           message.setAction(TreeManagementMessage::Action::Acknowledgement);
           message.send(message.getSenderRank(),peano4::parallel::Node::getInstance().getBlockingTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
         }
@@ -140,8 +138,8 @@ void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId )
 
     const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(masterId,newTreeId,peano4::parallel::Node::ExchangeMode::ForkJoinData);
     peano4::grid::AutomatonState state = _spacetrees.begin()->_root;
-    // @todo Debug
-    logInfo( "addSpacetree(int,int)", "send state " << state.toString() << " to rank " << targetRank << " via tag " << tag );
+
+    logDebug( "addSpacetree(int,int)", "send state " << state.toString() << " to rank " << targetRank << " via tag " << tag );
     state.send(targetRank,tag,false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     message.receive(targetRank,peano4::parallel::Node::getInstance().getBlockingTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
@@ -264,7 +262,6 @@ peano4::parallel::SpacetreeSet::DataExchangeTask::DataExchangeTask( peano4::grid
 
 
 bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
-	// @todo Klartsellen, dass Vertikal die hoechste Prio haben muss
   exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, _spacetree._masterId, _spacetree._childrenIds, VerticalDataExchangeMode::Running );
   exchangeAllHorizontalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, true );
   exchangeAllPeriodicBoundaryDataStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
@@ -344,7 +341,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees(peano4::grid::Trav
       logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
     }
   }
-  logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "trigger " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
+  logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "trigger " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
 
   #if PeanoDebug>0
   for (auto& p: dataExchangeTasks) {
@@ -392,8 +389,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     peano4::parallel::Node::getInstance().continueToRun();
   }
-
-  logInfo( "traverse(TraversalObserver)", "start new grid sweep" );
+  logDebug( "traverse(TraversalObserver)", "start new grid sweep" );
 
   _state = SpacetreeSetState::TraverseTreesAndExchangeData;
 

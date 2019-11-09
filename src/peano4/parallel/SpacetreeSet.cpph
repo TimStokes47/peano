@@ -23,15 +23,13 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
             );
             const int sourceStack = peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange(childId);
             const int size        = stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,sourceStack) ].size();
-            // @todo Change back to Debug
-            logInfo(
+            logDebug(
               "exchangeAllVerticalDataExchangeStacks(...)",
               "send out stack " << sourceStack << " (vertical fork communication) from tree " << spacetreeId << " to rank " << destinationRank << " hosting tree " << childId << " with tag " << tag
             );
             tarch::mpi::IntegerMessage message( size );
             message.send( destinationRank, tag, true, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-            // @todo Change back to Debug
-            logInfo(
+            logDebug(
               "exchangeAllVerticalDataExchangeStacks(...)",
               "holds " << message.getValue() << " entries"
             );
@@ -61,15 +59,13 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
             );
             const int sourceStack = peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange(childId);
             const int size        = stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,sourceStack) ].size();
-            // @todo Change back to Debug
-            logInfo(
+            logDebug(
               "exchangeAllVerticalDataExchangeStacks(...)",
               "send out stack " << sourceStack << " (vertical communication) from tree " << spacetreeId << " to rank " << destinationRank << " hosting tree " << childId << " with tag " << tag
             );
             tarch::mpi::IntegerMessage message( size );
             message.send( destinationRank, tag, true, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-            // @todo Change back to Debug
-            logInfo(
+            logDebug(
               "exchangeAllVerticalDataExchangeStacks(...)",
               "holds " << message.getValue() << " entries"
             );
@@ -112,15 +108,13 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
             spacetreeId,
             peano4::parallel::Node::ExchangeMode::ForkJoinData
           );
-          // @todo Change back to Debug
-          logInfo(
+          logDebug(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "receive stack " << destinationStack << " from tree " << parentId << " on rank " << sourceRank << " through tag " << tag
           );
           tarch::mpi::IntegerMessage message;
           message.receive( sourceRank, tag, true, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-          // @todo Change back to Debug
-          logInfo(
+          logDebug(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "receive " << message.getValue() << " entries"
           );
@@ -144,8 +138,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
           const int sourceStack      = peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange(spacetreeId);
           const int destinationStack = peano4::parallel::Node::getInputStackNumberForVerticalDataExchange(childId);
 
-          // @todo Debug
-          logInfo(
+          logDebug(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "move stack " << sourceStack << " from tree " << childId << " into stack " << destinationStack << " from tree " << spacetreeId
             << ": transfer " << stackContainer[ peano4::grid::Spacetree::StackKey(childId,sourceStack) ].size() << " element(s)"
@@ -268,11 +261,11 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllHorizontalData
       int inStack   = Node::getInstance().getInputStackNumberOfHorizontalDataExchange(targetId);
 
       int sendTag       = Node::getInstance().getGridDataExchangeTag( spacetreeId, targetId, Node::ExchangeMode::HorizontalData );
-      logInfo( "exchangeStacksAsynchronously(...)", "send stack " << sourceStack.first.second << " of tree " << sourceStack.first.first << " to rank " << rank << " with tag " << sendTag );
+      logDebug( "exchangeStacksAsynchronously(...)", "send stack " << sourceStack.first.second << " of tree " << sourceStack.first.first << " to rank " << rank << " with tag " << sendTag );
       sourceStack.second.startSend(rank,sendTag);
 
       int receiveTag    = Node::getInstance().getGridDataExchangeTag( targetId, spacetreeId, Node::ExchangeMode::HorizontalData );
-      logInfo( "exchangeStacksAsynchronously(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
+      logDebug( "exchangeStacksAsynchronously(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
       assertion(not Node::getInstance().isHorizontalDataExchangeOutputStackNumber(inStack));
       stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,inStack) ].startReceive(rank,receiveTag,count);
     }

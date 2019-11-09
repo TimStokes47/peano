@@ -343,7 +343,7 @@ bool peano4::parallel::Node::continueToRun() {
   else {
     StartTraversalMessage message;
     message.receive(tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-    logInfo( "continueToRun()", "received message " << message.toString() );
+    logDebug( "continueToRun()", "received message " << message.toString() );
     _currentProgramStep = message.getStepIdentifier();
   }
   #endif
