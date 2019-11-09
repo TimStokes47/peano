@@ -284,6 +284,12 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     std::set<int>                 getLocalTreesMergingWithWorkers() const;
 
+    /**
+     * Quick lookup whether an observer clone for this tree id does already exist.
+     * If not, we create one quickly.
+     */
+    void createObserverCloneIfRequired(peano4::grid::TraversalObserver& observer, int treeId);
+
     SpacetreeSet();
     SpacetreeSet(const SpacetreeSet& ) = delete;
     SpacetreeSet& operator=(const SpacetreeSet& ) = delete;

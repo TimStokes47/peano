@@ -184,6 +184,16 @@ void peano4::parallel::SpacetreeSet::TraverseTask::prefetch() {
 }
 
 
+void peano4::parallel::SpacetreeSet::createObserverCloneIfRequired(peano4::grid::TraversalObserver& observer, int treeId) {
+  if (
+    _clonedObserver.count(treeId)==0 or _clonedObserver[treeId]==nullptr
+  ) {
+    _clonedObserver[treeId] = observer.clone(treeId);
+  }
+  assertion1( _clonedObserver.count(treeId)==1 and _clonedObserver[treeId]!=nullptr, treeId );
+}
+
+
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseMaster(const std::set<int>& trees, peano4::grid::TraversalObserver& observer) {
   for (auto& masterTreeId: trees ) {
     peano4::grid::Spacetree& masterTree = getSpacetree(masterTreeId);
@@ -198,12 +208,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
     }
     logDebug( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "issue task to traverse tree " << masterTree._id << " in state " << peano4::grid::Spacetree::toString(masterTree._spacetreeState) );
 
-    if (
-      _clonedObserver.count(masterTree._id )==0 or _clonedObserver[masterTree._id]==nullptr
-    ) {
-      _clonedObserver[masterTree._id] = observer.clone( masterTree._id );
-    }
-    assertion1( _clonedObserver.count(masterTree._id )==1 and _clonedObserver[masterTree._id]!=nullptr, masterTree._id );
+    createObserverCloneIfRequired(observer, masterTree._id );
     masterTree.traverse( *_clonedObserver[masterTree._id ], true );
     // @todo Eigentlich Bloedsinn. Also wenn eh alles Stacks sind, dann kann ich es gleich selber machen
     _clonedObserver[masterTree._id]->exchangeStacksAfterGridSweep();
@@ -267,14 +272,8 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
   exchangeAllPeriodicBoundaryDataStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
   finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
 
-  if (
-    _spacetreeSet._clonedObserver.count(_spacetree._id )==0
-    or
-    _spacetreeSet._clonedObserver[ _spacetree._id ] == nullptr
-  ) {
-    _spacetreeSet._clonedObserver[_spacetree._id] = _observer.clone(_spacetree._id);
-  }
-  assertion1( _spacetreeSet._clonedObserver.count(_spacetree._id )==1, _spacetree._id );
+  // @todo Der Clone hier muss raus!
+  _spacetreeSet.createObserverCloneIfRequired(_observer, _spacetree._id );
   _spacetreeSet._clonedObserver[ _spacetree._id ]->exchangeStacksAfterGridSweep();
 
   return false;
@@ -292,19 +291,8 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
     if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
       logInfo( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " is new. Initialise it through clone" );
 
-      if (
-        _clonedObserver.count(p._masterId)==0 or _clonedObserver[p._masterId]==nullptr
-      ) {
-        _clonedObserver[p._masterId] = observer.clone(p._masterId);
-      }
-      assertion1( _clonedObserver.count(p._masterId)==1 and _clonedObserver[p._masterId]!=nullptr, p._masterId );
-
-      logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "run tree " << p._id << " in dry mode (data exchange only): " << p.toString() );
-      if (
-        _clonedObserver.count(p._id)==0 or _clonedObserver[p._id]==nullptr
-      ) {
-        _clonedObserver[p._id] = observer.clone(p._id);
-      }
+      createObserverCloneIfRequired(observer, p._masterId );
+      createObserverCloneIfRequired(observer, p._id );
 
       assertion1( _clonedObserver.count(p._id)==1 and _clonedObserver[p._id]!=nullptr, p._id );
       DataExchangeTask::exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, p._childrenIds, DataExchangeTask::VerticalDataExchangeMode::PrepareDryRunForNewSpacetree);

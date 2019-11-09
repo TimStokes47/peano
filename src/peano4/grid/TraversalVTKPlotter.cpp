@@ -167,6 +167,11 @@ void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
   tarch::multicore::Lock lock(semaphore);
 
   std::string newFile = getFilename( spacetreeId );
+
+  for (auto& p: _clonedSpacetreeIds) {
+	assertion3( p!=newFile, p, newFile, spacetreeId );
+  }
+
   _clonedSpacetreeIds.push_back( newFile );
   // avoid typical invocation for same id twice in a row
   assertion2(
@@ -215,7 +220,11 @@ void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
         for (int i=0; i<entries; i++) {
           tarch::mpi::StringMessage message;
           message.receive( rank, _plotterMessageTag, false, tarch::mpi::StringMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
-          _clonedSpacetreeIds.push_back( tarch::mpi::StringTools::convert(message) );
+          std::string newEntry = tarch::mpi::StringTools::convert(message);
+          for (auto& p: _clonedSpacetreeIds) {
+        	assertion3( p!=newEntry, p, newEntry, rank );
+          }
+          _clonedSpacetreeIds.push_back( newEntry );
         }
       }
     }
