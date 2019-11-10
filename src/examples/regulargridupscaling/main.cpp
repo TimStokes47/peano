@@ -121,6 +121,10 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
 
   examples::regulargridupscaling::MyObserver emptyObserver(examples::regulargridupscaling::MyObserver::RanksObserverTemplate,h);
 
+  // @todo Change
+//  const int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
+  const int numberOfThreads = 3;
+
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     logInfo( "runParallel(...)", "create initial grid (step #1)" );
     while (
@@ -156,7 +160,7 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
     }
 
     logInfo( "runParallel(...)", "trigger split of master rank into threads" );
-    for (int thread=1; thread<tarch::multicore::Core::getInstance().getNumberOfThreads(); thread++) {
+    for (int thread=1; thread<numberOfThreads; thread++) {
       if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,numberOfCellsPerThread,0)) {
         logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << numberOfCellsPerThread << " cell(s)" );
       }
@@ -198,7 +202,7 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
         assertionEquals( peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size(), 1);
         const int localTree = *(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().begin());
         logInfo( "runParallel(...)", "trigger split of rank " << tarch::mpi::Rank::getInstance().getRank() << " (tree " << localTree << ") into threads" );
-        for (int thread=1; thread<tarch::multicore::Core::getInstance().getNumberOfThreads(); thread++) {
+        for (int thread=1; thread<numberOfThreads; thread++) {
           if ( not peano4::parallel::SpacetreeSet::getInstance().split(localTree,numberOfCellsPerThread,tarch::mpi::Rank::getInstance().getRank())) {
             logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << numberOfCellsPerThread << " cell(s)" );
           }

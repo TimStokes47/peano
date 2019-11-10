@@ -61,29 +61,7 @@ std::vector< peano4::grid::GridControlEvent > examples::regulargridupscaling::My
     newEvent.setWidth( {1.0,1.0,1.0} );
     newEvent.setH( {_h,_h,_h} );
   #endif
-  logInfo( "getGridControlEvents()", "added only one refinement criterion: " << newEvent.toString() );
   controlEvents.push_back(newEvent);
-    /*
-      if (_iterationCounter<8) {
-        peano4::grid::GridControlEvent newEvent;
-        newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
-  }
-
-  if (_iterationCounter>12) {
-    peano4::grid::GridControlEvent newEvent;
-	newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Erase );
-#if Dimensions==2
-	newEvent.setOffset( {0.01,0.01} );
-	newEvent.setWidth( {0.99,0.99} );
-	newEvent.setH( {0.4,0.4} );
-#elif Dimensions==3
-	newEvent.setOffset( {0.01,0.01,0.01} );
-	newEvent.setWidth( {0.99,0.99,0.99} );
-	newEvent.setH( {0.4,0.4,0.4} );
-#endif
-    controlEvents.push_back(newEvent);
-  }
-*/
 
   return controlEvents;
 }
