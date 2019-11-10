@@ -380,6 +380,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * out whether a local set contains a particular id.
      */
     bool isLocalSpacetree(int treeId) const;
+
+    std::set<int> getLocalSpacetrees() const;
 };
 
 

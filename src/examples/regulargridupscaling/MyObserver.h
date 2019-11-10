@@ -5,6 +5,7 @@
 
 
 #include "peano4/grid/TraversalObserver.h"
+#include "tarch/logging/Log.h"
 
 
 namespace examples {
@@ -16,9 +17,13 @@ namespace examples {
 
 class examples::regulargridupscaling::MyObserver: public peano4::grid::TraversalObserver {
   private:
-	static int _iterationCounter;
+    static tarch::logging::Log _log;
+
+	const double _h;
   public:
-    MyObserver(int spacetreeId = -1, int counter=0);
+	static constexpr int RanksObserverTemplate = 1;
+
+    MyObserver(int spacetreeId, double h);
     virtual ~MyObserver();
 
     void beginTraversal(

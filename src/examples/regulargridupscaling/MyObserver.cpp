@@ -4,14 +4,11 @@
 #include "peano4/parallel/Node.h"
 
 
+tarch::logging::Log examples::regulargridupscaling::MyObserver::_log( "examples::regulargridupscaling::MyObserver" );
 
-int examples::regulargridupscaling::MyObserver::_iterationCounter(0);
 
-
-examples::regulargridupscaling::MyObserver::MyObserver(int spacetreeId, int counter) {
-  if (spacetreeId==0) {
-	_iterationCounter++;
-  }
+examples::regulargridupscaling::MyObserver::MyObserver(int spacetreeId, double h):
+  _h(h) {
 }
 
 
@@ -46,26 +43,30 @@ void examples::regulargridupscaling::MyObserver::leaveCell(
 
 
 peano4::grid::TraversalObserver* examples::regulargridupscaling::MyObserver::clone(int spacetreeId) {
-  return new MyObserver( spacetreeId, _iterationCounter );
+  return new MyObserver( spacetreeId, _h );
 }
 
 
 std::vector< peano4::grid::GridControlEvent > examples::regulargridupscaling::MyObserver::getGridControlEvents() {
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
 
-  if (_iterationCounter<8) {
-    peano4::grid::GridControlEvent newEvent;
-    newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
-#if Dimensions==2
+  peano4::grid::GridControlEvent newEvent;
+  newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
+  #if Dimensions==2
     newEvent.setOffset( {0.0,0.0} );
-    newEvent.setWidth( {0.5,0.5} );
-    newEvent.setH( {0.02,0.02} );
-#elif Dimensions==3
+    newEvent.setWidth( {1.0,1.0} );
+    newEvent.setH( {_h,_h} );
+  #elif Dimensions==3
     newEvent.setOffset( {0.0,0.0,0.0} );
-    newEvent.setWidth( {0.5,0.5,0.5} );
-    newEvent.setH( {0.02,0.02,0.02} );
-#endif
-    controlEvents.push_back(newEvent);
+    newEvent.setWidth( {1.0,1.0,1.0} );
+    newEvent.setH( {_h,_h,_h} );
+  #endif
+  logInfo( "getGridControlEvents()", "added only one refinement criterion: " << newEvent.toString() );
+  controlEvents.push_back(newEvent);
+    /*
+      if (_iterationCounter<8) {
+        peano4::grid::GridControlEvent newEvent;
+        newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
   }
 
   if (_iterationCounter>12) {
@@ -82,6 +83,7 @@ std::vector< peano4::grid::GridControlEvent > examples::regulargridupscaling::My
 #endif
     controlEvents.push_back(newEvent);
   }
+*/
 
   return controlEvents;
 }

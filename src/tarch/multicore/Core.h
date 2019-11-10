@@ -46,16 +46,6 @@ class tarch::multicore::Core {
     static constexpr int UseDefaultNumberOfThreads         = 0;
 
     /**
-     * Use maximum number of threads. This is, if you run four ranks on a
-     * 24 core node, then each rank uses 24 threads. Usually not recommended
-     * with slurm, as the default OS masking forbids that a rank can pin its
-     * threads to cores assigned to another rank.
-     *
-     * Multiply with two to exploit hyperthreading.
-     */
-    static constexpr int UseMaximumNumberOfAvailableThreads = -1;
-
-    /**
      * Destructor
      */
     ~Core();
@@ -75,7 +65,7 @@ class tarch::multicore::Core {
      *        of threads) or it equals DefaultNumberOfThreads which means that the code should
      *        use the default number of threads.
      */
-    void configure( int numberOfThreads, int maxNumberOfConcurrentBackgroundTasks, int maxNumberOfConcurrentBandwidthBoundTasks );
+    void configure( int numberOfThreads = UseDefaultNumberOfThreads, int maxNumberOfConcurrentBackgroundTasks = UseDefaultNumberOfThreads, int maxNumberOfConcurrentBandwidthBoundTasks = UseDefaultNumberOfThreads );
 
     /**
      * Shutdown parallel environment.
