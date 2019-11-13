@@ -34,7 +34,6 @@ class tarch::la::Matrix {
     /**
      * Values of the matrix components.
      */
-//    Scalar _values[Rows*Cols] __attribute__((aligned(VectorisationAlignment)));
     Scalar _values[Rows*Cols];
 
   public:

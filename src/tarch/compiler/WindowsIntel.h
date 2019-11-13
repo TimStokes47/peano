@@ -3,14 +3,6 @@
 // consult LinuxIntel.h which is the most elaborate documentation.
 
 
-/**
- * The Intel compiler based upon Microsoft's Visual C++ does not support the
- * __align__ keyword. We thus disable this feature though you might try to
- * set it in PeanoOptimisations.h
- */
-#define noManualAlignment
-#define noManualInlining
-
 
 #define UseTestSpecificCompilerSettings
 //#define CompilerCLANG
@@ -20,13 +12,6 @@
 #define CompilerHasTimespec
 //#define CompilerHasSysinfo
 //#define CompilerDefinesMPIMaxNameString
-//#define DaStGenPackedPadding 1      // 32 bit version
-// #define DaStGenPackedPadding 2   // 64 bit version
-
-
-#if !defined(noMultipleThreadsMayTriggerMPICalls) && !defined(MultipleThreadsMayTriggerMPICalls)
-#define MultipleThreadsMayTriggerMPICalls
-#endif
 
 
 #if !defined(UseManualInlining) &&  !defined(noUseManualInlining)
@@ -34,7 +19,3 @@
 #endif
 
 #define LittleEndian
-
-#if !defined(noMPI2) && !defined(MPI2)
-#define MPI2
-#endif

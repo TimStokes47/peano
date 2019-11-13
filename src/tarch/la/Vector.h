@@ -34,7 +34,6 @@ namespace tarch {
 template<int Size, typename Scalar>
 struct tarch::la::Vector {
   private:
-    //    Scalar _values[Size] __attribute__((aligned(VectorisationAlignment)));
     Scalar _values[Size];
 
   public:

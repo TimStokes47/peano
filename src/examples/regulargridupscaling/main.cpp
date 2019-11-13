@@ -224,13 +224,16 @@ int main(int argc, char** argv) {
   peano4::fillLookupTables();
 
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch::multicore", true
-  ));
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid::EmptyTraversalObserver", true
-  ));
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
+  ));
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
+  ));
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
+  ));
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
   ));
   tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
 

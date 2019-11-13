@@ -327,7 +327,7 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
   #ifdef Parallel
   int result = MPI_SUCCESS;
 
-  #if defined( SharedMemoryParallelisation ) && defined( MultipleThreadsMayTriggerMPICalls )
+  #if defined( SharedMemoryParallelisation )
   int initThreadProvidedThreadLevelSupport;
   result = MPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &initThreadProvidedThreadLevelSupport );
   if (initThreadProvidedThreadLevelSupport!=MPI_THREAD_MULTIPLE ) {
@@ -336,15 +336,7 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
               << ". Disable MultipleThreadsMayTriggerMPICalls in the compiler-specific settings or via -DnoMultipleThreadsMayTriggerMPICalls."<< std::endl;
     exit(-1);
   }
-  #elif defined( SharedMemoryParallelisation )
-  int initThreadProvidedThreadLevelSupport;
-  result = MPI_Init_thread( argc, argv, MPI_THREAD_SERIALIZED, &initThreadProvidedThreadLevelSupport );
-  if (initThreadProvidedThreadLevelSupport!=MPI_THREAD_SERIALIZED ) {
-    std::cerr << "warning: MPI implementation does not support MPI_THREAD_SERIALIZED. Support multithreading level is "
-              << initThreadProvidedThreadLevelSupport << " instead of " << MPI_THREAD_SERIALIZED
-              << ". Disable shared memory parallelisation in the compiler-specific settings."<< std::endl;
-    exit(-1);
-  }
+  logInfo( "init(...)", "initialised MPI with MPI_THREAD_MULTIPLE" );
   #else
   result = MPI_Init( argc, argv );
   #endif

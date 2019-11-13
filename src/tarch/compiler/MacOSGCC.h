@@ -21,14 +21,7 @@
 #define CompilerHasUTSName
 #define CompilerHasTimespec
 //#define CompilerDefinesMPIMaxNameString
-//#define DaStGenPackedPadding 1      // 32 bit version
-// #define DaStGenPackedPadding 2   // 64 bit version
 //#define CompilerHasSysinfo
-
-
-#if !defined(noMultipleThreadsMayTriggerMPICalls) && !defined(MultipleThreadsMayTriggerMPICalls)
-#define MultipleThreadsMayTriggerMPICalls
-#endif
 
 
 #if !defined(UseManualInlining) &&  !defined(noUseManualInlining)
@@ -36,7 +29,3 @@
 #endif
 
 #define LittleEndian
-
-#if !defined(noMPI2) && !defined(MPI2)
-#define MPI2
-#endif
