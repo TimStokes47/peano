@@ -261,7 +261,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllHorizontalData
       int inStack   = Node::getInstance().getInputStackNumberOfHorizontalDataExchange(targetId);
 
       int sendTag       = Node::getInstance().getGridDataExchangeTag( spacetreeId, targetId, Node::ExchangeMode::HorizontalData );
-      logDebug( "exchangeStacksAsynchronously(...)", "send stack " << sourceStack.first.second << " of tree " << sourceStack.first.first << " to rank " << rank << " with tag " << sendTag );
+      logDebug( "exchangeStacksAsynchronously(...)", "send stack " << sourceStack.first.second << " of tree " << sourceStack.first.first << " to rank " << rank << " with tag " << sendTag << ": " << count << " element(s)");
       sourceStack.second.startSend(rank,sendTag);
 
       int receiveTag    = Node::getInstance().getGridDataExchangeTag( targetId, spacetreeId, Node::ExchangeMode::HorizontalData );
