@@ -74,9 +74,9 @@ std::string peano4::parallel::Node::toString( ExchangeMode mode ) {
 
 
 int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange ) const {
-  int result  = _dataExchangeBaseTag;
-
   logTraceInWith3Arguments( "getGridDataExchangeTag(int,int,ExchangeMode)", sendingTreeId, receivingTreeId, toString(exchange) );
+
+  int result  = _dataExchangeBaseTag;
   result     += 3 * (getLocalTreeId(sendingTreeId) * MaxSpacetreesPerRank + getLocalTreeId(receivingTreeId));
   switch (exchange) {
     case ExchangeMode::HorizontalData:
@@ -89,8 +89,8 @@ int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int recei
       result += 2;
       break;
   }
-  logTraceOutWith1Argument( "getGridDataExchangeTag(int,int,ExchangeMode)", result );
 
+  logTraceOutWith1Argument( "getGridDataExchangeTag(int,int,ExchangeMode)", result );
   return result;
 }
 
