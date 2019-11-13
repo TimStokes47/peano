@@ -11,7 +11,7 @@ void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag) {
 
   assertion( _ioMPIRequest == nullptr );
   _ioMPIRequest = new MPI_Request;
-  int result = MPI_Isend( _data.data(), _data.size(), MPI_DOUBLE, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
+  int result = MPI_Isend( _data.data(), _currentElement, MPI_DOUBLE, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
   if  (result!=MPI_SUCCESS) {
     std::ostringstream msg;
     logError( "startSend(int,int)", "was not able to send to node " << rank << " on tag " << tag
