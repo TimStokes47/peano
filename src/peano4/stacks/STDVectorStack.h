@@ -8,6 +8,9 @@
 #include <algorithm>
 
 
+#include "peano4/parallel/Node.h"
+
+
 #include "tarch/logging/Log.h"
 #include "tarch/Assertions.h"
 #include "tarch/mpi/Rank.h"
@@ -382,7 +385,7 @@ class peano4::stacks::STDVectorStack {
             (!triggeredTimeoutWarning)
           ) {
             tarch::mpi::Rank::getInstance().writeTimeOutWarning(
-              "peano4::stacks::STDVectorStack<double>",
+              "peano4::stacks::STDVectorStack<T>",
               "finishSendOrReceive()", _ioRank,_ioTag, _data.size()
              );
              triggeredTimeoutWarning = true;
@@ -392,8 +395,8 @@ class peano4::stacks::STDVectorStack {
             (clock()>timeOutShutdown)
           ) {
             tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut(
-              "peano4::stacks::STDVectorStack<double>",
-              "finishSendOrReceive()", _ioRank,_ioTag, _data.size()
+              "peano4::stacks::STDVectorStack<T>",
+              "finishSendOrReceive()", _ioRank,_ioTag, _data.size(), "Tag type: " + peano4::parallel::Node::getSemanticsForTag(_ioTag)
             );
           }
           tarch::mpi::Rank::getInstance().receiveDanglingMessages();

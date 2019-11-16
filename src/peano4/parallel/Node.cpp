@@ -44,11 +44,11 @@ void peano4::parallel::Node::shutdownMPIDatatypes() {
 
 peano4::parallel::Node::Node():
   _currentProgramStep(UndefProgramStep),
-  _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
-  _blockingTreeManagementTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
-  _asynchronousTreeManagementTagWhichChangesSpacetreeState( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
-  _asynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
-  _dataExchangeBaseTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node", ReservedMPITagsForDataExchange) ) {
+  _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - rank orchestration") ),
+  _blockingTreeManagementTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - blocking tree management") ),
+  _asynchronousTreeManagementTagWhichChangesSpacetreeState( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - asynchronous tree management which changes spacetree state") ),
+  _asynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - asynchronous tree management which does not change spacetree state") ),
+  _dataExchangeBaseTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - data management", ReservedMPITagsForDataExchange) ) {
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     registerId( 0, -1);
   }
@@ -70,28 +70,6 @@ std::string peano4::parallel::Node::toString( ExchangeMode mode ) {
       return "vertical-data";
   }
   return "undef";
-}
-
-
-int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange ) const {
-  logTraceInWith3Arguments( "getGridDataExchangeTag(int,int,ExchangeMode)", sendingTreeId, receivingTreeId, toString(exchange) );
-
-  int result  = _dataExchangeBaseTag;
-  result     += 3 * (getLocalTreeId(sendingTreeId) * MaxSpacetreesPerRank + getLocalTreeId(receivingTreeId));
-  switch (exchange) {
-    case ExchangeMode::HorizontalData:
-      result += 0;
-      break;
-    case ExchangeMode::ForkJoinData:
-      result += 1;
-      break;
-    case ExchangeMode::VerticalData:
-      result += 2;
-      break;
-  }
-
-  logTraceOutWith1Argument( "getGridDataExchangeTag(int,int,ExchangeMode)", result );
-  return result;
 }
 
 
@@ -383,3 +361,59 @@ void peano4::parallel::Node::shutdown() {
     continueToRun();
   }
 }
+
+
+int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange ) const {
+  logTraceInWith3Arguments( "getGridDataExchangeTag(int,int,ExchangeMode)", sendingTreeId, receivingTreeId, toString(exchange) );
+
+  int result  = _dataExchangeBaseTag;
+  result     += 3 * (getLocalTreeId(sendingTreeId) * MaxSpacetreesPerRank + getLocalTreeId(receivingTreeId));
+  switch (exchange) {
+    case ExchangeMode::HorizontalData:
+      result += 0;
+      break;
+    case ExchangeMode::ForkJoinData:
+      result += 1;
+      break;
+    case ExchangeMode::VerticalData:
+      result += 2;
+      break;
+  }
+
+  logTraceOutWith1Argument( "getGridDataExchangeTag(int,int,ExchangeMode)", result );
+  return result;
+}
+
+
+std::string peano4::parallel::Node::getSemanticsForTag( int tag ) {
+  if (tag==getInstance()._rankOrchestrationTag) {
+    return "rank orchestration tag";
+  }
+
+  if (tag==getInstance()._blockingTreeManagementTag) {
+    return "blocking tree management tag";
+  }
+
+  if (tag==getInstance()._asynchronousTreeManagementTagWhichChangesSpacetreeState) {
+    return "asynchronous tree management tag which changes spacetree state";
+  }
+
+  if (tag==getInstance()._asynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState) {
+    return "asynchronous tree management tag which does not change spacetree state";
+  }
+
+  if (tag>=getInstance()._dataExchangeBaseTag and tag<ReservedMPITagsForDataExchange) {
+    std::string result = "data exchange tag for ";
+
+    switch ( (tag-getInstance()._dataExchangeBaseTag) % 3) {
+      case 0: result += "horizontal data"; break;
+      case 1: result += "fork/join data"; break;
+      case 2: result += "vertical data"; break;
+    }
+
+    return result;
+  }
+
+  return "tag semantics not known to peano4::parallel::Node";
+}
+

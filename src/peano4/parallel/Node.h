@@ -322,6 +322,12 @@ class peano4::parallel::Node {
      * different tags per tree pair.
      */
     int getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange ) const;
+
+    /**
+     * I use this for debugging. When I have a tag, I can ask the node whether
+     * the node is aware what this tag actually means.
+     */
+    static std::string getSemanticsForTag( int tag );
 };
 
 #endif
