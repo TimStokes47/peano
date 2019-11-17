@@ -38,13 +38,6 @@ tarch::logging::CommandLineLogger::CommandLineLogger():
   setLogMachineName();
   setLogMessageType();
   setLogTrace();
-
-  #if PeanoDebug>=1
-  addFilterListEntry( FilterListEntry( "debug", false )  );
-  #else
-  addFilterListEntry( FilterListEntry( "debug", true )  );
-  #endif
-  addFilterListEntry( FilterListEntry( "info", false )  );
 }
 
 
@@ -163,7 +156,7 @@ void tarch::logging::CommandLineLogger::debug(double timestamp, const std::strin
     #endif
 
     std::string outputMessage = constructMessageString(
-      "debug",
+      FilterListEntry::TargetDebug,
       timestamp,
       timestampHumanReadable,
       machineName,
@@ -182,7 +175,7 @@ void tarch::logging::CommandLineLogger::debug(double timestamp, const std::strin
 void tarch::logging::CommandLineLogger::info(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
   if (writeInfo(trace)) {
     std::string outputMessage = constructMessageString(
-      "info",
+      FilterListEntry::TargetInfo,
       timestamp,
       timestampHumanReadable,
       machineName,
@@ -213,6 +206,7 @@ void tarch::logging::CommandLineLogger::warning(double timestamp, const std::str
     );
 
     tarch::multicore::Lock lockCout( _semaphore );
+    out() << outputMessage;
     out().flush();
     std::cerr << outputMessage;
     std::cerr.flush();
@@ -233,6 +227,7 @@ void tarch::logging::CommandLineLogger::error(double timestamp, const std::strin
     );
 
     tarch::multicore::Lock lockCout( _semaphore );
+    out() << outputMessage;
     out().flush();
     std::cerr << outputMessage;
     std::cerr.flush();
@@ -244,6 +239,42 @@ void tarch::logging::CommandLineLogger::error(double timestamp, const std::strin
 }
 
 
+void tarch::logging::CommandLineLogger::traceIn(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
+  if ( writeTrace(trace) ) {
+    std::string outputMessage = constructMessageString(
+      "trace",
+      timestamp,
+      timestampHumanReadable,
+      machineName,
+	  threadName,
+      trace,
+      message
+    );
+
+    tarch::multicore::Lock lockCout( _semaphore );
+    out() << outputMessage;
+    out().flush();
+  }
+}
+
+
+void tarch::logging::CommandLineLogger::traceOut(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
+  if ( writeTrace(trace) ) {
+    std::string outputMessage = constructMessageString(
+      "trace",
+      timestamp,
+      timestampHumanReadable,
+      machineName,
+	  threadName,
+      trace,
+      message
+    );
+
+    tarch::multicore::Lock lockCout( _semaphore );
+    out() << outputMessage;
+    out().flush();
+  }
+}
 
 
 void tarch::logging::CommandLineLogger::indent( bool indent, const std::string& trace, const std::string& message ) {

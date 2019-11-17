@@ -31,33 +31,17 @@ tarch::logging::LoggerWithFilter::FilterListEntry::FilterListEntry( const std::s
   _rank(rank),
   _namespaceName(className),
   _isBlackEntry(isBlackListEntry) {
-  assertion1( targetName==std::string("info") || targetName==std::string("debug") || targetName==std::string(""), targetName );
+  assertion1( targetName==TargetInfo or targetName==TargetDebug or targetName==TargetAll or targetName==TargetTrace, targetName );
 }
 
 
 std::string tarch::logging::LoggerWithFilter::FilterListEntry::toString() const {
   std::ostringstream msg;
   msg << "(";
-  if (_targetName=="") {
-    msg << "target:*,";
-  }
-  else {
-    msg << _targetName << ",";
-  }
-  if (_namespaceName=="") {
-    msg << "namespace:*,";
-  }
-  else {
-    msg << _namespaceName << ",";
-  }
+  msg << "target:" << _targetName << ",";
+  msg << _namespaceName << ",";
   #ifdef Parallel
-  msg << "rank:";
-  if (_rank!=AnyRank) {
-    msg << _rank;
-  }
-  else {
-    msg << "*";
-  }
+  msg << "rank:" << _rank;
   msg << ",";
   #endif
   if (_isBlackEntry) {
@@ -86,6 +70,11 @@ bool tarch::logging::LoggerWithFilter::FilterListEntry::operator!=(const FilterL
 }
 
 
+tarch::logging::LoggerWithFilter::LoggerWithFilter() {
+  addFilterListEntry( FilterListEntry( FilterListEntry::TargetAll, false )  );
+}
+
+
 void tarch::logging::LoggerWithFilter::printFilterListToCout() const {
   if (_filterlist.empty()) {
     std::cout << "filter list is empty" << std::endl;
@@ -100,12 +89,26 @@ void tarch::logging::LoggerWithFilter::printFilterListToCout() const {
 
 
 bool tarch::logging::LoggerWithFilter::writeDebug(const std::string& className) {
-  return !filterOut("debug",className);
+  #if PeanoDebug>=4
+  return !filterOut(FilterListEntry::TargetDebug,className);
+  #else
+  return false;
+  #endif
 }
 
 
 bool tarch::logging::LoggerWithFilter::writeInfo(const std::string& className) {
-  return !filterOut("info",className);
+  return !filterOut(FilterListEntry::TargetInfo,className);
+}
+
+
+bool tarch::logging::LoggerWithFilter::writeTrace(const std::string& className) {
+  #if PeanoDebug>=1
+  const bool result = !filterOut(FilterListEntry::TargetTrace,className);
+  return result;
+  #else
+  return false;
+  #endif
 }
 
 
@@ -142,7 +145,8 @@ bool tarch::logging::LoggerWithFilter::filterOut(
     int length = static_cast<int>(p->_namespaceName.size());
     if ( length >= lengthActive ) {
       if (
-        (targetName == p->_targetName) &&
+        ( targetName == p->_targetName or p->_targetName==FilterListEntry::TargetAll )
+		and
         (className.find(p->_namespaceName,0)==0)
         #ifdef Parallel
         &&
@@ -157,6 +161,7 @@ bool tarch::logging::LoggerWithFilter::filterOut(
   }
 
   if (!foundRule) {
+    printFilterListToCout();
     std::cerr << "did not find filter rule for target \"" << targetName << "\" and class \"" << className << "\" on rank " << tarch::mpi::Rank::getInstance().getRank() << std::endl;
   }
   return result;

@@ -32,7 +32,7 @@ namespace tarch {
   }
 }
 
-#if PeanoDebug>=1
+#if PeanoDebug>=4
 /**
  * @see logInfo() macro
  */
@@ -43,12 +43,17 @@ namespace tarch {
       conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
       _log.debug (methodName, conv.str()); \
    }
+#else
+#define logDebug(methodName, messageStream)
+#endif
 
+
+#if PeanoDebug>=1
 #define logTraceIn(methodName) \
   { \
     std::ostringstream conv; \
     conv << "in (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
+    _log.traceIn(methodName, conv.str()); \
     _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
@@ -57,7 +62,7 @@ namespace tarch {
     std::ostringstream conv; \
     conv << "in:" << #argument0 << ":" << argument0; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
+    _log.traceIn (methodName, conv.str()); \
     _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
@@ -67,7 +72,7 @@ namespace tarch {
     conv << "in:" << #argument0 << ":" << argument0; \
     conv << "," << #argument1 << ":" << argument1; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
+    _log.traceIn (methodName, conv.str()); \
     _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
@@ -78,7 +83,7 @@ namespace tarch {
     conv << "," << #argument1 << ":" << argument1; \
     conv << "," << #argument2 << ":" << argument2; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
+    _log.traceIn (methodName, conv.str()); \
     _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
@@ -90,7 +95,7 @@ namespace tarch {
     conv << "," << #argument2 << ":" << argument2; \
     conv << "," << #argument3 << ":" << argument3; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
+    _log.traceIn (methodName, conv.str()); \
     _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
@@ -104,7 +109,7 @@ namespace tarch {
     conv << "," << #argument4 << ":" << argument4; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.debug (methodName, conv.str()); \
-    _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
+    _log.traceIn(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
 #define logTraceInWith6Arguments(methodName,argument0,argument1,argument2,argument3,argument4,argument5) \
@@ -117,7 +122,7 @@ namespace tarch {
     conv << "," << #argument4 << ":" << argument4; \
     conv << "," << #argument5 << ":" << argument5; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
+    _log.traceIn (methodName, conv.str()); \
     _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
@@ -132,7 +137,7 @@ namespace tarch {
     conv << "," << #argument5 << ":" << argument5; \
     conv << "," << #argument6 << ":" << argument6; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
+    _log.traceIn (methodName, conv.str()); \
     _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
@@ -148,7 +153,7 @@ namespace tarch {
     conv << "," << #argument6 << ":" << argument6; \
     conv << "," << #argument7 << ":" << argument7; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
+    _log.traceIn (methodName, conv.str()); \
     _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
@@ -165,7 +170,7 @@ namespace tarch {
     conv << "," << #argument7 << ":" << argument7; \
     conv << "," << #argument8 << ":" << argument8; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
+    _log.traceIn (methodName, conv.str()); \
     _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
@@ -174,7 +179,7 @@ namespace tarch {
     std::ostringstream conv; \
     conv << "out (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 #define logTraceOutWith1Argument(methodName,argument0) \
@@ -183,7 +188,7 @@ namespace tarch {
     conv << "out:" << #argument0 << ":" << argument0; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 #define logTraceOutWith2Arguments(methodName,argument0,argument1) \
@@ -193,7 +198,7 @@ namespace tarch {
     conv << "," << #argument1 << ":" << argument1; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 #define logTraceOutWith3Arguments(methodName,argument0,argument1,argument2) \
@@ -204,7 +209,7 @@ namespace tarch {
     conv << "," << #argument2 << ":" << argument2; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 #define logTraceOutWith4Arguments(methodName,argument0,argument1,argument2,argument3) \
@@ -216,7 +221,7 @@ namespace tarch {
     conv << "," << #argument3 << ":" << argument3; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 #define logTraceOutWith5Arguments(methodName,argument0,argument1,argument2,argument3,argument4) \
@@ -229,7 +234,7 @@ namespace tarch {
     conv << "," << #argument4 << ":" << argument4; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 #define logTraceOutWith6Arguments(methodName,argument0,argument1,argument2,argument3,argument4,argument5) \
@@ -243,7 +248,7 @@ namespace tarch {
     conv << "," << #argument5 << ":" << argument5; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 #define logTraceOutWith7Arguments(methodName,argument0,argument1,argument2,argument3,argument4,argument5,argument6) \
@@ -258,7 +263,7 @@ namespace tarch {
     conv << "," << #argument6 << ":" << argument6; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 
@@ -275,7 +280,7 @@ namespace tarch {
     conv << "," << #argument7 << ":" << argument7; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 #define logTraceOutWith12Arguments(methodName,argument0,argument1,argument2,argument3,argument4,argument5,argument6,argument7,argument8,argument9,argument10,argument11) \
@@ -295,11 +300,10 @@ namespace tarch {
     conv << "," << #argument11 << ":" << argument11; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
     _log.indent(false,_log.getTraceInformation(methodName),conv.str()); \
-    _log.debug (methodName, conv.str()); \
+    _log.traceOut (methodName, conv.str()); \
   }
 
 #else
-#define logDebug(methodName, messageStream)
 #define logTraceIn(methodName)
 #define logTraceInWith1Argument(methodName,argument0)
 #define logTraceInWith2Arguments(methodName,argument0,argument1)
@@ -521,7 +525,7 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    #if PeanoDebug>=1
+    #if PeanoDebug>=4
     void debug(const std::string& methodName, const std::string& message) const;
     #else
     void debug(const std::string& methodName, const std::string& message) const {
@@ -580,6 +584,9 @@ class tarch::logging::Log {
      * @param message    log message
      */
     void error(const std::string& methodName, const std::string& message) const;
+
+    void traceIn(const std::string& methodName, const std::string& message) const;
+    void traceOut(const std::string& methodName, const std::string& message) const;
 
     /**
      * Indent the Subsequent Messages

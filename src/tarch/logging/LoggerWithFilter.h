@@ -81,6 +81,12 @@ class tarch::logging::LoggerWithFilter {
 
 
     /**
+     * By default, everything is on
+     */
+    LoggerWithFilter();
+
+
+    /**
      * May not be const as it might write a warning itself
      *
      * Is public as some analysis frameworks check explicitly whether these
@@ -110,6 +116,7 @@ class tarch::logging::LoggerWithFilter {
     bool writeInfo(const std::string& trace);
     bool writeWarning(const std::string& trace);
     bool writeError(const std::string& trace);
+    bool writeTrace(const std::string& trace);
 };
 
 

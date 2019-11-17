@@ -34,7 +34,7 @@
     std::cerr.precision(20); \
   }
 
-  #if PeanoDebug>=1
+  #if PeanoDebug>=2
     #include "tarch/logging/Log.h"
     #define assertionTriggersExit { \
       std::cout.flush(); \

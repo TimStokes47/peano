@@ -210,6 +210,9 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      */
     void error(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
 
+    void traceIn(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
+    void traceOut(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
+
     /**
      * Tells the logger to increment/decrement the indent.
      *

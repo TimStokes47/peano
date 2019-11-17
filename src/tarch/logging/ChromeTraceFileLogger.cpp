@@ -194,6 +194,20 @@ void tarch::logging::ChromeTraceFileLogger::warning(double timestamp, const std:
 }
 
 
+void tarch::logging::ChromeTraceFileLogger::traceIn(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
+  if (writeTrace(trace)) {
+
+  }
+}
+
+
+void tarch::logging::ChromeTraceFileLogger::traceOut(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
+  if (writeTrace(trace)) {
+
+  }
+}
+
+
 void tarch::logging::ChromeTraceFileLogger::error(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
   if ( writeError(trace) ) {
     std::string outputMessage = constructMessageString(

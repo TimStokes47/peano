@@ -61,7 +61,7 @@ tarch::logging::Log::~Log() {
 }
 
 
-#if PeanoDebug>=1
+#if PeanoDebug>=4
 void tarch::logging::Log::debug(const std::string& methodName, const std::string& message) const {
   UsedLogService::getInstance().debug(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
 }
@@ -80,6 +80,14 @@ void tarch::logging::Log::error(const std::string& methodName, const std::string
   UsedLogService::getInstance().error(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
 }
 
+void tarch::logging::Log::traceIn(const std::string& methodName, const std::string& message) const {
+  UsedLogService::getInstance().traceIn(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
+}
+
+void tarch::logging::Log::traceOut(const std::string& methodName, const std::string& message) const {
+  UsedLogService::getInstance().traceOut(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
+}
+
 void tarch::logging::Log::indent( bool indent, const std::string& trace, const std::string& message ) const {
   UsedLogService::getInstance().indent( indent, trace, message );
 }
@@ -88,7 +96,6 @@ void tarch::logging::Log::indent( bool indent, const std::string& trace, const s
 std::string tarch::logging::Log::getThreadInformation() const {
   return tarch::multicore::Core::getInstance().getThreadId();
 }
-
 
 
 std::string tarch::logging::Log::getMachineInformation() const {

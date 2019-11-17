@@ -156,18 +156,26 @@ int main(int argc, char** argv) {
   peano4::fillLookupTables();
 
   // This part is only used if you use the default (command line) logging
+
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
   ));
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
+  ));
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
+  ));
+
   tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
 
   // I set an output file if one switches to the Chrome format. In the default build

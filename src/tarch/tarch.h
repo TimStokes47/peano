@@ -14,6 +14,12 @@
  * Please note that the tarch in the Peano4 repository/branch is not the same
  * as the tarch in previous Peano versions. I've cleaned it up quite a lot and
  * old features that are not used anymore are removed.
+ *
+ * <h1> Debug level </h2>
+ *
+ * - PeanoDebug = 1: Enable tracing
+ * - PeanoDebug = 2: Enable assertions (includes level 1)
+ * - PeanoDebug = 4: Enable debug messages (includes level 2)
  */
 namespace tarch {
 }
