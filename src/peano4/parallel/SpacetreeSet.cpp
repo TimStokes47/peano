@@ -284,6 +284,15 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::prefetch() {
 }
 
 
+/*
+Das Problem ist, dass die geforkten Trees one-by-one abgearbeitet werden. Wenn diese nun auch noch miteinander kommunizieren sollen,
+dann geht das nicht weil der erste traversiert wird, dann austauschen will, aber evtl bereits Daten vom zweiten erwartet.
+Man muss also Traversierung von Datenaustausch trennen oder, nohc besser, alles parallel machen a priori. Bin mir sicher dass
+der zweite Weg der gute ist. Aber der funktioniert net seriell. Also muss man zwei Loops haben, so wie in den normalen Trees auch.
+Man darf Traversierung nie mit Datenaustausch koppelnr
+*/
+
+
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRerunClones(
   peano4::grid::TraversalObserver&  observer
 ) {
@@ -297,11 +306,17 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
       assertion1( _clonedObserver.count(p._id)==1 and _clonedObserver[p._id]!=nullptr, p._id );
       DataExchangeTask::exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, p._childrenIds, DataExchangeTask::VerticalDataExchangeMode::PrepareDryRunForNewSpacetree);
       DataExchangeTask::finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
+      // @todo Debug
+      logInfo( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " and its master " << p._masterId << " exchanged all vertical data");
+
       p.traverse(*_clonedObserver[p._id],true);
+      // @todo Debug
+      logInfo( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " finished its dry run's traversal. Tree state=" << p.toString() );
 
       _clonedObserver[p._masterId]->exchangeStacksAfterGridSweep();
 
-      logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree after dry run: " << p.toString() );
+      // @todo Debug
+      logInfo( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree after dry run: " << p.toString() );
     }
     else if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running) {
       if (not p._hasSplit.empty()) {
@@ -309,8 +324,12 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
         for (auto k: p._hasSplit) {
           newChildren.insert(k.first);
         }
+        // @todo Debug
+        logInfo( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "send out data for try runs to all new subtrees of " << p._id );
         DataExchangeTask::exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, newChildren, DataExchangeTask::VerticalDataExchangeMode::SendOutDataForDryRunOfNewSpacetree);
         DataExchangeTask::finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
+        // @todo Debug
+        logInfo( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "sent out data for try runs to all new subtrees of " << p._id );
       }
     }
   }
@@ -396,9 +415,6 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   _state = SpacetreeSetState::Waiting;
 
   mergeStatistics();
-
-  // Ist jetzt unten gemaess Kommentar. Bitte hier loeschen beizeiten
-//  createNewTrees();
 
   _state = SpacetreeSetState::TraverseTreesAndExchangeData;
   exchangeDataBetweenTrees(observer);
@@ -499,6 +515,8 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
   	p++;
   }
 }
+
+
 
 
 void peano4::parallel::SpacetreeSet::merge(

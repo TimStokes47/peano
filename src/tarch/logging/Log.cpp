@@ -1,10 +1,13 @@
 #include "tarch/logging/Log.h"
-#include "tarch/logging/CommandLineLogger.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/Assertions.h"
 #include "tarch/multicore/Core.h"
 
 #include "config.h"
+
+
+#include "tarch/logging/CommandLineLogger.h"
+#include "tarch/logging/ChromeTraceFileLogger.h"
 
 
 /**

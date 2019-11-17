@@ -3,6 +3,7 @@
 #include "tarch/logging/Log.h"
 #include "tarch/tests/TestCaseRegistry.h"
 #include "tarch/logging/CommandLineLogger.h"
+#include "tarch/logging/ChromeTraceFileLogger.h"
 #include "tarch/multicore/Core.h"
 #include "tarch/mpi/Rank.h"
 

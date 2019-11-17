@@ -28,6 +28,7 @@ namespace tarch {
   namespace logging {
     class Log;
     class CommandLineLogger;
+    class ChromeTraceFileLogger;
   }
 }
 
@@ -403,7 +404,7 @@ namespace tarch {
 /**
  * Log Device
  *
- * Log is the class all logging classes should use. To use the logging api they
+ * Log is the class all logging classes should use. To use the logging API they
  * have to create an instance by their own. It is suggested to hold this
  * instance static for the constructor of the Log class has to be given the
  * class name of the logging class. The Log class itself is stateless.
@@ -411,31 +412,43 @@ namespace tarch {
  * assigned logger (an internal attribute).
  *
  * Which concrete implementation has to be used for logging is switched using
- * a compiler attribute. Since the logging is used extremly often, this is
- * better than dynamic binding. Furthermoren, the log device is configured
- * using some compiler switches that define the type of information written.
+ * a compiler attribute. Since the logging is used extremely often, this is
+ * better than dynamic binding.
  *
  * There are five different log levels, the user may write any output:
  *
  * - error: Here only errors have to be written to. Error messages may never
  *          be oppressed.
  * - warning:
- * - debug: Debug information that is switched off normally.
+ * - debug: Debug information that is switched off normally. Only available if
+ *          you use Debug
  * - info:  Statistical information, copyright and similar information. Should
  *          be used rather seldom.
  *
- * IMPORTANT: The underlying log device (like the CommandlineLogger) has to offer
- *            synchronized output methods. Thus, calls to logging methdos in
- *            multithreaded environments mark synchronization points of your programme
- *            and will change timing behaviour!
+ * <h2> Runtime </h2>
  *
+ * The underlying log device (like the CommandlineLogger) has to offer
+ * synchronized output methods. Thus, calls to logging methods in
+ * multithreaded environments mark synchronization points of your programme
+ * and will change timing behaviour!
  *
- * @version $Revision: 1.13 $
+ * <h2> Log output format </h2>
+ *
+ * You can switch the log output format by setting -DUsedLogService=xxx. At
+ * the moment, I support two different formats for xxx:
+ *
+ * - CommandLineLogger       This is the default.
+ * - ChromeTraceFileLogger   For the Chrome tracing API.
+ *
  * @author  Tobias Weinzierl
  */
 class tarch::logging::Log {
   private:
-    typedef CommandLineLogger UsedLogService;
+    #if !defined(UsedLogService)
+    typedef CommandLineLogger     UsedLogService;
+    // @todo Remove
+//    typedef ChromeTraceFileLogger     UsedLogService;
+    #endif
 
     /**
      * Writes a timestamp to the standard output.

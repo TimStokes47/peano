@@ -3,6 +3,7 @@
 #include "tarch/logging/Log.h"
 #include "tarch/tests/TestCaseRegistry.h"
 #include "tarch/logging/CommandLineLogger.h"
+#include "tarch/logging/ChromeTraceFileLogger.h"
 #include "tarch/multicore/Core.h"
 #include "tarch/mpi/Rank.h"
 
@@ -30,83 +31,6 @@ void runTests() {
 }
 
 
-void updateDomainDecomposition() {
-  static int phase = 0;
-
-  int targetRank = (phase+1) % tarch::mpi::Rank::getInstance().getNumberOfRanks();
-
-  if (phase==0) {
-    const int spacetreeOfInterest = 0;
-
-    if ( peano4::parallel::SpacetreeSet::getInstance().isLocalSpacetree(spacetreeOfInterest) ) {
-      if (
-        peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD
-        and
-        peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,targetRank)
-        and
-        peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,targetRank)
-      ) {
-        phase++;
-      }
-    }
-    else phase++;
-  }
-  else if (
-    phase==1
-    and
-    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*2
-  ) {
-    const int spacetreeOfInterest = 1;
-
-    if ( peano4::parallel::SpacetreeSet::getInstance().isLocalSpacetree(spacetreeOfInterest) ) {
-      if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3,targetRank) ) {
-        phase++;
-      }
-    }
-    else phase++;
-  }
-  else if (
-    phase==3
-    and
-    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*6
-  ) {
-    const int spacetreeOfInterest = 2;
-    if ( peano4::parallel::SpacetreeSet::getInstance().isLocalSpacetree(spacetreeOfInterest) ) {
-      if ( not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3/3/3,targetRank) ) {
-        phase++;
-      }
-    }
-    else phase++;
-  }
-  else if (
-    phase==4
-    and
-    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*8
-  ) {
-    const int spacetreeOfInterest = 2;
-    if ( peano4::parallel::SpacetreeSet::getInstance().isLocalSpacetree(spacetreeOfInterest) ) {
-      if ( not peano4::parallel::SpacetreeSet::getInstance().split(spacetreeOfInterest,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3/3/3/3,targetRank) ) {
-        phase++;
-      }
-    }
-    else phase++;
-  }
-  else if (
-    phase==5
-    and
-    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()>=ThreePowerD*10
-  ) {
-    const int spacetreeOfInterest = 1;
-    if ( peano4::parallel::SpacetreeSet::getInstance().isLocalSpacetree(spacetreeOfInterest) ) {
-      if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,10,targetRank) ) {
-        phase++;
-      }
-    }
-    else phase++;
-  }
-}
-
-
 void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread) {
   peano4::parallel::SpacetreeSet::getInstance().init(
     #if Dimensions==2
@@ -121,9 +45,7 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
 
   examples::regulargridupscaling::MyObserver emptyObserver(examples::regulargridupscaling::MyObserver::RanksObserverTemplate,h);
 
-  // @todo Change
-//  const int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
-  const int numberOfThreads = 3;
+  const int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     logInfo( "runParallel(...)", "create initial grid (step #1)" );
@@ -152,8 +74,10 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
       }
     }
 
-    logInfo( "runParallel(...)", "commit split and give ranks time to 'recover' (step #2)" );
-    for (int i=0; i<3; i++) {
+    const int MaxNumberOfConstructionSteps = static_cast<int>(std::round(  std::log(1.0 / h)/std::log(3.0)  ));
+    assertion1(MaxNumberOfConstructionSteps>=0, MaxNumberOfConstructionSteps);
+    logInfo( "runParallel(...)", "commit split and give ranks " << MaxNumberOfConstructionSteps << " iterations to 'recover' (step #2)" );
+    for (int i=0; i<MaxNumberOfConstructionSteps; i++) {
       peano4::parallel::Node::getInstance().setNextProgramStep(2);
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
@@ -171,7 +95,7 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
     tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 
-    logInfo( "runParallel(...)", "commit split and give ranks time to 'recover' (step #4)" );
+    logInfo( "runParallel(...)", "commit splits into threads and give ranks time to 'recover' (step #4)" );
     for (int i=0; i<3; i++) {
       peano4::parallel::Node::getInstance().setNextProgramStep(4);
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
@@ -179,6 +103,14 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
     }
 
     logInfo( "runParallel(...)", "start parallel traversals (step #5)" );
+    logInfo( "runParallel(...)", "refined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefinedVertices() );
+    logInfo( "runParallel(...)", "unrefined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfUnrefinedVertices() );
+    logInfo( "runParallel(...)", "refining vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefiningVertices() );
+    logInfo( "runParallel(...)", "erasing vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfErasingVertices() );
+    logInfo( "runParallel(...)", "local unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells());
+    logInfo( "runParallel(...)", "local refined cell= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalRefinedCells() );
+    logInfo( "runParallel(...)", "remote unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+    logInfo( "runParallel(...)", "remote refined cells= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
     for (int i=0; i<20; i++) {
       peano4::parallel::Node::getInstance().setNextProgramStep(5);
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
@@ -223,6 +155,7 @@ int main(int argc, char** argv) {
   peano4::initSharedMemoryEnvironment();
   peano4::fillLookupTables();
 
+  // This part is only used if you use the default (command line) logging
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
   ));
@@ -236,6 +169,10 @@ int main(int argc, char** argv) {
     "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
   ));
   tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
+
+  // I set an output file if one switches to the Chrome format. In the default build
+  // variant, I do not use the Chrome format and this line thus is irrelevant.
+  tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile( "p4.tracing" );
 
   if (argc!=2) {
 	logError( "main(...)", "Usage: ./executable mesh-width");

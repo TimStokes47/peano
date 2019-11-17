@@ -25,78 +25,6 @@ const std::string::size_type tarch::logging::CommandLineLogger::NumberOfStandard
 const int                    tarch::logging::CommandLineLogger::DigitsInFilenamesIterationNumer  = 5;
 
 
-const int tarch::logging::CommandLineLogger::FilterListEntry::AnyRank = -1;
-
-
-tarch::logging::CommandLineLogger::FilterListEntry::FilterListEntry( const std::string& targetName, bool isBlackListEntry ):
-  _targetName(targetName),
-  _rank(AnyRank),
-  _namespaceName(""),
-  _isBlackEntry(isBlackListEntry) {
-  assertion1( targetName==std::string("info") || targetName==std::string("debug") || targetName==std::string(""), targetName );
-}
-
-
-tarch::logging::CommandLineLogger::FilterListEntry::FilterListEntry( const std::string& targetName, int rank, const std::string& className, bool isBlackListEntry ):
-  _targetName(targetName),
-  _rank(rank),
-  _namespaceName(className),
-  _isBlackEntry(isBlackListEntry) {
-  assertion1( targetName==std::string("info") || targetName==std::string("debug") || targetName==std::string(""), targetName );
-}
-
-
-std::string tarch::logging::CommandLineLogger::FilterListEntry::toString() const {
-  std::ostringstream msg;
-  msg << "(";
-  if (_targetName=="") {
-    msg << "target:*,";
-  }
-  else {
-    msg << _targetName << ",";
-  }
-  if (_namespaceName=="") {
-    msg << "namespace:*,";
-  }
-  else {
-    msg << _namespaceName << ",";
-  }
-  #ifdef Parallel
-  msg << "rank:";
-  if (_rank!=AnyRank) {
-    msg << _rank;
-  }
-  else {
-    msg << "*";
-  }
-  msg << ",";
-  #endif
-  if (_isBlackEntry) {
-    msg << "blacklist-entry";
-  }
-  else {
-    msg << "whitelist-entry";
-  }
-  msg << ")";
-  return msg.str();
-}
-
-
-bool tarch::logging::CommandLineLogger::FilterListEntry::operator<(const FilterListEntry& b) const {
-  return _rank < b._rank || _namespaceName < b._namespaceName || _targetName < b._targetName;
-}
-
-
-bool tarch::logging::CommandLineLogger::FilterListEntry::operator==(const FilterListEntry& b) const {
-  return _rank == b._rank || _namespaceName == b._namespaceName || _targetName == b._targetName;
-}
-
-
-bool tarch::logging::CommandLineLogger::FilterListEntry::operator!=(const FilterListEntry& b) const {
-  return not operator==(b);
-}
-
-
 tarch::logging::CommandLineLogger::CommandLineLogger():
   _outputStream(nullptr),
   _hasWrittenToOuputStream(false),
@@ -419,83 +347,6 @@ void tarch::logging::CommandLineLogger::setLogFormat(
 }
 
 
-void tarch::logging::CommandLineLogger::addFilterListEntry( const FilterListEntry& entry) {
-  if (_filterlist.count(entry)!=0) {
-    logError( "addFilterListEntry(...)", "tried to insert " << entry.toString() << " multiple times");
-    assertion(false);
-  }
-  else {
-    _filterlist.insert( entry );
-  }
-}
-
-
-void tarch::logging::CommandLineLogger::addFilterListEntries( const FilterList&    entries) {
-  for (FilterList::const_iterator p = entries.begin(); p!=entries.end(); p++ ) {
-    addFilterListEntry(*p);
-  }
-}
-
-
-void tarch::logging::CommandLineLogger::clearFilterList() {
-  _filterlist.clear();
-}
-
-
-bool tarch::logging::CommandLineLogger::filterOut(
-  const std::string& targetName,
-  const std::string& className
-) {
-  bool result    = true;
-  bool foundRule = false;
-  int lengthActive = 0;
-  for (FilterList::const_iterator p = _filterlist.begin(); p!=_filterlist.end(); p++ ) {
-    int length = static_cast<int>(p->_namespaceName.size());
-    if ( length >= lengthActive ) {
-      if (
-        (targetName == p->_targetName) &&
-        (className.find(p->_namespaceName,0)==0)
-        #ifdef Parallel
-        &&
-        (p->_rank == FilterListEntry::AnyRank || p->_rank == tarch::mpi::Rank::getInstance().getRank())
-        #endif
-      ) {
-        lengthActive = length;
-        result       = p->_isBlackEntry;
-        foundRule    = true;
-      }
-    }
-  }
-
-  if (!foundRule) {
-    logWarning( "filterOut(...)", "did not find filter rule for target \"" << targetName << "\" and class \"" << className << "\" on rank " << tarch::mpi::Rank::getInstance().getRank() );
-  }
-  return result;
-}
-
-
-
-
-bool tarch::logging::CommandLineLogger::writeDebug(const std::string& className) {
-  return !filterOut("debug",className);
-}
-
-
-bool tarch::logging::CommandLineLogger::writeInfo(const std::string& className) {
-  return !filterOut("info",className);
-}
-
-
-bool tarch::logging::CommandLineLogger::writeWarning(const std::string& className) {
-  return true;
-}
-
-
-bool tarch::logging::CommandLineLogger::writeError(const std::string& className) {
-  return true;
-}
-
-
 std::string tarch::logging::CommandLineLogger::getLogColumnSeparator() const {
   return _logColumnSeparator;
 }
@@ -563,19 +414,6 @@ void tarch::logging::CommandLineLogger::setLogMessageType( bool value ) {
 
 void tarch::logging::CommandLineLogger::setLogTrace( bool value ) {
   _logTrace = value;
-}
-
-
-void tarch::logging::CommandLineLogger::printFilterListToWarningDevice() const {
-  if (_filterlist.empty()) {
-    logWarning( "printFilterListToWarningDevice()", "filter list is empty" );
-  }
-  else {
-    logWarning( "printFilterListToWarningDevice()", "filter list is not empty and contains " << _filterlist.size() << " entries" );
-    for (FilterList::const_iterator p = _filterlist.begin(); p!=_filterlist.end(); p++ ) {
-      logWarning( "printFilterListToWarningDevice()", p->toString() );
-    }
-  }
 }
 
 

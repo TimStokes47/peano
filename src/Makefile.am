@@ -109,8 +109,10 @@ Tarch_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/mpi/StringMessage.cpp \
  tarch/mpi/StringTools.cpp \
  tarch/logging/CommandLineLogger.cpp \
+ tarch/logging/ChromeTraceFileLogger.cpp \
  tarch/logging/Log.cpp \
  tarch/logging/LogFilterFileReader.cpp \
+ tarch/logging/LoggerWithFilter.cpp \
  tarch/timing/Watch.cpp \
  tarch/timing/Measurement.cpp \
  tarch/timing/GlidingAverageMeasurement.cpp \

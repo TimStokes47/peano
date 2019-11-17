@@ -17,6 +17,8 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/logging/Log.h"
 
+#include "LoggerWithFilter.h"
+
 
 namespace tarch {
   namespace logging {
@@ -48,65 +50,9 @@ namespace tarch {
  * @version $Revision: 1.19 $
  * @author  Tobias Weinzierl, Wolfgang Eckhardt
  */
-class tarch::logging::CommandLineLogger {
-  public:
-    /**
-     * Represents one entry of the filter list. Syntax:
-     *
-     * <log-filter target="debug" component="component-name" rank="int|*" switch="on|off" />
-     */
-    struct FilterListEntry {
-      static const int AnyRank;
-
-      /**
-       * The message type target can be either "debug" or "info". Only messages
-       * with corresponding target are filtered by the FilterListEntry.
-       *
-       * If left blank, all message types are targeted.
-       */
-      std::string _targetName;
-
-      /**
-       * Sometimes, one wants to block all log entries of one namespace of one
-       * node (parallel case). In this case _rank holds the corresponding entry,
-       * if all entries from one namespace have to be blocked, the value of
-       * _rank equals AnyRank.
-       */
-      int         _rank;
-
-      /**
-       * Name of the namespace that should not be logged.
-       */
-      std::string _namespaceName;
-
-      /**
-       * If true, filter list entry is a filter list entry, otherwise white list.
-       */
-      bool        _isBlackEntry;
-
-      bool operator<(const FilterListEntry& b) const;
-      bool operator==(const FilterListEntry& b) const;
-      bool operator!=(const FilterListEntry& b) const;
-
-      /**
-       * Construct filter list entry for one target without any
-       */
-      FilterListEntry( const std::string& targetName="", bool isBlackListEntry=false );
-      FilterListEntry( const std::string& targetName, int rank, const std::string& className, bool isBlackListEntry );
-
-      std::string toString() const;
-    };
-
-    typedef std::set<FilterListEntry> FilterList;
-
-    #if !defined(SharedMemoryParallelisation) && PeanoDebug>=1
-    std::stack<std::string>  _indentTraces;
-    #endif
-
+class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter {
   private:
     static Log _log;
-
-    FilterList  _filterlist;
 
     tarch::multicore::BooleanSemaphore _semaphore;
 
@@ -198,11 +144,6 @@ class tarch::logging::CommandLineLogger {
      */
     void configureOutputStreams();
 
-    bool writeDebug(const std::string& trace);
-    bool writeInfo(const std::string& trace);
-    bool writeWarning(const std::string& trace);
-    bool writeError(const std::string& trace);
-
     /**
      * It's a singleton.
      */
@@ -219,17 +160,6 @@ class tarch::logging::CommandLineLogger {
     ~CommandLineLogger();
 
     static CommandLineLogger& getInstance();
-
-    /**
-     * May not be const as it might write a warning itself
-     *
-     * Is public as some analysis frameworks check explicitly whether these
-     * features are switched on.
-     */
-    bool filterOut(
-      const std::string& targetName,
-      const std::string& className
-    );
 
     /**
      * Is public as some analysis frameworks check explicitly whether these
@@ -254,19 +184,6 @@ class tarch::logging::CommandLineLogger {
      * features are switched on.
      */
     bool        getLogTimeStamp() const;
-
-    /**
-     * Add one filter list entry
-     *
-     * If you wanna switch on the logging globally, please add
-     *
-     * tarch::logging::CommandLineLogger::getInstance().addFilterListEntry(tarch::logging::CommandLineLogger::FilterListEntry());
-     *
-     * to your configuration.
-     */
-    void addFilterListEntry( const FilterListEntry& entry);
-    void addFilterListEntries( const FilterList&    entries);
-    void clearFilterList();
 
     void debug(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
     void info(       double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
@@ -353,8 +270,6 @@ class tarch::logging::CommandLineLogger {
      * is to establish an output file.
      */
     void setOutputFile( const std::string&  outputLogFileName );
-
-    void printFilterListToWarningDevice() const;
 
     void setQuitOnError(bool value);
 
