@@ -20,7 +20,8 @@ tarch::logging::Log tarch::logging::ChromeTraceFileLogger::_log( "tarch::logging
 
 tarch::logging::ChromeTraceFileLogger::ChromeTraceFileLogger():
   _outputStream(nullptr),
-  _quitOnError(false) {
+  _quitOnError(false),
+  _hasWrittenEntry(false) {
   configureOutputStreams();
 
   #if PeanoDebug>=1
@@ -35,6 +36,14 @@ tarch::logging::ChromeTraceFileLogger::ChromeTraceFileLogger():
 tarch::logging::ChromeTraceFileLogger& tarch::logging::ChromeTraceFileLogger::getInstance() {
   static ChromeTraceFileLogger singleton;
   return singleton;
+}
+
+
+void tarch::logging::ChromeTraceFileLogger::nextEntry() {
+  if ( _hasWrittenEntry ) {
+	*_outputStream << ",\n";
+  }
+  _hasWrittenEntry = true;
 }
 
 
@@ -120,7 +129,7 @@ std::string tarch::logging::ChromeTraceFileLogger::constructEventEntryInTraceFil
 		 << " \"pid\": " << rank << ","
 		 << " \"tid\": " << threadId << ","
 		 << " \"args\": { \"message\": \"" + args + "\"}"
-		 " },\n";
+		 " }";
   return result.str();
 }
 
@@ -133,6 +142,7 @@ void tarch::logging::ChromeTraceFileLogger::debug(   long int timestampMS, int r
     );
     tarch::multicore::Lock lockCout( _semaphore );
     if (_outputStream!=nullptr) {
+      nextEntry();
       *_outputStream << eventEntry;
     }
   }
@@ -152,7 +162,8 @@ void tarch::logging::ChromeTraceFileLogger::info(   long int timestampMS, int ra
     tarch::multicore::Lock lockCout( _semaphore );
     std::cout << outputMessage;
     if (_outputStream!=nullptr) {
-      *_outputStream << eventEntry;
+    	nextEntry();
+    	*_outputStream << eventEntry;
     }
   }
 }
@@ -171,7 +182,8 @@ void tarch::logging::ChromeTraceFileLogger::warning(   long int timestampMS, int
     tarch::multicore::Lock lockCout( _semaphore );
     std::cout << outputMessage;
     if (_outputStream!=nullptr) {
-      *_outputStream << eventEntry;
+    	nextEntry();
+    	*_outputStream << eventEntry;
     }
   }
 }
@@ -182,15 +194,17 @@ void tarch::logging::ChromeTraceFileLogger::traceIn(   long int timestampMS, int
     std::string args = message;
 	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
     tarch::multicore::Lock lockCout( _semaphore );
+    nextEntry();
 	*_outputStream << "  {"
 			 << " \"name\": \"" << trace << "\","
 			 << " \"cat\": \"trace\","
-			 << " \"ph\": \"b\","
+			 << " \"ph\": \"B\","
 			 << " \"ts\": " << timestampMS << ","
 			 << " \"pid\": " << rank << ","
 			 << " \"tid\": " << threadId << ","
+//			 << " \"tid\": 0,"
 			 << " \"args\": { \"params\": \"" + args + "\"}"
-			 " },\n";
+			 " }";
   }
 }
 
@@ -200,15 +214,17 @@ void tarch::logging::ChromeTraceFileLogger::traceOut(   long int timestampMS, in
     std::string args = message;
 	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
     tarch::multicore::Lock lockCout( _semaphore );
+    nextEntry();
 	*_outputStream << "  {"
 			 << " \"name\": \"" << trace << "\","
 			 << " \"cat\": \"trace\","
-			 << " \"ph\": \"e\","
+			 << " \"ph\": \"E\","
 			 << " \"ts\": " << timestampMS << ","
 			 << " \"pid\": " << rank << ","
 			 << " \"tid\": " << threadId << ","
+//			 << " \"tid\": 0,"
 			 << " \"args\": { \"result\": \"" + args + "\"}"
-			 " },\n";
+			 " }";
   }
 }
 

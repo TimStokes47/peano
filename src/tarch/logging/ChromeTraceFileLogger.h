@@ -48,7 +48,10 @@ class tarch::logging::ChromeTraceFileLogger: public tarch::logging::LoggerWithFi
      */
     std::ostream*  _outputStream;
     bool           _quitOnError;
+    bool           _hasWrittenEntry;
 
+
+    void nextEntry();
 
     /**
      * Declared private since assignment does not make sense for an output
