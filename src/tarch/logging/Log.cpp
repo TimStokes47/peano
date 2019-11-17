@@ -108,6 +108,11 @@ std::string tarch::logging::Log::getMachineInformation() {
 }
 
 
+void tarch::logging::Log::flushBeforeAssertion() {
+  UsedLogService::getInstance().close();
+}
+
+
 long int tarch::logging::Log::getTimeStamp() const {
 /*
   #ifdef SharedOMP
@@ -181,3 +186,4 @@ std::string tarch::logging::Log::getTimeStampHumanReadable() const {
 std::string tarch::logging::Log::getTraceInformation( const std::string& methodName ) const {
   return _className + "::" + methodName;
 }
+

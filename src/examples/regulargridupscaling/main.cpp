@@ -32,6 +32,7 @@ void runTests() {
 
 
 void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread) {
+  logTraceInWith3Arguments( "runParallel", h, numberOfCellsPerRank, numberOfCellsPerThread);
   peano4::parallel::SpacetreeSet::getInstance().init(
     #if Dimensions==2
     {0.0, 0.0},
@@ -144,6 +145,7 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
       }
     }
   }
+  logTraceOut( "runParallel" );
 }
 
 
@@ -156,30 +158,50 @@ int main(int argc, char** argv) {
   peano4::fillLookupTables();
 
   // This part is only used if you use the default (command line) logging
-
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
   ));
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", false
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
   ));
 
   tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
 
   // I set an output file if one switches to the Chrome format. In the default build
   // variant, I do not use the Chrome format and this line thus is irrelevant.
+  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
+  ));
+  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
+  ));
+  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
+  ));
+  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::parallel::SpacetreeSet", false
+  ));
+  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
+  ));
+  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
+  ));
+  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
+  ));
   tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile( "p4.tracing" );
 
   if (argc!=2) {
@@ -208,8 +230,8 @@ int main(int argc, char** argv) {
   const int numberOfFineGridCells = std::round( std::pow( 1.0 / meshWidth, Dimensions ));
   logInfo( "main(...)", "expect more than " << numberOfFineGridCells << " cell(s) in total" );
 
-  const int numberOfCellsPerRank   = numberOfFineGridCells / numberOfRanks;
-  const int numberOfCellsPerThread = numberOfCellsPerRank / numberOfCores;
+  const int numberOfCellsPerRank   = std::max(numberOfFineGridCells / numberOfRanks,1);
+  const int numberOfCellsPerThread = std::max(numberOfCellsPerRank / numberOfCores,1);
   logInfo( "main(...)", "deploy around " << numberOfCellsPerRank << " cell(s) to each rank with at least " << numberOfCellsPerThread << " cell(s) per thread" );
 
   runParallel(meshWidth, numberOfCellsPerRank, numberOfCellsPerThread);

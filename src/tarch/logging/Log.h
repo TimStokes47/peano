@@ -584,6 +584,8 @@ class tarch::logging::Log {
     void indent( bool indent, const std::string& trace, const std::string& message ) const;
 
     std::string getTraceInformation( const std::string& methodName ) const;
+
+    static void flushBeforeAssertion();
 };
 
 

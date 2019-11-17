@@ -8,6 +8,7 @@
 #include <sstream>
 #include <fstream>
 #include <stdlib.h>
+#include <chrono>
 
 #include "../mpi/Rank.h"
 
@@ -76,10 +77,7 @@ tarch::logging::CommandLineLogger::CommandLineLogger(const CommandLineLogger& pa
 
 
 tarch::logging::CommandLineLogger::~CommandLineLogger() {
-  if (_outputStream!=nullptr) {
-    delete _outputStream;
-    _outputStream = nullptr;
-  }
+  close();
 }
 
 
@@ -102,7 +100,19 @@ void tarch::logging::CommandLineLogger::closeOutputStreamAndReopenNewOne() {
 
 
 std::string tarch::logging::CommandLineLogger::getTimeStampHumanReadable( long int timestampMS ) {
+  long int hours = timestampMS / 3600000;
+  timestampMS = timestampMS - 3600000 * hours;
 
+  //60000 milliseconds in a minute
+  long int minutes = timestampMS / 60000;
+  timestampMS = timestampMS - 60000 * minutes;
+
+  //1000 milliseconds in a second
+  long int secones = timestampMS / 1000;
+
+  std::stringstream result;
+  result << hours << ":" << minutes << ":" << secones;
+  return result.str();
 }
 
 
@@ -422,3 +432,12 @@ void tarch::logging::CommandLineLogger::setQuitOnError(bool value) {
   _quitOnError = value;
 }
 
+
+void tarch::logging::CommandLineLogger::close() {
+  std::cout.flush();
+  std::cerr.flush();
+  if (_outputStream!=nullptr) {
+    delete _outputStream;
+    _outputStream = nullptr;
+  }
+}

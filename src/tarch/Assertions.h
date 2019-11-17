@@ -39,6 +39,7 @@
     #define assertionTriggersExit { \
       std::cout.flush(); \
       std::cerr.flush(); \
+      tarch::logging::Log::flushBeforeAssertion(); \
       assert(false); \
       exit(ASSERTION_EXIT_CODE); \
     }

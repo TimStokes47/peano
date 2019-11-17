@@ -122,6 +122,8 @@ class tarch::logging::ChromeTraceFileLogger: public tarch::logging::LoggerWithFi
     void setOutputFile( const std::string&  outputLogFileName );
 
     void setQuitOnError(bool value);
+
+    void close();
 };
 
 #endif

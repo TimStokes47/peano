@@ -69,14 +69,7 @@ tarch::logging::ChromeTraceFileLogger::ChromeTraceFileLogger(const ChromeTraceFi
 
 
 tarch::logging::ChromeTraceFileLogger::~ChromeTraceFileLogger() {
-  if (_outputStream!=nullptr) {
-	*_outputStream << "]";
-    delete _outputStream;
-    _outputStream = nullptr;
-  }
-  else {
-	std::cerr << "Warning: ChromeTraceFileLogger used, but not trace file set. Use singleton's setOuputFile()" << std::endl;
-  }
+  close();
 }
 
 
@@ -242,6 +235,7 @@ void tarch::logging::ChromeTraceFileLogger::error(   long int timestampMS, int r
     tarch::multicore::Lock lockCout( _semaphore );
     std::cout << outputMessage;
     if (_outputStream!=nullptr) {
+      nextEntry();
       *_outputStream << eventEntry;
     }
   }
@@ -286,3 +280,16 @@ void tarch::logging::ChromeTraceFileLogger::setQuitOnError(bool value) {
   _quitOnError = value;
 }
 
+
+void tarch::logging::ChromeTraceFileLogger::close() {
+  std::cout.flush();
+  std::cerr.flush();
+  if (_outputStream!=nullptr) {
+	*_outputStream << "]";
+    delete _outputStream;
+    _outputStream = nullptr;
+  }
+  else {
+	std::cerr << "Warning: ChromeTraceFileLogger used, but not trace file set. Use singleton's setOuputFile()" << std::endl;
+  }
+}

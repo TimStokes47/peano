@@ -281,6 +281,8 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      * output file per traversal.
      */
     void closeOutputStreamAndReopenNewOne();
+
+    void close();
 };
 
 #endif
