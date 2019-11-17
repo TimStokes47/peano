@@ -181,6 +181,7 @@ void tarch::logging::ChromeTraceFileLogger::traceIn(   int timestampMS, int rank
   if (writeTrace(trace) and _outputStream!=nullptr) {
     std::string args = message;
 	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
+    tarch::multicore::Lock lockCout( _semaphore );
 	*_outputStream << "  {"
 			 << " \"name\": \"" << trace << "\","
 			 << " \"cat\": \"trace\","
@@ -198,6 +199,7 @@ void tarch::logging::ChromeTraceFileLogger::traceOut(   int timestampMS, int ran
   if (writeTrace(trace) and _outputStream!=nullptr) {
     std::string args = message;
 	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
+    tarch::multicore::Lock lockCout( _semaphore );
 	*_outputStream << "  {"
 			 << " \"name\": \"" << trace << "\","
 			 << " \"cat\": \"trace\","
