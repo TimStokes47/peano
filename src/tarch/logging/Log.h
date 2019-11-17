@@ -16,13 +16,8 @@
 #include <mach/clock.h>
 #endif
 
-
-#ifdef SharedOMP
-#include <omp.h>
-#elif defined(SharedTBB)
-#include <tbb/tick_count.h>
-#endif
-
+#include <ctime>
+#include <chrono>
 
 namespace tarch {
   namespace logging {
@@ -449,28 +444,21 @@ namespace tarch {
 class tarch::logging::Log {
   private:
     #if !defined(UsedLogService)
-    typedef CommandLineLogger     UsedLogService;
-    // @todo Remove
-//    typedef ChromeTraceFileLogger     UsedLogService;
+//    typedef CommandLineLogger     UsedLogService;
+    typedef ChromeTraceFileLogger     UsedLogService;
     #endif
 
     /**
-     * Writes a timestamp to the standard output.
+     * Returns the time stamp in ms.
      */
-    double getTimeStampSeconds() const;
-
-    std::string getTimeStampHumanReadable() const;
+    int getTimeStamp() const;
 
     /**
      * Name of the class that is using the interface.
      */
     std::string _className;
 
-    #if defined(SharedTBB) || defined(TBBInvade)
-    static tbb::tick_count  _startupTime;
-    #else
-    static double _startupTime;
-    #endif
+    static std::chrono::system_clock::time_point _startupTime;
 
 
     #ifdef __APPLE__
@@ -483,9 +471,8 @@ class tarch::logging::Log {
      * The information string contains the operation system name, the computer
      * name and the cpu name.
      */
-    std::string getMachineInformation() const;
+    static std::string getMachineInformation();
 
-    std::string getThreadInformation() const;
 
     /**
      * Constructor

@@ -62,25 +62,25 @@ class tarch::logging::ChromeTraceFileLogger: public tarch::logging::LoggerWithFi
      */
     ChromeTraceFileLogger(const ChromeTraceFileLogger& param);
 
+
     /**
-     * Construct message string
-     *
-     * !!! Thread Safety
-     *
-     * The message string relies on the global field _indent. This one might
-     * change throughout the execution of this method. However, I accept such a
-     * behavior: Changing _indent throughout the message execution makes the
-     * method add the wrong number of whitespaces in front of the message. That
-     * is a 'bug' we can accept.
+     * Ensures each column has same length
+     */
+    std::string addSeparators(std::string  message) const;
+
+    /**
+     * Construct message string for output to terminal. I pipe data to the
+     * terminal for error messages, warnings and infos.
      */
     std::string constructMessageString(
       std::string          messageType,
-      double               timestamp,
-      std::string          timestampHumanReadable,
-      std::string          machineName,
-      std::string          threadName,
-      std::string          trace,
-      const std::string&   message
+	   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
+    );
+
+
+    std::string constructEventEntryInTraceFile(
+      std::string          messageType,
+	   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
     );
 
     /**
@@ -92,41 +92,17 @@ class tarch::logging::ChromeTraceFileLogger: public tarch::logging::LoggerWithFi
      * It's a singleton.
      */
     ChromeTraceFileLogger();
-
-    std::ostream& out();
   public:
     ~ChromeTraceFileLogger();
 
     static ChromeTraceFileLogger& getInstance();
 
-
-    void debug(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
-    void info(       double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
-
-    /**
-     * Write Warning
-     *
-     * In the implementation, I call a flush on cout before I write to cerr.
-     * Otherwise, the cerr messages might overtake cout. Before the operation
-     * returns, it does a flush on cerr, too. Otherwise, the message might not
-     * occur, i.e. the application might shut down before the message is flushed
-     * to the terminal.
-     */
-    void warning(    double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
-
-    /**
-     * Write Error
-     *
-     * In the implementation, I call a flush on cout before I write to cerr.
-     * Otherwise, the cerr messages might overtake cout. Before the operation
-     * returns, it does a flush on cerr, too. Otherwise, the message might not
-     * occur, i.e. the application might shut down before the message is flushed
-     * to the terminal.
-     */
-    void error(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
-
-    void traceIn(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
-    void traceOut(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
+    void debug(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void info(    int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void warning( int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void error(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void traceIn( int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void traceOut(int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
     /**
      * Tells the logger to increment/decrement the indent.

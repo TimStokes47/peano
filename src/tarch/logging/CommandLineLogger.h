@@ -131,13 +131,10 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      */
     std::string constructMessageString(
       std::string          messageType,
-      double               timestamp,
-      std::string          timestampHumanReadable,
-      std::string          machineName,
-      std::string          threadName,
-      std::string          trace,
-      const std::string&   message
+	  int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
     );
+
+    static std::string getTimeStampHumanReadable( int timestampMs );
 
     /**
      * Configures the output streams
@@ -185,8 +182,8 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      */
     bool        getLogTimeStamp() const;
 
-    void debug(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
-    void info(       double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
+    void debug(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void info(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
     /**
      * Write Warning
@@ -197,7 +194,7 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      * occur, i.e. the application might shut down before the message is flushed
      * to the terminal.
      */
-    void warning(    double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
+    void warning(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
     /**
      * Write Error
@@ -208,10 +205,10 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      * occur, i.e. the application might shut down before the message is flushed
      * to the terminal.
      */
-    void error(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
+    void error(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
-    void traceIn(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
-    void traceOut(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
+    void traceIn(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void traceOut(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
     /**
      * Tells the logger to increment/decrement the indent.

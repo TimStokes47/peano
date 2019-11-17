@@ -368,9 +368,11 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
 
 
 int tarch::mpi::Rank::getRank() const {
+/*
   #ifdef Parallel
   assertion(_initIsCalled);
   #endif
+*/
   return _rank;
 }
 

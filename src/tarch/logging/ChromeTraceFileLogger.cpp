@@ -8,6 +8,8 @@
 #include <sstream>
 #include <fstream>
 #include <stdlib.h>
+#include <algorithm>
+
 
 #include "../mpi/Rank.h"
 
@@ -36,21 +38,15 @@ tarch::logging::ChromeTraceFileLogger& tarch::logging::ChromeTraceFileLogger::ge
 }
 
 
-std::ostream& tarch::logging::ChromeTraceFileLogger::out() {
-  if (_outputStream==nullptr) {
-    return std::cout;
-  }
-  else {
-    return *_outputStream;
-  }
-}
-
-
 void tarch::logging::ChromeTraceFileLogger::configureOutputStreams() {
-  out().setf( std::ios_base::scientific, std::ios_base::floatfield );
-  out().precision(20);
+  if (_outputStream!=nullptr) {
+    _outputStream->setf( std::ios_base::scientific, std::ios_base::floatfield );
+    _outputStream->precision(20);
+  }
   std::cerr.setf( std::ios_base::scientific, std::ios_base::floatfield );
   std::cerr.precision(20);
+  std::cout.setf( std::ios_base::scientific, std::ios_base::floatfield );
+  std::cout.precision(20);
 }
 
 
@@ -75,155 +71,161 @@ tarch::logging::ChromeTraceFileLogger::~ChromeTraceFileLogger() {
 }
 
 
+
+
+std::string tarch::logging::ChromeTraceFileLogger::addSeparators(std::string message) const {
+  const int ColumnWidth = 8;
+  if ( message.size() > 0 ) {
+    while (message.size() < ColumnWidth) {
+      message += " ";
+    }
+  }
+  message += " ";
+
+  return message;
+}
+
+
 std::string tarch::logging::ChromeTraceFileLogger::constructMessageString(
   std::string          messageType,
-  double               timestamp,
-  std::string          timestampHumanReadable,
-  std::string          machineName,
-  std::string          threadName,
-  std::string          trace,
-  const std::string&   message
+  int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
 ) {
-  std::string prefix = "";
-//  for (unsigned int i=0; i<_indent; i++ ) prefix += " ";
-
   std::string result;
 
-/*
-  if ( getLogTimeStamp() ) {
-    std::ostringstream timeStampString;
-    timeStampString << timestamp;
-    result += addSeparators(NumberOfStandardColumnSpaces,timeStampString.str() );
-  }
-
-  if ( getLogTimeStampHumanReadable() ) {
-    result += addSeparators(NumberOfStandardColumnSpaces,timestampHumanReadable);
-  }
-
-  if ( getLogMachineName() ) {
-    result += addSeparators(NumberOfStandardColumnSpaces,machineName);
-  }
-
-  if ( getLogThreadName() ) {
-    result += addSeparators(NumberOfStandardColumnSpaces,threadName);
-  }
-
-  if ( getLogMessageType() ) {
-    result += addSeparators(NumberOfStandardColumnSpaces,messageType);
-  }
-
-  if ( getLogTrace() ) {
-    result += addSeparators(NumberOfTraceColumnSpaces,trace);
-  }
-
-  result += addSeparators(NumberOfStandardColumnSpaces,prefix + message);
-*/
-
-  result += "{";
-  result += "\"cat\": \"trace\",";
-  result += "\"name\": " + trace + ",";
-  result += "\"name\": " + trace + ",";
-  result += "};";
+  result += addSeparators(std::to_string(timestampMS));
+  result += addSeparators("rank:" + std::to_string(rank) );
+  result += addSeparators("core:" + std::to_string(threadId) );
+  result += addSeparators(messageType);
+  result += message;
   result += "\n";
 
   return result;
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::debug(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
-  if (writeDebug(trace)) {
-    #if !defined(PeanoDebug) || PeanoDebug<1
-    assertion(false);
-    #endif
 
-    std::string outputMessage = constructMessageString(
-      "debug",
-      timestamp,
-      timestampHumanReadable,
-      machineName,
-	  threadName,
-      trace,
-      message
-    );
 
-    tarch::multicore::Lock lockCout( _semaphore );
-    out() << outputMessage;
-    out().flush();
-  }
+std::string tarch::logging::ChromeTraceFileLogger::constructEventEntryInTraceFile(
+  std::string          messageType,
+  int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
+) {
+  std::ostringstream result;
+  std::string args = message;
+  std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
+  result << "  {"
+		 << " \"name\": \"" << trace << "\","
+		 << " \"cat\": \"" << messageType << "\","
+		 << " \"ph\": \"i\","
+		 << " \"ts\": " << timestampMS << ","
+		 << " \"pid\": " << rank << ","
+		 << " \"tid\": " << threadId << ","
+		 << " \"args\": { \"message\": \"" + args + "\"}"
+		 " },\n";
+  return result.str();
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::info(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
-  if (writeInfo(trace)) {
-    std::string outputMessage = constructMessageString(
-      "info",
-      timestamp,
-      timestampHumanReadable,
-      machineName,
-	  threadName,
-      trace,
-      message
+void tarch::logging::ChromeTraceFileLogger::debug(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+  if (writeDebug(trace)) {
+    std::string eventEntry = constructEventEntryInTraceFile(
+      "debug",
+      timestampMS, rank, threadId, trace, message
     );
-
     tarch::multicore::Lock lockCout( _semaphore );
-    out() << outputMessage;
     if (_outputStream!=nullptr) {
-      std::cout << outputMessage;
+      *_outputStream << eventEntry;
     }
   }
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::warning(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
+void tarch::logging::ChromeTraceFileLogger::info(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+  if (writeInfo(trace)) {
+    std::string outputMessage = constructMessageString(
+      "info",
+	  timestampMS, rank, threadId, trace, message
+    );
+    std::string eventEntry = constructEventEntryInTraceFile(
+      "info",
+	  timestampMS, rank, threadId, trace, message
+    );
+    tarch::multicore::Lock lockCout( _semaphore );
+    std::cout << outputMessage;
+    if (_outputStream!=nullptr) {
+      *_outputStream << eventEntry;
+    }
+  }
+}
+
+
+void tarch::logging::ChromeTraceFileLogger::warning(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if (writeWarning(trace)) {
     std::string outputMessage = constructMessageString(
       "warning",
-      timestamp,
-      timestampHumanReadable,
-      machineName,
-	  threadName,
-      trace,
-      message
+	  timestampMS, rank, threadId, trace, message
     );
-
+    std::string eventEntry = constructEventEntryInTraceFile(
+      "warning",
+	  timestampMS, rank, threadId, trace, message
+    );
     tarch::multicore::Lock lockCout( _semaphore );
-    out().flush();
-    std::cerr << outputMessage;
-    std::cerr.flush();
+    std::cout << outputMessage;
+    if (_outputStream!=nullptr) {
+      *_outputStream << eventEntry;
+    }
   }
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::traceIn(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
-  if (writeTrace(trace)) {
-
+void tarch::logging::ChromeTraceFileLogger::traceIn(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+  if (writeTrace(trace) and _outputStream!=nullptr) {
+    std::string args = message;
+	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
+	*_outputStream << "  {"
+			 << " \"name\": \"" << trace << "\","
+			 << " \"cat\": \"trace\","
+			 << " \"ph\": \"b\","
+			 << " \"ts\": " << timestampMS << ","
+			 << " \"pid\": " << rank << ","
+			 << " \"tid\": " << threadId << ","
+			 << " \"args\": { \"params\": \"" + args + "\"}"
+			 " },\n";
   }
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::traceOut(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
-  if (writeTrace(trace)) {
-
+void tarch::logging::ChromeTraceFileLogger::traceOut(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+  if (writeTrace(trace) and _outputStream!=nullptr) {
+    std::string args = message;
+	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
+	*_outputStream << "  {"
+			 << " \"name\": \"" << trace << "\","
+			 << " \"cat\": \"trace\","
+			 << " \"ph\": \"e\","
+			 << " \"ts\": " << timestampMS << ","
+			 << " \"pid\": " << rank << ","
+			 << " \"tid\": " << threadId << ","
+			 << " \"args\": { \"result\": \"" + args + "\"}"
+			 " },\n";
   }
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::error(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message) {
+void tarch::logging::ChromeTraceFileLogger::error(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if ( writeError(trace) ) {
     std::string outputMessage = constructMessageString(
       "error",
-      timestamp,
-      timestampHumanReadable,
-      machineName,
-	  threadName,
-      trace,
-      message
+	  timestampMS, rank, threadId, trace, message
     );
-
+    std::string eventEntry = constructEventEntryInTraceFile(
+      "error",
+	  timestampMS, rank, threadId, trace, message
+    );
     tarch::multicore::Lock lockCout( _semaphore );
-    out().flush();
-    std::cerr << outputMessage;
-    std::cerr.flush();
+    std::cout << outputMessage;
+    if (_outputStream!=nullptr) {
+      *_outputStream << eventEntry;
+    }
   }
 
   if (_quitOnError) {
@@ -256,7 +258,9 @@ void tarch::logging::ChromeTraceFileLogger::setOutputFile( const std::string&  o
 
   _outputStream = new std::ofstream( myOutputFileName.str().c_str() );
 
-  *_outputStream << "[";
+  configureOutputStreams();
+
+  *_outputStream << "[\n";
 }
 
 

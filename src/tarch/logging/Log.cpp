@@ -26,34 +26,12 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-#if defined(SharedTBB)
-tbb::tick_count tarch::logging::Log::_startupTime( tbb::tick_count::now() );
-#else
-double tarch::logging::Log::_startupTime(0.0);
-#endif
+std::chrono::system_clock::time_point tarch::logging::Log::_startupTime;
 
 
 tarch::logging::Log::Log(const std::string& className):
   _className( className ) {
-
-  #if !defined(SharedTBB)
-  if (_startupTime==0.0) {
-  #if defined(SharedOMP)
-    _startupTime       = omp_get_wtime();
-  #elif defined(SharedTBB)
-    _startupTime       = tbb::tick_count::now();
-  #elif defined(__APPLE__)
-    static mach_timebase_info_data_t s_timebase_info;
-    if (s_timebase_info.denom == 0) mach_timebase_info(&s_timebase_info);
-    _startupTime= mach_absolute_time();
-  #elif defined(CompilerHasTimespec)
-    struct timespec ts;
-    if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
-      _startupTime = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
-    }
-  #endif
-  }
-  #endif
+  _startupTime = std::chrono::system_clock::now();
 }
 
 
@@ -63,42 +41,42 @@ tarch::logging::Log::~Log() {
 
 #if PeanoDebug>=4
 void tarch::logging::Log::debug(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().debug(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().debug(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
 #endif
 
 
 void tarch::logging::Log::info(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().info(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().info(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
+
 
 void tarch::logging::Log::warning(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().warning(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().warning(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
+
 
 void tarch::logging::Log::error(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().error(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().error(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
+
 
 void tarch::logging::Log::traceIn(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().traceIn(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().traceIn(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
 
+
 void tarch::logging::Log::traceOut(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().traceOut(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().traceOut(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
+
 
 void tarch::logging::Log::indent( bool indent, const std::string& trace, const std::string& message ) const {
   UsedLogService::getInstance().indent( indent, trace, message );
 }
 
 
-std::string tarch::logging::Log::getThreadInformation() const {
-  return tarch::multicore::Core::getInstance().getThreadId();
-}
-
-
-std::string tarch::logging::Log::getMachineInformation() const {
+std::string tarch::logging::Log::getMachineInformation() {
   std::ostringstream message;
 
   #ifdef CompilerHasUTSName
@@ -130,7 +108,8 @@ std::string tarch::logging::Log::getMachineInformation() const {
 }
 
 
-double tarch::logging::Log::getTimeStampSeconds() const {
+int tarch::logging::Log::getTimeStamp() const {
+/*
   #ifdef SharedOMP
     double currentTS       = omp_get_wtime();
     return currentTS - _startupTime;
@@ -141,21 +120,27 @@ double tarch::logging::Log::getTimeStampSeconds() const {
     static mach_timebase_info_data_t s_timebase_info;
     if (s_timebase_info.denom == 0) mach_timebase_info(&s_timebase_info);
     return (double)((mach_absolute_time() - _startupTime) * (s_timebase_info.numer) / s_timebase_info.denom) * 1e-09;
-  #elif defined(CompilerHasTimespec)
+*/
+/*
+  #if defined(CompilerHasTimespec)
     struct timespec ts;
     if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
        const double currentTS = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
        return currentTS - _startupTime;
     }
     else {
-      return 0.0;
+      return 0;
     }
   #else
-    return 0.0;
+    return 0;
   #endif
+*/
+  std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+  int result = std::chrono::duration_cast<std::chrono::nanoseconds>(now - _startupTime).count();
+  return result;
 }
 
-
+/*
 std::string tarch::logging::Log::getTimeStampHumanReadable() const {
   // calender time: create struct and get time from system
   time_t* timeStamp = new time_t();
@@ -189,7 +174,7 @@ std::string tarch::logging::Log::getTimeStampHumanReadable() const {
   delete timeStamp;
 
   return message.str();
-}
+}*/
 
 
 std::string tarch::logging::Log::getTraceInformation( const std::string& methodName ) const {
