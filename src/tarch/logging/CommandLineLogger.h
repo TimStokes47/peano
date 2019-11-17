@@ -131,10 +131,10 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      */
     std::string constructMessageString(
       std::string          messageType,
-	  int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
+	  long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
     );
 
-    static std::string getTimeStampHumanReadable( int timestampMs );
+    static std::string getTimeStampHumanReadable( long int timestampMS );
 
     /**
      * Configures the output streams
@@ -182,8 +182,8 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      */
     bool        getLogTimeStamp() const;
 
-    void debug(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
-    void info(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void debug(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void info(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
     /**
      * Write Warning
@@ -194,7 +194,7 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      * occur, i.e. the application might shut down before the message is flushed
      * to the terminal.
      */
-    void warning(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void warning(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
     /**
      * Write Error
@@ -205,10 +205,10 @@ class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter
      * occur, i.e. the application might shut down before the message is flushed
      * to the terminal.
      */
-    void error(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void error(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
-    void traceIn(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
-    void traceOut(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void traceIn(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void traceOut(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
     /**
      * Tells the logger to increment/decrement the indent.

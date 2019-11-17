@@ -88,7 +88,7 @@ std::string tarch::logging::ChromeTraceFileLogger::addSeparators(std::string mes
 
 std::string tarch::logging::ChromeTraceFileLogger::constructMessageString(
   std::string          messageType,
-  int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
+  long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
 ) {
   std::string result;
 
@@ -107,7 +107,7 @@ std::string tarch::logging::ChromeTraceFileLogger::constructMessageString(
 
 std::string tarch::logging::ChromeTraceFileLogger::constructEventEntryInTraceFile(
   std::string          messageType,
-  int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
+  long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
 ) {
   std::ostringstream result;
   std::string args = message;
@@ -125,7 +125,7 @@ std::string tarch::logging::ChromeTraceFileLogger::constructEventEntryInTraceFil
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::debug(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::ChromeTraceFileLogger::debug(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if (writeDebug(trace)) {
     std::string eventEntry = constructEventEntryInTraceFile(
       "debug",
@@ -139,7 +139,7 @@ void tarch::logging::ChromeTraceFileLogger::debug(   int timestampMS, int rank, 
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::info(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::ChromeTraceFileLogger::info(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if (writeInfo(trace)) {
     std::string outputMessage = constructMessageString(
       "info",
@@ -158,7 +158,7 @@ void tarch::logging::ChromeTraceFileLogger::info(   int timestampMS, int rank, i
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::warning(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::ChromeTraceFileLogger::warning(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if (writeWarning(trace)) {
     std::string outputMessage = constructMessageString(
       "warning",
@@ -177,7 +177,7 @@ void tarch::logging::ChromeTraceFileLogger::warning(   int timestampMS, int rank
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::traceIn(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::ChromeTraceFileLogger::traceIn(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if (writeTrace(trace) and _outputStream!=nullptr) {
     std::string args = message;
 	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
@@ -195,7 +195,7 @@ void tarch::logging::ChromeTraceFileLogger::traceIn(   int timestampMS, int rank
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::traceOut(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::ChromeTraceFileLogger::traceOut(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if (writeTrace(trace) and _outputStream!=nullptr) {
     std::string args = message;
 	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
@@ -213,7 +213,7 @@ void tarch::logging::ChromeTraceFileLogger::traceOut(   int timestampMS, int ran
 }
 
 
-void tarch::logging::ChromeTraceFileLogger::error(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::ChromeTraceFileLogger::error(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if ( writeError(trace) ) {
     std::string outputMessage = constructMessageString(
       "error",

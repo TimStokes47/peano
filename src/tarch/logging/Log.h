@@ -451,7 +451,7 @@ class tarch::logging::Log {
     /**
      * Returns the time stamp in ms.
      */
-    int getTimeStamp() const;
+    long int getTimeStamp() const;
 
     /**
      * Name of the class that is using the interface.

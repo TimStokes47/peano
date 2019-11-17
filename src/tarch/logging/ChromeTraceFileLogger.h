@@ -74,13 +74,13 @@ class tarch::logging::ChromeTraceFileLogger: public tarch::logging::LoggerWithFi
      */
     std::string constructMessageString(
       std::string          messageType,
-	   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
+	   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
     );
 
 
     std::string constructEventEntryInTraceFile(
       std::string          messageType,
-	   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
+	   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
     );
 
     /**
@@ -97,12 +97,12 @@ class tarch::logging::ChromeTraceFileLogger: public tarch::logging::LoggerWithFi
 
     static ChromeTraceFileLogger& getInstance();
 
-    void debug(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
-    void info(    int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
-    void warning( int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
-    void error(   int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
-    void traceIn( int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
-    void traceOut(int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void debug(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void info(    long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void warning( long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void error(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void traceIn( long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
+    void traceOut(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message);
 
     /**
      * Tells the logger to increment/decrement the indent.

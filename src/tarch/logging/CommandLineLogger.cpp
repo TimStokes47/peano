@@ -101,14 +101,14 @@ void tarch::logging::CommandLineLogger::closeOutputStreamAndReopenNewOne() {
 }
 
 
-std::string tarch::logging::CommandLineLogger::getTimeStampHumanReadable( int timestampMs ) {
+std::string tarch::logging::CommandLineLogger::getTimeStampHumanReadable( long int timestampMS ) {
 
 }
 
 
 std::string tarch::logging::CommandLineLogger::constructMessageString(
   std::string          messageType,
-  int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
+  long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
 ) {
   std::string prefix = "";
   for (unsigned int i=0; i<_indent; i++ ) prefix += " ";
@@ -149,7 +149,7 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
 }
 
 
-void tarch::logging::CommandLineLogger::debug(int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::debug(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if (writeDebug(trace)) {
     #if !defined(PeanoDebug) || PeanoDebug<1
     assertion(false);
@@ -167,7 +167,7 @@ void tarch::logging::CommandLineLogger::debug(int timestampMS, int rank, int thr
 }
 
 
-void tarch::logging::CommandLineLogger::info(int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::info(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if (writeInfo(trace)) {
     std::string outputMessage = constructMessageString(
       FilterListEntry::TargetInfo,
@@ -183,7 +183,7 @@ void tarch::logging::CommandLineLogger::info(int timestampMS, int rank, int thre
 }
 
 
-void tarch::logging::CommandLineLogger::warning(int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::warning(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if (writeWarning(trace)) {
     std::string outputMessage = constructMessageString(
       "warning",
@@ -199,7 +199,7 @@ void tarch::logging::CommandLineLogger::warning(int timestampMS, int rank, int t
 }
 
 
-void tarch::logging::CommandLineLogger::error(int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::error(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if ( writeError(trace) ) {
     std::string outputMessage = constructMessageString(
       "error",
@@ -219,7 +219,7 @@ void tarch::logging::CommandLineLogger::error(int timestampMS, int rank, int thr
 }
 
 
-void tarch::logging::CommandLineLogger::traceIn(int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::traceIn(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if ( writeTrace(trace) ) {
     std::string outputMessage = constructMessageString(
       "trace",
@@ -233,7 +233,7 @@ void tarch::logging::CommandLineLogger::traceIn(int timestampMS, int rank, int t
 }
 
 
-void tarch::logging::CommandLineLogger::traceOut(int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::traceOut(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
   if ( writeTrace(trace) ) {
     std::string outputMessage = constructMessageString(
       "trace",

@@ -108,7 +108,7 @@ std::string tarch::logging::Log::getMachineInformation() {
 }
 
 
-int tarch::logging::Log::getTimeStamp() const {
+long int tarch::logging::Log::getTimeStamp() const {
 /*
   #ifdef SharedOMP
     double currentTS       = omp_get_wtime();
@@ -136,7 +136,8 @@ int tarch::logging::Log::getTimeStamp() const {
   #endif
 */
   std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-  int result = std::chrono::duration_cast<std::chrono::nanoseconds>(now - _startupTime).count();
+  long int result = std::chrono::duration_cast<std::chrono::nanoseconds>(now - _startupTime).count();
+  assertion1(result>=0,result);
   return result;
 }
 
