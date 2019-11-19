@@ -364,7 +364,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllHorizontalData
       sourceStack++;
     }
   }
-  logTraceOutWith2Arguments( "exchangeAllHorizontalDataExchangeStacks(...)", spacetreeId, symmetricDataCardinality );
+  logTraceOut( "exchangeAllHorizontalDataExchangeStacks(...)" );
 }
 
 
