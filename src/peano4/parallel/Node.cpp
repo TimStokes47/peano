@@ -169,6 +169,26 @@ int peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange(int id) 
 }
 
 
+int peano4::parallel::Node::xxx_getOutputStackNumberForVerticalDataExchange(int id) {
+  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 2;
+}
+
+
+int peano4::parallel::Node::xxx_getInputStackNumberForVerticalDataExchange(int id) {
+  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 3;
+}
+
+
+int peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(int id) {
+  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 4;
+}
+
+
+int peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange(int id) {
+  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 5;
+}
+
+
 std::bitset<2*Dimensions> peano4::parallel::Node::getPeriodicBoundaryNumber(const tarch::la::Vector<TwoPowerD,int>& flags) {
   std::bitset<2*Dimensions> result;
 
@@ -235,16 +255,6 @@ std::set<peano4::parallel::Node::PeriodicBoundaryStackIdentifier> peano4::parall
 }
 
 
-int peano4::parallel::Node::getInputStackNumberForVerticalDataExchange(int id) {
-  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 2;
-}
-
-
-int peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange(int id) {
-  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 3;
-}
-
-
 int  peano4::parallel::Node::getPeriodicBoundaryExchangeInputStackNumberForOutputStack(int outputStackNumber) {
   logTraceInWith4Arguments( "getPeriodicBoundaryExchangeInputStackNumberForOutputStack(int)", outputStackNumber, peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance, peano4::grid::PeanoCurve::NumberOfPeriodicBoundaryConditionStacks, peano4::grid::PeanoCurve::NumberOfPeriodicBoundaryConditionOutputStacks );
   assertion( isPeriodicBoundaryExchangeOutputStackNumber(outputStackNumber) );
@@ -293,17 +303,29 @@ bool peano4::parallel::Node::isHorizontalDataExchangeInputStackNumber(int id) {
 
 bool peano4::parallel::Node::isVerticalDataExchangeOutputStackNumber(int id) {
   return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
-     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 3 );
+     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 2 );
 }
 
 
 bool peano4::parallel::Node::isVerticalDataExchangeInputStackNumber(int id) {
   return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
-     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 2 );
+     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 3 );
 }
 
 
-int peano4::parallel::Node::getIdOfExchangeStackNumber(int number) {
+bool peano4::parallel::Node::isForkJoinDataExchangeOutputStackNumber(int id) {
+  return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
+    and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 4 );
+}
+
+
+bool peano4::parallel::Node::isForkJoinDataExchangeInputStackNumber(int id) {
+  return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
+     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 5 );
+}
+
+
+int peano4::parallel::Node::getTreeNumberTiedToExchangeStackNumber(int number) {
   return (number-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) / StacksPerCommunicationPartner;
 }
 

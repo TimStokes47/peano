@@ -197,8 +197,12 @@ class peano4::parallel::Node {
      * data to/from when it exchanges information with id. Such vertical
      * data is multiscale information or split/join data.
      */
-    static int getInputStackNumberForVerticalDataExchange(int id);
-    static int getOutputStackNumberForVerticalDataExchange(int id);
+    // @todo Wieder zurueck umbennen
+    static int xxx_getInputStackNumberForVerticalDataExchange(int id);
+    static int xxx_getOutputStackNumberForVerticalDataExchange(int id);
+
+    static int getInputStackNumberForForkJoinDataExchange(int id);
+    static int getOutputStackNumberForForkJoinDataExchange(int id);
 
     /**
      * Counterpart of getOutputStackNumberOfBoundaryExchange(int)
@@ -237,6 +241,9 @@ class peano4::parallel::Node {
     static bool isVerticalDataExchangeOutputStackNumber(int number);
     static bool isVerticalDataExchangeInputStackNumber(int number);
 
+    static bool isForkJoinDataExchangeOutputStackNumber(int number);
+    static bool isForkJoinDataExchangeInputStackNumber(int number);
+
     static bool isPeriodicBoundaryExchangeOutputStackNumber(int number);
     static int  getPeriodicBoundaryExchangeInputStackNumberForOutputStack(int outputStackNumber);
 
@@ -252,7 +259,7 @@ class peano4::parallel::Node {
      * number, which corresponds to stack number. This works for all kinds
      * of stacks.
      */
-    static int getIdOfExchangeStackNumber(int number);
+    static int getTreeNumberTiedToExchangeStackNumber(int number);
 
     /**
      * You should call this operation only on the ranks >0 to find out whether

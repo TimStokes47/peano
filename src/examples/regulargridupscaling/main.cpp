@@ -75,7 +75,7 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
       }
     }
 
-    const int MaxNumberOfConstructionSteps = static_cast<int>(std::round(  std::log(1.0 / h)/std::log(3.0)  ));
+    const int MaxNumberOfConstructionSteps = static_cast<int>(std::round(  std::log(1.0 / h)/std::log(3.0)+1  ));
     assertion1(MaxNumberOfConstructionSteps>=0, MaxNumberOfConstructionSteps);
     logInfo( "runParallel(...)", "commit split and give ranks " << MaxNumberOfConstructionSteps << " iterations to 'recover' (step #2)" );
     for (int i=0; i<MaxNumberOfConstructionSteps; i++) {
@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
     tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
   ));
   tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
+    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
   ));
   tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true

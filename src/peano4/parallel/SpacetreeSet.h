@@ -117,6 +117,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
           ReceiveJoinDataForRunOfMaster
         };
 
+        static std::string toString(VerticalDataExchangeMode mode);
+
   	    /**
          * Counterpart of exchangeStacksAsynchronously() which directly transfers
          * data within a traversal. We use it for synchronous data vertical data
