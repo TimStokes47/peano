@@ -336,7 +336,6 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
               << ". Disable MultipleThreadsMayTriggerMPICalls in the compiler-specific settings or via -DnoMultipleThreadsMayTriggerMPICalls."<< std::endl;
     exit(-1);
   }
-  logInfo( "init(...)", "initialised MPI with MPI_THREAD_MULTIPLE" );
   #else
   result = MPI_Init( argc, argv );
   #endif
@@ -358,6 +357,14 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
     return false;
   }
 
+  if (_rank==0) {
+    #if defined( SharedMemoryParallelisation )
+    logInfo( "init(...)", "initialised MPI with MPI_THREAD_MULTIPLE" );
+    #else
+    logInfo( "init(...)", "initialised MPI with default mode, i.e. with MPI_Init(...)" );
+    #endif
+  }
+    
   IntegerMessage::initDatatype();
   StringMessage::initDatatype();
   #endif
