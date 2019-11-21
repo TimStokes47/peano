@@ -19,6 +19,12 @@
 #include <ctime>
 #include <chrono>
 
+
+
+#include "LogFilter.h"
+
+
+
 namespace tarch {
   namespace logging {
     class Log;
@@ -456,15 +462,18 @@ class tarch::logging::Log {
     /**
      * Name of the class that is using the interface.
      */
-    std::string _className;
+    std::string  _className;
 
-    static std::chrono::system_clock::time_point _startupTime;
-
+    std::chrono::system_clock::time_point  _startupTime;
 
     #ifdef __APPLE__
     clock_serv_t cclock;
     #endif
 
+    bool _hasQueriedFilter;
+    bool _logTrace;
+    bool _logDebug;
+    bool _logInfo;
   public:
     /**
      * Writes information about the computer the output is written from.
@@ -513,7 +522,7 @@ class tarch::logging::Log {
      * @param message    log message
      */
     #if PeanoDebug>=4
-    void debug(const std::string& methodName, const std::string& message) const;
+    void debug(const std::string& methodName, const std::string& message);
     #else
     void debug(const std::string& methodName, const std::string& message) const {
     }
@@ -534,7 +543,7 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    void info(const std::string& methodName, const std::string& message) const;
+    void info(const std::string& methodName, const std::string& message);
 
 
     /**
@@ -552,7 +561,7 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    void warning(const std::string& methodName, const std::string& message) const;
+    void warning(const std::string& methodName, const std::string& message);
 
 
     /**
@@ -570,10 +579,15 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    void error(const std::string& methodName, const std::string& message) const;
+    void error(const std::string& methodName, const std::string& message);
 
-    void traceIn(const std::string& methodName, const std::string& message) const;
-    void traceOut(const std::string& methodName, const std::string& message) const;
+    #if PeanoDebug>=1
+    void traceIn(const std::string& methodName, const std::string& message);
+    void traceOut(const std::string& methodName, const std::string& message);
+    #else
+    void traceIn(const std::string& methodName, const std::string& message) {}
+    void traceOut(const std::string& methodName, const std::string& message) {}
+    #endif
 
     /**
      * Indent the Subsequent Messages

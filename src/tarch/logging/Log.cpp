@@ -26,11 +26,12 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-std::chrono::system_clock::time_point tarch::logging::Log::_startupTime;
-
-
 tarch::logging::Log::Log(const std::string& className):
-  _className( className ) {
+  _className( className ),
+  _hasQueriedFilter(false),
+  _logTrace(true),
+  _logDebug(true),
+  _logInfo(true) {
   _startupTime = std::chrono::system_clock::now();
 }
 
@@ -40,35 +41,53 @@ tarch::logging::Log::~Log() {
 
 
 #if PeanoDebug>=4
-void tarch::logging::Log::debug(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().debug(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
+void tarch::logging::Log::debug(const std::string& methodName, const std::string& message) {
+  if (not _hasQueriedFilter) {
+	_hasQueriedFilter = true;
+	_logDebug = LogFilter::getInstance().writeDebug( _className );
+  }
+  if (_logDebug)
+    UsedLogService::getInstance().debug(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
 #endif
 
 
-void tarch::logging::Log::info(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().info(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
+void tarch::logging::Log::info(const std::string& methodName, const std::string& message) {
+  if (not _hasQueriedFilter) {
+	_hasQueriedFilter = true;
+	_logInfo = LogFilter::getInstance().writeInfo( _className );
+  }
+  if (_logInfo)
+    UsedLogService::getInstance().info(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
 
 
-void tarch::logging::Log::warning(const std::string& methodName, const std::string& message) const {
+void tarch::logging::Log::warning(const std::string& methodName, const std::string& message) {
   UsedLogService::getInstance().warning(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
 
 
-void tarch::logging::Log::error(const std::string& methodName, const std::string& message) const {
+void tarch::logging::Log::error(const std::string& methodName, const std::string& message) {
   UsedLogService::getInstance().error(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
 
 
-void tarch::logging::Log::traceIn(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().traceIn(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
+#if PeanoDebug>=1
+void tarch::logging::Log::traceIn(const std::string& methodName, const std::string& message) {
+  if (not _hasQueriedFilter) {
+	_hasQueriedFilter = true;
+	_logTrace = LogFilter::getInstance().writeTrace( _className );
+  }
+  if (_logTrace)
+    UsedLogService::getInstance().traceIn(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
 
 
-void tarch::logging::Log::traceOut(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().traceOut(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
+void tarch::logging::Log::traceOut(const std::string& methodName, const std::string& message) {
+  if (_logTrace)
+    UsedLogService::getInstance().traceOut(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
+#endif
 
 
 void tarch::logging::Log::indent( bool indent, const std::string& trace, const std::string& message ) const {

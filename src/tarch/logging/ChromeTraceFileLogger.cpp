@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <algorithm>
 
+#include "LogFilter.h"
+
 
 #include "../mpi/Rank.h"
 
@@ -23,13 +25,6 @@ tarch::logging::ChromeTraceFileLogger::ChromeTraceFileLogger():
   _quitOnError(false),
   _hasWrittenEntry(false) {
   configureOutputStreams();
-
-  #if PeanoDebug>=1
-  addFilterListEntry( FilterListEntry( "debug", false )  );
-  #else
-  addFilterListEntry( FilterListEntry( "debug", true )  );
-  #endif
-  addFilterListEntry( FilterListEntry( "info", false )  );
 }
 
 
@@ -128,8 +123,7 @@ std::string tarch::logging::ChromeTraceFileLogger::constructEventEntryInTraceFil
 
 
 void tarch::logging::ChromeTraceFileLogger::debug(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
-  if (writeDebug(trace)) {
-    std::string eventEntry = constructEventEntryInTraceFile(
+  std::string eventEntry = constructEventEntryInTraceFile(
       "debug",
       timestampMS, rank, threadId, trace, message
     );
@@ -137,13 +131,14 @@ void tarch::logging::ChromeTraceFileLogger::debug(   long int timestampMS, int r
     if (_outputStream!=nullptr) {
       nextEntry();
       *_outputStream << eventEntry;
+      #if PeanoDebug>=4
+      _outputStream->flush();
+      #endif
     }
-  }
 }
 
 
 void tarch::logging::ChromeTraceFileLogger::info(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
-  if (writeInfo(trace)) {
     std::string outputMessage = constructMessageString(
       "info",
 	  timestampMS, rank, threadId, trace, message
@@ -155,15 +150,16 @@ void tarch::logging::ChromeTraceFileLogger::info(   long int timestampMS, int ra
     tarch::multicore::Lock lockCout( _semaphore );
     std::cout << outputMessage;
     if (_outputStream!=nullptr) {
-    	nextEntry();
-    	*_outputStream << eventEntry;
+      nextEntry();
+      *_outputStream << eventEntry;
+      #if PeanoDebug>=4
+      _outputStream->flush();
+      #endif
     }
-  }
 }
 
 
 void tarch::logging::ChromeTraceFileLogger::warning(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
-  if (writeWarning(trace)) {
     std::string outputMessage = constructMessageString(
       "warning",
 	  timestampMS, rank, threadId, trace, message
@@ -177,13 +173,14 @@ void tarch::logging::ChromeTraceFileLogger::warning(   long int timestampMS, int
     if (_outputStream!=nullptr) {
     	nextEntry();
     	*_outputStream << eventEntry;
+      #if PeanoDebug>=4
+      _outputStream->flush();
+      #endif
     }
-  }
 }
 
 
 void tarch::logging::ChromeTraceFileLogger::traceIn(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
-  if (writeTrace(trace) and _outputStream!=nullptr) {
     std::string args = message;
 	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
     tarch::multicore::Lock lockCout( _semaphore );
@@ -195,15 +192,15 @@ void tarch::logging::ChromeTraceFileLogger::traceIn(   long int timestampMS, int
 			 << " \"ts\": " << timestampMS << ","
 			 << " \"pid\": " << rank << ","
 			 << " \"tid\": " << threadId << ","
-//			 << " \"tid\": 0,"
 			 << " \"args\": { \"params\": \"" + args + "\"}"
 			 " }";
-  }
+  #if PeanoDebug>=4
+  _outputStream->flush();
+  #endif
 }
 
 
 void tarch::logging::ChromeTraceFileLogger::traceOut(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
-  if (writeTrace(trace) and _outputStream!=nullptr) {
     std::string args = message;
 	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
     tarch::multicore::Lock lockCout( _semaphore );
@@ -215,15 +212,15 @@ void tarch::logging::ChromeTraceFileLogger::traceOut(   long int timestampMS, in
 			 << " \"ts\": " << timestampMS << ","
 			 << " \"pid\": " << rank << ","
 			 << " \"tid\": " << threadId << ","
-//			 << " \"tid\": 0,"
 			 << " \"args\": { \"result\": \"" + args + "\"}"
 			 " }";
-  }
+  #if PeanoDebug>=4
+  _outputStream->flush();
+  #endif
 }
 
 
 void tarch::logging::ChromeTraceFileLogger::error(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
-  if ( writeError(trace) ) {
     std::string outputMessage = constructMessageString(
       "error",
 	  timestampMS, rank, threadId, trace, message
@@ -238,7 +235,6 @@ void tarch::logging::ChromeTraceFileLogger::error(   long int timestampMS, int r
       nextEntry();
       *_outputStream << eventEntry;
     }
-  }
 
   if (_quitOnError) {
     exit(-1);

@@ -18,7 +18,6 @@
 #include "tarch/logging/Log.h"
 
 
-#include "LoggerWithFilter.h"
 
 
 namespace tarch {
@@ -37,7 +36,7 @@ namespace tarch {
  *
  * @author  Tobias Weinzierl
  */
-class tarch::logging::ChromeTraceFileLogger: public tarch::logging::LoggerWithFilter {
+class tarch::logging::ChromeTraceFileLogger {
   private:
     static Log _log;
 

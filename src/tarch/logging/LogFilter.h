@@ -1,7 +1,7 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _TARCH_LOGGING_LOGGER_WITH_FILTER_H_
-#define _TARCH_LOGGING_LOGGER_WITH_FILTER_H_
+#ifndef _TARCH_LOGGING_LOG_FILTER_H_
+#define _TARCH_LOGGING_LOG_FILTER_H_
 
 
 #include <string>
@@ -11,12 +11,17 @@
 
 namespace tarch {
   namespace logging {
-    class LoggerWithFilter;
+    class LogFilter;
   }
 }
 
 
-class tarch::logging::LoggerWithFilter {
+/**
+ * Peano4's log filter is used by every single log instance. Please note that
+ * the fourth generation of Peano allows users to filter only w.r.t. the class
+ * name. You can't filter on the method level anymore.
+ */
+class tarch::logging::LogFilter {
   private:
   public:
     /**
@@ -83,7 +88,7 @@ class tarch::logging::LoggerWithFilter {
     /**
      * By default, everything is on
      */
-    LoggerWithFilter();
+    LogFilter();
 
 
     /**
@@ -96,6 +101,9 @@ class tarch::logging::LoggerWithFilter {
       const std::string& targetName,
       const std::string& className
     );
+
+  public:
+    static LogFilter& getInstance();
 
     /**
      * Add one filter list entry
@@ -111,11 +119,8 @@ class tarch::logging::LoggerWithFilter {
     void clearFilterList();
     void printFilterListToCout() const;
 
-  protected:
     bool writeDebug(const std::string& trace);
     bool writeInfo(const std::string& trace);
-    bool writeWarning(const std::string& trace);
-    bool writeError(const std::string& trace);
     bool writeTrace(const std::string& trace);
 };
 

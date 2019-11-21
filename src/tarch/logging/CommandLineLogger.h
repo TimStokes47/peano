@@ -17,7 +17,6 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/logging/Log.h"
 
-#include "LoggerWithFilter.h"
 
 
 namespace tarch {
@@ -50,7 +49,7 @@ namespace tarch {
  * @version $Revision: 1.19 $
  * @author  Tobias Weinzierl, Wolfgang Eckhardt
  */
-class tarch::logging::CommandLineLogger: public tarch::logging::LoggerWithFilter {
+class tarch::logging::CommandLineLogger {
   private:
     static Log _log;
 

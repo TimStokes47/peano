@@ -1,4 +1,3 @@
-#include "LoggerWithFilter.h"
 #include "tarch/Assertions.h"
 
 
@@ -7,17 +6,18 @@
 
 #include <sstream>
 #include <iostream>
+#include "LogFilter.h"
 
 
-const int tarch::logging::LoggerWithFilter::FilterListEntry::AnyRank = -1;
+const int tarch::logging::LogFilter::FilterListEntry::AnyRank = -1;
 
-const std::string tarch::logging::LoggerWithFilter::FilterListEntry::TargetAll   = "all";
-const std::string tarch::logging::LoggerWithFilter::FilterListEntry::TargetInfo  = "info";
-const std::string tarch::logging::LoggerWithFilter::FilterListEntry::TargetDebug = "debug";
-const std::string tarch::logging::LoggerWithFilter::FilterListEntry::TargetTrace = "trace";
+const std::string tarch::logging::LogFilter::FilterListEntry::TargetAll   = "all";
+const std::string tarch::logging::LogFilter::FilterListEntry::TargetInfo  = "info";
+const std::string tarch::logging::LogFilter::FilterListEntry::TargetDebug = "debug";
+const std::string tarch::logging::LogFilter::FilterListEntry::TargetTrace = "trace";
 
 
-tarch::logging::LoggerWithFilter::FilterListEntry::FilterListEntry( const std::string& targetName, bool isBlackListEntry ):
+tarch::logging::LogFilter::FilterListEntry::FilterListEntry( const std::string& targetName, bool isBlackListEntry ):
   _targetName(targetName),
   _rank(AnyRank),
   _namespaceName(""),
@@ -26,7 +26,7 @@ tarch::logging::LoggerWithFilter::FilterListEntry::FilterListEntry( const std::s
 }
 
 
-tarch::logging::LoggerWithFilter::FilterListEntry::FilterListEntry( const std::string& targetName, int rank, const std::string& className, bool isBlackListEntry ):
+tarch::logging::LogFilter::FilterListEntry::FilterListEntry( const std::string& targetName, int rank, const std::string& className, bool isBlackListEntry ):
   _targetName(targetName),
   _rank(rank),
   _namespaceName(className),
@@ -35,7 +35,7 @@ tarch::logging::LoggerWithFilter::FilterListEntry::FilterListEntry( const std::s
 }
 
 
-std::string tarch::logging::LoggerWithFilter::FilterListEntry::toString() const {
+std::string tarch::logging::LogFilter::FilterListEntry::toString() const {
   std::ostringstream msg;
   msg << "(";
   msg << "target:" << _targetName << ",";
@@ -55,27 +55,27 @@ std::string tarch::logging::LoggerWithFilter::FilterListEntry::toString() const 
 }
 
 
-bool tarch::logging::LoggerWithFilter::FilterListEntry::operator<(const FilterListEntry& b) const {
+bool tarch::logging::LogFilter::FilterListEntry::operator<(const FilterListEntry& b) const {
   return _rank < b._rank || _namespaceName < b._namespaceName || _targetName < b._targetName;
 }
 
 
-bool tarch::logging::LoggerWithFilter::FilterListEntry::operator==(const FilterListEntry& b) const {
+bool tarch::logging::LogFilter::FilterListEntry::operator==(const FilterListEntry& b) const {
   return _rank == b._rank || _namespaceName == b._namespaceName || _targetName == b._targetName;
 }
 
 
-bool tarch::logging::LoggerWithFilter::FilterListEntry::operator!=(const FilterListEntry& b) const {
+bool tarch::logging::LogFilter::FilterListEntry::operator!=(const FilterListEntry& b) const {
   return not operator==(b);
 }
 
 
-tarch::logging::LoggerWithFilter::LoggerWithFilter() {
+tarch::logging::LogFilter::LogFilter() {
   addFilterListEntry( FilterListEntry( FilterListEntry::TargetAll, false )  );
 }
 
 
-void tarch::logging::LoggerWithFilter::printFilterListToCout() const {
+void tarch::logging::LogFilter::printFilterListToCout() const {
   if (_filterlist.empty()) {
     std::cout << "filter list is empty" << std::endl;
   }
@@ -88,7 +88,13 @@ void tarch::logging::LoggerWithFilter::printFilterListToCout() const {
 }
 
 
-bool tarch::logging::LoggerWithFilter::writeDebug(const std::string& className) {
+tarch::logging::LogFilter& tarch::logging::LogFilter::getInstance() {
+  static LogFilter _singleton;
+  return _singleton;
+}
+
+
+bool tarch::logging::LogFilter::writeDebug(const std::string& className) {
   #if PeanoDebug>=4
   return !filterOut(FilterListEntry::TargetDebug,className);
   #else
@@ -97,12 +103,12 @@ bool tarch::logging::LoggerWithFilter::writeDebug(const std::string& className) 
 }
 
 
-bool tarch::logging::LoggerWithFilter::writeInfo(const std::string& className) {
+bool tarch::logging::LogFilter::writeInfo(const std::string& className) {
   return !filterOut(FilterListEntry::TargetInfo,className);
 }
 
 
-bool tarch::logging::LoggerWithFilter::writeTrace(const std::string& className) {
+bool tarch::logging::LogFilter::writeTrace(const std::string& className) {
   #if PeanoDebug>=1
   const bool result = !filterOut(FilterListEntry::TargetTrace,className);
   return result;
@@ -112,33 +118,23 @@ bool tarch::logging::LoggerWithFilter::writeTrace(const std::string& className) 
 }
 
 
-bool tarch::logging::LoggerWithFilter::writeWarning(const std::string& className) {
-  return true;
-}
-
-
-bool tarch::logging::LoggerWithFilter::writeError(const std::string& className) {
-  return true;
-}
-
-
-void tarch::logging::LoggerWithFilter::addFilterListEntries( const FilterList&    entries) {
+void tarch::logging::LogFilter::addFilterListEntries( const FilterList&    entries) {
   for (FilterList::const_iterator p = entries.begin(); p!=entries.end(); p++ ) {
     addFilterListEntry(*p);
   }
 }
 
 
-void tarch::logging::LoggerWithFilter::clearFilterList() {
+void tarch::logging::LogFilter::clearFilterList() {
   _filterlist.clear();
 }
 
 
-bool tarch::logging::LoggerWithFilter::filterOut(
+bool tarch::logging::LogFilter::filterOut(
   const std::string& targetName,
   const std::string& className
 ) {
-  bool result    = true;
+  bool result    = false;
   bool foundRule = false;
   int lengthActive = 0;
   for (FilterList::const_iterator p = _filterlist.begin(); p!=_filterlist.end(); p++ ) {
@@ -161,14 +157,13 @@ bool tarch::logging::LoggerWithFilter::filterOut(
   }
 
   if (!foundRule) {
-    printFilterListToCout();
     std::cerr << "did not find filter rule for target \"" << targetName << "\" and class \"" << className << "\" on rank " << tarch::mpi::Rank::getInstance().getRank() << std::endl;
   }
   return result;
 }
 
 
-void tarch::logging::LoggerWithFilter::addFilterListEntry( const FilterListEntry& entry) {
+void tarch::logging::LogFilter::addFilterListEntry( const FilterListEntry& entry) {
   if (_filterlist.count(entry)!=0) {
     std::cerr << "tried to insert log filter " << entry.toString() << " multiple times" << std::endl;
     assertion(false);

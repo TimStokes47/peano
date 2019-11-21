@@ -33,8 +33,8 @@ bool tarch::logging::LogFilterFileReader::interpretTokens( const std::string& le
   }
 
   if (result) {
-    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry(
-      ::tarch::logging::CommandLineLogger::FilterListEntry(
+    LogFilter::getInstance().addFilterListEntry(
+      ::tarch::logging::LogFilter::FilterListEntry(
         levelToken, rank, classNameToken, isFilter )
     );
   }
@@ -81,7 +81,7 @@ bool tarch::logging::LogFilterFileReader::parseLine(std::ifstream& file, const s
 bool tarch::logging::LogFilterFileReader::parsePlainTextFile( const std::string& filename ) {
   bool result = true;
 
-  tarch::logging::CommandLineLogger::getInstance().clearFilterList();
+  LogFilter::getInstance().clearFilterList();
 
   std::ifstream file;
   file.open(filename.c_str()); // open a file
@@ -104,8 +104,8 @@ bool tarch::logging::LogFilterFileReader::parsePlainTextFile( const std::string&
 
   if (!result) {
     logWarning( "parsePlainTextFile(string)", "filter file " << filename << " was invalid. Switch on all log statements" );
-    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
-    tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", false ) );
+    LogFilter::getInstance().addFilterListEntry( ::tarch::logging::LogFilter::FilterListEntry( "info", false ) );
+    LogFilter::getInstance().addFilterListEntry( ::tarch::logging::LogFilter::FilterListEntry( "debug", false ) );
   }
 
   return result;
