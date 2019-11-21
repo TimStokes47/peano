@@ -332,6 +332,7 @@ int peano4::parallel::Node::getTreeNumberTiedToExchangeStackNumber(int number) {
 
 bool peano4::parallel::Node::continueToRun() {
   #ifdef Parallel
+  logTraceIn( "continueToRun()" );
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     for (int i=1; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++ ) {
       StartTraversalMessage message;
@@ -341,11 +342,12 @@ bool peano4::parallel::Node::continueToRun() {
     }
   }
   else {
-    StartTraversalMessage message;
+	StartTraversalMessage message;
     message.receive(tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
     logDebug( "continueToRun()", "received message " << message.toString() );
     _currentProgramStep = message.getStepIdentifier();
   }
+  logTraceOutWith1Argument( "continueToRun()", _currentProgramStep );
   #endif
   return _currentProgramStep!=Terminate;
 }
