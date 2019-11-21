@@ -55,7 +55,6 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
 	  tarch::mpi::Rank::getInstance().getNumberOfRanks() * numberOfCellsPerRank
 	) {
       peano4::parallel::Node::getInstance().setNextProgramStep(1);
-      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
     }
     logInfo( "runParallel(...)", "created initial grid with " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().toString() );
@@ -80,7 +79,6 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
     logInfo( "runParallel(...)", "commit split and give ranks " << MaxNumberOfConstructionSteps << " iterations to 'recover' (step #2)" );
     for (int i=0; i<MaxNumberOfConstructionSteps; i++) {
       peano4::parallel::Node::getInstance().setNextProgramStep(2);
-      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
     }
 
@@ -93,13 +91,11 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
 
     logInfo( "runParallel(...)", "run one step committing split and telling other ranks to split as well (step #3)" );
     peano4::parallel::Node::getInstance().setNextProgramStep(3);
-    tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 
     logInfo( "runParallel(...)", "commit splits into threads and give ranks time to 'recover' (step #4)" );
     for (int i=0; i<3; i++) {
       peano4::parallel::Node::getInstance().setNextProgramStep(4);
-      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
     }
 
@@ -114,13 +110,13 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
     logInfo( "runParallel(...)", "remote refined cells= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
     for (int i=0; i<20; i++) {
       peano4::parallel::Node::getInstance().setNextProgramStep(5);
-      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
     }
     logInfo( "runParallel(...)", "terminated successfully" );
   }
   else { // not the global master
     while (peano4::parallel::Node::getInstance().continueToRun()) {
+      logDebug( "runParallel(...)", "trigger a new sweep with step " << peano4::parallel::Node::getInstance().getCurrentProgramStep() );
       if (
         peano4::parallel::Node::getInstance().getCurrentProgramStep()==2
 		or
@@ -128,7 +124,6 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
 		or
         peano4::parallel::Node::getInstance().getCurrentProgramStep()==5
       ) {
-        tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
         peano4::parallel::SpacetreeSet::getInstance().traverse(emptyObserver);
       }
       else if (peano4::parallel::Node::getInstance().getCurrentProgramStep()==3) {
@@ -140,7 +135,6 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
             logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << numberOfCellsPerThread << " cell(s)" );
           }
         }
-        tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
         peano4::parallel::SpacetreeSet::getInstance().traverse(emptyObserver);
       }
     }
@@ -157,51 +151,26 @@ int main(int argc, char** argv) {
   peano4::initSharedMemoryEnvironment();
   peano4::fillLookupTables();
 
-  // This part is only used if you use the default (command line) logging
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", false
   ));
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", false
   ));
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", false
   ));
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", true
   ));
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", false
   ));
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", true
   ));
 
-  tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
-
-  // I set an output file if one switches to the Chrome format. In the default build
-  // variant, I do not use the Chrome format and this line thus is irrelevant.
-  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
-  ));
-  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
-  ));
-  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", true
-  ));
-  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::parallel::SpacetreeSet", false
-  ));
-  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetDebug, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
-  ));
-  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetInfo, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
-  ));
-  tarch::logging::ChromeTraceFileLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
-    tarch::logging::CommandLineLogger::FilterListEntry::TargetTrace, tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch", true
-  ));
+  //tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
   tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile( "p4.tracing" );
 
   if (argc!=2) {
