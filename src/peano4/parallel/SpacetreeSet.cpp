@@ -25,8 +25,8 @@ peano4::parallel::SpacetreeSet::SpacetreeSet():
 
 
 peano4::parallel::SpacetreeSet&  peano4::parallel::SpacetreeSet::getInstance() {
-  static peano4::parallel::SpacetreeSet singleton;
-  return singleton;
+  static SpacetreeSet _singleton;
+  return _singleton;
 }
 
 
@@ -59,6 +59,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
   if (
     peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState(),true)
   ) {
+	logTraceInWith1Argument( "receiveDanglingMessages()", "getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState");
     peano4::parallel::TreeManagementMessage message;
     message.receive(MPI_ANY_SOURCE,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
@@ -70,16 +71,17 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
             message.getMasterSpacetreeId()
           );
 
-          logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << message.getMasterSpacetreeId() );
-
           message.setWorkerSpacetreeId( newSpacetreeId );
           message.setAction(TreeManagementMessage::Action::Acknowledgement);
           message.send(message.getSenderRank(),peano4::parallel::Node::getInstance().getBlockingTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+
+          logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << message.getMasterSpacetreeId() );
         }
         break;
       default:
     	assertionMsg( false, "should not be called" );
     }
+	logTraceOutWith1Argument( "receiveDanglingMessages()", "getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState");
   }
 
   if (
@@ -87,6 +89,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
     and
     peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichChangesASpacetreeState(),true)
   ) {
+    logTraceInWith1Argument( "receiveDanglingMessages()", "getAsynchronousTreeManagementTagWhichChangesASpacetreeState");
     peano4::parallel::TreeManagementMessage message;
     message.receive(MPI_ANY_SOURCE,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichChangesASpacetreeState(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
@@ -121,12 +124,14 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       default:
     	assertionMsg( false, "should not be called" );
     }
+    logTraceOutWith1Argument( "receiveDanglingMessages()", "getAsynchronousTreeManagementTagWhichChangesASpacetreeState");
   }
   #endif
 }
 
 
 void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId ) {
+  logTraceInWith2Arguments( "addSpacetree(int,int)", masterId, newTreeId );
   tarch::multicore::Lock lock( _semaphore );
 
   if ( peano4::parallel::Node::getInstance().getRank(masterId)!=peano4::parallel::Node::getInstance().getRank(newTreeId) ) {
@@ -158,6 +163,7 @@ void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId )
     );
     _spacetrees.push_back( std::move(newTree) );
   }
+  logTraceOut( "addSpacetree(int,int)" );
 }
 
 
