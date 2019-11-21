@@ -7,20 +7,22 @@ SUBDIRS = . examples/grid examples/integerdiffusionthroughfaces examples/delta e
 
 
 #
-# I did not succeed in using static libraries with Peano. So I use dynamic
-# libraries instead.
+# I want Peano4 to be as fast as possible and thus build it as static library
+# such that a linker/compiler can ipo. One of the other reasons for this is 
+# that I have a couple of singletons and I did struggle with singletons and 
+# shared libraries. 
 #
-lib_LTLIBRARIES =  libTarch.la libTarch_debug.la libPeano4Core2d.la libPeano4Core2d_debug.la libPeano4Core3d.la libPeano4Core3d_debug.la
+lib_LIBRARIES =  libTarch.a libTarch_debug.a libPeano4Core2d.a libPeano4Core2d_debug.a libPeano4Core3d.a libPeano4Core3d_debug.a
 
 
-libTarch_la_CXXFLAGS = -DPeanoDebug=1 $(PEANO_CXXFLAGS)
-libTarch_debug_la_CXXFLAGS = -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
+libTarch_a_CXXFLAGS = -DPeanoDebug=1 $(PEANO_CXXFLAGS)
+libTarch_debug_a_CXXFLAGS = -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
 
 
-libPeano4Core2d_la_CXXFLAGS        = -DDimensions=2 -DPeanoDebug=1 $(PEANO_CXXFLAGS)
-libPeano4Core2d_debug_la_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
-libPeano4Core3d_la_CXXFLAGS        = -DDimensions=3 -DPeanoDebug=1 $(PEANO_CXXFLAGS)
-libPeano4Core3d_debug_la_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core2d_a_CXXFLAGS        = -DDimensions=2 -DPeanoDebug=1 $(PEANO_CXXFLAGS)
+libPeano4Core2d_debug_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core3d_a_CXXFLAGS        = -DDimensions=3 -DPeanoDebug=1 $(PEANO_CXXFLAGS)
+libPeano4Core3d_debug_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
 
 
 #
@@ -112,7 +114,7 @@ Tarch_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/logging/ChromeTraceFileLogger.cpp \
  tarch/logging/Log.cpp \
  tarch/logging/LogFilterFileReader.cpp \
- tarch/logging/LoggerWithFilter.cpp \
+ tarch/logging/LogFilter.cpp \
  tarch/timing/Watch.cpp \
  tarch/timing/Measurement.cpp \
  tarch/timing/GlidingAverageMeasurement.cpp \
@@ -120,21 +122,14 @@ Tarch_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/services/ServiceRepository.cpp 
 
 
-# tarch/mpi/messages/ActivationMessage.cpp \
-# tarch/mpi/messages/JobRequestMessage.cpp \
-# tarch/mpi/messages/RegisterAtNodePoolMessage.cpp \
-# tarch/mpi/messages/WorkerRequestMessage.cpp \
-# tarch/mpi/messages/NodePoolAnswerMessage.cpp 
-
-
 #
 # Map defined source sequences onto libraries
 #
-libTarch_debug_la_SOURCES = $(Tarch_SOURCES)
-libTarch_la_SOURCES       = $(Tarch_SOURCES)
+libTarch_debug_a_SOURCES = $(Tarch_SOURCES)
+libTarch_a_SOURCES       = $(Tarch_SOURCES)
 
-libPeano4Core2d_la_SOURCES       = $(Peano4Core_SOURCES)
-libPeano4Core2d_debug_la_SOURCES = $(Peano4Core_SOURCES)
-libPeano4Core3d_la_SOURCES       = $(Peano4Core_SOURCES)
-libPeano4Core3d_debug_la_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core2d_a_SOURCES       = $(Peano4Core_SOURCES)
+libPeano4Core2d_debug_a_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core3d_a_SOURCES       = $(Peano4Core_SOURCES)
+libPeano4Core3d_debug_a_SOURCES = $(Peano4Core_SOURCES)
 
