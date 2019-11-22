@@ -2,31 +2,17 @@
 \label{section:logging}
 
 
+\section{Logging, tracing and assertion architecture}
 
-% \chapterDescription
-%   {
-%     There are no real examples coming along with this chapter, but you might
-%     want to use its topics for any project.
-%   }
-%   {
-%     Chapter \ref{chapter:quickstart}.
-%   }
-
-
-%\subsection{The user interface}
-
-%\subsection{Repository fields}
-
-%\subsection{Logging}
-
-Level
-Was zum Chrome
+Peano is built upon a technical architecture (\texttt{tarch}) which provides
+logging, tracing and assertions.
 
  * - PeanoDebug = 1: Enable tracing
  * - PeanoDebug = 2: Enable assertions (includes level 1)
  * - PeanoDebug = 4: Enable debug messages (includes level 2)
 
 
+\section{Using the logging interface}
 
 Peano relies on a plain interface to write out user information. 
 All constituents of this interface are collected in the package
@@ -83,7 +69,7 @@ Peano offers three levels of logging:
 
 
 
-\subsubsection{Logging device: CommandLineLogger}
+\section{Logging devices (formats)}
 
 The \texttt{Log} instance forwards the information to a logger. By default, this
 is the \\ \texttt{tarch::logging::CommandLineLogger} which writes information
@@ -123,7 +109,7 @@ The output files are enumerated automatically.
 
 
 
-\subsubsection{Log filter}
+\section{Log filter}
 
 The amount of log information often becomes hard to track; notably if you run in
 debug mode.
