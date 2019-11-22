@@ -25,7 +25,7 @@ mv src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d src/examples/re
 mv src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d-parallel
 
 
-## Step 2: Single core run ##
+## Step 2: Single core runs ##
 
 This step creates the benchmark baseline. Switch into the directory holding the executables
 
@@ -34,14 +34,57 @@ cd src/examples/regulargridupscaling
 Here, we run the following snippet:
 
 
-for h in 0.1 0.5 0.01
+for h in 0.1 0.5 0.01 0.005 0.001
 do
   ./PeanoRegularGridUpscaling2d-serial $h > serial2d-$h.out
 done
 
 
-It might be convenient to paste those in to a SLURM file. 
+It might be convenient to paste those in to a SLURM file. The same is done for 3d.
 
   
+## Summary: Submit all the slurm files (on SuperMUC-NG) ##
+
+
+sbatch SuperMUC-NG-scripts/serial-2d.slurm-script
+sbatch SuperMUC-NG-scripts/serial-3d.slurm-script
+
+sbatch SuperMUC-NG-scripts/shared-memory-1-core-2d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-2-cores-2d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-3-cores-2d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-6-cores-2d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-12-cores-2d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-24-cores-2d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-48-cores-2d.slurm-script
+
+sbatch SuperMUC-NG-scripts/shared-memory-1-core-3d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-2-cores-3d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-3-cores-3d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-6-cores-3d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-12-cores-3d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-24-cores-3d.slurm-script
+sbatch SuperMUC-NG-scripts/shared-memory-48-cores-3d.slurm-script
+
+sbatch SuperMUC-NG-scripts/distributed-memory-1-node-2d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-2-nodes-2d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-3-nodes-2d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-6-nodes-2d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-8-nodes-2d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-10-nodes-2d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-12-nodes-2d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-14-nodes-2d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-16-nodes-2d.slurm-script
+
+sbatch SuperMUC-NG-scripts/distributed-memory-1-node-3d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-2-nodes-3d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-3-nodes-3d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-6-nodes-3d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-8-nodes-3d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-10-nodes-3d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-12-nodes-3d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-14-nodes-3d.slurm-script
+sbatch SuperMUC-NG-scripts/distributed-memory-16-nodes-3d.slurm-script
+
+
 
 
