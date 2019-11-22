@@ -22,6 +22,7 @@
  * - PeanoDebug = 4: Enable debug messages (includes level 2)
  */
 namespace tarch {
+  void writeCopyrightMessage();
 }
 
 

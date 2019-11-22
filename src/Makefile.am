@@ -56,7 +56,8 @@ Peano4Core_SOURCES = peano4/peano.cpp \
 
 
 
-Tarch_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
+Tarch_SOURCES= tarch/tarch.cpp \
+ tarch/la/tests/MatrixVectorTest.cpp \
  tarch/la/tests/MatrixTest.cpp \
  tarch/la/tests/ScalarTest.cpp \
  tarch/la/tests/GramSchmidtTest.cpp \
