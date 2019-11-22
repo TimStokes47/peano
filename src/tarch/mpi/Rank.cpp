@@ -1,4 +1,5 @@
 #include "tarch/Assertions.h"
+#include "tarch/tarch.h"
 #include "tarch/services/ServiceRepository.h"
 
 #include <sstream>
@@ -358,6 +359,7 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
   }
 
   if (_rank==0) {
+    tarch::writeCopyrightMessage();
     #if defined( SharedMemoryParallelisation )
     logInfo( "init(...)", "initialised MPI with MPI_THREAD_MULTIPLE" );
     #else

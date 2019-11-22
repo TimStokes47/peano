@@ -1,5 +1,6 @@
 #include "tarch/services/ServiceRepository.h"
 #include "tarch/Assertions.h"
+#include "tarch/tarch.h"
 #include "tarch/multicore/RecursiveLock.h"
 
 
@@ -8,6 +9,7 @@
 
 tarch::services::ServiceRepository::ServiceRepository():
   _services() {
+  writeCopyrightMessage();
 }
 
 
