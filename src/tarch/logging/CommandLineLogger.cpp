@@ -238,7 +238,7 @@ void tarch::logging::CommandLineLogger::traceIn(long int timestampMS, int rank, 
 void tarch::logging::CommandLineLogger::traceOut(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
     std::string outputMessage = constructMessageString(
       "trace",
-	  timestampMS, rank, threadId, trace, message
+      timestampMS, rank, threadId, trace, message
     );
 
     tarch::multicore::Lock lockCout( _semaphore );

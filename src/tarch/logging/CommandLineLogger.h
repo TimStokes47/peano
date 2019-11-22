@@ -152,6 +152,8 @@ class tarch::logging::CommandLineLogger {
     std::ostream& out();
 
     void reopenOutputStream();
+
+    std::stack< std::string >  _indentTraces;
   public:
     ~CommandLineLogger();
 

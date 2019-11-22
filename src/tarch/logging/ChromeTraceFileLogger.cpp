@@ -249,8 +249,8 @@ void tarch::logging::ChromeTraceFileLogger::indent( bool indent, const std::stri
 
 
 void tarch::logging::ChromeTraceFileLogger::setOutputFile( const std::string&  outputLogFileName ) {
-  #ifdef Parallel
   std::ostringstream myOutputFileName;
+  #ifdef Parallel
   if (!outputLogFileName.empty()) {
     myOutputFileName << "rank-" << tarch::mpi::Rank::getInstance().getRank() << "-" << outputLogFileName;
   }
