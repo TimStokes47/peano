@@ -9,7 +9,7 @@ PeanoRegularGridUpscaling2d_debug_LDADD     = $(top_builddir)/src/libPeano4Core2
 PeanoRegularGridUpscaling2d_debug_SOURCES   = $(PeanoRegularGridUpscalingSources)
 PeanoRegularGridUpscaling2d_debug_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS)
 
-PeanoRegularGridUpscaling2d_CXXFLAGS  = -I$(top_builddir)/src $(PEANO_CXXFLAGS)  -DPeanoDebug=1 -DDimensions=2
+PeanoRegularGridUpscaling2d_CXXFLAGS  = -I$(top_builddir)/src $(PEANO_CXXFLAGS) -DPeanoDebug=0 -DDimensions=2
 PeanoRegularGridUpscaling2d_LDADD     = $(top_builddir)/src/libPeano4Core2d.a $(top_builddir)/src/libTarch.a
 PeanoRegularGridUpscaling2d_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS)
 PeanoRegularGridUpscaling2d_SOURCES   = $(PeanoRegularGridUpscalingSources)
@@ -19,7 +19,7 @@ PeanoRegularGridUpscaling3d_debug_LDADD     = $(top_builddir)/src/libPeano4Core3
 PeanoRegularGridUpscaling3d_debug_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS)
 PeanoRegularGridUpscaling3d_debug_SOURCES   = $(PeanoRegularGridUpscalingSources)
 
-PeanoRegularGridUpscaling3d_CXXFLAGS  = -I$(top_builddir)/src $(PEANO_CXXFLAGS)  -DPeanoDebug=1 -DDimensions=3
+PeanoRegularGridUpscaling3d_CXXFLAGS  = -I$(top_builddir)/src $(PEANO_CXXFLAGS)  -DPeanoDebug=0 -DDimensions=3
 PeanoRegularGridUpscaling3d_LDADD     = $(top_builddir)/src/libPeano4Core3d.a $(top_builddir)/src/libTarch.a
 PeanoRegularGridUpscaling3d_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS)
 PeanoRegularGridUpscaling3d_SOURCES   = $(PeanoRegularGridUpscalingSources)
