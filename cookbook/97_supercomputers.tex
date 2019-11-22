@@ -1,30 +1,46 @@
 \chapter{Selected HPC platforms}
 
 
-\section{SuperMUC-NG}
+\section{Supercomputer login and change into working directory}
+
+\paragraph{SuperMUC-NG}
+\begin{code}
+ ssh lu57zat6@skx.supermuc.lrz.de
+ cd $WORK
+\end{code}
 
 
-\subsection{Quick install}
+\paragraph{Hamilton}
+\begin{code}
+ ssh frmh84@hamilton.dur.ac.uk
+ module load intel/xe_2018.2
+ module load intelmpi/intel/2018.2
+ cd $SCRATCH
+ cd /ddn/data/frmh84/
+ setenv CXX icpc
+\end{code}
+
+From hereon, the steps are all the same.
+
+
+\section{Quick install}
 
 Please exchange the login below with your login. 
 Login is only possible from machines with a fixed, registered IP. 
 Durham's mira server is one example for such a machine. 
 
 
-\subsubsection{Grab distribution from git (recommended)}
 
-\subsubsection{Grab from raw git files (not recommended)}
+\subsection{Grab from raw git files (not recommended)}
 
 \begin{code}
- ssh lu57zat6@skx.supermuc.lrz.de
- cd $WORK
- git clone https://gitlab.lrz.de/your-login/Peano.git
+ git clone https://gitlab.lrz.de/hpcsoftware/Peano.git
  cd Peano
  git checkout p4
  libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing
 \end{code}
 
-\subsubsection{Configure and build}
+\section{Configure and build}
 
 \begin{code}
  export CXX=icpc
