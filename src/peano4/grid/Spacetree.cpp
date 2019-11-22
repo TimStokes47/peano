@@ -273,17 +273,12 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
   _root.setInverted( not _root.getInverted() );
 
   if (calledFromSpacetreeSet) {
-    _hasSplit.clear();
-    _hasSplit.insert(_splitting.begin(), _splitting.end() );
     for (auto& rank: _splitting) {
       _childrenIds.insert(rank.first);
     }
     _splitting.clear();
     _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
     _splitTriggered.clear();
-
-    _hasJoined.clear();
-    _hasJoined.insert( _joining.begin(), _joining.end() );
 
     _joining.clear();
     _joining.insert( _joinTriggered.begin(), _joinTriggered.end() );
@@ -2113,6 +2108,7 @@ std::string peano4::grid::Spacetree::toString() const {
     }
     msg << "}";
   }
+/*
   if (_hasJoined.empty()) {
 	msg << ",noone-has-joined-recently";
   }
@@ -2123,6 +2119,7 @@ std::string peano4::grid::Spacetree::toString() const {
     }
     msg << "}";
   }
+*/
   if (_splitTriggered.empty()) {
     msg << ",no-split-triggered";
   }
@@ -2143,6 +2140,7 @@ std::string peano4::grid::Spacetree::toString() const {
     }
 	  msg << "}";
   }
+/*
   if (_hasSplit.empty()) {
 	msg << ",noone-has-split-recently";
   }
@@ -2153,6 +2151,7 @@ std::string peano4::grid::Spacetree::toString() const {
     }
     msg << "}";
   }
+*/
   msg << ",stacks:";
   bool allStackAreEmpty = true;
   for (auto& p: _vertexStack) {

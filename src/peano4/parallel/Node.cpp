@@ -105,7 +105,7 @@ int peano4::parallel::Node::getLocalTreeId(int treeId) const {
 int peano4::parallel::Node::reserveId(int rank, int forTreeId)  {
   int localThread = 0;
   int result = -1;
-  while (result==-1) {
+  while (result==-1 and localThread<MaxSpacetreesPerRank) {
     if ( _treeEntries.count( getId(rank,localThread) )==0 ) {
       assertion(localThread<ReservedMPITagsForDataExchange/2);
       result = getId(rank,localThread);
@@ -116,8 +116,16 @@ int peano4::parallel::Node::reserveId(int rank, int forTreeId)  {
     localThread++;
   }
 
-  registerId( result, forTreeId );
+  if (localThread==MaxSpacetreesPerRank-1) {
+    logWarning( "reserveId(int,int)", "gave out" << (localThread+1) << " trees on rank " << tarch::mpi::Rank::getInstance().getRank() << ". Max trees per rank=" << MaxSpacetreesPerRank );
+  }
 
+  if (localThread<MaxSpacetreesPerRank) {
+    registerId( result, forTreeId );
+  }
+  else {
+	result = -1;
+  }
   return result;
 }
 
@@ -169,12 +177,12 @@ int peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange(int id) 
 }
 
 
-int peano4::parallel::Node::xxx_getOutputStackNumberForVerticalDataExchange(int id) {
+int peano4::parallel::Node::getOutputStackNumberForVerticalDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 2;
 }
 
 
-int peano4::parallel::Node::xxx_getInputStackNumberForVerticalDataExchange(int id) {
+int peano4::parallel::Node::getInputStackNumberForVerticalDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 3;
 }
 

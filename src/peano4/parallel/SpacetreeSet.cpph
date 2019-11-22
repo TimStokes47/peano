@@ -2,15 +2,10 @@
 #include "tarch/mpi/IntegerMessage.h"
 
 
-// @todo childrenIds raus. Evtl. im Nachklatsch auch insgesamt raus.
-// Das Problem ist hier, dass childrenIds es uns erlaubt nicht immer vertikale Messages
-// hin und her zu schicken. Andererseits - warum net?
-// Dann auch alles andere raus und den hasSplit status weg
 template <class Container>
 void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataExchangeStacks(
   Container& stackContainer,
   int spacetreeId, int parentId,
-  const std::set<int>& childrenIds,
   VerticalDataExchangeMode mode
 ) {
   logTraceInWith3Arguments( "exchangeAllVerticalDataExchangeStacks(...)", spacetreeId, parentId, toString(mode) );

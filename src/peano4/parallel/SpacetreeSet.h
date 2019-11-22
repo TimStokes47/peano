@@ -130,7 +130,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
         template <class Container>
         static void exchangeAllVerticalDataExchangeStacks(
           Container& stackContainer,
-          int spacetreeId, int parentId, const std::set<int>& childrenIds,
+          int spacetreeId, int parentId,
           VerticalDataExchangeMode mode
         );
 
@@ -191,7 +191,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * <h2> Forks </h2>
      *
      * If we are forking, we first have to establish the new (forked) trees
-     * before we issue any data transer. Otherwise, the xxx
+     * before we issue any data transfer.
      *
      * <h2> Multithreading </h2>
      *

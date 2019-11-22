@@ -59,11 +59,6 @@ class peano4::parallel::Node {
      */
     static constexpr int        StacksPerCommunicationPartner = 6;
 
-    /**
-     * @todo Das muss ich irgendwo bei der Nummernanfrage checken und dann
-     * aber nicht nur ne assertion einbauen, sondern sowohl eine Warnung als
-     * auch eine Error-Message, denn das kann ja auch im Produktionsbetrieb auftreten
-     */
     static constexpr int        MaxSpacetreesPerRank = 64;
 
     /**
@@ -197,9 +192,8 @@ class peano4::parallel::Node {
      * data to/from when it exchanges information with id. Such vertical
      * data is multiscale information or split/join data.
      */
-    // @todo Wieder zurueck umbennen
-    static int xxx_getInputStackNumberForVerticalDataExchange(int id);
-    static int xxx_getOutputStackNumberForVerticalDataExchange(int id);
+    static int getInputStackNumberForVerticalDataExchange(int id);
+    static int getOutputStackNumberForVerticalDataExchange(int id);
 
     static int getInputStackNumberForForkJoinDataExchange(int id);
     static int getOutputStackNumberForForkJoinDataExchange(int id);

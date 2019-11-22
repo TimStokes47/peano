@@ -237,7 +237,6 @@ class peano4::grid::Spacetree {
     typedef std::map< int, int >  SplitSpecification;
     SplitSpecification   _splitTriggered;
     SplitSpecification   _splitting;
-    SplitSpecification   _hasSplit;
 
     constexpr static int NoJoin = -1;
     /**
@@ -250,8 +249,6 @@ class peano4::grid::Spacetree {
      * If master: Set of workers that should join
      */
     std::set< int >      _joining;
-    std::set< int >      _hasJoined;
-
 
     /**
      * To look up the right stack, we use a combination of tree number (id) and
