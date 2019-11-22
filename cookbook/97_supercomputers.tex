@@ -1,0 +1,40 @@
+\chapter{Selected HPC platforms}
+
+
+\section{SuperMUC-NG}
+
+
+\subsection{Quick install}
+
+Please exchange the login below with your login. 
+Login is only possible from machines with a fixed, registered IP. 
+Durham's mira server is one example for such a machine. 
+
+
+\subsubsection{Grab distribution from git (recommended)}
+
+\subsubsection{Grab from raw git files (not recommended)}
+
+\begin{code}
+ ssh lu57zat6@skx.supermuc.lrz.de
+ cd $WORK
+ git clone https://gitlab.lrz.de/your-login/Peano.git
+ cd Peano
+ git checkout p4
+ libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing
+\end{code}
+
+\subsubsection{Configure and build}
+
+\begin{code}
+ export CXX=icpc
+ ./configure --with-multithreading=cpp --with-mpi=mpicxx
+ --prefix=$(WORK)/Peano/bin make -j
+\end{code}
+
+
+% So geht es auch auf dem Login-Knoten:
+% export I_MPI_HYDRA_BOOTSTRAP=fork
+
+
+\section{Hamilton}

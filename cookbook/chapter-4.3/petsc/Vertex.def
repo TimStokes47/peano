@@ -1,5 +1,0 @@
-Packed-Type: short int;
-
-class petsc::records::Vertex {  
-  parallelise persistent int index;
-};

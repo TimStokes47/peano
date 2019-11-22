@@ -18,6 +18,7 @@ I also have at least some ideas which application areas benefit from the
 software and where it is ran.
 \begin{code}
 git clone https://gitlab.lrz.de/your-login/Peano.git
+cd Peano
 git checkout p4
 \end{code}
 
@@ -29,6 +30,8 @@ branch \texttt{p4}.
 
 
 \section{Configure}
+\label{section:installation:configure}
+
 
 Peano relies on the autotools to set up its build environment.
 Change into the project's directory and type in 
@@ -99,24 +102,43 @@ finally will deploy the Peano files in the directory specified via the
 \texttt{prefix} before.
 
 
-\section{Peano components}
+\section{Peano components and build variants}
 
-Peano currently is delivered as a set of archives:
+Peano currently is delivered as a set of archives, i.e.~static libraries:
 \begin{itemize}
   \item There is a technical architecture (\texttt{Tarch}) and the actual
   \texttt{Peano4Core}.
-  \item Each archive variant is available as a release version and as a debug
-  version. The latter is identified by a postfix \texttt{\_debug}.
+  \item Each archive variant is available as a release version, as a debug
+  version, and as a tracing version. 
   \item Each archive variant is available as 2d build and as 3d build. If you
   need higher dimensions, you have to build the required libraries manually.
 \end{itemize}
 
 
+The version terminology is as follows:
+\begin{itemize}
+  \item {\bf debug} The debug versions of the archives all have the postfix
+  \texttt{\_debug}. If you link against these versions, the full set of
+  assertions, of all tracing and all debug messages is available; though you can
+  always filter on the application-level which information you want to see
+  (cmp.~Chapter \ref{section:logging}).
+  \item {\bf tracing} The release versions of the archives all have the postfix
+  \texttt{\_trace}. If you link against these versions, all assertions and debug
+  messages are removed, but some tracing is active. You can switch on/off the
+  tracing per class (cmp.~Chapter \ref{section:logging}), and different tracing
+  backends allow you to connect to different (profiling) tools.
+  \item {\bf release} The release versions of the archives have no
+  particular postfix. They disable tracing, any debugging and all assertions.
+  These archives should be used by production runs.
+\end{itemize}
+
+
+\noindent
 Besides these archives, the Peano installation also comes along with a set of
 example applications.
 They are found in the directory \texttt{src/examples}.
-After the build, each hosts at least two variants of the example: a debug
-version and a release version.
+Most examples create by default two variants of the example: a debug
+version and one with only tracing enabled.
 Several examples furthermore come along as 2d and 3d build.
 
 
