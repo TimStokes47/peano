@@ -585,8 +585,8 @@ class tarch::logging::Log {
     void traceIn(const std::string& methodName, const std::string& message);
     void traceOut(const std::string& methodName, const std::string& message);
     #else
-    void traceIn(const std::string& methodName, const std::string& message) {}
-    void traceOut(const std::string& methodName, const std::string& message) {}
+    void traceIn(const std::string& methodName, const std::string& message);
+    void traceOut(const std::string& methodName, const std::string& message);
     #endif
 
     /**

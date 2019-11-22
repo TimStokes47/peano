@@ -87,6 +87,13 @@ void tarch::logging::Log::traceOut(const std::string& methodName, const std::str
   if (_logTrace)
     UsedLogService::getInstance().traceOut(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
 }
+#else
+void tarch::logging::Log::traceIn(const std::string& methodName, const std::string& message) {
+}
+
+
+void tarch::logging::Log::traceOut(const std::string& methodName, const std::string& message) {
+}
 #endif
 
 
