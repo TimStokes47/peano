@@ -192,6 +192,7 @@ int main(int argc, char** argv) {
 
   runTests();
 
+  tarch::multicore::Core::getInstance().configure();
   const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
   const int numberOfCores = tarch::multicore::Core::getInstance().getNumberOfThreads();
   logInfo( "main(...)", "run on " << numberOfRanks << " ranks with " << numberOfCores << " thread(s) each" );
