@@ -41,6 +41,7 @@ done
 
 
 It might be convenient to paste those in to a SLURM file. The same is done for 3d.
+After that, we continue with shared and distributed memory runs.
 
   
 ## Summary: Submit all the slurm files (on SuperMUC-NG) ##
@@ -85,6 +86,8 @@ sbatch SuperMUC-NG-scripts/distributed-memory-12-nodes-3d.slurm-script
 sbatch SuperMUC-NG-scripts/distributed-memory-14-nodes-3d.slurm-script
 sbatch SuperMUC-NG-scripts/distributed-memory-16-nodes-3d.slurm-script
 
+
+## Summary: Submit all the slurm files (on Hamilton) ##
 
 
 

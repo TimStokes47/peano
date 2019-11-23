@@ -5,20 +5,12 @@
 
 
 #include <thread>
-
+#include "tarch/logging/Log.h"
 
 
 namespace tarch {
   namespace multicore {
     class Core;
-
-    /**
-     * Gives you the CPU number on which your current execution is running.
-     * This is a wrapper around a UNIX operation and thus might not be
-     * available on all machines - notably not on MAC.
-     */
-    int getCPUNumber();
-    std::thread::id getThreadNumber();
   }
 }
 
@@ -34,7 +26,14 @@ namespace tarch {
  */
 class tarch::multicore::Core {
   private:
+    /**
+     * Logging device
+     */
+    static tarch::logging::Log  _log;
+
     Core();
+
+    int _numberOfThreads;
   public:
     /**
      * The default is what the system management typically gives you. So if
@@ -96,6 +95,11 @@ class tarch::multicore::Core {
      * @return Physical core the process is running on
      */
     int getCoreNumber() const;
+
+    /**
+     *
+     */
+    static int getNumberOfUnmaskedThreads();
 };
 
 

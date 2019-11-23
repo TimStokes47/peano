@@ -8,13 +8,15 @@
 #endif
 
 
-
-
 #if defined(SharedCPP)
 #include <sstream>
 
 
-tarch::multicore::Core::Core() {
+tarch::logging::Log tarch::multicore::Core::_log( "tarch::multicore::Core" );
+
+
+tarch::multicore::Core::Core():
+  _numberOfThreads(std::thread::hardware_concurrency()) {
 }
 
 
@@ -28,6 +30,15 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
 }
 
 void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConcurrentBackgroundTasks, int maxNumberOfConcurrentBandwidthBoundTasks ) {
+  if (numberOfThreads != UseDefaultNumberOfThreads) {
+    _numberOfThreads = numberOfThreads;
+    if (_numberOfThreads>getNumberOfUnmaskedThreads()) {
+      logWarning( "configure(int,int,int)", "number of configured threads (" << numberOfThreads << ") is bigger than available unmasked threads (" << getNumberOfUnmaskedThreads() << ")" );
+    }
+  }
+  else {
+    _numberOfThreads = std::thread::hardware_concurrency();
+  }
 }
 
 
@@ -41,8 +52,7 @@ bool tarch::multicore::Core::isInitialised() const {
 
 
 int tarch::multicore::Core::getNumberOfThreads() const {
-	// @todo
-  return std::thread::hardware_concurrency();
+  return _numberOfThreads;
 }
 
 
@@ -61,5 +71,34 @@ int tarch::multicore::Core::getCoreNumber() const {
   return 1;
   #endif
 }
+
+
+
+
+int tarch::multicore::Core::getNumberOfUnmaskedThreads() {
+  #ifdef CompilerHasSysinfo
+  cpu_set_t mask;
+  sched_getaffinity(0, sizeof(cpu_set_t), &mask);
+
+  int result = 0;
+  for (int i = 0; i < std::thread::hardware_concurrency(); i++) {
+    if ( CPU_ISSET(i, &mask)!=0 ) {
+      result++;
+    }
+  }
+
+  return result;
+/*
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(i, &cpuset);
+
+  int sched_setaffinity(pid_t pid,size_t cpusetsize,cpu_set_t *mask);
+*/
+  #else
+  return std::thread::hardware_concurrency();
+  #endif
+}
+
 
 #endif

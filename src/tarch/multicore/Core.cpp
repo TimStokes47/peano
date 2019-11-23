@@ -9,12 +9,6 @@
 
 
 
-
-std::thread::id tarch::multicore::getThreadNumber() {
-  return std::this_thread::get_id();
-}
-
-
 #ifndef SharedMemoryParallelisation
 
 #include "tarch/multicore/Core.h"
