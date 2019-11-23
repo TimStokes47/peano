@@ -89,5 +89,41 @@ sbatch SuperMUC-NG-scripts/distributed-memory-16-nodes-3d.slurm-script
 
 ## Summary: Submit all the slurm files (on Hamilton) ##
 
+sbatch Hamilton-scripts/serial-2d.slurm-script
+sbatch Hamilton-scripts/serial-3d.slurm-script
 
+sbatch Hamilton-scripts/shared-memory-1-core-2d.slurm-script
+sbatch Hamilton-scripts/shared-memory-2-cores-2d.slurm-script
+sbatch Hamilton-scripts/shared-memory-3-cores-2d.slurm-script
+sbatch Hamilton-scripts/shared-memory-6-cores-2d.slurm-script
+sbatch Hamilton-scripts/shared-memory-12-cores-2d.slurm-script
+sbatch Hamilton-scripts/shared-memory-24-cores-2d.slurm-script
+sbatch Hamilton-scripts/shared-memory-48-cores-2d.slurm-script
 
+sbatch Hamilton-scripts/shared-memory-1-core-3d.slurm-script
+sbatch Hamilton-scripts/shared-memory-2-cores-3d.slurm-script
+sbatch Hamilton-scripts/shared-memory-3-cores-3d.slurm-script
+sbatch Hamilton-scripts/shared-memory-6-cores-3d.slurm-script
+sbatch Hamilton-scripts/shared-memory-12-cores-3d.slurm-script
+sbatch Hamilton-scripts/shared-memory-24-cores-3d.slurm-script
+sbatch Hamilton-scripts/shared-memory-48-cores-3d.slurm-script
+
+sbatch Hamilton-scripts/distributed-memory-1-node-2d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-2-nodes-2d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-4-nodes-2d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-6-nodes-2d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-12-nodes-2d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-24-nodes-2d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-36-nodes-2d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-48-nodes-2d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-60-nodes-2d.slurm-script
+
+sbatch Hamilton-scripts/distributed-memory-1-node-3d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-2-nodes-3d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-4-nodes-3d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-6-nodes-3d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-12-nodes-3d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-24-nodes-3d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-36-nodes-3d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-48-nodes-3d.slurm-script
+sbatch Hamilton-scripts/distributed-memory-60-nodes-3d.slurm-script
