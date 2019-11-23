@@ -173,9 +173,9 @@ int main(int argc, char** argv) {
   //tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
   tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile( "p4.tracing" );
 
-  if (argc!=2) {
-	logError( "main(...)", "Usage: ./executable mesh-width");
-	return 1;
+  if (argc!=2 and argc!=3) {
+  	logError( "main(...)", "Usage: ./executable mesh-width [core-count]");
+	  return 1;
   }
 
   double meshWidth = std::atof( argv[1] );
@@ -192,7 +192,11 @@ int main(int argc, char** argv) {
 
   runTests();
 
-  tarch::multicore::Core::getInstance().configure();
+  if (argc==3) {
+    int cores = std::atoi( argv[2] );
+    tarch::multicore::Core::getInstance().configure(cores);
+  }
+
   const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
   const int numberOfCores = tarch::multicore::Core::getInstance().getNumberOfThreads();
   logInfo( "main(...)", "run on " << numberOfRanks << " ranks with " << numberOfCores << " thread(s) each" );
