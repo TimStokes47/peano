@@ -5,6 +5,7 @@
 #SBATCH -N 12
 #SBATCH --ntasks-per-node=1
 
+source /etc/profile.d/modules.sh
 
 module load intel/xe_2018.2
 module load intelmpi/intel/2018.2
