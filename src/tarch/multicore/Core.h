@@ -20,7 +20,12 @@ namespace tarch {
  *
  * Any shared memory implementation has to provide a singleton Core. Its full
  * qualified name is tarch::multicore::Core. If no shared memory variant is
- * switched on, this is the default Core implementation that does nothing.
+ * switched on, Peano provides a default Core implementation that does nothing.
+ *
+ * If you don't configure the core explicitly, it will try to use some
+ * meaningful default.
+ *
+ * @see configure()
  *
  * @author Tobias Weinzierl
  */
@@ -55,9 +60,12 @@ class tarch::multicore::Core {
     static Core& getInstance();
 
     /**
-     * Configure the whole thing. If numberOfThreads equals 0, the core is
-     * using the number of standard threads.
-     *
+     * Configure the whole thing. If numberOfThreads equals the default, the
+     * routine will use the hardware concurrency to determine the number of
+     * threads that should be used. On SLURM-based HPC platforms, this will
+     * be wrong if multiple MPI ranks are placed on one node. It is also a
+     * bad choice if hyperthreading should not/can not be used. Use the helper
+     * function getNumberOfUnmaskedThreads().
      *
      * @param numberOfThreads Number of threads that shall be used. This
      *        parameter either is greater than zero (which defines the number
@@ -72,15 +80,14 @@ class tarch::multicore::Core {
     void shutDown();
 
     /**
-     * @return Shared memory environment is up and runnning.
+     * @return Shared memory environment is up and running. Most shared
+     * memory implementations work properly with the defaults. They just
+     * return true always.
      */
     bool isInitialised() const;
 
     /**
-     * Returns the number of threads that is used by TBB. This routine usually
-     * is not of interest at all as TBB should do all the thread management
-     * automatically. However, the user interface plots some information on the
-     * number of threads used, and sometimes I found it useful.
+     * Returns the number of threads that is used.
      *
      * @return Number of threads available.
      */
@@ -97,7 +104,10 @@ class tarch::multicore::Core {
     int getCoreNumber() const;
 
     /**
-     *
+     * This routine runs through the Unix thread mask and counts how many
+     * threads SLURM allows a code to use. It returns this count. If you
+     * use multiple MPI ranks per node, each rank usually gets the permission
+     * to access the same number of cores exclusively.
      */
     static int getNumberOfUnmaskedThreads();
 };
