@@ -1,0 +1,18 @@
+#!/bin/bash
+#SBATCH -t 48:00:00
+#SBATCH --exclusive
+#SBATCH -p par7.q
+#SBATCH -N 12
+#SBATCH --ntasks-per-node=1
+
+
+module load intel/xe_2018.2
+module load intelmpi/intel/2018.2
+
+
+for h in 0.1 0.5 0.01 0.005 0.001
+do
+  mpirun ./PeanoRegularGridUpscaling2d-parallel $h > distributed-memory-$SLURM_NTASKS-nodes-2d-$h.out
+done
+
+
