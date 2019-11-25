@@ -31,7 +31,7 @@ void runTests() {
 }
 
 
-void runParallel(double h) {
+void runParallel(double h, int flopsPerCell) {
   logTraceInWith1Argument( "runParallel", h );
   peano4::parallel::SpacetreeSet::getInstance().init(
     #if Dimensions==2
@@ -44,7 +44,7 @@ void runParallel(double h) {
     0
   );
 
-  examples::regulargridupscaling::MyObserver emptyObserver(examples::regulargridupscaling::MyObserver::RanksObserverTemplate,h);
+  examples::regulargridupscaling::MyObserver emptyObserver(examples::regulargridupscaling::MyObserver::RanksObserverTemplate,h,flopsPerCell);
 
   const int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
 
@@ -177,12 +177,13 @@ int main(int argc, char** argv) {
   //tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
   tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile( "p4.tracing" );
 
-  if (argc!=2 and argc!=3) {
-  	logError( "main(...)", "Usage: ./executable mesh-width [core-count]");
+  if (argc!=3 and argc!=4) {
+  	logError( "main(...)", "Usage: ./executable mesh-width flops-per-cell [core-count]");
 	  return 1;
   }
 
-  double meshWidth = std::atof( argv[1] );
+  double meshWidth    = std::atof( argv[1] );
+  int    flopsPerCell = std::atoi( argv[2] );
   if (meshWidth<=0) {
     logError( "main(...)", "Usage: ./executable mesh-width");
     logError( "main(...)", "  mesh-width has to be a positive value");
@@ -196,8 +197,8 @@ int main(int argc, char** argv) {
 
   runTests();
 
-  if (argc==3) {
-    int cores = std::atoi( argv[2] );
+  if (argc==4) {
+    int cores = std::atoi( argv[3] );
     tarch::multicore::Core::getInstance().configure(cores);
   }
 
@@ -208,7 +209,7 @@ int main(int argc, char** argv) {
   const int numberOfFineGridCells = std::round( std::pow( 1.0 / meshWidth, Dimensions ));
   logInfo( "main(...)", "expect more than " << numberOfFineGridCells << " cell(s) in total" );
 
-  runParallel(meshWidth);
+  runParallel(meshWidth,flopsPerCell);
 
   peano4::shutdownSharedMemoryEnvironment();
   peano4::shutdownParallelEnvironment();

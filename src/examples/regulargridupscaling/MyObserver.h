@@ -19,11 +19,17 @@ class examples::regulargridupscaling::MyObserver: public peano4::grid::Traversal
   private:
     static tarch::logging::Log _log;
 
-	const double _h;
-  public:
-	static constexpr int RanksObserverTemplate = 1;
+    const double _h;
+    const int    _flopsPerCell;
 
-    MyObserver(int spacetreeId, double h);
+    /**
+     * I use an accumulator just to ensure that the flop calculations are not removed.
+     */
+    double _accumulator;
+  public:
+    static constexpr int RanksObserverTemplate = 1;
+
+    MyObserver(int spacetreeId, double h, int flopsPerCell);
     virtual ~MyObserver();
 
     void beginTraversal(

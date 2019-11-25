@@ -2,13 +2,14 @@ import matplotlib.pyplot as plt
 import os.path
 
 D = [2,3]
-H = [0.5,0.1,0.005,0.001]
+H = [0.1,0.05,0.01,0.005,0.001]
 
 def plot_shared_memory():
   for d in [2,3]:
     plt.clf()
     max_cores = 0
     for h in H:
+      max_cells = 0.0
       ydata = []
       xdata = []
       for cores in range(1,64):
@@ -20,13 +21,17 @@ def plot_shared_memory():
           for line in file:
             if "start parallel traversals" in line:
               start_time = int( line.split(" ")[0] )
+            if "local unrefined cells" in line:
+              cells = float( line.split("=")[-1] )
+              max_cells = max(cells,max_cells)
             if "terminated successfully" in line:
               time = int( line.split(" ")[0] )
               max_cores = max(max_cores,cores)
               xdata.append(cores)
               ydata.append(time - start_time)
       if len(xdata)>0:
-        plt.plot( xdata, ydata, label="h=" + str(h), marker=H.index(h)+4 )
+        ydata_calibrated = [ y/max_cells for y in ydata ]
+        plt.plot( xdata, ydata_calibrated, label="h=" + str(h), marker=H.index(h)+4 )
     plt.legend()
     plt.xlabel( "cores" )
     plt.ylabel( "time/cell" )
