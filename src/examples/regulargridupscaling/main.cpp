@@ -31,8 +31,8 @@ void runTests() {
 }
 
 
-void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread) {
-  logTraceInWith3Arguments( "runParallel", h, numberOfCellsPerRank, numberOfCellsPerThread);
+void runParallel(double h) {
+  logTraceInWith1Argument( "runParallel", h );
   peano4::parallel::SpacetreeSet::getInstance().init(
     #if Dimensions==2
     {0.0, 0.0},
@@ -52,7 +52,7 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
     logInfo( "runParallel(...)", "create initial grid (step #1)" );
     while (
       peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() <
-	    tarch::mpi::Rank::getInstance().getNumberOfRanks() * numberOfCellsPerRank / ThreePowerD
+	    tarch::mpi::Rank::getInstance().getNumberOfRanks() * ThreePowerD
 	) {
       peano4::parallel::Node::getInstance().setNextProgramStep(1);
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
@@ -67,9 +67,8 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
     logInfo( "runParallel(...)", "remote refined cells= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
     logInfo( "runParallel(...)", "remote unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteUnrefinedCells() );
 
-    const int oldNumberOfCellsPerRank = numberOfCellsPerRank;
-    numberOfCellsPerRank = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::mpi::Rank::getInstance().getNumberOfRanks();
-    logInfo( "runParallel(...)", "trigger split of initial grid among ranks with " << numberOfCellsPerRank << " cells per rank compared to an estimate of " << oldNumberOfCellsPerRank );
+    int numberOfCellsPerRank = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::mpi::Rank::getInstance().getNumberOfRanks();
+    logInfo( "runParallel(...)", "trigger split of initial grid among ranks with " << numberOfCellsPerRank << " cells per rank" );
     for (int rank=1; rank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
       if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,numberOfCellsPerRank,rank)) {
         logWarning( "runParallel(...)", "failed to assign rank " << rank << " " << numberOfCellsPerRank << " cell(s)" );
@@ -84,7 +83,7 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
     }
 
-    numberOfCellsPerThread = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+    int numberOfCellsPerThread = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
     logInfo( "runParallel(...)", "trigger split of master rank into threads with " << numberOfCellsPerThread  << " cells per thread" );
     for (int thread=1; thread<numberOfThreads; thread++) {
       if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,numberOfCellsPerThread,0)) {
@@ -132,7 +131,7 @@ void runParallel(double h, int numberOfCellsPerRank, int numberOfCellsPerThread)
       else if (peano4::parallel::Node::getInstance().getCurrentProgramStep()==3) {
         assertionEquals( peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size(), 1);
         const int localTree = *(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().begin());
-        numberOfCellsPerThread = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+        int numberOfCellsPerThread = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
         logInfo( "runParallel(...)", "local unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells());
         logInfo( "runParallel(...)", "trigger split of master rank into threads with " << numberOfCellsPerThread << " cells per thread");
         for (int thread=1; thread<numberOfThreads; thread++) {
@@ -209,11 +208,7 @@ int main(int argc, char** argv) {
   const int numberOfFineGridCells = std::round( std::pow( 1.0 / meshWidth, Dimensions ));
   logInfo( "main(...)", "expect more than " << numberOfFineGridCells << " cell(s) in total" );
 
-  const int numberOfCellsPerRank   = std::max(numberOfFineGridCells / numberOfRanks,1);
-  const int numberOfCellsPerThread = std::max(numberOfCellsPerRank / numberOfCores,1);
-  logInfo( "main(...)", "deploy at least " << numberOfCellsPerRank << " cell(s) to each rank with at least " << numberOfCellsPerThread << " cell(s) per thread" );
-
-  runParallel(meshWidth, numberOfCellsPerRank, numberOfCellsPerThread);
+  runParallel(meshWidth);
 
   peano4::shutdownSharedMemoryEnvironment();
   peano4::shutdownParallelEnvironment();
