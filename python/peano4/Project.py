@@ -3,6 +3,7 @@
 
 
 import peano4.output
+import peano4.datamodel
 
 
 class Project (object):
@@ -18,18 +19,27 @@ class Project (object):
     # Create default output model, i.e. those parts that have to be there
     # always
     #
-    self.output    = peano4.output.Output()    
+    self.output       = peano4.output.Output()    
+    
+    #
+    # Empty model by default
+    #
+    self.datamodel    = peano4.datamodel.Model()
+    
     self.is_generated = False
     self.is_built     = False
-    pass
+
     
   def generate(self, overwrite=peano4.output.Overwrite.Default):
     """
     Generate all code.
     """
     self.is_generated = True
+
+    self.datamodel.construct_output(self.output)
+    
     self.output.generate(overwrite, self.directory)
-    pass
+
           
   def build(self):
     """
