@@ -14,10 +14,13 @@ module load intelmpi/intel/2018.2
 export d=3
 export cores=4
 for flops in 1 100 10000 1000000
-done
+do
  for h in 0.1 0.5 0.01 0.005 0.001
  do
-   mpirun ./PeanoRegularGridUpscaling$dd-parallel $h $f $cores> shared-memory-$cores-cores-$dd-$h-$flops-flops.out 6
+   executable="./PeanoRegularGridUpscaling"$d"d-parallel"
+   output="shared-memory-"$cores"-cores-"$d"d-"$h"-"$flops"-flops.out"
+   echo $executable  $output
+   mpirun $executable $h $flops $cores > $output
  done
 done
 
