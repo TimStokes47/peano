@@ -1,16 +1,32 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+import peano4.output.TemplatedHeaderImplementationFilePair
+import os
+
+
 class Patch(object):
-  def __init__(self, dim):
+  def __init__(self, dim, name):
     """
       dim should be a two-tuple or a three-tuple of integers, so a construction 
       could look like
       
-        cell_data = peano4.datamodel.Patch( (6,6,6) )
+        cell_data = peano4.datamodel.Patch( (6,6,6), "Fluid" )
 
     """
-    self.dim = dim
+    self.dim       = dim
     self.generator = PatchToDoubleArray(self)
+    self.name      = name
+    self.namespace = []
+
+
+  def configure(self,namespace):
+    """
+    Typically called by model as soon as you add an object to it
+    """
+    self.namespace = namespace
+
+
+
 
 
 class PatchToDoubleArray(object):
@@ -25,7 +41,19 @@ class PatchToDoubleArray(object):
     """
       Pass in a version of output
     """
-    filename = "mytest"
-    output.makefile.add_cpp_file( filename + ".cpp" )
+    output.makefile.add_cpp_file( self.data.namespace[-1] + "/" + self.data.name + ".cpp" )
+    templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )    
+    generated_files = peano4.output.TemplatedHeaderImplementationFilePair(
+      templatefile_prefix+".h.template",
+      templatefile_prefix+".cpp.template",
+      self.data.name, 
+      self.data.namespace,
+      self.data.namespace[-1], 
+      { 
+        "CARDINALITY_2D": str(self.data.dim[0]*self.data.dim[1]), 
+        "CARDINALITY_3D": str(self.data.dim[0]*self.data.dim[1]*self.data.dim[2]) 
+      },
+      True)
+    output.add(generated_files)
 
 

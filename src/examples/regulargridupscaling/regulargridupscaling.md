@@ -47,8 +47,8 @@ After that, we continue with shared and distributed memory runs.
 ## Summary: Submit all the slurm files (on SuperMUC-NG) ##
 
 
-sbatch SuperMUC-NG-scripts/serial-2d.slurm-script
-sbatch SuperMUC-NG-scripts/serial-3d.slurm-script
+%sbatch SuperMUC-NG-scripts/serial-2d.slurm-script
+%sbatch SuperMUC-NG-scripts/serial-3d.slurm-script
 
 sbatch SuperMUC-NG-scripts/shared-memory-1-core-2d.slurm-script
 sbatch SuperMUC-NG-scripts/shared-memory-2-cores-2d.slurm-script
@@ -89,8 +89,8 @@ sbatch SuperMUC-NG-scripts/distributed-memory-16-nodes-3d.slurm-script
 
 ## Summary: Submit all the slurm files (on Hamilton) ##
 
-sbatch Hamilton-scripts/serial-2d.slurm-script
-sbatch Hamilton-scripts/serial-3d.slurm-script
+%sbatch Hamilton-scripts/serial-2d.slurm-script
+%sbatch Hamilton-scripts/serial-3d.slurm-script
 
 sbatch Hamilton-scripts/shared-memory-1-core-2d.slurm-script
 sbatch Hamilton-scripts/shared-memory-2-cores-2d.slurm-script

@@ -3,18 +3,22 @@
 
 
 class Model(object):
-  def __init__(self):
-    self.cell_data = []
-    self.face_data = []
+  def __init__(self,namespace):
+    self.cell_data   = []
+    self.face_data   = []
     self.vertex_data = []
+    self.namespace   = namespace
 
   def add_cell(self,submodel):
+    submodel.configure(self.namespace + ["celldata"])
     self.cell_data.append(submodel)
 
   def add_face(self,submodel):
+    submodel.configure(self.namespace + ["facedata"])
     self.face_data.append(submodel)
 
   def add_vertex(self,submodel):
+    submodel.configure(self.namespace + ["vertexdata"])
     self.vertex_data.append(submodel)
 
   def construct_output(self,output):

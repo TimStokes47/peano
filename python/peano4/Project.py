@@ -9,6 +9,8 @@ import peano4.datamodel
 class Project (object):
   """ 
   Represents on Peano 4 project.
+  
+  namespace sequence of strings representing the (nested) namespace
   """
   
   def __init__(self, namespace, directory = "."):
@@ -24,7 +26,7 @@ class Project (object):
     #
     # Empty model by default
     #
-    self.datamodel    = peano4.datamodel.Model()
+    self.datamodel    = peano4.datamodel.Model(namespace)
     
     self.is_generated = False
     self.is_built     = False

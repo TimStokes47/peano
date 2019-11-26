@@ -17,10 +17,10 @@ OBJS=$(subst .cpp,.o,$(SOURCES))
 all: solver
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
     
 solver: $(OBJS)
-	$(CXX) $(LDFLAGS) -o peano4 $(OBJS) $(LDLIBS)
+	$(CXX) $(LDFLAGS) $(OBJS) $(LDLIBS) -o p4 
     
 clean:
 	rm -f $(OBJS)

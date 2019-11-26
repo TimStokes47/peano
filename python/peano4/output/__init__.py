@@ -4,3 +4,4 @@
 from .Output   import Output
 from .Helper   import Overwrite
 from .Makefile import Makefile
+from .TemplatedHeaderImplementationFilePair import TemplatedHeaderImplementationFilePair
