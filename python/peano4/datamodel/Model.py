@@ -1,5 +1,6 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+from .ModelToAbstractObserver import ModelToAbstractObserver
 
 
 class Model(object):
@@ -8,6 +9,7 @@ class Model(object):
     self.face_data   = []
     self.vertex_data = []
     self.namespace   = namespace
+    self.generator   = ModelToAbstractObserver(self)
 
   def add_cell(self,submodel):
     submodel.configure(self.namespace + ["celldata"])
@@ -28,3 +30,10 @@ class Model(object):
       i.generator.construct_output(output)
     for i in self.vertex_data:
       i.generator.construct_output(output)
+    self.generator.construct_output(output)
+
+
+
+
+
+    

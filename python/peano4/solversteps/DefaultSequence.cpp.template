@@ -8,6 +8,8 @@
 #include "peano4/grid/Spacetree.h"
 #include "peano4/parallel/SpacetreeSet.h"
 
+#include "observers/AbstractObserver.h"
+
 
 tarch::logging::Log _log("examples::regulargridupscaling");
 
