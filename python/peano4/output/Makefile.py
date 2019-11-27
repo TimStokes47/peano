@@ -23,10 +23,11 @@ class Makefile(object):
   def set_dimension(self,dimension):
     self.d["DIM"] = str(dimension)
 
-  def parse_configure_outcome(self,directory):
+  def parse_configure_script_outcome(self,directory):
     """
     directory should point to the directory which holds the ./configure script.
-    It furthermore has to be invoked after configure has passed successfully.
+    It furthermore has to be invoked after configure has passed successfully. 
+    This script does not accept relative paths.
     """
     input_file = directory + "/Makefile"
     input = open( input_file, "r" )
@@ -57,7 +58,7 @@ class Makefile(object):
       # files
       self.d[ 'SOURCES' ] = ""
       for i in self.cppfiles:
-        self.d[ 'SOURCES' ] += ""
+        self.d[ 'SOURCES' ] += " "
         self.d[ 'SOURCES' ] += i
       
       # We first eliminate the precompiled variant, and then we get rid of the
