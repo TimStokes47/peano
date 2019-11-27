@@ -10,3 +10,15 @@
 src/stamp-h1
 
 /ar-lib
+/autom4te.cache/
+/compile
+/config.guess
+/config.log
+/config.status
+/config.sub
+/configure
+/depcomp
+/install-sh
+/ltmain.sh
+/missing
+/aclocal.m4

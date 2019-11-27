@@ -1,11 +1,27 @@
 import matplotlib.pyplot as plt
 import os.path
+import sys
 
 
 D     = [2,3]
 H     = [ 0.1,       0.05,      0.01,      0.005,     0.001 ]
 Flops = [ 1,         100,       10000,     1000000 ]
 Color = [ "#ff0000", "#00ff00", "#0000ff", "#a0a000", "#a000a0" ]
+
+
+def filter_shared_memory():
+  for d in [2,3]:
+    for h in H:
+      for flops in Flops:
+        for cores in range(1,64):
+          filename = "shared-memory-" + str(cores) + "-cores-" + str(d) + "d-" + str(h) + "-" + str(flops) + "-flops.out"
+          if os.path.exists( filename ):
+            print( "found " + filename + " write " + filename + ".filter" )
+            input_file   = open(filename, "r")
+            output_file  = open(filename, "w")
+            for line in file:
+              if ("start parallel traversals" in line) or ("local unrefined cells" in line) or "terminated successfully" in line:
+                output_file.write( line )
 
 
 def plot_shared_memory():
@@ -20,8 +36,15 @@ def plot_shared_memory():
         ydata = []
         xdata = []
         for cores in range(1,64):
+          found_file = False
           filename = "shared-memory-" + str(cores) + "-cores-" + str(d) + "d-" + str(h) + "-" + str(flops) + "-flops.out"
-          if os.path.exists( filename ):
+          if os.path.exists( filename+".filter" ):
+            found_file  = True
+            filename   += ".filter"
+          elif os.path.exists( filename ):
+            found_file = True
+          
+          if found_file:
             print( "found " + filename )
             file       = open(filename, "r")
             start_time = 0
@@ -85,6 +108,18 @@ def plot_shared_memory():
 
 
 if __name__ == "__main__":
-  plot_shared_memory()
+  if len(sys.argv)!=3:
+    print( "Usage: python " + sys.argv[0] + " [option] [target]")
+    print( "" )
+    print( "With option from" )
+    print( "  filter            filters out files, i.e. throws away all entries which are not required" )
+    print( "  create-plots      generate plots" )
+    print( "" )
+    print( "With option from" )
+    print( "  shared-memory     create shared memory plots" )
+  elif sys.argv[1]=="create-plots" and sys.argv[2]=="shared-memory":
+    plot_shared_memory()
+  else:
+    print( "Invalid option. Run without arguments for usage message" )
   
   
