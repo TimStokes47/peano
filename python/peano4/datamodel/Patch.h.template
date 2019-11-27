@@ -11,6 +11,9 @@
 #include <string>
 
 
+#include "tarch/la/Vector.h"
+
+
 {OPEN_NAMESPACE}
   class {CLASSNAME};
 {CLOSE_NAMESPACE}

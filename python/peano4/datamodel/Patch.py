@@ -5,7 +5,7 @@ import os
 
 
 class Patch(object):
-  def __init__(self, dim, name):
+  def __init__(self, dim, no_of_unknowns, name):
     """
       dim should be a two-tuple or a three-tuple of integers, so a construction 
       could look like
@@ -14,6 +14,7 @@ class Patch(object):
 
     """
     self.dim       = dim
+    self.no_of_unknowns = no_of_unknowns
     self.generator = PatchToDoubleArray(self)
     self.name      = name
     self.namespace = []
@@ -50,8 +51,8 @@ class PatchToDoubleArray(object):
       self.data.namespace,
       self.data.namespace[-1], 
       { 
-        "CARDINALITY_2D": str(self.data.dim[0]*self.data.dim[1]), 
-        "CARDINALITY_3D": str(self.data.dim[0]*self.data.dim[1]*self.data.dim[2]) 
+        "CARDINALITY_2D": str(self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1]), 
+        "CARDINALITY_3D": str(self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1]*self.data.dim[2]) 
       },
       True)
     output.add(generated_files)
