@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import os.path
 import sys
 
@@ -18,13 +17,14 @@ def filter_shared_memory():
           if os.path.exists( filename ):
             print( "found " + filename + " write " + filename + ".filter" )
             input_file   = open(filename, "r")
-            output_file  = open(filename, "w")
-            for line in file:
+            output_file  = open(filename + ".filter", "w")
+            for line in input_file:
               if ("start parallel traversals" in line) or ("local unrefined cells" in line) or "terminated successfully" in line:
                 output_file.write( line )
 
 
 def plot_shared_memory():
+  import matplotlib.pyplot as plt
   for d in [2,3]:
     plt.clf()
     max_cores = 0
@@ -119,6 +119,8 @@ if __name__ == "__main__":
     print( "  shared-memory     create shared memory plots" )
   elif sys.argv[1]=="create-plots" and sys.argv[2]=="shared-memory":
     plot_shared_memory()
+  elif sys.argv[1]=="filter" and sys.argv[2]=="shared-memory":
+    filter_shared_memory()
   else:
     print( "Invalid option. Run without arguments for usage message" )
   
