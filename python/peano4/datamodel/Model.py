@@ -1,6 +1,6 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from .ModelToAbstractObserver import ModelToAbstractObserver
+from peano4.datamodel.ModelToDataRepository import ModelToDataRepository
 
 
 class Model(object):
@@ -9,7 +9,7 @@ class Model(object):
     self.face_data   = []
     self.vertex_data = []
     self.namespace   = namespace
-    self.generator   = ModelToAbstractObserver(self)
+    self.generator   = ModelToDataRepository(self)
 
   def add_cell(self,submodel):
     submodel.configure(self.namespace + ["celldata"])
