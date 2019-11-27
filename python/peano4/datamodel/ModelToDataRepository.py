@@ -35,22 +35,10 @@ class ModelToDataRepository(object):
       self.__build_up_dictionary_for_one_data_set(i,"Cell")
 
     for i in self.model.face_data:
-      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "typedef "
-      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += i.generator.get_stack_container()
-      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "  FaceData" + str(self.model.face_data.index(i)) + ";\n"
-      self.d[ "DATA_CONTAINER_INCLUDES" ]      += i.generator.get_header_file_include()
-      self.d[ "DATA_CONTAINER_INCLUDES" ]      += "\n"
-      self.d[ "DATA_CONTAINER_DECLARATION" ]   += "static std::map< DataKey, FaceData" + str(self.model.face_data.index(i)) + ">  _faceData" + str(self.model.face_data.index(i)) + ";\n"
-      self.d[ "DATA_CONTAINER_INSTANTIATION" ] += "std::map< DataKey, " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::FaceData" + str(self.model.face_data.index(i)) + ">  _faceData" + str(self.model.face_data.index(i)) + ";\n"
+      self.__build_up_dictionary_for_one_data_set(i,"Face")
 
     for i in self.model.vertex_data:
-      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "typedef "
-      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += i.generator.get_stack_container()
-      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "  VertexData" + str(self.model.vertex_data.index(i)) + ";\n"
-      self.d[ "DATA_CONTAINER_INCLUDES" ]      += i.generator.get_header_file_include()
-      self.d[ "DATA_CONTAINER_INCLUDES" ]      += "\n"
-      self.d[ "DATA_CONTAINER_DECLARATION" ]   += "static std::map< DataKey, VertexData" + str(self.model.vertex_data.index(i)) + ">  _vertexData" + str(self.model.vertex_data.index(i)) + ";\n"
-      self.d[ "DATA_CONTAINER_INSTANTIATION" ] += "std::map< DataKey, VertexData" + str(self.model.vertex_data.index(i)) + ">  _vertexData" + str(self.model.vertex_data.index(i)) + ";\n"
+      self.__build_up_dictionary_for_one_data_set(i,"Vertex")
 
   def __get_full_namespace(self):
     return self.model.namespace + [ "observers" ]

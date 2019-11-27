@@ -29,6 +29,12 @@ project = peano4.Project( ["examples", "finitevolumes"], "." )
 patch = peano4.datamodel.Patch( (4,4,4), 5, "Q" )
 project.datamodel.add_cell(patch)
 
+#
+# Along the faces, we have the patch overlaps. As we use only a Rusanov flux, 
+# one cell of overlap between adjacent patches is sufficient.
+#
+patch_overlap = peano4.datamodel.Patch( (1,4,4), 5, "Q" )
+project.datamodel.add_face(patch_overlap)
 
 #
 # Peano's API does not know which settings to use on the present system. To 
