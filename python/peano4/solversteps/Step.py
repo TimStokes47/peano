@@ -74,7 +74,7 @@ class Step:
     perspective.
     """
     interface = peano4.output.MappingInterface(
-      self.name, self.project.namespace+ [ "mappings" ],self.project.directory + "/mappings",True
+      self.name, self.project.namespace+ [ "mappings" ],self.project.directory + "/mappings",False
     )
  
     for i in self.vertex_data:
@@ -102,3 +102,11 @@ class Step:
 
     output.artefacts.append( interface )
 
+    observer = peano4.output.Observer(
+      self.name, self.project.namespace+ [ "observers" ],self.project.directory + "/observers"
+    )
+    output.artefacts.append( observer )
+    output.makefile.add_cpp_file( observer.get_cpp_file_name() )
+
+    # @todo Kein virtual in die generierten Signaturen
+    
