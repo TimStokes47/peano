@@ -85,7 +85,7 @@ class peano4::datamanagement::VertexEnumerator {
       tarch::la::Vector<Dimensions,double> result( _x );
       std::bitset<Dimensions> myset(i);
       for (int d=0; d<Dimensions; d++) {
-        result(d) += myset[d] * _h(d);
+        result(d) += static_cast<double>(myset[d]) * _h(d);
       }
       return result;
 	}
