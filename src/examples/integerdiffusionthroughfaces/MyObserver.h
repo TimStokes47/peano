@@ -82,9 +82,7 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
   	 */
   	TraversalObserver* clone(int spacetreeId) override;
 
-	  std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
-
-    void exchangeStacksAfterGridSweep() override;
+    std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
 };
 
 #endif

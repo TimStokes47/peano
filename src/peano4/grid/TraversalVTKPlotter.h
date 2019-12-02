@@ -137,8 +137,6 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
      * Obviously empty for this particular observer.
      */
     std::vector< GridControlEvent > getGridControlEvents() override;
-
-    void exchangeStacksAfterGridSweep() override;
 };
 
 #endif

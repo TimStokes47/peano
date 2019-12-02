@@ -262,7 +262,3 @@ void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
 std::vector< peano4::grid::GridControlEvent > peano4::grid::TraversalVTKPlotter::getGridControlEvents() {
   return std::vector< peano4::grid::GridControlEvent >();
 }
-
-
-void peano4::grid::TraversalVTKPlotter::exchangeStacksAfterGridSweep() {
-}
