@@ -37,6 +37,16 @@ patch_overlap = peano4.datamodel.Patch( (1,4,4), 5, "Q" )
 project.datamodel.add_face(patch_overlap)
 
 #
+# For each step that we wanna do, we define one solver step.
+#
+grid_printer = peano4.solversteps.Step( "PlotGrid" )
+grid_printer.use_face(patch_overlap)
+grid_printer.use_cell(patch)
+project.solversteps.add_step(grid_printer)
+
+
+
+#
 # Peano's API does not know which settings to use on the present system. To 
 # make it copy/clone the settings identified by ./configure, we ask it to 
 # parse the generated configuration scripts. The makefile would also offer a
@@ -51,6 +61,7 @@ project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano"
 # round, it is always admissible to only generate stuff, e.g., but to build and
 # run the project through a command line
 #
-project.generate(peano4.output.Overwrite.Always)
+#project.generate(peano4.output.Overwrite.Always)
+project.generate(peano4.output.Overwrite.Default)
 project.build()
 project.run( "myarguments" )
