@@ -80,8 +80,6 @@ class examples::delta::MyObserver: public peano4::grid::TraversalObserver {
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;
-
-    void exchangeStacksAfterGridSweep() override;
 };
 
 #endif

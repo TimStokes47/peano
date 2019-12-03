@@ -114,8 +114,3 @@ std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGri
 
   return controlEvents;
 }
-
-
-void examples::grid::MyObserver::exchangeStacksAfterGridSweep() {
-}
-

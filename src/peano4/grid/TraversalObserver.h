@@ -34,9 +34,9 @@ class peano4::grid::TraversalObserver {
   public:
 	virtual ~TraversalObserver() {}
 
-	static constexpr int CreateOrDestroyPersistentGridEntity = -1;
-	static constexpr int CreateOrDestroyHangingGridEntity    = -2;
-  static constexpr int NoData                              = -3;
+    static constexpr int CreateOrDestroyPersistentGridEntity = -1;
+    static constexpr int CreateOrDestroyHangingGridEntity    = -2;
+    static constexpr int NoData                              = -3;
 
 	/**
 	 * Event is invoked per cell. It is however not called for the root cell,
@@ -121,19 +121,6 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
     const tarch::la::Vector<Dimensions,double>&  x,
     const tarch::la::Vector<Dimensions,double>&  h
   ) = 0;
-
-  /**
-   * Traditionally just calls the spacetree set's routines to trigger all data
-   * flow. However, users might also implement their data flow manually here.
-   *
-   * @see peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeStacksAsynchronously()
-   */
-// @todo Dieser Name ist falsch. Es sollte generell nur ein exchangeStacks geben mit
-//       - dem Vater-Rank
-//       - den Kinder-Ranks
-//       - einem Enum-Mode: BeforeFirstSweep, WhileForking, ...
-//       Gesamte Signatur gibt es schon in exchangeAllVerticalDataExchangeStacks().
-  virtual void exchangeStacksAfterGridSweep() = 0;
 };
 
 #endif

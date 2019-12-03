@@ -1,0 +1,47 @@
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#ifndef {INCLUDE_GUARD}
+#define {INCLUDE_GUARD}
+
+
+#include "tarch/la/Vector.h"
+#include "peano4/utils/Globals.h"
+#include "peano4/grid/GridControlEvent.h"
+#include "peano4/grid/GridTraversalEvent.h"
+#include "peano4/grid/TraversalObserver.h"
+#include "mappings/{CLASSNAME}.h"
+
+
+{OPEN_NAMESPACE}
+  class {CLASSNAME};
+{CLOSE_NAMESPACE}
+
+
+class {FULL_QUALIFIED_CLASSNAME}: public peano4::grid::TraversalObserver {{
+  public:
+    mappings::{CLASSNAME}    _mapping;
+  public:
+	void enterCell(
+      const peano4::grid::GridTraversalEvent&  event
+    ) override;
+
+	void leaveCell(
+	  const peano4::grid::GridTraversalEvent&  event
+    ) override;
+
+	TraversalObserver* clone(int spacetreeId) override;
+
+	std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
+
+    void beginTraversal(
+      const tarch::la::Vector<Dimensions,double>&  x,
+      const tarch::la::Vector<Dimensions,double>&  h
+    ) override;
+
+    void endTraversal(
+      const tarch::la::Vector<Dimensions,double>&  x,
+      const tarch::la::Vector<Dimensions,double>&  h
+    ) override;
+}};
+
+#endif

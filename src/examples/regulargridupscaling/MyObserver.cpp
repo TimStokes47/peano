@@ -79,8 +79,3 @@ std::vector< peano4::grid::GridControlEvent > examples::regulargridupscaling::My
 
   return controlEvents;
 }
-
-
-void examples::regulargridupscaling::MyObserver::exchangeStacksAfterGridSweep() {
-}
-

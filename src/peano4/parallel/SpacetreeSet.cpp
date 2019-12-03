@@ -218,7 +218,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
     createObserverCloneIfRequired(observer, masterTree._id );
     masterTree.traverse( *_clonedObserver[masterTree._id ], true );
     // @todo Eigentlich Bloedsinn. Also wenn eh alles Stacks sind, dann kann ich es gleich selber machen
-    _clonedObserver[masterTree._id]->exchangeStacksAfterGridSweep();
+//    _clonedObserver[masterTree._id]->exchangeStacksAfterGridSweep();
   }
   logTraceOut( "exchangeDataBetweenMergingTreesAndTraverseMaster(...)" );
 }
@@ -273,7 +273,7 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
 
   // @todo Der Clone hier muss raus!
   _spacetreeSet.createObserverCloneIfRequired(_observer, _spacetree._id );
-  _spacetreeSet._clonedObserver[ _spacetree._id ]->exchangeStacksAfterGridSweep();
+//  _spacetreeSet._clonedObserver[ _spacetree._id ]->exchangeStacksAfterGridSweep();
 
   return false;
 }
@@ -311,7 +311,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
           logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " and its master " << p._masterId << " exchanged all vertical data");
           p.traverse(*_clonedObserver[p._id],true);
           logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " finished its dry run's traversal. Tree state=" << p.toString() );
-          _clonedObserver[p._masterId]->exchangeStacksAfterGridSweep();
+//          _clonedObserver[p._masterId]->exchangeStacksAfterGridSweep();
           logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree after dry run: " << p.toString() );
 	    }
 	    break;

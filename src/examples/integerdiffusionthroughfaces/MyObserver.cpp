@@ -325,7 +325,3 @@ std::vector< peano4::grid::GridControlEvent > examples::integerdiffusionthroughf
 
   return controlEvents;
 }
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::exchangeStacksAfterGridSweep() {
-}

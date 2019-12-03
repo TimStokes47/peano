@@ -4,6 +4,8 @@
 
 import peano4.output
 import peano4.datamodel
+import peano4.solversteps
+import peano4.runner
 
 
 class Project (object):
@@ -28,6 +30,10 @@ class Project (object):
     #
     self.datamodel    = peano4.datamodel.Model(namespace)
     
+    self.solversteps  = peano4.solversteps.Steps(self)
+    
+    self.main         = peano4.runner.DefaultSequence(self) 
+    
     self.is_generated = False
     self.is_built     = False
 
@@ -39,6 +45,10 @@ class Project (object):
     self.is_generated = True
 
     self.datamodel.construct_output(self.output)
+
+    self.solversteps.construct_output(self.output)
+      
+    self.main.construct_output(self.output)
     
     self.output.generate(overwrite, self.directory)
 

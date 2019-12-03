@@ -47,7 +47,3 @@ peano4::grid::TraversalObserver*  peano4::grid::EmptyTraversalObserver::clone(in
 std::vector< peano4::grid::GridControlEvent > peano4::grid::EmptyTraversalObserver::getGridControlEvents() {
   return std::vector< peano4::grid::GridControlEvent >();
 }
-
-
-void peano4::grid::EmptyTraversalObserver::exchangeStacksAfterGridSweep() {
-}
