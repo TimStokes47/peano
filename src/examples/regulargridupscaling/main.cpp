@@ -202,6 +202,8 @@ int main(int argc, char** argv) {
     tarch::multicore::Core::getInstance().configure(cores);
   }
 
+  tarch::mpi::Rank::getInstance().setDeadlockTimeOut(0);
+
   const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
   const int numberOfCores = tarch::multicore::Core::getInstance().getNumberOfThreads();
   logInfo( "main(...)", "run on " << numberOfRanks << " ranks with " << numberOfCores << " thread(s) each" );
