@@ -92,7 +92,7 @@ AC_ARG_WITH(
     case "${withval}" in
       no)     AC_MSG_RESULT([no multithreading]);                    multithreading=false ;;
       cpp)    AC_MSG_RESULT([cpp (C++11)]);                          multithreading=cpp ;;
-      tbb)    AC_MSG_RESULT([tbb (Intel Threading Building Blocks]); multithreading=tbb ;;
+      tbb)    AC_MSG_RESULT([tbb (Intel Threading Building Blocks)]); multithreading=tbb ;;
       *)      AC_MSG_FAILURE([default=no (no multithreading). Use cpp or tbb to define target]);            multithreading=false ;;
     esac
   ], 
@@ -109,7 +109,7 @@ if test "$multithreading" == cpp; then
 fi
 
 if test "$multithreading" == tbb; then
-  AC_CHECK_HEADERS([tbb.h],[],[AC_MSG_ERROR([header <tbb.h> not found])])
+  AC_CHECK_HEADERS([tbb/tbb.h],[],[AC_MSG_ERROR([header <tbb.h> not found])])
   AC_DEFINE([SharedTBB], [1], [SharedTBB])
 fi
 
