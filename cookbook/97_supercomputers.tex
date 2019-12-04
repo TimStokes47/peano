@@ -24,12 +24,13 @@ From hereon, the steps are all the same. If you wanna use TBB, you however have 
 
 \begin{code}
  setenv CXXFLAGS $TBB_INC
- setenv LDFLAGS $TBB_SHLIB
+ setenv LDFLAGS "$TBB_SHLIB"
 
  ./configure --with-multithreading=tbb --with-mpi=mpicxx
 \end{code}
 
-before you call configure from above.
+before you call configure from above. Be sure you use the hyphens above. The TBB library flag comes
+along with two arguments and you want to move both over to \texttt{LDFLAGS}.
 
 
 
