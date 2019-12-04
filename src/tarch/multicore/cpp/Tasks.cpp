@@ -19,9 +19,6 @@ void tarch::multicore::yield() {
 
 
 bool tarch::multicore::processPendingTasks() {
-  // Note: Only invoked if no shared memory parallelisation activated. If
-  // TBB/C++/OpenMP are enabled, the routine of the respective subfolder is
-  // invoked
   if (backgroundJobs.empty()) {
     return false;
   }
