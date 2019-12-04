@@ -2,6 +2,10 @@
 #include "AutomatonState.h"
 
 
+constexpr int peano4::grid::PeanoCurve::CallStack;
+constexpr int peano4::grid::PeanoCurve::NumberOfBaseStacks;
+
+
 bool peano4::grid::PeanoCurve::isTraversePositiveAlongAxis(
   const AutomatonState&  state,
   int                    axis
