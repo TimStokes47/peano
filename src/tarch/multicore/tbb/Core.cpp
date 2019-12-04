@@ -11,6 +11,7 @@
 #if defined(SharedTBB)
 #include <sstream>
 #include "tarch/Assertions.h"
+#include "TBB.h"
 
 
 // This seems to be an Intel requirement as this feature isnt' released yet officially.
@@ -18,8 +19,6 @@
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
 
-
-#include "Tasks.h"
 
 namespace {
   ::tbb::global_control*      __globalThreadCountControl;
@@ -47,17 +46,21 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
   if (numberOfThreads==UseDefaultNumberOfThreads) {
     __numberOfThreads = tbb::task_scheduler_init::default_num_threads();
   }
-  else if (numberOfThreads==UseMaximumNumberOfAvailableThreads) {
-    __numberOfThreads = std::thread::hardware_concurrency();
-  }
   else {
     __numberOfThreads = numberOfThreads;
   }
 
   __globalThreadCountControl = new tbb::global_control(tbb::global_control::max_allowed_parallelism,__numberOfThreads);
 
-  internal::setMaxNumberOfConcurrentBackgroundTasks(maxNumberOfConcurrentBackgroundTasks);
-  internal::setMaxNumberOfConcurrentHighBandwidthTasks(maxNumberOfConcurrentBandwidthBoundTasks);
+  if (maxNumberOfConcurrentBackgroundTasks==UseDefaultNumberOfThreads) {
+    maxNumberOfConcurrentBackgroundTasks = __numberOfThreads;
+  }
+  if (maxNumberOfConcurrentBandwidthBoundTasks==UseDefaultNumberOfThreads ) {
+    maxNumberOfConcurrentBandwidthBoundTasks = __numberOfThreads;
+  }
+
+  MaxNumberOfConcurrentBackgroundTasks     = maxNumberOfConcurrentBackgroundTasks;
+  MaxNumberOfConcurrentHighBandwidthTasks  = maxNumberOfConcurrentBandwidthBoundTasks;
 }
 
 

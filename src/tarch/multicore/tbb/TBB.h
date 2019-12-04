@@ -1,0 +1,19 @@
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#include "tarch/multicore/MulticoreDefinitions.h"
+
+
+#if !defined(_TARCH_MULTICORE_TBB_TBB_H_) && defined(SharedTBB)
+#define _TARCH_MULTICORE_TBB_TBB_H_
+
+namespace tarch {
+  namespace multicore {
+    /**
+     * Configure TBB runtime.
+     */
+    extern int MaxNumberOfConcurrentHighBandwidthTasks;
+    extern int MaxNumberOfConcurrentBackgroundTasks;
+  }
+}
+
+#endif

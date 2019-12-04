@@ -1,13 +1,12 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#if !defined(_TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_)
+#include "tarch/multicore/MulticoreDefinitions.h"
+
+#if !defined(_TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_) && defined(SharedTBB)
 #define _TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_
 
-#include <string>
-#include <thread>
 
-#include "tarch/multicore/BooleanSemaphore.h"
-#include "tarch/logging/Log.h"
+#include <tbb/recursive_mutex.h>
 
 
 namespace tarch {
@@ -16,7 +15,6 @@ namespace tarch {
     class RecursiveLock;
   }
 }
-
 
 
 /**
@@ -32,6 +30,10 @@ class tarch::multicore::RecursiveSemaphore {
   private:
     friend class tarch::multicore::RecursiveLock;
 
+    tbb::recursive_mutex          _recursiveMutex;
+
+
+    bool tryEnterCriticalSection();
     /**
      * Waits until I can enter the critical section.
      */

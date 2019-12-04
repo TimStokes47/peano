@@ -231,6 +231,11 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * traversed its grid. Therefore, all data which has to be streamed is
      * already in the respective queues. We thus can copy them over and
      * issue the traversal of the master tree.
+     *
+     * For there is a strong order (first the merging child, then the father), we
+     * explicitly traverse only non merging trees in the first step of a traversal.
+     *
+     * @see traverseNonMergingExistingTrees()
      */
     void exchangeDataBetweenMergingTreesAndTraverseMaster(const std::set<int>& trees, peano4::grid::TraversalObserver& observer);
 

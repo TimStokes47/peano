@@ -97,8 +97,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       case peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree:
         {
           const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(message.getMasterSpacetreeId(),message.getWorkerSpacetreeId(),peano4::parallel::Node::ExchangeMode::ForkJoinData);
-          // @todo Debug
-          logInfo( "receiveDanglingMessages(...)", "wait for new state on tag " << tag );
+          logDebug( "receiveDanglingMessages(...)", "wait for new state on tag " << tag );
           peano4::grid::AutomatonState state;
           state.receive(message.getSenderRank(),tag,false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
           peano4::grid::Spacetree newTree(
