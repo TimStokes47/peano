@@ -20,7 +20,17 @@
  setenv CXX icpc
 \end{code}
 
-From hereon, the steps are all the same.
+From hereon, the steps are all the same. If you wanna use TBB, you however have to set
+
+\begin{code}
+ setenv CXXFLAGS $TBB_INC
+ setenv LDFLAGS $TBB_SHLIB
+
+ ./configure --with-multithreading=tbb --with-mpi=mpicxx
+\end{code}
+
+before you call configure from above.
+
 
 
 \section{Quick install}
@@ -53,4 +63,3 @@ Durham's mira server is one example for such a machine.
 % export I_MPI_HYDRA_BOOTSTRAP=fork
 
 
-\section{Hamilton}
