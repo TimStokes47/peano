@@ -1,12 +1,8 @@
-#include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
 
-#include "Tasks.h"
-
-
-// This implementation is valid iff neither OpenMP nor TBBs nor any other
-// shared memory parallelisation are active
 
 #if !defined(SharedMemoryParallelisation)
+#include "tarch/multicore/BooleanSemaphore.h"
 tarch::multicore::BooleanSemaphore::BooleanSemaphore() {
 }
 

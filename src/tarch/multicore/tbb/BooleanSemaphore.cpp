@@ -1,3 +1,6 @@
+#include "tarch/multicore/MulticoreDefinitions.h"
+
+
 #if defined(SharedTBB)
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Core.h"

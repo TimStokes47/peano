@@ -11,7 +11,7 @@
 #if defined(SharedTBB)
 #include <sstream>
 #include "tarch/Assertions.h"
-#include "Globals.h"
+#include "TBB.h"
 
 
 // This seems to be an Intel requirement as this feature isnt' released yet officially.
@@ -19,8 +19,6 @@
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
 
-
-#include "Tasks.h"
 
 namespace {
   ::tbb::global_control*      __globalThreadCountControl;
@@ -61,8 +59,8 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
     maxNumberOfConcurrentBandwidthBoundTasks = __numberOfThreads;
   }
 
-  setMaxNumberOfConcurrentBackgroundTasks(maxNumberOfConcurrentBackgroundTasks);
-  setMaxNumberOfConcurrentHighBandwidthTasks(maxNumberOfConcurrentBandwidthBoundTasks);
+  MaxNumberOfConcurrentBackgroundTasks     = maxNumberOfConcurrentBackgroundTasks;
+  MaxNumberOfConcurrentHighBandwidthTasks  = maxNumberOfConcurrentBandwidthBoundTasks;
 }
 
 
