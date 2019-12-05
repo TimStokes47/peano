@@ -24,6 +24,12 @@ make -j
 mv src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d-parallel
 mv src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d-parallel
 
+Alternatively, you can use the debug versions:
+
+mv src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d-parallel
+mv src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d_debug src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d-parallel
+
+
 
 ## Step 2: Single core runs ##
 
@@ -113,6 +119,7 @@ sbatch Hamilton-scripts/distributed-memory-2-nodes-2d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-4-nodes-2d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-6-nodes-2d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-12-nodes-2d.slurm-script
+
 sbatch Hamilton-scripts/distributed-memory-24-nodes-2d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-36-nodes-2d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-48-nodes-2d.slurm-script
@@ -123,6 +130,7 @@ sbatch Hamilton-scripts/distributed-memory-2-nodes-3d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-4-nodes-3d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-6-nodes-3d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-12-nodes-3d.slurm-script
+
 sbatch Hamilton-scripts/distributed-memory-24-nodes-3d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-36-nodes-3d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-48-nodes-3d.slurm-script

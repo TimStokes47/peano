@@ -22,7 +22,7 @@
 #include <tbb/task.h>
 #include <tbb/task_group.h>
 #include <tbb/concurrent_priority_queue.h>
-
+#include <tbb/concurrent_hash_map.h>
 
 
 namespace {
