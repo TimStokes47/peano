@@ -135,3 +135,11 @@ sbatch Hamilton-scripts/distributed-memory-24-nodes-3d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-36-nodes-3d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-48-nodes-3d.slurm-script
 sbatch Hamilton-scripts/distributed-memory-60-nodes-3d.slurm-script
+
+
+
+
+/opt/mpi/mpirun -np 1 /opt/intel/inspector/bin64/inspxe-cl -collect ti3 -r r000ti3 /home/tobias/git/Peano/src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug 0.1 1 2
+
+/opt/mpi/mpirun -np 1 /opt/intel/inspector/bin64/inspxe-cl -collect mi3 -knob analyze-stack=true -r r000mi3 /home/tobias/git/Peano/src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug 0.1 1 2
+
