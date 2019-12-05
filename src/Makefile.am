@@ -16,16 +16,16 @@ lib_LIBRARIES = libTarch.a libTarch_debug.a libTarch_trace.a libPeano4Core2d.a l
 
 
 libTarch_a_CXXFLAGS = -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libTarch_trace_a_CXXFLAGS = -DPeanoDebug=1 -ggdb3 -O0 $(PEANO_CXXFLAGS)
-libTarch_debug_a_CXXFLAGS = -DPeanoDebug=4 -ggdb3 -O0 $(PEANO_CXXFLAGS)
+libTarch_trace_a_CXXFLAGS = -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
+libTarch_debug_a_CXXFLAGS = -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
 
 
 libPeano4Core2d_a_CXXFLAGS        = -DDimensions=2 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libPeano4Core2d_trace_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=1 -ggdb3 -O0 $(PEANO_CXXFLAGS)
-libPeano4Core2d_debug_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=4 -ggdb3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core2d_trace_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core2d_debug_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
 libPeano4Core3d_a_CXXFLAGS        = -DDimensions=3 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libPeano4Core3d_trace_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=1 -ggdb3 -O0 $(PEANO_CXXFLAGS)
-libPeano4Core3d_debug_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=4 -ggdb3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core3d_trace_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core3d_debug_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
 
 
 #
