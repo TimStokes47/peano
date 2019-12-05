@@ -20,7 +20,23 @@
  setenv CXX icpc
 \end{code}
 
-From hereon, the steps are all the same.
+From hereon, the steps are all the same. 
+
+
+
+\paragraph{Local workstations}
+If you don't have a proper module file, you might have to configure your environment manually to use TBB:
+\begin{code}
+export CXXFLAGS=-I/opt/tbb/include
+export LDFLAGS="-L/opt/tbb/lib/intel64/gcc4.7 -ltbb"
+
+./configure --with-multithreading=tbb --with-mpi=/opt/mpi/mpicxx
+\end{code}
+
+I found bash sometimes to be picky when setting the TBB libraries. The path and the library literally have to be set separately.
+
+
+
 
 
 \section{Quick install}
