@@ -1,0 +1,70 @@
+\chapter{Selected HPC platforms}
+
+
+\section{Supercomputer login and change into working directory}
+
+\paragraph{SuperMUC-NG}
+\begin{code}
+ ssh lu57zat6@skx.supermuc.lrz.de
+ cd $WORK
+\end{code}
+
+
+\paragraph{Hamilton}
+\begin{code}
+ ssh frmh84@hamilton.dur.ac.uk
+ module load intel/xe_2018.2
+ module load intelmpi/intel/2018.2
+ cd $SCRATCH
+ cd /ddn/data/frmh84/
+ setenv CXX icpc
+\end{code}
+
+From hereon, the steps are all the same. 
+
+
+
+\paragraph{Local workstations}
+If you don't have a proper module file, you might have to configure your environment manually to use TBB:
+\begin{code}
+export CXXFLAGS=-I/opt/tbb/include
+export LDFLAGS="-L/opt/tbb/lib/intel64/gcc4.7 -ltbb"
+
+./configure --with-multithreading=tbb --with-mpi=/opt/mpi/mpicxx
+\end{code}
+
+I found bash sometimes to be picky when setting the TBB libraries. The path and the library literally have to be set separately.
+
+
+
+
+
+\section{Quick install}
+
+Please exchange the login below with your login. 
+Login is only possible from machines with a fixed, registered IP. 
+Durham's mira server is one example for such a machine. 
+
+
+
+\subsection{Grab from raw git files (not recommended)}
+
+\begin{code}
+ git clone https://gitlab.lrz.de/hpcsoftware/Peano.git
+ cd Peano
+ git checkout p4
+ libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing
+\end{code}
+
+\section{Configure and build}
+
+\begin{code}
+ export CXX=icpc
+ ./configure --with-multithreading=cpp --with-mpi=mpicxx
+ --prefix=$(WORK)/Peano/bin make -j
+\end{code}
+
+
+% So geht es auch auf dem Login-Knoten:
+% export I_MPI_HYDRA_BOOTSTRAP=fork
+
