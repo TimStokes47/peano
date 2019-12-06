@@ -143,7 +143,7 @@ class peano4::grid::Spacetree {
     /**
      * Simple recursive type analysis
      *
-     * <h2> Merge semantics </h2>
+     * \section  Merge semantics
      *
      * We run over the parent vertices and merge along the faces (per
      * dimension). The priority of flags should be taken from the code

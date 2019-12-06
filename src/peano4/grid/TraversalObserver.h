@@ -22,7 +22,7 @@ namespace peano4 {
 
 /**
  *
- * <h2> Copy behaviour </h2>
+ * \section  Copy behaviour
  *
  * There is one observer by grid traversal thread and per rank. The observers
  * are generated from the original observer via the clone() operator.
@@ -56,7 +56,7 @@ class peano4::grid::TraversalObserver {
 	 * between different spacetrees of one spacetree set, there can be no race
 	 * condition. Yet, the clone() itself could be called in parallel.
 	 *
-	 * <h2> Global per-sweep actions </h2>
+	 * \section  Global per-sweep actions
 	 *
 	 * If you want to implement an operation once per sweep in a parallel
 	 * environment, then you can exploit the fact that the spacetree set also
@@ -80,7 +80,7 @@ class peano4::grid::TraversalObserver {
 	/**
 	 * The tree traversal invokes this operation before beginIteration.
 	 *
-	 * <h2> Content </h2>
+	 * \section  Content
 	 *
 	 * Dynamic AMR is controlled via a sequence of grid control events. Each
 	 * event spans a certain region and prescribes an h resolution over this

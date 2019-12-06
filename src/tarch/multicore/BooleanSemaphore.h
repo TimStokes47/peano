@@ -28,7 +28,7 @@ namespace tarch {
  * all other threads that want to enter a section that is protected by the same
  * semaphore have to wait.
  *
- * <h2> Usage </h2>
+ * \section Usage
  *
  * - Add your class an attribute of BooleanSemaphore.
  * - For each operation with a critical section:
@@ -66,7 +66,7 @@ namespace tarch {
  * In the code above, the critical sections A and B are never executed at the
  * same time.
  *
- * <h2> Rationale </h2>
+ * \section Rationale
  *
  * - A pure critical section does not work for many applications: A plotter for
  *   example writes both vertices and cells to an output file. The write
@@ -91,7 +91,7 @@ namespace tarch {
  *   implementations of the semaphore.
  *
  *
- * <h2> Bugs due to the locks </h2>
+ * \section  Bugs due to the locks
  *
  * Inserting Locks and relying on the lock destructor turns out to be
  * problematic in two cases:
@@ -109,7 +109,7 @@ namespace tarch {
  * explicitly. In our codes, this did resolve all the issues.
  *
  *
- * <h2> Semaphores protecting more than one variable</h2>
+ * \section  Semaphores protecting more than one variable
  *
  * If a semaphore protects more than a single variable, memory reordering, caching
  * and non-barriering can induce data inconsistencies: Assume one thread writes

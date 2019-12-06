@@ -12,7 +12,8 @@ namespace peano4 {
   * multicore parallelisation.
   *
   *
-  * <h2> Recreate all DaStGen objects </h2>
+  * \section Recreate all DaStGen objects
+  *
   * <pre>
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator TreeEntry.def  .
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator StartTraversalMessage.def  .

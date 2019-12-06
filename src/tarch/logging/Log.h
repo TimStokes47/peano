@@ -430,14 +430,14 @@ namespace tarch {
  * - info:  Statistical information, copyright and similar information. Should
  *          be used rather seldom.
  *
- * <h2> Runtime </h2>
+ * \section  Runtime
  *
  * The underlying log device (like the CommandlineLogger) has to offer
  * synchronized output methods. Thus, calls to logging methods in
  * multithreaded environments mark synchronization points of your programme
  * and will change timing behaviour!
  *
- * <h2> Log output format </h2>
+ * \section  Log output format
  *
  * You can switch the log output format by setting -DUsedLogService=xxx. At
  * the moment, I support two different formats for xxx:

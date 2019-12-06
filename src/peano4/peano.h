@@ -11,7 +11,7 @@
  *
  * @image html architecture-layers.png
  *
- * <h2> Build and run unit, integration and performance tests </h2>
+ * \section Build and run unit, integration and performance tests
  *
  */
 
@@ -48,13 +48,13 @@ namespace peano4 {
    * arguments directly without calling initParallelEnvironment() they
    * might contain MPI values not important to the program.
    *
-   * <h2> Rationale </h2>
+   * \section Rationale
    *
    * You may not use the trace macros before this operation has invoked the init
    * operation. Otherwise, the getRank() assertion fails, as the node has not
    * been configured correctly.
    *
-   * <h2> Usage </h2>
+   * \section Usage
    *
    * Invoke with an address operator before that.
    * <pre>
