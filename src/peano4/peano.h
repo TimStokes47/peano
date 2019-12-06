@@ -3,6 +3,24 @@
 #ifndef _PEANO4_H_
 #define _PEANO4_H_
 
+/**
+ *
+ * @mainpage Peano 4
+ *
+ * Welcome to the source code documentation of Peano4.
+ *
+ * @image html architecture-layers.png
+ *
+ * <h2> Build and run unit, integration and performance tests </h2>
+ *
+ */
+
+
+/**
+ * @dir peano
+ *
+ * Peano's core layer. It sits on top of the technical architecture.
+ */
 namespace peano4 {
   /**
    * Fill Lookup Tables
