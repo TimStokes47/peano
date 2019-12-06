@@ -58,7 +58,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
   public:
     /**
-     * <h2> Rationale </h2>
+     * \section  Rationale
      *
      * I originally planned to merge this task into the data traversal task. The
      * idea behind such a merger is that a data exchange right after the data

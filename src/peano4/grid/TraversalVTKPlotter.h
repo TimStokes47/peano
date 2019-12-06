@@ -111,12 +111,12 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
  * This is the main plotter. In the parallel case, I will have to check
  * whether I'm on the global rank as well.
  *
- * <h2> Thread safety </h2>
+ * \section Thread safety
  *
  * As clone() might be called by multiple threads in parallel, I need some
  * semaphore mechanism.
  *
- * <h2> Inheriting </h2>
+ * \section Inheriting
  *
  * If you inherit from the plotter, please call updateMetaFile() whenever
  * you clone. However, do this only on spacetreeId==-1, i.e. on the

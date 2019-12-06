@@ -3,6 +3,24 @@
 #ifndef _PEANO4_H_
 #define _PEANO4_H_
 
+/**
+ *
+ * @mainpage Peano 4
+ *
+ * Welcome to the source code documentation of Peano4.
+ *
+ * @image html architecture-layers.png
+ *
+ * \section Build and run unit, integration and performance tests
+ *
+ */
+
+
+/**
+ * @dir peano
+ *
+ * Peano's core layer. It sits on top of the technical architecture.
+ */
 namespace peano4 {
   /**
    * Fill Lookup Tables
@@ -30,13 +48,13 @@ namespace peano4 {
    * arguments directly without calling initParallelEnvironment() they
    * might contain MPI values not important to the program.
    *
-   * <h2> Rationale </h2>
+   * \section Rationale
    *
    * You may not use the trace macros before this operation has invoked the init
    * operation. Otherwise, the getRank() assertion fails, as the node has not
    * been configured correctly.
    *
-   * <h2> Usage </h2>
+   * \section Usage
    *
    * Invoke with an address operator before that.
    * <pre>

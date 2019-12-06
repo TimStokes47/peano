@@ -35,7 +35,7 @@ namespace peano4 {
  * Please see the documentation of the constructor with only one argument for
  * further details, as this one behaves differently.
  *
- * <h2> Issuing background tasks </h2>
+ * \section  Issuing background tasks
  *
  * If you spawn a task, I cannot know when it is actually executed. As a
  * result, I never can rely where data is at the very moment the task then is

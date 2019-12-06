@@ -22,7 +22,7 @@ namespace examples {
 /**
  * Integer diffusion mapping
  *
- * <h2> Marker semantics </h2>
+ * \section Marker semantics
  *
  * - Marker k=K:   Cell holds valid data.
  * - Marker k=K-1: Remove cell if appropriate.
@@ -41,7 +41,7 @@ namespace examples {
  * face for the first time, clear the face attribute, and then accumulate the
  * value again.
  *
- * <h2> Marker flow </h2>
+ * \section Marker flow
  *
  * We basically solve an integer-valued equation similar to
  *

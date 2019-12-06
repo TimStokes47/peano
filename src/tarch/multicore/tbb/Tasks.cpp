@@ -1125,7 +1125,7 @@ void tarch::multicore::spawnAndWait(
 ) {
   tbb::task_group g;
   for (auto& p: tasks) {
-    g.run([&]{
+    g.run([=]{
       tarch::multicore::Task* task = p;
       task->run();
       delete task;

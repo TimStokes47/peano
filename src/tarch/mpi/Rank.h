@@ -136,7 +136,7 @@ class tarch::mpi::Rank {
      * delivered exactly once. The string argument is just for logging.
      *
      *
-     * <h2> Implementation details </h2>
+     * \section  Implementation details
      *
      * This operation should write something to the log devices. However, it
      * is static and the class' log devices are static, too. C++ has no

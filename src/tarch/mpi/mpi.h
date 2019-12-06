@@ -26,6 +26,21 @@ typedef int    MPI_Request;
 
 
 
+/**
+
+ @namespace tarch::mpi
+
+ \section Init MPI
+
+
+ \section Regenerate all data types
+
+ \code
+ java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator src/tarch/mpi/IntegerMessage.def src/tarch/mpi
+ java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator src/tarch/mpi/StringMessage.def src/tarch/mpi
+ \endcode
+ */
+
 
 #endif
 

@@ -52,7 +52,7 @@ class visualisation::input::PeanoTextPatchFileReader: public visualisation::inpu
 	/**
 	 * Read in one file.
 	 *
-	 * <h2> Parse process </h2>
+	 * \section Parse process
 	 *
 	 * - Load the whole files into a vector called lines, i.e. we load line by line.
 	 * -
