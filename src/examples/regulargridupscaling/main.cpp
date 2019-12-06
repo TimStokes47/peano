@@ -117,7 +117,7 @@ void runParallel(double h, int flopsPerCell) {
     const int Iterations=20;
     #endif
 
-    for (int i=0; i<20; i++) {
+    for (int i=0; i<Iterations; i++) {
       peano4::parallel::Node::getInstance().setNextProgramStep(5);
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
     }
