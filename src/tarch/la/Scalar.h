@@ -37,6 +37,12 @@ namespace tarch {
      * function for this.
      */
     double max( double a, double b, double c);
+
+    /**
+     * Wrapper around std::pow which is redirected to Intel's implementation on 
+     * Intel machines.
+     */
+    double pow( double base, double exponent );
   }
 }
 

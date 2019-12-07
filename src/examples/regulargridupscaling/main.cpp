@@ -208,9 +208,6 @@ int main(int argc, char** argv) {
   const int numberOfCores = tarch::multicore::Core::getInstance().getNumberOfThreads();
   logInfo( "main(...)", "run on " << numberOfRanks << " ranks with " << numberOfCores << " thread(s) each" );
 
-  const int numberOfFineGridCells = std::round( std::pow( 1.0 / meshWidth, Dimensions ));
-  logInfo( "main(...)", "expect more than " << numberOfFineGridCells << " cell(s) in total" );
-
   runParallel(meshWidth,flopsPerCell);
 
   peano4::shutdownSharedMemoryEnvironment();
