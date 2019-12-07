@@ -13,6 +13,38 @@
  *
  * \section Build and run unit, integration and performance tests
  *
+ * You can quickly check whether your system is properly configured if you
+ * you build the code with the following options, and run one of the standard
+ * examples (it is just invoked, i.e. not actually run; so you see that the
+ * code actually starts up, but you do not actually execute anything):
+ *
+ * <pre>
+   ./configure
+   make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
+   make -j
+   src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
+
+   ./configure --with-multithreading=cpp
+   make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
+   make -j
+   src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
+
+   ./configure --with-mpi=mpicxx
+   make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
+   make -j
+   mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
+
+   ./configure --with-multithreading=cpp --with-mpi=mpicxx
+   make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
+   make -j
+   mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
+   </pre>
+ *
+ * Each individual program invocation runs all unit tests, as I make my
+ * examples always run the unit tests first before they try to start up the
+ * real simulation. If you pipe the outcomes of the program runs into a file
+ * (all in one file please) and then run the Python script on this file, you
+ * get an image of all the builds that have been successful.
  */
 
 

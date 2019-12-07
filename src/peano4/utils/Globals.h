@@ -1,17 +1,5 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-
-/**
- * This file defines some macros and definitions used by most of the files of
- * the project. Among the definition of assertions and the global constants
- * (Dimensions and NUMBER_OF_VERTICES_PER_ELEMENT) are the numerical comparison
- * operations.
- *
- * @version $Revision: 1.70 $
- * @author Tobias Weinzierl, Tobias Neckel
- *
- * @todo Doku fuer macros in Globals.h vervollstaendigen!
- */
 #ifndef _PEANO4_UTILS_GLOBALS_H_
 #define _PEANO4_UTILS_GLOBALS_H_
 
