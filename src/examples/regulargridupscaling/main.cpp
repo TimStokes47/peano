@@ -123,7 +123,14 @@ void runParallel(double h, int flopsPerCell) {
     logInfo( "runParallel(...)", "local unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells());
     logInfo( "runParallel(...)", "remote refined cells= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
     logInfo( "runParallel(...)", "remote unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-    for (int i=0; i<20; i++) {
+
+    #if PeanoDebug>=2
+    const int Iterations=2;
+    #else
+    const int Iterations=20;
+    #endif
+
+    for (int i=0; i<Iterations; i++) {
       peano4::parallel::Node::getInstance().setNextProgramStep(5);
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
     }

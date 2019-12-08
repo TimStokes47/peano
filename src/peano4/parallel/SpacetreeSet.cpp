@@ -179,7 +179,8 @@ peano4::parallel::SpacetreeSet::TraverseTask::TraverseTask(
 
 bool peano4::parallel::SpacetreeSet::TraverseTask::run() {
   assertion1( _spacetreeSet._clonedObserver.count(_spacetree._id)==0 or _spacetreeSet._clonedObserver[_spacetree._id]==nullptr, _spacetree._id );
-  _spacetreeSet._clonedObserver[_spacetree._id] = _observer.clone( _spacetree._id );
+  //_spacetreeSet._clonedObserver[_spacetree._id] = _observer.clone( _spacetree._id );
+  _spacetreeSet.createObserverCloneIfRequired(_observer,_spacetree._id);
   _spacetree.traverse( *_spacetreeSet._clonedObserver[_spacetree._id], true );
   return false;
 }
@@ -201,6 +202,9 @@ void peano4::parallel::SpacetreeSet::createObserverCloneIfRequired(peano4::grid:
 
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseMaster(const std::set<int>& trees, peano4::grid::TraversalObserver& observer) {
   logTraceIn( "exchangeDataBetweenMergingTreesAndTraverseMaster(...)" );
+
+  std::vector< tarch::multicore::Task* > traverseTasksForMasterTrees;
+
   for (auto& masterTreeId: trees ) {
     peano4::grid::Spacetree& masterTree = getSpacetree(masterTreeId);
 
@@ -214,11 +218,16 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
     }
     logDebug( "exchangeDataBetweenMergingTreesAndTraverseMaster(TraversalObserver&)", "issue task to traverse tree " << masterTree._id << " in state " << peano4::grid::Spacetree::toString(masterTree._spacetreeState) );
 
-    createObserverCloneIfRequired(observer, masterTree._id );
-    masterTree.traverse( *_clonedObserver[masterTree._id ], true );
+    traverseTasksForMasterTrees.push_back( new TraverseTask(
+      getSpacetree(masterTree._id), *this, observer
+    ));
     // @todo Eigentlich Bloedsinn. Also wenn eh alles Stacks sind, dann kann ich es gleich selber machen
 //    _clonedObserver[masterTree._id]->exchangeStacksAfterGridSweep();
   }
+
+  static int multitaskingRegionForMasterTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseMaster" );
+  peano4::parallel::Tasks run(traverseTasksForMasterTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForMasterTrees);
+
   logTraceOut( "exchangeDataBetweenMergingTreesAndTraverseMaster(...)" );
 }
 
@@ -295,23 +304,31 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
   peano4::grid::TraversalObserver&  observer
 ) {
   logTraceIn( "exchangeDataBetweenExistingAndNewTreesAndRerunClones(...)" );
+
+  std::vector< tarch::multicore::Task* > traverseTasksForNewTrees;
+
   for (auto& p: _spacetrees) {
 	switch (p._spacetreeState) {
 	  case peano4::grid::Spacetree::SpacetreeState::NewFromSplit:
 	    {
           logInfo( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " is new. Initialise it through clone" );
 
-          createObserverCloneIfRequired(observer, p._masterId );
-          createObserverCloneIfRequired(observer, p._id );
+//          createObserverCloneIfRequired(observer, p._masterId );
+//          createObserverCloneIfRequired(observer, p._id );
 
-          assertion1( _clonedObserver.count(p._id)==1 and _clonedObserver[p._id]!=nullptr, p._id );
+//          assertion1( _clonedObserver.count(p._id)==1 and _clonedObserver[p._id]!=nullptr, p._id );
           DataExchangeTask::exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, DataExchangeTask::VerticalDataExchangeMode::PrepareDryRunForNewSpacetree);
           DataExchangeTask::finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
+
           logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " and its master " << p._masterId << " exchanged all vertical data");
-          p.traverse(*_clonedObserver[p._id],true);
-          logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " finished its dry run's traversal. Tree state=" << p.toString() );
+          traverseTasksForNewTrees.push_back( new TraverseTask(
+            p, *this, observer
+          ));
+
+//          p.traverse(*_clonedObserver[p._id],true);
+//          logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " finished its dry run's traversal. Tree state=" << p.toString() );
 //          _clonedObserver[p._masterId]->exchangeStacksAfterGridSweep();
-          logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree after dry run: " << p.toString() );
+//          logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree after dry run: " << p.toString() );
 	    }
 	    break;
 	  case peano4::grid::Spacetree::SpacetreeState::NewRoot:
@@ -329,6 +346,10 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
 	    break;
     }
   }
+
+  static int multitasking = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRerunClones" );
+  peano4::parallel::Tasks run(traverseTasksForNewTrees,peano4::parallel::Tasks::TaskType::Task,multitasking);
+
   logTraceOut( "exchangeDataBetweenExistingAndNewTreesAndRerunClones(...)" );
 }
 
