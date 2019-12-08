@@ -19,6 +19,7 @@ mv src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d src/examples/re
 mv src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d-serial
 
 ./configure --with-multithreading=cpp --with-mpi=mpicxx
+./configure --with-multithreading=tbb --with-mpi=mpicxx
 make clean
 make -j
 mv src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d-parallel

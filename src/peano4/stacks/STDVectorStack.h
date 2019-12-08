@@ -14,6 +14,7 @@
 #include "tarch/logging/Log.h"
 #include "tarch/Assertions.h"
 #include "tarch/mpi/Rank.h"
+#include "tarch/multicore/Tasks.h"
 
 
 namespace peano4 {
@@ -400,6 +401,7 @@ class peano4::stacks::STDVectorStack {
             );
           }
           tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+          tarch::multicore::yield();
         }
         delete _ioMPIRequest;
         _ioMPIRequest = nullptr;
