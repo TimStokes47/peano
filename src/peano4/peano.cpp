@@ -32,7 +32,7 @@ void peano4::writeCopyrightMessage() {
     buildInfo += ", tbb";
     #elif defined(SharedCPP)
     buildInfo += ", C++ threading";
-    #else defined(SharedCPP)
+    #else
     buildInfo += ", no threading";
     #endif
 
