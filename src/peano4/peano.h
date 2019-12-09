@@ -54,6 +54,8 @@
  * Peano's core layer. It sits on top of the technical architecture.
  */
 namespace peano4 {
+  void writeCopyrightMessage();
+
   /**
    * Fill Lookup Tables
    *

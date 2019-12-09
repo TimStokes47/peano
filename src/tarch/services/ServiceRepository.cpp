@@ -9,7 +9,6 @@
 
 tarch::services::ServiceRepository::ServiceRepository():
   _services() {
-  writeCopyrightMessage();
 }
 
 

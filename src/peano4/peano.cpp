@@ -9,6 +9,39 @@
 #include "tarch/tarch.h"
 
 
+void peano4::writeCopyrightMessage() {
+  static bool wrote = false;
+  if (
+    not wrote and tarch::mpi::Rank::getInstance().getRank() == tarch::mpi::Rank::getGlobalMasterRank() ) {
+    std::cout << "Peano 4 (C) www.peano-framework.org " << std::endl
+		      << "Written by Tobias Weinzierl et al" << std::endl;
+    std::string buildInfo = "build: ";
+
+    buildInfo += std::to_string(Dimensions);
+    buildInfo += "d";
+
+    #ifdef Parallel
+    buildInfo += ", mpi";
+    #endif
+
+    #if defined(SharedOMP)
+    buildInfo += ", omp";
+    #elif defined(SharedTBB)
+    buildInfo += ", tbb";
+    #elif defined(SharedCPP)
+    buildInfo += ", C++ threading";
+    #endif
+
+    #if PeanoDebug>0
+    buildInfo += ", debug level=" + std::to_string(PeanoDebug);
+    #endif
+
+    std::cout << buildInfo << std::endl;
+  }
+  wrote = true;
+}
+
+
 void peano4::fillLookupTables() {
 /*
   Had in in Globals.cpp
@@ -40,7 +73,7 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
   }
   #endif
 
-  tarch::writeCopyrightMessage();
+  writeCopyrightMessage();
 
   return result;
 }
@@ -62,7 +95,7 @@ int peano4::initSharedMemoryEnvironment() {
     result = -3;
   }
   #endif
-  tarch::writeCopyrightMessage();
+  writeCopyrightMessage();
   return result;
 }
 
