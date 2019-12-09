@@ -21,7 +21,9 @@ void peano4::writeCopyrightMessage() {
     buildInfo += "d";
 
     #ifdef Parallel
-    buildInfo += ", mpi";
+    buildInfo += ", with mpi";
+    #else
+    buildInfo += ", no mpi";
     #endif
 
     #if defined(SharedOMP)
@@ -30,6 +32,8 @@ void peano4::writeCopyrightMessage() {
     buildInfo += ", tbb";
     #elif defined(SharedCPP)
     buildInfo += ", C++ threading";
+    #else defined(SharedCPP)
+    buildInfo += ", no threading";
     #endif
 
     #if PeanoDebug>0

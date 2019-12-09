@@ -4,8 +4,8 @@ import sys
 
 
 Dimensions_Marker = [ "2d", "3d" ]
-MPI_Marker = [ "", "mpi" ]
-Multithreading_Marker = [ "", "omp", "tbb", "C++ threading" ]
+MPI_Marker = [ "no mpi", "with mpi" ]
+Multithreading_Marker = [ "no threading", "omp", "tbb", "C++ threading" ]
 
 
 def read_build_report( filename, dimensions, mpi, multithreading ):
@@ -36,7 +36,7 @@ def write_summary():
   out.write( "<table>")
   out.write( "<tr><td />")
   for dimensions in Dimensions_Marker:
-    out.write( "<td bgcolor=\"white\" colspan=\"" + str(len(MPI_Marker)) + "\">" )   
+    out.write( "<td bgcolor=\"white\" align=\"center\" colspan=\"" + str(len(MPI_Marker)) + "\">" )   
     out.write( dimensions )   
     out.write( "</td>" )   
   out.write( "</tr>")
