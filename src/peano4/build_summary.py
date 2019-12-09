@@ -39,14 +39,14 @@ def write_summary():
     out.write( "<td bgcolor=\"white\" align=\"center\" colspan=\"" + str(len(MPI_Marker)) + "\">" )   
     out.write( dimensions )   
     out.write( "</td>" )   
-  out.write( "</tr>")
+  out.write( "</tr>\n")
   out.write( "<tr><td />")
   for dimensions in Dimensions_Marker:
     for mpi in MPI_Marker:
       out.write( "<td bgcolor=\"white\" >" )
       out.write( mpi )
       out.write( "</td>" )
-  out.write( "</tr>")
+  out.write( "</tr>\n")
   for multithreading in Multithreading_Marker:
     out.write( "<tr>")
     out.write( "<td bgcolor=\"white\" >")
@@ -61,7 +61,7 @@ def write_summary():
           out.write( "<td bgcolor=\"yellow\">unit test failed</td>" )
         else:
           out.write( "<td bgcolor=\"red\">build failed</td>" )
-    out.write( "</tr>")
+    out.write( "</tr>\n")
   out.write( "</table>")
 
 
