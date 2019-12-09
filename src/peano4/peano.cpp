@@ -25,8 +25,7 @@ void peano4::fillLookupTables() {
 
 
 int peano4::initParallelEnvironment(int* argc, char*** argv) {
-  tarch::writeCopyrightMessage();
-
+  int result = 0;
   #ifdef Parallel
   if ( tarch::mpi::Rank::getInstance().init(argc,argv) ) {
 	peano4::parallel::Node::initMPIDatatypes();
@@ -35,14 +34,15 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
 	clock_t timeout = 60;
 	tarch::mpi::Rank::getInstance().setTimeOutWarning(timeout/4);
 	tarch::mpi::Rank::getInstance().setDeadlockTimeOut(timeout);
-    return 0;
   }
   else {
-    return -2;
+    result = -2;
   }
-  #else
-  return 0;
   #endif
+
+  tarch::writeCopyrightMessage();
+
+  return result;
 }
 
 
@@ -54,18 +54,16 @@ void peano4::shutdownParallelEnvironment() {
 
 
 int peano4::initSharedMemoryEnvironment() {
-  tarch::writeCopyrightMessage();
-
+  int result = 0;
   #ifdef SharedMemoryParallelisation
   if ( tarch::multicore::Core::getInstance().isInitialised() ) {
-    return 0;
   }
   else {
-    return -3;
+    result = -3;
   }
-  #else
-  return 0;
   #endif
+  tarch::writeCopyrightMessage();
+  return result;
 }
 
 
