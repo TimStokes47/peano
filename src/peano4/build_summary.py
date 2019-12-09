@@ -20,10 +20,10 @@ def read_build_report( filename, dimensions, mpi, multithreading ):
       if "build: " in line:
         if dimensions in line and mpi in line and multithreading in line:
           firstEntry = True
-        if "running global test case collection" in line and "ok" in line and firstEntry:
-          return (True,True)
-        elif "running global test case collection" in line and firstEntry:
-          return (True,False)
+      if "running global test case collection" in line and "ok" in line and firstEntry:
+        return (True,True)
+      elif "running global test case collection" in line and firstEntry:
+        return (True,False)
     return (firstEntry,secondEntry)
   except:
     return (False,False)
