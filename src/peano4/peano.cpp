@@ -6,6 +6,7 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/multicore/Core.h"
 #include "tarch/mpi/Rank.h"
+#include "tarch/tarch.h"
 
 
 void peano4::fillLookupTables() {
@@ -24,6 +25,8 @@ void peano4::fillLookupTables() {
 
 
 int peano4::initParallelEnvironment(int* argc, char*** argv) {
+  tarch::writeCopyrightMessage();
+
   #ifdef Parallel
   if ( tarch::mpi::Rank::getInstance().init(argc,argv) ) {
 	peano4::parallel::Node::initMPIDatatypes();
@@ -51,6 +54,8 @@ void peano4::shutdownParallelEnvironment() {
 
 
 int peano4::initSharedMemoryEnvironment() {
+  tarch::writeCopyrightMessage();
+
   #ifdef SharedMemoryParallelisation
   if ( tarch::multicore::Core::getInstance().isInitialised() ) {
     return 0;
