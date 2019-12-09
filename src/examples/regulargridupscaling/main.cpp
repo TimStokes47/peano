@@ -197,6 +197,8 @@ int main(int argc, char** argv) {
   //tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
   tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile( "p4.tracing" );
 
+  runTests();
+
   if (argc!=3 and argc!=4) {
   	logError( "main(...)", "Usage: ./executable mesh-width flops-per-cell [core-count]");
 	  return 1;
@@ -214,8 +216,6 @@ int main(int argc, char** argv) {
     logError( "main(...)", "  mesh-width has to be smaller than one");
     return 2;
   }
-
-  runTests();
 
   if (argc==4) {
     int cores = std::atoi( argv[3] );
