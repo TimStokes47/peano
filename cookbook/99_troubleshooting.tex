@@ -47,7 +47,7 @@ the directory.
   find the TBB header. To ensure it does, check that \texttt{CXXFLAGS} are properly
 		set. Next, set \texttt{LDFLAGS=-Lmypath}. Usually, I add \texttt{-ltbb} to 
   this parameter and then everything is fine. However, some configures then don't 
-  like the configure script anymore. So I instead use \texttt{export PEANO_LDFLAGS="-ltbb"}. 
+  like the configure script anymore. So I instead use \texttt{export PEANO\_LDFLAGS="-ltbb"}. 
   For some systems, it then still remains necessary to add pthreads, too.
 \end{itemize}
 
