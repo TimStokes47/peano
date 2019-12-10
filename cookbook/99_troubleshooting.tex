@@ -22,8 +22,8 @@
 
 \section{Compilation}
 
-Peano relies on a header \texttt{tarch/compiler/CompilerSpecificSettings.h}
-whenever I find incompatibilities between different compilers. 
+Peano relies on a header \texttt{tarch/compiler/CompilerSpecificSettings.h}.
+Whenever I find incompatibilities between different compilers, I try to resolve them through this file. 
 The header reads out some compiler preprocessor directives and then includes the
 one it find most appropriate. 
 You may always include your own file derived from one of the other headers in
@@ -42,6 +42,13 @@ the directory.
   that the flag \linebreak \texttt{UseTestSpecificCompilerSettings} is enabled.
   This effectively disables any optimisation for the unit tests. Without the
   flag, unit test can become really big due to template instantiation.
+  \item \textbf{configure crashes when I try to translate with TBB}. I have seen
+  this on a couple of systems and found it annoying. First, ensure that configure
+  find the TBB header. To ensure it does, check that \texttt{CXXFLAGS} are properly
+		set. Next, set \texttt{LDFLAGS=-Lmypath}. Usually, I add \texttt{-ltbb} to 
+  this parameter and then everything is fine. However, some configures then don't 
+  like the configure script anymore. So I instead use \texttt{export PEANO_LDFLAGS="-ltbb"}. 
+  For some systems, it then still remains necessary to add pthreads, too.
 \end{itemize}
 
 
