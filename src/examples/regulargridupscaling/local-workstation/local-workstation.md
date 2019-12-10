@@ -8,7 +8,7 @@
 ./configure --with-multithreading=cpp
 make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
 make -j
-cd src/examples/regulargrid
+cd src/examples/regulargridupscaling
 chmod a+x local-workstation/*.sh
 local-workstation/shared-memory-2d.sh
 local-workstation/shared-memory-3d.sh

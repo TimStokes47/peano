@@ -137,6 +137,7 @@ def plot_shared_memory():
     plt.xticks( xtics, xlabels )
     plt.title( "shared memory scaling " + str(d) + "d" )
     plt.savefig( "shared-memory-" + str(d) + "d.pdf" )
+    plt.savefig( "shared-memory-" + str(d) + "d.png" )
 
 
 if __name__ == "__main__":
