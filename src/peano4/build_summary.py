@@ -56,7 +56,7 @@ def write_summary():
       for mpi in MPI_Marker:
         result = read_build_report(sys.argv[1],dimensions,mpi,multithreading)
         if result[1]:
-          out.write( "<td bgcolor=\"green\">unit test passed</td>" )
+          out.write( "<td bgcolor=\"lime\">unit test passed</td>" )
         elif result[0]:
           out.write( "<td bgcolor=\"yellow\">unit test failed</td>" )
         else:

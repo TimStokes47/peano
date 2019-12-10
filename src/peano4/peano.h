@@ -23,21 +23,25 @@
    make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
    make -j
    src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
+   src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d_debug
 
    ./configure --with-multithreading=cpp
    make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
    make -j
    src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
+   src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d_debug
 
    ./configure --with-mpi=mpicxx
    make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
    make -j
    mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
+   mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d_debug
 
    ./configure --with-multithreading=cpp --with-mpi=mpicxx
    make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
    make -j
    mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
+   mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d_debug
    </pre>
  *
  * Each individual program invocation runs all unit tests, as I make my
