@@ -131,8 +131,6 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
 
 void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId ) {
   logTraceInWith2Arguments( "addSpacetree(int,int)", masterId, newTreeId );
-  tarch::multicore::Lock lock( _semaphore );
-
   if ( peano4::parallel::Node::getInstance().getRank(masterId)!=peano4::parallel::Node::getInstance().getRank(newTreeId) ) {
     #ifdef Parallel
     const int targetRank = peano4::parallel::Node::getInstance().getRank(newTreeId);
@@ -160,6 +158,7 @@ void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId )
       _spacetrees.begin()->_root.getH(),
       _spacetrees.begin()->_root.getInverted()
     );
+    tarch::multicore::Lock lock( _semaphore );
     _spacetrees.push_back( std::move(newTree) );
   }
   logTraceOut( "addSpacetree(int,int)" );

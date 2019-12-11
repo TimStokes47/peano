@@ -215,6 +215,10 @@ peano::datatraversal::Tasks backgroundTask(
     );
 
 
+    /**
+     * Run a set of tasks. I hand in a vector of task pointers. The vector is
+     * passed through to tarch::multicore::spawnAndWait().
+     */
     Tasks(
       const std::vector< tarch::multicore::Task* >& tasks,
       TaskType                 type,

@@ -255,6 +255,12 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      *
      * In a distributed memory environment, we have to break up the creation
      * into a set of sends forth and back through TreeManagementMessages.
+     *
+     * \section Multithreading
+     *
+     * I may not globally lock this routine, as I otherwise would block the
+     * createObserverCloneIfRequired(). So I literally "only" protect the
+     * actual push back in the vector.
      */
     void addSpacetree( int masterId, int newTreeId );
 
@@ -294,6 +300,11 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     /**
      * Quick lookup whether an observer clone for this tree id does already exist.
      * If not, we create one quickly.
+     *
+     * \section Multithreading
+     *
+     * This operation uses a lock on the semaphore to ensure that no two threads
+     * insert an observer into the global table at the same time.
      */
     void createObserverCloneIfRequired(peano4::grid::TraversalObserver& observer, int treeId);
 
