@@ -191,6 +191,8 @@ void peano4::parallel::SpacetreeSet::TraverseTask::prefetch() {
 
 
 void peano4::parallel::SpacetreeSet::createObserverCloneIfRequired(peano4::grid::TraversalObserver& observer, int treeId) {
+  tarch::multicore::Lock lock(_semaphore);
+
   if (_clonedObserver.count(treeId)==0) {
 	_clonedObserver.insert( std::pair< int, peano4::grid::TraversalObserver* >(treeId,observer.clone(treeId)) );
   }
