@@ -10,7 +10,7 @@ do
    executable="./PeanoRegularGridUpscaling"$d"d"
    output="shared-memory-"$cores"-cores-"$d"d-"$h"-"$flops"-flops.out"
    echo $executable  $output
-   timout 30m $executable $h $flops $cores > $output
+   timeout 30m $executable $h $flops $cores > $output
   done
  done
 done

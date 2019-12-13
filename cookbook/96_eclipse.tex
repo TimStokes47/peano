@@ -29,8 +29,21 @@ Otherwise, open the Eclipse GUI and run the following steps:
   \item Select a C++ project with the mode \texttt{Managed Build}.
   \item Locate the project at a remote directory (where you git deposits the
   clones).
-  \item Select \texttt{GNU Autotools}.
+  \item Select \texttt{GNU Autotools}. The Empty Project is the right one to select.
+  \item You need only one target configuration. By default, Eclipse offers you to build Build and Debug. Disable the debug variant.  
 \end{itemize}
 
+\noindent
+Somee Eclipse wizards tend to overwrite Peano's configure.ac file. If this is the 
+case, replace the files through
+
+\begin{code}
+git restore  configure.ac
+git restore  Makefile.am
+git restore  src/Makefile.am
+\end{code}
+
+\noindent
+and clean the project in Eclipse.
 
 

@@ -256,7 +256,7 @@ class peano4::grid::Spacetree {
      */
     typedef std::pair<int,int>  StackKey;
 
-    static std::map< StackKey, peano4::stacks::GridVertexStack >    _vertexStack;
+    static std::map< StackKey, peano4::stacks::GridVertexStack* >    _vertexStack;
 
     /**
      * We get these control events when we kick off the traversal and then
