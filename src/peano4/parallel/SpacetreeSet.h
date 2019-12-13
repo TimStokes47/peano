@@ -144,6 +144,11 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     static tarch::logging::Log _log;
 
+    /**
+     * Semaphore to protect container holding all the local trees.
+     */
+    static tarch::multicore::BooleanSemaphore                      _semaphore;
+
     enum class SpacetreeSetState {
       Waiting,
 	  TraverseTreesAndExchangeData
@@ -156,8 +161,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     );
 
     std::list< peano4::grid::Spacetree >  _spacetrees;
-
-    tarch::multicore::BooleanSemaphore    _semaphore;
 
     /**
      * The state identifies what the set is doing right now. The flag is for example

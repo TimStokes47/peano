@@ -18,6 +18,9 @@
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
 
 
+tarch::multicore::BooleanSemaphore  peano4::parallel::SpacetreeSet::_semaphore;
+
+
 peano4::parallel::SpacetreeSet::SpacetreeSet():
   _state( SpacetreeSetState::Waiting) {
   tarch::services::ServiceRepository::getInstance().addService( this, "peano4::parallel::SpacetreeSet" );

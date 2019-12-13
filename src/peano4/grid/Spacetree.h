@@ -14,11 +14,10 @@
 #include "tarch/logging/Log.h"
 
 
-#include "peano4/stacks/stacks.h"
+#include "peano4/stacks/STDVectorStack.h"
+#include "peano4/maps/STPStackMap.h"
 
 
-#include <vector>
-#include <map>
 #include <set>
 #include <bitset>
 
@@ -50,6 +49,7 @@ class peano4::grid::Spacetree {
     static const int RankOfCellWitchWillBeJoined;
     static const int RankOfPeriodicBoundaryCondition;
     static const int NumberOfStationarySweepsToWaitAtLeastTillJoin;
+
   private:
     static tarch::logging::Log  _log;
 
@@ -250,13 +250,7 @@ class peano4::grid::Spacetree {
      */
     std::set< int >      _joining;
 
-    /**
-     * To look up the right stack, we use a combination of tree number (id) and
-     * stack number.
-     */
-    typedef std::pair<int,int>  StackKey;
-
-    static std::map< StackKey, peano4::stacks::GridVertexStack* >    _vertexStack;
+    static peano4::maps::GridVertexStackMap  _vertexStack;
 
     /**
      * We get these control events when we kick off the traversal and then

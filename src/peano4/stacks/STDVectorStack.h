@@ -17,18 +17,15 @@
 #include "tarch/multicore/Tasks.h"
 
 
+#include "peano4/grid/GridVertex.h"
+
+
 namespace peano4 {
   namespace stacks {
-//    template <class T>
-//    concept bool HasMPIDatatype = T::Datatype;
-/*
-    concept bool HasMPIDatatype = requires(T object) {
-      typename T::Datatype;
-    };
-*/
-
     template <class T>
     class STDVectorStack;
+
+    typedef STDVectorStack< peano4::grid::GridVertex >   GridVertexStack;
 
     enum class IOMode {
       None,

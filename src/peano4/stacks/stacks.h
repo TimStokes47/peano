@@ -4,14 +4,9 @@
 #define _PEANO4_STACKS_STACK_H_
 
 
-#include "peano4/grid/GridVertex.h"
-#include "STDVectorStack.h"
-
-
 namespace peano4 {
- namespace stacks {
-   typedef STDVectorStack< peano4::grid::GridVertex >   GridVertexStack;
- }
+  namespace stacks {
+  }
 }
 
 
