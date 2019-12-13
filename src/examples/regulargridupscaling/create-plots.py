@@ -70,6 +70,7 @@ def plot_shared_memory():
     max_cores = 0
     max_serial_time = 0.0
     min_serial_time = 65536.0
+    max_cores=0
     for h in H:
       for flops in Flops:
         max_cells = 0.0
@@ -90,6 +91,7 @@ def plot_shared_memory():
             (new_entry,cells) = parse_file(filename)
             if new_entry>0.0:
                 max_cells = max(cells,max_cells)
+                max_cores = max(cores,max_cores)
                 xdata.append(cores)
                 ydata.append(new_entry)
                 if cores==1:
@@ -134,6 +136,8 @@ def plot_shared_memory():
     while xtics[-1] < max_cores:
       xtics.append( xtics[-1]*2 )
       xlabels.append( str(xtics[-1]) )
+    print( "xtics=" + str(xtics ))
+    print( "labels=" + str(xlabels))
     plt.xticks( xtics, xlabels )
     plt.title( "shared memory scaling " + str(d) + "d" )
     plt.savefig( "shared-memory-" + str(d) + "d.pdf" )
