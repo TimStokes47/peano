@@ -56,7 +56,7 @@ parameters:
 If you don't have a proper module file, you might have to configure your environment manually to use TBB:
 \begin{code}
 export CXXFLAGS=-I/opt/intel/tbb/include
-export LDFLAGS="-L/opt/intel/tbb/lib/intel64/gcc4.7 -ltbb"
+export LDFLAGS="-L/opt/intel/tbb/lib/intel64/gcc4.7 -ltbb -pthread"
 
 ./configure --with-multithreading=tbb --with-mpi=/opt/mpi/mpicxx
 \end{code}
