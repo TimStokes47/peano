@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export d=3
-for flops in 1 100 10000 1000000
+for flops in 1 100 
 do
  for h in 0.1 0.5 0.01
  do
@@ -10,7 +10,7 @@ do
    executable="./PeanoRegularGridUpscaling"$d"d"
    output="shared-memory-"$cores"-cores-"$d"d-"$h"-"$flops"-flops.out"
    echo $executable  $output
-   timeout 60m $executable $h $flops $cores > $output
+   timeout 45m $executable $h $flops $cores > $output
   done
  done
 done
