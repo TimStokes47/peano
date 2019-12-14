@@ -283,11 +283,6 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
   exchangeAllHorizontalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, true );
   exchangeAllPeriodicBoundaryDataStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
   finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
-
-  // @todo Der Clone hier muss raus!
-  _spacetreeSet.createObserverCloneIfRequired(_observer, _spacetree._id );
-//  _spacetreeSet._clonedObserver[ _spacetree._id ]->exchangeStacksAfterGridSweep();
-
   return false;
 }
 
@@ -369,14 +364,12 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees(peano4::grid::Trav
       dataExchangeTasks.push_back( new DataExchangeTask(
         p, *this, observer
       ));
-      logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
+      logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
     }
     else {
-    	// @todo Debug
-      logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "skip tree " << p._id << " as it is new" );
+      logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "skip tree " << p._id << " as it is new" );
     }
   }
-  // @todo
   logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "trigger " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
 
 /*
@@ -457,6 +450,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   createNewTrees();
 
   deleteClonedObservers();
+
   logTraceOut( "traverse(...)" );
 }
 

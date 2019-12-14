@@ -33,6 +33,8 @@ class peano4::maps::STDStackMap {
 
     void createStack(int treeId, int stackId);
   public:
+    ~STDStackMap();
+
     bool empty(int treeId, int stackId) const;
 
     /**
@@ -108,4 +110,13 @@ std::set<peano4::maps::StackKey>  peano4::maps::STDStackMap<T>::getKeys() {
   return result;
 }
 
+
+template <typename T>
+peano4::maps::STDStackMap<T>::~STDStackMap() {
+  for (auto& p: _data) {
+    delete p.second;
+  }
+}
+
 #endif
+

@@ -33,7 +33,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
               peano4::parallel::Node::ExchangeMode::ForkJoinData
             );
             const int sourceStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(childId);
-            const int size        = stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,sourceStack) ].size();
+            const int size        = stackContainer.get(spacetreeId,sourceStack)->size();
             logDebug(
               "exchangeAllVerticalDataExchangeStacks(...)",
               "send out stack " << sourceStack << " (vertical fork communication) from tree " << spacetreeId << " to rank " << destinationRank << " hosting tree " << childId << " with tag " << tag
@@ -46,7 +46,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
             );
             assertion(message.getValue()>=0);
             if (message.getValue()>0) {
-              stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,sourceStack) ].startSend(
+              stackContainer.get(spacetreeId,sourceStack)->startSend(
                 destinationRank, tag
               );
             }
@@ -138,11 +138,11 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
             "exchangeAllVerticalDataExchangeStacks(...)",
             "receive " << message.getValue() << " entries"
           );
-          stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].startReceive(
+          stackContainer.get(spacetreeId,destinationStack)->startReceive(
             sourceRank, tag, message.getValue()
           );
-          stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].finishSendOrReceive();
-          stackContainer[ peano4::grid::Spacetree::StackKey(spacetreeId,destinationStack) ].reverse();
+          stackContainer.get(spacetreeId,destinationStack)->finishSendOrReceive();
+          stackContainer.get(spacetreeId,destinationStack)->reverse();
           #else
           assertionMsg( false, "should never be entered" );
           #endif

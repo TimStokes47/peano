@@ -138,6 +138,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
         static void finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId );
 	  };
 
+
   private:
     /**
      * Logging device.
