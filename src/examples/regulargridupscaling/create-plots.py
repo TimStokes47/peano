@@ -5,7 +5,7 @@ from fileinput import filename
 
 
 D     = [2,3]
-H     = [ 0.1,       0.05,      0.01,      0.005,     0.001 ]
+H     = [ 0.5,       0.2,       0.1,       0.05,      0.01,      0.005,     0.001 ]
 Flops = [ 1,         100,       10000,     1000000 ]
 Color = [ "#ff0000", "#00ff00", "#0000ff", "#a0a000", "#a000a0" ]
 BenchmarkIterations = 20
