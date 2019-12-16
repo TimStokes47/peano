@@ -31,18 +31,39 @@ class peano4::maps::STDStackMap {
      */
     tarch::multicore::BooleanSemaphore                      _semaphore;
 
-    void createStack(int treeId, int stackId);
+    /**
+     * This routine is not thread-safe, i.e. if you need it thread-safe then
+     * you have to wrap it into  a semaphore manually.
+     */
+    void createStack(const StackKey& key);
   public:
     ~STDStackMap();
 
     bool empty(int treeId, int stackId) const;
 
     /**
+     * Get the stack belonging to a tree.
+     *
+     * There are two versions of the routine: one is thread-safe, the other one
+     * does not employ a dedicated semaphore. The one with a semaphore can
+     * lazily create stacks; which is the reason why we need the semaphore:
+     * everytime we lazily insert new stacks, we run risk that we break the
+     * consistency of the underlying container. Originally, I worked with
+     * thread-safe accessors only. This resulted in disappointing timings and
+     * notably speedup. With a carelfull distinction, I got down the runtime
+     * to two third of the original.
+     *
      * @return A stack of type T. Actually, it is a pointer and this routine is
      *   a lazy creation, i.e. might create the result upon demand.
      */
-    T* get(int treeId, int stackId);
-    T* get(const StackKey& key);
+    T* getThreadSafe(int treeId, int stackId);
+    T* getThreadSafe(const StackKey& key);
+
+    /**
+     * @see getThreadSafe(int,int)
+     */
+    T* getNotThreadSafe(int treeId, int stackId) const;
+    T* getNotThreadSafe(const StackKey& key) const;
 
     std::string toString() const;
 
@@ -56,12 +77,11 @@ class peano4::maps::STDStackMap {
 
 
 template <typename T>
-void peano4::maps::STDStackMap<T>::createStack(int treeId, int stackId) {
-  tarch::multicore::Lock lock(_semaphore);
-  if ( _data.count( StackKey(treeId,stackId) )==0 ) {
+void peano4::maps::STDStackMap<T>::createStack(const StackKey& key) {
+  if ( _data.count( key )==0 ) {
     _data.insert(
       std::pair< StackKey, T* >(
-        StackKey(treeId,stackId),
+        key,
 		new T()
 	  )
     );
@@ -77,26 +97,41 @@ bool peano4::maps::STDStackMap<T>::empty(int treeId, int stackId) const {
 
 
 template <typename T>
-T* peano4::maps::STDStackMap<T>::get(int treeId, int stackId) {
-  createStack(treeId,stackId);
-
-  tarch::multicore::Lock lock(_semaphore);
-  return _data[StackKey(treeId,stackId)];
+T* peano4::maps::STDStackMap<T>::getThreadSafe(int treeId, int stackId) {
+  return getThreadSafe( StackKey(treeId,stackId) );
 }
 
 
 template <typename T>
-T* peano4::maps::STDStackMap<T>::get(const StackKey& key) {
-  createStack(key.first,key.second);
-
+T* peano4::maps::STDStackMap<T>::getThreadSafe(const StackKey& key) {
   tarch::multicore::Lock lock(_semaphore);
+  createStack(key);
   return _data[key];
 }
 
 
 template <typename T>
+T* peano4::maps::STDStackMap<T>::getNotThreadSafe(int treeId, int stackId) const {
+  return getNotThreadSafe( StackKey(treeId,stackId) );
+}
+
+
+template <typename T>
+T* peano4::maps::STDStackMap<T>::getNotThreadSafe(const StackKey& key) const {
+  assertion( _data.count(key)==1 );
+  return _data.at( key );
+}
+
+
+template <typename T>
 std::string peano4::maps::STDStackMap<T>::toString() const {
-  return "(" + std::to_string( _data.size() ) + ")";
+  std::string result = "(" + std::to_string( _data.size() );
+  for (auto& p: _data) {
+	result += ",";
+	result += std::to_string(p.first.first) + "x" + std::to_string(p.first.second) + ":" + std::to_string(p.second->size());
+  }
+  result += ")";
+  return result;
 }
 
 
