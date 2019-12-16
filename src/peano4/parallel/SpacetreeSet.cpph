@@ -33,7 +33,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
               peano4::parallel::Node::ExchangeMode::ForkJoinData
             );
             const int sourceStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(childId);
-            const int size        = stackContainer.get(spacetreeId,sourceStack)->size();
+            const int size        = stackContainer.getThreadSafe(spacetreeId,sourceStack)->size();
             logDebug(
               "exchangeAllVerticalDataExchangeStacks(...)",
               "send out stack " << sourceStack << " (vertical fork communication) from tree " << spacetreeId << " to rank " << destinationRank << " hosting tree " << childId << " with tag " << tag
@@ -46,7 +46,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
             );
             assertion(message.getValue()>=0);
             if (message.getValue()>0) {
-              stackContainer.get(spacetreeId,sourceStack)->startSend(
+              stackContainer.getThreadSafe(spacetreeId,sourceStack)->startSend(
                 destinationRank, tag
               );
             }
