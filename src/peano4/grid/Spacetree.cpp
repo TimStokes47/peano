@@ -22,7 +22,7 @@ const int peano4::grid::Spacetree::NumberOfStationarySweepsToWaitAtLeastTillJoin
 
 
 
-peano4::maps::GridVertexStackMap    peano4::grid::Spacetree::_vertexStack;
+peano4::grid::Spacetree::GridVertexStackMap    peano4::grid::Spacetree::_vertexStack;
 
 
 peano4::grid::Spacetree::Spacetree(

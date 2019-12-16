@@ -5,7 +5,6 @@
 
 
 #include "maps.h"
-#include "peano4/grid/GridVertex.h"
 
 
 #include <map>
@@ -15,8 +14,6 @@ namespace peano4 {
   namespace maps {
     template <typename T>
     class STDStackMap;
-
-    typedef STDStackMap< peano4::stacks::GridVertexStack >   GridVertexStackMap;
   }
 }
 

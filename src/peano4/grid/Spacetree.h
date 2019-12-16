@@ -15,7 +15,10 @@
 
 
 #include "peano4/stacks/STDVectorStack.h"
-#include "peano4/maps/STPStackMap.h"
+
+
+#include "peano4/maps/STDStackMap.h"
+#include "peano4/maps/HierarchicalStackMap.h"
 
 
 #include <set>
@@ -250,7 +253,10 @@ class peano4::grid::Spacetree {
      */
     std::set< int >      _joining;
 
-    static peano4::maps::GridVertexStackMap  _vertexStack;
+    //typedef peano4::maps::STDStackMap< peano4::stacks::GridVertexStack >   GridVertexStackMap;
+    typedef peano4::maps::HierarchicalStackMap< peano4::stacks::GridVertexStack >   GridVertexStackMap;
+
+    static GridVertexStackMap  _vertexStack;
 
     /**
      * We get these control events when we kick off the traversal and then
