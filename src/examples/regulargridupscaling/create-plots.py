@@ -7,7 +7,7 @@ from fileinput import filename
 D     = [2,3]
 H     = [ 0.5,       0.2,       0.1,       0.05,      0.01,      0.005,     0.001 ]
 Flops = [ 1,         100,       10000,     1000000 ]
-Color = [ "#ff0000", "#00ff00", "#0000ff", "#a0a000", "#a000a0" ]
+Color = [ "#ff0000", "#00ff00", "#0000ff", "#a0a000", "#a000a0", "#00a0a0", "998899", "aa8888", "88aa88", "8888aa" ]
 BenchmarkIterations = 20
 
 
@@ -136,8 +136,6 @@ def plot_shared_memory():
     while xtics[-1] < max_cores:
       xtics.append( xtics[-1]*2 )
       xlabels.append( str(xtics[-1]) )
-    print( "xtics=" + str(xtics ))
-    print( "labels=" + str(xlabels))
     plt.xticks( xtics, xlabels )
     plt.title( "shared memory scaling " + str(d) + "d" )
     plt.savefig( "shared-memory-" + str(d) + "d.pdf" )
