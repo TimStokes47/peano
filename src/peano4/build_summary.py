@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import os.path
 import sys
+import enum
 
 
 Dimensions_Marker = [ "2d", "3d" ]
@@ -8,25 +9,35 @@ MPI_Marker = [ "no mpi", "with mpi" ]
 Multithreading_Marker = [ "no threading", "omp", "tbb", "C++ threading" ]
 
 
+class BuildReport(enum.Enum):
+  Failed = 0,
+  MPILevelNoSupported = 1,
+  UnitTestsFailed = 2,
+  Success = 3
+
+
 def read_build_report( filename, dimensions, mpi, multithreading ):
-  """ 
+  """
     Return a tuple. The first entry means whether the build is there, the second means that the unit tests have passed
   """
   try:
+    print( "parse " + filename + " (" + dimensions + ", " + mpi + "," + multithreading + ") ..." )
     file = open(filename, "r")
-    firstEntry  = False
-    secondEntry = False
+    found_build_summary  = False
     for line in file:
       if "build: " in line:
         if dimensions in line and mpi in line and multithreading in line:
-          firstEntry = True
-      if "running global test case collection" in line and "ok" in line and firstEntry:
-        return (True,True)
-      elif "running global test case collection" in line and firstEntry:
-        return (True,False)
-    return (firstEntry,secondEntry)
+          found_build_summary = True
+      if "running global test case collection" in line and "ok" in line and found_build_summary:
+        print( "success\n" )
+        return BuildReport.Success
+      elif "running global test case collection" in line and found_build_summary:
+        print("unit tests failed\n")
+        return BuildReport.UnitTestsFailed
   except:
-    return (False,False)
+    pass
+  print( "failed\n" )
+  return BuildReport.Failed
 
 
 
@@ -55,12 +66,21 @@ def write_summary():
     for dimensions in Dimensions_Marker:
       for mpi in MPI_Marker:
         result = read_build_report(sys.argv[1],dimensions,mpi,multithreading)
-        if result[1]:
-          out.write( "<td bgcolor=\"lime\">unit tests passed</td>" )
-        elif result[0]:
-          out.write( "<td bgcolor=\"yellow\">unit tests failed</td>" )
-        else:
-          out.write( "<td bgcolor=\"red\">build failed</td>" )
+        text   = ""
+        color  = ""
+        if result==BuildReport.Failed:
+          text = "failed"
+          color = "red"
+        if result==BuildReport.MPILevelNoSupported:
+          text = "mpi threading level not supported"
+          color = "blue"
+        if result==BuildReport.UnitTestsFailed:
+          text = "unit tests failed"
+          color = "yellow"
+        if result==BuildReport.Success:
+          text = "success"
+          color = "lime"
+        out.write( "<td bgcolor=\"" + color + "\">" + text + "</td>" )
     out.write( "</tr>\n")
   out.write( "</table>")
 
