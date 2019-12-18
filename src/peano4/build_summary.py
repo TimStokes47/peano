@@ -24,16 +24,26 @@ def read_build_report( filename, dimensions, mpi, multithreading ):
     print( "parse " + filename + " (" + dimensions + ", " + mpi + "," + multithreading + ") ..." )
     file = open(filename, "r")
     found_build_summary  = False
+    mpi_level_complaint  = False
     for line in file:
+      if "MPI implementation does not support MPI_THREAD_MULTIPLE" in line:
+        mpi_level_complaint = True
       if "build: " in line:
         if dimensions in line and mpi in line and multithreading in line:
           found_build_summary = True
       if "running global test case collection" in line and "ok" in line and found_build_summary:
-        print( "success\n" )
-        return BuildReport.Success
+        if mpi_level_complaint:
+          print( "mpi issues\n" )
+          return BuildReport.MPILevelNoSupported
+        else:
+          print( "success\n" )
+          return BuildReport.Success
       elif "running global test case collection" in line and found_build_summary:
         print("unit tests failed\n")
         return BuildReport.UnitTestsFailed
+      elif "running global test case collection" in line:
+        mpi_level_complaint  = False
+
   except:
     pass
   print( "failed\n" )

@@ -335,7 +335,6 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
     std::cerr << "warning: MPI implementation does not support MPI_THREAD_MULTIPLE. Support multithreading level is "
               << initThreadProvidedThreadLevelSupport << " instead of " << MPI_THREAD_MULTIPLE
               << ". Disable MultipleThreadsMayTriggerMPICalls in the compiler-specific settings or via -DnoMultipleThreadsMayTriggerMPICalls."<< std::endl;
-    exit(-1);
   }
   #else
   result = MPI_Init( argc, argv );
