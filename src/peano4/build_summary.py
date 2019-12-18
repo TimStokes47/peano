@@ -83,7 +83,7 @@ def write_summary():
           color = "red"
         if result==BuildReport.MPILevelNoSupported:
           text = "mpi threading level not supported"
-          color = "blue"
+          color = "fuchsia"
         if result==BuildReport.UnitTestsFailed:
           text = "unit tests failed"
           color = "yellow"
