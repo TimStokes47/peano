@@ -100,21 +100,19 @@ def plot_shared_memory():
 
         if len(xdata)>0:
           ydata_calibrated = normalise_raw_times(ydata,max_cells)
-          if H.index(h)==0 or Flops.index(flops)==0:
-            plt.plot( 
+          #if H.index(h)==0 or Flops.index(flops)==0:
+          plt.plot( 
               xdata, ydata_calibrated, 
               label="h=" + str(h) + ",#flops/cell=" + str(flops), 
-              #color=Color[Flops.index(flops)],
-              #marker=H.index(h)+4 
               color=Color[H.index(h)],
               marker=Flops.index(flops)+4 
-            )
-          else:
-            plt.plot( 
-              xdata, ydata_calibrated, 
-              color=Color[H.index(h)],
-              marker=Flops.index(flops)+4 
-            )
+          )
+          #else:
+          #  plt.plot( 
+          #    xdata, ydata_calibrated, 
+          #    color=Color[H.index(h)],
+          #    marker=Flops.index(flops)+4 
+          #  )
             
     xdata = range(1,max_cores)
     plt.plot(
