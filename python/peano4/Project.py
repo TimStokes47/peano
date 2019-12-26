@@ -8,6 +8,9 @@ import peano4.solversteps
 import peano4.runner
 
 
+import subprocess
+
+
 class Project (object):
   """ 
   Represents on Peano 4 project.
@@ -42,6 +45,7 @@ class Project (object):
     """
     Generate all code.
     """
+    print( "generate all code ..." )
     self.is_generated = True
 
     self.datamodel.construct_output(self.output)
@@ -51,24 +55,36 @@ class Project (object):
     self.main.construct_output(self.output)
     
     self.output.generate(overwrite, self.directory)
+    print( "generation complete" )
 
           
   def build(self):
     """
     Invokes the underlying make/C build mechanism on the project. 
+    We invoke the make command via a subprocess. That's it.
     """
     self.is_built = True
     if not self.is_generated:
       self.generate();
-    pass
+    print( "start to compile ..." )
+    try:
+      subprocess.call(["make", "-j"])
+      print( "compile complete" )
+    except Exception as e:
+      print( "compile was not successful: " + str(e) )
   
   def run(self, args):
     """
-    Runs the code
+    Runs the code. args should be a list of strings or the empty list.
     """
     if not self.is_built:
       self.build()
-    pass
+    print( "run application ..." )
+    try:
+      subprocess.call(["./peano4"] + args)
+      print( "run complete" )
+    except Exception as e:
+      print( "run of application was not successful: " + str(e) )
   
       
       

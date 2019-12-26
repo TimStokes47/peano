@@ -17,6 +17,7 @@ class Makefile(object):
     self.d["CXX"]           = ""
     self.d["CXXFLAGS"]      = ""
     self.d["LDFLAGS"]       = ""
+    self.d["LIBS"]          = ""
     self.d["DIM"]           = "2"
     self.d["CONFIGUREPATH"] = "."
     
@@ -45,6 +46,10 @@ class Makefile(object):
         flags = line.split("=",1)[1].strip()
         self.d["LDFLAGS"] += flags
         self.d["LDFLAGS"] += " "
+      if re.search( "LIBS *=", line):
+        flags = line.split("=",1)[1].strip()
+        self.d["LIBS"] += flags
+        self.d["LIBS"] += " "
     self.d["CONFIGUREPATH"] = directory
  
   def add_cpp_file(self,filename):

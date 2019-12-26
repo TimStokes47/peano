@@ -64,4 +64,4 @@ project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano"
 #project.generate(peano4.output.Overwrite.Always)
 project.generate(peano4.output.Overwrite.Default)
 project.build()
-project.run( "myarguments" )
+project.run( ["myarguments"] )

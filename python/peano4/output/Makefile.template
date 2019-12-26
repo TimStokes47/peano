@@ -5,23 +5,26 @@
 CXX = {CXX}
 CXXFLAGS = {CXXFLAGS} -DDimensions={DIM} -I. -I{CONFIGUREPATH}/src -DPeanoDebug=1
 LDFLAGS = {LDFLAGS}
+LIBS = {CONFIGUREPATH}/src/libPeano4Core{DIM}d_trace.a {CONFIGUREPATH}/src/libTarch_trace.a {LIBS}
 DIM = {DIM}
-LDLIBS = {CONFIGUREPATH}/src/libPeano4Core{DIM}d_trace.a {CONFIGUREPATH}/src/libTarch_trace.a
-#LDLIBS = {CONFIGUREPATH}/src/libPeano4Core{DIM}d_debug.a {CONFIGUREPATH}/src/libTarch_debug.a
-#LDLIBS = {CONFIGUREPATH}/src/libPeano4Core{DIM}d.a {CONFIGUREPATH}/src/libTarch.a
 
 
 SOURCES={SOURCES} 
 
+
 OBJS=$(subst .cpp,.o,$(SOURCES))
+
 
 all: solver
 
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
     
 solver: $(OBJS)
-	$(CXX) $(LDFLAGS) $(OBJS) $(LDLIBS) -o peano4 
+	$(CXX) $(LDFLAGS) $(OBJS) $(LIBS) -o peano4 
+
     
 clean:
 	rm -f $(OBJS)
