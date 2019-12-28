@@ -39,11 +39,32 @@ class Observer(object):
         output.write( template.format(**self.d) )
 
 
+  def __generate_implementation_begin_end_traversal(self,output_file):
+    output_file.write( "void  " );
+    output_file.write( self.d[ "FULL_QUALIFIED_CLASSNAME" ] )
+    output_file.write( "::beginTraversal" );
+    output_file.write( "( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {\n" )
+    output_file.write( "}\n\n\n" )
+                       
+    output_file.write( "void  " );
+    output_file.write( self.d[ "FULL_QUALIFIED_CLASSNAME" ] )
+    output_file.write( "::endTraversal" );
+    output_file.write( "( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {\n" )
+    output_file.write( "}\n\n\n" )
+  
+    # oid endTraversal(
+    #  const tarch::la::Vector<Dimensions,double>&  x,
+    #  const tarch::la::Vector<Dimensions,double>&  h
+    #) override;
+
+
   def __generate_implementation(self,overwrite,full_qualified_filename):
     if writeFile(overwrite,self.default_overwrite,full_qualified_filename):
       print( "write " + full_qualified_filename )
       output_file = open( full_qualified_filename, "w" )
-      output_file.write( "#include \"" + self.d[ "CLASSNAME" ] + ".h\"" )
+      output_file.write( "#include \"" + self.d[ "CLASSNAME" ] + ".h\"\n\n\n" )
+      
+      self.__generate_implementation_begin_end_traversal(output_file)
       #template_file = os.path.realpath(__file__).replace( ".pyc", ".h.template" ).replace( ".py", ".h.template" )
       #with open( os.path.realpath(template_file), "r" ) as input:
       #  template = input.read()

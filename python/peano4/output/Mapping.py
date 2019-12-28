@@ -97,7 +97,10 @@ class Mapping(object):
       outputfile.write( "#include \"peano4/datamanagement/FaceEnumerator.h\" \n" )
       outputfile.write( "#include \"peano4/datamanagement/VertexEnumerator.h\" \n" )
       outputfile.write( "#include \"peano4/datamanagement/CellMarker.h\" \n" )
+      outputfile.write( "#include \"peano4/grid/GridControlEvent.h\" \n" )
       outputfile.write( "#include \"tarch/la/Vector.h\" \n\n\n" )
+
+      outputfile.write( "#include <vector>\n\n\n" )
 
       self.__generate_includes(outputfile)
       
@@ -111,6 +114,9 @@ class Mapping(object):
 
       outputfile.write( "class " + full_qualified_classname + "{\n" )
       outputfile.write( "  public:\n" )
+
+      outputfile.write( "    " + self.classname + "(int treeNumber);\n\n" )
+      outputfile.write( "    std::vector< peano4::grid::GridControlEvent > getGridControlEvents();\n\n" )
       
       for i in self.operations:
         self.__generate_operation(outputfile,i)       
@@ -134,11 +140,20 @@ class Mapping(object):
       #full_qualified_classname = self.__get_full_qualified_class_name()
 
       outputfile.write( "#include \"" + self.classname + ".h\"\n\n\n" )
+
+      outputfile.write( self.__get_full_qualified_class_name() + "::" + self.classname + "(int spaceTree) {\n" )
+      outputfile.write( "  // @todo Insert your code here\n" )
+      outputfile.write( " }\n\n\n" )
+
+      outputfile.write( "std::vector< peano4::grid::GridControlEvent > " + self.__get_full_qualified_class_name() + "::getGridControlEvents() {\n" )
+      outputfile.write( "  // @todo Insert your code here\n" )
+      outputfile.write( " }\n\n\n" )
+
       
       for operation in self.operations:
         outputfile.write( operation[1] )
         outputfile.write( " " )
-        outputfile.write( operation[0] )
+        outputfile.write( self.__get_full_qualified_class_name() + "::" + operation[0] )
         outputfile.write( self.__get_operation_arguments(operation) )
         outputfile.write( " {\n" )
         outputfile.write( "  // @todo Insert your code here\n" )

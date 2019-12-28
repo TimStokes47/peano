@@ -20,7 +20,11 @@
 class {FULL_QUALIFIED_CLASSNAME}: public peano4::grid::TraversalObserver {{
   public:
     mappings::{CLASSNAME}    _mapping;
+    
+    {CLASSNAME}(int spacetreeId);
   public:
+    {CLASSNAME}();
+    
 	void enterCell(
       const peano4::grid::GridTraversalEvent&  event
     ) override;

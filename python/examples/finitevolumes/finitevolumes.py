@@ -61,7 +61,6 @@ project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano"
 # round, it is always admissible to only generate stuff, e.g., but to build and
 # run the project through a command line
 #
-project.generate(peano4.output.Overwrite.Always)
-#project.generate(peano4.output.Overwrite.Default)
+project.generate(peano4.output.Overwrite.Default)
 project.build()
 project.run( ["myarguments"] )
