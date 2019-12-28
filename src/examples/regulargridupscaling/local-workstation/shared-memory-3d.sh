@@ -20,7 +20,7 @@ for flops in 1 100
 do
  for h in 0.01 
  do
-  for cores in 4 6 8 10 12 14 16 20 24 48
+  for cores in 2 4 6 8 10 12 14 16 20 24 48
   do
    executable="./PeanoRegularGridUpscaling"$d"d"
    output="shared-memory-"$cores"-cores-"$d"d-"$h"-"$flops"-flops.out"
