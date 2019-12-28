@@ -1,6 +1,7 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 from .PatchToDoubleArray import PatchToDoubleArray
+from argparse import Namespace
 
 
 class Patch(object):
@@ -25,6 +26,14 @@ class Patch(object):
     """
     self.namespace = namespace
 
+
+  def get_full_qualified_type(self):
+    result = ""
+    for i in self.namespace:
+      result += i
+      result += "::"
+    result += self.name
+    return result
 
 
 

@@ -7,7 +7,7 @@ import os
 import re
 
 
-class MappingInterface(object):
+class Mapping(object):
   default_overwrite = True
     
   def __init__(self,classname,namespace,subdirectory,is_interface):
@@ -38,42 +38,56 @@ class MappingInterface(object):
       outputfile.write( "#include \"" )
       outputfile.write( i )
       outputfile.write( "\"\n")
+
       
+  def __get_operation_arguments(self,operation):
+    result = "("
+    i = 2
+    while i<len(operation):
+      result += operation[i+1] 
+      result += " "
+      result += operation[i] 
+      i+=2
+      if i<len(operation):
+        result += ", "
+        
+    result += ")"
+    return result
+     
+     
   def __generate_operation(self,outputfile,operation):
+    """
+      outputfile points to file, operation to an operation object as added by the solver step
+    """
+    if self.is_interface:
       outputfile.write( "    virtual " )
+    else:
+      outputfile.write( "    " )
       outputfile.write( operation[1] )
       outputfile.write( " ")
       outputfile.write( operation[0] )
-      outputfile.write( "(")
-      i = 2
-      while i<len(operation):
-        outputfile.write( operation[i+1] )
-        outputfile.write( " ")
-        outputfile.write( operation[i] )
-        i+=2
-        if i<len(operation):
-          outputfile.write( ", ")
-        
-      outputfile.write( ")")
+      outputfile.write( self.__get_operation_arguments(operation) )
       if self.is_interface:
         outputfile.write( " = 0")
       outputfile.write( ";\n\n")
 
-  
-  def generate(self,overwrite,directory):
-    if not os.path.exists( directory + "/" + self.subdirectory ):
-      os.mkdir(directory + "/" + self.subdirectory)
 
+  def __get_full_qualified_class_name(self):
+    full_qualified_classname = ""
+    for i in self.namespace:
+      full_qualified_classname += i
+      full_qualified_classname += "::"
+    full_qualified_classname += self.classname
+    return full_qualified_classname
+  
+  
+  def __generate_header(self,overwrite,directory):
     filename = directory + "/" + self.subdirectory + "/" + self.classname + ".h";
     if writeFile(overwrite,self.default_overwrite,filename):
       print( "write " + filename )
       outputfile = open( filename, "w" )
 
-      full_qualified_classname = ""
-      for i in self.namespace:
-        full_qualified_classname += i
-        full_qualified_classname += "::"
-      full_qualified_classname += self.classname
+      full_qualified_classname = self.__get_full_qualified_class_name()
       include_guard = "_" + full_qualified_classname.replace( "::", "_" ).upper() + "_H_"
 
       outputfile.write( "#ifndef " + include_guard + "\n" )
@@ -88,7 +102,7 @@ class MappingInterface(object):
       self.__generate_includes(outputfile)
       
       for i in self.namespace:
-        outputfile.write( "namespace " + i + "{\n" )
+        outputfile.write( "namespace " + i + " {\n" )
 
       outputfile.write( "  class " + self.classname + ";\n" )
 
@@ -104,3 +118,36 @@ class MappingInterface(object):
       outputfile.write( "};\n\n\n" )
 
       outputfile.write( "#endif\n\n" )
+
+
+
+  def get_cpp_file_name(self):
+    return self.subdirectory + "/" + self.classname + ".cpp"
+
+
+  def __generate_implementation(self,overwrite,directory):
+    filename = directory + "/" + self.get_cpp_file_name()
+    if writeFile(overwrite,self.default_overwrite,filename):
+      print( "write " + filename )
+      outputfile = open( filename, "w" )
+
+      #full_qualified_classname = self.__get_full_qualified_class_name()
+
+      outputfile.write( "#include \"" + self.classname + ".h\"\n\n\n" )
+      
+      for operation in self.operations:
+        outputfile.write( operation[1] )
+        outputfile.write( " " )
+        outputfile.write( operation[0] )
+        outputfile.write( self.__get_operation_arguments(operation) )
+        outputfile.write( " {\n" )
+        outputfile.write( "  // @todo Insert your code here\n" )
+        outputfile.write( " }\n\n\n" )
+
+
+  def generate(self,overwrite,directory):
+    if not os.path.exists( directory + "/" + self.subdirectory ):
+      os.mkdir(directory + "/" + self.subdirectory)
+    self.__generate_header(overwrite,directory)
+    self.__generate_implementation(overwrite,directory)
+

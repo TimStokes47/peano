@@ -66,12 +66,16 @@ class Project (object):
     self.is_built = True
     if not self.is_generated:
       self.generate();
-    print( "start to compile ..." )
-    try:
-      subprocess.call(["make", "-j"])
-      print( "compile complete" )
-    except Exception as e:
-      print( "compile was not successful: " + str(e) )
+    if self.is_built:
+      print( "start to compile ..." )
+      try:
+        subprocess.check_call(["make", "-j"])
+        print( "compile complete" )
+      except Exception as e:
+        print( "compile was not successful: " + str(e) )
+        self.is_built = False
+    else:
+      print( "can not build as code generation has not been successful" )
   
   def run(self, args):
     """
@@ -79,12 +83,15 @@ class Project (object):
     """
     if not self.is_built:
       self.build()
-    print( "run application ..." )
-    try:
-      subprocess.call(["./peano4"] + args)
-      print( "run complete" )
-    except Exception as e:
-      print( "run of application was not successful: " + str(e) )
+    if self.is_built:
+      print( "run application ..." )
+      try:
+        subprocess.call(["./peano4"] + args)
+        print( "run complete" )
+      except Exception as e:
+        print( "run of application was not successful: " + str(e) )
+    else:
+      print( "can not run as code compilation has not been successful" )
   
       
       

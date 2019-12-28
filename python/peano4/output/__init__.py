@@ -3,7 +3,7 @@
 
 from .Helper           import Overwrite
 from .Makefile         import Makefile
-from .MappingInterface import MappingInterface
+from .Mapping          import Mapping
 from .Observer         import Observer
 from .Output           import Output
 from .TemplatedHeaderImplementationFilePair import TemplatedHeaderImplementationFilePair
