@@ -147,7 +147,8 @@ class Mapping(object):
 
       outputfile.write( "std::vector< peano4::grid::GridControlEvent > " + self.__get_full_qualified_class_name() + "::getGridControlEvents() {\n" )
       outputfile.write( "  // @todo Insert your code here\n" )
-      outputfile.write( " }\n\n\n" )
+      outputfile.write( "  return std::vector< peano4::grid::GridControlEvent >();\n" )
+      outputfile.write( "}\n\n\n" )
 
       
       for operation in self.operations:

@@ -39,23 +39,53 @@ class Observer(object):
         output.write( template.format(**self.d) )
 
 
-  def __generate_implementation_begin_end_traversal(self,output_file):
-    output_file.write( "void  " );
-    output_file.write( self.d[ "FULL_QUALIFIED_CLASSNAME" ] )
-    output_file.write( "::beginTraversal" );
-    output_file.write( "( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {\n" )
-    output_file.write( "}\n\n\n" )
-                       
-    output_file.write( "void  " );
-    output_file.write( self.d[ "FULL_QUALIFIED_CLASSNAME" ] )
-    output_file.write( "::endTraversal" );
-    output_file.write( "( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {\n" )
-    output_file.write( "}\n\n\n" )
+
+  TemplateConstructor = """
   
-    # oid endTraversal(
-    #  const tarch::la::Vector<Dimensions,double>&  x,
-    #  const tarch::la::Vector<Dimensions,double>&  h
-    #) override;
+  {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}():
+    {CLASSNAME}(-1) {{
+  }}
+  
+    
+  {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId):
+    _mapping(spacetreeId) {{
+  }}
+  
+
+  """
+
+
+  TemplateBeginTraversal = """
+  
+  void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
+    _mapping.beginTraversal();
+  }}
+  
+  """
+
+
+  TemplateEndTraversal = """
+  
+  void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
+    _mapping.endTraversal();
+  }}
+  
+  """
+
+
+  TemplateClone = """
+  
+  void {FULL_QUALIFIED_CLASSNAME}::clone( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
+    _mapping.endTraversal( x, h );
+  }}
+  
+  """
+  
+  
+  def __generate_implementation_glue_code(self,output_file):
+    output_file.write( self.TemplateConstructor.format(**self.d) )
+    output_file.write( self.TemplateBeginTraversal.format(**self.d) )
+    output_file.write( self.TemplateEndTraversal.format(**self.d) )
 
 
   def __generate_implementation(self,overwrite,full_qualified_filename):
@@ -64,12 +94,7 @@ class Observer(object):
       output_file = open( full_qualified_filename, "w" )
       output_file.write( "#include \"" + self.d[ "CLASSNAME" ] + ".h\"\n\n\n" )
       
-      self.__generate_implementation_begin_end_traversal(output_file)
-      #template_file = os.path.realpath(__file__).replace( ".pyc", ".h.template" ).replace( ".py", ".h.template" )
-      #with open( os.path.realpath(template_file), "r" ) as input:
-      #  template = input.read()
-      #with open( full_qualified_filename, "w" ) as output:
-      #  output.write( template.format(**self.d) )
+      self.__generate_implementation_glue_code(output_file)
 
 
   def get_header_file_name(self):
