@@ -75,17 +75,50 @@ class Observer(object):
 
   TemplateClone = """
   
-  void {FULL_QUALIFIED_CLASSNAME}::clone( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
-    _mapping.endTraversal( x, h );
+  peano4::grid::TraversalObserver* {FULL_QUALIFIED_CLASSNAME}::clone(int spacetreeId) {{
+    return new {CLASSNAME}(spacetreeId);
+  }}
+  
+  """
+
+
+  TemplateGetGridControlEvents = """
+  
+  std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGridControlEvents() {{
+    std::vector< peano4::grid::GridControlEvent > result;
+    
+    const std::vector< peano4::grid::GridControlEvent > userData = _mapping.getGridControlEvents();
+    result.insert(result.begin(),userData.begin(),userData.end());
+    
+    return result;
   }}
   
   """
   
   
+
   def __generate_implementation_glue_code(self,output_file):
     output_file.write( self.TemplateConstructor.format(**self.d) )
     output_file.write( self.TemplateBeginTraversal.format(**self.d) )
     output_file.write( self.TemplateEndTraversal.format(**self.d) )
+    output_file.write( self.TemplateClone.format(**self.d) )
+    output_file.write( self.TemplateGetGridControlEvents.format(**self.d) )
+
+
+  def __generate_enterCell(self,output_file):
+    output_file.write( "void " + self.d[ "FULL_QUALIFIED_CLASSNAME" ] + "::enterCell( const peano4::grid::GridTraversalEvent&  event ) { \n" )
+    output_file.write( "}\n\n\n" )
+
+  def __generate_leaveCell(self,output_file):
+    output_file.write( "void " + self.d[ "FULL_QUALIFIED_CLASSNAME" ] + "::leaveCell( const peano4::grid::GridTraversalEvent&  event ) { \n" )
+    output_file.write( "}\n\n\n" )
+    
+    #if writeFile(overwrite,self.default_overwrite,full_qualified_filename):
+    #  print( "write " + full_qualified_filename )
+    #  output_file = open( full_qualified_filename, "w" )
+    #  output_file.write( "#include \"" + self.d[ "CLASSNAME" ] + ".h\"\n\n\n" )
+    # 
+    #  self.__generate_implementation_glue_code(output_file)
 
 
   def __generate_implementation(self,overwrite,full_qualified_filename):
@@ -95,6 +128,8 @@ class Observer(object):
       output_file.write( "#include \"" + self.d[ "CLASSNAME" ] + ".h\"\n\n\n" )
       
       self.__generate_implementation_glue_code(output_file)
+      self.__generate_enterCell(output_file)
+      self.__generate_leaveCell(output_file)
 
 
   def get_header_file_name(self):

@@ -66,6 +66,14 @@ class Project (object):
     self.is_built = True
     if not self.is_generated:
       self.generate();
+
+    print( "clean up project ..." )
+    try:
+      subprocess.check_call(["clean"])
+      print( "clean complete" )
+    except Exception as e:
+      print( "clean failed - continue anyway" )
+
     if self.is_built:
       print( "start to compile ..." )
       try:
