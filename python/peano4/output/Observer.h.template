@@ -21,9 +21,20 @@ class {FULL_QUALIFIED_CLASSNAME}: public peano4::grid::TraversalObserver {{
   public:
     mappings::{CLASSNAME}    _mapping;
     
-    {CLASSNAME}(int spacetreeId);
   public:
-    {CLASSNAME}();
+    /**
+     * If you pass this marker into the constructor, it implies that this 
+     * observer is used as prototype for the real observers which are created
+     * per local spacetree.
+     */
+    static constexpr int SpacetreePrototype = -1; 
+  
+    /**
+     * @param spacetreeId -1 is the dummy, i.e. this observer is not 
+     *                    instantiated for a spacetree yet but serves as 
+     *                    blueprint for the real trees later on.
+     */
+    {CLASSNAME}(int spacetreeId = SpacetreePrototype);
     
 	void enterCell(
       const peano4::grid::GridTraversalEvent&  event

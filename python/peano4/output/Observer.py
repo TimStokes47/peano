@@ -42,11 +42,6 @@ class Observer(object):
 
   TemplateConstructor = """
   
-  {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}():
-    {CLASSNAME}(-1) {{
-  }}
-  
-    
   {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId):
     _mapping(spacetreeId) {{
   }}

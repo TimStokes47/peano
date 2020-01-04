@@ -69,10 +69,10 @@ class Project (object):
 
     print( "clean up project ..." )
     try:
-      subprocess.check_call(["clean"])
+      subprocess.check_call(["make", "clean"])
       print( "clean complete" )
     except Exception as e:
-      print( "clean failed - continue anyway" )
+      print( "clean failed (" + str(e) + ") - continue anyway" )
 
     if self.is_built:
       print( "start to compile ..." )
