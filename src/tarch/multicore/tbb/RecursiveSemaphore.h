@@ -6,8 +6,8 @@
 #define _TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_
 
 
-//#include <tbb/recursive_mutex.h>
-#include <mutex>
+#include <tbb/recursive_mutex.h>
+//#include <mutex>
 
 
 namespace tarch {
@@ -31,8 +31,8 @@ class tarch::multicore::RecursiveSemaphore {
   private:
     friend class tarch::multicore::RecursiveLock;
 
-    //tbb::recursive_mutex          _recursiveMutex;
-    std::recursive_mutex          _recursiveMutex;
+    tbb::recursive_mutex          _recursiveMutex;
+    //std::recursive_mutex          _recursiveMutex;
 
 
     bool tryEnterCriticalSection();
