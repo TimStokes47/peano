@@ -98,7 +98,7 @@ namespace {
 //            internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
           );
           tbb::task::enqueue(*tbbTask);
-          ::backgroundTaskContext.set_priority(tbb::priority_low);
+          //::backgroundTaskContext.set_priority(tbb::priority_low);
         }
 
         JobConsumerTask(const JobConsumerTask& copy):

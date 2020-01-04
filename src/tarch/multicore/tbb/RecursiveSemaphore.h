@@ -6,8 +6,8 @@
 #define _TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_
 
 
-//#include <tbb/recursive_mutex.h>
-#include <mutex>
+#include <tbb/recursive_mutex.h>
+//#include <mutex>
 
 
 namespace tarch {
@@ -24,6 +24,13 @@ namespace tarch {
  * A recursive semaphore is a boolean semphore that one thread (the first one)
  * can lock an arbitrary number of times.
  *
+ * <h2> C++17 vs. new TBB versions </h2>
+ *
+ * New TBB versions have deprecated the tbb::recursive_mutex class in favour of
+ * the C++ version. I however experienced segfault every now and then when I
+ * tried to use the C++ variant. For the time being, I'll thus stick with the
+ * TBB version.
+ *
  *
  * @author Tobias Weinzierl
  */
@@ -31,8 +38,8 @@ class tarch::multicore::RecursiveSemaphore {
   private:
     friend class tarch::multicore::RecursiveLock;
 
-    //tbb::recursive_mutex          _recursiveMutex;
-    std::recursive_mutex          _recursiveMutex;
+    tbb::recursive_mutex          _recursiveMutex;
+    //std::recursive_mutex          _recursiveMutex;
 
 
     bool tryEnterCriticalSection();

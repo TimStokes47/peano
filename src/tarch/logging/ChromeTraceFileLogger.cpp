@@ -35,7 +35,7 @@ tarch::logging::ChromeTraceFileLogger& tarch::logging::ChromeTraceFileLogger::ge
 
 
 void tarch::logging::ChromeTraceFileLogger::nextEntry() {
-  if ( _hasWrittenEntry ) {
+  if ( _hasWrittenEntry and _outputStream!=nullptr) {
 	*_outputStream << ",\n";
   }
   _hasWrittenEntry = true;
@@ -181,11 +181,12 @@ void tarch::logging::ChromeTraceFileLogger::warning(   long int timestampMS, int
 
 
 void tarch::logging::ChromeTraceFileLogger::traceIn(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
-    std::string args = message;
-	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
-    tarch::multicore::Lock lockCout( _semaphore );
-    nextEntry();
-	*_outputStream << "  {"
+	if (_outputStream!=nullptr) {
+      std::string args = message;
+	  std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
+      tarch::multicore::Lock lockCout( _semaphore );
+      nextEntry();
+      *_outputStream << "  {"
 			 << " \"name\": \"" << trace << "\","
 			 << " \"cat\": \"trace\","
 			 << " \"ph\": \"B\","
@@ -194,13 +195,15 @@ void tarch::logging::ChromeTraceFileLogger::traceIn(   long int timestampMS, int
 			 << " \"tid\": " << threadId << ","
 			 << " \"args\": { \"params\": \"" + args + "\"}"
 			 " }";
-  #if PeanoDebug>=4
-  _outputStream->flush();
-  #endif
+    #if PeanoDebug>=4
+    _outputStream->flush();
+    #endif
+  }
 }
 
 
 void tarch::logging::ChromeTraceFileLogger::traceOut(   long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+  if (_outputStream!=nullptr) {
     std::string args = message;
 	std::replace( args.begin(), args.end(), '"', ' '); // replace all 'x' to 'y'
     tarch::multicore::Lock lockCout( _semaphore );
@@ -214,9 +217,10 @@ void tarch::logging::ChromeTraceFileLogger::traceOut(   long int timestampMS, in
 			 << " \"tid\": " << threadId << ","
 			 << " \"args\": { \"result\": \"" + args + "\"}"
 			 " }";
-  #if PeanoDebug>=4
-  _outputStream->flush();
-  #endif
+    #if PeanoDebug>=4
+    _outputStream->flush();
+    #endif
+  }
 }
 
 
@@ -230,7 +234,7 @@ void tarch::logging::ChromeTraceFileLogger::error(   long int timestampMS, int r
 	  timestampMS, rank, threadId, trace, message
     );
     tarch::multicore::Lock lockCout( _semaphore );
-    std::cout << outputMessage;
+    std::cerr << outputMessage;
     if (_outputStream!=nullptr) {
       nextEntry();
       *_outputStream << eventEntry;
@@ -286,6 +290,6 @@ void tarch::logging::ChromeTraceFileLogger::close() {
     _outputStream = nullptr;
   }
   else {
-	std::cerr << "Warning: ChromeTraceFileLogger used, but not trace file set. Use singleton's setOuputFile()" << std::endl;
+	std::cerr << "Warning: ChromeTraceFileLogger used, but no trace file set. Use singleton's setOuputFile(). No trace information dumped" << std::endl;
   }
 }
