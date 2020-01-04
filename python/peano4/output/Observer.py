@@ -42,8 +42,10 @@ class Observer(object):
 
   TemplateConstructor = """
   
-  {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId):
-    _mapping(spacetreeId) {{
+  {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId)
+  //:
+  //  _mapping(spacetreeId) {{
+  {{
   }}
   
 
@@ -53,7 +55,7 @@ class Observer(object):
   TemplateBeginTraversal = """
   
   void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
-    _mapping.beginTraversal();
+    //_mapping.beginTraversal();
   }}
   
   """
@@ -62,7 +64,7 @@ class Observer(object):
   TemplateEndTraversal = """
   
   void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
-    _mapping.endTraversal();
+    //_mapping.endTraversal();
   }}
   
   """
@@ -82,8 +84,8 @@ class Observer(object):
   std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGridControlEvents() {{
     std::vector< peano4::grid::GridControlEvent > result;
     
-    const std::vector< peano4::grid::GridControlEvent > userData = _mapping.getGridControlEvents();
-    result.insert(result.begin(),userData.begin(),userData.end());
+    //const std::vector< peano4::grid::GridControlEvent > userData = _mapping.getGridControlEvents();
+    //result.insert(result.begin(),userData.begin(),userData.end());
     
     return result;
   }}

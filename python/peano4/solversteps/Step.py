@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.output.TemplatedHeaderImplementationFilePair
 import peano4.output.Mapping
-#import peano4.output.Mapp
+import peano4.solversteps.UserMapping
 
 
 class Step:
@@ -17,6 +17,7 @@ class Step:
     self.cell_data   = []
     self.face_data   = []
     self.vertex_data = []
+    self.mappings    = [ peano4.solversteps.UserMapping() ]
 
     
   def set_project(self,project):
@@ -72,35 +73,42 @@ class Step:
     provides plugin points into the created data transitions from a user's 
     perspective.
     """
-    mapping = peano4.output.Mapping(
-      self.name, self.project.namespace+ [ "mappings" ],self.project.directory + "/mappings",False
-    )
+    include_statements = ""
+    
+    for mapping in self.mappings:
+      mapping_name = self.name + "2" + mapping.get_mapping_name() + str( self.mappings.index(mapping))
+      if len(self.mappings)==1:
+        mapping_name = self.name
+      mapping = peano4.output.Mapping(
+        mapping_name, self.project.namespace + ["mappings"], self.project.directory + "/mappings", mapping
+      )
+      include_statements += "#include \"mappings/" + mapping_name + ".h\"\n"
  
-    for i in self.vertex_data:
-      mapping.include_files.append( "vertexdata/" + i.name + ".h" )    
-    for i in self.face_data:
-      mapping.include_files.append( "facedata/" + i.name + ".h" )    
-    for i in self.cell_data:
-      mapping.include_files.append( "celldata/" + i.name + ".h" )    
+      for i in self.vertex_data:
+        mapping.include_files.append( "vertexdata/" + i.name + ".h" )    
+      for i in self.face_data:
+        mapping.include_files.append( "facedata/" + i.name + ".h" )    
+      for i in self.cell_data:
+        mapping.include_files.append( "celldata/" + i.name + ".h" )    
 
-    if len(self.vertex_data)>0:
-      mapping.operations.append( [ "createPersistentVertex", "void" ] + self.__get_vertex_operations_signature() )
-      mapping.operations.append( [ "destroyPersistentVertex", "void" ] + self.__get_vertex_operations_signature() )
-      mapping.operations.append( [ "createHangingVertex", "void" ] + self.__get_vertex_operations_signature() )
-      mapping.operations.append( [ "destroyHangingVertex", "void" ] + self.__get_vertex_operations_signature() )
+      if len(self.vertex_data)>0:
+        mapping.operations.append( [ "createPersistentVertex", "void" ] + self.__get_vertex_operations_signature() )
+        mapping.operations.append( [ "destroyPersistentVertex", "void" ] + self.__get_vertex_operations_signature() )
+        mapping.operations.append( [ "createHangingVertex", "void" ] + self.__get_vertex_operations_signature() )
+        mapping.operations.append( [ "destroyHangingVertex", "void" ] + self.__get_vertex_operations_signature() )
 
-    if len(self.face_data)>0:
-      mapping.operations.append( [ "createPersistentFace", "void" ] + self.__get_face_operations_signature() )
-      mapping.operations.append( [ "destroyPersistentFace", "void" ] + self.__get_face_operations_signature() )
-      mapping.operations.append( [ "createHangingFace", "void" ] + self.__get_face_operations_signature() )
-      mapping.operations.append( [ "destroyHangingFace", "void" ] + self.__get_face_operations_signature() )
+      if len(self.face_data)>0:
+        mapping.operations.append( [ "createPersistentFace", "void" ] + self.__get_face_operations_signature() )
+        mapping.operations.append( [ "destroyPersistentFace", "void" ] + self.__get_face_operations_signature() )
+        mapping.operations.append( [ "createHangingFace", "void" ] + self.__get_face_operations_signature() )
+        mapping.operations.append( [ "destroyHangingFace", "void" ] + self.__get_face_operations_signature() )
 
-    if len(self.cell_data)>0:
-      mapping.operations.append( [ "createCell", "void" ] + self.__get_cell_operations_signature() )
-      mapping.operations.append( [ "destroyCell", "void" ] + self.__get_cell_operations_signature() )
+      if len(self.cell_data)>0:
+        mapping.operations.append( [ "createCell", "void" ] + self.__get_cell_operations_signature() )
+        mapping.operations.append( [ "destroyCell", "void" ] + self.__get_cell_operations_signature() )
 
-    output.artefacts.append( mapping )
-    output.makefile.add_cpp_file( mapping.get_cpp_file_name() )
+      output.artefacts.append( mapping )
+      output.makefile.add_cpp_file( mapping.get_cpp_file_name() )
 
     observer = peano4.output.Observer(
       self.name, self.project.namespace+ [ "observers" ],self.project.directory + "/observers"

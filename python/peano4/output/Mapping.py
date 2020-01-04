@@ -5,25 +5,29 @@ from .Helper import writeFile
 
 import os
 import re
+import peano4.solversteps.Mapping
 
 
 class Mapping(object):
   default_overwrite = True
     
-  def __init__(self,classname,namespace,subdirectory,is_interface):
+  def __init__(self,classname,namespace,subdirectory,implementation = None):
     """
-     If is_interface is set, then all routines are abstract 
+     implementation Should be of type peano4.solversteps.Mapping or None. If 
+                    it is None, then the generated stuff will be a sole 
+                    interface.
     """
     self.classname    = classname
     self.namespace    = namespace
     self.subdirectory = subdirectory
-    self.is_interface = is_interface
     self.operations   = [
       ("beginTraversal","void"),
       ("endTraversal","void")
     ]
     self.include_files = []
     self.typedefs = []
+    self.implementation = implementation
+
 
   def add_operation(self,name,signature):
     """
@@ -59,7 +63,7 @@ class Mapping(object):
     """
       outputfile points to file, operation to an operation object as added by the solver step
     """
-    if self.is_interface:
+    if self.implementation == None:
       outputfile.write( "    virtual " )
     else:
       outputfile.write( "    " )
@@ -67,7 +71,7 @@ class Mapping(object):
       outputfile.write( " ")
       outputfile.write( operation[0] )
       outputfile.write( self.__get_operation_arguments(operation) )
-      if self.is_interface:
+      if self.implementation == None:
         outputfile.write( " = 0")
       outputfile.write( ";\n\n")
 
@@ -142,12 +146,11 @@ class Mapping(object):
       outputfile.write( "#include \"" + self.classname + ".h\"\n\n\n" )
 
       outputfile.write( self.__get_full_qualified_class_name() + "::" + self.classname + "(int spaceTree) {\n" )
-      outputfile.write( "  // @todo Insert your code here\n" )
+      outputfile.write( self.implementation.get_constructor_body() )
       outputfile.write( " }\n\n\n" )
 
       outputfile.write( "std::vector< peano4::grid::GridControlEvent > " + self.__get_full_qualified_class_name() + "::getGridControlEvents() {\n" )
-      outputfile.write( "  // @todo Insert your code here\n" )
-      outputfile.write( "  return std::vector< peano4::grid::GridControlEvent >();\n" )
+      outputfile.write( self.implementation.get_body_of_getGridControlEvents() )
       outputfile.write( "}\n\n\n" )
 
       
@@ -157,7 +160,7 @@ class Mapping(object):
         outputfile.write( self.__get_full_qualified_class_name() + "::" + operation[0] )
         outputfile.write( self.__get_operation_arguments(operation) )
         outputfile.write( " {\n" )
-        outputfile.write( "  // @todo Insert your code here\n" )
+        outputfile.write( self.implementation.get_body_of_operation( operation[0] ) )
         outputfile.write( " }\n\n\n" )
 
 
