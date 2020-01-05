@@ -47,14 +47,24 @@ class tarch::services::Service {
     virtual void receiveDanglingMessages() = 0;
 
     /**
-     * Sometimes it is possible to ensure that receiveDanglingMessages is not
-     * ran in parallel with other operations on one rank. This notably holds
-     * for MPI updates or updates of lists of MPIRequests. Use this semaphore
-     * to ensure your data protection. The ServiceRepository does already lock
+     * Recursive semaphores
+     *
+     * We have ensure that receiveDanglingMessages is not ran in parallel with
+     * other operations on one rank. This holds for example for MPI updates or
+     * updates of lists of MPIRequests. Yet, there can be cases where
+     * receiveDanglingMessages() in turn invokes receiveDanglingMessages()
+     * recursively. With a standard semaphore, we would now run into a deadlock
+     * as default semaphores are not recursion-safe. Therefore, I provide this
+     * recursive semaphore. The ServiceRepository does already lock
      * it, so receiveDanglingMessages() invoked through the factory should be
      * fine. You might however want to lock it yourself, too.
+     *
+     * I had severe issues when I outsourced the tarch into a library. The
+     * static initialisation of the recursive semaphores then led to seg faults
+     * from time to time. Therefore, I decided to make this semaphore a pointer.
+     * It is initialised lazily tarch::services::ServiceRepository::receiveDanglingMessages().
      */
-	static tarch::multicore::RecursiveSemaphore  receiveDanglingMessagesSemaphore;
+	static tarch::multicore::RecursiveSemaphore*  receiveDanglingMessagesSemaphore;
 };
 
 #endif
