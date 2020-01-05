@@ -8,6 +8,10 @@ class UserMapping(Mapping):
     pass
 
 
+  def user_should_modify_template(self):
+    return True
+
+
   def get_constructor_body(self):
     return "// @todo Please implement\n"
 

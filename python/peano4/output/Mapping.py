@@ -9,8 +9,7 @@ import peano4.solversteps.Mapping
 
 
 class Mapping(object):
-  default_overwrite = True
-    
+ 
   def __init__(self,classname,namespace,subdirectory,implementation = None):
     """
      implementation Should be of type peano4.solversteps.Mapping or None. If 
@@ -21,8 +20,8 @@ class Mapping(object):
     self.namespace    = namespace
     self.subdirectory = subdirectory
     self.operations   = [
-      ("beginTraversal","void"),
-      ("endTraversal","void")
+      (peano4.solversteps.Mapping.OPERATION_BEGIN_TRAVERSAL,"void"),
+      (peano4.solversteps.Mapping.OPERATION_END_TRAVERSAL,"void")
     ]
     self.include_files = []
     self.typedefs = []
@@ -87,7 +86,11 @@ class Mapping(object):
   
   def __generate_header(self,overwrite,directory):
     filename = directory + "/" + self.subdirectory + "/" + self.classname + ".h";
-    if writeFile(overwrite,self.default_overwrite,filename):
+    default_overwrite = True
+    if self.implementation.user_should_modify_template():
+      default_overwrite = False
+
+    if writeFile(overwrite,default_overwrite,filename):
       print( "write " + filename )
       outputfile = open( filename, "w" )
 
@@ -137,7 +140,10 @@ class Mapping(object):
 
   def __generate_implementation(self,overwrite,directory):
     filename = directory + "/" + self.get_cpp_file_name()
-    if writeFile(overwrite,self.default_overwrite,filename):
+    default_overwrite = True
+    if self.implementation.user_should_modify_template():
+      default_overwrite = False
+    if writeFile(overwrite,default_overwrite,filename):
       print( "write " + filename )
       outputfile = open( filename, "w" )
 

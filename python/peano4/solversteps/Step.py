@@ -19,6 +19,30 @@ class Step:
     self.vertex_data = []
     self.mappings    = [ peano4.solversteps.UserMapping() ]
 
+  def remove_all_mappings(self):
+    """
+     Each step holds a set of mappings. They describe what the step actually
+     should do whenever it loads a vertex, runs into a cell, and so forth. By
+     default, the step holds one user-defined mapping (UserMapping) which means
+     that a stub is generated where users can insert their functionality. You
+     can remove this one (or any other one added so far) with this routine.
+    """
+    self.mappings = []
+
+  def add_mapping(self,mapping):
+    """
+     Each step holds a set of mappings. They describe what the step actually
+     should do whenever it loads a vertex, runs into a cell, and so forth. By
+     default, the step holds one user-defined mapping (UserMapping) which means
+     that a stub is generated where users can insert their functionality. It is 
+     important in which order you add your mappings: The whole tree traversal 
+     is a top-down/depth-first tree traversal. So all the enter, create, ...
+     operations of a mapping are invoked exactly in the order you add them to 
+     the step. All the delete, leave, ... operations are invokved in reversed
+     order.
+    """
+    self.mappings.append(mapping)
+
     
   def set_project(self,project):
     """
@@ -74,13 +98,29 @@ class Step:
     perspective.
     """
     include_statements = ""
+
+    number_of_user_mappings = 0
+    for mapping in self.mappings:
+      if mapping.user_should_modify_template():
+        number_of_user_mappings +=1
+    #print( "number of user-defined mappings for this step: " + str(number_of_user_mappings) )
     
     for mapping in self.mappings:
-      mapping_name = self.name + "2" + mapping.get_mapping_name() + str( self.mappings.index(mapping))
-      if len(self.mappings)==1:
+      mapping_name = ""
+      if number_of_user_mappings<=1 and mapping.user_should_modify_template():
         mapping_name = self.name
+      else:
+        mapping_name = self.name + "2" + mapping.get_mapping_name() + str( self.mappings.index(mapping))
+        
+      subnamespace = ""
+      if mapping.user_should_modify_template():
+        subnamespace = "mappings" 
+        print( "user has to modify class " + mapping_name + " in mappings directory manually ")
+      else:
+        subnamespace = "observers" 
+        
       mapping = peano4.output.Mapping(
-        mapping_name, self.project.namespace + ["mappings"], self.project.directory + "/mappings", mapping
+        mapping_name, self.project.namespace + [ subnamespace ], self.project.directory + "/" + subnamespace, mapping
       )
       include_statements += "#include \"mappings/" + mapping_name + ".h\"\n"
  
@@ -92,20 +132,20 @@ class Step:
         mapping.include_files.append( "celldata/" + i.name + ".h" )    
 
       if len(self.vertex_data)>0:
-        mapping.operations.append( [ "createPersistentVertex", "void" ] + self.__get_vertex_operations_signature() )
-        mapping.operations.append( [ "destroyPersistentVertex", "void" ] + self.__get_vertex_operations_signature() )
-        mapping.operations.append( [ "createHangingVertex", "void" ] + self.__get_vertex_operations_signature() )
-        mapping.operations.append( [ "destroyHangingVertex", "void" ] + self.__get_vertex_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_PERSISTENT_VERTEX,  "void" ] + self.__get_vertex_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_PERSISTENT_VERTEX, "void" ] + self.__get_vertex_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_HANGING_VERTEX,     "void" ] + self.__get_vertex_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_HANGING_VERTEX,    "void" ] + self.__get_vertex_operations_signature() )
 
       if len(self.face_data)>0:
-        mapping.operations.append( [ "createPersistentFace", "void" ] + self.__get_face_operations_signature() )
-        mapping.operations.append( [ "destroyPersistentFace", "void" ] + self.__get_face_operations_signature() )
-        mapping.operations.append( [ "createHangingFace", "void" ] + self.__get_face_operations_signature() )
-        mapping.operations.append( [ "destroyHangingFace", "void" ] + self.__get_face_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_PERSISTENT_FACE, "void" ] + self.__get_face_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_PERSISTENT_FACE, "void" ] + self.__get_face_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_HANGING_FACE, "void" ] + self.__get_face_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_HANGING_FACE, "void" ] + self.__get_face_operations_signature() )
 
       if len(self.cell_data)>0:
-        mapping.operations.append( [ "createCell", "void" ] + self.__get_cell_operations_signature() )
-        mapping.operations.append( [ "destroyCell", "void" ] + self.__get_cell_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_CELL, "void" ] + self.__get_cell_operations_signature() )
+        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_CELL, "void" ] + self.__get_cell_operations_signature() )
 
       output.artefacts.append( mapping )
       output.makefile.add_cpp_file( mapping.get_cpp_file_name() )

@@ -17,8 +17,26 @@ class Mapping:
     return "return std::vector< peano4::grid::GridControlEvent >();\n" 
 
 
+  OPERATION_BEGIN_TRAVERSAL           = "beginTraversal"
+  OPERATION_END_TRAVERSAL             = "endTraversal"
+  OPERATION_CREATE_PERSISTENT_VERTEX  = "createPersistentVertex"
+  OPERATION_DESTROY_PERSISTENT_VERTEX = "destroyPersistentVertex"
+  OPERATION_CREATE_HANGING_VERTEX     = "createHangingVertex"
+  OPERATION_DESTROY_HANGING_VERTEX    = "destroyHangingVertex"
+  OPERATION_CREATE_PERSISTENT_FACE    = "createPersistentFace"
+  OPERATION_DESTROY_PERSISTENT_FACE   = "destroyPersistentFace"
+  OPERATION_CREATE_HANGING_FACE       = "createHangingFace"
+  OPERATION_DESTROY_HANGING_FACE      = "destroyHangingFace"
+  OPERATION_CREATE_CELL               = "createCell"
+  OPERATION_DESTROY_CELL              = "destroyCell"
+
+
   @abstractmethod
   def get_body_of_operation(self,operation_name):
+    """
+     See class' string constants starting with OPERATION_ for possible values
+     of operation_name
+    """
     return "// @todo Should be overwritten by mapping\n"
 
 
@@ -30,3 +48,13 @@ class Mapping:
      possible) and uppercase. Also, every subclass should overwrite this routine.
     """
     return "Dummy"
+
+
+  @abstractmethod
+  def user_should_modify_template(self):
+    """
+     Return whether you expect the user to modify the generated code. If this 
+     is the case, then the API places the generated output in the directory
+     mappings. Otherwise, it goes into the observer directory.
+    """
+    return True
