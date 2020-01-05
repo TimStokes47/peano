@@ -1348,9 +1348,9 @@ void peano4::grid::Spacetree::clearStatistics() {
 
   if (_spacetreeState==SpacetreeState::Running) {
     _statistics.setStationarySweeps( _statistics.getStationarySweeps()+1 );
-    if (_statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin+1) {
+    /*if (_statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin+1) {
       _statistics.setStationarySweeps( NumberOfStationarySweepsToWaitAtLeastTillJoin+1 );
-    }
+    }*/
   }
   else {
     _statistics.setStationarySweeps( 0 );
