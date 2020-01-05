@@ -19,6 +19,7 @@ class Step:
     self.vertex_data = []
     self.mappings    = [ peano4.solversteps.UserMapping() ]
 
+
   def remove_all_mappings(self):
     """
      Each step holds a set of mappings. They describe what the step actually
@@ -29,6 +30,7 @@ class Step:
     """
     self.mappings = []
 
+  
   def add_mapping(self,mapping):
     """
      Each step holds a set of mappings. They describe what the step actually
@@ -87,7 +89,7 @@ class Step:
     for i in self.cell_data:
       result += ["cell" + i.name,i.get_full_qualified_type() + "&"]
     return result
-
+      
 
   def construct_output(self,output):
     """
@@ -97,8 +99,7 @@ class Step:
     provides plugin points into the created data transitions from a user's 
     perspective.
     """
-    include_statements = ""
-
+    included_mappings = []
     number_of_user_mappings = 0
     for mapping in self.mappings:
       if mapping.user_should_modify_template():
@@ -122,7 +123,7 @@ class Step:
       mapping = peano4.output.Mapping(
         mapping_name, self.project.namespace + [ subnamespace ], self.project.directory + "/" + subnamespace, mapping
       )
-      include_statements += "#include \"mappings/" + mapping_name + ".h\"\n"
+      included_mappings.append( subnamespace + "::" + mapping_name )
  
       for i in self.vertex_data:
         mapping.include_files.append( "vertexdata/" + i.name + ".h" )    
@@ -151,7 +152,7 @@ class Step:
       output.makefile.add_cpp_file( mapping.get_cpp_file_name() )
 
     observer = peano4.output.Observer(
-      self.name, self.project.namespace+ [ "observers" ],self.project.directory + "/observers"
+      self.name, self.project.namespace+ [ "observers" ],self.project.directory + "/observers",included_mappings
     )
     output.artefacts.append( observer )
     output.makefile.add_cpp_file( observer.get_cpp_file_name() )

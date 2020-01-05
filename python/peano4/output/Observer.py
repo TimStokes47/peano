@@ -3,6 +3,8 @@
 from .Helper import Overwrite
 from .Helper import writeFile
 
+
+
 import os
 import re
 
@@ -11,10 +13,14 @@ class Observer(object):
   default_overwrite = True
   
   
-  def __init__(self,classname,namespace,subdirectory):
+  def __init__(self,classname,namespace,subdirectory,included_mappings):
+    """
+      Included mappings is a list of qualified mappings which are used
+    """
     self.classname    = classname
     self.namespace    = namespace
     self.subdirectory = subdirectory 
+    self.included_mappings = included_mappings
     
     self.d = {}
     self.d[ "OPEN_NAMESPACE" ]           = ""
@@ -27,6 +33,18 @@ class Observer(object):
     self.d[ "CLASSNAME" ]                 = classname
     self.d[ "FULL_QUALIFIED_CLASSNAME" ] += classname
     self.d[ "INCLUDE_GUARD" ]             = "_" + self.d[ "FULL_QUALIFIED_CLASSNAME" ].replace( "::", "_" ).upper() + "_H_"
+    self.d[ "INCLUDES" ]                  = ""
+    self.d[ "ATTRIBUTES" ]                = ""
+
+    for mapping in self.included_mappings:
+      self.d[ "INCLUDES" ] += "#include \""
+      self.d[ "INCLUDES" ] += mapping.replace( "::", "/" )
+      self.d[ "INCLUDES" ] += ".h\"\n"
+      self.d[ "ATTRIBUTES" ] += mapping
+      self.d[ "ATTRIBUTES" ] += "   _mapping"
+      self.d[ "ATTRIBUTES" ] += str( self.included_mappings.index(mapping) )
+      self.d[ "ATTRIBUTES" ] += "; \n"
+
 
 
   def __generate_header(self,overwrite,full_qualified_filename):
@@ -42,11 +60,10 @@ class Observer(object):
 
   TemplateConstructor = """
   
-  {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId)
-  //:
-  //  _mapping(spacetreeId) {{
-  {{
-  }}
+{FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId):
+{MAPPING_INITIALISATION_LIST}
+{{
+}}
   
 
   """
@@ -54,52 +71,89 @@ class Observer(object):
 
   TemplateBeginTraversal = """
   
-  void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
-    //_mapping.beginTraversal();
-  }}
+void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
+{MAPPING_BEGIN_TRAVERSAL_CALLS}
+}}
   
   """
 
 
   TemplateEndTraversal = """
   
-  void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
-    //_mapping.endTraversal();
-  }}
+void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
+{MAPPING_END_TRAVERSAL_CALLS}
+}}
   
   """
 
 
   TemplateClone = """
   
-  peano4::grid::TraversalObserver* {FULL_QUALIFIED_CLASSNAME}::clone(int spacetreeId) {{
-    return new {CLASSNAME}(spacetreeId);
-  }}
+peano4::grid::TraversalObserver* {FULL_QUALIFIED_CLASSNAME}::clone(int spacetreeId) {{
+  return new {CLASSNAME}(spacetreeId);
+}}
   
   """
 
 
   TemplateGetGridControlEvents = """
   
-  std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGridControlEvents() {{
-    std::vector< peano4::grid::GridControlEvent > result;
-    
-    //const std::vector< peano4::grid::GridControlEvent > userData = _mapping.getGridControlEvents();
-    //result.insert(result.begin(),userData.begin(),userData.end());
-    
-    return result;
-  }}
+std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGridControlEvents() {{
+  std::vector< peano4::grid::GridControlEvent > result;
+
+{MAPPING_GET_GRID_CONTROL_EVENT_CALLS}
+        
+  return result;
+}}
   
   """
   
   
 
   def __generate_implementation_glue_code(self,output_file):
+    #
+    # Constructor
+    #
+    self.d[ "MAPPING_INITIALISATION_LIST" ]                = ""
+    for mapping in self.included_mappings:
+      self.d[ "MAPPING_INITIALISATION_LIST" ]  += " _mapping"
+      self.d[ "MAPPING_INITIALISATION_LIST" ]  += str( self.included_mappings.index(mapping) )
+      self.d[ "MAPPING_INITIALISATION_LIST" ]  += "(spacetreeId)"
+      if mapping != self.included_mappings[-1]:
+        self.d[ "MAPPING_INITIALISATION_LIST" ]  += ", "
     output_file.write( self.TemplateConstructor.format(**self.d) )
+    
+    self.d[ "MAPPING_BEGIN_TRAVERSAL_CALLS" ]                = ""
+    for mapping in self.included_mappings:
+      self.d[ "MAPPING_BEGIN_TRAVERSAL_CALLS" ]  += "  _mapping"
+      self.d[ "MAPPING_BEGIN_TRAVERSAL_CALLS" ]  += str( self.included_mappings.index(mapping) )
+      self.d[ "MAPPING_BEGIN_TRAVERSAL_CALLS" ]  += ".beginTraversal();\n"
     output_file.write( self.TemplateBeginTraversal.format(**self.d) )
+    
+    self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]                = ""
+    for mapping in self.included_mappings:
+      self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]  += "  _mapping"
+      self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]  += str( self.included_mappings.index(mapping) )
+      self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]  += ".endTraversal();\n"
     output_file.write( self.TemplateEndTraversal.format(**self.d) )
-    output_file.write( self.TemplateClone.format(**self.d) )
+    
+    #    //const std::vector< peano4::grid::GridControlEvent > userData = _mapping.getGridControlEvents();
+    #//result.insert(result.begin(),userData.begin(),userData.end());
+    self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]                = ""
+    for mapping in self.included_mappings:
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += "  const std::vector< peano4::grid::GridControlEvent > result"
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += str( self.included_mappings.index(mapping) )
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += " = _mapping"
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += str( self.included_mappings.index(mapping) )
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += ".getGridControlEvents();\n"
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += "  result.insert( result.begin(), result"
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += str( self.included_mappings.index(mapping) )
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += ".begin(), result"
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += str( self.included_mappings.index(mapping) )
+      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += ".end() );\n"
     output_file.write( self.TemplateGetGridControlEvents.format(**self.d) )
+
+    output_file.write( self.TemplateClone.format(**self.d) )
 
 
   def __generate_enterCell(self,output_file):

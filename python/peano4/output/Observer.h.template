@@ -9,7 +9,7 @@
 #include "peano4/grid/GridControlEvent.h"
 #include "peano4/grid/GridTraversalEvent.h"
 #include "peano4/grid/TraversalObserver.h"
-//#include "mappings/{CLASSNAME}.h"
+{INCLUDES}
 
 
 {OPEN_NAMESPACE}
@@ -19,7 +19,7 @@
 
 class {FULL_QUALIFIED_CLASSNAME}: public peano4::grid::TraversalObserver {{
   public:
-    //mappings::{CLASSNAME}    _mapping;
+    {ATTRIBUTES}
     
   public:
     /**
