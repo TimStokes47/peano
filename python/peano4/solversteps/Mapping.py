@@ -13,6 +13,11 @@ class Mapping:
     return "// @todo Should be overwritten by mapping\n"
 
 
+  @abstractmethod
+  def get_destructor_body(self):
+    return "// @todo Should be overwritten by mapping\n"
+
+
   def get_body_of_getGridControlEvents(self):
     return "return std::vector< peano4::grid::GridControlEvent >();\n" 
 
@@ -58,3 +63,20 @@ class Mapping:
      mappings. Otherwise, it goes into the observer directory.
     """
     return True
+
+
+  @abstractmethod
+  def get_attributes(self):
+    """
+     Return attributes as copied and pasted into the generated class.
+    """
+    return ""
+
+
+  @abstractmethod
+  def get_includes(self):
+    """
+     Return include statements that you need.
+    """
+    return ""
+

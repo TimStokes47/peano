@@ -16,6 +16,10 @@ class UserMapping(Mapping):
     return "// @todo Please implement\n"
 
 
+  def get_destructor_body(self):
+    return "// @todo Please implement\n"
+
+
   def get_body_of_getGridControlEvents(self):
     return "// @todo Please implement\nreturn std::vector< peano4::grid::GridControlEvent >();\n" 
 
@@ -31,3 +35,12 @@ class UserMapping(Mapping):
      possible) and uppercase. Also, every subclass should overwrite this routine.
     """
     return "UserCode"
+
+
+  def get_attributes(self):
+    return "// @todo Please implement\n"
+
+
+  def get_includes(self):
+    return "// @todo Please implement\n"
+

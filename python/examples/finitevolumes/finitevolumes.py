@@ -42,7 +42,7 @@ project.datamodel.add_face(patch_overlap)
 grid_printer = peano4.solversteps.Step( "PlotGrid" )
 grid_printer.use_face(patch_overlap)
 grid_printer.use_cell(patch)
-grid_printer.add_mapping( peano4.solversteps.PlotGridInPeanoBlockFormat() )
+grid_printer.add_mapping( peano4.solversteps.PlotGridInPeanoBlockFormat("grid-dump") )
 project.solversteps.add_step(grid_printer)
 
 

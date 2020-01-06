@@ -109,6 +109,9 @@ class Mapping(object):
 
       outputfile.write( "#include <vector>\n\n\n" )
 
+      outputfile.write( self.implementation.get_includes() )
+      outputfile.write( "\n\n" )
+
       self.__generate_includes(outputfile)
       
       for i in self.namespace:
@@ -120,9 +123,29 @@ class Mapping(object):
         outputfile.write( "}\n" )
 
       outputfile.write( "class " + full_qualified_classname + "{\n" )
-      outputfile.write( "  public:\n" )
+      outputfile.write( "  private:\n" )
+      outputfile.write( "    static tarch::logging::Log  _log;\n" )
+      outputfile.write( self.implementation.get_attributes() )
 
+      outputfile.write( "  public:\n" )
+      outputfile.write( """
+/**
+ * Create mapping instance for one tree for one grid sweep
+ *
+ * <h2> Thread safety </h2>
+ *
+ * The creation of individual trees usually happens through peano4::parallel::SpacetreeSet::createObserverCloneIfRequired().
+ * This routine is called lazily when we start to traverse a subtree. 
+ * Therefore, the creation of mappings is not thread-safe.
+ *
+ *
+ * @param treeNumber Number of the spacetree for which we create the tree instance. Is 
+ *                   smaller 0 if this is the prototype mapping used on a rank from which 
+ *                   the real mappings are constructed from.
+ */      
+      """ )
       outputfile.write( "    " + self.classname + "(int treeNumber);\n\n" )
+      outputfile.write( "    ~" + self.classname + "();\n\n" )
       outputfile.write( "    std::vector< peano4::grid::GridControlEvent > getGridControlEvents();\n\n" )
       
       for i in self.operations:
@@ -151,8 +174,14 @@ class Mapping(object):
 
       outputfile.write( "#include \"" + self.classname + ".h\"\n\n\n" )
 
-      outputfile.write( self.__get_full_qualified_class_name() + "::" + self.classname + "(int spaceTree) {\n" )
+      outputfile.write( "tarch::logging::Log " + self.__get_full_qualified_class_name() + "::_log( \""+ self.__get_full_qualified_class_name() + "\");\n\n\n" )
+
+      outputfile.write( self.__get_full_qualified_class_name() + "::" + self.classname + "(int treeNumber) {\n" )
       outputfile.write( self.implementation.get_constructor_body() )
+      outputfile.write( " }\n\n\n" )
+
+      outputfile.write( self.__get_full_qualified_class_name() + "::~" + self.classname + "() {\n" )
+      outputfile.write( self.implementation.get_destructor_body() )
       outputfile.write( " }\n\n\n" )
 
       outputfile.write( "std::vector< peano4::grid::GridControlEvent > " + self.__get_full_qualified_class_name() + "::getGridControlEvents() {\n" )
