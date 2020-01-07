@@ -8,7 +8,7 @@ class ModelToDataRepository(object):
   def __init__(self,model):
     self.model = model
     self.d     = {}
-    #self.total_data_count = 0
+
 
   def __build_up_dictionary_for_one_data_set(self,i,prefix):
     self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "typedef "
@@ -18,6 +18,7 @@ class ModelToDataRepository(object):
     self.d[ "DATA_CONTAINER_INCLUDES" ]      += "\n"
     self.d[ "DATA_CONTAINER_DECLARATION" ]   += "static std::map< DataKey, " + prefix + "Data" + i.name + ">  _" + prefix + "Data" + i.name + ";\n"
     self.d[ "DATA_CONTAINER_INSTANTIATION" ] += "std::map< " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::DataKey, " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::" + prefix + "Data" + i.name + ">   " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::_" + prefix + "Data" + i.name + ";\n"
+
       
   def __parse_data_declarations_in_model(self):
     self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     = ""
@@ -36,9 +37,11 @@ class ModelToDataRepository(object):
 
     for i in self.model.face_data:
       self.__build_up_dictionary_for_one_data_set(i,"Face")
+      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "    typedef peano4::datamanagement::FaceEnumerator<FaceData" + i.name + ">  Faces" + i.name + ";\n"
 
     for i in self.model.vertex_data:
       self.__build_up_dictionary_for_one_data_set(i,"Vertex")
+      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "    typedef peano4::datamanagement::VertexEnumerator<VertexData" + i.name + ">  Vertices" + i.name + ";\n"
 
   def __get_full_namespace(self):
     return self.model.namespace + [ "observers" ]

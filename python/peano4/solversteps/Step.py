@@ -3,6 +3,7 @@
 import peano4.solversteps.UserMapping
 
 from peano4.solversteps.StepToMapping import StepToMapping
+from peano4.solversteps.StepToObserver import StepToObserver
 
 
 # 
@@ -23,6 +24,7 @@ class Step:
     self.vertex_data = []
     self.mappings    = [ peano4.solversteps.UserMapping() ]
     self.mapping_generator   = StepToMapping(self)
+    self.observer_generator  = StepToObserver(self)
 
 
   def remove_all_mappings(self):
@@ -109,15 +111,7 @@ class Step:
       full_qualified_mapping_name = self.mapping_generator.construct_output(output,mapping)
       included_mappings.append( full_qualified_mapping_name )
     
-    observer = peano4.output.Observer(
-      self.name, self.project.namespace+ [ "observers" ],self.project.directory + "/observers",
-      included_mappings,
-      [x.name for x in self.vertex_data],
-      [x.name for x in self.face_data],
-      [x.name for x in self.cell_data]
-    )
-    output.artefacts.append( observer )
-    output.makefile.add_cpp_file( observer.get_cpp_file_name() )
+    self.observer_generator.construct_output(output, included_mappings)
     
 
     

@@ -12,6 +12,8 @@
 
 
 #include <utility>
+#include "peano4/datamanagement/FaceEnumerator.h"
+#include "peano4/datamanagement/VertexEnumerator.h"
 
 
 {OPEN_NAMESPACE}

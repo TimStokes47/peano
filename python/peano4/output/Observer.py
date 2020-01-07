@@ -4,11 +4,6 @@ from .Helper import Overwrite
 from .Helper import writeFile
 
 
-#
-# @todo Work directly against model and use its generator field plus the getters in there to construct stack accesses
-#
-
-
 import os
 import re
 
@@ -57,6 +52,19 @@ class Observer(object):
       self.d[ "ATTRIBUTES" ] += str( self.included_mappings.index(mapping) )
       self.d[ "ATTRIBUTES" ] += "; \n"
 
+    for vertex in vertices:
+      self.d[ "ATTRIBUTES" ] += "   peano4::stacks::STDVectorStack< DataRepository::Vertices"
+      self.d[ "ATTRIBUTES" ] += vertex
+      self.d[ "ATTRIBUTES" ] += ">  _vertices"
+      self.d[ "ATTRIBUTES" ] += vertex
+      self.d[ "ATTRIBUTES" ] += "CallStack; \n"
+
+    for face in faces:
+      self.d[ "ATTRIBUTES" ] += "   peano4::stacks::STDVectorStack< DataRepository::Faces"
+      self.d[ "ATTRIBUTES" ] += face
+      self.d[ "ATTRIBUTES" ] += ">  _faces"
+      self.d[ "ATTRIBUTES" ] += face
+      self.d[ "ATTRIBUTES" ] += "CallStack; \n"
 
 
   def __generate_header(self,overwrite,full_qualified_filename):
@@ -91,15 +99,6 @@ class Observer(object):
       self.d[ "MAPPING_INITIALISATION_LIST" ]  += str( self.included_mappings.index(mapping) )
       self.d[ "MAPPING_INITIALISATION_LIST" ]  += "(spacetreeId)"
     output_file.write( self.TemplateConstructor.format(**self.d) )
-
-
-  TemplateEndTraversal = """
-  
-void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
-{MAPPING_END_TRAVERSAL_CALLS}
-}}
-  
-  """
 
 
   TemplateClone = """
@@ -148,17 +147,24 @@ void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensi
     for cell in self.cells:
       self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  DataRepository::_CellData" + cell + "[ DataRepository::DataKey(_spacetreeId,outStack) ].push( celldata::" + cell + "() );\n"
 
-    self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  for (int i=0; i<TwoTimesD; i++) {;\n"
-    for cell in self.faces:
-      self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "    DataRepository::_FaceData" + cell + "[ DataRepository::DataKey(_spacetreeId,outStack) ].push( facedata::" + cell + "() );\n"
-    self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  };\n"
-    
-    self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  for (int i=0; i<TwoPowerD; i++) {;\n"
-    for cell in self.vertices:
-      self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "    DataRepository::_VertexData" + cell + "[ DataRepository::DataKey(_spacetreeId,outStack) ].push( vertexdata::" + cell + "() );\n"
-    self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  };\n"
+    for face in self.faces:
+      self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  _faces" + face + "CallStack.push(DataRepository::Faces" + face + "(x,h));\n"
+
+    for vertex in self.vertices:
+      self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  _vertices" + vertex + "CallStack.push(DataRepository::Vertices" + vertex + "(x,h));\n"
 
     output_file.write( self.TemplateBeginTraversal.format(**self.d) )
+
+
+  TemplateEndTraversal = """
+  
+void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
+{MAPPING_END_TRAVERSAL_CALLS}
+  int inStack = peano4::grid::PeanoCurve::CallStack;
+{FINAL_POP_FROM_INPUT_STREAMS}
+}}
+  
+  """
 
     
   def __generate_endTraversal(self,output_file):
@@ -167,12 +173,21 @@ void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensi
       self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]  += "  _mapping"
       self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]  += str( self.included_mappings.index(mapping) )
       self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]  += ".endTraversal();\n"
+
+    self.d[ "FINAL_POP_FROM_INPUT_STREAMS" ]    = ""
+    for cell in self.cells:
+      self.d[ "FINAL_POP_FROM_INPUT_STREAMS" ]    += "  DataRepository::_CellData" + cell + "[ DataRepository::DataKey(_spacetreeId,inStack) ].pop();\n"
+
+    for face in self.faces:
+      self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  _faces" + cell + "CallStack.pop();\n"
+
+    for vertex in self.vertices:
+      self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  _vertices" + vertex + "CallStack.pop();\n"
+    
     output_file.write( self.TemplateEndTraversal.format(**self.d) )
     
     
   def __generate_getGridControlEvents(self,output_file):
-    #    //const std::vector< peano4::grid::GridControlEvent > userData = _mapping.getGridControlEvents();
-    #//result.insert(result.begin(),userData.begin(),userData.end());
     self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]                = ""
     for mapping in self.included_mappings:
       self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += "  const std::vector< peano4::grid::GridControlEvent > result"
@@ -201,13 +216,6 @@ void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensi
   def __generate_leaveCell(self,output_file):
     output_file.write( "void " + self.d[ "FULL_QUALIFIED_CLASSNAME" ] + "::leaveCell( const peano4::grid::GridTraversalEvent&  event ) { \n" )
     output_file.write( "}\n\n\n" )
-    
-    #if writeFile(overwrite,self.default_overwrite,full_qualified_filename):
-    #  print( "write " + full_qualified_filename )
-    #  output_file = open( full_qualified_filename, "w" )
-    #  output_file.write( "#include \"" + self.d[ "CLASSNAME" ] + ".h\"\n\n\n" )
-    # 
-    #  self.__generate_implementation_glue_code(output_file)
 
 
   def __generate_implementation(self,overwrite,full_qualified_filename):
