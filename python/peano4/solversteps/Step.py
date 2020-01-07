@@ -1,8 +1,8 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.output.TemplatedHeaderImplementationFilePair
-import peano4.output.Mapping
 import peano4.solversteps.UserMapping
+
+from peano4.solversteps.StepToMapping import StepToMapping
 
 
 # 
@@ -22,6 +22,7 @@ class Step:
     self.face_data   = []
     self.vertex_data = []
     self.mappings    = [ peano4.solversteps.UserMapping() ]
+    self.mapping_generator   = StepToMapping(self)
 
 
   def remove_all_mappings(self):
@@ -69,13 +70,13 @@ class Step:
   def __get_spatial_attributes_of_mapping_signature(self):
     return ["center", "const tarch::la::Vector<Dimensions,double>&", "h", "const tarch::la::Vector<Dimensions,double>&" ]
 
-  def __get_vertex_operations_signature(self):
+  def get_vertex_operations_signature(self):
     result = self.__get_spatial_attributes_of_mapping_signature()
     for i in self.vertex_data:
       result += ["vertex" + i.name,i.get_full_qualified_type() + "&"]
     return result
 
-  def __get_face_operations_signature(self):
+  def get_face_operations_signature(self):
     result  = self.__get_spatial_attributes_of_mapping_signature()
     result += ["normal", "int"]
     for i in self.vertex_data:
@@ -84,7 +85,7 @@ class Step:
       result += ["face" + i.name,i.get_full_qualified_type() + "&"]
     return result
 
-  def __get_cell_operations_signature(self):
+  def get_cell_operations_signature(self):
     result  = self.__get_spatial_attributes_of_mapping_signature()
     for i in self.vertex_data:
       result += ["vertices" + i.name, "peano4::datamanagement::VertexEnumerator<" + i.get_full_qualified_type() + ">&" ]
@@ -104,57 +105,10 @@ class Step:
     perspective.
     """
     included_mappings = []
-    number_of_user_mappings = 0
     for mapping in self.mappings:
-      if mapping.user_should_modify_template():
-        number_of_user_mappings +=1
-    #print( "number of user-defined mappings for this step: " + str(number_of_user_mappings) )
+      full_qualified_mapping_name = self.mapping_generator.construct_output(output,mapping)
+      included_mappings.append( full_qualified_mapping_name )
     
-    for mapping in self.mappings:
-      mapping_name = ""
-      if number_of_user_mappings<=1 and mapping.user_should_modify_template():
-        mapping_name = self.name
-      else:
-        mapping_name = self.name + "2" + mapping.get_mapping_name() + str( self.mappings.index(mapping))
-        
-      subnamespace = ""
-      if mapping.user_should_modify_template():
-        subnamespace = "mappings" 
-        print( "user has to modify class " + mapping_name + " in mappings directory manually ")
-      else:
-        subnamespace = "observers" 
-        
-      mapping = peano4.output.Mapping(
-        mapping_name, self.project.namespace + [ subnamespace ], self.project.directory + "/" + subnamespace, mapping
-      )
-      included_mappings.append( subnamespace + "::" + mapping_name )
- 
-      for i in self.vertex_data:
-        mapping.include_files.append( "vertexdata/" + i.name + ".h" )    
-      for i in self.face_data:
-        mapping.include_files.append( "facedata/" + i.name + ".h" )    
-      for i in self.cell_data:
-        mapping.include_files.append( "celldata/" + i.name + ".h" )    
-
-      if len(self.vertex_data)>0:
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_PERSISTENT_VERTEX,  "void" ] + self.__get_vertex_operations_signature() )
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_PERSISTENT_VERTEX, "void" ] + self.__get_vertex_operations_signature() )
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_HANGING_VERTEX,     "void" ] + self.__get_vertex_operations_signature() )
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_HANGING_VERTEX,    "void" ] + self.__get_vertex_operations_signature() )
-
-      if len(self.face_data)>0:
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_PERSISTENT_FACE, "void" ] + self.__get_face_operations_signature() )
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_PERSISTENT_FACE, "void" ] + self.__get_face_operations_signature() )
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_HANGING_FACE, "void" ] + self.__get_face_operations_signature() )
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_HANGING_FACE, "void" ] + self.__get_face_operations_signature() )
-
-      if len(self.cell_data)>0:
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_CELL, "void" ] + self.__get_cell_operations_signature() )
-        mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_CELL, "void" ] + self.__get_cell_operations_signature() )
-
-      output.artefacts.append( mapping )
-      output.makefile.add_cpp_file( mapping.get_cpp_file_name() )
-
     observer = peano4.output.Observer(
       self.name, self.project.namespace+ [ "observers" ],self.project.directory + "/observers",
       included_mappings,
