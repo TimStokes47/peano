@@ -37,9 +37,6 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     std::stringstream _snapshotFileOut;
     bool              _haveWrittenAtLeastOnePatch;
 
-//    tarch::la::Vector<3,double>&   _lastOffset;
-//    tarch::la::Vector<3,double>&   _lastSize;
-
     void writeMetaData(const std::string& metaData);
     void writeMapping(int totalEntries, double* values);
   public:

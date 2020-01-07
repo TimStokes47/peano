@@ -5,6 +5,10 @@ import peano4.output.Mapping
 import peano4.solversteps.UserMapping
 
 
+# 
+# @todo Aufteilen in mehrere Files mit ToXXXXX wie im Model.
+#
+
 class Step:
   """
     Most generic version of a solver step. A solverstep describes what Peano4 
@@ -152,7 +156,11 @@ class Step:
       output.makefile.add_cpp_file( mapping.get_cpp_file_name() )
 
     observer = peano4.output.Observer(
-      self.name, self.project.namespace+ [ "observers" ],self.project.directory + "/observers",included_mappings
+      self.name, self.project.namespace+ [ "observers" ],self.project.directory + "/observers",
+      included_mappings,
+      [x.name for x in self.vertex_data],
+      [x.name for x in self.face_data],
+      [x.name for x in self.cell_data]
     )
     output.artefacts.append( observer )
     output.makefile.add_cpp_file( observer.get_cpp_file_name() )

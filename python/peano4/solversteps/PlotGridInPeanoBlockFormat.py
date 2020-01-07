@@ -25,7 +25,7 @@ class PlotGridInPeanoBlockFormat(Mapping):
     
     if (_treeNumber>=0) {
       const bool newFile = tarch::mpi::Rank::getInstance().isGlobalMaster() and _counter==0;
-      logInfo( "PlotGrid2PlotGridInPeanoBlockFormat1()", "created tree instance for " << treeNumber << ". Create new file=" << newFile);
+      logDebug( "PlotGrid2PlotGridInPeanoBlockFormat1()", "created tree instance for " << treeNumber << ". Create new file=" << newFile);
       _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
         Dimensions,\"""" + self.filename + """\", not newFile
       );
@@ -67,7 +67,7 @@ if (_dataWriter!=nullptr) {
 
 
   def get_body_of_operation(self,operation_name):
-    return "// @todo Please implement\n"
+    return "assertionMsg(false, \"not implemented yet\");\n// @todo Please implement\n"
 
 #void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::plotCell(
 #  const tarch::la::Vector<Dimensions,double>&  center,

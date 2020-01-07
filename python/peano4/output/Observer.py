@@ -4,6 +4,10 @@ from .Helper import Overwrite
 from .Helper import writeFile
 
 
+#
+# @todo Work directly against model and use its generator field plus the getters in there to construct stack accesses
+#
+
 
 import os
 import re
@@ -13,14 +17,22 @@ class Observer(object):
   default_overwrite = True
   
   
-  def __init__(self,classname,namespace,subdirectory,included_mappings):
+  def __init__(self,classname,namespace,subdirectory,included_mappings,vertices,faces,cells):
     """
       Included mappings is a list of qualified mappings which are used
+      
+      vertices is a list of names. They are not qualified
+      faces is a list of names. They are not qualified
+      cells is a list of names. They are not qualified
     """
     self.classname    = classname
     self.namespace    = namespace
     self.subdirectory = subdirectory 
+    
     self.included_mappings = included_mappings
+    self.vertices          = vertices
+    self.faces             = faces
+    self.cells             = cells
     
     self.d = {}
     self.d[ "OPEN_NAMESPACE" ]           = ""
@@ -61,7 +73,7 @@ class Observer(object):
   TemplateConstructor = """
   
 {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId):
-{MAPPING_INITIALISATION_LIST}
+  _spacetreeId( spacetreeId ) {MAPPING_INITIALISATION_LIST}
 {{
 }}
   
@@ -69,13 +81,16 @@ class Observer(object):
   """
 
 
-  TemplateBeginTraversal = """
-  
-void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
-{MAPPING_BEGIN_TRAVERSAL_CALLS}
-}}
-  
-  """
+  def __generate_constructor(self,output_file):
+    #
+    # Constructor
+    #
+    self.d[ "MAPPING_INITIALISATION_LIST" ]                = ""
+    for mapping in self.included_mappings:
+      self.d[ "MAPPING_INITIALISATION_LIST" ]  += ", _mapping"
+      self.d[ "MAPPING_INITIALISATION_LIST" ]  += str( self.included_mappings.index(mapping) )
+      self.d[ "MAPPING_INITIALISATION_LIST" ]  += "(spacetreeId)"
+    output_file.write( self.TemplateConstructor.format(**self.d) )
 
 
   TemplateEndTraversal = """
@@ -108,28 +123,45 @@ std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGri
   
   """
   
-  
 
-  def __generate_implementation_glue_code(self,output_file):
-    #
-    # Constructor
-    #
-    self.d[ "MAPPING_INITIALISATION_LIST" ]                = ""
-    for mapping in self.included_mappings:
-      self.d[ "MAPPING_INITIALISATION_LIST" ]  += " _mapping"
-      self.d[ "MAPPING_INITIALISATION_LIST" ]  += str( self.included_mappings.index(mapping) )
-      self.d[ "MAPPING_INITIALISATION_LIST" ]  += "(spacetreeId)"
-      if mapping != self.included_mappings[-1]:
-        self.d[ "MAPPING_INITIALISATION_LIST" ]  += ", "
-    output_file.write( self.TemplateConstructor.format(**self.d) )
+  TemplateBeginTraversal = """
+  
+void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
+{MAPPING_BEGIN_TRAVERSAL_CALLS}
+
+  int outStack = peano4::grid::PeanoCurve::CallStack;
+
+{INITIAL_PUSH_TO_OUTPUT_STREAMS}
+}}
+  
+  """
+
     
-    self.d[ "MAPPING_BEGIN_TRAVERSAL_CALLS" ]                = ""
+  def __generate_beginTraversal(self,output_file):
+    self.d[ "MAPPING_BEGIN_TRAVERSAL_CALLS" ]     = ""
     for mapping in self.included_mappings:
       self.d[ "MAPPING_BEGIN_TRAVERSAL_CALLS" ]  += "  _mapping"
       self.d[ "MAPPING_BEGIN_TRAVERSAL_CALLS" ]  += str( self.included_mappings.index(mapping) )
       self.d[ "MAPPING_BEGIN_TRAVERSAL_CALLS" ]  += ".beginTraversal();\n"
-    output_file.write( self.TemplateBeginTraversal.format(**self.d) )
+      
+    self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    = ""
+    for cell in self.cells:
+      self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  DataRepository::_CellData" + cell + "[ DataRepository::DataKey(_spacetreeId,outStack) ].push( celldata::" + cell + "() );\n"
+
+    self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  for (int i=0; i<TwoTimesD; i++) {;\n"
+    for cell in self.faces:
+      self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "    DataRepository::_FaceData" + cell + "[ DataRepository::DataKey(_spacetreeId,outStack) ].push( facedata::" + cell + "() );\n"
+    self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  };\n"
     
+    self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  for (int i=0; i<TwoPowerD; i++) {;\n"
+    for cell in self.vertices:
+      self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "    DataRepository::_VertexData" + cell + "[ DataRepository::DataKey(_spacetreeId,outStack) ].push( vertexdata::" + cell + "() );\n"
+    self.d[ "INITIAL_PUSH_TO_OUTPUT_STREAMS" ]    += "  };\n"
+
+    output_file.write( self.TemplateBeginTraversal.format(**self.d) )
+
+    
+  def __generate_endTraversal(self,output_file):
     self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]                = ""
     for mapping in self.included_mappings:
       self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]  += "  _mapping"
@@ -137,6 +169,8 @@ std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGri
       self.d[ "MAPPING_END_TRAVERSAL_CALLS" ]  += ".endTraversal();\n"
     output_file.write( self.TemplateEndTraversal.format(**self.d) )
     
+    
+  def __generate_getGridControlEvents(self,output_file):
     #    //const std::vector< peano4::grid::GridControlEvent > userData = _mapping.getGridControlEvents();
     #//result.insert(result.begin(),userData.begin(),userData.end());
     self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]                = ""
@@ -153,12 +187,16 @@ std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGri
       self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += ".end() );\n"
     output_file.write( self.TemplateGetGridControlEvents.format(**self.d) )
 
+
+  def __generate_clone(self,output_file):
     output_file.write( self.TemplateClone.format(**self.d) )
 
 
   def __generate_enterCell(self,output_file):
     output_file.write( "void " + self.d[ "FULL_QUALIFIED_CLASSNAME" ] + "::enterCell( const peano4::grid::GridTraversalEvent&  event ) { \n" )
     output_file.write( "}\n\n\n" )
+
+
 
   def __generate_leaveCell(self,output_file):
     output_file.write( "void " + self.d[ "FULL_QUALIFIED_CLASSNAME" ] + "::leaveCell( const peano4::grid::GridTraversalEvent&  event ) { \n" )
@@ -177,8 +215,14 @@ std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGri
       print( "write " + full_qualified_filename )
       output_file = open( full_qualified_filename, "w" )
       output_file.write( "#include \"" + self.d[ "CLASSNAME" ] + ".h\"\n\n\n" )
+      output_file.write( """#include "DataRepository.h"\n""" )
+      output_file.write( """#include "peano4/grid/PeanoCurve.h"\n""" )
       
-      self.__generate_implementation_glue_code(output_file)
+      self.__generate_constructor(output_file)
+      self.__generate_clone(output_file)
+      self.__generate_getGridControlEvents(output_file)
+      self.__generate_beginTraversal(output_file)
+      self.__generate_endTraversal(output_file)
       self.__generate_enterCell(output_file)
       self.__generate_leaveCell(output_file)
 

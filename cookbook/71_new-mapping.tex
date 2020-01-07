@@ -88,3 +88,16 @@ step with \texttt{add\_mapping}.
 The order in which mappings are added is important.
 See \texttt{add\_mapping}'s documentation of information on this.
 
+
+
+\section{Conventions}
+
+By default, the Peano toolkit equips each mapping with a couple of
+features/attributes:
+
+\begin{itemize}
+  \item Every mapping has a static attribute \texttt{\_log} which is an instance
+  of \texttt{tarch::logging::Log}. That is, you can use Peano's logging commands
+  straightaway.
+\end{itemize}
+

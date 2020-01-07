@@ -17,7 +17,7 @@ class ModelToDataRepository(object):
     self.d[ "DATA_CONTAINER_INCLUDES" ]      += i.generator.get_header_file_include()
     self.d[ "DATA_CONTAINER_INCLUDES" ]      += "\n"
     self.d[ "DATA_CONTAINER_DECLARATION" ]   += "static std::map< DataKey, " + prefix + "Data" + i.name + ">  _" + prefix + "Data" + i.name + ";\n"
-    self.d[ "DATA_CONTAINER_INSTANTIATION" ] += "std::map< " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::DataKey, " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::" + prefix + "Data" + i.name + ">   _" + prefix + "Data" + i.name + ";\n"
+    self.d[ "DATA_CONTAINER_INSTANTIATION" ] += "std::map< " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::DataKey, " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::" + prefix + "Data" + i.name + ">   " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::_" + prefix + "Data" + i.name + ";\n"
       
   def __parse_data_declarations_in_model(self):
     self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     = ""
