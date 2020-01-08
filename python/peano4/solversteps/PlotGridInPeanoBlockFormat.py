@@ -67,7 +67,7 @@ if (_dataWriter!=nullptr) {
 
 
   def get_body_of_operation(self,operation_name):
-    return "assertionMsg(false, \"not implemented yet\");\n// @todo Please implement\n"
+    return "\n"
 
 #void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::plotCell(
 #  const tarch::la::Vector<Dimensions,double>&  center,

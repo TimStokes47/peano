@@ -65,6 +65,13 @@ class Observer(object):
       self.d[ "ATTRIBUTES" ] += ">  _faces"
       self.d[ "ATTRIBUTES" ] += face
       self.d[ "ATTRIBUTES" ] += "CallStack; \n"
+      
+    self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]       = ""
+    self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]      = ""
+    self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]   = ""
+    self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]     = ""
+    self.d[ "MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS" ]    = ""
+    self.d[ "MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS" ] = ""
 
 
   def __generate_header(self,overwrite,full_qualified_filename):
@@ -207,9 +214,108 @@ void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimension
     output_file.write( self.TemplateClone.format(**self.d) )
 
 
+  TemplateEnterCell_Preamble = """  
+void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEvent&  event ) {{
+"""
+
+
+  TemplateEnterCell_FaceLoad = """  
+  // Handle face {FACE_UNKNOWN_NAME}
+  DataRepository::Faces{FACE_UNKNOWN_NAME}     fineGridFaces{FACE_UNKNOWN_NAME}(event.getX(),event.getH());
+  DataRepository::Faces{FACE_UNKNOWN_NAME}     coarseGridFaces{FACE_UNKNOWN_NAME}(event.getX(),event.getH());
+  {{
+    DataRepository::FaceData{FACE_UNKNOWN_NAME}::PushBlockVertexStackView faceView = DataRepository::_FaceData{FACE_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock(Dimensions*2);
+  }}
+"""
+
+
+  TemplateEnterCell_CellLoad = """  
+  // Handle cell {CELL_UNKNOWN_NAME}
+  {{
+    int inCellStack  = event.getCellData();
+    int outCellStack = peano4::grid::PeanoCurve::CallStack;
+    logDebug("enterCell(...)", "cell " << inCellStack << "->pos-" << outCellStack );
+
+    if (inCellStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+      celldata::{CELL_UNKNOWN_NAME} data;
+
+      // @todo
+      Ich weiss noch net, wie ich das hier mache, dass ich mehrere Mappings benutze. Eigentlich
+      waere ein Array nett.
+          _mapping->createCell(
+      event.getX(),event.getH(),data,
+        _facesCallStack.top(0),
+        _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1),
+        _facesCallStack.top(1)
+    );
+
+      
+      DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,outCellStack) ].push(data);
+    }}
+    else {{
+      celldata::{CELL_UNKNOWN_NAME} data;
+      data = DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,inCellStack) ].pop();
+      DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,outCellStack) ].push(data);
+    }}
+  }}
+  celldata::{CELL_UNKNOWN_NAME}& fineCell{CELL_UNKNOWN_NAME}   = DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0);
+  celldata::{CELL_UNKNOWN_NAME}& coarseCell{CELL_UNKNOWN_NAME} = DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(1);
+"""
+
+
+
+  TemplateEnterCell_MappingInvocation = """  
+  {{
+    peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
+    {ACTIVE_MAPPING}.touchCellFirstTime(
+      event.getX(), event.getH(),
+      {MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
+      {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
+      {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
+      {MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
+      {MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+      {MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
+      marker
+    );
+  }}
+"""
+
+
+
+  TemplateEnterCell_Epilogue = """  
+}}
+"""
+
+  
   def __generate_enterCell(self,output_file):
-    output_file.write( "void " + self.d[ "FULL_QUALIFIED_CLASSNAME" ] + "::enterCell( const peano4::grid::GridTraversalEvent&  event ) { \n" )
-    output_file.write( "}\n\n\n" )
+    """
+      Generates enter cell
+      Befills the argument lists for the mapping calls
+    """
+    output_file.write( self.TemplateEnterCell_Preamble.format(**self.d) )
+          
+    # @todo Das ist noch net fertig
+    for vertices in self.vertices:
+      output_file.write( "  DataRepository::Vertices" + vertices + " fineGridVertices" + face + "(event.getX(),event.getH());\n" )
+      output_file.write( "  DataRepository::Vertices" + vertices + " coarseGridVertices" + face + "(event.getX(),event.getH());\n" )
+
+    for face in self.faces:
+      self.d[ "FACE_UNKNOWN_NAME" ]  = face
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]   += "fineGridFaces" + face + ", "
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS" ] += "fineGridFaces" + face + ", "
+      output_file.write( self.TemplateEnterCell_FaceLoad.format(**self.d) )
+
+    for cell in self.cells:
+      self.d[ "CELL_UNKNOWN_NAME" ]  = cell
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]   += "fineCell" + cell + ", "
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ] += "coarseCell" + cell + ", "
+      output_file.write( self.TemplateEnterCell_CellLoad.format(**self.d) )
+
+    for mapping in self.included_mappings:
+      self.d[ "ACTIVE_MAPPING" ]  = "_mapping" + str( self.included_mappings.index(mapping) )
+      output_file.write( self.TemplateEnterCell_MappingInvocation.format(**self.d) )
+        
+    output_file.write( self.TemplateEnterCell_Epilogue.format(**self.d) )
 
 
 
@@ -218,13 +324,23 @@ void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimension
     output_file.write( "}\n\n\n" )
 
 
+  TemplateImplementationFilePrologue = """
+#include "{CLASSNAME}.h"
+#include "DataRepository.h"
+#include "peano4/grid/PeanoCurve.h"
+
+
+
+tarch::logging::Log {FULL_QUALIFIED_CLASSNAME}::_log( "{FULL_QUALIFIED_CLASSNAME}" );
+
+"""
+
+
   def __generate_implementation(self,overwrite,full_qualified_filename):
     if writeFile(overwrite,self.default_overwrite,full_qualified_filename):
       print( "write " + full_qualified_filename )
       output_file = open( full_qualified_filename, "w" )
-      output_file.write( "#include \"" + self.d[ "CLASSNAME" ] + ".h\"\n\n\n" )
-      output_file.write( """#include "DataRepository.h"\n""" )
-      output_file.write( """#include "peano4/grid/PeanoCurve.h"\n""" )
+      output_file.write( self.TemplateImplementationFilePrologue.format(**self.d) )
       
       self.__generate_constructor(output_file)
       self.__generate_clone(output_file)
