@@ -15,11 +15,23 @@
  * as the tarch in previous Peano versions. I've cleaned it up quite a lot and
  * old features that are not used anymore are removed.
  *
- * <h1> Debug level </h2>
+ * \section Debug level
  *
  * - PeanoDebug = 1: Enable tracing
  * - PeanoDebug = 2: Enable assertions (includes level 1)
  * - PeanoDebug = 4: Enable debug messages (includes level 2)
+ *
+ * \section Default libraries
+ *
+ * By default, Peano 4 builds all core libraries in three different versions:
+ *
+ * - A debug variant which holds a compile with PeanoDebug=4
+ * - A trace variant which holds a compile with PeanoDebug=1
+ * - A production variants with PeanoDebug=0
+ *
+ * Note: The trace variant does not contain any assertions, as assertions are
+ * typically expensive and slow down the code considerably.
+ *
  */
 namespace tarch {
 }

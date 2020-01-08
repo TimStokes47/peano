@@ -215,7 +215,7 @@ class peano4::stacks::STDVectorStack {
      * Pops element from a stack.
      */
     T pop() {
-      assertion(_currentElement>0);
+      assertion1(_currentElement>0,_currentElement);
       _currentElement--;
       return _data[_currentElement];
     }
