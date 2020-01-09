@@ -117,19 +117,6 @@ peano4::grid::TraversalObserver* {FULL_QUALIFIED_CLASSNAME}::clone(int spacetree
   """
 
 
-  TemplateGetGridControlEvents = """
-  
-std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGridControlEvents() {{
-  std::vector< peano4::grid::GridControlEvent > result;
-
-{MAPPING_GET_GRID_CONTROL_EVENT_CALLS}
-        
-  return result;
-}}
-  
-  """
-  
-
   TemplateBeginTraversal = """
   
 void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
@@ -193,21 +180,48 @@ void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimension
     
     output_file.write( self.TemplateEndTraversal.format(**self.d) )
     
-    
+
+  def __format_template_per_mapping(self,output_file,template,reverse_order=False):
+    """
+     Takes the specified template file, iterates over self.mappings and pastes
+     the template into the output file once per mapping. Per mapping, the dictionary's
+     entries are updated. Otherwise, the dictionary remains unchanged.
+    """ 
+    local_mappings = [x for x in self.included_mappings]
+    if reverse_order:
+      local_mappings.reverse()
+        
+    for mapping in local_mappings:
+      self.d[ "ACTIVE_MAPPING" ]  = "_mapping" + str( self.included_mappings.index(mapping) )
+      self.d[ "ACTIVE_MAPPING_FULL_QUALIFIED_NAME" ]  = mapping
+      output_file.write( template.format(**self.d) )
+        
+
+  TemplateGetGridControlEvents_Preamble = """
+  
+std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGridControlEvents() {{
+  std::vector< peano4::grid::GridControlEvent > result;
+"""
+
+  TemplateGetGridControlEvents_MappingCall = """
+  {{
+    const std::vector< peano4::grid::GridControlEvent > mappingResult = {ACTIVE_MAPPING}.getGridControlEvents();
+    result.insert(result.begin(),mappingResult.begin(),mappingResult.end());
+  }}
+"""        
+
+  
+  TemplateGetGridControlEvents_Epilogue = """
+  return result;
+}}
+  
+"""
+  
+        
   def __generate_getGridControlEvents(self,output_file):
-    self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]                = ""
-    for mapping in self.included_mappings:
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += "  const std::vector< peano4::grid::GridControlEvent > result"
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += str( self.included_mappings.index(mapping) )
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += " = _mapping"
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += str( self.included_mappings.index(mapping) )
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += ".getGridControlEvents();\n"
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += "  result.insert( result.begin(), result"
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += str( self.included_mappings.index(mapping) )
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += ".begin(), result"
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += str( self.included_mappings.index(mapping) )
-      self.d[ "MAPPING_GET_GRID_CONTROL_EVENT_CALLS" ]  += ".end() );\n"
-    output_file.write( self.TemplateGetGridControlEvents.format(**self.d) )
+    output_file.write( self.TemplateGetGridControlEvents_Preamble.format(**self.d) )
+    self.__format_template_per_mapping(output_file,self.TemplateGetGridControlEvents_MappingCall)
+    output_file.write( self.TemplateGetGridControlEvents_Epilogue.format(**self.d) )
 
 
   def __generate_clone(self,output_file):
@@ -239,16 +253,15 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     if (inCellStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
       celldata::{CELL_UNKNOWN_NAME} data;
 
-      // @todo
-      Ich weiss noch net, wie ich das hier mache, dass ich mehrere Mappings benutze. Eigentlich
-      waere ein Array nett.
-          _mapping->createCell(
-      event.getX(),event.getH(),data,
-        _facesCallStack.top(0),
-        _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1),
-        _facesCallStack.top(1)
-    );
-
+      {ACTIVE_MAPPING}.createCell(
+        event.getX(),event.getH(),
+        {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
+        {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
+        data,
+        {MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
+        {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
+        DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,outCellStack) ].top(1)
+      );
       
       DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,outCellStack) ].push(data);
     }}
@@ -264,17 +277,17 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
 
 
-  TemplateEnterCell_MappingInvocation = """  
+  TemplateEnterCell_MappingCall = """  
   {{
     peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
     {ACTIVE_MAPPING}.touchCellFirstTime(
       event.getX(), event.getH(),
-      {MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
-      {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
       {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
-      {MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
-      {MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+      {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
+      {MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
       {MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
+      {MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+      {MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
       marker
     );
   }}
@@ -311,9 +324,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ] += "coarseCell" + cell + ", "
       output_file.write( self.TemplateEnterCell_CellLoad.format(**self.d) )
 
-    for mapping in self.included_mappings:
-      self.d[ "ACTIVE_MAPPING" ]  = "_mapping" + str( self.included_mappings.index(mapping) )
-      output_file.write( self.TemplateEnterCell_MappingInvocation.format(**self.d) )
+    self.__format_template_per_mapping(output_file, self.TemplateEnterCell_MappingCall, False)
         
     output_file.write( self.TemplateEnterCell_Epilogue.format(**self.d) )
 
