@@ -322,6 +322,9 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       self.d[ "CELL_UNKNOWN_NAME" ]  = cell
       self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]   += "fineCell" + cell + ", "
       self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ] += "coarseCell" + cell + ", "
+      
+      Das stimmt so net. Wir machen jetzt pro Zelldatum pro Mapping einen Call. Darf aber net sein
+      
       output_file.write( self.TemplateEnterCell_CellLoad.format(**self.d) )
 
     self.__format_template_per_mapping(output_file, self.TemplateEnterCell_MappingCall, False)
