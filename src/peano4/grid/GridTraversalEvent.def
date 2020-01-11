@@ -10,7 +10,13 @@ Constant: TwoTimesD   hint-value 6;
 
 
 class peano4::grid::GridTraversalEvent {
+  /**
+   * Centre of corresponding cell.
+   */
   persistent parallelise double         x[Dimensions];
+  /**
+   * Size of corresponding cell.
+   */
   persistent parallelise double         h[Dimensions];
   persistent parallelise packed bool    isRefined;
   
