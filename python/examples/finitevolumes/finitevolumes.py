@@ -14,6 +14,9 @@
 # variable PYTHONPATH points to Peano4's python directory.
 #
 import peano4
+import peano4.datamodel
+import peano4.solversteps
+import peano4.output
 
 
 

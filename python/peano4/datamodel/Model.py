@@ -1,6 +1,7 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 from peano4.datamodel.ModelToDataRepository import ModelToDataRepository
+from peano4.datamodel.DoF                   import DoFAssociation
 
 
 class Model(object):
@@ -12,15 +13,15 @@ class Model(object):
     self.generator   = ModelToDataRepository(self)
 
   def add_cell(self,submodel):
-    submodel.configure(self.namespace + ["celldata"])
+    submodel.configure(self.namespace, DoFAssociation.Cell)
     self.cell_data.append(submodel)
 
   def add_face(self,submodel):
-    submodel.configure(self.namespace + ["facedata"])
+    submodel.configure(self.namespace, DoFAssociation.Face)
     self.face_data.append(submodel)
 
   def add_vertex(self,submodel):
-    submodel.configure(self.namespace + ["vertexdata"])
+    submodel.configure(self.namespace, DoFAssociation.Vertex)
     self.vertex_data.append(submodel)
 
   def construct_output(self,output):

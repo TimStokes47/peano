@@ -10,14 +10,24 @@ class ModelToDataRepository(object):
     self.d     = {}
 
 
-  def __build_up_dictionary_for_one_data_set(self,i,prefix):
-    self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "typedef "
-    self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += i.generator.get_stack_container()
-    self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "  " + prefix + "Data" + i.name + ";\n"
+  def __build_up_dictionary_for_one_data_set(self,i):
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "     typedef "
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += i.get_full_qualified_type()
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "  " 
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += i.get_repository_type_name()
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += ";\n  " 
+
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "     typedef "
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += i.generator.get_stack_container()
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "  " 
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += i.get_logical_type_name()
+    #self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "Stack;\n  " 
+    
     self.d[ "DATA_CONTAINER_INCLUDES" ]      += i.generator.get_header_file_include()
     self.d[ "DATA_CONTAINER_INCLUDES" ]      += "\n"
-    self.d[ "DATA_CONTAINER_DECLARATION" ]   += "static std::map< DataKey, " + prefix + "Data" + i.name + ">  _" + prefix + "Data" + i.name + ";\n"
-    self.d[ "DATA_CONTAINER_INSTANTIATION" ] += "std::map< " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::DataKey, " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::" + prefix + "Data" + i.name + ">   " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::_" + prefix + "Data" + i.name + ";\n"
+    
+    self.d[ "DATA_CONTAINER_DECLARATION" ]   += "static std::map< DataKey, " + i.generator.get_stack_container() + ">  _" + i.get_logical_type_name() + "Stack;\n"
+    self.d[ "DATA_CONTAINER_INSTANTIATION" ] += "std::map< " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::DataKey, " + i.generator.get_stack_container()  + ">   " + self.d[ "FULL_QUALIFIED_CLASS_NAME" ] + "::_" + i.get_logical_type_name() + "Stack;\n"
 
       
   def __parse_data_declarations_in_model(self):
@@ -33,15 +43,13 @@ class ModelToDataRepository(object):
     self.d[ "FULL_QUALIFIED_CLASS_NAME" ] += self.__get_class_name()
     
     for i in self.model.cell_data:
-      self.__build_up_dictionary_for_one_data_set(i,"Cell")
+      self.__build_up_dictionary_for_one_data_set(i)
 
     for i in self.model.face_data:
-      self.__build_up_dictionary_for_one_data_set(i,"Face")
-      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "    typedef peano4::datamanagement::FaceEnumerator<FaceData" + i.name + ">  Faces" + i.name + ";\n"
+      self.__build_up_dictionary_for_one_data_set(i)
 
     for i in self.model.vertex_data:
-      self.__build_up_dictionary_for_one_data_set(i,"Vertex")
-      self.d[ "DATA_CONTAINER_TYPE_DEFS" ]     += "    typedef peano4::datamanagement::VertexEnumerator<VertexData" + i.name + ">  Vertices" + i.name + ";\n"
+      self.__build_up_dictionary_for_one_data_set(i)
 
   def __get_full_namespace(self):
     return self.model.namespace + [ "observers" ]

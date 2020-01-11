@@ -75,26 +75,44 @@ class Step:
   def get_vertex_operations_signature(self):
     result = self.__get_spatial_attributes_of_mapping_signature()
     for i in self.vertex_data:
-      result += ["vertex" + i.name,i.get_full_qualified_type() + "&"]
+      result += ["fineGridVertex" + i.name,i.get_full_qualified_type() + "&"]
+    for i in self.vertex_data:
+      result += ["coarseGridVertices" + i.name, i.get_enumeration_type() + "&" ]
+    for i in self.face_data:
+      result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + ">&" ]
+    for i in self.cell_data:
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
     return result
 
   def get_face_operations_signature(self):
     result  = self.__get_spatial_attributes_of_mapping_signature()
     result += ["normal", "int"]
     for i in self.vertex_data:
-      result += ["vertices" + i.name, "peano4::datamanagement::VertexEnumerator<" + i.get_full_qualified_type() + ">&" ]
+      result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "&" ]
     for i in self.face_data:
-      result += ["face" + i.name,i.get_full_qualified_type() + "&"]
+      result += ["fineGridFace" + i.name,i.get_full_qualified_type() + "&"]
+    for i in self.vertex_data:
+      result += ["coarseGridVertices" + i.name, i.get_enumeration_type() + "&" ]
+    for i in self.face_data:
+      result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "&" ]
+    for i in self.cell_data:
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
     return result
 
   def get_cell_operations_signature(self):
     result  = self.__get_spatial_attributes_of_mapping_signature()
     for i in self.vertex_data:
-      result += ["vertices" + i.name, "peano4::datamanagement::VertexEnumerator<" + i.get_full_qualified_type() + ">&" ]
+      result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "&" ]
     for i in self.face_data:
-      result += ["faces" + i.name, "peano4::datamanagement::FaceEnumerator<" + i.get_full_qualified_type() + ">&" ]
+      result += ["fineGridFaces" + i.name, i.get_enumeration_type() + "&" ]
     for i in self.cell_data:
-      result += ["cell" + i.name,i.get_full_qualified_type() + "&"]
+      result += ["fineGridCell" + i.name,i.get_full_qualified_type() + "&"]
+    for i in self.vertex_data:
+      result += ["coarseGridVertices" + i.name, i.get_enumeration_type() + "&" ]
+    for i in self.face_data:
+      result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "&" ]
+    for i in self.cell_data:
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
     return result
       
 

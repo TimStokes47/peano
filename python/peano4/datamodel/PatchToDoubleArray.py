@@ -13,7 +13,7 @@ class PatchToDoubleArray(object):
     self.data = patch
 
   def get_stack_container(self):
-    return "peano4::stacks::STDVectorStack< " + self.data.namespace[-1] + "::" + self.data.name + " >";
+    return "peano4::stacks::STDVectorStack< " + self.data.get_full_qualified_type() + " >";
     
   def get_header_file_include(self):
     return "#include \"peano4/stacks/STDVectorStack.h\" \n \
