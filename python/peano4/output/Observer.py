@@ -6,6 +6,7 @@ from .Helper import writeFile
 
 import os
 import re
+from gi._gi import BaseInfo
 
 
 class Observer(object):
@@ -49,14 +50,14 @@ class Observer(object):
       self.d[ "ATTRIBUTES" ] += "; \n"
 
     for vertex in vertices:
-      self.d[ "ATTRIBUTES" ] += "   std::vector< "
+      self.d[ "ATTRIBUTES" ] += "   peano4::stacks::STDVectorStack<"
       self.d[ "ATTRIBUTES" ] += vertex.get_enumeration_type()
       self.d[ "ATTRIBUTES" ] += "   _"
       self.d[ "ATTRIBUTES" ] += vertex.get_logical_type_name()
       self.d[ "ATTRIBUTES" ] += "CallStack; \n"
 
     for face in faces:
-      self.d[ "ATTRIBUTES" ] += "   std::vector< "
+      self.d[ "ATTRIBUTES" ] += "   peano4::stacks::STDVectorStack<"
       self.d[ "ATTRIBUTES" ] += face.get_enumeration_type()
       self.d[ "ATTRIBUTES" ] += ">   _"
       self.d[ "ATTRIBUTES" ] += face.get_logical_type_name()
@@ -68,13 +69,24 @@ class Observer(object):
     #  self.d[ "ATTRIBUTES" ] += "   _"
     #  self.d[ "ATTRIBUTES" ] += cell.get_logical_type_name()
     #  self.d[ "ATTRIBUTES" ] += "CallStack; \n"
-      
     self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]       = ""
-    self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]      = ""
-    self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]   = ""
     self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]     = ""
+    for cell in cells:
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]   += ",DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0)";
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ] += ",DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(1)";
+     
+    self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]      = ""
     self.d[ "MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS" ]    = ""
+    for face in faces:
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]   += ",_" + face.get_logical_type_name() + "CallStack.top(0)"
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS" ] += ",_" + face.get_logical_type_name() + "CallStack.top(1)"
+      
+    self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]   = ""
     self.d[ "MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS" ] = ""
+    for vertex in vertices:
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]   = ",_" + vertex.get_logical_type_name() + "CallStack.top(0)"
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS" ] = ",_" + vertex.get_logical_type_name() + "CallStack.top(1)"
+      
 
 
   def __generate_header(self,overwrite,full_qualified_filename):
@@ -250,50 +262,43 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
   TemplateEnterCell_FaceLoad = """  
   // Handle face {name}
-//  {enumeration_type}     fineGridFaces{name}(event.getX(),event.getH());
-//  {enumeration_type}     coarseGridFaces{name}(event.getX(),event.getH());
-//  {{
+  {enumeration_type}     fineGridFaces{name}(event.getX(),event.getH());
+  {enumeration_type}     coarseGridFaces{name}(event.getX(),event.getH());
+  // @todo Die Enumeratoren muessen jetzt gleich auch auf den Call-Stack, sonst gehen die Zugriffslisten net in den Events 
+  {{
 //    DataRepository::{logical_type_name}Stack::PushBlockVertexStackView faceView = DataRepository::_FaceData{name}[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock(Dimensions*2);
-//  }}
+  }}
 """
 
 
   TemplateEnterCell_CellLoad_Prologue = """  
-  // Handle cell {CELL_UNKNOWN_NAME}
+  // Handle cell {name}
   {{
-    int inCellStack  = event.getCellData();
-    int outCellStack = peano4::grid::PeanoCurve::CallStack;
+    const int inCellStack  = event.getCellData();
+    const int outCellStack = peano4::grid::PeanoCurve::CallStack;
     logDebug("enterCell(...)", "cell " << inCellStack << "->pos-" << outCellStack );
 
-    if (inCellStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
-      celldata::{CELL_UNKNOWN_NAME} data;
-
+    {full_qualified_type} data;
+    if (inCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+      data = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,inCellStack) ].pop();
+    }}
+    DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,outCellStack) ].push(data);
+  }}
 """
 
   TemplateEnterCell_CellLoad_MappingCall = """  
-      {ACTIVE_MAPPING}.createCell(
-        event.getX(),event.getH(),
+  if (event.getCellData()==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+    {ACTIVE_MAPPING}.createCell(
+         event.getX()
+        ,event.getH()
         {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
         {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
-        data,
+        ,DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0)
         {MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
         {MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
-        DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,outCellStack) ].top(1)
-      );
-"""
-
-
-  TemplateEnterCell_CellLoad_Epilogue = """  
-      DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,outCellStack) ].push(data);
-    }}
-    else {{
-      celldata::{CELL_UNKNOWN_NAME} data;
-      data = DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,inCellStack) ].pop();
-      DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,outCellStack) ].push(data);
-    }}
+        {MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
+    );
   }}
-  celldata::{CELL_UNKNOWN_NAME}& fineCell{CELL_UNKNOWN_NAME}   = DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0);
-  celldata::{CELL_UNKNOWN_NAME}& coarseCell{CELL_UNKNOWN_NAME} = DataRepository::_CellData{CELL_UNKNOWN_NAME}[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(1);
 """
 
 
@@ -323,17 +328,13 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   def __generate_enterCell(self,output_file):
     """
       Generates enter cell
-      Befills the argument lists for the mapping calls
     """
     output_file.write( self.TemplateEnterCell_Prologue.format(**self.d) )
           
     # @todo Das ist noch net fertig
     for vertices in self.vertices:
-      self.d[ "name" ]                 = face.name
-      self.d[ "enumeration_type" ]     = face.get_enumeration_type
-      self.d[ "logical_type_name" ]    = face.get_logical_type_name
-      self.d[ "full_qualified_type" ]  = face.get_full_qualified_type
       #output_file.write( self.TemplateEnterCell_FaceLoad.format(**self.d) )
+      pass
 
     for face in self.faces:
       self.d[ "name" ]                 = face.name
@@ -342,14 +343,14 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       self.d[ "full_qualified_type" ]  = face.get_full_qualified_type()
       output_file.write( self.TemplateEnterCell_FaceLoad.format(**self.d) )
 
-    #for cell in self.cells:
-    #  self.d[ "name" ]                 = cell.name
-    #  self.d[ "enumeration_type" ]     = cell.get_enumeration_type
-    #  self.d[ "logical_type_name" ]    = cell.get_logical_type_name
-    #  self.d[ "full_qualified_type" ]  = cell.get_full_qualified_type
-    #  output_file.write( self.TemplateEnterCell_CellLoad.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "name" ]                 = cell.name
+      #self.d[ "enumeration_type" ]     = cell.get_enumeration_type()
+      self.d[ "logical_type_name" ]    = cell.get_logical_type_name()
+      self.d[ "full_qualified_type" ]  = cell.get_full_qualified_type()
+      output_file.write( self.TemplateEnterCell_CellLoad_Prologue.format(**self.d) )
+      self.__format_template_per_mapping(output_file, self.TemplateEnterCell_CellLoad_MappingCall, False)
 
-    #self.__format_template_per_mapping(output_file, self.TemplateEnterCell_MappingCall, False)
         
     output_file.write( self.TemplateEnterCell_Epilogue.format(**self.d) )
 

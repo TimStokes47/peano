@@ -34,7 +34,7 @@ class DoF(object):
       self.namespace += [ "facedata" ]
     else:
       assert False
-    print( "added a new DoF: " + str(self.namespace) )
+    #print( "added a new DoF: " + str(self.namespace) )
     
 
   def get_full_qualified_type(self):
