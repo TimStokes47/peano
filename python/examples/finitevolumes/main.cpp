@@ -3,6 +3,7 @@
 #include "tarch/logging/Log.h"
 
 #include "tarch/tests/TestCaseRegistry.h"
+#include "tarch/logging/ChromeTraceFileLogger.h"
 
 #include "peano4/peano.h"
 #include "peano4/grid/Spacetree.h"
@@ -27,7 +28,7 @@ int main(int argc, char** argv) {
   peano4::fillLookupTables();
 
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", false
+    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", true
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", false
@@ -42,8 +43,12 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", false
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", true
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", false
   ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "examples", false
+  ));
+  tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile("trace");
 
   #if PeanoDebug>=2
   tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();

@@ -257,6 +257,7 @@ std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGri
 
   TemplateEnterCell_Prologue = """  
 void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEvent&  event ) {{
+  logTraceInWith1Argument( "enterCell(peano4::grid::GridTraversalEvent)", event.toString() );
 """
 
 
@@ -276,7 +277,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   {{
     const int inCellStack  = event.getCellData();
     const int outCellStack = peano4::grid::PeanoCurve::CallStack;
-    logDebug("enterCell(...)", "cell " << inCellStack << "->pos-" << outCellStack );
+    logDebug("enterCell(peano4::grid::GridTraversalEvent)", "cell " << inCellStack << "->pos-" << outCellStack );
 
     {full_qualified_type} data;
     if (inCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
@@ -321,6 +322,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
 
   TemplateEnterCell_Epilogue = """  
+  logTraceOut( "enterCell(peano4::grid::GridTraversalEvent)" );
 }}
 """
 
@@ -355,10 +357,94 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     output_file.write( self.TemplateEnterCell_Epilogue.format(**self.d) )
 
 
+  TemplateLeaveCell_Prologue = """  
+void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEvent&  event ) {{
+  logTraceInWith1Argument( "leaveCell(peano4::grid::GridTraversalEvent)", event.toString() );
+"""
+
+
+  TemplateLeaveCell_CellStore_MappingCall = """  
+  if (event.getCellData()==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+    {ACTIVE_MAPPING}.destroyCell(
+         event.getX()
+        ,event.getH()
+        {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
+        {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
+        ,DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0)
+        {MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
+        {MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+        {MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
+    );
+  }}
+"""
+
+
+  TemplateLeaveCell_CellStore_Epilogue = """  
+  // Handle cell {name}
+  {{
+    const int inCellStack   = peano4::grid::PeanoCurve::CallStack;
+    const int outCellStack  = event.getCellData();
+    logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "cell " << inCellStack << "->pos-" << outCellStack );
+
+    {full_qualified_type} data = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,inCellStack) ].pop();
+    if (outCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+      DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,outCellStack) ].push(data);
+    }}
+  }}
+"""
+
+
+  TemplateLeaveCell_MappingCall = """  
+  {{
+    peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
+    {ACTIVE_MAPPING}.touchCellLastTime(
+      event.getX(), event.getH(),
+      {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
+      {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
+      {MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
+      {MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
+      {MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+      {MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
+      marker
+    );
+  }}
+"""
+
+
+
+  TemplateLeaveCell_Epilogue = """  
+  logTraceOut( "leaveCell(peano4::grid::GridTraversalEvent)" );
+}}
+"""
+
 
   def __generate_leaveCell(self,output_file):
-    output_file.write( "void " + self.d[ "FULL_QUALIFIED_CLASSNAME" ] + "::leaveCell( const peano4::grid::GridTraversalEvent&  event ) { \n" )
-    output_file.write( "}\n\n\n" )
+    """
+      Generates enter cell
+    """
+    output_file.write( self.TemplateLeaveCell_Prologue.format(**self.d) )
+          
+    for cell in self.cells:
+      self.d[ "name" ]                 = cell.name
+      #self.d[ "enumeration_type" ]     = cell.get_enumeration_type()
+      self.d[ "logical_type_name" ]    = cell.get_logical_type_name()
+      self.d[ "full_qualified_type" ]  = cell.get_full_qualified_type()
+      self.__format_template_per_mapping(output_file, self.TemplateLeaveCell_CellStore_MappingCall, False)
+      output_file.write( self.TemplateLeaveCell_CellStore_Epilogue.format(**self.d) )
+
+    for face in self.faces:
+      self.d[ "name" ]                 = face.name
+      self.d[ "enumeration_type" ]     = face.get_enumeration_type()
+      self.d[ "logical_type_name" ]    = face.get_logical_type_name()
+      self.d[ "full_qualified_type" ]  = face.get_full_qualified_type()
+      pass
+      #output_file.write( self.TemplateEnterCell_FaceLoad.format(**self.d) )
+        
+    for vertices in self.vertices:
+      #output_file.write( self.TemplateEnterCell_FaceLoad.format(**self.d) )
+      pass
+
+    output_file.write( self.TemplateLeaveCell_Epilogue.format(**self.d) )
 
 
   TemplateImplementationFilePrologue = """
