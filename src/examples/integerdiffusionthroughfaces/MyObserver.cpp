@@ -187,8 +187,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
 
-  // @todo Es gibt noch kein inside/outside hier, oder? Was ist remote?
-  peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
+  peano4::datamanagement::CellMarker marker(event);
   assertionNumericalEquals2(
     _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0).h(0)*3.0,
 	_cellData[ DataKey(_spacetreeId,outCellStack) ].top(1).h(0),
@@ -218,7 +217,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
   int inCellStack   = peano4::grid::PeanoCurve::CallStack;
   int outCellStack  = event.getCellData();
 
-  peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
+  peano4::datamanagement::CellMarker marker(event);
   _mapping->touchCellLastTime(
     event.getX(), event.getH(),
     _cellData[ DataKey(_spacetreeId,inCellStack) ].top(0),

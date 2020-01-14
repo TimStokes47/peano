@@ -8,18 +8,19 @@ namespace peano4 {
   namespace datamanagement {
     struct CellMarker;
   }
+
+  namespace grid {
+    class GridTraversalEvent;
+  }
 }
 
 
 
 struct peano4::datamanagement::CellMarker {
-  CellMarker( bool isRefined_, bool isAdjacentToTreeBoundary_ ):
-    isRefined(isRefined_),
-	isAdjacentToTreeBoundary(isAdjacentToTreeBoundary_) {
-  }
+  CellMarker(const peano4::grid::GridTraversalEvent&  event);
 
-  bool isRefined;
-  bool isAdjacentToTreeBoundary;
+  const bool isRefined;
+  const bool isAdjacentToTreeBoundary;
 };
 
 #endif

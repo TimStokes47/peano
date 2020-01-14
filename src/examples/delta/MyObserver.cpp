@@ -211,7 +211,7 @@ void examples::delta::MyObserver::enterCell(
     inCellStack!=peano4::grid::TraversalObserver::NoData
   ) {
     // @todo Es gibt noch kein inside/outside hier, oder? Was ist remote?
-    peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
+    peano4::datamanagement::CellMarker marker(event);
     // @todo Coarse data stimmt net, oder?
     if (_spacetreeId==0) {
      assertionNumericalEquals2(
@@ -264,7 +264,7 @@ void examples::delta::MyObserver::leaveCell(
   int outCellStack  = event.getCellData();
 
   if (outCellStack!=peano4::grid::TraversalObserver::NoData) {
-    peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
+    peano4::datamanagement::CellMarker marker(event);
     _mapping->touchCellLastTime(
       event.getX(), event.getH(),
       _cellData[ DataKey(_spacetreeId,inCellStack) ].top(0),
