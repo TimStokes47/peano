@@ -24,6 +24,7 @@ class Mapping:
 
   OPERATION_BEGIN_TRAVERSAL           = "beginTraversal"
   OPERATION_END_TRAVERSAL             = "endTraversal"
+  
   OPERATION_CREATE_PERSISTENT_VERTEX  = "createPersistentVertex"
   OPERATION_DESTROY_PERSISTENT_VERTEX = "destroyPersistentVertex"
   OPERATION_CREATE_HANGING_VERTEX     = "createHangingVertex"
@@ -34,6 +35,13 @@ class Mapping:
   OPERATION_DESTROY_HANGING_FACE      = "destroyHangingFace"
   OPERATION_CREATE_CELL               = "createCell"
   OPERATION_DESTROY_CELL              = "destroyCell"
+  
+  OPERATION_TOUCH_VERTEX_FIRST_TIME   = "touchVertexFirstTime"
+  OPERATION_TOUCH_VERTEX_LAST_TIME    = "touchVertexLastTime"
+  OPERATION_TOUCH_FACE_FIRST_TIME     = "touchFaceFirstTime"
+  OPERATION_TOUCH_FACE_LAST_TIME      = "touchFaceLastTime"
+  OPERATION_TOUCH_CELL_FIRST_TIME     = "touchCellFirstTime"
+  OPERATION_TOUCH_CELL_LAST_TIME      = "touchCellLastTime"
 
 
   @abstractmethod

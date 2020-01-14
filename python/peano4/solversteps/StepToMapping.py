@@ -46,16 +46,29 @@ class StepToMapping(object):
         new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_PERSISTENT_VERTEX, "void" ] + self.step.get_vertex_operations_signature() )
         new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_HANGING_VERTEX,     "void" ] + self.step.get_vertex_operations_signature() )
         new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_HANGING_VERTEX,    "void" ] + self.step.get_vertex_operations_signature() )
+        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_TOUCH_VERTEX_FIRST_TIME,   "void" ] + self.step.get_vertex_operations_signature() )
+        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_TOUCH_VERTEX_LAST_TIME,    "void" ] + self.step.get_vertex_operations_signature() )
 
       if len(self.step.face_data)>0:
-        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_PERSISTENT_FACE, "void" ]  + self.step.get_face_operations_signature() )
+        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_PERSISTENT_FACE,  "void" ] + self.step.get_face_operations_signature() )
         new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_PERSISTENT_FACE, "void" ] + self.step.get_face_operations_signature() )
-        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_HANGING_FACE, "void" ]     + self.step.get_face_operations_signature() )
-        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_HANGING_FACE, "void" ]    + self.step.get_face_operations_signature() )
+        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_HANGING_FACE,     "void" ] + self.step.get_face_operations_signature() )
+        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_HANGING_FACE,    "void" ] + self.step.get_face_operations_signature() )
+        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_TOUCH_FACE_FIRST_TIME,   "void" ] + self.step.get_face_operations_signature() )
+        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_TOUCH_FACE_LAST_TIME,    "void" ] + self.step.get_face_operations_signature() )
 
       if len(self.step.cell_data)>0:
-        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_CELL, "void" ]  + self.step.get_cell_operations_signature() )
-        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_CELL, "void" ] + self.step.get_cell_operations_signature() )
+        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_CREATE_CELL,           "void" ] + self.step.get_cell_operations_signature() )
+        new_mapping.operations.append( [ peano4.solversteps.Mapping.OPERATION_DESTROY_CELL,          "void" ] + self.step.get_cell_operations_signature() )
+
+      new_mapping.operations.append( 
+        [ peano4.solversteps.Mapping.OPERATION_TOUCH_CELL_FIRST_TIME, "void" ] + 
+        self.step.get_cell_operations_signature()
+      )
+      new_mapping.operations.append( 
+        [ peano4.solversteps.Mapping.OPERATION_TOUCH_CELL_LAST_TIME, "void" ] + 
+        self.step.get_cell_operations_signature()
+      )
 
       output.artefacts.append( new_mapping )
       output.makefile.add_cpp_file( new_mapping.get_cpp_file_name() )

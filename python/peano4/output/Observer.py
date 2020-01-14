@@ -307,14 +307,14 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   {{
     peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
     {ACTIVE_MAPPING}.touchCellFirstTime(
-      event.getX(), event.getH(),
-      {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
-      {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
-      {MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
-      {MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
-      {MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
-      {MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
-      marker
+      event.getX(), event.getH()
+       {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
+       {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
+       {MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
+       {MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
+       {MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+       {MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
+      ,marker
     );
   }}
 """
@@ -353,7 +353,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       output_file.write( self.TemplateEnterCell_CellLoad_Prologue.format(**self.d) )
       self.__format_template_per_mapping(output_file, self.TemplateEnterCell_CellLoad_MappingCall, False)
 
-        
+
+    self.__format_template_per_mapping(output_file, self.TemplateEnterCell_MappingCall, False)
     output_file.write( self.TemplateEnterCell_Epilogue.format(**self.d) )
 
 
