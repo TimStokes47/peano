@@ -17,6 +17,7 @@ import peano4
 import peano4.datamodel
 import peano4.solversteps
 import peano4.output
+import peano4.visualisation
 
 
 
@@ -68,3 +69,13 @@ project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano"
 project.generate(peano4.output.Overwrite.Default)
 project.build()
 project.run( ["myarguments"] )
+
+
+#
+# Dump grid into VTK
+#
+convert = peano4.visualisation.Convert( "grid-dump" )
+convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+convert.extract_fine_grid()
+convert.convert_to_vtk()
+
