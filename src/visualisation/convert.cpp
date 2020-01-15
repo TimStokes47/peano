@@ -19,6 +19,7 @@
 
 
 #include "tarch/Assertions.h"
+#include "tarch/logging/ChromeTraceFileLogger.h"
 
 
 #include <experimental/filesystem> // or #include <filesystem>
@@ -262,6 +263,8 @@ int main(int argc, char* argv[]) {
       validParams = false;
     }
     else {
+      tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile( "convert" );
+
       std::string mode            = argv[1];
       if (mode.compare("inspect")==0 and argc>=3) {
     	for (int i=2; i<argc; i++) {
