@@ -22,8 +22,7 @@ namespace tarch {
  * Abstract base class for a patch plotter
  *
  * Patch plotters are either wrappers around existing plotters or real
- * plotters. This is their abstract interface. They are different to
- * the
+ * plotters. This is their abstract interface.
  *
  * @author Kristof Unterweger, Tobias Weinzierl
  */
@@ -56,9 +55,12 @@ class tarch::plotter::griddata::blockstructured::PatchWriter {
         /**
          * Write data for one cell.
          *
-         * @param index Index of the cell. This index has to equal the index
-         *              used for the cell within the VTKWriter class
-         *              interface.
+         * You have to tell the plotter which cell you want to manipulate.
+         * If you are not sure, use getFirstCellWithinPatch() of the class
+         * to transform the patch index you got from plotPatch() into a proper
+         * vertex/cell index.
+         *
+         * @param index Index of the cell.
          * @param value Value for the cell.
          */
         virtual void plotCell( int index, double value ) = 0;
@@ -76,7 +78,10 @@ class tarch::plotter::griddata::blockstructured::PatchWriter {
          */
         virtual void assignRemainingCellsDefaultValues() = 0;
 
-        virtual int getFirstCellWithinPatch(int index) const = 0;
+        /**
+         * @see plotCell()
+         */
+        virtual int getFirstCellWithinPatch(int patchIndex) const = 0;
     };
 
     /**
@@ -89,10 +94,13 @@ class tarch::plotter::griddata::blockstructured::PatchWriter {
         /**
          * Write data for one cell.
          *
-         * @param index Index of the vertex. This index has to equal the index
-         *              used for the cell within the VTKWriter class
-         *              interface.
-         * @param value Value for the cell.
+         * You have to tell the plotter which vertex you want to manipulate.
+         * If you are not sure, use getFirstVertexWithinPatch() of the class
+         * to transform the patch index you got from plotPatch() into a proper
+         * vertex/cell index.
+         *
+         * @param index Index of the vertex.
+         * @param value Value for vertex cell or array of values.
          */
         virtual void plotVertex( int index, double value ) = 0;
         virtual void plotVertex( int index, double* values ) = 0;
@@ -104,14 +112,23 @@ class tarch::plotter::griddata::blockstructured::PatchWriter {
          */
         virtual void assignRemainingVerticesDefaultValues() = 0;
 
-        virtual int getFirstVertexWithinPatch(int index) const = 0;
+        /**
+         * @seee plotVertex()
+         */
+        virtual int getFirstVertexWithinPatch(int patchIndex) const = 0;
     };
 
+    /**
+     * @return Patch index, i.e. unique number of this patch
+     */
     virtual int plotPatch(
       const tarch::la::Vector<2,double>& offset,
       const tarch::la::Vector<2,double>& size
     ) = 0;
 
+    /**
+     * @return Patch index, i.e. unique number of this patch
+     */
     virtual int plotPatch(
       const tarch::la::Vector<3,double>& offset,
       const tarch::la::Vector<3,double>& size
