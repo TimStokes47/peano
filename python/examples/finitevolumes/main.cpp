@@ -14,6 +14,7 @@
 
 // @todo Automatisch inclusideren? Noe
 #include "observers/PlotGrid.h"
+#include "observers/PlotSolution.h"
 
 
 tarch::logging::Log _log("examples::regulargridupscaling");
@@ -83,6 +84,10 @@ int main(int argc, char** argv) {
     }
     while (peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<5);
     logInfo("main()", "used " << iterationNumber << " iterations");
+
+    examples::finitevolumes::observers::PlotSolution plotSolutionObserver;
+    peano4::parallel::SpacetreeSet::getInstance().traverse(plotSolutionObserver);
+    logInfo("main()", "dumped solution");
   }
   else {
     logInfo("main()", "I'm not the global master");

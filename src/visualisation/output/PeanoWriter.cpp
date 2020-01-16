@@ -97,7 +97,7 @@ void visualisation::output::PeanoWriter::writeFile(const std::vector<visualisati
     writeFile( dataSet[i], _directory + "/" + outputFileName + _FileExtension );
   }
 
-  if (numberOfDataSets>0) {
+  if (numberOfDataSets>1) {
     std::string outputFileName = _directory + "/" + _outputFileWithoutExtension + _FileExtension;
     logInfo( "writeFile(...)", "write meta file " << outputFileName );
     std::ofstream  file( outputFileName );
@@ -108,6 +108,9 @@ void visualisation::output::PeanoWriter::writeFile(const std::vector<visualisati
       file << "  include \"" << outputFileName << "\"" << std::endl;
       file << "end dataset" << std::endl << std::endl;
     }
+  }
+  else {
+    logInfo( "writeFile(...)", _directory << "/" << _outputFileWithoutExtension << " is a single data set. Thus, no meta data file is written");
   }
 }
 

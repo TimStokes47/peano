@@ -41,7 +41,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
   ifs.close();
 
   if (lines.empty()) {
-    logError( "parse()", "file is empty (or does not exist)" );
+    logError( "parse()", "file " << _file << " is empty (or does not exist)" );
   }
 
   #pragma omp parallel

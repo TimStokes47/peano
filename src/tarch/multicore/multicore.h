@@ -8,7 +8,7 @@ namespace tarch {
 
   /**
  
- \namespace "Multicore"
+ \namespace "tarch::multicore"
 
  To compile with multicore support, we currently offer three variants:
  

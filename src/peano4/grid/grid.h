@@ -6,7 +6,7 @@
 
 namespace peano4 {
  /**
-  * \namespace grid
+  * @namespace peano4::grid
   *
   * The grid namespace is Peano's core.
   *
