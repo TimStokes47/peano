@@ -39,8 +39,8 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
   assertion( !std::isnan(value) );
   for (int i=0; i<_numberOfUnknowns; i++) {
     _out << " " << value;
+    _entryCounter++;
   }
-  _entryCounter++;
   flushIfPatchIsComplete();
 }
 
@@ -49,8 +49,8 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
   for (int i=0; i<_numberOfUnknowns; i++) {
     _out << " " << values[i];
     assertion( !std::isnan(values[i]) );
+    _entryCounter++;
   }
-  _entryCounter++;
   flushIfPatchIsComplete();
 }
 

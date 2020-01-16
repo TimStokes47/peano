@@ -52,6 +52,8 @@ class visualisation::data::Variable {
 	int getVerticesPerAxisInCartesianMesh() const;
 	int getTotalNumberOfVerticesInCartesianMesh() const;
 	int getTotalNumberOfCellsInCartesianMesh() const;
+
+	std::string toString() const;
 };
 
 

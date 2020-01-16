@@ -32,6 +32,7 @@ project = peano4.Project( ["examples", "finitevolumes"], "." )
 # The solver will be patch-based, i.e. we will have one patch per cell.
 #
 patch = peano4.datamodel.Patch( (4,4,4), 5, "Q" )
+#patch = peano4.datamodel.Patch( (2,2,2), 5, "Q" )
 project.datamodel.add_cell(patch)
 
 #
@@ -92,10 +93,10 @@ project.run( ["myarguments"] )
 #
 # Dump grid into VTK
 #
-convert = peano4.visualisation.Convert( "grid-dump" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
-convert.extract_fine_grid()
-convert.convert_to_vtk()
+#convert = peano4.visualisation.Convert( "grid-dump" )
+#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+#convert.extract_fine_grid()
+#convert.convert_to_vtk()
 
 
 

@@ -43,8 +43,12 @@ class Convert(object):
         self.file_name + self.extension
       ])
       for line in convert_result.splitlines(False):
-        if "variable" in line and not "hosts" in line:
-          new_entry = line.split("variable")[-1].strip()
+        #if "variable" in line:
+        #  print( line )
+        #if "variable" in line and not "hosts" in line and not "held" in line:
+        #  new_entry = line.split("variable")[-1].strip()
+        if "is held by" in line:
+          new_entry = line.split("variable")[-1].split("is")[0].strip()
           result.append( new_entry ) 
       result = set(result)
       print( "complete. Found selectors " + str(result) )

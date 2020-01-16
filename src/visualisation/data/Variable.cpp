@@ -23,11 +23,6 @@ bool visualisation::data::Variable::operator==( const visualisation::data::Varia
   return name==rhs.name;
 }
 
-/*
-bool operator<( const visualisation::data::Variable& lhs, const visualisation::data::Variable& rhs ) {
-  return lhs.name<rhs.name;
-}
-*/
 
 int visualisation::data::Variable::getTotalNumberOfQuantitiesPerPatch() const {
   return unknowns * getTotalNumberOfDofsPerPatch();
@@ -56,4 +51,18 @@ int visualisation::data::Variable::getTotalNumberOfVerticesInCartesianMesh() con
 
 int visualisation::data::Variable::getTotalNumberOfCellsInCartesianMesh() const {
   return tarch::la::aPowI(dimensions,getVerticesPerAxisInCartesianMesh()-1);
+}
+
+
+std::string visualisation::data::Variable::toString() const {
+  std::ostringstream msg;
+
+  msg << "(name:" << name
+	  << ",dofs-per-axis:" << dofsPerAxis
+      << ",unknowns:" << unknowns
+	  << ",type:" << (type==visualisation::data::PeanoDataType::Cell_Values ? "cell-values" : "vertex-values" )
+      << ",dim:" << dimensions
+	  << ")";
+
+  return msg.str();
 }

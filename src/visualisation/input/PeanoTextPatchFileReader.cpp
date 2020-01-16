@@ -308,7 +308,7 @@ void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSet
 
   const int expectedDataEntries = key.getTotalNumberOfQuantitiesPerPatch();
   if ( textData.size()!=expectedDataEntries ) {
-    logError( "parsePatch(...)", "expected " << expectedDataEntries << " data entries for variable " << variableName << " but got " << textData.size() << ". Ignore data set");
+    logError( "parsePatch(...)", "expected " << expectedDataEntries << " data entries for variable " << variableName << " but got " << textData.size() << ". Ignore data set. Key=" << key.toString() );
     return;
   }
 

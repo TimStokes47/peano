@@ -100,7 +100,7 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
   __Template_TouchCellFirstTime = """ 
   int vertexIndices[TwoPowerD];
   
-  const double PatchScaling = 0.9;
+  const double PatchScaling = 0.95;
 
   assertion( _writer!=nullptr );
   assertion( _dataWriter!=nullptr );
@@ -116,7 +116,7 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
   dfor(k,{DOFS_PER_AXIS}) {{
     for( int i=0; i<{DOFS_PER_AXIS}; i++) {{
     }}
-    _dataWriter->plotCell( cellIndex, 0.01 );
+    _dataWriter->plotCell( cellIndex, k(0) * 0.001 );
     cellIndex++;
   }}
 """
