@@ -142,7 +142,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
   else {
     logInfo( "parse()", "file " << _file << " hosts " << _data[0].data.size() << " variable(s)");
     for (auto p: _data[0].data) {
-      logDebug( "parse()", "variable " << p.first.name << " hosts " << p.second.size() << " patch(es)");
+      logInfo( "parse()", "variable " << p.first.name << " is held by " << p.second.size() << " patch(es)");
     }
   }
 }

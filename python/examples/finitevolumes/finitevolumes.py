@@ -64,7 +64,7 @@ project.solversteps.add_step(grid_printer)
 solution_printer = peano4.solversteps.Step( "PlotSolution" )
 solution_printer.use_cell(patch)
 solution_printer.remove_all_mappings()
-plotter = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch)
+plotter = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
 solution_printer.add_mapping( plotter )
 project.solversteps.add_step(solution_printer)
 
@@ -92,10 +92,10 @@ project.run( ["myarguments"] )
 #
 # Dump grid into VTK
 #
-#convert = peano4.visualisation.Convert( "grid-dump" )
-#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
-#convert.extract_fine_grid()
-#convert.convert_to_vtk()
+convert = peano4.visualisation.Convert( "grid-dump" )
+convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+convert.extract_fine_grid()
+convert.convert_to_vtk()
 
 
 

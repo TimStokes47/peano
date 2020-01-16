@@ -10,15 +10,29 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
   """
   Very simple plotter that should be used in combination with Patches.
   At the moment, I only support plain double patches, i.e. you have to 
-  use the default source code generator for your stuff.
+  use the default source code generator for your stuff. This plotter 
+  works only for cell patches, i.e. patches associated with faces or 
+  vertices are not supported.
+  
+  At the moment, I can only plot one dataset (patch type) per plotter.
+  In theory, the underlying Peano plotter however could dump multiple
+  patches at once.
+  
+  Also, this dump expects incoming data to be AoS.
   """
   
   
-  def __init__(self,filename,patch):
+  def __init__(self,filename,patch,dataset_name):
     self.d = {}
     self.d[ "FILENAME" ]           = filename
     self.d[ "UNKNOWNS" ]           = str(patch.no_of_unknowns)
-    
+    self.d[ "DOFS_PER_AXIS" ]      = str(patch.dim[0])
+    self.d[ "NAME" ]               = dataset_name
+        
+    for i in patch.dim:
+      if i!=patch.dim[0]:
+        print( "Error: patch plotter requires patch to have same dimension along all coordinate axes")
+
     #self.dim       = dim
     #self.no_of_unknowns = no_of_unknowns
 
@@ -39,7 +53,7 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
     _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
       Dimensions,"{FILENAME}", not newFile
     );
-    _dataWriter = _writer->createCellDataWriter( "cell-marker", 1, {UNKNOWNS} );
+    _dataWriter = _writer->createCellDataWriter( "{NAME}", {DOFS_PER_AXIS}, {UNKNOWNS} );
     _counter = counter;
     counter++;
   }}
@@ -85,15 +99,26 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
 
   __Template_TouchCellFirstTime = """ 
   int vertexIndices[TwoPowerD];
+  
+  const double PatchScaling = 0.9;
 
-  int indices = _writer->plotPatch(
-    center - h * 0.5,
-    h
-  );
-
+  assertion( _writer!=nullptr );
   assertion( _dataWriter!=nullptr );
-  // @todo Use marker data here
- _dataWriter->plotCell(indices,1.0);
+  
+  const int patchIndex = _writer->plotPatch(
+    center - h * PatchScaling * 0.5,
+    h * PatchScaling
+  );
+ 
+  int cellIndex  = _dataWriter->getFirstCellWithinPatch(patchIndex);
+  int dofCounter = 0;
+  
+  dfor(k,{DOFS_PER_AXIS}) {{
+    for( int i=0; i<{DOFS_PER_AXIS}; i++) {{
+    }}
+    _dataWriter->plotCell( cellIndex, 0.01 );
+    cellIndex++;
+  }}
 """
 
 
@@ -120,4 +145,5 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
 #include "tarch/mpi/Rank.h"
+#include "peano4/utils/Loop.h"
 """
