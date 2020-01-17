@@ -1,4 +1,7 @@
 #include "PlotGrid.h"
+#include "Constants.h"
+
+#include "peano4/utils/Loop.h"
 
 
 tarch::logging::Log examples::finitevolumes::mappings::PlotGrid::_log( "examples::finitevolumes::mappings::PlotGrid");
@@ -120,7 +123,23 @@ void examples::finitevolumes::mappings::PlotGrid::createCell(
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q>& coarseGridFacesQ,
       examples::finitevolumes::celldata::Q& coarseGridCellQ,
       peano4::datamanagement::CellMarker marker) {
-// @todo Please implement
+  const double subcellWidth = h(0) / PatchSize;
+  dfor(k,PatchSize) {
+    const tarch::la::Vector<Dimensions,double> subcellCentre =
+      center - 0.5*h + k.convertScalar<double>() * subcellWidth + subcellWidth;
+    int dofIndex = peano4::utils::dLinearised(k,PatchSize) * NumberOfUnknownsPerCell;
+    double initialValue = 0.01;
+    if (
+      tarch::la::norm2( subcellCentre-tarch::la::Vector<Dimensions,double>(0.5) ) < 0.3
+    ) {
+      initialValue = 1.0;
+    }
+    for (int i=0; i<NumberOfUnknownsPerCell; i++) {
+      fineGridCellQ.value[dofIndex] = 0.0;
+      dofIndex++;
+    }
+    fineGridCellQ.value[dofIndex-1] = initialValue;
+  }
 }
 
 

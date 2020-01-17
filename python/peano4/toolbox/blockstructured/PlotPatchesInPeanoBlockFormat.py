@@ -111,13 +111,13 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
   );
  
   int cellIndex  = _dataWriter->getFirstCellWithinPatch(patchIndex);
-  int dofCounter = 0;
+  int currentDoF = 0;
   
   dfor(k,{DOFS_PER_AXIS}) {{
-    for( int i=0; i<{DOFS_PER_AXIS}; i++) {{
-    }}
-    _dataWriter->plotCell( cellIndex, k(0) * 0.001 );
+    double* data = fineGridCell{NAME}.value + currentDoF;
+    _dataWriter->plotCell( cellIndex, data );
     cellIndex++;
+    currentDoF += {UNKNOWNS};
   }}
 """
 

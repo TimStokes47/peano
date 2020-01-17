@@ -1,6 +1,7 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 
+from .Constants        import Constants
 from .Helper           import Overwrite
 from .Makefile         import Makefile
 from .Mapping          import Mapping

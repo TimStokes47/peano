@@ -39,6 +39,12 @@ class Project (object):
     
     self.is_generated = False
     self.is_built     = False
+    
+    self.constants  = peano4.output.Constants(self)
+
+
+  def export_constant( self, value, name ):
+    self.constants.export_constant( value, name )
 
     
   def generate(self, overwrite=peano4.output.Overwrite.Default):
@@ -55,6 +61,9 @@ class Project (object):
     self.main.construct_output(self.output)
     
     self.output.generate(overwrite, self.directory)
+
+    self.constants.generate(overwrite, self.directory)
+
     print( "generation complete" )
 
           

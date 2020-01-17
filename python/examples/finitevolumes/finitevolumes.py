@@ -31,15 +31,16 @@ project = peano4.Project( ["examples", "finitevolumes"], "." )
 #
 # The solver will be patch-based, i.e. we will have one patch per cell.
 #
-patch = peano4.datamodel.Patch( (4,4,4), 5, "Q" )
-#patch = peano4.datamodel.Patch( (2,2,2), 5, "Q" )
+patch_size = 4
+unknowns   = 5
+patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, "Q" )
 project.datamodel.add_cell(patch)
 
 #
 # Along the faces, we have the patch overlaps. As we use only a Rusanov flux, 
 # one cell of overlap between adjacent patches is sufficient.
 #
-patch_overlap = peano4.datamodel.Patch( (1,4,4), 5, "Q" )
+patch_overlap = peano4.datamodel.Patch( (1,patch_size,patch_size), unknowns, "Q" )
 project.datamodel.add_face(patch_overlap)
 
 #
@@ -61,13 +62,15 @@ project.solversteps.add_step(grid_printer)
 # we use features from there. In the example above, we added code to the 
 # step manually (the grid setup). This time, we don't want to add any 
 # further code manually.
-#
+#that I can 
 solution_printer = peano4.solversteps.Step( "PlotSolution" )
 solution_printer.use_cell(patch)
 solution_printer.remove_all_mappings()
 plotter = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
 solution_printer.add_mapping( plotter )
 project.solversteps.add_step(solution_printer)
+
+
 
 
 #
@@ -77,6 +80,8 @@ project.solversteps.add_step(solution_printer)
 # routine to set the dimension. We take the default here.
 #
 project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano" )
+project.export_constant( patch_size, "PatchSize" )
+project.export_constant( unknowns, "NumberOfUnknownsPerCell" )
 
 
 #
