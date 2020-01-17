@@ -1,24 +1,16 @@
-\section{Unit tests}
+\chapter{Unit tests}
 \label{section:test}
 
 
-
-\chapterDescription
-  {
-    There are no real examples coming along with this chapter, but you should be
-    able to write your own tests with 20 minutes.
-  }
-  {
-    Chapter \ref{chapter:quickstart}.
-  }
-
 Peano introduces its own lightweight test concept with picks up best practices
 from the JUnit world. 
-While it is way simpler and has no external dependencies (all test routines are
+While it is simple and has no external dependencies (all test routines are
 collected within the \texttt{tarch} subdirectory), it provides a few macros to
-handle numeric data---which might be convenient for AMR applications.
+handle numeric data---which might be convenient for AMR applications; so
+there's some added value. It also provides test routines for vectors.
 
-\subsection{Test architecture}
+
+\section{Test architecture}
 
 A Peano test is a class that implements and extends
 \texttt{tarch::tests::TestCase}.
@@ -78,6 +70,10 @@ void exahype::tests::TestCase::run() {
 \noindent
 Again, the pregenerated empty test shows how to use the unit test framework
 correctly.
+
+
+
+\section{Running the tests}
 Once these steps are handled, you can run the tests within your \texttt{main}:
 
 \begin{code}
@@ -93,14 +89,14 @@ unit tests, your own test cases, and all other test cases someone else
 (toolboxes you use, e.g.) has registered for your project.
 It returns an output similar to
 \begin{code}
-running test case collection "exahype.tests.c" ...... ok                                                                                                                
-running test case collection "exahype.tests.solvers" .. ok                                                                                                              
-running test case collection "exahype.tests" .... ok                                                                                                                    
-running test case collection "peano.grid.tests" .................... ok                                                                                                 
-running test case collection "peano.grid"  ok                                                                                                                           
-running test case collection "peano.heap.tests" .. ok                                                                                                                   
-running test case collection "peano.heap"  ok                                                                                                                           
-running test case collection "peano"  ok                                                                                                                                
+running test case collection "exahype2.tests.c" ...... ok                                                                                                                
+running test case collection "exahype2.tests.solvers" .. ok                                                                                                              
+running test case collection "exahype2.tests" .... ok                                                                                                                    
+running test case collection "peano4.grid.tests" .................... ok                                                                                                 
+running test case collection "peano4.grid"  ok                                                                                                                           
+running test case collection "peano4.heap.tests" .. ok                                                                                                                   
+running test case collection "peano4.heap"  ok                                                                                                                           
+running test case collection "peano4"  ok                                                                                                                                
 running test case collection "tarch"  ok                                                                                                                                
 running global test case collection  ok                                                                                                                                 
 \end{code}
@@ -114,17 +110,16 @@ line number.
 
 
 \begin{remark}
-  It is convenient to run tests only if \texttt{-DAsserts} (and probably
-  \texttt{-DDebug}) is set, i.e.~to remove the test runs from your release
-  build.
-  Notably the Peano kernel does not register some tests if \texttt{-DDebug} is
-  not uses for the compile as the tests rely on helper attributes that are only
-  available in the debug mode.
+  It is convenient to run tests only if you have translated your code with a 
+  sufficient debug level (cmp.~Section \ref{section:logging}).
+  When you write your own tests, I often add test attributes to the
+  classes---fields that are not required but help me to validate object
+  states. Since I protect these attributes with ifdefs reading Peano's debug
+  level, they are removed from the production code.
 \end{remark}
 
 
 
-\begin{remark}
   Peano provides two types of test registries: the standard test registry as
   used in this section is meant for standard unit tests. There is a second
   registry for integration tests. Integration tests are unit tests that register
@@ -134,36 +129,19 @@ line number.
   certain environment, so you don't want to run them all the time, while other
   tests are ran on a regular basis. If you distinguish between unit tests (that
   you run frequently) and integration tests, you can host both of them within
-  the same source code concept.
-\end{remark}
-
-
+  the same source code concept. 
 
 
 \begin{remark}
-  Tests tend to become spaghetti code and some of them are very expensive to
-  translate as the compiler's optimiser has a hard time to translate the long
-  code fragments.
-  I thus recommend to insert
-  \begin{code}
-#include "tarch/compiler/CompilerSpecificSettings.h"
-
-#ifdef UseTestSpecificCompilerSettings
-#pragma optimize("", off)
-#endif
-
-// All the implementation
-
-#ifdef UseTestSpecificCompilerSettings
-#pragma optimize("", on)
-#endif
-  \end{code}
-  into your implementation file around all your code. This switches off all
-  optimisation explicitly for the tests.
+ I have some (few) tests which write files and/or require manual intervention.
+ In the classic sense, they are thus not unit tests, and I therefore classify
+ them as regression tests.
+ The regression test suite thus is just a larger test suite which is more
+ expensive and which I therefore don't run that often.
 \end{remark}
 
 
-\subsection{Test routines}
+\section{Test routines}
 
 A typical unit tests builds up some classes, befills them with data, invokes
 some operations and finally checks the class state via some getters or routines
@@ -187,4 +165,27 @@ information if a test has failed, i.e.~to plot the values of further variables,
 e.g.
 All validation macros automatically set a test to failed if they fail, and they
 write a verbose message on the reason why some tests failed to the terminal.  
+
+
+
+  Tests tend to become spaghetti code and some of them are very expensive to
+  translate as the compiler's optimiser has a hard time to translate the long
+  code fragments.
+  I thus recommend to insert
+  \begin{code}
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+#ifdef UseTestSpecificCompilerSettings
+#pragma optimize("", off)
+#endif
+
+// All the implementation
+
+#ifdef UseTestSpecificCompilerSettings
+#pragma optimize("", on)
+#endif
+  \end{code}
+  into your implementation file around all your code. This switches off all
+  optimisation explicitly for the tests.
+
 

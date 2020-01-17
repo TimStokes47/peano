@@ -88,12 +88,13 @@ Peano offers four levels of logging through its macros:
   well.
   \item {\bf Tracing}. Used to keep track of when a method is entered and
   then left again.
-  \item {\textbf Debug}. Should be used to write debug data. It goes to
+  \item {\bf Debug}. Should be used to write debug data. It goes to
   \texttt{cout} and all debug data is removed if you do not translate with the compile flag
   \texttt{-DDebug}. Notably, use the \texttt{logDebug} macros when you write to
   the debug level, as all required log operations then are removed by the
   compiler once you create a release version of your code.
 \end{itemize}
+
 
 
 
@@ -217,6 +218,17 @@ For performance reasons, it is important to take two facts into account:
   filter then is hold persistently. 
 \end{enumerate}
 
+
+\begin{remark}
+ Whether a log message is written or not results from the combination of compile
+ flags (\texttt{PeanoDebug} flag) plus the log filters you have in place. If you 
+ translate with \texttt{-DPeanoDebug=0}, debug log filters play no role, as the 
+ underlying messages are not written anyway.
+ In this context, you have to pay attention against which libraries you link. 
+ Peano builds the technical architecture, the core and tools in different
+ versions with different optimisation levels and different log settings. 
+ Select the right one if you wanna see messages from the core or tarch.
+\end{remark}
 
 
 \section{Assertions}
