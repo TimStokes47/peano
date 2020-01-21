@@ -121,7 +121,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   // Face processing
   // ===============
   // @todo If there were vertices, then we would pass in vertices via an enumerator
-  FaceDataContainer::PushBlockVertexStackView faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock(Dimensions*2);
+  auto faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock(Dimensions*2);
   for (int i=0; i<Dimensions*2; i++) {
     int inFaceStack  = event.getFaceDataFrom(i);
 	int outFaceStack = event.getFaceDataTo(i);
@@ -244,7 +244,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
 
-  FaceDataContainer::PopBlockVertexStackView faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].popBlock(Dimensions*2);
+  auto faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].popBlock(Dimensions*2);
   for (int i=0; i<Dimensions*2; i++) {
     int inFaceStack  = event.getFaceDataFrom(i);
 	int outFaceStack = event.getFaceDataTo(i);

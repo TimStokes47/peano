@@ -120,7 +120,7 @@ class peano4::stacks::STDVectorStack {
      * element within in random order, or you can pop/push elements. If we
      * grab a block from the tree, it is logically removed from the main stack.
      */
-    class PopBlockVertexStackView {
+    class PopBlockStackView {
       protected:
         /**
          * Parent is friend
@@ -134,7 +134,7 @@ class peano4::stacks::STDVectorStack {
         /**
          * Constructor
          */
-        PopBlockVertexStackView(int size, int base, peano4::stacks::STDVectorStack<T>* stack):
+        PopBlockStackView(int size, int base, peano4::stacks::STDVectorStack<T>* stack):
           _size(size),
           _baseElement(base),
           _stack(stack) {
@@ -160,7 +160,54 @@ class peano4::stacks::STDVectorStack {
         }
     };
 
-    class PushBlockVertexStackView {
+    class ReadWriteBlockStackView {
+      protected:
+        /**
+         * Parent is friend
+         */
+        friend class peano4::stacks::STDVectorStack<T>;
+
+        const int                           _size;
+        const int                           _baseElement;
+        peano4::stacks::STDVectorStack<T>*  _stack;
+
+        /**
+         * Constructor
+         */
+        ReadWriteBlockStackView(int size, int base, peano4::stacks::STDVectorStack<T>* stack):
+          _size(size),
+          _baseElement(base),
+          _stack(stack) {
+        }
+
+      public:
+        int size() const {
+          return _size;
+        }
+
+        T get(int index) {
+          assertion2( index>=0, index, _size );
+          assertion2( index<_size, index, _size );
+          return _stack->_data[_baseElement+index];
+        }
+
+        T* set(int index, const T& value) {
+          assertion2( index>=0, index, _size );
+          assertion2( index<_size, index, _size );
+          _stack->_data[_baseElement+index] = value;
+          return &(_stack->_data[_baseElement+index]);
+        }
+
+        std::string toString() const {
+          std::ostringstream msg;
+          msg << "(size=" << _size
+              << ",baseElement=" << _baseElement
+              << ")";
+          return msg.str();
+        }
+    };
+
+    class PushBlockStackView {
       protected:
         /**
          * Parent is friend
@@ -170,7 +217,7 @@ class peano4::stacks::STDVectorStack {
         /**
          * Constructor
          */
-        PushBlockVertexStackView(int size, int base, peano4::stacks::STDVectorStack<T>* stack):
+        PushBlockStackView(int size, int base, peano4::stacks::STDVectorStack<T>* stack):
           _size(size),
 		  _baseElement(base),
           _stack(stack) {
@@ -221,6 +268,11 @@ class peano4::stacks::STDVectorStack {
     }
 
 
+    /**
+     * Get top element or shiftth top element. We start to count with
+     * 0, i.e. a shift of 0 (default) really returns the top element.
+     * A shift of 3 returns the fourth element from the stack
+     */
     T& top(int shift=0) {
       assertion1(shift>=0,shift);
       assertion2(_currentElement>shift, _currentElement, shift);
@@ -242,17 +294,23 @@ class peano4::stacks::STDVectorStack {
     }
 
     /**
-     * This operation grabs numberOfVertices from the input stack en block and
+     * This operation grabs numberOfElements from the input stack en block and
      * returns a view to it. Subsequent pops do not affect this block anymore,
      * i.e. the stack is reduced immediately.
      *
      * @return Pointer to block. Your are responsible to delete this view afterwards.
      */
-    PopBlockVertexStackView  popBlock(int numberOfVertices) {
-      _currentElement-=numberOfVertices;
+    PopBlockStackView  popBlock(int numberOfElements) {
+      _currentElement-=numberOfElements;
       assertion( _currentElement>=0 );
 
-      PopBlockVertexStackView result(numberOfVertices, _currentElement, this);
+      PopBlockStackView result(numberOfElements, _currentElement, this);
+      return result;
+    }
+
+    ReadWriteBlockStackView  viewBlock(int numberOfElements) {
+      assertion( _currentElement>=numberOfElements );
+      ReadWriteBlockStackView result(numberOfElements, _currentElement-numberOfElements, this);
       return result;
     }
 
@@ -260,7 +318,7 @@ class peano4::stacks::STDVectorStack {
      * Push a block on the output stack
      *
      * Pushing a block on the output stack basically means that we move the
-     * stack pointer by numberOfVertices entries. A block write stems from a
+     * stack pointer by numberOfElements entries. A block write stems from a
      * regular subgrid, i.e. the corresponding subgrid remains constant, but
      * it might happen that other grid parts processed before have added new
      * vertices. So, we might have to increase the stack size before we open
@@ -268,12 +326,12 @@ class peano4::stacks::STDVectorStack {
      * imply that the current output stack is not big enough - the input stack
      * might be, but we are using two distinguished stack data structures.
      *
-     * @param numberOfVertices Size of the view
+     * @param numberOfElements Size of the view
      */
-    PushBlockVertexStackView  pushBlock(int numberOfVertices) {
-      PushBlockVertexStackView result(numberOfVertices, _currentElement, this);
+    PushBlockStackView  pushBlock(int numberOfElements) {
+      PushBlockStackView result(numberOfElements, _currentElement, this);
 
-      _currentElement+=numberOfVertices;
+      _currentElement+=numberOfElements;
 
       if (static_cast<int>(_data.size())<_currentElement) {
     	_data.resize(_currentElement);

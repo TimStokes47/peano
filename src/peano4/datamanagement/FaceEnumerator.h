@@ -19,7 +19,7 @@ namespace peano4 {
 template <class Face>
 class peano4::datamanagement::FaceEnumerator {
   private:
-	Face* _faces[ TwoTimesD ];
+    Face* _faces[ TwoTimesD ];
 
 	/**
 	 * Bottom left vertex of associated cell.
@@ -28,19 +28,20 @@ class peano4::datamanagement::FaceEnumerator {
 
 	tarch::la::Vector<Dimensions,double>  _h;
   public:
-	/**
-	 * Usually is only used by the observers, i.e. users should not interact
-	 * with this routine.
-	 */
-	FaceEnumerator(const tarch::la::Vector<Dimensions,double>  x, const tarch::la::Vector<Dimensions,double>  h):
+    /**
+     * Usually is only used by the observers, i.e. users should not interact
+     * with this routine.
+     */
+    FaceEnumerator(const tarch::la::Vector<Dimensions,double>  x, const tarch::la::Vector<Dimensions,double>  h):
       _x(x),
-	  _h(h) {
+      _h(h) {
       #if PeanoDebug>0
-	  for (int i=0; i<TwoTimesD; i++) {
-		_faces[i] = nullptr;
-	  }
+      for (int i=0; i<TwoTimesD; i++) {
+    	_faces[i] = nullptr;
+      }
       #endif
-	}
+    }
+
 
     /**
      * Face enumerator with standard ordering of faces within a consecutive
@@ -64,7 +65,7 @@ class peano4::datamanagement::FaceEnumerator {
     }
 
 
-	FaceEnumerator& operator=(const FaceEnumerator<Face>& copy ) {
+    FaceEnumerator& operator=(const FaceEnumerator<Face>& copy ) {
       _x = copy._x;
       _h = copy._h;
       for (int i=0; i<TwoTimesD; i++) {

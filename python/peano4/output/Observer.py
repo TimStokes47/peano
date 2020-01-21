@@ -281,12 +281,19 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
   TemplateEnterCell_FaceLoad_MappingCall = """  
   // Handle face {name}
-//  {enumeration_type}     fineGridFaces{name}(event.getX(),event.getH());
-//  {enumeration_type}     coarseGridFaces{name}(event.getX(),event.getH());
-  // @todo Die Enumeratoren muessen jetzt gleich auch auf den Call-Stack, sonst gehen die Zugriffslisten net in den Events 
-  {{
-//    DataRepository::{logical_type_name}Stack::PushBlockVertexStackView faceView = DataRepository::_FaceData{name}[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock(Dimensions*2);
-  }}
+    auto view = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].viewBlock( TwoTimesD );
+    for (int i=0; i<TwoTimesD; i++) {{
+      int inFaceStackPosition  = event.getFaceDataFrom(i);
+      int outFaceStack         = event.getFaceDataTo(i);
+      {full_qualified_type} data = view.get(inFaceStackPosition);
+      if (
+        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+      ) {{
+        DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,outFaceStack) ].push(data);
+      }}
+    }}
 """
 
 
@@ -463,6 +470,8 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 """
 
   TemplateLeaveCell_VertexStore_MappingCall = """
+  {{
+  }}
 """
 
   TemplateLeaveCell_VertexStore_Epilogue = """
