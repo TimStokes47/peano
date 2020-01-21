@@ -20,10 +20,6 @@
 
 
 struct {FULL_QUALIFIED_CLASSNAME} {{
-  #if PeanoDebug>0
-  tarch::la::Vector<Dimensions,double>   x;
-  tarch::la::Vector<Dimensions,double>   h;
-  #endif
   #if Dimensions==2
   double                                 value[{CARDINALITY_2D}];
   #else

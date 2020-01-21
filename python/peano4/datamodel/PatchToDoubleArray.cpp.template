@@ -2,11 +2,6 @@
 
 
 std::string {FULL_QUALIFIED_CLASSNAME}::toString() const {{
-  std::string result = std::string("(")
-         #if PeanoDebug>0
-	     + x.toString() + std::string(",")
-	     + h.toString() // + std::string(",")
-         #endif
-		 + std::string(")");
+  std::string result = std::string("()");
   return result;
 }}

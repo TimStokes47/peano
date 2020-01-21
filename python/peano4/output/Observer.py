@@ -59,14 +59,14 @@ class Observer(object):
     self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]      = ""
     self.d[ "MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS" ]    = ""
     for face in faces:
-      self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]   += ",peano4::datamanagement::FaceEnumerator<" + face.get_full_qualified_type() + ">( event.getX(),event.getH(), &DataRepository::_" + face.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoTimesD) )";
-      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS" ] += ",peano4::datamanagement::FaceEnumerator<" + face.get_full_qualified_type() + ">( event.getX(),event.getH(), &DataRepository::_" + face.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoTimesD*2) )";
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]   += ",peano4::datamanagement::FaceEnumerator<" + face.get_full_qualified_type() + ">( event.getX(),event.getH(), &DataRepository::_" + face.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoTimesD-1) )";
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS" ] += ",peano4::datamanagement::FaceEnumerator<" + face.get_full_qualified_type() + ">( event.getX(),event.getH(), &DataRepository::_" + face.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoTimesD*2-1) )";
       
     self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]   = ""
     self.d[ "MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS" ] = ""
     for vertex in vertices:
-      self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]   = ",_" + vertex.get_logical_type_name() + "CallStack.top(0)"
-      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS" ] = ",_" + vertex.get_logical_type_name() + "CallStack.top(1)"
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]   += ",peano4::datamanagement::VertexEnumerator<" + vertex.get_full_qualified_type() + ">( event.getX(),event.getH(), &DataRepository::_" + face.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoPowerD-1) )";
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS" ] += ",peano4::datamanagement::VertexEnumerator<" + vertex.get_full_qualified_type() + ">( event.getX(),event.getH(), &DataRepository::_" + face.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoPowerD*2-1) )";
       
 
 
@@ -261,9 +261,20 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   TemplateEnterCell_FaceLoad_Prologue = """  
   // Load face {name}
   {{
-    //{enumeration_type}     fineGridFaces{name}(event.getX(),event.getH());
-    //{enumeration_type}     coarseGridFaces{name}(event.getX(),event.getH());
-    //DataRepository::{logical_type_name}Stack::PushBlockVertexStackView faceView = _{logical_type_name}CallStack.pushBlock(Dimensions*2);
+    auto view = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock( TwoTimesD );
+    for (int i=0; i<TwoTimesD; i++) {{
+      int inFaceStack          = event.getFaceDataFrom(i);
+      int outFaceStackPosition = event.getFaceDataTo(i);
+      {full_qualified_type} data ;
+      if (
+        inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+      ) {{
+        data = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,inFaceStack) ].pop();
+      }}
+      view.set(outFaceStackPosition,data);
+    }}
   }}
 """
 
@@ -433,6 +444,22 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 """
 
   TemplateLeaveCell_FaceStore_Epilogue = """
+  // Store face {name}
+  {{
+    auto view = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].popBlock( TwoTimesD );
+    for (int i=0; i<TwoTimesD; i++) {{
+      int inFaceStackPosition  = event.getFaceDataFrom(i);
+      int outFaceStack         = event.getFaceDataTo(i);
+      {full_qualified_type} data = view.get(inFaceStackPosition);
+      if (
+        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+      ) {{
+        DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,outFaceStack) ].push(data);
+      }}
+    }}
+  }}
 """
 
   TemplateLeaveCell_VertexStore_MappingCall = """
