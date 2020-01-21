@@ -223,7 +223,7 @@ class peano4::stacks::STDVectorStack {
 
     T& top(int shift=0) {
       assertion1(shift>=0,shift);
-      //assertion2(_currentElement>shift, _currentElement, shift);
+      assertion2(_currentElement>shift, _currentElement, shift);
       return _data[_currentElement-1-shift];
     }
 
