@@ -42,8 +42,20 @@ class peano4::datamanagement::FaceEnumerator {
       #endif
 	}
 
+    /**
+     * Face enumerator with standard ordering of faces within a consecutive
+     * array.
+     */
+    FaceEnumerator(const tarch::la::Vector<Dimensions,double>  x, const tarch::la::Vector<Dimensions,double>  h, Face* firstFace):
+      _x(x),
+      _h(h) {
+      for (int i=0; i<TwoTimesD; i++) {
+      _faces[i] = firstFace+i;
+      }
+    }
 
-	FaceEnumerator(const FaceEnumerator<Face>& copy ):
+
+    FaceEnumerator(const FaceEnumerator<Face>& copy ):
       _x(copy._x),
       _h(copy._h) {
       for (int i=0; i<TwoTimesD; i++) {

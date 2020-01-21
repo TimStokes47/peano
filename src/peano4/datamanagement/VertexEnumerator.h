@@ -45,6 +45,19 @@ class peano4::datamanagement::VertexEnumerator {
 	}
 
 
+	/**
+	 * Constructs vertex enumerator with default layout for consecutively
+	 * stored vertices.
+	 */
+	VertexEnumerator(const tarch::la::Vector<Dimensions,double>  x, const tarch::la::Vector<Dimensions,double>  h, Vertex* firstVertex):
+    _x(x),
+	  _h(h) {
+	  for (int i=0; i<TwoTimesD; i++) {
+		  _vertices[i] = firstVertex+i;
+	  }
+  }
+
+
 	VertexEnumerator(const VertexEnumerator<Vertex>& copy ):
       _x(copy._x),
       _h(copy._h) {
