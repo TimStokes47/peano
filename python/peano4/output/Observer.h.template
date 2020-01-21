@@ -31,7 +31,7 @@ class {FULL_QUALIFIED_CLASSNAME}: public peano4::grid::TraversalObserver {{
   
     const int _spacetreeId;
     
-    {ATTRIBUTES}
+{ATTRIBUTES}
     
   public:
     /**
