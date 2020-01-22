@@ -511,7 +511,8 @@ class peano4::grid::Spacetree {
     GridTraversalEvent createEnterCellTraversalEvent(
       GridVertex              coarseGridVertices[TwoPowerD],
       GridVertex              fineGridVertices[TwoPowerD],
-      const AutomatonState&   state
+      const AutomatonState&   state,
+      const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
     ) const;
 
     /**
@@ -520,7 +521,8 @@ class peano4::grid::Spacetree {
     GridTraversalEvent createLeaveCellTraversalEvent(
       GridVertex              coarseGridVertices[TwoPowerD],
       GridVertex              fineGridVertices[TwoPowerD],
-      const AutomatonState&   state
+      const AutomatonState&   state,
+      const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
     ) const;
 
     /**

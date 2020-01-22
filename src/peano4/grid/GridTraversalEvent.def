@@ -14,6 +14,7 @@ class peano4::grid::GridTraversalEvent {
    * Centre of corresponding cell.
    */
   persistent parallelise double         x[Dimensions];
+  
   /**
    * Size of corresponding cell.
    */
@@ -58,5 +59,10 @@ class peano4::grid::GridTraversalEvent {
   persistent parallelise int     sendReceiveVertexDataRank[TwoPowerD];
   persistent parallelise int     sendReceiveFaceDataRank[TwoTimesD];
   persistent parallelise int     sendReceiveCellDataRank;
+  
+  /**
+   * Integer array with entries from 0 to 2.
+   */
+  persistent parallelise int     relativePositionToFather[Dimensions];
 };
 

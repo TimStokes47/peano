@@ -173,7 +173,7 @@ void examples::delta::MyObserver::enterCell(
     case peano4::grid::GridTraversalEvent::ExchangeHorizontally:
       assertionMsg( false, "may not happen" );
       break;
-    case peano4::grid::GridTraversalEvent::StreamIn:
+    case peano4::grid::GridTraversalEvent::StreamInOut:
       {
         const int streamSourceStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getSendReceiveCellDataRank() );
         assertion3(
@@ -190,9 +190,6 @@ void examples::delta::MyObserver::enterCell(
         #endif
         _cellData[ DataKey(_spacetreeId,outCellStack) ].push( data );
       }
-      break;
-    case peano4::grid::GridTraversalEvent::StreamOut:
-      logDebug("leaveCell(...)", "cell will be streamed out after the user event");
       break;
     case peano4::grid::GridTraversalEvent::ExchangeVerticallyWithMaster:
       // @todo Should be optional, isn't it?
@@ -227,7 +224,7 @@ void examples::delta::MyObserver::enterCell(
     );
   }
 
-  if (event.getSendReceiveCellData()==peano4::grid::GridTraversalEvent::StreamOut) {
+  if (event.getSendReceiveCellData()==peano4::grid::GridTraversalEvent::StreamInOut) {
     logDebug("leaveCell(...)", "stream cell to tree " << event.getSendReceiveCellDataRank() );
     const int streamTargetStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange( event.getSendReceiveCellDataRank() );
     _cellData[ DataKey(_spacetreeId,streamTargetStack ) ].push( _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0) );
@@ -274,8 +271,7 @@ void examples::delta::MyObserver::leaveCell(
     case peano4::grid::GridTraversalEvent::ExchangeHorizontally:
       assertionMsg( false, "may not happen" );
       break;
-    case peano4::grid::GridTraversalEvent::StreamIn:
-    case peano4::grid::GridTraversalEvent::StreamOut:
+    case peano4::grid::GridTraversalEvent::StreamInOut:
       assertionMsg( false, "may not happen" );
       break;
     case peano4::grid::GridTraversalEvent::ExchangeVerticallyWithMaster:

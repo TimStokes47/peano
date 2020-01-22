@@ -1518,7 +1518,7 @@ void peano4::grid::Spacetree::descend(
     }
 
     observer.enterCell(createEnterCellTraversalEvent(
-      vertices, fineGridVertices, fineGridStates[peano4::utils::dLinearised(k,3)]
+      vertices, fineGridVertices, fineGridStates[peano4::utils::dLinearised(k,3)], k
     ));
 
     //
@@ -1551,7 +1551,7 @@ void peano4::grid::Spacetree::descend(
     // Leave cell
     //
     observer.leaveCell(createLeaveCellTraversalEvent(
-      vertices, fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)]
+      vertices, fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)],k
     ));
 
     splitOrJoinCell(
@@ -1572,14 +1572,16 @@ void peano4::grid::Spacetree::descend(
 peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTraversalEvent(
   GridVertex                                   coarseGridVertices[TwoPowerD],
   GridVertex                                   fineGridVertices[TwoPowerD],
-  const AutomatonState&                        state
+  const AutomatonState&                        state,
+  const tarch::la::Vector<Dimensions,int>&     relativePositionToFather
 ) const {
-  logTraceInWith2Arguments( "createEnterCellTraversalEvent(...)", state.toString(), _id );
+  logTraceInWith3Arguments( "createEnterCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather );
   GridTraversalEvent  event;
 
   event.setX( state.getX() + state.getH()*0.5 );
   event.setH( state.getH() );
   event.setIsRefined( isSpacetreeNodeRefined(fineGridVertices) );
+  event.setRelativePositionToFather( relativePositionToFather );
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
@@ -1663,13 +1665,13 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
         break;
       case CellEvent::MovingNewCellToWorker:
         event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
-        event.setSendReceiveCellData( GridTraversalEvent::StreamOut );
+        event.setSendReceiveCellData( GridTraversalEvent::StreamInOut );
         event.setSendReceiveCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
         break;
       case CellEvent::MovingPersistentCellToWorker:
       case CellEvent::MovingDeletingCellToWorker:
         event.setCellData(stackNumber);
-        event.setSendReceiveCellData( GridTraversalEvent::StreamOut );
+        event.setSendReceiveCellData( GridTraversalEvent::StreamInOut );
         event.setSendReceiveCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
         break;
       case CellEvent::JoiningWithMaster:
@@ -1688,7 +1690,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
         break;
       case CellEvent::NewFromSplit:
         event.setCellData(TraversalObserver::NoData);
-        event.setSendReceiveCellData(GridTraversalEvent::StreamIn);
+        event.setSendReceiveCellData(GridTraversalEvent::StreamInOut);
         event.setSendReceiveCellDataRank( _masterId );
         break;
     }
@@ -1702,14 +1704,16 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
 peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTraversalEvent(
   GridVertex              coarseGridVertices[TwoPowerD],
   GridVertex              fineGridVertices[TwoPowerD],
-  const AutomatonState&   state
+  const AutomatonState&   state,
+  const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
 ) const {
-  logTraceInWith2Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), _id );
+  logTraceInWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather );
   GridTraversalEvent  event;
 
   event.setX( state.getX() + state.getH()*0.5 );
   event.setH( state.getH() );
   event.setIsRefined( isSpacetreeNodeRefined(fineGridVertices) );
+  event.setRelativePositionToFather( relativePositionToFather );
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {

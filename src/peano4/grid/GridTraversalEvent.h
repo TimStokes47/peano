@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   02/07/2019 19:40
+ * @date   22/01/2020 16:31
  */
 class peano4::grid::GridTraversalEvent { 
    
@@ -37,7 +37,7 @@ class peano4::grid::GridTraversalEvent {
       typedef peano4::grid::GridTraversalEventPacked Packed;
       
       enum DataExchangeType {
-         ExchangeHorizontally = 0, StreamIn = 1, StreamOut = 2, ExchangeVerticallyWithMaster = 3, ExchangeVerticallyWithWorker = 4, None =5
+         ExchangeHorizontally = 0, StreamInOut = 1, ExchangeVerticallyWithMaster = 2, ExchangeVerticallyWithWorker = 3, None = 4
       };
       
       struct PersistentRecords {
@@ -55,6 +55,7 @@ class peano4::grid::GridTraversalEvent {
          tarch::la::Vector<TwoPowerD,int> _sendReceiveVertexDataRank;
          tarch::la::Vector<TwoTimesD,int> _sendReceiveFaceDataRank;
          int _sendReceiveCellDataRank;
+         tarch::la::Vector<Dimensions,int> _relativePositionToFather;
          /**
           * Generated
           */
@@ -63,7 +64,7 @@ class peano4::grid::GridTraversalEvent {
          /**
           * Generated
           */
-         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank);
+         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather);
          
           tarch::la::Vector<Dimensions,double> getX() const ;
          
@@ -145,6 +146,10 @@ class peano4::grid::GridTraversalEvent {
           */
           void setSendReceiveCellDataRank(const int& sendReceiveCellDataRank) ;
          
+          tarch::la::Vector<Dimensions,int> getRelativePositionToFather() const ;
+         
+          void setRelativePositionToFather(const tarch::la::Vector<Dimensions,int>& relativePositionToFather) ;
+         
          
       };
       private: 
@@ -164,7 +169,7 @@ class peano4::grid::GridTraversalEvent {
          /**
           * Generated
           */
-         GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank);
+         GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather);
          
          /**
           * Generated
@@ -291,6 +296,14 @@ class peano4::grid::GridTraversalEvent {
           */
           void setSendReceiveCellDataRank(const int& sendReceiveCellDataRank) ;
          
+          tarch::la::Vector<Dimensions,int> getRelativePositionToFather() const ;
+         
+          void setRelativePositionToFather(const tarch::la::Vector<Dimensions,int>& relativePositionToFather) ;
+         
+          int getRelativePositionToFather(int elementIndex) const ;
+         
+          void setRelativePositionToFather(int elementIndex, const int& relativePositionToFather) ;
+         
          /**
           * Generated
           */
@@ -364,7 +377,7 @@ class peano4::grid::GridTraversalEvent {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   02/07/2019 19:40
+ * @date   22/01/2020 16:31
  */
 class peano4::grid::GridTraversalEventPacked { 
    
@@ -378,6 +391,7 @@ class peano4::grid::GridTraversalEventPacked {
          tarch::la::Vector<TwoPowerD,int> _sendReceiveVertexDataRank;
          tarch::la::Vector<TwoTimesD,int> _sendReceiveFaceDataRank;
          int _sendReceiveCellDataRank;
+         tarch::la::Vector<Dimensions,int> _relativePositionToFather;
          
          /** mapping of records:
          || Member 	|| startbit 	|| length
@@ -425,7 +439,7 @@ class peano4::grid::GridTraversalEventPacked {
          /**
           * Generated
           */
-         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank);
+         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather);
          
           tarch::la::Vector<Dimensions,double> getX() const ;
          
@@ -507,6 +521,10 @@ class peano4::grid::GridTraversalEventPacked {
           */
           void setSendReceiveCellDataRank(const int& sendReceiveCellDataRank) ;
          
+          tarch::la::Vector<Dimensions,int> getRelativePositionToFather() const ;
+         
+          void setRelativePositionToFather(const tarch::la::Vector<Dimensions,int>& relativePositionToFather) ;
+         
          
       };
       private: 
@@ -526,7 +544,7 @@ class peano4::grid::GridTraversalEventPacked {
          /**
           * Generated
           */
-         GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank);
+         GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather);
          
          /**
           * Generated
@@ -652,6 +670,14 @@ class peano4::grid::GridTraversalEventPacked {
           * Generated
           */
           void setSendReceiveCellDataRank(const int& sendReceiveCellDataRank) ;
+         
+          tarch::la::Vector<Dimensions,int> getRelativePositionToFather() const ;
+         
+          void setRelativePositionToFather(const tarch::la::Vector<Dimensions,int>& relativePositionToFather) ;
+         
+          int getRelativePositionToFather(int elementIndex) const ;
+         
+          void setRelativePositionToFather(int elementIndex, const int& relativePositionToFather) ;
          
          /**
           * Generated
