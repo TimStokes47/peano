@@ -52,7 +52,7 @@ struct peano4::datamanagement::CellWrapper {
     CellWrapper(
       const tarch::la::Vector<Dimensions,double>&  centre,
 	  const tarch::la::Vector<Dimensions,double>&  h,
-	  const tarch::la::Vector<Dimensions,double>&  relativePositionToFather,
+	  const tarch::la::Vector<Dimensions,int>&     relativePositionToFather,
 	  Cell* cell
 	):
       _cell(cell),
@@ -67,9 +67,9 @@ struct peano4::datamanagement::CellWrapper {
 
 
     CellWrapper( const CellWrapper& copy ):
-      _cell(copy.cell),
-      _centre(copy.centre),
-      _h(copy.h) {
+      _cell(copy._cell),
+      _centre(copy._centre),
+      _h(copy._h) {
     }
 
 
