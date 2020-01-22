@@ -24,7 +24,7 @@ class peano4::datamanagement::FaceEnumerator {
     /**
      * Bottom left vertex of associated cell.
      */
-    tarch::la::Vector<Dimensions,double>  _x;
+    tarch::la::Vector<Dimensions,double>  _cellCentre;
 
     tarch::la::Vector<Dimensions,double>  _h;
   public:
@@ -32,8 +32,8 @@ class peano4::datamanagement::FaceEnumerator {
      * Usually is only used by the observers, i.e. users should not interact
      * with this routine.
      */
-    FaceEnumerator(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>&  h):
-      _x(x),
+    FaceEnumerator(const tarch::la::Vector<Dimensions,double>& cellCentre, const tarch::la::Vector<Dimensions,double>&  h):
+      _cellCentre(cellCentre),
       _h(h) {
       #if PeanoDebug>0
       for (int i=0; i<TwoTimesD; i++) {
@@ -47,8 +47,8 @@ class peano4::datamanagement::FaceEnumerator {
      * Face enumerator with standard ordering of faces within a consecutive
      * array.
      */
-    FaceEnumerator(const tarch::la::Vector<Dimensions,double>  x, const tarch::la::Vector<Dimensions,double>  h, Face* firstFace):
-      _x(x),
+    FaceEnumerator(const tarch::la::Vector<Dimensions,double>  cellCentre, const tarch::la::Vector<Dimensions,double>  h, Face* firstFace):
+      _cellCentre(cellCentre),
       _h(h) {
       for (int i=0; i<TwoTimesD; i++) {
       _faces[i] = firstFace+i;
@@ -56,8 +56,28 @@ class peano4::datamanagement::FaceEnumerator {
     }
 
 
+    FaceEnumerator(
+      const tarch::la::Vector<Dimensions,double>&  cellCentre,
+	  const tarch::la::Vector<Dimensions,double>&  h,
+	  const tarch::la::Vector<Dimensions,int>&     relativePositionToFather,
+	  Face* firstFace
+	):
+      _cellCentre(cellCentre),
+      _h(h) {
+      for (int i=0; i<TwoTimesD; i++) {
+      _faces[i] = firstFace+i;
+      }
+
+	  for (int d=0; d<Dimensions; d++) {
+        _cellCentre(d) += (1.0-relativePositionToFather(d)) * _h(d);
+	  }
+
+	  _h = 3.0 * _h;
+    }
+
+
     FaceEnumerator(const FaceEnumerator<Face>& copy ):
-      _x(copy._x),
+      _cellCentre(copy._cellCentre),
       _h(copy._h) {
       for (int i=0; i<TwoTimesD; i++) {
         _faces[i] = copy._faces[i];
@@ -66,7 +86,7 @@ class peano4::datamanagement::FaceEnumerator {
 
 
     FaceEnumerator& operator=(const FaceEnumerator<Face>& copy ) {
-      _x = copy._x;
+      _cellCentre = copy._cellCentre;
       _h = copy._h;
       for (int i=0; i<TwoTimesD; i++) {
         _faces[i] = copy._faces[i];
@@ -93,7 +113,7 @@ class peano4::datamanagement::FaceEnumerator {
 	}
 
 	tarch::la::Vector<Dimensions,double> x(int i) const {
-      tarch::la::Vector<Dimensions,double> result( _x );
+      tarch::la::Vector<Dimensions,double> result( _cellCentre );
       int normal = i % Dimensions;
 	  result(normal) += i >= Dimensions ? _h(normal)/2.0 : -_h(normal)/2.0;
       return result;
@@ -107,7 +127,7 @@ class peano4::datamanagement::FaceEnumerator {
 	}
 
 	std::string toString() const {
-	  return "(" + _x.toString() + "," + _h.toString() + ")";
+	  return "(" + _cellCentre.toString() + "," + _h.toString() + ")";
 	}
 };
 

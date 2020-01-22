@@ -38,10 +38,46 @@ struct peano4::datamanagement::CellWrapper {
     bool _isAdjacentToTreeBoundary;
 
   public:
-    CellWrapper( const tarch::la::Vector<Dimensions,double>&  centre, const tarch::la::Vector<Dimensions,double>&  h, Cell* cell):
+    CellWrapper(
+      const tarch::la::Vector<Dimensions,double>&  centre,
+	  const tarch::la::Vector<Dimensions,double>&  h,
+	  Cell* cell
+	):
       _cell(cell),
       _centre(centre),
       _h(h) {
+    }
+
+
+    CellWrapper(
+      const tarch::la::Vector<Dimensions,double>&  centre,
+	  const tarch::la::Vector<Dimensions,double>&  h,
+	  const tarch::la::Vector<Dimensions,double>&  relativePositionToFather,
+	  Cell* cell
+	):
+      _cell(cell),
+      _centre(centre),
+      _h(h) {
+  	  for (int d=0; d<Dimensions; d++) {
+        _centre(d) += (1.0-relativePositionToFather(d)) * _h(d);
+  	  }
+
+  	  _h = 3.0 * _h;
+    }
+
+
+    CellWrapper( const CellWrapper& copy ):
+      _cell(copy.cell),
+      _centre(copy.centre),
+      _h(copy.h) {
+    }
+
+
+    CellWrapper& operator=( const CellWrapper& copy ) {
+      _cell   = copy.cell;
+      _centre = copy.centre;
+      _h      = copy.h;
+      return *this;
     }
 
 
