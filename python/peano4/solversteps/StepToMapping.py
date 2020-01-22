@@ -63,11 +63,11 @@ class StepToMapping(object):
 
       new_mapping.operations.append( 
         [ peano4.solversteps.Mapping.OPERATION_TOUCH_CELL_FIRST_TIME, "void" ] + 
-        self.step.get_cell_operations_signature()
+        self.step.get_touch_cell_signature()
       )
       new_mapping.operations.append( 
         [ peano4.solversteps.Mapping.OPERATION_TOUCH_CELL_LAST_TIME, "void" ] + 
-        self.step.get_cell_operations_signature()
+        self.step.get_touch_cell_signature()
       )
 
       output.artefacts.append( new_mapping )

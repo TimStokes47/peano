@@ -13,28 +13,28 @@
 namespace peano4 {
   namespace datamanagement {
     template <class Vertex>
-    class VertexEnumerator;
+    struct VertexEnumerator;
   }
 }
 
 
 template <class Vertex>
-class peano4::datamanagement::VertexEnumerator {
+struct peano4::datamanagement::VertexEnumerator {
   private:
-	Vertex* _vertices[ TwoPowerD ];
+    Vertex* _vertices[ TwoPowerD ];
 
-	/**
-	 * Bottom left vertex of associated cell.
-	 */
-	tarch::la::Vector<Dimensions,double>  _x;
+    /**
+     * Bottom left vertex of associated cell.
+     */
+    tarch::la::Vector<Dimensions,double>  _x;
 
-	tarch::la::Vector<Dimensions,double>  _h;
+    tarch::la::Vector<Dimensions,double>  _h;
   public:
 	/**
 	 * Usually is only used by the observers, i.e. users should not interact
 	 * with this routine.
 	 */
-	VertexEnumerator(const tarch::la::Vector<Dimensions,double>  x, const tarch::la::Vector<Dimensions,double>  h):
+	VertexEnumerator(const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h):
       _x(x),
 	  _h(h) {
       #if PeanoDebug>0
@@ -49,7 +49,7 @@ class peano4::datamanagement::VertexEnumerator {
 	 * Constructs vertex enumerator with default layout for consecutively
 	 * stored vertices.
 	 */
-	VertexEnumerator(const tarch::la::Vector<Dimensions,double>  x, const tarch::la::Vector<Dimensions,double>  h, Vertex* firstVertex):
+	VertexEnumerator(const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h, Vertex* firstVertex):
     _x(x),
 	  _h(h) {
 	  for (int i=0; i<TwoTimesD; i++) {
@@ -67,7 +67,7 @@ class peano4::datamanagement::VertexEnumerator {
     }
 
 
-	VertexEnumerator& operator=(const VertexEnumerator<Vertex>& copy ) {
+    VertexEnumerator& operator=(const VertexEnumerator<Vertex>& copy ) {
       _x = copy._x;
       _h = copy._h;
       for (int i=0; i<TwoTimesD; i++) {

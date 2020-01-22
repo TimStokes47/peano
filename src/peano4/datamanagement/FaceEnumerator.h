@@ -21,18 +21,18 @@ class peano4::datamanagement::FaceEnumerator {
   private:
     Face* _faces[ TwoTimesD ];
 
-	/**
-	 * Bottom left vertex of associated cell.
-	 */
-	tarch::la::Vector<Dimensions,double>  _x;
+    /**
+     * Bottom left vertex of associated cell.
+     */
+    tarch::la::Vector<Dimensions,double>  _x;
 
-	tarch::la::Vector<Dimensions,double>  _h;
+    tarch::la::Vector<Dimensions,double>  _h;
   public:
     /**
      * Usually is only used by the observers, i.e. users should not interact
      * with this routine.
      */
-    FaceEnumerator(const tarch::la::Vector<Dimensions,double>  x, const tarch::la::Vector<Dimensions,double>  h):
+    FaceEnumerator(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>&  h):
       _x(x),
       _h(h) {
       #if PeanoDebug>0

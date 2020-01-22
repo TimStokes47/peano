@@ -114,7 +114,7 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
   int currentDoF = 0;
   
   dfor(k,{DOFS_PER_AXIS}) {{
-    double* data = fineGridCell{NAME}.value + currentDoF;
+    double* data = fineGridCell{NAME}.data().value + currentDoF;
     _dataWriter->plotCell( cellIndex, data );
     cellIndex++;
     currentDoF += {UNKNOWNS};

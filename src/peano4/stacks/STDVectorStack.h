@@ -160,53 +160,6 @@ class peano4::stacks::STDVectorStack {
         }
     };
 
-    class ReadWriteBlockStackView {
-      protected:
-        /**
-         * Parent is friend
-         */
-        friend class peano4::stacks::STDVectorStack<T>;
-
-        const int                           _size;
-        const int                           _baseElement;
-        peano4::stacks::STDVectorStack<T>*  _stack;
-
-        /**
-         * Constructor
-         */
-        ReadWriteBlockStackView(int size, int base, peano4::stacks::STDVectorStack<T>* stack):
-          _size(size),
-          _baseElement(base),
-          _stack(stack) {
-        }
-
-      public:
-        int size() const {
-          return _size;
-        }
-
-        T get(int index) {
-          assertion2( index>=0, index, _size );
-          assertion2( index<_size, index, _size );
-          return _stack->_data[_baseElement+index];
-        }
-
-        T* set(int index, const T& value) {
-          assertion2( index>=0, index, _size );
-          assertion2( index<_size, index, _size );
-          _stack->_data[_baseElement+index] = value;
-          return &(_stack->_data[_baseElement+index]);
-        }
-
-        std::string toString() const {
-          std::ostringstream msg;
-          msg << "(size=" << _size
-              << ",baseElement=" << _baseElement
-              << ")";
-          return msg.str();
-        }
-    };
-
     class PushBlockStackView {
       protected:
         /**
@@ -305,12 +258,6 @@ class peano4::stacks::STDVectorStack {
       assertion( _currentElement>=0 );
 
       PopBlockStackView result(numberOfElements, _currentElement, this);
-      return result;
-    }
-
-    ReadWriteBlockStackView  viewBlock(int numberOfElements) {
-      assertion( _currentElement>=numberOfElements );
-      ReadWriteBlockStackView result(numberOfElements, _currentElement-numberOfElements, this);
       return result;
     }
 

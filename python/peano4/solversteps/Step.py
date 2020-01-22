@@ -79,15 +79,15 @@ class Step:
     for i in self.vertex_data:
       result += ["coarseGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
-      result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + ">" ]
+      result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
+      result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
     result += [ "marker", "peano4::datamanagement::VertexMarker" ]
     return result
 
   def get_face_operations_signature(self):
     result  = self.__get_spatial_attributes_of_mapping_signature()
-    result += ["normal", "int"]
+    result += ["normal", "const tarch::la::Vector<Dimensions,double>&"]
     for i in self.vertex_data:
       result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
@@ -97,7 +97,7 @@ class Step:
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
+      result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
     result += [ "marker", "peano4::datamanagement::FaceMarker" ]
     return result
 
@@ -114,7 +114,25 @@ class Step:
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
+      result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
+    result += [ "marker", "peano4::datamanagement::CellMarker" ]
+    return result
+      
+
+  def get_touch_cell_signature(self):
+    result  = self.__get_spatial_attributes_of_mapping_signature()
+    for i in self.vertex_data:
+      result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "" ]
+    for i in self.face_data:
+      result += ["fineGridFaces" + i.name, i.get_enumeration_type() + "" ]
+    for i in self.cell_data:
+      result += ["fineGridCell" + i.name,i.get_enumeration_type() + ""]
+    for i in self.vertex_data:
+      result += ["coarseGridVertices" + i.name, i.get_enumeration_type() + "" ]
+    for i in self.face_data:
+      result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
+    for i in self.cell_data:
+      result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
     result += [ "marker", "peano4::datamanagement::CellMarker" ]
     return result
       

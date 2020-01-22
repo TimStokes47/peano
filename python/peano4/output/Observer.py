@@ -53,8 +53,10 @@ class Observer(object):
     self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]       = ""
     self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]     = ""
     for cell in cells:
-      self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]    += ",DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0)";
-      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]  += ",DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(1)";
+      #self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]    += ",DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0)";
+      #self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]  += ",DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(1)";
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]    += ",peano4::datamanagement::CellWrapper<" + cell.get_full_qualified_type() + ">( event.getX(), event.getH(), &DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0) )";
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]  += ",peano4::datamanagement::CellWrapper<" + cell.get_full_qualified_type() + ">( event.getX(), event.getH(), &DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(1) )";
      
     self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]      = ""
     self.d[ "MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS" ]    = ""
@@ -281,19 +283,43 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
   TemplateEnterCell_FaceLoad_MappingCall = """  
   // Handle face {name}
-    auto view = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].viewBlock( TwoTimesD );
+  {{
+    peano4::datamanagement::FaceEnumerator<{full_qualified_type}> view(
+      event.getX(), event.getH(),
+      &DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top( TwoTimesD-1 )
+    );
     for (int i=0; i<TwoTimesD; i++) {{
-      int inFaceStackPosition  = event.getFaceDataFrom(i);
-      int outFaceStack         = event.getFaceDataTo(i);
-      {full_qualified_type} data = view.get(inFaceStackPosition);
-      if (
-        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
-        and
-        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
-      ) {{
-        DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,outFaceStack) ].push(data);
+      int inFaceStack        = event.getFaceDataFrom(i);
+      int outFaceStackNumber = event.getFaceDataTo(i);
+
+      peano4::datamanagement::FaceMarker  marker(event, outFaceStackNumber);
+      
+      logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStackNumber );
+      
+      if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+        /*
+        {ACTIVE_MAPPING}.createPersistentFace(
+          view.x(outFaceStackNumber)
+         ,event.getH()
+         ,view.normal(outFaceStackNumber)
+         ,view(outFaceStackNumber)
+         {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
+         {MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
+         {MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+         ,marker
+        );
+        */
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+      else if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {{
+        //_mapping->createHangingFace(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+      else if (peano4::grid::PeanoCurve::isInOutStack(inFaceStack)) {{
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
       }}
     }}
+  }}
 """
 
 
@@ -521,9 +547,13 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 #include "DataRepository.h"
 
 #include "peano4/grid/PeanoCurve.h"
+
 #include "peano4/datamanagement/FaceEnumerator.h"
 #include "peano4/datamanagement/VertexEnumerator.h"
 
+#include "peano4/datamanagement/FaceMarker.h"
+#include "peano4/datamanagement/VertexMarker.h"
+#include "peano4/datamanagement/CellMarker.h"
 
 
 tarch::logging::Log {FULL_QUALIFIED_CLASSNAME}::_log( "{FULL_QUALIFIED_CLASSNAME}" );
