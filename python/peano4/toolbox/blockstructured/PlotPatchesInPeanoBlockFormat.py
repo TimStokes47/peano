@@ -106,8 +106,8 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
   assertion( _dataWriter!=nullptr );
   
   const int patchIndex = _writer->plotPatch(
-    center - h * PatchScaling * 0.5,
-    h * PatchScaling
+    fineGridCell{NAME}.centre() - fineGridCell{NAME}.h() * PatchScaling * 0.5,
+    fineGridCell{NAME}.h() * PatchScaling
   );
  
   int cellIndex  = _dataWriter->getFirstCellWithinPatch(patchIndex);

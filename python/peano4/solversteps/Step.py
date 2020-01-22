@@ -98,8 +98,8 @@ class Step:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
       result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
-    result += [ "marker", "peano4::datamanagement::FaceMarker" ]
     return result
+
 
   def get_cell_operations_signature(self):
     result  = self.__get_spatial_attributes_of_mapping_signature()
@@ -115,12 +115,11 @@ class Step:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
       result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
-    result += [ "marker", "peano4::datamanagement::CellMarker" ]
     return result
       
 
   def get_touch_cell_signature(self):
-    result  = self.__get_spatial_attributes_of_mapping_signature()
+    result  = []
     for i in self.vertex_data:
       result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
@@ -133,7 +132,9 @@ class Step:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
       result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
-    result += [ "marker", "peano4::datamanagement::CellMarker" ]
+    if len(self.cell_data)==0:
+      result += ["fineGridCell","peano::datamanagement::CellWrapper<void>"]
+      result += ["coarseGridCell","peano::datamanagement::CellWrapper<void>"]
     return result
       
 

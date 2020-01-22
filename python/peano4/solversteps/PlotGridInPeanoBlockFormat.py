@@ -7,9 +7,21 @@ from .Mapping import Mapping
 # @todo Konstanten fuer ops
 
 class PlotGridInPeanoBlockFormat(Mapping):
-  def __init__(self,filename):
+  def __init__(self,filename,cell_unknown):
+    """
+      Plot only the grid structure
+      
+      filename       Name of the output file
+      cell_unknown   If you use cell unknowns, pass any unknown in. As we do not dump
+                     any semantic information about unknowns, it does not matter which 
+                     one you choose. If you don't have cell unknowns at all, pass in 
+                     None 
+    """
     self.d = {}
-    self.d[ "FILENAME" ]           = filename
+    self.d[ "FILENAME" ]     = filename
+    self.d[ "CELL_WRAPPER" ] = "Cell"
+    if cell_unknown!=None:
+      self.d[ "CELL_WRAPPER" ] += cell_unknown.name
     
 
   __Template_Constructor = """
@@ -77,8 +89,8 @@ class PlotGridInPeanoBlockFormat(Mapping):
   int vertexIndices[TwoPowerD];
 
   int indices = _writer->plotPatch(
-    center - h * 0.5,
-    h
+    fineGrid{CELL_WRAPPER}.centre() - fineGrid{CELL_WRAPPER}.h() * 0.5,
+    fineGrid{CELL_WRAPPER}.h()
   );
 
   assertion( _dataWriter!=nullptr );

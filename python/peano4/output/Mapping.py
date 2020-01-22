@@ -102,11 +102,8 @@ class Mapping(object):
       
       outputfile.write( "#include \"peano4/utils/Globals.h\" \n" )
       outputfile.write( "#include \"peano4/datamanagement/VertexEnumerator.h\" \n" )
-      outputfile.write( "#include \"peano4/datamanagement/VertexMarker.h\" \n" )
       outputfile.write( "#include \"peano4/datamanagement/FaceEnumerator.h\" \n" )
-      outputfile.write( "#include \"peano4/datamanagement/FaceMarker.h\" \n" )
       outputfile.write( "#include \"peano4/datamanagement/CellWrapper.h\" \n" )
-      outputfile.write( "#include \"peano4/datamanagement/CellMarker.h\" \n" )
       outputfile.write( "#include \"peano4/grid/GridControlEvent.h\" \n" )
       outputfile.write( "#include \"tarch/la/Vector.h\" \n\n\n" )
 
