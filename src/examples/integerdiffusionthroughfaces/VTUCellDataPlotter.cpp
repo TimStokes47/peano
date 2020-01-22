@@ -137,12 +137,14 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchCellFirstT
   CellData&                                    data,
   Faces&                                       faces,
   CellData&                                    coarseData,
-  Faces&                                       coarseFaces,
-  peano4::datamanagement::CellMarker           marker
+  Faces&                                       coarseFaces
 )  {
+  assertion(false);
+/*
   if (not marker.isRefined and _plotThroughoutDescent) {
 	plotCell( center, h, data );
   }
+*/
 }
 
 
@@ -181,11 +183,13 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchCellLastTi
   CellData&                                    data,
   Faces&                                       faces,
   CellData&                                    coarseData,
-  Faces&                                       coarseFaces,
-  peano4::datamanagement::CellMarker           marker
+  Faces&                                       coarseFaces
 )  {
+  assertion(false);
+/*
   if (not marker.isRefined and not _plotThroughoutDescent) {
 	plotCell( center, h, data );
   }
+*/
 }
 

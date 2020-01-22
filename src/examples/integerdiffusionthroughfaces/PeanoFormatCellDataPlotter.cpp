@@ -168,8 +168,7 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCe
   CellData&                                    data,
   Faces&                                       faces,
   CellData&                                    coarseData,
-  Faces&                                       coarseFaces,
-  peano4::datamanagement::CellMarker           marker
+  Faces&                                       coarseFaces
 )  {
   if (_plotThroughoutDescent) {
 	plotCell(center,h,data);
@@ -183,8 +182,7 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCe
   CellData&                                    data,
   Faces&                                       faces,
   CellData&                                    coarseData,
-  Faces&                                       coarseFaces,
-  peano4::datamanagement::CellMarker           marker
+  Faces&                                       coarseFaces
 )  {
   if (not _plotThroughoutDescent) {
 	plotCell(center,h,data);

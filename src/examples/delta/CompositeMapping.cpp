@@ -69,11 +69,10 @@ void examples::delta::CompositeMapping::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  CellData&                                    coarseData,
-  peano4::datamanagement::CellMarker           marker
+  CellData&                                    coarseData
 )  {
   for (auto& p: _mappings) {
-    p->touchCellFirstTime(center,h,data,coarseData,marker);
+    p->touchCellFirstTime(center,h,data,coarseData);
   }
 }
 
@@ -82,11 +81,10 @@ void examples::delta::CompositeMapping::touchCellLastTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  CellData&                                    coarseData,
-  peano4::datamanagement::CellMarker           marker
+  CellData&                                    coarseData
 )  {
   for (auto& p: _mappings) {
-    p->touchCellLastTime(center,h,data,coarseData,marker);
+    p->touchCellLastTime(center,h,data,coarseData);
   }
 }
 

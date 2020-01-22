@@ -187,7 +187,6 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
 
-  peano4::datamanagement::CellMarker marker(event);
   assertionNumericalEquals2(
     _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0).h(0)*3.0,
 	_cellData[ DataKey(_spacetreeId,outCellStack) ].top(1).h(0),
@@ -199,8 +198,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
     _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0),
 	_facesCallStack.top(0),
     _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1),
-	_facesCallStack.top(1),
-	marker
+	_facesCallStack.top(1)
   );
 
   logTraceOutWith1Argument("enterCell(...)",event.toString());
@@ -217,13 +215,12 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
   int inCellStack   = peano4::grid::PeanoCurve::CallStack;
   int outCellStack  = event.getCellData();
 
-  peano4::datamanagement::CellMarker marker(event);
   _mapping->touchCellLastTime(
     event.getX(), event.getH(),
     _cellData[ DataKey(_spacetreeId,inCellStack) ].top(0),
 	_facesCallStack.top(0),
     _cellData[ DataKey(_spacetreeId,inCellStack) ].top(1),
-	_facesCallStack.top(1), marker
+	_facesCallStack.top(1)
   );
 
   logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );

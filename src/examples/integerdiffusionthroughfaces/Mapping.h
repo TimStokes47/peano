@@ -6,7 +6,7 @@
 
 #include "peano4/utils/Globals.h"
 #include "peano4/datamanagement/FaceEnumerator.h"
-#include "peano4/datamanagement/CellMarker.h"
+#include "peano4/datamanagement/CellWrapper.h"
 #include "tarch/la/Vector.h"
 
 
@@ -105,8 +105,7 @@ class examples::integerdiffusionthroughfaces::Mapping {
 	  CellData&                                    data,
 	  Faces&                                       faces,
 	  CellData&                                    coarseData,
-	  Faces&                                       coarseFaces,
-	  peano4::datamanagement::CellMarker           marker
+	  Faces&                                       coarseFaces
     ) = 0;
 
 	virtual void touchCellLastTime(
@@ -115,8 +114,7 @@ class examples::integerdiffusionthroughfaces::Mapping {
 	  CellData&                                    data,
 	  Faces&                                       faces,
 	  CellData&                                    coarseData,
-	  Faces&                                       coarseFaces,
-	  peano4::datamanagement::CellMarker           marker
+	  Faces&                                       coarseFaces
     ) = 0;
 };
 

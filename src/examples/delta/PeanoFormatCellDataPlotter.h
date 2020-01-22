@@ -71,16 +71,14 @@ class examples::delta::PeanoFormatCellDataPlotter: public examples::delta::Mappi
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       CellData&                                    data,
-      CellData&                                    coarseData,
-      peano4::datamanagement::CellMarker           marker
+      CellData&                                    coarseData
     ) final;
 
     void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       CellData&                                    data,
-      CellData&                                    coarseData,
-      peano4::datamanagement::CellMarker           marker
+      CellData&                                    coarseData
     ) final;
 };
 

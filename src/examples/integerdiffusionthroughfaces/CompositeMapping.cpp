@@ -134,11 +134,10 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::touchCellFirstTim
   CellData&                                    data,
   Faces&                                       faces,
   CellData&                                    coarseData,
-  Faces&                                       coarseFaces,
-  peano4::datamanagement::CellMarker           marker
+  Faces&                                       coarseFaces
 ) {
   for (auto& p: _mappings) {
-	p->touchCellFirstTime(center,h,data,faces,coarseData,coarseFaces,marker);
+	p->touchCellFirstTime(center,h,data,faces,coarseData,coarseFaces);
   }
 }
 
@@ -149,11 +148,10 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::touchCellLastTime
   CellData&                                    data,
   Faces&                                       faces,
   CellData&                                    coarseData,
-  Faces&                                       coarseFaces,
-  peano4::datamanagement::CellMarker           marker
+  Faces&                                       coarseFaces
 ) {
   for (auto& p: _mappings) {
-	p->touchCellLastTime(center,h,data,faces,coarseData,coarseFaces,marker);
+	p->touchCellLastTime(center,h,data,faces,coarseData,coarseFaces);
   }
 }
 

@@ -133,8 +133,7 @@ void examples::delta::InitData::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  CellData&                                    coarseData,
-  peano4::datamanagement::CellMarker           marker
+  CellData&                                    coarseData
 )  {
 }
 
@@ -143,8 +142,7 @@ void examples::delta::InitData::touchCellLastTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  CellData&                                    coarseData,
-  peano4::datamanagement::CellMarker           marker
+  CellData&                                    coarseData
 )  {
 }
 

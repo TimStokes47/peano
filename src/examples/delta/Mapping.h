@@ -5,7 +5,7 @@
 
 
 #include "peano4/utils/Globals.h"
-#include "peano4/datamanagement/CellMarker.h"
+#include "peano4/datamanagement/CellWrapper.h"
 #include "tarch/la/Vector.h"
 
 
@@ -54,16 +54,14 @@ class examples::delta::Mapping {
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       CellData&                                    data,
-      CellData&                                    coarseData,
-      peano4::datamanagement::CellMarker           marker
+      CellData&                                    coarseData
     ) = 0;
 
     virtual void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       CellData&                                    data,
-      CellData&                                    coarseData,
-      peano4::datamanagement::CellMarker           marker
+      CellData&                                    coarseData
     ) = 0;
 };
 

@@ -132,8 +132,7 @@ void examples::delta::PeanoFormatCellDataPlotter::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  CellData&                                    coarseData,
-  peano4::datamanagement::CellMarker           marker
+  CellData&                                    coarseData
 )  {
   if (_plotThroughoutDescent) {
     plotCell(center,h,data);
@@ -145,8 +144,7 @@ void examples::delta::PeanoFormatCellDataPlotter::touchCellLastTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  CellData&                                    coarseData,
-  peano4::datamanagement::CellMarker           marker
+  CellData&                                    coarseData
 )  {
   if (not _plotThroughoutDescent) {
     plotCell(center,h,data);

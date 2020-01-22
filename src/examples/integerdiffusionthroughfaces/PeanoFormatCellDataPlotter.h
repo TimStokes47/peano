@@ -119,8 +119,7 @@ class examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter: public
 	  CellData&                                    data,
 	  Faces&                                       faces,
 	  CellData&                                    coarseData,
-	  Faces&                                       coarseFaces,
-	  peano4::datamanagement::CellMarker           marker
+	  Faces&                                       coarseFaces
     ) final;
 
 	void touchCellLastTime(
@@ -129,8 +128,7 @@ class examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter: public
 	  CellData&                                    data,
 	  Faces&                                       faces,
 	  CellData&                                    coarseData,
-	  Faces&                                       coarseFaces,
-	  peano4::datamanagement::CellMarker           marker
+	  Faces&                                       coarseFaces
     ) final;
 };
 

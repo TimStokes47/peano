@@ -118,11 +118,13 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
   CellData&                                    data,
   Faces&                                       faces,
   CellData&                                    coarseData,
-  Faces&                                       coarseFaces,
-  peano4::datamanagement::CellMarker           marker
+  Faces&                                       coarseFaces
 ) {
   logTraceInWith1Argument( "touchCellFirstTime(...)", data.toString() );
 
+  assertion(false);
+
+/*
   // Integer diffusion - preamble
   data.oldValue = data.value;
   if (data.value==MarkerCoarseGridReplication) {
@@ -160,6 +162,7 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
       data.value = std::max( data.value, faces(i).oldValue-data.oldValue-1 );
     }
   }
+*/
 
   logTraceOutWith1Argument( "touchCellFirstTime(...)", data.toString() );
 }
@@ -171,8 +174,7 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellLastTime(
   CellData&                                    data,
   Faces&                                       faces,
   CellData&                                    coarseData,
-  Faces&                                       coarseFaces,
-  peano4::datamanagement::CellMarker           marker
+  Faces&                                       coarseFaces
 ) {
   logTraceInWith1Argument( "touchCellLastTime(...)", data.toString() );
 

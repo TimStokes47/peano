@@ -32,9 +32,6 @@ libPeano4Core3d_debug_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=4 -g3 -O0 $(PEAN
 # All sources below
 #
 Peano4Core_SOURCES = \
-  peano4/datamanagement/VertexMarker.cpp \
-  peano4/datamanagement/FaceMarker.cpp \
-  peano4/datamanagement/CellMarker.cpp \
   peano4/peano.cpp \
   peano4/grid/AutomatonState.cpp \
   peano4/grid/EmptyTraversalObserver.cpp \

@@ -56,16 +56,14 @@ class examples::delta::CompositeMapping: public examples::delta::Mapping {
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       CellData&                                    data,
-      CellData&                                    coarseData,
-      peano4::datamanagement::CellMarker           marker
+      CellData&                                    coarseData
     ) final;
 
     void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       CellData&                                    data,
-      CellData&                                    coarseData,
-      peano4::datamanagement::CellMarker           marker
+      CellData&                                    coarseData
     ) final;
 };
 
