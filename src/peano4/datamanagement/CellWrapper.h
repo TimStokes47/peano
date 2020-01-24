@@ -12,6 +12,9 @@ namespace peano4 {
   namespace datamanagement {
     template <typename Cell>
     struct CellWrapper;
+
+    template <>
+    struct CellWrapper<void>;
   }
 }
 
@@ -40,9 +43,9 @@ struct peano4::datamanagement::CellWrapper {
   public:
     CellWrapper(
       const tarch::la::Vector<Dimensions,double>&  centre,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-	  Cell* cell
-	):
+      const tarch::la::Vector<Dimensions,double>&  h,
+      Cell* cell
+	  ):
       _cell(cell),
       _centre(centre),
       _h(h) {
@@ -74,9 +77,9 @@ struct peano4::datamanagement::CellWrapper {
 
 
     CellWrapper& operator=( const CellWrapper& copy ) {
-      _cell   = copy.cell;
-      _centre = copy.centre;
-      _h      = copy.h;
+      _cell   = copy._cell;
+      _centre = copy._centre;
+      _h      = copy._h;
       return *this;
     }
 
@@ -98,6 +101,75 @@ struct peano4::datamanagement::CellWrapper {
 
     Cell& data() {
       return *_cell;
+    }
+};
+
+
+
+
+template <>
+struct peano4::datamanagement::CellWrapper<void> {
+  private:
+    /**
+     * Centre
+     */
+    tarch::la::Vector<Dimensions,double>  _centre;
+
+    tarch::la::Vector<Dimensions,double>  _h;
+
+    bool _isRefined;
+    bool _isAdjacentToTreeBoundary;
+
+  public:
+    CellWrapper(
+      const tarch::la::Vector<Dimensions,double>&  centre,
+      const tarch::la::Vector<Dimensions,double>&  h
+    ):
+      _centre(centre),
+      _h(h) {
+    }
+
+
+    CellWrapper(
+      const tarch::la::Vector<Dimensions,double>&  centre,
+      const tarch::la::Vector<Dimensions,double>&  h,
+      const tarch::la::Vector<Dimensions,int>&     relativePositionToFather
+    ):
+      _centre(centre),
+      _h(h) {
+      for (int d=0; d<Dimensions; d++) {
+        _centre(d) += (1.0-relativePositionToFather(d)) * _h(d);
+      }
+
+      _h = 3.0 * _h;
+    }
+
+
+    CellWrapper( const CellWrapper& copy ):
+      _centre(copy._centre),
+      _h(copy._h) {
+    }
+
+
+    CellWrapper& operator=( const CellWrapper& copy ) {
+      _centre = copy._centre;
+      _h      = copy._h;
+      return *this;
+    }
+
+
+    bool isRefined() const {
+      return _isRefined;
+    }
+
+
+    tarch::la::Vector<Dimensions,double>  centre() const {
+      return _centre;
+    }
+
+
+    tarch::la::Vector<Dimensions,double>  h() const {
+      return _h;
     }
 };
 
