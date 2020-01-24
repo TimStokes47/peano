@@ -1,23 +1,23 @@
-#include "PlotGrid.h"
+#include "CreateGrid.h"
 #include "Constants.h"
 
 #include "peano4/utils/Loop.h"
 
 
-tarch::logging::Log examples::finitevolumes::mappings::PlotGrid::_log( "examples::finitevolumes::mappings::PlotGrid");
+tarch::logging::Log examples::finitevolumes::mappings::CreateGrid::_log( "examples::finitevolumes::mappings::CreateGrid");
 
 
-examples::finitevolumes::mappings::PlotGrid::PlotGrid(int treeNumber) {
+examples::finitevolumes::mappings::CreateGrid::CreateGrid(int treeNumber) {
 // @todo Please implement
 }
 
 
-examples::finitevolumes::mappings::PlotGrid::~PlotGrid() {
+examples::finitevolumes::mappings::CreateGrid::~CreateGrid() {
 // @todo Please implement
 }
 
 
-std::vector< peano4::grid::GridControlEvent > examples::finitevolumes::mappings::PlotGrid::getGridControlEvents() {
+std::vector< peano4::grid::GridControlEvent > examples::finitevolumes::mappings::CreateGrid::getGridControlEvents() {
   std::vector< peano4::grid::GridControlEvent > result;
 
   result.push_back(peano4::grid::GridControlEvent(
@@ -31,98 +31,91 @@ std::vector< peano4::grid::GridControlEvent > examples::finitevolumes::mappings:
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::beginTraversal(
+void examples::finitevolumes::mappings::CreateGrid::beginTraversal(
       ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::endTraversal(
+void examples::finitevolumes::mappings::CreateGrid::endTraversal(
       ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::createPersistentFace(
+void examples::finitevolumes::mappings::CreateGrid::createPersistentFace(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       const tarch::la::Vector<Dimensions,double>& normal,
       examples::finitevolumes::facedata::Q& fineGridFaceQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::destroyPersistentFace(
+void examples::finitevolumes::mappings::CreateGrid::destroyPersistentFace(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       const tarch::la::Vector<Dimensions,double>& normal,
       examples::finitevolumes::facedata::Q& fineGridFaceQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::createHangingFace(
+void examples::finitevolumes::mappings::CreateGrid::createHangingFace(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       const tarch::la::Vector<Dimensions,double>& normal,
       examples::finitevolumes::facedata::Q& fineGridFaceQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::destroyHangingFace(
+void examples::finitevolumes::mappings::CreateGrid::destroyHangingFace(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       const tarch::la::Vector<Dimensions,double>& normal,
       examples::finitevolumes::facedata::Q& fineGridFaceQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::touchFaceFirstTime(
+void examples::finitevolumes::mappings::CreateGrid::touchFaceFirstTime(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       const tarch::la::Vector<Dimensions,double>& normal,
       examples::finitevolumes::facedata::Q& fineGridFaceQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::touchFaceLastTime(
+void examples::finitevolumes::mappings::CreateGrid::touchFaceLastTime(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       const tarch::la::Vector<Dimensions,double>& normal,
       examples::finitevolumes::facedata::Q& fineGridFaceQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::createCell(
+void examples::finitevolumes::mappings::CreateGrid::createCell(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> fineGridFacesQ,
       examples::finitevolumes::celldata::Q& fineGridCellQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
   const double subcellWidth = h(0) / PatchSize;
   dfor(k,PatchSize) {
     const tarch::la::Vector<Dimensions,double> subcellCentre =
@@ -143,34 +136,31 @@ void examples::finitevolumes::mappings::PlotGrid::createCell(
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::destroyCell(
+void examples::finitevolumes::mappings::CreateGrid::destroyCell(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> fineGridFacesQ,
       examples::finitevolumes::celldata::Q& fineGridCellQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::touchCellFirstTime(
+void examples::finitevolumes::mappings::CreateGrid::touchCellFirstTime(
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> fineGridFacesQ,
       peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> fineGridCellQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
 // @todo Please implement
 }
 
 
-void examples::finitevolumes::mappings::PlotGrid::touchCellLastTime(
+void examples::finitevolumes::mappings::CreateGrid::touchCellLastTime(
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> fineGridFacesQ,
       peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> fineGridCellQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
-      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ
-) {
+      peano4::datamanagement::CellWrapper<examples::finitevolumes::celldata::Q> coarseGridCellQ) {
 // @todo Please implement
 }
 
