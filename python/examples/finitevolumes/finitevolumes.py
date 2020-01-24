@@ -28,6 +28,7 @@ import peano4.toolbox.blockstructured
 #
 project = peano4.Project( ["examples", "finitevolumes"], "." )
 
+
 #
 # The solver will be patch-based, i.e. we will have one patch per cell.
 #
@@ -36,6 +37,7 @@ unknowns   = 5
 patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, "Q" )
 project.datamodel.add_cell(patch)
 
+
 #
 # Along the faces, we have the patch overlaps. As we use only a Rusanov flux, 
 # one cell of overlap between adjacent patches is sufficient.
@@ -43,17 +45,17 @@ project.datamodel.add_cell(patch)
 patch_overlap = peano4.datamodel.Patch( (1,patch_size,patch_size), unknowns, "Q" )
 project.datamodel.add_face(patch_overlap)
 
-#
-# For each step that we wanna do, we define one solver step. This one is 
-# labelled PlotGrid which is not 100% correct. It plots the grid, but it 
-# also builds it up
-#
-grid_printer = peano4.solversteps.Step( "PlotGrid" )
-grid_printer.use_face(patch_overlap)
-grid_printer.use_cell(patch)
-grid_printer.add_mapping( peano4.solversteps.PlotGridInPeanoBlockFormat("grid-dump", patch) )
-project.solversteps.add_step(grid_printer)
 
+#
+# For each step that we wanna do, we define one solver step. In the first step that
+# we use, we add one grid level to the mesh per step. We also initialise the blocks
+# with the initial values.
+#
+create_grid = peano4.solversteps.Step( "CreateGrid" )
+create_grid.use_face(patch_overlap)
+create_grid.use_cell(patch)
+create_grid.add_mapping( peano4.solversteps.PlotGridInPeanoBlockFormat("grid-dump", patch) )
+project.solversteps.add_step(create_grid)
 
 
 #
@@ -63,14 +65,12 @@ project.solversteps.add_step(grid_printer)
 # step manually (the grid setup). This time, we don't want to add any 
 # further code manually.
 #that I can 
-solution_printer = peano4.solversteps.Step( "PlotSolution" )
-solution_printer.use_cell(patch)
-solution_printer.remove_all_mappings()
+print_solution = peano4.solversteps.Step( "PlotSolution" )
+print_solution.use_cell(patch)
+print_solution.remove_all_mappings()
 plotter = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
-solution_printer.add_mapping( plotter )
-project.solversteps.add_step(solution_printer)
-
-
+print_solution.add_mapping( plotter )
+project.solversteps.add_step(print_solution)
 
 
 #
@@ -102,7 +102,6 @@ project.run( ["myarguments"] )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
 #convert.extract_fine_grid()
 #convert.convert_to_vtk()
-
 
 
 convert = peano4.visualisation.Convert( "solution" )

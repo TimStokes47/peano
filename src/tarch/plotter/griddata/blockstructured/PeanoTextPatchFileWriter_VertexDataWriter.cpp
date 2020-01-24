@@ -38,6 +38,7 @@ int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexD
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, double value ) {
   assertion( !std::isnan(value) );
   for (int i=0; i<_numberOfUnknowns; i++) {
+    if ( std::abs(value) < std::numeric_limits<double>::min() ) value = 0.0;
     _out << " " << value;
     _entryCounter++;
   }
@@ -47,6 +48,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, double* values ) {
   for (int i=0; i<_numberOfUnknowns; i++) {
+    if ( std::abs(values[i]) < std::numeric_limits<double>::min() ) values[i] = 0.0;
     _out << " " << values[i];
     assertion( !std::isnan(values[i]) );
     _entryCounter++;

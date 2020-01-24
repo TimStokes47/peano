@@ -14,7 +14,7 @@
 
 
 // @todo Automatisch inclusideren? Noe
-#include "observers/PlotGrid.h"
+#include "observers/CreateGrid.h"
 #include "observers/PlotSolution.h"
 
 
@@ -75,20 +75,24 @@ int main(int argc, char** argv) {
     0
   );
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
-    examples::finitevolumes::observers::PlotGrid   observer;
-    logInfo("main()", "build up grid");
-    int iterationNumber = 0;
-    do {
-      peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
-      iterationNumber++;
-      logDebug("main()", "iteration #" << iterationNumber << ": " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().toString() );
+    {
+      examples::finitevolumes::observers::CreateGrid   observer;
+      logInfo("main()", "build up grid");
+      int iterationNumber = 0;
+      do {
+        peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+        iterationNumber++;
+        logDebug("main()", "iteration #" << iterationNumber << ": " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().toString() );
+      }
+      while (peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<5);
+      logInfo("main()", "used " << iterationNumber << " iterations");
     }
-    while (peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<5);
-    logInfo("main()", "used " << iterationNumber << " iterations");
 
-    examples::finitevolumes::observers::PlotSolution plotSolutionObserver;
-    peano4::parallel::SpacetreeSet::getInstance().traverse(plotSolutionObserver);
-    logInfo("main()", "dumped solution");
+    {
+      examples::finitevolumes::observers::PlotSolution observer;
+      peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+      logInfo("main()", "dumped solution");
+    }
   }
   else {
     logInfo("main()", "I'm not the global master");

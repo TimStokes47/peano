@@ -94,6 +94,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
       }
       if (i==lines.size()) {
         logError( "parse()", "file " << _file << " is corrupt as cell-values for " << variableName << " is not terminated properly. Quit parsing" );
+        exit(-1);
       }
       else {
         parseVariablesDeclaration( _data.size()-1, variableDeclarationLines, variableName, visualisation::data::PeanoDataType::Cell_Values );
@@ -108,13 +109,22 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
       }
       if (i==lines.size()) {
         logError( "parse()", "file " << _file << " is corrupt as vertex-values for " << variableName << " is not terminated properly. Quit parsing" );
+        exit(-1);
       }
       else {
         parseVariablesDeclaration( _data.size()-1, variableDeclarationLines, variableName, visualisation::data::PeanoDataType::Vertex_Values );
       }
     }
     else if ( tokens[0]=="dimensions" ) {
-      _dimensions = std::stoi(tokens[1]);
+     try {
+       _dimensions = std::stoi(tokens[1]);
+     }
+     catch (std::out_of_range& e) {
+       logError( "parse()", "error reading data for data set for _dimensions" );
+       logError( "parse()", "invalid token: " << tokens[1] );
+       logError( "parse()", "have to quit" );
+       exit(-1);
+     }
      logDebug( "parse()", "dimensions=" << _dimensions );
     }
     else if( tokens[0]=="begin" and tokens[1]=="patch" ) {
@@ -155,10 +165,26 @@ void visualisation::input::PeanoTextPatchFileReader::parseVariablesDeclaration( 
 	for (auto p: description) {
     std::vector<std::string> tokens = Parser::tokenise( p );
 	  if (tokens[0]=="number-of-unknowns") {
-      numberOfUnknowns = std::stoi(tokens[1]);
+	    try {
+        numberOfUnknowns = std::stoi(tokens[1]);
+      }
+      catch (std::out_of_range& e) {
+        logError( "parse()", "error reading data for data set for number-of-unknowns" );
+        logError( "parse()", "invalid token: " << tokens[1] );
+        logError( "parse()", "have to quit" );
+        exit(-1);
+      }
 	  }
 	  if (tokens[0]=="number-of-dofs-per-axis") {
-      numberOfDofs = std::stoi(tokens[1]);
+	    try {
+        numberOfDofs = std::stoi(tokens[1]);
+      }
+      catch (std::out_of_range& e) {
+        logError( "parse()", "error reading data for data set for number-of-dofs-per-axis" );
+        logError( "parse()", "invalid token: " << tokens[1] );
+        logError( "parse()", "have to quit" );
+        exit(-1);
+      }
 	  }
 	}
 
@@ -247,13 +273,29 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
     if( tokens[0]=="offset" ) {
       logDebug( "parsePatch(...)", "set offset to " << text[i] );
       for(int j = 0; j < _dimensions; j++) {
-        offset.push_back( std::stod(tokens[j+1]) );
+        try {
+          offset.push_back( std::stod(tokens[j+1]) );
+        }
+        catch (std::out_of_range& e) {
+          logError( "parsePatch(...)", "error reading data for data set " << dataSetCounter );
+          logError( "parsePatch(...)", "invalid token: " << tokens[j+1] );
+          logError( "parsePatch(...)", "have to quit" );
+          exit(-1);
+        }
       }
     }
     else if ( tokens[0]=="size" ) {
       logDebug( "parsePatch(...)", "set sizes to " << text[i] );
       for(int j = 0; j < _dimensions; j++) {
-        size.push_back( std::stod(tokens[j+1]) );
+        try {
+          size.push_back( std::stod(tokens[j+1]) );
+        }
+        catch (std::out_of_range& e) {
+          logError( "parsePatch(...)", "error reading data for data set " << dataSetCounter );
+          logError( "parsePatch(...)", "invalid token: " << tokens[j+1] );
+          logError( "parsePatch(...)", "have to quit" );
+          exit(-1);
+        }
       }
     }
     else if ( tokens[0]=="begin" and tokens[1]=="cell-values") {
@@ -314,7 +356,15 @@ void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSet
 
   visualisation::data::PatchData newEntry(_dimensions, offset, size, key.dofsPerAxis, key.unknowns);
   for (int i=0; i<expectedDataEntries; i++) {
-    newEntry.data[i] = std::stod(textData[i]);
+    try {
+      newEntry.data[i] = std::stod(textData[i]);
+    }
+    catch (std::out_of_range& e) {
+      logError( "parsePatch(...)", "error reading data for " << variableName );
+      logError( "parsePatch(...)", "invalid value: " << textData[i] );
+      logError( "parsePatch(...)", "have to quit" );
+      exit(-1);
+    }
   }
 
   _data[dataSetCounter].data[key].push_back( newEntry );
