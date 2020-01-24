@@ -19,15 +19,23 @@ convertSources = \
   input/PeanoTextPatchFileReader.cpp \
   output/PeanoWriter.cpp \
   output/VTUWriter.cpp
+  
+VTK_LIBRARY_EXTENSION = -8.90
+VTK_SHARED_LIBS       =  -lvtkIOXML$(VTK_LIBRARY_EXTENSION) \
+                         -lvtkCommonExecutionModel$(VTK_LIBRARY_EXTENSION) \
+                         -lvtkCommonCore$(VTK_LIBRARY_EXTENSION) \
+                         -lvtkCommonDataModel$(VTK_LIBRARY_EXTENSION) \
+                         -lvtkFiltersCore$(VTK_LIBRARY_EXTENSION) \
+                         -lvtkFiltersGeneral$(VTK_LIBRARY_EXTENSION)
 
 convert_CXXFLAGS  = $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS)
 convert_LDADD     = $(top_builddir)/src/libTarch.a
-convert_LDFLAGS   = $(PEANO_LDFLAGS) -lstdc++fs -lvtkIOXML -lvtkCommonExecutionModel -lvtkCommonCore -lvtkCommonDataModel -lvtkFiltersCore -lvtkFiltersGeneral
+convert_LDFLAGS   = $(PEANO_LDFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_SHARED_LIBS)
 convert_SOURCES   = $(convertSources)
 
 convert_debug_CXXFLAGS  = $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS) -O0 -g3 -DPeanoDebug=1
 convert_debug_LDADD     = $(top_builddir)/src/libTarch_debug.a
-convert_debug_LDFLAGS   = $(PEANO_LDFLAGS) -lstdc++fs -lvtkIOXML -lvtkCommonExecutionModel -lvtkCommonCore -lvtkCommonDataModel -lvtkFiltersCore -lvtkFiltersGeneral
+convert_debug_LDFLAGS   = $(PEANO_LDFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_SHARED_LIBS)
 convert_debug_SOURCES   = $(convertSources)
 
 #ifeq ($(VTK_INCLUDE),)
