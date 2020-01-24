@@ -74,6 +74,24 @@ project.solversteps.add_step(print_solution)
 
 
 #
+# We also need the actual solve. Basically, what we'll do is that we will run
+# over the grid twice per time step: In the first step, we evaluate all the 
+# Riemann problems. In the second step, we update the time. The Riemann solves
+# assume that all the patch data is already projected onto the faces, i.e. the 
+# faces hold all overlap data. As a result, they do not need the patch data. It
+# is only the timestepping which needs both types of data: faces (that is all 
+# overlaps) plus the actual cell data. 
+#
+solve_Riemann_problems = peano4.solversteps.Step( "SolveRiemannProblems" )
+perform_time_step      = peano4.solversteps.Step( "PerformTimeStep" )
+solve_Riemann_problems.use_face(patch_overlap)
+perform_time_step.use_face(patch_overlap)
+perform_time_step.use_cell(patch)
+project.solversteps.add_step(solve_Riemann_problems)
+project.solversteps.add_step(perform_time_step)
+
+
+#
 # Peano's API does not know which settings to use on the present system. To 
 # make it copy/clone the settings identified by ./configure, we ask it to 
 # parse the generated configuration scripts. The makefile would also offer a

@@ -126,15 +126,20 @@ class Step:
       result += ["fineGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
       result += ["fineGridCell" + i.name,i.get_enumeration_type() + ""]
+      
+    if len(self.cell_data)==0:
+      result += ["fineGridCell","peano4::datamanagement::CellWrapper<void>"]
+      
     for i in self.vertex_data:
       result += ["coarseGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
       result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
+
     if len(self.cell_data)==0:
-      result += ["fineGridCell","peano::datamanagement::CellWrapper<void>"]
-      result += ["coarseGridCell","peano::datamanagement::CellWrapper<void>"]
+      result += ["coarseGridCell","peano4::datamanagement::CellWrapper<void>"]
+      
     return result
       
 

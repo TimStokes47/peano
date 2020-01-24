@@ -58,6 +58,11 @@ class Observer(object):
         self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ] += ",";
       self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]     += "peano4::datamanagement::CellWrapper<" + cell.get_full_qualified_type() + ">( event.getX(), event.getH(), &DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0) )";
       self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]   += "peano4::datamanagement::CellWrapper<" + cell.get_full_qualified_type() + ">( event.getX(), event.getH(), event.getRelativePositionToFather(), &DataRepository::_" + cell.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(1) )";
+      
+    if len(cells)==0:
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]       = "peano4::datamanagement::CellWrapper<void>(event.getX(), event.getH())"
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]     = "peano4::datamanagement::CellWrapper<void>(event.getX(), event.getH(),event.getRelativePositionToFather())"
+          
      
     self.d[ "MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS" ]      = ""
     self.d[ "MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS" ]    = ""
@@ -84,11 +89,12 @@ class Observer(object):
       new_dictionary_entries = {}
       for keyA in self.d:
         for keyB in self.d:
-          newEntry = self.d[keyA]
-          if newEntry!="":
-            newEntry += "," 
-          newEntry += self.d[keyB]
-          new_dictionary_entries[keyA+","+keyB] = newEntry
+          new_entry = ""
+          if self.d[keyA]!="" and self.d[keyB]!="":
+            new_entry = self.d[keyA] + "," + self.d[keyB]
+          else:
+            new_entry = self.d[keyA] + self.d[keyB]
+          new_dictionary_entries[keyA+","+keyB] = new_entry
       for key in new_dictionary_entries:
         self.d[key] = new_dictionary_entries[key]
     
