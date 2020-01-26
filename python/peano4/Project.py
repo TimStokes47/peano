@@ -9,6 +9,7 @@ import peano4.runner
 
 
 import subprocess
+import sys
 
 
 class Project (object):
@@ -19,6 +20,9 @@ class Project (object):
   """
   
   def __init__(self, namespace, directory = "."):
+    if sys.version_info.major < 3:
+      print( "Warning: should be invoked through python3, i.e. with newer Python version" )
+
     self.namespace = namespace
     self.directory = directory
 

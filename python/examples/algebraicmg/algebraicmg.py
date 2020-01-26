@@ -32,6 +32,19 @@ project = peano4.Project( ["examples", "algebraicmg"], "." )
 
 
 #
+# There's different ways to tell the project which data are associated to the 
+# grid entities. One way to associate stuff is to use our DaStGen legacy format.
+# This is our strategy here.
+#
+dastgen_model = peano4.datamodel.DaStGen( "MG" )
+dastgen_model.add_double_scalar( "u" )
+dastgen_model.add_double_scalar( "rhs" )
+dastgen_model.add_double_scalar( "res" )
+project.datamodel.add_vertex( dastgen_model )
+
+
+
+#
 # First, lets create the initial grid (which is regular)
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )

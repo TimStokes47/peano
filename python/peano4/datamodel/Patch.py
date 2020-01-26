@@ -2,7 +2,6 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .PatchToDoubleArray import PatchToDoubleArray
 from .DoF                import DoF
-from argparse import Namespace
 
 
 class Patch(DoF):

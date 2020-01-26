@@ -12,12 +12,15 @@ class PatchToDoubleArray(object):
   def __init__(self,patch):
     self.data = patch
 
+
   def get_stack_container(self):
     return "peano4::stacks::STDVectorStack< " + self.data.get_full_qualified_type() + " >";
+
     
   def get_header_file_include(self):
     return "#include \"peano4/stacks/STDVectorStack.h\" \n \
             #include \"" + self.data.namespace[-1] + "/" + self.data.name + ".h\""
+
     
   def construct_output(self,output):
     """
@@ -37,5 +40,4 @@ class PatchToDoubleArray(object):
       },
       True)
     output.add(generated_files)
-
 
