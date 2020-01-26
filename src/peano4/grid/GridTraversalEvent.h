@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   22/01/2020 16:31
+ * @date   26/01/2020 20:18
  */
 class peano4::grid::GridTraversalEvent { 
    
@@ -377,7 +377,7 @@ class peano4::grid::GridTraversalEvent {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   22/01/2020 16:31
+ * @date   26/01/2020 20:18
  */
 class peano4::grid::GridTraversalEventPacked { 
    

@@ -1,4 +1,4 @@
-#include "peano4/grid/GridTraversalEvent.h"
+#include "GridTraversalEvent.h"
 
 peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords() {
    

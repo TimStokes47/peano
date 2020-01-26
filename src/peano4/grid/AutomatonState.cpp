@@ -1,4 +1,4 @@
-#include "peano4/grid/AutomatonState.h"
+#include "AutomatonState.h"
 
 peano4::grid::AutomatonState::PersistentRecords::PersistentRecords() {
    

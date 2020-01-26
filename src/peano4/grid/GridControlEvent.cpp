@@ -1,4 +1,4 @@
-#include "peano4/grid/GridControlEvent.h"
+#include "GridControlEvent.h"
 
 peano4::grid::GridControlEvent::PersistentRecords::PersistentRecords() {
    

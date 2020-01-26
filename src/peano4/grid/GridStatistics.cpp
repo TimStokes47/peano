@@ -1,4 +1,4 @@
-#include "peano4/grid/GridStatistics.h"
+#include "GridStatistics.h"
 
 peano4::grid::GridStatistics::PersistentRecords::PersistentRecords() {
    

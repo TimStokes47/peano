@@ -1,4 +1,4 @@
-#include "peano4/grid/GridVertex.h"
+#include "GridVertex.h"
 
 #if !defined(PeanoDebug)
    peano4::grid::GridVertex::PersistentRecords::PersistentRecords() {
