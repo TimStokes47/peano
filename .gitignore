@@ -8,6 +8,7 @@
 **/.externalToolBuilders
 **/.o
 **/Makefile.in
+**/*.pyc
 src/stamp-h1
 
 /ar-lib

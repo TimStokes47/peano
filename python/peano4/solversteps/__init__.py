@@ -5,4 +5,3 @@ from .Step                       import Step
 from .Steps                      import Steps
 from .Mapping                    import Mapping
 from .UserMapping                import UserMapping
-from .PlotGridInPeanoBlockFormat import PlotGridInPeanoBlockFormat

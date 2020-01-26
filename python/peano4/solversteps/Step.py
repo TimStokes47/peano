@@ -17,12 +17,21 @@ class Step:
     of data from the data model are used by the solver step, it can handle all
     the user data stack flow.
   """
-  def __init__(self,name):
+  def __init__(self,name,add_user_defined_mapping = True):
+    """
+     By default, the step generates at least one mapping for the user. 
+     However, you can disable this behaviour by passing False to
+     add_user_defined_mapping. Alternatively, use remove_all_mappings()
+     on the step.
+    """
     self.name        = name
     self.cell_data   = []
     self.face_data   = []
     self.vertex_data = []
-    self.mappings    = [ peano4.solversteps.UserMapping() ]
+    if add_user_defined_mapping:
+      self.mappings    = [ peano4.solversteps.UserMapping() ]
+    else:
+      self.mappings    = []
     self.mapping_generator   = StepToMapping(self)
     self.observer_generator  = StepToObserver(self)
 

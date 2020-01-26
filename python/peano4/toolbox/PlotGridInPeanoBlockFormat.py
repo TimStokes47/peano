@@ -1,10 +1,8 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from .Mapping import Mapping
+from peano4.solversteps.Mapping import Mapping
 
 
-# @todo getter einfuehren, so dass man sieht was gen Observer geht und was net
-# @todo Konstanten fuer ops
 
 class PlotGridInPeanoBlockFormat(Mapping):
   def __init__(self,filename,cell_unknown):

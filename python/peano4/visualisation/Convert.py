@@ -18,7 +18,9 @@ class Convert(object):
 
   def set_visualisation_tools_path(self, path):
     """
-      Set path where tool can find the convert script. 
+      Set path where tool can find the convert script. Convert is part of 
+      the Peano4 installation if you have configured your build to use
+      VTK (see ./configure script and the option --with-vtk in there).
     """
     self.visualisation_tools_path = path
 

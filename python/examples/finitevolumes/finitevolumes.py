@@ -62,7 +62,7 @@ project.datamodel.add_face(patch_overlap)
 create_grid = peano4.solversteps.Step( "CreateGrid" )
 create_grid.use_face(patch_overlap)
 create_grid.use_cell(patch)
-create_grid.add_mapping( peano4.solversteps.PlotGridInPeanoBlockFormat("grid-dump", patch) )
+create_grid.add_mapping( peano4.toolbox.PlotGridInPeanoBlockFormat("grid-dump", patch) )
 create_grid.add_mapping( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 project.solversteps.add_step(create_grid)
 
