@@ -31,6 +31,9 @@ class ProjectPatchOntoFaces(Mapping):
       assert( patch_overlap.dim[1] == patch.dim[0] )
       
     #self.d[ "FILENAME" ]           = filename
+    self.d[ "UNKNOWNS" ]           = str(patch.no_of_unknowns)
+    self.d[ "DOFS_PER_AXIS" ]      = str(patch.dim[0])
+    self.d[ "OVERLAP" ]            = str(patch_overlap.dim[0]/2)
 
 
 
@@ -47,43 +50,68 @@ class ProjectPatchOntoFaces(Mapping):
 
 
   def get_mapping_name(self):
-    return __name__.split(".")[-1].replace(".py", "").replace(".", "_")
-    #return __name__.split(".")[-1].replace(".py", "")
+    return __name__.replace(".py", "").replace(".", "_")
 
 
   def user_should_modify_template(self):
     return False
 
 
-  __Template_TouchCellFirstTime = """ 
-  int vertexIndices[TwoPowerD];
+  __Template_TouchCellFirstTime = """
+  auto serialisePatchIndex = [](tarch::la::Vector<Dimensions,int> overlapCell, int normal) {{
+    int base   = 1;
+    int result = 0;
+    for (int d=0; d<Dimensions; d++) {{
+      result += overlapCell(d) * base;
+      if (d==normal) {{
+        base *= {OVERLAP}*2;
+      }}
+      else {{
+        base *= {DOFS_PER_AXIS};
+      }}
+    }}
+    return result;
+  }};
   
-  const double PatchScaling = 0.95;
+  for(int d=0; d<Dimensions; d++) {{
+    /**
+     * d-loop over all dimensions except d. The vector k's entry d is set
+     * to 0. We start with the left/bottom face, i.e. the one closer to the 
+     * coordinate system's origin.
+     */
+    dfore(k,{DOFS_PER_AXIS},d,0) {{
+      for (int i=0; i<{OVERLAP}; i++) {{
+        tarch::la::Vector<Dimensions,int> patchCell   = k;
+        tarch::la::Vector<Dimensions,int> overlapCell = k;
+        patchCell(d)   = i;
+        overlapCell(d) = i+{OVERLAP};
+        
+        int patchCellSerialised   = peano4::utils::dLinearised(patchCell,{DOFS_PER_AXIS});
+        int overlapCellSerialised = serialisePatchIndex(overlapCell,d);
+        for (int j=0; j<{UNKNOWNS}; j++) {{
+          fineGridFacesQ(d).value[overlapCellSerialised*{UNKNOWNS}+j] = 
+            fineGridCellQ.data().value[patchCellSerialised*{UNKNOWNS}+j];
+        }}
 
-  assertion( _writer!=nullptr );
-  assertion( _dataWriter!=nullptr );
-  
-  const int patchIndex = _writer->plotPatch(
-    fineGridCell{NAME}.centre() - fineGridCell{NAME}.h() * PatchScaling * 0.5,
-    fineGridCell{NAME}.h() * PatchScaling
-  );
- 
-  int cellIndex  = _dataWriter->getFirstCellWithinPatch(patchIndex);
-  int currentDoF = 0;
-  
-  dfor(k,{DOFS_PER_AXIS}) {{
-    double* data = fineGridCell{NAME}.data().value + currentDoF;
-    _dataWriter->plotCell( cellIndex, data );
-    cellIndex++;
-    currentDoF += {UNKNOWNS};
+        patchCell(d)   = i+{DOFS_PER_AXIS}-{OVERLAP};
+        overlapCell(d) = i;
+        
+        patchCellSerialised   = peano4::utils::dLinearised(patchCell,{DOFS_PER_AXIS});
+        overlapCellSerialised = serialisePatchIndex(overlapCell,d);
+        for (int j=0; j<{UNKNOWNS}; j++) {{
+          fineGridFacesQ(d+Dimensions).value[overlapCellSerialised*{UNKNOWNS}+j] = 
+            fineGridCellQ.data().value[patchCellSerialised*{UNKNOWNS}+j];
+        }}
+      }}
+    }}
   }}
 """
 
 
   def get_body_of_operation(self,operation_name):
     result = "\n"
-    if operation_name==Mapping.OPERATION_TOUCH_CELL_FIRST_TIME:
-      #result = self.__Template_TouchCellFirstTime.format(**self.d)
+    if operation_name==Mapping.OPERATION_TOUCH_CELL_LAST_TIME:
+      result = self.__Template_TouchCellFirstTime.format(**self.d)
       pass 
     return result
 
@@ -94,9 +122,5 @@ class ProjectPatchOntoFaces(Mapping):
 
   def get_includes(self):
     return """
-#include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
-#include "tarch/multicore/BooleanSemaphore.h"
-#include "tarch/multicore/Lock.h"
-#include "tarch/mpi/Rank.h"
 #include "peano4/utils/Loop.h"
 """

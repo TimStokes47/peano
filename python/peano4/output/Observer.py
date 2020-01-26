@@ -457,7 +457,8 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
   TemplateLeaveCell_MappingCall = """  
   {{
     {ACTIVE_MAPPING}.touchCellLastTime(
-      {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
+       {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
+      {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
     );
   }}
 """
@@ -533,12 +534,13 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       Generates enter cell
     """
     output_file.write( self.TemplateLeaveCell_Prologue.format(**self.d) )
+    self.__format_template_per_mapping(output_file, self.TemplateLeaveCell_MappingCall, True)
           
     for cell in self.cells:
       self.d[ "name" ]                 = cell.name
       self.d[ "logical_type_name" ]    = cell.get_logical_type_name()
       self.d[ "full_qualified_type" ]  = cell.get_full_qualified_type()
-      self.__format_template_per_mapping(output_file, self.TemplateLeaveCell_CellStore_MappingCall, False)
+      self.__format_template_per_mapping(output_file, self.TemplateLeaveCell_CellStore_MappingCall, True)
       output_file.write( self.TemplateLeaveCell_CellStore_Epilogue.format(**self.d) )
 
     for face in self.faces:
@@ -546,7 +548,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       self.d[ "enumeration_type" ]     = face.get_enumeration_type()
       self.d[ "logical_type_name" ]    = face.get_logical_type_name()
       self.d[ "full_qualified_type" ]  = face.get_full_qualified_type()
-      self.__format_template_per_mapping(output_file, self.TemplateLeaveCell_FaceStore_MappingCall, False)
+      self.__format_template_per_mapping(output_file, self.TemplateLeaveCell_FaceStore_MappingCall, True)
       output_file.write( self.TemplateLeaveCell_FaceStore_Epilogue.format(**self.d) )
         
     for vertex in self.vertices:
@@ -554,7 +556,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       self.d[ "enumeration_type" ]     = vertex.get_enumeration_type()
       self.d[ "logical_type_name" ]    = vertex.get_logical_type_name()
       self.d[ "full_qualified_type" ]  = vertex.get_full_qualified_type()
-      self.__format_template_per_mapping(output_file, self.TemplateLeaveCell_VertexStore_MappingCall, False)
+      self.__format_template_per_mapping(output_file, self.TemplateLeaveCell_VertexStore_MappingCall, True)
       output_file.write( self.TemplateLeaveCell_VertexStore_Epilogue.format(**self.d) )
 
     output_file.write( self.TemplateLeaveCell_Epilogue.format(**self.d) )

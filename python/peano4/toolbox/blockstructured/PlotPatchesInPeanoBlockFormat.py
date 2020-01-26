@@ -3,8 +3,6 @@
 from peano4.solversteps.Mapping import Mapping
 
 
-# @todo getter einfuehren, so dass man sieht was gen Observer geht und was net
-# @todo Konstanten fuer ops
 
 class PlotPatchesInPeanoBlockFormat(Mapping):
   """
@@ -90,7 +88,7 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
 
 
   def get_mapping_name(self):
-    return "PlotPatchesInPeanoBlockFormat"
+    return __name__.replace(".py", "").replace(".", "_")
 
 
   def user_should_modify_template(self):

@@ -2,6 +2,5 @@
 # use, please see the copyright notice at www.peano-framework.org
 
 from .PlotPatchesInPeanoBlockFormat  import PlotPatchesInPeanoBlockFormat
-
-
+from .ProjectPatchOntoFaces          import ProjectPatchOntoFaces
 

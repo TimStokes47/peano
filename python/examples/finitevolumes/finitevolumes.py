@@ -13,6 +13,7 @@
 # We import Peano4 as project. If this step fails, ensure that your environment
 # variable PYTHONPATH points to Peano4's python directory.
 #
+import os
 import peano4
 import peano4.datamodel
 import peano4.solversteps
@@ -20,6 +21,13 @@ import peano4.output
 import peano4.visualisation
 import peano4.toolbox.blockstructured
 
+
+#
+# Lets first clean up all plot files, so we don't get a mismatch
+#
+output_files = [ f for f in os.listdir(".") if f.endswith(".peano-patch-file") ]
+for f in output_files:
+  os.remove(f)
 
 
 #
@@ -42,7 +50,7 @@ project.datamodel.add_cell(patch)
 # Along the faces, we have the patch overlaps. As we use only a Rusanov flux, 
 # one cell of overlap between adjacent patches is sufficient.
 #
-patch_overlap = peano4.datamodel.Patch( (1,patch_size,patch_size), unknowns, "Q" )
+patch_overlap = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, "Q" )
 project.datamodel.add_face(patch_overlap)
 
 
@@ -55,6 +63,7 @@ create_grid = peano4.solversteps.Step( "CreateGrid" )
 create_grid.use_face(patch_overlap)
 create_grid.use_cell(patch)
 create_grid.add_mapping( peano4.solversteps.PlotGridInPeanoBlockFormat("grid-dump", patch) )
+create_grid.add_mapping( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 project.solversteps.add_step(create_grid)
 
 
@@ -87,6 +96,7 @@ perform_time_step      = peano4.solversteps.Step( "PerformTimeStep" )
 solve_Riemann_problems.use_face(patch_overlap)
 perform_time_step.use_face(patch_overlap)
 perform_time_step.use_cell(patch)
+perform_time_step.add_mapping( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 project.solversteps.add_step(solve_Riemann_problems)
 project.solversteps.add_step(perform_time_step)
 

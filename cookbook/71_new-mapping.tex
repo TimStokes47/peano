@@ -44,7 +44,7 @@ used as class name part for the generated file) and to provide this information:
   def get_mapping_name(self):
     // My default implementation that I use in the toolboxes is this following
     // line. You are however allowed to use your own, bespoke name
-    // return __name__.split(".")[-1].replace(".py", "").replace(".", "_")
+    // return __name__.replace(".py", "").replace(".", "_")
     return "MyName"
 
   def user_should_modify_template(self):
