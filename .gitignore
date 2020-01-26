@@ -7,6 +7,7 @@
 **/.settings
 **/.externalToolBuilders
 **/.o
+**/Makefile.in
 src/stamp-h1
 
 /ar-lib
