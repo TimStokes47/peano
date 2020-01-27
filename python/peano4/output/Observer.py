@@ -79,8 +79,8 @@ class Observer(object):
       if vertices.index(vertex)!=0:
         self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]   += ","
         self.d[ "MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS" ] += ","
-      self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]     += "peano4::datamanagement::VertexEnumerator<" + vertex.get_full_qualified_type() + ">( event.getX(),event.getH(), &DataRepository::_" + face.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoPowerD-1) )";
-      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS" ]   += "peano4::datamanagement::VertexEnumerator<" + vertex.get_full_qualified_type() + ">( event.getX(),event.getH(), event.getRelativePositionToFather(), &DataRepository::_" + face.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoPowerD*2-1) )";
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS" ]     += "peano4::datamanagement::VertexEnumerator<" + vertex.get_full_qualified_type() + ">( event.getX(),event.getH(), &DataRepository::_" + vertex.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoPowerD-1) )";
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS" ]   += "peano4::datamanagement::VertexEnumerator<" + vertex.get_full_qualified_type() + ">( event.getX(),event.getH(), event.getRelativePositionToFather(), &DataRepository::_" + vertex.get_logical_type_name() + "Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(TwoPowerD*2-1) )";
 
     #
     # Create powersets of arguments

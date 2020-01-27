@@ -91,7 +91,6 @@ class Step:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
       result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
-    result += [ "marker", "peano4::datamanagement::VertexMarker" ]
     return result
 
   def get_face_operations_signature(self):

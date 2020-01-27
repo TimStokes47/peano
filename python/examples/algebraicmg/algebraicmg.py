@@ -53,6 +53,16 @@ project.solversteps.add_step(create_grid)
 
 
 #
+# Set up the rhs and the material parameters, boundary conditions, and, finally,
+# also the initial guess. For this, we use the default constructor value True,
+# i.e. we ask the API to give us a C++ routine.
+#
+setup_scenario = peano4.solversteps.Step( "SetupScenario" )
+setup_scenario.use_vertex( dastgen_model )
+project.solversteps.add_step(setup_scenario)
+
+
+#
 # Finally, plot the grid.
 #
 plot_solution = peano4.solversteps.Step( "PlotSolution", False )

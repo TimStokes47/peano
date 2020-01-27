@@ -12,6 +12,7 @@
 #include "observers/DataRepository.h"
 #include "observers/PlotSolution.h"
 #include "observers/CreateGrid.h"
+#include "observers/SetupScenario.h"
 
 
 tarch::logging::Log _log("::");
@@ -72,6 +73,11 @@ int main(int argc, char** argv) {
       peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
     }
     while (peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<2);
+
+    {
+      examples::algebraicmg::observers::SetupScenario  observer;
+      peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+    }
 
     {
       examples::algebraicmg::observers::PlotSolution  observer;
