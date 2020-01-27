@@ -1,4 +1,5 @@
 #include "tarch/logging/LogFilterFileReader.h"
+#include "tarch/logging/LogFilter.h"
 
 
 #include <fstream>

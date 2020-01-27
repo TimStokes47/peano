@@ -16,6 +16,9 @@ const std::string tarch::logging::LogFilter::FilterListEntry::TargetInfo  = "inf
 const std::string tarch::logging::LogFilter::FilterListEntry::TargetDebug = "debug";
 const std::string tarch::logging::LogFilter::FilterListEntry::TargetTrace = "trace";
 
+const bool tarch::logging::LogFilter::FilterListEntry::BlackListEntry = true;
+const bool tarch::logging::LogFilter::FilterListEntry::WhiteListEntry = false;
+
 
 tarch::logging::LogFilter::FilterListEntry::FilterListEntry( const std::string& targetName, bool isBlackListEntry ):
   _targetName(targetName),

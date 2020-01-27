@@ -298,6 +298,25 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
 
   TemplateEnterCell_VertexLoad_Prologue = """
+  // Load vertex {name}
+  {{
+    auto view = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock( TwoPowerD );
+    for (int i=0; i<TwoPowerD; i++) {{
+      int inVertexStack          = event.getFaceDataFrom(i);
+      int outVertexStackPosition = event.getFaceDataTo(i);
+      logDebug("enterCell(...)", "vertex " << inVertexStack << "->pos-" << outVertexStackPosition );
+
+      {full_qualified_type} data;
+      if (
+        inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+      ) {{
+        data = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,inVertexStack) ].pop();
+      }}
+      view.set(outVertexStackPosition,data);
+    }}
+  }}
 """
 
 
@@ -312,6 +331,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     for (int i=0; i<TwoTimesD; i++) {{
       int inFaceStack          = event.getFaceDataFrom(i);
       int outFaceStackPosition = event.getFaceDataTo(i);
+      logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStackPosition );
+      
       {full_qualified_type} data ;
       if (
         inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
@@ -336,8 +357,6 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     for (int i=0; i<TwoTimesD; i++) {{
       int inFaceStack        = event.getFaceDataFrom(i);
       int outFaceStackNumber = event.getFaceDataTo(i);
-
-      logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStackNumber );
       
       if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
         /*
@@ -502,6 +521,8 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     for (int i=0; i<TwoTimesD; i++) {{
       int inFaceStackPosition  = event.getFaceDataFrom(i);
       int outFaceStack         = event.getFaceDataTo(i);
+      logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "face " << inFaceStack << "->pos-" << outFaceStack );
+      
       {full_qualified_type} data = view.get(inFaceStackPosition);
       if (
         outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
@@ -520,6 +541,24 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 """
 
   TemplateLeaveCell_VertexStore_Epilogue = """
+  // Store vertex {name}
+  {{
+    auto view = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].popBlock( TwoPowerD );
+    for (int i=0; i<TwoPowerD; i++) {{
+      int inVertexStackPosition  = event.getFaceDataFrom(i);
+      int outVertexStack         = event.getFaceDataTo(i);
+      logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "vertex " << inVertexStackPosition << "->pos-" << outVertexStack );
+      
+      {full_qualified_type} data = view.get(inVertexStackPosition);
+      if (
+        outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+      ) {{
+        DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,outVertexStack) ].push(data);
+      }}
+    }}
+  }}
 """
 
 

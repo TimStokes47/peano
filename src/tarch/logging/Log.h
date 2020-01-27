@@ -21,10 +21,6 @@
 
 
 
-#include "LogFilter.h"
-
-
-
 namespace tarch {
   namespace logging {
     class Log;
@@ -470,6 +466,10 @@ class tarch::logging::Log {
     clock_serv_t cclock;
     #endif
 
+    /**
+     * This is a memoriser: If it is set false, I ask the log filter whether I should
+     * write data or not. If the file is set however, I assume that I know what to do.
+     */
     bool _hasQueriedFilter;
     bool _logTrace;
     bool _logDebug;

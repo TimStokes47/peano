@@ -37,6 +37,9 @@ class tarch::logging::LogFilter {
       static const std::string TargetDebug;
       static const std::string TargetTrace;
 
+      static const bool BlackListEntry;
+      static const bool WhiteListEntry;
+
       /**
        * The message type target can be either "debug" or "info". Only messages
        * with corresponding target are filtered by the FilterListEntry.

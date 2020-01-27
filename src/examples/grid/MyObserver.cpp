@@ -3,6 +3,8 @@
 #include "peano4/grid/GridControlEvent.h"
 #include "peano4/parallel/Node.h"
 
+#include "tarch/logging/LogFilter.h"
+
 
 
 int examples::grid::MyObserver::_iterationCounter(0);

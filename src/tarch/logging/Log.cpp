@@ -6,6 +6,7 @@
 #include "config.h"
 
 
+#include "tarch/logging/LogFilter.h"
 #include "tarch/logging/CommandLineLogger.h"
 #include "tarch/logging/ChromeTraceFileLogger.h"
 
@@ -46,8 +47,10 @@ void tarch::logging::Log::debug(const std::string& methodName, const std::string
 	_hasQueriedFilter = true;
 	_logDebug = LogFilter::getInstance().writeDebug( _className );
   }
-  if (_logDebug)
+
+  if (_logDebug) {
     UsedLogService::getInstance().debug(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
+  }
 }
 #endif
 
