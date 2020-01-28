@@ -465,15 +465,6 @@ class tarch::logging::Log {
     #ifdef __APPLE__
     clock_serv_t cclock;
     #endif
-
-    /**
-     * This is a memoriser: If it is set false, I ask the log filter whether I should
-     * write data or not. If the file is set however, I assume that I know what to do.
-     */
-    bool _hasQueriedFilter;
-    bool _logTrace;
-    bool _logDebug;
-    bool _logInfo;
   public:
     /**
      * Writes information about the computer the output is written from.

@@ -28,11 +28,7 @@
 
 
 tarch::logging::Log::Log(const std::string& className):
-  _className( className ),
-  _hasQueriedFilter(false),
-  _logTrace(true),
-  _logDebug(true),
-  _logInfo(true) {
+  _className( className ) {
   _startupTime = std::chrono::system_clock::now();
 }
 
@@ -43,12 +39,7 @@ tarch::logging::Log::~Log() {
 
 #if PeanoDebug>=4
 void tarch::logging::Log::debug(const std::string& methodName, const std::string& message) {
-  if (not _hasQueriedFilter) {
-	_hasQueriedFilter = true;
-	_logDebug = LogFilter::getInstance().writeDebug( _className );
-  }
-
-  if (_logDebug) {
+  if (LogFilter::getInstance().writeDebug( _className )) {
     UsedLogService::getInstance().debug(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
   }
 }
@@ -56,12 +47,9 @@ void tarch::logging::Log::debug(const std::string& methodName, const std::string
 
 
 void tarch::logging::Log::info(const std::string& methodName, const std::string& message) {
-  if (not _hasQueriedFilter) {
-	_hasQueriedFilter = true;
-	_logInfo = LogFilter::getInstance().writeInfo( _className );
-  }
-  if (_logInfo)
+  if (LogFilter::getInstance().writeInfo( _className )) {
     UsedLogService::getInstance().info(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
+  }
 }
 
 
@@ -77,18 +65,16 @@ void tarch::logging::Log::error(const std::string& methodName, const std::string
 
 #if PeanoDebug>=1
 void tarch::logging::Log::traceIn(const std::string& methodName, const std::string& message) {
-  if (not _hasQueriedFilter) {
-	_hasQueriedFilter = true;
-	_logTrace = LogFilter::getInstance().writeTrace( _className );
-  }
-  if (_logTrace)
+  if (LogFilter::getInstance().writeTrace( _className )) {
     UsedLogService::getInstance().traceIn(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
+  }
 }
 
 
 void tarch::logging::Log::traceOut(const std::string& methodName, const std::string& message) {
-  if (_logTrace)
+  if (LogFilter::getInstance().writeTrace( _className )) {
     UsedLogService::getInstance().traceOut(getTimeStamp(),tarch::mpi::Rank::getInstance().getRank(),tarch::multicore::Core::getInstance().getCoreNumber(),getTraceInformation(methodName),message);
+  }
 }
 #else
 void tarch::logging::Log::traceIn(const std::string& methodName, const std::string& message) {

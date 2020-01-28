@@ -162,6 +162,7 @@ peano4::grid::TraversalObserver* {FULL_QUALIFIED_CLASSNAME}::clone(int spacetree
   TemplateBeginTraversal = """
   
 void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
+  logTraceInWith2Arguments( "beginTraversal(...)", x, h );
   //
   // Invoke beginTraversal() on the mappings
   //
@@ -173,6 +174,7 @@ void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensi
   // statements, a top(1) call would raise an assertion. 
   //
 {INITIAL_PUSH_TO_OUTPUT_STREAMS}
+  logTraceOutWith2Arguments( "beginTraversal(...)", x, h );
 }}
   
   """
@@ -208,8 +210,10 @@ void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensi
   TemplateEndTraversal = """
   
 void {FULL_QUALIFIED_CLASSNAME}::endTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
+  logTraceInWith2Arguments( "endTraversal(...)", x, h );
 {MAPPING_END_TRAVERSAL_CALLS}
 {FINAL_POP_FROM_INPUT_STREAMS}
+  logTraceOutWith2Arguments( "endTraversal(...)", x, h );
 }}
   
   """
@@ -302,8 +306,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   {{
     auto view = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock( TwoPowerD );
     for (int i=0; i<TwoPowerD; i++) {{
-      int inVertexStack          = event.getFaceDataFrom(i);
-      int outVertexStackPosition = event.getFaceDataTo(i);
+      int inVertexStack          = event.getVertexDataFrom(i);
+      int outVertexStackPosition = event.getVertexDataTo(i);
       logDebug("enterCell(...)", "vertex " << inVertexStack << "->pos-" << outVertexStackPosition );
 
       {full_qualified_type} data;
@@ -321,6 +325,36 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
 
   TemplateEnterCell_VertexLoad_MappingCall = """
+  // Handle vertex {name}
+  {{
+    peano4::datamanagement::VertexEnumerator<{full_qualified_type}> view(
+      event.getX(), event.getH(),
+      &DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top( TwoPowerD-1 )
+    );
+    for (int i=0; i<TwoPowerD; i++) {{
+      int inVertexStack        = event.getVertexDataFrom(i);
+      
+      if (inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+        /*
+        {ACTIVE_MAPPING}.createPersistentFace(
+          view.x(outFaceStackNumber)
+         ,event.getH()
+         ,view.normal(outFaceStackNumber)
+         ,view(outFaceStackNumber)
+         {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+        );
+        */
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+      else if (inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {{
+        //_mapping->createHangingFace(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+      else if (peano4::grid::PeanoCurve::isInOutStack(inVertexStack)) {{
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+    }}
+  }}
 """
 
 
@@ -356,7 +390,6 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     );
     for (int i=0; i<TwoTimesD; i++) {{
       int inFaceStack        = event.getFaceDataFrom(i);
-      int outFaceStackNumber = event.getFaceDataTo(i);
       
       if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
         /*
@@ -512,6 +545,36 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 
 
   TemplateLeaveCell_FaceStore_MappingCall = """
+  // Handle face {name}
+  {{
+    peano4::datamanagement::FaceEnumerator<{full_qualified_type}> view(
+      event.getX(), event.getH(),
+      &DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top( TwoTimesD-1 )
+    );
+    for (int i=0; i<TwoTimesD; i++) {{
+      int outFaceStack        = event.getFaceDataTo(i);
+      
+      if (outFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+        /*
+        {ACTIVE_MAPPING}.createPersistentFace(
+          view.x(outFaceStackNumber)
+         ,event.getH()
+         ,view.normal(outFaceStackNumber)
+         ,view(outFaceStackNumber)
+         {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+        );
+        */
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+      else if (outFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {{
+        //_mapping->createHangingFace(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+      else if (peano4::grid::PeanoCurve::isInOutStack(outFaceStack)) {{
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+    }}
+  }}
 """
 
   TemplateLeaveCell_FaceStore_Epilogue = """
@@ -536,7 +599,35 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 """
 
   TemplateLeaveCell_VertexStore_MappingCall = """
+  // Handle face {name}
   {{
+    peano4::datamanagement::VertexEnumerator<{full_qualified_type}> view(
+      event.getX(), event.getH(),
+      &DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top( TwoPowerD-1 )
+    );
+    for (int i=0; i<TwoPowerD; i++) {{
+      int outVertexStack        = event.getVertexDataTo(i);
+      
+      if (outVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+        /*
+        {ACTIVE_MAPPING}.createPersistentFace(
+          view.x(outFaceStackNumber)
+         ,event.getH()
+         ,view.normal(outFaceStackNumber)
+         ,view(outFaceStackNumber)
+         {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
+        );
+        */
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+      else if (outVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {{
+        //_mapping->createHangingFace(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+      else if (peano4::grid::PeanoCurve::isInOutStack(outVertexStack)) {{
+        //_mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      }}
+    }}
   }}
 """
 
@@ -545,9 +636,9 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
   {{
     auto view = DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].popBlock( TwoPowerD );
     for (int i=0; i<TwoPowerD; i++) {{
-      int inVertexStackPosition  = event.getFaceDataFrom(i);
-      int outVertexStack         = event.getFaceDataTo(i);
-      logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "vertex " << inVertexStackPosition << "->pos-" << outVertexStack );
+      int inVertexStackPosition  = event.getVertexDataFrom(i);
+      int outVertexStack         = event.getVertexDataTo(i);
+      logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "vertex pos-" << inVertexStackPosition << "->" << outVertexStack );
       
       {full_qualified_type} data = view.get(inVertexStackPosition);
       if (

@@ -48,8 +48,17 @@ project.datamodel.add_vertex( dastgen_model )
 # First, lets create the initial grid (which is regular)
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
+#
+# @todo Die Zeile haett ich gern raus. Aber dann werden die Vertices net auf dem Stack
+#       abgelegt. Das ist konzeptionell. Aber ich muss es irgendwo abfragen/-sichern.
+#       Alternativ kann ich die Konvention einbauen, dass creational Patterns immer in
+#       jedem Mapping aufgerufen werden. Find ich aber net so schoen. Am schoensten 
+#       waere eine Assertion im C++ Code oder ein Check hier. Eher ersteres.
+#
+create_grid.use_vertex( dastgen_model )
 create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.01) )
 project.solversteps.add_step(create_grid)
+
 
 
 #
