@@ -113,7 +113,7 @@ class matrixfree::solver::Multigrid {
     /**
      * !!! Compute Transfer Contribution Weight for one Individual Fine Grid Vertex
      *
-     * If you wanna compute @f$ Pu_\mbox{coarse} @f$ or @f$ Ru_\mbox{fine} @f$ (for
+     * If you wanna compute @f$ Pu_{\mbox{coarse}} @f$ or @f$ Ru_{\mbox{fine}} @f$ (for
      * example in a a touchVertex FirstTime() event) for one individual fine
      * grid vertex, you can do this in @f$ 2^d @f$ steps: For each coarse grid
      * vertex
