@@ -135,11 +135,11 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
 
   if ( _bandwidthTasksAreProcessed.compare_and_swap(true,false) ) {
-    hasProcessedJobs |= processJobs(internal::HighBandwidthTasksJobClassNumber,std::numeric_limits<int>::max(), false /* isCalledOnMasterThread */);
+    hasProcessedJobs |= processJobs(internal::HighBandwidthTasksJobClassNumber,std::numeric_limits<int>::max(), -1, true);
     _bandwidthTasksAreProcessed = false;
   }
 
-  hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs, false /* isCalledOnMasterThread */);
+  hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs, -1, true);
 
   if ( hasProcessedJobs or rescheduleThisConsumer ) {
     enqueue();
