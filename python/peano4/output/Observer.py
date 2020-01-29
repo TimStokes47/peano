@@ -159,9 +159,6 @@ peano4::grid::TraversalObserver* {FULL_QUALIFIED_CLASSNAME}::clone(int spacetree
   """
 
 
-Geht alles net, weil noch keine Stacks ausgetauscht werden. Frage mich, wie das mit den Zellstacks funktionnieren konnnte
-
-
   TemplateBeginTraversal = """
   
 void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
@@ -695,6 +692,28 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     output_file.write( self.TemplateLeaveCell_Epilogue.format(**self.d) )
 
 
+  TemplateExchangeRoutines = """
+void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {{
+}}
+
+
+void {FULL_QUALIFIED_CLASSNAME}::exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) {{
+}}
+
+
+void {FULL_QUALIFIED_CLASSNAME}::exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) {{
+}}
+
+
+void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives( int spacetreeId ) {{
+}}
+"""
+
+
+  def __generate_exchange_routines(self,output_file):
+    output_file.write( self.TemplateExchangeRoutines.format(**self.d) )
+      
+
   TemplateImplementationFilePrologue = """
 #include "{CLASSNAME}.h"
 #include "DataRepository.h"
@@ -725,6 +744,7 @@ tarch::logging::Log {FULL_QUALIFIED_CLASSNAME}::_log( "{FULL_QUALIFIED_CLASSNAME
       self.__generate_endTraversal(output_file)
       self.__generate_enterCell(output_file)
       self.__generate_leaveCell(output_file)
+      self.__generate_exchange_routines(output_file)
 
 
   def get_header_file_name(self):
