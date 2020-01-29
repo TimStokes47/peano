@@ -80,6 +80,11 @@ class examples::delta::MyObserver: public peano4::grid::TraversalObserver {
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h
     ) override;
+
+    void exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) override;
+    void exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) override;
+    void exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) override;
+    void finishAllOutstandingSendsAndReceives( int spacetreeId ) override;
 };
 
 #endif

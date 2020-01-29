@@ -4,6 +4,7 @@
 #define _PEANO4_GRID_TRAVERSAL_OBSERVER_H_
 
 
+#include "peano4/parallel/parallel.h"
 #include "peano4/utils/Globals.h"
 #include "tarch/la/Vector.h"
 
@@ -121,6 +122,12 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
     const tarch::la::Vector<Dimensions,double>&  x,
     const tarch::la::Vector<Dimensions,double>&  h
   ) = 0;
+
+
+  virtual void exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) = 0;
+  virtual void exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) = 0;
+  virtual void exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) = 0;
+  virtual void finishAllOutstandingSendsAndReceives( int spacetreeId ) = 0;
 };
 
 #endif

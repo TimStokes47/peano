@@ -110,13 +110,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
         template <class Container>
         static void exchangeAllPeriodicBoundaryDataStacks( Container& stackContainer, int spacetreeId );
 
-        enum class VerticalDataExchangeMode {
-          Running,
-          PrepareDryRunForNewSpacetree,
-		  SendOutDataForDryRunOfNewSpacetree,
-          ReceiveJoinDataForRunOfMaster
-        };
-
         static std::string toString(VerticalDataExchangeMode mode);
 
   	    /**

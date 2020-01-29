@@ -79,3 +79,10 @@ std::vector< peano4::grid::GridControlEvent > examples::regulargridupscaling::My
 
   return controlEvents;
 }
+
+
+void examples::regulargridupscaling::MyObserver::exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {}
+void examples::regulargridupscaling::MyObserver::exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) {}
+void examples::regulargridupscaling::MyObserver::exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) {}
+void examples::regulargridupscaling::MyObserver::finishAllOutstandingSendsAndReceives( int spacetreeId ) {}
+

@@ -321,3 +321,9 @@ std::vector< peano4::grid::GridControlEvent > examples::integerdiffusionthroughf
 
   return controlEvents;
 }
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {}
+void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) {}
+void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) {}
+void examples::integerdiffusionthroughfaces::MyObserver::finishAllOutstandingSendsAndReceives( int spacetreeId ) {}

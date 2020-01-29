@@ -363,3 +363,10 @@ std::vector< peano4::grid::GridControlEvent > examples::delta::MyObserver::getGr
 
   return controlEvents;
 }
+
+
+void examples::delta::MyObserver::exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {}
+void examples::delta::MyObserver::exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) {}
+void examples::delta::MyObserver::exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) {}
+void examples::delta::MyObserver::finishAllOutstandingSendsAndReceives( int spacetreeId ) {}
+

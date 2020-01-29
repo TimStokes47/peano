@@ -5,25 +5,31 @@
 
 
 namespace peano4 {
- /**
-  * \namespace parallel
-  *
-  * The parallel namespace is Peano's core abstracts from both MPI and
-  * multicore parallelisation.
-  *
-  *
-  * \section Recreate all DaStGen objects
-  *
-  * <pre>
+  /**
+   * \namespace parallel
+   *
+   * The parallel namespace is Peano's core abstracts from both MPI and
+   * multicore parallelisation.
+   *
+   *
+   * \section Recreate all DaStGen objects
+   *
+   * <pre>
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator TreeEntry.def  .
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator StartTraversalMessage.def  .
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator TreeManagementMessage.def  .
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator IntegerMessage.def  .
     </pre>
-  *
-  */
- namespace parallel {
- }
+   *
+   */
+  namespace parallel {
+    enum class VerticalDataExchangeMode {
+      Running,
+      PrepareDryRunForNewSpacetree,
+      SendOutDataForDryRunOfNewSpacetree,
+      ReceiveJoinDataForRunOfMaster
+    };
+  }
 }
 
 #endif

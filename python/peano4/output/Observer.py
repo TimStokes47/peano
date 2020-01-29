@@ -159,6 +159,9 @@ peano4::grid::TraversalObserver* {FULL_QUALIFIED_CLASSNAME}::clone(int spacetree
   """
 
 
+Geht alles net, weil noch keine Stacks ausgetauscht werden. Frage mich, wie das mit den Zellstacks funktionnieren konnnte
+
+
   TemplateBeginTraversal = """
   
 void {FULL_QUALIFIED_CLASSNAME}::beginTraversal( const tarch::la::Vector<Dimensions,double>&  x, const tarch::la::Vector<Dimensions,double>&  h ) {{
