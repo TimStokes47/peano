@@ -66,6 +66,7 @@ Packed-Type: short int;
         else:
           file.write( "\n" )
       file.write( "  };\n" )
+      file.write( "  persistent packed parallelise " + i[0] + "  " + i[0] + ";\n" )
 
     file.write( "};\n\n\n" )
 
