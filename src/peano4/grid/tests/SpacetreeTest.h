@@ -24,6 +24,7 @@ class peano4::grid::tests::SpacetreeTest: public tarch::tests::TestCase {
     static tarch::logging::Log _log;
 
     void testRestrictToCoarseGrid();
+    void testCreateLeaveCellTraversalEvent();
   public:
     void run() override;
 };
