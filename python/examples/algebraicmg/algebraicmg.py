@@ -40,6 +40,7 @@ dastgen_model = peano4.datamodel.DaStGen( "MG" )
 dastgen_model.add_double_scalar( "u" )
 dastgen_model.add_double_scalar( "rhs" )
 dastgen_model.add_double_scalar( "res" )
+dastgen_model.add_enum( "VertexType", ["Boundary", "Inside"] )
 project.datamodel.add_vertex( dastgen_model )
 
 

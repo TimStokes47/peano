@@ -56,6 +56,17 @@ Packed-Type: short int;
       file.write( i )
       file.write( ";\n" )
 
+    for i in self.data.attributes_enum:
+      file.write( "  enum " + i[0] + " {\n" )
+      file.write( "    " )
+      for j in i[1]:
+        file.write( j )
+        if j!=i[1][-1]:
+          file.write( ", " )
+        else:
+          file.write( "\n" )
+      file.write( "  };\n" )
+
     file.write( "};\n\n\n" )
 
 

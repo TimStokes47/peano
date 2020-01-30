@@ -12,12 +12,23 @@ class DaStGen(DoF):
       
         cell_data = peano4.datamodel.Patch( (6,6,6), "Fluid" )
 
+      attributes_double  Series of strings which encode doubles.
+      attributes_enum    Series of tuples with a string plus an array of strings.
     """
     super(DaStGen, self).__init__(name)
     self.generator = DaStGenToLegacyTool(self)
     self.attributes_double = []
+    self.attributes_enum   = []
 
-  def add_double_scalar(self,name):
+
+  def add_double_scalar(self, name):
     self.attributes_double.append( name )
+
     
+  def add_enum(self, enum_name, enum_variants ):
+    """
+      enum  Is a set or series of strings.
+    """
+    self.attributes_enum.append( (enum_name, enum_variants) )
+    #  attributes_enum    Series of tuples with a string plus an array of strings.
     
