@@ -1724,6 +1724,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
     switch ( fineGridVertices[vertexIndex.to_ulong()].getState() ) {
       case GridVertex::HangingVertex:
         event.setVertexDataTo(i,TraversalObserver::CreateOrDestroyHangingGridEntity);
+        break;
       case GridVertex::New:
       case GridVertex::Unrefined:
       case GridVertex::Refined:
@@ -1732,6 +1733,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
       case GridVertex::EraseTriggered:
       case GridVertex::Erasing:
         event.setVertexDataTo(i,stackNumber);
+        break;
       case GridVertex::Delete:
         {
           if ( PeanoCurve::isInOutStack(stackNumber) ) {
