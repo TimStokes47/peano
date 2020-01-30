@@ -76,7 +76,7 @@ class PlotGridInPeanoBlockFormat(Mapping):
 
 
   def get_mapping_name(self):
-    return "PlotGridInPeanoBlockFormat"
+    return __name__.replace(".py", "").replace(".", "_")
 
 
   def user_should_modify_template(self):

@@ -64,11 +64,12 @@ int main(int argc, char** argv) {
     "tarch",
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
+
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug,
     tarch::logging::LogFilter::FilterListEntry::AnyRank,
     "examples::algebraicmg",
-    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo,
@@ -84,6 +85,8 @@ int main(int argc, char** argv) {
   ));
 
   tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile( "trace" );
+
+  tarch::logging::LogFilter::getInstance().printFilterListToCout();
 
   #if PeanoDebug>=2
   tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();

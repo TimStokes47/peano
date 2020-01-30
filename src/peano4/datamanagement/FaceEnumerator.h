@@ -129,6 +129,23 @@ class peano4::datamanagement::FaceEnumerator {
 	std::string toString() const {
 	  return "(" + _cellCentre.toString() + "," + _h.toString() + ")";
 	}
+
+	/**
+	 * @return Centre of the cell associated with this face at the moment. You always are
+	 *         given access to a face from within a cell. This is the centre of this cell.
+	 */
+    tarch::la::Vector<Dimensions,double>  centre() const {
+        return _cellCentre;
+    }
+
+
+    /**
+     * @return The mesh size associated with this face.
+     */
+    tarch::la::Vector<Dimensions,double>  h() const {
+      return _h;
+    }
+
 };
 
 

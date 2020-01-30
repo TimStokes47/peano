@@ -18,7 +18,7 @@ import peano4.toolbox
 #
 # Lets first clean up all plot files, so we don't get a mismatch
 #
-output_files = [ f for f in os.listdir(".") if f.endswith(".peano-patch-file") ]
+output_files = [ f for f in os.listdir(".") if f.endswith(".peano-patch-file") or f.endswith(".vtu") ]
 for f in output_files:
   os.remove(f)
 
@@ -72,10 +72,12 @@ project.solversteps.add_step(setup_scenario)
 
 
 #
-# Finally, plot the grid.
+# Finally, plot the grid, and plot the solution, too.
 #
 plot_solution = peano4.solversteps.Step( "PlotSolution", False )
-plot_solution.add_mapping( peano4.toolbox.PlotGridInPeanoBlockFormat("solution",None) )
+plot_solution.use_vertex( dastgen_model )
+plot_solution.add_mapping( peano4.toolbox.PlotGridInPeanoBlockFormat("grid",None) )
+plot_solution.add_mapping( peano4.toolbox.PlotScalarNodalFieldInPeanoBlockFormat("solution",dastgen_model,"getU()") )
 project.solversteps.add_step(plot_solution)
 
 
