@@ -46,7 +46,7 @@ project.datamodel.add_vertex( dastgen_model )
 
 
 #
-# First, lets create the initial grid (which is regular)
+# First, lets create the initial grid (which is regular).
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
 #

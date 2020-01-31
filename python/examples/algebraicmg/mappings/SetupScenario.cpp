@@ -69,11 +69,41 @@ void examples::algebraicmg::mappings::SetupScenario::destroyHangingVertex(
 
 
 void examples::algebraicmg::mappings::SetupScenario::touchVertexFirstTime(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
+  const tarch::la::Vector<Dimensions,double>& center,
+  const tarch::la::Vector<Dimensions,double>& h,
+  examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
+  peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
+) {
+  const bool isBoundaryVertex =
+    tarch::la::oneEquals(center,0.0)
+    or
+    tarch::la::oneEquals(center,1.0);
+
+  if (isBoundaryVertex) {
+	// Setup from https://math.nist.gov/~WMitchell/papers/test_problems_paper.pdf Table 5
+    tarch::la::Vector<Dimensions,double> c(0.0);
+    const double alpha = 20.0;
+	c(0)               = -0.05;
+	c(1)               = -0.05;
+	const double r0    =  0.7;
+
+	double r = tarch::la::norm2(center-c);
+
+	double value = std::atan(alpha*(r-r0));
+
+    fineGridVertexMG.setVertexType( examples::algebraicmg::vertexdata::MG::VertexType::Boundary );
+    fineGridVertexMG.setU( value );
+    fineGridVertexMG.setRhs( 0.0 );
+  }
+  else {
+	const double Max =  tarch::la::PI/2.0;
+	const double Min = -tarch::la::PI/2.0;
+
+	const double scaledRandomValue = static_cast<double>( std::rand() ) /  static_cast<double>(RAND_MAX);
+    fineGridVertexMG.setVertexType( examples::algebraicmg::vertexdata::MG::VertexType::Inside );
+    fineGridVertexMG.setU( Min + scaledRandomValue*(Max-Min) );
+    fineGridVertexMG.setRhs( 0.0 );
+  }
 }
 
 
@@ -83,20 +113,6 @@ void examples::algebraicmg::mappings::SetupScenario::touchVertexLastTime(
   examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
   peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
 ) {
-  if (
-    tarch::la::oneEquals(center,0.0)
-    or
-    tarch::la::oneEquals(center,1.0)
-  ) {
-    fineGridVertexMG.setVertexType( examples::algebraicmg::vertexdata::MG::VertexType::Boundary );
-    fineGridVertexMG.setU( 4.0 );
-    fineGridVertexMG.setRhs( 0.0 );
-  }
-  else {
-    fineGridVertexMG.setVertexType( examples::algebraicmg::vertexdata::MG::VertexType::Inside );
-    fineGridVertexMG.setU( -1.0 );
-    fineGridVertexMG.setRhs( 0.0 );
-  }
 }
 
 
