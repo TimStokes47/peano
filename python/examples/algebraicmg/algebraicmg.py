@@ -57,7 +57,7 @@ create_grid = peano4.solversteps.Step( "CreateGrid", False )
 #       waere eine Assertion im C++ Code oder ein Check hier. Eher ersteres.
 #
 create_grid.use_vertex( dastgen_model )
-create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.01) )
+create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.1) )
 project.solversteps.add_step(create_grid)
 
 

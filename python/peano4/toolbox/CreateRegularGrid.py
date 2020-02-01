@@ -26,9 +26,9 @@ class CreateRegularGrid(Mapping):
 
   result.push_back(peano4::grid::GridControlEvent(
     peano4::grid::GridControlEvent::RefinementControl::Refine,
-    tarch::la::Vector<Dimensions,double>(0.0),
-    tarch::la::Vector<Dimensions,double>(1.0),
-    tarch::la::Vector<Dimensions,double>(0.1)
+    tarch::la::Vector<Dimensions,double>(-std::numeric_limits<double>::max()/2.0),
+    tarch::la::Vector<Dimensions,double>( std::numeric_limits<double>::max()),
+    tarch::la::Vector<Dimensions,double>({H_MAX})
   ));
 
   return result;
