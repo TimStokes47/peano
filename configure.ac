@@ -219,5 +219,5 @@ AC_SUBST([PEANO_LDFLAGS])
 # Kick out makefiles. I'm not sure but it seems that you have to add the directories to 
 # Makefile.am in the src subdirectories, too
 #
-AC_OUTPUT(Makefile src/Makefile src/examples/grid/Makefile src/examples/integerdiffusionthroughfaces/Makefile src/examples/delta/Makefile src/examples/regulargridupscaling/Makefile src/visualisation/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/examples/grid/Makefile src/examples/integerdiffusionthroughfaces/Makefile src/examples/delta/Makefile src/examples/regulargridupscaling/Makefile src/visualisation/Makefile src/toolbox/finiteelements/Makefile)
 
