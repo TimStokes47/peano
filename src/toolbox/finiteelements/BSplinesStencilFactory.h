@@ -6,7 +6,7 @@
 
 #include "tarch/la/Vector.h"
 #include "tarch/la/Matrix.h"
-#include "peano/utils/Globals.h"
+#include "peano4/utils/Globals.h"
 
 
 namespace toolbox {
@@ -26,7 +26,7 @@ namespace toolbox {
  *
  * @author Tobias Weinzierl
  */
-class matrixfree::stencil::BSplinesStencilFactory {
+class toolbox::finiteelements::BSplinesStencilFactory {
   public:
     /**
      * @return @f$ [\frac{1}{6}, \frac{2}{3}, \frac{1}{6}] @f$
@@ -80,15 +80,15 @@ class matrixfree::stencil::BSplinesStencilFactory {
     static tarch::la::Vector<7,double>  get1DLaplaceStencilP3(int elementOfSupport);
     static tarch::la::Vector<9,double>  get1DLaplaceStencilP4(int elementOfSupport);
 
-    static tarch::la::Vector<THREE_POWER_D,double>   getLaplacianStencilP1( const tarch::la::Vector<DIMENSIONS,double>& scaling = 1.0 );
-    static tarch::la::Vector<FIVE_POWER_D,double>    getLaplacianStencilP2( const tarch::la::Vector<DIMENSIONS,double>& scaling = 1.0 );
-    static tarch::la::Vector<SEVEN_POWER_D,double>   getLaplacianStencilP3( const tarch::la::Vector<DIMENSIONS,double>& scaling = 1.0 );
-    static tarch::la::Vector<NINE_POWER_D,double>    getLaplacianStencilP4( const tarch::la::Vector<DIMENSIONS,double>& scaling = 1.0 );
+    static tarch::la::Vector<ThreePowerD,double>   getLaplacianStencilP1( const tarch::la::Vector<Dimensions,double>& scaling = 1.0 );
+    static tarch::la::Vector<FivePowerD,double>    getLaplacianStencilP2( const tarch::la::Vector<Dimensions,double>& scaling = 1.0 );
+    static tarch::la::Vector<SevenPowerD,double>   getLaplacianStencilP3( const tarch::la::Vector<Dimensions,double>& scaling = 1.0 );
+    static tarch::la::Vector<NinePowerD,double>    getLaplacianStencilP4( const tarch::la::Vector<Dimensions,double>& scaling = 1.0 );
 
-    static tarch::la::Vector<THREE_POWER_D,double>   getMassStencilP1();
-    static tarch::la::Vector<FIVE_POWER_D,double>    getMassStencilP2();
-    static tarch::la::Vector<SEVEN_POWER_D,double>   getMassStencilP3();
-    static tarch::la::Vector<NINE_POWER_D,double>    getMassStencilP4();
+    static tarch::la::Vector<ThreePowerD,double>   getMassStencilP1();
+    static tarch::la::Vector<FivePowerD,double>    getMassStencilP2();
+    static tarch::la::Vector<SevenPowerD,double>   getMassStencilP3();
+    static tarch::la::Vector<NinePowerD,double>    getMassStencilP4();
 
     /**
      *   N means NumberOfInfluencingVerticesAroundCurrentElementAlongEachAxis
@@ -116,7 +116,7 @@ class matrixfree::stencil::BSplinesStencilFactory {
 };
 
 
-#include "matrixfree/stencil/BSplinesStencilFactory.cpph"
+#include "BSplinesStencilFactory.cpph"
 
 
 #endif

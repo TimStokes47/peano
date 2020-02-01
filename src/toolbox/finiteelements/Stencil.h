@@ -3,7 +3,7 @@
 #ifndef _TOOLBOX_FINITE_ELEMENTS_STENCIL_H_
 #define _TOOLBOX_FINITE_ELEMENTS_STENCIL_H_
 
-#include "peano/utils/Globals.h"
+#include "peano4/utils/Globals.h"
 
 #include "tarch/la/Vector.h"
 #include "tarch/la/Matrix.h"
@@ -16,32 +16,32 @@ namespace toolbox {
       /**
        * Element-wise Matrix
        */
-      typedef tarch::la::Matrix<NUMBER_OF_VERTICES_PER_ELEMENT,NUMBER_OF_VERTICES_PER_ELEMENT, double> ElementWiseAssemblyMatrix;
+      typedef tarch::la::Matrix<TwoPowerD,TwoPowerD, double> ElementWiseAssemblyMatrix;
 
-      typedef tarch::la::Matrix<NUMBER_OF_VERTICES_PER_ELEMENT,NUMBER_OF_VERTICES_PER_ELEMENT, std::complex<double> > ComplexElementWiseAssemblyMatrix;
+      typedef tarch::la::Matrix<TwoPowerD,TwoPowerD, std::complex<double> > ComplexElementWiseAssemblyMatrix;
 
-      typedef tarch::la::Matrix<TWO_POWER_D,TWO_POWER_D, double> InterGridTransferMatrix;
+      typedef tarch::la::Matrix<TwoPowerD,TwoPowerD, double> InterGridTransferMatrix;
 
-      typedef tarch::la::Matrix<NUMBER_OF_VERTICES_PER_ELEMENT/2,NUMBER_OF_VERTICES_PER_ELEMENT/2, double> ElementWiseAssemblyMatrixOnSpaceTimeGrid;
+      typedef tarch::la::Matrix<TwoPowerD/2,TwoPowerD/2, double> ElementWiseAssemblyMatrixOnSpaceTimeGrid;
 
       /**
        * Stencil
        */
-      typedef tarch::la::Vector<THREE_POWER_D,double>  Stencil;
-      typedef tarch::la::Vector<THREE_POWER_D,std::complex<double> >  ComplexStencil;
+      typedef tarch::la::Vector<ThreePowerD,double>  Stencil;
+      typedef tarch::la::Vector<ThreePowerD,std::complex<double> >  ComplexStencil;
 
       /**
        * Vectors.
        */
-      typedef tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,double>  VectorOfStencils;
-    typedef tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,std::complex<double> >  VectorOfComplexStencils;
+      typedef tarch::la::Vector<ThreePowerD * TwoPowerD,double>  VectorOfStencils;
+      typedef tarch::la::Vector<ThreePowerD * TwoPowerD,std::complex<double> >  VectorOfComplexStencils;
 
       /**
        * Vector of Element (Lexicographic Ordering of Unknowns)
        */
-      typedef tarch::la::Vector<NUMBER_OF_VERTICES_PER_ELEMENT,double> ElementWiseVector;
+      typedef tarch::la::Vector<TwoPowerD,double> ElementWiseVector;
 
-      int getStencilEntryLinearisedIndex( const tarch::la::Vector<DIMENSIONS,int>  stencilEntry);
+      int getStencilEntryLinearisedIndex( const tarch::la::Vector<Dimensions,int>  stencilEntry);
 
 
     }

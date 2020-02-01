@@ -1,7 +1,10 @@
 AUTOMAKE_OPTIONS = subdir-objects
 #
 # By default, automake does dfs. We need the libs to be built first however.
-# So we add the . explicitly.
+# So we add the . explicitly. Please note that it is not enough to add your
+# directory here. You also have to add any new directory to the root's 
+# configure.ac script and rerun the whole autotool pipeline (see comment 
+# within configure.ac as well as its very last line).
 #
 SUBDIRS = . \
           examples/grid examples/integerdiffusionthroughfaces examples/delta examples/regulargridupscaling \

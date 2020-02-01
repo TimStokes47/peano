@@ -4,8 +4,8 @@
 #define _TOOLBOX_FINITE_ELEMENTS_ELEMENT_MATRIX_H_
 
 
-#include "matrixfree/stencil/Stencil.h"
-#include "peano/grid/VertexEnumerator.h"
+#include "Stencil.h"
+#include <bitset>
 
 
 namespace toolbox {
@@ -130,7 +130,7 @@ namespace toolbox {
       * not make any assumptions about stencil homogeneity and thus is only
       * able to fill in some stencil entries partially.
       */
-     tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D, double> reconstructStencilFragments(const ElementWiseAssemblyMatrix& matrix );
+     tarch::la::Vector<TwoPowerD * ThreePowerD, double> reconstructStencilFragments(const ElementWiseAssemblyMatrix& matrix );
 
     /**
      * Derive element-wise matrix from @f$ 2^d @f$ stencils, i.e. this operation
@@ -215,12 +215,12 @@ namespace toolbox {
       * @param cellIsOutside Identifies which of the 3^d-1 surrounding cells
       *                      are inside.
       */
-     ElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfStencils& vectorOfStencils, const std::bitset<THREE_POWER_D>& cellIsInside );
+     ElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfStencils& vectorOfStencils, const std::bitset<ThreePowerD>& cellIsInside );
 
      /**
       * See non-complex variant.
       */
-     ComplexElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfComplexStencils& vectorOfStencils, const std::bitset<THREE_POWER_D>& cellIsInside );
+     ComplexElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfComplexStencils& vectorOfStencils, const std::bitset<ThreePowerD>& cellIsInside );
 
      /**
       * An element-wise assembly matrix is distilled from a sequence of
@@ -238,7 +238,7 @@ namespace toolbox {
       */
      int mapElementMatrixEntryOntoStencilEntry(int row, int col);
 
-     int mapElementMatrixEntryOntoStencilEntry(const tarch::la::Vector<DIMENSIONS,int>& row, const tarch::la::Vector<DIMENSIONS,int>&  col);
+     int mapElementMatrixEntryOntoStencilEntry(const tarch::la::Vector<Dimensions,int>& row, const tarch::la::Vector<Dimensions,int>&  col);
 
      double getDiagonalElement( const ElementWiseAssemblyMatrix& matrix );
      double getDiagonalElement( const Stencil& stencil );
@@ -258,6 +258,6 @@ namespace toolbox {
   }
 }
 
-#include "matrixfree/stencil/ElementMatrix.cpph"
+#include "ElementMatrix.cpph"
 
 #endif

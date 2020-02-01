@@ -1,14 +1,14 @@
-#include "matrixfree/stencil/StencilFactory.h"
+#include "StencilFactory.h"
 
-#include "peano/utils/Loop.h"
+#include "peano4/utils/Loop.h"
 
 
-void matrixfree::stencil::preprocessBoundaryStencil( Stencil& stencil, const std::bitset<DIMENSIONS*2>& boundaryFaceNormals ) {
+void toolbox::finiteelements::preprocessBoundaryStencil( Stencil& stencil, const std::bitset<Dimensions*2>& boundaryFaceNormals ) {
   assertion2( boundaryFaceNormals!=0, stencil, boundaryFaceNormals );
-  for (int d=0; d<DIMENSIONS; d++) {
-    if (boundaryFaceNormals[d] || boundaryFaceNormals[d+DIMENSIONS]) {
+  for (int d=0; d<Dimensions; d++) {
+    if (boundaryFaceNormals[d] || boundaryFaceNormals[d+Dimensions]) {
       dfore(k,3,d,1) {
-        int entry = peano::utils::dLinearised(k,3);
+        int entry = peano4::utils::dLinearised(k,3);
         stencil(entry) *= 2;
       }
     }
@@ -16,13 +16,13 @@ void matrixfree::stencil::preprocessBoundaryStencil( Stencil& stencil, const std
 }
 
 
-matrixfree::stencil::Stencil
-matrixfree::stencil::exchangeCoordinates( const Stencil& stencil, int coord0, int coord1 ) {
+toolbox::finiteelements::Stencil
+toolbox::finiteelements::exchangeCoordinates( const Stencil& stencil, int coord0, int coord1 ) {
     Stencil result;
 
 #ifdef Dim3
     d3for3(destination)
-            tarch::la::Vector<DIMENSIONS,int> source;
+            tarch::la::Vector<Dimensions,int> source;
     source = destination;
     source(coord0) = destination(coord1);
     source(coord1) = destination(coord0);
@@ -36,7 +36,7 @@ matrixfree::stencil::exchangeCoordinates( const Stencil& stencil, int coord0, in
 }
 
 
-tarch::la::Vector<5,double> matrixfree::stencil::get1DLinearInterpolationStencil() {
+tarch::la::Vector<5,double> toolbox::finiteelements::get1DLinearInterpolationStencil() {
     tarch::la::Vector<5,double> result;
     result(0) =  1.0 / 3.0;
     result(1) =  2.0 / 3.0;
@@ -47,7 +47,7 @@ tarch::la::Vector<5,double> matrixfree::stencil::get1DLinearInterpolationStencil
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::get1DMassStencil() {
+tarch::la::Vector<3,double> toolbox::finiteelements::get1DMassStencil() {
     tarch::la::Vector<3,double> result;
     result(0) =  1.0 / 6.0;
     result(1) =  4.0 / 6.0;
@@ -56,7 +56,7 @@ tarch::la::Vector<3,double> matrixfree::stencil::get1DMassStencil() {
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::get1DIdentity() {
+tarch::la::Vector<3,double> toolbox::finiteelements::get1DIdentity() {
     tarch::la::Vector<3,double> result;
     result(0) =  0.0;
     result(1) =  1.0;
@@ -65,7 +65,7 @@ tarch::la::Vector<3,double> matrixfree::stencil::get1DIdentity() {
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::get1DLeftIdentity() {
+tarch::la::Vector<3,double> toolbox::finiteelements::get1DLeftIdentity() {
     tarch::la::Vector<3,double> result;
     result(0) =  1.0;
     result(1) =  0.0;
@@ -74,7 +74,7 @@ tarch::la::Vector<3,double> matrixfree::stencil::get1DLeftIdentity() {
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::get1DRightIdentity() {
+tarch::la::Vector<3,double> toolbox::finiteelements::get1DRightIdentity() {
     tarch::la::Vector<3,double> result;
     result(0) =  0.0;
     result(1) =  0.0;
@@ -83,7 +83,7 @@ tarch::la::Vector<3,double> matrixfree::stencil::get1DRightIdentity() {
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::get1DDownwindStencil() {
+tarch::la::Vector<3,double> toolbox::finiteelements::get1DDownwindStencil() {
   tarch::la::Vector<3,double> result;
   result(0) =  -1.0;
   result(1) =  1.0;
@@ -92,7 +92,7 @@ tarch::la::Vector<3,double> matrixfree::stencil::get1DDownwindStencil() {
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::get1DUpwindStencil() {
+tarch::la::Vector<3,double> toolbox::finiteelements::get1DUpwindStencil() {
   tarch::la::Vector<3,double> result;
   result(0) =  0.0;
   result(1) = -1.0;
@@ -101,7 +101,7 @@ tarch::la::Vector<3,double> matrixfree::stencil::get1DUpwindStencil() {
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::get1DCentralDifferencesStencil() {
+tarch::la::Vector<3,double> toolbox::finiteelements::get1DCentralDifferencesStencil() {
   tarch::la::Vector<3,double> result;
   result(0) = -1.0;
   result(1) =  0.0;
@@ -110,7 +110,7 @@ tarch::la::Vector<3,double> matrixfree::stencil::get1DCentralDifferencesStencil(
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::get1DMeanValueStencil() {
+tarch::la::Vector<3,double> toolbox::finiteelements::get1DMeanValueStencil() {
     tarch::la::Vector<3,double> result;
     result(0) =  1.0 / 2.0;
     result(1) =  0.0;
@@ -119,7 +119,7 @@ tarch::la::Vector<3,double> matrixfree::stencil::get1DMeanValueStencil() {
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::get1DLaplaceStencil() {
+tarch::la::Vector<3,double> toolbox::finiteelements::get1DLaplaceStencil() {
     tarch::la::Vector<3,double> result;
     result(0) = -1.0;
     result(1) =  2.0;
@@ -128,7 +128,7 @@ tarch::la::Vector<3,double> matrixfree::stencil::get1DLaplaceStencil() {
 }
 
 
-tarch::la::Vector<3*3,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<3*3,double> toolbox::finiteelements::stencilProduct(
         const tarch::la::Vector<3,double>& a,
         const tarch::la::Vector<3,double>& b
         ) {
@@ -144,7 +144,7 @@ tarch::la::Vector<3*3,double> matrixfree::stencil::stencilProduct(
 }
 
 
-tarch::la::Vector<5*5,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<5*5,double> toolbox::finiteelements::stencilProduct(
         const tarch::la::Vector<5,double>& a,
         const tarch::la::Vector<5,double>& b
         ) {
@@ -160,7 +160,7 @@ tarch::la::Vector<5*5,double> matrixfree::stencil::stencilProduct(
 }
 
 
-tarch::la::Vector<3*3*3,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<3*3*3,double> toolbox::finiteelements::stencilProduct(
         const tarch::la::Vector<3,double>& a,
         const tarch::la::Vector<3,double>& b,
         const tarch::la::Vector<3,double>& c
@@ -179,7 +179,7 @@ tarch::la::Vector<3*3*3,double> matrixfree::stencil::stencilProduct(
 }
 
 
-tarch::la::Vector<5*5*5,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<5*5*5,double> toolbox::finiteelements::stencilProduct(
         const tarch::la::Vector<5,double>& a,
         const tarch::la::Vector<5,double>& b,
         const tarch::la::Vector<5,double>& c
@@ -198,7 +198,7 @@ tarch::la::Vector<5*5*5,double> matrixfree::stencil::stencilProduct(
 }
 
 
-tarch::la::Vector<3*3*3*3,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<3*3*3*3,double> toolbox::finiteelements::stencilProduct(
   const tarch::la::Vector<3,double>& a,
   const tarch::la::Vector<3,double>& b,
   const tarch::la::Vector<3,double>& c,
@@ -220,7 +220,7 @@ tarch::la::Vector<3*3*3*3,double> matrixfree::stencil::stencilProduct(
 }
 
 
-tarch::la::Vector<5*5*5*5,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<5*5*5*5,double> toolbox::finiteelements::stencilProduct(
   const tarch::la::Vector<5,double>& a,
   const tarch::la::Vector<5,double>& b,
   const tarch::la::Vector<5,double>& c,
@@ -242,7 +242,7 @@ tarch::la::Vector<5*5*5*5,double> matrixfree::stencil::stencilProduct(
 }
 
 
-tarch::la::Vector<3*3*3*3*3,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<3*3*3*3*3,double> toolbox::finiteelements::stencilProduct(
   const tarch::la::Vector<3,double>& a,
   const tarch::la::Vector<3,double>& b,
   const tarch::la::Vector<3,double>& c,
@@ -267,7 +267,7 @@ tarch::la::Vector<3*3*3*3*3,double> matrixfree::stencil::stencilProduct(
 }
 
 
-tarch::la::Vector<5*5*5*5*5,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<5*5*5*5*5,double> toolbox::finiteelements::stencilProduct(
   const tarch::la::Vector<5,double>& a,
   const tarch::la::Vector<5,double>& b,
   const tarch::la::Vector<5,double>& c,
@@ -292,41 +292,41 @@ tarch::la::Vector<5*5*5*5*5,double> matrixfree::stencil::stencilProduct(
 }
 
 
-tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::getLaplacian(
-  const tarch::la::Vector<DIMENSIONS,double>& h,
-  const tarch::la::Vector<DIMENSIONS,double>& scaling
+tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getLaplacian(
+  const tarch::la::Vector<Dimensions,double>& h,
+  const tarch::la::Vector<Dimensions,double>& scaling
 ) {
-  tarch::la::Vector<THREE_POWER_D,double> result;
+  tarch::la::Vector<ThreePowerD,double> result;
 
   #if defined(Dim2)
   result =  scaling(0) * h(1)/h(0) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             )
             + scaling(1) * h(0)/h(1) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil()
             );
   #elif defined(Dim3)
   result =  scaling(0) * h(1)*h(2)/h(0) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             )
             + scaling(1) * h(0)*h(2)/h(1) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             )
             + scaling(2) * h(0)*h(1)/h(2) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil()
             );
   #else
   assertionMsg( false, "dimension not supported" );
@@ -336,111 +336,111 @@ tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::getLaplacian(
 }
 
 
-tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getLaplacian(
-  const tarch::la::Vector<DIMENSIONS,std::complex<double> >& h,
-  const tarch::la::Vector<DIMENSIONS,std::complex<double> >& scaling
+tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::getLaplacian(
+  const tarch::la::Vector<Dimensions,std::complex<double> >& h,
+  const tarch::la::Vector<Dimensions,std::complex<double> >& scaling
 ) {
-  tarch::la::Vector<THREE_POWER_D,std::complex<double> > result;
+  tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
   #if defined(Dim2)
   result =  scaling(0) * h(1)/h(0) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             + scaling(1) * h(0)/h(1) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil()
             ).convertScalar< std::complex<double> >();
   #elif defined(Dim3)
   result =  scaling(0) * h(1)*h(2)/h(0) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             + scaling(1) * h(0)*h(2)/h(1) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             + scaling(2) * h(0)*h(1)/h(2) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil()
             ).convertScalar< std::complex<double> >();
   #elif defined(Dim4)
   result =  scaling(0) * h(1)*h(2)*h(3)/h(0) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             + scaling(1) * h(0)*h(2)*h(3)/h(1) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             + scaling(2) * h(0)*h(1)*h(3)/h(2) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             + scaling(2) * h(0)*h(1)*h(2)/h(3) *
-              matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil()
+              toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil()
             ).convertScalar< std::complex<double> >();
   #elif defined(Dim5)
   result =  scaling(0) * h(1)*h(2)*h(3)*h(4)/h(0) *
-          matrixfree::stencil::stencilProduct(
-            matrixfree::stencil::get1DLaplaceStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil()
+          toolbox::finiteelements::stencilProduct(
+            toolbox::finiteelements::get1DLaplaceStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil()
           ).convertScalar< std::complex<double> >()
           + scaling(1) * h(0)*h(2)*h(3)*h(4)/h(1) *
-          matrixfree::stencil::stencilProduct(
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DLaplaceStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil()
+          toolbox::finiteelements::stencilProduct(
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DLaplaceStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil()
           ).convertScalar< std::complex<double> >()
           + scaling(2) * h(0)*h(1)*h(3)*h(4)/h(2) *
-          matrixfree::stencil::stencilProduct(
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DLaplaceStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil()
+          toolbox::finiteelements::stencilProduct(
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DLaplaceStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil()
           ).convertScalar< std::complex<double> >()
           + scaling(2) * h(0)*h(1)*h(2)*h(4)/h(3) *
-            matrixfree::stencil::stencilProduct(
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DLaplaceStencil(),
-            matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DLaplaceStencil(),
+            toolbox::finiteelements::get1DMassStencil()
           ).convertScalar< std::complex<double> >();
           + scaling(2) * h(0)*h(1)*h(2)*h(3)/h(4) *
-            matrixfree::stencil::stencilProduct(
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DLaplaceStencil()
+            toolbox::finiteelements::stencilProduct(
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DLaplaceStencil()
           ).convertScalar< std::complex<double> >();
   #else
   assertionMsg( false, "dimension not supported" );
@@ -449,41 +449,41 @@ tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getL
   return result;
 }
 
-tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getLaplacian(
-  const tarch::la::Vector<DIMENSIONS,double >& h,
-  const tarch::la::Vector<DIMENSIONS,std::complex<double> >& scaling
+tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::getLaplacian(
+  const tarch::la::Vector<Dimensions,double >& h,
+  const tarch::la::Vector<Dimensions,std::complex<double> >& scaling
 ) {
-  tarch::la::Vector<THREE_POWER_D,std::complex<double> > result;
+  tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
   #if defined(Dim2)
   result =  scaling(0) * h(1)/h(0) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             + scaling(1) * h(0)/h(1) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil()
             ).convertScalar< std::complex<double> >();
   #elif defined(Dim3)
   result =  scaling(0) * h(1)*h(2)/h(0) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             + scaling(1) * h(0)*h(2)/h(1) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil(),
-              matrixfree::stencil::get1DMassStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             + scaling(2) * h(0)*h(1)/h(2) *
-            matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DLaplaceStencil()
+            toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DLaplaceStencil()
             ).convertScalar< std::complex<double> >();
   #else
   assertionMsg( false, "dimension not supported" );
@@ -493,11 +493,11 @@ tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getL
 }
 
 
-tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::getUpwindDiscretisedConvection(
-  const tarch::la::Vector<DIMENSIONS,double >& h,
-  const tarch::la::Vector<DIMENSIONS,double>& convCoeff
+tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getUpwindDiscretisedConvection(
+  const tarch::la::Vector<Dimensions,double >& h,
+  const tarch::la::Vector<Dimensions,double>& convCoeff
 ) {
-  tarch::la::Vector<THREE_POWER_D,double> result;
+  tarch::la::Vector<ThreePowerD,double> result;
 
   #if defined(Dim2)
   result(0) = 0.0;
@@ -553,11 +553,11 @@ tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::getUpwindDiscretise
 }
 
 
-void matrixfree::stencil::applyNeumannBC(
-  tarch::la::Vector<THREE_POWER_D,double>&     stencil,
+void toolbox::finiteelements::applyNeumannBC(
+  tarch::la::Vector<ThreePowerD,double>&     stencil,
   double&                                      rhs,
-  const std::bitset<DIMENSIONS*2>&             boundaryFaceNormals,
-  const tarch::la::Vector<DIMENSIONS,double>&  h,
+  const std::bitset<Dimensions*2>&             boundaryFaceNormals,
+  const tarch::la::Vector<Dimensions,double>&  h,
   double                                       derivative
 ) {
 
@@ -613,19 +613,19 @@ void matrixfree::stencil::applyNeumannBC(
 }
 
 
-tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::getMassMatrix(const tarch::la::Vector<DIMENSIONS,double>& h) {
-  tarch::la::Vector<THREE_POWER_D,double> result;
+tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getMassMatrix(const tarch::la::Vector<Dimensions,double>& h) {
+  tarch::la::Vector<ThreePowerD,double> result;
 
   #if defined(Dim2)
-  result =  matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil()
+  result =  toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ) * h(0) * h(1);
   #elif defined(Dim3)
-  result =  matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil()
+  result =  toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ) * h(0) * h(1) * h(2);
   #else
     assertionMsg( false, "dimension not supported" );
@@ -635,20 +635,20 @@ tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::getMassMatrix(const
 }
 
 
-tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getMassMatrix(const tarch::la::Vector<DIMENSIONS,std::complex<double> >& h) {
-  tarch::la::Vector<THREE_POWER_D,std::complex<double> > result;
+tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::getMassMatrix(const tarch::la::Vector<Dimensions,std::complex<double> >& h) {
+  tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
   #if defined(Dim2)
-  result =  matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil()
+  result =  toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             * h(0) * h(1);
   #elif defined(Dim3)
-  result =  matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil()
+  result =  toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >() * h(0) * h(1) * h(2);
   #else
     assertionMsg( false, "dimension not supported" );
@@ -658,21 +658,21 @@ tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getM
 }
 
 
-tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getHelmholtzShiftMatrix(
-        const tarch::la::Vector<DIMENSIONS,double>& h,
+tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::getHelmholtzShiftMatrix(
+        const tarch::la::Vector<Dimensions,double>& h,
         const std::complex<double>& phi ) {
-  tarch::la::Vector<THREE_POWER_D,std::complex<double> > result;
+  tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
   #if defined(Dim2)
-  result =  ( h(0) * h(1)* matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil() )
+  result =  ( h(0) * h(1)* toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil() )
              ).convertScalar< std::complex<double> >();
   #elif defined(Dim3)
-  result =  ( h(0) * h(1) * h(2) * matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil() )
+  result =  ( h(0) * h(1) * h(2) * toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil() )
               ).convertScalar< std::complex<double> >();
   #else
     assertionMsg( false, "dimension not supported" );
@@ -681,37 +681,37 @@ tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getH
   return phi * result;
 }
 
-tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getHelmholtzShiftMatrix(
-  const tarch::la::Vector<DIMENSIONS,std::complex<double> >& h,
+tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::getHelmholtzShiftMatrix(
+  const tarch::la::Vector<Dimensions,std::complex<double> >& h,
   const std::complex<double>& phi
 ) {
-  tarch::la::Vector<THREE_POWER_D,std::complex<double> > result;
+  tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
   #if defined(Dim2)
-  result =  h(0) * h(1)* (  matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil() )
+  result =  h(0) * h(1)* (  toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil() )
              ).convertScalar< std::complex<double> >();
   #elif defined(Dim3)
-  result =  h(0) * h(1) * h(2) * ( matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil(),
-              matrixfree::stencil::get1DMassStencil() )
+  result =  h(0) * h(1) * h(2) * ( toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil(),
+              toolbox::finiteelements::get1DMassStencil() )
               ).convertScalar< std::complex<double> >();
   #elif defined(Dim4)
-  result =  h(0) * h(1) * h(2) * h(3) * ( matrixfree::stencil::stencilProduct(
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil() )
+  result =  h(0) * h(1) * h(2) * h(3) * ( toolbox::finiteelements::stencilProduct(
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil() )
             ).convertScalar< std::complex<double> >();
   #elif defined(Dim5)
-  result =  h(0) * h(1) * h(2) * h(3) * h(4) * ( matrixfree::stencil::stencilProduct(
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil(),
-            matrixfree::stencil::get1DMassStencil() )
+  result =  h(0) * h(1) * h(2) * h(3) * h(4) * ( toolbox::finiteelements::stencilProduct(
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil(),
+            toolbox::finiteelements::get1DMassStencil() )
             ).convertScalar< std::complex<double> >();
   #else
     assertionMsg( false, "dimension not supported" );
@@ -721,20 +721,20 @@ tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getH
 }
 
 
-tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::getIdentity(const tarch::la::Vector<DIMENSIONS,double>& h) {
-  tarch::la::Vector<THREE_POWER_D,double> result;
+tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getIdentity(const tarch::la::Vector<Dimensions,double>& h) {
+  tarch::la::Vector<ThreePowerD,double> result;
 
   #if defined(Dim2)
-  result = matrixfree::stencil::stencilProduct(
-             matrixfree::stencil::get1DIdentity(),
-             matrixfree::stencil::get1DIdentity()
+  result = toolbox::finiteelements::stencilProduct(
+             toolbox::finiteelements::get1DIdentity(),
+             toolbox::finiteelements::get1DIdentity()
            )
            * h(0) * h(1);
   #elif defined(Dim3)
-  result = matrixfree::stencil::stencilProduct(
-             matrixfree::stencil::get1DIdentity(),
-             matrixfree::stencil::get1DIdentity(),
-             matrixfree::stencil::get1DIdentity()
+  result = toolbox::finiteelements::stencilProduct(
+             toolbox::finiteelements::get1DIdentity(),
+             toolbox::finiteelements::get1DIdentity(),
+             toolbox::finiteelements::get1DIdentity()
            )
            * h(0) * h(1) * h(2);
   #else
@@ -745,37 +745,37 @@ tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::getIdentity(const t
 }
 
 
-tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getIdentity(const tarch::la::Vector<DIMENSIONS,std::complex<double> >& h) {
-  tarch::la::Vector<THREE_POWER_D,std::complex<double> > result;
+tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::getIdentity(const tarch::la::Vector<Dimensions,std::complex<double> >& h) {
+  tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
   #if defined(Dim2)
-  result =  matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DIdentity(),
-              matrixfree::stencil::get1DIdentity()
+  result =  toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DIdentity(),
+              toolbox::finiteelements::get1DIdentity()
             ).convertScalar< std::complex<double> >()
             * h(0) * h(1);
   #elif defined(Dim3)
-  result =  matrixfree::stencil::stencilProduct(
-              matrixfree::stencil::get1DIdentity(),
-              matrixfree::stencil::get1DIdentity(),
-              matrixfree::stencil::get1DIdentity()
+  result =  toolbox::finiteelements::stencilProduct(
+              toolbox::finiteelements::get1DIdentity(),
+              toolbox::finiteelements::get1DIdentity(),
+              toolbox::finiteelements::get1DIdentity()
               ).convertScalar< std::complex<double> >()
             * h(0) * h(1) * h(2);
   #elif defined(Dim4)
-  result =  matrixfree::stencil::stencilProduct(
-            matrixfree::stencil::get1DIdentity(),
-            matrixfree::stencil::get1DIdentity(),
-            matrixfree::stencil::get1DIdentity(),
-            matrixfree::stencil::get1DIdentity()
+  result =  toolbox::finiteelements::stencilProduct(
+            toolbox::finiteelements::get1DIdentity(),
+            toolbox::finiteelements::get1DIdentity(),
+            toolbox::finiteelements::get1DIdentity(),
+            toolbox::finiteelements::get1DIdentity()
             ).convertScalar< std::complex<double> >()
           * h(0) * h(1) * h(2) * h(3);
   #elif defined(Dim4)
-  result =  matrixfree::stencil::stencilProduct(
-            matrixfree::stencil::get1DIdentity(),
-            matrixfree::stencil::get1DIdentity(),
-            matrixfree::stencil::get1DIdentity(),
-            matrixfree::stencil::get1DIdentity(),
-            matrixfree::stencil::get1DIdentity()
+  result =  toolbox::finiteelements::stencilProduct(
+            toolbox::finiteelements::get1DIdentity(),
+            toolbox::finiteelements::get1DIdentity(),
+            toolbox::finiteelements::get1DIdentity(),
+            toolbox::finiteelements::get1DIdentity(),
+            toolbox::finiteelements::get1DIdentity()
             ).convertScalar< std::complex<double> >()
           * h(0) * h(1) * h(2) * h(3) * h(4);
   #else
@@ -786,37 +786,37 @@ tarch::la::Vector<THREE_POWER_D,std::complex<double> > matrixfree::stencil::getI
 }
 
 
-tarch::la::Vector<FIVE_POWER_D,double> matrixfree::stencil::getDLinearInterpolation() {
-    tarch::la::Vector<FIVE_POWER_D,double> result;
+tarch::la::Vector<FivePowerD,double> toolbox::finiteelements::getDLinearInterpolation() {
+    tarch::la::Vector<FivePowerD,double> result;
 #ifdef Dim2
     result =
-            matrixfree::stencil::stencilProduct(
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil()
+            toolbox::finiteelements::stencilProduct(
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil()
                 );
 #elif Dim3
     result =
-            matrixfree::stencil::stencilProduct(
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil()
+            toolbox::finiteelements::stencilProduct(
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil()
                 );
 #elif Dim4
     result =
-            matrixfree::stencil::stencilProduct(
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil()
+            toolbox::finiteelements::stencilProduct(
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil()
                 );
 #elif Dim5
     result =
-            matrixfree::stencil::stencilProduct(
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil(),
-                matrixfree::stencil::get1DLinearInterpolationStencil()
+            toolbox::finiteelements::stencilProduct(
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil(),
+                toolbox::finiteelements::get1DLinearInterpolationStencil()
                 );
 #else
     assertionMsg( false, "dimension not supported" );
@@ -826,17 +826,17 @@ tarch::la::Vector<FIVE_POWER_D,double> matrixfree::stencil::getDLinearInterpolat
 }
 
 
-matrixfree::stencil::Stencil matrixfree::stencil::extractElementStencil( const Stencil& stencil, const tarch::la::Vector<DIMENSIONS,int>&   adjacentCell ) {
-  matrixfree::stencil::Stencil result(0.0);
+toolbox::finiteelements::Stencil toolbox::finiteelements::extractElementStencil( const Stencil& stencil, const tarch::la::Vector<Dimensions,int>&   adjacentCell ) {
+  toolbox::finiteelements::Stencil result(0.0);
 
   dfor2(i)
-    tarch::la::Vector<DIMENSIONS,int> stencilEntry;
+    tarch::la::Vector<Dimensions,int> stencilEntry;
     double    commonFacesPowerTwo = 1.0;
-    for (int d=0; d<DIMENSIONS; d++) {
+    for (int d=0; d<Dimensions; d++) {
       stencilEntry(d) = i(d)+adjacentCell(d);
       if (stencilEntry(d)==1) commonFacesPowerTwo *= 2.0;
     }
-    result(peano::utils::dLinearised(stencilEntry,3)) = stencil(peano::utils::dLinearised(stencilEntry,3)) / commonFacesPowerTwo;
+    result(peano4::utils::dLinearised(stencilEntry,3)) = stencil(peano4::utils::dLinearised(stencilEntry,3)) / commonFacesPowerTwo;
   enddforx
 
   return result;

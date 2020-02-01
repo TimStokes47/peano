@@ -1,9 +1,9 @@
-#include "peano/utils/Loop.h"
-#include "matrixfree/stencil/ElementMatrix.h"
+#include "peano4/utils/Loop.h"
+#include "ElementMatrix.h"
 
 
 template <int p, int N>
-tarch::la::Matrix<N*N,N*N,double>  matrixfree::stencil::BSplinesStencilFactory::getElementWiseAssemblyMatrix(
+tarch::la::Matrix<N*N,N*N,double>  toolbox::finiteelements::BSplinesStencilFactory::getElementWiseAssemblyMatrix(
   tarch::la::Vector<2*p+1,double> stencilX[N],
   tarch::la::Vector<2*p+1,double> stencilY[N]
 ) {
@@ -18,7 +18,7 @@ tarch::la::Matrix<N*N,N*N,double>  matrixfree::stencil::BSplinesStencilFactory::
     d2for(col,N)
       tarch::la::Vector<2,int> stencilEntry = tarch::la::Vector<2,int>((2*p+1)/2) + col - row;
       if ( tarch::la::allGreaterEquals(stencilEntry,0) && tarch::la::allSmaller(stencilEntry,2*p+1) ) {
-        int linearisedStencilEntry = peano::utils::d2Linearised(stencilEntry,2*p+1);
+        int linearisedStencilEntry = peano4::utils::d2Linearised(stencilEntry,2*p+1);
         result(rowScalar,colScalar) = rowStencil(linearisedStencilEntry);
       }
     enddforx
@@ -28,7 +28,7 @@ tarch::la::Matrix<N*N,N*N,double>  matrixfree::stencil::BSplinesStencilFactory::
 
 
 template <int p, int N>
-tarch::la::Matrix<N*N*N,N*N*N,double>  matrixfree::stencil::BSplinesStencilFactory::getElementWiseAssemblyMatrix(
+tarch::la::Matrix<N*N*N,N*N*N,double>  toolbox::finiteelements::BSplinesStencilFactory::getElementWiseAssemblyMatrix(
   tarch::la::Vector<2*p+1,double> stencilX[N],
   tarch::la::Vector<2*p+1,double> stencilY[N],
   tarch::la::Vector<2*p+1,double> stencilZ[N]
@@ -45,7 +45,7 @@ tarch::la::Matrix<N*N*N,N*N*N,double>  matrixfree::stencil::BSplinesStencilFacto
     d3for(col,N)
       tarch::la::Vector<3,int> stencilEntry = tarch::la::Vector<3,int>((2*p+1)/2) + col - row;
       if ( tarch::la::allGreaterEquals(stencilEntry,0) && tarch::la::allSmaller(stencilEntry,2*p+1) ) {
-        int linearisedStencilEntry = peano::utils::d3Linearised(stencilEntry,2*p+1);
+        int linearisedStencilEntry = peano4::utils::d3Linearised(stencilEntry,2*p+1);
         result(rowScalar,colScalar) = rowStencil(linearisedStencilEntry);
       }
     enddforx

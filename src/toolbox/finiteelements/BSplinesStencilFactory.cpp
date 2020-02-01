@@ -1,21 +1,21 @@
-#include "matrixfree/stencil/BSplinesStencilFactory.h"
+#include "BSplinesStencilFactory.h"
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP1() {
+tarch::la::Vector<3,double> toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP1() {
   tarch::la::Vector<3,double> result;
   result = 0.16666666666666669, 0.6666666666666666, 0.16666666666666666;
   return result;
 }
 
 
-tarch::la::Vector<5,double> matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP2() {
+tarch::la::Vector<5,double> toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP2() {
   tarch::la::Vector<5,double> result;
   result = 0.008333333316235017, 0.21666666666200657, 0.5499999997948198, 0.21666666666200657, 0.00833333331623502;
   return result;
 }
 
 
-tarch::la::Vector<7,double> matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP3() {
+tarch::la::Vector<7,double> toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP3() {
   tarch::la::Vector<7,double> result;
   result = 0.00019841269841269839, 0.023809523809523808, 0.2363095238095238, 0.4793650793650793, 0.2363095238095238, 0.023809523809523808, 0.00019841269841269836;
   return result;
@@ -23,98 +23,98 @@ tarch::la::Vector<7,double> matrixfree::stencil::BSplinesStencilFactory::get1DMa
 
 
 
-tarch::la::Vector<9,double> matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP4() {
+tarch::la::Vector<9,double> toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP4() {
   tarch::la::Vector<9,double> result;
   result = 2.7557332248134565e-06, 0.0013833774195073723, 0.04025573206367054, 0.24314925047638827, 0.43041776925721903, 0.24314925047638827, 0.04025573206367054, 0.0013833774195073723, 2.7557332248134565e-06;
   return result;
 }
 
 
-tarch::la::Vector<11,double> matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP5() {
+tarch::la::Vector<11,double> toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP5() {
   tarch::la::Vector<11,double> result;
   result = 2.5052304450569587e-08, 5.1006092636848604e-05, 0.0038238786674069103, 0.05520202019999654, 0.243960287398345, 0.3939255651717376, 0.243960287398345, 0.05520202019999654, 0.0038238786674069107, 5.100609263684861e-05, 2.505230445056959e-08;
   return result;
 }
 
 
-tarch::la::Vector<13,double> matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP6() {
+tarch::la::Vector<13,double> toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP6() {
   tarch::la::Vector<13,double> result;
   result = 2.4094144075879413e-10, 1.3133086711151696e-06, 0.00023762984838819455, 0.007312236697946331, 0.06797496727064363, 0.24178841798351722, 0.3653708695288048, 0.24178841798351722, 0.06797496727064362, 0.00731223669794633, 0.00023762984838819455, 1.3133086711151694e-06, 2.409414407587941e-10;
   return result;
 }
 
 
-tarch::la::Vector<15,double> matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP7() {
+tarch::la::Vector<15,double> toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP7() {
   tarch::la::Vector<15,double> result;
   result = 1.0947193580436178e-12, 2.504599051941938e-08, 1.0571999465794245e-05, 0.0006485490055258489, 0.011502274482876591, 0.07859525386013605, 0.2381231949093699, 0.3422402613437703, 0.23812319490936987, 0.07859525386013605, 0.01150227448287659, 0.0006485490055258489, 1.0571999465794241e-05, 2.5045990519419365e-08, 1.0947193580436178e-12;
   return result;
 }
 
 
-tarch::la::Vector<17,double> matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP8() {
+tarch::la::Vector<17,double> toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP8() {
   tarch::la::Vector<17,double> result;
   result = 2.3373653415865523e-15, 3.24501468745525e-10, 3.5643941825441703e-07, 4.182154971459e-05, 0.0013308125720157594, 0.01607392199095226, 0.08731164076995032, 0.23373674923044221, 0.32300939415726554, 0.2337367492304422, 0.08731164076995032, 0.016073921990952256, 0.0013308125720157599, 4.182154971459001e-05, 3.5643941825441703e-07, 3.2450146874552373e-10, 2.3373653415865784e-15;
   return result;
 }
 
 
-tarch::la::Vector<3,double> matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP1() {
+tarch::la::Vector<3,double> toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP1() {
   tarch::la::Vector<3,double> result;
   result = -1.0, 2.0, -1.0;
   return result;
 }
 
 
-tarch::la::Vector<5,double> matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP2() {
+tarch::la::Vector<5,double> toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP2() {
   tarch::la::Vector<5,double> result;
   result = -0.16666666666666669, -0.3333333333333332, 1.0000000000000004, -0.3333333333333334, -0.16666666666666669;
   return result;
 }
 
 
-tarch::la::Vector<7,double> matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP3() {
+tarch::la::Vector<7,double> toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP3() {
   tarch::la::Vector<7,double> result;
   result = -0.033333333333333326, -0.7999999999999999, -0.4999999999999998, 2.6666666666666665, -0.4999999999999999, -0.7999999999999999, -0.033333333333333326;
   return result;
 }
 
 
-tarch::la::Vector<9,double> matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP4() {
+tarch::la::Vector<9,double> toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP4() {
   tarch::la::Vector<9,double> result;
   result = -0.00178571426809686, -0.2107142857070971, -1.7000000003129403, -0.2749999998371173, 4.374999999986392, -0.27499999983711726, -1.7000000003129403, -0.2107142857070971, -0.0017857142680968597;
   return result;
 }
 
 
-tarch::la::Vector<11,double> matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP5() {
+tarch::la::Vector<11,double> toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP5() {
   tarch::la::Vector<11,double> result;
   result = -4.40917125194486e-05, -0.022045855361508403, -0.5998677251325906, -2.624338625437523, 0.24999999970240092, 5.992592592315672, 0.24999999970240078, -2.6243386254375225, -0.5998677251325906, -0.02204585536150841, -4.409171251944858e-05;
   return result;
 }
 
 
-tarch::la::Vector<13,double> matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP6() {
+tarch::la::Vector<13,double> toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP6() {
   tarch::la::Vector<13,double> result;
   result = -6.263026951071867e-07, -0.0012738997050349508, -0.09304728786496695, -1.1901317241411467, -3.434503141404895, 0.9698247354247478, 7.498263889271339, 0.9698247354247472, -3.434503141404895, -1.1901317241411464, -0.09304728786496695, -0.0012738997050349506, -6.263026951071873e-07;
   return result;
 }
 
 
-tarch::la::Vector<15,double> matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP7() {
+tarch::la::Vector<15,double> toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP7() {
   tarch::la::Vector<15,double> result;
   result = -8.0167838891586e-09, -4.726755365152731e-05, -0.008460122053872053, -0.24617845117845116, -1.9291724536961081, -4.073425926009033, 1.8083159721446325, 8.897936507923742, 1.808315972144633, -4.073425926009033, -1.9291724536961086, -0.2461784511784512, -0.008460122053872053, -4.7267553651527287e-05, -8.0167838891586e-09;
   return result;
 }
 
 
-tarch::la::Vector<17,double> matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP8() {
+tarch::la::Vector<17,double> toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP8() {
   tarch::la::Vector<17,double> result;
   result = -3.3148981962750917e-11, -1.2271786081213804e-06, -0.0005155737360477914, -0.030744072146573372, -0.5005716754996019, -2.7557234410238713, -4.529313121562418, 2.715132855368815, 10.203472511572237, 2.715132855368814, -4.529313121562417, -2.7557234410238713, -0.5005716754996019, -0.030744072146573376, -0.0005155737360477913, -1.2271786081213804e-06, -3.3148981962751246e-11;
   return result;
 }
 
 
-tarch::la::Vector<3,double>  matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP1(int elementOfSupport) {
+tarch::la::Vector<3,double>  toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP1(int elementOfSupport) {
   assertion1(elementOfSupport<2 && elementOfSupport>=0, elementOfSupport);
   tarch::la::Vector<3,double> result;
   switch (elementOfSupport) {
@@ -131,7 +131,7 @@ tarch::la::Vector<3,double>  matrixfree::stencil::BSplinesStencilFactory::get1DM
 }
 
 
-tarch::la::Vector<5,double>  matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP2(int elementOfSupport) {
+tarch::la::Vector<5,double>  toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP2(int elementOfSupport) {
   assertion1(elementOfSupport<4 && elementOfSupport>=0, elementOfSupport);
   tarch::la::Vector<5,double> result;
   switch (elementOfSupport) {
@@ -154,7 +154,7 @@ tarch::la::Vector<5,double>  matrixfree::stencil::BSplinesStencilFactory::get1DM
 }
 
 
-tarch::la::Vector<7,double>  matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP3(int elementOfSupport) {
+tarch::la::Vector<7,double>  toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP3(int elementOfSupport) {
   assertion1(elementOfSupport<4 && elementOfSupport>=0, elementOfSupport);
   tarch::la::Vector<7,double> result;
   switch (elementOfSupport) {
@@ -177,7 +177,7 @@ tarch::la::Vector<7,double>  matrixfree::stencil::BSplinesStencilFactory::get1DM
 }
 
 
-tarch::la::Vector<9,double>  matrixfree::stencil::BSplinesStencilFactory::get1DMassStencilP4(int elementOfSupport) {
+tarch::la::Vector<9,double>  toolbox::finiteelements::BSplinesStencilFactory::get1DMassStencilP4(int elementOfSupport) {
   assertion1(elementOfSupport<6 && elementOfSupport>=0, elementOfSupport);
   tarch::la::Vector<9,double> result;
   switch (elementOfSupport) {
@@ -200,7 +200,7 @@ tarch::la::Vector<9,double>  matrixfree::stencil::BSplinesStencilFactory::get1DM
 }
 
 
-tarch::la::Vector<3,double>  matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP1(int elementOfSupport) {
+tarch::la::Vector<3,double>  toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP1(int elementOfSupport) {
   assertion1(elementOfSupport<2 && elementOfSupport>=0, elementOfSupport);
   tarch::la::Vector<3,double> result;
   switch (elementOfSupport) {
@@ -215,7 +215,7 @@ tarch::la::Vector<3,double>  matrixfree::stencil::BSplinesStencilFactory::get1DL
 }
 
 
-tarch::la::Vector<5,double>  matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP2(int elementOfSupport) {
+tarch::la::Vector<5,double>  toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP2(int elementOfSupport) {
   assertion1(elementOfSupport<4 && elementOfSupport>=0, elementOfSupport);
   tarch::la::Vector<5,double> result;
   switch (elementOfSupport) {
@@ -234,7 +234,7 @@ tarch::la::Vector<5,double>  matrixfree::stencil::BSplinesStencilFactory::get1DL
 }
 
 
-tarch::la::Vector<7,double>  matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP3(int elementOfSupport) {
+tarch::la::Vector<7,double>  toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP3(int elementOfSupport) {
   assertion1(elementOfSupport<4 && elementOfSupport>=0, elementOfSupport);
   tarch::la::Vector<7,double> result; // @todo Shift in script is wrong. This version is manually fixed. In the script, I just forgot this h/2 shift of the interval borders
   switch (elementOfSupport) {
@@ -257,7 +257,7 @@ tarch::la::Vector<7,double>  matrixfree::stencil::BSplinesStencilFactory::get1DL
 }
 
 
-tarch::la::Vector<9,double>  matrixfree::stencil::BSplinesStencilFactory::get1DLaplaceStencilP4(int elementOfSupport) {
+tarch::la::Vector<9,double>  toolbox::finiteelements::BSplinesStencilFactory::get1DLaplaceStencilP4(int elementOfSupport) {
   assertion1(elementOfSupport<6 && elementOfSupport>=0, elementOfSupport);
   tarch::la::Vector<9,double> result;
   switch (elementOfSupport) {
@@ -285,8 +285,8 @@ tarch::la::Vector<9,double>  matrixfree::stencil::BSplinesStencilFactory::get1DL
 }
 
 
-tarch::la::Vector<FIVE_POWER_D,double> matrixfree::stencil::BSplinesStencilFactory::getLaplacianStencilP2( const tarch::la::Vector<DIMENSIONS,double>& scaling ) {
-  tarch::la::Vector<FIVE_POWER_D,double> result;
+tarch::la::Vector<FivePowerD,double> toolbox::finiteelements::BSplinesStencilFactory::getLaplacianStencilP2( const tarch::la::Vector<Dimensions,double>& scaling ) {
+  tarch::la::Vector<FivePowerD,double> result;
 
   #if defined(Dim2)
   result =  scaling(0) *
@@ -326,8 +326,8 @@ tarch::la::Vector<FIVE_POWER_D,double> matrixfree::stencil::BSplinesStencilFacto
 }
 
 
-tarch::la::Vector<SEVEN_POWER_D,double> matrixfree::stencil::BSplinesStencilFactory::getLaplacianStencilP3( const tarch::la::Vector<DIMENSIONS,double>& scaling ) {
-  tarch::la::Vector<SEVEN_POWER_D,double> result;
+tarch::la::Vector<SevenPowerD,double> toolbox::finiteelements::BSplinesStencilFactory::getLaplacianStencilP3( const tarch::la::Vector<Dimensions,double>& scaling ) {
+  tarch::la::Vector<SevenPowerD,double> result;
 
   #if defined(Dim2)
   result =  scaling(0) *
@@ -367,8 +367,8 @@ tarch::la::Vector<SEVEN_POWER_D,double> matrixfree::stencil::BSplinesStencilFact
 }
 
 
-tarch::la::Vector<NINE_POWER_D,double> matrixfree::stencil::BSplinesStencilFactory::getLaplacianStencilP4( const tarch::la::Vector<DIMENSIONS,double>& scaling ) {
-  tarch::la::Vector<NINE_POWER_D,double> result;
+tarch::la::Vector<NinePowerD,double> toolbox::finiteelements::BSplinesStencilFactory::getLaplacianStencilP4( const tarch::la::Vector<Dimensions,double>& scaling ) {
+  tarch::la::Vector<NinePowerD,double> result;
 
   #if defined(Dim2)
   result =  scaling(0) *
@@ -408,8 +408,8 @@ tarch::la::Vector<NINE_POWER_D,double> matrixfree::stencil::BSplinesStencilFacto
 }
 
 
-tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::BSplinesStencilFactory::getLaplacianStencilP1( const tarch::la::Vector<DIMENSIONS,double>& scaling ) {
-  tarch::la::Vector<THREE_POWER_D,double> result;
+tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::BSplinesStencilFactory::getLaplacianStencilP1( const tarch::la::Vector<Dimensions,double>& scaling ) {
+  tarch::la::Vector<ThreePowerD,double> result;
 
   #if defined(Dim2)
   result =  scaling(0) *
@@ -449,8 +449,8 @@ tarch::la::Vector<THREE_POWER_D,double> matrixfree::stencil::BSplinesStencilFact
 }
 
 
-tarch::la::Vector<THREE_POWER_D,double>  matrixfree::stencil::BSplinesStencilFactory::getMassStencilP1() {
-  tarch::la::Vector<THREE_POWER_D,double> result;
+tarch::la::Vector<ThreePowerD,double>  toolbox::finiteelements::BSplinesStencilFactory::getMassStencilP1() {
+  tarch::la::Vector<ThreePowerD,double> result;
 
   #if defined(Dim2)
   result =  stencilProduct(
@@ -471,8 +471,8 @@ tarch::la::Vector<THREE_POWER_D,double>  matrixfree::stencil::BSplinesStencilFac
 }
 
 
-tarch::la::Vector<FIVE_POWER_D,double>  matrixfree::stencil::BSplinesStencilFactory::getMassStencilP2() {
-  tarch::la::Vector<FIVE_POWER_D,double> result;
+tarch::la::Vector<FivePowerD,double>  toolbox::finiteelements::BSplinesStencilFactory::getMassStencilP2() {
+  tarch::la::Vector<FivePowerD,double> result;
 
   #if defined(Dim2)
   result =  stencilProduct(
@@ -493,8 +493,8 @@ tarch::la::Vector<FIVE_POWER_D,double>  matrixfree::stencil::BSplinesStencilFact
 }
 
 
-tarch::la::Vector<SEVEN_POWER_D,double>  matrixfree::stencil::BSplinesStencilFactory::getMassStencilP3() {
-  tarch::la::Vector<SEVEN_POWER_D,double> result;
+tarch::la::Vector<SevenPowerD,double>  toolbox::finiteelements::BSplinesStencilFactory::getMassStencilP3() {
+  tarch::la::Vector<SevenPowerD,double> result;
 
   #if defined(Dim2)
   result =  stencilProduct(
@@ -515,8 +515,8 @@ tarch::la::Vector<SEVEN_POWER_D,double>  matrixfree::stencil::BSplinesStencilFac
 }
 
 
-tarch::la::Vector<NINE_POWER_D,double>  matrixfree::stencil::BSplinesStencilFactory::getMassStencilP4() {
-  tarch::la::Vector<NINE_POWER_D,double> result;
+tarch::la::Vector<NinePowerD,double>  toolbox::finiteelements::BSplinesStencilFactory::getMassStencilP4() {
+  tarch::la::Vector<NinePowerD,double> result;
 
   #if defined(Dim2)
   result =  stencilProduct(

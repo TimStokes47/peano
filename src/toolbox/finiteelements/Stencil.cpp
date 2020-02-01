@@ -1,11 +1,11 @@
-#include "matrixfree/stencil/Stencil.h"
+#include "Stencil.h"
 
 
-int matrixfree::stencil::getStencilEntryLinearisedIndex( const tarch::la::Vector<DIMENSIONS,int>  stencilEntry) {
+int toolbox::finiteelements::getStencilEntryLinearisedIndex( const tarch::la::Vector<Dimensions,int>  stencilEntry) {
   int result = 0;
   int base   = 1;
 
-  for (int d=0; d<DIMENSIONS; d++) {
+  for (int d=0; d<Dimensions; d++) {
     result += stencilEntry(d) * base;
     base *= 3;
   }

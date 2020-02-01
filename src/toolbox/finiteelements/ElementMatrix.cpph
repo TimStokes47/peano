@@ -1,5 +1,5 @@
 template<int StencilSize>
-tarch::la::Vector<StencilSize*StencilSize,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<StencilSize*StencilSize,double> toolbox::finiteelements::stencilProduct(
   const tarch::la::Vector<StencilSize,double>& a,
   const tarch::la::Vector<StencilSize,double>& b
 ) {
@@ -17,7 +17,7 @@ tarch::la::Vector<StencilSize*StencilSize,double> matrixfree::stencil::stencilPr
 
 
 template<int StencilSize>
-tarch::la::Vector<StencilSize*StencilSize*StencilSize,double> matrixfree::stencil::stencilProduct(
+tarch::la::Vector<StencilSize*StencilSize*StencilSize,double> toolbox::finiteelements::stencilProduct(
   const tarch::la::Vector<StencilSize,double>& a,
   const tarch::la::Vector<StencilSize,double>& b,
   const tarch::la::Vector<StencilSize,double>& c

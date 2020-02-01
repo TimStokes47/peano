@@ -4,7 +4,7 @@
 #define _TOOLBOX_FINITE_ELEMENTS_STENCIL_FACTORY_H_
 
 
-#include "matrixfree/stencil/Stencil.h"
+#include "Stencil.h"
 
 #include <bitset>
 
@@ -51,10 +51,10 @@ namespace toolbox {
      * The routine then upscales the stencil entries such that an evaluation in
      * the end yields the right result.
      *
-     * @param boundaryFaceNormals Where is the boundary. The first DIMENSIONS
+     * @param boundaryFaceNormals Where is the boundary. The first Dimensions
      *        entry refer to the faces running through the left bottom vertex.
      */
-    void preprocessBoundaryStencil( Stencil& stencil, const std::bitset<DIMENSIONS*2>& boundaryFaceNormals );
+    void preprocessBoundaryStencil( Stencil& stencil, const std::bitset<Dimensions*2>& boundaryFaceNormals );
 
     /**
      * Exchanges the coordinates of a stencil.
@@ -168,17 +168,17 @@ namespace toolbox {
      * material parameter, either pass 1.0 and rescale the result or pass in a
      * vector where all entries hold the material parameter.
      */
-     tarch::la::Vector<THREE_POWER_D,double>     getLaplacian(
-            const tarch::la::Vector<DIMENSIONS,double>& h,
-            const tarch::la::Vector<DIMENSIONS,double>& scaling = 1.0
+     tarch::la::Vector<ThreePowerD,double>     getLaplacian(
+            const tarch::la::Vector<Dimensions,double>& h,
+            const tarch::la::Vector<Dimensions,double>& scaling = 1.0
             );
-     tarch::la::Vector<THREE_POWER_D,std::complex<double> >  getLaplacian(
-            const tarch::la::Vector<DIMENSIONS,std::complex<double> >& h,
-            const tarch::la::Vector<DIMENSIONS,std::complex<double> >& scaling = std::complex<double>(1.0)
+     tarch::la::Vector<ThreePowerD,std::complex<double> >  getLaplacian(
+            const tarch::la::Vector<Dimensions,std::complex<double> >& h,
+            const tarch::la::Vector<Dimensions,std::complex<double> >& scaling = std::complex<double>(1.0)
             );
-     tarch::la::Vector<THREE_POWER_D,std::complex<double> >  getLaplacian(
-            const tarch::la::Vector<DIMENSIONS, double >& h,
-            const tarch::la::Vector<DIMENSIONS,std::complex<double> >& scaling
+     tarch::la::Vector<ThreePowerD,std::complex<double> >  getLaplacian(
+            const tarch::la::Vector<Dimensions, double >& h,
+            const tarch::la::Vector<Dimensions,std::complex<double> >& scaling
             );
 
      /**
@@ -191,9 +191,9 @@ namespace toolbox {
       * mesh widths. For most applications, this should do, though formally the
       * stencil should be derived from piecewise linear shape functions.
       */
-     tarch::la::Vector<THREE_POWER_D,double>  getUpwindDiscretisedConvection(
-    		 const tarch::la::Vector<DIMENSIONS,double >& h,
-    		 const tarch::la::Vector<DIMENSIONS,double>& convCoeff
+     tarch::la::Vector<ThreePowerD,double>  getUpwindDiscretisedConvection(
+    		 const tarch::la::Vector<Dimensions,double >& h,
+    		 const tarch::la::Vector<Dimensions,double>& convCoeff
 			 );
 
      /**
@@ -243,10 +243,10 @@ u0  u1  u2
       * @param derivative Pass zero if you have homogeneous Neumann
       */
      void applyNeumannBC(
-       tarch::la::Vector<THREE_POWER_D,double>&      stencil,
+       tarch::la::Vector<ThreePowerD,double>&      stencil,
        double&                                       rhs,
-       const std::bitset<DIMENSIONS*2>&              boundaryFaceNormals,
-       const tarch::la::Vector<DIMENSIONS,double>&   h,
+       const std::bitset<Dimensions*2>&              boundaryFaceNormals,
+       const tarch::la::Vector<Dimensions,double>&   h,
        double                                        derivative
      );
 
@@ -257,8 +257,8 @@ u0  u1  u2
      * in the finite element sense. As such, it is scaled with h^d. And it is
      * not a nodal evaluation but a nine-point stencil (in 2d).
      */
-     tarch::la::Vector<THREE_POWER_D,double>                 getMassMatrix(const tarch::la::Vector<DIMENSIONS,double>& h);
-     tarch::la::Vector<THREE_POWER_D,std::complex<double> >  getMassMatrix(const tarch::la::Vector<DIMENSIONS,std::complex<double> >& h);
+     tarch::la::Vector<ThreePowerD,double>                 getMassMatrix(const tarch::la::Vector<Dimensions,double>& h);
+     tarch::la::Vector<ThreePowerD,std::complex<double> >  getMassMatrix(const tarch::la::Vector<Dimensions,std::complex<double> >& h);
 
 
     /**
@@ -266,13 +266,13 @@ u0  u1  u2
      *
      * The Helmholtz shift is the term that needs to be added to the Laplacian matrix in order to get the full Helmholtz matrix
      */
-     tarch::la::Vector<THREE_POWER_D,std::complex<double> >  getHelmholtzShiftMatrix(
-            const tarch::la::Vector<DIMENSIONS,double>& h,
+     tarch::la::Vector<ThreePowerD,std::complex<double> >  getHelmholtzShiftMatrix(
+            const tarch::la::Vector<Dimensions,double>& h,
             const std::complex<double>& phi
             );
 
-     tarch::la::Vector<THREE_POWER_D,std::complex<double> >  getHelmholtzShiftMatrix(
-            const tarch::la::Vector<DIMENSIONS,std::complex<double> >& h,
+     tarch::la::Vector<ThreePowerD,std::complex<double> >  getHelmholtzShiftMatrix(
+            const tarch::la::Vector<Dimensions,std::complex<double> >& h,
             const std::complex<double>& phi
             );
 
@@ -285,13 +285,13 @@ u0  u1  u2
      * volume of h. As such it corresponds to the integral over a
      * characteristic function of one cell.
      */
-     tarch::la::Vector<THREE_POWER_D,double>                 getIdentity(const tarch::la::Vector<DIMENSIONS,double>& h);
-     tarch::la::Vector<THREE_POWER_D,std::complex<double> >  getIdentity(const tarch::la::Vector<DIMENSIONS,std::complex<double> >& h);
+     tarch::la::Vector<ThreePowerD,double>                 getIdentity(const tarch::la::Vector<Dimensions,double>& h);
+     tarch::la::Vector<ThreePowerD,std::complex<double> >  getIdentity(const tarch::la::Vector<Dimensions,std::complex<double> >& h);
 
     /**
      * Computes the stencil for a d-linear interpolation.
      */
-     tarch::la::Vector<FIVE_POWER_D,double> getDLinearInterpolation();
+     tarch::la::Vector<FivePowerD,double> getDLinearInterpolation();
 
      /**
       * The standard stencil spans 2^d cells adjacent to a vertex. Let (0,0)
@@ -306,7 +306,7 @@ u0  u1  u2
       * getElementWiseAssemblyMatrix() but realises everything from a
       * stencil point of view rather than with an element-wise language.
       */
-     Stencil extractElementStencil( const Stencil& stencil, const tarch::la::Vector<DIMENSIONS,int>&   adjacentCell );
+     Stencil extractElementStencil( const Stencil& stencil, const tarch::la::Vector<Dimensions,int>&   adjacentCell );
   }
 }
 
