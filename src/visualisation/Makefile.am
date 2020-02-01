@@ -20,8 +20,8 @@ convertSources = \
   output/PeanoWriter.cpp \
   output/VTUWriter.cpp
   
-#VTK_LIBRARY_EXTENSION = -8.90
-VTK_LIBRARY_EXTENSION = 
+VTK_LIBRARY_EXTENSION = -8.90
+#VTK_LIBRARY_EXTENSION = 
 VTK_REQUIRED_LIBS     =  -lvtkIOXML$(VTK_LIBRARY_EXTENSION) \
                          -lvtkCommonExecutionModel$(VTK_LIBRARY_EXTENSION) \
                          -lvtkCommonCore$(VTK_LIBRARY_EXTENSION) \
@@ -31,11 +31,11 @@ VTK_REQUIRED_LIBS     =  -lvtkIOXML$(VTK_LIBRARY_EXTENSION) \
 
 convert_CXXFLAGS  = $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS)
 convert_LDADD     = $(top_builddir)/src/libTarch.a
-convert_LDFLAGS   = $(PEANO_LDFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
+convert_LDFLAGS   = $(PEANO_LDFLAGS) $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
 convert_SOURCES   = $(convertSources)
 
-convert_debug_CXXFLAGS  = $(PEANO_CXXFLAGS) -O0 -g3 -DPeanoDebug=4
+convert_debug_CXXFLAGS  = $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS) -O0 -g3 -DPeanoDebug=4
 convert_debug_LDADD     = $(top_builddir)/src/libTarch_debug.a
-convert_debug_LDFLAGS   = $(PEANO_LDFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
+convert_debug_LDFLAGS   = $(PEANO_LDFLAGS) $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
 convert_debug_SOURCES   = $(convertSources)
 

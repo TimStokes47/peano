@@ -109,12 +109,11 @@ void examples::algebraicmg::mappings::SetupScenario::createRuedeSetup(
   const tarch::la::Vector<Dimensions,double>& center,
   examples::algebraicmg::vertexdata::MG& fineGridVertexMG
 ) const {
-  const bool isBoundaryVertex = true;
-/*
+  const bool isBoundaryVertex =
     tarch::la::oneEquals(center,-1.0)
     or
     tarch::la::oneEquals(center, 1.0);
-*/
+
 
   if (isBoundaryVertex) {
     double value = std::cos( 2.0*tarch::la::PI * (center(0)-center(1)) )
