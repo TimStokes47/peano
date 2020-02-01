@@ -2,15 +2,24 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .Helper import Overwrite
 from .Helper import writeFile
+from enum import Enum
+
 
 import os
 import re
 
 
+class CompileMode(Enum):
+  Debug = 0
+  Trace = 1
+  Release = 2
+  
+
 class Makefile(object):
   """ Represents the created makefile of a Peano4 project """
   default_overwrite = True
    
+  
   def __init__(self):
     self.cppfiles = []
     self.d = {}
@@ -20,9 +29,65 @@ class Makefile(object):
     self.d["LIBS"]          = ""
     self.d["DIM"]           = "2"
     self.d["CONFIGUREPATH"] = "."
+    self.d["LIBRARY_POSTFIX"] = "_debug"
+
     
   def set_dimension(self,dimension):
     self.d["DIM"] = str(dimension)
+
+
+  def get_configure_path(self):
+    """
+    Returns the directory where the ./configure script is located
+    """
+    return self.d["CONFIGUREPATH"]
+
+
+  def get_source_path(self):
+    """
+    Returns the directory where the ./configure script is located
+    """
+    return self.get_configure_path() + "/src"
+
+
+  def add_library(self, library_name, library_path="" ):
+    """
+    If you want to link against a library from Peano, feel free to use
+    get_Peano4_source_directory() and hand in a concatenation of this 
+    path plus a subpath. Otherwise, specify the absolute path where to 
+    search for. By default, Peano's src directory is in the search 
+    path.
+    
+    A popular invocation including one of Peano's toolboxes is 
+    
+    project.output.makefile.add_library( "ToolboxFiniteElements2d_trace", project.output.makefile.get_source_path() + "/toolbox/finiteelements" )
+
+    """
+    if library_path!="":
+      self.d["LIBS"] = "-L" + library_path + " " + self.d["LIBS"]
+    self.d["LIBS"] += "-l" + library_name
+
+
+  def set_mode( self, mode ):
+    """
+      mode should be of type CompileMode. Pass in 
+
+      peano4.output.CompileMode.Debug
+      
+      for example
+    """
+    if mode==CompileMode.Debug:
+      self.d["CXXFLAGS"]        = "-g -O0 -DPeanoDebug=4"
+      self.d["LIBRARY_POSTFIX"] = "_debug"
+    elif mode==CompileMode.Trace:
+      self.d["CXXFLAGS"]        = "-g -O2 -DPeanoDebug=1"
+      self.d["LIBRARY_POSTFIX"] = "_trace"
+    elif mode==CompileMode.Release:
+      self.d["CXXFLAGS"]        = "-O2 -DPeanoDebug=0"
+      self.d["LIBRARY_POSTFIX"] = ""
+    else:
+      assert(False)      
+
 
   def parse_configure_script_outcome(self,directory):
     """
@@ -51,9 +116,11 @@ class Makefile(object):
         self.d["LIBS"] += flags
         self.d["LIBS"] += " "
     self.d["CONFIGUREPATH"] = directory
+
  
   def add_cpp_file(self,filename):
     self.cppfiles.append(filename)
+
 
   def generate(self,overwrite,directory):
     filename = directory + "/Makefile";

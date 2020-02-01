@@ -5,6 +5,7 @@ from .Constants            import Constants
 from .Helper               import Overwrite
 from .InvokeExternalTool   import InvokeExternalTool
 from .Makefile             import Makefile
+from .Makefile             import CompileMode
 from .Mapping              import Mapping
 from .Observer             import Observer
 from .Output               import Output

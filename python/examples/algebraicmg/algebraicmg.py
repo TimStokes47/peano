@@ -116,9 +116,9 @@ project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano"
 # round, it is always admissible to only generate stuff, e.g., but to build and
 # run the project through a command line
 #
-project.add_library( "ToolboxFiniteElement2d_trace" )
-project.set_dimensions( 2 )
-project.set_mode( project.Debug )
+project.output.makefile.add_library( "ToolboxFiniteElements2d_trace", project.output.makefile.get_source_path() + "/toolbox/finiteelements" )
+project.output.makefile.set_dimension( 2 )
+project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
 project.generate(peano4.output.Overwrite.Default)
 project.build()
 project.run( ["myarguments"] )

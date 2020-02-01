@@ -6,9 +6,7 @@ CXX = {CXX}
 CXXFLAGS = {CXXFLAGS} -DDimensions={DIM} -I. -I{CONFIGUREPATH}/src -DPeanoDebug=4 -g3
 #CXXFLAGS = {CXXFLAGS} -DDimensions={DIM} -I. -I{CONFIGUREPATH}/src -DPeanoDebug=1
 LDFLAGS = {LDFLAGS}
-#LIBS = {CONFIGUREPATH}/src/libPeano4Core{DIM}d.a {CONFIGUREPATH}/src/libTarch.a {LIBS}
-#LIBS = {CONFIGUREPATH}/src/libPeano4Core{DIM}d_trace.a {CONFIGUREPATH}/src/libTarch_trace.a {LIBS}
-LIBS = {CONFIGUREPATH}/src/libPeano4Core{DIM}d_debug.a {CONFIGUREPATH}/src/libTarch_debug.a {LIBS}
+LIBS = -L{CONFIGUREPATH}/src -lPeano4Core{DIM}d{LIBRARY_POSTFIX} -lTarch{LIBRARY_POSTFIX} {LIBS}
 DIM = {DIM}
 
 
