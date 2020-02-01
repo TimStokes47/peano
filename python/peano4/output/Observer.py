@@ -671,7 +671,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 """
 
   TemplateLeaveCell_VertexStore_MappingCall = """
-  // Handle face {name}
+  // Handle vertex {name}
   {{
     peano4::datamanagement::VertexEnumerator<{full_qualified_type}> view(
       event.getX(), event.getH(),
@@ -679,7 +679,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     );
     for (int i=0; i<TwoPowerD; i++) {{
       int outVertexStack        = event.getVertexDataTo(i);
-      int inVertexPosition      = event.getVertexDataTo(i);
+      int inVertexPosition      = event.getVertexDataFrom(i);
       
       if (outVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
         {ACTIVE_MAPPING}.touchVertexLastTime(

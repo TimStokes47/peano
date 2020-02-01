@@ -20,8 +20,8 @@ class InvokeExternalTool(object):
       os.mkdir(directory + "/" + self.subdirectory)
 
     try:
-       print( "invoked " + self.instruction_stream )
-       returnCode = subprocess.call( self.instruction_stream, stdout=subprocess.PIPE, shell=True, cwd=self.subdirectory )
+       print( "invoke " + self.instruction_stream )
+       returnCode = subprocess.check_call( self.instruction_stream, stdout=subprocess.PIPE, shell=True, cwd=self.subdirectory )
        if returnCode!=0:
          print( "Error: something went wrong with the program invocation (error code=" + str(returnCode) + ")" )
     except Exception as e:

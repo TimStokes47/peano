@@ -42,6 +42,10 @@ Packed-Type: short int;
 
 
   def __generate_dastgen_input_file(self):
+    directory = self.data.namespace[-1]
+    if not os.path.exists( directory ):
+      os.mkdir(directory)
+    
     file = open( self.__get_full_qualified_file_name(), "w" )
     file.write( self.__Template_Prologue )
     file.write( "class " )

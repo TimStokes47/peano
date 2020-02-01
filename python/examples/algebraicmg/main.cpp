@@ -102,11 +102,11 @@ int main(int argc, char** argv) {
 
   peano4::parallel::SpacetreeSet::getInstance().init(
     #if Dimensions==2
-    {0.0, 0.0},
-    {1.0, 1.0},
+    {-1.0, -1.0},
+    { 2.0,  2.0},
     #else
-    {0.0, 0.0, 0.0},
-    {1.0, 1.0, 1.0},
+    {-1.0, -1.0, -1.0},
+    { 2.0,  2.0,  2.0},
     #endif
     0
   );
