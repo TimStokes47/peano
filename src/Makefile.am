@@ -3,7 +3,10 @@ AUTOMAKE_OPTIONS = subdir-objects
 # By default, automake does dfs. We need the libs to be built first however.
 # So we add the . explicitly.
 #
-SUBDIRS = . examples/grid examples/integerdiffusionthroughfaces examples/delta examples/regulargridupscaling visualisation
+SUBDIRS = . \
+          examples/grid examples/integerdiffusionthroughfaces examples/delta examples/regulargridupscaling \
+          toolbox/finiteelements \
+          visualisation
 
 
 #
@@ -12,7 +15,9 @@ SUBDIRS = . examples/grid examples/integerdiffusionthroughfaces examples/delta e
 # that I have a couple of singletons and I did struggle with singletons and 
 # shared libraries. 
 #
-lib_LIBRARIES = libTarch.a libTarch_debug.a libTarch_trace.a libPeano4Core2d.a libPeano4Core2d_debug.a libPeano4Core2d_trace.a libPeano4Core3d.a libPeano4Core3d_debug.a libPeano4Core3d_trace.a
+lib_LIBRARIES = libTarch.a libTarch_debug.a libTarch_trace.a \
+                libPeano4Core2d.a libPeano4Core2d_debug.a libPeano4Core2d_trace.a \
+                libPeano4Core3d.a libPeano4Core3d_debug.a libPeano4Core3d_trace.a
 
 
 libTarch_a_CXXFLAGS = -DPeanoDebug=0 $(PEANO_CXXFLAGS)
