@@ -14,6 +14,8 @@
 #include "observers/PlotSolution.h"
 #include "observers/CreateGrid.h"
 #include "observers/SetupScenario.h"
+#include "observers/ComputeResidualWithGeometricOperators.h"
+#include "observers/JacobiUpdate.h"
 
 
 tarch::logging::Log _log("::");
@@ -120,6 +122,14 @@ int main(int argc, char** argv) {
     {
       examples::algebraicmg::observers::SetupScenario  observer;
       peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+    }
+
+    for (int i=0; i<20; i++)
+    {
+      examples::algebraicmg::observers::ComputeResidualWithGeometricOperators  computeResidual;
+      peano4::parallel::SpacetreeSet::getInstance().traverse(computeResidual);
+      examples::algebraicmg::observers::JacobiUpdate  jacobiUpdate;
+      peano4::parallel::SpacetreeSet::getInstance().traverse(jacobiUpdate);
     }
 
     {

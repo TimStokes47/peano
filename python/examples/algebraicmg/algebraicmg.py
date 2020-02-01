@@ -39,6 +39,7 @@ project = peano4.Project( ["examples", "algebraicmg"], "." )
 dastgen_model = peano4.datamodel.DaStGen( "MG" )
 dastgen_model.add_double_scalar( "u" )
 dastgen_model.add_double_scalar( "rhs" )
+dastgen_model.add_double_scalar( "diag" )
 dastgen_model.add_double_scalar( "res" )
 dastgen_model.add_enum( "VertexType", ["Boundary", "Inside"] )
 project.datamodel.add_vertex( dastgen_model )
@@ -73,6 +74,24 @@ project.solversteps.add_step(setup_scenario)
 
 
 #
+# We create the steps to compute the residual and to update the solution. This 
+# time, we create our corresponding user mappings explicitly, as we will use 
+# them later on again.
+#
+compute_residual = peano4.solversteps.Step( "ComputeResidualWithGeometricOperators", False )
+compute_residual_user_code = peano4.solversteps.UserMapping();
+compute_residual.use_vertex( dastgen_model )
+compute_residual.add_mapping( compute_residual_user_code )
+project.solversteps.add_step( compute_residual )
+
+jacobi_update = peano4.solversteps.Step( "JacobiUpdate", False )
+jacobi_update_user_code = peano4.solversteps.UserMapping();
+jacobi_update.use_vertex( dastgen_model )
+jacobi_update.add_mapping( jacobi_update_user_code )
+project.solversteps.add_step( jacobi_update )
+
+
+#
 # Finally, plot the grid, and plot the solution, too.
 #
 plot_solution = peano4.solversteps.Step( "PlotSolution", False )
@@ -97,6 +116,9 @@ project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano"
 # round, it is always admissible to only generate stuff, e.g., but to build and
 # run the project through a command line
 #
+project.add_library( "ToolboxFiniteElement2d_trace" )
+project.set_dimensions( 2 )
+project.set_mode( project.Debug )
 project.generate(peano4.output.Overwrite.Default)
 project.build()
 project.run( ["myarguments"] )

@@ -71,7 +71,7 @@ class Project (object):
     print( "generation complete" )
 
           
-  def build(self):
+  def build(self, additional_libraries = []):
     """
     Invokes the underlying make/C build mechanism on the project. 
     We invoke the make command via a subprocess. That's it.
