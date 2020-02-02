@@ -347,7 +347,7 @@ namespace peano4 {
 /**
  * If Dimensions is not set to two, we might nevertheless need
  * two-dimensional loops. So this is the corresponding macro. It is
- * way slower than dfor if you compile with Dim2.
+ * way slower than dfor if you compile with -DDimensions=2.
  *
  * Please use this macro with an enddforx macro closing your scope rather than
  * brackets.
@@ -417,7 +417,7 @@ namespace peano4 {
 /**
  * If Dimensions is not set to three, we might nevertheless need
  * two-dimensional loops. So this is the corresponding macro. It is
- * way slower than dfor if you compile with Dim2.
+ * way slower than dfor if you compile with -DDimensions=2.
  *
  * Please use this macro with an enddforx macro closing your scope rather than
  * brackets.
