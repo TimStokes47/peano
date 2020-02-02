@@ -28,32 +28,30 @@ class examples::algebraicmg::mappings::SetupScenario{
   private:
     static tarch::logging::Log  _log;
 
+    enum class Scenario {
+      Mitchell,
+      Ruede
+    };
+
+    static constexpr Scenario _scenario = Scenario::Ruede;
+
+  public:
 
     /**
-     * Init Dirichlet problem following
+     * Init Dirichlet problem following either
      *
      * https://math.nist.gov/~WMitchell/papers/test_problems_paper.pdf
      *
      * By default, I use the setup from Table 5.
-     */
-    void createMitchellSetup(
-      const tarch::la::Vector<Dimensions,double>& center,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG
-    ) const;
-
-
-    /**
-     * Init Dirichlet problem following Uli Ruede's "Mathematical and
+     *
+     * Alternatively, I implemented Uli Ruede's "Mathematical and
      * Computational Techniques for Multilevel Adaptive Methods".
      * You find the description in 3.10.2. The domain here's not the
      * unit cube, but the domain (-1,1)^d.
      */
-    void createRuedeSetup(
-      const tarch::la::Vector<Dimensions,double>& center,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG
-    ) const;
-
-  public:
+    static examples::algebraicmg::vertexdata::MG::VertexType getVertexType(const tarch::la::Vector<Dimensions,double>& x);
+    static double                                            getSolution(const tarch::la::Vector<Dimensions,double>& x);
+    static void                                              init(const tarch::la::Vector<Dimensions,double>& x, examples::algebraicmg::vertexdata::MG& fineGridVertexMG);
 
     /**
      * Create mapping instance for one tree for one grid sweep

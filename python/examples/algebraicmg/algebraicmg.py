@@ -90,6 +90,14 @@ jacobi_update.use_vertex( dastgen_model )
 jacobi_update.add_mapping( jacobi_update_user_code )
 project.solversteps.add_step( jacobi_update )
 
+#
+# As we solve only benchmarks with an analytical solution, we can really
+# compute the residual plus the error 
+#
+compute_global_residual_and_error = peano4.solversteps.Step( "ComputeGlobalResidualAndError" )
+compute_global_residual_and_error.use_vertex( dastgen_model )
+project.solversteps.add_step( compute_global_residual_and_error )
+
 
 #
 # Finally, plot the grid, and plot the solution, too.

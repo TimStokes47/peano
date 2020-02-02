@@ -91,9 +91,6 @@ void examples::algebraicmg::mappings::JacobiUpdate::touchVertexLastTime(
       omega * fineGridVertexMG.getRes() / fineGridVertexMG.getDiag()
     );
   }
-  // @todo Docu warum hier (oder auch net)
-  fineGridVertexMG.setRes(0.0);
-  fineGridVertexMG.setDiag(0.0);
 }
 
 

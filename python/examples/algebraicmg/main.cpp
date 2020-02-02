@@ -15,6 +15,7 @@
 #include "observers/CreateGrid.h"
 #include "observers/SetupScenario.h"
 #include "observers/ComputeResidualWithGeometricOperators.h"
+#include "observers/ComputeGlobalResidualAndError.h"
 #include "observers/JacobiUpdate.h"
 
 
@@ -39,13 +40,12 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetInfo,
     tarch::logging::LogFilter::FilterListEntry::AnyRank,
     "peano4",
-    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetTrace,
     tarch::logging::LogFilter::FilterListEntry::AnyRank,
     "peano4",
-    //tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
     tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
@@ -130,6 +130,8 @@ int main(int argc, char** argv) {
       peano4::parallel::SpacetreeSet::getInstance().traverse(computeResidual);
       examples::algebraicmg::observers::JacobiUpdate  jacobiUpdate;
       peano4::parallel::SpacetreeSet::getInstance().traverse(jacobiUpdate);
+      examples::algebraicmg::observers::ComputeGlobalResidualAndError computeGlobalResidualAndError;
+      peano4::parallel::SpacetreeSet::getInstance().traverse(computeGlobalResidualAndError);
     }
 
     {

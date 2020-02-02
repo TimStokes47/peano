@@ -107,7 +107,7 @@ class Project (object):
     if self.is_built:
       print( "run application ..." )
       try:
-        subprocess.call(["./peano4"] + args)
+        subprocess.call(["./peano4"] + args, shell=True, bufsize=1)
         print( "run complete" )
       except Exception as e:
         print( "run of application was not successful: " + str(e) )
