@@ -298,7 +298,7 @@ tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getLaplacian(
 ) {
   tarch::la::Vector<ThreePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  scaling(0) * h(1)/h(0) *
             toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DLaplaceStencil(),
@@ -309,7 +309,7 @@ tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getLaplacian(
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DLaplaceStencil()
             );
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  scaling(0) * h(1)*h(2)/h(0) *
             toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DLaplaceStencil(),
@@ -342,7 +342,7 @@ tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::ge
 ) {
   tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  scaling(0) * h(1)/h(0) *
             toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DLaplaceStencil(),
@@ -353,7 +353,7 @@ tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::ge
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DLaplaceStencil()
             ).convertScalar< std::complex<double> >();
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  scaling(0) * h(1)*h(2)/h(0) *
             toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DLaplaceStencil(),
@@ -455,7 +455,7 @@ tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::ge
 ) {
   tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  scaling(0) * h(1)/h(0) *
             toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DLaplaceStencil(),
@@ -466,7 +466,7 @@ tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::ge
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DLaplaceStencil()
             ).convertScalar< std::complex<double> >();
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  scaling(0) * h(1)*h(2)/h(0) *
             toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DLaplaceStencil(),
@@ -499,7 +499,7 @@ tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getUpwindDiscreti
 ) {
   tarch::la::Vector<ThreePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result(0) = 0.0;
   result(1) = - convCoeff(1) - fabs(convCoeff(1));
   result(2) = 0.0;
@@ -512,7 +512,7 @@ tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getUpwindDiscreti
 
   assertionNumericalEquals(h(0), h(1));
   result *= h(0)*0.5;
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result(0)  = 0.0;
   result(1)  = 0.0;
   result(2)  = 0.0;
@@ -561,7 +561,7 @@ void toolbox::finiteelements::applyNeumannBC(
   double                                       derivative
 ) {
 
-  #if defined(Dim2)
+  #if Dimensions==2
 
 	if ( boundaryFaceNormals[0] ) { // left boundary
 	      stencil(4) += stencil(0);
@@ -616,12 +616,12 @@ void toolbox::finiteelements::applyNeumannBC(
 tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getMassMatrix(const tarch::la::Vector<Dimensions,double>& h) {
   tarch::la::Vector<ThreePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DMassStencil()
             ) * h(0) * h(1);
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DMassStencil(),
@@ -638,13 +638,13 @@ tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getMassMatrix(con
 tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::getMassMatrix(const tarch::la::Vector<Dimensions,std::complex<double> >& h) {
   tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DMassStencil()
             ).convertScalar< std::complex<double> >()
             * h(0) * h(1);
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DMassStencil(),
@@ -663,12 +663,12 @@ tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::ge
         const std::complex<double>& phi ) {
   tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  ( h(0) * h(1)* toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DMassStencil() )
              ).convertScalar< std::complex<double> >();
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  ( h(0) * h(1) * h(2) * toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DMassStencil(),
@@ -687,12 +687,12 @@ tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::ge
 ) {
   tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  h(0) * h(1)* (  toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DMassStencil() )
              ).convertScalar< std::complex<double> >();
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  h(0) * h(1) * h(2) * ( toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DMassStencil(),
               toolbox::finiteelements::get1DMassStencil(),
@@ -724,13 +724,13 @@ tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::ge
 tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getIdentity(const tarch::la::Vector<Dimensions,double>& h) {
   tarch::la::Vector<ThreePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result = toolbox::finiteelements::stencilProduct(
              toolbox::finiteelements::get1DIdentity(),
              toolbox::finiteelements::get1DIdentity()
            )
            * h(0) * h(1);
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result = toolbox::finiteelements::stencilProduct(
              toolbox::finiteelements::get1DIdentity(),
              toolbox::finiteelements::get1DIdentity(),
@@ -748,13 +748,13 @@ tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::getIdentity(const
 tarch::la::Vector<ThreePowerD,std::complex<double> > toolbox::finiteelements::getIdentity(const tarch::la::Vector<Dimensions,std::complex<double> >& h) {
   tarch::la::Vector<ThreePowerD,std::complex<double> > result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DIdentity(),
               toolbox::finiteelements::get1DIdentity()
             ).convertScalar< std::complex<double> >()
             * h(0) * h(1);
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  toolbox::finiteelements::stencilProduct(
               toolbox::finiteelements::get1DIdentity(),
               toolbox::finiteelements::get1DIdentity(),

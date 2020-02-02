@@ -288,7 +288,7 @@ tarch::la::Vector<9,double>  toolbox::finiteelements::BSplinesStencilFactory::ge
 tarch::la::Vector<FivePowerD,double> toolbox::finiteelements::BSplinesStencilFactory::getLaplacianStencilP2( const tarch::la::Vector<Dimensions,double>& scaling ) {
   tarch::la::Vector<FivePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  scaling(0) *
             stencilProduct(
               get1DLaplaceStencilP2(),
@@ -299,7 +299,7 @@ tarch::la::Vector<FivePowerD,double> toolbox::finiteelements::BSplinesStencilFac
               get1DMassStencilP2(),
               get1DLaplaceStencilP2()
             );
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  scaling(0) *
             stencilProduct(
               get1DLaplaceStencilP2(),
@@ -329,7 +329,7 @@ tarch::la::Vector<FivePowerD,double> toolbox::finiteelements::BSplinesStencilFac
 tarch::la::Vector<SevenPowerD,double> toolbox::finiteelements::BSplinesStencilFactory::getLaplacianStencilP3( const tarch::la::Vector<Dimensions,double>& scaling ) {
   tarch::la::Vector<SevenPowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  scaling(0) *
             stencilProduct(
               get1DLaplaceStencilP3(),
@@ -340,7 +340,7 @@ tarch::la::Vector<SevenPowerD,double> toolbox::finiteelements::BSplinesStencilFa
               get1DMassStencilP3(),
               get1DLaplaceStencilP3()
             );
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  scaling(0) *
             stencilProduct(
               get1DLaplaceStencilP3(),
@@ -370,7 +370,7 @@ tarch::la::Vector<SevenPowerD,double> toolbox::finiteelements::BSplinesStencilFa
 tarch::la::Vector<NinePowerD,double> toolbox::finiteelements::BSplinesStencilFactory::getLaplacianStencilP4( const tarch::la::Vector<Dimensions,double>& scaling ) {
   tarch::la::Vector<NinePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  scaling(0) *
             stencilProduct(
               get1DLaplaceStencilP4(),
@@ -381,7 +381,7 @@ tarch::la::Vector<NinePowerD,double> toolbox::finiteelements::BSplinesStencilFac
               get1DMassStencilP4(),
               get1DLaplaceStencilP4()
             );
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  scaling(0) *
             stencilProduct(
               get1DLaplaceStencilP4(),
@@ -411,7 +411,7 @@ tarch::la::Vector<NinePowerD,double> toolbox::finiteelements::BSplinesStencilFac
 tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::BSplinesStencilFactory::getLaplacianStencilP1( const tarch::la::Vector<Dimensions,double>& scaling ) {
   tarch::la::Vector<ThreePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  scaling(0) *
             stencilProduct(
               get1DLaplaceStencilP1(),
@@ -422,7 +422,7 @@ tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::BSplinesStencilFa
               get1DMassStencilP1(),
               get1DLaplaceStencilP1()
             );
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  scaling(0) *
             stencilProduct(
               get1DLaplaceStencilP1(),
@@ -452,12 +452,12 @@ tarch::la::Vector<ThreePowerD,double> toolbox::finiteelements::BSplinesStencilFa
 tarch::la::Vector<ThreePowerD,double>  toolbox::finiteelements::BSplinesStencilFactory::getMassStencilP1() {
   tarch::la::Vector<ThreePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  stencilProduct(
               get1DMassStencilP1(),
               get1DMassStencilP1()
             );
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  stencilProduct(
               get1DMassStencilP1(),
               get1DMassStencilP1(),
@@ -474,12 +474,12 @@ tarch::la::Vector<ThreePowerD,double>  toolbox::finiteelements::BSplinesStencilF
 tarch::la::Vector<FivePowerD,double>  toolbox::finiteelements::BSplinesStencilFactory::getMassStencilP2() {
   tarch::la::Vector<FivePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  stencilProduct(
               get1DMassStencilP2(),
               get1DMassStencilP2()
             );
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  stencilProduct(
               get1DMassStencilP2(),
               get1DMassStencilP2(),
@@ -496,12 +496,12 @@ tarch::la::Vector<FivePowerD,double>  toolbox::finiteelements::BSplinesStencilFa
 tarch::la::Vector<SevenPowerD,double>  toolbox::finiteelements::BSplinesStencilFactory::getMassStencilP3() {
   tarch::la::Vector<SevenPowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  stencilProduct(
               get1DMassStencilP3(),
               get1DMassStencilP3()
             );
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  stencilProduct(
               get1DMassStencilP3(),
               get1DMassStencilP3(),
@@ -518,12 +518,12 @@ tarch::la::Vector<SevenPowerD,double>  toolbox::finiteelements::BSplinesStencilF
 tarch::la::Vector<NinePowerD,double>  toolbox::finiteelements::BSplinesStencilFactory::getMassStencilP4() {
   tarch::la::Vector<NinePowerD,double> result;
 
-  #if defined(Dim2)
+  #if Dimensions==2
   result =  stencilProduct(
               get1DMassStencilP4(),
               get1DMassStencilP4()
             );
-  #elif defined(Dim3)
+  #elif Dimensions==3
   result =  stencilProduct(
               get1DMassStencilP4(),
               get1DMassStencilP4(),
