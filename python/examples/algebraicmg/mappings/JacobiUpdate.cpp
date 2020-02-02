@@ -73,8 +73,6 @@ void examples::algebraicmg::mappings::JacobiUpdate::touchVertexFirstTime(
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-  fineGridVertexMG.setRes(0.0);
-  fineGridVertexMG.setDiag(0.0);
 }
 
 
@@ -85,6 +83,7 @@ void examples::algebraicmg::mappings::JacobiUpdate::touchVertexLastTime(
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
   const double omega = 0.7;
   if (fineGridVertexMG.getVertexType()==examples::algebraicmg::vertexdata::MG::VertexType::Inside) {
+    logDebug( "touchVertexLastTime(...)", "update " << fineGridVertexMG.toString() )
     assertion3( fineGridVertexMG.getDiag()>0.0, fineGridVertexMG.toString(), center, h );
     fineGridVertexMG.setU(
       fineGridVertexMG.getU()
@@ -92,6 +91,9 @@ void examples::algebraicmg::mappings::JacobiUpdate::touchVertexLastTime(
       omega * fineGridVertexMG.getRes() / fineGridVertexMG.getDiag()
     );
   }
+  // @todo Docu warum hier (oder auch net)
+  fineGridVertexMG.setRes(0.0);
+  fineGridVertexMG.setDiag(0.0);
 }
 
 

@@ -125,8 +125,8 @@ void examples::algebraicmg::mappings::SetupScenario::createRuedeSetup(
     fineGridVertexMG.setRhs( 0.0 );
   }
   else {
-    const double Max =  0.0;
-    const double Min =  0.0;
+    const double Max =  1.0;
+    const double Min = -1.0;
 
     const double scaledRandomValue = static_cast<double>( std::rand() ) /  static_cast<double>(RAND_MAX);
     fineGridVertexMG.setVertexType( examples::algebraicmg::vertexdata::MG::VertexType::Inside );

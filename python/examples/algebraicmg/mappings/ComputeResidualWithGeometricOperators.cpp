@@ -13,6 +13,8 @@ examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::ComputeR
     toolbox::finiteelements::getElementWiseAssemblyMatrix(
       toolbox::finiteelements::getLaplacian(1.0)
     );
+  logDebug( "ComputeResidualWithGeometricOperators(...)", "local element matrix " << _localStiffnessMatrix );
+  logDebug( "ComputeResidualWithGeometricOperators(...)", "constructed from stencil " << toolbox::finiteelements::getLaplacian(1.0));
 }
 
 
@@ -80,7 +82,9 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
+  // @todo Bin mir net sicher hier
+  fineGridVertexMG.setRes(0.0);
+  fineGridVertexMG.setDiag(0.0);
 }
 
 
@@ -107,12 +111,15 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
     u(i) = fineGridVerticesMG(i).getU();
   }
 
-  r = tarch::la::volume(fineGridCell.h()) * _localStiffnessMatrix * u;
+  // compute residual contribution. Mind the minus sign here that
+  // results from the residual's definition: r = b-Au
+  const double scaling = tarch::la::pow(fineGridCell.h()(0), (double)(Dimensions-2));
+  r = - scaling * _localStiffnessMatrix * u;
 
   // scatter residual contributions
   for (int i=0; i<TwoPowerD; i++) {
     fineGridVerticesMG(i).setRes(  fineGridVerticesMG(i).getRes() + r(i) );
-    fineGridVerticesMG(i).setDiag( fineGridVerticesMG(i).getDiag() + tarch::la::volume(fineGridCell.h()) * _localStiffnessMatrix(i,i) );
+    fineGridVerticesMG(i).setDiag( fineGridVerticesMG(i).getDiag() + scaling * _localStiffnessMatrix(i,i) );
   }
 }
 
