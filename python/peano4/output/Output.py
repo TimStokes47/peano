@@ -13,8 +13,12 @@ class Output(object):
     self.artefacts = []
     self.makefile = Makefile()
     
-  def add(self,artefact):
-    self.artefacts.append(artefact)
+  def add(self,artefact,append=True):
+    if append:
+      self.artefacts.append(artefact)
+    else:
+      self.artefacts = [artefact] + self.artefacts
+        
     
   def generate(self,overwrite,directory):
     """

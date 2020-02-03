@@ -45,6 +45,7 @@ Packed-Type: short int;
     directory = self.data.namespace[-1]
     if not os.path.exists( directory ):
       os.mkdir(directory)
+      print( "created directory " + directory + " for DaStGen legacy file" )
     
     file = open( self.__get_full_qualified_file_name(), "w" )
     file.write( self.__Template_Prologue )
@@ -77,9 +78,10 @@ Packed-Type: short int;
 
   def construct_output(self,output):
     """
-      Pass in a version of output
+      Pass in a version of output. It is important that external tools are used
+      first before we start any compile or so. So I add them first. 
     """
     self.__generate_dastgen_input_file()
     output.makefile.add_cpp_file( self.data.namespace[-1] + "/" + self.data.name + ".cpp" )
-    output.add( peano4.output.InvokeExternalTool( self.DaStGenInvocationPrefix + " " + self.__get_file_name() + " .", self.data.namespace[-1] ) )
+    output.add( peano4.output.InvokeExternalTool( self.DaStGenInvocationPrefix + " " + self.__get_file_name() + " .", self.data.namespace[-1] ), False )
 
