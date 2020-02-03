@@ -49,6 +49,13 @@ the directory.
   this parameter and then everything is fine. However, some configures then don't 
   like the configure script anymore. So I instead use \texttt{export PEANO\_LDFLAGS="-ltbb"}. 
   For some systems, it then still remains necessary to add pthreads, too.
+  \item \textbf{The linker says that the vtk libraries were not found}.
+  Some VTK installations do not install their libraries as plain libraries, but 
+  attach a -8.90 or similar postfix denoting the library version. We've in particular
+  seen this on Ubuntu. If you have such a system (search for files starting with 
+  \texttt{libvtk}), change into \texttt{visualisation/Makefile.am} and define the
+  postfix there. Rerun configure and build.
+  \item To be continued \dots
 \end{itemize}
 
 
