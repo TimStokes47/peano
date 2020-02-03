@@ -98,7 +98,7 @@ class Project (object):
     else:
       print( "can not build as code generation has not been successful" )
   
-  def run(self, args):
+  def run(self, args, prefix=""):
     """
     Runs the code. args should be a list of strings or the empty list.
     """
@@ -107,7 +107,7 @@ class Project (object):
     if self.is_built:
       print( "run application ..." )
       try:
-        subprocess.call(["./peano4"] + args, shell=True, bufsize=1)
+        subprocess.call([prefix + " ./peano4"] + args, shell=True, bufsize=1)
         print( "run complete" )
       except Exception as e:
         print( "run of application was not successful: " + str(e) )

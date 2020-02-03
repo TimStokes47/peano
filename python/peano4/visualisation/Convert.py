@@ -14,15 +14,21 @@ class Convert(object):
     self.file_name = file_name
     self.extension = ".peano-patch-file"
     self.output_path = "."
+    self.invocation_prefix      = ""
 
 
-  def set_visualisation_tools_path(self, path):
+  def set_visualisation_tools_path(self, path, invocation_prefix="" ):
     """
       Set path where tool can find the convert script. Convert is part of 
       the Peano4 installation if you have configured your build to use
       VTK (see ./configure script and the option --with-vtk in there).
+      
+      invocation_prefix If you built your code with MPI, you might have to 
+        set an explicit invocation prefix. Otherwise, just leave it as it 
+        is.
     """
     self.visualisation_tools_path = path
+    self.invocation_prefix        = invocation_prefix
 
 
   def set_output_path(self, path):
@@ -40,6 +46,7 @@ class Convert(object):
     result = []
     try:
       convert_result = subprocess.check_output([
+        self.invocation_prefix + " " +
         self.visualisation_tools_path + "/convert", 
         "inspect", 
         self.file_name + self.extension
