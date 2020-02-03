@@ -29,7 +29,7 @@ class Makefile(object):
     self.d["LIBS"]          = ""
     self.d["DIM"]           = "2"
     self.d["CONFIGUREPATH"] = "."
-    self.d["LIBRARY_POSTFIX"] = "_debug"
+    self.set_mode( CompileMode.Debug )
 
     
   def set_dimension(self,dimension):
@@ -50,6 +50,10 @@ class Makefile(object):
     return self.get_configure_path() + "/src"
 
 
+  def add_header_search_path(self, path ):
+    self.d["CXXFLAGS"] += " -I" + path
+
+
   def add_library(self, library_name, library_path="" ):
     """
     If you want to link against a library from Peano, feel free to use
@@ -65,7 +69,7 @@ class Makefile(object):
     """
     if library_path!="":
       self.d["LIBS"] = "-L" + library_path + " " + self.d["LIBS"]
-    self.d["LIBS"] += "-l" + library_name
+    self.d["LIBS"] += " -l" + library_name
 
 
   def set_mode( self, mode ):
@@ -77,13 +81,13 @@ class Makefile(object):
       for example
     """
     if mode==CompileMode.Debug:
-      self.d["CXXFLAGS"]        = "-g -O0 -DPeanoDebug=4"
+      self.d["CXX_MODE_FLAGS"]  = "-g -O0 -DPeanoDebug=4"
       self.d["LIBRARY_POSTFIX"] = "_debug"
     elif mode==CompileMode.Trace:
-      self.d["CXXFLAGS"]        = "-g -O2 -DPeanoDebug=1"
+      self.d["CXX_MODE_FLAGS"]  = "-g -O2 -DPeanoDebug=1"
       self.d["LIBRARY_POSTFIX"] = "_trace"
     elif mode==CompileMode.Release:
-      self.d["CXXFLAGS"]        = "-O2 -DPeanoDebug=0"
+      self.d["CXX_MODE_FLAGS"]  = "-O2 -DPeanoDebug=0"
       self.d["LIBRARY_POSTFIX"] = ""
     else:
       assert(False)      
@@ -132,7 +136,7 @@ class Makefile(object):
       for i in self.cppfiles:
         self.d[ 'SOURCES' ] += " "
         self.d[ 'SOURCES' ] += i
-      
+     
       # We first eliminate the precompiled variant, and then we get rid of the
       # postfix in the case where it is a source file
       with open( os.path.realpath(__file__).replace( ".pyc", ".template" ).replace( ".py", ".template" ), "r" ) as input:

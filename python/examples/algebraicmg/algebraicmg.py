@@ -125,6 +125,7 @@ project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano"
 # run the project through a command line
 #
 project.output.makefile.add_library( "ToolboxFiniteElements2d_trace", project.output.makefile.get_source_path() + "/toolbox/finiteelements" )
+project.output.makefile.add_header_search_path( "/opt/tbb/include" ) 
 project.output.makefile.set_dimension( 2 )
 project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
 project.generate(peano4.output.Overwrite.Default)
