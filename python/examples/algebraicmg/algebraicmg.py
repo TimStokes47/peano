@@ -59,7 +59,7 @@ create_grid = peano4.solversteps.Step( "CreateGrid", False )
 #       waere eine Assertion im C++ Code oder ein Check hier. Eher ersteres.
 #
 create_grid.use_vertex( dastgen_model )
-create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.05) )
+create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.02) )
 project.solversteps.add_step(create_grid)
 
 
@@ -138,21 +138,21 @@ project.output.makefile.set_dimension( 2 )
 project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
 project.generate(peano4.output.Overwrite.Default)
 project.build()
-#project.run( ["myarguments"] )
-project.run( ["myarguments"], "/opt/mpi/mpirun -n 1" )
+project.run( ["1.0"] )
+#project.run( ["myarguments"], "/opt/mpi/mpirun -n 1" )
 
 
 #
 # Convert data into vtk, so we can open it in Paraview
 #
 convert = peano4.visualisation.Convert( "solution" )
-#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
+convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
 convert.extract_fine_grid()
 convert.convert_to_vtk()
 
 convert = peano4.visualisation.Convert( "epsilon" )
-#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
+convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
 convert.extract_fine_grid()
 convert.convert_to_vtk()

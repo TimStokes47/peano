@@ -117,6 +117,13 @@ int main(int argc, char** argv) {
     #endif
     0
   );
+
+
+  if (argc>1) {
+    examples::algebraicmg::mappings::SetupScenario::Theta = std::atof( argv[1] );
+  }
+
+
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     do {
       examples::algebraicmg::observers::CreateGrid  observer;
@@ -132,7 +139,8 @@ int main(int argc, char** argv) {
       peano4::parallel::SpacetreeSet::getInstance().traverse(plotMaterialParameter);
     }
 
-    for (int i=0; i<20; i++)
+//    for (int i=0; i<20; i++)
+        for (int i=0; i<1; i++)
     {
       examples::algebraicmg::observers::ComputeResidualWithGeometricOperators  computeResidual;
       peano4::parallel::SpacetreeSet::getInstance().traverse(computeResidual);

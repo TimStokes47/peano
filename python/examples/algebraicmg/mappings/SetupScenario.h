@@ -37,6 +37,7 @@ class examples::algebraicmg::mappings::SetupScenario{
     static constexpr Scenario _scenario = Scenario::Sin;
 
   public:
+	static double Theta;
 
     /**
      * Init Dirichlet problem following either
@@ -54,6 +55,7 @@ class examples::algebraicmg::mappings::SetupScenario{
     static double                                            getSolution(const tarch::la::Vector<Dimensions,double>& x);
     static double                                            getEpsilon(const tarch::la::Vector<Dimensions,double>& x);
     static void                                              init(const tarch::la::Vector<Dimensions,double>& x, examples::algebraicmg::vertexdata::MG& fineGridVertexMG);
+    static std::pair<double,double>                          getMinMax();
 
     /**
      * Create mapping instance for one tree for one grid sweep

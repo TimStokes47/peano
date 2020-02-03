@@ -4,6 +4,9 @@
 tarch::logging::Log examples::algebraicmg::mappings::SetupScenario::_log( "examples::algebraicmg::mappings::SetupScenario");
 
 
+double examples::algebraicmg::mappings::SetupScenario::Theta = 0.0;
+
+
 examples::algebraicmg::mappings::SetupScenario::SetupScenario(int treeNumber) {
 // @todo Please implement
 }
@@ -132,6 +135,23 @@ double examples::algebraicmg::mappings::SetupScenario::getSolution(const tarch::
 }
 
 
+std::pair<double,double>  examples::algebraicmg::mappings::SetupScenario::getMinMax() {
+  switch (_scenario) {
+    case Scenario::Mitchell:
+   	  return std::pair<double,double>(-tarch::la::PI/2.0,tarch::la::PI/2.0);
+      break;
+    case Scenario::Ruede:
+   	  return std::pair<double,double>(-1.0,1.0);
+      break;
+    case Scenario::Sin:
+   	  return std::pair<double,double>(0.0,4.0/3.0);
+      break;
+  }
+  return std::pair<double,double>(0.0,0.0);
+}
+
+
+
 double examples::algebraicmg::mappings::SetupScenario::getEpsilon(const tarch::la::Vector<Dimensions,double>& x) {
   double result;
   switch (_scenario) {
@@ -141,10 +161,9 @@ double examples::algebraicmg::mappings::SetupScenario::getEpsilon(const tarch::l
       break;
     case Scenario::Sin:
       {
-    	double Scaling = 17.0;
         result = 1.0
-	           + 0.3/Dimensions * std::exp(-x(0)) * std::cos( tarch::la::PI * x(0) * Scaling )
-               + 0.3/Dimensions * std::exp(-x(1)) * std::cos( tarch::la::PI * x(1) * Scaling );
+	           + 0.3/Dimensions * std::exp(-Theta * x(0)) * std::cos( tarch::la::PI * x(0) * Theta )
+               + 0.3/Dimensions * std::exp(-Theta * x(1)) * std::cos( tarch::la::PI * x(1) * Theta );
       }
       break;
   }
@@ -162,12 +181,11 @@ void   examples::algebraicmg::mappings::SetupScenario::init(const tarch::la::Vec
     fineGridVertexMG.setEps( getEpsilon(x) );
   }
   else {
-    const double Max = _scenario==Scenario::Mitchell ?  tarch::la::PI/2.0 :  1.0;
-    const double Min = _scenario==Scenario::Mitchell ? -tarch::la::PI/2.0 : -1.0;
-
+    std::pair<double,double> minMax = getMinMax();
     const double scaledRandomValue = static_cast<double>( std::rand() ) /  static_cast<double>(RAND_MAX);
+
     fineGridVertexMG.setVertexType( examples::algebraicmg::vertexdata::MG::VertexType::Inside );
-    fineGridVertexMG.setU( Min + scaledRandomValue*(Max-Min) );
+    fineGridVertexMG.setU( minMax.first + scaledRandomValue*(minMax.second-minMax.first) );
     fineGridVertexMG.setRhs( 0.0 );
     fineGridVertexMG.setDiag( 1.0 );
     fineGridVertexMG.setEps( getEpsilon(x) );

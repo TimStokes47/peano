@@ -55,11 +55,9 @@ class Convert(object):
     print( "inspect file " + self.file_name + " ... ")
     convert_result = ""
     result = []
+    invocation = self.__invoke() + [ "inspect", self.file_name + self.extension ]
     try:
-      convert_result = subprocess.check_output(self.__invoke() + [
-        "inspect", 
-        self.file_name + self.extension
-      ])
+      convert_result = subprocess.check_output(invocation)
       for line in convert_result.decode("utf-8").splitlines(False):
         #if "variable" in line:
         #  print( line )
@@ -71,7 +69,7 @@ class Convert(object):
       result = set(result)
       print( "complete. Found selectors " + str(result) )
     except Exception as e:
-      print( "failed to inspect (" + e + ")" )  
+      print( "failed to inspect (" + str(e) + ") with " + str(invocation) )  
     return result
 
 
@@ -82,19 +80,20 @@ class Convert(object):
     selectors = self.__get_selectors()
 
     print( "extract fine grid from " + self.file_name + " ... ")
-    try:
-      for selector in selectors:
-        subprocess.check_call(self.__invoke() + [
+    for selector in selectors:
+      invocation =         self.__invoke() + [
           "apply-filter",
           self.file_name + self.extension,
           selector,
           self.output_path,
           "extract-fine-grid",
           selector + "-fine-grid"
-        ])
-      print( "complete" )
-    except Exception as e:
-      print( "failed to extract fine grid (" + e + ")" )
+        ]
+      try:
+        subprocess.check_call(invocation)
+        print( "complete" )
+      except Exception as e:
+        print( "failed to extract grid (" + str(e) + ") with " + str(invocation) )  
 
 
   def convert_to_vtk(self):
@@ -104,16 +103,17 @@ class Convert(object):
     selectors = self.__get_selectors()
 
     print( "convert file " + self.file_name + " ... ")
-    try:
-      for selector in selectors:
-        subprocess.check_call(self.__invoke() + [
+    for selector in selectors:
+      invocation =         self.__invoke() + [
           "convert-file",
           self.file_name + self.extension,
           selector,
           self.output_path,
           "vtu"
-        ])
-      print( "complete" )
-    except Exception as e:
-      print( "failed to convert to vtk (" + e + ")" )
+        ]
+      try:
+        subprocess.check_call(invocation)
+        print( "complete" )
+      except Exception as e:
+        print( "failed to convert to vtk (" + str(e) + ") with " + str(invocation) )  
 
