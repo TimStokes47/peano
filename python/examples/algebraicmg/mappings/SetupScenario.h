@@ -30,10 +30,11 @@ class examples::algebraicmg::mappings::SetupScenario{
 
     enum class Scenario {
       Mitchell,
-      Ruede
+      Ruede,
+	  Sin
     };
 
-    static constexpr Scenario _scenario = Scenario::Ruede;
+    static constexpr Scenario _scenario = Scenario::Sin;
 
   public:
 
@@ -51,6 +52,7 @@ class examples::algebraicmg::mappings::SetupScenario{
      */
     static examples::algebraicmg::vertexdata::MG::VertexType getVertexType(const tarch::la::Vector<Dimensions,double>& x);
     static double                                            getSolution(const tarch::la::Vector<Dimensions,double>& x);
+    static double                                            getEpsilon(const tarch::la::Vector<Dimensions,double>& x);
     static void                                              init(const tarch::la::Vector<Dimensions,double>& x, examples::algebraicmg::vertexdata::MG& fineGridVertexMG);
 
     /**

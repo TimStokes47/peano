@@ -12,6 +12,7 @@
 
 #include "observers/DataRepository.h"
 #include "observers/PlotSolution.h"
+#include "observers/PlotMaterialParameter.h"
 #include "observers/CreateGrid.h"
 #include "observers/SetupScenario.h"
 #include "observers/ComputeResidualWithGeometricOperators.h"
@@ -104,8 +105,12 @@ int main(int argc, char** argv) {
 
   peano4::parallel::SpacetreeSet::getInstance().init(
     #if Dimensions==2
+    { 0.0, 0.0},
+    { 1.0, 1.0},
+/*
     {-1.0, -1.0},
     { 2.0,  2.0},
+*/
     #else
     {-1.0, -1.0, -1.0},
     { 2.0,  2.0,  2.0},
@@ -120,8 +125,11 @@ int main(int argc, char** argv) {
     while (peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<2);
 
     {
-      examples::algebraicmg::observers::SetupScenario  observer;
-      peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+      examples::algebraicmg::observers::SetupScenario  setupScenario;
+      peano4::parallel::SpacetreeSet::getInstance().traverse(setupScenario);
+
+      examples::algebraicmg::observers::PlotMaterialParameter  plotMaterialParameter;
+      peano4::parallel::SpacetreeSet::getInstance().traverse(plotMaterialParameter);
     }
 
     for (int i=0; i<20; i++)

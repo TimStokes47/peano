@@ -39,6 +39,7 @@ project = peano4.Project( ["examples", "algebraicmg"], "." )
 dastgen_model = peano4.datamodel.DaStGen( "MG" )
 dastgen_model.add_double_scalar( "u" )
 dastgen_model.add_double_scalar( "rhs" )
+dastgen_model.add_double_scalar( "eps" )
 dastgen_model.add_double_scalar( "diag" )
 dastgen_model.add_double_scalar( "res" )
 dastgen_model.add_enum( "VertexType", ["Boundary", "Inside"] )
@@ -58,7 +59,7 @@ create_grid = peano4.solversteps.Step( "CreateGrid", False )
 #       waere eine Assertion im C++ Code oder ein Check hier. Eher ersteres.
 #
 create_grid.use_vertex( dastgen_model )
-create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.1) )
+create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.05) )
 project.solversteps.add_step(create_grid)
 
 
@@ -71,6 +72,13 @@ project.solversteps.add_step(create_grid)
 setup_scenario = peano4.solversteps.Step( "SetupScenario" )
 setup_scenario.use_vertex( dastgen_model )
 project.solversteps.add_step(setup_scenario)
+
+
+plot_material_parameter = peano4.solversteps.Step( "PlotMaterialParameter", False )
+plot_material_parameter.use_vertex( dastgen_model )
+plot_material_parameter.add_mapping( peano4.toolbox.PlotScalarNodalFieldInPeanoBlockFormat("epsilon",dastgen_model,"getEps()") )
+project.solversteps.add_step(plot_material_parameter)
+
 
 
 #
@@ -138,6 +146,12 @@ project.run( ["myarguments"], "/opt/mpi/mpirun -n 1" )
 # Convert data into vtk, so we can open it in Paraview
 #
 convert = peano4.visualisation.Convert( "solution" )
+#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
+convert.extract_fine_grid()
+convert.convert_to_vtk()
+
+convert = peano4.visualisation.Convert( "epsilon" )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
 convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
 convert.extract_fine_grid()

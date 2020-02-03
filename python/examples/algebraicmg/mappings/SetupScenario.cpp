@@ -72,6 +72,7 @@ examples::algebraicmg::vertexdata::MG::VertexType examples::algebraicmg::mapping
   examples::algebraicmg::vertexdata::MG::VertexType result;
   switch (_scenario) {
     case Scenario::Mitchell:
+    case Scenario::Sin:
       {
         const bool isBoundaryVertex =
           tarch::la::oneEquals(x,0.0)
@@ -121,6 +122,31 @@ double examples::algebraicmg::mappings::SetupScenario::getSolution(const tarch::
                / std::sinh( 8.0*tarch::la::PI );
       }
       break;
+    case Scenario::Sin:
+      {
+        result = 0.0;
+      }
+      break;
+  }
+  return result;
+}
+
+
+double examples::algebraicmg::mappings::SetupScenario::getEpsilon(const tarch::la::Vector<Dimensions,double>& x) {
+  double result;
+  switch (_scenario) {
+    case Scenario::Mitchell:
+    case Scenario::Ruede:
+      result = 1.0;
+      break;
+    case Scenario::Sin:
+      {
+    	double Scaling = 17.0;
+        result = 1.0
+	           + 0.3/Dimensions * std::exp(-x(0)) * std::cos( tarch::la::PI * x(0) * Scaling )
+               + 0.3/Dimensions * std::exp(-x(1)) * std::cos( tarch::la::PI * x(1) * Scaling );
+      }
+      break;
   }
   return result;
 }
@@ -133,6 +159,7 @@ void   examples::algebraicmg::mappings::SetupScenario::init(const tarch::la::Vec
     fineGridVertexMG.setRhs( 0.0 );
     // @todo Document: Important to allow fusion
     fineGridVertexMG.setDiag( 1.0 );
+    fineGridVertexMG.setEps( getEpsilon(x) );
   }
   else {
     const double Max = _scenario==Scenario::Mitchell ?  tarch::la::PI/2.0 :  1.0;
@@ -143,6 +170,7 @@ void   examples::algebraicmg::mappings::SetupScenario::init(const tarch::la::Vec
     fineGridVertexMG.setU( Min + scaledRandomValue*(Max-Min) );
     fineGridVertexMG.setRhs( 0.0 );
     fineGridVertexMG.setDiag( 1.0 );
+    fineGridVertexMG.setEps( getEpsilon(x) );
   }
 }
 

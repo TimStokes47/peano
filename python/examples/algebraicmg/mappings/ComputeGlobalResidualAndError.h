@@ -32,8 +32,10 @@ class examples::algebraicmg::mappings::ComputeGlobalResidualAndError{
 
     double _globalResidualL2;
     double _globalResidualMax;
+    double _globalResidualEukledian;
     double _globalErrorL2;
     double _globalErrorMax;
+    double _globalErrorEukledian;
   public:
 
     /**
