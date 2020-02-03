@@ -34,6 +34,18 @@
  *
  */
 namespace tarch {
+  enum class MemoryUsageFormat {
+	MByte
+  };
+
+  /**
+   * Method for getting the application's memory footprint
+   *
+   * We use the exact version of KiloByte with 1024 bytes.
+   *
+   * The implementation is based on C-version of Michael Moltenbrey.
+   */
+  int getMemoryUsage(MemoryUsageFormat format);
 }
 
 
