@@ -14,10 +14,10 @@ class Convert(object):
     self.file_name = file_name
     self.extension = ".peano-patch-file"
     self.output_path = "."
-    self.invocation_prefix      = ""
+    self.mpi_prefix      = ""
 
 
-  def set_visualisation_tools_path(self, path, invocation_prefix="" ):
+  def set_visualisation_tools_path(self, path, mpi_prefix="" ):
     """
       Set path where tool can find the convert script. Convert is part of 
       the Peano4 installation if you have configured your build to use
@@ -25,10 +25,11 @@ class Convert(object):
       
       invocation_prefix If you built your code with MPI, you might have to 
         set an explicit invocation prefix. Otherwise, just leave it as it 
-        is.
+        is. Don't add something alike -np 1. The code will add this 
+        automatically, as it is well-awa
     """
     self.visualisation_tools_path = path
-    self.invocation_prefix        = invocation_prefix
+    self.mpi_prefix               = mpi_prefix
 
 
   def set_output_path(self, path):
@@ -38,6 +39,16 @@ class Convert(object):
       If you use ., then the input data is enriched
     """
     self.output_path = path
+    
+
+  def __invoke(self):
+    """
+    Returns the invocation call. This is a set of strings.
+    """
+    if self.mpi_prefix!="":
+      return [self.mpi_prefix, "-n", "1", self.visualisation_tools_path + "/convert"]
+    else:
+      return [self.visualisation_tools_path + "/convert"]
 
 
   def __get_selectors(self):
@@ -45,13 +56,11 @@ class Convert(object):
     convert_result = ""
     result = []
     try:
-      convert_result = subprocess.check_output([
-        self.invocation_prefix + " " +
-        self.visualisation_tools_path + "/convert", 
+      convert_result = subprocess.check_output(self.__invoke() + [
         "inspect", 
         self.file_name + self.extension
       ])
-      for line in convert_result.splitlines(False):
+      for line in convert_result.decode("utf-8").splitlines(False):
         #if "variable" in line:
         #  print( line )
         #if "variable" in line and not "hosts" in line and not "held" in line:
@@ -62,7 +71,7 @@ class Convert(object):
       result = set(result)
       print( "complete. Found selectors " + str(result) )
     except Exception as e:
-      print( "failed (" + str(e) + ")" )  
+      print( "failed to inspect (" + e + ")" )  
     return result
 
 
@@ -75,8 +84,7 @@ class Convert(object):
     print( "extract fine grid from " + self.file_name + " ... ")
     try:
       for selector in selectors:
-        subprocess.check_call([
-          self.visualisation_tools_path + "/convert", 
+        subprocess.check_call(self.__invoke() + [
           "apply-filter",
           self.file_name + self.extension,
           selector,
@@ -86,7 +94,7 @@ class Convert(object):
         ])
       print( "complete" )
     except Exception as e:
-      print( "failed (" + str(e) + ")" )
+      print( "failed to extract fine grid (" + e + ")" )
 
 
   def convert_to_vtk(self):
@@ -98,8 +106,7 @@ class Convert(object):
     print( "convert file " + self.file_name + " ... ")
     try:
       for selector in selectors:
-        subprocess.check_call([
-          self.visualisation_tools_path + "/convert", 
+        subprocess.check_call(self.__invoke() + [
           "convert-file",
           self.file_name + self.extension,
           selector,
@@ -108,5 +115,5 @@ class Convert(object):
         ])
       print( "complete" )
     except Exception as e:
-      print( "failed (" + str(e) + ")" )
+      print( "failed to convert to vtk (" + e + ")" )
 

@@ -139,6 +139,6 @@ project.run( ["myarguments"], "/opt/mpi/mpirun -n 1" )
 #
 convert = peano4.visualisation.Convert( "solution" )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun -n 1" )
+convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
 convert.extract_fine_grid()
 convert.convert_to_vtk()
