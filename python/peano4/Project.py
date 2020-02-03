@@ -71,7 +71,7 @@ class Project (object):
     print( "generation complete" )
 
           
-  def build(self, additional_libraries = []):
+  def build(self, make_clean_first=True, additional_libraries = []):
     """
     Invokes the underlying make/C build mechanism on the project. 
     We invoke the make command via a subprocess. That's it.
@@ -80,12 +80,13 @@ class Project (object):
     if not self.is_generated:
       self.generate();
 
-    print( "clean up project ..." )
-    try:
-      subprocess.check_call(["make", "clean"])
-      print( "clean complete" )
-    except Exception as e:
-      print( "clean failed (" + str(e) + ") - continue anyway" )
+    if make_clean_first:
+      print( "clean up project ..." )
+      try:
+        subprocess.check_call(["make", "clean"])
+        print( "clean complete" )
+      except Exception as e:
+        print( "clean failed (" + str(e) + ") - continue anyway" )
 
     if self.is_built:
       print( "start to compile ..." )
@@ -98,6 +99,7 @@ class Project (object):
     else:
       print( "can not build as code generation has not been successful" )
   
+  
   def run(self, args, prefix=""):
     """
     Runs the code. args should be a list of strings or the empty list.
@@ -106,11 +108,14 @@ class Project (object):
       self.build()
     if self.is_built:
       print( "run application ..." )
+      
+      invocation = [ "./peano4" ] + args
       try:
-        subprocess.call([prefix + " ./peano4"] + args, shell=True, bufsize=1)
+        subprocess.check_call( invocation )
         print( "run complete" )
       except Exception as e:
         print( "run of application was not successful: " + str(e) )
+        print( "invocation: " + str(invocation) )
     else:
       print( "can not run as code compilation has not been successful" )
   

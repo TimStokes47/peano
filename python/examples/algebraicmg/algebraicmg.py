@@ -137,19 +137,19 @@ project.output.makefile.add_header_search_path( "/opt/tbb/include" )
 project.output.makefile.set_dimension( 2 )
 project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
 project.generate(peano4.output.Overwrite.Default)
-project.build()
-project.run( ["1.0"] )
+project.build(False)
+project.run( ["16.0"] )
 #project.run( ["myarguments"], "/opt/mpi/mpirun -n 1" )
 
 
 #
 # Convert data into vtk, so we can open it in Paraview
 #
-convert = peano4.visualisation.Convert( "solution" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+#convert = peano4.visualisation.Convert( "solution" )
+#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
-convert.extract_fine_grid()
-convert.convert_to_vtk()
+#convert.extract_fine_grid()
+#convert.convert_to_vtk()
 
 convert = peano4.visualisation.Convert( "epsilon" )
 convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )

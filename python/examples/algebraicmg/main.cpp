@@ -23,7 +23,7 @@
 tarch::logging::Log _log("::");
 
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
   const int ExitCodeSuccess         = 0;
   const int ExitCodeUnitTestsFailed = 1;
 
@@ -89,8 +89,6 @@ int main(int argc, char** argv) {
 
   tarch::logging::ChromeTraceFileLogger::getInstance().setOutputFile( "trace" );
 
-  tarch::logging::LogFilter::getInstance().printFilterListToCout();
-
   #if PeanoDebug>=2
   tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
   int unitTestsErrors = tarch::tests::TestCaseRegistry::getInstance()
@@ -122,6 +120,10 @@ int main(int argc, char** argv) {
   if (argc>1) {
     examples::algebraicmg::mappings::SetupScenario::Theta = std::atof( argv[1] );
   }
+  else {
+    logWarning( "main()", "use dummy value for theta " );
+  }
+  logInfo( "main()", "theta=" << examples::algebraicmg::mappings::SetupScenario::Theta  );
 
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
