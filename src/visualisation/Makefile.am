@@ -20,8 +20,8 @@ convertSources = \
   output/PeanoWriter.cpp \
   output/VTUWriter.cpp
   
-VTK_LIBRARY_EXTENSION = -8.90
-#VTK_LIBRARY_EXTENSION = 
+#VTK_LIBRARY_EXTENSION = -8.90
+VTK_LIBRARY_EXTENSION = 
 VTK_REQUIRED_LIBS     =  -lvtkIOXML$(VTK_LIBRARY_EXTENSION) \
                          -lvtkCommonExecutionModel$(VTK_LIBRARY_EXTENSION) \
                          -lvtkCommonCore$(VTK_LIBRARY_EXTENSION) \
