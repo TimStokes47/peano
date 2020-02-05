@@ -302,7 +302,7 @@ toolbox::finiteelements::getElementWiseAssemblyMatrix( const VectorOfComplexSten
 toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::hierarchicalTransform(
   const ElementWiseAssemblyMatrix&              matrix,
   const tarch::la::Vector<Dimensions,double>&   h,
-  double                                        sign
+  double                                        weight
 ) {
   static toolbox::finiteelements::ElementWiseAssemblyMatrix referenceStiffnessMatrix =
     toolbox::finiteelements::getElementWiseAssemblyMatrix(
@@ -314,7 +314,7 @@ toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::hier
   toolbox::finiteelements::ElementWiseAssemblyMatrix result;
   for (int row=0; row<TwoPowerD; row++)
   for (int col=0; col<TwoPowerD; col++) {
-    result(row,col) = matrix(row,col) + sign * referenceStiffnessMatrix(row,col) * scaling;
+    result(row,col) = matrix(row,col) - weight * referenceStiffnessMatrix(row,col) * scaling;
   }
   return result;
 }
@@ -322,7 +322,8 @@ toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::hier
 
 toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::inverseHierarchicalTransform(
   const ElementWiseAssemblyMatrix&              matrix,
-  const tarch::la::Vector<Dimensions,double>&   h
+  const tarch::la::Vector<Dimensions,double>&   h,
+  double weight
 ) {
-  return hierarchicalTransform(matrix,h,1.0);
+  return hierarchicalTransform(matrix,h,-weight);
 }

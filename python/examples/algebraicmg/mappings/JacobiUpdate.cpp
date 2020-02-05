@@ -82,7 +82,12 @@ void examples::algebraicmg::mappings::JacobiUpdate::touchVertexLastTime(
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
   const double omega = 0.7;
-  if (fineGridVertexMG.getVertexType()==examples::algebraicmg::vertexdata::MG::VertexType::Inside) {
+  // @todo Wir sollten hier auf Feingitter auch noch testen. Geht aber noch net
+  if (
+    fineGridVertexMG.getVertexType()==examples::algebraicmg::vertexdata::MG::VertexType::Inside
+	and
+	fineGridVertexMG.getDiag()>0.0
+  ) {
     logDebug( "touchVertexLastTime(...)", "update " << fineGridVertexMG.toString() )
     assertion3( fineGridVertexMG.getDiag()>0.0, fineGridVertexMG.toString(), center, h );
     fineGridVertexMG.setU(

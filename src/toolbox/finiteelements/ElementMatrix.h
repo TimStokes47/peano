@@ -257,10 +257,18 @@ namespace toolbox {
     );
 
     /**
-     * Don't change sign
+     * @param weight   Weight of the Laplacian. Use it to inject material parameter samples, e.g.
      */
-    ElementWiseAssemblyMatrix hierarchicalTransform(const ElementWiseAssemblyMatrix& matrix, const tarch::la::Vector<Dimensions,double>&   h,   double  sign = -1.0);
-    ElementWiseAssemblyMatrix inverseHierarchicalTransform(const ElementWiseAssemblyMatrix& matrix, const tarch::la::Vector<Dimensions,double>&   h);
+    ElementWiseAssemblyMatrix hierarchicalTransform(
+      const ElementWiseAssemblyMatrix&             matrix,
+	  const tarch::la::Vector<Dimensions,double>&  h,
+	  double                                       weight = 1.0
+	);
+    ElementWiseAssemblyMatrix inverseHierarchicalTransform(
+      const ElementWiseAssemblyMatrix&             matrix,
+	  const tarch::la::Vector<Dimensions,double>&  h,
+	  double                                       weight = 1.0
+    );
   }
 }
 

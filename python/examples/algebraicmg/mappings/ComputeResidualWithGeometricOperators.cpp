@@ -101,26 +101,34 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
   peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
   peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA
 ) {
-	// @todo Nur auf dem Feingitter
-  tarch::la::Vector<TwoPowerD, double> u;
-  tarch::la::Vector<TwoPowerD, double> r;
+  if (fineGridCellA.isRefined()) {
+    tarch::la::Vector<TwoPowerD, double> u;
+    tarch::la::Vector<TwoPowerD, double> r;
 
-  // gather solution values
-  for (int i=0; i<TwoPowerD; i++) {
-    u(i) = fineGridVerticesMG(i).getU();
-  }
+    // gather solution values
+    for (int i=0; i<TwoPowerD; i++) {
+      u(i) = fineGridVerticesMG(i).getU();
+    }
 
-  if ( fineGridCellA.data().entries.empty() ) {
-    tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix =
-      toolbox::finiteelements::getPoissonMatrixWithJumpingCoefficient(
-        fineGridCellA.centre(), fineGridCellA.h(), 1,
-		[](const tarch::la::Vector<Dimensions,double>& x) -> double {
-          return SetupScenario::getEpsilon(x);
-		}
-	  );
+    if ( fineGridCellA.data().entries.empty() ) {
+      tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix =
+        toolbox::finiteelements::getPoissonMatrixWithJumpingCoefficient(
+          fineGridCellA.centre(), fineGridCellA.h(), 1,
+  	      [](const tarch::la::Vector<Dimensions,double>& x) -> double {
+            return SetupScenario::getEpsilon(x);
+          }
+	    );
 
-    for (int row=0; row<TwoPowerD; row++)
-    for (int col=0; col<TwoPowerD; col++) {
+      tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  lala = toolbox::finiteelements::hierarchicalTransform(
+        localStiffnessMatrix,
+		fineGridCellA.h(),
+		SetupScenario::getEpsilon( fineGridCellA.centre() )
+      );
+      std::cout << lala << std::endl;
+
+
+      for (int row=0; row<TwoPowerD; row++)
+      for (int col=0; col<TwoPowerD; col++) {
 /*
       // Seems to be too restrictive, i.e. fails in the digit eight or nine.
 
@@ -131,8 +139,8 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
         * _localStiffnessMatrixOneIntegrationPoint(row,col)
       );
 */
-      fineGridCellA.data().entries.push_back( localStiffnessMatrix(row,col) );
-    }
+        fineGridCellA.data().entries.push_back( localStiffnessMatrix(row,col) );
+      }
 
 
 /*
@@ -143,23 +151,25 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
       fineGridCellA.data().entries.push_back( scaling * _localStiffnessMatrixOneIntegrationPoint(row,col) );
     }
 */
-  }
+    }
 
-  tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix;
-  for (int row=0; row<TwoPowerD; row++)
-  for (int col=0; col<TwoPowerD; col++) {
-    localStiffnessMatrix(row,col) = fineGridCellA.data().entries[ row*TwoPowerD + col ];
-  }
+    tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix;
+    for (int row=0; row<TwoPowerD; row++)
+    for (int col=0; col<TwoPowerD; col++) {
+      localStiffnessMatrix(row,col) = fineGridCellA.data().entries[ row*TwoPowerD + col ];
+    }
 
-  // compute residual contribution. Mind the minus sign here that
-  // results from the residual's definition: r = b-Au
-  const double scaling = tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2));
-  r = - scaling * _localStiffnessMatrixOneIntegrationPoint * u;
+    // compute residual contribution. Mind the minus sign here that
+    // results from the residual's definition: r = b-Au
+    // const double scaling = tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2));
+    // r = - scaling * _localStiffnessMatrixOneIntegrationPoint * u;
+    r = - 1.0 * localStiffnessMatrix * u;
 
-  // scatter residual contributions
-  for (int i=0; i<TwoPowerD; i++) {
-    fineGridVerticesMG(i).setRes(  fineGridVerticesMG(i).getRes() + r(i) );
-    fineGridVerticesMG(i).setDiag( fineGridVerticesMG(i).getDiag() + scaling * _localStiffnessMatrixOneIntegrationPoint(i,i) );
+    // scatter residual contributions
+    for (int i=0; i<TwoPowerD; i++) {
+      fineGridVerticesMG(i).setRes(  fineGridVerticesMG(i).getRes() + r(i) );
+      fineGridVerticesMG(i).setDiag( fineGridVerticesMG(i).getDiag() + localStiffnessMatrix(i,i) );
+    }
   }
 }
 
