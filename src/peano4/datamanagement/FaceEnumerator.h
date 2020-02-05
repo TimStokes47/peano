@@ -12,6 +12,9 @@ namespace peano4 {
   namespace datamanagement {
     template <class Face>
     class FaceEnumerator;
+
+    template <>
+    class FaceEnumerator<void>;
   }
 }
 
@@ -148,5 +151,75 @@ class peano4::datamanagement::FaceEnumerator {
 
 };
 
+
+template <>
+class peano4::datamanagement::FaceEnumerator<void> {
+  private:
+    /**
+     * Bottom left vertex of associated cell.
+     */
+    tarch::la::Vector<Dimensions,double>  _cellCentre;
+
+    tarch::la::Vector<Dimensions,double>  _h;
+  public:
+    /**
+     * Usually is only used by the observers, i.e. users should not interact
+     * with this routine.
+     */
+    FaceEnumerator(const tarch::la::Vector<Dimensions,double>& cellCentre, const tarch::la::Vector<Dimensions,double>&  h):
+      _cellCentre(cellCentre),
+      _h(h) {
+    }
+
+
+    FaceEnumerator(const FaceEnumerator<void>& copy ):
+      _cellCentre(copy._cellCentre),
+      _h(copy._h) {
+    }
+
+
+    FaceEnumerator& operator=(const FaceEnumerator<void>& copy ) {
+      _cellCentre = copy._cellCentre;
+      _h = copy._h;
+      return *this;
+    }
+
+
+	tarch::la::Vector<Dimensions,double> x(int i) const {
+      tarch::la::Vector<Dimensions,double> result( _cellCentre );
+      int normal = i % Dimensions;
+	  result(normal) += i >= Dimensions ? _h(normal)/2.0 : -_h(normal)/2.0;
+      return result;
+	}
+
+
+	tarch::la::Vector<Dimensions,double> normal(int i) const {
+      tarch::la::Vector<Dimensions,double> result( 0.0 );
+      int index = i % Dimensions;
+      result(index) += i<Dimensions ? -_h(index) : _h(index);
+      return result;
+	}
+
+	std::string toString() const {
+	  return "(" + _cellCentre.toString() + "," + _h.toString() + ")";
+	}
+
+	/**
+	 * @return Centre of the cell associated with this face at the moment. You always are
+	 *         given access to a face from within a cell. This is the centre of this cell.
+	 */
+    tarch::la::Vector<Dimensions,double>  centre() const {
+        return _cellCentre;
+    }
+
+
+    /**
+     * @return The mesh size associated with this face.
+     */
+    tarch::la::Vector<Dimensions,double>  h() const {
+      return _h;
+    }
+
+};
 
 #endif

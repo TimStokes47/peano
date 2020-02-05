@@ -14,6 +14,9 @@ namespace peano4 {
   namespace datamanagement {
     template <class Vertex>
     struct VertexEnumerator;
+
+    template <>
+    struct VertexEnumerator<void>;
   }
 }
 
@@ -35,7 +38,7 @@ struct peano4::datamanagement::VertexEnumerator {
 	 * with this routine.
 	 */
 	VertexEnumerator(const tarch::la::Vector<Dimensions,double>&  cellCentre, const tarch::la::Vector<Dimensions,double>&  h):
-      _cellCentre(x),
+      _cellCentre(cellCentre),
 	  _h(h) {
       #if PeanoDebug>0
 	  for (int i=0; i<TwoTimesD; i++) {
@@ -157,5 +160,97 @@ struct peano4::datamanagement::VertexEnumerator {
     }
 };
 
+
+
+template <>
+struct peano4::datamanagement::VertexEnumerator<void> {
+  private:
+    /**
+     * Bottom left vertex of associated cell.
+     */
+    tarch::la::Vector<Dimensions,double>  _cellCentre;
+
+    tarch::la::Vector<Dimensions,double>  _h;
+  public:
+	/**
+	 * Usually is only used by the observers, i.e. users should not interact
+	 * with this routine.
+	 */
+	VertexEnumerator(const tarch::la::Vector<Dimensions,double>&  cellCentre, const tarch::la::Vector<Dimensions,double>&  h):
+      _cellCentre(cellCentre),
+	  _h(h) {
+	}
+
+
+	/**
+	 * Constructs a vertex enumerator within a cell specified by x and h.
+	 * However, this
+	 */
+	VertexEnumerator(
+	  const tarch::la::Vector<Dimensions,double>&  cellCentre,
+	  const tarch::la::Vector<Dimensions,double>&  h,
+	  const tarch::la::Vector<Dimensions,int>&     relativePositionToFather
+	):
+      _cellCentre(cellCentre),
+	  _h(h) {
+
+	  for (int d=0; d<Dimensions; d++) {
+        _cellCentre(d) += (1.0-relativePositionToFather(d)) * _h(d);
+	  }
+
+	  _h = 3.0 * _h;
+    }
+
+
+	VertexEnumerator(const VertexEnumerator<void>& copy ):
+      _cellCentre(copy._cellCentre),
+      _h(copy._h) {
+    }
+
+
+    VertexEnumerator& operator=(const VertexEnumerator<void>& copy ) {
+      _cellCentre = copy._cellCentre;
+      _h = copy._h;
+      return *this;
+    }
+
+	/**
+	 * We do enumerate the vertices in a lexicographic way, i.e. we start with the
+	 * bottom left vertex. Then we run along the first Cartesian axis, then the
+	 * second, and so forth. This yields a z-pattern for the enumeration.
+	 *
+	 * @return Position of ith vertex
+	 */
+	tarch::la::Vector<Dimensions,double> x(int i) const {
+      tarch::la::Vector<Dimensions,double> result( _cellCentre );
+      std::bitset<Dimensions> myset(i);
+      for (int d=0; d<Dimensions; d++) {
+        result(d) -= 0.5 * _h(d);
+        result(d) += static_cast<double>(myset[d]) * _h(d);
+      }
+      return result;
+	}
+
+	std::string toString() const {
+	  return "(" + _cellCentre.toString() + "," + _h.toString() + ")";
+	}
+
+
+	/**
+	 * @return Centre of the cell associated with this face at the moment. You always are
+	 *         given access to a face from within a cell. This is the centre of this cell.
+	 */
+    tarch::la::Vector<Dimensions,double>  centre() const {
+        return _cellCentre;
+    }
+
+
+    /**
+     * @return The mesh size associated with this face.
+     */
+    tarch::la::Vector<Dimensions,double>  h() const {
+      return _h;
+    }
+};
 
 #endif
