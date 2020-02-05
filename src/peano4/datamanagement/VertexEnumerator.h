@@ -5,6 +5,7 @@
 
 
 #include "peano4/utils/Globals.h"
+#include "peano4/grid/GridTraversalEvent.h"
 #include "tarch/la/Vector.h"
 
 #include <bitset>
@@ -37,9 +38,9 @@ struct peano4::datamanagement::VertexEnumerator {
 	 * Usually is only used by the observers, i.e. users should not interact
 	 * with this routine.
 	 */
-	VertexEnumerator(const tarch::la::Vector<Dimensions,double>&  cellCentre, const tarch::la::Vector<Dimensions,double>&  h):
-      _cellCentre(cellCentre),
-	  _h(h) {
+	VertexEnumerator(const peano4::grid::GridTraversalEvent&   event):
+      _cellCentre(event.getX()),
+	  _h(event.getH()) {
       #if PeanoDebug>0
 	  for (int i=0; i<TwoTimesD; i++) {
 		_vertices[i] = nullptr;
@@ -52,9 +53,9 @@ struct peano4::datamanagement::VertexEnumerator {
 	 * Constructs vertex enumerator with default layout for consecutively
 	 * stored vertices.
 	 */
-	VertexEnumerator(const tarch::la::Vector<Dimensions,double>&  cellCentre, const tarch::la::Vector<Dimensions,double>&  h, Vertex* firstVertex):
-      _cellCentre(cellCentre),
-	  _h(h) {
+	VertexEnumerator(const peano4::grid::GridTraversalEvent&   event, Vertex* firstVertex):
+      _cellCentre(event.getX()),
+	  _h(event.getH()) {
 	  for (int i=0; i<TwoTimesD; i++) {
 		  _vertices[i] = firstVertex+i;
 	  }
@@ -66,13 +67,12 @@ struct peano4::datamanagement::VertexEnumerator {
 	 * However, this
 	 */
 	VertexEnumerator(
-	  const tarch::la::Vector<Dimensions,double>&  cellCentre,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-	  const tarch::la::Vector<Dimensions,int>&     relativePositionToFather,
+      const peano4::grid::GridTraversalEvent&   event,
+	  const tarch::la::Vector<Dimensions,int>&  relativePositionToFather,
 	  Vertex* firstVertex
 	):
-      _cellCentre(cellCentre),
-	  _h(h) {
+      _cellCentre(event.getX()),
+	  _h(event.getH()) {
 	  for (int i=0; i<TwoTimesD; i++) {
         _vertices[i] = firstVertex+i;
 	  }
@@ -176,9 +176,9 @@ struct peano4::datamanagement::VertexEnumerator<void> {
 	 * Usually is only used by the observers, i.e. users should not interact
 	 * with this routine.
 	 */
-	VertexEnumerator(const tarch::la::Vector<Dimensions,double>&  cellCentre, const tarch::la::Vector<Dimensions,double>&  h):
-      _cellCentre(cellCentre),
-	  _h(h) {
+	VertexEnumerator(const peano4::grid::GridTraversalEvent&   event):
+      _cellCentre(event.getX()),
+	  _h(event.getH()) {
 	}
 
 
@@ -187,12 +187,11 @@ struct peano4::datamanagement::VertexEnumerator<void> {
 	 * However, this
 	 */
 	VertexEnumerator(
-	  const tarch::la::Vector<Dimensions,double>&  cellCentre,
-	  const tarch::la::Vector<Dimensions,double>&  h,
+      const peano4::grid::GridTraversalEvent&   event,
 	  const tarch::la::Vector<Dimensions,int>&     relativePositionToFather
 	):
-      _cellCentre(cellCentre),
-	  _h(h) {
+      _cellCentre(event.getX()),
+	  _h(event.getH()) {
 
 	  for (int d=0; d<Dimensions; d++) {
         _cellCentre(d) += (1.0-relativePositionToFather(d)) * _h(d);

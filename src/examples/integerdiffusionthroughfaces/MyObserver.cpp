@@ -74,7 +74,9 @@ void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal(
   data.h = h;
   #endif
   _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
-  _facesCallStack.push( MyMapping::Faces(x,h) );
+  assertion(false);
+  // @todo
+  // _facesCallStack.push( MyMapping::Faces(event) );
 }
 
 
@@ -115,8 +117,8 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   // Vertex processing -> nop here
   // =============================
 
-  MyMapping::Faces fineGridFaces(event.getX(),event.getH());
-  MyMapping::Faces coarseGridFaces(event.getX(),event.getH());
+  MyMapping::Faces fineGridFaces(event);
+  MyMapping::Faces coarseGridFaces(event);
 
   // Face processing
   // ===============

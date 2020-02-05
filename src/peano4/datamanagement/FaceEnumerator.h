@@ -5,6 +5,7 @@
 
 
 #include "peano4/utils/Globals.h"
+#include "peano4/grid/GridTraversalEvent.h"
 #include "tarch/la/Vector.h"
 
 
@@ -35,9 +36,9 @@ class peano4::datamanagement::FaceEnumerator {
      * Usually is only used by the observers, i.e. users should not interact
      * with this routine.
      */
-    FaceEnumerator(const tarch::la::Vector<Dimensions,double>& cellCentre, const tarch::la::Vector<Dimensions,double>&  h):
-      _cellCentre(cellCentre),
-      _h(h) {
+    FaceEnumerator(const peano4::grid::GridTraversalEvent&   event):
+      _cellCentre(event.getX()),
+ 	  _h(event.getH()) {
       #if PeanoDebug>0
       for (int i=0; i<TwoTimesD; i++) {
     	_faces[i] = nullptr;
@@ -50,9 +51,9 @@ class peano4::datamanagement::FaceEnumerator {
      * Face enumerator with standard ordering of faces within a consecutive
      * array.
      */
-    FaceEnumerator(const tarch::la::Vector<Dimensions,double>  cellCentre, const tarch::la::Vector<Dimensions,double>  h, Face* firstFace):
-      _cellCentre(cellCentre),
-      _h(h) {
+    FaceEnumerator(const peano4::grid::GridTraversalEvent&   event, Face* firstFace):
+      _cellCentre(event.getX()),
+ 	  _h(event.getH()) {
       for (int i=0; i<TwoTimesD; i++) {
       _faces[i] = firstFace+i;
       }
@@ -60,13 +61,12 @@ class peano4::datamanagement::FaceEnumerator {
 
 
     FaceEnumerator(
-      const tarch::la::Vector<Dimensions,double>&  cellCentre,
-	  const tarch::la::Vector<Dimensions,double>&  h,
+      const peano4::grid::GridTraversalEvent&   event,
 	  const tarch::la::Vector<Dimensions,int>&     relativePositionToFather,
 	  Face* firstFace
 	):
-      _cellCentre(cellCentre),
-      _h(h) {
+      _cellCentre(event.getX()),
+	  _h(event.getH()) {
       for (int i=0; i<TwoTimesD; i++) {
       _faces[i] = firstFace+i;
       }
@@ -166,9 +166,9 @@ class peano4::datamanagement::FaceEnumerator<void> {
      * Usually is only used by the observers, i.e. users should not interact
      * with this routine.
      */
-    FaceEnumerator(const tarch::la::Vector<Dimensions,double>& cellCentre, const tarch::la::Vector<Dimensions,double>&  h):
-      _cellCentre(cellCentre),
-      _h(h) {
+    FaceEnumerator(const peano4::grid::GridTraversalEvent&   event):
+      _cellCentre(event.getX()),
+ 	  _h(event.getH()) {
     }
 
 

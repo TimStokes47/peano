@@ -6,6 +6,7 @@
 
 #include "tarch/la/Vector.h"
 #include "peano4/utils/Globals.h"
+#include "peano4/grid/GridTraversalEvent.h"
 
 
 namespace peano4 {
@@ -42,25 +43,25 @@ struct peano4::datamanagement::CellWrapper {
 
   public:
     CellWrapper(
-      const tarch::la::Vector<Dimensions,double>&  centre,
-      const tarch::la::Vector<Dimensions,double>&  h,
+      const peano4::grid::GridTraversalEvent& event,
       Cell* cell
 	  ):
       _cell(cell),
-      _centre(centre),
-      _h(h) {
+      _centre(event.getX()),
+  	  _h(event.getH()),
+	  _isRefined(event.getIsRefined()) {
     }
 
 
     CellWrapper(
-      const tarch::la::Vector<Dimensions,double>&  centre,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-	  const tarch::la::Vector<Dimensions,int>&     relativePositionToFather,
+      const peano4::grid::GridTraversalEvent&   event,
+	  const tarch::la::Vector<Dimensions,int>&  relativePositionToFather,
 	  Cell* cell
 	):
       _cell(cell),
-      _centre(centre),
-      _h(h) {
+	  _centre(event.getX()),
+  	  _h(event.getH()),
+	  _isRefined(true) {
   	  for (int d=0; d<Dimensions; d++) {
         _centre(d) += (1.0-relativePositionToFather(d)) * _h(d);
   	  }
@@ -72,7 +73,8 @@ struct peano4::datamanagement::CellWrapper {
     CellWrapper( const CellWrapper& copy ):
       _cell(copy._cell),
       _centre(copy._centre),
-      _h(copy._h) {
+      _h(copy._h),
+	  _isRefined(copy._isRefined){
     }
 
 
@@ -80,6 +82,7 @@ struct peano4::datamanagement::CellWrapper {
       _cell   = copy._cell;
       _centre = copy._centre;
       _h      = copy._h;
+      _isRefined = copy._isRefined;
       return *this;
     }
 
@@ -122,21 +125,21 @@ struct peano4::datamanagement::CellWrapper<void> {
 
   public:
     CellWrapper(
-      const tarch::la::Vector<Dimensions,double>&  centre,
-      const tarch::la::Vector<Dimensions,double>&  h
+      const peano4::grid::GridTraversalEvent&   event
     ):
-      _centre(centre),
-      _h(h) {
+      _centre(event.getX()),
+  	  _h(event.getH()),
+	  _isRefined(event.getIsRefined()) {
     }
 
 
     CellWrapper(
-      const tarch::la::Vector<Dimensions,double>&  centre,
-      const tarch::la::Vector<Dimensions,double>&  h,
-      const tarch::la::Vector<Dimensions,int>&     relativePositionToFather
+      const peano4::grid::GridTraversalEvent&   event,
+      const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
     ):
-      _centre(centre),
-      _h(h) {
+      _centre(event.getX()),
+ 	  _h(event.getH()),
+	  _isRefined(true) {
       for (int d=0; d<Dimensions; d++) {
         _centre(d) += (1.0-relativePositionToFather(d)) * _h(d);
       }
@@ -147,13 +150,15 @@ struct peano4::datamanagement::CellWrapper<void> {
 
     CellWrapper( const CellWrapper& copy ):
       _centre(copy._centre),
-      _h(copy._h) {
+      _h(copy._h),
+	  _isRefined(copy._isRefined) {
     }
 
 
     CellWrapper& operator=( const CellWrapper& copy ) {
       _centre = copy._centre;
       _h      = copy._h;
+      _isRefined = copy._isRefined;
       return *this;
     }
 
