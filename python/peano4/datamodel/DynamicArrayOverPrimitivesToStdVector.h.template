@@ -21,7 +21,7 @@
 
 
 struct {FULL_QUALIFIED_CLASSNAME} {{
-  std::vector< {TYPE} >  data;
+  std::vector< {TYPE} >  entries;
 }};
 
 

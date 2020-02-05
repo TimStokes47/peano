@@ -37,7 +37,7 @@ class examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators{
     /**
      * Holds the stiffness matrix for the Laplacian for h=1.0.
      */
-    tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  _localStiffnessMatrix;
+    tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  _localStiffnessMatrixOneIntegrationPoint;
   public:
 
     /**

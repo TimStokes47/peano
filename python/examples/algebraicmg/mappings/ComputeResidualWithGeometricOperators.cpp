@@ -1,4 +1,5 @@
 #include "ComputeResidualWithGeometricOperators.h"
+#include "SetupScenario.h"
 
 
 #include "toolbox/finiteelements/ElementMatrix.h"
@@ -9,34 +10,29 @@ tarch::logging::Log examples::algebraicmg::mappings::ComputeResidualWithGeometri
 
 
 examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::ComputeResidualWithGeometricOperators(int treeNumber) {
-  _localStiffnessMatrix =
+  _localStiffnessMatrixOneIntegrationPoint =
     toolbox::finiteelements::getElementWiseAssemblyMatrix(
       toolbox::finiteelements::getLaplacian(1.0)
     );
-  logDebug( "ComputeResidualWithGeometricOperators(...)", "local element matrix " << _localStiffnessMatrix );
+  logDebug( "ComputeResidualWithGeometricOperators(...)", "local element matrix " << _localStiffnessMatrixOneIntegrationPoint );
   logDebug( "ComputeResidualWithGeometricOperators(...)", "constructed from stencil " << toolbox::finiteelements::getLaplacian(1.0));
 }
 
 
 examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::~ComputeResidualWithGeometricOperators() {
-// @todo Please implement
 }
 
 
 std::vector< peano4::grid::GridControlEvent > examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::getGridControlEvents() {
-// @todo Please implement
-return std::vector< peano4::grid::GridControlEvent >();
+  return std::vector< peano4::grid::GridControlEvent >();
 }
 
 
-void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::beginTraversal(
-      ) {
-// @todo Please implement
+void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::beginTraversal() {
 }
 
 
-void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::endTraversal(
-      ) {
+void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::endTraversal() {
 // @todo Please implement
 }
 
@@ -105,6 +101,7 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
   peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
   peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA
 ) {
+	// @todo Nur auf dem Feingitter
   tarch::la::Vector<TwoPowerD, double> u;
   tarch::la::Vector<TwoPowerD, double> r;
 
@@ -113,15 +110,35 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
     u(i) = fineGridVerticesMG(i).getU();
   }
 
+  if ( fineGridCellA.data().entries.empty() ) {
+    const double scaling = tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2))
+	                       * SetupScenario::getEpsilon(fineGridCellA.centre());
+    for (int row=0; row<TwoPowerD; row++)
+    for (int col=0; col<TwoPowerD; col++) {
+      fineGridCellA.data().entries.push_back( scaling * _localStiffnessMatrixOneIntegrationPoint(row,col) );
+    }
+  }
+
+  tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix;
+  for (int row=0; row<TwoPowerD; row++)
+  for (int col=0; col<TwoPowerD; col++) {
+    localStiffnessMatrix(row,col) = fineGridCellA.data().entries[ row*TwoPowerD + col ];
+    // @todo Assertion is wrong as soon a we use more than one integration point
+    assertionNumericalEquals(
+      localStiffnessMatrix(row,col),
+	  _localStiffnessMatrixOneIntegrationPoint(row,col) * tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2)) * SetupScenario::getEpsilon(fineGridCellA.centre())
+	);
+  }
+
   // compute residual contribution. Mind the minus sign here that
   // results from the residual's definition: r = b-Au
   const double scaling = tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2));
-  r = - scaling * _localStiffnessMatrix * u;
+  r = - scaling * _localStiffnessMatrixOneIntegrationPoint * u;
 
   // scatter residual contributions
   for (int i=0; i<TwoPowerD; i++) {
     fineGridVerticesMG(i).setRes(  fineGridVerticesMG(i).getRes() + r(i) );
-    fineGridVerticesMG(i).setDiag( fineGridVerticesMG(i).getDiag() + scaling * _localStiffnessMatrix(i,i) );
+    fineGridVerticesMG(i).setDiag( fineGridVerticesMG(i).getDiag() + scaling * _localStiffnessMatrixOneIntegrationPoint(i,i) );
   }
 }
 
