@@ -151,7 +151,7 @@ project.generate(peano4.output.Overwrite.Default)
 project.build(False)
 #project.run( ["16.0"] )
 #project.run( ["16.0"], ["/opt/mpi/mpirun", "-n", "1"] )
-project.run( ["2.0"], ["/opt/mpi/mpirun", "-n", "1"] )
+project.run( ["64.0"], ["/opt/mpi/mpirun", "-n", "1"] )
 
 
 #
