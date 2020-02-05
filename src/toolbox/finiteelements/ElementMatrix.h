@@ -255,6 +255,12 @@ namespace toolbox {
       const tarch::la::Vector<StencilSize,double>& b,
       const tarch::la::Vector<StencilSize,double>& c
     );
+
+    /**
+     * Don't change sign
+     */
+    ElementWiseAssemblyMatrix hierarchicalTransform(const ElementWiseAssemblyMatrix& matrix, const tarch::la::Vector<Dimensions,double>&   h,   double  sign = -1.0);
+    ElementWiseAssemblyMatrix inverseHierarchicalTransform(const ElementWiseAssemblyMatrix& matrix, const tarch::la::Vector<Dimensions,double>&   h);
   }
 }
 

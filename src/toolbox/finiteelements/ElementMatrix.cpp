@@ -1,4 +1,5 @@
 #include "ElementMatrix.h"
+#include "StencilFactory.h"
 
 #include "peano4/utils/Globals.h"
 #include "peano4/utils/Loop.h"
@@ -295,4 +296,33 @@ toolbox::finiteelements::getElementWiseAssemblyMatrix( const VectorOfComplexSten
   #endif
 
   return result;
+}
+
+
+toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::hierarchicalTransform(
+  const ElementWiseAssemblyMatrix&              matrix,
+  const tarch::la::Vector<Dimensions,double>&   h,
+  double                                        sign
+) {
+  static toolbox::finiteelements::ElementWiseAssemblyMatrix referenceStiffnessMatrix =
+    toolbox::finiteelements::getElementWiseAssemblyMatrix(
+      toolbox::finiteelements::getLaplacian(1.0)
+    );
+
+  double scaling = tarch::la::volume(h) / h(0) / h(0);
+
+  toolbox::finiteelements::ElementWiseAssemblyMatrix result;
+  for (int row=0; row<TwoPowerD; row++)
+  for (int col=0; col<TwoPowerD; col++) {
+    result(row,col) = matrix(row,col) + sign * referenceStiffnessMatrix(row,col) * scaling;
+  }
+  return result;
+}
+
+
+toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::inverseHierarchicalTransform(
+  const ElementWiseAssemblyMatrix&              matrix,
+  const tarch::la::Vector<Dimensions,double>&   h
+) {
+  return hierarchicalTransform(matrix,h,1.0);
 }
