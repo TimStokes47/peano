@@ -48,6 +48,14 @@ project.datamodel.add_vertex( dastgen_model )
 
 
 #
+# This is the stencil data structure
+#
+cell_assembly_data = peano4.datamodel.DynamicArrayOverPrimitives( "A" )
+project.datamodel.add_cell( cell_assembly_data )
+
+
+
+#
 # First, lets create the initial grid (which is regular).
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
@@ -59,7 +67,9 @@ create_grid = peano4.solversteps.Step( "CreateGrid", False )
 #       waere eine Assertion im C++ Code oder ein Check hier. Eher ersteres.
 #
 create_grid.use_vertex( dastgen_model )
-create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.02) )
+create_grid.use_cell( cell_assembly_data )
+#create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.02) )
+create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(1.0) )
 project.solversteps.add_step(create_grid)
 
 
@@ -89,6 +99,7 @@ project.solversteps.add_step(plot_material_parameter)
 compute_residual = peano4.solversteps.Step( "ComputeResidualWithGeometricOperators", False )
 compute_residual_user_code = peano4.solversteps.UserMapping();
 compute_residual.use_vertex( dastgen_model )
+compute_residual.use_cell( cell_assembly_data )
 compute_residual.add_mapping( compute_residual_user_code )
 project.solversteps.add_step( compute_residual )
 
@@ -138,8 +149,8 @@ project.output.makefile.set_dimension( 2 )
 project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
 project.generate(peano4.output.Overwrite.Default)
 project.build(False)
-project.run( ["16.0"] )
-#project.run( ["myarguments"], "/opt/mpi/mpirun -n 1" )
+#project.run( ["16.0"] )
+project.run( ["16.0"], ["/opt/mpi/mpirun", "-n", "1"] )
 
 
 #
@@ -152,7 +163,7 @@ project.run( ["16.0"] )
 #convert.convert_to_vtk()
 
 convert = peano4.visualisation.Convert( "epsilon" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
-#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
+#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
 convert.extract_fine_grid()
 convert.convert_to_vtk()

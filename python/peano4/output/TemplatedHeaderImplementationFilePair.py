@@ -13,6 +13,8 @@ class TemplatedHeaderImplementationFilePair(object):
       The template files should be fully qualified
       classname is a string
       namespace is a (possibly empty) list of strings
+      
+      cppfile_template can be None
     """
     self.headerfile_template  = headfile_template
     self.cppfile_template     = cppfile_template
@@ -35,7 +37,7 @@ class TemplatedHeaderImplementationFilePair(object):
     
 
   def generate_file(self,overwrite,full_qualified_filename,template_file):
-    if writeFile(overwrite,self.default_overwrite,full_qualified_filename):
+    if template_file!=None and writeFile(overwrite,self.default_overwrite,full_qualified_filename):
       print( "write " + full_qualified_filename )
       with open( os.path.realpath(template_file), "r" ) as input:
         template = input.read()
