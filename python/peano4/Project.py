@@ -10,6 +10,7 @@ import peano4.runner
 
 import subprocess
 import sys
+from asn1crypto.core import Null
 
 
 class Project (object):
@@ -100,16 +101,24 @@ class Project (object):
       print( "can not build as code generation has not been successful" )
   
   
-  def run(self, args, prefix=""):
+  def run(self, args, prefix=None):
     """
     Runs the code. args should be a list of strings or the empty list.
+    prefix is an array, too. A typical invocation looks alike
+
+    project.run( ["16.0", "32.0"], ["/opt/mpi/mpirun", "-n", "1"] )
+
     """
     if not self.is_built:
       self.build()
     if self.is_built:
       print( "run application ..." )
-      
-      invocation = [ "./peano4" ] + args
+
+      invocation  = []
+      if prefix!=None:
+        invocation += prefix
+      invocation += [ "./peano4" ]
+      invocation += args
       try:
         subprocess.check_call( invocation )
         print( "run complete" )
