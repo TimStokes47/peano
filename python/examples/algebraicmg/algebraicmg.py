@@ -69,7 +69,7 @@ create_grid = peano4.solversteps.Step( "CreateGrid", False )
 create_grid.use_vertex( dastgen_model )
 create_grid.use_cell( cell_assembly_data )
 #create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.02) )
-create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(1.0) )
+create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.1) )
 project.solversteps.add_step(create_grid)
 
 
