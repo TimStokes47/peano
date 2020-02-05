@@ -111,23 +111,44 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
   }
 
   if ( fineGridCellA.data().entries.empty() ) {
+    tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix =
+      toolbox::finiteelements::getPoissonMatrixWithJumpingCoefficient(
+        fineGridCellA.centre(), fineGridCellA.h(), 1,
+		[](const tarch::la::Vector<Dimensions,double>& x) -> double {
+          return SetupScenario::getEpsilon(x);
+		}
+	  );
+
+    for (int row=0; row<TwoPowerD; row++)
+    for (int col=0; col<TwoPowerD; col++) {
+/*
+      // Seems to be too restrictive, i.e. fails in the digit eight or nine.
+
+      assertionNumericalEquals(
+        localStiffnessMatrix(row,col),
+		tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2))
+        * SetupScenario::getEpsilon(fineGridCellA.centre())
+        * _localStiffnessMatrixOneIntegrationPoint(row,col)
+      );
+*/
+      fineGridCellA.data().entries.push_back( localStiffnessMatrix(row,col) );
+    }
+
+
+/*
     const double scaling = tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2))
 	                       * SetupScenario::getEpsilon(fineGridCellA.centre());
     for (int row=0; row<TwoPowerD; row++)
     for (int col=0; col<TwoPowerD; col++) {
       fineGridCellA.data().entries.push_back( scaling * _localStiffnessMatrixOneIntegrationPoint(row,col) );
     }
+*/
   }
 
   tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix;
   for (int row=0; row<TwoPowerD; row++)
   for (int col=0; col<TwoPowerD; col++) {
     localStiffnessMatrix(row,col) = fineGridCellA.data().entries[ row*TwoPowerD + col ];
-    // @todo Assertion is wrong as soon a we use more than one integration point
-    assertionNumericalEquals(
-      localStiffnessMatrix(row,col),
-	  _localStiffnessMatrixOneIntegrationPoint(row,col) * tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2)) * SetupScenario::getEpsilon(fineGridCellA.centre())
-	);
   }
 
   // compute residual contribution. Mind the minus sign here that

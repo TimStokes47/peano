@@ -1,4 +1,5 @@
 #include "StencilFactory.h"
+#include "ElementMatrix.h"
 
 #include "peano4/utils/Loop.h"
 
@@ -838,6 +839,42 @@ toolbox::finiteelements::Stencil toolbox::finiteelements::extractElementStencil(
     }
     result(peano4::utils::dLinearised(stencilEntry,3)) = stencil(peano4::utils::dLinearised(stencilEntry,3)) / commonFacesPowerTwo;
   enddforx
+
+  return result;
+}
+
+
+toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::getPoissonMatrixWithJumpingCoefficient(
+  const tarch::la::Vector<Dimensions,double>&   cellCentre,
+  const tarch::la::Vector<Dimensions,double>&   h,
+  int                                           integrationPointsPerAxis,
+  std::function<double(const tarch::la::Vector<Dimensions,double>&)>   epsilon
+) {
+  static toolbox::finiteelements::ElementWiseAssemblyMatrix referenceStiffnessMatrix =
+    toolbox::finiteelements::getElementWiseAssemblyMatrix(
+      toolbox::finiteelements::getLaplacian(1.0)
+    );
+
+  toolbox::finiteelements::ElementWiseAssemblyMatrix result(0.0);
+
+  const double termScaling = 1.0 / std::pow(integrationPointsPerAxis,Dimensions);
+
+  dfor( subVolume, integrationPointsPerAxis ) {
+    tarch::la::Vector<Dimensions,double> x = cellCentre - h/2.0 + (subVolume.convertScalar<double>()+0.5) * h / integrationPointsPerAxis;
+
+    double epsilonScaling = epsilon(x) * tarch::la::volume(h) / h(0) / h(0);
+
+    dfor2( targetVertex )
+      double cellScaling = epsilonScaling;
+      for (int d=0; d<Dimensions; d++) {
+    	int mirroredIndex = targetVertex(d)==0 ? subVolume(d) : integrationPointsPerAxis-subVolume(d)-1;
+        cellScaling *= termScaling * ( std::pow(mirroredIndex+1,Dimensions) - std::pow(mirroredIndex,Dimensions) );
+      }
+      dfor2( testVertex )
+        result(targetVertexScalar,testVertexScalar) += cellScaling * referenceStiffnessMatrix(targetVertexScalar,testVertexScalar);
+      enddforx
+    enddforx
+  }
 
   return result;
 }

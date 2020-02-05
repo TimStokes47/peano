@@ -7,6 +7,7 @@
 #include "Stencil.h"
 
 #include <bitset>
+#include <functional>
 
 
 namespace toolbox {
@@ -307,6 +308,25 @@ u0  u1  u2
       * stencil point of view rather than with an element-wise language.
       */
      Stencil extractElementStencil( const Stencil& stencil, const tarch::la::Vector<Dimensions,int>&   adjacentCell );
+
+
+     /**
+      * Integrate over element with a subvoxel scheme (cmp. Murray) and
+      * approximate epsilon within each of the voxels as a constant. This means
+      * we basically use the reference matrix per subvoxel, multiply it with
+      * @f$
+      *   \left( - \frac{i^d}{h^d} + \frac{(i+1)^d}{h^d} \right)\left( - \frac{j^d}{h^d} + \frac{(j+1)^d}{h^d} \right)\dots
+      * @f$
+      * and then add it to the rows. The i and j here are the logical Cartesian
+      * coordinates of the subvoxel which have to be mirrored accordingly if we
+      * map the reference matrix onto the respective vertices.
+      */
+     ElementWiseAssemblyMatrix getPoissonMatrixWithJumpingCoefficient(
+       const tarch::la::Vector<Dimensions,double>&   cellCentre,
+       const tarch::la::Vector<Dimensions,double>&   h,
+	   int                                           integrationPointsPerAxis,
+       std::function<double(const tarch::la::Vector<Dimensions,double>&)>
+     );
   }
 }
 

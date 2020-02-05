@@ -166,34 +166,34 @@ namespace toolbox {
      *
      * @see getElementWiseAssemblyMatrix( const Stencil& stencil );
      */
-     ElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfStencils& vectorOfStencils );
+    ElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfStencils& vectorOfStencils );
 
-     /**
-      * @see getElementWiseAssemblyMatrix( const VectorOfStencils& vectorOfStencils )
-      */
-     ComplexElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfComplexStencils& vectorOfComplexStencils );
+    /**
+     * @see getElementWiseAssemblyMatrix( const VectorOfStencils& vectorOfStencils )
+     */
+    ComplexElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfComplexStencils& vectorOfComplexStencils );
 
-     /**
-      *
-      * I originally thought it would be possible to identify how many
-      * neighbours there are from the adjacent vertices' state. However, this
-      * is not unique. If we look at the following 3x3 cells (outside and
-      * inside)
-      *
-      * o o i
-      * o o i
-      * i i i
-      *
-      * and on the two vertices on the right (there are four real vertices in
-      * this ASCII art that are really surrounded by known cells). The upper
-      * one has a surrounding pattern of
-      *
-      * o i
-      * o i
-      *
-      * and thus two inner adjacent cells. In the upper right inner cell, we
-      * know that it is boundary. In the cell below, the lower left vertex
-      * has exactly the same pattern from inside the cell. However, as its
+    /**
+     *
+     * I originally thought it would be possible to identify how many
+     * neighbours there are from the adjacent vertices' state. However, this
+     * is not unique. If we look at the following 3x3 cells (outside and
+     * inside)
+     *
+     * o o i
+     * o o i
+     * i i i
+     *
+     * and on the two vertices on the right (there are four real vertices in
+     * this ASCII art that are really surrounded by known cells). The upper
+     * one has a surrounding pattern of
+     *
+     * o i
+     * o i
+     *
+     * and thus two inner adjacent cells. In the upper right inner cell, we
+     * know that it is boundary. In the cell below, the lower left vertex
+     * has exactly the same pattern from inside the cell. However, as its
       * adjacent cells have the state
       *
       * o i
@@ -217,40 +217,40 @@ namespace toolbox {
       */
      ElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfStencils& vectorOfStencils, const std::bitset<ThreePowerD>& cellIsInside );
 
-     /**
-      * See non-complex variant.
-      */
-     ComplexElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfComplexStencils& vectorOfStencils, const std::bitset<ThreePowerD>& cellIsInside );
+    /**
+     * See non-complex variant.
+     */
+    ComplexElementWiseAssemblyMatrix getElementWiseAssemblyMatrix( const VectorOfComplexStencils& vectorOfStencils, const std::bitset<ThreePowerD>& cellIsInside );
 
-     /**
-      * An element-wise assembly matrix is distilled from a sequence of
-      * @f$ 2^d @f$ stencils which are in turn @f$ 3^d @f$ double arrays. This
-      * operation computes the inverse index mapping. You hand in a row of the
-      * matrix plus a column. The operation tells you which entry it is in the
-      * original stencil of the rowth vertex.
-      *
-      * For the 2d variant, I've just hard-coded all entries. This might also
-      * be an option for 3d if it turns out that the operation is too slow. For
-      * all other dimensions, we realise a generic version of the lookup: We
-      * convert both parameters row and col into integer vectors that have
-      * either a zero or a one as argument. We then call the overloaded variant
-      * of the present function.
-      */
-     int mapElementMatrixEntryOntoStencilEntry(int row, int col);
+    /**
+     * An element-wise assembly matrix is distilled from a sequence of
+     * @f$ 2^d @f$ stencils which are in turn @f$ 3^d @f$ double arrays. This
+     * operation computes the inverse index mapping. You hand in a row of the
+     * matrix plus a column. The operation tells you which entry it is in the
+     * original stencil of the rowth vertex.
+     *
+     * For the 2d variant, I've just hard-coded all entries. This might also
+     * be an option for 3d if it turns out that the operation is too slow. For
+     * all other dimensions, we realise a generic version of the lookup: We
+     * convert both parameters row and col into integer vectors that have
+     * either a zero or a one as argument. We then call the overloaded variant
+     * of the present function.
+     */
+    int mapElementMatrixEntryOntoStencilEntry(int row, int col);
 
-     int mapElementMatrixEntryOntoStencilEntry(const tarch::la::Vector<Dimensions,int>& row, const tarch::la::Vector<Dimensions,int>&  col);
+    int mapElementMatrixEntryOntoStencilEntry(const tarch::la::Vector<Dimensions,int>& row, const tarch::la::Vector<Dimensions,int>&  col);
 
-     double getDiagonalElement( const ElementWiseAssemblyMatrix& matrix );
-     double getDiagonalElement( const Stencil& stencil );
+    double getDiagonalElement( const ElementWiseAssemblyMatrix& matrix );
+    double getDiagonalElement( const Stencil& stencil );
 
     template<int StencilSize>
-     tarch::la::Vector<StencilSize*StencilSize,double> stencilProduct(
+    tarch::la::Vector<StencilSize*StencilSize,double> stencilProduct(
       const tarch::la::Vector<StencilSize,double>& a,
       const tarch::la::Vector<StencilSize,double>& b
     );
 
     template<int StencilSize>
-     tarch::la::Vector<StencilSize*StencilSize*StencilSize,double> stencilProduct(
+    tarch::la::Vector<StencilSize*StencilSize*StencilSize,double> stencilProduct(
       const tarch::la::Vector<StencilSize,double>& a,
       const tarch::la::Vector<StencilSize,double>& b,
       const tarch::la::Vector<StencilSize,double>& c
