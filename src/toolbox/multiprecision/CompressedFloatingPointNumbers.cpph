@@ -3,7 +3,7 @@
 
 
 template <class T>
-void int toolbox::multiprecision::decompose(
+void toolbox::multiprecision::decompose(
   const double&  value,
   char&          exponent,
   T&             mantissa
@@ -26,7 +26,7 @@ void int toolbox::multiprecision::decompose(
 
 
 template <class T>
-double int toolbox::multiprecision::compose(
+double toolbox::multiprecision::compose(
   const char&   exponent,
   const T&      mantissa
 ) {

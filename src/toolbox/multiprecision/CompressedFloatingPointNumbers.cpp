@@ -9,44 +9,25 @@
 int toolbox::multiprecision::findMostAgressiveCompression(
   double        values[],
   int           count,
-  double        maxError,
-  bool          useRelativeError
+  double        maxError
 ) {
   assertion(count>0);
 
-  if (useRelativeError) {
-	maxError = tarch::la::absoluteWeight(values,count,maxError);
-  }
-
   int result = 0;
   for (int i=0; i<count; i++) {
-    result = std::max(result, findMostAgressiveCompression(values[i],maxError,false));
+    result = std::max(result, findMostAgressiveCompression(values[i],maxError));
   }
   assertion(result>0);
   return result;
 }
 
 
-int int toolbox::multiprecision::findMostAgressiveCompression(
-  double        value,
-  double        maxError,
-  bool          useRelativeError
-) {
-  if (useRelativeError) {
-    return findMostAgressiveCompression(value, tarch::la::absoluteWeight( value,maxError ) );
-  }
-  else {
-    return findMostAgressiveCompression(value, maxError);
-  }
-}
-
-
 #if defined(CompilerICC)
 int peano::heap::findMostAgressiveCompression(
 #elif defined(CompilerCLANG)
-int __attribute__((optnone)) peano::heap::findMostAgressiveCompression(
+int __attribute__((optnone)) toolbox::multiprecision::findMostAgressiveCompression(
 #else
-int __attribute__((optimize("O0"))) peano::heap::findMostAgressiveCompression(
+int __attribute__((optimize("O0"))) toolbox::multiprecision::findMostAgressiveCompression(
 #endif
   double        value,
   double        maxError
@@ -99,9 +80,9 @@ int __attribute__((optimize("O0"))) peano::heap::findMostAgressiveCompression(
 #ifdef CompilerICC
 void peano::heap::decomposeIntoEightVariants(
 #elif defined(CompilerCLANG)
-int __attribute__((optnone)) peano::heap::findMostAgressiveCompression(
+int __attribute__((optnone)) toolbox::multiprecision::findMostAgressiveCompression(
 #else
-void __attribute__((optimize("O0"))) peano::heap::decomposeIntoEightVariants(
+void __attribute__((optimize("O0"))) toolbox::multiprecision::decomposeIntoEightVariants(
 #endif
   double        value,
   char          exponent[8],
@@ -164,9 +145,9 @@ void __attribute__((optimize("O0"))) peano::heap::decomposeIntoEightVariants(
 #ifdef CompilerICC
 void peano::heap::decompose(
 #elif defined(CompilerCLANG)
-int __attribute__((optnone)) peano::heap::findMostAgressiveCompression(
+int __attribute__((optnone)) toolbox::multiprecision::findMostAgressiveCompression(
 #else
-void __attribute__((optimize("O0"))) peano::heap::decompose(
+void __attribute__((optimize("O0"))) toolbox::multiprecision::decompose(
 #endif
   double        value,
   char&         exponent,
@@ -215,7 +196,7 @@ void __attribute__((optimize("O0"))) peano::heap::decompose(
 
 
 
-void peano::heap::decomposeIntoFourVariants(
+void toolbox::multiprecision::decomposeIntoFourVariants(
   double   value,
   char     exponent[4],
   int      mantissa[4],
@@ -274,7 +255,7 @@ void peano::heap::decomposeIntoFourVariants(
 }
 
 
-double peano::heap::compose(
+double toolbox::multiprecision::compose(
   char         exponent,
   long int     mantissa,
   int          bytesUsed

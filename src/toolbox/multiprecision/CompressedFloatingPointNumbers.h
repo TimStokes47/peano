@@ -105,17 +105,9 @@ namespace toolbox {
      */
     int findMostAgressiveCompression(
       double        value,
-	  double        maxError,
-	  bool          useRelativeError
+	  double        maxAbsoluteError
     );
 
-    /**
-     * @see findMostAgressiveCompression(double,double,bool)
-     */
-    int findMostAgressiveCompression(
-      double        value,
-	  double        maxAsoluteError
-    );
 
     /**
      * Wrapper around findMostAgressiveCompression() that works for an array of
@@ -146,8 +138,7 @@ namespace toolbox {
     int findMostAgressiveCompression(
       double        values[],
       int           count,
-	  double        maxError,
-	  bool          useRelativeError
+	  double        maxError
     );
 
 

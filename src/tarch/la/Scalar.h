@@ -43,6 +43,13 @@ namespace tarch {
      * Intel machines.
      */
     double pow( double base, double exponent );
+
+    /**
+     * Convert an absolute value into a relative one. That is if the
+     * referenceValue is smaller than one, then we do nothing. Otherwise,
+     * we divide the absolute value by the reference value.
+     */
+    double convertAbsoluteIntoRelativeValue( double referenceValue, double value );
   }
 }
 
