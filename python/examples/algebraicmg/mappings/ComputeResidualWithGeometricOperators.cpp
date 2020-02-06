@@ -4,6 +4,7 @@
 
 #include "toolbox/finiteelements/ElementMatrix.h"
 #include "toolbox/finiteelements/StencilFactory.h"
+#include "toolbox/multiprecision/CompressedLinearAlgebra.h"
 
 
 tarch::logging::Log examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::_log( "examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators");
@@ -113,7 +114,7 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
     if ( fineGridCellA.data().entries.empty() ) {
       tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix =
         toolbox::finiteelements::getPoissonMatrixWithJumpingCoefficient(
-          fineGridCellA.centre(), fineGridCellA.h(), 1,
+          fineGridCellA.centre(), fineGridCellA.h(), 16,
   	      [](const tarch::la::Vector<Dimensions,double>& x) -> double {
             return SetupScenario::getEpsilon(x);
           }
@@ -124,8 +125,9 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
 		fineGridCellA.h(),
 		SetupScenario::getEpsilon( fineGridCellA.centre() )
       );
-      std::cout << lala << std::endl;
-
+      std::vector<unsigned char> data = toolbox::multiprecision::compress(lala,1e-12);
+      std::cout << "size " << data.size()
+    		    << ", bpm " << (int)(data[0]) << std::endl;
 
       for (int row=0; row<TwoPowerD; row++)
       for (int col=0; col<TwoPowerD; col++) {

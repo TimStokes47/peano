@@ -61,6 +61,11 @@ Packed-Type: short int;
       file.write( i )
       file.write( ";\n" )
 
+    for i in self.data.attributes_integer:
+      file.write( "  persistent parallelise int " )
+      file.write( i )
+      file.write( ";\n" )
+
     for i in self.data.attributes_enum:
       file.write( "  enum " + i[0] + " {\n" )
       file.write( "    " )

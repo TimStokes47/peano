@@ -53,6 +53,11 @@ project.datamodel.add_vertex( dastgen_model )
 cell_assembly_data = peano4.datamodel.DynamicArrayOverPrimitives( "A" )
 project.datamodel.add_cell( cell_assembly_data )
 
+cell_meta_data = peano4.datamodel.DaStGen( "p" )
+cell_meta_data.add_integer_scalar( "n" )
+project.datamodel.add_cell( cell_meta_data )
+
+
 
 
 #
@@ -144,11 +149,12 @@ project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano"
 # run the project through a command line
 #
 project.output.makefile.add_library( "ToolboxFiniteElements2d_trace", project.output.makefile.get_source_path() + "/toolbox/finiteelements" )
+project.output.makefile.add_library( "ToolboxMultiprecision_trace", project.output.makefile.get_source_path() + "/toolbox/multiprecision" )
 project.output.makefile.add_header_search_path( "/opt/tbb/include" ) 
 project.output.makefile.set_dimension( 2 )
 project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
 project.generate(peano4.output.Overwrite.Default)
-project.build(False)
+project.build(True)
 #project.run( ["16.0"] )
 #project.run( ["16.0"], ["/opt/mpi/mpirun", "-n", "1"] )
 project.run( ["64.0"], ["/opt/mpi/mpirun", "-n", "1"] )

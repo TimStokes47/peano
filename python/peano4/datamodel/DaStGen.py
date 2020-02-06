@@ -17,12 +17,17 @@ class DaStGen(DoF):
     """
     super(DaStGen, self).__init__(name)
     self.generator = DaStGenToLegacyTool(self)
-    self.attributes_double = []
-    self.attributes_enum   = []
+    self.attributes_double  = []
+    self.attributes_integer = []
+    self.attributes_enum    = []
 
 
   def add_double_scalar(self, name):
     self.attributes_double.append( name )
+
+
+  def add_integer_scalar(self, name):
+    self.attributes_integer.append( name )
 
     
   def add_enum(self, enum_name, enum_variants ):
