@@ -73,6 +73,7 @@ create_grid = peano4.solversteps.Step( "CreateGrid", False )
 #
 create_grid.use_vertex( dastgen_model )
 create_grid.use_cell( cell_assembly_data )
+create_grid.use_cell( cell_meta_data )
 #create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.02) )
 create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.1) )
 project.solversteps.add_step(create_grid)
@@ -105,6 +106,7 @@ compute_residual = peano4.solversteps.Step( "ComputeResidualWithGeometricOperato
 compute_residual_user_code = peano4.solversteps.UserMapping();
 compute_residual.use_vertex( dastgen_model )
 compute_residual.use_cell( cell_assembly_data )
+compute_residual.use_cell( cell_meta_data )
 compute_residual.add_mapping( compute_residual_user_code )
 project.solversteps.add_step( compute_residual )
 

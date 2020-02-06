@@ -43,7 +43,8 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::cre
 	      const tarch::la::Vector<Dimensions,double>& h,
 	      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
 	      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp
 ) {
 }
 
@@ -53,7 +54,9 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::des
 	      const tarch::la::Vector<Dimensions,double>& h,
 	      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
 	      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA) {
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp
+) {
 }
 
 

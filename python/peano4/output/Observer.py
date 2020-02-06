@@ -501,7 +501,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         event.getH(),
         {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,}
         {MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS,}
-        DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0)
+        {MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS}
         {,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS}
         {,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
@@ -587,7 +587,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
          event.getX()
         ,event.getH()
         {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
-        ,DataRepository::_{logical_type_name}Stack[ DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].top(0)
+        ,{MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
     );
   }}

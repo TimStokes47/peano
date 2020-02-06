@@ -16,6 +16,7 @@
 
 #include "vertexdata/MG.h"
 #include "celldata/A.h"
+#include "celldata/p.h"
 
 
 #include "tarch/la/Matrix.h"
@@ -71,70 +72,84 @@ class examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators{
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
     void destroyPersistentVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
     void createHangingVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
     void destroyHangingVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
     void touchVertexFirstTime(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
     void touchVertexLastTime(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
     void createCell(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
       examples::algebraicmg::celldata::A& fineGridCellA,
+      examples::algebraicmg::celldata::p& fineGridCellp,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
     void destroyCell(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
       examples::algebraicmg::celldata::A& fineGridCellA,
+      examples::algebraicmg::celldata::p& fineGridCellp,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
     void touchCellFirstTime(
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
       peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> fineGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> fineGridCellp,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
     void touchCellLastTime(
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
       peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> fineGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> fineGridCellp,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA);
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp);
 
 };
 
