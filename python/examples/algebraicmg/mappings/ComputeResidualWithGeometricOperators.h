@@ -13,7 +13,6 @@
 #include <vector>
 
 
-
 #include "vertexdata/MG.h"
 #include "celldata/A.h"
 #include "celldata/p.h"
