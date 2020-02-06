@@ -231,7 +231,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
   }
 
   static int multitaskingRegionForMasterTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseMaster" );
-  peano4::parallel::Tasks run(traverseTasksForMasterTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForMasterTrees);
+  peano4::parallel::Tasks run(traverseTasksForMasterTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForMasterTrees,true);
 
   logTraceOut( "exchangeDataBetweenMergingTreesAndTraverseMaster(...)" );
 }
@@ -265,7 +265,7 @@ void peano4::parallel::SpacetreeSet::traverseNonMergingExistingTrees(peano4::gri
   if ( not traverseTasksForRunningTrees.empty() ) {
     logInfo( "traverseNonMergingExistingTrees(TraversalObserver&)", "spawn " << traverseTasksForRunningTrees.size() << " concurrent traversal tasks" );
     static int multitaskingRegionForAllOtherTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverseNonMergingExistingTrees" );
-    peano4::parallel::Tasks run(traverseTasksForRunningTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForAllOtherTrees);
+    peano4::parallel::Tasks run(traverseTasksForRunningTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForAllOtherTrees,true);
   }
   logTraceOut( "traverseNonMergingExistingTrees(...)" );
 }
@@ -348,7 +348,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
   }
 
   static int multitasking = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRerunClones" );
-  peano4::parallel::Tasks run(traverseTasksForNewTrees,peano4::parallel::Tasks::TaskType::Task,multitasking);
+  peano4::parallel::Tasks run(traverseTasksForNewTrees,peano4::parallel::Tasks::TaskType::Task,multitasking,true);
 
   logTraceOut( "exchangeDataBetweenExistingAndNewTreesAndRerunClones(...)" );
 }
@@ -381,7 +381,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees(peano4::grid::Trav
   #else
 */
   static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees" );
-  peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
+  peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion,true);
 //  #endif
   logTraceOut( "exchangeDataBetweenTrees(...)" );
 }

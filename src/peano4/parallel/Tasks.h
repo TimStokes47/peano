@@ -23,78 +23,25 @@ namespace peano4 {
  *
  * This is my very simple wrapper of task parallelism in Peano. The class
  * provides only one type of constructor. This constructor is passed a set of
- * instances representing one functor each. The constructor executes all of
- * them in parallel (if this is the user's wish) and returns. Consequently,
- * this wrapper is the right choice iff all the task are totally independent
- * of each other.
+ * tasks. The constructor executes all of them in parallel (if this is the
+ * user's wish) and returns. Consequently, this wrapper is the right choice iff
+ * all the task are totally independent of each other.
  *
  * The standard variants do not copy the task you hand in and I expect the
- * functors to be handed in as references. If the tasks are not independent
- * of each other, they thus might induce data races.
+ * functors to be handed in as references.
  *
- * Please see the documentation of the constructor with only one argument for
- * further details, as this one behaves differently.
+ * <h2> Task priorities </h2>
  *
- * \section  Issuing background tasks
+ * Tasks in Peano can have different priorities. Within the Peano core code, I
+ * don't use these priorities, but work with logical names (task types). One
+ * further job of this wrapper thus is to map the logical task types onto
+ * numerical priorities.
  *
- * If you spawn a task, I cannot know when it is actually executed. As a
- * result, I never can rely where data is at the very moment the task then is
- * actually triggered. Notably if you directly try to access vertices/cells,
- * they might already have been moved to a different memory location. So what
- * you have to do is that you store the data you wanna manipulate on heaps as
- * data on heaps doesn't move. And then you equip your tasks with pointers
- * (indices) to the heap. These pointers/indices are copied but the heap index
- * itself remains valid, so it doesn't really matter to you if the vertex
- * holding pointers too moves around.
+ * <h2> Autotuning </h2>
  *
- * If you want to get data back from a background tasks, you have to take into
- * account that the task you hand over to the Tasks constructor is not directly executed
- *   if you declare it as background task.
- *   Instead, the runtime system makes a copy of your functor/task, stores it
- *   safely away and executes this one. That means once you hand over a
- *   functor, you can safely destroy this object. The tasking system has
- *   created a copy of its own.
- *
- * Please note that you notably should have a boolean flag somewhere that
- * indicates whether your task has terminated. I often store entries with
- * an enum on a heap. The enum encodes the states BackGroundTaskSpawned and
- * BackGroundTaskCompleted. I do protect the access to these enums with one
- * global semaphore to ensure that no two threads read/write it
- * simultaneously. If a task is spawned, the corresponding value on the heap is
- * set to BackGroundTaskSpawned. The operator() of the task sets the value to
- * BackGroundTaskCompleted as very last action. In a mapping where I need the
- * task result, I add a while loop that looks whether the task has already
- * terminated:
- *
- * <pre>
-bool taskHasTerminated = false;
-while (!taskHasTerminated) {
-  tarch::multicore::Lock myLock(_globalBackgroundTaskStatusSemphore);
-  taskHasTerminated = MyStatusHeap.getIndex(...).getStatus()==BackGroundTaskCompleted;
-  myLock.free();
-}
-</pre>
- *
- * Alternatively, you can ask the tarch::multicore::jobs component whether all
- * background tasks have terminated.
- *
- * <h2> Number of background tasks </h2>
- *
- * I did occasionally run into situations where too many background tasks made the
- * overall system starve. So you can restrict the number of background tasks now
- * manually. The system queues all tasks and then checks whether a background task
- * is active already. If not, it launches a consumer task. See tarch::multicore::jobs.
- *
- * <h2> Difference of tasks and jobs</h2>
- *
- * In Peano, I prefer to speak of jobs rather than tasks. Tasks are atomic, i.e.
- * once they kick off, there are no further dependencies that they require to
- * terminate. Jobs in turn might internally wait for further input data. As a
- * consequence, jobs easily deadlock. Tasks are a special case of jobs.
- *
- * The name Tasks consequently is not perfect. It should be JobSet. Anyway, you
- * can always tell Peano whether a job you pass is actually a task. If it is a
- * task, Peano can optimise the execution pattern.
+ * Finally, the class expects an identifier that allows this wrapper to
+ * autotune. Autotuning in the present context always means `should I invoke
+ * some operation as task or rather do stuff sequentially'.
  *
  * @author Tobias Weinzierl
  */
@@ -102,24 +49,23 @@ class peano4::parallel::Tasks {
   public:
     enum class TaskType {
       /**
-       * Job does not depend on any other job or input or IO at all. Peano
-       * runs it as soon as possible. If you use this arguments for Tasks
-       * with a single task, it does not really make sense: The whole thing
-       * become a direct function call. Otherwise, eapch call is deployed to
-       * its own task.
+       * Default
        */
       Task,
-	  /**
-	   * This is a background task which is bandwidth bound. Not too many of
-	   * these guys should run in parallel.
-	   */
-	  HighBandwidthTask,
-	  HighPriorityTask
+	  HighPriority,
+	  LowPriority
     };
   private:
     static tarch::logging::Log  _log;
 
     static int                  _locationCounter;
+
+    /**
+     * Find out whether to launch tasks issued by location in parallel.
+     */
+    bool taskForLocationShouldBeIssuedAsTask( int location, int taskCount ) const;
+
+    int getPriority( TaskType type ) const;
   public:
     /**
      * Codes create an identifier (int) per parallel region through this
@@ -130,77 +76,12 @@ class peano4::parallel::Tasks {
     /**
      * Spawn One Task
      *
-     * If you spawn one task, you have to clarify which type of task you spawn.
-     * This is controlled through TaskType. See the documentation there.
-     * Actually, it rarely makes sense to pass a job through this constructor
-     * that is not some type of a background task, i.e. can run at any time
-     * later without any further dependencies.
-     *
-     * <h2> Spawn task through a dedicated task class</h2>
-     *
-     * If you go down this route, then you write your own little class that
-     * represents your job. The class has the following properties:
-     *
-     * - It has attributes that basically store all the data you require for
-     *   this job to complete. If you job needs some parameters, the class
-     *   needs local attributes. If your job has to write some global output
-     *   data, your class needs a reference or pointer to these data.
-     * - The class needs a constructor that initialises all class attributes.
-     *   Please note that background tasks could be run at any time throughout
-     *   the application execution. Hence, a job class may not hold references
-     *   or pointers to local variables of the calling function.
-     * - The class needs a functor that does the actual work.
-     *
-     * Here's an example of a  job class from the ExaHyPE project:
-     * <pre>
-class PredictionTask {
-private:
-  ADERDGSolver&    _solver;
-  CellDescription& _cellDescription;
-public:
-  PredictionTask(
-      ADERDGSolver&     solver,
-      CellDescription&  cellDescription);
-  void operator()();
-};
-       </pre>
-     *
-     * This task then is used as follows:
-     * <pre>
-PredictionTask predictionTask( myPointer, cellDescription );
-peano::datatraversal::Tasks spawnedSet( predictionTask, peano::datatraversal::Tasks::TaskType::Background  );
-       </pre>
-     *
-     *
-     *
-     * <h2> Lambda calculus </h2>
-     *
-     * In principle, you can simply pass in a lambda expression instead of a
-     * defined functor:
-     *
-     * <pre>
-peano::datatraversal::Tasks backgroundTask(
-  [=] () -> bool {
-    // do something
-    return false; // don't want to repeat this one forever
-  },
-  peano::datatraversal::Tasks::TaskType::Background
-);
-       </pre>
-     *
-     * It is important that myFunctor catches everything via copy. As a
-     * consequence do something only includes static and const accessors.
-     *
-     * Note: This interface is only used for tasks that do not have to run
-     * persistently (in the background) for a very long time. It is only
-     * to be used for tasks that are reasonably short. So you can use it if
-     * your routine checks whether the tasks are all complete before it
-     * terminates.
+     * This routine spans a task with no wait semantics, i.e. the constructor
+     * returns immediately.
      */
     Tasks(
       std::function<bool()>&  task,
-      TaskType                taskType,
-	  int                     location
+      TaskType                type
     );
 
 
@@ -210,100 +91,27 @@ peano::datatraversal::Tasks backgroundTask(
      */
     Tasks(
       tarch::multicore::Task*  task,
-      TaskType                 type,
-	  int                      location
+      TaskType                 type
     );
 
 
     /**
-     * Run a set of tasks. I hand in a vector of task pointers. The vector is
-     * passed through to tarch::multicore::spawnAndWait().
+     * Task wrapper to issue a whole set of tasks in one rush. While the
+     * other tasks all return immediately (no-wait semantics), this
+     * constructor can either issue tasks one by one or launch them
+     * with wait semantics.
+     *
+     * @param location From where is this constructor called from. This allows
+     *   the routine to autotune, i.e. to decide whether an independent task
+     *   should be launched. See getLocationIdentifier().
      */
     Tasks(
       const std::vector< tarch::multicore::Task* >& tasks,
       TaskType                 type,
-	  int                      location
+	  int                      location,
+	  bool                     waitForCompletion
     );
-
-    /**
-     * Invoke operations in parallel. Works fine with lambda
-     * expressions:
-     *
-     * <pre>
-peano::datatraversal::Tasks runParallelTasks(
-  [&]() -> bool {
-   ...
-  },
-  [&]() -> bool {
-   ...
-  },
-  typeA,
-  typeB,
-  true
-);
-     *
-     * Please do not invoke any background threads through this operation. In
-     * return, you can use catching via the reference operator.
-     */
-/*
-    Tasks(
-      std::function<bool ()>&&  function1,
-      std::function<bool ()>&&  function2,
-	  TaskType                  taskType,
-      int                       location
-    );
-*/
-
-/*
-    Tasks(
-      std::function<bool ()>&& function1,
-      std::function<bool ()>&& function2,
-      std::function<bool ()>&& function3,
-	  TaskType                 taskType,
-      int                      location
-    );
-
-    Tasks(
-      std::function<bool ()>&& function1,
-      std::function<bool ()>&& function2,
-      std::function<bool ()>&& function3,
-      std::function<bool ()>&& function4,
-	  TaskType                 taskType,
-	  int                      location
-    );
-
-    Tasks(
-      std::function<bool ()>&& function1,
-      std::function<bool ()>&& function2,
-      std::function<bool ()>&& function3,
-      std::function<bool ()>&& function4,
-      std::function<bool ()>&& function5,
-	  TaskType                 taskType,
-      int                      location
-    );
-
-
-    Tasks(
-      std::function<bool ()>&& function1,
-      std::function<bool ()>&& function2,
-      std::function<bool ()>&& function3,
-      std::function<bool ()>&& function4,
-      std::function<bool ()>&& function5,
-      std::function<bool ()>&& function6,
-      std::function<bool ()>&& function7,
-      std::function<bool ()>&& function8,
-      std::function<bool ()>&& function9,
-      std::function<bool ()>&& function10,
-      std::function<bool ()>&& function11,
-      std::function<bool ()>&& function12,
-	  TaskType                 taskType,
-      int                      location
-    );
-*/
 };
 
 
-
-
 #endif
-
