@@ -50,7 +50,7 @@ project.datamodel.add_vertex( dastgen_model )
 #
 # This is the stencil data structure
 #
-cell_assembly_data = peano4.datamodel.DynamicArrayOverPrimitives( "A" )
+cell_assembly_data = peano4.datamodel.DynamicArrayOverPrimitives( "A", "unsigned char" )
 project.datamodel.add_cell( cell_assembly_data )
 
 cell_meta_data = peano4.datamodel.DaStGen( "p" )
@@ -159,7 +159,7 @@ project.generate(peano4.output.Overwrite.Default)
 project.build(True)
 #project.run( ["16.0"] )
 #project.run( ["16.0"], ["/opt/mpi/mpirun", "-n", "1"] )
-project.run( ["64.0"], ["/opt/mpi/mpirun", "-n", "1"] )
+project.run( ["2.0"], ["/opt/mpi/mpirun", "-n", "1"] )
 
 
 #
