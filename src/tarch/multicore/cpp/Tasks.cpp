@@ -6,9 +6,11 @@
 #ifdef SharedCPP
 #include <thread>
 #include <queue>
+#include <mutex>
 
 namespace {
-  std::queue<tarch::multicore::Task* > backgroundJobs;
+  std::queue<tarch::multicore::Task* > nonblockingTasks;
+  std::mutex                           taskQueueMutex;
 }
 
 
@@ -18,35 +20,43 @@ void tarch::multicore::yield() {
 }
 
 
-bool tarch::multicore::processPendingTasks() {
-  if (backgroundJobs.empty()) {
-    return false;
-  }
-  else {
-    while ( !backgroundJobs.empty() ) {
-      Task* p = backgroundJobs.front();
-      backgroundJobs.pop();
-      while (p->run()) {};
-      delete p;
+bool tarch::multicore::processPendingTasks(int maxTasks) {
+  assertion(maxTasks>=1);
+  bool result = false;
+  while ( maxTasks>0 ) {
+	// try to get a task and store in p
+    Task* p = nullptr;
+    taskQueueMutex.lock();
+    if (not nonblockingTasks.empty()) {
+      p = nonblockingTasks.front();
+      nonblockingTasks.pop();
     }
-    return true;
+    taskQueueMutex.unlock();
+
+    // process task
+    if (p!=nullptr) {
+      bool requeue = p->run();
+      if (requeue) {
+        spawnTask( p );
+      }
+      else {
+        delete p;
+      }
+      maxTasks--;
+      result = true;
+    }
+    else {
+      maxTasks=0;
+    }
   }
+  return result;
 }
 
 
 void tarch::multicore::spawnTask(Task*  job) {
-  backgroundJobs.push(job);
-}
-
-
-void tarch::multicore::spawnHighBandwidthTask(Task*  job) {
-  backgroundJobs.push(job);
-}
-
-
-void tarch::multicore::spawnHighPriorityTask(Task*  job) {
-  while( job->run() ) {};
-  delete job;
+  taskQueueMutex.lock();
+  nonblockingTasks.push(job);
+  taskQueueMutex.unlock();
 }
 
 

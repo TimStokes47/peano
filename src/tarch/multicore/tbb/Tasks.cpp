@@ -1118,7 +1118,6 @@ void tarch::multicore::spawnHighPriorityTask(Task*  job) {
 */
 }
 
-// @todo Fuer fixe Zahl an Tasks sollte man tbb::parallel_invoke nehmen
 
 void tarch::multicore::spawnAndWait(
   const std::vector< tarch::multicore::Task* >&  tasks

@@ -7,6 +7,27 @@
 #include "MulticoreDefinitions.h"
 
 
+tarch::multicore::Task::Task( int priority ):
+  _priority( priority ) {
+}
+
+
+int tarch::multicore::Task::getPriority() const {
+  return _priority;
+}
+
+
+void tarch::multicore::Task::setPriority( int priority ) {
+  _priority = priority;
+}
+
+
+void tarch::multicore::Task::prefetch() {
+}
+
+
+
+
 tarch::multicore::TaskWithCopyOfFunctor::TaskWithCopyOfFunctor( const std::function<bool()>& taskFunctor ):
   _taskFunctor(taskFunctor)  {
 }
@@ -14,10 +35,6 @@ tarch::multicore::TaskWithCopyOfFunctor::TaskWithCopyOfFunctor( const std::funct
 
 bool tarch::multicore::TaskWithCopyOfFunctor::run() {
   return _taskFunctor();
-}
-
-
-void tarch::multicore::TaskWithCopyOfFunctor::prefetch() {
 }
 
 
@@ -29,11 +46,6 @@ tarch::multicore::TaskWithoutCopyOfFunctor::TaskWithoutCopyOfFunctor( std::funct
 bool tarch::multicore::TaskWithoutCopyOfFunctor::run() {
   return _taskFunctor();
 }
-
-
-void tarch::multicore::TaskWithoutCopyOfFunctor::prefetch() {
-}
-
 
 
 #ifndef SharedMemoryParallelisation
