@@ -57,7 +57,7 @@ namespace {
 }
 
 
-bool tarch::multicore::processPendingTasks() {
+bool tarch::multicore::processPendingTasks(int maxTasks) {
   // Note: Only invoked if no shared memory parallelisation activated. If
   // TBB/C++/OpenMP are enabled, the routine of the respective subfolder is
   // invoked
@@ -65,11 +65,12 @@ bool tarch::multicore::processPendingTasks() {
     return false;
   }
   else {
-    while ( !backgroundJobs.empty() ) {
+    while ( maxTasks>0 and !backgroundJobs.empty() ) {
       Task* p = backgroundJobs.front();
       backgroundJobs.pop();
       while (p->run()) {};
       delete p;
+      maxTasks--;
     }
     return true;
   }
@@ -78,17 +79,6 @@ bool tarch::multicore::processPendingTasks() {
 
 void tarch::multicore::spawnTask(Task*  job) {
   backgroundJobs.push(job);
-}
-
-
-void tarch::multicore::spawnHighBandwidthTask(Task*  job) {
-  backgroundJobs.push(job);
-}
-
-
-void tarch::multicore::spawnHighPriorityTask(Task*  job) {
-  while( job->run() ) {};
-  delete job;
 }
 
 

@@ -110,7 +110,6 @@ namespace tarch {
      * to delete the pointer.
      */
     void spawnTask(Task*  job);
-    void spawnHighBandwidthTask(Task*  job);
 
     /**
      * The routine deletes all the passed arguments.
