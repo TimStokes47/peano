@@ -8,7 +8,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 #
 SUBDIRS = . \
           examples/grid examples/integerdiffusionthroughfaces examples/delta examples/regulargridupscaling \
-          toolbox/finiteelements \
+          toolbox/finiteelements toolbox/multiprecision \
           visualisation
 
 
