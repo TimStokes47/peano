@@ -41,6 +41,8 @@ namespace {
 
   tbb::atomic<int> numberOfConsumerTasks;
 
+  const int MinNumberOfTasksPerConsumer = 16;
+
   /**
    * This is a task which consumes background jobs, as it invokes
    * processBackgroundJobs(). Typically, I make such a job consume up to
@@ -91,7 +93,7 @@ namespace {
     	int  numberOfPendingTasksPriorToStart = nonblockingTasks.size();
     	bool handledTasks                     = tarch::multicore::processPendingTasks(_maxJobs);
 
-    	if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart) {
+    	if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart and nonblockingTasks.size()>MinNumberOfTasksPerConsumer) {
           enqueue(_maxJobs*2);
           enqueue(_maxJobs*2);
     	}
