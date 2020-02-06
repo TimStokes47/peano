@@ -67,6 +67,8 @@ tarch::la::Vector<Size,double> toolbox::multiprecision::uncompressVector( const 
     result(i) = compose( exponent, mantissa, bytesForMantissa );
   }
 
+  assertionEquals(index,stream.size());
+
   return result;
 }
 
@@ -92,6 +94,8 @@ tarch::la::Matrix<Rows,Cols,double> toolbox::multiprecision::uncompressMatrix( c
 
     result(row,col) = compose( exponent, mantissa, bytesForMantissa );
   }
+
+  assertionEquals(index,stream.size());
 
   return result;
 }
