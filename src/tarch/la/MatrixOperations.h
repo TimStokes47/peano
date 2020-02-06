@@ -50,6 +50,12 @@ namespace tarch {
     Matrix<Rows,Cols,Scalar> invertEntries (
       const Matrix<Rows,Cols,Scalar>&  matrix
     );
+
+
+    template<int Rows, int Cols, typename Scalar>
+    Scalar frobeniusNorm(
+      const Matrix<Rows,Cols,Scalar>&  matrix
+    );
   }
 }
 
