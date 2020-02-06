@@ -860,7 +860,9 @@ toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::getP
   const double termScaling = 1.0 / std::pow(integrationPointsPerAxis,Dimensions);
 
   dfor( subVolume, integrationPointsPerAxis ) {
-    tarch::la::Vector<Dimensions,double> x = cellCentre - h/2.0 + (subVolume.convertScalar<double>()+0.5) * h / integrationPointsPerAxis;
+    tarch::la::Vector<Dimensions,double> x =
+      cellCentre - h/2.0 +
+	  (1.0/integrationPointsPerAxis) * tarch::la::multiplyComponents(subVolume.convertScalar<double>()+0.5, h);
 
     double epsilonScaling = epsilon(x) * tarch::la::volume(h) / h(0) / h(0);
 

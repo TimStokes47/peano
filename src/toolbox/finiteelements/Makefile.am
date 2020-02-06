@@ -1,3 +1,6 @@
+AUTOMAKE_OPTIONS = subdir-objects
+
+
 lib_LIBRARIES = libToolboxFiniteElements2d.a libToolboxFiniteElements2d_debug.a libToolboxFiniteElements2d_trace.a \
                 libToolboxFiniteElements3d.a libToolboxFiniteElements3d_debug.a libToolboxFiniteElements3d_trace.a
 
@@ -6,7 +9,8 @@ ToolboxFiniteElements_SOURCES = \
   BSplinesStencilFactory.cpp \
   ElementMatrix.cpp \
   Stencil.cpp \
-  StencilFactory.cpp
+  StencilFactory.cpp \
+  tests/StencilFactoryTest.cpp
   
 
 libToolboxFiniteElements2d_a_CXXFLAGS       = -DDimensions=2 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
