@@ -30,11 +30,19 @@ std::vector< peano4::grid::GridControlEvent > examples::algebraicmg::mappings::C
 
 
 void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::beginTraversal() {
+  _maximumN = 0;
+  _accumulatedN = 0;
+  _totalNumberOfStencils = 0;
+  _totalBytesOfStoredStencils = 0;
 }
 
 
 void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::endTraversal() {
-// @todo Please implement
+  std::cout << "\t max(N)=" << _maximumN
+		    << "\t average(N)=" << (_accumulatedN/_totalNumberOfStencils)
+			<< "\t average bytes per stencil=" << (_totalNumberOfStencils/_totalBytesOfStoredStencils)
+			<< "\t compression=" << (_totalBytesOfStoredStencils*ThreePowerD) / _totalNumberOfStencils
+			<< std::endl;
 }
 
 
@@ -65,7 +73,9 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::cre
 	      const tarch::la::Vector<Dimensions,double>& h,
 	      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
 	      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA) {
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp
+) {
 }
 
 
@@ -74,7 +84,9 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::des
 	      const tarch::la::Vector<Dimensions,double>& h,
 	      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
 	      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA) {
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp
+) {
 }
 
 
@@ -83,7 +95,9 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
 	      const tarch::la::Vector<Dimensions,double>& h,
 	      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
 	      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA) {
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp
+) {
   fineGridVertexMG.setRes(0.0);
   fineGridVertexMG.setDiag(0.0);
 }
@@ -94,7 +108,8 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
 	      const tarch::la::Vector<Dimensions,double>& h,
 	      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
 	      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
+	      peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp
 ) {
 }
 
@@ -114,7 +129,12 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
       u(i) = fineGridVerticesMG(i).getU();
     }
 
+
+    _totalNumberOfStencils++;
     if ( fineGridCellA.data().entries.empty() ) {
+      //
+      //
+      //
       tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix =
         toolbox::finiteelements::getPoissonMatrixWithJumpingCoefficient(
           fineGridCellA.centre(), fineGridCellA.h(), 16,
