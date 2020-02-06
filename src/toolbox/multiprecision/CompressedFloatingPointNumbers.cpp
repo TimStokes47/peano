@@ -7,7 +7,7 @@
 
 
 int toolbox::multiprecision::findMostAgressiveCompression(
-  double        values[],
+  const double  values[],
   int           count,
   double        maxError
 ) {
