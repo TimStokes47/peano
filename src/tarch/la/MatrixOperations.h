@@ -60,7 +60,7 @@ namespace tarch {
      * Max norm
      */
     template<int Rows, int Cols, typename Scalar>
-    Scalar max(
+    Scalar elementMax(
       const Matrix<Rows,Cols,Scalar>&  matrix
     );
   }

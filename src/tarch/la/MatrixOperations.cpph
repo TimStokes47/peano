@@ -26,7 +26,7 @@ Scalar tarch::la::frobeniusNorm(
 
 
 template<int Rows, int Cols, typename Scalar>
-Scalar tarch::la::max(
+Scalar tarch::la::elementMax(
   const Matrix<Rows,Cols,Scalar>&  matrix
 ) {
   Scalar result(0);
