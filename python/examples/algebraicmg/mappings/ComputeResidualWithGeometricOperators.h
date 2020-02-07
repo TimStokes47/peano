@@ -40,13 +40,23 @@ class examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators{
     tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  _localStiffnessMatrixOneIntegrationPoint;
 
     int _maximumN;
+    int _minimumN;
     int _accumulatedN;
     int _totalNumberOfLocalStiffnessMatrices;
     int _totalBytesOfStoredMatrices;
     int _minBytesPerMatrix;
     int _maxBytesPerMatrix;
 
-
+    /**
+     * @param center I need the center for the hierarchical transform  to compute the reference matrix
+     * @param h      I need the mesh size for the hierarchical transform to compute the reference matrix
+     */
+    void embedMatrixIntoCellStream(
+      const tarch::la::Vector<Dimensions,double>&   center,
+      const tarch::la::Vector<Dimensions,double>&   h,
+	  const tarch::la::Matrix<TwoPowerD,TwoPowerD,double>& localStiffnessMatrix,
+	  peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A>& fineGridCellA
+    );
   public:
 
     /**

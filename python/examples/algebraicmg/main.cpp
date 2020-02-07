@@ -5,6 +5,7 @@
 #include "tarch/logging/ChromeTraceFileLogger.h"
 #include "tarch/tests/TestCaseRegistry.h"
 #include "tarch/logging/LogFilter.h"
+#include "tarch/multicore/multicore.h"
 
 #include "peano4/peano.h"
 #include "peano4/grid/Spacetree.h"
@@ -124,6 +125,16 @@ int main(int argc, char* argv[]) {
     logWarning( "main()", "use dummy value for theta " );
   }
   logInfo( "main()", "theta=" << examples::algebraicmg::mappings::SetupScenario::Theta  );
+
+  int coreCount = 1;
+  if (argc==3) {
+    #ifdef SharedMemoryParallelisation
+    coreCount = std::atof( argv[1] );
+    logInfo( "main()", "use " << coreCount << " core(s)" );
+    #else
+    logWarning( "main()", "you should not set the thread count if you translate without multicore support" );
+    #endif
+  }
 
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {

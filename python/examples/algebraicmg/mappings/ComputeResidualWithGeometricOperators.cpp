@@ -31,6 +31,7 @@ std::vector< peano4::grid::GridControlEvent > examples::algebraicmg::mappings::C
 
 void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::beginTraversal() {
   _maximumN = 0;
+  _minimumN = std::numeric_limits<int>::max();
   _accumulatedN = 0;
   _totalNumberOfLocalStiffnessMatrices = 0;
   _totalBytesOfStoredMatrices = 0;
@@ -41,6 +42,7 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::beg
 
 void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::endTraversal() {
   std::cout << "\t max(N)=" << _maximumN
+  	        << "\t min(N)=" << _minimumN
 		    << "\t average(N)=" << (static_cast<double>(_accumulatedN)/static_cast<double>(_totalNumberOfLocalStiffnessMatrices))
 			<< "\t average bytes per matrix=" << (static_cast<double>(_totalBytesOfStoredMatrices)/static_cast<double>(_totalNumberOfLocalStiffnessMatrices))
 			<< "\t min bytes per matrix=" << _minBytesPerMatrix
@@ -118,6 +120,33 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
 }
 
 
+const double AcceptableError = 1e-8;
+
+
+void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::embedMatrixIntoCellStream(
+  const tarch::la::Vector<Dimensions,double>&   centre,
+  const tarch::la::Vector<Dimensions,double>&   h,
+  const tarch::la::Matrix<TwoPowerD,TwoPowerD,double>& localStiffnessMatrix,
+  peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A>& fineGridCellA
+) {
+   tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  hierarchicalTransformOfLocalStiffnessMatrix = toolbox::finiteelements::hierarchicalTransform(
+    localStiffnessMatrix,
+	h,
+	SetupScenario::getEpsilon( centre )
+  );
+
+  std::vector<unsigned char> compressedLocalStiffnessMatrix = toolbox::multiprecision::compress(
+    hierarchicalTransformOfLocalStiffnessMatrix,
+    AcceptableError
+  );
+
+  //  assertionEquals5( compressedLocalStiffnessMatrix.size(), 1, localStiffnessMatrix, hierarchicalTransformOfLocalStiffnessMatrix, SetupScenario::getEpsilon( centre ), centre, h );
+
+  fineGridCellA.data().entries.clear();
+  fineGridCellA.data().entries.insert( fineGridCellA.data().entries.begin(), compressedLocalStiffnessMatrix.begin(), compressedLocalStiffnessMatrix.end() );
+}
+
+
 void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::touchCellFirstTime(
   peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
   peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> fineGridCellA,
@@ -126,7 +155,7 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
   peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::A> coarseGridCellA,
   peano4::datamanagement::CellWrapper<examples::algebraicmg::celldata::p> coarseGridCellp
 ) {
-  if (fineGridCellA.isRefined()) {
+  if (not fineGridCellA.isRefined()) {
     tarch::la::Vector<TwoPowerD, double> u;
     tarch::la::Vector<TwoPowerD, double> r;
 
@@ -135,8 +164,6 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
       u(i) = fineGridVerticesMG(i).getU();
     }
 
-
-    const double AcceptableError = 1e-8;
     if ( fineGridCellA.data().entries.empty() ) {
       //
       // Create an initial guess of the matrix through low order discretisation
@@ -149,18 +176,10 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
           }
 	    );
 
-      tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  hierarchicalTransformOfLocalStiffnessMatrix = toolbox::finiteelements::hierarchicalTransform(
-        localStiffnessMatrix,
-		fineGridCellA.h(),
-		SetupScenario::getEpsilon( fineGridCellA.centre() )
-      );
+      embedMatrixIntoCellStream( fineGridCellA.centre(), fineGridCellA.h(), localStiffnessMatrix, fineGridCellA );
 
-      std::vector<unsigned char> compressedLocalStiffnessMatrix = toolbox::multiprecision::compress(
-        hierarchicalTransformOfLocalStiffnessMatrix,
-		AcceptableError
-	  );
+      assertionEquals2( fineGridCellA.data().entries.size(), 1, localStiffnessMatrix, fineGridCellA.centre() );
 
-      fineGridCellA.data().entries.insert( fineGridCellA.data().entries.begin(), compressedLocalStiffnessMatrix.begin(), compressedLocalStiffnessMatrix.end() );
       fineGridCellp.data().setN(1);
     }
 
@@ -177,19 +196,16 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
       SetupScenario::getEpsilon( fineGridCellA.centre() )
     );
 
-
     //
     // Update stats
     //
-    _maximumN      = std::max(_maximumN,fineGridCellp.data().getN());
-    _accumulatedN += fineGridCellp.data().getN();
+    _maximumN      = std::max(_maximumN, std::abs(fineGridCellp.data().getN()) );
+    _minimumN      = std::min(_minimumN, std::abs(fineGridCellp.data().getN()) );
+    _accumulatedN += std::abs(fineGridCellp.data().getN());
     _totalNumberOfLocalStiffnessMatrices++;
     _totalBytesOfStoredMatrices += fineGridCellA.data().entries.size();
     _minBytesPerMatrix = std::min(_minBytesPerMatrix,(int)(fineGridCellA.data().entries.size()));
     _maxBytesPerMatrix = std::max(_maxBytesPerMatrix,(int)(fineGridCellA.data().entries.size()));
-
-
-
 
     // compute residual contribution. Mind the minus sign here that
     // results from the residual's definition: r = b-Au
@@ -201,6 +217,36 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
     for (int i=0; i<TwoPowerD; i++) {
       fineGridVerticesMG(i).setRes(  fineGridVerticesMG(i).getRes() + r(i) );
       fineGridVerticesMG(i).setDiag( fineGridVerticesMG(i).getDiag() + localStiffnessMatrix(i,i) );
+    }
+
+    if (fineGridCellp.data().getN()>0) {
+      //
+      // Create an initial guess of the matrix through low order discretisation
+      //
+      tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  improvedLocalStiffnessMatrix =
+        toolbox::finiteelements::getPoissonMatrixWithJumpingCoefficient(
+            fineGridCellA.centre(), fineGridCellA.h(), fineGridCellp.data().getN()+1,
+    	      [](const tarch::la::Vector<Dimensions,double>& x) -> double {
+              return SetupScenario::getEpsilon(x);
+            }
+  	    );
+
+        double oldFrobeniusNorm = tarch::la::frobeniusNorm(localStiffnessMatrix);
+        double newFrobeniusNorm = tarch::la::frobeniusNorm(improvedLocalStiffnessMatrix);
+        double improvement = std::abs(oldFrobeniusNorm-newFrobeniusNorm)/oldFrobeniusNorm;
+
+        ///std::cout << " " << improvement << "(" << oldFrobeniusNorm << ")";
+        //double improvement = tarch::la::frobeniusNorm(improvedLocalStiffnessMatrix-localStiffnessMatrix)/oldFrobeniusNorm;
+
+        //const double MaxDifference = AcceptableError;
+        const double MaxDifference = 0.01;
+        if (improvement>MaxDifference) {
+          embedMatrixIntoCellStream( fineGridCellA.h(), fineGridCellA.centre(), improvedLocalStiffnessMatrix, fineGridCellA );
+          fineGridCellp.data().setN( fineGridCellp.data().getN()+1 );
+        }
+        else {
+          fineGridCellp.data().setN( -fineGridCellp.data().getN() );
+        }
     }
   }
 }
