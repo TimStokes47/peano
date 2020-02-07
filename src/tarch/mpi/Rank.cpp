@@ -7,7 +7,7 @@
 
 #include "Rank.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
-#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/multicore.h"
 
 #include "tarch/mpi/IntegerMessage.h"
 #include "tarch/mpi/StringMessage.h"

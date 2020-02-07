@@ -4,7 +4,7 @@
 #include <thread>
 #include <queue>
 #include "Tasks.h"
-#include "MulticoreDefinitions.h"
+#include "multicore.h"
 
 
 tarch::multicore::Task::Task( int priority ):

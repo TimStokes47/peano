@@ -4,7 +4,7 @@
 #define _TARCH_MULTICORE_CPP_BOOLEAN_SEMAPHORE_H_
 
 #include <string>
-#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/multicore.h"
 
 
 namespace tarch {

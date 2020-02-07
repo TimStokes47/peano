@@ -6,7 +6,7 @@
 #include "peano4/grid/PeanoCurve.h"
 
 
-#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Lock.h"
 
 #include "tarch/mpi/Rank.h"

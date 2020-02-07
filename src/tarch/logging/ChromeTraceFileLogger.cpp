@@ -3,7 +3,7 @@
 #include "tarch/Assertions.h"
 
 #include "tarch/multicore/Lock.h"
-#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/multicore.h"
 
 #include <sstream>
 #include <fstream>

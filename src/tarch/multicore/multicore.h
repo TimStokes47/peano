@@ -2,6 +2,17 @@
 // use, please see the copyright notice at www.peano-framework.org
 
 
+#include "config.h"
+
+#if defined(SharedOMP) || defined(SharedTBB) || defined(SharedCPP)
+  #define SharedMemoryParallelisation
+#endif
+
+#if defined(TBBInvade) && !defined(SharedTBB)
+#error TBBInvade used without SharedTBB
+#endif
+
+
 
 namespace tarch {
 

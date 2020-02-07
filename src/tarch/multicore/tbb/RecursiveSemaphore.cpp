@@ -1,4 +1,4 @@
-#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/multicore.h"
 
 
 #ifdef SharedTBB

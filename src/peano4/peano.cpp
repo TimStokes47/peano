@@ -3,7 +3,7 @@
 #include "peano4/utils/Loop.h"
 #include "peano4/parallel/Node.h"
 
-#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Core.h"
 #include "tarch/mpi/Rank.h"
 #include "tarch/tarch.h"

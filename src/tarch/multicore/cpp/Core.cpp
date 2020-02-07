@@ -1,5 +1,5 @@
 #include "tarch/multicore/Core.h"
-#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/multicore.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 

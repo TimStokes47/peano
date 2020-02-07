@@ -1,6 +1,6 @@
 #include "tarch/Assertions.h"
 #include "../Tasks.h"
-#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/multicore.h"
 
 
 #ifdef SharedCPP

@@ -1,6 +1,6 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/multicore.h"
 #if defined(SharedCPP)
   #include "cpp/BooleanSemaphore.h"
 #elif defined(SharedTBB)
