@@ -51,9 +51,16 @@ namespace tarch {
       const Matrix<Rows,Cols,Scalar>&  matrix
     );
 
-
     template<int Rows, int Cols, typename Scalar>
     Scalar frobeniusNorm(
+      const Matrix<Rows,Cols,Scalar>&  matrix
+    );
+
+    /**
+     * Max norm
+     */
+    template<int Rows, int Cols, typename Scalar>
+    Scalar max(
       const Matrix<Rows,Cols,Scalar>&  matrix
     );
   }

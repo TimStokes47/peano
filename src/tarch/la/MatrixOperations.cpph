@@ -10,8 +10,6 @@ tarch::la::Matrix<Rows,Rows,Scalar>  tarch::la::identity() {
 }
 
 
-
-
 template<int Rows, int Cols, typename Scalar>
 Scalar tarch::la::frobeniusNorm(
   const Matrix<Rows,Cols,Scalar>&  matrix
@@ -24,6 +22,21 @@ Scalar tarch::la::frobeniusNorm(
   }
 
   return std::sqrt(result);
+}
+
+
+template<int Rows, int Cols, typename Scalar>
+Scalar tarch::la::max(
+  const Matrix<Rows,Cols,Scalar>&  matrix
+) {
+  Scalar result(0);
+
+  for (int row=0; row<Rows; row++)
+  for (int col=0; col<Cols; col++) {
+	result = std::max( result, std::abs( matrix(row,col) ) );
+  }
+
+  return result;
 }
 
 

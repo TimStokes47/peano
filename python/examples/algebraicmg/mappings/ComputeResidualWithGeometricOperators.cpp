@@ -32,16 +32,20 @@ std::vector< peano4::grid::GridControlEvent > examples::algebraicmg::mappings::C
 void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::beginTraversal() {
   _maximumN = 0;
   _accumulatedN = 0;
-  _totalNumberOfStencils = 0;
-  _totalBytesOfStoredStencils = 0;
+  _totalNumberOfLocalStiffnessMatrices = 0;
+  _totalBytesOfStoredMatrices = 0;
+  _minBytesPerMatrix = ThreePowerD*sizeof(double);
+  _maxBytesPerMatrix = 0;
 }
 
 
 void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::endTraversal() {
   std::cout << "\t max(N)=" << _maximumN
-		    << "\t average(N)=" << (_accumulatedN/_totalNumberOfStencils)
-			<< "\t average bytes per stencil=" << (_totalNumberOfStencils/_totalBytesOfStoredStencils)
-			<< "\t compression=" << (_totalBytesOfStoredStencils*ThreePowerD) / _totalNumberOfStencils
+		    << "\t average(N)=" << (static_cast<double>(_accumulatedN)/static_cast<double>(_totalNumberOfLocalStiffnessMatrices))
+			<< "\t average bytes per matrix=" << (static_cast<double>(_totalBytesOfStoredMatrices)/static_cast<double>(_totalNumberOfLocalStiffnessMatrices))
+			<< "\t min bytes per matrix=" << _minBytesPerMatrix
+			<< "\t max bytes per matrix=" << _maxBytesPerMatrix
+			<< "\t compression=" << static_cast<double>(_totalNumberOfLocalStiffnessMatrices*TwoPowerD*TwoPowerD*sizeof(double)) / _totalBytesOfStoredMatrices
 			<< std::endl;
 }
 
@@ -132,59 +136,60 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::tou
     }
 
 
-    _totalNumberOfStencils++;
+    const double AcceptableError = 1e-8;
     if ( fineGridCellA.data().entries.empty() ) {
       //
-      //
+      // Create an initial guess of the matrix through low order discretisation
       //
       tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix =
         toolbox::finiteelements::getPoissonMatrixWithJumpingCoefficient(
-          fineGridCellA.centre(), fineGridCellA.h(), 16,
+          fineGridCellA.centre(), fineGridCellA.h(), 1,
   	      [](const tarch::la::Vector<Dimensions,double>& x) -> double {
             return SetupScenario::getEpsilon(x);
           }
 	    );
 
-      tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  lala = toolbox::finiteelements::hierarchicalTransform(
+      tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  hierarchicalTransformOfLocalStiffnessMatrix = toolbox::finiteelements::hierarchicalTransform(
         localStiffnessMatrix,
 		fineGridCellA.h(),
 		SetupScenario::getEpsilon( fineGridCellA.centre() )
       );
-      std::vector<unsigned char> data = toolbox::multiprecision::compress(lala,1e-12);
-      std::cout << "size " << data.size()
-    		    << ", bpm " << (int)(data[0]) << std::endl;
 
-      for (int row=0; row<TwoPowerD; row++)
-      for (int col=0; col<TwoPowerD; col++) {
-/*
-      // Seems to be too restrictive, i.e. fails in the digit eight or nine.
+      std::vector<unsigned char> compressedLocalStiffnessMatrix = toolbox::multiprecision::compress(
+        hierarchicalTransformOfLocalStiffnessMatrix,
+		AcceptableError
+	  );
 
-      assertionNumericalEquals(
-        localStiffnessMatrix(row,col),
-		tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2))
-        * SetupScenario::getEpsilon(fineGridCellA.centre())
-        * _localStiffnessMatrixOneIntegrationPoint(row,col)
-      );
-*/
-        fineGridCellA.data().entries.push_back( localStiffnessMatrix(row,col) );
-      }
-
-
-/*
-    const double scaling = tarch::la::pow(fineGridCellA.h()(0), (double)(Dimensions-2))
-	                       * SetupScenario::getEpsilon(fineGridCellA.centre());
-    for (int row=0; row<TwoPowerD; row++)
-    for (int col=0; col<TwoPowerD; col++) {
-      fineGridCellA.data().entries.push_back( scaling * _localStiffnessMatrixOneIntegrationPoint(row,col) );
-    }
-*/
+      fineGridCellA.data().entries.insert( fineGridCellA.data().entries.begin(), compressedLocalStiffnessMatrix.begin(), compressedLocalStiffnessMatrix.end() );
+      fineGridCellp.data().setN(1);
     }
 
-    tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix;
-    for (int row=0; row<TwoPowerD; row++)
-    for (int col=0; col<TwoPowerD; col++) {
-      localStiffnessMatrix(row,col) = fineGridCellA.data().entries[ row*TwoPowerD + col ];
-    }
+    //
+    // Get the compressed data from the stream and convert it into local assembly matrix
+    //
+    tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  hierarchicalTransformOfLocalStiffnessMatrix = toolbox::multiprecision::uncompressMatrix<TwoPowerD,TwoPowerD>(
+       fineGridCellA.data().entries
+    );
+
+    tarch::la::Matrix<TwoPowerD,TwoPowerD,double>  localStiffnessMatrix = toolbox::finiteelements::inverseHierarchicalTransform(
+      hierarchicalTransformOfLocalStiffnessMatrix,
+      fineGridCellA.h(),
+      SetupScenario::getEpsilon( fineGridCellA.centre() )
+    );
+
+
+    //
+    // Update stats
+    //
+    _maximumN      = std::max(_maximumN,fineGridCellp.data().getN());
+    _accumulatedN += fineGridCellp.data().getN();
+    _totalNumberOfLocalStiffnessMatrices++;
+    _totalBytesOfStoredMatrices += fineGridCellA.data().entries.size();
+    _minBytesPerMatrix = std::min(_minBytesPerMatrix,(int)(fineGridCellA.data().entries.size()));
+    _maxBytesPerMatrix = std::max(_maxBytesPerMatrix,(int)(fineGridCellA.data().entries.size()));
+
+
+
 
     // compute residual contribution. Mind the minus sign here that
     // results from the residual's definition: r = b-Au

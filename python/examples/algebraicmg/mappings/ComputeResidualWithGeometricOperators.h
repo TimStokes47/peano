@@ -41,8 +41,11 @@ class examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators{
 
     int _maximumN;
     int _accumulatedN;
-    int _totalNumberOfStencils;
-    int _totalBytesOfStoredStencils;
+    int _totalNumberOfLocalStiffnessMatrices;
+    int _totalBytesOfStoredMatrices;
+    int _minBytesPerMatrix;
+    int _maxBytesPerMatrix;
+
 
   public:
 
