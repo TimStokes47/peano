@@ -6,18 +6,21 @@ std::vector<unsigned char> toolbox::multiprecision::compress(const tarch::la::Ve
   std::vector<unsigned char> result;
   unsigned char bytesForMantissa = findMostAgressiveCompression( vector.data(), Size, maxAbsoluteError );
   result.push_back(bytesForMantissa);
-  for (int i=0; i<Size; i++) {
-	 char     exponent;
-	 long int mantissa;
-	 double   error;
-     char*    pMantissa = reinterpret_cast<char*>( &(mantissa) );
 
-     decompose( vector(i), exponent, mantissa, bytesForMantissa );
+  if (bytesForMantissa>0) {
+    for (int i=0; i<Size; i++) {
+	  char     exponent;
+      long int mantissa;
+ 	  double   error;
+      char*    pMantissa = reinterpret_cast<char*>( &(mantissa) );
 
-     result.push_back(exponent);
-     for (int j=0; j<bytesForMantissa; j++) {
-       result.push_back(pMantissa[j]);
-     }
+      decompose( vector(i), exponent, mantissa, bytesForMantissa );
+
+      result.push_back(exponent);
+      for (int j=0; j<bytesForMantissa; j++) {
+        result.push_back(pMantissa[j]);
+      }
+    }
   }
   return result;
 }
@@ -28,18 +31,20 @@ std::vector<unsigned char> toolbox::multiprecision::compress(const tarch::la::Ma
   std::vector<unsigned char> result;
   unsigned char bytesForMantissa = findMostAgressiveCompression( matrix.data(), Rows*Cols, maxAbsoluteError );
   result.push_back(bytesForMantissa);
-  for (int row=0; row<Rows; row++)
-  for (int col=0; col<Cols; col++) {
-    char     exponent;
-    long int mantissa;
-	double   error;
-    char*    pMantissa = reinterpret_cast<char*>( &(mantissa) );
+  if (bytesForMantissa>0) {
+    for (int row=0; row<Rows; row++)
+    for (int col=0; col<Cols; col++) {
+      char     exponent;
+      long int mantissa;
+	  double   error;
+      char*    pMantissa = reinterpret_cast<char*>( &(mantissa) );
 
-    decompose( matrix(row,col), exponent, mantissa, bytesForMantissa );
+      decompose( matrix(row,col), exponent, mantissa, bytesForMantissa );
 
-    result.push_back(exponent);
-    for (int j=0; j<bytesForMantissa; j++) {
-      result.push_back(pMantissa[j]);
+      result.push_back(exponent);
+      for (int j=0; j<bytesForMantissa; j++) {
+        result.push_back(pMantissa[j]);
+      }
     }
   }
   return result;
@@ -55,16 +60,21 @@ tarch::la::Vector<Size,double> toolbox::multiprecision::uncompressVector( const 
   unsigned char bytesForMantissa = stream[index]; index++;
 
   for (int i=0; i<Size; i++) {
-    char     exponent;
-    long int mantissa;
-    char*    pMantissa = reinterpret_cast<char*>( &(mantissa) );
+    if (bytesForMantissa>0) {
+      char     exponent;
+      long int mantissa;
+      char*    pMantissa = reinterpret_cast<char*>( &(mantissa) );
 
-    exponent = stream[index]; index++;
-    for (int j=0; j<bytesForMantissa; j++) {
-      pMantissa[j] = stream[index]; index++;
+      exponent = stream[index]; index++;
+      for (int j=0; j<bytesForMantissa; j++) {
+        pMantissa[j] = stream[index]; index++;
+      }
+
+      result(i) = compose( exponent, mantissa, bytesForMantissa );
     }
-
-    result(i) = compose( exponent, mantissa, bytesForMantissa );
+    else {
+      result(i) = 0;
+    }
   }
 
   assertionEquals(index,stream.size());
@@ -82,17 +92,21 @@ tarch::la::Matrix<Rows,Cols,double> toolbox::multiprecision::uncompressMatrix( c
 
   for (int row=0; row<Rows; row++)
   for (int col=0; col<Cols; col++) {
+    if (bytesForMantissa>0) {
+      char     exponent;
+      long int mantissa = 0;
+      char*    pMantissa = reinterpret_cast<char*>( &(mantissa) );
 
-    char     exponent;
-    long int mantissa = 0;
-    char*    pMantissa = reinterpret_cast<char*>( &(mantissa) );
+      exponent = stream[index]; index++;
+      for (int j=0; j<bytesForMantissa; j++) {
+        pMantissa[j] = stream[index]; index++;
+      }
 
-    exponent = stream[index]; index++;
-    for (int j=0; j<bytesForMantissa; j++) {
-      pMantissa[j] = stream[index]; index++;
+      result(row,col) = compose( exponent, mantissa, bytesForMantissa );
     }
-
-    result(row,col) = compose( exponent, mantissa, bytesForMantissa );
+    else {
+      result(row,col) = 0;
+    }
   }
 
   assertionEquals(index,stream.size());

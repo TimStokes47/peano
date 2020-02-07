@@ -2,6 +2,7 @@
 #include "ElementMatrix.h"
 
 #include "peano4/utils/Loop.h"
+#include "tarch/Assertions.h"
 
 
 void toolbox::finiteelements::preprocessBoundaryStencil( Stencil& stencil, const std::bitset<Dimensions*2>& boundaryFaceNormals ) {
@@ -862,7 +863,7 @@ toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::getP
   dfor( subVolume, integrationPointsPerAxis ) {
     tarch::la::Vector<Dimensions,double> x =
       cellCentre - h/2.0 +
-	  (1.0/integrationPointsPerAxis) * tarch::la::multiplyComponents(subVolume.convertScalar<double>()+0.5, h);
+	  tarch::la::multiplyComponents(subVolume.convertScalar<double>()+0.5, h/static_cast<double>(integrationPointsPerAxis));
 
     double epsilonScaling = epsilon(x) * tarch::la::volume(h) / h(0) / h(0);
 

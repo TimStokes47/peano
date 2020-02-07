@@ -32,6 +32,9 @@ namespace toolbox {
      *   bytes.
      * - The first byte per entry is the exponent.
      * - The remaining n bytes encode the mantissa.
+     *
+     * There's one reserved code: If the passed data holds zeros only, i.e. we
+     * don't have to store any entry. So we add a zero as header an return.
      */
     template<int Size>
     std::vector<unsigned char> compress(const tarch::la::Vector<Size,double>& vector, double maxAbsoluteError);

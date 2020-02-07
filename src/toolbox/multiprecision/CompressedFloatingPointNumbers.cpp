@@ -32,6 +32,10 @@ int __attribute__((optimize("O0"))) toolbox::multiprecision::findMostAgressiveCo
   double        value,
   double        maxError
 ) {
+  if (std::abs(value)<maxError) {
+	return 0;
+  }
+
   assertion(value==value);
   assertion1( sizeof(long int)*8>=64, sizeof(long int) );
   assertion(maxError>=0.0);

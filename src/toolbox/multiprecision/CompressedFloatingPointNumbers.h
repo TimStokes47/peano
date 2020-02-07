@@ -91,7 +91,7 @@ namespace toolbox {
      * use this index and reduce it by one, you find the right entry in
      * decomposeIntoFourVariants().
      *
-     * @return Value between 1 and 7
+     * @return Value between 1 and 7 or 0 if data does not hold any information
      */
     int findMostAgressiveCompression(
       double        value,

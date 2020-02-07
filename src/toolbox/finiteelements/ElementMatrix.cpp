@@ -306,16 +306,15 @@ toolbox::finiteelements::ElementWiseAssemblyMatrix toolbox::finiteelements::hier
 ) {
   static toolbox::finiteelements::ElementWiseAssemblyMatrix referenceStiffnessMatrix =
     toolbox::finiteelements::getElementWiseAssemblyMatrix(
-      toolbox::finiteelements::getLaplacian(1.0)
+      toolbox::finiteelements::getLaplacian(h)
     );
-
-  double scaling = tarch::la::volume(h) / h(0) / h(0);
 
   toolbox::finiteelements::ElementWiseAssemblyMatrix result;
   for (int row=0; row<TwoPowerD; row++)
   for (int col=0; col<TwoPowerD; col++) {
-    result(row,col) = matrix(row,col) - weight * referenceStiffnessMatrix(row,col) * scaling;
+    result(row,col) = matrix(row,col) - weight * referenceStiffnessMatrix(row,col);
   }
+
   return result;
 }
 
