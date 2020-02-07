@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
   int coreCount = 1;
   if (argc==3) {
     #ifdef SharedMemoryParallelisation
-    coreCount = std::atof( argv[1] );
+    coreCount = std::atof( argv[2] );
     logInfo( "main()", "use " << coreCount << " core(s)" );
     #else
     logWarning( "main()", "you should not set the thread count if you translate without multicore support" );
@@ -151,6 +151,18 @@ int main(int argc, char* argv[]) {
       examples::algebraicmg::observers::PlotMaterialParameter  plotMaterialParameter;
       peano4::parallel::SpacetreeSet::getInstance().traverse(plotMaterialParameter);
     }
+
+    if (coreCount>1) {
+      int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / coreCount;
+      logInfo( "main()", "should host " << cellsPerCore << " cells per core" );
+
+      for (int thread=1; thread<coreCount; thread++) {
+        if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerCore,0)) {
+          logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << cellsPerCore << " cell(s)" );
+        }
+      }
+    }
+
 
     for (int i=0; i<20; i++)
     {
