@@ -47,7 +47,7 @@ void runParallel(double h, int flopsPerCell) {
 
   examples::regulargridupscaling::MyObserver emptyObserver(examples::regulargridupscaling::MyObserver::RanksObserverTemplate,h,flopsPerCell);
 
-  const int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
+  int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     logInfo( "runParallel(...)", "create initial grid (step #1)" );
@@ -97,7 +97,7 @@ void runParallel(double h, int flopsPerCell) {
       peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
     }
 
-    int numberOfCellsPerThread = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+    int numberOfCellsPerThread = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / numberOfThreads;
     logInfo( "runParallel(...)", "trigger split of master rank into threads with " << numberOfCellsPerThread  << " cells per thread" );
     for (int thread=1; thread<numberOfThreads; thread++) {
       if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,numberOfCellsPerThread,0)) {
@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
 
   runTests();
 
-  if (argc!=3 and argc!=4) {
+  if (argc<3 or argc>6) {
   	logError( "main(...)", "Usage: ./executable mesh-width flops-per-cell [core-count]");
 	  return 1;
   }
@@ -218,9 +218,16 @@ int main(int argc, char** argv) {
     return 2;
   }
 
-  if (argc==4) {
+  if (argc>=4) {
     int cores = std::atoi( argv[3] );
     tarch::multicore::Core::getInstance().configure(cores);
+  }
+
+  if (argc>=5) {
+    examples::regulargridupscaling::MyObserver::FractionOfCellsYieldingIntegrationTask = std::atof( argv[4] );
+  }
+  if (argc>=6) {
+    examples::regulargridupscaling::MyObserver::IntegrationAccuracy = std::atoi( argv[5] );
   }
 
   const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();

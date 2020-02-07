@@ -7,8 +7,8 @@ AUTOMAKE_OPTIONS = subdir-objects
 # within configure.ac as well as its very last line).
 #
 SUBDIRS = . \
-          examples/grid examples/integerdiffusionthroughfaces examples/delta examples/regulargridupscaling \
           toolbox/finiteelements toolbox/multiprecision \
+          examples/grid examples/integerdiffusionthroughfaces examples/delta examples/regulargridupscaling \
           visualisation
 
 

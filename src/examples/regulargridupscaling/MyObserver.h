@@ -26,8 +26,14 @@ class examples::regulargridupscaling::MyObserver: public peano4::grid::Traversal
      * I use an accumulator just to ensure that the flop calculations are not removed.
      */
     double _accumulator;
+
+    double _taskAccumulator;
+
   public:
     static constexpr int RanksObserverTemplate = 1;
+
+    static double FractionOfCellsYieldingIntegrationTask;
+    static int    IntegrationAccuracy;
 
     MyObserver(int spacetreeId, double h, int flopsPerCell);
     virtual ~MyObserver();

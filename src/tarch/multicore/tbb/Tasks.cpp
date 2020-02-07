@@ -134,7 +134,7 @@ namespace {
  * @return Have done one
  */
 bool tarch::multicore::processPendingTasks( int maxTasks ) {
-  assertion(maxTasks>=1);
+  assertion(maxTasks>=0);
   bool result = false;
   while ( maxTasks>0 ) {
 	// try to get a task and store in p
@@ -197,5 +197,12 @@ void tarch::multicore::spawnAndWait(
   }
   g.wait();
 }
+
+
+
+int tarch::multicore::getNumberOfPendingTasks() {
+  return nonblockingTasks.size();
+}
+
 
 #endif

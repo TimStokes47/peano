@@ -80,8 +80,8 @@ class peano4::parallel::Tasks {
      * returns immediately.
      */
     Tasks(
-      std::function<bool()>&  task,
-      TaskType                type
+      std::function<bool()>  task,
+      TaskType               type
     );
 
 

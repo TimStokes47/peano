@@ -46,7 +46,7 @@ int peano4::parallel::Tasks::getPriority( TaskType type ) const {
 
 
 peano4::parallel::Tasks::Tasks(
-  std::function<bool ()>& function,
+  std::function<bool ()>  function,
   TaskType                type
 ):
   Tasks(

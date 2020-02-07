@@ -53,7 +53,7 @@ bool tarch::multicore::TaskWithoutCopyOfFunctor::run() {
 #include <thread>
 
 namespace {
-  std::queue<tarch::multicore::Task* > backgroundJobs;
+  std::queue<tarch::multicore::Task* > nonblockingTasks;
 }
 
 
@@ -61,13 +61,13 @@ bool tarch::multicore::processPendingTasks(int maxTasks) {
   // Note: Only invoked if no shared memory parallelisation activated. If
   // TBB/C++/OpenMP are enabled, the routine of the respective subfolder is
   // invoked
-  if (backgroundJobs.empty()) {
+  if (nonblockingTasks.empty()) {
     return false;
   }
   else {
-    while ( maxTasks>0 and !backgroundJobs.empty() ) {
-      Task* p = backgroundJobs.front();
-      backgroundJobs.pop();
+    while ( maxTasks>0 and !nonblockingTasks.empty() ) {
+      Task* p = nonblockingTasks.front();
+      nonblockingTasks.pop();
       while (p->run()) {};
       delete p;
       maxTasks--;
@@ -78,7 +78,7 @@ bool tarch::multicore::processPendingTasks(int maxTasks) {
 
 
 void tarch::multicore::spawnTask(Task*  job) {
-  backgroundJobs.push(job);
+  nonblockingTasks.push(job);
 }
 
 
@@ -99,6 +99,11 @@ void tarch::multicore::spawnAndWait(
  */
 void tarch::multicore::yield() {
   std::this_thread::yield();
+}
+
+
+int tarch::multicore::getNumberOfPendingTasks() {
+  return nonblockingTasks.size();
 }
 
 #endif

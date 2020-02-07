@@ -94,12 +94,15 @@ namespace tarch {
 
         bool run() override;
     };
-       
+
+    int getNumberOfPendingTasks();
+
     /**
      * @return There have been tasks
+     *
      * @todo Default argument
      */
-    bool processPendingTasks(int maxTasks);
+    bool processPendingTasks(int maxTasks = getNumberOfPendingTasks());
 
     /**
      * Kick out a new job. The job's type has to be set properly: It
