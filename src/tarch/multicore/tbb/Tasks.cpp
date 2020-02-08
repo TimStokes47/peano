@@ -7,6 +7,12 @@
 
 
 #ifdef SharedTBB
+
+
+#if !defined(noTBBPrefetchesJobData) and !defined(TBBPrefetchesJobData)
+  #define TBBPrefetchesJobData
+#endif
+
 #include "../Tasks.h"
 #include "TBB.h"
 
