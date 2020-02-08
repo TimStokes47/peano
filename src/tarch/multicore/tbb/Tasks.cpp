@@ -143,7 +143,7 @@ bool tarch::multicore::processPendingTasks( int maxTasks ) {
     #if defined(TBBPrefetchesJobData)
     Task* myPrefetchTask = nullptr;
     bool gotPrefetchTask = nonblockingTasks.try_pop(myPrefetchTask);
-    if (gotPrefetchTask) {
+    if (gotPrefetchTask and maxTasks>1) {
       myPrefetchTask->prefetch();
       nonblockingTasks.push(myPrefetchTask);
     }
