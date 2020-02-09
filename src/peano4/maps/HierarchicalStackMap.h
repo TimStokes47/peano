@@ -88,14 +88,14 @@ class peano4::maps::HierarchicalStackMap {
      * @return A stack of type T. Actually, it is a pointer and this routine is
      *   a lazy creation, i.e. might create the result upon demand.
      */
-    T* getThreadSafe(int treeId, int stackId);
-    T* getThreadSafe(const StackKey& key);
+    T* getForPush(int treeId, int stackId);
+    T* getForPush(const StackKey& key);
 
     /**
-     * @see getThreadSafe(int,int)
+     * @see getForPush(int,int)
      */
-    T* getNotThreadSafe(int treeId, int stackId) const;
-    T* getNotThreadSafe(const StackKey& key) const;
+    T* getForPop(int treeId, int stackId) const;
+    T* getForPop(const StackKey& key) const;
 
     std::string toString() const;
 
@@ -129,13 +129,13 @@ bool peano4::maps::HierarchicalStackMap<T>::empty(int treeId, int stackId) const
 
 
 template <typename T>
-T* peano4::maps::HierarchicalStackMap<T>::getThreadSafe(int treeId, int stackId) {
-  return getThreadSafe( StackKey(treeId,stackId) );
+T* peano4::maps::HierarchicalStackMap<T>::getForPush(int treeId, int stackId) {
+  return getForPush( StackKey(treeId,stackId) );
 }
 
 
 template <typename T>
-T* peano4::maps::HierarchicalStackMap<T>::getThreadSafe(const StackKey& key) {
+T* peano4::maps::HierarchicalStackMap<T>::getForPush(const StackKey& key) {
   if (_data.count(key.first)==0) {
     _data.insert( std::pair< int, TreeData* >(
       key.first, new TreeData()
@@ -149,13 +149,13 @@ T* peano4::maps::HierarchicalStackMap<T>::getThreadSafe(const StackKey& key) {
 
 
 template <typename T>
-T* peano4::maps::HierarchicalStackMap<T>::getNotThreadSafe(int treeId, int stackId) const {
-  return getNotThreadSafe( StackKey(treeId,stackId) );
+T* peano4::maps::HierarchicalStackMap<T>::getForPop(int treeId, int stackId) const {
+  return getForPop( StackKey(treeId,stackId) );
 }
 
 
 template <typename T>
-T* peano4::maps::HierarchicalStackMap<T>::getNotThreadSafe(const StackKey& key) const {
+T* peano4::maps::HierarchicalStackMap<T>::getForPop(const StackKey& key) const {
   assertion( _data.count(key.first)==1 );
   return _data.at(key.first)->_stackNumberToData.at(key.second);
 }

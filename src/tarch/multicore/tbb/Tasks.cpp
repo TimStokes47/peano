@@ -205,7 +205,6 @@ void tarch::multicore::spawnAndWait(
 }
 
 
-
 int tarch::multicore::getNumberOfPendingTasks() {
   return nonblockingTasks.size();
 }

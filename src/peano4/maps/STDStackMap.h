@@ -53,14 +53,14 @@ class peano4::maps::STDStackMap {
      * @return A stack of type T. Actually, it is a pointer and this routine is
      *   a lazy creation, i.e. might create the result upon demand.
      */
-    T* getThreadSafe(int treeId, int stackId);
-    T* getThreadSafe(const StackKey& key);
+    T* getForPush(int treeId, int stackId);
+    T* getForPush(const StackKey& key);
 
     /**
-     * @see getThreadSafe(int,int)
+     * @see getForPush(int,int)
      */
-    T* getNotThreadSafe(int treeId, int stackId) const;
-    T* getNotThreadSafe(const StackKey& key) const;
+    T* getForPop(int treeId, int stackId) const;
+    T* getForPop(const StackKey& key) const;
 
     std::string toString() const;
 
@@ -94,13 +94,13 @@ bool peano4::maps::STDStackMap<T>::empty(int treeId, int stackId) const {
 
 
 template <typename T>
-T* peano4::maps::STDStackMap<T>::getThreadSafe(int treeId, int stackId) {
-  return getThreadSafe( StackKey(treeId,stackId) );
+T* peano4::maps::STDStackMap<T>::getForPush(int treeId, int stackId) {
+  return getForPush( StackKey(treeId,stackId) );
 }
 
 
 template <typename T>
-T* peano4::maps::STDStackMap<T>::getThreadSafe(const StackKey& key) {
+T* peano4::maps::STDStackMap<T>::getForPush(const StackKey& key) {
   tarch::multicore::Lock lock(_semaphore);
   createStack(key);
   return _data[key];
@@ -108,13 +108,21 @@ T* peano4::maps::STDStackMap<T>::getThreadSafe(const StackKey& key) {
 
 
 template <typename T>
-T* peano4::maps::STDStackMap<T>::getNotThreadSafe(int treeId, int stackId) const {
-  return getNotThreadSafe( StackKey(treeId,stackId) );
+T* peano4::maps::STDStackMap<T>::getForPop(int treeId, int stackId) const {
+  return getForPop( StackKey(treeId,stackId) );
 }
 
 
 template <typename T>
-T* peano4::maps::STDStackMap<T>::getNotThreadSafe(const StackKey& key) const {
+T* peano4::maps::STDStackMap<T>::getForPop(const StackKey& key) const {
+/*
+	Da hab ich jetzt auf dem Hamilton mal auch ne Semaphore rein. Dann muessen die const raus.
+	Aber damit scheint es jetzt ohne Seg Fault durchzugehen. Dann koennen wir die Dinger aber
+	auch gleich komplett kicken ...
+	Auch die seltsamen Versuche, joins zu starten gehen dann floeten
+*/
+
+
   assertion( _data.count(key)==1 );
   return _data.at( key );
 }

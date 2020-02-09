@@ -150,11 +150,14 @@ project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano"
 # round, it is always admissible to only generate stuff, e.g., but to build and
 # run the project through a command line
 #
-project.output.makefile.add_library( "ToolboxFiniteElements2d_trace", project.output.makefile.get_source_path() + "/toolbox/finiteelements" )
-project.output.makefile.add_library( "ToolboxMultiprecision_trace", project.output.makefile.get_source_path() + "/toolbox/multiprecision" )
+#project.output.makefile.add_library( "ToolboxFiniteElements2d_trace", project.output.makefile.get_source_path() + "/toolbox/finiteelements" )
+#project.output.makefile.add_library( "ToolboxMultiprecision_trace", project.output.makefile.get_source_path() + "/toolbox/multiprecision" )
+project.output.makefile.add_library( "ToolboxFiniteElements2d", project.output.makefile.get_source_path() + "/toolbox/finiteelements" )
+project.output.makefile.add_library( "ToolboxMultiprecision", project.output.makefile.get_source_path() + "/toolbox/multiprecision" )
 project.output.makefile.add_header_search_path( "/opt/tbb/include" ) 
 project.output.makefile.set_dimension( 2 )
-project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
+#project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
+project.output.makefile.set_mode( peano4.output.CompileMode.Release )
 project.generate(peano4.output.Overwrite.Default)
 project.build(True)
 project.run( ["64.0", "1"] )
