@@ -102,6 +102,12 @@ int peano4::parallel::Node::getLocalTreeId(int treeId) const {
 }
 
 
+int peano4::parallel::Node::getGlobalTreeId(int treeId) const {
+  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
+  return treeId + tarch::mpi::Rank::getInstance().getRank() * numberOfRanks;
+}
+
+
 int peano4::parallel::Node::reserveId(int rank, int forTreeId)  {
   int localThread = 0;
   int result = -1;

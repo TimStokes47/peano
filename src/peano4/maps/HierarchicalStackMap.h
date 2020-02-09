@@ -5,7 +5,7 @@
 
 
 #include "maps.h"
-
+#include "peano4/parallel/Node.h"
 
 #include <map>
 
@@ -21,32 +21,11 @@ namespace peano4 {
 /**
  *
  *
- * \section Software architecture
+ * <h2> Software architecture </h2>
  *
- * There's one entry per tree. Each entry has a semaphore of its own. So if we
- * need a lock, we only lock once per tree.
- *
- *
- * \section Result
- *
- * With the standard stack map, I got the following data:
-
-real    0m20.442s
-user    1m9.988s
-sys     0m1.161s
-
-real    0m24.223s
-user    1m13.845s
-sys     0m1.438s
-
- *
- * With the new data structure, we get data alike
- *
-
-real    0m14.495s
-user    0m54.581s
-sys     0m0.149s
-
+ * There's one entry per tree. I use the mapping from global to local trees, so
+ * I don't have to maintain too many entries for 'just in case'. Each entry has
+ * a semaphore of its own. So if we need a lock, we only lock once per tree.
  *
  *
  */
@@ -61,14 +40,19 @@ class peano4::maps::HierarchicalStackMap {
       tarch::multicore::BooleanSemaphore  _semaphore;
 	};
 
-	std::map< int, TreeData* >            _data;
+	/**
+	 * A vector of maps. I hold one entry per local spacetree, i.e.
+	 * map all global ids onto local indices.
+	 */
+	std::vector< TreeData >            _data;
 
     /**
      * This routine is not thread-safe, i.e. if you need it thread-safe then
      * you have to wrap it into  a semaphore manually.
      */
-    void createStack(const StackKey& key);
+    void createStack(int localTreeNumber, int stackNumber);
   public:
+    HierarchicalStackMap();
     ~HierarchicalStackMap();
 
     bool empty(int treeId, int stackId) const;
@@ -108,11 +92,13 @@ class peano4::maps::HierarchicalStackMap {
 
 
 template <typename T>
-void peano4::maps::HierarchicalStackMap<T>::createStack(const StackKey& key) {
-  if ( _data.at( key.first )->_stackNumberToData.count(key.second)==0 ) {
-    _data[key.first]->_stackNumberToData.insert(
+void peano4::maps::HierarchicalStackMap<T>::createStack(int localTreeNumber, int stackNumber) {
+  assertion(localTreeNumber>=0);
+  assertion(localTreeNumber<_data.size());
+  if ( _data[localTreeNumber]._stackNumberToData.count(stackNumber)==0 ) {
+    _data[localTreeNumber]._stackNumberToData.insert(
       std::pair< int, T* >(
-        key.second,
+        stackNumber,
 		new T()
 	  )
     );
@@ -122,9 +108,11 @@ void peano4::maps::HierarchicalStackMap<T>::createStack(const StackKey& key) {
 
 template <typename T>
 bool peano4::maps::HierarchicalStackMap<T>::empty(int treeId, int stackId) const {
-  return _data.count( treeId )==0
-      or _data.at( treeId )->_stackNumberToData.count(stackId)==0
-	  or _data.at( treeId )->_stackNumberToData.at(stackId)->empty();
+  const int localTreeId = peano4::parallel::Node::getInstance().getLocalTreeId(treeId);
+  assertion3(localTreeId>=0,localTreeId,treeId,stackId);
+  assertion4(localTreeId<_data.size(),localTreeId,_data.size(),treeId,stackId);
+  return _data[localTreeId]._stackNumberToData.count(stackId)==0
+	  or _data[localTreeId]._stackNumberToData.at(stackId)->empty();
 }
 
 
@@ -136,28 +124,28 @@ T* peano4::maps::HierarchicalStackMap<T>::getForPush(int treeId, int stackId) {
 
 template <typename T>
 T* peano4::maps::HierarchicalStackMap<T>::getForPush(const StackKey& key) {
-  if (_data.count(key.first)==0) {
-    _data.insert( std::pair< int, TreeData* >(
-      key.first, new TreeData()
-    ));
-  }
-  tarch::multicore::Lock lock(_data[key.first]->_semaphore);
-  createStack(key);
-  assertion( _data[key.first]->_stackNumberToData[key.second] != nullptr );
-  return _data[key.first]->_stackNumberToData[key.second];
+  const int localTreeId = peano4::parallel::Node::getInstance().getLocalTreeId(key.first);
+  assertion3(localTreeId>=0,localTreeId,key.first,key.second);
+  assertion4(localTreeId<_data.size(),localTreeId,_data.size(),key.first,key.second);
+  tarch::multicore::Lock lock(_data[key.first]._semaphore);
+  createStack(localTreeId,key.second);
+  assertion( _data[key.first]._stackNumberToData[key.second] != nullptr );
+  return _data[key.first]._stackNumberToData[key.second];
 }
 
 
 template <typename T>
-T* peano4::maps::HierarchicalStackMap<T>::getForPop(int treeId, int stackId) 		 {
+T* peano4::maps::HierarchicalStackMap<T>::getForPop(int treeId, int stackId) {
   return getForPop( StackKey(treeId,stackId) );
 }
 
 
 template <typename T>
 T* peano4::maps::HierarchicalStackMap<T>::getForPop(const StackKey& key) {
-  assertion( _data.count(key.first)==1 );
-  return _data.at(key.first)->_stackNumberToData.at(key.second);
+  const int localTreeId = peano4::parallel::Node::getInstance().getLocalTreeId(key.first);
+  assertion3(localTreeId>=0,localTreeId,key.first,key.second);
+  assertion4(localTreeId<_data.size(),localTreeId,_data.size(),key.first,key.second);
+  return _data[localTreeId]._stackNumberToData.at(key.second);
 }
 
 
@@ -177,15 +165,13 @@ std::string peano4::maps::HierarchicalStackMap<T>::toString() const {
 
 template <typename T>
 std::set<peano4::maps::StackKey>  peano4::maps::HierarchicalStackMap<T>::getKeys() {
-  static tarch::multicore::BooleanSemaphore getKeysSemaphore;
-  tarch::multicore::Lock lock(getKeysSemaphore);
-
   std::set<peano4::maps::StackKey> result;
-  for (auto& p: _data)
-  for (auto& pp: p.second->_stackNumberToData) {
-    result.insert( peano4::maps::StackKey(p.first,pp.first) );
+  for (int i=0; i<_data.size(); i++) {
+    tarch::multicore::Lock lock(_data[i]._semaphore);
+    for (auto& pp: _data[i]._stackNumberToData) {
+      result.insert( peano4::maps::StackKey( peano4::parallel::Node::getInstance().getGlobalTreeId(i),pp.first) );
+    }
   }
-
   return result;
 }
 
@@ -193,9 +179,29 @@ std::set<peano4::maps::StackKey>  peano4::maps::HierarchicalStackMap<T>::getKeys
 template <typename T>
 peano4::maps::HierarchicalStackMap<T>::~HierarchicalStackMap() {
   for (auto& p: _data) {
-    delete p.second;
+	for (auto& pp: p._stackNumberToData) {
+	  delete pp.second;
+	}
   }
 }
 
-#endif
 
+template <typename T>
+peano4::maps::HierarchicalStackMap<T>::HierarchicalStackMap():
+  _data(peano4::parallel::Node::MaxSpacetreesPerRank) {
+/*
+  for (int i=0; i<peano4::parallel::Node::MaxSpacetreesPerRank; i++) {
+	_data.push_back( TreeData() );
+  }
+*/
+	/*
+	  if (_data.count(key.first)==0) {
+	    _data.insert( std::pair< int, TreeData* >(
+	      key.first, new TreeData()
+	    ));
+	  }
+	*/
+}
+
+
+#endif

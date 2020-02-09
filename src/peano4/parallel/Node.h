@@ -37,6 +37,7 @@ namespace peano4 {
 class peano4::parallel::Node {
   public:
     static constexpr int        Terminate = -2;
+    static constexpr int        MaxSpacetreesPerRank = 64;
   private:
     friend class peano4::parallel::tests::NodeTest;
 
@@ -58,8 +59,6 @@ class peano4::parallel::Node {
      * We should rather speak of horizontal and vertical data.
      */
     static constexpr int        StacksPerCommunicationPartner = 6;
-
-    static constexpr int        MaxSpacetreesPerRank = 64;
 
     /**
      * The MPI standard specifies that the tag upper bound must be at least 32767.
@@ -100,11 +99,6 @@ class peano4::parallel::Node {
     int getId(int rank, int localTreeId) const;
 
     /**
-     * @see getId(int,int)
-     */
-    int getLocalTreeId(int treeId) const;
-
-    /**
      * The operation is not thread-safe as we call it only internally,
      * i.e. you are not supposed to call this function directly.
      *
@@ -120,6 +114,12 @@ class peano4::parallel::Node {
      */
     static std::bitset<2*Dimensions> getPeriodicBoundaryNumber(const tarch::la::Vector<TwoPowerD,int>& flags);
   public:
+    /**
+     * @see getId(int,int)
+     */
+    int getLocalTreeId(int treeId) const;
+    int getGlobalTreeId(int treeId) const;
+
     /**
      * I originally wanted to embed these guys into the singleton's
      * constructor. However, the singleton might not yet be up when
