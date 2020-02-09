@@ -49,6 +49,7 @@ void examples::algebraicmg::mappings::ComputeResidualWithGeometricOperators::end
 			<< "\t max bytes per matrix=" << _maxBytesPerMatrix
 			<< "\t compression=" << static_cast<double>(_totalNumberOfLocalStiffnessMatrices*TwoPowerD*TwoPowerD*sizeof(double)) / _totalBytesOfStoredMatrices
 			<< std::endl;
+  tarch::multicore::processPendingTasks();
 }
 
 

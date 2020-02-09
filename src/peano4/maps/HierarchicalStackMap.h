@@ -127,7 +127,7 @@ T* peano4::maps::HierarchicalStackMap<T>::getForPush(const StackKey& key) {
   const int localTreeId = peano4::parallel::Node::getInstance().getLocalTreeId(key.first);
   assertion3(localTreeId>=0,localTreeId,key.first,key.second);
   assertion4(localTreeId<_data.size(),localTreeId,_data.size(),key.first,key.second);
-  tarch::multicore::Lock lock(_data[key.first]._semaphore);
+  tarch::multicore::Lock lock(_data[localTreeId]._semaphore);
   createStack(localTreeId,key.second);
   assertion( _data[key.first]._stackNumberToData[key.second] != nullptr );
   return _data[key.first]._stackNumberToData[key.second];
