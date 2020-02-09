@@ -23,7 +23,7 @@ int toolbox::multiprecision::findMostAgressiveCompression(
 
 
 #if defined(CompilerICC)
-int peano::heap::findMostAgressiveCompression(
+int toolbox::multiprecision::findMostAgressiveCompression(
 #elif defined(CompilerCLANG)
 int __attribute__((optnone)) toolbox::multiprecision::findMostAgressiveCompression(
 #else
@@ -82,7 +82,7 @@ int __attribute__((optimize("O0"))) toolbox::multiprecision::findMostAgressiveCo
 
 
 #ifdef CompilerICC
-void peano::heap::decomposeIntoEightVariants(
+void toolbox::multiprecision::decomposeIntoEightVariants(
 #elif defined(CompilerCLANG)
 int __attribute__((optnone)) toolbox::multiprecision::findMostAgressiveCompression(
 #else
@@ -147,7 +147,7 @@ void __attribute__((optimize("O0"))) toolbox::multiprecision::decomposeIntoEight
 
 
 #ifdef CompilerICC
-void peano::heap::decompose(
+void toolbox::multiprecision::decompose(
 #elif defined(CompilerCLANG)
 int __attribute__((optnone)) toolbox::multiprecision::findMostAgressiveCompression(
 #else
