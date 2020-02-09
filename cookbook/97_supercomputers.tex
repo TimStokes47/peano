@@ -24,7 +24,8 @@ Some remarks on Peano4 on Hamilton, Durham's local supercomputer:
 
 \begin{code}
  ssh frmh84@hamilton.dur.ac.uk
- module load intel/xe_2018.2
+ # module load intel/xe_2018.2
+ module load intel/2019.5
  module load intelmpi/intel/2018.2
  cd $SCRATCH
  cd /ddn/data/frmh84/
@@ -44,6 +45,12 @@ To pipe them into configure, we have to map them onto the appropriate autotools
 parameters:
 
 \begin{code}
+ setenv TBB_INC "-I/ddn/apps/Cluster-Apps/intel/xe_2018.2/tbb/include"
+ setenv TBB_SHLIB "-L/ddn/apps/Cluster-Apps/intel/xe_2018.2/tbb/lib/intel64/gcc4.7 -ltbb"
+ 
+ setenv TBB_INC "-I/ddn/apps/Cluster-Apps/intel/2019.5/tbb/include"
+ setenv TBB_SHLIB "-L/ddn/apps/Cluster-Apps/intel/2019.5/tbb/lib/intel64/gcc4.7 -ltbb"
+ 
  setenv CXXFLAGS "$TBB_INC  -DTBB_USE_ASSERT -DTBB_USE_THREADING_TOOLS"
  setenv LDFLAGS "$TBB_SHLIB -ltbb_debug"
  setenv CXX icpc
