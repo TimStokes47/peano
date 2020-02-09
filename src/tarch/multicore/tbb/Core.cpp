@@ -27,6 +27,7 @@ namespace {
 
 
 tarch::multicore::Core::Core() {
+  __numberOfThreads = tbb::task_scheduler_init::default_num_threads();
 }
 
 
