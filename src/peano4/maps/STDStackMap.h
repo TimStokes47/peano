@@ -41,16 +41,18 @@ class peano4::maps::STDStackMap {
     /**
      * Get the stack belonging to a tree.
      *
-     * There are two versions of the routine: one is thread-safe, the other one
-     * does not employ a dedicated semaphore. The one with a semaphore can
-     * lazily create stacks; which is the reason why we need the semaphore:
-     * everytime we lazily insert new stacks, we run risk that we break the
-     * consistency of the underlying container. Originally, I worked with
-     * thread-safe accessors only. This resulted in disappointing timings and
-     * notably speedup. With a carelfull distinction, I got down the runtime
-     * to two third of the original.
+     * There are two versions of the routine: one for pushes, one for pops. I
+     * distinguish the two, as the push variant might create new stacks lazily
+     * whereas the pop knowns a priori that the requested stack does exist.
      *
-     * @return A stack of type T. Actually, it is a pointer and this routine is
+     * <h2> Implementation details </h2>
+     *
+     * We nevertheless have to be careful with pops. In the vanilla version,
+     * pops cannot create new stacks. But we use one global map for all stacks
+     * of all spacetrees hosted by this rank. So concurrent pushes can create
+     * new stacks on-the-fly. So we need some thread-saving mechanisms.
+     *
+     * @return A stack of type T. It is a pointer and this routine realises
      *   a lazy creation, i.e. might create the result upon demand.
      */
     T* getForPush(int treeId, int stackId);
@@ -58,9 +60,11 @@ class peano4::maps::STDStackMap {
 
     /**
      * @see getForPush(int,int)
+     *
+     * @return A stack of type T.
      */
-    T* getForPop(int treeId, int stackId) const;
-    T* getForPop(const StackKey& key) const;
+    T* getForPop(int treeId, int stackId);
+    T* getForPop(const StackKey& key);
 
     std::string toString() const;
 
@@ -108,21 +112,14 @@ T* peano4::maps::STDStackMap<T>::getForPush(const StackKey& key) {
 
 
 template <typename T>
-T* peano4::maps::STDStackMap<T>::getForPop(int treeId, int stackId) const {
+T* peano4::maps::STDStackMap<T>::getForPop(int treeId, int stackId) {
   return getForPop( StackKey(treeId,stackId) );
 }
 
 
 template <typename T>
-T* peano4::maps::STDStackMap<T>::getForPop(const StackKey& key) const {
-/*
-	Da hab ich jetzt auf dem Hamilton mal auch ne Semaphore rein. Dann muessen die const raus.
-	Aber damit scheint es jetzt ohne Seg Fault durchzugehen. Dann koennen wir die Dinger aber
-	auch gleich komplett kicken ...
-	Auch die seltsamen Versuche, joins zu starten gehen dann floeten
-*/
-
-
+T* peano4::maps::STDStackMap<T>::getForPop(const StackKey& key) {
+  tarch::multicore::Lock lock(_semaphore);
   assertion( _data.count(key)==1 );
   return _data.at( key );
 }

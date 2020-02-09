@@ -94,8 +94,8 @@ class peano4::maps::HierarchicalStackMap {
     /**
      * @see getForPush(int,int)
      */
-    T* getForPop(int treeId, int stackId) const;
-    T* getForPop(const StackKey& key) const;
+    T* getForPop(int treeId, int stackId);
+    T* getForPop(const StackKey& key);
 
     std::string toString() const;
 
@@ -149,13 +149,13 @@ T* peano4::maps::HierarchicalStackMap<T>::getForPush(const StackKey& key) {
 
 
 template <typename T>
-T* peano4::maps::HierarchicalStackMap<T>::getForPop(int treeId, int stackId) const {
+T* peano4::maps::HierarchicalStackMap<T>::getForPop(int treeId, int stackId) 		 {
   return getForPop( StackKey(treeId,stackId) );
 }
 
 
 template <typename T>
-T* peano4::maps::HierarchicalStackMap<T>::getForPop(const StackKey& key) const {
+T* peano4::maps::HierarchicalStackMap<T>::getForPop(const StackKey& key) {
   assertion( _data.count(key.first)==1 );
   return _data.at(key.first)->_stackNumberToData.at(key.second);
 }
