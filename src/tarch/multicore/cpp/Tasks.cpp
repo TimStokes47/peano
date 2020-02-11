@@ -74,7 +74,7 @@ namespace {
         spawnConsumerTask( numberOfTasks*2 );
       }
       else if (hasProcessedTasks and numberOfTasks>1) {
-        spawnConsumerTask( numberOfTasks-- );
+        spawnConsumerTask( numberOfTasks-1 );
       }
       numberOfConsumerTasks--;
     }).detach();

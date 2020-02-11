@@ -109,7 +109,7 @@ namespace {
           enqueue(_maxJobs*2);
     	}
     	else if (handledTasks and _maxJobs>1) {
-          enqueue(_maxJobs--);
+          enqueue(_maxJobs-1);
     	}
         numberOfConsumerTasks.fetch_and_add(-1);
 
