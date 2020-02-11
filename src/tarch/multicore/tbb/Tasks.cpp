@@ -101,12 +101,15 @@ namespace {
 
     	// @todo Remove MinNumberOfTasksPerConsumer Premature optimisation
     	//if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart and nonblockingTasks.size()>MinNumberOfTasksPerConsumer) {
-      	if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart) {
+      	if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart*2) {
           enqueue(_maxJobs*2);
           enqueue(_maxJobs*2);
     	}
+      	else if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart) {
+          enqueue(_maxJobs*2);
+    	}
     	else if (handledTasks and _maxJobs>1) {
-          enqueue(_maxJobs/2);
+          enqueue(_maxJobs--);
     	}
         numberOfConsumerTasks.fetch_and_add(-1);
 

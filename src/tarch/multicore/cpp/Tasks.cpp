@@ -66,12 +66,15 @@ namespace {
       bool hasProcessedTasks = tarch::multicore::processPendingTasks( numberOfTasks );
       int  newNumberOfTasks  = tarch::multicore::getNumberOfPendingTasks();
 
-      if (hasProcessedTasks and newNumberOfTasks>numberOfTasks) {
+      if (hasProcessedTasks and newNumberOfTasks>numberOfTasks*2) {
         spawnConsumerTask( numberOfTasks*2 );
         spawnConsumerTask( numberOfTasks*2 );
       }
+      else if (hasProcessedTasks and newNumberOfTasks>numberOfTasks) {
+        spawnConsumerTask( numberOfTasks*2 );
+      }
       else if (hasProcessedTasks and numberOfTasks>1) {
-        spawnConsumerTask( numberOfTasks/2 );
+        spawnConsumerTask( numberOfTasks-- );
       }
       numberOfConsumerTasks--;
     }).detach();
