@@ -99,7 +99,9 @@ namespace {
     	int  numberOfPendingTasksPriorToStart = nonblockingTasks.size();
     	bool handledTasks                     = tarch::multicore::processPendingTasks(_maxJobs);
 
-    	if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart and nonblockingTasks.size()>MinNumberOfTasksPerConsumer) {
+    	// @todo Remove MinNumberOfTasksPerConsumer Premature optimisation
+    	//if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart and nonblockingTasks.size()>MinNumberOfTasksPerConsumer) {
+      	if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart) {
           enqueue(_maxJobs*2);
           enqueue(_maxJobs*2);
     	}

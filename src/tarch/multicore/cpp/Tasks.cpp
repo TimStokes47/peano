@@ -7,6 +7,8 @@
 #include <thread>
 #include <queue>
 #include <mutex>
+#include <atomic>
+
 
 namespace {
   std::queue<tarch::multicore::Task* > nonblockingTasks;
@@ -53,10 +55,38 @@ bool tarch::multicore::processPendingTasks(int maxTasks) {
 }
 
 
+namespace {
+  std::atomic<int> numberOfConsumerTasks(0);
+
+
+  void spawnConsumerTask( int numberOfTasks = tarch::multicore::getNumberOfPendingTasks() ) {
+    numberOfConsumerTasks++;
+
+    std::thread([numberOfTasks]() {
+      bool hasProcessedTasks = tarch::multicore::processPendingTasks( numberOfTasks );
+      int  newNumberOfTasks  = tarch::multicore::getNumberOfPendingTasks();
+
+      if (hasProcessedTasks and newNumberOfTasks>numberOfTasks) {
+        spawnConsumerTask( numberOfTasks*2 );
+        spawnConsumerTask( numberOfTasks*2 );
+      }
+      else if (hasProcessedTasks and numberOfTasks>1) {
+        spawnConsumerTask( numberOfTasks/2 );
+      }
+      numberOfConsumerTasks--;
+    }).detach();
+  }
+}
+
+
 void tarch::multicore::spawnTask(Task*  job) {
   taskQueueMutex.lock();
   nonblockingTasks.push(job);
   taskQueueMutex.unlock();
+
+  if (numberOfConsumerTasks==0) {
+    spawnConsumerTask();
+  }
 }
 
 
