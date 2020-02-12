@@ -74,7 +74,7 @@ peano4::parallel::Tasks::Tasks(
   }
   else {
     bool reschedule = task->run();
-    assertionMsg( false, "wenn ein einziger Task rescheduled, dann muss er immer in den Hintergrund gehen, oder das ganze Ding geht net (Deadlock)")
+    assertionMsg( not reschedule, "wenn ein einziger Task rescheduled, dann muss er immer in den Hintergrund gehen, oder das ganze Ding geht net (Deadlock)")
     delete task;
   }
 }
@@ -99,10 +99,10 @@ peano4::parallel::Tasks::Tasks(
     }
   }
   else {
-	for (auto& p: tasks) {
+    for (auto& p: tasks) {
       bool reschedule = p->run();
-      assertionMsg( false, "wenn ein einziger Task rescheduled, dann muss er immer in den Hintergrund gehen, oder das ganze Ding geht net (Deadlock)")
-	  delete p;
-	}
+      assertionMsg( not reschedule, "wenn ein einziger Task rescheduled, dann muss er immer in den Hintergrund gehen, oder das ganze Set an Tasks geht den Bach runter. Es muss permutieren! (Deadlock)")
+      delete p;
+    }
   }
 }
