@@ -356,33 +356,29 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
 
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees(peano4::grid::TraversalObserver&  observer) {
   logTraceIn( "exchangeDataBetweenTrees(...)" );
-  std::vector< tarch::multicore::Task* > dataExchangeTasks;
-  dataExchangeTasks.reserve( _spacetrees.size() );
+  // @todo Geht net parallel, weil das u.U. die darunterliegenden Maps gleichzeitig aendert.
+  //       Hier brauch ich also wohl doch echt irgendwie Semaphoren
+
+  //std::vector< tarch::multicore::Task* > dataExchangeTasks;
+  //dataExchangeTasks.reserve( _spacetrees.size() );
 
   for (auto& p: _spacetrees) {
     if (p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
-      dataExchangeTasks.push_back( new DataExchangeTask(
-        p, *this, observer
-      ));
+      DataExchangeTask* newTask = new DataExchangeTask( p, *this, observer );
+      //dataExchangeTasks.push_back( newTask );
+      newTask->run();
+      delete newTask;
       logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
     }
     else {
       logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "skip tree " << p._id << " as it is new" );
     }
   }
-  logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "trigger " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
+  //logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "trigger " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
 
-/*
-  #if PeanoDebug>0
-  for (auto& p: dataExchangeTasks) {
-    p->run();
-    delete p;
-  }
-  #else
-*/
-  static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees" );
-  peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion,true);
-//  #endif
+  //static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees" );
+  //peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion,true);
+
   logTraceOut( "exchangeDataBetweenTrees(...)" );
 }
 
