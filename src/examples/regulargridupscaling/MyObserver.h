@@ -19,6 +19,7 @@ class examples::regulargridupscaling::MyObserver: public peano4::grid::Traversal
   private:
     static tarch::logging::Log _log;
 
+    const int    _spacetreeId;
     const double _h;
     const int    _flopsPerCell;
 

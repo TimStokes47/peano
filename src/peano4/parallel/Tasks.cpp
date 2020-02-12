@@ -47,21 +47,36 @@ int peano4::parallel::Tasks::getPriority( TaskType type ) const {
 
 peano4::parallel::Tasks::Tasks(
   std::function<bool ()>  function,
-  TaskType                type
+  TaskType                type,
+  int                     location,
+  bool                    waitForCompletion
 ):
   Tasks(
     new tarch::multicore::TaskWithCopyOfFunctor(function),
-	type
+	type,
+	location,
+	waitForCompletion
   ) {
 }
 
 
 peano4::parallel::Tasks::Tasks(
   tarch::multicore::Task*  task,
-  TaskType                 type
+  TaskType                 type,
+  int                      location,
+  bool                     waitForCompletion
 ) {
-  task->setPriority( getPriority(type) );
-  tarch::multicore::spawnTask( task );
+  const bool parallelise = waitForCompletion and taskForLocationShouldBeIssuedAsTask( location, 1 );
+
+  if (parallelise) {
+    task->setPriority( getPriority(type) );
+    tarch::multicore::spawnTask( task );
+  }
+  else {
+    bool reschedule = task->run();
+    assertionMsg( false, "wenn ein einziger Task rescheduled, dann muss er immer in den Hintergrund gehen, oder das ganze Ding geht net (Deadlock)")
+    delete task;
+  }
 }
 
 
@@ -85,7 +100,8 @@ peano4::parallel::Tasks::Tasks(
   }
   else {
 	for (auto& p: tasks) {
-      while ( p->run() ) {}
+      bool reschedule = p->run();
+      assertionMsg( false, "wenn ein einziger Task rescheduled, dann muss er immer in den Hintergrund gehen, oder das ganze Ding geht net (Deadlock)")
 	  delete p;
 	}
   }

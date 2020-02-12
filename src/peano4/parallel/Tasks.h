@@ -78,10 +78,15 @@ class peano4::parallel::Tasks {
      *
      * This routine spans a task with no wait semantics, i.e. the constructor
      * returns immediately.
+     *
+     * @param location          See getLocationIdentifier()
+     * @param waitForCompletion
      */
     Tasks(
       std::function<bool()>  task,
-      TaskType               type
+      TaskType               type,
+	  int                    location,
+	  bool                   waitForCompletion = false
     );
 
 
@@ -91,7 +96,9 @@ class peano4::parallel::Tasks {
      */
     Tasks(
       tarch::multicore::Task*  task,
-      TaskType                 type
+      TaskType                 type,
+	  int                      location,
+	  bool                     waitForCompletion = false
     );
 
 

@@ -6,6 +6,7 @@
 #include "peano4/grid/GridTraversalEvent.h"
 
 #include "tarch/la/MatrixOperations.h"
+#include "tarch/multicore/Core.h"
 
 #include "toolbox/finiteelements/ElementMatrix.h"
 #include "toolbox/finiteelements/StencilFactory.h"
@@ -17,6 +18,7 @@ int                 examples::regulargridupscaling::MyObserver::IntegrationAccur
 
 
 examples::regulargridupscaling::MyObserver::MyObserver(int spacetreeId, double h, int flopsPerCell):
+  _spacetreeId(spacetreeId),
   _h(h),
   _flopsPerCell(flopsPerCell),
   _accumulator(0.0) {
@@ -56,7 +58,11 @@ void examples::regulargridupscaling::MyObserver::enterCell(
     for (int i=0; i<_flopsPerCell; i++) {
       _accumulator += 1.0;
     }
-    _taskAccumulator += FractionOfCellsYieldingIntegrationTask;
+
+    if (_spacetreeId==0) {
+      _taskAccumulator += std::abs(FractionOfCellsYieldingIntegrationTask) * tarch::multicore::Core::getInstance().getNumberOfThreads();
+    }
+
     if (_taskAccumulator>=1.0) {
       _taskAccumulator -= 1.0;
       assertion(IntegrationAccuracy>=1);
@@ -77,7 +83,9 @@ void examples::regulargridupscaling::MyObserver::enterCell(
 
     	  return false;
         },
-		peano4::parallel::Tasks::TaskType::Task
+		peano4::parallel::Tasks::TaskType::Task,
+		peano4::parallel::Tasks::getLocationIdentifier( "examples::regulargridupscaling::MyObserver::enterCell" ),
+		FractionOfCellsYieldingIntegrationTask<0
       );
     }
   }

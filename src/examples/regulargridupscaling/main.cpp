@@ -201,7 +201,7 @@ int main(int argc, char** argv) {
   runTests();
 
   if (argc<3 or argc>6) {
-  	logError( "main(...)", "Usage: ./executable mesh-width flops-per-cell [core-count]");
+  	logError( "main(...)", "Usage: ./executable mesh-width flops-per-cell [core-count] [spawn-frequency] [integration-points]");
 	  return 1;
   }
 
