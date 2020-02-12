@@ -98,7 +98,7 @@ void runParallel(double h, int flopsPerCell) {
     }
 
     int numberOfCellsPerThread = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / numberOfThreads;
-    logInfo( "runParallel(...)", "trigger split of master rank into threads with " << numberOfCellsPerThread  << " cells per thread" );
+    logInfo( "runParallel(...)", "trigger split of master rank into threads with " << numberOfCellsPerThread  << " cells per thread (total: " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() << ")");
     for (int thread=1; thread<numberOfThreads; thread++) {
       if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,numberOfCellsPerThread,0)) {
         logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << numberOfCellsPerThread << " cell(s)" );
