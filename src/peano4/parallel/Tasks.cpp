@@ -66,7 +66,7 @@ peano4::parallel::Tasks::Tasks(
   int                      location,
   bool                     waitForCompletion
 ) {
-  const bool parallelise = waitForCompletion and taskForLocationShouldBeIssuedAsTask( location, 1 );
+  const bool parallelise = not waitForCompletion and taskForLocationShouldBeIssuedAsTask( location, 1 );
 
   if (parallelise) {
     task->setPriority( getPriority(type) );

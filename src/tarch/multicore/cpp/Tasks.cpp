@@ -10,6 +10,10 @@
 #include <atomic>
 
 
+/**
+ * This class is a 1:1 mirror of my TBB implementation. Please see
+ * documentation there.
+ */
 namespace {
   std::queue<tarch::multicore::Task* > nonblockingTasks;
   std::mutex                           taskQueueMutex;
@@ -67,11 +71,11 @@ namespace {
       int  newNumberOfTasks  = tarch::multicore::getNumberOfPendingTasks();
 
       if (hasProcessedTasks and newNumberOfTasks>numberOfTasks*2) {
-        spawnConsumerTask( numberOfTasks*2 );
-        spawnConsumerTask( numberOfTasks*2 );
+        spawnConsumerTask( numberOfTasks );
+        spawnConsumerTask( numberOfTasks );
       }
       else if (hasProcessedTasks and newNumberOfTasks>numberOfTasks) {
-        spawnConsumerTask( numberOfTasks*2 );
+        spawnConsumerTask( numberOfTasks+1 );
       }
       else if (hasProcessedTasks and numberOfTasks>1) {
         spawnConsumerTask( numberOfTasks-1 );

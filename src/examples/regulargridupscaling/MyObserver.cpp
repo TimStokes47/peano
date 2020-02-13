@@ -80,7 +80,6 @@ void examples::regulargridupscaling::MyObserver::enterCell(
     	    );
           // just to ensure we cannot remove it.
           _accumulator += tarch::la::frobeniusNorm(localStiffnessMatrix);
-
     	  return false;
         },
 		peano4::parallel::Tasks::TaskType::Task,

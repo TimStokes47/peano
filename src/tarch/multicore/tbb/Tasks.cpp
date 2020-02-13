@@ -47,8 +47,6 @@ namespace {
 
   tbb::atomic<int> numberOfConsumerTasks;
 
-  const int MinNumberOfTasksPerConsumer = 16;
-
   /**
    * This is a task which consumes background jobs, as it invokes
    * processBackgroundJobs(). Typically, I make such a job consume up to
@@ -83,8 +81,7 @@ namespace {
       static void enqueue(int maxTasks = nonblockingTasks.size()) {
         numberOfConsumerTasks.fetch_and_add(1);
         ConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) ConsumerTask(maxTasks);
-        tbb::task::enqueue(*tbbTask);
-        //::backgroundTaskContext.set_priority(tbb::priority_low);
+        tbb::task::enqueue(*tbbTask,tbb::priority_t::priority_low);
       }
 
       ConsumerTask(const ConsumerTask& copy):
@@ -99,14 +96,12 @@ namespace {
     	int  numberOfPendingTasksPriorToStart = nonblockingTasks.size();
     	bool handledTasks                     = tarch::multicore::processPendingTasks(_maxJobs);
 
-    	// @todo Remove MinNumberOfTasksPerConsumer Premature optimisation
-    	//if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart and nonblockingTasks.size()>MinNumberOfTasksPerConsumer) {
       	if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart*2) {
-          enqueue(_maxJobs*2);
-          enqueue(_maxJobs*2);
+          enqueue(_maxJobs);
+          enqueue(_maxJobs);
     	}
       	else if (handledTasks and nonblockingTasks.size()>numberOfPendingTasksPriorToStart) {
-          enqueue(_maxJobs*2);
+          enqueue(_maxJobs+1);
     	}
     	else if (handledTasks and _maxJobs>1) {
           enqueue(_maxJobs-1);
@@ -187,6 +182,11 @@ void tarch::multicore::yield() {
 }
 
 
+/**
+ * Spawns the task, i.e. puts is into the queue of pending tasks.
+ * After this, it ensures that there's at least one consumer still
+ * up and running.
+ */
 void tarch::multicore::spawnTask(Task*  task) {
   nonblockingTasks.push( task );
   if ( numberOfConsumerTasks==0 ) {
