@@ -1,5 +1,5 @@
-#ifndef _EXAMPLES_ALGEBRAICMG_MAPPINGS_SETUPSCENARIO_H_
-#define _EXAMPLES_ALGEBRAICMG_MAPPINGS_SETUPSCENARIO_H_
+#ifndef _EXAMPLES_ALGEBRAICMG_ACTIONS_JACOBIUPDATE_H_
+#define _EXAMPLES_ALGEBRAICMG_ACTIONS_JACOBIUPDATE_H_
 
 
 #include "peano4/utils/Globals.h" 
@@ -19,61 +19,34 @@
 #include "vertexdata/MG.h"
 namespace examples {
 namespace algebraicmg {
-namespace mappings {
-  class SetupScenario;
+namespace actions {
+  class JacobiUpdate;
 }
 }
 }
-class examples::algebraicmg::mappings::SetupScenario{
+class examples::algebraicmg::actions::JacobiUpdate{
   private:
     static tarch::logging::Log  _log;
-
-    enum class Scenario {
-      Mitchell,
-      Ruede,
-	  Sin
-    };
-
-    static constexpr Scenario _scenario = Scenario::Sin;
-
+// @todo Please implement
   public:
-	static double Theta;
 
     /**
-     * Init Dirichlet problem following either
-     *
-     * https://math.nist.gov/~WMitchell/papers/test_problems_paper.pdf
-     *
-     * By default, I use the setup from Table 5.
-     *
-     * Alternatively, I implemented Uli Ruede's "Mathematical and
-     * Computational Techniques for Multilevel Adaptive Methods".
-     * You find the description in 3.10.2. The domain here's not the
-     * unit cube, but the domain (-1,1)^d.
-     */
-    static examples::algebraicmg::vertexdata::MG::VertexType getVertexType(const tarch::la::Vector<Dimensions,double>& x);
-    static double                                            getSolution(const tarch::la::Vector<Dimensions,double>& x);
-    static double                                            getEpsilon(const tarch::la::Vector<Dimensions,double>& x);
-    static void                                              init(const tarch::la::Vector<Dimensions,double>& x, examples::algebraicmg::vertexdata::MG& fineGridVertexMG);
-    static std::pair<double,double>                          getMinMax();
-
-    /**
-     * Create mapping instance for one tree for one grid sweep
+     * Create action instance for one tree for one grid sweep
      *
      * <h2> Thread safety </h2>
      *
      * The creation of individual trees usually happens through peano4::parallel::SpacetreeSet::createObserverCloneIfRequired().
      * This routine is called lazily when we start to traverse a subtree. 
-     * Therefore, the creation of mappings is not thread-safe.
+     * Therefore, the creation of actions is not thread-safe.
      *
      *
      * @param treeNumber Number of the spacetree for which we create the tree instance. Is 
-     *                   smaller 0 if this is the prototype mapping used on a rank from which 
-     *                   the real mappings are constructed from.
+     *                   smaller 0 if this is the prototype action used on a rank from which 
+     *                   the real actions are constructed from.
      */      
-    SetupScenario(int treeNumber);
+    JacobiUpdate(int treeNumber);
 
-    ~SetupScenario();
+    ~JacobiUpdate();
 
     std::vector< peano4::grid::GridControlEvent > getGridControlEvents();
 

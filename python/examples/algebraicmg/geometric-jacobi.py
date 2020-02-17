@@ -53,13 +53,21 @@ project.datamodel.add_vertex( dastgen_model )
 
 
 #
-# This is the stencil data structure
+# These guys are stencil data structures. We don't need it here. I add
+# them nevertheless. In the next few steps, I will use them. And then
+# I want to reuse as many of my action sets as possible, to I define 
+# quite a lot of data structures here despite the fact that I don't use
+# them at all.
 #
-cell_assembly_data = peano4.datamodel.DynamicArrayOverPrimitives( "A", "unsigned char" )
+compressed_cell_assembly_data = peano4.datamodel.DynamicArrayOverPrimitives( "CompressedA", "unsigned char" )
+project.datamodel.add_cell( compressed_cell_assembly_data )
+
+cell_assembly_data = peano4.datamodel.DynamicArrayOverPrimitives( "A", "double" )
 project.datamodel.add_cell( cell_assembly_data )
 
 cell_meta_data = peano4.datamodel.DaStGen( "p" )
 cell_meta_data.add_integer_scalar( "n" )
+cell_meta_data.add_integer_scalar( "taskId" )
 project.datamodel.add_cell( cell_meta_data )
 
 
@@ -69,17 +77,10 @@ project.datamodel.add_cell( cell_meta_data )
 # First, lets create the initial grid (which is regular).
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
-#
-# @todo Die Zeile haett ich gern raus. Aber dann werden die Vertices net auf dem Stack
-#       abgelegt. Das ist konzeptionell. Aber ich muss es irgendwo abfragen/-sichern.
-#       Alternativ kann ich die Konvention einbauen, dass creational Patterns immer in
-#       jedem Mapping aufgerufen werden. Find ich aber net so schoen. Am schoensten 
-#       waere eine Assertion im C++ Code oder ein Check hier. Eher ersteres.
-#
 create_grid.use_vertex( dastgen_model )
+create_grid.use_cell( compressed_cell_assembly_data )
 create_grid.use_cell( cell_assembly_data )
 create_grid.use_cell( cell_meta_data )
-#create_grid.add_mapping( peano4.toolbox.CreateRegularGrid(0.02) )
 create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.1) )
 project.solversteps.add_step(create_grid)
 
@@ -110,8 +111,6 @@ project.solversteps.add_step(plot_material_parameter)
 compute_residual = peano4.solversteps.Step( "ComputeResidualWithGeometricOperators", False )
 compute_residual_user_code = peano4.solversteps.UserActionSet();
 compute_residual.use_vertex( dastgen_model )
-compute_residual.use_cell( cell_assembly_data )
-compute_residual.use_cell( cell_meta_data )
 compute_residual.add_action_set( compute_residual_user_code )
 project.solversteps.add_step( compute_residual )
 
@@ -173,14 +172,11 @@ project.run( ["64.0", "1"] )
 #
 # Convert data into vtk, so we can open it in Paraview
 #
-#convert = peano4.visualisation.Convert( "solution" )
-#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
-#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
-#convert.extract_fine_grid()
-#convert.convert_to_vtk()
-
 convert = peano4.visualisation.Convert( "epsilon" )
 convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
 convert.extract_fine_grid()
 convert.convert_to_vtk()
+
+
+# @todo Loesung rausschreiben

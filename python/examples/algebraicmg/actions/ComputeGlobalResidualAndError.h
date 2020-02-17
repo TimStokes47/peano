@@ -1,5 +1,5 @@
-#ifndef _EXAMPLES_ALGEBRAICMG_MAPPINGS_COMPUTEGLOBALRESIDUALANDERROR_H_
-#define _EXAMPLES_ALGEBRAICMG_MAPPINGS_COMPUTEGLOBALRESIDUALANDERROR_H_
+#ifndef _EXAMPLES_ALGEBRAICMG_ACTIONS_COMPUTEGLOBALRESIDUALANDERROR_H_
+#define _EXAMPLES_ALGEBRAICMG_ACTIONS_COMPUTEGLOBALRESIDUALANDERROR_H_
 
 
 #include "peano4/utils/Globals.h" 
@@ -18,15 +18,14 @@
 
 namespace examples {
   namespace algebraicmg {
-    namespace mappings {
+    namespace actions {
       class ComputeGlobalResidualAndError;
     }
   }
 }
 
 
-
-class examples::algebraicmg::mappings::ComputeGlobalResidualAndError{
+class examples::algebraicmg::actions::ComputeGlobalResidualAndError{
   private:
     static tarch::logging::Log  _log;
 
@@ -39,18 +38,18 @@ class examples::algebraicmg::mappings::ComputeGlobalResidualAndError{
   public:
 
     /**
-     * Create mapping instance for one tree for one grid sweep
+     * Create action instance for one tree for one grid sweep
      *
      * <h2> Thread safety </h2>
      *
      * The creation of individual trees usually happens through peano4::parallel::SpacetreeSet::createObserverCloneIfRequired().
      * This routine is called lazily when we start to traverse a subtree. 
-     * Therefore, the creation of mappings is not thread-safe.
+     * Therefore, the creation of actions is not thread-safe.
      *
      *
      * @param treeNumber Number of the spacetree for which we create the tree instance. Is 
-     *                   smaller 0 if this is the prototype mapping used on a rank from which 
-     *                   the real mappings are constructed from.
+     *                   smaller 0 if this is the prototype action used on a rank from which 
+     *                   the real actions are constructed from.
      */      
     ComputeGlobalResidualAndError(int treeNumber);
 

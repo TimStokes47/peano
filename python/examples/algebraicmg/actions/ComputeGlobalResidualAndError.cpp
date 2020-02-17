@@ -1,29 +1,30 @@
 #include "ComputeGlobalResidualAndError.h"
 #include "SetupScenario.h"
 
+
 #include "tarch/tarch.h"
 
 
-tarch::logging::Log examples::algebraicmg::mappings::ComputeGlobalResidualAndError::_log( "examples::algebraicmg::mappings::ComputeGlobalResidualAndError");
+tarch::logging::Log examples::algebraicmg::actions::ComputeGlobalResidualAndError::_log( "examples::algebraicmg::actions::ComputeGlobalResidualAndError");
 
 
-examples::algebraicmg::mappings::ComputeGlobalResidualAndError::ComputeGlobalResidualAndError(int treeNumber) {
+examples::algebraicmg::actions::ComputeGlobalResidualAndError::ComputeGlobalResidualAndError(int treeNumber) {
 // @todo Please implement
 }
 
 
-examples::algebraicmg::mappings::ComputeGlobalResidualAndError::~ComputeGlobalResidualAndError() {
+examples::algebraicmg::actions::ComputeGlobalResidualAndError::~ComputeGlobalResidualAndError() {
 // @todo Please implement
 }
 
 
-std::vector< peano4::grid::GridControlEvent > examples::algebraicmg::mappings::ComputeGlobalResidualAndError::getGridControlEvents() {
+std::vector< peano4::grid::GridControlEvent > examples::algebraicmg::actions::ComputeGlobalResidualAndError::getGridControlEvents() {
 // @todo Please implement
 return std::vector< peano4::grid::GridControlEvent >();
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::beginTraversal() {
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::beginTraversal() {
   _globalResidualL2        = 0.0;
   _globalResidualMax       = 0.0;
   _globalResidualEukledian = 0.0;
@@ -33,7 +34,7 @@ void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::beginTraver
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::endTraversal() {
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::endTraversal() {
   logInfo(
     "endTraversal",
     " \t |res|_h="   << std::sqrt(_globalResidualL2) <<
@@ -47,7 +48,7 @@ void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::endTraversa
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::createPersistentVertex(
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::createPersistentVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
@@ -56,7 +57,7 @@ void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::createPersi
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::destroyPersistentVertex(
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::destroyPersistentVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
@@ -65,7 +66,7 @@ void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::destroyPers
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::createHangingVertex(
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::createHangingVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
@@ -74,7 +75,7 @@ void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::createHangi
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::destroyHangingVertex(
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::destroyHangingVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
@@ -83,7 +84,7 @@ void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::destroyHang
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::touchVertexFirstTime(
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchVertexFirstTime(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
@@ -92,11 +93,12 @@ void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::touchVertex
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::touchVertexLastTime(
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchVertexLastTime(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
+) {
   double solution = SetupScenario::getSolution(center);
   double error    = fineGridVertexMG.getU() - solution;
 
@@ -110,7 +112,7 @@ void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::touchVertex
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::touchCellFirstTime(
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchCellFirstTime(
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
       peano4::datamanagement::CellWrapper<void> fineGridCell,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
@@ -119,7 +121,7 @@ void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::touchCellFi
 }
 
 
-void examples::algebraicmg::mappings::ComputeGlobalResidualAndError::touchCellLastTime(
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchCellLastTime(
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
       peano4::datamanagement::CellWrapper<void> fineGridCell,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
