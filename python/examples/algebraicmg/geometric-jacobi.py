@@ -15,6 +15,8 @@
 """
 
 import os
+import time
+
 import peano4
 import peano4.datamodel
 import peano4.solversteps
@@ -61,8 +63,8 @@ project.datamodel.add_vertex( dastgen_model )
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
 create_grid.use_vertex( dastgen_model )
-create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.1) )
-#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
+#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.1) )
+create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
 project.solversteps.add_step(create_grid)
 
 
@@ -135,13 +137,15 @@ project.output.makefile.add_library( "ToolboxFiniteElements2d", project.output.m
 project.output.makefile.add_library( "ToolboxMultiprecision", project.output.makefile.get_source_path() + "/toolbox/multiprecision" )
 project.output.makefile.add_header_search_path( "/opt/tbb/include" ) 
 project.output.makefile.set_dimension( 2 )
-project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
-#project.output.makefile.set_mode( peano4.output.CompileMode.Release )
+#project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
+project.output.makefile.set_mode( peano4.output.CompileMode.Release )
 project.generate(peano4.output.Overwrite.Default)
 project.build(True)
+start_time_stamp = time.time()
 project.run( ["64.0", "1"] )
 #project.run( ["16.0"], ["/opt/mpi/mpirun", "-n", "1"] )
 #project.run( ["32"], ["/opt/mpi/mpirun", "-n", "1"] )
+print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
 
 
 
@@ -164,7 +168,10 @@ convert.convert_to_vtk()
 #
 # Reset project, so it knows that we have changed some stuff. To be on the safe
 # side, we invoke a clean. This time, we use a different mode where the Jacobi 
-# update and the residual computation are merged into one grid sweep.
+# update and the residual computation are merged into one grid sweep. Also the 
+# error computation is done on-the-fly. This example tries to quantify how 
+# important it is to fuse different steps, to increase the arithmetic intensity
+# and to eliminate memory accesses.
 #    
 fused_step = peano4.solversteps.Step( "FusedSolverSteps", False )
 fused_step.use_vertex( dastgen_model )
@@ -176,4 +183,6 @@ project.solversteps.add_step( fused_step )
 project.constants.define( "FuseSolverSteps" )
 project.generate()
 project.build(True)
+start_time_stamp = time.time()
 project.run( ["64.0", "1"] )
+print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
