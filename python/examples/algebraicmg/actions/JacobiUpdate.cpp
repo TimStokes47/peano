@@ -1,4 +1,5 @@
 #include "JacobiUpdate.h"
+#include "SetupScenario.h"
 
 
 tarch::logging::Log examples::algebraicmg::actions::JacobiUpdate::_log( "examples::algebraicmg::actions::JacobiUpdate");
@@ -78,10 +79,10 @@ void examples::algebraicmg::actions::JacobiUpdate::touchVertexFirstTime(
 
 
 void examples::algebraicmg::actions::JacobiUpdate::touchVertexLastTime(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
+  const tarch::la::Vector<Dimensions,double>& center,
+  const tarch::la::Vector<Dimensions,double>& h,
+  examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
+  peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
 ) {
   const double omega = 0.7;
 
@@ -97,6 +98,11 @@ void examples::algebraicmg::actions::JacobiUpdate::touchVertexLastTime(
       +
       omega * fineGridVertexMG.getRes() / fineGridVertexMG.getDiag()
     );
+  }
+  else if (
+    fineGridVertexMG.getVertexType()==examples::algebraicmg::vertexdata::MG::VertexType::Boundary
+  ) {
+    fineGridVertexMG.setU( SetupScenario::getSolution(center) );
   }
 }
 

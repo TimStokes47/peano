@@ -18,21 +18,12 @@ examples::algebraicmg::actions::SetupScenario::~SetupScenario() {
 
 
 std::vector< peano4::grid::GridControlEvent > examples::algebraicmg::actions::SetupScenario::getGridControlEvents() {
-// @todo Please implement
-return std::vector< peano4::grid::GridControlEvent >();
+  return std::vector< peano4::grid::GridControlEvent >();
 }
 
 
-void examples::algebraicmg::actions::SetupScenario::beginTraversal(
-      ) {
-// @todo Please implement
-}
-
-
-void examples::algebraicmg::actions::SetupScenario::endTraversal(
-      ) {
-// @todo Please implement
-}
+void examples::algebraicmg::actions::SetupScenario::beginTraversal() {}
+void examples::algebraicmg::actions::SetupScenario::endTraversal() {}
 
 
 void examples::algebraicmg::actions::SetupScenario::createPersistentVertex(

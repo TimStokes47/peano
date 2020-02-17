@@ -13,9 +13,6 @@
 #include <vector>
 
 
-// @todo Please implement
-
-
 #include "vertexdata/MG.h"
 
 

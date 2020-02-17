@@ -51,39 +51,13 @@ dastgen_model.add_enum( "VertexType", ["Boundary", "Inside"] )
 project.datamodel.add_vertex( dastgen_model )
 
 
-
-#
-# These guys are stencil data structures. We don't need it here. I add
-# them nevertheless. In the next few steps, I will use them. And then
-# I want to reuse as many of my action sets as possible, to I define 
-# quite a lot of data structures here despite the fact that I don't use
-# them at all.
-#
-compressed_cell_assembly_data = peano4.datamodel.DynamicArrayOverPrimitives( "CompressedA", "unsigned char" )
-project.datamodel.add_cell( compressed_cell_assembly_data )
-
-cell_assembly_data = peano4.datamodel.DynamicArrayOverPrimitives( "A", "double" )
-project.datamodel.add_cell( cell_assembly_data )
-
-cell_meta_data = peano4.datamodel.DaStGen( "p" )
-cell_meta_data.add_integer_scalar( "n" )
-cell_meta_data.add_integer_scalar( "taskId" )
-project.datamodel.add_cell( cell_meta_data )
-
-
-
-
 #
 # First, lets create the initial grid (which is regular).
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
 create_grid.use_vertex( dastgen_model )
-create_grid.use_cell( compressed_cell_assembly_data )
-create_grid.use_cell( cell_assembly_data )
-create_grid.use_cell( cell_meta_data )
 create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.1) )
 project.solversteps.add_step(create_grid)
-
 
 
 #
@@ -102,7 +76,6 @@ plot_material_parameter.add_action_set( peano4.toolbox.PlotScalarNodalFieldInPea
 project.solversteps.add_step(plot_material_parameter)
 
 
-
 #
 # We create the steps to compute the residual and to update the solution. This 
 # time, we create our corresponding user mappings explicitly, as we will use 
@@ -119,6 +92,7 @@ jacobi_update_user_code = peano4.solversteps.UserActionSet();
 jacobi_update.use_vertex( dastgen_model )
 jacobi_update.add_action_set( jacobi_update_user_code )
 project.solversteps.add_step( jacobi_update )
+
 
 #
 # As we solve only benchmarks with an analytical solution, we can really
@@ -178,5 +152,7 @@ convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation"
 convert.extract_fine_grid()
 convert.convert_to_vtk()
 
+convert.set_input_file_name( "solution" )
+convert.extract_fine_grid()
+convert.convert_to_vtk()
 
-# @todo Loesung rausschreiben

@@ -17,6 +17,10 @@ class Convert(object):
     self.mpi_prefix      = ""
 
 
+  def set_input_file_name(self,file_name):
+    self.file_name = file_name
+
+
   def set_visualisation_tools_path(self, path, mpi_prefix="" ):
     """
       Set path where tool can find the convert script. Convert is part of 
