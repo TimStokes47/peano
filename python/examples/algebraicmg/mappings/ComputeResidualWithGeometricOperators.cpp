@@ -2,6 +2,10 @@
 #include "SetupScenario.h"
 
 
+#include "tarch/multicore/multicore.h"
+#include "tarch/multicore/Tasks.h"
+
+
 #include "toolbox/finiteelements/ElementMatrix.h"
 #include "toolbox/finiteelements/StencilFactory.h"
 #include "toolbox/multiprecision/CompressedLinearAlgebra.h"
