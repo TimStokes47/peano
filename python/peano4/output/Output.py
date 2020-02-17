@@ -12,7 +12,13 @@ class Output(object):
   def __init__(self):
     self.artefacts = []
     self.makefile = Makefile()
-    
+
+
+  def clear_artefacts(self):
+    self.artefacts = []
+    self.makefile.cppfiles = []
+
+          
   def add(self,artefact,append=True):
     if append:
       self.artefacts.append(artefact)

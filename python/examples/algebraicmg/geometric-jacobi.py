@@ -5,6 +5,11 @@
  to study this example in detail before you do more sophisticated stuff, as 
  all of my multigrid solvers kind of build upon this solver.
  
+ Ensure your python path is set properly before you invoke this script. On 
+ my bash system, I can set it for example through
+ 
+ export PYTHONPATH=../..
+ 
  @author Tobias Weinzierl
 
 """
@@ -57,6 +62,7 @@ project.datamodel.add_vertex( dastgen_model )
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
 create_grid.use_vertex( dastgen_model )
 create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.1) )
+#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
 project.solversteps.add_step(create_grid)
 
 
@@ -81,16 +87,12 @@ project.solversteps.add_step(plot_material_parameter)
 # time, we create our corresponding user mappings explicitly, as we will use 
 # them later on again.
 #
-compute_residual = peano4.solversteps.Step( "ComputeResidualWithGeometricOperators", False )
-compute_residual_user_code = peano4.solversteps.UserActionSet();
+compute_residual = peano4.solversteps.Step( "ComputeResidualWithGeometricOperators" )
 compute_residual.use_vertex( dastgen_model )
-compute_residual.add_action_set( compute_residual_user_code )
 project.solversteps.add_step( compute_residual )
 
-jacobi_update = peano4.solversteps.Step( "JacobiUpdate", False )
-jacobi_update_user_code = peano4.solversteps.UserActionSet();
+jacobi_update = peano4.solversteps.Step( "JacobiUpdate" )
 jacobi_update.use_vertex( dastgen_model )
-jacobi_update.add_action_set( jacobi_update_user_code )
 project.solversteps.add_step( jacobi_update )
 
 
@@ -121,7 +123,6 @@ project.solversteps.add_step(plot_solution)
 #
 project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano" )
 
-
 #
 # Standard triad of operations. You can skip the first two steps if you want as 
 # the script then will automatically invoke the previous steps. The other way 
@@ -143,6 +144,9 @@ project.run( ["64.0", "1"] )
 #project.run( ["32"], ["/opt/mpi/mpirun", "-n", "1"] )
 
 
+
+
+
 #
 # Convert data into vtk, so we can open it in Paraview
 #
@@ -156,3 +160,20 @@ convert.set_input_file_name( "solution" )
 convert.extract_fine_grid()
 convert.convert_to_vtk()
 
+
+#
+# Reset project, so it knows that we have changed some stuff. To be on the safe
+# side, we invoke a clean. This time, we use a different mode where the Jacobi 
+# update and the residual computation are merged into one grid sweep.
+#    
+fused_step = peano4.solversteps.Step( "FusedSolverSteps", False )
+fused_step.use_vertex( dastgen_model )
+fused_step.copy_action_sets_from_other_step( jacobi_update )
+fused_step.copy_action_sets_from_other_step( compute_residual )
+fused_step.copy_action_sets_from_other_step( compute_global_residual_and_error )
+project.solversteps.add_step( fused_step )
+
+project.constants.define( "FuseSolverSteps" )
+project.generate()
+project.build(True)
+project.run( ["64.0", "1"] )

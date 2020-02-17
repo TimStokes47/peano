@@ -4,7 +4,8 @@ from .ActionSet import ActionSet
 
 
 class UserActionSet(ActionSet):
-  def __init__(self):
+  def __init__(self,name):
+    self.name = name
     pass
 
 
@@ -28,7 +29,7 @@ class UserActionSet(ActionSet):
     return "// @todo Please implement\n"
 
 
-  def get_mapping_name(self):
+  def get_action_set_name(self):
     """
      Returns a description (word) for the mapping which is also used as class name
      for the generated type. As a consequence, the result should be one word (if 

@@ -23,8 +23,8 @@ class ActionSet(object):
       (peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL,"void"),
       (peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL,"void")
     ]
-    self.include_files = []
-    self.typedefs = []
+    self.include_files  = []
+    self.typedefs       = []
     self.implementation = implementation
 
 

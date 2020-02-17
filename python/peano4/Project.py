@@ -50,26 +50,29 @@ class Project (object):
     
     self.constants  = peano4.output.Constants(self)
 
-
-  def export_constant( self, value, name ):
-    self.constants.export_constant( value, name )
-
     
   def generate(self, overwrite=peano4.output.Overwrite.Default):
     """
-    Generate all code.
+    Generate all code. If you add stuff to your project after a 
+    build, you have to (re-)generate the code. If you compile only
+    once, you don't have to invoke this routine explicitly. It is 
+    lazily called by the other project routines - the latest before
+    you run the code.
+    
+    It is important that I reset the output. Otherwise, two 
+    subsequent generate calls enrich the output twice.
     """
     print( "generate all code ..." )
     self.is_generated = True
+    self.is_built = False
+    if len(self.output.artefacts)>0:
+      print( "remove all the old artefacts from the repository")
+      self.output.clear_artefacts()    
 
     self.datamodel.construct_output(self.output)
-
     self.solversteps.construct_output(self.output)
-      
     self.main.construct_output(self.output)
-    
     self.output.generate(overwrite, self.directory)
-
     self.constants.generate(overwrite, self.directory)
 
     print( "generation complete" )

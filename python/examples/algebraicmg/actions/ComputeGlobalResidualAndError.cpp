@@ -8,19 +8,13 @@
 tarch::logging::Log examples::algebraicmg::actions::ComputeGlobalResidualAndError::_log( "examples::algebraicmg::actions::ComputeGlobalResidualAndError");
 
 
-examples::algebraicmg::actions::ComputeGlobalResidualAndError::ComputeGlobalResidualAndError(int treeNumber) {
-// @todo Please implement
-}
+examples::algebraicmg::actions::ComputeGlobalResidualAndError::ComputeGlobalResidualAndError(int treeNumber) {}
 
-
-examples::algebraicmg::actions::ComputeGlobalResidualAndError::~ComputeGlobalResidualAndError() {
-// @todo Please implement
-}
+examples::algebraicmg::actions::ComputeGlobalResidualAndError::~ComputeGlobalResidualAndError() {}
 
 
 std::vector< peano4::grid::GridControlEvent > examples::algebraicmg::actions::ComputeGlobalResidualAndError::getGridControlEvents() {
-// @todo Please implement
-return std::vector< peano4::grid::GridControlEvent >();
+  return std::vector< peano4::grid::GridControlEvent >();
 }
 
 
@@ -52,45 +46,43 @@ void examples::algebraicmg::actions::ComputeGlobalResidualAndError::createPersis
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::destroyPersistentVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::createHangingVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::destroyHangingVertex(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchVertexFirstTime(
       const tarch::la::Vector<Dimensions,double>& center,
       const tarch::la::Vector<Dimensions,double>& h,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
+
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchCellFirstTime(
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
+      peano4::datamanagement::CellWrapper<void> fineGridCell,
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
+      peano4::datamanagement::CellWrapper<void> coarseGridCell) {}
+
+void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchCellLastTime(
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
+      peano4::datamanagement::CellWrapper<void> fineGridCell,
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
+      peano4::datamanagement::CellWrapper<void> coarseGridCell) {}
 
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchVertexLastTime(
@@ -99,6 +91,7 @@ void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchVertexL
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
 ) {
+	// @todo Das sollte ich aber wirklich nur am kleinsten Level machen -> marker
   double solution = SetupScenario::getSolution(center);
   double error    = fineGridVertexMG.getU() - solution;
 
@@ -110,23 +103,3 @@ void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchVertexL
   _globalErrorL2         += error * error * tarch::la::volume(h);
   _globalErrorEukledian  += error * error;
 }
-
-
-void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchCellFirstTime(
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell) {
-// @todo Please implement
-}
-
-
-void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchCellLastTime(
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell) {
-// @todo Please implement
-}
-
-

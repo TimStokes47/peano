@@ -21,6 +21,11 @@
 #include "observers/JacobiUpdate.h"
 
 
+#ifdef FuseSolverSteps
+#include "observers/FusedSolverSteps.h"
+#endif
+
+
 tarch::logging::Log _log("::");
 
 
@@ -166,12 +171,17 @@ int main(int argc, char* argv[]) {
 
     for (int i=0; i<20; i++)
     {
+      #ifdef FuseSolverSteps
+      examples::algebraicmg::observers::FusedSolverSteps observer;
+      peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+      #else
       examples::algebraicmg::observers::ComputeResidualWithGeometricOperators  computeResidual;
       peano4::parallel::SpacetreeSet::getInstance().traverse(computeResidual);
       examples::algebraicmg::observers::JacobiUpdate  jacobiUpdate;
       peano4::parallel::SpacetreeSet::getInstance().traverse(jacobiUpdate);
       examples::algebraicmg::observers::ComputeGlobalResidualAndError computeGlobalResidualAndError;
       peano4::parallel::SpacetreeSet::getInstance().traverse(computeGlobalResidualAndError);
+      #endif
     }
 
     {

@@ -8,9 +8,9 @@ class StepToActionSet(object):
     self.step = step
     
     
-  def construct_output(self,output,mapping):
+  def construct_output(self,output,action_set):
       """
-        Construct one mapping
+        Construct one action_set
       """
       number_of_user_action_sets = 0
       for x in self.step.action_sets:
@@ -18,20 +18,17 @@ class StepToActionSet(object):
           number_of_user_action_sets +=1
 
       action_set_name = ""
-      if number_of_user_action_sets<=1 and mapping.user_should_modify_template():
-        action_set_name = self.step.name
-      else:
-        action_set_name = self.step.name + "2" + mapping.get_action_set_name() + str( self.step.action_sets.index(mapping))
-        
       subnamespace = ""
-      if mapping.user_should_modify_template():
+      if action_set.user_should_modify_template():
         subnamespace = "actions" 
-        print( "user has to modify class " + action_set_name + " in actions directory manually ")
+        action_set_name = action_set.name
+        print( "user has to modify class " + action_set.name + " in actions directory manually ")
       else:
         subnamespace = "observers" 
+        action_set_name = self.step.name + "2" + action_set.get_action_set_name() + str( self.step.action_sets.index(action_set))
 
       new_action_set = peano4.output.ActionSet(
-        action_set_name, self.step.project.namespace + [ subnamespace ], self.step.project.directory + "/" + subnamespace, mapping
+        action_set_name, self.step.project.namespace + [ subnamespace ], self.step.project.directory + "/" + subnamespace, action_set
       )
  
       for i in self.step.vertex_data:

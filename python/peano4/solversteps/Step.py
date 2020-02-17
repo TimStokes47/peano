@@ -29,7 +29,7 @@ class Step:
     self.face_data   = []
     self.vertex_data = []
     if add_user_defined_actions:
-      self.action_sets    = [ peano4.solversteps.UserActionSet() ]
+      self.action_sets    = [ peano4.solversteps.UserActionSet( name ) ]
     else:
       self.action_sets    = []
     self.action_set_generator   = StepToActionSet(self)
@@ -159,12 +159,18 @@ class Step:
     provides plugin points into the created data transitions from a user's 
     perspective.
     """
+    
+    
     included_action_sets = []
     for action_set in self.action_sets:
       full_qualified_action_set_name = self.action_set_generator.construct_output(output,action_set)
       included_action_sets.append( full_qualified_action_set_name )
     
     self.observer_generator.construct_output(output, included_action_sets)
+
+  
+  def copy_action_sets_from_other_step(self, other_step):
+    self.action_sets += other_step.action_sets
     
 
     

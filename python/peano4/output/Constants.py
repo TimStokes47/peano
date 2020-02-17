@@ -24,14 +24,38 @@ class Constants(object):
       self.d[ "OPEN_NAMESPACE" ]        += "namespace " + i + "{\n"
       self.d[ "CLOSE_NAMESPACE" ]       += "}\n"
       self.d[ "INCLUDE_GUARD" ]         += i + "_"
+    self.d[ "INCLUDE_GUARD" ]         += "CONSTANTS_"
 
     self.d[ "INCLUDE_GUARD" ] = self.d[ "INCLUDE_GUARD" ].upper()
     
-  def export_constant( self, value, name ):
+  def export( self, name, value ):
+    """
+      Tell the C++ code underlying the project that a certain variable with a 
+      name has a certain value. The passed arguments are mapped onto an 
+      constexpr. Therefore, name has to be a string, while value can be an 
+      integer, a float or a string as well. If you want to export booleans
+      or just define variants, you have to use the other routines.
+    """
     new_entry = "constexpr auto " + name + " = " + str(value) + ";"
     self.d[ "ADD_CONSTANTS" ] += "  " + new_entry + "\n"
     pass
-    #self.constants.export_constant( value, name )    
+
+
+  def export_boolean( self, name, value ):
+    new_entry = "constexpr bool " + name + " = "
+    if value:
+      new_entry += "true"
+    else:
+      new_entry += "false"
+    self.d[ "ADD_CONSTANTS" ] += "  " + new_entry + ";\n"
+    pass
+
+
+  def define( self, name ):
+    new_entry = "#define " + name
+    self.d[ "ADD_CONSTANTS" ] += "  " + new_entry + "\n"
+    pass
+
 
   def generate(self, overwrite, directory):
     filename = directory + "/Constants.h";

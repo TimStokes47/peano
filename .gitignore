@@ -6,7 +6,7 @@
 **/.dirstamp
 **/.settings
 **/.externalToolBuilders
-**/.o
+**/*.o
 **/Makefile.in
 **/*.pyc
 src/stamp-h1

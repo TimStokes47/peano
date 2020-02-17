@@ -123,7 +123,14 @@ class Makefile(object):
 
  
   def add_cpp_file(self,filename):
-    self.cppfiles.append(filename)
+    """
+     Add a new filename. This is basically a set implementation, i.e. you can
+     add files multiple times, but they are not inserted multiple times. This 
+     is important, as the steps add the cpp files. Multiple steps can hold the 
+     same action, so this action would be created multiple times.
+    """
+    if self.cppfiles.count(filename)==0:
+      self.cppfiles.append( filename )
 
 
   def generate(self,overwrite,directory):
