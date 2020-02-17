@@ -6,7 +6,7 @@ from .Helper               import Overwrite
 from .InvokeExternalTool   import InvokeExternalTool
 from .Makefile             import Makefile
 from .Makefile             import CompileMode
-from .Mapping              import Mapping
+from .ActionSet            import ActionSet
 from .Observer             import Observer
 from .Output               import Output
 from .TemplatedHeaderImplementationFilePair import TemplatedHeaderImplementationFilePair

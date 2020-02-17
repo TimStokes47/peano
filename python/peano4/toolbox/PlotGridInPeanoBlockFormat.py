@@ -1,10 +1,10 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.Mapping import Mapping
+from peano4.solversteps.ActionSet import ActionSet
 
 
 
-class PlotGridInPeanoBlockFormat(Mapping):
+class PlotGridInPeanoBlockFormat(ActionSet):
   def __init__(self,filename,cell_unknown):
     """
       Plot only the grid structure
@@ -75,7 +75,7 @@ class PlotGridInPeanoBlockFormat(Mapping):
     return "  return std::vector< peano4::grid::GridControlEvent >();\n" 
 
 
-  def get_mapping_name(self):
+  def get_action_set_name(self):
     return __name__.replace(".py", "").replace(".", "_")
 
 
@@ -99,7 +99,7 @@ class PlotGridInPeanoBlockFormat(Mapping):
 
   def get_body_of_operation(self,operation_name):
     result = "\n"
-    if operation_name==Mapping.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = self.__Template_TouchCellFirstTime.format(**self.d) 
     return result
 

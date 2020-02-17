@@ -1,9 +1,9 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from .Mapping import Mapping
+from .ActionSet import ActionSet
 
 
-class UserMapping(Mapping):
+class UserActionSet(ActionSet):
   def __init__(self):
     pass
 

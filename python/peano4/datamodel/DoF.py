@@ -49,7 +49,7 @@ class DoF(object):
   def get_logical_type_name(self):
     """
       What should the data type be called within the data repository,
-      or within mappings. We add a prefix name here.
+      or within action sets. We add a prefix name here.
     """
     result = ""
     if self.assocation==DoFAssociation.Vertex:

@@ -3,19 +3,19 @@
 from abc import abstractmethod
  
 
-class Mapping:
+class ActionSet:
   def __init__(self):
     pass
 
 
   @abstractmethod
   def get_constructor_body(self):
-    return "// @todo Should be overwritten by mapping\n"
+    return "// @todo Should be overwritten\n"
 
 
   @abstractmethod
   def get_destructor_body(self):
-    return "// @todo Should be overwritten by mapping\n"
+    return "// @todo Should be overwritten\n"
 
 
   def get_body_of_getGridControlEvents(self):
@@ -54,7 +54,7 @@ class Mapping:
 
 
   @abstractmethod
-  def get_mapping_name(self):
+  def get_actionset_name(self):
     """
      Returns a description (word) for the mapping which is also used as class name
      for the generated type. As a consequence, the result should be one word (if 
@@ -68,7 +68,7 @@ class Mapping:
     """
      Return whether you expect the user to modify the generated code. If this 
      is the case, then the API places the generated output in the directory
-     mappings. Otherwise, it goes into the observer directory.
+     actions. Otherwise, it goes into the observer directory.
     """
     return True
 

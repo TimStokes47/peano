@@ -17,7 +17,10 @@ class Project (object):
   """ 
   Represents on Peano 4 project.
   
-  namespace sequence of strings representing the (nested) namespace
+  namespace Sequence of strings representing the (nested) namespace. Pass in 
+    [ "examples", "algebraicmg" ] for example if you wanna write a solver that 
+    is embedded into the namespace examples::algebraicmg.
+    
   """
   
   def __init__(self, namespace, directory = "."):

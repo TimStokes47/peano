@@ -1,10 +1,10 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.Mapping import Mapping
+from peano4.solversteps.ActionSet import ActionSet
 
 
 
-class CreateRegularGrid(Mapping):
+class CreateRegularGrid(ActionSet):
   def __init__(self,maximum_cell_width):
     """
       maximum_cell_width
@@ -39,7 +39,7 @@ class CreateRegularGrid(Mapping):
     return self.__Template_GridControlEvents.format(**self.d)
 
 
-  def get_mapping_name(self):
+  def get_action_set_name(self):
     return __name__.replace(".py", "").replace(".", "_")
 
 

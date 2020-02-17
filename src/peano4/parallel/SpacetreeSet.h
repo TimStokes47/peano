@@ -73,9 +73,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     class DataExchangeTask: public tarch::multicore::Task {
       private:
-        peano4::grid::Spacetree&          _spacetree;
-        SpacetreeSet&  _spacetreeSet;
-        peano4::grid::TraversalObserver&  _observer;
+        peano4::grid::Spacetree&           _spacetree;
+        SpacetreeSet&                      _spacetreeSet;
+        peano4::grid::TraversalObserver&   _observer;
       public:
         DataExchangeTask( peano4::grid::Spacetree& spacetree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
 

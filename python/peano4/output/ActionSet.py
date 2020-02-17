@@ -5,10 +5,10 @@ from .Helper import writeFile
 
 import os
 import re
-import peano4.solversteps.Mapping
+import peano4.solversteps.ActionSet
 
 
-class Mapping(object):
+class ActionSet(object):
  
   def __init__(self,classname,namespace,subdirectory,implementation = None):
     """
@@ -20,8 +20,8 @@ class Mapping(object):
     self.namespace    = namespace
     self.subdirectory = subdirectory
     self.operations   = [
-      (peano4.solversteps.Mapping.OPERATION_BEGIN_TRAVERSAL,"void"),
-      (peano4.solversteps.Mapping.OPERATION_END_TRAVERSAL,"void")
+      (peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL,"void"),
+      (peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL,"void")
     ]
     self.include_files = []
     self.typedefs = []
@@ -130,18 +130,18 @@ class Mapping(object):
       outputfile.write( "  public:\n" )
       outputfile.write( """
     /**
-     * Create mapping instance for one tree for one grid sweep
+     * Create action instance for one tree for one grid sweep
      *
      * <h2> Thread safety </h2>
      *
      * The creation of individual trees usually happens through peano4::parallel::SpacetreeSet::createObserverCloneIfRequired().
      * This routine is called lazily when we start to traverse a subtree. 
-     * Therefore, the creation of mappings is not thread-safe.
+     * Therefore, the creation of actions is not thread-safe.
      *
      *
      * @param treeNumber Number of the spacetree for which we create the tree instance. Is 
-     *                   smaller 0 if this is the prototype mapping used on a rank from which 
-     *                   the real mappings are constructed from.
+     *                   smaller 0 if this is the prototype action used on a rank from which 
+     *                   the real actions are constructed from.
      */      
 """ )
       outputfile.write( "    " + self.classname + "(int treeNumber);\n\n" )

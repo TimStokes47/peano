@@ -119,12 +119,12 @@ int main(int argc, char* argv[]) {
 
 
   if (argc>1) {
-    examples::algebraicmg::mappings::SetupScenario::Theta = std::atof( argv[1] );
+    examples::algebraicmg::actions::SetupScenario::Theta = std::atof( argv[1] );
   }
   else {
     logWarning( "main()", "use dummy value for theta " );
   }
-  logInfo( "main()", "theta=" << examples::algebraicmg::mappings::SetupScenario::Theta  );
+  logInfo( "main()", "theta=" << examples::algebraicmg::actions::SetupScenario::Theta  );
 
   int coreCount = 1;
   if (argc==3) {

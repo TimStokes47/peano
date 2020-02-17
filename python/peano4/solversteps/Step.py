@@ -1,9 +1,9 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.solversteps.UserMapping
+import peano4.solversteps.UserActionSet
 
-from peano4.solversteps.StepToMapping import StepToMapping
-from peano4.solversteps.StepToObserver import StepToObserver
+from peano4.solversteps.StepToActionSet import StepToActionSet
+from peano4.solversteps.StepToObserver  import StepToObserver
 
 
 # 
@@ -17,49 +17,49 @@ class Step:
     of data from the data model are used by the solver step, it can handle all
     the user data stack flow.
   """
-  def __init__(self,name,add_user_defined_mapping = True):
+  def __init__(self,name,add_user_defined_actions = True):
     """
-     By default, the step generates at least one mapping for the user. 
+     By default, the step generates at least one action set for the user. 
      However, you can disable this behaviour by passing False to
-     add_user_defined_mapping. Alternatively, use remove_all_mappings()
+     add_user_defined_actions. Alternatively, use remove_all_action_sets()
      on the step.
     """
     self.name        = name
     self.cell_data   = []
     self.face_data   = []
     self.vertex_data = []
-    if add_user_defined_mapping:
-      self.mappings    = [ peano4.solversteps.UserMapping() ]
+    if add_user_defined_actions:
+      self.action_sets    = [ peano4.solversteps.UserActionSet() ]
     else:
-      self.mappings    = []
-    self.mapping_generator   = StepToMapping(self)
+      self.action_sets    = []
+    self.action_set_generator   = StepToActionSet(self)
     self.observer_generator  = StepToObserver(self)
 
 
-  def remove_all_mappings(self):
+  def remove_all_actions(self):
     """
-     Each step holds a set of mappings. They describe what the step actually
+     Each step holds a set of actions. They describe what the step actually
      should do whenever it loads a vertex, runs into a cell, and so forth. By
-     default, the step holds one user-defined mapping (UserMapping) which means
+     default, the step holds one user-defined actions which means
      that a stub is generated where users can insert their functionality. You
      can remove this one (or any other one added so far) with this routine.
     """
-    self.mappings = []
+    self.action_sets = []
 
   
-  def add_mapping(self,mapping):
+  def add_action_set(self,action_set):
     """
-     Each step holds a set of mappings. They describe what the step actually
+     Each step holds a set of action_sets. They describe what the step actually
      should do whenever it loads a vertex, runs into a cell, and so forth. By
-     default, the step holds one user-defined mapping (UserMapping) which means
+     default, the step holds one user-defined action_set (UserActionSet) which means
      that a stub is generated where users can insert their functionality. It is 
-     important in which order you add your mappings: The whole tree traversal 
+     important in which order you add your action_sets: The whole tree traversal 
      is a top-down/depth-first tree traversal. So all the enter, create, ...
-     operations of a mapping are invoked exactly in the order you add them to 
+     operations of a action_set are invoked exactly in the order you add them to 
      the step. All the delete, leave, ... operations are invokved in reversed
      order.
     """
-    self.mappings.append(mapping)
+    self.action_sets.append(action_set)
 
     
   def set_project(self,project):
@@ -78,11 +78,11 @@ class Step:
   def use_vertex(self,submodel):
     self.vertex_data.append(submodel)
 
-  def __get_spatial_attributes_of_mapping_signature(self):
+  def __get_spatial_attributes_of_action_set_signature(self):
     return ["center", "const tarch::la::Vector<Dimensions,double>&", "h", "const tarch::la::Vector<Dimensions,double>&" ]
 
   def get_vertex_operations_signature(self):
-    result = self.__get_spatial_attributes_of_mapping_signature()
+    result = self.__get_spatial_attributes_of_action_set_signature()
     for i in self.vertex_data:
       result += ["fineGridVertex" + i.name,i.get_full_qualified_type() + "&"]
     for i in self.vertex_data:
@@ -94,7 +94,7 @@ class Step:
     return result
 
   def get_face_operations_signature(self):
-    result  = self.__get_spatial_attributes_of_mapping_signature()
+    result  = self.__get_spatial_attributes_of_action_set_signature()
     result += ["normal", "const tarch::la::Vector<Dimensions,double>&"]
     for i in self.vertex_data:
       result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "" ]
@@ -110,7 +110,7 @@ class Step:
 
 
   def get_cell_operations_signature(self):
-    result  = self.__get_spatial_attributes_of_mapping_signature()
+    result  = self.__get_spatial_attributes_of_action_set_signature()
     for i in self.vertex_data:
       result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
@@ -159,12 +159,12 @@ class Step:
     provides plugin points into the created data transitions from a user's 
     perspective.
     """
-    included_mappings = []
-    for mapping in self.mappings:
-      full_qualified_mapping_name = self.mapping_generator.construct_output(output,mapping)
-      included_mappings.append( full_qualified_mapping_name )
+    included_action_sets = []
+    for action_set in self.action_sets:
+      full_qualified_action_set_name = self.action_set_generator.construct_output(output,action_set)
+      included_action_sets.append( full_qualified_action_set_name )
     
-    self.observer_generator.construct_output(output, included_mappings)
+    self.observer_generator.construct_output(output, included_action_sets)
     
 
     

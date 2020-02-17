@@ -199,18 +199,6 @@ peano4::maps::HierarchicalStackMap<T>::~HierarchicalStackMap() {
 template <typename T>
 peano4::maps::HierarchicalStackMap<T>::HierarchicalStackMap():
   _data(peano4::parallel::Node::MaxSpacetreesPerRank) {
-/*
-  for (int i=0; i<peano4::parallel::Node::MaxSpacetreesPerRank; i++) {
-	_data.push_back( TreeData() );
-  }
-*/
-	/*
-	  if (_data.count(key.first)==0) {
-	    _data.insert( std::pair< int, TreeData* >(
-	      key.first, new TreeData()
-	    ));
-	  }
-	*/
 }
 
 
