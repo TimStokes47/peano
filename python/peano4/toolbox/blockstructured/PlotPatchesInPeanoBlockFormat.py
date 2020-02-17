@@ -104,15 +104,15 @@ class PlotPatchesInPeanoBlockFormat(Mapping):
   assertion( _dataWriter!=nullptr );
   
   const int patchIndex = _writer->plotPatch(
-    fineGridCell{NAME}.centre() - fineGridCell{NAME}.h() * PatchScaling * 0.5,
-    fineGridCell{NAME}.h() * PatchScaling
+    marker.centre() - marker.h() * PatchScaling * 0.5,
+    marker.h() * PatchScaling
   );
  
   int cellIndex  = _dataWriter->getFirstCellWithinPatch(patchIndex);
   int currentDoF = 0;
   
   dfor(k,{DOFS_PER_AXIS}) {{
-    double* data = fineGridCell{NAME}.data().value + currentDoF;
+    double* data = fineGridCell{NAME}.value + currentDoF;
     _dataWriter->plotCell( cellIndex, data );
     cellIndex++;
     currentDoF += {UNKNOWNS};

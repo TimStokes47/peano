@@ -27,76 +27,50 @@ void examples::algebraicmg::actions::SetupScenario::endTraversal() {}
 
 
 void examples::algebraicmg::actions::SetupScenario::createPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::SetupScenario::destroyPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::SetupScenario::createHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::SetupScenario::destroyHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 
 void examples::algebraicmg::actions::SetupScenario::touchVertexFirstTime(
-  const tarch::la::Vector<Dimensions,double>& center,
-  const tarch::la::Vector<Dimensions,double>& h,
+  const peano4::datamanagement::VertexMarker& marker,
   examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
   peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
 ) {
-  init( center, fineGridVertexMG );
+  init( marker.x(), fineGridVertexMG );
 }
 
 
 void examples::algebraicmg::actions::SetupScenario::touchVertexLastTime(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::SetupScenario::touchCellFirstTime(
+      const peano4::datamanagement::CellMarker& marker,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell) {
-// @todo Please implement
-}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 
 void examples::algebraicmg::actions::SetupScenario::touchCellLastTime(
+      const peano4::datamanagement::CellMarker& marker,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell) {
-// @todo Please implement
-}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 
 

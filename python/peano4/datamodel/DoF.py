@@ -82,8 +82,8 @@ class DoF(object):
       result += "peano4::datamanagement::VertexEnumerator<"
     elif self.assocation==DoFAssociation.Face:
       result += "peano4::datamanagement::FaceEnumerator<"
-    elif self.assocation==DoFAssociation.Cell:
-      result += "peano4::datamanagement::CellWrapper<"
+    #elif self.assocation==DoFAssociation.Cell:
+    #  result += "peano4::datamanagement::CellWrapper<"
     else:
       assert False
     result += self.get_full_qualified_type()

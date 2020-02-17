@@ -5,7 +5,7 @@ peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords() {
 }
 
 
-peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
+peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
 _x(x),
 _h(h),
 _isRefined(isRefined),
@@ -49,14 +49,14 @@ _relativePositionToFather(relativePositionToFather) {
 
 
 
- bool peano4::grid::GridTraversalEvent::PersistentRecords::getIsRefined() const  {
+ std::bitset<TwoPowerD> peano4::grid::GridTraversalEvent::PersistentRecords::getIsRefined() const  {
    return _isRefined;
 }
 
 
 
- void peano4::grid::GridTraversalEvent::PersistentRecords::setIsRefined(const bool& isRefined)  {
-   _isRefined = isRefined;
+ void peano4::grid::GridTraversalEvent::PersistentRecords::setIsRefined(const std::bitset<TwoPowerD>& isRefined)  {
+   _isRefined = (isRefined);
 }
 
 
@@ -215,7 +215,7 @@ _persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords
 }
 
 
-peano4::grid::GridTraversalEvent::GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
+peano4::grid::GridTraversalEvent::GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
 _persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, faceDataTo, cellData, sendReceiveVertexData, sendReceiveFaceData, sendReceiveCellData, sendReceiveVertexDataRank, sendReceiveFaceDataRank, sendReceiveCellDataRank, relativePositionToFather) {
    
 }
@@ -284,14 +284,40 @@ peano4::grid::GridTraversalEvent::~GridTraversalEvent() { }
 
 
 
- bool peano4::grid::GridTraversalEvent::getIsRefined() const  {
+ std::bitset<TwoPowerD> peano4::grid::GridTraversalEvent::getIsRefined() const  {
    return _persistentRecords._isRefined;
 }
 
 
 
- void peano4::grid::GridTraversalEvent::setIsRefined(const bool& isRefined)  {
-   _persistentRecords._isRefined = isRefined;
+ void peano4::grid::GridTraversalEvent::setIsRefined(const std::bitset<TwoPowerD>& isRefined)  {
+   _persistentRecords._isRefined = (isRefined);
+}
+
+
+
+ bool peano4::grid::GridTraversalEvent::getIsRefined(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   return _persistentRecords._isRefined[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setIsRefined(int elementIndex, const bool& isRefined)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   _persistentRecords._isRefined[elementIndex]= isRefined;
+   
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::flipIsRefined(int elementIndex)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   _persistentRecords._isRefined.flip(elementIndex);
 }
 
 
@@ -637,7 +663,11 @@ void peano4::grid::GridTraversalEvent::toString (std::ostream& out) const {
    }
    out << getH(Dimensions-1) << "]";
    out << ",";
-   out << "isRefined:" << getIsRefined();
+   out << "isRefined:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getIsRefined(i) << ",";
+   }
+   out << getIsRefined(TwoPowerD-1) << "]";
    out << ",";
    out << "vertexDataFrom:[";
    for (int i = 0; i < TwoPowerD-1; i++) {
@@ -773,7 +803,7 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             #endif
               Dimensions		 //x
             , Dimensions		 //h
-            , 1		 //isRefined
+            , TwoPowerD		 //isRefined
             , TwoPowerD		 //vertexDataFrom
             , TwoPowerD		 //vertexDataTo
             , TwoTimesD		 //faceDataFrom
@@ -960,7 +990,7 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             #endif
               Dimensions		 //x
             , Dimensions		 //h
-            , 1		 //isRefined
+            , TwoPowerD		 //isRefined
             , TwoPowerD		 //vertexDataFrom
             , TwoPowerD		 //vertexDataTo
             , TwoTimesD		 //faceDataFrom
@@ -1373,12 +1403,12 @@ switch (mode) {
 
 
 peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords() {
-   if ((55 >= (8 * sizeof(long int)))) {
+   if ((TwoPowerD+48 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((55 < (8 * sizeof(long int))));
+   assertion((TwoPowerD+48 < (8 * sizeof(long int))));
    if ((64 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1391,12 +1421,12 @@ peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords() {
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((48 >= (8 * sizeof(long int)))) {
+   if ((54 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((48 < (8 * sizeof(long int))));
+   assertion((54 < (8 * sizeof(long int))));
    if ((18 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1407,7 +1437,7 @@ peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords() {
 }
 
 
-peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
+peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
 _x(x),
 _h(h),
 _sendReceiveVertexDataRank(sendReceiveVertexDataRank),
@@ -1423,12 +1453,12 @@ _relativePositionToFather(relativePositionToFather) {
    setSendReceiveVertexData(sendReceiveVertexData);
    setSendReceiveFaceData(sendReceiveFaceData);
    setSendReceiveCellData(sendReceiveCellData);
-   if ((55 >= (8 * sizeof(long int)))) {
+   if ((TwoPowerD+48 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((55 < (8 * sizeof(long int))));
+   assertion((TwoPowerD+48 < (8 * sizeof(long int))));
    if ((64 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1441,12 +1471,12 @@ _relativePositionToFather(relativePositionToFather) {
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((48 >= (8 * sizeof(long int)))) {
+   if ((54 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((48 < (8 * sizeof(long int))));
+   assertion((54 < (8 * sizeof(long int))));
    if ((18 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1481,17 +1511,22 @@ _relativePositionToFather(relativePositionToFather) {
 
 
 
- bool peano4::grid::GridTraversalEventPacked::PersistentRecords::getIsRefined() const  {
-   long int mask = 1 << (0);
+ std::bitset<TwoPowerD> peano4::grid::GridTraversalEventPacked::PersistentRecords::getIsRefined() const  {
+   long int mask = (long int) (1 << (TwoPowerD)) - 1 ;
+   mask = static_cast<long int>(mask << (0));
    long int tmp = static_cast<long int>(_packedRecords0 & mask);
-   return (tmp != 0);
+   tmp = static_cast<long int>(tmp >> (0));
+   std::bitset<TwoPowerD> result = tmp;
+   return result;
 }
 
 
 
- void peano4::grid::GridTraversalEventPacked::PersistentRecords::setIsRefined(const bool& isRefined)  {
-   long int mask = 1 << (0);
-   _packedRecords0 = static_cast<long int>( isRefined ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+ void peano4::grid::GridTraversalEventPacked::PersistentRecords::setIsRefined(const std::bitset<TwoPowerD>& isRefined)  {
+   long int mask = (long int) (1 << (TwoPowerD)) - 1 ;
+   mask = static_cast<long int>(mask << (0));
+   _packedRecords0 = static_cast<long int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<long int>(_packedRecords0 | isRefined.to_ulong() << (0));
 }
 
 
@@ -1572,13 +1607,13 @@ _relativePositionToFather(relativePositionToFather) {
 
  tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getFaceDataFrom() const  {
    long int mask = 15;
-   mask = mask << (1);
+   mask = mask << (TwoPowerD);
    tarch::la::Vector<TwoTimesD,int> result;
    long int tmp;
    
    for (int i = 0; i < TwoTimesD; i++) {
       tmp = _packedRecords0 & mask;
-      tmp = tmp >> (1 + i * 4);
+      tmp = tmp >> (TwoPowerD + i * 4);
       tmp = tmp + -4;
       result[i] = (int) tmp;
       mask = mask << 4;
@@ -1598,10 +1633,10 @@ _relativePositionToFather(relativePositionToFather) {
    }
    for (int i = 0; i < TwoTimesD; i++) {
       long int mask = 15;
-      mask = mask << (1 + i * 4 );
+      mask = mask << (TwoPowerD + i * 4 );
       _packedRecords0 = _packedRecords0 & ~mask;
       long int tmp = static_cast<long int>(faceDataFrom[i]);
-      _packedRecords0 = _packedRecords0 | ( tmp - -4) << (1 + i * 4);
+      _packedRecords0 = _packedRecords0 | ( tmp - -4) << (TwoPowerD + i * 4);
    }
 }
 
@@ -1609,13 +1644,13 @@ _relativePositionToFather(relativePositionToFather) {
 
  tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getFaceDataTo() const  {
    long int mask = 15;
-   mask = mask << (25);
+   mask = mask << (TwoPowerD + 24);
    tarch::la::Vector<TwoTimesD,int> result;
    long int tmp;
    
    for (int i = 0; i < TwoTimesD; i++) {
       tmp = _packedRecords0 & mask;
-      tmp = tmp >> (25 + i * 4);
+      tmp = tmp >> (TwoPowerD + 24 + i * 4);
       tmp = tmp + -4;
       result[i] = (int) tmp;
       mask = mask << 4;
@@ -1635,10 +1670,10 @@ _relativePositionToFather(relativePositionToFather) {
    }
    for (int i = 0; i < TwoTimesD; i++) {
       long int mask = 15;
-      mask = mask << (25 + i * 4 );
+      mask = mask << (TwoPowerD + 24 + i * 4 );
       _packedRecords0 = _packedRecords0 & ~mask;
       long int tmp = static_cast<long int>(faceDataTo[i]);
-      _packedRecords0 = _packedRecords0 | ( tmp - -4) << (25 + i * 4);
+      _packedRecords0 = _packedRecords0 | ( tmp - -4) << (TwoPowerD + 24 + i * 4);
    }
 }
 
@@ -1646,9 +1681,9 @@ _relativePositionToFather(relativePositionToFather) {
 
  int peano4::grid::GridTraversalEventPacked::PersistentRecords::getCellData() const  {
    long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (49));
-   long int tmp = static_cast<long int>(_packedRecords0 & mask);
-   tmp = static_cast<long int>(tmp >> (49));
+   mask = static_cast<long int>(mask << (0));
+   long int tmp = static_cast<long int>(_packedRecords3 & mask);
+   tmp = static_cast<long int>(tmp >> (0));
    tmp = tmp + -4;
    assertion(( tmp >= -4 &&  tmp <= 1));
    return (int) tmp;
@@ -1659,22 +1694,22 @@ _relativePositionToFather(relativePositionToFather) {
  void peano4::grid::GridTraversalEventPacked::PersistentRecords::setCellData(const int& cellData)  {
    assertion((cellData >= -4 && cellData <= 1));
    long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (49));
-   _packedRecords0 = static_cast<long int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<long int>(_packedRecords0 | (static_cast<long int>(cellData) - -4) << (49));
+   mask = static_cast<long int>(mask << (0));
+   _packedRecords3 = static_cast<long int>(_packedRecords3 & ~mask);
+   _packedRecords3 = static_cast<long int>(_packedRecords3 | (static_cast<long int>(cellData) - -4) << (0));
 }
 
 
 
  tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveVertexData() const  {
    long int mask = 7;
-   mask = mask << (0);
+   mask = mask << (3);
    tarch::la::Vector<TwoPowerD,DataExchangeType> result;
    long int tmp;
    
    for (int i = 0; i < TwoPowerD; i++) {
       tmp = _packedRecords3 & mask;
-      tmp = tmp >> (0 + i * 3);
+      tmp = tmp >> (3 + i * 3);
       result[i] = (DataExchangeType) tmp;
       mask = mask << 3;
    }
@@ -1693,10 +1728,10 @@ _relativePositionToFather(relativePositionToFather) {
    }
    for (int i = 0; i < TwoPowerD; i++) {
       long int mask = 7;
-      mask = mask << (0 + i * 3 );
+      mask = mask << (3 + i * 3 );
       _packedRecords3 = _packedRecords3 & ~mask;
       long int tmp = static_cast<long int>(sendReceiveVertexData[i]);
-      _packedRecords3 = _packedRecords3 | ( tmp << (0 + i * 3));
+      _packedRecords3 = _packedRecords3 | ( tmp << (3 + i * 3));
    }
 }
 
@@ -1740,9 +1775,9 @@ _relativePositionToFather(relativePositionToFather) {
 
  peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveCellData() const  {
    long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (52));
-   long int tmp = static_cast<long int>(_packedRecords0 & mask);
-   tmp = static_cast<long int>(tmp >> (52));
+   mask = static_cast<long int>(mask << (51));
+   long int tmp = static_cast<long int>(_packedRecords3 & mask);
+   tmp = static_cast<long int>(tmp >> (51));
    assertion(( tmp >= 0 &&  tmp <= 4));
    return (DataExchangeType) tmp;
 }
@@ -1752,9 +1787,9 @@ _relativePositionToFather(relativePositionToFather) {
  void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveCellData(const DataExchangeType& sendReceiveCellData)  {
    assertion((sendReceiveCellData >= 0 && sendReceiveCellData <= 4));
    long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (52));
-   _packedRecords0 = static_cast<long int>(_packedRecords0 & ~mask);
-   _packedRecords0 = static_cast<long int>(_packedRecords0 | static_cast<long int>(sendReceiveCellData) << (52));
+   mask = static_cast<long int>(mask << (51));
+   _packedRecords3 = static_cast<long int>(_packedRecords3 & ~mask);
+   _packedRecords3 = static_cast<long int>(_packedRecords3 | static_cast<long int>(sendReceiveCellData) << (51));
 }
 
 
@@ -1807,12 +1842,12 @@ _relativePositionToFather(relativePositionToFather) {
 
 
 peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked() {
-   if ((55 >= (8 * sizeof(long int)))) {
+   if ((TwoPowerD+48 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((55 < (8 * sizeof(long int))));
+   assertion((TwoPowerD+48 < (8 * sizeof(long int))));
    if ((64 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1825,12 +1860,12 @@ peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked() {
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((48 >= (8 * sizeof(long int)))) {
+   if ((54 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((48 < (8 * sizeof(long int))));
+   assertion((54 < (8 * sizeof(long int))));
    if ((18 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1843,12 +1878,12 @@ peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked() {
 
 peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked(const PersistentRecords& persistentRecords):
 _persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords.getIsRefined(), persistentRecords.getVertexDataFrom(), persistentRecords.getVertexDataTo(), persistentRecords.getFaceDataFrom(), persistentRecords.getFaceDataTo(), persistentRecords.getCellData(), persistentRecords.getSendReceiveVertexData(), persistentRecords.getSendReceiveFaceData(), persistentRecords.getSendReceiveCellData(), persistentRecords._sendReceiveVertexDataRank, persistentRecords._sendReceiveFaceDataRank, persistentRecords._sendReceiveCellDataRank, persistentRecords._relativePositionToFather) {
-   if ((55 >= (8 * sizeof(long int)))) {
+   if ((TwoPowerD+48 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((55 < (8 * sizeof(long int))));
+   assertion((TwoPowerD+48 < (8 * sizeof(long int))));
    if ((64 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1861,12 +1896,12 @@ _persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((48 >= (8 * sizeof(long int)))) {
+   if ((54 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((48 < (8 * sizeof(long int))));
+   assertion((54 < (8 * sizeof(long int))));
    if ((18 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1877,14 +1912,14 @@ _persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords
 }
 
 
-peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
+peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
 _persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, faceDataTo, cellData, sendReceiveVertexData, sendReceiveFaceData, sendReceiveCellData, sendReceiveVertexDataRank, sendReceiveFaceDataRank, sendReceiveCellDataRank, relativePositionToFather) {
-   if ((55 >= (8 * sizeof(long int)))) {
+   if ((TwoPowerD+48 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((55 < (8 * sizeof(long int))));
+   assertion((TwoPowerD+48 < (8 * sizeof(long int))));
    if ((64 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1897,12 +1932,12 @@ _persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, 
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((48 >= (8 * sizeof(long int)))) {
+   if ((54 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((48 < (8 * sizeof(long int))));
+   assertion((54 < (8 * sizeof(long int))));
    if ((18 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1976,17 +2011,55 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 
 
 
- bool peano4::grid::GridTraversalEventPacked::getIsRefined() const  {
-   long int mask = 1 << (0);
+ std::bitset<TwoPowerD> peano4::grid::GridTraversalEventPacked::getIsRefined() const  {
+   long int mask = (long int) (1 << (TwoPowerD)) - 1 ;
+   mask = static_cast<long int>(mask << (0));
    long int tmp = static_cast<long int>(_persistentRecords._packedRecords0 & mask);
-   return (tmp != 0);
+   tmp = static_cast<long int>(tmp >> (0));
+   std::bitset<TwoPowerD> result = tmp;
+   return result;
 }
 
 
 
- void peano4::grid::GridTraversalEventPacked::setIsRefined(const bool& isRefined)  {
+ void peano4::grid::GridTraversalEventPacked::setIsRefined(const std::bitset<TwoPowerD>& isRefined)  {
+   long int mask = (long int) (1 << (TwoPowerD)) - 1 ;
+   mask = static_cast<long int>(mask << (0));
+   _persistentRecords._packedRecords0 = static_cast<long int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<long int>(_persistentRecords._packedRecords0 | isRefined.to_ulong() << (0));
+}
+
+
+
+ bool peano4::grid::GridTraversalEventPacked::getIsRefined(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   int mask = 1 << (0);
+   mask = mask << elementIndex;
+   return (_persistentRecords._packedRecords0& mask);
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setIsRefined(int elementIndex, const bool& isRefined)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   assertion(!isRefined || isRefined==1);
+   int shift        = 0 + elementIndex; 
+   long int mask         = 1     << (shift);
+   long int shiftedValue = isRefined << (shift);
+   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 & ~mask;
+   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 |  shiftedValue;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::flipIsRefined(int elementIndex)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
    long int mask = 1 << (0);
-   _persistentRecords._packedRecords0 = static_cast<long int>( isRefined ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+   mask = mask << elementIndex;
+   _persistentRecords._packedRecords0^= mask;
 }
 
 
@@ -2125,13 +2198,13 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 
  tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::getFaceDataFrom() const  {
    long int mask = 15;
-   mask = mask << (1);
+   mask = mask << (TwoPowerD);
    tarch::la::Vector<TwoTimesD,int> result;
    long int tmp;
    
    for (int i = 0; i < TwoTimesD; i++) {
       tmp = _persistentRecords._packedRecords0 & mask;
-      tmp = tmp >> (1 + i * 4);
+      tmp = tmp >> (TwoPowerD + i * 4);
       tmp = tmp + -4;
       result[i] = (int) tmp;
       mask = mask << 4;
@@ -2151,10 +2224,10 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
    }
    for (int i = 0; i < TwoTimesD; i++) {
       long int mask = 15;
-      mask = mask << (1 + i * 4 );
+      mask = mask << (TwoPowerD + i * 4 );
       _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 & ~mask;
       long int tmp = static_cast<long int>(faceDataFrom[i]);
-      _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -4) << (1 + i * 4);
+      _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -4) << (TwoPowerD + i * 4);
    }
 }
 
@@ -2165,9 +2238,9 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
    assertion(elementIndex>=0);
    assertion(elementIndex<TwoTimesD);
    long int mask = 15;
-   mask = mask << (1 + elementIndex * 4);
+   mask = mask << (TwoPowerD + elementIndex * 4);
    long int tmp = _persistentRecords._packedRecords0 & mask;
-   tmp = tmp >> (1 + elementIndex * 4);
+   tmp = tmp >> (TwoPowerD + elementIndex * 4);
    tmp = tmp + -4;
    assertion((tmp >= -4) && (tmp <= 7));
    return (int) tmp;
@@ -2181,23 +2254,23 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
    assertion(elementIndex<TwoTimesD);
    assertion((faceDataFrom >= -4 && faceDataFrom <= 7));
    long int mask = 15;
-   mask = mask << (1 + elementIndex * 4);
+   mask = mask << (TwoPowerD + elementIndex * 4);
    _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 & ~mask;
    long int tmp = static_cast<long int>(faceDataFrom);
-   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -4) << (1 + elementIndex * 4);
+   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -4) << (TwoPowerD + elementIndex * 4);
 }
 
 
 
  tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::getFaceDataTo() const  {
    long int mask = 15;
-   mask = mask << (25);
+   mask = mask << (TwoPowerD + 24);
    tarch::la::Vector<TwoTimesD,int> result;
    long int tmp;
    
    for (int i = 0; i < TwoTimesD; i++) {
       tmp = _persistentRecords._packedRecords0 & mask;
-      tmp = tmp >> (25 + i * 4);
+      tmp = tmp >> (TwoPowerD + 24 + i * 4);
       tmp = tmp + -4;
       result[i] = (int) tmp;
       mask = mask << 4;
@@ -2217,10 +2290,10 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
    }
    for (int i = 0; i < TwoTimesD; i++) {
       long int mask = 15;
-      mask = mask << (25 + i * 4 );
+      mask = mask << (TwoPowerD + 24 + i * 4 );
       _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 & ~mask;
       long int tmp = static_cast<long int>(faceDataTo[i]);
-      _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -4) << (25 + i * 4);
+      _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -4) << (TwoPowerD + 24 + i * 4);
    }
 }
 
@@ -2231,9 +2304,9 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
    assertion(elementIndex>=0);
    assertion(elementIndex<TwoTimesD);
    long int mask = 15;
-   mask = mask << (25 + elementIndex * 4);
+   mask = mask << (TwoPowerD + 24 + elementIndex * 4);
    long int tmp = _persistentRecords._packedRecords0 & mask;
-   tmp = tmp >> (25 + elementIndex * 4);
+   tmp = tmp >> (TwoPowerD + 24 + elementIndex * 4);
    tmp = tmp + -4;
    assertion((tmp >= -4) && (tmp <= 7));
    return (int) tmp;
@@ -2247,19 +2320,19 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
    assertion(elementIndex<TwoTimesD);
    assertion((faceDataTo >= -4 && faceDataTo <= 7));
    long int mask = 15;
-   mask = mask << (25 + elementIndex * 4);
+   mask = mask << (TwoPowerD + 24 + elementIndex * 4);
    _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 & ~mask;
    long int tmp = static_cast<long int>(faceDataTo);
-   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -4) << (25 + elementIndex * 4);
+   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -4) << (TwoPowerD + 24 + elementIndex * 4);
 }
 
 
 
  int peano4::grid::GridTraversalEventPacked::getCellData() const  {
    long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (49));
-   long int tmp = static_cast<long int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<long int>(tmp >> (49));
+   mask = static_cast<long int>(mask << (0));
+   long int tmp = static_cast<long int>(_persistentRecords._packedRecords3 & mask);
+   tmp = static_cast<long int>(tmp >> (0));
    tmp = tmp + -4;
    assertion(( tmp >= -4 &&  tmp <= 1));
    return (int) tmp;
@@ -2270,22 +2343,22 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
  void peano4::grid::GridTraversalEventPacked::setCellData(const int& cellData)  {
    assertion((cellData >= -4 && cellData <= 1));
    long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (49));
-   _persistentRecords._packedRecords0 = static_cast<long int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<long int>(_persistentRecords._packedRecords0 | (static_cast<long int>(cellData) - -4) << (49));
+   mask = static_cast<long int>(mask << (0));
+   _persistentRecords._packedRecords3 = static_cast<long int>(_persistentRecords._packedRecords3 & ~mask);
+   _persistentRecords._packedRecords3 = static_cast<long int>(_persistentRecords._packedRecords3 | (static_cast<long int>(cellData) - -4) << (0));
 }
 
 
 
  tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEventPacked::getSendReceiveVertexData() const  {
    long int mask = 7;
-   mask = mask << (0);
+   mask = mask << (3);
    tarch::la::Vector<TwoPowerD,DataExchangeType> result;
    long int tmp;
    
    for (int i = 0; i < TwoPowerD; i++) {
       tmp = _persistentRecords._packedRecords3 & mask;
-      tmp = tmp >> (0 + i * 3);
+      tmp = tmp >> (3 + i * 3);
       result[i] = (DataExchangeType) tmp;
       mask = mask << 3;
    }
@@ -2304,10 +2377,10 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
    }
    for (int i = 0; i < TwoPowerD; i++) {
       long int mask = 7;
-      mask = mask << (0 + i * 3 );
+      mask = mask << (3 + i * 3 );
       _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 & ~mask;
       long int tmp = static_cast<long int>(sendReceiveVertexData[i]);
-      _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (0 + i * 3));
+      _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (3 + i * 3));
    }
 }
 
@@ -2318,9 +2391,9 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
    assertion(elementIndex>=0);
    assertion(elementIndex<TwoPowerD);
    long int mask = 7;
-   mask = mask << (0 + elementIndex * 3);
+   mask = mask << (3 + elementIndex * 3);
    long int tmp = _persistentRecords._packedRecords3 & mask;
-   tmp = tmp >> (0 + elementIndex * 3);
+   tmp = tmp >> (3 + elementIndex * 3);
    assertion((tmp >= 0) && (tmp <= 4));
    return (DataExchangeType) tmp;
 }
@@ -2333,10 +2406,10 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
    assertion(elementIndex<TwoPowerD);
    assertion((sendReceiveVertexData >= 0 && sendReceiveVertexData <= 4));
    long int mask = 7;
-   mask = mask << (0 + elementIndex * 3);
+   mask = mask << (3 + elementIndex * 3);
    _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 & ~mask;
    long int tmp = static_cast<long int>(sendReceiveVertexData);
-   _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (0 + elementIndex * 3));
+   _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (3 + elementIndex * 3));
 }
 
 
@@ -2407,9 +2480,9 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 
  peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEventPacked::getSendReceiveCellData() const  {
    long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (52));
-   long int tmp = static_cast<long int>(_persistentRecords._packedRecords0 & mask);
-   tmp = static_cast<long int>(tmp >> (52));
+   mask = static_cast<long int>(mask << (51));
+   long int tmp = static_cast<long int>(_persistentRecords._packedRecords3 & mask);
+   tmp = static_cast<long int>(tmp >> (51));
    assertion(( tmp >= 0 &&  tmp <= 4));
    return (DataExchangeType) tmp;
 }
@@ -2419,9 +2492,9 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
  void peano4::grid::GridTraversalEventPacked::setSendReceiveCellData(const DataExchangeType& sendReceiveCellData)  {
    assertion((sendReceiveCellData >= 0 && sendReceiveCellData <= 4));
    long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (52));
-   _persistentRecords._packedRecords0 = static_cast<long int>(_persistentRecords._packedRecords0 & ~mask);
-   _persistentRecords._packedRecords0 = static_cast<long int>(_persistentRecords._packedRecords0 | static_cast<long int>(sendReceiveCellData) << (52));
+   mask = static_cast<long int>(mask << (51));
+   _persistentRecords._packedRecords3 = static_cast<long int>(_persistentRecords._packedRecords3 & ~mask);
+   _persistentRecords._packedRecords3 = static_cast<long int>(_persistentRecords._packedRecords3 | static_cast<long int>(sendReceiveCellData) << (51));
 }
 
 
@@ -2557,7 +2630,11 @@ void peano4::grid::GridTraversalEventPacked::toString (std::ostream& out) const 
    }
    out << getH(Dimensions-1) << "]";
    out << ",";
-   out << "isRefined:" << getIsRefined();
+   out << "isRefined:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getIsRefined(i) << ",";
+   }
+   out << getIsRefined(TwoPowerD-1) << "]";
    out << ",";
    out << "vertexDataFrom:[";
    for (int i = 0; i < TwoPowerD-1; i++) {

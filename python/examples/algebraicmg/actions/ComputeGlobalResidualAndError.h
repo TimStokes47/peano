@@ -3,15 +3,18 @@
 
 
 #include "peano4/utils/Globals.h" 
-#include "peano4/datamanagement/VertexEnumerator.h" 
-#include "peano4/datamanagement/FaceEnumerator.h" 
-#include "peano4/datamanagement/CellWrapper.h" 
+#include "peano4/datamanagement/VertexEnumerator.h"
+#include "peano4/datamanagement/VertexMarker.h"
+#include "peano4/datamanagement/FaceEnumerator.h"
+#include "peano4/datamanagement/FaceMarker.h"
+#include "peano4/datamanagement/CellMarker.h"
 #include "peano4/grid/GridControlEvent.h" 
 #include "tarch/la/Vector.h" 
 
 
 #include <vector>
 
+#include "../../../../src/peano4/datamanagement/CellMarker.h"
 
 #include "vertexdata/MG.h"
 
@@ -64,52 +67,44 @@ class examples::algebraicmg::actions::ComputeGlobalResidualAndError{
       );
 
     void createPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
 
     void destroyPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
 
     void createHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
 
     void destroyHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
 
     void touchVertexFirstTime(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
 
     void touchVertexLastTime(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
 
     void touchCellFirstTime(
+      const peano4::datamanagement::CellMarker& marker,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell);
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
 
     void touchCellLastTime(
+      const peano4::datamanagement::CellMarker& marker,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell);
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
 
 };
 

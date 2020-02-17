@@ -19,7 +19,11 @@ class peano4::grid::GridTraversalEvent {
    * Size of corresponding cell.
    */
   persistent parallelise double         h[Dimensions];
-  persistent parallelise packed bool    isRefined;
+  
+  /**
+   * We use or-based refining.
+   */ 
+  persistent parallelise packed bool    isRefined[TwoPowerD];
   
   /**
    * Per vertex, we specify from which stack the vertex comes from and in which

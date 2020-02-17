@@ -87,8 +87,8 @@ class PlotGridInPeanoBlockFormat(ActionSet):
   int vertexIndices[TwoPowerD];
 
   int indices = _writer->plotPatch(
-    fineGrid{CELL_WRAPPER}.centre() - fineGrid{CELL_WRAPPER}.h() * 0.5,
-    fineGrid{CELL_WRAPPER}.h()
+    marker.x() - marker.h() * 0.5,
+    marker.h()
   );
 
   assertion( _dataWriter!=nullptr );

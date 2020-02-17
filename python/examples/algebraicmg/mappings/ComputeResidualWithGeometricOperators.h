@@ -5,13 +5,13 @@
 #include "peano4/utils/Globals.h" 
 #include "peano4/datamanagement/VertexEnumerator.h" 
 #include "peano4/datamanagement/FaceEnumerator.h" 
-#include "peano4/datamanagement/CellWrapper.h" 
 #include "peano4/grid/GridControlEvent.h" 
 #include "tarch/la/Vector.h" 
 
 
 #include <vector>
 
+#include "../../../../src/peano4/datamanagement/CellMarker.h"
 
 #include "vertexdata/MG.h"
 #include "celldata/A.h"

@@ -1,4 +1,5 @@
 #include "TraversalVTKPlotter.h"
+#include "Spacetree.h"
 #include "GridControlEvent.h"
 #include "GridTraversalEvent.h"
 
@@ -111,7 +112,8 @@ void peano4::grid::TraversalVTKPlotter::closeFile() {
 void peano4::grid::TraversalVTKPlotter::enterCell(
   const GridTraversalEvent&  event
 ) {
-  bool plot = not event.getIsRefined()
+  bool cellIsRefined = event.getIsRefined()!=0;
+  bool plot = not cellIsRefined
               and
               event.getCellData()!=TraversalObserver::NoData
               and

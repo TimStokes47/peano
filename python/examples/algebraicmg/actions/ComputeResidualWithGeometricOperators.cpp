@@ -12,72 +12,42 @@
 tarch::logging::Log examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::_log( "examples::algebraicmg::actions::ComputeResidualWithGeometricOperators");
 
 
-examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::ComputeResidualWithGeometricOperators(int treeNumber) {
-}
+examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::ComputeResidualWithGeometricOperators(int treeNumber) {}
 
-
-examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::~ComputeResidualWithGeometricOperators() {
-// @todo Please implement
-}
-
+examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::~ComputeResidualWithGeometricOperators() {}
 
 std::vector< peano4::grid::GridControlEvent > examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::getGridControlEvents() {
-// @todo Please implement
-return std::vector< peano4::grid::GridControlEvent >();
+  return std::vector< peano4::grid::GridControlEvent >();
 }
 
 
-void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::beginTraversal(
-      ) {
-// @todo Please implement
-}
+void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::beginTraversal() {}
 
-
-void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::endTraversal(
-      ) {
-// @todo Please implement
-}
-
+void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::endTraversal() {}
 
 void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::createPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::destroyPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::createHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::destroyHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 
 void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::touchVertexFirstTime(
-  const tarch::la::Vector<Dimensions,double>& center,
-  const tarch::la::Vector<Dimensions,double>& h,
+  const peano4::datamanagement::VertexMarker& marker,
   examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
   peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
 ) {
@@ -87,21 +57,17 @@ void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::touc
 
 
 void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::touchVertexLastTime(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 
 void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::touchCellFirstTime(
+  const peano4::datamanagement::CellMarker& marker,
   peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-  peano4::datamanagement::CellWrapper<void> fineGridCell,
-  peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-  peano4::datamanagement::CellWrapper<void> coarseGridCell
+  peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
 ) {
-  if (not fineGridCell.isRefined()) {
+  if (not marker.isRefined()) {
     tarch::la::Vector<TwoPowerD, double> u;
     tarch::la::Vector<TwoPowerD, double> r;
 
@@ -110,14 +76,14 @@ void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::touc
       u(i) = fineGridVerticesMG(i).getU();
     }
 
-    const double epsilon = SetupScenario::getEpsilon(fineGridCell.centre());
+    const double epsilon = SetupScenario::getEpsilon(marker.x());
 
     // Holds the stiffness matrix for the Laplacian. Not the most sophisticated
     // version. Obviously, we could compute it once for h=1.0 and then just
     // rescale it. But in this code, I prefer to have everything in one place.
     tarch::la::Matrix<TwoPowerD,TwoPowerD,double> localStiffnessMatrix =
       toolbox::finiteelements::getElementWiseAssemblyMatrix(
-        toolbox::finiteelements::getLaplacian(fineGridCell.h())
+        toolbox::finiteelements::getLaplacian(marker.h())
       );
 
     // compute residual contribution. Mind the minus sign here that
@@ -134,11 +100,6 @@ void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::touc
 
 
 void examples::algebraicmg::actions::ComputeResidualWithGeometricOperators::touchCellLastTime(
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell) {
-// @todo Please implement
-}
-
-
+  const peano4::datamanagement::CellMarker& marker,
+  peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
+  peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}

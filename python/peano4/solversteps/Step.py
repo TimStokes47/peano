@@ -78,11 +78,9 @@ class Step:
   def use_vertex(self,submodel):
     self.vertex_data.append(submodel)
 
-  def __get_spatial_attributes_of_action_set_signature(self):
-    return ["center", "const tarch::la::Vector<Dimensions,double>&", "h", "const tarch::la::Vector<Dimensions,double>&" ]
 
   def get_vertex_operations_signature(self):
-    result = self.__get_spatial_attributes_of_action_set_signature()
+    result = ["marker", "const peano4::datamanagement::VertexMarker&" ]
     for i in self.vertex_data:
       result += ["fineGridVertex" + i.name,i.get_full_qualified_type() + "&"]
     for i in self.vertex_data:
@@ -94,8 +92,7 @@ class Step:
     return result
 
   def get_face_operations_signature(self):
-    result  = self.__get_spatial_attributes_of_action_set_signature()
-    result += ["normal", "const tarch::la::Vector<Dimensions,double>&"]
+    result = ["marker", "const peano4::datamanagement::FaceMarker&" ]
     for i in self.vertex_data:
       result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
@@ -110,7 +107,7 @@ class Step:
 
 
   def get_cell_operations_signature(self):
-    result  = self.__get_spatial_attributes_of_action_set_signature()
+    result = ["marker", "const peano4::datamanagement::CellMarker&" ]
     for i in self.vertex_data:
       result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
@@ -127,16 +124,13 @@ class Step:
       
 
   def get_touch_cell_signature(self):
-    result  = []
+    result = ["marker", "const peano4::datamanagement::CellMarker&" ]
     for i in self.vertex_data:
       result += ["fineGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
       result += ["fineGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
       result += ["fineGridCell" + i.name,i.get_enumeration_type() + ""]
-      
-    if len(self.cell_data)==0:
-      result += ["fineGridCell","peano4::datamanagement::CellWrapper<void>"]
       
     for i in self.vertex_data:
       result += ["coarseGridVertices" + i.name, i.get_enumeration_type() + "" ]
@@ -145,9 +139,6 @@ class Step:
     for i in self.cell_data:
       result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
 
-    if len(self.cell_data)==0:
-      result += ["coarseGridCell","peano4::datamanagement::CellWrapper<void>"]
-      
     return result
       
 

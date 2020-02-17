@@ -4,8 +4,8 @@
 #define _EXAMPLES_DELTA_MAPPING_H_
 
 
+#include "../../peano4/datamanagement/CellMarker.h"
 #include "peano4/utils/Globals.h"
-#include "peano4/datamanagement/CellWrapper.h"
 #include "tarch/la/Vector.h"
 
 

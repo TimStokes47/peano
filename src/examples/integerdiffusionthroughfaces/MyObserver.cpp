@@ -113,6 +113,9 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
 ) {
   logTraceInWith1Argument("enterCell(...)",event.toString());
 
+  assertion(false);
+
+  /*
   // @todo
   // Vertex processing -> nop here
   // =============================
@@ -202,6 +205,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
     _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1),
 	_facesCallStack.top(1)
   );
+  */
 
   logTraceOutWith1Argument("enterCell(...)",event.toString());
 }
@@ -212,6 +216,9 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
 ) {
   logTraceInWith1Argument("leaveCell(...)",event.toString());
 
+  assertion(false);
+
+  /*
   // @todo Es gibt noch kein inside/outside hier, oder?
   // @todo Enclaves fehlen halt auch noch
   int inCellStack   = peano4::grid::PeanoCurve::CallStack;
@@ -275,6 +282,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
   }
 
   _facesCallStack.pop();
+  */
 
   logTraceOutWith1Argument("leaveCell(...)",event.toString());
 }

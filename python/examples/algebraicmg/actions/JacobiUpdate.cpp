@@ -21,66 +21,38 @@ return std::vector< peano4::grid::GridControlEvent >();
 }
 
 
-void examples::algebraicmg::actions::JacobiUpdate::beginTraversal(
-      ) {
-// @todo Please implement
-}
+void examples::algebraicmg::actions::JacobiUpdate::beginTraversal() {}
 
-
-void examples::algebraicmg::actions::JacobiUpdate::endTraversal(
-      ) {
-// @todo Please implement
-}
-
+void examples::algebraicmg::actions::JacobiUpdate::endTraversal() {}
 
 void examples::algebraicmg::actions::JacobiUpdate::createPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::JacobiUpdate::destroyPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::JacobiUpdate::createHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::JacobiUpdate::destroyHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
-
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::JacobiUpdate::touchVertexFirstTime(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {
-// @todo Please implement
-}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 
 void examples::algebraicmg::actions::JacobiUpdate::touchVertexLastTime(
-  const tarch::la::Vector<Dimensions,double>& center,
-  const tarch::la::Vector<Dimensions,double>& h,
+  const peano4::datamanagement::VertexMarker& marker,
   examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
   peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
 ) {
@@ -92,7 +64,7 @@ void examples::algebraicmg::actions::JacobiUpdate::touchVertexLastTime(
 	fineGridVertexMG.getDiag()>0.0
   ) {
     logDebug( "touchVertexLastTime(...)", "update " << fineGridVertexMG.toString() )
-    assertion3( fineGridVertexMG.getDiag()>0.0, fineGridVertexMG.toString(), center, h );
+    assertion2( fineGridVertexMG.getDiag()>0.0, fineGridVertexMG.toString(), marker.toString() );
     fineGridVertexMG.setU(
       fineGridVertexMG.getU()
       +
@@ -102,26 +74,20 @@ void examples::algebraicmg::actions::JacobiUpdate::touchVertexLastTime(
   else if (
     fineGridVertexMG.getVertexType()==examples::algebraicmg::vertexdata::MG::VertexType::Boundary
   ) {
-    fineGridVertexMG.setU( SetupScenario::getSolution(center) );
+    fineGridVertexMG.setU( SetupScenario::getSolution(marker.x()) );
   }
 }
 
 
 void examples::algebraicmg::actions::JacobiUpdate::touchCellFirstTime(
+      const peano4::datamanagement::CellMarker& marker,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell) {
-// @todo Please implement
-}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 
 void examples::algebraicmg::actions::JacobiUpdate::touchCellLastTime(
+      const peano4::datamanagement::CellMarker& marker,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell) {
-// @todo Please implement
-}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 

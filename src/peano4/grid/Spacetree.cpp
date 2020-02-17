@@ -314,13 +314,27 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
 }
 
 
+bool peano4::grid::Spacetree::isVertexRefined(GridVertex  vertex) {
+  return vertex.getState() == GridVertex::State::Refining
+      or vertex.getState() == GridVertex::State::Refined
+	  or vertex.getState() == GridVertex::State::EraseTriggered
+	  or vertex.getState() == GridVertex::State::Erasing;
+}
+
+
+std::bitset<TwoPowerD> peano4::grid::Spacetree::areVerticesRefined(GridVertex  vertices[TwoPowerD]) {
+  std::bitset<TwoPowerD> bitset;
+  for (int i=0; i<TwoPowerD; i++) {
+	bitset.set(i,isVertexRefined(vertices[i]));
+  }
+  return bitset;
+}
+
+
 bool peano4::grid::Spacetree::isSpacetreeNodeRefined(GridVertex  vertices[TwoPowerD]) {
   bool result = false;
   dfor2(k)
-    result |= vertices[kScalar].getState() == GridVertex::State::Refining;
-    result |= vertices[kScalar].getState() == GridVertex::State::Refined;
-    result |= vertices[kScalar].getState() == GridVertex::State::EraseTriggered;
-    result |= vertices[kScalar].getState() == GridVertex::State::Erasing;
+    result |= isVertexRefined( vertices[kScalar] );
   enddforx
   return result;
 }
@@ -1580,7 +1594,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
 
   event.setX( state.getX() + state.getH()*0.5 );
   event.setH( state.getH() );
-  event.setIsRefined( isSpacetreeNodeRefined(fineGridVertices) );
+  event.setIsRefined( areVerticesRefined(fineGridVertices) );
   event.setRelativePositionToFather( relativePositionToFather );
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
@@ -1712,7 +1726,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
 
   event.setX( state.getX() + state.getH()*0.5 );
   event.setH( state.getH() );
-  event.setIsRefined( isSpacetreeNodeRefined(fineGridVertices) );
+  event.setIsRefined( areVerticesRefined(fineGridVertices) );
   event.setRelativePositionToFather( relativePositionToFather );
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);

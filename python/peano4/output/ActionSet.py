@@ -100,14 +100,20 @@ class ActionSet(object):
       outputfile.write( "#ifndef " + include_guard + "\n" )
       outputfile.write( "#define " + include_guard + "\n\n\n" )
       
-      outputfile.write( "#include \"peano4/utils/Globals.h\" \n" )
-      outputfile.write( "#include \"peano4/datamanagement/VertexEnumerator.h\" \n" )
-      outputfile.write( "#include \"peano4/datamanagement/FaceEnumerator.h\" \n" )
-      outputfile.write( "#include \"peano4/datamanagement/CellWrapper.h\" \n" )
-      outputfile.write( "#include \"peano4/grid/GridControlEvent.h\" \n" )
-      outputfile.write( "#include \"tarch/la/Vector.h\" \n\n\n" )
+      outputfile.write( """
+#include "peano4/utils/Globals.h"
+#include "peano4/datamanagement/VertexEnumerator.h"
+#include "peano4/datamanagement/VertexMarker.h"
+#include "peano4/datamanagement/FaceEnumerator.h"
+#include "peano4/datamanagement/FaceMarker.h"
+#include "peano4/datamanagement/CellMarker.h"
+#include "peano4/grid/GridControlEvent.h"
+#include "tarch/la/Vector.h"
 
-      outputfile.write( "#include <vector>\n\n\n" )
+#include <vector>
+
+
+""" )
 
       outputfile.write( self.implementation.get_includes() )
       outputfile.write( "\n\n" )

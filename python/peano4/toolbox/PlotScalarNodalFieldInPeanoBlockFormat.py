@@ -86,8 +86,8 @@ class PlotScalarNodalFieldInPeanoBlockFormat(ActionSet):
   int vertexIndices[TwoPowerD];
 
   int patchIndex = _writer->plotPatch(
-    fineGridVertices{VERTEX_UNKNOWN_NAME}.x(0),
-    fineGridVertices{VERTEX_UNKNOWN_NAME}.h()
+    marker.x()-0.5 * marker.h(),
+    marker.h()
   );
 
   assertion( _dataWriter!=nullptr );

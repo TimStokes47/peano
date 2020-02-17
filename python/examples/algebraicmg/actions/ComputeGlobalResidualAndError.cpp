@@ -7,7 +7,6 @@
 
 tarch::logging::Log examples::algebraicmg::actions::ComputeGlobalResidualAndError::_log( "examples::algebraicmg::actions::ComputeGlobalResidualAndError");
 
-
 examples::algebraicmg::actions::ComputeGlobalResidualAndError::ComputeGlobalResidualAndError(int treeNumber) {}
 
 examples::algebraicmg::actions::ComputeGlobalResidualAndError::~ComputeGlobalResidualAndError() {}
@@ -43,63 +42,56 @@ void examples::algebraicmg::actions::ComputeGlobalResidualAndError::endTraversal
 
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::createPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::destroyPersistentVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::createHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::destroyHangingVertex(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchVertexFirstTime(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchCellFirstTime(
+      const peano4::datamanagement::CellMarker& marker,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell) {}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchCellLastTime(
+      const peano4::datamanagement::CellMarker& marker,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> fineGridCell,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG,
-      peano4::datamanagement::CellWrapper<void> coarseGridCell) {}
+      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG) {}
 
 
 void examples::algebraicmg::actions::ComputeGlobalResidualAndError::touchVertexLastTime(
-      const tarch::la::Vector<Dimensions,double>& center,
-      const tarch::la::Vector<Dimensions,double>& h,
+      const peano4::datamanagement::VertexMarker& marker,
       examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG
 ) {
-	// @todo Das sollte ich aber wirklich nur am kleinsten Level machen -> marker
-  double solution = SetupScenario::getSolution(center);
-  double error    = fineGridVertexMG.getU() - solution;
+  if (not marker.isRefined()) {
+    double solution = SetupScenario::getSolution(marker.x());
+    double error    = fineGridVertexMG.getU() - solution;
 
-  _globalResidualMax         = std::max( _globalResidualMax, fineGridVertexMG.getRes() );
-  _globalResidualL2         += fineGridVertexMG.getRes() * fineGridVertexMG.getRes() * tarch::la::volume(h);
-  _globalResidualEukledian  += fineGridVertexMG.getRes() * fineGridVertexMG.getRes();
+    _globalResidualMax         = std::max( _globalResidualMax, fineGridVertexMG.getRes() );
+    _globalResidualL2         += fineGridVertexMG.getRes() * fineGridVertexMG.getRes() * tarch::la::volume(marker.h());
+    _globalResidualEukledian  += fineGridVertexMG.getRes() * fineGridVertexMG.getRes();
 
-  _globalErrorMax         = std::max( _globalErrorMax, std::abs(error) );
-  _globalErrorL2         += error * error * tarch::la::volume(h);
-  _globalErrorEukledian  += error * error;
+    _globalErrorMax         = std::max( _globalErrorMax, std::abs(error) );
+    _globalErrorL2         += error * error * tarch::la::volume(marker.h());
+    _globalErrorEukledian  += error * error;
+  }
 }
