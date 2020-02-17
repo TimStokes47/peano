@@ -40,7 +40,7 @@ for f in output_files:
 # subdirectory). I use the namespace algebraicmg here. This is what we wanna do
 # eventually. So I use this namespace for all of my examples.
 #
-project = peano4.Project( ["examples", "algebraicmg"], "." )
+project = peano4.Project( ["examples", "jacobi"], "." )
 
 
 #

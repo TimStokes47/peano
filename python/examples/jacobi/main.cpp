@@ -77,19 +77,19 @@ int main(int argc, char* argv[]) {
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug,
     tarch::logging::LogFilter::FilterListEntry::AnyRank,
-    "examples::algebraicmg",
+    "examples::jacobi",
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo,
     tarch::logging::LogFilter::FilterListEntry::AnyRank,
-    "examples::algebraicmg",
+    "examples::jacobi",
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetTrace,
     tarch::logging::LogFilter::FilterListEntry::AnyRank,
-    "examples::algebraicmg",
+    "examples::jacobi",
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
 
@@ -124,12 +124,12 @@ int main(int argc, char* argv[]) {
 
 
   if (argc>1) {
-    examples::algebraicmg::actions::SetupScenario::Theta = std::atof( argv[1] );
+    examples::jacobi::actions::SetupScenario::Theta = std::atof( argv[1] );
   }
   else {
     logWarning( "main()", "use dummy value for theta " );
   }
-  logInfo( "main()", "theta=" << examples::algebraicmg::actions::SetupScenario::Theta  );
+  logInfo( "main()", "theta=" << examples::jacobi::actions::SetupScenario::Theta  );
 
   int coreCount = 1;
   if (argc==3) {
@@ -144,16 +144,16 @@ int main(int argc, char* argv[]) {
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     do {
-      examples::algebraicmg::observers::CreateGrid  observer;
+      examples::jacobi::observers::CreateGrid  observer;
       peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
     }
     while (peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<2);
 
     {
-      examples::algebraicmg::observers::SetupScenario  setupScenario;
+      examples::jacobi::observers::SetupScenario  setupScenario;
       peano4::parallel::SpacetreeSet::getInstance().traverse(setupScenario);
 
-      examples::algebraicmg::observers::PlotMaterialParameter  plotMaterialParameter;
+      examples::jacobi::observers::PlotMaterialParameter  plotMaterialParameter;
       peano4::parallel::SpacetreeSet::getInstance().traverse(plotMaterialParameter);
     }
 
@@ -174,20 +174,20 @@ int main(int argc, char* argv[]) {
     for (int i=0; i<MaxIterations; i++)
     {
       #ifdef FuseSolverSteps
-      examples::algebraicmg::observers::FusedSolverSteps observer;
+      examples::jacobi::observers::FusedSolverSteps observer;
       peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
       #else
-      examples::algebraicmg::observers::ComputeResidualWithGeometricOperators  computeResidual;
+      examples::jacobi::observers::ComputeResidualWithGeometricOperators  computeResidual;
       peano4::parallel::SpacetreeSet::getInstance().traverse(computeResidual);
-      examples::algebraicmg::observers::JacobiUpdate  jacobiUpdate;
+      examples::jacobi::observers::JacobiUpdate  jacobiUpdate;
       peano4::parallel::SpacetreeSet::getInstance().traverse(jacobiUpdate);
-      examples::algebraicmg::observers::ComputeGlobalResidualAndError computeGlobalResidualAndError;
+      examples::jacobi::observers::ComputeGlobalResidualAndError computeGlobalResidualAndError;
       peano4::parallel::SpacetreeSet::getInstance().traverse(computeGlobalResidualAndError);
       #endif
     }
 
     {
-      examples::algebraicmg::observers::PlotSolution  observer;
+      examples::jacobi::observers::PlotSolution  observer;
       peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
     }
   }

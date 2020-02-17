@@ -1,5 +1,5 @@
-#ifndef _EXAMPLES_ALGEBRAICMG_ACTIONS_COMPUTEGLOBALRESIDUALANDERROR_H_
-#define _EXAMPLES_ALGEBRAICMG_ACTIONS_COMPUTEGLOBALRESIDUALANDERROR_H_
+#ifndef _EXAMPLES_JACOBI_ACTIONS_COMPUTEGLOBALRESIDUALANDERROR_H_
+#define _EXAMPLES_JACOBI_ACTIONS_COMPUTEGLOBALRESIDUALANDERROR_H_
 
 
 #include "peano4/utils/Globals.h" 
@@ -20,7 +20,7 @@
 
 
 namespace examples {
-  namespace algebraicmg {
+  namespace jacobi {
     namespace actions {
       class ComputeGlobalResidualAndError;
     }
@@ -28,7 +28,7 @@ namespace examples {
 }
 
 
-class examples::algebraicmg::actions::ComputeGlobalResidualAndError{
+class examples::jacobi::actions::ComputeGlobalResidualAndError{
   private:
     static tarch::logging::Log  _log;
 
@@ -68,43 +68,43 @@ class examples::algebraicmg::actions::ComputeGlobalResidualAndError{
 
     void createPersistentVertex(
       const peano4::datamanagement::VertexMarker& marker,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
+      examples::jacobi::vertexdata::MG& fineGridVertexMG,
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG);
 
     void destroyPersistentVertex(
       const peano4::datamanagement::VertexMarker& marker,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
+      examples::jacobi::vertexdata::MG& fineGridVertexMG,
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG);
 
     void createHangingVertex(
       const peano4::datamanagement::VertexMarker& marker,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
+      examples::jacobi::vertexdata::MG& fineGridVertexMG,
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG);
 
     void destroyHangingVertex(
       const peano4::datamanagement::VertexMarker& marker,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
+      examples::jacobi::vertexdata::MG& fineGridVertexMG,
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG);
 
     void touchVertexFirstTime(
       const peano4::datamanagement::VertexMarker& marker,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
+      examples::jacobi::vertexdata::MG& fineGridVertexMG,
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG);
 
     void touchVertexLastTime(
       const peano4::datamanagement::VertexMarker& marker,
-      examples::algebraicmg::vertexdata::MG& fineGridVertexMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
+      examples::jacobi::vertexdata::MG& fineGridVertexMG,
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG);
 
     void touchCellFirstTime(
       const peano4::datamanagement::CellMarker& marker,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> fineGridVerticesMG,
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG);
 
     void touchCellLastTime(
       const peano4::datamanagement::CellMarker& marker,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> fineGridVerticesMG,
-      peano4::datamanagement::VertexEnumerator<examples::algebraicmg::vertexdata::MG> coarseGridVerticesMG);
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> fineGridVerticesMG,
+      peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG);
 
 };
 
