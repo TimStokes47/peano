@@ -14,7 +14,7 @@ of complexity. Some of them build upon each other. Others are orthogonal.
 - geometric-jacobi
     Baseline code that we use as a template for all of the subsequent examples.
     It solves the problem with a d-linear elements where the material parameter
-    is sampled once per cell.
+    is sampled once per cell. Therefore, we can evaluate it on-the-fly
     
     Files that have to be studied/defined for this setup:
     - SetupScenario - generic setup class holding the problem description that 
