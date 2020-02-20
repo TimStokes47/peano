@@ -785,27 +785,130 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     output_file.write( self.TemplateLeaveCell_Epilogue.format(**self.d) )
 
 
-  TemplateExchangeRoutines = """
-void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {{
+  TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {{
+"""
+
+  TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Exchange = """
+  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataExchangeStacks(
+    {DATASET},
+    _spacetreeId,
+    masterId,
+    mode
+  );
+"""
+
+  TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Epilogue = """
 }}
+"""
 
 
-void {FULL_QUALIFIED_CLASSNAME}::exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) {{
+
+
+  TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {{
+"""
+
+  TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Exchange = """
+  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllHorizontalDataExchangeStacks(
+    {DATASET},
+    _spacetreeId,
+    symmetricDataCardinality
+  );
+"""
+
+  TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Epilogue = """
 }}
+"""
 
 
-void {FULL_QUALIFIED_CLASSNAME}::exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) {{
+
+
+  TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::exchangeAllPeriodicBoundaryDataStacks() {{
+"""
+
+  TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Exchange = """
+  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllPeriodicBoundaryDataStacks(
+    {DATASET},
+    _spacetreeId
+  );
+"""
+
+  TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Epilogue = """
 }}
+"""
 
 
-void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives( int spacetreeId ) {{
+
+
+  TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives() {{
+"""
+
+  TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Exchange = """
+  peano4::parallel::SpacetreeSet::DataExchangeTask::finishAllOutstandingSendsAndReceives(
+    {DATASET},
+    _spacetreeId
+  );
+"""
+
+  TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Epilogue = """
 }}
 """
 
 
   def __generate_exchange_routines(self,output_file):
-    output_file.write( self.TemplateExchangeRoutines.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Prologue.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "DATASET" ] = "DataRepository::_" + cell.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Exchange.format(**self.d) )
+    for face in self.faces:
+      self.d[ "DATASET" ] = "DataRepository::_" + face.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Exchange.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Epilogue.format(**self.d) )
       
+    output_file.write( self.TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Prologue.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "DATASET" ] = "DataRepository::_" + cell.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Exchange.format(**self.d) )
+    for face in self.faces:
+      self.d[ "DATASET" ] = "DataRepository::_" + face.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Exchange.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Epilogue.format(**self.d) )
+
+    output_file.write( self.TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Prologue.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "DATASET" ] = "DataRepository::_" + cell.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Exchange.format(**self.d) )
+    for face in self.faces:
+      self.d[ "DATASET" ] = "DataRepository::_" + face.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Exchange.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Epilogue.format(**self.d) )
+
+    output_file.write( self.TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Prologue.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "DATASET" ] = "DataRepository::_" + cell.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Exchange.format(**self.d) )
+    for face in self.faces:
+      self.d[ "DATASET" ] = "DataRepository::_" + face.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Exchange.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Epilogue.format(**self.d) )
+      
+
+
 
   TemplateImplementationFilePrologue = """
 #include "{CLASSNAME}.h"
@@ -819,6 +922,7 @@ void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives( int space
 #include "peano4/datamanagement/FaceMarker.h"
 #include "peano4/datamanagement/CellMarker.h"
 
+#include "peano4/parallel/SpacetreeSet.h"
 
 
 tarch::logging::Log {FULL_QUALIFIED_CLASSNAME}::_log( "{FULL_QUALIFIED_CLASSNAME}" );

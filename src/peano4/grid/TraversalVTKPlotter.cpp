@@ -266,17 +266,17 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::TraversalVTKPlotter:
 }
 
 
-void peano4::grid::TraversalVTKPlotter::exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {
+void peano4::grid::TraversalVTKPlotter::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {
 }
 
 
-void peano4::grid::TraversalVTKPlotter::exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) {
+void peano4::grid::TraversalVTKPlotter::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {
 }
 
 
-void peano4::grid::TraversalVTKPlotter::exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) {
+void peano4::grid::TraversalVTKPlotter::exchangeAllPeriodicBoundaryDataStacks() {
 }
 
 
-void peano4::grid::TraversalVTKPlotter::finishAllOutstandingSendsAndReceives( int spacetreeId ) {
+void peano4::grid::TraversalVTKPlotter::finishAllOutstandingSendsAndReceives() {
 }

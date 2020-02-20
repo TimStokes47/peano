@@ -49,17 +49,17 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::EmptyTraversalObserv
 }
 
 
-void peano4::grid::EmptyTraversalObserver::exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {
+void peano4::grid::EmptyTraversalObserver::exchangeAllVerticalDataExchangeStacks(int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {
 }
 
 
-void peano4::grid::EmptyTraversalObserver::exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) {
+void peano4::grid::EmptyTraversalObserver::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {
 }
 
 
-void peano4::grid::EmptyTraversalObserver::exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) {
+void peano4::grid::EmptyTraversalObserver::exchangeAllPeriodicBoundaryDataStacks() {
 }
 
 
-void peano4::grid::EmptyTraversalObserver::finishAllOutstandingSendsAndReceives( int spacetreeId ) {
+void peano4::grid::EmptyTraversalObserver::finishAllOutstandingSendsAndReceives() {
 }

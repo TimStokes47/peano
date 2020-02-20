@@ -333,7 +333,7 @@ std::vector< peano4::grid::GridControlEvent > examples::integerdiffusionthroughf
 }
 
 
-void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {}
-void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) {}
-void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) {}
-void examples::integerdiffusionthroughfaces::MyObserver::finishAllOutstandingSendsAndReceives( int spacetreeId ) {}
+void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {}
+void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {}
+void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllPeriodicBoundaryDataStacks() {}
+void examples::integerdiffusionthroughfaces::MyObserver::finishAllOutstandingSendsAndReceives() {}

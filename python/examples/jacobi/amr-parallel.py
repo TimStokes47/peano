@@ -48,32 +48,30 @@ project = peano4.Project( ["examples", "jacobi"], "amr-parallel", "." )
 # grid entities. One way to associate stuff is to use our DaStGen legacy format.
 # This is our strategy here.
 #
-# Different to the previous example, I now need some hanging nodes as well.
-#
 dastgen_model = peano4.datamodel.DaStGen( "MG" )
 dastgen_model.add_double_scalar( "u" )
 dastgen_model.add_double_scalar( "rhs" )
 dastgen_model.add_double_scalar( "eps" )
 dastgen_model.add_double_scalar( "diag" )
 dastgen_model.add_double_scalar( "res" )
-dastgen_model.add_enum( "VertexType", ["Boundary", "Inside", "Hanging"] )
+dastgen_model.add_enum( "VertexType", ["Boundary", "Inside"] )
 project.datamodel.add_vertex( dastgen_model )
 
 
 #
-# The initial grid remains regular, so no changes here.
+# First, lets create the initial grid (which is regular).
 #
-Natuerlich ein Change -> setupGrid muss hier mit rein, weil wir das nachher auch wieder brauchen
-
-
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
 create_grid.use_vertex( dastgen_model )
-create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
+create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.05) )
+#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
 project.solversteps.add_step(create_grid)
 
 
 #
-# Setup scenario has to be different. 
+# Set up the rhs and the material parameters, boundary conditions, and, finally,
+# also the initial guess. For this, we use the default constructor value True,
+# i.e. we ask the API to give us a C++ routine.
 #
 setup_scenario = peano4.solversteps.Step( "SetupScenario" )
 setup_scenario.use_vertex( dastgen_model )
@@ -139,12 +137,12 @@ project.output.makefile.add_library( "ToolboxFiniteElements2d", project.output.m
 project.output.makefile.add_library( "ToolboxMultiprecision", project.output.makefile.get_source_path() + "/toolbox/multiprecision" )
 project.output.makefile.add_header_search_path( "/opt/tbb/include" ) 
 project.output.makefile.set_dimension( 2 )
-#project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
-project.output.makefile.set_mode( peano4.output.CompileMode.Release )
+project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
+#project.output.makefile.set_mode( peano4.output.CompileMode.Release )
 project.generate(peano4.output.Overwrite.Default)
 project.build(True)
 start_time_stamp = time.time()
-project.run( ["64.0", "1"] )
+project.run( ["8"] )
 #project.run( ["16.0"], ["/opt/mpi/mpirun", "-n", "1"] )
 #project.run( ["32"], ["/opt/mpi/mpirun", "-n", "1"] )
 print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
@@ -186,5 +184,5 @@ project.constants.define( "FuseSolverSteps" )
 project.generate()
 project.build(True)
 start_time_stamp = time.time()
-project.run( ["64.0", "1"] )
+project.run( ["8"] )
 print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )

@@ -39,6 +39,13 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
   else {
     _numberOfThreads = std::thread::hardware_concurrency();
   }
+
+  if (maxNumberOfConcurrentBackgroundTasks!=UseDefaultNumberOfThreads) {
+    logError( "configure(...)", "non-default number of background threads not supported" );
+  }
+  if (maxNumberOfConcurrentBandwidthBoundTasks!=UseDefaultNumberOfThreads) {
+    logError( "configure(...)", "non-default number of high-bandwidth threads not supported" );
+  }
 }
 
 

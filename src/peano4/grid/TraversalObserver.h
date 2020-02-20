@@ -124,10 +124,10 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
   ) = 0;
 
 
-  virtual void exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) = 0;
-  virtual void exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) = 0;
-  virtual void exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) = 0;
-  virtual void finishAllOutstandingSendsAndReceives( int spacetreeId ) = 0;
+  virtual void exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) = 0;
+  virtual void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) = 0;
+  virtual void exchangeAllPeriodicBoundaryDataStacks() = 0;
+  virtual void finishAllOutstandingSendsAndReceives() = 0;
 };
 
 #endif

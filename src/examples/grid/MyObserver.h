@@ -56,10 +56,10 @@ class examples::grid::MyObserver: public
 
     std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
 
-    void exchangeAllVerticalDataExchangeStacks( int spacetreeId, int masterId, peano4::parallel::VerticalDataExchangeMode mode ) override;
-    void exchangeAllHorizontalDataExchangeStacks( int spacetreeId, bool symmetricDataCardinality ) override;
-    void exchangeAllPeriodicBoundaryDataStacks( int spacetreeId ) override;
-    void finishAllOutstandingSendsAndReceives( int spacetreeId ) override;
+    void exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) override;
+    void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) override;
+    void exchangeAllPeriodicBoundaryDataStacks() override;
+    void finishAllOutstandingSendsAndReceives() override;
 };
 
 #endif

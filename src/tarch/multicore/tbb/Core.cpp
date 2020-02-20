@@ -62,6 +62,13 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
 
   MaxNumberOfConcurrentBackgroundTasks     = maxNumberOfConcurrentBackgroundTasks;
   MaxNumberOfConcurrentHighBandwidthTasks  = maxNumberOfConcurrentBandwidthBoundTasks;
+
+  if (maxNumberOfConcurrentBackgroundTasks!=UseDefaultNumberOfThreads) {
+    logError( "configure(...)", "non-default number of background threads not supported" );
+  }
+  if (maxNumberOfConcurrentBandwidthBoundTasks!=UseDefaultNumberOfThreads) {
+    logError( "configure(...)", "non-default number of high-bandwidth threads not supported" );
+  }
 }
 
 
