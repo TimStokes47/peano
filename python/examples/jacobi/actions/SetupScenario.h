@@ -34,33 +34,40 @@ class examples::jacobi::actions::SetupScenario{
     static tarch::logging::Log  _log;
 
     enum class Scenario {
+      /**
+       * Init Dirichlet problem following either
+       *
+       * https://math.nist.gov/~WMitchell/papers/test_problems_paper.pdf
+       *
+       * By default, I use the setup from Table 5.
+       */
       Mitchell,
+
+      /*
+       * Alternatively, I implemented Uli Ruede's "Mathematical and
+       * Computational Techniques for Multilevel Adaptive Methods".
+       * You find the description in 3.10.2. The domain here's not the
+       *  unit cube, but the domain (-1,1)^d.
+       */
       Ruede,
-	  Sin
+
+      /**
+       * From my CCPE paper
+       */
+      EpsilonFrequencies
     };
 
-    static constexpr Scenario _scenario = Scenario::Sin;
+    static constexpr Scenario _scenario = Scenario::Ruede;
 
   public:
 	static double Theta;
-
-    /**
-     * Init Dirichlet problem following either
-     *
-     * https://math.nist.gov/~WMitchell/papers/test_problems_paper.pdf
-     *
-     * By default, I use the setup from Table 5.
-     *
-     * Alternatively, I implemented Uli Ruede's "Mathematical and
-     * Computational Techniques for Multilevel Adaptive Methods".
-     * You find the description in 3.10.2. The domain here's not the
-     *  unit cube, but the domain (-1,1)^d.
-     */
     static examples::jacobi::vertexdata::MG::VertexType getVertexType(const tarch::la::Vector<Dimensions,double>& x);
     static double                                            getSolution(const tarch::la::Vector<Dimensions,double>& x);
     static double                                            getEpsilon(const tarch::la::Vector<Dimensions,double>& x);
     static void                                              init(const tarch::la::Vector<Dimensions,double>& x, examples::jacobi::vertexdata::MG& fineGridVertexMG);
     static std::pair<double,double>                          getMinMax();
+    static tarch::la::Vector<Dimensions,double>              getDomainOffset();
+    static tarch::la::Vector<Dimensions,double>              getDomainSize();
 
     /**
      * Create action instance for one tree for one grid sweep

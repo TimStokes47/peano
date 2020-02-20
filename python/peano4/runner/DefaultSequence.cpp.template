@@ -4,6 +4,8 @@
 #include "tarch/logging/Log.h"
 
 #include "tarch/tests/TestCaseRegistry.h"
+#include "tarch/logging/LogFilter.h"
+#include "tarch/multicore/multicore.h"
 
 #include "peano4/peano.h"
 #include "peano4/grid/Spacetree.h"

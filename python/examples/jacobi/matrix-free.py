@@ -40,7 +40,7 @@ for f in output_files:
 # subdirectory). I use the namespace algebraicmg here. This is what we wanna do
 # eventually. So I use this namespace for all of my examples.
 #
-project = peano4.Project( ["examples", "jacobi"], "." )
+project = peano4.Project( ["examples", "jacobi"], "matrix-free", "." )
 
 
 #
@@ -63,8 +63,8 @@ project.datamodel.add_vertex( dastgen_model )
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
 create_grid.use_vertex( dastgen_model )
-#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.1) )
-create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
+create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.1) )
+#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
 project.solversteps.add_step(create_grid)
 
 

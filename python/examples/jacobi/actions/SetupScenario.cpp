@@ -78,7 +78,7 @@ examples::jacobi::vertexdata::MG::VertexType examples::jacobi::actions::SetupSce
   examples::jacobi::vertexdata::MG::VertexType result;
   switch (_scenario) {
     case Scenario::Mitchell:
-    case Scenario::Sin:
+    case Scenario::EpsilonFrequencies:
       {
         const bool isBoundaryVertex =
           tarch::la::oneEquals(x,0.0)
@@ -128,7 +128,7 @@ double examples::jacobi::actions::SetupScenario::getSolution(const tarch::la::Ve
                / std::sinh( 8.0*tarch::la::PI );
       }
       break;
-    case Scenario::Sin:
+    case Scenario::EpsilonFrequencies:
       {
         result = 0.0;
       }
@@ -146,7 +146,7 @@ std::pair<double,double>  examples::jacobi::actions::SetupScenario::getMinMax() 
     case Scenario::Ruede:
    	  return std::pair<double,double>(-1.0,1.0);
       break;
-    case Scenario::Sin:
+    case Scenario::EpsilonFrequencies:
    	  return std::pair<double,double>(0.0,4.0/3.0);
       break;
   }
@@ -162,7 +162,7 @@ double examples::jacobi::actions::SetupScenario::getEpsilon(const tarch::la::Vec
     case Scenario::Ruede:
       result = 1.0;
       break;
-    case Scenario::Sin:
+    case Scenario::EpsilonFrequencies:
       {
         result = 1.0
 	           + 0.3/Dimensions * std::exp(-Theta * x(0)) * std::cos( tarch::la::PI * x(0) * Theta )
@@ -195,4 +195,29 @@ void   examples::jacobi::actions::SetupScenario::init(const tarch::la::Vector<Di
   }
 }
 
+
+tarch::la::Vector<Dimensions,double>  examples::jacobi::actions::SetupScenario::getDomainOffset() {
+  switch (_scenario) {
+    case Scenario::Mitchell:
+      return {0.0, 0.0};
+    case Scenario::Ruede:
+      return {-1.0, -1.0};
+    case Scenario::EpsilonFrequencies:
+      return {0.0, 0.0};
+  }
+  return tarch::la::Vector<Dimensions,double>(0.0,0.0);
+}
+
+
+tarch::la::Vector<Dimensions,double>  examples::jacobi::actions::SetupScenario::getDomainSize() {
+  switch (_scenario) {
+    case Scenario::Mitchell:
+      return {1.0, 1.0};
+    case Scenario::Ruede:
+      return {2.0, 2.0};
+    case Scenario::EpsilonFrequencies:
+      return {1.0, 1.0};
+  }
+  return tarch::la::Vector<Dimensions,double>(-1.0,-1.0);
+}
 

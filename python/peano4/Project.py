@@ -23,12 +23,16 @@ class Project (object):
     
   """
   
-  def __init__(self, namespace, directory = "."):
+  def __init__(self, namespace, project_name, directory = "."):
+    """
+      project_name  Simple string. 
+    """
     if sys.version_info.major < 3:
       print( "Warning: should be invoked through python3, i.e. with newer Python version" )
 
-    self.namespace = namespace
-    self.directory = directory
+    self.namespace    = namespace
+    self.directory    = directory
+    self.project_name = project_name
 
     #
     # Create default output model, i.e. those parts that have to be there
@@ -71,7 +75,7 @@ class Project (object):
 
     self.datamodel.construct_output(self.output)
     self.solversteps.construct_output(self.output)
-    self.main.construct_output(self.output)
+    self.main.construct_output(self.output,self.project_name + "-main")
     self.output.generate(overwrite, self.directory)
     self.constants.generate(overwrite, self.directory)
 

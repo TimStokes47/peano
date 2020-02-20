@@ -9,16 +9,20 @@ class DefaultSequence:
     self.project = project
     
     
-  def construct_output(self,output):
+  def construct_output(self,output,main_name):
     """
       Pass in a version of output
+      
+      main_name  Is the name of you main file. By default, this might be 
+         main.cpp, but you might want to have different main files for 
+         different experiments. Please do not give the file an extension.
     """
-    output.makefile.add_cpp_file( "main.cpp" )
+    output.makefile.add_cpp_file( main_name + ".cpp" )
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )    
     generated_files = peano4.output.TemplatedHeaderImplementationFilePair(
       templatefile_prefix+".h.template",
       templatefile_prefix+".cpp.template",
-      "main", 
+      main_name, 
       self.project.namespace,
       ".", 
       {},
