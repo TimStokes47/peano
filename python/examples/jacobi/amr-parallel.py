@@ -117,6 +117,26 @@ plot_solution.add_action_set( peano4.toolbox.PlotScalarNodalFieldInPeanoBlockFor
 project.solversteps.add_step(plot_solution)
 
 
+
+#
+# Created the fused version of the steps
+#    
+fused_step = peano4.solversteps.Step( "FusedSolverSteps", False )
+fused_step.use_vertex( dastgen_model )
+fused_step.copy_action_sets_from_other_step( jacobi_update )
+fused_step.copy_action_sets_from_other_step( compute_residual )
+fused_step.copy_action_sets_from_other_step( compute_global_residual_and_error )
+project.solversteps.add_step( fused_step )
+
+
+project.generate()
+project.build(True)
+start_time_stamp = time.time()
+project.run( ["8"] )
+print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
+
+
+
 #
 # Peano's API does not know which settings to use on the present system. To 
 # make it copy/clone the settings identified by ./configure, we ask it to 
@@ -165,24 +185,3 @@ convert.extract_fine_grid()
 convert.convert_to_vtk()
 
 
-#
-# Reset project, so it knows that we have changed some stuff. To be on the safe
-# side, we invoke a clean. This time, we use a different mode where the Jacobi 
-# update and the residual computation are merged into one grid sweep. Also the 
-# error computation is done on-the-fly. This example tries to quantify how 
-# important it is to fuse different steps, to increase the arithmetic intensity
-# and to eliminate memory accesses.
-#    
-fused_step = peano4.solversteps.Step( "FusedSolverSteps", False )
-fused_step.use_vertex( dastgen_model )
-fused_step.copy_action_sets_from_other_step( jacobi_update )
-fused_step.copy_action_sets_from_other_step( compute_residual )
-fused_step.copy_action_sets_from_other_step( compute_global_residual_and_error )
-project.solversteps.add_step( fused_step )
-
-project.constants.define( "FuseSolverSteps" )
-project.generate()
-project.build(True)
-start_time_stamp = time.time()
-project.run( ["8"] )
-print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )

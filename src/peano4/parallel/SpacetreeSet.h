@@ -220,6 +220,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     void deleteClonedObservers();
 
+    /**
+     * @see traverse()
+     */
     void exchangeDataBetweenExistingAndNewTreesAndRerunClones(peano4::grid::TraversalObserver& observer);
 
     /**
@@ -332,6 +335,38 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     /**
      * Invoke traverse on all spacetrees in parallel.
+     *
+     * <h2>Split/merge process</h2>
+     *
+     * @image html split-merge-sequence.svg.png
+     *
+     * The splits and merges in P4 are realised in two phases consisting of four
+     * steps. The first
+     * phase is the split-triggered phase. In this phase which is also the first step
+     * of the process, only the origin tree is aware of the data splits. It decides
+     * which cells to get rid off, and updates the local vertices' adjacency
+     * information. This information goes out. Nothing else is done in this traversal.
+     *
+     * Once all traversals have finished, the master tree transitions into the
+     * splitting state, it creates the new child tree, and it copies its whole tree
+     * over to this new rank. Please note that we are talking only about the raw
+     * tree data structure without any user data. This is the second step realised
+     * as preamble to the second grid traversal.
+     *
+     * In the third step, the master runs through its tree. At this point, all
+     * neighbours have sent in their vertex data, as they had not been aware
+     * previously of the split. The master merges this data (plus the user data) into
+     * the local tree. This is a sole merger phase, i.e. no local routines are invoked
+     * besides the merger. Once everything is merged, the master tree streams its whole
+     * tree data plus all user data to the new worker, and it starts to erase all the
+     * tree parts that are not local anymore.
+     *
+     * In the final step, both the new worker and the neighbours traverse their mesh.
+     * The neighbours now recognise the update in the adjacency information and update
+     * their local adjacency information, too. The new worker is very well aware that
+     * it is new and thus tries not to receive anything from a neighbour. Instead, it
+     * streams in data.
+     *
      */
     void traverse(peano4::grid::TraversalObserver& observer);
 

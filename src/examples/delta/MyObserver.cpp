@@ -169,6 +169,7 @@ void examples::delta::MyObserver::enterCell(
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
 
+/*
   switch (event.getSendReceiveCellData()) {
     case peano4::grid::GridTraversalEvent::ExchangeHorizontally:
       assertionMsg( false, "may not happen" );
@@ -202,6 +203,7 @@ void examples::delta::MyObserver::enterCell(
     case peano4::grid::GridTraversalEvent::None:
       break;
   }
+*/
 
 
   if (
@@ -224,11 +226,13 @@ void examples::delta::MyObserver::enterCell(
     );
   }
 
+/*
   if (event.getSendReceiveCellData()==peano4::grid::GridTraversalEvent::StreamInOut) {
     logDebug("leaveCell(...)", "stream cell to tree " << event.getSendReceiveCellDataRank() );
     const int streamTargetStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange( event.getSendReceiveCellDataRank() );
     _cellData[ DataKey(_spacetreeId,streamTargetStack ) ].push( _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0) );
   }
+*/
 
   logTraceOutWith1Argument("enterCell(...)",event.toString());
 }
@@ -266,7 +270,7 @@ void examples::delta::MyObserver::leaveCell(
     );
   }
 
-
+/*
   switch (event.getSendReceiveCellData()) {
     case peano4::grid::GridTraversalEvent::ExchangeHorizontally:
       assertionMsg( false, "may not happen" );
@@ -284,7 +288,7 @@ void examples::delta::MyObserver::leaveCell(
       break;
     case peano4::grid::GridTraversalEvent::None:
       break;
-  }
+  }*/
 
   if (outCellStack==TraversalObserver::CreateOrDestroyPersistentGridEntity) {
     logDebug("leaveCell(...)", "destroy cell" );

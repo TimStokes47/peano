@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 (f8dce91, 2019-08-02)"
+   sodipodi:docname="split-merge-sequence.svg"
+   inkscape:export-filename="/home/tobias/git/Peano/src/peano4/parallel/split-merge-sequence.svg.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="158.12564"
+     inkscape:cy="611.81923"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1850"
+     inkscape:window-height="1016"
+     inkscape:window-x="70"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       id="rect3789-6"
+       width="79.375"
+       height="32.505959"
+       x="8.3154774"
+       y="165.84225"
+       style="fill:#00ffff;stroke-width:0.23394588" />
+    <rect
+       id="rect3789-7"
+       width="79.375"
+       height="51.782745"
+       x="8.6934519"
+       y="106.5"
+       style="fill:#800080;stroke-width:0.29527482" />
+    <rect
+       id="rect3789-3"
+       width="79.375"
+       height="19.276794"
+       x="8.3154755"
+       y="72.104172"
+       style="fill:#00ff00;stroke-width:0.18015705" />
+    <rect
+       id="rect3789"
+       width="79.375"
+       height="32.505959"
+       x="8.3154755"
+       y="30.526785"
+       style="fill:#00ffff;stroke-width:0.23394586" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:4.79145765px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.11978643"
+       x="10.902905"
+       y="38.375217"
+       id="text3715"><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="38.375217"
+         style="stroke-width:0.11978643"
+         id="tspan3717">Update all adjacency lists</tspan><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="44.364536"
+         style="stroke-width:0.11978643"
+         id="tspan3721">(no actual split happening)</tspan><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="50.353863"
+         style="stroke-width:0.11978643"
+         id="tspan3723" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="56.343182"
+         style="stroke-width:0.11978643"
+         id="tspan3725" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="62.332508"
+         style="stroke-width:0.11978643"
+         id="tspan3727" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="68.321823"
+         style="stroke-width:0.11978643"
+         id="tspan3729" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="74.31115"
+         style="stroke-width:0.11978643"
+         id="tspan3731" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="80.300468"
+         style="stroke-width:0.11978643"
+         id="tspan3733">Copy whole spacetree (only</tspan><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="86.289787"
+         style="stroke-width:0.11978643"
+         id="tspan3735">mesh data) over to new rank</tspan><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="92.279114"
+         style="stroke-width:0.11978643"
+         id="tspan3737" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="98.268433"
+         style="stroke-width:0.11978643"
+         id="tspan3739" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="104.25776"
+         style="stroke-width:0.11978643"
+         id="tspan3741" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="110.24709"
+         style="stroke-width:0.11978643"
+         id="tspan3743" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="116.2364"
+         style="stroke-width:0.11978643"
+         id="tspan3745">Stream out user data in </tspan><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="122.22572"
+         style="stroke-width:0.11978643"
+         id="tspan3747">enterCell to new rank</tspan><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="128.21504"
+         style="stroke-width:0.11978643"
+         id="tspan3763" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="134.20436"
+         style="stroke-width:0.11978643"
+         id="tspan3765">Do not invoke any operation</tspan><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="140.1937"
+         style="stroke-width:0.11978643"
+         id="tspan3757" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="146.18301"
+         style="stroke-width:0.11978643"
+         id="tspan3759">Eliminate grid parts becoming</tspan><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="152.17233"
+         style="stroke-width:0.11978643"
+         id="tspan3761">remote</tspan><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="158.16165"
+         style="stroke-width:0.11978643"
+         id="tspan3749" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="164.15097"
+         style="stroke-width:0.11978643"
+         id="tspan3751" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="170.1403"
+         style="stroke-width:0.11978643"
+         id="tspan3753" /><tspan
+         sodipodi:role="line"
+         x="10.902905"
+         y="176.12962"
+         style="stroke-width:0.11978643"
+         id="tspan3755">Stream in user data in enterCell</tspan></text>
+    <g
+       id="g3907"
+       transform="translate(0,43.089286)">
+      <rect
+         style="fill:#00ffff;stroke-width:0.27519444"
+         y="163.5744"
+         x="116.79464"
+         height="44.979172"
+         width="79.375"
+         id="rect3789-6-5" />
+      <text
+         id="text3769"
+         y="171.23854"
+         x="119.11124"
+         style="font-style:normal;font-weight:normal;font-size:4.79145765px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.11978643"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.11978643"
+           y="171.23854"
+           x="119.11124"
+           id="tspan3767"
+           sodipodi:role="line">Receive and update adjacency</tspan><tspan
+           id="tspan3771"
+           style="stroke-width:0.11978643"
+           y="177.22786"
+           x="119.11124"
+           sodipodi:role="line">information</tspan><tspan
+           id="tspan3773"
+           style="stroke-width:0.11978643"
+           y="183.21718"
+           x="119.11124"
+           sodipodi:role="line" /><tspan
+           id="tspan3775"
+           style="stroke-width:0.11978643"
+           y="189.20651"
+           x="119.11124"
+           sodipodi:role="line" /><tspan
+           id="tspan3777"
+           style="stroke-width:0.11978643"
+           y="195.19583"
+           x="119.11124"
+           sodipodi:role="line">Send out boundary data to new</tspan><tspan
+           id="tspan3779"
+           style="stroke-width:0.11978643"
+           y="201.18515"
+           x="119.11124"
+           sodipodi:role="line">rank</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:8.34500694px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.20862518"
+       x="7.3290935"
+       y="16.251303"
+       id="text3783"><tspan
+         sodipodi:role="line"
+         id="tspan3781"
+         x="7.3290935"
+         y="16.251303"
+         style="stroke-width:0.20862518">Splitting rank</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:8.34500694px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.20862518"
+       x="125.23406"
+       y="15.597016"
+       id="text3787"><tspan
+         sodipodi:role="line"
+         id="tspan3785"
+         x="125.23406"
+         y="15.597016"
+         style="stroke-width:0.20862518">Neighbour rank</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 1.5119047,97.050594 H 202.21726"
+       id="path3879"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 0.75595238,66.434522 H 201.83928"
+       id="path3881"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:7.61850262px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.19046256"
+       x="-77.282143"
+       y="-6.2524529"
+       id="text3885"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan3883"
+         x="-77.282143"
+         y="-6.2524529"
+         style="stroke-width:0.19046256">split triggered</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:7.61850262px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.19046256"
+       x="-159.58562"
+       y="-6.0020075"
+       id="text3889"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         id="tspan3887"
+         x="-159.58562"
+         y="-6.0020075"
+         style="stroke-width:0.19046256">splitting</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.81107736px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.07027693"
+       x="37.43713"
+       y="-203.25404"
+       id="text3893"
+       transform="rotate(90)"><tspan
+         sodipodi:role="line"
+         id="tspan3891"
+         x="37.43713"
+         y="-203.25404"
+         style="stroke-width:0.07027693">traverseTask</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.81107736px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.07027693"
+       x="109.31199"
+       y="-91.684212"
+       id="text3897"
+       transform="rotate(90)"><tspan
+         sodipodi:role="line"
+         id="tspan3895"
+         x="109.31199"
+         y="-91.684212"
+         style="stroke-width:0.07027693">exchangeDataBetweenExistingAndNewTreesAndRerunClones</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.81107736px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.07027693"
+       x="216.57588"
+       y="-199.06174"
+       id="text3893-3"
+       transform="rotate(90)"><tspan
+         sodipodi:role="line"
+         id="tspan3891-5"
+         x="216.57588"
+         y="-199.06174"
+         style="stroke-width:0.07027693">traverseTask</tspan></text>
+    <g
+       id="g3907-6"
+       transform="translate(5.896417,-132.89646)">
+      <rect
+         style="fill:#00ffff;stroke-width:0.27519444"
+         y="163.5744"
+         x="116.79464"
+         height="30.994053"
+         width="78.619057"
+         id="rect3789-6-5-2" />
+      <text
+         id="text3769-9"
+         y="171.23854"
+         x="119.11124"
+         style="font-style:normal;font-weight:normal;font-size:4.79145765px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.11978643"
+         xml:space="preserve"><tspan
+           id="tspan3779-3"
+           style="stroke-width:0.11978643"
+           y="171.23854"
+           x="119.11124"
+           sodipodi:role="line">Send to &quot;old&quot; rank, as not </tspan><tspan
+           style="stroke-width:0.11978643"
+           y="177.22786"
+           x="119.11124"
+           sodipodi:role="line"
+           id="tspan3986">aware of split yet</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.81107736px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.07027693"
+       x="36.332943"
+       y="-91.178223"
+       id="text3893-6"
+       transform="rotate(90)"><tspan
+         sodipodi:role="line"
+         id="tspan3891-0"
+         x="36.332943"
+         y="-91.178223"
+         style="stroke-width:0.07027693">traverseTask</tspan></text>
+  </g>
+</svg>

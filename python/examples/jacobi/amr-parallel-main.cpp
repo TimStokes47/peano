@@ -156,17 +156,8 @@ int main(int argc, char** argv) {
 
     for (int i=0; i<MaxIterations; i++)
     {
-      #ifdef FuseSolverSteps
       examples::jacobi::observers::FusedSolverSteps observer;
       peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
-      #else
-      examples::jacobi::observers::ComputeResidualWithGeometricOperators  computeResidual;
-      peano4::parallel::SpacetreeSet::getInstance().traverse(computeResidual);
-      examples::jacobi::observers::JacobiUpdate  jacobiUpdate;
-      peano4::parallel::SpacetreeSet::getInstance().traverse(jacobiUpdate);
-      examples::jacobi::observers::ComputeGlobalResidualAndError computeGlobalResidualAndError;
-      peano4::parallel::SpacetreeSet::getInstance().traverse(computeGlobalResidualAndError);
-      #endif
     }
 
     // Plot output

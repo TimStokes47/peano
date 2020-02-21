@@ -5,7 +5,7 @@ peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords() {
 }
 
 
-peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
+peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData, const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData, const HorizontalDataExchange& sendReceiveHorizontalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank, const int& sendReceiveHorizontalCellDataRank):
 _x(x),
 _h(h),
 _isRefined(isRefined),
@@ -14,13 +14,13 @@ _vertexDataTo(vertexDataTo),
 _faceDataFrom(faceDataFrom),
 _faceDataTo(faceDataTo),
 _cellData(cellData),
-_sendReceiveVertexData(sendReceiveVertexData),
-_sendReceiveFaceData(sendReceiveFaceData),
-_sendReceiveCellData(sendReceiveCellData),
-_sendReceiveVertexDataRank(sendReceiveVertexDataRank),
-_sendReceiveFaceDataRank(sendReceiveFaceDataRank),
-_sendReceiveCellDataRank(sendReceiveCellDataRank),
-_relativePositionToFather(relativePositionToFather) {
+_relativePositionToFather(relativePositionToFather),
+_sendReceiveHorizontalVertexData(sendReceiveHorizontalVertexData),
+_sendReceiveHorizontalFaceData(sendReceiveHorizontalFaceData),
+_sendReceiveHorizontalCellData(sendReceiveHorizontalCellData),
+_sendReceiveHorizontalVertexDataRank(sendReceiveHorizontalVertexDataRank),
+_sendReceiveHorizontalFaceDataRank(sendReceiveHorizontalFaceDataRank),
+_sendReceiveHorizontalCellDataRank(sendReceiveHorizontalCellDataRank) {
    
 }
 
@@ -121,78 +121,6 @@ _relativePositionToFather(relativePositionToFather) {
 
 
 
- tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveVertexData() const  {
-   return _sendReceiveVertexData;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveVertexData(const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData)  {
-   _sendReceiveVertexData = (sendReceiveVertexData);
-}
-
-
-
- tarch::la::Vector<TwoTimesD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveFaceData() const  {
-   return _sendReceiveFaceData;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveFaceData(const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData)  {
-   _sendReceiveFaceData = (sendReceiveFaceData);
-}
-
-
-
- peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveCellData() const  {
-   return _sendReceiveCellData;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveCellData(const DataExchangeType& sendReceiveCellData)  {
-   _sendReceiveCellData = sendReceiveCellData;
-}
-
-
-
- tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveVertexDataRank() const  {
-   return _sendReceiveVertexDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank)  {
-   _sendReceiveVertexDataRank = (sendReceiveVertexDataRank);
-}
-
-
-
- tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveFaceDataRank() const  {
-   return _sendReceiveFaceDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank)  {
-   _sendReceiveFaceDataRank = (sendReceiveFaceDataRank);
-}
-
-
-
- int peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveCellDataRank() const  {
-   return _sendReceiveCellDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveCellDataRank(const int& sendReceiveCellDataRank)  {
-   _sendReceiveCellDataRank = sendReceiveCellDataRank;
-}
-
-
-
  tarch::la::Vector<Dimensions,int> peano4::grid::GridTraversalEvent::PersistentRecords::getRelativePositionToFather() const  {
    return _relativePositionToFather;
 }
@@ -204,19 +132,91 @@ _relativePositionToFather(relativePositionToFather) {
 }
 
 
+
+ tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::HorizontalDataExchange> peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveHorizontalVertexData() const  {
+   return _sendReceiveHorizontalVertexData;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveHorizontalVertexData(const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData)  {
+   _sendReceiveHorizontalVertexData = (sendReceiveHorizontalVertexData);
+}
+
+
+
+ tarch::la::Vector<TwoTimesD,peano4::grid::GridTraversalEvent::HorizontalDataExchange> peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveHorizontalFaceData() const  {
+   return _sendReceiveHorizontalFaceData;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveHorizontalFaceData(const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData)  {
+   _sendReceiveHorizontalFaceData = (sendReceiveHorizontalFaceData);
+}
+
+
+
+ peano4::grid::GridTraversalEvent::HorizontalDataExchange peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveHorizontalCellData() const  {
+   return _sendReceiveHorizontalCellData;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveHorizontalCellData(const HorizontalDataExchange& sendReceiveHorizontalCellData)  {
+   _sendReceiveHorizontalCellData = sendReceiveHorizontalCellData;
+}
+
+
+
+ tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveHorizontalVertexDataRank() const  {
+   return _sendReceiveHorizontalVertexDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveHorizontalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank)  {
+   _sendReceiveHorizontalVertexDataRank = (sendReceiveHorizontalVertexDataRank);
+}
+
+
+
+ tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveHorizontalFaceDataRank() const  {
+   return _sendReceiveHorizontalFaceDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveHorizontalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank)  {
+   _sendReceiveHorizontalFaceDataRank = (sendReceiveHorizontalFaceDataRank);
+}
+
+
+
+ int peano4::grid::GridTraversalEvent::PersistentRecords::getSendReceiveHorizontalCellDataRank() const  {
+   return _sendReceiveHorizontalCellDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::PersistentRecords::setSendReceiveHorizontalCellDataRank(const int& sendReceiveHorizontalCellDataRank)  {
+   _sendReceiveHorizontalCellDataRank = sendReceiveHorizontalCellDataRank;
+}
+
+
 peano4::grid::GridTraversalEvent::GridTraversalEvent() {
    
 }
 
 
 peano4::grid::GridTraversalEvent::GridTraversalEvent(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords._isRefined, persistentRecords._vertexDataFrom, persistentRecords._vertexDataTo, persistentRecords._faceDataFrom, persistentRecords._faceDataTo, persistentRecords._cellData, persistentRecords._sendReceiveVertexData, persistentRecords._sendReceiveFaceData, persistentRecords._sendReceiveCellData, persistentRecords._sendReceiveVertexDataRank, persistentRecords._sendReceiveFaceDataRank, persistentRecords._sendReceiveCellDataRank, persistentRecords._relativePositionToFather) {
+_persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords._isRefined, persistentRecords._vertexDataFrom, persistentRecords._vertexDataTo, persistentRecords._faceDataFrom, persistentRecords._faceDataTo, persistentRecords._cellData, persistentRecords._relativePositionToFather, persistentRecords._sendReceiveHorizontalVertexData, persistentRecords._sendReceiveHorizontalFaceData, persistentRecords._sendReceiveHorizontalCellData, persistentRecords._sendReceiveHorizontalVertexDataRank, persistentRecords._sendReceiveHorizontalFaceDataRank, persistentRecords._sendReceiveHorizontalCellDataRank) {
    
 }
 
 
-peano4::grid::GridTraversalEvent::GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
-_persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, faceDataTo, cellData, sendReceiveVertexData, sendReceiveFaceData, sendReceiveCellData, sendReceiveVertexDataRank, sendReceiveFaceDataRank, sendReceiveCellDataRank, relativePositionToFather) {
+peano4::grid::GridTraversalEvent::GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData, const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData, const HorizontalDataExchange& sendReceiveHorizontalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank, const int& sendReceiveHorizontalCellDataRank):
+_persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, faceDataTo, cellData, relativePositionToFather, sendReceiveHorizontalVertexData, sendReceiveHorizontalFaceData, sendReceiveHorizontalCellData, sendReceiveHorizontalVertexDataRank, sendReceiveHorizontalFaceDataRank, sendReceiveHorizontalCellDataRank) {
    
 }
 
@@ -454,150 +454,6 @@ peano4::grid::GridTraversalEvent::~GridTraversalEvent() { }
 
 
 
- tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEvent::getSendReceiveVertexData() const  {
-   return _persistentRecords._sendReceiveVertexData;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveVertexData(const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData)  {
-   _persistentRecords._sendReceiveVertexData = (sendReceiveVertexData);
-}
-
-
-
- peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEvent::getSendReceiveVertexData(int elementIndex) const  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
-   return _persistentRecords._sendReceiveVertexData[elementIndex];
-   
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveVertexData(int elementIndex, const DataExchangeType& sendReceiveVertexData)  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
-   _persistentRecords._sendReceiveVertexData[elementIndex]= sendReceiveVertexData;
-   
-}
-
-
-
- tarch::la::Vector<TwoTimesD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEvent::getSendReceiveFaceData() const  {
-   return _persistentRecords._sendReceiveFaceData;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveFaceData(const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData)  {
-   _persistentRecords._sendReceiveFaceData = (sendReceiveFaceData);
-}
-
-
-
- peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEvent::getSendReceiveFaceData(int elementIndex) const  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
-   return _persistentRecords._sendReceiveFaceData[elementIndex];
-   
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveFaceData(int elementIndex, const DataExchangeType& sendReceiveFaceData)  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
-   _persistentRecords._sendReceiveFaceData[elementIndex]= sendReceiveFaceData;
-   
-}
-
-
-
- peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEvent::getSendReceiveCellData() const  {
-   return _persistentRecords._sendReceiveCellData;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveCellData(const DataExchangeType& sendReceiveCellData)  {
-   _persistentRecords._sendReceiveCellData = sendReceiveCellData;
-}
-
-
-
- tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEvent::getSendReceiveVertexDataRank() const  {
-   return _persistentRecords._sendReceiveVertexDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank)  {
-   _persistentRecords._sendReceiveVertexDataRank = (sendReceiveVertexDataRank);
-}
-
-
-
- int peano4::grid::GridTraversalEvent::getSendReceiveVertexDataRank(int elementIndex) const  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
-   return _persistentRecords._sendReceiveVertexDataRank[elementIndex];
-   
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveVertexDataRank(int elementIndex, const int& sendReceiveVertexDataRank)  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
-   _persistentRecords._sendReceiveVertexDataRank[elementIndex]= sendReceiveVertexDataRank;
-   
-}
-
-
-
- tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEvent::getSendReceiveFaceDataRank() const  {
-   return _persistentRecords._sendReceiveFaceDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank)  {
-   _persistentRecords._sendReceiveFaceDataRank = (sendReceiveFaceDataRank);
-}
-
-
-
- int peano4::grid::GridTraversalEvent::getSendReceiveFaceDataRank(int elementIndex) const  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
-   return _persistentRecords._sendReceiveFaceDataRank[elementIndex];
-   
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveFaceDataRank(int elementIndex, const int& sendReceiveFaceDataRank)  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
-   _persistentRecords._sendReceiveFaceDataRank[elementIndex]= sendReceiveFaceDataRank;
-   
-}
-
-
-
- int peano4::grid::GridTraversalEvent::getSendReceiveCellDataRank() const  {
-   return _persistentRecords._sendReceiveCellDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEvent::setSendReceiveCellDataRank(const int& sendReceiveCellDataRank)  {
-   _persistentRecords._sendReceiveCellDataRank = sendReceiveCellDataRank;
-}
-
-
-
  tarch::la::Vector<Dimensions,int> peano4::grid::GridTraversalEvent::getRelativePositionToFather() const  {
    return _persistentRecords._relativePositionToFather;
 }
@@ -627,19 +483,161 @@ peano4::grid::GridTraversalEvent::~GridTraversalEvent() { }
 }
 
 
-std::string peano4::grid::GridTraversalEvent::toString(const DataExchangeType& param) {
+
+ tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::HorizontalDataExchange> peano4::grid::GridTraversalEvent::getSendReceiveHorizontalVertexData() const  {
+   return _persistentRecords._sendReceiveHorizontalVertexData;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalVertexData(const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData)  {
+   _persistentRecords._sendReceiveHorizontalVertexData = (sendReceiveHorizontalVertexData);
+}
+
+
+
+ peano4::grid::GridTraversalEvent::HorizontalDataExchange peano4::grid::GridTraversalEvent::getSendReceiveHorizontalVertexData(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   return _persistentRecords._sendReceiveHorizontalVertexData[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalVertexData(int elementIndex, const HorizontalDataExchange& sendReceiveHorizontalVertexData)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   _persistentRecords._sendReceiveHorizontalVertexData[elementIndex]= sendReceiveHorizontalVertexData;
+   
+}
+
+
+
+ tarch::la::Vector<TwoTimesD,peano4::grid::GridTraversalEvent::HorizontalDataExchange> peano4::grid::GridTraversalEvent::getSendReceiveHorizontalFaceData() const  {
+   return _persistentRecords._sendReceiveHorizontalFaceData;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalFaceData(const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData)  {
+   _persistentRecords._sendReceiveHorizontalFaceData = (sendReceiveHorizontalFaceData);
+}
+
+
+
+ peano4::grid::GridTraversalEvent::HorizontalDataExchange peano4::grid::GridTraversalEvent::getSendReceiveHorizontalFaceData(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoTimesD);
+   return _persistentRecords._sendReceiveHorizontalFaceData[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalFaceData(int elementIndex, const HorizontalDataExchange& sendReceiveHorizontalFaceData)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoTimesD);
+   _persistentRecords._sendReceiveHorizontalFaceData[elementIndex]= sendReceiveHorizontalFaceData;
+   
+}
+
+
+
+ peano4::grid::GridTraversalEvent::HorizontalDataExchange peano4::grid::GridTraversalEvent::getSendReceiveHorizontalCellData() const  {
+   return _persistentRecords._sendReceiveHorizontalCellData;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalCellData(const HorizontalDataExchange& sendReceiveHorizontalCellData)  {
+   _persistentRecords._sendReceiveHorizontalCellData = sendReceiveHorizontalCellData;
+}
+
+
+
+ tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEvent::getSendReceiveHorizontalVertexDataRank() const  {
+   return _persistentRecords._sendReceiveHorizontalVertexDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank)  {
+   _persistentRecords._sendReceiveHorizontalVertexDataRank = (sendReceiveHorizontalVertexDataRank);
+}
+
+
+
+ int peano4::grid::GridTraversalEvent::getSendReceiveHorizontalVertexDataRank(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   return _persistentRecords._sendReceiveHorizontalVertexDataRank[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalVertexDataRank(int elementIndex, const int& sendReceiveHorizontalVertexDataRank)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   _persistentRecords._sendReceiveHorizontalVertexDataRank[elementIndex]= sendReceiveHorizontalVertexDataRank;
+   
+}
+
+
+
+ tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEvent::getSendReceiveHorizontalFaceDataRank() const  {
+   return _persistentRecords._sendReceiveHorizontalFaceDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank)  {
+   _persistentRecords._sendReceiveHorizontalFaceDataRank = (sendReceiveHorizontalFaceDataRank);
+}
+
+
+
+ int peano4::grid::GridTraversalEvent::getSendReceiveHorizontalFaceDataRank(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoTimesD);
+   return _persistentRecords._sendReceiveHorizontalFaceDataRank[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalFaceDataRank(int elementIndex, const int& sendReceiveHorizontalFaceDataRank)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoTimesD);
+   _persistentRecords._sendReceiveHorizontalFaceDataRank[elementIndex]= sendReceiveHorizontalFaceDataRank;
+   
+}
+
+
+
+ int peano4::grid::GridTraversalEvent::getSendReceiveHorizontalCellDataRank() const  {
+   return _persistentRecords._sendReceiveHorizontalCellDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEvent::setSendReceiveHorizontalCellDataRank(const int& sendReceiveHorizontalCellDataRank)  {
+   _persistentRecords._sendReceiveHorizontalCellDataRank = sendReceiveHorizontalCellDataRank;
+}
+
+
+std::string peano4::grid::GridTraversalEvent::toString(const HorizontalDataExchange& param) {
    switch (param) {
-      case ExchangeHorizontally: return "ExchangeHorizontally";
-      case StreamInOut: return "StreamInOut";
-      case ExchangeVerticallyWithMaster: return "ExchangeVerticallyWithMaster";
-      case ExchangeVerticallyWithWorker: return "ExchangeVerticallyWithWorker";
       case None: return "None";
+      case ForkMerge: return "ForkMerge";
+      case InterGridTransfer: return "InterGridTransfer";
    }
    return "undefined";
 }
 
-std::string peano4::grid::GridTraversalEvent::getDataExchangeTypeMapping() {
-   return "DataExchangeType(ExchangeHorizontally=0,StreamInOut=1,ExchangeVerticallyWithMaster=2,ExchangeVerticallyWithWorker=3,None=4)";
+std::string peano4::grid::GridTraversalEvent::getHorizontalDataExchangeMapping() {
+   return "HorizontalDataExchange(None=0,ForkMerge=1,InterGridTransfer=2)";
 }
 
 
@@ -695,39 +693,39 @@ void peano4::grid::GridTraversalEvent::toString (std::ostream& out) const {
    out << ",";
    out << "cellData:" << getCellData();
    out << ",";
-   out << "sendReceiveVertexData:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
-      out << getSendReceiveVertexData(i) << ",";
-   }
-   out << getSendReceiveVertexData(TwoPowerD-1) << "]";
-   out << ",";
-   out << "sendReceiveFaceData:[";
-   for (int i = 0; i < TwoTimesD-1; i++) {
-      out << getSendReceiveFaceData(i) << ",";
-   }
-   out << getSendReceiveFaceData(TwoTimesD-1) << "]";
-   out << ",";
-   out << "sendReceiveCellData:" << toString(getSendReceiveCellData());
-   out << ",";
-   out << "sendReceiveVertexDataRank:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
-      out << getSendReceiveVertexDataRank(i) << ",";
-   }
-   out << getSendReceiveVertexDataRank(TwoPowerD-1) << "]";
-   out << ",";
-   out << "sendReceiveFaceDataRank:[";
-   for (int i = 0; i < TwoTimesD-1; i++) {
-      out << getSendReceiveFaceDataRank(i) << ",";
-   }
-   out << getSendReceiveFaceDataRank(TwoTimesD-1) << "]";
-   out << ",";
-   out << "sendReceiveCellDataRank:" << getSendReceiveCellDataRank();
-   out << ",";
    out << "relativePositionToFather:[";
    for (int i = 0; i < Dimensions-1; i++) {
       out << getRelativePositionToFather(i) << ",";
    }
    out << getRelativePositionToFather(Dimensions-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalVertexData:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getSendReceiveHorizontalVertexData(i) << ",";
+   }
+   out << getSendReceiveHorizontalVertexData(TwoPowerD-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalFaceData:[";
+   for (int i = 0; i < TwoTimesD-1; i++) {
+      out << getSendReceiveHorizontalFaceData(i) << ",";
+   }
+   out << getSendReceiveHorizontalFaceData(TwoTimesD-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalCellData:" << toString(getSendReceiveHorizontalCellData());
+   out << ",";
+   out << "sendReceiveHorizontalVertexDataRank:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getSendReceiveHorizontalVertexDataRank(i) << ",";
+   }
+   out << getSendReceiveHorizontalVertexDataRank(TwoPowerD-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalFaceDataRank:[";
+   for (int i = 0; i < TwoTimesD-1; i++) {
+      out << getSendReceiveHorizontalFaceDataRank(i) << ",";
+   }
+   out << getSendReceiveHorizontalFaceDataRank(TwoTimesD-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalCellDataRank:" << getSendReceiveHorizontalCellDataRank();
    out <<  ")";
 }
 
@@ -746,13 +744,13 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
       getFaceDataFrom(),
       getFaceDataTo(),
       getCellData(),
-      getSendReceiveVertexData(),
-      getSendReceiveFaceData(),
-      getSendReceiveCellData(),
-      getSendReceiveVertexDataRank(),
-      getSendReceiveFaceDataRank(),
-      getSendReceiveCellDataRank(),
-      getRelativePositionToFather()
+      getRelativePositionToFather(),
+      getSendReceiveHorizontalVertexData(),
+      getSendReceiveHorizontalFaceData(),
+      getSendReceiveHorizontalCellData(),
+      getSendReceiveHorizontalVertexDataRank(),
+      getSendReceiveHorizontalFaceDataRank(),
+      getSendReceiveHorizontalCellDataRank()
    );
 }
 
@@ -784,13 +782,13 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , MPI_INT		 //faceDataFrom
             , MPI_INT		 //faceDataTo
             , MPI_INT		 //cellData
-            , MPI_INT		 //sendReceiveVertexData
-            , MPI_INT		 //sendReceiveFaceData
-            , MPI_INT		 //sendReceiveCellData
-            , MPI_INT		 //sendReceiveVertexDataRank
-            , MPI_INT		 //sendReceiveFaceDataRank
-            , MPI_INT		 //sendReceiveCellDataRank
             , MPI_INT		 //relativePositionToFather
+            , MPI_INT		 //sendReceiveHorizontalVertexData
+            , MPI_INT		 //sendReceiveHorizontalFaceData
+            , MPI_INT		 //sendReceiveHorizontalCellData
+            , MPI_INT		 //sendReceiveHorizontalVertexDataRank
+            , MPI_INT		 //sendReceiveHorizontalFaceDataRank
+            , MPI_INT		 //sendReceiveHorizontalCellDataRank
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -809,13 +807,13 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , TwoTimesD		 //faceDataFrom
             , TwoTimesD		 //faceDataTo
             , 1		 //cellData
-            , TwoPowerD		 //sendReceiveVertexData
-            , TwoTimesD		 //sendReceiveFaceData
-            , 1		 //sendReceiveCellData
-            , TwoPowerD		 //sendReceiveVertexDataRank
-            , TwoTimesD		 //sendReceiveFaceDataRank
-            , 1		 //sendReceiveCellDataRank
             , Dimensions		 //relativePositionToFather
+            , TwoPowerD		 //sendReceiveHorizontalVertexData
+            , TwoTimesD		 //sendReceiveHorizontalFaceData
+            , 1		 //sendReceiveHorizontalCellData
+            , TwoPowerD		 //sendReceiveHorizontalVertexDataRank
+            , TwoTimesD		 //sendReceiveHorizontalFaceDataRank
+            , 1		 //sendReceiveHorizontalCellDataRank
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -878,45 +876,45 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveVertexData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveVertexData[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveFaceData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveFaceData[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveCellData))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveCellData))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveVertexDataRank[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveVertexDataRank[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveFaceDataRank[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveFaceDataRank[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveCellDataRank))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveCellDataRank))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalVertexData[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalVertexData[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalFaceData[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalFaceData[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalCellData))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalCellData))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalVertexDataRank[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalVertexDataRank[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalFaceDataRank[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalFaceDataRank[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalCellDataRank))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalCellDataRank))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;
@@ -971,13 +969,13 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , MPI_INT		 //faceDataFrom
             , MPI_INT		 //faceDataTo
             , MPI_INT		 //cellData
-            , MPI_INT		 //sendReceiveVertexData
-            , MPI_INT		 //sendReceiveFaceData
-            , MPI_INT		 //sendReceiveCellData
-            , MPI_INT		 //sendReceiveVertexDataRank
-            , MPI_INT		 //sendReceiveFaceDataRank
-            , MPI_INT		 //sendReceiveCellDataRank
             , MPI_INT		 //relativePositionToFather
+            , MPI_INT		 //sendReceiveHorizontalVertexData
+            , MPI_INT		 //sendReceiveHorizontalFaceData
+            , MPI_INT		 //sendReceiveHorizontalCellData
+            , MPI_INT		 //sendReceiveHorizontalVertexDataRank
+            , MPI_INT		 //sendReceiveHorizontalFaceDataRank
+            , MPI_INT		 //sendReceiveHorizontalCellDataRank
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -996,13 +994,13 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , TwoTimesD		 //faceDataFrom
             , TwoTimesD		 //faceDataTo
             , 1		 //cellData
-            , TwoPowerD		 //sendReceiveVertexData
-            , TwoTimesD		 //sendReceiveFaceData
-            , 1		 //sendReceiveCellData
-            , TwoPowerD		 //sendReceiveVertexDataRank
-            , TwoTimesD		 //sendReceiveFaceDataRank
-            , 1		 //sendReceiveCellDataRank
             , Dimensions		 //relativePositionToFather
+            , TwoPowerD		 //sendReceiveHorizontalVertexData
+            , TwoTimesD		 //sendReceiveHorizontalFaceData
+            , 1		 //sendReceiveHorizontalCellData
+            , TwoPowerD		 //sendReceiveHorizontalVertexDataRank
+            , TwoTimesD		 //sendReceiveHorizontalFaceDataRank
+            , 1		 //sendReceiveHorizontalCellDataRank
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -1065,45 +1063,45 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveVertexData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveVertexData[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveFaceData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveFaceData[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveCellData))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveCellData))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveVertexDataRank[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveVertexDataRank[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveFaceDataRank[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveFaceDataRank[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveCellDataRank))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveCellDataRank))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalVertexData[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalVertexData[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalFaceData[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalFaceData[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalCellData))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalCellData))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalVertexDataRank[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalVertexDataRank[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalFaceDataRank[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalFaceDataRank[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalCellDataRank))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._sendReceiveHorizontalCellDataRank))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;
@@ -1421,38 +1419,32 @@ peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords() {
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((54 >= (8 * sizeof(long int)))) {
+   if ((49 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((54 < (8 * sizeof(long int))));
-   if ((18 >= (8 * sizeof(long int)))) {
-      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
-      std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
-      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
-   }
-   assertion((18 < (8 * sizeof(long int))));
+   assertion((49 < (8 * sizeof(long int))));
    
 }
 
 
-peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
+peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData, const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData, const HorizontalDataExchange& sendReceiveHorizontalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank, const int& sendReceiveHorizontalCellDataRank):
 _x(x),
 _h(h),
-_sendReceiveVertexDataRank(sendReceiveVertexDataRank),
-_sendReceiveFaceDataRank(sendReceiveFaceDataRank),
-_sendReceiveCellDataRank(sendReceiveCellDataRank),
-_relativePositionToFather(relativePositionToFather) {
+_relativePositionToFather(relativePositionToFather),
+_sendReceiveHorizontalVertexDataRank(sendReceiveHorizontalVertexDataRank),
+_sendReceiveHorizontalFaceDataRank(sendReceiveHorizontalFaceDataRank),
+_sendReceiveHorizontalCellDataRank(sendReceiveHorizontalCellDataRank) {
    setIsRefined(isRefined);
    setVertexDataFrom(vertexDataFrom);
    setVertexDataTo(vertexDataTo);
    setFaceDataFrom(faceDataFrom);
    setFaceDataTo(faceDataTo);
    setCellData(cellData);
-   setSendReceiveVertexData(sendReceiveVertexData);
-   setSendReceiveFaceData(sendReceiveFaceData);
-   setSendReceiveCellData(sendReceiveCellData);
+   setSendReceiveHorizontalVertexData(sendReceiveHorizontalVertexData);
+   setSendReceiveHorizontalFaceData(sendReceiveHorizontalFaceData);
+   setSendReceiveHorizontalCellData(sendReceiveHorizontalCellData);
    if ((TwoPowerD+48 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1471,18 +1463,12 @@ _relativePositionToFather(relativePositionToFather) {
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((54 >= (8 * sizeof(long int)))) {
+   if ((49 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((54 < (8 * sizeof(long int))));
-   if ((18 >= (8 * sizeof(long int)))) {
-      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
-      std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
-      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
-   }
-   assertion((18 < (8 * sizeof(long int))));
+   assertion((49 < (8 * sizeof(long int))));
    
 }
 
@@ -1701,135 +1687,6 @@ _relativePositionToFather(relativePositionToFather) {
 
 
 
- tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveVertexData() const  {
-   long int mask = 7;
-   mask = mask << (3);
-   tarch::la::Vector<TwoPowerD,DataExchangeType> result;
-   long int tmp;
-   
-   for (int i = 0; i < TwoPowerD; i++) {
-      tmp = _packedRecords3 & mask;
-      tmp = tmp >> (3 + i * 3);
-      result[i] = (DataExchangeType) tmp;
-      mask = mask << 3;
-   }
-   for (int i = 0; i < TwoPowerD; i++) {
-      assertion((result[i] >= 0 && result[i] <= 4));
-   }
-   return result;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveVertexData(const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData)  {
-   
-   for (int i = 0; i < TwoPowerD; i++) {
-      assertion((sendReceiveVertexData[i] >= 0 && sendReceiveVertexData[i] <= 4));
-   }
-   for (int i = 0; i < TwoPowerD; i++) {
-      long int mask = 7;
-      mask = mask << (3 + i * 3 );
-      _packedRecords3 = _packedRecords3 & ~mask;
-      long int tmp = static_cast<long int>(sendReceiveVertexData[i]);
-      _packedRecords3 = _packedRecords3 | ( tmp << (3 + i * 3));
-   }
-}
-
-
-
- tarch::la::Vector<TwoTimesD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveFaceData() const  {
-   long int mask = 7;
-   mask = mask << (0);
-   tarch::la::Vector<TwoTimesD,DataExchangeType> result;
-   long int tmp;
-   
-   for (int i = 0; i < TwoTimesD; i++) {
-      tmp = _packedRecords4 & mask;
-      tmp = tmp >> (0 + i * 3);
-      result[i] = (DataExchangeType) tmp;
-      mask = mask << 3;
-   }
-   for (int i = 0; i < TwoTimesD; i++) {
-      assertion((result[i] >= 0 && result[i] <= 4));
-   }
-   return result;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveFaceData(const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData)  {
-   
-   for (int i = 0; i < TwoTimesD; i++) {
-      assertion((sendReceiveFaceData[i] >= 0 && sendReceiveFaceData[i] <= 4));
-   }
-   for (int i = 0; i < TwoTimesD; i++) {
-      long int mask = 7;
-      mask = mask << (0 + i * 3 );
-      _packedRecords4 = _packedRecords4 & ~mask;
-      long int tmp = static_cast<long int>(sendReceiveFaceData[i]);
-      _packedRecords4 = _packedRecords4 | ( tmp << (0 + i * 3));
-   }
-}
-
-
-
- peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveCellData() const  {
-   long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (51));
-   long int tmp = static_cast<long int>(_packedRecords3 & mask);
-   tmp = static_cast<long int>(tmp >> (51));
-   assertion(( tmp >= 0 &&  tmp <= 4));
-   return (DataExchangeType) tmp;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveCellData(const DataExchangeType& sendReceiveCellData)  {
-   assertion((sendReceiveCellData >= 0 && sendReceiveCellData <= 4));
-   long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (51));
-   _packedRecords3 = static_cast<long int>(_packedRecords3 & ~mask);
-   _packedRecords3 = static_cast<long int>(_packedRecords3 | static_cast<long int>(sendReceiveCellData) << (51));
-}
-
-
-
- tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveVertexDataRank() const  {
-   return _sendReceiveVertexDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank)  {
-   _sendReceiveVertexDataRank = (sendReceiveVertexDataRank);
-}
-
-
-
- tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveFaceDataRank() const  {
-   return _sendReceiveFaceDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank)  {
-   _sendReceiveFaceDataRank = (sendReceiveFaceDataRank);
-}
-
-
-
- int peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveCellDataRank() const  {
-   return _sendReceiveCellDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveCellDataRank(const int& sendReceiveCellDataRank)  {
-   _sendReceiveCellDataRank = sendReceiveCellDataRank;
-}
-
-
-
  tarch::la::Vector<Dimensions,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getRelativePositionToFather() const  {
    return _relativePositionToFather;
 }
@@ -1838,6 +1695,135 @@ _relativePositionToFather(relativePositionToFather) {
 
  void peano4::grid::GridTraversalEventPacked::PersistentRecords::setRelativePositionToFather(const tarch::la::Vector<Dimensions,int>& relativePositionToFather)  {
    _relativePositionToFather = (relativePositionToFather);
+}
+
+
+
+ tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::HorizontalDataExchange> peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveHorizontalVertexData() const  {
+   long int mask = 3;
+   mask = mask << (3);
+   tarch::la::Vector<TwoPowerD,HorizontalDataExchange> result;
+   long int tmp;
+   
+   for (int i = 0; i < TwoPowerD; i++) {
+      tmp = _packedRecords3 & mask;
+      tmp = tmp >> (3 + i * 2);
+      result[i] = (HorizontalDataExchange) tmp;
+      mask = mask << 2;
+   }
+   for (int i = 0; i < TwoPowerD; i++) {
+      assertion((result[i] >= 0 && result[i] <= 2));
+   }
+   return result;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveHorizontalVertexData(const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData)  {
+   
+   for (int i = 0; i < TwoPowerD; i++) {
+      assertion((sendReceiveHorizontalVertexData[i] >= 0 && sendReceiveHorizontalVertexData[i] <= 2));
+   }
+   for (int i = 0; i < TwoPowerD; i++) {
+      long int mask = 3;
+      mask = mask << (3 + i * 2 );
+      _packedRecords3 = _packedRecords3 & ~mask;
+      long int tmp = static_cast<long int>(sendReceiveHorizontalVertexData[i]);
+      _packedRecords3 = _packedRecords3 | ( tmp << (3 + i * 2));
+   }
+}
+
+
+
+ tarch::la::Vector<TwoTimesD,peano4::grid::GridTraversalEvent::HorizontalDataExchange> peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveHorizontalFaceData() const  {
+   long int mask = 3;
+   mask = mask << (35);
+   tarch::la::Vector<TwoTimesD,HorizontalDataExchange> result;
+   long int tmp;
+   
+   for (int i = 0; i < TwoTimesD; i++) {
+      tmp = _packedRecords3 & mask;
+      tmp = tmp >> (35 + i * 2);
+      result[i] = (HorizontalDataExchange) tmp;
+      mask = mask << 2;
+   }
+   for (int i = 0; i < TwoTimesD; i++) {
+      assertion((result[i] >= 0 && result[i] <= 2));
+   }
+   return result;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveHorizontalFaceData(const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData)  {
+   
+   for (int i = 0; i < TwoTimesD; i++) {
+      assertion((sendReceiveHorizontalFaceData[i] >= 0 && sendReceiveHorizontalFaceData[i] <= 2));
+   }
+   for (int i = 0; i < TwoTimesD; i++) {
+      long int mask = 3;
+      mask = mask << (35 + i * 2 );
+      _packedRecords3 = _packedRecords3 & ~mask;
+      long int tmp = static_cast<long int>(sendReceiveHorizontalFaceData[i]);
+      _packedRecords3 = _packedRecords3 | ( tmp << (35 + i * 2));
+   }
+}
+
+
+
+ peano4::grid::GridTraversalEvent::HorizontalDataExchange peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveHorizontalCellData() const  {
+   long int mask =  (1 << (2)) - 1;
+   mask = static_cast<long int>(mask << (47));
+   long int tmp = static_cast<long int>(_packedRecords3 & mask);
+   tmp = static_cast<long int>(tmp >> (47));
+   assertion(( tmp >= 0 &&  tmp <= 2));
+   return (HorizontalDataExchange) tmp;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveHorizontalCellData(const HorizontalDataExchange& sendReceiveHorizontalCellData)  {
+   assertion((sendReceiveHorizontalCellData >= 0 && sendReceiveHorizontalCellData <= 2));
+   long int mask =  (1 << (2)) - 1;
+   mask = static_cast<long int>(mask << (47));
+   _packedRecords3 = static_cast<long int>(_packedRecords3 & ~mask);
+   _packedRecords3 = static_cast<long int>(_packedRecords3 | static_cast<long int>(sendReceiveHorizontalCellData) << (47));
+}
+
+
+
+ tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveHorizontalVertexDataRank() const  {
+   return _sendReceiveHorizontalVertexDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveHorizontalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank)  {
+   _sendReceiveHorizontalVertexDataRank = (sendReceiveHorizontalVertexDataRank);
+}
+
+
+
+ tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveHorizontalFaceDataRank() const  {
+   return _sendReceiveHorizontalFaceDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveHorizontalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank)  {
+   _sendReceiveHorizontalFaceDataRank = (sendReceiveHorizontalFaceDataRank);
+}
+
+
+
+ int peano4::grid::GridTraversalEventPacked::PersistentRecords::getSendReceiveHorizontalCellDataRank() const  {
+   return _sendReceiveHorizontalCellDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::PersistentRecords::setSendReceiveHorizontalCellDataRank(const int& sendReceiveHorizontalCellDataRank)  {
+   _sendReceiveHorizontalCellDataRank = sendReceiveHorizontalCellDataRank;
 }
 
 
@@ -1860,24 +1846,18 @@ peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked() {
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((54 >= (8 * sizeof(long int)))) {
+   if ((49 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((54 < (8 * sizeof(long int))));
-   if ((18 >= (8 * sizeof(long int)))) {
-      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
-      std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
-      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
-   }
-   assertion((18 < (8 * sizeof(long int))));
+   assertion((49 < (8 * sizeof(long int))));
    
 }
 
 
 peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords.getIsRefined(), persistentRecords.getVertexDataFrom(), persistentRecords.getVertexDataTo(), persistentRecords.getFaceDataFrom(), persistentRecords.getFaceDataTo(), persistentRecords.getCellData(), persistentRecords.getSendReceiveVertexData(), persistentRecords.getSendReceiveFaceData(), persistentRecords.getSendReceiveCellData(), persistentRecords._sendReceiveVertexDataRank, persistentRecords._sendReceiveFaceDataRank, persistentRecords._sendReceiveCellDataRank, persistentRecords._relativePositionToFather) {
+_persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords.getIsRefined(), persistentRecords.getVertexDataFrom(), persistentRecords.getVertexDataTo(), persistentRecords.getFaceDataFrom(), persistentRecords.getFaceDataTo(), persistentRecords.getCellData(), persistentRecords._relativePositionToFather, persistentRecords.getSendReceiveHorizontalVertexData(), persistentRecords.getSendReceiveHorizontalFaceData(), persistentRecords.getSendReceiveHorizontalCellData(), persistentRecords._sendReceiveHorizontalVertexDataRank, persistentRecords._sendReceiveHorizontalFaceDataRank, persistentRecords._sendReceiveHorizontalCellDataRank) {
    if ((TwoPowerD+48 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1896,24 +1876,18 @@ _persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((54 >= (8 * sizeof(long int)))) {
+   if ((49 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((54 < (8 * sizeof(long int))));
-   if ((18 >= (8 * sizeof(long int)))) {
-      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
-      std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
-      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
-   }
-   assertion((18 < (8 * sizeof(long int))));
+   assertion((49 < (8 * sizeof(long int))));
    
 }
 
 
-peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData, const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData, const DataExchangeType& sendReceiveCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank, const int& sendReceiveCellDataRank, const tarch::la::Vector<Dimensions,int>& relativePositionToFather):
-_persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, faceDataTo, cellData, sendReceiveVertexData, sendReceiveFaceData, sendReceiveCellData, sendReceiveVertexDataRank, sendReceiveFaceDataRank, sendReceiveCellDataRank, relativePositionToFather) {
+peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData, const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData, const HorizontalDataExchange& sendReceiveHorizontalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank, const int& sendReceiveHorizontalCellDataRank):
+_persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, faceDataTo, cellData, relativePositionToFather, sendReceiveHorizontalVertexData, sendReceiveHorizontalFaceData, sendReceiveHorizontalCellData, sendReceiveHorizontalVertexDataRank, sendReceiveHorizontalFaceDataRank, sendReceiveHorizontalCellDataRank) {
    if ((TwoPowerD+48 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -1932,18 +1906,12 @@ _persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, 
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
    assertion((64 < (8 * sizeof(long int))));
-   if ((54 >= (8 * sizeof(long int)))) {
+   if ((49 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((54 < (8 * sizeof(long int))));
-   if ((18 >= (8 * sizeof(long int)))) {
-      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
-      std::cerr << "  Packed-Type: long int hint-size no-of-bits;  " << std::endl << std::endl;
-      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
-   }
-   assertion((18 < (8 * sizeof(long int))));
+   assertion((49 < (8 * sizeof(long int))));
    
 }
 
@@ -2350,227 +2318,6 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 
 
 
- tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEventPacked::getSendReceiveVertexData() const  {
-   long int mask = 7;
-   mask = mask << (3);
-   tarch::la::Vector<TwoPowerD,DataExchangeType> result;
-   long int tmp;
-   
-   for (int i = 0; i < TwoPowerD; i++) {
-      tmp = _persistentRecords._packedRecords3 & mask;
-      tmp = tmp >> (3 + i * 3);
-      result[i] = (DataExchangeType) tmp;
-      mask = mask << 3;
-   }
-   for (int i = 0; i < TwoPowerD; i++) {
-      assertion((result[i] >= 0 && result[i] <= 4));
-   }
-   return result;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveVertexData(const tarch::la::Vector<TwoPowerD,DataExchangeType>& sendReceiveVertexData)  {
-   
-   for (int i = 0; i < TwoPowerD; i++) {
-      assertion((sendReceiveVertexData[i] >= 0 && sendReceiveVertexData[i] <= 4));
-   }
-   for (int i = 0; i < TwoPowerD; i++) {
-      long int mask = 7;
-      mask = mask << (3 + i * 3 );
-      _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 & ~mask;
-      long int tmp = static_cast<long int>(sendReceiveVertexData[i]);
-      _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (3 + i * 3));
-   }
-}
-
-
-
- peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEventPacked::getSendReceiveVertexData(int elementIndex) const  {
-   
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
-   long int mask = 7;
-   mask = mask << (3 + elementIndex * 3);
-   long int tmp = _persistentRecords._packedRecords3 & mask;
-   tmp = tmp >> (3 + elementIndex * 3);
-   assertion((tmp >= 0) && (tmp <= 4));
-   return (DataExchangeType) tmp;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveVertexData(int elementIndex, const DataExchangeType& sendReceiveVertexData)  {
-   
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
-   assertion((sendReceiveVertexData >= 0 && sendReceiveVertexData <= 4));
-   long int mask = 7;
-   mask = mask << (3 + elementIndex * 3);
-   _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 & ~mask;
-   long int tmp = static_cast<long int>(sendReceiveVertexData);
-   _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (3 + elementIndex * 3));
-}
-
-
-
- tarch::la::Vector<TwoTimesD,peano4::grid::GridTraversalEvent::DataExchangeType> peano4::grid::GridTraversalEventPacked::getSendReceiveFaceData() const  {
-   long int mask = 7;
-   mask = mask << (0);
-   tarch::la::Vector<TwoTimesD,DataExchangeType> result;
-   long int tmp;
-   
-   for (int i = 0; i < TwoTimesD; i++) {
-      tmp = _persistentRecords._packedRecords4 & mask;
-      tmp = tmp >> (0 + i * 3);
-      result[i] = (DataExchangeType) tmp;
-      mask = mask << 3;
-   }
-   for (int i = 0; i < TwoTimesD; i++) {
-      assertion((result[i] >= 0 && result[i] <= 4));
-   }
-   return result;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveFaceData(const tarch::la::Vector<TwoTimesD,DataExchangeType>& sendReceiveFaceData)  {
-   
-   for (int i = 0; i < TwoTimesD; i++) {
-      assertion((sendReceiveFaceData[i] >= 0 && sendReceiveFaceData[i] <= 4));
-   }
-   for (int i = 0; i < TwoTimesD; i++) {
-      long int mask = 7;
-      mask = mask << (0 + i * 3 );
-      _persistentRecords._packedRecords4 = _persistentRecords._packedRecords4 & ~mask;
-      long int tmp = static_cast<long int>(sendReceiveFaceData[i]);
-      _persistentRecords._packedRecords4 = _persistentRecords._packedRecords4 | ( tmp << (0 + i * 3));
-   }
-}
-
-
-
- peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEventPacked::getSendReceiveFaceData(int elementIndex) const  {
-   
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
-   long int mask = 7;
-   mask = mask << (0 + elementIndex * 3);
-   long int tmp = _persistentRecords._packedRecords4 & mask;
-   tmp = tmp >> (0 + elementIndex * 3);
-   assertion((tmp >= 0) && (tmp <= 4));
-   return (DataExchangeType) tmp;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveFaceData(int elementIndex, const DataExchangeType& sendReceiveFaceData)  {
-   
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
-   assertion((sendReceiveFaceData >= 0 && sendReceiveFaceData <= 4));
-   long int mask = 7;
-   mask = mask << (0 + elementIndex * 3);
-   _persistentRecords._packedRecords4 = _persistentRecords._packedRecords4 & ~mask;
-   long int tmp = static_cast<long int>(sendReceiveFaceData);
-   _persistentRecords._packedRecords4 = _persistentRecords._packedRecords4 | ( tmp << (0 + elementIndex * 3));
-}
-
-
-
- peano4::grid::GridTraversalEvent::DataExchangeType peano4::grid::GridTraversalEventPacked::getSendReceiveCellData() const  {
-   long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (51));
-   long int tmp = static_cast<long int>(_persistentRecords._packedRecords3 & mask);
-   tmp = static_cast<long int>(tmp >> (51));
-   assertion(( tmp >= 0 &&  tmp <= 4));
-   return (DataExchangeType) tmp;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveCellData(const DataExchangeType& sendReceiveCellData)  {
-   assertion((sendReceiveCellData >= 0 && sendReceiveCellData <= 4));
-   long int mask =  (1 << (3)) - 1;
-   mask = static_cast<long int>(mask << (51));
-   _persistentRecords._packedRecords3 = static_cast<long int>(_persistentRecords._packedRecords3 & ~mask);
-   _persistentRecords._packedRecords3 = static_cast<long int>(_persistentRecords._packedRecords3 | static_cast<long int>(sendReceiveCellData) << (51));
-}
-
-
-
- tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEventPacked::getSendReceiveVertexDataRank() const  {
-   return _persistentRecords._sendReceiveVertexDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveVertexDataRank)  {
-   _persistentRecords._sendReceiveVertexDataRank = (sendReceiveVertexDataRank);
-}
-
-
-
- int peano4::grid::GridTraversalEventPacked::getSendReceiveVertexDataRank(int elementIndex) const  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
-   return _persistentRecords._sendReceiveVertexDataRank[elementIndex];
-   
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveVertexDataRank(int elementIndex, const int& sendReceiveVertexDataRank)  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
-   _persistentRecords._sendReceiveVertexDataRank[elementIndex]= sendReceiveVertexDataRank;
-   
-}
-
-
-
- tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::getSendReceiveFaceDataRank() const  {
-   return _persistentRecords._sendReceiveFaceDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveFaceDataRank)  {
-   _persistentRecords._sendReceiveFaceDataRank = (sendReceiveFaceDataRank);
-}
-
-
-
- int peano4::grid::GridTraversalEventPacked::getSendReceiveFaceDataRank(int elementIndex) const  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
-   return _persistentRecords._sendReceiveFaceDataRank[elementIndex];
-   
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveFaceDataRank(int elementIndex, const int& sendReceiveFaceDataRank)  {
-   assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
-   _persistentRecords._sendReceiveFaceDataRank[elementIndex]= sendReceiveFaceDataRank;
-   
-}
-
-
-
- int peano4::grid::GridTraversalEventPacked::getSendReceiveCellDataRank() const  {
-   return _persistentRecords._sendReceiveCellDataRank;
-}
-
-
-
- void peano4::grid::GridTraversalEventPacked::setSendReceiveCellDataRank(const int& sendReceiveCellDataRank)  {
-   _persistentRecords._sendReceiveCellDataRank = sendReceiveCellDataRank;
-}
-
-
-
  tarch::la::Vector<Dimensions,int> peano4::grid::GridTraversalEventPacked::getRelativePositionToFather() const  {
    return _persistentRecords._relativePositionToFather;
 }
@@ -2600,12 +2347,233 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 }
 
 
-std::string peano4::grid::GridTraversalEventPacked::toString(const DataExchangeType& param) {
+
+ tarch::la::Vector<TwoPowerD,peano4::grid::GridTraversalEvent::HorizontalDataExchange> peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalVertexData() const  {
+   long int mask = 3;
+   mask = mask << (3);
+   tarch::la::Vector<TwoPowerD,HorizontalDataExchange> result;
+   long int tmp;
+   
+   for (int i = 0; i < TwoPowerD; i++) {
+      tmp = _persistentRecords._packedRecords3 & mask;
+      tmp = tmp >> (3 + i * 2);
+      result[i] = (HorizontalDataExchange) tmp;
+      mask = mask << 2;
+   }
+   for (int i = 0; i < TwoPowerD; i++) {
+      assertion((result[i] >= 0 && result[i] <= 2));
+   }
+   return result;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalVertexData(const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData)  {
+   
+   for (int i = 0; i < TwoPowerD; i++) {
+      assertion((sendReceiveHorizontalVertexData[i] >= 0 && sendReceiveHorizontalVertexData[i] <= 2));
+   }
+   for (int i = 0; i < TwoPowerD; i++) {
+      long int mask = 3;
+      mask = mask << (3 + i * 2 );
+      _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 & ~mask;
+      long int tmp = static_cast<long int>(sendReceiveHorizontalVertexData[i]);
+      _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (3 + i * 2));
+   }
+}
+
+
+
+ peano4::grid::GridTraversalEvent::HorizontalDataExchange peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalVertexData(int elementIndex) const  {
+   
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   long int mask = 3;
+   mask = mask << (3 + elementIndex * 2);
+   long int tmp = _persistentRecords._packedRecords3 & mask;
+   tmp = tmp >> (3 + elementIndex * 2);
+   assertion((tmp >= 0) && (tmp <= 2));
+   return (HorizontalDataExchange) tmp;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalVertexData(int elementIndex, const HorizontalDataExchange& sendReceiveHorizontalVertexData)  {
+   
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   assertion((sendReceiveHorizontalVertexData >= 0 && sendReceiveHorizontalVertexData <= 2));
+   long int mask = 3;
+   mask = mask << (3 + elementIndex * 2);
+   _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 & ~mask;
+   long int tmp = static_cast<long int>(sendReceiveHorizontalVertexData);
+   _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (3 + elementIndex * 2));
+}
+
+
+
+ tarch::la::Vector<TwoTimesD,peano4::grid::GridTraversalEvent::HorizontalDataExchange> peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalFaceData() const  {
+   long int mask = 3;
+   mask = mask << (35);
+   tarch::la::Vector<TwoTimesD,HorizontalDataExchange> result;
+   long int tmp;
+   
+   for (int i = 0; i < TwoTimesD; i++) {
+      tmp = _persistentRecords._packedRecords3 & mask;
+      tmp = tmp >> (35 + i * 2);
+      result[i] = (HorizontalDataExchange) tmp;
+      mask = mask << 2;
+   }
+   for (int i = 0; i < TwoTimesD; i++) {
+      assertion((result[i] >= 0 && result[i] <= 2));
+   }
+   return result;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalFaceData(const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData)  {
+   
+   for (int i = 0; i < TwoTimesD; i++) {
+      assertion((sendReceiveHorizontalFaceData[i] >= 0 && sendReceiveHorizontalFaceData[i] <= 2));
+   }
+   for (int i = 0; i < TwoTimesD; i++) {
+      long int mask = 3;
+      mask = mask << (35 + i * 2 );
+      _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 & ~mask;
+      long int tmp = static_cast<long int>(sendReceiveHorizontalFaceData[i]);
+      _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (35 + i * 2));
+   }
+}
+
+
+
+ peano4::grid::GridTraversalEvent::HorizontalDataExchange peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalFaceData(int elementIndex) const  {
+   
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoTimesD);
+   long int mask = 3;
+   mask = mask << (35 + elementIndex * 2);
+   long int tmp = _persistentRecords._packedRecords3 & mask;
+   tmp = tmp >> (35 + elementIndex * 2);
+   assertion((tmp >= 0) && (tmp <= 2));
+   return (HorizontalDataExchange) tmp;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalFaceData(int elementIndex, const HorizontalDataExchange& sendReceiveHorizontalFaceData)  {
+   
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoTimesD);
+   assertion((sendReceiveHorizontalFaceData >= 0 && sendReceiveHorizontalFaceData <= 2));
+   long int mask = 3;
+   mask = mask << (35 + elementIndex * 2);
+   _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 & ~mask;
+   long int tmp = static_cast<long int>(sendReceiveHorizontalFaceData);
+   _persistentRecords._packedRecords3 = _persistentRecords._packedRecords3 | ( tmp << (35 + elementIndex * 2));
+}
+
+
+
+ peano4::grid::GridTraversalEvent::HorizontalDataExchange peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalCellData() const  {
+   long int mask =  (1 << (2)) - 1;
+   mask = static_cast<long int>(mask << (47));
+   long int tmp = static_cast<long int>(_persistentRecords._packedRecords3 & mask);
+   tmp = static_cast<long int>(tmp >> (47));
+   assertion(( tmp >= 0 &&  tmp <= 2));
+   return (HorizontalDataExchange) tmp;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalCellData(const HorizontalDataExchange& sendReceiveHorizontalCellData)  {
+   assertion((sendReceiveHorizontalCellData >= 0 && sendReceiveHorizontalCellData <= 2));
+   long int mask =  (1 << (2)) - 1;
+   mask = static_cast<long int>(mask << (47));
+   _persistentRecords._packedRecords3 = static_cast<long int>(_persistentRecords._packedRecords3 & ~mask);
+   _persistentRecords._packedRecords3 = static_cast<long int>(_persistentRecords._packedRecords3 | static_cast<long int>(sendReceiveHorizontalCellData) << (47));
+}
+
+
+
+ tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalVertexDataRank() const  {
+   return _persistentRecords._sendReceiveHorizontalVertexDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank)  {
+   _persistentRecords._sendReceiveHorizontalVertexDataRank = (sendReceiveHorizontalVertexDataRank);
+}
+
+
+
+ int peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalVertexDataRank(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   return _persistentRecords._sendReceiveHorizontalVertexDataRank[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalVertexDataRank(int elementIndex, const int& sendReceiveHorizontalVertexDataRank)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoPowerD);
+   _persistentRecords._sendReceiveHorizontalVertexDataRank[elementIndex]= sendReceiveHorizontalVertexDataRank;
+   
+}
+
+
+
+ tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalFaceDataRank() const  {
+   return _persistentRecords._sendReceiveHorizontalFaceDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank)  {
+   _persistentRecords._sendReceiveHorizontalFaceDataRank = (sendReceiveHorizontalFaceDataRank);
+}
+
+
+
+ int peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalFaceDataRank(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoTimesD);
+   return _persistentRecords._sendReceiveHorizontalFaceDataRank[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalFaceDataRank(int elementIndex, const int& sendReceiveHorizontalFaceDataRank)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<TwoTimesD);
+   _persistentRecords._sendReceiveHorizontalFaceDataRank[elementIndex]= sendReceiveHorizontalFaceDataRank;
+   
+}
+
+
+
+ int peano4::grid::GridTraversalEventPacked::getSendReceiveHorizontalCellDataRank() const  {
+   return _persistentRecords._sendReceiveHorizontalCellDataRank;
+}
+
+
+
+ void peano4::grid::GridTraversalEventPacked::setSendReceiveHorizontalCellDataRank(const int& sendReceiveHorizontalCellDataRank)  {
+   _persistentRecords._sendReceiveHorizontalCellDataRank = sendReceiveHorizontalCellDataRank;
+}
+
+
+std::string peano4::grid::GridTraversalEventPacked::toString(const HorizontalDataExchange& param) {
    return peano4::grid::GridTraversalEvent::toString(param);
 }
 
-std::string peano4::grid::GridTraversalEventPacked::getDataExchangeTypeMapping() {
-   return peano4::grid::GridTraversalEvent::getDataExchangeTypeMapping();
+std::string peano4::grid::GridTraversalEventPacked::getHorizontalDataExchangeMapping() {
+   return peano4::grid::GridTraversalEvent::getHorizontalDataExchangeMapping();
 }
 
 
@@ -2662,39 +2630,39 @@ void peano4::grid::GridTraversalEventPacked::toString (std::ostream& out) const 
    out << ",";
    out << "cellData:" << getCellData();
    out << ",";
-   out << "sendReceiveVertexData:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
-      out << getSendReceiveVertexData(i) << ",";
-   }
-   out << getSendReceiveVertexData(TwoPowerD-1) << "]";
-   out << ",";
-   out << "sendReceiveFaceData:[";
-   for (int i = 0; i < TwoTimesD-1; i++) {
-      out << getSendReceiveFaceData(i) << ",";
-   }
-   out << getSendReceiveFaceData(TwoTimesD-1) << "]";
-   out << ",";
-   out << "sendReceiveCellData:" << toString(getSendReceiveCellData());
-   out << ",";
-   out << "sendReceiveVertexDataRank:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
-      out << getSendReceiveVertexDataRank(i) << ",";
-   }
-   out << getSendReceiveVertexDataRank(TwoPowerD-1) << "]";
-   out << ",";
-   out << "sendReceiveFaceDataRank:[";
-   for (int i = 0; i < TwoTimesD-1; i++) {
-      out << getSendReceiveFaceDataRank(i) << ",";
-   }
-   out << getSendReceiveFaceDataRank(TwoTimesD-1) << "]";
-   out << ",";
-   out << "sendReceiveCellDataRank:" << getSendReceiveCellDataRank();
-   out << ",";
    out << "relativePositionToFather:[";
    for (int i = 0; i < Dimensions-1; i++) {
       out << getRelativePositionToFather(i) << ",";
    }
    out << getRelativePositionToFather(Dimensions-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalVertexData:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getSendReceiveHorizontalVertexData(i) << ",";
+   }
+   out << getSendReceiveHorizontalVertexData(TwoPowerD-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalFaceData:[";
+   for (int i = 0; i < TwoTimesD-1; i++) {
+      out << getSendReceiveHorizontalFaceData(i) << ",";
+   }
+   out << getSendReceiveHorizontalFaceData(TwoTimesD-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalCellData:" << toString(getSendReceiveHorizontalCellData());
+   out << ",";
+   out << "sendReceiveHorizontalVertexDataRank:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getSendReceiveHorizontalVertexDataRank(i) << ",";
+   }
+   out << getSendReceiveHorizontalVertexDataRank(TwoPowerD-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalFaceDataRank:[";
+   for (int i = 0; i < TwoTimesD-1; i++) {
+      out << getSendReceiveHorizontalFaceDataRank(i) << ",";
+   }
+   out << getSendReceiveHorizontalFaceDataRank(TwoTimesD-1) << "]";
+   out << ",";
+   out << "sendReceiveHorizontalCellDataRank:" << getSendReceiveHorizontalCellDataRank();
    out <<  ")";
 }
 
@@ -2713,13 +2681,13 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
       getFaceDataFrom(),
       getFaceDataTo(),
       getCellData(),
-      getSendReceiveVertexData(),
-      getSendReceiveFaceData(),
-      getSendReceiveCellData(),
-      getSendReceiveVertexDataRank(),
-      getSendReceiveFaceDataRank(),
-      getSendReceiveCellDataRank(),
-      getRelativePositionToFather()
+      getRelativePositionToFather(),
+      getSendReceiveHorizontalVertexData(),
+      getSendReceiveHorizontalFaceData(),
+      getSendReceiveHorizontalCellData(),
+      getSendReceiveHorizontalVertexDataRank(),
+      getSendReceiveHorizontalFaceDataRank(),
+      getSendReceiveHorizontalCellDataRank()
    );
 }
 
@@ -2735,9 +2703,9 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          GridTraversalEventPacked dummyGridTraversalEventPacked[16];
          
          #ifdef MPI2
-         const int Attributes = 11;
+         const int Attributes = 10;
          #else
-         const int Attributes = 11+2;
+         const int Attributes = 10+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
@@ -2745,15 +2713,14 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             #endif
               MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
-            , MPI_INT		 //sendReceiveVertexDataRank
-            , MPI_INT		 //sendReceiveFaceDataRank
-            , MPI_INT		 //sendReceiveCellDataRank
             , MPI_INT		 //relativePositionToFather
+            , MPI_INT		 //sendReceiveHorizontalVertexDataRank
+            , MPI_INT		 //sendReceiveHorizontalFaceDataRank
+            , MPI_INT		 //sendReceiveHorizontalCellDataRank
             , MPI_LONG		 //_packedRecords0
             , MPI_LONG		 //_packedRecords1
             , MPI_LONG		 //_packedRecords2
             , MPI_LONG		 //_packedRecords3
-            , MPI_LONG		 //_packedRecords4
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -2766,15 +2733,14 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             #endif
               Dimensions		 //x
             , Dimensions		 //h
-            , TwoPowerD		 //sendReceiveVertexDataRank
-            , TwoTimesD		 //sendReceiveFaceDataRank
-            , 1		 //sendReceiveCellDataRank
             , Dimensions		 //relativePositionToFather
+            , TwoPowerD		 //sendReceiveHorizontalVertexDataRank
+            , TwoTimesD		 //sendReceiveHorizontalFaceDataRank
+            , 1		 //sendReceiveHorizontalCellDataRank
             , 1		 //_packedRecords0
             , 1		 //_packedRecords1
             , 1		 //_packedRecords2
             , 1		 //_packedRecords3
-            , 1		 //_packedRecords4
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -2801,27 +2767,27 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveVertexDataRank[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveVertexDataRank[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveFaceDataRank[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveFaceDataRank[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveCellDataRank))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveCellDataRank))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalVertexDataRank[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalVertexDataRank[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalFaceDataRank[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalFaceDataRank[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalCellDataRank))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalCellDataRank))), 		&disp[currentAddress] );
          #endif
          currentAddress++;
          #ifdef MPI2
@@ -2846,12 +2812,6 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords3))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords3))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords4))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords4))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;
@@ -2890,9 +2850,9 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          GridTraversalEventPacked dummyGridTraversalEventPacked[16];
          
          #ifdef MPI2
-         const int Attributes = 11;
+         const int Attributes = 10;
          #else
-         const int Attributes = 11+2;
+         const int Attributes = 10+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
@@ -2900,15 +2860,14 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             #endif
               MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
-            , MPI_INT		 //sendReceiveVertexDataRank
-            , MPI_INT		 //sendReceiveFaceDataRank
-            , MPI_INT		 //sendReceiveCellDataRank
             , MPI_INT		 //relativePositionToFather
+            , MPI_INT		 //sendReceiveHorizontalVertexDataRank
+            , MPI_INT		 //sendReceiveHorizontalFaceDataRank
+            , MPI_INT		 //sendReceiveHorizontalCellDataRank
             , MPI_LONG		 //_packedRecords0
             , MPI_LONG		 //_packedRecords1
             , MPI_LONG		 //_packedRecords2
             , MPI_LONG		 //_packedRecords3
-            , MPI_LONG		 //_packedRecords4
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -2921,15 +2880,14 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             #endif
               Dimensions		 //x
             , Dimensions		 //h
-            , TwoPowerD		 //sendReceiveVertexDataRank
-            , TwoTimesD		 //sendReceiveFaceDataRank
-            , 1		 //sendReceiveCellDataRank
             , Dimensions		 //relativePositionToFather
+            , TwoPowerD		 //sendReceiveHorizontalVertexDataRank
+            , TwoTimesD		 //sendReceiveHorizontalFaceDataRank
+            , 1		 //sendReceiveHorizontalCellDataRank
             , 1		 //_packedRecords0
             , 1		 //_packedRecords1
             , 1		 //_packedRecords2
             , 1		 //_packedRecords3
-            , 1		 //_packedRecords4
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -2956,27 +2914,27 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveVertexDataRank[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveVertexDataRank[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveFaceDataRank[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveFaceDataRank[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveCellDataRank))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveCellDataRank))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalVertexDataRank[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalVertexDataRank[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalFaceDataRank[0]))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalFaceDataRank[0]))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalCellDataRank))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._sendReceiveHorizontalCellDataRank))), 		&disp[currentAddress] );
          #endif
          currentAddress++;
          #ifdef MPI2
@@ -3001,12 +2959,6 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords3))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords3))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords4))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords4))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;
