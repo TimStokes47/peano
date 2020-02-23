@@ -446,8 +446,8 @@ namespace tarch {
 class tarch::logging::Log {
   private:
     #if !defined(UsedLogService)
-//    typedef CommandLineLogger     UsedLogService;
-    typedef ChromeTraceFileLogger     UsedLogService;
+    typedef CommandLineLogger     UsedLogService;
+//    typedef ChromeTraceFileLogger     UsedLogService;
     #endif
 
     /**

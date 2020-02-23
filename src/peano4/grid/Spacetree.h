@@ -162,6 +162,29 @@ class peano4::grid::Spacetree {
       NewFromSplit
     };
 
+
+    enum class FaceEvent {
+      NewLocal, HangingLocal, PersistentLocal, DeleteLocal,
+      Remote,
+      MovingNewFaceToWorker, MovingPersistentFaceToWorker, MovingDeletingFaceToWorker,
+      JoiningWithMaster,
+      TopFaceOfRemoteWorker,
+      TopFaceOfLocalForest,
+      NewFromSplit
+    };
+
+
+    enum class VertexEvent {
+      NewLocal, HangingLocal, PersistentLocal, DeleteLocal,
+      Remote,
+      MovingNewVertexToWorker, MovingPersistentVertexToWorker, MovingDeletingVertexToWorker,
+      JoiningWithMaster,
+      TopVertexOfRemoteWorker,
+      TopVertexOfLocalForest,
+      NewFromSplit
+    };
+
+
     static std::string toString( SpacetreeState state );
     static std::string toString( VertexType type );
     static std::string toString( FaceType type );
@@ -207,8 +230,19 @@ class peano4::grid::Spacetree {
      */
     CellEvent getCellEvent(
       GridVertex                         coarseGridVertices[TwoPowerD],
+      GridVertex                         fineGridVertices[TwoPowerD]
+    ) const;
+
+    FaceEvent getFaceEvent(
+      GridVertex                         coarseGridVertices[TwoPowerD],
       GridVertex                         fineGridVertices[TwoPowerD],
-      CellType                           type
+      int                                faceIndex
+    ) const;
+
+    VertexEvent getVertexEvent(
+      GridVertex                         coarseGridVertices[TwoPowerD],
+      GridVertex                         fineGridVertices[TwoPowerD],
+      int                                vertexIndex
     ) const;
 
     bool isCellSplitCandidate(

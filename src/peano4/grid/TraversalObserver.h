@@ -33,62 +33,70 @@ namespace peano4 {
  */
 class peano4::grid::TraversalObserver {
   public:
-	virtual ~TraversalObserver() {}
+    virtual ~TraversalObserver() {}
 
-    static constexpr int CreateOrDestroyPersistentGridEntity = -1;
-    static constexpr int CreateOrDestroyHangingGridEntity    = -2;
-    static constexpr int NoData                              = -3;
+    static constexpr int NoData                              = -1;
 
-	/**
-	 * Event is invoked per cell. It is however not called for the root cell,
-	 * i.e. for the cell with level 0 that does not have a parent.
-	 */
-	virtual void enterCell(
+	  /**
+	   * Implies that the data will then be local or had been local.
+	   */
+    static constexpr int CreateOrDestroyPersistentGridEntity = -2;
+
+    /**
+     * Implies that the data will then be local or had been local.
+     */
+    static constexpr int CreateOrDestroyHangingGridEntity    = -3;
+
+    /**
+     * Event is invoked per cell. It is however not called for the root cell,
+     * i.e. for the cell with level 0 that does not have a parent.
+     */
+    virtual void enterCell(
       const GridTraversalEvent&  event
     ) = 0;
 
 
-	virtual void leaveCell(
-	  const GridTraversalEvent&  event
+    virtual void leaveCell(
+      const GridTraversalEvent&  event
     ) = 0;
 
-	/**
-	 * I use the clone to create one observer object per traversal thread. So
-	 * between different spacetrees of one spacetree set, there can be no race
-	 * condition. Yet, the clone() itself could be called in parallel.
-	 *
-	 * \section  Global per-sweep actions
-	 *
-	 * If you want to implement an operation once per sweep in a parallel
-	 * environment, then you can exploit the fact that the spacetree set also
-	 * creates an observer for the global master thread, i.e. tree no 0. So if
-	 * you add a statement alike
-	 *
-	 * <pre>
+	  /**
+	   * I use the clone to create one observer object per traversal thread. So
+	   * between different spacetrees of one spacetree set, there can be no race
+ 	   * condition. Yet, the clone() itself could be called in parallel.
+	   *
+	   * \section  Global per-sweep actions
+	   *
+	   * If you want to implement an operation once per sweep in a parallel
+	   * environment, then you can exploit the fact that the spacetree set also
+	   * creates an observer for the global master thread, i.e. tree no 0. So if
+	   * you add a statement alike
+	   *
+	   * <pre>
   if (peano4::parallel::Node::isGlobalMaster(spacetreeId)) {
     ...
   }
 	   </pre>
-	 *
-	 * then you can be sure that the branch body is executed only once globally
-	 * per grid sweep.
-	 *
-	 *
-	 * The counterpart of the clone operation is the destructor.
-	 */
-	virtual TraversalObserver* clone(int spacetreeId) = 0;
+	   *
+	   * then you can be sure that the branch body is executed only once globally
+  	 * per grid sweep.
+	   *
+	   *
+	   * The counterpart of the clone operation is the destructor.
+	   */
+	  virtual TraversalObserver* clone(int spacetreeId) = 0;
 
-	/**
-	 * The tree traversal invokes this operation before beginIteration.
-	 *
-	 * \section  Content
-	 *
-	 * Dynamic AMR is controlled via a sequence of grid control events. Each
-	 * event spans a certain region and prescribes an h resolution over this
-	 * region. Depending on the type of the event (erase or refine), the grid
-	 * adopts. A simple snippet just creating a refined area in a square is
-	 *
-	 * <pre>
+  	/**
+	   * The tree traversal invokes this operation before beginIteration.
+	   *
+	   * \section  Content
+	   *
+	   * Dynamic AMR is controlled via a sequence of grid control events. Each
+	   * event spans a certain region and prescribes an h resolution over this
+	   * region. Depending on the type of the event (erase or refine), the grid
+	   * adopts. A simple snippet just creating a refined area in a square is
+	   *
+	   * <pre>
 std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::getGridControlEvents() {
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
   peano4::grid::GridControlEvent newEvent;
@@ -100,11 +108,11 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
   return controlEvents;
 }
 	 </pre>
-	 *
-	 * The entries are logically ordered. The later the entry, the more
-	 * important it is. So entry 2 overrules entry 1.
-	 */
-	virtual std::vector< GridControlEvent > getGridControlEvents() = 0;
+	   *
+	   * The entries are logically ordered. The later the entry, the more
+	   * important it is. So entry 2 overrules entry 1.
+	   */
+  	virtual std::vector< GridControlEvent > getGridControlEvents() = 0;
 
   /**
    * We do not really need stack numbers et al here, as everything will

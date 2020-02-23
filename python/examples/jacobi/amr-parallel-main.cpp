@@ -4,7 +4,10 @@
 #include "tarch/logging/Log.h"
 
 #include "tarch/tests/TestCaseRegistry.h"
+
 #include "tarch/logging/LogFilter.h"
+#include "tarch/logging/CommandLineLogger.h"
+
 #include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Core.h"
 
@@ -52,7 +55,7 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "peano4", 
-    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
@@ -70,6 +73,12 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "tarch", 
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+  ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetDebug,
+    tarch::logging::LogFilter::FilterListEntry::AnyRank,
+    "examples",
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
  
@@ -80,6 +89,13 @@ int main(int argc, char** argv) {
 //    "mynamespace", 
 //    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
 //  ));
+
+  //tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.log" );
+  tarch::logging::CommandLineLogger::getInstance().setLogFormat(
+    " ", false, false, false, false, false, true, "trace.log"
+  );
+
+
 
   #if PeanoDebug>=2
   tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
@@ -135,6 +151,8 @@ int main(int argc, char** argv) {
 
       examples::jacobi::observers::PlotMaterialParameter  plotMaterialParameter;
       peano4::parallel::SpacetreeSet::getInstance().traverse(plotMaterialParameter);
+
+      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     }
 
     // Split up domain among threads
@@ -158,6 +176,7 @@ int main(int argc, char** argv) {
     {
       examples::jacobi::observers::FusedSolverSteps observer;
       peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     }
 
     // Plot output

@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   21/02/2020 08:11
+ * @date   21/02/2020 11:07
  */
 class peano4::grid::GridTraversalEvent { 
    
@@ -36,8 +36,8 @@ class peano4::grid::GridTraversalEvent {
       
       typedef peano4::grid::GridTraversalEventPacked Packed;
       
-      enum HorizontalDataExchange {
-         None = 0, ForkMerge = 1, InterGridTransfer = 2
+      enum VerticalDataExchange {
+         None = 0, CopyToWorker = 1, CopyToMaster = 2, ReceiveFromMaster = 3, ReceiveFromWorker = 4, InterGridTransfer = 5
       };
       
       struct PersistentRecords {
@@ -50,12 +50,12 @@ class peano4::grid::GridTraversalEvent {
          tarch::la::Vector<TwoTimesD,int> _faceDataTo;
          int _cellData;
          tarch::la::Vector<Dimensions,int> _relativePositionToFather;
-         tarch::la::Vector<TwoPowerD,HorizontalDataExchange> _sendReceiveHorizontalVertexData;
-         tarch::la::Vector<TwoTimesD,HorizontalDataExchange> _sendReceiveHorizontalFaceData;
-         HorizontalDataExchange _sendReceiveHorizontalCellData;
-         tarch::la::Vector<TwoPowerD,int> _sendReceiveHorizontalVertexDataRank;
-         tarch::la::Vector<TwoTimesD,int> _sendReceiveHorizontalFaceDataRank;
-         int _sendReceiveHorizontalCellDataRank;
+         tarch::la::Vector<TwoPowerD,VerticalDataExchange> _sendReceiveVerticalVertexData;
+         tarch::la::Vector<TwoTimesD,VerticalDataExchange> _sendReceiveVerticalFaceData;
+         VerticalDataExchange _sendReceiveVerticalCellData;
+         tarch::la::Vector<TwoPowerD,int> _sendReceiveVerticalVertexDataRank;
+         tarch::la::Vector<TwoTimesD,int> _sendReceiveVerticalFaceDataRank;
+         int _sendReceiveVerticalCellDataRank;
          /**
           * Generated
           */
@@ -64,7 +64,7 @@ class peano4::grid::GridTraversalEvent {
          /**
           * Generated
           */
-         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData, const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData, const HorizontalDataExchange& sendReceiveHorizontalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank, const int& sendReceiveHorizontalCellDataRank);
+         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,VerticalDataExchange>& sendReceiveVerticalVertexData, const tarch::la::Vector<TwoTimesD,VerticalDataExchange>& sendReceiveVerticalFaceData, const VerticalDataExchange& sendReceiveVerticalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVerticalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveVerticalFaceDataRank, const int& sendReceiveVerticalCellDataRank);
          
           tarch::la::Vector<Dimensions,double> getX() const ;
          
@@ -108,41 +108,41 @@ class peano4::grid::GridTraversalEvent {
          
           void setRelativePositionToFather(const tarch::la::Vector<Dimensions,int>& relativePositionToFather) ;
          
-          tarch::la::Vector<TwoPowerD,HorizontalDataExchange> getSendReceiveHorizontalVertexData() const ;
+          tarch::la::Vector<TwoPowerD,VerticalDataExchange> getSendReceiveVerticalVertexData() const ;
          
-          void setSendReceiveHorizontalVertexData(const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData) ;
+          void setSendReceiveVerticalVertexData(const tarch::la::Vector<TwoPowerD,VerticalDataExchange>& sendReceiveVerticalVertexData) ;
          
-          tarch::la::Vector<TwoTimesD,HorizontalDataExchange> getSendReceiveHorizontalFaceData() const ;
+          tarch::la::Vector<TwoTimesD,VerticalDataExchange> getSendReceiveVerticalFaceData() const ;
          
-          void setSendReceiveHorizontalFaceData(const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData) ;
-         
-         /**
-          * Generated
-          */
-          HorizontalDataExchange getSendReceiveHorizontalCellData() const ;
+          void setSendReceiveVerticalFaceData(const tarch::la::Vector<TwoTimesD,VerticalDataExchange>& sendReceiveVerticalFaceData) ;
          
          /**
           * Generated
           */
-          void setSendReceiveHorizontalCellData(const HorizontalDataExchange& sendReceiveHorizontalCellData) ;
-         
-          tarch::la::Vector<TwoPowerD,int> getSendReceiveHorizontalVertexDataRank() const ;
-         
-          void setSendReceiveHorizontalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank) ;
-         
-          tarch::la::Vector<TwoTimesD,int> getSendReceiveHorizontalFaceDataRank() const ;
-         
-          void setSendReceiveHorizontalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank) ;
+          VerticalDataExchange getSendReceiveVerticalCellData() const ;
          
          /**
           * Generated
           */
-          int getSendReceiveHorizontalCellDataRank() const ;
+          void setSendReceiveVerticalCellData(const VerticalDataExchange& sendReceiveVerticalCellData) ;
+         
+          tarch::la::Vector<TwoPowerD,int> getSendReceiveVerticalVertexDataRank() const ;
+         
+          void setSendReceiveVerticalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveVerticalVertexDataRank) ;
+         
+          tarch::la::Vector<TwoTimesD,int> getSendReceiveVerticalFaceDataRank() const ;
+         
+          void setSendReceiveVerticalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveVerticalFaceDataRank) ;
          
          /**
           * Generated
           */
-          void setSendReceiveHorizontalCellDataRank(const int& sendReceiveHorizontalCellDataRank) ;
+          int getSendReceiveVerticalCellDataRank() const ;
+         
+         /**
+          * Generated
+          */
+          void setSendReceiveVerticalCellDataRank(const int& sendReceiveVerticalCellDataRank) ;
          
          
       };
@@ -163,7 +163,7 @@ class peano4::grid::GridTraversalEvent {
          /**
           * Generated
           */
-         GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData, const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData, const HorizontalDataExchange& sendReceiveHorizontalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank, const int& sendReceiveHorizontalCellDataRank);
+         GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,VerticalDataExchange>& sendReceiveVerticalVertexData, const tarch::la::Vector<TwoTimesD,VerticalDataExchange>& sendReceiveVerticalFaceData, const VerticalDataExchange& sendReceiveVerticalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVerticalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveVerticalFaceDataRank, const int& sendReceiveVerticalCellDataRank);
          
          /**
           * Generated
@@ -246,67 +246,67 @@ class peano4::grid::GridTraversalEvent {
          
           void setRelativePositionToFather(int elementIndex, const int& relativePositionToFather) ;
          
-          tarch::la::Vector<TwoPowerD,HorizontalDataExchange> getSendReceiveHorizontalVertexData() const ;
+          tarch::la::Vector<TwoPowerD,VerticalDataExchange> getSendReceiveVerticalVertexData() const ;
          
-          void setSendReceiveHorizontalVertexData(const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData) ;
+          void setSendReceiveVerticalVertexData(const tarch::la::Vector<TwoPowerD,VerticalDataExchange>& sendReceiveVerticalVertexData) ;
          
-          peano4::grid::GridTraversalEvent::HorizontalDataExchange getSendReceiveHorizontalVertexData(int elementIndex) const ;
+          peano4::grid::GridTraversalEvent::VerticalDataExchange getSendReceiveVerticalVertexData(int elementIndex) const ;
          
-          void setSendReceiveHorizontalVertexData(int elementIndex, const HorizontalDataExchange& sendReceiveHorizontalVertexData) ;
+          void setSendReceiveVerticalVertexData(int elementIndex, const VerticalDataExchange& sendReceiveVerticalVertexData) ;
          
-          tarch::la::Vector<TwoTimesD,HorizontalDataExchange> getSendReceiveHorizontalFaceData() const ;
+          tarch::la::Vector<TwoTimesD,VerticalDataExchange> getSendReceiveVerticalFaceData() const ;
          
-          void setSendReceiveHorizontalFaceData(const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData) ;
+          void setSendReceiveVerticalFaceData(const tarch::la::Vector<TwoTimesD,VerticalDataExchange>& sendReceiveVerticalFaceData) ;
          
-          peano4::grid::GridTraversalEvent::HorizontalDataExchange getSendReceiveHorizontalFaceData(int elementIndex) const ;
+          peano4::grid::GridTraversalEvent::VerticalDataExchange getSendReceiveVerticalFaceData(int elementIndex) const ;
          
-          void setSendReceiveHorizontalFaceData(int elementIndex, const HorizontalDataExchange& sendReceiveHorizontalFaceData) ;
-         
-         /**
-          * Generated
-          */
-          HorizontalDataExchange getSendReceiveHorizontalCellData() const ;
+          void setSendReceiveVerticalFaceData(int elementIndex, const VerticalDataExchange& sendReceiveVerticalFaceData) ;
          
          /**
           * Generated
           */
-          void setSendReceiveHorizontalCellData(const HorizontalDataExchange& sendReceiveHorizontalCellData) ;
-         
-          tarch::la::Vector<TwoPowerD,int> getSendReceiveHorizontalVertexDataRank() const ;
-         
-          void setSendReceiveHorizontalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank) ;
-         
-          int getSendReceiveHorizontalVertexDataRank(int elementIndex) const ;
-         
-          void setSendReceiveHorizontalVertexDataRank(int elementIndex, const int& sendReceiveHorizontalVertexDataRank) ;
-         
-          tarch::la::Vector<TwoTimesD,int> getSendReceiveHorizontalFaceDataRank() const ;
-         
-          void setSendReceiveHorizontalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank) ;
-         
-          int getSendReceiveHorizontalFaceDataRank(int elementIndex) const ;
-         
-          void setSendReceiveHorizontalFaceDataRank(int elementIndex, const int& sendReceiveHorizontalFaceDataRank) ;
+          VerticalDataExchange getSendReceiveVerticalCellData() const ;
          
          /**
           * Generated
           */
-          int getSendReceiveHorizontalCellDataRank() const ;
+          void setSendReceiveVerticalCellData(const VerticalDataExchange& sendReceiveVerticalCellData) ;
+         
+          tarch::la::Vector<TwoPowerD,int> getSendReceiveVerticalVertexDataRank() const ;
+         
+          void setSendReceiveVerticalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveVerticalVertexDataRank) ;
+         
+          int getSendReceiveVerticalVertexDataRank(int elementIndex) const ;
+         
+          void setSendReceiveVerticalVertexDataRank(int elementIndex, const int& sendReceiveVerticalVertexDataRank) ;
+         
+          tarch::la::Vector<TwoTimesD,int> getSendReceiveVerticalFaceDataRank() const ;
+         
+          void setSendReceiveVerticalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveVerticalFaceDataRank) ;
+         
+          int getSendReceiveVerticalFaceDataRank(int elementIndex) const ;
+         
+          void setSendReceiveVerticalFaceDataRank(int elementIndex, const int& sendReceiveVerticalFaceDataRank) ;
          
          /**
           * Generated
           */
-          void setSendReceiveHorizontalCellDataRank(const int& sendReceiveHorizontalCellDataRank) ;
+          int getSendReceiveVerticalCellDataRank() const ;
          
          /**
           * Generated
           */
-         static std::string toString(const HorizontalDataExchange& param);
+          void setSendReceiveVerticalCellDataRank(const int& sendReceiveVerticalCellDataRank) ;
          
          /**
           * Generated
           */
-         static std::string getHorizontalDataExchangeMapping();
+         static std::string toString(const VerticalDataExchange& param);
+         
+         /**
+          * Generated
+          */
+         static std::string getVerticalDataExchangeMapping();
          
          /**
           * Generated
@@ -371,21 +371,21 @@ class peano4::grid::GridTraversalEvent {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   21/02/2020 08:11
+ * @date   21/02/2020 11:07
  */
 class peano4::grid::GridTraversalEventPacked { 
    
    public:
       
-      typedef peano4::grid::GridTraversalEvent::HorizontalDataExchange HorizontalDataExchange;
+      typedef peano4::grid::GridTraversalEvent::VerticalDataExchange VerticalDataExchange;
       
       struct PersistentRecords {
          tarch::la::Vector<Dimensions,double> _x;
          tarch::la::Vector<Dimensions,double> _h;
          tarch::la::Vector<Dimensions,int> _relativePositionToFather;
-         tarch::la::Vector<TwoPowerD,int> _sendReceiveHorizontalVertexDataRank;
-         tarch::la::Vector<TwoTimesD,int> _sendReceiveHorizontalFaceDataRank;
-         int _sendReceiveHorizontalCellDataRank;
+         tarch::la::Vector<TwoPowerD,int> _sendReceiveVerticalVertexDataRank;
+         tarch::la::Vector<TwoTimesD,int> _sendReceiveVerticalFaceDataRank;
+         int _sendReceiveVerticalCellDataRank;
          
          /** mapping of records:
          || Member 	|| startbit 	|| length
@@ -413,11 +413,17 @@ class peano4::grid::GridTraversalEventPacked {
          /** mapping of records:
          || Member 	|| startbit 	|| length
           |  cellData	| startbit 0	| #bits 3
-          |  sendReceiveHorizontalVertexData	| startbit 3	| #bits 32
-          |  sendReceiveHorizontalFaceData	| startbit 35	| #bits 12
-          |  sendReceiveHorizontalCellData	| startbit 47	| #bits 2
+          |  sendReceiveVerticalVertexData	| startbit 3	| #bits 48
+          |  sendReceiveVerticalCellData	| startbit 51	| #bits 3
           */
          long int _packedRecords3;
+         
+         
+         /** mapping of records:
+         || Member 	|| startbit 	|| length
+          |  sendReceiveVerticalFaceData	| startbit 0	| #bits 18
+          */
+         long int _packedRecords4;
          
          /**
           * Generated
@@ -427,7 +433,7 @@ class peano4::grid::GridTraversalEventPacked {
          /**
           * Generated
           */
-         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData, const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData, const HorizontalDataExchange& sendReceiveHorizontalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank, const int& sendReceiveHorizontalCellDataRank);
+         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,VerticalDataExchange>& sendReceiveVerticalVertexData, const tarch::la::Vector<TwoTimesD,VerticalDataExchange>& sendReceiveVerticalFaceData, const VerticalDataExchange& sendReceiveVerticalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVerticalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveVerticalFaceDataRank, const int& sendReceiveVerticalCellDataRank);
          
           tarch::la::Vector<Dimensions,double> getX() const ;
          
@@ -471,41 +477,41 @@ class peano4::grid::GridTraversalEventPacked {
          
           void setRelativePositionToFather(const tarch::la::Vector<Dimensions,int>& relativePositionToFather) ;
          
-          tarch::la::Vector<TwoPowerD,HorizontalDataExchange> getSendReceiveHorizontalVertexData() const ;
+          tarch::la::Vector<TwoPowerD,VerticalDataExchange> getSendReceiveVerticalVertexData() const ;
          
-          void setSendReceiveHorizontalVertexData(const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData) ;
+          void setSendReceiveVerticalVertexData(const tarch::la::Vector<TwoPowerD,VerticalDataExchange>& sendReceiveVerticalVertexData) ;
          
-          tarch::la::Vector<TwoTimesD,HorizontalDataExchange> getSendReceiveHorizontalFaceData() const ;
+          tarch::la::Vector<TwoTimesD,VerticalDataExchange> getSendReceiveVerticalFaceData() const ;
          
-          void setSendReceiveHorizontalFaceData(const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData) ;
-         
-         /**
-          * Generated
-          */
-          HorizontalDataExchange getSendReceiveHorizontalCellData() const ;
+          void setSendReceiveVerticalFaceData(const tarch::la::Vector<TwoTimesD,VerticalDataExchange>& sendReceiveVerticalFaceData) ;
          
          /**
           * Generated
           */
-          void setSendReceiveHorizontalCellData(const HorizontalDataExchange& sendReceiveHorizontalCellData) ;
-         
-          tarch::la::Vector<TwoPowerD,int> getSendReceiveHorizontalVertexDataRank() const ;
-         
-          void setSendReceiveHorizontalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank) ;
-         
-          tarch::la::Vector<TwoTimesD,int> getSendReceiveHorizontalFaceDataRank() const ;
-         
-          void setSendReceiveHorizontalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank) ;
+          VerticalDataExchange getSendReceiveVerticalCellData() const ;
          
          /**
           * Generated
           */
-          int getSendReceiveHorizontalCellDataRank() const ;
+          void setSendReceiveVerticalCellData(const VerticalDataExchange& sendReceiveVerticalCellData) ;
+         
+          tarch::la::Vector<TwoPowerD,int> getSendReceiveVerticalVertexDataRank() const ;
+         
+          void setSendReceiveVerticalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveVerticalVertexDataRank) ;
+         
+          tarch::la::Vector<TwoTimesD,int> getSendReceiveVerticalFaceDataRank() const ;
+         
+          void setSendReceiveVerticalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveVerticalFaceDataRank) ;
          
          /**
           * Generated
           */
-          void setSendReceiveHorizontalCellDataRank(const int& sendReceiveHorizontalCellDataRank) ;
+          int getSendReceiveVerticalCellDataRank() const ;
+         
+         /**
+          * Generated
+          */
+          void setSendReceiveVerticalCellDataRank(const int& sendReceiveVerticalCellDataRank) ;
          
          
       };
@@ -526,7 +532,7 @@ class peano4::grid::GridTraversalEventPacked {
          /**
           * Generated
           */
-         GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData, const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData, const HorizontalDataExchange& sendReceiveHorizontalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank, const int& sendReceiveHorizontalCellDataRank);
+         GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const tarch::la::Vector<TwoPowerD,VerticalDataExchange>& sendReceiveVerticalVertexData, const tarch::la::Vector<TwoTimesD,VerticalDataExchange>& sendReceiveVerticalFaceData, const VerticalDataExchange& sendReceiveVerticalCellData, const tarch::la::Vector<TwoPowerD,int>& sendReceiveVerticalVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& sendReceiveVerticalFaceDataRank, const int& sendReceiveVerticalCellDataRank);
          
          /**
           * Generated
@@ -609,67 +615,67 @@ class peano4::grid::GridTraversalEventPacked {
          
           void setRelativePositionToFather(int elementIndex, const int& relativePositionToFather) ;
          
-          tarch::la::Vector<TwoPowerD,HorizontalDataExchange> getSendReceiveHorizontalVertexData() const ;
+          tarch::la::Vector<TwoPowerD,VerticalDataExchange> getSendReceiveVerticalVertexData() const ;
          
-          void setSendReceiveHorizontalVertexData(const tarch::la::Vector<TwoPowerD,HorizontalDataExchange>& sendReceiveHorizontalVertexData) ;
+          void setSendReceiveVerticalVertexData(const tarch::la::Vector<TwoPowerD,VerticalDataExchange>& sendReceiveVerticalVertexData) ;
          
-          peano4::grid::GridTraversalEvent::HorizontalDataExchange getSendReceiveHorizontalVertexData(int elementIndex) const ;
+          peano4::grid::GridTraversalEvent::VerticalDataExchange getSendReceiveVerticalVertexData(int elementIndex) const ;
          
-          void setSendReceiveHorizontalVertexData(int elementIndex, const HorizontalDataExchange& sendReceiveHorizontalVertexData) ;
+          void setSendReceiveVerticalVertexData(int elementIndex, const VerticalDataExchange& sendReceiveVerticalVertexData) ;
          
-          tarch::la::Vector<TwoTimesD,HorizontalDataExchange> getSendReceiveHorizontalFaceData() const ;
+          tarch::la::Vector<TwoTimesD,VerticalDataExchange> getSendReceiveVerticalFaceData() const ;
          
-          void setSendReceiveHorizontalFaceData(const tarch::la::Vector<TwoTimesD,HorizontalDataExchange>& sendReceiveHorizontalFaceData) ;
+          void setSendReceiveVerticalFaceData(const tarch::la::Vector<TwoTimesD,VerticalDataExchange>& sendReceiveVerticalFaceData) ;
          
-          peano4::grid::GridTraversalEvent::HorizontalDataExchange getSendReceiveHorizontalFaceData(int elementIndex) const ;
+          peano4::grid::GridTraversalEvent::VerticalDataExchange getSendReceiveVerticalFaceData(int elementIndex) const ;
          
-          void setSendReceiveHorizontalFaceData(int elementIndex, const HorizontalDataExchange& sendReceiveHorizontalFaceData) ;
-         
-         /**
-          * Generated
-          */
-          HorizontalDataExchange getSendReceiveHorizontalCellData() const ;
+          void setSendReceiveVerticalFaceData(int elementIndex, const VerticalDataExchange& sendReceiveVerticalFaceData) ;
          
          /**
           * Generated
           */
-          void setSendReceiveHorizontalCellData(const HorizontalDataExchange& sendReceiveHorizontalCellData) ;
-         
-          tarch::la::Vector<TwoPowerD,int> getSendReceiveHorizontalVertexDataRank() const ;
-         
-          void setSendReceiveHorizontalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveHorizontalVertexDataRank) ;
-         
-          int getSendReceiveHorizontalVertexDataRank(int elementIndex) const ;
-         
-          void setSendReceiveHorizontalVertexDataRank(int elementIndex, const int& sendReceiveHorizontalVertexDataRank) ;
-         
-          tarch::la::Vector<TwoTimesD,int> getSendReceiveHorizontalFaceDataRank() const ;
-         
-          void setSendReceiveHorizontalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveHorizontalFaceDataRank) ;
-         
-          int getSendReceiveHorizontalFaceDataRank(int elementIndex) const ;
-         
-          void setSendReceiveHorizontalFaceDataRank(int elementIndex, const int& sendReceiveHorizontalFaceDataRank) ;
+          VerticalDataExchange getSendReceiveVerticalCellData() const ;
          
          /**
           * Generated
           */
-          int getSendReceiveHorizontalCellDataRank() const ;
+          void setSendReceiveVerticalCellData(const VerticalDataExchange& sendReceiveVerticalCellData) ;
+         
+          tarch::la::Vector<TwoPowerD,int> getSendReceiveVerticalVertexDataRank() const ;
+         
+          void setSendReceiveVerticalVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& sendReceiveVerticalVertexDataRank) ;
+         
+          int getSendReceiveVerticalVertexDataRank(int elementIndex) const ;
+         
+          void setSendReceiveVerticalVertexDataRank(int elementIndex, const int& sendReceiveVerticalVertexDataRank) ;
+         
+          tarch::la::Vector<TwoTimesD,int> getSendReceiveVerticalFaceDataRank() const ;
+         
+          void setSendReceiveVerticalFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& sendReceiveVerticalFaceDataRank) ;
+         
+          int getSendReceiveVerticalFaceDataRank(int elementIndex) const ;
+         
+          void setSendReceiveVerticalFaceDataRank(int elementIndex, const int& sendReceiveVerticalFaceDataRank) ;
          
          /**
           * Generated
           */
-          void setSendReceiveHorizontalCellDataRank(const int& sendReceiveHorizontalCellDataRank) ;
+          int getSendReceiveVerticalCellDataRank() const ;
          
          /**
           * Generated
           */
-         static std::string toString(const HorizontalDataExchange& param);
+          void setSendReceiveVerticalCellDataRank(const int& sendReceiveVerticalCellDataRank) ;
          
          /**
           * Generated
           */
-         static std::string getHorizontalDataExchangeMapping();
+         static std::string toString(const VerticalDataExchange& param);
+         
+         /**
+          * Generated
+          */
+         static std::string getVerticalDataExchangeMapping();
          
          /**
           * Generated

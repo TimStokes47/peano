@@ -317,7 +317,7 @@ std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGri
 
   TemplateEnterCell_Prologue = """  
 void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEvent&  event ) {{
-  logTraceInWith1Argument( "enterCell(peano4::grid::GridTraversalEvent)", event.toString() );
+  logTraceInWith2Arguments( "enterCell(peano4::grid::GridTraversalEvent)", _spacetreeId, event.toString() );
 """
 
 
@@ -478,6 +478,15 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inCellStack))->pop();
     }}
     DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,outCellStack))->push(data);
+
+    if ( 
+      event.getSendReceiveVerticalCellData()==peano4::grid::GridTraversalEvent::CopyToWorker
+      or
+      event.getSendReceiveVerticalCellData()==peano4::grid::GridTraversalEvent::CopyToMaster
+    ) {{
+      const int streamStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getSendReceiveVerticalCellDataRank() );
+      DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,streamStack))->push(data);
+    }}
   }}
 """
 
@@ -502,17 +511,25 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
   TemplateEnterCell_MappingCall = """  
   {{
-    peano4::datamanagement::CellMarker marker( event );
-    {ACTIVE_ACTION_SET}.touchCellFirstTime(
-       marker,
-       {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_CELL_EVENT}
-      {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS_CELL_EVENT}
-    );
+    if ( 
+      event.getCellData()!=peano4::grid::TraversalObserver::NoData
+      and
+      event.getSendReceiveVerticalCellData()!=peano4::grid::GridTraversalEvent::CopyToWorker
+      and
+      event.getSendReceiveVerticalCellData()!=peano4::grid::GridTraversalEvent::CopyToMaster
+    ) {{
+      peano4::datamanagement::CellMarker marker( event );
+      {ACTIVE_ACTION_SET}.touchCellFirstTime(
+         marker,
+         {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_CELL_EVENT}
+        {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS_CELL_EVENT}
+      );
+    }}
   }}
 """
 
 
-  TemplateEnterCell_Epilogue = """  
+  TemplateEnterCell_Epilogue = """
   logTraceOut( "enterCell(peano4::grid::GridTraversalEvent)" );
 }}
 """
@@ -558,7 +575,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
   TemplateLeaveCell_Prologue = """  
 void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEvent&  event ) {{
-  logTraceInWith1Argument( "leaveCell(peano4::grid::GridTraversalEvent)", event.toString() );
+  logTraceInWith2Arguments( "leaveCell(peano4::grid::GridTraversalEvent)", _spacetreeId, event.toString() );
 """
 
 

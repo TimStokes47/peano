@@ -67,6 +67,7 @@ void examples::jacobi::actions::ComputeResidualWithGeometricOperators::touchCell
   peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> fineGridVerticesMG,
   peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG
 ) {
+  logTraceInWith1Argument( "touchCellFirstTime()", marker.toString() );
   if (not marker.isRefined()) {
     tarch::la::Vector<TwoPowerD, double> u;
     tarch::la::Vector<TwoPowerD, double> r;
@@ -96,6 +97,7 @@ void examples::jacobi::actions::ComputeResidualWithGeometricOperators::touchCell
       fineGridVerticesMG(i).setDiag( fineGridVerticesMG(i).getDiag() + localStiffnessMatrix(i,i) );
     }
   }
+  logTraceOut( "touchCellFirstTime()" );
 }
 
 

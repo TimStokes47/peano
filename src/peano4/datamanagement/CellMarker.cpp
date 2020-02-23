@@ -5,11 +5,8 @@ peano4::datamanagement::CellMarker::CellMarker(
   const peano4::grid::GridTraversalEvent& event
 ):
   _centre(event.getX()),
-  _h(event.getH())
-/*
-,
-  _isRefined(event.getIsRefined())     // @todo Fixen
-*/
+  _h(event.getH()),
+  _isRefined(event.getIsRefined()!=0)
 {
 }
 
@@ -29,3 +26,9 @@ tarch::la::Vector<Dimensions,double>  peano4::datamanagement::CellMarker::h() co
   return _h;
 }
 
+
+std::string peano4::datamanagement::CellMarker::toString() const {
+  std::ostringstream msg;
+  msg << "(" << _centre << "," << _h << "," << _isRefined << ")";
+  return msg.str();
+}

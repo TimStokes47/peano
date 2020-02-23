@@ -117,7 +117,7 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
               and
               event.getCellData()!=TraversalObserver::NoData
               and
-              event.getSendReceiveHorizontalCellData()!=GridTraversalEvent::HorizontalDataExchange::ForkMerge;
+              event.getSendReceiveVerticalCellData()!=GridTraversalEvent::VerticalDataExchange::CopyToWorker;
 
   if (plot) {
     plotCell(event);

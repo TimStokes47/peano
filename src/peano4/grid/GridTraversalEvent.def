@@ -47,15 +47,18 @@ class peano4::grid::GridTraversalEvent {
    */
   persistent parallelise int     relativePositionToFather[Dimensions];
 
-  enum HorizontalDataExchange {
+  enum VerticalDataExchange {
     None,
-    ForkMerge,
+    CopyToWorker,
+    CopyToMaster,
+    ReceiveFromMaster,
+    ReceiveFromWorker,
     InterGridTransfer
   };
   
-  persistent parallelise packed HorizontalDataExchange sendReceiveHorizontalVertexData[TwoPowerD];
-  persistent parallelise packed HorizontalDataExchange sendReceiveHorizontalFaceData[TwoTimesD];
-  persistent parallelise packed HorizontalDataExchange sendReceiveHorizontalCellData;
+  persistent parallelise packed VerticalDataExchange sendReceiveVerticalVertexData[TwoPowerD];
+  persistent parallelise packed VerticalDataExchange sendReceiveVerticalFaceData[TwoTimesD];
+  persistent parallelise packed VerticalDataExchange sendReceiveVerticalCellData;
 
   /**
    * In a parallel environment, we might have to send data to other ranks 
@@ -63,8 +66,8 @@ class peano4::grid::GridTraversalEvent {
    * over to the user code. This is denoted by these flags. They actually 
    * denote ranks.
    */
-  persistent parallelise int     sendReceiveHorizontalVertexDataRank[TwoPowerD];
-  persistent parallelise int     sendReceiveHorizontalFaceDataRank[TwoTimesD];
-  persistent parallelise int     sendReceiveHorizontalCellDataRank;
+  persistent parallelise int     sendReceiveVerticalVertexDataRank[TwoPowerD];
+  persistent parallelise int     sendReceiveVerticalFaceDataRank[TwoTimesD];
+  persistent parallelise int     sendReceiveVerticalCellDataRank;
 };
 
