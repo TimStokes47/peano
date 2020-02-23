@@ -26,6 +26,9 @@ namespace {
 }
 
 
+tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
+
+
 tarch::multicore::Core::Core() {
   __numberOfThreads = tbb::task_scheduler_init::default_num_threads();
 }
