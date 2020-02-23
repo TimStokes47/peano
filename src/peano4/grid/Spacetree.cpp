@@ -1597,6 +1597,22 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
   event.setIsRefined( areVerticesRefined(fineGridVertices) );
   event.setRelativePositionToFather( relativePositionToFather );
 
+  if ( _spacetreeState==SpacetreeState::NewFromSplit ) {
+    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamIn);
+  }
+  else if ( _spacetreeState==SpacetreeState::Joining ) {
+    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamOut);
+  }
+  else if ( not _splitting.empty() ) {
+    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamOut);
+  }
+  else if ( not _joining.empty() ) {
+    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamIn);
+  }
+  else {
+    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::NoRebalancing);
+  }
+
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
     const std::bitset<Dimensions>  vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
@@ -1627,56 +1643,35 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     	break;
     }
     event.setVertexDataTo(i,vertexIndex.to_ulong());
+
+    bool parentVertexIsLocal   = isSpacetreeVertexLocal(coarseGridVertices);
+    bool vertexIsLocal         = isSpacetreeVertexLocal(fineGridVertices);
+
+    if ( vertexIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
+      assertionMsg( false, "not yet implemented" );
+    }
+    else if ( vertexIsLocal and _spacetreeState==SpacetreeState::Joining ) {
+      assertionMsg( false, "not yet implemented" );
+    }
+    else if ( not vertexIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+      event.setStreamVertexDataRank( i, getTreeOwningSpacetreeNode(fineGridVertices) );
+    }
+    else if ( not vertexIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+      assertionMsg( false, "not yet implemented" );
+    }
+    else {
+      event.setStreamVertexDataRank( i, TraversalObserver::NoRebalancing );
+    }
   }
 
 
   for (int i=0; i<2*Dimensions; i++) {
     int        faceIndex   = PeanoCurve::getFaceNumberAlongCurve(state,i);
+    FaceType   type        = getFaceType(fineGridVertices,faceIndex);
     const int  stackNumber = PeanoCurve::getFaceReadStackNumber(state,faceIndex);
 
-    FaceEvent  event = getFaceEvent(coarseGridVertices,fineGridVertices,faceIndex);
-
-    switch (event) {
-      case FaceEvent::NewLocal:
-        assertion(false);
-        break;
-      case FaceEvent::HangingLocal:
-        assertion(false);
-        break;
-      case FaceEvent::PersistentLocal:
-        assertion(false);
-        break;
-      case FaceEvent::DeleteLocal:
-        assertion(false);
-        break;
-      case FaceEvent::Remote:
-        assertion(false);
-        break;
-      case FaceEvent::MovingNewFaceToWorker:
-        assertion(false);
-        break;
-      case FaceEvent::MovingPersistentFaceToWorker:
-        assertion(false);
-        break;
-      case FaceEvent::MovingDeletingFaceToWorker:
-        assertion(false);
-        break;
-      case FaceEvent::JoiningWithMaster:
-        assertion(false);
-        break;
-      case FaceEvent::TopFaceOfRemoteWorker:
-        assertion(false);
-        break;
-      case FaceEvent::TopFaceOfLocalForest:
-        assertion(false);
-        break;
-      case FaceEvent::NewFromSplit:
-        assertion(false);
-        break;
-    }
-
-/*
-    case FaceType::New:
+    switch (type) {
+      case FaceType::New:
         {
           if ( PeanoCurve::isInOutStack(stackNumber) ) {
             event.setFaceDataFrom(i,TraversalObserver::CreateOrDestroyPersistentGridEntity);
@@ -1695,60 +1690,59 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
         break;
     }
     event.setFaceDataTo(i,faceIndex);
-*/
+
+    bool parentFaceIsLocal   = isSpacetreeFaceLocal(coarseGridVertices);
+    bool faceIsLocal         = isSpacetreeFaceLocal(fineGridVertices);
+
+    if ( faceIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
+      assertionMsg( false, "not yet implemented" );
+    }
+    else if ( faceIsLocal and _spacetreeState==SpacetreeState::Joining ) {
+      assertionMsg( false, "not yet implemented" );
+    }
+    else if ( not faceIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+      event.setStreamFaceDataRank( i, getTreeOwningSpacetreeNode(fineGridVertices) );
+    }
+    else if ( not faceIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+      assertionMsg( false, "not yet implemented" );
+    }
+    else {
+      event.setStreamFaceDataRank( i, TraversalObserver::NoRebalancing );
+    }
   }
 
   {
-    CellEvent cellEvent = getCellEvent(coarseGridVertices,fineGridVertices);
-    logDebug( "createEnterCellTraversalEvent()", "cell event " << toString(cellEvent) << " on cell type " << toString(getCellType(fineGridVertices)) << " on tree " << _id);
-
+    CellType type = getCellType(fineGridVertices);
     const int  stackNumber = PeanoCurve::getCellReadStackNumber(state);
+    switch (type) {
+      case CellType::New:
+        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
+        break;
+	  case CellType::Persistent:
+        event.setCellData(stackNumber);
+        break;
+      case CellType::Delete:
+        event.setCellData(stackNumber);
+        break;
+    }
 
-    switch (cellEvent) {
-      case CellEvent::NewLocal:
-        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
-        event.setSendReceiveVerticalCellData(GridTraversalEvent::None);
-        break;
-      case CellEvent::PersistentLocal:
-      case CellEvent::DeleteLocal:
-        event.setCellData(stackNumber);
-        event.setSendReceiveVerticalCellData(GridTraversalEvent::None);
-        break;
-      case CellEvent::Remote:
-        event.setCellData(TraversalObserver::NoData);
-        event.setSendReceiveVerticalCellData(GridTraversalEvent::None);
-        break;
-      case CellEvent::MovingNewCellToWorker:
-        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
-        event.setSendReceiveVerticalCellData(GridTraversalEvent::CopyToWorker);
-        event.setSendReceiveVerticalCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
-        break;
-      case CellEvent::MovingPersistentCellToWorker:
-      case CellEvent::MovingDeletingCellToWorker:
-        event.setCellData(stackNumber);
-        event.setSendReceiveVerticalCellData(GridTraversalEvent::CopyToWorker);
-        event.setSendReceiveVerticalCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
-        break;
-      case CellEvent::JoiningWithMaster:
-        event.setCellData(stackNumber);
-        event.setSendReceiveVerticalCellData(GridTraversalEvent::CopyToMaster);
-        event.setSendReceiveVerticalCellDataRank( _masterId );
-        break;
-      case CellEvent::TopCellOfRemoteWorker:
-        event.setCellData(TraversalObserver::NoData);
-        event.setSendReceiveVerticalCellData(GridTraversalEvent::ReceiveFromWorker);
-        event.setSendReceiveVerticalCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
-        break;
-      case CellEvent::TopCellOfLocalForest:
-        event.setCellData(stackNumber);
-        event.setSendReceiveVerticalCellData(GridTraversalEvent::ReceiveFromMaster);
-        event.setSendReceiveVerticalCellDataRank( _masterId );
-        break;
-      case CellEvent::NewFromSplit:
-        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
-        event.setSendReceiveVerticalCellData(GridTraversalEvent::ReceiveFromMaster);
-        event.setSendReceiveVerticalCellDataRank( _masterId );
-        break;
+    bool parentCellIsLocal   = isSpacetreeNodeLocal(coarseGridVertices);
+    bool cellIsLocal         = isSpacetreeNodeLocal(fineGridVertices);
+
+    if ( cellIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
+      assertionMsg( false, "not yet implemented" );
+    }
+    else if ( cellIsLocal and _spacetreeState==SpacetreeState::Joining ) {
+      assertionMsg( false, "not yet implemented" );
+    }
+    else if ( not cellIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+      event.setStreamCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
+    }
+    else if ( not cellIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+      assertionMsg( false, "not yet implemented" );
+    }
+    else {
+      event.setStreamCellDataRank( TraversalObserver::NoRebalancing );
     }
   }
 
@@ -1830,11 +1824,31 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
   }
 
   {
-    CellEvent cellEvent = getCellEvent(coarseGridVertices,fineGridVertices);
-    logDebug( "createLeaveCellTraversalEvent()", "cell event " << toString(cellEvent) << " on cell type " << toString(getCellType(fineGridVertices)) << " on tree " << _id);
-
+    CellType type = getCellType(fineGridVertices);
     const int  stackNumber = PeanoCurve::getCellWriteStackNumber(state);
 
+    switch (type) {
+      case CellType::New:
+        event.setCellData(stackNumber);
+        break;
+	  case CellType::Persistent:
+        event.setCellData(stackNumber);
+        break;
+      case CellType::Delete:
+        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
+        break;
+    }
+
+    bool parentCellIsLocal   = isSpacetreeNodeLocal(coarseGridVertices);
+    bool cellIsLocal         = isSpacetreeNodeLocal(fineGridVertices);
+
+    /*
+    CellEvent cellEvent = getCellEvent(coarseGridVertices,fineGridVertices);
+    logDebug( "createLeaveCellTraversalEvent()", "cell event " << toString(cellEvent) << " on cell type " << toString(getCellType(fineGridVertices)) << " on tree " << _id);
+*/
+
+
+/*
     switch (cellEvent) {
       case CellEvent::NewFromSplit:
       case CellEvent::NewLocal:
@@ -1872,6 +1886,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
         //event.setSendReceiveCellDataRank( _masterId );
         break;
     }
+*/
   }
 
   logTraceOutWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), event.toString(), _id );
@@ -2256,29 +2271,7 @@ bool peano4::grid::Spacetree::isInvolvedInJoinOrFork() const {
 	    or not _splitting.empty();
 }
 
-
-peano4::grid::Spacetree::VertexEvent peano4::grid::Spacetree::getVertexEvent(
-  GridVertex                         coarseGridVertices[TwoPowerD],
-  GridVertex                         fineGridVertices[TwoPowerD],
-  int                                vertexIndex
-) const {
-  VertexEvent  result;
-  assertionMsg(false,"not implemented yet");
-  return result;
-}
-
-
-peano4::grid::Spacetree::FaceEvent peano4::grid::Spacetree::getFaceEvent(
-  GridVertex                         coarseGridVertices[TwoPowerD],
-  GridVertex                         fineGridVertices[TwoPowerD],
-  int                                faceIndex
-) const {
-  FaceEvent  result;
-  FaceType   type        = getFaceType(fineGridVertices,faceIndex);
-  assertionMsg(false,"not implemented yet");
-  return result;
-}
-
+/*
 
 peano4::grid::Spacetree::CellEvent peano4::grid::Spacetree::getCellEvent(
   GridVertex                         coarseGridVertices[TwoPowerD],
@@ -2346,21 +2339,4 @@ peano4::grid::Spacetree::CellEvent peano4::grid::Spacetree::getCellEvent(
   logTraceOutWith1Argument("getCellEvent(...)",toString(result));
   return result;
 }
-
-
-std::string peano4::grid::Spacetree::toString( CellEvent type ) {
-  switch (type) {
-    case CellEvent::NewLocal:               return "new-local";
-    case CellEvent::PersistentLocal:        return "persistent-local";
-    case CellEvent::DeleteLocal:            return "delete-local";
-    case CellEvent::Remote:                 return "remote";
-    case CellEvent::MovingNewCellToWorker:  return "moving-new-cell-to-worker";
-    case CellEvent::MovingPersistentCellToWorker:  return "moving-persistent-cell-to-worker";
-    case CellEvent::MovingDeletingCellToWorker:    return "moving-deleting-cell-to-worker";
-    case CellEvent::JoiningWithMaster:      return "joining-with-master";
-    case CellEvent::TopCellOfRemoteWorker:  return "top-cell-of-remote-worker";
-    case CellEvent::TopCellOfLocalForest:   return "top-cell-of-local-forest";
-    case CellEvent::NewFromSplit:           return "new-from-split";
-  }
-  return "<undef>";
-}
+*/

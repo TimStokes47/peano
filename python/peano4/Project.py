@@ -117,8 +117,11 @@ class Project (object):
     prefix is an array, too. A typical invocation looks alike
 
     project.run( ["16.0", "32.0"], ["/opt/mpi/mpirun", "-n", "1"] )
+    
+    The operation returns True if the run had been successful
 
     """
+    result = False
     if not self.is_built:
       self.build()
     if self.is_built:
@@ -132,12 +135,14 @@ class Project (object):
       try:
         subprocess.check_call( invocation )
         print( "run complete" )
+        result = True
       except Exception as e:
         print( "run of application was not successful: " + str(e) )
         print( "invocation: " + str(invocation) )
     else:
       print( "can not run as code compilation has not been successful" )
   
+    return result
       
       
       

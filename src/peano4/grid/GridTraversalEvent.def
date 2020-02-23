@@ -47,27 +47,23 @@ class peano4::grid::GridTraversalEvent {
    */
   persistent parallelise int     relativePositionToFather[Dimensions];
 
-  enum VerticalDataExchange {
-    None,
-    CopyToWorker,
-    CopyToMaster,
-    ReceiveFromMaster,
-    ReceiveFromWorker,
-    InterGridTransfer
+  enum LoadBalancingDataExchange {
+    StreamIn,
+    StreamOut,
+    NoRebalancing
   };
-  
-  persistent parallelise packed VerticalDataExchange sendReceiveVerticalVertexData[TwoPowerD];
-  persistent parallelise packed VerticalDataExchange sendReceiveVerticalFaceData[TwoTimesD];
-  persistent parallelise packed VerticalDataExchange sendReceiveVerticalCellData;
 
   /**
-   * In a parallel environment, we might have to send data to other ranks 
-   * before we store them or merge into our own data just before we hand it
-   * over to the user code. This is denoted by these flags. They actually 
-   * denote ranks.
+   * Tells you whether we stream in or out. In is set by a 
+   * master joining in a worker or by a new worker. The flag 
+   * per se does not mean anything for the data flow. It simply
+   * indicates the data flow direction if data is actually 
+   * moved around.
    */
-  persistent parallelise int     sendReceiveVerticalVertexDataRank[TwoPowerD];
-  persistent parallelise int     sendReceiveVerticalFaceDataRank[TwoTimesD];
-  persistent parallelise int     sendReceiveVerticalCellDataRank;
+  persistent parallelise LoadBalancingDataExchange    loadBalancingDataExchange;
+  
+  persistent parallelise int     streamVertexDataRank[TwoPowerD];
+  persistent parallelise int     streamFaceDataRank[TwoTimesD];
+  persistent parallelise int     streamCellDataRank;
 };
 

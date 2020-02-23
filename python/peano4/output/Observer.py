@@ -338,6 +338,23 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       ) {{
         data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inVertexStack))->pop();
       }}
+      
+      if (
+        inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
+        and
+        event.getStreamVertexDataRank(i)!=peano4::grid::TraversalObserver::NoRebalancing 
+        and
+        event.getLoadBalancingDataExchange()==peano4::grid::GridTraversalEvent::LoadBalancingDataExchange::StreamOut
+      ) {{
+        const int streamStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getStreamVertexDataRank(i) );
+        DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,streamStack))->push(data);
+        logDebug("enterCell(peano4::grid::GridTraversalEvent)", "vertex " << inVertexStack << "->stream-" << streamStack );
+      }}
+
       view.set(outVertexStackPosition,data);
     }}
   }}
@@ -409,6 +426,23 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       ) {{
         data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inFaceStack))->pop();
       }}
+      
+      if (
+        inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        peano4::grid::PeanoCurve::isInOutStack(inFaceStack)
+        and
+        event.getStreamFaceDataRank(i)!=peano4::grid::TraversalObserver::NoRebalancing 
+        and
+        event.getLoadBalancingDataExchange()==peano4::grid::GridTraversalEvent::LoadBalancingDataExchange::StreamOut
+      ) {{
+        const int streamStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getStreamFaceDataRank(i) );
+        DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,streamStack))->push(data);
+        logDebug("enterCell(peano4::grid::GridTraversalEvent)", "face " << inFaceStack << "->stream-" << streamStack );
+      }}
+      
       view.set(outFaceStackPosition,data);
     }}
   }}
@@ -479,13 +513,17 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     }}
     DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,outCellStack))->push(data);
 
+    // I usually should check here whether it is a creational routine over a persistent face or an
+    // in/out stack, but for cells, this check does hold always.
+
     if ( 
-      event.getSendReceiveVerticalCellData()==peano4::grid::GridTraversalEvent::CopyToWorker
-      or
-      event.getSendReceiveVerticalCellData()==peano4::grid::GridTraversalEvent::CopyToMaster
-    ) {{
-      const int streamStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getSendReceiveVerticalCellDataRank() );
+      event.getStreamCellDataRank()!=peano4::grid::TraversalObserver::NoRebalancing 
+      and
+      event.getLoadBalancingDataExchange()==peano4::grid::GridTraversalEvent::LoadBalancingDataExchange::StreamOut
+    ) {
+      const int streamStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getStreamCellDataRank() );
       DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,streamStack))->push(data);
+      logDebug("enterCell(peano4::grid::GridTraversalEvent)", "cell " << inCellStack << "->stream-" << streamStack );
     }}
   }}
 """
@@ -514,9 +552,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     if ( 
       event.getCellData()!=peano4::grid::TraversalObserver::NoData
       and
-      event.getSendReceiveVerticalCellData()!=peano4::grid::GridTraversalEvent::CopyToWorker
-      and
-      event.getSendReceiveVerticalCellData()!=peano4::grid::GridTraversalEvent::CopyToMaster
+      event.getStreamCellDataRank()==peano4::grid::TraversalObserver::NoRebalancing
     ) {{
       peano4::datamanagement::CellMarker marker( event );
       {ACTIVE_ACTION_SET}.touchCellFirstTime(

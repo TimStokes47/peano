@@ -122,74 +122,11 @@ class peano4::grid::Spacetree {
   	  Joining
     };
 
-    enum class CellEvent {
-      /**
-       * Local means the cell resides on the local tree, is not remote, and is
-       * neither the top level cell shared with the master rank nor a cell
-       * shared with a worker. The whole tree (and thus cell) also is not
-       * involved in any split or join.
-       */
-      NewLocal, PersistentLocal, DeleteLocal,
-      /**
-       * This cell is remote. That means it should not hold any data.
-       */
-      Remote,
-      /**
-       * This cell is currently moving to a worker, i.e. our tree is splitting.
-       * If a cell is to be moved to a worker, then we know that it is/has been
-       * inside, and it is not the top level cell of a tree. If we moved the
-       * top level cell, we would destroy the tree topology on the MPI ranks.
-       * As we work with a streaming process here (the old tree streams its
-       * data into the new tree), this state triggers lots of creational
-       * events (destruction of data on the former master).
-       */
-      MovingNewCellToWorker, MovingPersistentCellToWorker, MovingDeletingCellToWorker,
-      /**
-       * We join only top level cells of workers.
-       */
-      JoiningWithMaster,
-      /**
-       * This routine is called on the master tree if it bumps into the coarsest
-       * cell which is already assigned to a worker.
-       */
-      TopCellOfRemoteWorker,
-      TopCellOfLocalForest,
-      /**
-       * Counterpart of MovingToWorker. We stream in user-defined data when we
-       * touch a cell for the first time, but we basically do nothing when we
-       * leave the cell.
-       */
-      NewFromSplit
-    };
-
-
-    enum class FaceEvent {
-      NewLocal, HangingLocal, PersistentLocal, DeleteLocal,
-      Remote,
-      MovingNewFaceToWorker, MovingPersistentFaceToWorker, MovingDeletingFaceToWorker,
-      JoiningWithMaster,
-      TopFaceOfRemoteWorker,
-      TopFaceOfLocalForest,
-      NewFromSplit
-    };
-
-
-    enum class VertexEvent {
-      NewLocal, HangingLocal, PersistentLocal, DeleteLocal,
-      Remote,
-      MovingNewVertexToWorker, MovingPersistentVertexToWorker, MovingDeletingVertexToWorker,
-      JoiningWithMaster,
-      TopVertexOfRemoteWorker,
-      TopVertexOfLocalForest,
-      NewFromSplit
-    };
-
-
     static std::string toString( SpacetreeState state );
+
     static std::string toString( VertexType type );
     static std::string toString( FaceType type );
     static std::string toString( CellType type );
-    static std::string toString( CellEvent type );
 
     /**
      * Simple recursive type analysis
@@ -210,40 +147,6 @@ class peano4::grid::Spacetree {
       GridVertex                         coarseGridVertices[TwoPowerD],
       int                                faceNumber
     );
-
-    /**
-     * This routine is used by both createEnterCellTraversalEvent() and
-     * createLeaveCellTraversalEvent() to learn why an event is to be
-     * built up. In return, this will allow the create routines to construct
-     * all required and necessary data flow.
-     *
-     * <h2> CellEvent::NewFromSplit </h2>
-     * <h2> CellEvent::MovingToWorker </h2>
-     * <h2> CellEvent::JoiningWithMaster </h2>
-     * <h2> CellEvent::Local </h2>
-     * <h2> CellEvent::TopCellOfLocalForest </h2>
-     * <h2> CellEvent::TopCellOfRemoteWorker </h2>
-     * <h2> CellEvent::Remote </h2>
-     *
-     *
-     *
-     */
-    CellEvent getCellEvent(
-      GridVertex                         coarseGridVertices[TwoPowerD],
-      GridVertex                         fineGridVertices[TwoPowerD]
-    ) const;
-
-    FaceEvent getFaceEvent(
-      GridVertex                         coarseGridVertices[TwoPowerD],
-      GridVertex                         fineGridVertices[TwoPowerD],
-      int                                faceIndex
-    ) const;
-
-    VertexEvent getVertexEvent(
-      GridVertex                         coarseGridVertices[TwoPowerD],
-      GridVertex                         fineGridVertices[TwoPowerD],
-      int                                vertexIndex
-    ) const;
 
     bool isCellSplitCandidate(
       GridVertex                         coarseGridVertices[TwoPowerD],

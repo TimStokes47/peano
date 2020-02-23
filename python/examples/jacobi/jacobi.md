@@ -31,7 +31,9 @@ of complexity. Some of them build upon each other. Others are orthogonal.
     This second step discusses one functional and one non-functional extension: 
     I write a dynamic AMR variant of the Jacobi (the first step solely works on 
     a regular grid) and I then parallelise this code using MPI and TBB.  
-    
+
+
+Wie verwenden wir verschiedene mains?    
     
     
     

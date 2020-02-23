@@ -37,6 +37,8 @@ class peano4::grid::TraversalObserver {
 
     static constexpr int NoData                              = -1;
 
+    static constexpr int NoRebalancing                       = -1;
+
 	  /**
 	   * Implies that the data will then be local or had been local.
 	   */

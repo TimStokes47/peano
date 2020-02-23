@@ -29,7 +29,7 @@ import peano4.toolbox
 #
 # Lets first clean up all plot files, so we don't get a mismatch.
 #
-output_files = [ f for f in os.listdir(".") if f.endswith(".peano-patch-file") or f.endswith(".vtu") ]
+output_files = [ f for f in os.listdir(".") if f.endswith(".peano-patch-file") or f.endswith(".vtu") or f.endswith(".log") ]
 for f in output_files:
   os.remove(f)
 
@@ -156,7 +156,7 @@ project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
 project.generate(peano4.output.Overwrite.Default)
 project.build(True)
 start_time_stamp = time.time()
-project.run( ["2"] )
+run_successful = project.run( ["2"] )
 #project.run( ["16.0"], ["/opt/mpi/mpirun", "-n", "1"] )
 #project.run( ["32"], ["/opt/mpi/mpirun", "-n", "1"] )
 print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
@@ -165,17 +165,18 @@ print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
 
 
 
-#
-# Convert data into vtk, so we can open it in Paraview
-#
-convert = peano4.visualisation.Convert( "epsilon" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
-#convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
-convert.extract_fine_grid()
-convert.convert_to_vtk()
+if run_successful:
+  #
+  # Convert data into vtk, so we can open it in Paraview  
+  #
+  convert = peano4.visualisation.Convert( "epsilon" )
+  convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+  #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
+  convert.extract_fine_grid()
+  convert.convert_to_vtk()
 
-convert.set_input_file_name( "solution" )
-convert.extract_fine_grid()
-convert.convert_to_vtk()
+  convert.set_input_file_name( "solution" )
+  convert.extract_fine_grid()
+  convert.convert_to_vtk()
 
 

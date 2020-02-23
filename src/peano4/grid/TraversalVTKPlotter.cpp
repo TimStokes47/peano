@@ -115,9 +115,10 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
   bool cellIsRefined = event.getIsRefined()!=0;
   bool plot = not cellIsRefined
               and
-              event.getCellData()!=TraversalObserver::NoData
-              and
-              event.getSendReceiveVerticalCellData()!=GridTraversalEvent::VerticalDataExchange::CopyToWorker;
+              event.getCellData()!=TraversalObserver::NoData;
+  // @todo Fix this part again. Leads to flickering
+//              and
+//              event.getSendReceiveVerticalCellData()!=GridTraversalEvent::VerticalDataExchange::CopyToWorker;
 
   if (plot) {
     plotCell(event);
