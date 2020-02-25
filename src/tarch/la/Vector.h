@@ -22,6 +22,8 @@ namespace tarch {
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
+#include <bitset>
+
 
 /**
  * Simple vector class
@@ -42,6 +44,8 @@ struct tarch::la::Vector {
     Vector (Scalar* values);
     Vector (Scalar value0, Scalar value1);
     Vector (Scalar value0, Scalar value1, Scalar value2);
+
+    Vector( const std::bitset<Size>& value );
 
     /**
      * Assignment operator for any vector type.
