@@ -327,13 +327,31 @@ class peano4::grid::Spacetree {
     ) const;
 
     /**
-     * @see isSpacetreeFaceLocal()
+     * Return pair for fine grid and coarse grid vertex, i.e. you are told whether the
+     * fine grid vertex is local and if the coarser grid entities have been local, too.
+     *
+     * Don't call this routine for a hanging vertex.
+     *
+     * @image html Spacetree_isSpacetreeVertexLocalInVerticalCommunicationContext.png
+     *
+     * If the fine grid vertex coincides spatially with a coarse vertex, then the father
+     * flag is set if the tree is a member of the father flag. We look at all adjacency
+     * entries.
      */
-    std::pair<bool,bool> isSpacetreeVertexLocal(
+    std::pair<bool,bool> isSpacetreeVertexLocalInVerticalCommunicationContext(
       GridVertex                                   coarseGridVertices[TwoPowerD],
       GridVertex                                   fineGridVertices[TwoPowerD],
       const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
-      int                                          vertexNumber
+	  const std::bitset<Dimensions>&               vertexNumber
+    ) const;
+
+    /**
+     * Helper routine for other operation
+     */
+    bool isSpacetreeCoarseVertexLocalInVerticalCommunicationContext(
+      GridVertex                                   coarseGridVertices[TwoPowerD],
+      const tarch::la::Vector<Dimensions,int>&     relativePositionOfVertexToFather,
+      std::bitset<TwoPowerD>                       fatherMask
     ) const;
 
     /**
@@ -382,8 +400,6 @@ class peano4::grid::Spacetree {
       GridVertex  coarseGridVertices[TwoPowerD],
       GridVertex  fineGridVertices[TwoPowerD]
     ) const;
-
-    bool oneOfParentVerticesHoldsSpacetreeId( GridVertex  coarseGridVertices[TwoPowerD] ) const;
 
 
     /**

@@ -170,32 +170,89 @@ std::pair<bool,bool> peano4::grid::Spacetree::isSpacetreeFaceLocal(
 ) const {
   std::pair<bool,bool> result(false,false);
 
-  result.first  = tarch::tarch::contains( fineGridVertices[vertexNumber].getAdjacentRanks(), _id );
-  result.second = oneOfParentVerticesHoldsSpacetreeId(coarseGridVertices);
+// @todo
+//  assertionMsg(false, "not implemented yet" );
 
   return result;
 }
 
 
-bool peano4::grid::Spacetree::oneOfParentVerticesHoldsSpacetreeId( GridVertex  coarseGridVertices[TwoPowerD] ) const {
-  aber nur die, die net haengen
-  return xxx;
+bool peano4::grid::Spacetree::isSpacetreeCoarseVertexLocalInVerticalCommunicationContext(
+  GridVertex                                   coarseGridVertices[TwoPowerD],
+  const tarch::la::Vector<Dimensions,int>&     relativePositionOfVertexToFather,
+  std::bitset<TwoPowerD>                       fatherMask
+) const {
+  bool result = false;
+  if (
+    tarch::la::contains(relativePositionOfVertexToFather, 1)
+    or
+    tarch::la::contains(relativePositionOfVertexToFather, 2)
+  ) {
+	int recurseAlongDimension = 0;
+    for (int d=0; d<Dimensions; d++) {
+      if ( relativePositionOfVertexToFather(d)==1 or relativePositionOfVertexToFather(d)==2 ) {
+    	recurseAlongDimension = d;
+      }
+    }
+    tarch::la::Vector<Dimensions,int> left  = relativePositionOfVertexToFather;
+    tarch::la::Vector<Dimensions,int> right = relativePositionOfVertexToFather;
+    left(recurseAlongDimension)  = 0;
+    right(recurseAlongDimension) = 3;
+
+    std::bitset<TwoPowerD> leftMask  = fatherMask;
+    std::bitset<TwoPowerD> rightMask = fatherMask;
+
+    for(int i=0; i<TwoPowerD; i++) {
+      std::bitset<TwoPowerD> currentMaskEntry;
+      currentMaskEntry = i;
+      currentMaskEntry[recurseAlongDimension] = 0;
+      leftMask[ currentMaskEntry.to_ulong() ] = false;
+      currentMaskEntry = i;
+      currentMaskEntry[recurseAlongDimension] = 1;
+      leftMask[ currentMaskEntry.to_ulong() ] = false;
+    }
+
+    return isSpacetreeCoarseVertexLocalInVerticalCommunicationContext( coarseGridVertices, left, leftMask )
+        or isSpacetreeCoarseVertexLocalInVerticalCommunicationContext( coarseGridVertices, right, rightMask );
+  }
+  else {
+	tarch::la::Vector<Dimensions,int> positionWithinCoarserCell = relativePositionOfVertexToFather / 3;
+	int                               coarseVertex = peano4::utils::dLinearised(positionWithinCoarserCell,2);
+    for (int i=0; i<TwoPowerD; i++) {
+      if (
+        fatherMask[i]
+        and
+		coarseGridVertices[coarseVertex].getState()!=GridVertex::State::HangingVertex
+      ) {
+        result |= tarch::la::contains( coarseGridVertices[coarseVertex].getAdjacentRanks(), _id );
+      }
+    }
+  }
+  return result;
 }
 
 
-std::pair<bool,bool> peano4::grid::Spacetree::isSpacetreeVertexLocal(
+std::pair<bool,bool> peano4::grid::Spacetree::isSpacetreeVertexLocalInVerticalCommunicationContext(
   GridVertex                                   coarseGridVertices[TwoPowerD],
   GridVertex                                   fineGridVertices[TwoPowerD],
   const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
-  int                                          vertexNumber
+  const std::bitset<Dimensions>&               vertexPosition
 ) const {
+  logTraceInWith2Arguments( "isSpacetreeVertexLocalInVerticalCommunicationContext(...)", relativePositionOfCellToFather, vertexPosition );
   std::pair<bool,bool> result;
 
-  assertion( fineGridVertices[vertexNumber].getState()!=GridVertex::State::HangingVertex );
+  assertion( fineGridVertices[vertexPosition.to_ulong()].getState()!=GridVertex::State::HangingVertex );
 
-  result.first  = tarch::tarch::contains( fineGridVertices[vertexNumber].getAdjacentRanks(), _id );
-  result.second = oneOfParentVerticesHoldsSpacetreeId(coarseGridVertices);
+  result.first  = tarch::la::contains( fineGridVertices[vertexPosition.to_ulong()].getAdjacentRanks(), _id );
 
+  tarch::la::Vector<Dimensions,int> positionWithinPatch = relativePositionOfCellToFather + tarch::la::Vector<Dimensions,int>(vertexPosition);
+  std::bitset<TwoPowerD>            mask;
+
+  mask.set();
+
+  result.second = isSpacetreeCoarseVertexLocalInVerticalCommunicationContext(coarseGridVertices,positionWithinPatch,mask);
+
+  logTraceOutWith2Arguments( "isSpacetreeVertexLocalInVerticalCommunicationContext(...)", result.first, result.second );
   return result;
 }
 
@@ -1684,7 +1741,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
 
     event.setStreamVertexDataRank( i, TraversalObserver::NoRebalancing );
     if (fineGridVertices[vertexIndex.to_ulong()].getState()!=GridVertex::HangingVertex) {
-      std::pair<bool,bool> local = isSpacetreeVertexLocal(coarseGridVertices, fineGridVertices, relativePositionToFather, i);
+      std::pair<bool,bool> local = isSpacetreeVertexLocalInVerticalCommunicationContext(coarseGridVertices, fineGridVertices, relativePositionToFather, vertexIndex);
       bool parentVertexIsLocal   = local.second;
       bool vertexIsLocal         = local.first;
 
@@ -1776,6 +1833,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
       assertionMsg( false, "not yet implemented" );
     }
     else if ( not cellIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+      logInfo( "createEnterCellTraversalEvent(...)", "cell will become remote: " << event.toString() );
       event.setStreamCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
     }
     else if ( not cellIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {

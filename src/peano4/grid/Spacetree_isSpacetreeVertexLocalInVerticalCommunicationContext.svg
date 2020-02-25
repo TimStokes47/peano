@@ -15,7 +15,10 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-   sodipodi:docname="Spacetree_isSpacetreeVertexLocalInVerticalCommunicationContext.svg">
+   sodipodi:docname="Spacetree_isSpacetreeVertexLocalInVerticalCommunicationContext.svg"
+   inkscape:export-filename="/home/tobias/git/Peano/src/peano4/grid/Spacetree_isSpacetreeVertexLocalInVerticalCommunicationContext.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs2" />
   <sodipodi:namedview
@@ -25,15 +28,15 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.979899"
-     inkscape:cx="537.30063"
-     inkscape:cy="771.91861"
+     inkscape:zoom="0.9899495"
+     inkscape:cx="647.70686"
+     inkscape:cy="938.57481"
      inkscape:document-units="mm"
-     inkscape:current-layer="g942-31"
+     inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="2560"
-     inkscape:window-height="1381"
-     inkscape:window-x="0"
+     inkscape:window-width="1920"
+     inkscape:window-height="1051"
+     inkscape:window-x="2560"
      inkscape:window-y="0"
      inkscape:window-maximized="1" />
   <metadata
@@ -44,7 +47,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
