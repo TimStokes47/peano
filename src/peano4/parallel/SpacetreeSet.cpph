@@ -13,7 +13,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
   switch (mode) {
     case VerticalDataExchangeMode::SendOutDataForDryRunOfNewSpacetree:
       {
-    	std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
+        std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
         for (auto& sourceStackKey: keys) {
           if (
             sourceStackKey.first==spacetreeId
@@ -21,15 +21,15 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
             Node::getInstance().isForkJoinDataExchangeOutputStackNumber(sourceStackKey.second)
             and
             not stackContainer.getForPush(sourceStackKey)->empty()
-    	    and
+            and
             Node::getInstance().getRank( Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second) )!=tarch::mpi::Rank::getInstance().getRank()
           ) {
-        	const int childId         = Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second);
+            const int childId         = Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second);
             const int destinationRank = Node::getInstance().getRank( childId );
             #ifdef Parallel
             const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(
               spacetreeId,
-			  childId,
+              childId,
               peano4::parallel::Node::ExchangeMode::ForkJoinData
             );
             const int sourceStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(childId);
@@ -114,12 +114,16 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
           const int sourceStack      = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(spacetreeId);
           logDebug(
             "exchangeAllVerticalDataExchangeStacks(...)",
-            "move stack " << sourceStack << " from tree " << spacetreeId << " into stack " << destinationStack << " from tree " << parentId <<
+            "move stack " << sourceStack << " from tree " << parentId << " into stack " << destinationStack << " from tree " << spacetreeId <<
             ": " << stackContainer.getForPush(parentId,sourceStack)->toString()
           );
           stackContainer.getForPush(spacetreeId,destinationStack)->clone( *stackContainer.getForPush(parentId,sourceStack) );
           stackContainer.getForPush(spacetreeId,destinationStack)->reverse();
           stackContainer.getForPush(parentId,sourceStack)->clear();
+          logDebug(
+            "exchangeAllVerticalDataExchangeStacks(...)",
+            "size of stack " << destinationStack << " on tree " << spacetreeId << ": " << stackContainer.getForPush(spacetreeId,destinationStack)->size()
+          );
         }
         else {
           #ifdef Parallel

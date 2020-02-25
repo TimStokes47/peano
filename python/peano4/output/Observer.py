@@ -330,8 +330,33 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       int outVertexStackPosition = event.getVertexDataTo(i);
       logDebug("enterCell(...)", "vertex " << inVertexStack << "->pos-" << outVertexStackPosition );
 
+      if (
+        inVertexStack!=peano4::grid::TraversalObserver::NoData
+        and
+        inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
+        and
+        event.getLoadBalancingDataExchange()==peano4::grid::GridTraversalEvent::LoadBalancingDataExchange::StreamIn
+      ) {{
+        logDebug( "enterCell(...)", "have to analyse input event for incoming data" );  
+        for( int j=0; j<TwoPowerD; j++) {{
+          if ( event.getStreamVertexDataRank(outVertexStackPosition*TwoPowerD+j)!=peano4::grid::TraversalObserver::NoRebalancing ) {{
+            const int streamStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getStreamVertexDataRank(outVertexStackPosition*TwoPowerD+j) );
+            logDebug( "enterCell(...)", "move data from input stream " << streamStack << " over into stack " << inVertexStack );
+            assertion2( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,streamStack))->empty(), _spacetreeId, streamStack );  
+            auto data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,streamStack))->pop();
+            DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,inVertexStack))->push(data);
+          }}
+        }}
+      }}
+
       {full_qualified_type} data;
       if (
+        inVertexStack!=peano4::grid::TraversalObserver::NoData
+        and
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
@@ -340,19 +365,23 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       
       if (
+        inVertexStack!=peano4::grid::TraversalObserver::NoData
+        and
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
         and
         peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
         and
-        event.getStreamVertexDataRank(i)!=peano4::grid::TraversalObserver::NoRebalancing 
-        and
         event.getLoadBalancingDataExchange()==peano4::grid::GridTraversalEvent::LoadBalancingDataExchange::StreamOut
       ) {{
-        const int streamStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getStreamVertexDataRank(i) );
-        DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,streamStack))->push(data);
-        logDebug("enterCell(peano4::grid::GridTraversalEvent)", "vertex " << inVertexStack << "->stream-" << streamStack );
+        for( int j=0; j<TwoPowerD; j++) {{
+          if ( event.getStreamVertexDataRank(outVertexStackPosition*TwoPowerD+j)!=peano4::grid::TraversalObserver::NoRebalancing ) {{
+            const int streamStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange( event.getStreamVertexDataRank(outVertexStackPosition*TwoPowerD+j) );
+            DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,streamStack))->push(data);
+            logDebug("enterCell(peano4::grid::GridTraversalEvent)", "vertex " << inVertexStack << "->stream-" << streamStack );
+          }} 
+        }}
       }}
 
       view.set(outVertexStackPosition,data);
@@ -397,7 +426,11 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         );
       }}
-      else if (peano4::grid::PeanoCurve::isInOutStack(inVertexStack)) {{
+      else if (
+        inVertexStack!=peano4::grid::TraversalObserver::NoData
+        and
+        peano4::grid::PeanoCurve::isInOutStack(inVertexStack
+      )) {{
         {ACTIVE_ACTION_SET}.touchVertexFirstTime(
            marker.select(pick)
           ,{MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS_PICK_ENTRY}
@@ -438,7 +471,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         and
         event.getLoadBalancingDataExchange()==peano4::grid::GridTraversalEvent::LoadBalancingDataExchange::StreamOut
       ) {{
-        const int streamStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getStreamFaceDataRank(i) );
+        const int streamStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange( event.getStreamFaceDataRank(i) );
         DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,streamStack))->push(data);
         logDebug("enterCell(peano4::grid::GridTraversalEvent)", "face " << inFaceStack << "->stream-" << streamStack );
       }}
@@ -521,7 +554,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       and
       event.getLoadBalancingDataExchange()==peano4::grid::GridTraversalEvent::LoadBalancingDataExchange::StreamOut
     ) {
-      const int streamStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange( event.getStreamCellDataRank() );
+      const int streamStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange( event.getStreamCellDataRank() );
       DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,streamStack))->push(data);
       logDebug("enterCell(peano4::grid::GridTraversalEvent)", "cell " << inCellStack << "->stream-" << streamStack );
     }}
@@ -840,6 +873,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 
   TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Prologue = """
 void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {{
+  logTraceInWith1Argument( "exchangeAllVerticalDataExchangeStacks(...)", masterId );
 """
 
   TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Exchange = """
@@ -852,6 +886,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int mast
 """
 
   TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Epilogue = """
+  logTraceOut( "exchangeAllVerticalDataExchangeStacks(...)" );
 }}
 """
 
@@ -860,6 +895,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int mast
 
   TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Prologue = """
 void {FULL_QUALIFIED_CLASSNAME}::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {{
+  logTraceInWith1Argument( "exchangeAllHorizontalDataExchangeStacks(...)", symmetricDataCardinality );
 """
 
   TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Exchange = """
@@ -871,6 +907,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllHorizontalDataExchangeStacks( bool s
 """
 
   TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Epilogue = """
+  logTraceOut( "exchangeAllHorizontalDataExchangeStacks(...)" );
 }}
 """
 
@@ -879,6 +916,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllHorizontalDataExchangeStacks( bool s
 
   TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Prologue = """
 void {FULL_QUALIFIED_CLASSNAME}::exchangeAllPeriodicBoundaryDataStacks() {{
+  logTraceIn( "exchangeAllPeriodicBoundaryDataStacks()" );
 """
 
   TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Exchange = """
@@ -889,6 +927,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllPeriodicBoundaryDataStacks() {{
 """
 
   TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Epilogue = """
+  logTraceOut( "exchangeAllPeriodicBoundaryDataStacks()" );
 }}
 """
 

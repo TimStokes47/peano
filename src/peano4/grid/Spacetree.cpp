@@ -1678,6 +1678,7 @@ void peano4::grid::Spacetree::descend(
 }
 
 
+
 peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTraversalEvent(
   GridVertex                                   coarseGridVertices[TwoPowerD],
   GridVertex                                   fineGridVertices[TwoPowerD],
@@ -1727,11 +1728,16 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     	break;
       case GridVertex::New:
         {
-          if ( PeanoCurve::isInOutStack(stackNumber) ) {
-            event.setVertexDataFrom(i,TraversalObserver::CreateOrDestroyPersistentGridEntity);
+          if ( isVertexAdjacentToLocalSpacetree(fineGridVertices[vertexPosition],true,false)) {
+            if ( PeanoCurve::isInOutStack(stackNumber) ) {
+              event.setVertexDataFrom(i,TraversalObserver::CreateOrDestroyPersistentGridEntity);
+            }
+            else {
+              event.setVertexDataFrom(i,stackNumber);
+            }
           }
           else {
-            event.setVertexDataFrom(i,stackNumber);
+            event.setVertexDataFrom(i,TraversalObserver::NoData);
           }
         }
     	break;
@@ -1742,14 +1748,34 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
       case GridVertex::EraseTriggered:
       case GridVertex::Erasing:
       case GridVertex::Delete:
-        event.setVertexDataFrom(i,stackNumber);
+        if ( isVertexAdjacentToLocalSpacetree(fineGridVertices[vertexPosition],true,false)) {
+          event.setVertexDataFrom(i,stackNumber);
+        }
+        else {
+          event.setVertexDataFrom(i,TraversalObserver::NoData);
+        }
     	break;
     }
     event.setVertexDataTo(i,vertexIndex.to_ulong());
 
-    if ( _spacetreeState==SpacetreeState::NewFromSplit and fineGridVertices[vertexPosition].getState()!=GridVertex::HangingVertex ) {
-      //event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamIn);
-      assertionMsg(false,"not defined");
+    if (
+      _spacetreeState==SpacetreeState::NewFromSplit
+      and
+      fineGridVertices[vertexPosition].getState()!=GridVertex::HangingVertex
+      and
+      PeanoCurve::isInOutStack(stackNumber)
+    ) {
+      // ========================
+      // build up adjacency lists
+      // ========================
+      for (int j=0; j<TwoPowerD; j++) {
+        if (
+           tarch::la::contains( fineGridVertices[vertexPosition].getAdjacentRanks(), _id )
+        ) {
+          logDebug( "createEnterCellTraversalEvent(...)", vertexPosition << "th vertex is to be streamed in from master" );
+          event.setStreamVertexDataRank( j + vertexPosition*TwoPowerD, _masterId );
+        }
+      }
     }
     else if ( _spacetreeState==SpacetreeState::Joining and fineGridVertices[vertexPosition].getState()!=GridVertex::HangingVertex ) {
       //event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamOut);
@@ -1757,64 +1783,23 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     }
     else if (
       not _splitting.empty()
-	  and
-	  PeanoCurve::isInOutStack(stackNumber)
+      and
+      fineGridVertices[vertexPosition].getState()!=GridVertex::HangingVertex
+      and
+      PeanoCurve::isInOutStack(stackNumber)
     ) {
-      // ========================
-      // build up adjacency lists
-      // ========================
       for (int j=0; j<TwoPowerD; j++) {
-     	int currentRank = fineGridVertices[vertexPosition].getAdjacentRanks(j);
+        int currentRank = fineGridVertices[vertexPosition].getAdjacentRanks(j);
         if ( _splitting.count(currentRank)>0 ) {
           logDebug( "createEnterCellTraversalEvent(...)", vertexPosition << "th vertex is streamed out to tree " << currentRank );
           event.setStreamVertexDataRank( j + vertexPosition*TwoPowerD, currentRank );
         }
-      }
-      // ================
-      // clear duplicates
-      // ================
-      logDebug( "createEnterCellTraversalEvent(...)", "start to remove duplicates from " << event.getStreamVertexDataRank() );
-      for (int j=0;   j<TwoPowerD; j++)
-      for (int k=j+1; k<TwoPowerD; k++) {
-      	if (event.getStreamVertexDataRank( j + vertexPosition*TwoPowerD ) == event.getStreamVertexDataRank( k + vertexPosition*TwoPowerD ) ) {
-          event.setStreamVertexDataRank( k + vertexPosition*TwoPowerD, TraversalObserver::NoRebalancing );
-      	}
       }
     }
     else if ( not _joining.empty() and fineGridVertices[vertexPosition].getState()!=GridVertex::HangingVertex ) {
       //event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamIn);
       assertionMsg(false,"not defined");
     }
-
-
-/*
-
-    		isVertexAdjacentToSplittingOrJoiningSpacetree(fineGridVertices[vertexPosition]) ) {
-      event.setStreamVertexDataRank( vertexPosition,  );
-    }
-    else {
-
-    }
-*/
-
-/*
-      std::pair<bool,bool> local = isSpacetreeVertexLocalInVerticalCommunicationContext(coarseGridVertices, fineGridVertices, relativePositionToFather, vertexIndex);
-      bool parentVertexIsLocal   = local.second;
-      bool vertexIsLocal         = local.first;
-
-      if ( vertexIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
-        assertionMsg( false, "not yet implemented" );
-      }
-      else if ( vertexIsLocal and _spacetreeState==SpacetreeState::Joining ) {
-        assertionMsg( false, "not yet implemented" );
-      }
-      else if (  not vertexIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-        event.setStreamVertexDataRank( i, getTreeOwningSpacetreeNode(fineGridVertices) );
-      }
-      else if ( not vertexIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-        assertionMsg( false, "not yet implemented" );
-      }
-*/
   }
 
 
@@ -1872,13 +1857,28 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     const int  stackNumber = PeanoCurve::getCellReadStackNumber(state);
     switch (type) {
       case CellType::New:
-        event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
+        if (isSpacetreeNodeLocal(fineGridVertices)) {
+          event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
+        }
+        else {
+          event.setCellData(TraversalObserver::NoData);
+        }
         break;
 	  case CellType::Persistent:
-        event.setCellData(stackNumber);
+        if (isSpacetreeNodeLocal(fineGridVertices)) {
+          event.setCellData(stackNumber);
+        }
+        else {
+          event.setCellData(TraversalObserver::NoData);
+        }
         break;
       case CellType::Delete:
-        event.setCellData(stackNumber);
+        if (isSpacetreeNodeLocal(fineGridVertices)) {
+          event.setCellData(stackNumber);
+        }
+        else {
+          event.setCellData(TraversalObserver::NoData);
+        }
         break;
     }
 
@@ -1897,6 +1897,14 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     }
     else if ( not cellIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
       assertionMsg( false, "not yet implemented" );
+    }
+  }
+
+  for (int i=0;   i<TwoPowerD; i++)
+  for (int j=0;   j<TwoPowerD; j++)
+  for (int k=j+1; k<TwoPowerD; k++) {
+    if (event.getStreamVertexDataRank( j + i*TwoPowerD ) == event.getStreamVertexDataRank( k + i*TwoPowerD ) ) {
+      event.setStreamVertexDataRank( k + i*TwoPowerD, peano4::grid::TraversalObserver::NoRebalancing );
     }
   }
 

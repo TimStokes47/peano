@@ -284,7 +284,16 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
   exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, _spacetree._masterId, VerticalDataExchangeMode::Running );
   exchangeAllHorizontalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, true );
   exchangeAllPeriodicBoundaryDataStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
+
+  _spacetreeSet.createObserverCloneIfRequired(_observer,_spacetree._id);
+
+  _spacetreeSet._clonedObserver[_spacetree._id]->exchangeAllVerticalDataExchangeStacks( _spacetree._masterId, VerticalDataExchangeMode::Running );
+  _spacetreeSet._clonedObserver[_spacetree._id]->exchangeAllHorizontalDataExchangeStacks( true );
+  _spacetreeSet._clonedObserver[_spacetree._id]->exchangeAllPeriodicBoundaryDataStacks();
+
   finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
+  _spacetreeSet._clonedObserver[_spacetree._id]->finishAllOutstandingSendsAndReceives();
+
   return false;
 }
 
