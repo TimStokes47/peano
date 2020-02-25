@@ -17,8 +17,9 @@
 
   #define DimensionsTimesTwo (Dimensions*2)
 
-  #define TwoPowerD          (BasePowerExponent<2,Dimensions>::value)
-  #define TwoPowerDPlusTwo   (BasePowerExponent<2,Dimensions>::value+2)
+  #define TwoPowerD                (BasePowerExponent<2,Dimensions>::value)
+  #define TwoPowerDPlusTwo         (BasePowerExponent<2,Dimensions>::value+2)
+  #define TwoPowerDTimesTwoPowerD  (BasePowerExponent<2,Dimensions>::value*BasePowerExponent<2,Dimensions>::value)
 
   #define ThreePowerD        (BasePowerExponent<3,Dimensions>::value)
   #define FivePowerD         (BasePowerExponent<5,Dimensions>::value)
@@ -26,6 +27,7 @@
   #define NinePowerD         (BasePowerExponent<9,Dimensions>::value)
 
   #define TwoTimesD          (2*Dimensions)
+  #define TwoTimesDTimesTwo  (2*Dimensions*2)
 
 /*
   #define TwoPowerDTimesD   (BasePowerExponent<2,Dimensions>::value*Dimensions)

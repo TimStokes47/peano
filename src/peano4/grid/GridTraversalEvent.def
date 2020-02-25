@@ -7,6 +7,8 @@ Packed-Type: long int hint-size 64;
 Constant: Dimensions  hint-value 4;
 Constant: TwoPowerD   hint-value 16;
 Constant: TwoTimesD   hint-value 6;
+Constant: TwoPowerDTimesTwoPowerD;
+Constant: TwoTimesDTimesTwo;
 
 
 class peano4::grid::GridTraversalEvent {
@@ -62,8 +64,8 @@ class peano4::grid::GridTraversalEvent {
    */
   persistent parallelise LoadBalancingDataExchange    loadBalancingDataExchange;
   
-  persistent parallelise int     streamVertexDataRank[TwoPowerD];
-  persistent parallelise int     streamFaceDataRank[TwoTimesD];
+  persistent parallelise int     streamVertexDataRank[TwoPowerDTimesTwoPowerD];
+  persistent parallelise int     streamFaceDataRank[TwoTimesDTimesTwo];
   persistent parallelise int     streamCellDataRank;
 };
 

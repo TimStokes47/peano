@@ -309,7 +309,7 @@ class peano4::grid::Spacetree {
      * two.
      */
     bool isSpacetreeNodeLocal(
-	    GridVertex            vertices[TwoPowerD]
+      GridVertex            vertices[TwoPowerD]
     ) const;
 
     /**
@@ -319,12 +319,12 @@ class peano4::grid::Spacetree {
      *
      * Don't call this routine for a hanging vertex.
      */
-    std::pair<bool,bool> isSpacetreeFaceLocal(
-      GridVertex                                   coarseGridVertices[TwoPowerD],
-      GridVertex                                   fineGridVertices[TwoPowerD],
-      const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
-      int                                          faceNumber
-    ) const;
+//    std::pair<bool,bool> isSpacetreeFaceLocal(
+//      GridVertex                                   coarseGridVertices[TwoPowerD],
+//      GridVertex                                   fineGridVertices[TwoPowerD],
+//      const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
+//      int                                          faceNumber
+//    ) const;
 
     /**
      * Return pair for fine grid and coarse grid vertex, i.e. you are told whether the
@@ -338,21 +338,21 @@ class peano4::grid::Spacetree {
      * flag is set if the tree is a member of the father flag. We look at all adjacency
      * entries.
      */
-    std::pair<bool,bool> isSpacetreeVertexLocalInVerticalCommunicationContext(
-      GridVertex                                   coarseGridVertices[TwoPowerD],
-      GridVertex                                   fineGridVertices[TwoPowerD],
-      const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
-	  const std::bitset<Dimensions>&               vertexNumber
-    ) const;
+//    std::pair<bool,bool> isSpacetreeVertexLocalInVerticalCommunicationContext(
+//      GridVertex                                   coarseGridVertices[TwoPowerD],
+//      GridVertex                                   fineGridVertices[TwoPowerD],
+//      const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
+//	  const std::bitset<Dimensions>&               vertexNumber
+//    ) const;
 
     /**
      * Helper routine for other operation
      */
-    bool isSpacetreeCoarseVertexLocalInVerticalCommunicationContext(
-      GridVertex                                   coarseGridVertices[TwoPowerD],
-      const tarch::la::Vector<Dimensions,int>&     relativePositionOfVertexToFather,
-      std::bitset<TwoPowerD>                       fatherMask
-    ) const;
+//    bool isSpacetreeCoarseVertexLocalInVerticalCommunicationContext(
+//      GridVertex                                   coarseGridVertices[TwoPowerD],
+//      const tarch::la::Vector<Dimensions,int>&     relativePositionOfVertexToFather,
+//      std::bitset<TwoPowerD>                       fatherMask
+//    ) const;
 
     /**
      * We run over the @f$ 2^d @f$ adjacent vertices of the cell and look at

@@ -5,7 +5,7 @@ peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords() {
 }
 
 
-peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const LoadBalancingDataExchange& loadBalancingDataExchange, const tarch::la::Vector<TwoPowerD,int>& streamVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& streamFaceDataRank, const int& streamCellDataRank):
+peano4::grid::GridTraversalEvent::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const LoadBalancingDataExchange& loadBalancingDataExchange, const tarch::la::Vector<TwoPowerDTimesTwoPowerD,int>& streamVertexDataRank, const tarch::la::Vector<TwoTimesDTimesTwo,int>& streamFaceDataRank, const int& streamCellDataRank):
 _x(x),
 _h(h),
 _isRefined(isRefined),
@@ -143,25 +143,25 @@ _streamCellDataRank(streamCellDataRank) {
 
 
 
- tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEvent::PersistentRecords::getStreamVertexDataRank() const  {
+ tarch::la::Vector<TwoPowerDTimesTwoPowerD,int> peano4::grid::GridTraversalEvent::PersistentRecords::getStreamVertexDataRank() const  {
    return _streamVertexDataRank;
 }
 
 
 
- void peano4::grid::GridTraversalEvent::PersistentRecords::setStreamVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& streamVertexDataRank)  {
+ void peano4::grid::GridTraversalEvent::PersistentRecords::setStreamVertexDataRank(const tarch::la::Vector<TwoPowerDTimesTwoPowerD,int>& streamVertexDataRank)  {
    _streamVertexDataRank = (streamVertexDataRank);
 }
 
 
 
- tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEvent::PersistentRecords::getStreamFaceDataRank() const  {
+ tarch::la::Vector<TwoTimesDTimesTwo,int> peano4::grid::GridTraversalEvent::PersistentRecords::getStreamFaceDataRank() const  {
    return _streamFaceDataRank;
 }
 
 
 
- void peano4::grid::GridTraversalEvent::PersistentRecords::setStreamFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& streamFaceDataRank)  {
+ void peano4::grid::GridTraversalEvent::PersistentRecords::setStreamFaceDataRank(const tarch::la::Vector<TwoTimesDTimesTwo,int>& streamFaceDataRank)  {
    _streamFaceDataRank = (streamFaceDataRank);
 }
 
@@ -189,7 +189,7 @@ _persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords
 }
 
 
-peano4::grid::GridTraversalEvent::GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const LoadBalancingDataExchange& loadBalancingDataExchange, const tarch::la::Vector<TwoPowerD,int>& streamVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& streamFaceDataRank, const int& streamCellDataRank):
+peano4::grid::GridTraversalEvent::GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const LoadBalancingDataExchange& loadBalancingDataExchange, const tarch::la::Vector<TwoPowerDTimesTwoPowerD,int>& streamVertexDataRank, const tarch::la::Vector<TwoTimesDTimesTwo,int>& streamFaceDataRank, const int& streamCellDataRank):
 _persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, faceDataTo, cellData, relativePositionToFather, loadBalancingDataExchange, streamVertexDataRank, streamFaceDataRank, streamCellDataRank) {
    
 }
@@ -470,13 +470,13 @@ peano4::grid::GridTraversalEvent::~GridTraversalEvent() { }
 
 
 
- tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEvent::getStreamVertexDataRank() const  {
+ tarch::la::Vector<TwoPowerDTimesTwoPowerD,int> peano4::grid::GridTraversalEvent::getStreamVertexDataRank() const  {
    return _persistentRecords._streamVertexDataRank;
 }
 
 
 
- void peano4::grid::GridTraversalEvent::setStreamVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& streamVertexDataRank)  {
+ void peano4::grid::GridTraversalEvent::setStreamVertexDataRank(const tarch::la::Vector<TwoPowerDTimesTwoPowerD,int>& streamVertexDataRank)  {
    _persistentRecords._streamVertexDataRank = (streamVertexDataRank);
 }
 
@@ -484,7 +484,7 @@ peano4::grid::GridTraversalEvent::~GridTraversalEvent() { }
 
  int peano4::grid::GridTraversalEvent::getStreamVertexDataRank(int elementIndex) const  {
    assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
+   assertion(elementIndex<TwoPowerDTimesTwoPowerD);
    return _persistentRecords._streamVertexDataRank[elementIndex];
    
 }
@@ -493,20 +493,20 @@ peano4::grid::GridTraversalEvent::~GridTraversalEvent() { }
 
  void peano4::grid::GridTraversalEvent::setStreamVertexDataRank(int elementIndex, const int& streamVertexDataRank)  {
    assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
+   assertion(elementIndex<TwoPowerDTimesTwoPowerD);
    _persistentRecords._streamVertexDataRank[elementIndex]= streamVertexDataRank;
    
 }
 
 
 
- tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEvent::getStreamFaceDataRank() const  {
+ tarch::la::Vector<TwoTimesDTimesTwo,int> peano4::grid::GridTraversalEvent::getStreamFaceDataRank() const  {
    return _persistentRecords._streamFaceDataRank;
 }
 
 
 
- void peano4::grid::GridTraversalEvent::setStreamFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& streamFaceDataRank)  {
+ void peano4::grid::GridTraversalEvent::setStreamFaceDataRank(const tarch::la::Vector<TwoTimesDTimesTwo,int>& streamFaceDataRank)  {
    _persistentRecords._streamFaceDataRank = (streamFaceDataRank);
 }
 
@@ -514,7 +514,7 @@ peano4::grid::GridTraversalEvent::~GridTraversalEvent() { }
 
  int peano4::grid::GridTraversalEvent::getStreamFaceDataRank(int elementIndex) const  {
    assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
+   assertion(elementIndex<TwoTimesDTimesTwo);
    return _persistentRecords._streamFaceDataRank[elementIndex];
    
 }
@@ -523,7 +523,7 @@ peano4::grid::GridTraversalEvent::~GridTraversalEvent() { }
 
  void peano4::grid::GridTraversalEvent::setStreamFaceDataRank(int elementIndex, const int& streamFaceDataRank)  {
    assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
+   assertion(elementIndex<TwoTimesDTimesTwo);
    _persistentRecords._streamFaceDataRank[elementIndex]= streamFaceDataRank;
    
 }
@@ -616,16 +616,16 @@ void peano4::grid::GridTraversalEvent::toString (std::ostream& out) const {
    out << "loadBalancingDataExchange:" << toString(getLoadBalancingDataExchange());
    out << ",";
    out << "streamVertexDataRank:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
+   for (int i = 0; i < TwoPowerDTimesTwoPowerD-1; i++) {
       out << getStreamVertexDataRank(i) << ",";
    }
-   out << getStreamVertexDataRank(TwoPowerD-1) << "]";
+   out << getStreamVertexDataRank(TwoPowerDTimesTwoPowerD-1) << "]";
    out << ",";
    out << "streamFaceDataRank:[";
-   for (int i = 0; i < TwoTimesD-1; i++) {
+   for (int i = 0; i < TwoTimesDTimesTwo-1; i++) {
       out << getStreamFaceDataRank(i) << ",";
    }
-   out << getStreamFaceDataRank(TwoTimesD-1) << "]";
+   out << getStreamFaceDataRank(TwoTimesDTimesTwo-1) << "]";
    out << ",";
    out << "streamCellDataRank:" << getStreamCellDataRank();
    out <<  ")";
@@ -707,8 +707,8 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , 1		 //cellData
             , Dimensions		 //relativePositionToFather
             , 1		 //loadBalancingDataExchange
-            , TwoPowerD		 //streamVertexDataRank
-            , TwoTimesD		 //streamFaceDataRank
+            , TwoPowerDTimesTwoPowerD		 //streamVertexDataRank
+            , TwoTimesDTimesTwo		 //streamFaceDataRank
             , 1		 //streamCellDataRank
             #ifndef MPI2
             , 1 // upper bound
@@ -878,8 +878,8 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , 1		 //cellData
             , Dimensions		 //relativePositionToFather
             , 1		 //loadBalancingDataExchange
-            , TwoPowerD		 //streamVertexDataRank
-            , TwoTimesD		 //streamFaceDataRank
+            , TwoPowerDTimesTwoPowerD		 //streamVertexDataRank
+            , TwoTimesDTimesTwo		 //streamFaceDataRank
             , 1		 //streamCellDataRank
             #ifndef MPI2
             , 1 // upper bound
@@ -1297,7 +1297,7 @@ peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords() {
 }
 
 
-peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const LoadBalancingDataExchange& loadBalancingDataExchange, const tarch::la::Vector<TwoPowerD,int>& streamVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& streamFaceDataRank, const int& streamCellDataRank):
+peano4::grid::GridTraversalEventPacked::PersistentRecords::PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const LoadBalancingDataExchange& loadBalancingDataExchange, const tarch::la::Vector<TwoPowerDTimesTwoPowerD,int>& streamVertexDataRank, const tarch::la::Vector<TwoTimesDTimesTwo,int>& streamFaceDataRank, const int& streamCellDataRank):
 _x(x),
 _h(h),
 _relativePositionToFather(relativePositionToFather),
@@ -1577,25 +1577,25 @@ _streamCellDataRank(streamCellDataRank) {
 
 
 
- tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getStreamVertexDataRank() const  {
+ tarch::la::Vector<TwoPowerDTimesTwoPowerD,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getStreamVertexDataRank() const  {
    return _streamVertexDataRank;
 }
 
 
 
- void peano4::grid::GridTraversalEventPacked::PersistentRecords::setStreamVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& streamVertexDataRank)  {
+ void peano4::grid::GridTraversalEventPacked::PersistentRecords::setStreamVertexDataRank(const tarch::la::Vector<TwoPowerDTimesTwoPowerD,int>& streamVertexDataRank)  {
    _streamVertexDataRank = (streamVertexDataRank);
 }
 
 
 
- tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getStreamFaceDataRank() const  {
+ tarch::la::Vector<TwoTimesDTimesTwo,int> peano4::grid::GridTraversalEventPacked::PersistentRecords::getStreamFaceDataRank() const  {
    return _streamFaceDataRank;
 }
 
 
 
- void peano4::grid::GridTraversalEventPacked::PersistentRecords::setStreamFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& streamFaceDataRank)  {
+ void peano4::grid::GridTraversalEventPacked::PersistentRecords::setStreamFaceDataRank(const tarch::la::Vector<TwoTimesDTimesTwo,int>& streamFaceDataRank)  {
    _streamFaceDataRank = (streamFaceDataRank);
 }
 
@@ -1671,7 +1671,7 @@ _persistentRecords(persistentRecords._x, persistentRecords._h, persistentRecords
 }
 
 
-peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const LoadBalancingDataExchange& loadBalancingDataExchange, const tarch::la::Vector<TwoPowerD,int>& streamVertexDataRank, const tarch::la::Vector<TwoTimesD,int>& streamFaceDataRank, const int& streamCellDataRank):
+peano4::grid::GridTraversalEventPacked::GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const std::bitset<TwoPowerD>& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData, const tarch::la::Vector<Dimensions,int>& relativePositionToFather, const LoadBalancingDataExchange& loadBalancingDataExchange, const tarch::la::Vector<TwoPowerDTimesTwoPowerD,int>& streamVertexDataRank, const tarch::la::Vector<TwoTimesDTimesTwo,int>& streamFaceDataRank, const int& streamCellDataRank):
 _persistentRecords(x, h, isRefined, vertexDataFrom, vertexDataTo, faceDataFrom, faceDataTo, cellData, relativePositionToFather, loadBalancingDataExchange, streamVertexDataRank, streamFaceDataRank, streamCellDataRank) {
    if ((TwoPowerD+48 >= (8 * sizeof(long int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
@@ -2145,13 +2145,13 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 
 
 
- tarch::la::Vector<TwoPowerD,int> peano4::grid::GridTraversalEventPacked::getStreamVertexDataRank() const  {
+ tarch::la::Vector<TwoPowerDTimesTwoPowerD,int> peano4::grid::GridTraversalEventPacked::getStreamVertexDataRank() const  {
    return _persistentRecords._streamVertexDataRank;
 }
 
 
 
- void peano4::grid::GridTraversalEventPacked::setStreamVertexDataRank(const tarch::la::Vector<TwoPowerD,int>& streamVertexDataRank)  {
+ void peano4::grid::GridTraversalEventPacked::setStreamVertexDataRank(const tarch::la::Vector<TwoPowerDTimesTwoPowerD,int>& streamVertexDataRank)  {
    _persistentRecords._streamVertexDataRank = (streamVertexDataRank);
 }
 
@@ -2159,7 +2159,7 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 
  int peano4::grid::GridTraversalEventPacked::getStreamVertexDataRank(int elementIndex) const  {
    assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
+   assertion(elementIndex<TwoPowerDTimesTwoPowerD);
    return _persistentRecords._streamVertexDataRank[elementIndex];
    
 }
@@ -2168,20 +2168,20 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 
  void peano4::grid::GridTraversalEventPacked::setStreamVertexDataRank(int elementIndex, const int& streamVertexDataRank)  {
    assertion(elementIndex>=0);
-   assertion(elementIndex<TwoPowerD);
+   assertion(elementIndex<TwoPowerDTimesTwoPowerD);
    _persistentRecords._streamVertexDataRank[elementIndex]= streamVertexDataRank;
    
 }
 
 
 
- tarch::la::Vector<TwoTimesD,int> peano4::grid::GridTraversalEventPacked::getStreamFaceDataRank() const  {
+ tarch::la::Vector<TwoTimesDTimesTwo,int> peano4::grid::GridTraversalEventPacked::getStreamFaceDataRank() const  {
    return _persistentRecords._streamFaceDataRank;
 }
 
 
 
- void peano4::grid::GridTraversalEventPacked::setStreamFaceDataRank(const tarch::la::Vector<TwoTimesD,int>& streamFaceDataRank)  {
+ void peano4::grid::GridTraversalEventPacked::setStreamFaceDataRank(const tarch::la::Vector<TwoTimesDTimesTwo,int>& streamFaceDataRank)  {
    _persistentRecords._streamFaceDataRank = (streamFaceDataRank);
 }
 
@@ -2189,7 +2189,7 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 
  int peano4::grid::GridTraversalEventPacked::getStreamFaceDataRank(int elementIndex) const  {
    assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
+   assertion(elementIndex<TwoTimesDTimesTwo);
    return _persistentRecords._streamFaceDataRank[elementIndex];
    
 }
@@ -2198,7 +2198,7 @@ peano4::grid::GridTraversalEventPacked::~GridTraversalEventPacked() { }
 
  void peano4::grid::GridTraversalEventPacked::setStreamFaceDataRank(int elementIndex, const int& streamFaceDataRank)  {
    assertion(elementIndex>=0);
-   assertion(elementIndex<TwoTimesD);
+   assertion(elementIndex<TwoTimesDTimesTwo);
    _persistentRecords._streamFaceDataRank[elementIndex]= streamFaceDataRank;
    
 }
@@ -2287,16 +2287,16 @@ void peano4::grid::GridTraversalEventPacked::toString (std::ostream& out) const 
    out << "loadBalancingDataExchange:" << toString(getLoadBalancingDataExchange());
    out << ",";
    out << "streamVertexDataRank:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
+   for (int i = 0; i < TwoPowerDTimesTwoPowerD-1; i++) {
       out << getStreamVertexDataRank(i) << ",";
    }
-   out << getStreamVertexDataRank(TwoPowerD-1) << "]";
+   out << getStreamVertexDataRank(TwoPowerDTimesTwoPowerD-1) << "]";
    out << ",";
    out << "streamFaceDataRank:[";
-   for (int i = 0; i < TwoTimesD-1; i++) {
+   for (int i = 0; i < TwoTimesDTimesTwo-1; i++) {
       out << getStreamFaceDataRank(i) << ",";
    }
-   out << getStreamFaceDataRank(TwoTimesD-1) << "]";
+   out << getStreamFaceDataRank(TwoTimesDTimesTwo-1) << "]";
    out << ",";
    out << "streamCellDataRank:" << getStreamCellDataRank();
    out <<  ")";
@@ -2370,8 +2370,8 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             , Dimensions		 //h
             , Dimensions		 //relativePositionToFather
             , 1		 //loadBalancingDataExchange
-            , TwoPowerD		 //streamVertexDataRank
-            , TwoTimesD		 //streamFaceDataRank
+            , TwoPowerDTimesTwoPowerD		 //streamVertexDataRank
+            , TwoTimesDTimesTwo		 //streamFaceDataRank
             , 1		 //streamCellDataRank
             , 1		 //_packedRecords0
             , 1		 //_packedRecords1
@@ -2525,8 +2525,8 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             , Dimensions		 //h
             , Dimensions		 //relativePositionToFather
             , 1		 //loadBalancingDataExchange
-            , TwoPowerD		 //streamVertexDataRank
-            , TwoTimesD		 //streamFaceDataRank
+            , TwoPowerDTimesTwoPowerD		 //streamVertexDataRank
+            , TwoTimesDTimesTwo		 //streamFaceDataRank
             , 1		 //streamCellDataRank
             , 1		 //_packedRecords0
             , 1		 //_packedRecords1
