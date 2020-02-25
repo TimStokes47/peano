@@ -162,6 +162,44 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
 }
 
 
+std::pair<bool,bool> peano4::grid::Spacetree::isSpacetreeFaceLocal(
+  GridVertex                                   coarseGridVertices[TwoPowerD],
+  GridVertex                                   fineGridVertices[TwoPowerD],
+  const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
+  int                                          faceNumber
+) const {
+  std::pair<bool,bool> result(false,false);
+
+  result.first  = tarch::tarch::contains( fineGridVertices[vertexNumber].getAdjacentRanks(), _id );
+  result.second = oneOfParentVerticesHoldsSpacetreeId(coarseGridVertices);
+
+  return result;
+}
+
+
+bool peano4::grid::Spacetree::oneOfParentVerticesHoldsSpacetreeId( GridVertex  coarseGridVertices[TwoPowerD] ) const {
+  aber nur die, die net haengen
+  return xxx;
+}
+
+
+std::pair<bool,bool> peano4::grid::Spacetree::isSpacetreeVertexLocal(
+  GridVertex                                   coarseGridVertices[TwoPowerD],
+  GridVertex                                   fineGridVertices[TwoPowerD],
+  const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
+  int                                          vertexNumber
+) const {
+  std::pair<bool,bool> result;
+
+  assertion( fineGridVertices[vertexNumber].getState()!=GridVertex::State::HangingVertex );
+
+  result.first  = tarch::tarch::contains( fineGridVertices[vertexNumber].getAdjacentRanks(), _id );
+  result.second = oneOfParentVerticesHoldsSpacetreeId(coarseGridVertices);
+
+  return result;
+}
+
+
 int peano4::grid::Spacetree::getTreeOwningSpacetreeNode(
   GridVertex            vertices[TwoPowerD]
 ) const {
@@ -1644,23 +1682,24 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     }
     event.setVertexDataTo(i,vertexIndex.to_ulong());
 
-    bool parentVertexIsLocal   = isSpacetreeVertexLocal(coarseGridVertices);
-    bool vertexIsLocal         = isSpacetreeVertexLocal(fineGridVertices);
+    event.setStreamVertexDataRank( i, TraversalObserver::NoRebalancing );
+    if (fineGridVertices[vertexIndex.to_ulong()].getState()!=GridVertex::HangingVertex) {
+      std::pair<bool,bool> local = isSpacetreeVertexLocal(coarseGridVertices, fineGridVertices, relativePositionToFather, i);
+      bool parentVertexIsLocal   = local.second;
+      bool vertexIsLocal         = local.first;
 
-    if ( vertexIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
-      assertionMsg( false, "not yet implemented" );
-    }
-    else if ( vertexIsLocal and _spacetreeState==SpacetreeState::Joining ) {
-      assertionMsg( false, "not yet implemented" );
-    }
-    else if ( not vertexIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-      event.setStreamVertexDataRank( i, getTreeOwningSpacetreeNode(fineGridVertices) );
-    }
-    else if ( not vertexIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-      assertionMsg( false, "not yet implemented" );
-    }
-    else {
-      event.setStreamVertexDataRank( i, TraversalObserver::NoRebalancing );
+      if ( vertexIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
+        assertionMsg( false, "not yet implemented" );
+      }
+      else if ( vertexIsLocal and _spacetreeState==SpacetreeState::Joining ) {
+        assertionMsg( false, "not yet implemented" );
+      }
+      else if (  not vertexIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+        event.setStreamVertexDataRank( i, getTreeOwningSpacetreeNode(fineGridVertices) );
+      }
+      else if ( not vertexIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+        assertionMsg( false, "not yet implemented" );
+      }
     }
   }
 
@@ -1691,23 +1730,24 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     }
     event.setFaceDataTo(i,faceIndex);
 
-    bool parentFaceIsLocal   = isSpacetreeFaceLocal(coarseGridVertices);
-    bool faceIsLocal         = isSpacetreeFaceLocal(fineGridVertices);
+    event.setStreamFaceDataRank( i, TraversalObserver::NoRebalancing );
+    if ( type!=FaceType::Hanging ) {
+      std::pair<bool,bool> local = isSpacetreeFaceLocal(coarseGridVertices, fineGridVertices, relativePositionToFather, i);
+      bool parentFaceIsLocal   = local.second;
+      bool faceIsLocal         = local.first;
 
-    if ( faceIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
-      assertionMsg( false, "not yet implemented" );
-    }
-    else if ( faceIsLocal and _spacetreeState==SpacetreeState::Joining ) {
-      assertionMsg( false, "not yet implemented" );
-    }
-    else if ( not faceIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-      event.setStreamFaceDataRank( i, getTreeOwningSpacetreeNode(fineGridVertices) );
-    }
-    else if ( not faceIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-      assertionMsg( false, "not yet implemented" );
-    }
-    else {
-      event.setStreamFaceDataRank( i, TraversalObserver::NoRebalancing );
+      if ( faceIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
+        assertionMsg( false, "not yet implemented" );
+      }
+      else if ( faceIsLocal and _spacetreeState==SpacetreeState::Joining ) {
+        assertionMsg( false, "not yet implemented" );
+      }
+      else if ( not faceIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+        event.setStreamFaceDataRank( i, getTreeOwningSpacetreeNode(fineGridVertices) );
+      }
+      else if ( not faceIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
+        assertionMsg( false, "not yet implemented" );
+      }
     }
   }
 

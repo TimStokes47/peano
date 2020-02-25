@@ -313,6 +313,30 @@ class peano4::grid::Spacetree {
     ) const;
 
     /**
+     * Return pair for fine grid and coarse grid face, i.e. you are told whether the
+     * fine grid face is local and if the coarser grid entities have been local, too.
+     * Hanging faces are never local.
+     *
+     * Don't call this routine for a hanging vertex.
+     */
+    std::pair<bool,bool> isSpacetreeFaceLocal(
+      GridVertex                                   coarseGridVertices[TwoPowerD],
+      GridVertex                                   fineGridVertices[TwoPowerD],
+      const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
+      int                                          faceNumber
+    ) const;
+
+    /**
+     * @see isSpacetreeFaceLocal()
+     */
+    std::pair<bool,bool> isSpacetreeVertexLocal(
+      GridVertex                                   coarseGridVertices[TwoPowerD],
+      GridVertex                                   fineGridVertices[TwoPowerD],
+      const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
+      int                                          vertexNumber
+    ) const;
+
+    /**
      * We run over the @f$ 2^d @f$ adjacent vertices of the cell and look at
      * each vertex's adjacency list. Usually they should all agree on the who's
      * gonna own a cell. It is only hanging vertices which we should exclude
@@ -358,6 +382,9 @@ class peano4::grid::Spacetree {
       GridVertex  coarseGridVertices[TwoPowerD],
       GridVertex  fineGridVertices[TwoPowerD]
     ) const;
+
+    bool oneOfParentVerticesHoldsSpacetreeId( GridVertex  coarseGridVertices[TwoPowerD] ) const;
+
 
     /**
      * Study the adjacency flags and do ignore hanging nodes.
