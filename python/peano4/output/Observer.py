@@ -585,7 +585,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     if ( 
       event.getCellData()!=peano4::grid::TraversalObserver::NoData
       and
-      event.getStreamCellDataRank()==peano4::grid::TraversalObserver::NoRebalancing
+      event.getLoadBalancingDataExchange()!=peano4::grid::GridTraversalEvent::LoadBalancingDataExchange::StreamOut
+      //event.getStreamCellDataRank()!=peano4::grid::TraversalObserver::NoRebalancing
     ) {{
       peano4::datamanagement::CellMarker marker( event );
       {ACTIVE_ACTION_SET}.touchCellFirstTime(

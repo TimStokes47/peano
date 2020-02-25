@@ -1809,7 +1809,6 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     }
   }
 
-
   for (int i=0; i<2*Dimensions; i++) {
     int        faceIndex   = PeanoCurve::getFaceNumberAlongCurve(state,i);
     FaceType   type        = getFaceType(fineGridVertices,faceIndex);
@@ -1864,7 +1863,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     const int  stackNumber = PeanoCurve::getCellReadStackNumber(state);
     switch (type) {
       case CellType::New:
-        if (isSpacetreeNodeLocal(fineGridVertices,false,false)) {
+        if (isSpacetreeNodeLocal(fineGridVertices,true,false)) {
           event.setCellData(TraversalObserver::CreateOrDestroyPersistentGridEntity);
         }
         else {
@@ -1872,8 +1871,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
         }
         break;
 	  case CellType::Persistent:
-	    // @todo vermutlich true, false
-        if (isSpacetreeNodeLocal(fineGridVertices,false,false)) {
+        if (isSpacetreeNodeLocal(fineGridVertices,true,false)) {
           event.setCellData(stackNumber);
         }
         else {
@@ -1881,7 +1879,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
         }
         break;
       case CellType::Delete:
-        if (isSpacetreeNodeLocal(fineGridVertices,false,false)) {
+        if (isSpacetreeNodeLocal(fineGridVertices,true,false)) {
           event.setCellData(stackNumber);
         }
         else {
@@ -1894,7 +1892,10 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     bool cellIsLocal         = isSpacetreeNodeLocal(fineGridVertices,false,false);
 
     if ( cellIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
-      assertionMsg( false, "not yet implemented" );
+      if ( getTreeOwningSpacetreeNode(fineGridVertices)==_id) {
+        logDebug( "createEnterCellTraversalEvent(...)", "cell is to be streamed in from master" );
+        event.setStreamCellDataRank( _masterId );
+      }
     }
     else if ( cellIsLocal and _spacetreeState==SpacetreeState::Joining ) {
       assertionMsg( false, "not yet implemented" );
