@@ -309,7 +309,9 @@ class peano4::grid::Spacetree {
      * two.
      */
     bool isSpacetreeNodeLocal(
-      GridVertex            vertices[TwoPowerD]
+      GridVertex    vertices[TwoPowerD],
+      bool          splittingIsConsideredLocal,
+      bool          joiningIsConsideredLocal
     ) const;
 
     /**
