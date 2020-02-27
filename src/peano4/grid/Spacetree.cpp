@@ -1909,6 +1909,63 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     }
   }
 
+  createNeighbourExchangeLists( fineGridVertices, event );
+  removeDuplicateEntriesFromAdjancyListInEvent( event );
+
+  logTraceOutWith3Arguments( "createEnterCellTraversalEvent(...)", state.toString(), event.toString(), _id );
+  return event;
+}
+
+
+void peano4::grid::Spacetree::createNeighbourExchangeLists(
+  GridVertex           fineGridVertices[TwoPowerD],
+  GridTraversalEvent&  event
+) const {
+  if (
+    _spacetreeState==SpacetreeState::NewFromSplit
+	or
+	_spacetreeState==SpacetreeState::Joining
+  ) {
+    event.setExchangeVertexData(TraversalObserver::NoData);
+  }
+  else {
+    int counter = 0;
+    for (int i=0; i<TwoPowerD; i++) {
+      for (int j=0; j<TwoPowerD; j++) {
+        int currentRank = fineGridVertices[i].getAdjacentRanks(j);
+        if (
+          i!=TwoPowerD-j-1
+		  and
+          _splitting.count(currentRank)==0
+		  and
+          _joining.count(currentRank)==0
+		  and
+          currentRank!=_id
+        ) {
+           event.setExchangeVertexData(counter,currentRank);
+          counter++;
+        }
+        else if ( i!=TwoPowerD-j-1 ) {
+          event.setExchangeVertexData(counter,TraversalObserver::NoData);
+          counter++;
+        }
+      }
+    }
+    assertionEquals( counter, TwoPowerD*(TwoPowerD-1) );
+  }
+}
+
+
+void peano4::grid::Spacetree::removeDuplicateEntriesFromAdjancyListInEvent(
+  GridTraversalEvent&  event
+) const {
+  logTraceInWith1Argument( "removeDuplicateEntriesFromAdjancyListInEvent(GridTraversalEvent)", event.toString() );
+  for (int i=0; i<TwoTimesD; i++) {
+    if (event.getStreamFaceDataRank( i*2 ) == event.getStreamFaceDataRank( i*2+1 ) ) {
+      event.setStreamFaceDataRank( i*2+1, peano4::grid::TraversalObserver::NoRebalancing );
+    }
+  }
+
   for (int i=0;   i<TwoPowerD; i++)
   for (int j=0;   j<TwoPowerD; j++)
   for (int k=j+1; k<TwoPowerD; k++) {
@@ -1917,8 +1974,14 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
     }
   }
 
-  logTraceOutWith3Arguments( "createEnterCellTraversalEvent(...)", state.toString(), event.toString(), _id );
-  return event;
+  for (int i=0;   i<TwoPowerD; i++)
+  for (int j=0;   j<TwoPowerD-1; j++)
+  for (int k=j+1; k<TwoPowerD-1; k++) {
+    if (event.getExchangeVertexData( j + i*(TwoPowerD-1) ) == event.getExchangeVertexData( k + i*(TwoPowerD-1) ) ) {
+      event.setExchangeVertexData( k + i*(TwoPowerD-1), peano4::grid::TraversalObserver::NoData );
+    }
+  }
+  logTraceOutWith1Argument( "removeDuplicateEntriesFromAdjancyListInEvent(GridTraversalEvent)", event.toString() );
 }
 
 
@@ -2010,6 +2073,9 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
         break;
     }
   }
+
+  createNeighbourExchangeLists( fineGridVertices, event );
+  removeDuplicateEntriesFromAdjancyListInEvent( event );
 
   logTraceOutWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), event.toString(), _id );
   return event;

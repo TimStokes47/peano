@@ -9,6 +9,7 @@ Constant: TwoPowerD   hint-value 16;
 Constant: TwoTimesD   hint-value 6;
 Constant: TwoPowerDTimesTwoPowerD;
 Constant: TwoTimesDTimesTwo;
+Constant: TwoPowerDTimesTwoPowerDMinusOne;
 
 
 class peano4::grid::GridTraversalEvent {
@@ -67,5 +68,12 @@ class peano4::grid::GridTraversalEvent {
   persistent parallelise int     streamVertexDataRank[TwoPowerDTimesTwoPowerD];
   persistent parallelise int     streamFaceDataRank[TwoTimesDTimesTwo];
   persistent parallelise int     streamCellDataRank;
+
+  /**
+   * Boundary data exchange. This flag holds per vertex to which other ranks
+   * data has to be sent. So the cardinalty has to be @f$ 2^d \cdot (2^d-1) @f$.
+   */
+  persistent parallelise int     exchangeVertexData[TwoPowerDTimesTwoPowerDMinusOne];
+  persistent parallelise int     exchangeFaceData[TwoPowerD];
 };
 

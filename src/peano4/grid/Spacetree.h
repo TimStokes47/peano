@@ -495,6 +495,25 @@ class peano4::grid::Spacetree {
     );
 
     /**
+     * Some of the entries in the event are modelled as array (for example the
+     * set of neighbours of a vertex), though they are logically sets. So I
+     * befill the lists and then eventually remove duplicates from the lists
+     * before I hand out the event. As a result, the lists hold set data, i.e.
+     * each entry only once.
+     *
+     * Routine could even be static. Nothing changes in the spacetree state.
+     * We actually don't even need it.
+     */
+    void removeDuplicateEntriesFromAdjancyListInEvent(
+      GridTraversalEvent&  event
+    ) const;
+
+    void createNeighbourExchangeLists(
+      GridVertex           fineGridVertices[TwoPowerD],
+      GridTraversalEvent&  event
+    ) const;
+
+    /**
      * Create description of an enter cell traversal.
      *
      * We create new entries if we are in a split situation.

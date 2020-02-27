@@ -20,6 +20,7 @@
   #define TwoPowerD                (BasePowerExponent<2,Dimensions>::value)
   #define TwoPowerDPlusTwo         (BasePowerExponent<2,Dimensions>::value+2)
   #define TwoPowerDTimesTwoPowerD  (BasePowerExponent<2,Dimensions>::value*BasePowerExponent<2,Dimensions>::value)
+  #define TwoPowerDTimesTwoPowerDMinusOne  (BasePowerExponent<2,Dimensions>::value*(BasePowerExponent<2,Dimensions>::value-1))
 
   #define ThreePowerD        (BasePowerExponent<3,Dimensions>::value)
   #define FivePowerD         (BasePowerExponent<5,Dimensions>::value)
