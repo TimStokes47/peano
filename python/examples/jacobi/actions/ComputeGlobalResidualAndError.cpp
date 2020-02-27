@@ -82,7 +82,11 @@ void examples::jacobi::actions::ComputeGlobalResidualAndError::touchVertexLastTi
       examples::jacobi::vertexdata::MG& fineGridVertexMG,
       peano4::datamanagement::VertexEnumerator<examples::jacobi::vertexdata::MG> coarseGridVerticesMG
 ) {
-  if (not marker.isRefined()) {
+  if (
+    not marker.isRefined()
+	and
+    fineGridVertexMG.getVertexType()==examples::jacobi::vertexdata::MG::VertexType::Inside
+  ) {
     double solution = SetupScenario::getSolution(marker.x());
     double error    = fineGridVertexMG.getU() - solution;
 
