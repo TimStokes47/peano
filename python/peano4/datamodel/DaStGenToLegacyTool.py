@@ -31,6 +31,7 @@ class DaStGenToLegacyTool(object):
 // have to know whether we are using MPI
 #include "config.h"
 
+Constant: Dimensions;
 Packed-Type: short int;
 """
 
@@ -39,6 +40,16 @@ Packed-Type: short int;
 
   def __get_full_qualified_file_name(self):
     return self.data.namespace[-1] + "/" + self.__get_file_name()
+
+
+  __Template_DebugFlags = """  
+  #ifdef PeanoDebug
+  persistent parallelise expose double debugX[Dimensions];
+  persistent parallelise expose double debugH[Dimensions];
+  #endif
+  
+  
+"""
 
 
   def __generate_dastgen_input_file(self):
@@ -55,6 +66,8 @@ Packed-Type: short int;
       file.write( "::" )
     file.write( self.data.name )
     file.write( " {\n" )
+
+    file.write( self.__Template_DebugFlags );
 
     for i in self.data.attributes_double:
       file.write( "  persistent parallelise double " )

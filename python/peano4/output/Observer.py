@@ -363,6 +363,28 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       ) {{
         data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inVertexStack))->pop();
       }}
+    
+      #if PeanoDebug>0  
+      if (
+        inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        or
+        inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+      ) {{
+        peano4::datamanagement::VertexMarker  marker(event);
+        data.setDebugX( marker.x(outVertexStackPosition) );
+        data.setDebugH( marker.h() );
+      }}
+      else if (
+        inVertexStack!=peano4::grid::TraversalObserver::NoData
+        and
+        peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
+      ) {{
+        peano4::datamanagement::VertexMarker  marker(event);
+        assertionVectorNumericalEquals4( data.getDebugX(), marker.x(outVertexStackPosition), data.getDebugX(), marker.toString(), outVertexStackPosition, _spacetreeId );
+        assertionVectorNumericalEquals3( data.getDebugH(), marker.h(), data.getDebugX(), marker.toString(), _spacetreeId );
+      }}
+      #endif
+
       
       if (
         inVertexStack!=peano4::grid::TraversalObserver::NoData

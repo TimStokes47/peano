@@ -20,6 +20,18 @@
 
 
 struct {FULL_QUALIFIED_CLASSNAME} {{
+  #ifdef PeanoDebug
+  private:
+    tarch::la::vector<double,Dimensions> _debugX;
+    tarch::la::vector<double,Dimensions> _debugH;
+  
+  public:
+    void setDebugX( const tarch::la::vector<double,Dimensions>& data );
+    void setDebugH( const tarch::la::vector<double,Dimensions>& data );
+    tarch::la::vector<double,Dimensions> getDebugX() const;
+    tarch::la::vector<double,Dimensions> getDebugH() const;
+  #endif
+
   #if Dimensions==2
   double                                 value[{CARDINALITY_2D}];
   #else
