@@ -511,7 +511,8 @@ class peano4::grid::Spacetree {
 
     void createNeighbourExchangeLists(
       GridVertex           fineGridVertices[TwoPowerD],
-      GridTraversalEvent&  event
+      GridTraversalEvent&  event,
+      bool                 isEnterCell
     ) const;
 
     /**

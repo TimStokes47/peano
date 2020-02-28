@@ -40,6 +40,8 @@ int peano4::parallel::Tasks::getPriority( TaskType type ) const {
       return DefaultPriority * 2;
     case TaskType::LowPriority:
       return DefaultPriority / 2;
+    case TaskType::Sequential:
+      return DefaultPriority;
   }
   return -1;
 }
@@ -53,9 +55,9 @@ peano4::parallel::Tasks::Tasks(
 ):
   Tasks(
     new tarch::multicore::TaskWithCopyOfFunctor(function),
-	type,
-	location,
-	waitForCompletion
+    type,
+    location,
+    waitForCompletion
   ) {
 }
 
@@ -86,7 +88,7 @@ peano4::parallel::Tasks::Tasks(
   int                      location,
   bool                     waitForCompletion
 ) {
-  const bool parallelise = taskForLocationShouldBeIssuedAsTask( location, tasks.size() );
+  const bool parallelise = type!=TaskType::Sequential and taskForLocationShouldBeIssuedAsTask( location, tasks.size() );
 
   if (parallelise and waitForCompletion) {
     tarch::multicore::spawnAndWait(tasks);

@@ -63,9 +63,9 @@ project.datamodel.add_vertex( dastgen_model )
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
 create_grid.use_vertex( dastgen_model )
-create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.9) )
+#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.9) )
 #create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.05) )
-#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
+create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
 project.solversteps.add_step(create_grid)
 
 

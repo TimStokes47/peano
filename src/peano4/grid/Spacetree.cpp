@@ -91,6 +91,7 @@ bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(
     return false;
   }
   else {
+    logTraceInWith3Arguments( "isVertexAdjacentToLocalSpacetree(...)", vertex.toString(), splittingIsConsideredLocal, joiningIsConsideredLocal );
     bool result = false;
     for(int i=0; i<TwoPowerD; i++) {
       assertion( _splitTriggered.count( vertex.getAdjacentRanks(i) )<=1 );
@@ -104,6 +105,7 @@ bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(
 
       result |= (joiningIsConsideredLocal and _joining.count( vertex.getAdjacentRanks(i) )==1);
     }
+    logTraceOutWith1Argument( "isVertexAdjacentToLocalSpacetree(...)", result );
     return result;
   }
 }
@@ -1845,31 +1847,9 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
         event.setCellData(stackNumber);
         break;
     }
-
-/*
-    bool parentCellIsLocal   = isSpacetreeNodeLocal(coarseGridVertices,false,false);
-    bool cellIsLocal         = isSpacetreeNodeLocal(fineGridVertices,false,false);
-
-    if ( cellIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
-      if ( getTreeOwningSpacetreeNode(fineGridVertices)==_id) {
-        logDebug( "createEnterCellTraversalEvent(...)", "cell is to be streamed in from master" );
-        event.setStreamCellDataRank( _masterId );
-      }
-    }
-    else if ( cellIsLocal and _spacetreeState==SpacetreeState::Joining ) {
-      assertionMsg( false, "not yet implemented" );
-    }
-    else if ( not cellIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-      logInfo( "createEnterCellTraversalEvent(...)", "cell will become remote: " << event.toString() );
-      event.setStreamCellDataRank( getTreeOwningSpacetreeNode(fineGridVertices) );
-    }
-    else if ( not cellIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-      assertionMsg( false, "not yet implemented" );
-    }
-*/
   }
 
-  createNeighbourExchangeLists( fineGridVertices, event );
+  createNeighbourExchangeLists( fineGridVertices, event, true );
   removeDuplicateEntriesFromAdjancyListInEvent( event );
 
   logTraceOutWith3Arguments( "createEnterCellTraversalEvent(...)", state.toString(), event.toString(), _id );
@@ -1879,40 +1859,88 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
 
 void peano4::grid::Spacetree::createNeighbourExchangeLists(
   GridVertex           fineGridVertices[TwoPowerD],
-  GridTraversalEvent&  event
+  GridTraversalEvent&  event,
+  bool                 isEnterCell
 ) const {
-  if (
-    _spacetreeState==SpacetreeState::NewFromSplit
-	or
-	_spacetreeState==SpacetreeState::Joining
-  ) {
-    event.setExchangeVertexData(TraversalObserver::NoData);
+  logTraceInWith2Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell );
+  bool isLeaveCell = not isEnterCell;
+
+  event.setExchangeVertexData(TraversalObserver::NoData);
+  for (int i=0; i<TwoPowerD; i++) {
+    int counter = i * (TwoPowerD-1);
+    std::set<int> adjacentIds = getAdjacentDomainIds(fineGridVertices[i],isEnterCell);
+    for (auto p: adjacentIds) {
+      event.setExchangeVertexData(counter,p);
+      counter++;
+    }
   }
-  else {
-    int counter = 0;
-    for (int i=0; i<TwoPowerD; i++) {
-      for (int j=0; j<TwoPowerD; j++) {
-        int currentRank = fineGridVertices[i].getAdjacentRanks(j);
-        if (
-          i!=TwoPowerD-j-1
-		  and
-          _splitting.count(currentRank)==0
-		  and
-          _joining.count(currentRank)==0
-		  and
-          currentRank!=_id
-        ) {
-           event.setExchangeVertexData(counter,currentRank);
-          counter++;
-        }
-        else if ( i!=TwoPowerD-j-1 ) {
-          event.setExchangeVertexData(counter,TraversalObserver::NoData);
-          counter++;
-        }
+
+/*
+
+
+  event.setExchangeVertexData(TraversalObserver::NoData);
+
+  int counter = 0;
+  for (int i=0; i<TwoPowerD; i++) {
+    for (int j=0; j<TwoPowerD; j++) {
+      int currentRank = fineGridVertices[i].getAdjacentRanks(j);
+
+      bool isAdjacentToLocalPartition = isVertexAdjacentToLocalSpacetree(
+        fineGridVertices[i],
+        isEnterCell, // splitting local
+        isLeaveCell  // joining local
+      );
+
+      bool communicatingWithThisRankIsAllowedBySplit =
+        // If this holds, then we just prepare to send something out, but
+        // should not do yet.
+        _splitTriggered.count(currentRank)==0
+        and
+        // If we currently split, we should only send out data (leave cell)
+        // but we should not (yet) receive data from this rank.
+        (
+          _splitting.count(currentRank)==0 or isLeaveCell
+        )
+        and
+        // If we just set this node up through a clone, then we should send
+        // out data (for the other guys for the next step), but we should not
+        // (yet) receive.
+        (
+          _spacetreeState!=SpacetreeState::NewFromSplit or isLeaveCell
+        );
+
+      bool communicatingWithThisRankIsAllowedByJoin =
+        // If we currently join in a rank, then we are fine with receiving
+        // from this rank, but we should not send out stuff anymore.
+        (_joining.count(currentRank)==0 or isEnterCell)
+        and
+        (_spacetreeState!=SpacetreeState::Joining or isEnterCell);
+
+      if (
+        i!=TwoPowerD-j-1
+        and
+        isAdjacentToLocalPartition
+        and
+        communicatingWithThisRankIsAllowedBySplit
+        and
+        communicatingWithThisRankIsAllowedByJoin
+        and
+        currentRank!=_id
+      ) {
+        event.setExchangeVertexData(counter,currentRank);
+        counter++;
+      }
+      else if ( i!=TwoPowerD-j-1 ) {
+        // @todo Debug
+        logInfo( "createNeighbourExchangeLists(...)", isAdjacentToLocalPartition << "x" << communicatingWithThisRankIsAllowedBySplit << "x" << communicatingWithThisRankIsAllowedByJoin );
+        counter++;
       }
     }
-    assertionEquals( counter, TwoPowerD*(TwoPowerD-1) );
   }
+  assertionEquals( counter, TwoPowerD*(TwoPowerD-1) );
+*/
+
+  logTraceOutWith3Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell, isLeaveCell );
 }
 
 
@@ -2036,7 +2064,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
     }
   }
 
-  createNeighbourExchangeLists( fineGridVertices, event );
+  createNeighbourExchangeLists( fineGridVertices, event, false );
   removeDuplicateEntriesFromAdjancyListInEvent( event );
 
   logTraceOutWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), event.toString(), _id );
