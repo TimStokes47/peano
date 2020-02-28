@@ -10,6 +10,7 @@
 
 
 #include <vector>
+#include <set>
 
 
 namespace peano4 {
@@ -54,12 +55,12 @@ class peano4::grid::TraversalObserver {
      * i.e. for the cell with level 0 that does not have a parent.
      */
     virtual void enterCell(
-      const GridTraversalEvent&  event
+      const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
     ) = 0;
 
 
     virtual void leaveCell(
-      const GridTraversalEvent&  event
+      const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
     ) = 0;
 
 	  /**

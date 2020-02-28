@@ -201,7 +201,8 @@ class peano4::grid::Spacetree {
      */
     typedef std::map< int, int >  SplitSpecification;
     SplitSpecification   _splitTriggered;
-    SplitSpecification   _splitting;
+
+    std::set<int>        _splitting;
 
     constexpr static int NoJoin = -1;
     /**

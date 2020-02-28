@@ -50,25 +50,6 @@ class peano4::grid::GridTraversalEvent {
    */
   persistent parallelise int     relativePositionToFather[Dimensions];
 
-  enum LoadBalancingDataExchange {
-    StreamIn,
-    StreamOut,
-    NoRebalancing
-  };
-
-  /**
-   * Tells you whether we stream in or out. In is set by a 
-   * master joining in a worker or by a new worker. The flag 
-   * per se does not mean anything for the data flow. It simply
-   * indicates the data flow direction if data is actually 
-   * moved around.
-   */
-  persistent parallelise LoadBalancingDataExchange    loadBalancingDataExchange;
-  
-  persistent parallelise int     streamVertexDataRank[TwoPowerDTimesTwoPowerD];
-  persistent parallelise int     streamFaceDataRank[TwoTimesDTimesTwo];
-  persistent parallelise int     streamCellDataRank;
-
   /**
    * Boundary data exchange. This flag holds per vertex to which other ranks
    * data has to be sent. So the cardinalty has to be @f$ 2^d \cdot (2^d-1) @f$.

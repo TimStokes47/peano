@@ -100,11 +100,11 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     ) override;
 
     void enterCell(
-      const GridTraversalEvent&  event
+      const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
     ) override;
 
     void leaveCell(
-      const GridTraversalEvent&  event
+      const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
     ) override;
 
 /**

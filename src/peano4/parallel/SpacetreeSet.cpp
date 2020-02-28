@@ -411,7 +411,7 @@ std::set<int> peano4::parallel::SpacetreeSet::getLocalTreesMergingWithWorkers() 
 void peano4::parallel::SpacetreeSet::createNewTrees() {
   for (const auto& tree: _spacetrees) {
     for (auto& p: tree._splitting) {
-	    addSpacetree( tree._id, p.first );
+	    addSpacetree( tree._id, p );
     }
   }
 }

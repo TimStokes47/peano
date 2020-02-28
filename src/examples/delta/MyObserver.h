@@ -51,11 +51,11 @@ class examples::delta::MyObserver: public peano4::grid::TraversalObserver {
     ~MyObserver();
 
     void enterCell(
-      const peano4::grid::GridTraversalEvent&  event
+      const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
     ) override;
 
     void leaveCell(
-      const peano4::grid::GridTraversalEvent&  event
+      const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
     ) override;
 
     /**

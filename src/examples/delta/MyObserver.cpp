@@ -116,7 +116,7 @@ void examples::delta::MyObserver::endTraversal(
 
 
 void examples::delta::MyObserver::enterCell(
-  const peano4::grid::GridTraversalEvent&  event
+  const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
 ) {
   logTraceInWith1Argument("enterCell(...)",event.toString());
 
@@ -239,7 +239,7 @@ void examples::delta::MyObserver::enterCell(
 
 
 void examples::delta::MyObserver::leaveCell(
-  const peano4::grid::GridTraversalEvent&  event
+  const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
 ) {
   logTraceInWith1Argument("leaveCell(...)",event.toString());
 

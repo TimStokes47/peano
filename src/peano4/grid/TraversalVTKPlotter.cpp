@@ -110,7 +110,7 @@ void peano4::grid::TraversalVTKPlotter::closeFile() {
 
 
 void peano4::grid::TraversalVTKPlotter::enterCell(
-  const GridTraversalEvent&  event
+  const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
 ) {
   bool cellIsRefined = event.getIsRefined()!=0;
   bool plot = not cellIsRefined
@@ -156,7 +156,7 @@ void peano4::grid::TraversalVTKPlotter::plotCell(
 
 
 void peano4::grid::TraversalVTKPlotter::leaveCell(
-  const GridTraversalEvent&  event
+  const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
 ) {
 }
 
