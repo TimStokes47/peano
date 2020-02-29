@@ -1,0 +1,44 @@
+\chapter{MPI programming}
+\label{section:mpi}
+
+If you run Peano4 with MPI, you buy into MPI's SPMD paradigm, i.e.~every single
+rank hosts one instance of Peano.
+Each Peano instance in return hosts multiple subspacetrees, i.e.~multiscale
+domain partitions.
+It is the user's responsibility to ensure that the ranks do coordinate with each
+other.
+That is, the user has to ensure that whenever you run a certain type of grid
+sweep on one rank, then the other ranks run this sweep as well.
+For this, each rank has to host one spacetree set, and these sets have to be
+configured with the same parameters (domain offset plus domain size).
+I do provide Python interfaces/APIs to model this behaviour, but it might be
+reasonable to understand how it works.
+
+
+
+A typical Peano4 code distinguishes the global master (rank 0) from the workers
+(all other ranks).
+The global master hosts all the program logic, i.e.~decides which steps to run
+in which order.
+There's no reason for you not to emancipate from this pattern, but it has proven
+of value.
+The main of this pattern always looks similar to 
+\begin{code}
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
+    // All the program logic, i.e. all decisions here
+  }
+  else {
+    // React to decisions what to do next on all other ranks
+  }
+\end{code}
+
+
+Before we start, lets assume that each individual step (type of run through the
+mesh) has a unique positive number. 
+
+A typical parallel grid sweep looks as follows:
+\begin{enumerate}
+  \item 
+\end{enumerate} 
+
+

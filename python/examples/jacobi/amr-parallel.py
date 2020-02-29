@@ -63,8 +63,8 @@ project.datamodel.add_vertex( dastgen_model )
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
 create_grid.use_vertex( dastgen_model )
-create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.9) )
-#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.05) )
+#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.9) )
+create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.05) )
 #create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
 project.solversteps.add_step(create_grid)
 
@@ -156,9 +156,8 @@ project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
 project.generate(peano4.output.Overwrite.Default)
 project.build(True)
 start_time_stamp = time.time()
-run_successful = project.run( ["2"] )
-#project.run( ["16.0"], ["/opt/mpi/mpirun", "-n", "1"] )
-#project.run( ["32"], ["/opt/mpi/mpirun", "-n", "1"] )
+#run_successful = project.run( ["4"] )
+run_successful = project.run( ["1"], ["mpirun", "-n", "2"] )
 print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
 
 

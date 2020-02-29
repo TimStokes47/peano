@@ -358,8 +358,6 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       #endif
 
-      view.set(outVertexStackPosition,data);
-
       if (
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
@@ -367,12 +365,29 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         and
         peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
       ) {{
+        // Stream out for splits
         for (auto p: splitting) {{
           const int  stack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange( p );
           DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,stack))->push(data);
           logDebug("enterCell(...)", "vertex from position pos-" << outVertexStackPosition << " is streamed to output stream " << stack << " for tree " << p );
         }}
-      }}
+
+        // Merge with neighbour
+        for (int i=0; i<TwoPowerD-1; i++) {{
+          int currentEntryInExchangeList = event.getExchangeVertexData( i+outVertexStackPosition*(TwoPowerD-1) );
+          if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
+            const int stack = peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange( currentEntryInExchangeList );
+            logDebug("enterCell(...)", "merge local vertex on tree " << _spacetreeId << " with incoming neighbour from stack " << stack );
+            assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
+            {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
+            
+            assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), _spacetreeId );
+            assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), _spacetreeId );
+          }}
+        }}
+      }}      
+
+      view.set(outVertexStackPosition,data);
     }}
   }}
 """
@@ -415,8 +430,6 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         );
       }}
       else if (
-        inVertexStack!=peano4::grid::TraversalObserver::NoData
-        and
         peano4::grid::PeanoCurve::isInOutStack(inVertexStack
       )) {{
         {ACTIVE_ACTION_SET}.touchVertexFirstTime(
@@ -774,6 +787,25 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "vertex pos-" << inVertexStackPosition << "->" << outVertexStack );
       
       {full_qualified_type} data = view.get(inVertexStackPosition);
+      
+      if (
+        outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        peano4::grid::PeanoCurve::isInOutStack(outVertexStack)
+      ) {{
+        // Send out to neighbour
+        for (int i=0; i<TwoPowerD-1; i++) {{
+          int currentEntryInExchangeList = event.getExchangeVertexData( i+inVertexStackPosition*(TwoPowerD-1) );
+          if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
+            const int stack = peano4::parallel::Node::getOutputStackNumberOfHorizontalDataExchange( currentEntryInExchangeList );
+            logDebug("leaveCell(...)", "send local vertex from tree " << _spacetreeId << " to neighbour through stack " << stack );
+            DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,stack))->push(data);
+          }}
+        }}
+      }}      
+
       if (
         outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and

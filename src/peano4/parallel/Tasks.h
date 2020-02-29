@@ -52,8 +52,12 @@ class peano4::parallel::Tasks {
        * Default
        */
       Task,
-	  HighPriority,
-	  LowPriority
+      HighPriority,
+      LowPriority,
+      /**
+       * For debugging only
+       */
+      Sequential
     };
   private:
     static tarch::logging::Log  _log;
@@ -85,8 +89,8 @@ class peano4::parallel::Tasks {
     Tasks(
       std::function<bool()>  task,
       TaskType               type,
-	  int                    location,
-	  bool                   waitForCompletion = false
+      int                    location,
+      bool                   waitForCompletion = false
     );
 
 
@@ -97,8 +101,8 @@ class peano4::parallel::Tasks {
     Tasks(
       tarch::multicore::Task*  task,
       TaskType                 type,
-	  int                      location,
-	  bool                     waitForCompletion = false
+      int                      location,
+      bool                     waitForCompletion = false
     );
 
 
@@ -115,8 +119,8 @@ class peano4::parallel::Tasks {
     Tasks(
       const std::vector< tarch::multicore::Task* >& tasks,
       TaskType                 type,
-	  int                      location,
-	  bool                     waitForCompletion
+      int                      location,
+      bool                     waitForCompletion
     );
 };
 
