@@ -47,7 +47,8 @@ class ProgramRun {
 
     void step() {
       int stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
-      logInfo( "traverseGrid(...)", "run step " << stepIdentifier );
+      // @todo Debug
+      logInfo( "ProgramRun::step()", "run step " << stepIdentifier );
 
       // @todo Hier waere ein Case schoen
       switch (stepIdentifier) {
@@ -70,6 +71,35 @@ class ProgramRun {
           }
           break;
         case 10:
+          {
+            if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>1 ) {
+              int cellsPerRank = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::mpi::Rank::getInstance().getNumberOfRanks();
+              logInfo( "ProgramRun::step()", "should host " << cellsPerRank << " cells per rank (total number of cells: " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() << ")" );
+
+              for (int rank=1; rank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
+                if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerRank,rank)) {
+                  logWarning( "runParallel(...)", "failed to assign rank " << rank << " " << cellsPerRank << " cell(s)" );
+                }
+              }
+            }
+          }
+          break;
+        case 11:
+          {
+            if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
+              assertion(false);
+              int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+              logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core" );
+              for (int thread=1; thread<tarch::multicore::Core::getInstance().getNumberOfThreads(); thread++) {
+                // @todo aber mein Rank und mein Tree
+                if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerCore,0)) {
+                  logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << cellsPerCore << " cell(s)" );
+                }
+              }
+            }
+          }
+          break;
+        case 50:
           {
             examples::jacobi::observers::FusedSolverSteps  observer;
             peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
@@ -104,46 +134,20 @@ class ProgramRun {
       peano4::parallel::Node::getInstance().setNextProgramStep(2); // dump parameters
       step();
 
-      // Split up domain among ranks
-      // ===========================
-/*
-      if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>1 ) {
-        int cellsPerRank = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::mpi::Rank::getInstance().getNumberOfRanks();
-        logInfo( "main()", "should host " << cellsPerRank << " cells per rank (total number of cells: " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() << ")" );
+      peano4::parallel::Node::getInstance().setNextProgramStep(10); // dump parameters
+      step();
 
-        for (int rank=1; rank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
-          if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerRank,rank)) {
-            logWarning( "runParallel(...)", "failed to assign rank " << rank << " " << cellsPerRank << " cell(s)" );
-          }
-        }
-      }
-*/
-
-      // Split up domain among threads
-      // ===========================================================
-/*
-      if (coreCount>1) {
-        int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / coreCount;
-        logInfo( "main()", "should host " << cellsPerCore << " cells per core" );
-
-        for (int thread=1; thread<coreCount; thread++) {
-          if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerCore,0)) {
-            logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << cellsPerCore << " cell(s)" );
-          }
-        }
-      }
-*/
+      peano4::parallel::Node::getInstance().setNextProgramStep(11); // dump parameters
+      step();
 
       for (int i=0; i<iterations; i++) {
-        peano4::parallel::Node::getInstance().setNextProgramStep(10); // solve problem
+        peano4::parallel::Node::getInstance().setNextProgramStep(50); // solve problem
         step();
       }
 
       peano4::parallel::Node::getInstance().setNextProgramStep(99); // plot solution
       step();
     }
-
-
 };
 
 
@@ -172,7 +176,8 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "peano4", 
-    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+    // @todo Black
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
