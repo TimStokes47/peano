@@ -98,7 +98,7 @@ int peano4::parallel::Node::getRank(int id) const {
 
 int peano4::parallel::Node::getLocalTreeId(int treeId) const {
   const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
-  return treeId / numberOfRanks;
+  return treeId % numberOfRanks;
 }
 
 
