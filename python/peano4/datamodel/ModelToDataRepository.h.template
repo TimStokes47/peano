@@ -32,6 +32,9 @@ class {FULL_QUALIFIED_CLASSNAME} {{
 	{DATA_CONTAINER_TYPE_DEFS}
 
     {DATA_CONTAINER_DECLARATION}
+    
+    static void initDatatypes();
+    static void shutdownDatatypes();
 }};
 
 

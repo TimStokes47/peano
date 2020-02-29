@@ -160,6 +160,8 @@ int main(int argc, char** argv) {
   peano4::initSharedMemoryEnvironment();
   peano4::fillLookupTables();
 
+  examples::jacobi::observers::DataRepository::initDatatypes();
+
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
@@ -261,6 +263,8 @@ int main(int argc, char** argv) {
       programRun.step();
     }
   }
+
+  examples::jacobi::observers::DataRepository::shutdownDatatypes();
 
   peano4::shutdownSharedMemoryEnvironment();
   peano4::shutdownParallelEnvironment();

@@ -24,6 +24,8 @@ int main(int argc, char** argv) {{
   peano4::initParallelEnvironment(&argc,&argv);
   peano4::initSharedMemoryEnvironment();
   peano4::fillLookupTables();
+  
+  {FULL_QUALIFIED_CLASSNAME}::observers::DataRepository::initDatatypes();
 
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
@@ -99,6 +101,8 @@ int main(int argc, char** argv) {{
       logDebug( "runParallel(...)", "trigger a new sweep with step " << peano4::parallel::Node::getInstance().getCurrentProgramStep() );
     }}
   }}
+
+  {FULL_QUALIFIED_CLASSNAME}::observers::DataRepository::shutdownDatatypes();
 
   peano4::shutdownSharedMemoryEnvironment();
   peano4::shutdownParallelEnvironment();
