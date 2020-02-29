@@ -55,6 +55,7 @@ dastgen_model.add_double_scalar( "eps" )
 dastgen_model.add_double_scalar( "diag" )
 dastgen_model.add_double_scalar( "res" )
 dastgen_model.add_enum( "VertexType", ["Boundary", "Inside"] )
+peano4.datamodel.DaStGenToLegacyTool.DaStGenJarFile = "/ddn/data/frmh84/DaStGen/DaStGen.jar"
 project.datamodel.add_vertex( dastgen_model )
 
 
@@ -137,7 +138,7 @@ project.solversteps.add_step( fused_step )
 # parse the generated configuration scripts. The makefile would also offer a
 # routine to set the dimension. We take the default here.
 #
-project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano" )
+project.output.makefile.parse_configure_script_outcome( "../../.." )
 
 #
 # Standard triad of operations. You can skip the first two steps if you want as 

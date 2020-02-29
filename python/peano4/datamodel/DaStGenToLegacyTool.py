@@ -6,7 +6,12 @@ import peano4.output.InvokeExternalTool
 
 
 class DaStGenToLegacyTool(object):
-  DaStGenInvocationPrefix = "java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator "
+
+  """
+  Full qualified filename of jar file.
+  """
+  DaStGenJarFile = "~/git/DaStGen/DaStGen.jar"
+  __DaStGenArguments = "--plugin PeanoSnippetGenerator --naming Peano4NameTranslator "
     
     
   """
@@ -101,5 +106,5 @@ Packed-Type: short int;
     """
     self.__generate_dastgen_input_file()
     output.makefile.add_cpp_file( self.data.namespace[-1] + "/" + self.data.name + ".cpp" )
-    output.add( peano4.output.InvokeExternalTool( self.DaStGenInvocationPrefix + " " + self.__get_file_name() + " .", self.data.namespace[-1] ), False )
+    output.add( peano4.output.InvokeExternalTool( "java -jar " + self.DaStGenJarFile + " " + self.__DaStGenArguments + " " + self.__get_file_name() + " .", self.data.namespace[-1] ), False )
 

@@ -33,7 +33,7 @@ class TemplatedHeaderImplementationFilePair(object):
       self.d[ "FULL_QUALIFIED_CLASSNAME" ] += i + "::"
     self.d[ "CLASSNAME" ]                 = classname
     self.d[ "FULL_QUALIFIED_CLASSNAME" ] += classname
-    self.d[ "INCLUDE_GUARD" ]             = self.d[ "FULL_QUALIFIED_CLASSNAME" ].replace( "::", "_" ).upper()
+    self.d[ "INCLUDE_GUARD" ]             = self.d[ "FULL_QUALIFIED_CLASSNAME" ].replace( "::", "_" ).replace( "-", "_" ).upper()
     
 
   def generate_file(self,overwrite,full_qualified_filename,template_file):

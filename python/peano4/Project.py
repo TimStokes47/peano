@@ -10,7 +10,6 @@ import peano4.runner
 
 import subprocess
 import sys
-from asn1crypto.core import Null
 
 
 class Project (object):
