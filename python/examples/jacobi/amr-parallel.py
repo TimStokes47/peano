@@ -158,7 +158,7 @@ project.generate(peano4.output.Overwrite.Default)
 project.build(True)
 start_time_stamp = time.time()
 #run_successful = project.run( ["4"] )
-run_successful = project.run( ["1"], ["mpirun", "-n", "1"] )
+run_successful = project.run( ["1"], ["mpirun", "-n", "2"] )
 print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
 
 
