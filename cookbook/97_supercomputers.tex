@@ -30,7 +30,6 @@ Some remarks on Peano4 on Hamilton, Durham's local supercomputer:
  module load intelmpi/intel/2019.6
  # for the Python API
  module load python/3.6.8 
- # this is - I think - a bug
  module unload gcc/8.2.0
  # for legacy DaStGen
  module load java/1.8.0
@@ -40,8 +39,25 @@ Some remarks on Peano4 on Hamilton, Durham's local supercomputer:
  ./configure --with-multithreading=what-you-prefer --with-mpi=mpicxx
 \end{code}
 
-Achtung: Auch in Scripten explicit laden
+\noindent
+It is not clear to me, why the Python module does load gcc. 
+In my opinion, it should not, i.e.~the unload command should not be required.
+Anyway, if you skip the unload, then the Intel linker will fail.
 
+The Java module is required if and only if you use the legacy DaStGen feature to
+model data structures.
+
+If you you Intel MPI, you either have to use the \texttt{-parallel} flag
+when you compile with icpc---otherwise, your linker will fail---or you
+use the \texttt{mpicxx} wrapper right from the start.
+
+
+\begin{code}
+ setenv CXX mpicxx
+\end{code} 
+
+\noindent
+It is clear that your Slurm scripts have to load the same environment. 
 
 \paragraph{Intel's Threading Building Blocks (TBB)}
 
