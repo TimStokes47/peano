@@ -8,6 +8,7 @@
 #include "tarch/mpi/mpi.h"
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
+#include "tarch/multicore/BooleanSemaphore.h"
 
 #include <string>
 #include <map>
