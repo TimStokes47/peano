@@ -22,15 +22,6 @@ class PlotScalarNodalFieldInPeanoBlockFormat(ActionSet):
         
 
   __Template_Constructor = """
-  static int counter = 0;
-  static tarch::multicore::BooleanSemaphore booleanSemaphore;
-
-  {{
-    tarch::multicore::Lock lock(booleanSemaphore);
-   _counter = counter;
-    counter++;
-  }}
-    
   _writer      = nullptr;
   _dataWriter  = nullptr;
   _treeNumber  = treeNumber;
@@ -39,7 +30,7 @@ class PlotScalarNodalFieldInPeanoBlockFormat(ActionSet):
     
   logDebug( "PlotGrid2PlotGridInPeanoBlockFormat1()", "created tree instance for " << treeNumber );
   _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
-    Dimensions,"{FILENAME}"
+    Dimensions,"{FILENAME}",_treeNumber!=0
   );
   
   _dataWriter = _writer->createVertexDataWriter( "{VERTEX_UNKNOWN_NAME}", 2, 1 );
@@ -51,19 +42,29 @@ class PlotScalarNodalFieldInPeanoBlockFormat(ActionSet):
 
 
   __Template_Destructor = """
-  if (_dataWriter!=nullptr) {{
+  static int rankLocalCounter = 0;
+  static tarch::multicore::BooleanSemaphore booleanSemaphore;
+  
+  if (_dataWriter!=nullptr and _treeNumber>=0) {{
     _dataWriter->close();
 
+    int counter;
+    {{
+      tarch::multicore::Lock lock(booleanSemaphore);
+      counter = rankLocalCounter;
+      rankLocalCounter++;
+    }}
+
     std::ostringstream filename;
-    filename << "{FILENAME}" << "-tree-" << _treeNumber << "-" << _counter;
+    filename << "{FILENAME}" << "-tree-" << _treeNumber << "-" << counter;
     _writer->writeToFile( filename.str() );
-
-    delete _dataWriter;
-    delete _writer;
-
-    _dataWriter = nullptr;
-    _writer     = nullptr;
   }}
+  
+  delete _dataWriter;
+  delete _writer;
+
+  _dataWriter = nullptr;
+  _writer     = nullptr;
 """
 
     
@@ -111,7 +112,6 @@ class PlotScalarNodalFieldInPeanoBlockFormat(ActionSet):
   def get_attributes(self):
     return """
     int                _treeNumber;
-    int                _counter;
 
     tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter*                    _writer;
     tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter*  _dataWriter;
@@ -121,9 +121,7 @@ class PlotScalarNodalFieldInPeanoBlockFormat(ActionSet):
   def get_includes(self):
     return """
 #include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
-#include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
-#include "tarch/mpi/Rank.h"
-
+#include "tarch/multicore/BooleanSemaphore.h"
 #include "peano4/utils/Loop.h"
 """

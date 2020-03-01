@@ -35,10 +35,15 @@ void examples::delta::PeanoFormatCellDataPlotter::beginTraversal() {
   if (_instanceCounter==0) {
     assertion(_writer==nullptr);
 
+    assertion(false);
+
+/*
  	_writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
       Dimensions,
       _fileNamePrefix
+      // sollte hier den spacetree id abfragen
     );
+*/
 
     _dataWriter      = _writer->createCellDataWriter( "cell-data", CellData::DoFsPerAxis, Dimensions );
     #if PeanoDebug>0

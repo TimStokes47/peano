@@ -3,8 +3,11 @@
 #include "PeanoTextPatchFileWriter.h"
 
 #include "tarch/mpi/Rank.h"
+#include "tarch/mpi/Lock.h"
 
-tarch::logging::Log tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::_log( "tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter" );
+
+tarch::logging::Log           tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::_log( "tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter" );
+tarch::mpi::BooleanSemaphore  tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::_sempahore( "tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter" );
 
 
 const std::string tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::HEADER =
@@ -14,52 +17,47 @@ const std::string tarch::plotter::griddata::blockstructured::PeanoTextPatchFileW
 "# \n";
 
 
+namespace {
+  const std::string Token_BeginDataSet = "begin dataset";
+  const std::string Token_EndDataSet   = "end dataset";
+}
 
-//void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::addDataFileToIndexFile( const std::string& filename) {
-/*
-  std::ofstream     _metaFileOut;
-  if (append) {
-    _metaFileOut.open( (filename+".peano-patch-file").c_str(), std::ios::app );
+
+void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::addNewDatasetToIndexFile() {
+  tarch::mpi::Lock  lock( _sempahore );
+  std::ofstream     indexFileOut;
+  indexFileOut.open( (_indexFile + ".peano-patch-file").c_str(), std::ios::app );
+  indexFileOut << std::endl << Token_BeginDataSet << std::endl;
+  indexFileOut << std::endl << Token_EndDataSet << std::endl;
+}
+
+
+void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::addNewFileToCurrentDataSetInIndexFile( const std::string&  filename ) {
+  tarch::mpi::Lock  lock( _sempahore );
+
+  std::ifstream ifs(_indexFile + ".peano-patch-file");
+  std::vector<std::string> lines;
+  for (std::string line; std::getline(ifs, line); /**/ ) {
+    lines.push_back(line);
   }
+  ifs.close();
 
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    _metaFileOut << std::endl << "begin dataset" << std::endl;
-
-    #ifdef Parallel
-    for (int i=0; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++) {
-      std::ostringstream referencedFilename;
-      if (filenamePrefix.find("/")!=std::string::npos) {
-        referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
-      }
-      else {
-        referencedFilename << filenamePrefix;
-      }
-      referencedFilename << "-rank-" << i
-                         << ".peano-patch-file";
-      _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
-    }
-    #else
-    std::ostringstream referencedFilename;
-    if (filenamePrefix.find("/")!=std::string::npos) {
-      referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
-    }
-    else {
-      referencedFilename << filenamePrefix;
-    }
-    referencedFilename << ".peano-patch-file";
-    _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
-    #endif
-
-    _metaFileOut << "end dataset" << std::endl;
+  if ( lines[lines.size()-1].find( Token_EndDataSet )==std::string::npos ) {
+    logWarning(
+      "addNewFileToCurrentDataSetInIndexFile(...)",
+      "last line in index file " << _indexFile << ".peano-patch-file has not been end of dataset as expected. Expected \"" << Token_EndDataSet << "\" but got \"" << lines[lines.size()-1] << "\"" );
   }
-
-*/
-//}
-
-
-//void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::addDatasetToIndexFile( const std::vector< std::string >& filenames) {
-
-//}
+  else {
+    const std::string newEntry = "  include \"" + filename + "\"";
+    lines[lines.size()-1] = newEntry;
+    lines.push_back(Token_EndDataSet);
+    std::ofstream     indexFileOut;
+    indexFileOut.open( (_indexFile + ".peano-patch-file").c_str(), std::ios::out );
+    for (auto& p: lines) {
+      indexFileOut << p << std::endl;
+    }
+  }
+}
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::createEmptyIndexFile() {
@@ -67,13 +65,16 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::create
     logWarning( "PeanoTextPatchFileWriter()", "filename should not end with .peano-patch-file as routine adds extension automatically. Chosen filename=" << _indexFile );
   }
 
+  tarch::mpi::Lock  lock( _sempahore );
   std::ofstream     indexFileOut;
-
   indexFileOut.open( (_indexFile + ".peano-patch-file").c_str(), std::ios::out );
 
   if ( (!indexFileOut.fail()) && indexFileOut.is_open() ) {
     indexFileOut << HEADER
                  << "format ASCII" << std::endl;
+
+    indexFileOut << std::endl << Token_BeginDataSet << std::endl;
+    indexFileOut << std::endl << Token_EndDataSet << std::endl;
   }
 
   if ( !indexFileOut.is_open() ) {
@@ -85,7 +86,8 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::create
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPatchFileWriter(
   int                 dimension,
-  const std::string&  indexFile
+  const std::string&  indexFile,
+  bool                appendToIndexFile
 ):
   _writtenToFile(false),
   _dimensions(dimension),
@@ -95,7 +97,12 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
 
   clear();
 
-  createEmptyIndexFile();
+  if (appendToIndexFile) {
+    addNewDatasetToIndexFile();
+  }
+  else {
+    createEmptyIndexFile();
+  }
 }
 
 
@@ -252,6 +259,8 @@ bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeT
     }
 
     out << _snapshotFileOut.rdbuf();
+
+    addNewFileToCurrentDataSetInIndexFile(filename);
 
     _writtenToFile = true;
     return true;

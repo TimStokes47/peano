@@ -55,8 +55,6 @@ Peano4Core_SOURCES = \
   peano4/grid/TraversalObserver.cpp \
   peano4/grid/TraversalVTKPlotter.cpp \
   peano4/grid/tests/SpacetreeTest.cpp \
-  peano4/parallel/BooleanSemaphore.cpp \
-  peano4/parallel/Lock.cpp \
   peano4/parallel/Node.cpp \
   peano4/parallel/SpacetreeSet.cpp \
   peano4/parallel/StartTraversalMessage.cpp \
@@ -124,6 +122,8 @@ Tarch_SOURCES= tarch/tarch.cpp \
  tarch/plotter/pointdata/vtk/VTKTextFileWriter.cpp \
  tarch/plotter/pointdata/vtk/VTKBinaryFileWriter.cpp \
  tarch/plotter/pointdata/vtk/VTKBinaryFileWriter_PointDataWriter.cpp \
+ tarch/mpi/BooleanSemaphore.cpp \
+ tarch/mpi/Lock.cpp \
  tarch/mpi/Rank.cpp \
  tarch/mpi/mpi.cpp \
  tarch/mpi/IntegerMessage.cpp \

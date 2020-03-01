@@ -35,10 +35,14 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::beginTr
   if (_instanceCounter==0) {
     assertion(_writer==nullptr);
 
+    assertionMsg( false, "not yet implemented" );
+/*
  	_writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
       Dimensions,
-      _fileNamePrefix
+      _fileNamePrefix,
+      // sollte hier den spacetree id abfragen
     );
+*/
     _dataWriter      = _writer->createCellDataWriter( "cell-data", 1, 1 );
     _oldDataWriter   = _writer->createCellDataWriter( "old-cell-data", 1, 1 );
   }

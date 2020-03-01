@@ -163,6 +163,12 @@ int main(int argc, char** argv) {
   examples::jacobi::observers::DataRepository::initDatatypes();
 
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+    tarch::logging::LogFilter::FilterListEntry::AnyRank,
+    "",
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+  ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "peano4", 
@@ -205,20 +211,24 @@ int main(int argc, char** argv) {
     "examples",
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace,
+    tarch::logging::LogFilter::FilterListEntry::AnyRank,
+    "examples",
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+  ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+    tarch::logging::LogFilter::FilterListEntry::AnyRank,
+    "examples",
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+  ));
  
-  // @todo Add your namespace here
-//  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-//    tarch::logging::LogFilter::FilterListEntry::Target..., 
-//    tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-//    "mynamespace", 
-//    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-//  ));
 
   //tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.log" );
   tarch::logging::CommandLineLogger::getInstance().setLogFormat(
     " ", false, false, false, false, false, true, "trace.log"
   );
-
 
 
   #if PeanoDebug>=2

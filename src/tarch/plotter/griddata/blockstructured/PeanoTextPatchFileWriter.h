@@ -5,6 +5,7 @@
 
 
 #include "tarch/logging/Log.h"
+#include "tarch/mpi/BooleanSemaphore.h"
 #include "PatchWriter.h"
 
 
@@ -28,6 +29,13 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     static tarch::logging::Log _log;
     static const std::string HEADER;
 
+    /**
+     * This is a global (mpi) semaphore that I use to update/modify the
+     * index file over all files. The individual data writes are totally
+     * concurrent.
+     */
+    static tarch::mpi::BooleanSemaphore _sempahore;
+
     const std::string  _indexFile;
 
     bool _writtenToFile;
@@ -43,6 +51,9 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     void writeMapping(int totalEntries, double* values);
 
     void createEmptyIndexFile();
+    void addNewDatasetToIndexFile();
+    void addNewFileToCurrentDataSetInIndexFile( const std::string&  filename );
+
     /**
      * Adds a new dataset
      */
@@ -150,9 +161,11 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     /**
      * @param filename Is the filename of the meta/root file, i.e. the file
      *                 including the snapshots from the various MPI ranks.
+     * @param appendToIndexFile If this flag is false, the code deletes the
+     *                 index file and starts a brand new one.
      * @see Superclass
      */
-    PeanoTextPatchFileWriter(int dimension, const std::string&  indexFile );
+    PeanoTextPatchFileWriter(int dimension, const std::string&  indexFile, bool appendToIndexFile );
     virtual ~PeanoTextPatchFileWriter();
 
     /**

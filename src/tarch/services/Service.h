@@ -3,9 +3,6 @@
 #ifndef _TARCH_SERVICES_SERVICE_H_
 #define _TARCH_SERVICES_SERVICE_H_
 
-#define registerService(name) \
-  static tarch::services::ServiceFactory<name> thisServiceFactoryInstance( #name );
-
 
 #include "tarch/multicore/RecursiveSemaphore.h"
 
@@ -13,6 +10,7 @@
 namespace tarch {
   namespace services {
     class Service;
+    class ServiceFactory;
   }
 }
 
