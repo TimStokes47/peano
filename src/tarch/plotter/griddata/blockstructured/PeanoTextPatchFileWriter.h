@@ -109,7 +109,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
          int getFirstCellWithinPatch(int index) const override;
      };
 
-     class VertexDataWriter: public tarch::plotter::griddata::blockstructured::PatchWriter::VertexDataWriter {
+    class VertexDataWriter: public tarch::plotter::griddata::blockstructured::PatchWriter::VertexDataWriter {
        protected:
          tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter& _writer;
 
@@ -156,7 +156,13 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
          void assignRemainingVerticesDefaultValues() override;
 
          int getFirstVertexWithinPatch(int index) const override;
-     };
+    };
+
+    enum class IndexFileMode {
+      CreateNew,
+      AppendNewDataSet,
+      DontChange
+    };
 
     /**
      * @param filename Is the filename of the meta/root file, i.e. the file
@@ -165,7 +171,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      *                 index file and starts a brand new one.
      * @see Superclass
      */
-    PeanoTextPatchFileWriter(int dimension, const std::string&  indexFile, bool appendToIndexFile );
+    PeanoTextPatchFileWriter(int dimension, const std::string&  indexFile, IndexFileMode appendToIndexFile );
     virtual ~PeanoTextPatchFileWriter();
 
     /**

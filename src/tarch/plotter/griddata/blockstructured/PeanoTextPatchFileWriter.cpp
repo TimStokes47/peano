@@ -87,7 +87,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::create
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPatchFileWriter(
   int                 dimension,
   const std::string&  indexFile,
-  bool                appendToIndexFile
+  IndexFileMode       appendToIndexFile
 ):
   _writtenToFile(false),
   _dimensions(dimension),
@@ -97,11 +97,15 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
 
   clear();
 
-  if (appendToIndexFile) {
-    addNewDatasetToIndexFile();
-  }
-  else {
-    createEmptyIndexFile();
+  switch (appendToIndexFile) {
+    case IndexFileMode::CreateNew:
+      createEmptyIndexFile();
+      break;
+    case IndexFileMode::AppendNewDataSet:
+      addNewDatasetToIndexFile();
+      break;
+    case IndexFileMode::DontChange:
+      break;
   }
 }
 

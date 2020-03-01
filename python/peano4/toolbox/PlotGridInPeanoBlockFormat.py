@@ -30,8 +30,22 @@ class PlotGridInPeanoBlockFormat(ActionSet):
   // An MPI lock (critical section) would be important!
     
   logDebug( "PlotGrid2PlotGridInPeanoBlockFormat1()", "created tree instance for " << treeNumber );
+  
+  static bool calledBefore = false;
+  tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode mode;
+  if ( _treeNumber==0 and not calledBefore ) {{
+    calledBefore = true;
+    mode = tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::CreateNew;
+  }}
+  else if ( _treeNumber==0 ) {{
+    mode = tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::AppendNewDataSet;
+  }}
+  else {{
+    mode = tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::DontChange;
+  }}
+
   _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
-    Dimensions,"{FILENAME}",_treeNumber!=0
+    Dimensions,"{FILENAME}",mode
   );
   _dataWriter = _writer->createCellDataWriter( "cell-marker", 1, 1 );
 """
