@@ -24,7 +24,12 @@ class PlotScalarNodalFieldInPeanoBlockFormat(ActionSet):
   __Template_Constructor = """
   static int counter = 0;
   static tarch::multicore::BooleanSemaphore booleanSemaphore;
-  tarch::multicore::Lock lock(booleanSemaphore);
+
+  {{
+    tarch::multicore::Lock lock(booleanSemaphore);
+   _counter = counter;
+    counter++;
+  }}
     
   _writer      = nullptr;
   _dataWriter  = nullptr;
@@ -32,16 +37,12 @@ class PlotScalarNodalFieldInPeanoBlockFormat(ActionSet):
 
   // An MPI lock (critical section) would be important!
     
-  if (_treeNumber>=0) {{
-    const bool newFile = tarch::mpi::Rank::getInstance().isGlobalMaster() and _counter==0;
-    logDebug( "PlotGrid2PlotGridInPeanoBlockFormat1()", "created tree instance for " << treeNumber << ". Create new file=" << newFile);
-    _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
-      Dimensions,"{FILENAME}", not newFile
-    );
-    _dataWriter = _writer->createVertexDataWriter( "{VERTEX_UNKNOWN_NAME}", 2, 1 );
-    _counter = counter;
-    counter++;
-  }}
+  logDebug( "PlotGrid2PlotGridInPeanoBlockFormat1()", "created tree instance for " << treeNumber );
+  _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
+    Dimensions,"{FILENAME}"
+  );
+  
+  _dataWriter = _writer->createVertexDataWriter( "{VERTEX_UNKNOWN_NAME}", 2, 1 );
 """
 
 

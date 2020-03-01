@@ -9,6 +9,7 @@
 
 
 #include <fstream>
+#include <vector>
 
 
 namespace tarch {
@@ -27,18 +28,33 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     static tarch::logging::Log _log;
     static const std::string HEADER;
 
+    const std::string  _indexFile;
+
     bool _writtenToFile;
 
     int  _dimensions;
 
     int _patchCounter;
 
-    std::ofstream     _metaFileOut;
     std::stringstream _snapshotFileOut;
     bool              _haveWrittenAtLeastOnePatch;
 
     void writeMetaData(const std::string& metaData);
     void writeMapping(int totalEntries, double* values);
+
+    void createEmptyIndexFile();
+    /**
+     * Adds a new dataset
+     */
+//    static void addDataFileToIndexFile( const std::string& filename );
+
+    /**
+     * Parallel counterpart of addDataFileToIndexFile. Here, you pass a whole
+     * set of files that logically belong together. They typically are written
+     * by a number of trees concurrently.
+     */
+//    static void addDatasetToIndexFile( const std::vector< std::string >& filenames );
+
   public:
     class CellDataWriter: public tarch::plotter::griddata::blockstructured::PatchWriter::CellDataWriter {
       protected:
@@ -100,7 +116,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
        public:
          VertexDataWriter(
            const std::string& identifier,
-		   int                unknownsPerAxis,
+           int                unknownsPerAxis,
            int                numberOfUnknowns,
            const std::string& metaData,
            double*            mapping,
@@ -136,7 +152,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      *                 including the snapshots from the various MPI ranks.
      * @see Superclass
      */
-    PeanoTextPatchFileWriter(int dimension, const std::string& filename, bool append);
+    PeanoTextPatchFileWriter(int dimension, const std::string&  indexFile );
     virtual ~PeanoTextPatchFileWriter();
 
     /**

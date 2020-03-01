@@ -15,42 +15,91 @@ const std::string tarch::plotter::griddata::blockstructured::PeanoTextPatchFileW
 
 
 
+//void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::addDataFileToIndexFile( const std::string& filename) {
+/*
+  std::ofstream     _metaFileOut;
+  if (append) {
+    _metaFileOut.open( (filename+".peano-patch-file").c_str(), std::ios::app );
+  }
+
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    _metaFileOut << std::endl << "begin dataset" << std::endl;
+
+    #ifdef Parallel
+    for (int i=0; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++) {
+      std::ostringstream referencedFilename;
+      if (filenamePrefix.find("/")!=std::string::npos) {
+        referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
+      }
+      else {
+        referencedFilename << filenamePrefix;
+      }
+      referencedFilename << "-rank-" << i
+                         << ".peano-patch-file";
+      _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
+    }
+    #else
+    std::ostringstream referencedFilename;
+    if (filenamePrefix.find("/")!=std::string::npos) {
+      referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
+    }
+    else {
+      referencedFilename << filenamePrefix;
+    }
+    referencedFilename << ".peano-patch-file";
+    _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
+    #endif
+
+    _metaFileOut << "end dataset" << std::endl;
+  }
+
+*/
+//}
+
+
+//void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::addDatasetToIndexFile( const std::vector< std::string >& filenames) {
+
+//}
+
+
+void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::createEmptyIndexFile() {
+  if (_indexFile.rfind(".peano-patch-file")!=std::string::npos) {
+    logWarning( "PeanoTextPatchFileWriter()", "filename should not end with .peano-patch-file as routine adds extension automatically. Chosen filename=" << _indexFile );
+  }
+
+  std::ofstream     indexFileOut;
+
+  indexFileOut.open( (_indexFile + ".peano-patch-file").c_str(), std::ios::out );
+
+  if ( (!indexFileOut.fail()) && indexFileOut.is_open() ) {
+    indexFileOut << HEADER
+                 << "format ASCII" << std::endl;
+  }
+
+  if ( !indexFileOut.is_open() ) {
+    logError("PeanoTextPatchFileWriter()", "have not been able to open file " << _indexFile << ".peano-patch-file");
+  }
+  indexFileOut.close();
+}
+
+
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPatchFileWriter(
   int                 dimension,
-  const std::string&  filename,
-  bool                append
+  const std::string&  indexFile
 ):
   _writtenToFile(false),
-  _dimensions(dimension) {
+  _dimensions(dimension),
+  _indexFile(indexFile) {
   assertion( dimension>=2 );
   assertion( dimension<=3 );
 
   clear();
 
-  if (filename.rfind(".peano-patch-file")!=std::string::npos) {
-    logWarning( "PeanoTextPatchFileWriter()", "filename should not end with .peano-patch-file as routine adds extension automatically. Chosen filename=" << filename );
-  }
-
-  if (append) {
-    _metaFileOut.open( (filename+".peano-patch-file").c_str(), std::ios::app );
-  }
-  else {
-    _metaFileOut.open( (filename+".peano-patch-file").c_str(), std::ios::out );
-
-    if ( (!_metaFileOut.fail()) && _metaFileOut.is_open() ) {
-      _metaFileOut << HEADER
-                   << "format ASCII" << std::endl;
-    }
-  }
-
-  if ( !_metaFileOut.is_open() ) {
-    logError("PeanoTextPatchFileWriter()", "have not been able to open file " << filename << ".peano-patch-file");
-  }
+  createEmptyIndexFile();
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::~PeanoTextPatchFileWriter() {
-  _metaFileOut.close();
 }
 
 
@@ -181,36 +230,6 @@ int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::plotPat
 bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeToFile( const std::string& filenamePrefix ) {
   assertion( !_writtenToFile );
 
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    _metaFileOut << std::endl << "begin dataset" << std::endl;
-
-    #ifdef Parallel
-    for (int i=0; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++) {
-      std::ostringstream referencedFilename;
-      if (filenamePrefix.find("/")!=std::string::npos) {
-        referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
-      }
-      else {
-        referencedFilename << filenamePrefix;
-      }
-      referencedFilename << "-rank-" << i
-                         << ".peano-patch-file";
-      _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
-    }
-    #else
-    std::ostringstream referencedFilename;
-    if (filenamePrefix.find("/")!=std::string::npos) {
-      referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
-    }
-    else {
-      referencedFilename << filenamePrefix;
-    }
-    referencedFilename << ".peano-patch-file";
-    _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
-    #endif
-
-    _metaFileOut << "end dataset" << std::endl;
-  }
 
   if (filenamePrefix.rfind(".peano-patch-file")!=std::string::npos) {
     logWarning( "writeToFile()", "filename should not end with .peano-patch-file as routine adds extension automatically. Chosen filename prefix=" << filenamePrefix );

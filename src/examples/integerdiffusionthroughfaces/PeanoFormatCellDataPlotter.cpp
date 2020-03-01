@@ -37,8 +37,7 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::beginTr
 
  	_writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
       Dimensions,
-      _fileNamePrefix,
-      _counter>0  // bool append
+      _fileNamePrefix
     );
     _dataWriter      = _writer->createCellDataWriter( "cell-data", 1, 1 );
     _oldDataWriter   = _writer->createCellDataWriter( "old-cell-data", 1, 1 );

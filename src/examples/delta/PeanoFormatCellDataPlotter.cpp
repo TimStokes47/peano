@@ -37,8 +37,7 @@ void examples::delta::PeanoFormatCellDataPlotter::beginTraversal() {
 
  	_writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
       Dimensions,
-      _fileNamePrefix,
-      _counter>0  // bool append
+      _fileNamePrefix
     );
 
     _dataWriter      = _writer->createCellDataWriter( "cell-data", CellData::DoFsPerAxis, Dimensions );
