@@ -47,8 +47,7 @@ class ProgramRun {
 
     void step() {
       int stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
-      // @todo Debug
-      logInfo( "ProgramRun::step()", "run step " << stepIdentifier );
+      logDebug( "ProgramRun::step()", "run step " << stepIdentifier );
 
       // @todo Hier waere ein Case schoen
       switch (stepIdentifier) {
@@ -136,10 +135,10 @@ class ProgramRun {
       peano4::parallel::Node::getInstance().setNextProgramStep(2); // dump parameters
       step();
 
-      peano4::parallel::Node::getInstance().setNextProgramStep(10); // dump parameters
+      peano4::parallel::Node::getInstance().setNextProgramStep(10); 
       step();
 
-      peano4::parallel::Node::getInstance().setNextProgramStep(11); // dump parameters
+      peano4::parallel::Node::getInstance().setNextProgramStep(11); 
       step();
 
       for (int i=0; i<iterations; i++) {
@@ -149,6 +148,8 @@ class ProgramRun {
 
       peano4::parallel::Node::getInstance().setNextProgramStep(99); // plot solution
       step();
+      
+      logInfo( "runGlobalMaster(int)", "terminated successfully" );
     }
 };
 
@@ -267,7 +268,7 @@ int main(int argc, char** argv) {
   ProgramRun programRun;
   
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
-    const int MaxIterations = 2;
+    const int MaxIterations = 20;
     programRun.runGlobalMaster(MaxIterations);
   }
   else {
