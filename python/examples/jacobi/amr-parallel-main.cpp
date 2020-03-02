@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
 
   //tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.log" );
   tarch::logging::CommandLineLogger::getInstance().setLogFormat(
-    " ", false, false, false, false, false, true, "trace.log"
+    " ", false, false, true, false, false, true, "trace.log"
   );
 
 
@@ -267,7 +267,7 @@ int main(int argc, char** argv) {
   ProgramRun programRun;
   
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
-    const int MaxIterations = 10;
+    const int MaxIterations = 2;
     programRun.runGlobalMaster(MaxIterations);
   }
   else {
