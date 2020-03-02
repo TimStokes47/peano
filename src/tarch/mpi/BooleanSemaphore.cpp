@@ -37,31 +37,65 @@ tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::BooleanSemaphoreService()
 }
 
 
+void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::serveLockRequests() {
+  assertion(tarch::mpi::Rank::getInstance().isGlobalMaster());
 
-void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::receiveDanglingMessages() {
   #ifdef Parallel
-  int flag = false;
-  MPI_Status status;
-  MPI_Iprobe(MPI_ANY_SOURCE, _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, &status);
-
-  if (flag) {
-    int number;
-    logInfo( "receiveDanglingMessages()", "there's a pending message from " << status.MPI_SOURCE );
-    MPI_Recv( &number, 1, MPI_INT, status.MPI_SOURCE, _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
-    assertion(number!=0);
-    // @todo Debug
-    logInfo( "receiveDanglingMessages()", "received number " << number << " from rank " << status.MPI_SOURCE );
-    if (number>0) {
-      acquireLock(number);
-      // @todo Debug
-      logInfo( "receiveDanglingMessages()", "acquired lock for remote rank and send back acknoweldgement message" );
-      MPI_Send( &number, 1, MPI_INT, status.MPI_SOURCE, _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator());
-    }
-    else {
-      releaseLock(-number);
+  bool servedLockRequest = true;
+  while (servedLockRequest) {
+    servedLockRequest = false;
+    {
+      tarch::multicore::Lock lock(_mapAccessSemaphore);
+      for (auto request = _pendingLockRequests.begin(); request != _pendingLockRequests.end(); ) {
+        addMapEntryLazily(request->second);
+        if ( not _map[request->second] ) {
+          servedLockRequest = true;
+          _pendingLockRequests.erase(request);
+          _map[request->second] = true;
+          // @todo Debug
+          logInfo( "receiveDanglingMessages()", "locked sempahore " << request->second << " for rank " << request->first );
+          MPI_Send( &(request->second), 1, MPI_INT, request->first, _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator());
+          request--;
+        }
+        else {
+          request++;
+        }
+      }
     }
   }
   #endif
+}
+
+
+
+void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::receiveDanglingMessages() {
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    #ifdef Parallel
+    int flag = false;
+    MPI_Status status;
+    MPI_Iprobe(MPI_ANY_SOURCE, _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, &status);
+
+    if (flag) {
+      int number;
+      logInfo( "receiveDanglingMessages()", "there's a pending message from " << status.MPI_SOURCE );
+      MPI_Recv( &number, 1, MPI_INT, status.MPI_SOURCE, _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
+      assertion(number!=0);
+
+      // @todo Debug
+      logInfo( "receiveDanglingMessages()", "received number " << number << " from rank " << status.MPI_SOURCE );
+      if (number>0) {
+        tarch::multicore::Lock lock(_mapAccessSemaphore);
+        std::pair<int,int> newEntry( status.MPI_SOURCE, number );
+        _pendingLockRequests.push_back(newEntry);
+      }
+      else {
+        releaseLock(-number);
+      }
+    }
+
+    serveLockRequests();
+    #endif
+  }
 }
 
 
@@ -77,22 +111,27 @@ int tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getSemaphoreNumber() 
 }
 
 
+void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::addMapEntryLazily(int number) {
+  if ( _map.count(number)==0 ) {
+    _map.insert( std::pair<int,bool>(number,false) );
+  }
+}
+
+
 void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::acquireLock( int number ) {
   if ( tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     {
-      tarch::multicore::Lock lock(_mapSemaphore);
-      if ( _semaphoreMap.count(number)==0 ) {
-        _semaphoreMap.insert( std::pair<int,bool>(number,false) );
-     }
+      tarch::multicore::Lock lock(_mapAccessSemaphore);
+      addMapEntryLazily(number);
     }
 
     bool gotLock = false;
     while (not gotLock) {
       {
-        tarch::multicore::Lock lock(_mapSemaphore);
-        if (_semaphoreMap[number]==false) {
+        tarch::multicore::Lock lock(_mapAccessSemaphore);
+        if (_map[number]==false) {
           gotLock = true;
-          _semaphoreMap[number] = true;
+          _map[number] = true;
         }
       }
       // only check if not successful, so someone else has the chance to release
@@ -102,7 +141,7 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::acquireLock( int num
       }
     }
     // @todo Debug
-    logInfo( "acquireLock()", "successfully acquired lock " << number );
+    logInfo( "acquireLock()", "successfully acquired lock " << number << " for global master");
   }
   else {
     #ifdef Parallel
@@ -129,13 +168,15 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::acquireLock( int num
 
 void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::releaseLock( int number ) {
   if ( tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
-    tarch::multicore::Lock lock(_mapSemaphore);
-    assertion( _semaphoreMap.count(number)==1 );
-    assertion( _semaphoreMap[number]==true );
-    _semaphoreMap[number]=false;
+    tarch::multicore::Lock lock(_mapAccessSemaphore);
+    assertion( _map.count(number)==1 );
+    assertion( _map[number]==true );
+    _map[number]=false;
 
     // @todo Debug
     logInfo( "acquireLock()", "successfully released lock " << number );
+
+    serveLockRequests();
   }
   else {
     #ifdef Parallel

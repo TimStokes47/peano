@@ -38,12 +38,55 @@ class tarch::mpi::BooleanSemaphore {
         int                  _semaphoreCounter;
         int                  _semaphoreTag;
 
-        tarch::multicore::BooleanSemaphore  _mapSemaphore;
-        std::map<int,bool>                  _semaphoreMap;
+        /**
+         * On the master, I have to be sure that no two threads do
+         * access the map of semaphores concurrently. Therefore, I
+         * need a shared memory semaphore.
+         */
+        tarch::multicore::BooleanSemaphore  _mapAccessSemaphore;
+
+        /**
+         * This is the actual map which stores per semaphore number
+         * a bool that says whether it is currently taken. So false
+         * means noone's requested it, true means someone holds it.
+         */
+        std::map<int,bool>                  _map;
+
+        /**
+         * If another rank requests a semaphore, I store this request
+         * temporarily here. Each entry is a map from a rank that
+         * requests access to the number of the semaphore it is asking
+         * for.
+         */
+        std::vector< std::pair<int,int> >   _pendingLockRequests;
 
         BooleanSemaphoreService();
 
+        /**
+         * If a remote rank does request a lock, I don't reserve it
+         * straightaway. Instead, I buffer it in _pendingLockRequests.
+         * From time to time, I now have to check whether I can
+         * serve the request. I do so in receiveDanglingMessages()
+         * and I also try to serve requests directly after someone
+         * has released a lock, as this is the perfect timing.
+         *
+         * The routine serves multiple lock requests. This seems to be
+         * strange as it solely locks. But it makes sense, as the
+         * global master manages all sempahores and not only one, i.e.
+         * it might be able to serve multiple requests. Please note
+         * that this operation is invokved by receiveDanglingMessages().
+         * It is thus implicitly called iteratively. To avoid deadlock
+         * scenarios, it is furthermore important that the routine
+         * runs through all requests.
+         */
+        void serveLockRequests();
+
+        void addMapEntryLazily(int number);
       public:
+        /**
+         * We rely on the fact that no multiple threads can access the
+         * receiveDangling thing at the same time.
+         */
         void receiveDanglingMessages() override;
 
         /**
