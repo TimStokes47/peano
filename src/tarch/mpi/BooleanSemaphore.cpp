@@ -168,14 +168,17 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::acquireLock( int num
 
 void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::releaseLock( int number ) {
   if ( tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
-    tarch::multicore::Lock lock(_mapAccessSemaphore);
-    assertion( _map.count(number)==1 );
-    assertion( _map[number]==true );
-    _map[number]=false;
+    {
+      tarch::multicore::Lock lock(_mapAccessSemaphore);
+      assertion( _map.count(number)==1 );
+      assertion( _map[number]==true );
+      _map[number]=false;
 
-    // @todo Debug
-    logInfo( "acquireLock()", "successfully released lock " << number );
+      // @todo Debug
+      logInfo( "acquireLock()", "successfully released lock " << number );
+    }
 
+    // It is important to unlock the semaphore, as the serve process itself will reaquire it.
     serveLockRequests();
   }
   else {
