@@ -150,6 +150,14 @@ class tarch::mpi::Rank {
     static void releaseTag(int tag);
 
     /**
+     * I provide a custom barrier. This barrier is realised through a non-blocking
+     * barrier which calls receiveDanglingMessages(). This way, it is important that
+     * you insert a (logical) barrier, but you still can answer to load balancing
+     * queries or global locks.
+     */
+    void barrier();
+
+    /**
      * Logs the status of the process onto the log device.
      *
      */

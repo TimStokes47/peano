@@ -271,6 +271,20 @@ tarch::mpi::Rank::~Rank() {
 }
 
 
+void tarch::mpi::Rank::barrier() {
+  #ifdef Parallel
+  MPI_Request request;
+  MPI_Ibarrier( _communicator, &request );
+
+  int success = 0;
+  while (not success) {
+    receiveDanglingMessages();
+    MPI_Test(&request, &success, MPI_STATUS_IGNORE);
+  }
+  #endif
+}
+
+
 void tarch::mpi::Rank::shutdown() {
   #ifdef Parallel
   assertion( _rank!=-1 );
@@ -278,7 +292,8 @@ void tarch::mpi::Rank::shutdown() {
   IntegerMessage::shutdownDatatype();
   StringMessage::shutdownDatatype();
 
-  MPI_Barrier( _communicator );
+  barrier();
+
   MPI_Finalize();
   _communicator = MPI_COMM_WORLD;
   #endif
