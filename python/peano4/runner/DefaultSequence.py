@@ -25,6 +25,6 @@ class DefaultSequence:
       main_name, 
       self.project.namespace,
       ".", 
-      {},
+      {"MAIN_NAME": main_name},
       False)
     output.add(generated_files)

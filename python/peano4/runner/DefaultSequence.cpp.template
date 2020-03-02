@@ -1,4 +1,4 @@
-#include "main.h"
+#include "{MAIN_NAME}.h"
 #include "Constants.h"
 
 #include "tarch/logging/Log.h"
