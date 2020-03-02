@@ -281,6 +281,8 @@ void tarch::mpi::Rank::barrier() {
     receiveDanglingMessages();
     MPI_Test(&request, &success, MPI_STATUS_IGNORE);
   }
+  
+  logDebug( "barrier()", "barrier passed" );
   #endif
 }
 
@@ -294,6 +296,7 @@ void tarch::mpi::Rank::shutdown() {
 
   barrier();
 
+  MPI_Barrier( _communicator );
   MPI_Finalize();
   _communicator = MPI_COMM_WORLD;
   #endif
