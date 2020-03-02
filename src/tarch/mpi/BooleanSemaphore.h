@@ -19,6 +19,7 @@ namespace tarch {
   namespace mpi {
     class BooleanSemaphore;
     class Lock;
+    class Rank;
   }
 }
 
@@ -33,6 +34,7 @@ namespace tarch {
  */
 class tarch::mpi::BooleanSemaphore {
   private:
+    friend class Rank;
     class BooleanSemaphoreService: public tarch::services::Service {
       private:
         int                  _semaphoreCounter;
@@ -99,6 +101,10 @@ class tarch::mpi::BooleanSemaphore {
 
         void acquireLock( int number );
         void releaseLock( int number );
+
+        int getNumberOfLockedSemaphores();
+
+        std::string toString() const;
     };
 
     friend class tarch::mpi::Lock;

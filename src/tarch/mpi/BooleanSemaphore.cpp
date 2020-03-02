@@ -37,6 +37,23 @@ tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::BooleanSemaphoreService()
 }
 
 
+
+std::string tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::toString() const {
+  std::ostringstream msg;
+  msg << "(";
+  msg << "#sections:" << _map.size();
+  for (auto& p: _map) {
+    msg << "," << p.first << ":" << (p.second ? "locked" : "free" );
+  } 
+  msg << ",#requests:" << _pendingLockRequests.size();
+  for (auto& p: _pendingLockRequests) {
+    msg << "," << "lock " << p.second << " from " << p.first;
+  }
+  msg << ")";
+  return msg.str();
+}
+
+
 void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::serveLockRequests() {
   assertion(tarch::mpi::Rank::getInstance().isGlobalMaster());
 
@@ -50,11 +67,10 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::serveLockRequests() 
         addMapEntryLazily(request->second);
         if ( not _map[request->second] ) {
           servedLockRequest = true;
-          _pendingLockRequests.erase(request);
           _map[request->second] = true;
-          logDebug( "receiveDanglingMessages()", "locked sempahore " << request->second << " for rank " << request->first );
+          logDebug( "receiveDanglingMessages()", "locked sempahore " << request->second << " for rank " << request->first << ". state=" << toString() );
           MPI_Send( &(request->second), 1, MPI_INT, request->first, _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator());
-          request = _pendingLockRequests.begin();
+          request = _pendingLockRequests.erase(request);
         }
         else {
           request++;
@@ -76,7 +92,7 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::receiveDanglingMessa
 
     if (flag) {
       int number;
-      logInfo( "receiveDanglingMessages()", "there's a pending message from " << status.MPI_SOURCE );
+      logDebug( "receiveDanglingMessages()", "there's a pending message from " << status.MPI_SOURCE );
       MPI_Recv( &number, 1, MPI_INT, status.MPI_SOURCE, _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
       assertion(number!=0);
 
@@ -85,6 +101,7 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::receiveDanglingMessa
         tarch::multicore::Lock lock(_mapAccessSemaphore);
         std::pair<int,int> newEntry( status.MPI_SOURCE, number );
         _pendingLockRequests.push_back(newEntry);
+        logDebug( "receiveDanglingMessages()", "there are " << _pendingLockRequests.size() << " lock requests in total. state=" << toString() );
       }
       else {
         releaseLock(-number);
@@ -93,6 +110,17 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::receiveDanglingMessa
 
     serveLockRequests();
     #endif
+  }
+}
+
+
+int tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getNumberOfLockedSemaphores() {
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    tarch::multicore::Lock lock(_mapAccessSemaphore);
+    return _pendingLockRequests.size();
+  }
+  else {
+    return 0;
   }
 }
 
@@ -169,7 +197,7 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::releaseLock( int num
       assertion( _map.count(number)==1 );
       assertion( _map[number]==true );
       _map[number]=false;
-      logDebug( "acquireLock()", "successfully released lock " << number );
+      logDebug( "acquireLock()", "successfully released lock " << number << ". state=" << toString() );
     }
 
     // It is important to unlock the semaphore, as the serve process itself will reaquire it.

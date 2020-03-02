@@ -11,6 +11,9 @@
 
 #include "tarch/mpi/IntegerMessage.h"
 #include "tarch/mpi/StringMessage.h"
+#include "tarch/mpi/BooleanSemaphore.h"
+
+
 
 /**
  * For the machine name. If it doesn't work, switch it off in the file
@@ -294,10 +297,14 @@ void tarch::mpi::Rank::shutdown() {
   IntegerMessage::shutdownDatatype();
   StringMessage::shutdownDatatype();
 
+  logDebug( "shutdown()", "number of blocked critical sections: " << tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getInstance().getNumberOfLockedSemaphores() );
   barrier();
 
-  MPI_Barrier( _communicator );
-  MPI_Finalize();
+  int errorCode = MPI_Finalize();
+  if (errorCode) {
+    logError( "shutdown()", MPIReturnValueToString(errorCode) );
+  }
+
   _communicator = MPI_COMM_WORLD;
   #endif
 
