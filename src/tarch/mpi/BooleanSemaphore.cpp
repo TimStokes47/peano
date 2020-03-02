@@ -54,7 +54,7 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::serveLockRequests() 
           _map[request->second] = true;
           logDebug( "receiveDanglingMessages()", "locked sempahore " << request->second << " for rank " << request->first );
           MPI_Send( &(request->second), 1, MPI_INT, request->first, _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator());
-          request--;
+          request = _pendingLockRequests.begin();
         }
         else {
           request++;
@@ -110,6 +110,7 @@ int tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getSemaphoreNumber() 
 
 
 void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::addMapEntryLazily(int number) {
+  assertion1( number>0, number );
   if ( _map.count(number)==0 ) {
     _map.insert( std::pair<int,bool>(number,false) );
   }
