@@ -88,13 +88,14 @@ class ProgramRun {
             if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
               int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
               logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core" );
-              for (int thread=1; thread<tarch::multicore::Core::getInstance().getNumberOfThreads(); thread++) {
-#ifdef Parallel
-                assertionMsg(false, "not yet implemented" );
-#endif
-                // @todo aber mein Rank und mein Tree
-                if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerCore,0)) {
-                  logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << cellsPerCore << " cell(s)" );
+
+              if ( not peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().empty() ) {
+                int localTree = *( peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().begin() );
+                logInfo( "ProgramRun::step()", "fork local tree " << localTree );
+                for (int thread=1; thread<tarch::multicore::Core::getInstance().getNumberOfThreads(); thread++) {
+                  if ( not peano4::parallel::SpacetreeSet::getInstance().split(localTree,cellsPerCore,tarch::mpi::Rank::getInstance().getRank())) {
+                    logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << cellsPerCore << " cell(s)" );
+                  }
                 }
               }
             }
