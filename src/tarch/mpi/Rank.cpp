@@ -53,15 +53,12 @@ int tarch::mpi::Rank::reserveFreeTag(const std::string& fullQualifiedMessageName
   // properly initialised. Please note rank is -1 as long as MPI is not properly
   // initialised, i.e. any tag booking prior to the MPI initialisation is not
   // logged properly.
+  #if PeanoDebug>0
   if ( getInstance()._rank==getGlobalMasterRank() ) {
-    tarch::logging::Log _log("tarch::mpi::Rank<static>");
-    logInfo(
-      "reserveFreeTag()",
-      "assigned message " << fullQualifiedMessageName
-       << " the free tag " << result << " (" << numberOfTags << " consecutive tags reserved)"
-    );
+	std::cout << "assigned message " << fullQualifiedMessageName
+               << " the free tag " << result << " (" << numberOfTags << " consecutive tags reserved)" << std::endl;
   }
-
+  #endif
   return result;
 }
 

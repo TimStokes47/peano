@@ -141,10 +141,14 @@ class tarch::mpi::Rank {
      * This operation should write something to the log devices. However, it
      * is static and the class' log devices are static, too. C++ has no
      * mechanism to define which static entity has to be instantiated first.
-     * On some systems, it hence happened that someone called this static
-     * function while the static log attribute has not been initialised yet.
-     * Consequently, the operation uses its own (local) log variable instead
-     * of the log variable of the class. This is an important workaround!
+     * On some systems, it hence happened that this tag registration got
+     * called before the logging device had been up and running. The problem
+     * is known as static initialization order problem:
+     *
+     *     	https://isocpp.org/wiki/faq/ctors#static-init-order
+     *
+     * So what I do is that I log to std::cout only. This eliminated problems
+     * here.
      */
     static int reserveFreeTag(const std::string& fullQualifiedMessageName, int numberOfTags = 1);
     static void releaseTag(int tag);
