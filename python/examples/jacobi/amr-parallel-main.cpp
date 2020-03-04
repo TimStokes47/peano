@@ -124,8 +124,39 @@ class ProgramRun {
       // Construct grid until we are told that it hasn't changed for
       // more than two iterations.
       // ===========================================================
+      bool hasSplitRanks        = false;
+      bool hasSplitSharedMemory = false;
       do {
-        peano4::parallel::Node::getInstance().setNextProgramStep(0);
+        if (
+          tarch::mpi::Rank::getInstance().getNumberOfRanks()>1
+		  and
+		  not hasSplitRanks
+		  and
+		  peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > tarch::mpi::Rank::getInstance().getNumberOfRanks()
+		) {
+          peano4::parallel::Node::getInstance().setNextProgramStep(10); // split mpi
+          step();
+          hasSplitRanks = true;
+        }
+        else if (not hasSplitRanks) {
+          hasSplitRanks = true;
+        }
+        else if (
+          tarch::multicore::Core::getInstance().getNumberOfThreads()>1
+          and
+          not hasSplitSharedMemory
+          and
+          peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > tarch::multicore::Core::getInstance().getNumberOfThreads()
+        ) {
+          peano4::parallel::Node::getInstance().setNextProgramStep(11); // split tbb
+          step();
+          hasSplitSharedMemory = true;
+        }
+        else if (not hasSplitSharedMemory) {
+          hasSplitSharedMemory = true;
+        }
+
+        peano4::parallel::Node::getInstance().setNextProgramStep(0); // construct mesh
         step();
       }
       while (peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<2);
@@ -134,12 +165,6 @@ class ProgramRun {
       step();
 
       peano4::parallel::Node::getInstance().setNextProgramStep(2); // dump parameters
-      step();
-
-      peano4::parallel::Node::getInstance().setNextProgramStep(10); 
-      step();
-
-      peano4::parallel::Node::getInstance().setNextProgramStep(11); 
       step();
 
       for (int i=0; i<iterations; i++) {
