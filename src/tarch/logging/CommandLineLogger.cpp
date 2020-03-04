@@ -427,6 +427,7 @@ void tarch::logging::CommandLineLogger::close() {
   std::cout.flush();
   std::cerr.flush();
   if (_outputStream!=nullptr) {
+    _outputStream->flush();
     delete _outputStream;
     _outputStream = nullptr;
   }
