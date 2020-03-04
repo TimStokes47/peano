@@ -427,7 +427,11 @@ void tarch::logging::CommandLineLogger::close() {
   std::cout.flush();
   std::cerr.flush();
   if (_outputStream!=nullptr) {
+<<<<<<< HEAD
 	  // evtl. erst einen close()?
+=======
+    _outputStream->flush();
+>>>>>>> branch 'p4' of https://gitlab.lrz.de/hpcsoftware/Peano.git
     delete _outputStream;
     _outputStream = nullptr;
   }

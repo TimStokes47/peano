@@ -152,6 +152,13 @@ class Observer(object):
 {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId):
   _spacetreeId( spacetreeId ) {MAPPING_INITIALISATION_LIST}
 {{
+  assertion3(
+    spacetreeId==-1 or
+    peano4::parallel::Node::getInstance().getRank( spacetreeId ) == tarch::mpi::Rank::getInstance().getRank(),
+    peano4::parallel::Node::getInstance().getRank( spacetreeId ),
+    tarch::mpi::Rank::getInstance().getRank(),
+    spacetreeId 
+  );
 }}
   
 
@@ -377,7 +384,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
           int currentEntryInExchangeList = event.getExchangeVertexData( i+outVertexStackPosition*(TwoPowerD-1) );
           if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
             const int stack = peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange( currentEntryInExchangeList );
-            logDebug("enterCell(...)", "merge local vertex on tree " << _spacetreeId << " with incoming neighbour from stack " << stack );
+            logDebug("enterCell(...)", "merge local vertex on tree " << _spacetreeId << " with incoming neighbour from stack " << stack << " (neighbour " << currentEntryInExchangeList << ")" );
             assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
             {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
             
