@@ -29,7 +29,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   26/01/2020 20:18
+    * @date   04/03/2020 19:13
     */
    class peano4::grid::GridVertex { 
       
@@ -94,6 +94,7 @@ namespace peano4 {
          };
          private: 
             PersistentRecords _persistentRecords;
+            tarch::la::Vector<TwoPowerD,int> _backupOfAdjacentRanks;
             int _numberOfAdjacentRefinedLocalCells;
             
          public:
@@ -115,7 +116,7 @@ namespace peano4 {
             /**
              * Generated
              */
-            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells);
+            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells);
             
             /**
              * Generated
@@ -139,6 +140,14 @@ namespace peano4 {
              int getAdjacentRanks(int elementIndex) const ;
             
              void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+            
+             tarch::la::Vector<TwoPowerD,int> getBackupOfAdjacentRanks() const ;
+            
+             void setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks) ;
+            
+             int getBackupOfAdjacentRanks(int elementIndex) const ;
+            
+             void setBackupOfAdjacentRanks(int elementIndex, const int& backupOfAdjacentRanks) ;
             
             /**
              * Generated
@@ -243,7 +252,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   26/01/2020 20:18
+    * @date   04/03/2020 19:13
     */
    class peano4::grid::GridVertexPacked { 
       
@@ -310,6 +319,7 @@ namespace peano4 {
          };
          private: 
             PersistentRecords _persistentRecords;
+            tarch::la::Vector<TwoPowerD,int> _backupOfAdjacentRanks;
             int _numberOfAdjacentRefinedLocalCells;
             
          public:
@@ -331,7 +341,7 @@ namespace peano4 {
             /**
              * Generated
              */
-            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells);
+            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells);
             
             /**
              * Generated
@@ -355,6 +365,14 @@ namespace peano4 {
              int getAdjacentRanks(int elementIndex) const ;
             
              void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+            
+             tarch::la::Vector<TwoPowerD,int> getBackupOfAdjacentRanks() const ;
+            
+             void setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks) ;
+            
+             int getBackupOfAdjacentRanks(int elementIndex) const ;
+            
+             void setBackupOfAdjacentRanks(int elementIndex, const int& backupOfAdjacentRanks) ;
             
             /**
              * Generated
@@ -460,7 +478,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   26/01/2020 20:18
+       * @date   04/03/2020 19:13
        */
       class peano4::grid::GridVertex { 
          
@@ -541,6 +559,7 @@ namespace peano4 {
             };
             private: 
                PersistentRecords _persistentRecords;
+               tarch::la::Vector<TwoPowerD,int> _backupOfAdjacentRanks;
                int _numberOfAdjacentRefinedLocalCells;
                
             public:
@@ -562,7 +581,7 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -586,6 +605,14 @@ namespace peano4 {
                 int getAdjacentRanks(int elementIndex) const ;
                
                 void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+                tarch::la::Vector<TwoPowerD,int> getBackupOfAdjacentRanks() const ;
+               
+                void setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks) ;
+               
+                int getBackupOfAdjacentRanks(int elementIndex) const ;
+               
+                void setBackupOfAdjacentRanks(int elementIndex, const int& backupOfAdjacentRanks) ;
                
                /**
                 * Generated
@@ -708,7 +735,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   26/01/2020 20:18
+       * @date   04/03/2020 19:13
        */
       class peano4::grid::GridVertexPacked { 
          
@@ -791,6 +818,7 @@ namespace peano4 {
             };
             private: 
                PersistentRecords _persistentRecords;
+               tarch::la::Vector<TwoPowerD,int> _backupOfAdjacentRanks;
                int _numberOfAdjacentRefinedLocalCells;
                
             public:
@@ -812,7 +840,7 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -836,6 +864,14 @@ namespace peano4 {
                 int getAdjacentRanks(int elementIndex) const ;
                
                 void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+                tarch::la::Vector<TwoPowerD,int> getBackupOfAdjacentRanks() const ;
+               
+                void setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks) ;
+               
+                int getBackupOfAdjacentRanks(int elementIndex) const ;
+               
+                void setBackupOfAdjacentRanks(int elementIndex, const int& backupOfAdjacentRanks) ;
                
                /**
                 * Generated

@@ -509,6 +509,12 @@ class peano4::grid::Spacetree {
       GridTraversalEvent&  event
     ) const;
 
+    /**
+     * Is used by createEnterCellEvent() and createLeaveCellEvent(). At this
+     * point, the adjacency lists of the vertex are already overwritten. So
+     * we have to be careful in the enter cell event which adjacency list
+     * we do evaluate.
+     */
     void createNeighbourExchangeLists(
       GridVertex           fineGridVertices[TwoPowerD],
       GridTraversalEvent&  event,
@@ -825,7 +831,7 @@ class peano4::grid::Spacetree {
      *
      * The operation returns the empty set if a vertex is not local.
      */
-    std::set<int>  getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess ) const;
+    std::set<int>  getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess, bool useAdjacencyListBackups ) const;
 
     /**
      * This one is to be invoked if and only if a vertex goes to the in/out
@@ -887,6 +893,16 @@ class peano4::grid::Spacetree {
      *
      * Periodic boundary conditions fall back to standard boundary data
      * exchanges through specialised stacks. They are supported on tree 0 only.
+     *
+     * <h2> Backup for user codes </h2>
+     *
+     * It is convenient to merge the adjacency flags straightaway after a vertex
+     * has been loaded and its boundary counterparts have dropped in. However, once
+     * we merge we loose the information about the previous traversal's adjacency.
+     * This means, when we construct the neighbour information (who merges with
+     * what) for the user data (createEnterCellTraversalEvent()) we lack the
+     * information we actually need. Therefore, this routine backups the
+     * adjacency information from the vertex.
      */
     void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex, TraversalObserver& observer );
 

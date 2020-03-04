@@ -79,8 +79,9 @@
    }
    
    
-   peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells):
-   _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep),_numberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells) {
+   peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells):
+   _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep),_backupOfAdjacentRanks(backupOfAdjacentRanks),
+   _numberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells) {
       
    }
    
@@ -124,6 +125,36 @@
       assertion(elementIndex>=0);
       assertion(elementIndex<TwoPowerD);
       _persistentRecords._adjacentRanks[elementIndex]= adjacentRanks;
+      
+   }
+   
+   
+   
+    tarch::la::Vector<TwoPowerD,int> peano4::grid::GridVertex::getBackupOfAdjacentRanks() const  {
+      return _backupOfAdjacentRanks;
+   }
+   
+   
+   
+    void peano4::grid::GridVertex::setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks)  {
+      _backupOfAdjacentRanks = (backupOfAdjacentRanks);
+   }
+   
+   
+   
+    int peano4::grid::GridVertex::getBackupOfAdjacentRanks(int elementIndex) const  {
+      assertion(elementIndex>=0);
+      assertion(elementIndex<TwoPowerD);
+      return _backupOfAdjacentRanks[elementIndex];
+      
+   }
+   
+   
+   
+    void peano4::grid::GridVertex::setBackupOfAdjacentRanks(int elementIndex, const int& backupOfAdjacentRanks)  {
+      assertion(elementIndex>=0);
+      assertion(elementIndex<TwoPowerD);
+      _backupOfAdjacentRanks[elementIndex]= backupOfAdjacentRanks;
       
    }
    
@@ -200,6 +231,12 @@
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
       out << ",";
+      out << "backupOfAdjacentRanks:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getBackupOfAdjacentRanks(i) << ",";
+   }
+   out << getBackupOfAdjacentRanks(TwoPowerD-1) << "]";
+      out << ",";
       out << "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep:" << getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep();
       out << ",";
       out << "isAntecessorOfRefinedVertexInCurrentTreeSweep:" << getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
@@ -217,6 +254,7 @@
       return GridVertexPacked(
          getState(),
          getAdjacentRanks(),
+         getBackupOfAdjacentRanks(),
          getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),
          getIsAntecessorOfRefinedVertexInCurrentTreeSweep(),
          getNumberOfAdjacentRefinedLocalCells()
@@ -334,9 +372,9 @@
             GridVertex dummyGridVertex[16];
             
             #ifdef MPI2
-            const int Attributes = 5;
+            const int Attributes = 6;
             #else
-            const int Attributes = 5+2;
+            const int Attributes = 6+2;
             #endif
             MPI_Datatype subtypes[Attributes] = {
                #ifndef MPI2
@@ -346,6 +384,7 @@
                , MPI_INT		 //adjacentRanks
                , MPI_CXX_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
                , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+               , MPI_INT		 //backupOfAdjacentRanks
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , MPI_UB
@@ -361,6 +400,7 @@
                , TwoPowerD		 //adjacentRanks
                , 1		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
                , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+               , TwoPowerD		 //backupOfAdjacentRanks
                , 1		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , 1 // upper bound
@@ -397,6 +437,12 @@
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
             #else
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
+            #endif
+            currentAddress++;
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
             #endif
             currentAddress++;
             #ifdef MPI2
@@ -824,8 +870,8 @@ switch (mode) {
    }
    
    
-   peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells):
-   _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep) {
+   peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells):
+   _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep),_backupOfAdjacentRanks(backupOfAdjacentRanks) {
       setNumberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells);
       if ((6 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
@@ -885,6 +931,36 @@ switch (mode) {
       assertion(elementIndex>=0);
       assertion(elementIndex<TwoPowerD);
       _persistentRecords._adjacentRanks[elementIndex]= adjacentRanks;
+      
+   }
+   
+   
+   
+    tarch::la::Vector<TwoPowerD,int> peano4::grid::GridVertexPacked::getBackupOfAdjacentRanks() const  {
+      return _backupOfAdjacentRanks;
+   }
+   
+   
+   
+    void peano4::grid::GridVertexPacked::setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks)  {
+      _backupOfAdjacentRanks = (backupOfAdjacentRanks);
+   }
+   
+   
+   
+    int peano4::grid::GridVertexPacked::getBackupOfAdjacentRanks(int elementIndex) const  {
+      assertion(elementIndex>=0);
+      assertion(elementIndex<TwoPowerD);
+      return _backupOfAdjacentRanks[elementIndex];
+      
+   }
+   
+   
+   
+    void peano4::grid::GridVertexPacked::setBackupOfAdjacentRanks(int elementIndex, const int& backupOfAdjacentRanks)  {
+      assertion(elementIndex>=0);
+      assertion(elementIndex<TwoPowerD);
+      _backupOfAdjacentRanks[elementIndex]= backupOfAdjacentRanks;
       
    }
    
@@ -957,6 +1033,12 @@ switch (mode) {
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
       out << ",";
+      out << "backupOfAdjacentRanks:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getBackupOfAdjacentRanks(i) << ",";
+   }
+   out << getBackupOfAdjacentRanks(TwoPowerD-1) << "]";
+      out << ",";
       out << "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep:" << getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep();
       out << ",";
       out << "isAntecessorOfRefinedVertexInCurrentTreeSweep:" << getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
@@ -974,6 +1056,7 @@ switch (mode) {
       return GridVertex(
          getState(),
          getAdjacentRanks(),
+         getBackupOfAdjacentRanks(),
          getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),
          getIsAntecessorOfRefinedVertexInCurrentTreeSweep(),
          getNumberOfAdjacentRefinedLocalCells()
@@ -1083,9 +1166,9 @@ switch (mode) {
             GridVertexPacked dummyGridVertexPacked[16];
             
             #ifdef MPI2
-            const int Attributes = 3;
+            const int Attributes = 4;
             #else
-            const int Attributes = 3+2;
+            const int Attributes = 4+2;
             #endif
             MPI_Datatype subtypes[Attributes] = {
                #ifndef MPI2
@@ -1093,6 +1176,7 @@ switch (mode) {
                #endif
                  MPI_INT		 //adjacentRanks
                , MPI_SHORT		 //_packedRecords0
+               , MPI_INT		 //backupOfAdjacentRanks
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , MPI_UB
@@ -1106,6 +1190,7 @@ switch (mode) {
                #endif
                  TwoPowerD		 //adjacentRanks
                , 1		 //_packedRecords0
+               , TwoPowerD		 //backupOfAdjacentRanks
                , 1		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , 1 // upper bound
@@ -1130,6 +1215,12 @@ switch (mode) {
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
             #else
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
+            #endif
+            currentAddress++;
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
             #endif
             currentAddress++;
             #ifdef MPI2
@@ -1539,8 +1630,9 @@ switch (mode) {
       }
       
       
-      peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level):
-      _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level),_numberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells) {
+      peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level):
+      _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level),_backupOfAdjacentRanks(backupOfAdjacentRanks),
+      _numberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells) {
          
       }
       
@@ -1584,6 +1676,36 @@ switch (mode) {
          assertion(elementIndex>=0);
          assertion(elementIndex<TwoPowerD);
          _persistentRecords._adjacentRanks[elementIndex]= adjacentRanks;
+         
+      }
+      
+      
+      
+       tarch::la::Vector<TwoPowerD,int> peano4::grid::GridVertex::getBackupOfAdjacentRanks() const  {
+         return _backupOfAdjacentRanks;
+      }
+      
+      
+      
+       void peano4::grid::GridVertex::setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks)  {
+         _backupOfAdjacentRanks = (backupOfAdjacentRanks);
+      }
+      
+      
+      
+       int peano4::grid::GridVertex::getBackupOfAdjacentRanks(int elementIndex) const  {
+         assertion(elementIndex>=0);
+         assertion(elementIndex<TwoPowerD);
+         return _backupOfAdjacentRanks[elementIndex];
+         
+      }
+      
+      
+      
+       void peano4::grid::GridVertex::setBackupOfAdjacentRanks(int elementIndex, const int& backupOfAdjacentRanks)  {
+         assertion(elementIndex>=0);
+         assertion(elementIndex<TwoPowerD);
+         _backupOfAdjacentRanks[elementIndex]= backupOfAdjacentRanks;
          
       }
       
@@ -1702,6 +1824,12 @@ switch (mode) {
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
          out << ",";
+         out << "backupOfAdjacentRanks:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getBackupOfAdjacentRanks(i) << ",";
+   }
+   out << getBackupOfAdjacentRanks(TwoPowerD-1) << "]";
+         out << ",";
          out << "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep:" << getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep();
          out << ",";
          out << "isAntecessorOfRefinedVertexInCurrentTreeSweep:" << getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
@@ -1727,6 +1855,7 @@ switch (mode) {
          return GridVertexPacked(
             getState(),
             getAdjacentRanks(),
+            getBackupOfAdjacentRanks(),
             getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),
             getIsAntecessorOfRefinedVertexInCurrentTreeSweep(),
             getNumberOfAdjacentRefinedLocalCells(),
@@ -1862,9 +1991,9 @@ switch (mode) {
                GridVertex dummyGridVertex[16];
                
                #ifdef MPI2
-               const int Attributes = 7;
+               const int Attributes = 8;
                #else
-               const int Attributes = 7+2;
+               const int Attributes = 8+2;
                #endif
                MPI_Datatype subtypes[Attributes] = {
                   #ifndef MPI2
@@ -1876,6 +2005,7 @@ switch (mode) {
                   , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
+                  , MPI_INT		 //backupOfAdjacentRanks
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                   #ifndef MPI2
                   , MPI_UB
@@ -1893,6 +2023,7 @@ switch (mode) {
                   , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , Dimensions		 //x
                   , 1		 //level
+                  , TwoPowerD		 //backupOfAdjacentRanks
                   , 1		 //numberOfAdjacentRefinedLocalCells
                   #ifndef MPI2
                   , 1 // upper bound
@@ -1941,6 +2072,12 @@ switch (mode) {
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[currentAddress] );
                #else
                MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[currentAddress] );
+               #endif
+               currentAddress++;
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
                #endif
                currentAddress++;
                #ifdef MPI2
@@ -2394,8 +2531,8 @@ switch (mode) {
       }
       
       
-      peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level):
-      _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level) {
+      peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level):
+      _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level),_backupOfAdjacentRanks(backupOfAdjacentRanks) {
          setNumberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells);
          if ((6 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
@@ -2455,6 +2592,36 @@ switch (mode) {
          assertion(elementIndex>=0);
          assertion(elementIndex<TwoPowerD);
          _persistentRecords._adjacentRanks[elementIndex]= adjacentRanks;
+         
+      }
+      
+      
+      
+       tarch::la::Vector<TwoPowerD,int> peano4::grid::GridVertexPacked::getBackupOfAdjacentRanks() const  {
+         return _backupOfAdjacentRanks;
+      }
+      
+      
+      
+       void peano4::grid::GridVertexPacked::setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& backupOfAdjacentRanks)  {
+         _backupOfAdjacentRanks = (backupOfAdjacentRanks);
+      }
+      
+      
+      
+       int peano4::grid::GridVertexPacked::getBackupOfAdjacentRanks(int elementIndex) const  {
+         assertion(elementIndex>=0);
+         assertion(elementIndex<TwoPowerD);
+         return _backupOfAdjacentRanks[elementIndex];
+         
+      }
+      
+      
+      
+       void peano4::grid::GridVertexPacked::setBackupOfAdjacentRanks(int elementIndex, const int& backupOfAdjacentRanks)  {
+         assertion(elementIndex>=0);
+         assertion(elementIndex<TwoPowerD);
+         _backupOfAdjacentRanks[elementIndex]= backupOfAdjacentRanks;
          
       }
       
@@ -2569,6 +2736,12 @@ switch (mode) {
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
          out << ",";
+         out << "backupOfAdjacentRanks:[";
+   for (int i = 0; i < TwoPowerD-1; i++) {
+      out << getBackupOfAdjacentRanks(i) << ",";
+   }
+   out << getBackupOfAdjacentRanks(TwoPowerD-1) << "]";
+         out << ",";
          out << "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep:" << getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep();
          out << ",";
          out << "isAntecessorOfRefinedVertexInCurrentTreeSweep:" << getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
@@ -2594,6 +2767,7 @@ switch (mode) {
          return GridVertex(
             getState(),
             getAdjacentRanks(),
+            getBackupOfAdjacentRanks(),
             getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),
             getIsAntecessorOfRefinedVertexInCurrentTreeSweep(),
             getNumberOfAdjacentRefinedLocalCells(),
@@ -2721,9 +2895,9 @@ switch (mode) {
                GridVertexPacked dummyGridVertexPacked[16];
                
                #ifdef MPI2
-               const int Attributes = 5;
+               const int Attributes = 6;
                #else
-               const int Attributes = 5+2;
+               const int Attributes = 6+2;
                #endif
                MPI_Datatype subtypes[Attributes] = {
                   #ifndef MPI2
@@ -2733,6 +2907,7 @@ switch (mode) {
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_SHORT		 //_packedRecords0
+                  , MPI_INT		 //backupOfAdjacentRanks
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                   #ifndef MPI2
                   , MPI_UB
@@ -2748,6 +2923,7 @@ switch (mode) {
                   , Dimensions		 //x
                   , 1		 //level
                   , 1		 //_packedRecords0
+                  , TwoPowerD		 //backupOfAdjacentRanks
                   , 1		 //numberOfAdjacentRefinedLocalCells
                   #ifndef MPI2
                   , 1 // upper bound
@@ -2784,6 +2960,12 @@ switch (mode) {
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
                #else
                MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
+               #endif
+               currentAddress++;
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
                #endif
                currentAddress++;
                #ifdef MPI2

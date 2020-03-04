@@ -16,6 +16,12 @@ class peano4::grid::GridVertex {
   
   persistent packed parallelise packed State  state;
   persistent        parallelise int  adjacentRanks[TwoPowerD];
+  
+  /**
+   * I have to backup the ranks, as I immediately update the adjacency lists
+   * after I've received the updates from a neighbour.
+   */
+  discard           int  backupOfAdjacentRanks[TwoPowerD];
 
   persistent packed             bool hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
   persistent packed parallelise bool isAntecessorOfRefinedVertexInCurrentTreeSweep;

@@ -1235,22 +1235,27 @@ void peano4::grid::Spacetree::storeVertices(
 }
 
 
-std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess ) const {
+std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess, bool useAdjacencyListBackups ) const {
   const bool isLocalVertex =
 	  calledByReceivingProcess ?
       isVertexAdjacentToLocalSpacetree(vertex,true,false) :
       isVertexAdjacentToLocalSpacetree(vertex,false,false);
 
+  auto adjacentRanks = vertex.getAdjacentRanks();
+  if ( useAdjacencyListBackups ) {
+    adjacentRanks = vertex.getBackupOfAdjacentRanks();
+  }
+
   std::set<int> neighbourIds;
   for (int i=0; i<TwoPowerD; i++) {
     const bool mandatoryCriteria =
-		      vertex.getAdjacentRanks(i)!=_id
+              adjacentRanks(i)!=_id
 		      and
-		      vertex.getAdjacentRanks(i)!=InvalidRank
-          and
-          vertex.getAdjacentRanks(i)!=RankOfPeriodicBoundaryCondition
-          and
-          vertex.getAdjacentRanks(i)!=RankOfCellWitchWillBeJoined;
+			  adjacentRanks(i)!=InvalidRank
+              and
+			  adjacentRanks(i)!=RankOfPeriodicBoundaryCondition
+              and
+			  adjacentRanks(i)!=RankOfCellWitchWillBeJoined;
 
     // I should not try to receive anything from a node that we just are
     // splitting into.
@@ -1258,19 +1263,19 @@ std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& 
     const bool receiverCriteria = (_spacetreeState!=SpacetreeState::NewFromSplit or _masterId!=vertex.getAdjacentRanks(i))
     		                  and (_splitting.count(vertex.getAdjacentRanks(i))==0);
 */
-    const bool receiverCriteria = _splitting.count(vertex.getAdjacentRanks(i))==0;
+    const bool receiverCriteria = _splitting.count(adjacentRanks(i))==0;
     // I should not send out anything to a node that I will split into in
     // the next sweep
     const bool senderCriteria   = //(_joining.count( vertex.getAdjacentRanks(i)) ==0 )
     		                  //and
-    		                  (_splitTriggered.count(vertex.getAdjacentRanks(i))==0);
+    		                  (_splitTriggered.count(adjacentRanks(i))==0);
 
     const bool insertCriteria = calledByReceivingProcess ?
       (mandatoryCriteria and isLocalVertex and receiverCriteria) :
       (mandatoryCriteria and isLocalVertex and senderCriteria);
 
     if (insertCriteria) {
-      neighbourIds.insert( vertex.getAdjacentRanks(i) );
+      neighbourIds.insert( adjacentRanks(i) );
     }
   }
 
@@ -1343,7 +1348,12 @@ void peano4::grid::Spacetree::mergeAtDomainBoundary( GridVertex& vertex, const G
 void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex, TraversalObserver& observer ) {
   assertion( _spacetreeState!=SpacetreeState::NewFromSplit );
 
-  std::set<int> neighbourIds = getAdjacentDomainIds(vertex,true);
+  //
+  // Backup adjacency lists
+  //
+  vertex.setBackupOfAdjacentRanks( vertex.getAdjacentRanks() );
+
+  std::set<int> neighbourIds = getAdjacentDomainIds(vertex,true,false);
   for (auto neighbour: neighbourIds) {
     assertion1( neighbour>=0, neighbour );
     const int  inStack = peano4::parallel::Node::getInstance().getInputStackNumberOfHorizontalDataExchange(neighbour);
@@ -1398,7 +1408,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex, TraversalObserver& observer ) {
   logTraceInWith2Arguments( "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString(), _id );
 
-  std::set<int> outRanks = getAdjacentDomainIds(vertex,false);
+  std::set<int> outRanks = getAdjacentDomainIds(vertex,false,false);
   for (auto p: outRanks) {
     //
     // Boundary exchange
@@ -1868,7 +1878,7 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
   event.setExchangeVertexData(TraversalObserver::NoData);
   for (int i=0; i<TwoPowerD; i++) {
     int counter = i * (TwoPowerD-1);
-    std::set<int> adjacentIds = getAdjacentDomainIds(fineGridVertices[i],isEnterCell);
+    std::set<int> adjacentIds = getAdjacentDomainIds(fineGridVertices[i],isEnterCell,isEnterCell ? true : false);
     for (auto p: adjacentIds) {
       event.setExchangeVertexData(counter,p);
       counter++;
