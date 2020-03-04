@@ -256,7 +256,7 @@ int main(int argc, char** argv) {
 
   //tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.log" );
   tarch::logging::CommandLineLogger::getInstance().setLogFormat(
-    " ", false, false, true, false, false, true, "trace.log"
+    " ", true, false, true, false, false, true, "trace.log"
   );
 
 
