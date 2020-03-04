@@ -281,15 +281,20 @@ peano4::parallel::SpacetreeSet::DataExchangeTask::DataExchangeTask( peano4::grid
 
 
 bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
-  exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, _spacetree._masterId, VerticalDataExchangeMode::Running );
-  exchangeAllHorizontalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, true );
-  exchangeAllPeriodicBoundaryDataStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
+  static tarch::multicore::BooleanSemaphore semaphore;
 
-  _spacetreeSet.createObserverCloneIfRequired(_observer,_spacetree._id);
+  {
+    tarch::multicore::Lock lock(semaphore);
+    exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, _spacetree._masterId, VerticalDataExchangeMode::Running );
+    exchangeAllHorizontalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id, true );
+    exchangeAllPeriodicBoundaryDataStacks( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
 
-  _spacetreeSet._clonedObserver[_spacetree._id]->exchangeAllVerticalDataExchangeStacks( _spacetree._masterId, VerticalDataExchangeMode::Running );
-  _spacetreeSet._clonedObserver[_spacetree._id]->exchangeAllHorizontalDataExchangeStacks( true );
-  _spacetreeSet._clonedObserver[_spacetree._id]->exchangeAllPeriodicBoundaryDataStacks();
+    _spacetreeSet.createObserverCloneIfRequired(_observer,_spacetree._id);
+
+    _spacetreeSet._clonedObserver[_spacetree._id]->exchangeAllVerticalDataExchangeStacks( _spacetree._masterId, VerticalDataExchangeMode::Running );
+    _spacetreeSet._clonedObserver[_spacetree._id]->exchangeAllHorizontalDataExchangeStacks( true );
+    _spacetreeSet._clonedObserver[_spacetree._id]->exchangeAllPeriodicBoundaryDataStacks();
+  }
 
   finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, _spacetree._id );
   _spacetreeSet._clonedObserver[_spacetree._id]->finishAllOutstandingSendsAndReceives();
@@ -355,7 +360,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
           _clonedObserver[p._id]->exchangeAllVerticalDataExchangeStacks( p._masterId, VerticalDataExchangeMode::SendOutDataForDryRunOfNewSpacetree);
           DataExchangeTask::finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
           _clonedObserver[p._id]->finishAllOutstandingSendsAndReceives();
-          logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "sent out data for try runs to all new subtrees of " << p._id );
+          logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "sent out data for dry runs to all new subtrees of " << p._id );
 	    }
 	    break;
     }
@@ -370,28 +375,22 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
 
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees(peano4::grid::TraversalObserver&  observer) {
   logTraceIn( "exchangeDataBetweenTrees(...)" );
-  // @todo Geht net parallel, weil das u.U. die darunterliegenden Maps gleichzeitig aendert.
-  //       Hier brauch ich also wohl doch echt irgendwie Semaphoren
 
-  //std::vector< tarch::multicore::Task* > dataExchangeTasks;
-  //dataExchangeTasks.reserve( _spacetrees.size() );
+  std::vector< tarch::multicore::Task* > dataExchangeTasks;
 
   for (auto& p: _spacetrees) {
     if (p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
       DataExchangeTask* newTask = new DataExchangeTask( p, *this, observer );
-      //dataExchangeTasks.push_back( newTask );
-      newTask->run();
-      delete newTask;
+      dataExchangeTasks.push_back( newTask );
       logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
     }
     else {
       logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "skip tree " << p._id << " as it is new" );
     }
   }
-  //logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "trigger " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
 
-  //static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees" );
-  //peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion,true);
+  static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees" );
+  peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion,true);
 
   logTraceOut( "exchangeDataBetweenTrees(...)" );
 }
