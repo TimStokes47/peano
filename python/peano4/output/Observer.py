@@ -873,7 +873,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int mast
 """
 
   TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Exchange = """
-  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataExchangeStacks(
+  peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
     {DATASET},
     _spacetreeId,
     masterId,
@@ -895,7 +895,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllHorizontalDataExchangeStacks( bool s
 """
 
   TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Exchange = """
-  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllHorizontalDataExchangeStacks(
+  peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks(
     {DATASET},
     _spacetreeId,
     symmetricDataCardinality
@@ -916,7 +916,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllPeriodicBoundaryDataStacks() {{
 """
 
   TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Exchange = """
-  peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllPeriodicBoundaryDataStacks(
+  peano4::parallel::SpacetreeSet::exchangeAllPeriodicBoundaryDataStacks(
     {DATASET},
     _spacetreeId
   );
@@ -935,7 +935,7 @@ void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives() {{
 """
 
   TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Exchange = """
-  peano4::parallel::SpacetreeSet::DataExchangeTask::finishAllOutstandingSendsAndReceives(
+  peano4::parallel::SpacetreeSet::finishAllOutstandingSendsAndReceives(
     {DATASET},
     _spacetreeId
   );
