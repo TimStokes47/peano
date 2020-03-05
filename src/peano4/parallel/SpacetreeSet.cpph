@@ -3,7 +3,7 @@
 
 
 template <class Container>
-void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataExchangeStacks(
+void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
   Container& stackContainer,
   int spacetreeId, int parentId,
   VerticalDataExchangeMode mode
@@ -267,7 +267,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllVerticalDataEx
 
 
 template <class Container>
-void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllHorizontalDataExchangeStacks( Container& stackContainer, int spacetreeId, bool symmetricDataCardinality ) {
+void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Container& stackContainer, int spacetreeId, bool symmetricDataCardinality ) {
   logTraceInWith2Arguments( "exchangeAllHorizontalDataExchangeStacks(...)", spacetreeId, symmetricDataCardinality );
   assertionMsg( symmetricDataCardinality, "haven't implemented the asymetric case yet, but would be simple: Just need the integer messages as I do for the vertical data flow" );
   // Trigger all send and receives required
@@ -349,7 +349,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllHorizontalData
 
 
 template <class Container>
-void peano4::parallel::SpacetreeSet::DataExchangeTask::finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId ) {
+void peano4::parallel::SpacetreeSet::finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId ) {
   // Finalise data exchange
   // ----------------------
   std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
@@ -362,7 +362,7 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::finishAllOutstandingSends
 
 
 template <class Container>
-void peano4::parallel::SpacetreeSet::DataExchangeTask::exchangeAllPeriodicBoundaryDataStacks( Container& stackContainer, int spacetreeId ) {
+void peano4::parallel::SpacetreeSet::exchangeAllPeriodicBoundaryDataStacks( Container& stackContainer, int spacetreeId ) {
   std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
   for (auto& sourceStackKey: keys) {
     if (

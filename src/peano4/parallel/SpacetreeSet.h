@@ -58,79 +58,48 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
   public:
     /**
-     * \section  Rationale
+     * This is the kind of routine that does boundary data exchange, i.e.
+     * send outs in iteration n and receives (see counterpart routine), but
+     * the received data is used only in traversal n+1. The whole exchange
+     * thus asynchronous (logically).
      *
-     * I originally planned to merge this task into the data traversal task. The
-     * idea behind such a merger is that a data exchange right after the data
-     * traversal increases the concurrency: While one tree already triggers its
-     * data exchange, others still might run through the grid.
+     * Typically, this routine is called by user observers to for their
+     * user-defined data. We however also use it within the grid to trigger
+     * the actual vertex data exchange. As these routines all are invoked
+     * via tasks, this routine is typically invoked by multiple threads
+     * concurrently.
      *
-     * However, this does not work straightforwardly: With my idea of stack-based
-     * boundary exchange buffers, two communication partners have to have finished
-     * their traversal before they can exchange data. Otherwise, one input buffer
-     * of one grid (the one that is still running) might not yet be available when
-     * the partner tree tries to send its data over.
+     * @param symmetricDataCardinality If two ranks A and B are adjacent to
+     *   each other, and if A send n entries to B, then B received exactly
+     *   n entries in turn.
+     *
+     * @see finishAllOutstandingSendsAndReceives();
      */
-    class DataExchangeTask: public tarch::multicore::Task {
-      private:
-        peano4::grid::Spacetree&           _spacetree;
-        SpacetreeSet&                      _spacetreeSet;
-        peano4::grid::TraversalObserver&   _observer;
-      public:
-        DataExchangeTask( peano4::grid::Spacetree& spacetree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
+    template <class Container>
+    static void exchangeAllHorizontalDataExchangeStacks( Container& stackContainer, int spacetreeId, bool symmetricDataCardinality );
 
-        /**
-         * I create the copy of the observer, run the traversal on my local
-         * tree _spacetree and finally destroy the local observer copy.
-         */
-        bool run() override;
-        void prefetch() override;
+    template <class Container>
+    static void exchangeAllPeriodicBoundaryDataStacks( Container& stackContainer, int spacetreeId );
 
-        /**
-         * This is the kind of routine that does boundary data exchange, i.e.
-         * send outs in iteration n and receives (see counterpart routine), but
-         * the received data is used only in traversal n+1. The whole exchange
-         * thus asynchronous (logically).
-         *
-         * Typically, this routine is called by user observers to for their
-         * user-defined data. We however also use it within the grid to trigger
-         * the actual vertex data exchange. As these routines all are invoked
-         * via tasks, this routine is typically invoked by multiple threads
-         * concurrently.
-         *
-         * @param symmetricDataCardinality If two ranks A and B are adjacent to
-         *   each other, and if A send n entries to B, then B received exactly
-         *   n entries in turn.
-         *
-         * @see finishAllOutstandingSendsAndReceives();
-         */
-        template <class Container>
-        static void exchangeAllHorizontalDataExchangeStacks( Container& stackContainer, int spacetreeId, bool symmetricDataCardinality );
+    static std::string toString(VerticalDataExchangeMode mode);
 
-        template <class Container>
-        static void exchangeAllPeriodicBoundaryDataStacks( Container& stackContainer, int spacetreeId );
+   /**
+     * Counterpart of exchangeStacksAsynchronously() which directly transfers
+     * data within a traversal. We use it for synchronous data vertical data
+     * exchange and for the transfer of data throughout splits and merges.
+     *
+     * @param childrenIds Depending on the context, this is either the children or
+     *   the new children that are just about to be kicked off
+     */
+    template <class Container>
+    static void exchangeAllVerticalDataExchangeStacks(
+      Container& stackContainer,
+      int spacetreeId, int parentId,
+      VerticalDataExchangeMode mode
+    );
 
-        static std::string toString(VerticalDataExchangeMode mode);
-
-  	    /**
-         * Counterpart of exchangeStacksAsynchronously() which directly transfers
-         * data within a traversal. We use it for synchronous data vertical data
-         * exchange and for the transfer of data throughout splits and merges.
-         *
-         * @param childrenIds Depending on the context, this is either the children or
-         *   the new children that are just about to be kicked off
-         */
-        template <class Container>
-        static void exchangeAllVerticalDataExchangeStacks(
-          Container& stackContainer,
-          int spacetreeId, int parentId,
-          VerticalDataExchangeMode mode
-        );
-
-        template <class Container>
-        static void finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId );
-	  };
-
+    template <class Container>
+    static void finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId );
 
   private:
     /**
@@ -192,13 +161,16 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      *
      * <h2> Multithreading </h2>
      *
-     * If we run this routine in debug mode, then I do all data exchange
-     * sequentially. Otherwise, it is close to impossible to read the
-     * assertion messages.
-     *
-     * @param newTrees This set holds all indices of local ids that are down as
-     *          splitting before we issue the traversal preceding this function
-     *          call.
+     * I originally intended to make this routine use tasks. However, the data
+     * transfer routines do modify the underlying map/stack structures of Peano,
+     * as new containers are created, data is moved around, and so forth. So the
+     * data exchange per se is not thread-safe. As we do not/can not use threads,
+     * we have to be careful with the order. I originally had a loop over the
+     * trees that triggered per tree the data exchange and then waited for MPI.
+     * Obviously, this does not work with rendezvous protocol. We need two loops.
+     * The first one triggers all the MPI sends/receives and it also realises the
+     * local data exchange. The second one waits for all MPI operations to
+     * terminate.
      */
     void exchangeDataBetweenTrees(peano4::grid::TraversalObserver&  observer);
 
