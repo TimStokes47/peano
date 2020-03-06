@@ -32,6 +32,8 @@ class examples::jacobi::actions::ComputeGlobalResidualAndError{
   private:
     static tarch::logging::Log  _log;
 
+    int    _treeNumber;
+
     double _globalResidualL2;
     double _globalResidualMax;
     double _globalResidualEukledian;

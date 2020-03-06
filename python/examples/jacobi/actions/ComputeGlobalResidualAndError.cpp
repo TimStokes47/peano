@@ -7,7 +7,8 @@
 
 tarch::logging::Log examples::jacobi::actions::ComputeGlobalResidualAndError::_log( "examples::jacobi::actions::ComputeGlobalResidualAndError");
 
-examples::jacobi::actions::ComputeGlobalResidualAndError::ComputeGlobalResidualAndError(int treeNumber) {}
+examples::jacobi::actions::ComputeGlobalResidualAndError::ComputeGlobalResidualAndError(int treeNumber):
+  _treeNumber(treeNumber) {}
 
 examples::jacobi::actions::ComputeGlobalResidualAndError::~ComputeGlobalResidualAndError() {}
 
@@ -28,16 +29,18 @@ void examples::jacobi::actions::ComputeGlobalResidualAndError::beginTraversal() 
 
 
 void examples::jacobi::actions::ComputeGlobalResidualAndError::endTraversal() {
-  logInfo(
-    "endTraversal",
-    " \t |res|_h="   << std::sqrt(_globalResidualL2) <<
-    " \t |res|_max=" << _globalResidualMax <<
-    " \t |res|_2="   << std::sqrt(_globalResidualEukledian) <<
-    " \t |e|_h="     << std::sqrt(_globalErrorL2) <<
-    " \t |e|_max="   << _globalErrorMax <<
-    " \t |e|_2="     << std::sqrt(_globalErrorEukledian) <<
-	" \t mem="       << tarch::getMemoryUsage(tarch::MemoryUsageFormat::MByte) << "MB"
-  );
+  if (_treeNumber==0) {
+    logInfo(
+      "endTraversal",
+      " \t |res|_h="   << std::sqrt(_globalResidualL2) <<
+      " \t |res|_max=" << _globalResidualMax <<
+      " \t |res|_2="   << std::sqrt(_globalResidualEukledian) <<
+      " \t |e|_h="     << std::sqrt(_globalErrorL2) <<
+      " \t |e|_max="   << _globalErrorMax <<
+      " \t |e|_2="     << std::sqrt(_globalErrorEukledian) <<
+      " \t mem="       << tarch::getMemoryUsage(tarch::MemoryUsageFormat::MByte) << "MB"
+    );
+  }
 }
 
 
