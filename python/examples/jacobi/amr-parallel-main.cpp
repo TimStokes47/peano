@@ -123,9 +123,11 @@ class ProgramRun {
     }
 
 
-
-
+    #ifdef Parallel
     void runGlobalMaster(int iterations, bool buildUpGridCompletelyBeforeWeDecompose=false) {
+    #else
+    void runGlobalMaster(int iterations, bool buildUpGridCompletelyBeforeWeDecompose=true) {
+    #endif
       // Construct grid until we are told that it hasn't changed for
       // more than two iterations.
       // ===========================================================
@@ -193,16 +195,20 @@ class ProgramRun {
         step();
       }
 
+      #if !defined(Parallel)
       peano4::parallel::Node::getInstance().setNextProgramStep(2); // dump parameters
       step();
+      #endif
 
       for (int i=0; i<iterations; i++) {
         peano4::parallel::Node::getInstance().setNextProgramStep(50); // solve problem
         step();
       }
 
+      #if !defined(Parallel)
       peano4::parallel::Node::getInstance().setNextProgramStep(99); // plot solution
       step();
+      #endif
       
       logInfo( "runGlobalMaster(int)", "terminated successfully" );
     }
