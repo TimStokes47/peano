@@ -110,7 +110,10 @@ class ProgramRun {
           {
             if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
               if (cellsPerCore<=0) {
-                cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+                cellsPerCore = std::max( (int)1, peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads() );
+              }
+              else {
+                cellsPerCore *= ThreePowerD;
               }
 
               logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core, but split step by step" );
@@ -175,6 +178,8 @@ class ProgramRun {
           peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > tarch::mpi::Rank::getInstance().getNumberOfRanks()
         ) {
           peano4::parallel::Node::getInstance().setNextProgramStep(10); // split mpi
+          step();
+          peano4::parallel::Node::getInstance().setNextProgramStep(0); // construct mesh
           step();
           hasSplitRanks = true;
         }
