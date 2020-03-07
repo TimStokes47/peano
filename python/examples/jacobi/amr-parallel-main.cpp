@@ -49,6 +49,8 @@ class ProgramRun {
       int stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
       logInfo( "ProgramRun::step()", "run step " << stepIdentifier );
 
+      static int cellsPerCore = -1;   // some variants require this one to be static
+
       // @todo Hier waere ein Case schoen
       switch (stepIdentifier) {
         case 0:
@@ -86,7 +88,8 @@ class ProgramRun {
         case 11:
           {
             if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
-              int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+              cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+
               logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core" );
 
               if ( not peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().empty() ) {
@@ -106,7 +109,10 @@ class ProgramRun {
         case 12:
           {
             if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
-              static int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+              if (cellsPerCore<=0) {
+                cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+              }
+
               logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core, but split step by step" );
 
               if (
