@@ -103,6 +103,28 @@ class ProgramRun {
             peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
           }
           break;
+        case 12:
+          {
+            if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
+              static int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+              logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core, but split step by step" );
+
+              if (
+                not peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().empty()
+				and
+                peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()
+			  ) {
+                int localTree = *( peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().begin() );
+                logInfo( "ProgramRun::step()", "fork local tree " << localTree );
+                if ( not peano4::parallel::SpacetreeSet::getInstance().split(localTree,cellsPerCore,tarch::mpi::Rank::getInstance().getRank())) {
+                  logWarning( "runParallel(...)", "failed to assign new thread " << cellsPerCore << " cell(s)" );
+                }
+              }
+            }
+            examples::jacobi::observers::CreateGrid  observer;
+            peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+          }
+          break;
         case 50:
           {
             examples::jacobi::observers::FusedSolverSteps  observer;
@@ -119,15 +141,20 @@ class ProgramRun {
           assertionMsg(false, "step unknown");
       }
 
+      #if PeanoDebug>0
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+      #endif
     }
 
 
-    #ifdef Parallel
-    void runGlobalMaster(int iterations, bool buildUpGridCompletelyBeforeWeDecompose=false) {
-    #else
-    void runGlobalMaster(int iterations, bool buildUpGridCompletelyBeforeWeDecompose=true) {
-    #endif
+    enum class GridDecompositionStrategy {
+      BuildUpGridCompletelyBeforeWeDecompose,
+	  SplitUpMPIASAPAndThenSplitUpIntoAllThreadsInOneRush,
+	  SplitUpMPIASAPAndThenSplitUpIntoThreadsOneByOne
+    };
+
+
+    void runGlobalMaster(int iterations, GridDecompositionStrategy gridDecompositionStrategy = GridDecompositionStrategy::SplitUpMPIASAPAndThenSplitUpIntoThreadsOneByOne ) {
       // Construct grid until we are told that it hasn't changed for
       // more than two iterations.
       // ===========================================================
@@ -135,7 +162,7 @@ class ProgramRun {
       bool hasSplitSharedMemory = false;
       do {
         if (
-          not buildUpGridCompletelyBeforeWeDecompose
+          gridDecompositionStrategy != GridDecompositionStrategy::BuildUpGridCompletelyBeforeWeDecompose
           and
           not hasSplitRanks
           and
@@ -153,7 +180,7 @@ class ProgramRun {
           hasSplitRanks = true;
         }
         else if (
-          not buildUpGridCompletelyBeforeWeDecompose
+          gridDecompositionStrategy != GridDecompositionStrategy::BuildUpGridCompletelyBeforeWeDecompose
           and
           hasSplitRanks
           and
@@ -161,8 +188,19 @@ class ProgramRun {
           and
           peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > tarch::multicore::Core::getInstance().getNumberOfThreads()
         ) {
-          peano4::parallel::Node::getInstance().setNextProgramStep(11); // split tbb
-          step();
+          if (gridDecompositionStrategy == GridDecompositionStrategy::SplitUpMPIASAPAndThenSplitUpIntoAllThreadsInOneRush ) {
+            peano4::parallel::Node::getInstance().setNextProgramStep(11); // split tbb
+            step();
+          }
+          else {
+            for (int thread=1; thread<tarch::multicore::Core::getInstance().getNumberOfThreads(); thread++) {
+              peano4::parallel::Node::getInstance().setNextProgramStep(12); // split tbb
+              step();
+              peano4::parallel::Node::getInstance().setNextProgramStep(0); // construct mesh
+              step();
+            }
+          }
+
           hasSplitSharedMemory = true;
         }
         else if (
@@ -183,7 +221,7 @@ class ProgramRun {
       peano4::parallel::Node::getInstance().setNextProgramStep(1); // setup scenario
       step();
 
-      if ( buildUpGridCompletelyBeforeWeDecompose ) {
+      if ( gridDecompositionStrategy == GridDecompositionStrategy::BuildUpGridCompletelyBeforeWeDecompose ) {
         peano4::parallel::Node::getInstance().setNextProgramStep(11); // split tbb
         step();
       }
