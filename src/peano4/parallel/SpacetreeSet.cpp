@@ -6,6 +6,8 @@
 #include "peano4/grid/PeanoCurve.h"
 
 
+#include "tarch/tarch.h"
+
 #include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Lock.h"
 
@@ -627,7 +629,19 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
 
     if (newSpacetreeId>=0) {
       tree.split(newSpacetreeId, cells);
-      logInfo( "split(int,int)", "trigger split of tree " << treeId << " into tree " << newSpacetreeId << " with " << cells << " fine grid cells" );
+      if ( tarch::getMemoryUsage(tarch::MemoryUsageFormat::MByte)*2 > tarch::getTotalMemory(tarch::MemoryUsageFormat::MByte) ) {
+    	logWarning(
+          "split(int,int)",
+		  "Peano4 uses " << tarch::getMemoryUsage(tarch::MemoryUsageFormat::MByte) << "MB on rank " <<
+		  tarch::mpi::Rank::getInstance().getRank() << " and is asked to split. Total memory is " <<
+          tarch::getTotalMemory(tarch::MemoryUsageFormat::MByte) << "MB, i.e. we might run out of memory"
+    	)
+      }
+
+      logInfo(
+        "split(int,int)",
+		"trigger split of tree " << treeId << " into tree " << newSpacetreeId << " with " << cells << " fine grid cells"
+      );
       logTraceOutWith1Argument( "split(int,int,int)", true );
       return true;
     }
