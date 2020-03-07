@@ -46,6 +46,10 @@ namespace tarch {
    * The implementation is based on C-version of Michael Moltenbrey.
    */
   int getMemoryUsage(MemoryUsageFormat format);
+
+  int getTotalMemory(MemoryUsageFormat format);
+
+  int getFreeMemory(MemoryUsageFormat format);
 }
 
 

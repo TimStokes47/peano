@@ -10,6 +10,44 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <sys/sysinfo.h>
+
+
+namespace {
+  int convertMemorySize(long value, tarch::MemoryUsageFormat format) {
+    static tarch::logging::Log _log( "tarch" );
+	int result;
+    switch (format) {
+      case tarch::MemoryUsageFormat::MByte:
+        {
+	      long megaByte = 1024 * 1024;
+	      long usageMB ((value + (megaByte/2)) / megaByte );
+	      const long maxInteger = std::numeric_limits<int>::max();
+	      if (usageMB>maxInteger) {
+	        logError( "convertMemorySize()", "cannot cast result to return value: " << usageMB );
+	      }
+	      result = static_cast<int>(usageMB);
+	      }
+	  }
+    return result;
+  }
+}
+
+
+int tarch::getTotalMemory(MemoryUsageFormat format) {
+  struct sysinfo info;
+  sysinfo( &info );
+
+  return convertMemorySize(info.totalram,format);
+}
+
+
+int tarch::getFreeMemory(MemoryUsageFormat format) {
+  struct sysinfo info;
+  sysinfo( &info );
+
+  return convertMemorySize(info.freeram,format);
+}
 
 
 int tarch::getMemoryUsage(MemoryUsageFormat format) {
@@ -44,18 +82,5 @@ int tarch::getMemoryUsage(MemoryUsageFormat format) {
   std::size_t rawInput = 0;
   #endif
 
-  int result = 0;
-  switch (format) {
-    case MemoryUsageFormat::MByte:
-      {
-        long megaByte = 1024 * 1024;
-        long usageMB ((rawInput + (megaByte/2)) / megaByte );
-        const long maxInteger = std::numeric_limits<int>::max();
-        if (usageMB>maxInteger) {
-          logError( "getMemoryUsageKB()", "cannot cast result to return value: " << usageMB );
-        }
-        result = static_cast<int>(usageMB);
-      }
-  }
-  return result;
+  return convertMemorySize(rawInput,format);
 }

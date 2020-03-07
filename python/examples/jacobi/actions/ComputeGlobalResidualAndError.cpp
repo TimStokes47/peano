@@ -7,8 +7,10 @@
 
 tarch::logging::Log examples::jacobi::actions::ComputeGlobalResidualAndError::_log( "examples::jacobi::actions::ComputeGlobalResidualAndError");
 
+
 examples::jacobi::actions::ComputeGlobalResidualAndError::ComputeGlobalResidualAndError(int treeNumber):
   _treeNumber(treeNumber) {}
+
 
 examples::jacobi::actions::ComputeGlobalResidualAndError::~ComputeGlobalResidualAndError() {}
 

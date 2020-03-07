@@ -135,19 +135,12 @@ class ProgramRun {
         if (
           not buildUpGridCompletelyBeforeWeDecompose
           and
-	  not hasSplitRanks
-	  and
-	  peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > tarch::mpi::Rank::getInstance().getNumberOfRanks()
-	) {
+          not hasSplitRanks
+          and
+          peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > tarch::mpi::Rank::getInstance().getNumberOfRanks()
+        ) {
           peano4::parallel::Node::getInstance().setNextProgramStep(10); // split mpi
           step();
-          peano4::parallel::Node::getInstance().setNextProgramStep(0); // construct mesh
-          step();
-          peano4::parallel::Node::getInstance().setNextProgramStep(0); // construct mesh
-          step();
-          peano4::parallel::Node::getInstance().setNextProgramStep(0); // construct mesh
-          step();
-
           hasSplitRanks = true;
         }
         else if (
