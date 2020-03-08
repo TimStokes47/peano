@@ -4,6 +4,8 @@
 
 #include "tarch/la/Vector.h"
 #include "tarch/mpi/Rank.h"
+#include "tarch/multicore/Core.h"
+
 
 defineTest(peano4::parallel::tests::PingPongTest)
 
