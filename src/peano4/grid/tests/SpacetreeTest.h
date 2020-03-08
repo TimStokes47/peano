@@ -12,8 +12,7 @@ namespace peano4 {
   namespace grid {
     namespace tests {
       class SpacetreeTest;
-      extern tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest> thisTestCaseFactoryInstance;
-      static tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest>* fake = &thisTestCaseFactoryInstance;
+      declareTest(peano4::grid::tests,SpacetreeTest)
     }
   }
 }

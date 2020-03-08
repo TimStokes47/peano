@@ -23,18 +23,17 @@
       } \
     };
 
-/**
- * Automatically register a testCase.
- */
-#define registerTest(name) \
-  tarch::tests::TestCaseFactory<name> thisTestCaseFactoryInstance( tarch::tests::TestCaseFactory<name>::UnitTest, #name );
-
 
 /**
- * Automatically register an IntegrationTest.
+ * @param name Full qualified name
  */
-#define registerIntegrationTest(name) \
-  tarch::tests::TestCaseFactory<name> thisTestCaseFactoryInstance( tarch::tests::TestCaseFactory<name>::IntegrationTest, #name );
+#define defineTest(name) \
+  tarch::tests::TestCaseFactory<name> name##Instance( tarch::tests::TestCaseFactory<name>::UnitTest, #name );
+
+#define declareTest(fullqualifiedpath,unqualifiedTestName) \
+  extern tarch::tests::TestCaseFactory<unqualifiedTestName>   unqualifiedTestName##Instance; \
+  static tarch::tests::TestCaseFactory<unqualifiedTestName>*  unqualifiedTestName##InstancePointer = &unqualifiedTestName##Instance;
+
 
 
 #define testNumericalEquals(lhs,rhs) \

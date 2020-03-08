@@ -5,8 +5,6 @@
 
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
-#include "tarch/tests/TestCaseFactory.h"
-registerIntegrationTest(tarch::plotter::griddata::unstructured::vtk::tests::VTKBinaryFileTestCase)
 
 
 #ifdef UseTestSpecificCompilerSettings

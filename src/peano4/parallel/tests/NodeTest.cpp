@@ -6,8 +6,7 @@
 #include "peano4/grid/Spacetree.h"
 
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(peano4::parallel::tests::NodeTest)
+defineTest(peano4::parallel::tests::NodeTest)
 
 
 tarch::logging::Log peano4::parallel::tests::NodeTest::_log("peano4::parallel::tests::NodeTest");

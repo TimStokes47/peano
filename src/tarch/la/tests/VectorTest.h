@@ -3,11 +3,12 @@
 #ifndef _LA_TARCH_TESTS_VECTORTEST_H_
 #define _LA_TARCH_TESTS_VECTORTEST_H_
 
-#include "tarch/tests/TestCase.h"
+#include "tarch/tests/TestCaseFactory.h"
 
 namespace tarch {
   namespace la {
     class VectorTest;
+    declareTest(tarch::la,VectorTest)
   }
 }
 

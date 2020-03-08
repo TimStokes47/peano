@@ -5,8 +5,7 @@
 #include <sstream>
 #include <map>
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(tarch::la::VectorTest)
+defineTest(tarch::la::VectorTest)
 
 
 tarch::la::VectorTest::VectorTest ():

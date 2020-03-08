@@ -3,11 +3,12 @@
 #ifndef _LA_TARCH_TESTS_MATRIXTEST_H_
 #define _LA_TARCH_TESTS_MATRIXTEST_H_
 
-#include "tarch/tests/TestCase.h"
+#include "tarch/tests/TestCaseFactory.h"
 
 namespace tarch {
   namespace la {
     class MatrixTest;
+    declareTest(tarch::la,MatrixTest)
   }
 }
 

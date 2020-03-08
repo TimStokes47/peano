@@ -48,11 +48,25 @@ namespace tarch {
  *
  * <h2> Unit tests in libraries </h2>
  *
+ * If your unit test is part of a library, then simply registering the test is
+ * not enough, as the linker will remove the test again - assuming it is not
+ * invoked. So you have to do a couple of things:
  *
- *
- * libTarch_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
+ * First, you have to say that you wanna export the whole archive. With the
+ * autotools, you have to add
+ * <pre>
+libTarch_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
 libTarch_trace_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
 libTarch_debug_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
+   </pre>
+ *
+ * Second, you have to include add your test to the respective UnitTest.h
+ * file or, otherwise, you have to ensure that your main routine includes
+ * the header of the unit test.
+ *
+ * Finally, you have to use the declareTest macro which is basically a fake
+ * that hinders the linker to kick your test out.
+ * The latter trick is documented at https://stackoverflow.com/questions/5202142/static-variable-initialization-over-a-library.
  *
  *
  * @author Tobias Weinzierl, Wolfgang Eckhardt

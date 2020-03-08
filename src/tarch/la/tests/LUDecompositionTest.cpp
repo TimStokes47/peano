@@ -5,8 +5,7 @@
 #include "tarch/la/Matrix.h"
 #include "tarch/la/Vector.h"
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(tarch::la::LUDecompositionTest)
+defineTest(tarch::la::LUDecompositionTest)
 
 
 tarch::la::LUDecompositionTest::LUDecompositionTest():

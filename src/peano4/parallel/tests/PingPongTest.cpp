@@ -5,8 +5,7 @@
 #include "tarch/la/Vector.h"
 #include "tarch/mpi/Rank.h"
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(peano4::parallel::tests::PingPongTest)
+defineTest(peano4::parallel::tests::PingPongTest)
 
 
 tarch::logging::Log peano4::parallel::tests::PingPongTest::_log("peano4::parallel::tests::PingPongTest");

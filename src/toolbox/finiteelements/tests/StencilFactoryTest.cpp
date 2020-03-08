@@ -6,8 +6,7 @@
 #include "tarch/la/Vector.h"
 
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(toolbox::finiteelements::tests::StencilFactoryTest)
+defineTest(toolbox::finiteelements::tests::StencilFactoryTest)
 
 
 tarch::logging::Log toolbox::finiteelements::tests::StencilFactoryTest::_log( "toolbox::finiteelements::tests::StencilFactoryTest" );

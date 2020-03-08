@@ -5,8 +5,7 @@
 #include "tarch/la/ScalarOperations.h"
 
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(tarch::la::GramSchmidtTest)
+defineTest(tarch::la::GramSchmidtTest)
 
 
 tarch::la::GramSchmidtTest::GramSchmidtTest():

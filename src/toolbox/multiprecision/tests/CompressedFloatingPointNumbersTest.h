@@ -4,7 +4,7 @@
 #define _TOOLBOX_MULTIPRECISION_TESTS_COMPRESSED_FLOATING_POINT_NUMBERS_TESTS_
  
 
-#include "tarch/tests/TestCase.h"
+#include "tarch/tests/TestCaseFactory.h"
 #include "tarch/logging/Log.h"
 
 
@@ -12,6 +12,7 @@ namespace toolbox {
   namespace multiprecision {
     namespace tests {
       class CompressedFloatingPointNumbersTest;
+      declareTest(toolbox::multiprecision::tests,CompressedFloatingPointNumbersTest)
     }
   }
 }

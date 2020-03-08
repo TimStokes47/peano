@@ -13,13 +13,11 @@
 tarch::logging::Log _log("examples::unittests");
 
 
-//#include "tarch/tests/TestCaseFactory.h"
-#include "peano4/grid/tests/SpacetreeTest.h"
+#include "peano4/UnitTests.h"
+#include "tarch/UnitTests.h"
+
 
 void runTests() {
-	// @todo raus
-//  tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest> thisSecondTestCaseFactoryInstance( tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest>::UnitTest, "peano4::grid::tests::SpacetreeTest" );
-
   tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
   int unitTestsErrors = tarch::tests::TestCaseRegistry::getInstance()
                        .getTestCaseCollection()

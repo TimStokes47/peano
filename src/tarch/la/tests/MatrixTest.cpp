@@ -8,8 +8,8 @@
 #include <string>
 #include <sstream>
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(tarch::la::MatrixTest)
+
+defineTest(tarch::la::MatrixTest)
 
 
 tarch::la::MatrixTest::MatrixTest():

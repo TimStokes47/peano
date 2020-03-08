@@ -10,8 +10,7 @@
 #include <sstream>
 
 
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(tarch::la::MatrixVectorTest)
+defineTest(tarch::la::MatrixVectorTest)
 
 
 tarch::la::MatrixVectorTest::MatrixVectorTest():

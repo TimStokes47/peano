@@ -3,11 +3,12 @@
 #ifndef _TARCH_LA_TESTS_SCALARTEST_H_
 #define _TARCH_LA_TESTS_SCALARTEST_H_
 
-#include "tarch/tests/TestCase.h"
+#include "tarch/tests/TestCaseFactory.h"
 
 namespace tarch {
   namespace la {
     class ScalarTest;
+    declareTest(tarch::la,ScalarTest);
   }
 }
 

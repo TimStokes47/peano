@@ -4,7 +4,6 @@
 #define _TARCH_TESTS_TESTCASE_FACTORY_H_
 
 #include <string>
-
 #include "tarch/tests/TestCase.h"
 
 
@@ -12,6 +11,11 @@ namespace tarch {
   namespace tests {
     template <class TestName>
     class TestCaseFactory;
+
+    /**
+     * Forward declaration
+     */
+    class TestCase;
   }
 }
 

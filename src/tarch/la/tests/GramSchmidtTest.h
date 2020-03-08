@@ -4,19 +4,20 @@
 #define _LA_TARCH_TESTS_GRAMSCHMIDTTEST_H_
 
 #include "tarch/tests/TestCase.h"
+#include "tarch/tests/TestCaseFactory.h"
 
 namespace tarch {
   namespace la {
     class GramSchmidtTest;
+    declareTest(tarch::la,GramSchmidtTest);
   }
 }
 
 /**
  * Provides tests for types Vector, DynamicVector and all Vector functionality.
  */
-class tarch::la::GramSchmidtTest : public tarch::tests::TestCase
-{
-private:
+class tarch::la::GramSchmidtTest: public tarch::tests::TestCase {
+  private:
 
   /**
    * Tests constructors.

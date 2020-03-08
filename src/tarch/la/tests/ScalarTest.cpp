@@ -6,23 +6,21 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-registerTest(tarch::la::ScalarTest)
+defineTest(tarch::la::ScalarTest)
 
-namespace tarch {
-namespace la {
 
-ScalarTest::ScalarTest ()
-:
-  TestCase("tarch::la::ScalarTest")
-{}
 
-void ScalarTest::run ()
-{
+tarch::la::ScalarTest::ScalarTest():
+  TestCase("tarch::la::ScalarTest") {
+}
+
+
+void tarch::la::ScalarTest::run () {
   testMethod (testComparison);
   testMethod (testAbs);
 }
 
-void ScalarTest::testComparison()
+void tarch::la::ScalarTest::testComparison()
 {
   double a = 1.0;
   double b = 2.0;
@@ -54,7 +52,7 @@ void ScalarTest::testComparison()
   validate (equals(a, a + 10.0 * eps, 10.0 * eps));
 }
 
-void ScalarTest::testAbs()
+void tarch::la::ScalarTest::testAbs()
 {
   double a = -1.0;
   int b = -1;
@@ -63,4 +61,3 @@ void ScalarTest::testAbs()
   validateEquals (abs(b), 1);
 }
 
-}} // namespace tarch, la

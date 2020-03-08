@@ -3,11 +3,12 @@
 #ifndef LUDECOMPOSITIONTEST_H_
 #define LUDECOMPOSITIONTEST_H_
 
-#include "tarch/tests/TestCase.h"
+#include "tarch/tests/TestCaseFactory.h"
 
 namespace tarch {
   namespace la {
     class LUDecompositionTest;
+    declareTest(tarch::la,LUDecompositionTest)
   }
 }
 

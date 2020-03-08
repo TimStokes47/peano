@@ -13,6 +13,9 @@
 
 #include "observers/DataRepository.h"
 
+#include "peano4/UnitTests.h"
+#include "tarch/UnitTests.h"
+
 
 tarch::logging::Log _log("::");
 

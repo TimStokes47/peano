@@ -3,8 +3,8 @@
 #include "../CompressedFloatingPointNumbers.h"
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(toolbox::multiprecision::tests::CompressedFloatingPointNumbersTest)
+
+defineTest(toolbox::multiprecision::tests::CompressedFloatingPointNumbersTest)
 
 
 #ifdef UseTestSpecificCompilerSettings
