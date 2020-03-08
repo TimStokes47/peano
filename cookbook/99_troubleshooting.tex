@@ -1,25 +1,5 @@
 \chapter{Troubleshooting}
 
-% \section{PDT}
-% 
-% \begin{itemize}
-%   \item \textbf{ The PDT does not pass as the jar file is built with the wrong
-%   Java version}. Download the whole Peano project (from sourceforge via subversion),
-%   change into the directory \texttt{pdt/src}, and run
-%   \begin{code}
-%   make clean
-%   make createParser
-%   make compile
-%   make dist
-%   \end{code}
-%   Use the \texttt{pdt.jar} from the \texttt{pdt} directory now. 
-% \end{itemize}
-
-
-%update-alterantives --config java
-
-
-
 \section{Compilation}
 
 Peano relies on a header \texttt{tarch/compiler/CompilerSpecificSettings.h}.
@@ -57,6 +37,18 @@ the directory.
   postfix there. Rerun configure and build.
   \item To be continued \dots
 \end{itemize}
+
+
+
+\section{Linking}
+
+\begin{itemize}
+  \item \textbf{No unit tests seem to run.} Peano4 builds a set of libraries that are linked into 
+    the actual application. It seems that some linkers consider the unit tests to be dead code,
+    as the actual test routines indeed are never called (by the library). See the documentation in 
+    \texttt{tarch/tests/TestCase.h} for some details. 
+\end{itemize}
+
 
 
 
@@ -112,69 +104,9 @@ tarch::logging::LogFilter::getInstance().printFilterListToCout();
  
  
  
-% \section{Programming}
-% 
-% \begin{itemize}
-%   \item \textbf{ How can I find out the location of a cell}. See the
-%   documentation of the \texttt{VertexEnumerator}. The object has routines to query cell
-%   position, size and level in the spacetree.
-%   \item \textbf{ The adaptivity pattern lacks behing my adaptivity
-%   instructions}.
-%   For most refinement and erase calls, Peano needs at least one iteration to
-%   reliase them. It tries to do it faster, but usually needs these two
-%   iterations. Whenever Peano encounters regular subtrees, it tries to store 
-%   them separately in some arrays and process it way faster than with a classic
-%   tree. When a refinement command affects such a regular subregion, we first 
-%   have to find this region (at least one sweep), then break it up, in the
-%   follow-up iteration remove all veto markers that stopped the regular grid to
-%   be refined and then we can realise the refinement. If you have an extremely
-%   rapidely changing grid and you can't wait for Peano to keep pace, you should
-%   compile with \texttt{-DnoPersistentRegularSubtrees}. This will make the grid
-%   react quicker to your refinement requests but might slow down the code
-%   significantly.
-%   \item \textbf{ When does a grid coarsen?} If you invoke \texttt{erase}, Peano
-%   bookkeeps this coarsening requests but continues to traverse the grid. The
-%   actual grid then is actually coarsened in the subsequent grid sweep. If you
-%   trigger an erase, grid entities will not be destroyed prior to the next
-%   traversal. In some cases, it even can happen that an erase is neglected
-%   completely or postponed further:
-%   \begin{itemize}
-%     \item If your erase grid parts and refine adjacent grid parts, it can happen
-%     that the refine overwrites your erase (or the other way round). It depends
-%     which instruction can be accomodated by the grid first, i.e.~while Peano
-%     ensures that the grid remains valid and all events are always triggered in
-%     the right order, the actual grid pattern is non-deterministic from an
-%     application's point of view if you refine and coarsen at the same time in
-%     close domain regions.
-%     \item If you erase a grid region that is completely handled by one rank,
-%     then this makes the rank unemployed. If this happens, Peano first has to
-%     release the rank before the erase passes. In this case, you have to wait two
-%     or three iterations before your erase passes through. While the erase is
-%     bookkeeped but not realised yet, the state's \texttt{isGridStationary}
-%     attribute does not hold.
-%   \end{itemize}
-%   \item \textbf{ I need the state object in my mapping}. Create a copy of the
-%   state object in \texttt{beginIteration} and to merge this copy back in \texttt{endIteration}. 
-%   Peano updates the State itself and the state position in memory is not fixed.
-%   Do never ever hold a pointer to the state object handed into
-%   \texttt{beginIteration} or \texttt{endIteration}.
-%   \item \textbf{Peano's technical architecture uses a too precise machine
-%   precision}. By default, we use $10^{-12}$ as machine precision. You can change
-%   this however by compiling with \linebreak
-%   \texttt{-DMACHINE\_PRECISION=0.000001}, e.g.
-% \end{itemize}
-% 
-% 
-% \section{Application tailoring}
-% 
-% \begin{itemize}
-%   \item \textbf{ The code requires too much memory}.
-%   You can try to compile your code with
-%   \linebreak \texttt{-DnoPersistentRegularSubtrees}.
-%   However, this may lead to a severe performance \linebreak
-%   degradation---notably if you run your code with shared memory parallelisation.
-% \end{itemize}
-% 
+
+
+
 % \section{TBB troubleshooting}
 % 
 % \begin{itemize}
@@ -265,6 +197,31 @@ tarch::logging::LogFilter::getInstance().printFilterListToCout();
     you have built your code with \texttt{-DTBB\_USE\_ASSERT -DTBB\_USE\_THREADING\_TOOLS}.
   \item To be continued \dots
 \end{itemize}
+
+
+
+\section{PDT}
+
+This section is deprecated and is of relevance if and only if you use the Python API with 
+the legacy DaStGen support to model application-specific data.
+
+
+\begin{itemize}
+  \item \textbf{ The PDT does not pass as the jar file is built with the wrong
+  Java version}. Download the whole Peano project (from sourceforge via subversion),
+  change into the directory \texttt{pdt/src}, and run
+  \begin{code}
+  make clean
+  make createParser
+  make compile
+  make dist
+  \end{code}
+  Use the \texttt{pdt.jar} from the \texttt{pdt} directory now. 
+\end{itemize}
+
+
+%update-alterantives --config java
+
 
 
 
