@@ -30,12 +30,12 @@ VTK_REQUIRED_LIBS     =  -lvtkIOXML$(VTK_LIBRARY_EXTENSION) \
                          -lvtkFiltersGeneral$(VTK_LIBRARY_EXTENSION)
 
 convert_CXXFLAGS  = $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS)
-convert_LDADD     = $(top_builddir)/src/libTarch.a
-convert_LDFLAGS   = $(PEANO_LDFLAGS) $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
+convert_LDADD     = -lTarch
+convert_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS) $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
 convert_SOURCES   = $(convertSources)
 
 convert_debug_CXXFLAGS  = $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS) -O0 -g3 -DPeanoDebug=4
-convert_debug_LDADD     = $(top_builddir)/src/libTarch_debug.a
-convert_debug_LDFLAGS   = $(PEANO_LDFLAGS) $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
+convert_debug_LDADD     = -lTarch_debug
+convert_debug_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS) $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
 convert_debug_SOURCES   = $(convertSources)
 

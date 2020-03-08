@@ -5,15 +5,20 @@
 
 #include "tarch/tests/TestCase.h"
 #include "tarch/logging/Log.h"
+#include "tarch/tests/TestCaseFactory.h"
 
 
 namespace peano4 {
   namespace grid {
     namespace tests {
       class SpacetreeTest;
+      extern tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest> thisTestCaseFactoryInstance;
+      static tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest>* fake = &thisTestCaseFactoryInstance;
     }
   }
 }
+
+
 
 
 class peano4::grid::tests::SpacetreeTest: public tarch::tests::TestCase {
@@ -22,6 +27,8 @@ class peano4::grid::tests::SpacetreeTest: public tarch::tests::TestCase {
      * Logging device
      */
     static tarch::logging::Log _log;
+
+    //static extern tarch::tests::TestCaseFactory<SpacetreeTest> thisTestCaseFactoryInstance;
 
     void testRestrictToCoarseGrid();
     void testCreateLeaveCellTraversalEvent();

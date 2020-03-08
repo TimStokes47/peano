@@ -27,14 +27,14 @@
  * Automatically register a testCase.
  */
 #define registerTest(name) \
-  static tarch::tests::TestCaseFactory<name> thisTestCaseFactoryInstance( tarch::tests::TestCaseFactory<name>::UnitTest, #name );
+  tarch::tests::TestCaseFactory<name> thisTestCaseFactoryInstance( tarch::tests::TestCaseFactory<name>::UnitTest, #name );
 
 
 /**
  * Automatically register an IntegrationTest.
  */
 #define registerIntegrationTest(name) \
-  static tarch::tests::TestCaseFactory<name> thisTestCaseFactoryInstance( tarch::tests::TestCaseFactory<name>::IntegrationTest, #name );
+  tarch::tests::TestCaseFactory<name> thisTestCaseFactoryInstance( tarch::tests::TestCaseFactory<name>::IntegrationTest, #name );
 
 
 #define testNumericalEquals(lhs,rhs) \
@@ -411,4 +411,4 @@
     return;\
   }
 
-#endif /* VALIDATEMACROS_H_ */
+#endif

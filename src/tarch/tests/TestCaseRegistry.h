@@ -42,4 +42,6 @@ class tarch::tests::TestCaseRegistry {
     TestCase& getIntegrationTestCaseCollection();
 };
 
-#endif /* TESTCASEREGISTRY_H_ */
+#endif
+
+

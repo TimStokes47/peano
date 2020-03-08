@@ -1,5 +1,3 @@
-#include "MyObserver.h"
-
 #include "tarch/logging/Log.h"
 #include "tarch/tests/TestCaseRegistry.h"
 #include "tarch/logging/CommandLineLogger.h"
@@ -9,18 +7,19 @@
 #include "tarch/mpi/Rank.h"
 
 #include "peano4/peano.h"
-#include "peano4/grid/Spacetree.h"
-#include "peano4/parallel/SpacetreeSet.h"
 #include "peano4/parallel/Node.h"
 
 
 tarch::logging::Log _log("examples::unittests");
 
 
-std::bitset<Dimensions> periodicBC = 3;
-
+//#include "tarch/tests/TestCaseFactory.h"
+#include "peano4/grid/tests/SpacetreeTest.h"
 
 void runTests() {
+	// @todo raus
+//  tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest> thisSecondTestCaseFactoryInstance( tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest>::UnitTest, "peano4::grid::tests::SpacetreeTest" );
+
   tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
   int unitTestsErrors = tarch::tests::TestCaseRegistry::getInstance()
                        .getTestCaseCollection()
@@ -42,33 +41,38 @@ int main(int argc, char** argv) {
   peano4::fillLookupTables();
 
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", true
+    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", true
+    tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", true
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", true
+    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", true
+    tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", true
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
-  tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
 
-  tarch::multicore::Core::getInstance().configure(4,2,1);
-
-  runTests();
-  #if defined(Parallel) or defined(SharedMemoryParallelisation)
-  runParallel();
-  #else
-  runSerial();
+  #ifdef Parallel
+  if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {
+	logWarning( "main()", "it is recommended that you run the unit tests with more than one MPI rank, too");
+  }
   #endif
+
+  if (argc!=2) {
+	logError( "main()", "usage: ./" + std::string(argv[0]) + " core-count" );
+  }
+  else {
+	int cores = std::atoi( argv[1] );
+    tarch::multicore::Core::getInstance().configure(cores);
+    runTests();
+  }
 
   peano4::shutdownSharedMemoryEnvironment();
   peano4::shutdownParallelEnvironment();

@@ -8,7 +8,10 @@
 
 
 #include "tarch/tests/TestCaseFactory.h"
-registerTest(peano4::grid::tests::SpacetreeTest)
+//registerTest(peano4::grid::tests::SpacetreeTest)
+//volatile tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest> thisTestCaseFactoryInstance = tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest>( tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest>::UnitTest, "peano4::grid::tests::SpacetreeTest" );
+tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest> peano4::grid::tests::thisTestCaseFactoryInstance( tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest>::UnitTest, "peano4::grid::tests::SpacetreeTest" );
+//tarch::tests::TestCaseFactory<peano4::grid::tests::SpacetreeTest>* peano4::grid::tests::fake = &thisTestCaseFactoryInstance;
 
 
 tarch::logging::Log peano4::grid::tests::SpacetreeTest::_log("peano4::grid::tests::SpacetreeTest");
@@ -20,6 +23,7 @@ tarch::logging::Log peano4::grid::tests::SpacetreeTest::_log("peano4::grid::test
 
 
 void peano4::grid::tests::SpacetreeTest::testRestrictToCoarseGrid() {
+	validate(false);
   #if Dimensions==2
   tarch::la::Vector<Dimensions,int>  positionInPatch;
   tarch::la::Vector<Dimensions,int>  coarsePosition;

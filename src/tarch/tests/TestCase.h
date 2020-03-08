@@ -26,7 +26,7 @@ namespace tarch {
  * for details.
  *
  *
- * !!! Implementation remarks
+ * <h2> Implementation remarks </h2>
  *
  * Whenever you write a test case implementation, we recommend to add the
  * code block
@@ -44,10 +44,19 @@ namespace tarch {
    \endcode
  *
  * at the end of the implementation file.
+ *
+ *
+ * <h2> Unit tests in libraries </h2>
+ *
+ *
+ *
+ * libTarch_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
+libTarch_trace_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
+libTarch_debug_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
+ *
+ *
  * @author Tobias Weinzierl, Wolfgang Eckhardt
  * @version $Revision: 1.31 $
- *
- * @todo Doku fuer macros vervollstaendigen!
  */
 class tarch::tests::TestCase {
   protected:

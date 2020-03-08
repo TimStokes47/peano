@@ -64,7 +64,11 @@ void tarch::tests::TreeTestCaseCollection::run( const std::string& prefix ) {
     logInformation = "running global test case collection ";
   }
 
-  if (_subTests.size()==0) {
+  if (
+    _subTests.empty()
+	and
+	_testCases.empty()
+  ) {
 	logInformation += "... WARNING: no tests defined ... ";
   }
 

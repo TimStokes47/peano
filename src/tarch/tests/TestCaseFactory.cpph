@@ -9,6 +9,9 @@ tarch::tests::TestCaseFactory<TestName>::TestCaseFactory(
   _test = new TestName;
   _test->setTestCaseName(fullQualifiedTestName);
 
+
+  std::cout << "added " << fullQualifiedTestName << std::endl;
+
   switch (type) {
     case IntegrationTest:
       tarch::tests::TestCaseRegistry::getInstance().addIntegrationTestCase( fullQualifiedTestName, _test );
