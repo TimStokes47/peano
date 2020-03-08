@@ -64,6 +64,10 @@ void tarch::tests::TreeTestCaseCollection::run( const std::string& prefix ) {
     logInformation = "running global test case collection ";
   }
 
+  if (_subTests.size()==0) {
+	logInformation += "... WARNING: no tests defined ... ";
+  }
+
   std::string fullQualifiedName = _testCaseName.length()>0 ? prefix  +_testCaseName + "." : prefix;
   for (std::map<std::string, TreeTestCaseCollection*>::iterator p = _subTests.begin(); p!=_subTests.end(); p++ ) {
     (*p).second->run( fullQualifiedName );
