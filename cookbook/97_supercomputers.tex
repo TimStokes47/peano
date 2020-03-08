@@ -13,10 +13,79 @@ Some remarks on Peano4 on SuperMUC-NG:
  export CXX icpc
 \end{code}
 
+\noindent
+All Intel tools are properly preloaded on SuperMUC-NG.
+Hence, we can directly translate the code with MPI. 
+However, TBB seems not to be a standard package within the Intel module anymore. 
+So if you need TBB, you have to load it manually.
+
+\begin{code}
+module load tbb
+export CXXFLAGS="$TBB_INC  -DTBB_USE_ASSERT -DTBB_USE_THREADING_TOOLS"
+export LDFLAGS="$TBB_SHLIB"
+./configure --with-multithreading=tbb --with-mpi=mpiicpc
+\end{code}
 
 
 % So geht es auch auf dem Login-Knoten:
 % export I_MPI_HYDRA_BOOTSTRAP=fork
+
+\noindent
+If you want to use the legacy DaStGen variant with Java, you will have to load
+Java manually.
+Python3 in contrast is preloaded by default.
+
+
+
+\paragraph{Intel Trace Analyser and Correctness Checks}
+
+
+We follow the description from \url{https://software.intel.com/en-us/itc-user-and-reference-guide-configuring-intel-trace-collector}:
+
+\begin{itemize}
+  \item Run your code with mpirun but pass the arguments \texttt{-check_mpi}, too. This will create a file \texttt{peano4.stf}.
+  \item Run \texttt{itcconfig peano4.stf}. For this, you need X-forwarding.
+  \item Let the environment variable point to the new config file: \texttt{export VT_CONFIG=peano4.conf}.
+  \item Rerun the test with the \texttt{check_mpi} argument.
+\end{itemize}
+
+
+
+
+Thread and Signal Safety
+The MPI standard requires that MPI_Finalize be called only by the same thread that initialized MPI with either MPI_Init or MPI_Init_thread.
+
+
+nimm das -openmp raus aus dem Script, dann braucht es das -parallel im Linker net
+
+-mt_mpi
+
+
+mpiexec is hte only support thing. no mpirun no srun
+
+https://doku.lrz.de/display/PUBLIC/Job+Processing+with+SLURM+on+SuperMUC-NG
+
+
+
+
+https://software.intel.com/en-us/application-snapshot-user-guide-creating-configuration-file-for-intel-trace-collector
+
+https://doku.lrz.de/display/PUBLIC/Intel+Tracing+Tools%3A+Profiling+and+Correctness+checking+of+MPI+programs#IntelTracingTools:ProfilingandCorrectnesscheckingofMPIprograms-ConfigurationFile
+
+
+
+
+export VT_CONFIG=configure-itac.conf
+
+
+
+vi configure-itac.conf
+a
+
+
+
+
+
 
 \section{Hamilton}
 
@@ -39,25 +108,33 @@ Some remarks on Peano4 on Hamilton, Durham's local supercomputer:
  ./configure --with-multithreading=what-you-prefer --with-mpi=mpicxx
 \end{code}
 
-\noindent
-It is not clear to me, why the Python module does load gcc. 
-In my opinion, it should not, i.e.~the unload command should not be required.
-Anyway, if you skip the unload, then the Intel linker will fail.
+\begin{remark}
+ It is confirmed that the Python module should not load gcc, and that this will
+ be removed in future installations.
+ In the meantime, the unload is required.
+ If you skip it, then the Intel linker will fail.
+\end{remark}
 
+\begin{remark}
 The Java module is required if and only if you use the legacy DaStGen feature to
 model data structures.
-
-If you you Intel MPI, you either have to use the \texttt{-parallel} flag
-when you compile with icpc---otherwise, your linker will fail---or you
-use the \texttt{mpicxx} wrapper right from the start.
+\end{remark}
 
 
-\begin{code}
- setenv CXX mpicxx
-\end{code} 
+\paragraph{Intel MPI}
 
-\noindent
-It is clear that your Slurm scripts have to load the same environment. 
+If you you Intel MPI, it seems that you now have to add the \texttt{-parallel}
+flag to your makefile if you use the Python API. Otherwise, your linker will
+fail.
+I haven't yet found out which ``misconfiguration'' in Peano4 causes this
+dependency.
+As the flag is not required on other systems, the Python's API output does not
+by default add this field.
+So either modify the makefile manually or set it as additional \texttt{LDFLAGS}
+entry before you compile.
+The core b.t.w.~seems to be fine without the flag for whatever reason.
+
+
 
 \paragraph{Intel's Threading Building Blocks (TBB)}
 
@@ -67,10 +144,10 @@ loaded the Intel compiler.
 To pipe them into configure, we have to map them onto the appropriate autotools
 parameters:
 
-\begin{code}
- setenv TBB_INC "-I/ddn/apps/Cluster-Apps/intel/xe_2018.2/tbb/include"
- setenv TBB_SHLIB "-L/ddn/apps/Cluster-Apps/intel/xe_2018.2/tbb/lib/intel64/gcc4.7 -ltbb"
+%  setenv TBB_INC "-I/ddn/apps/Cluster-Apps/intel/xe_2018.2/tbb/include"
+%  setenv TBB_SHLIB "-L/ddn/apps/Cluster-Apps/intel/xe_2018.2/tbb/lib/intel64/gcc4.7 -ltbb"
  
+\begin{code}
  setenv TBB_INC "-I/ddn/apps/Cluster-Apps/intel/2019.5/tbb/include"
  setenv TBB_SHLIB "-L/ddn/apps/Cluster-Apps/intel/2019.5/tbb/lib/intel64/gcc4.7 -ltbb"
  
