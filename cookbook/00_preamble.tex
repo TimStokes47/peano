@@ -29,9 +29,10 @@ We however use a whole set of tools around it:
   \item C++17-compatible C++ compiler (required).
   \item Python3 (optional; not required if you work only with the C++
   baseline).
-  \item MPI2 (optional).
-  \item Intel's Threading Building Blocks (not supported at the moment; we rely
-  on C++ threads instead).
+  \item MPI2 (optional). MPI's multithreaded support is required.
+  \item Intel's Threading Building Blocks. You can use C++ threads instead,
+  but they seem to come along with a slightly higher overhead, and, obviously,
+  the Intel tool support is not as elaborate.
   \item The Visualization Toolkit (VTK) if you want to use the built-in
   visualisation facilities (optional).
 \end{itemize}
