@@ -32,6 +32,26 @@ void peano4::parallel::tests::PingPongTest::testBuiltInType() {
 }
 
 
+void peano4::parallel::tests::PingPongTest::testMultithreadedPingPong() {
+  #ifdef Parallel
+  int out = 23;
+  if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
+	for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
+      MPI_Send(&out,1,MPI_INT,1,i,MPI_COMM_WORLD);
+	}
+  }
+  if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
+    int in = 25;
+	for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
+      MPI_Recv(&in,1,MPI_INT,0,i,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      validateEquals( in, out );
+	}
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  #endif
+}
+
+
 void peano4::parallel::tests::PingPongTest::testDaStGenType() {
   #ifdef Parallel
   StartTraversalMessage out;
@@ -100,6 +120,7 @@ void peano4::parallel::tests::PingPongTest::run() {
   testMethod(  testBuiltInType );
   testMethod(  testDaStGenType );
   testMethod(  testDaStGenArray );
+  testMethod(  testMultithreadedPingPong );
 }
 
 
