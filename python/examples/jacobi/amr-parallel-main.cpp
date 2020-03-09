@@ -49,8 +49,6 @@ class ProgramRun {
       int stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
       logInfo( "ProgramRun::step()", "run step " << stepIdentifier );
 
-      static int cellsPerCore = -1;   // some variants require this one to be static
-
       // @todo Hier waere ein Case schoen
       switch (stepIdentifier) {
         case 0:
@@ -88,7 +86,7 @@ class ProgramRun {
         case 11:
           {
             if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
-              cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+              int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
 
               logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core" );
 
@@ -109,29 +107,20 @@ class ProgramRun {
         case 12:
           {
             if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
-              if (cellsPerCore<=0) {
-                cellsPerCore = std::max( (int)1, peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads() );
-              }
-              else {
-                cellsPerCore *= ThreePowerD;
-              }
+              static int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
 
-              logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core, but split step by step" );
+              logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core" );
 
-              if (
-                not peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().empty()
-				and
-                peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()
-			  ) {
+              if ( not peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().empty() ) {
                 int localTree = *( peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().begin() );
                 logInfo( "ProgramRun::step()", "fork local tree " << localTree );
                 if ( not peano4::parallel::SpacetreeSet::getInstance().split(localTree,cellsPerCore,tarch::mpi::Rank::getInstance().getRank())) {
                   logWarning( "runParallel(...)", "failed to assign new thread " << cellsPerCore << " cell(s)" );
                 }
+                examples::jacobi::observers::SetupScenario  observer;
+                peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
               }
             }
-            examples::jacobi::observers::CreateGrid  observer;
-            peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
           }
           break;
         case 50:
@@ -206,8 +195,6 @@ class ProgramRun {
           else {
             for (int thread=1; thread<tarch::multicore::Core::getInstance().getNumberOfThreads(); thread++) {
               peano4::parallel::Node::getInstance().setNextProgramStep(12); // split tbb
-              step();
-              peano4::parallel::Node::getInstance().setNextProgramStep(0); // construct mesh
               step();
             }
           }
