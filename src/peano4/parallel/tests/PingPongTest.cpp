@@ -39,6 +39,8 @@ void peano4::parallel::tests::PingPongTest::testBuiltInType() {
 
 
 namespace {
+  int testErrors = 0;
+
   class PingPongSendTask: public tarch::multicore::Task {
     private:
       const int _id;
@@ -49,8 +51,8 @@ namespace {
    
       bool run() {
         const int out = 23+_id;
-        static tarch::logging::Log _log( "PingPongSendTask" );
-        logDebug( "PingPongSendTask()", "send message to rank 1 with tag " << _id );
+        static tarch::logging::Log _log( "peano4::parallel::tests::PingPongSendTask" );
+       logDebug( "PingPongSendTask()", "send message " << out << " to rank 1 with tag " << _id );
         if (_blockingMPI) {
           MPI_Send(&out,1,MPI_INT,1,_id,MPI_COMM_WORLD);
         }
@@ -75,7 +77,7 @@ namespace {
 
       bool run() {
         int in = -12;
-        static tarch::logging::Log _log( "PingPongSendTask" );
+        static tarch::logging::Log _log( "peano4::parallel::tests::PingPongSendTask" );
         logDebug( "PingPongReceiveTask()", "receive message from rank 1 with tag " << _id );
         if (_blockingMPI) {
           MPI_Recv(&in,1,MPI_INT,0,_id,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
@@ -87,7 +89,8 @@ namespace {
           MPI_Wait(&request,MPI_STATUS_IGNORE);
         }
         if ( in != 23+_id) {
-          logError( "testMultithreadedPingPong()", "received " << in << " instead of " << (23+_id) );
+          logError( "testMultithreadedPingPong()", "received " << in << " instead of " << (23+_id) << " (blocking mode=" << _blockingMPI << ", tag=" << _id << ")" );
+          testErrors++;
         }
         return false;
       }
@@ -98,6 +101,7 @@ namespace {
 void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockingReceives() {
   #ifdef Parallel
   int out = 23;
+  testErrors = 0;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
       MPI_Send(&out,1,MPI_INT,1,i,MPI_COMM_WORLD);
@@ -111,6 +115,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockin
     tarch::multicore::spawnAndWait( tasks );
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  validate( testErrors==0 );
   #endif
 }
 
@@ -118,6 +123,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockin
 void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonblockingReceives() {
   #ifdef Parallel
   int out = 23;
+  testErrors = 0;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
       MPI_Send(&out,1,MPI_INT,1,i,MPI_COMM_WORLD);
@@ -131,6 +137,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonbloc
     tarch::multicore::spawnAndWait( tasks );
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  validate( testErrors==0 );
   #endif
 }
 
@@ -139,6 +146,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonbloc
 void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockingSends() {
   #ifdef Parallel
   int out = 23;
+  testErrors = 0;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     std::vector< tarch::multicore::Task* > tasks;
     for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
@@ -154,6 +162,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockin
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  validate( testErrors==0 );
   #endif
 }
 
@@ -161,6 +170,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockin
 void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonblockingSends() {
   #ifdef Parallel
   int out = 23;
+  testErrors = 0;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     std::vector< tarch::multicore::Task* > tasks;
     for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
@@ -176,6 +186,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonbloc
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  validate( testErrors==0 );
   #endif
 }
 
@@ -183,6 +194,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonbloc
 void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockingSendsAndReceives() {
   #ifdef Parallel
   int out = 23;
+  testErrors = 0;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     std::vector< tarch::multicore::Task* > tasks;
     for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
@@ -198,6 +210,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockin
     tarch::multicore::spawnAndWait( tasks );
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  validate( testErrors==0 );
   #endif
 }
 
@@ -205,6 +218,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockin
 void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonblockingSendsAndReceives() {
   #ifdef Parallel
   int out = 23;
+  testErrors = 0;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     std::vector< tarch::multicore::Task* > tasks;
     for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
@@ -220,6 +234,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonbloc
     tarch::multicore::spawnAndWait( tasks );
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  validate( testErrors==0 );
   #endif
 }
 
