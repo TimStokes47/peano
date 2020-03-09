@@ -30,7 +30,13 @@ class peano4::parallel::tests::PingPongTest: public tarch::tests::TestCase {
     void testDaStGenType();
     void testDaStGenArray();
 
-    void testMultithreadedPingPong();
+    void testMultithreadedPingPongWithBlockingReceives();
+    void testMultithreadedPingPongWithBlockingSends();
+    void testMultithreadedPingPongWithBlockingSendsAndReceives();
+
+    void testMultithreadedPingPongWithNonblockingReceives();
+    void testMultithreadedPingPongWithNonblockingSends();
+    void testMultithreadedPingPongWithNonblockingSendsAndReceives();
   public:
     PingPongTest();
     void run() override;
