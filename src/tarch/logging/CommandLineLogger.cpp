@@ -198,8 +198,10 @@ void tarch::logging::CommandLineLogger::warning(long int timestampMS, int rank, 
     );
 
     tarch::multicore::Lock lockCout( _semaphore );
-    out() << outputMessage;
-    out().flush();
+    if (_outputStream!=nullptr) {
+      out() << outputMessage;
+      out().flush();
+    }
     std::cerr << outputMessage;
     std::cerr.flush();
 }
@@ -212,8 +214,10 @@ void tarch::logging::CommandLineLogger::error(long int timestampMS, int rank, in
     );
 
     tarch::multicore::Lock lockCout( _semaphore );
-    out() << outputMessage;
-    out().flush();
+    if (_outputStream!=nullptr) {
+      out() << outputMessage;
+      out().flush();
+    }
     std::cerr << outputMessage;
     std::cerr.flush();
 
