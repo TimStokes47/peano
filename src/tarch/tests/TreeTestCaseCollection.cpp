@@ -61,10 +61,10 @@ void tarch::tests::TreeTestCaseCollection::run() {
 void tarch::tests::TreeTestCaseCollection::run( const std::string& prefix ) {
   std::string logInformation;
   if ( (prefix + _testCaseName).length()>0 ) {
-    logInformation = "running test case collection \"" + prefix + _testCaseName + "\" ";
+    logInformation = "running test case collection \"" + prefix + _testCaseName + "\" ...";
   }
   else {
-    logInformation = "running global test case collection ";
+    logInformation = "running test case collection ...";
   }
 
   if (

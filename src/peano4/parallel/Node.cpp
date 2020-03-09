@@ -56,7 +56,14 @@ peano4::parallel::Node::Node():
 
 
 peano4::parallel::Node::~Node() {
-  assertionMsg( tarch::mpi::Rank::getInstance().getNumberOfRanks()==1 or _currentProgramStep==Terminate, "forgot to terminate node properly through peano4::parallel::Node::getInstance().shutdown()" );
+  assertionMsg(
+    tarch::mpi::Rank::getInstance().getNumberOfRanks()==1
+	or
+	_currentProgramStep==UndefProgramStep
+    or
+    _currentProgramStep==Terminate,
+	"forgot to terminate node properly through peano4::parallel::Node::getInstance().shutdown()"
+  );
 }
 
 

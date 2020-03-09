@@ -138,6 +138,17 @@ class peano4::parallel::Node {
 
     /**
      * The standard destructor calls MPI_Finalize().
+     *
+     * Originally, I had an assertion in there that checked for
+     * <pre>
+ tarch::mpi::Rank::getInstance().getNumberOfRanks()==1
+ or
+ _currentProgramStep==Terminate,
+       <\pre>
+     *
+     * Unit tests for example don't rely on Peano's step
+     * information exchange and thus would trigger this assertion. So
+     * I have to weaken it.
      */
     virtual ~Node();
 
