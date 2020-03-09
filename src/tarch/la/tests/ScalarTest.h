@@ -3,16 +3,17 @@
 #ifndef _TARCH_LA_TESTS_SCALARTEST_H_
 #define _TARCH_LA_TESTS_SCALARTEST_H_
 
-#include "tarch/tests/TestCaseFactory.h"
+#include "tarch/tests/TestCase.h"
 
 namespace tarch {
   namespace la {
-    class ScalarTest;
-    declareTest(tarch::la,ScalarTest);
+    namespace tests {
+      class ScalarTest;
+    }
   }
 }
 
-class tarch::la::ScalarTest : public tarch::tests::TestCase
+class tarch::la::tests::ScalarTest : public tarch::tests::TestCase
 {
 private:
 

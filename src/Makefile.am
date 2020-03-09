@@ -27,9 +27,9 @@ libTarch_la_CXXFLAGS = -DPeanoDebug=0 $(PEANO_CXXFLAGS)
 libTarch_trace_la_CXXFLAGS = -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
 libTarch_debug_la_CXXFLAGS = -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
 
-libTarch_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
-libTarch_trace_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
-libTarch_debug_la_LDFLAGS = $(PEANO_LDFLAGS)  -Wl,--whole-archive
+libTarch_la_LDFLAGS = $(PEANO_LDFLAGS)
+libTarch_trace_la_LDFLAGS = $(PEANO_LDFLAGS)
+libTarch_debug_la_LDFLAGS = $(PEANO_LDFLAGS)
 
 
 libPeano4Core2d_la_CXXFLAGS        = -DDimensions=2 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
@@ -39,12 +39,12 @@ libPeano4Core3d_la_CXXFLAGS        = -DDimensions=3 -DPeanoDebug=0 $(PEANO_CXXFL
 libPeano4Core3d_trace_la_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
 libPeano4Core3d_debug_la_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
 
-libPeano4Core2d_la_LDFLAGS        = $(PEANO_LDFLAGS)  -Wl,--whole-archive
-libPeano4Core2d_trace_la_LDFLAGS  = $(PEANO_LDFLAGS)  -Wl,--whole-archive
-libPeano4Core2d_debug_la_LDFLAGS  = $(PEANO_LDFLAGS)  -Wl,--whole-archive
-libPeano4Core3d_la_LDFLAGS        = $(PEANO_LDFLAGS)  -Wl,--whole-archive
-libPeano4Core3d_trace_la_LDFLAGS  = $(PEANO_LDFLAGS)  -Wl,--whole-archive
-libPeano4Core3d_debug_la_LDFLAGS  = $(PEANO_LDFLAGS)  -Wl,--whole-archive
+libPeano4Core2d_la_LDFLAGS        = $(PEANO_LDFLAGS)
+libPeano4Core2d_trace_la_LDFLAGS  = $(PEANO_LDFLAGS)
+libPeano4Core2d_debug_la_LDFLAGS  = $(PEANO_LDFLAGS)
+libPeano4Core3d_la_LDFLAGS        = $(PEANO_LDFLAGS)
+libPeano4Core3d_trace_la_LDFLAGS  = $(PEANO_LDFLAGS)
+libPeano4Core3d_debug_la_LDFLAGS  = $(PEANO_LDFLAGS)
 
 #
 # All sources below
@@ -54,6 +54,7 @@ Peano4Core_SOURCES = \
   peano4/datamanagement/FaceMarker.cpp \
   peano4/datamanagement/VertexMarker.cpp \
   peano4/peano.cpp \
+  peano4/UnitTests.cpp \
   peano4/grid/AutomatonState.cpp \
   peano4/grid/EmptyTraversalObserver.cpp \
   peano4/grid/GridControlEvent.cpp \
@@ -79,6 +80,7 @@ Peano4Core_SOURCES = \
 
 
 Tarch_SOURCES= tarch/tarch.cpp \
+ tarch/UnitTests.cpp \
  tarch/la/tests/MatrixVectorTest.cpp \
  tarch/la/tests/MatrixTest.cpp \
  tarch/la/tests/ScalarTest.cpp \
@@ -105,7 +107,6 @@ Tarch_SOURCES= tarch/tarch.cpp \
  tarch/tests/TestCaseCollection.cpp \
  tarch/tests/TreeTestCaseCollection.cpp \
  tarch/tests/TestCase.cpp \
- tarch/tests/TestCaseRegistry.cpp \
  tarch/plotter/griddata/unstructured/vtk/VTUTextFileWriter_CellWriter.cpp \
  tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter_VertexDataWriter.cpp \
  tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter_VertexWriter.cpp \

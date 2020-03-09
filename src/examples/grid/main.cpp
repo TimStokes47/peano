@@ -1,7 +1,6 @@
 #include "MyObserver.h"
 
 #include "tarch/logging/Log.h"
-#include "tarch/tests/TestCaseRegistry.h"
 #include "tarch/logging/CommandLineLogger.h"
 #include "tarch/logging/ChromeTraceFileLogger.h"
 #include "tarch/logging/LogFilter.h"
@@ -19,20 +18,30 @@ tarch::logging::Log _log("examples::grid");
 
 std::bitset<Dimensions> periodicBC = 3;
 
+#include "peano4/UnitTests.h"
+#include "tarch/UnitTests.h"
+
 
 void runTests() {
-  #if PeanoDebug>=1
-  tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
-  int unitTestsErrors = tarch::tests::TestCaseRegistry::getInstance()
-                       .getTestCaseCollection()
-                       .getNumberOfErrors();
+  int unitTestsErrors = 0;
+  tarch::tests::TestCase* tests = nullptr;
+
+  tests = tarch::getUnitTests();
+  tests->run();
+  unitTestsErrors += tests->getNumberOfErrors();
+  delete tests;
+
+  tests = peano4::getUnitTests();
+  tests->run();
+  unitTestsErrors += tests->getNumberOfErrors();
+  delete tests;
 
   if (unitTestsErrors != 0) {
     logError("main()", "unit tests failed. Quit.");
     exit(-2);
   }
-  #endif
 }
+
 
 
 void runSerial() {

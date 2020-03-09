@@ -103,7 +103,7 @@ void tarch::plotter::griddata::unstructured::vtk::tests::VTKBinaryFileTestCase::
   cellDataWriter->close();
   delete cellDataWriter;
 
-  writer.writeToFile( _outputDirectory + "/VTKBinaryFileTestCase_testHexahedron.vtk" );
+  writer.writeToFile( "./VTKBinaryFileTestCase_testHexahedron.vtk" );
 }
 
 

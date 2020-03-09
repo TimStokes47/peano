@@ -1,7 +1,6 @@
 #include "MyObserver.h"
 
 #include "tarch/logging/Log.h"
-#include "tarch/tests/TestCaseRegistry.h"
 #include "tarch/logging/CommandLineLogger.h"
 #include "tarch/logging/ChromeTraceFileLogger.h"
 #include "tarch/logging/LogFilter.h"
@@ -17,19 +16,32 @@
 tarch::logging::Log _log("examples::regulargridupscaling");
 
 
-void runTests() {
-  #if PeanoDebug>=1
-  tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
-  int unitTestsErrors = tarch::tests::TestCaseRegistry::getInstance()
-                       .getTestCaseCollection()
-                       .getNumberOfErrors();
+#include "peano4/UnitTests.h"
+#include "tarch/UnitTests.h"
 
-  if (unitTestsErrors != 0) {
-    logError("main()", "unit tests failed. Quit.");
-    exit(-2);
-  }
-  #endif
+
+void runTests() {
+	  int unitTestsErrors = 0;
+	  tarch::tests::TestCase* tests = nullptr;
+
+	  tests = tarch::getUnitTests();
+	  tests->run();
+	  unitTestsErrors += tests->getNumberOfErrors();
+	  delete tests;
+
+	  tests = peano4::getUnitTests();
+	  tests->run();
+	  unitTestsErrors += tests->getNumberOfErrors();
+	  delete tests;
+
+	  if (unitTestsErrors != 0) {
+	    logError("main()", "unit tests failed. Quit.");
+	    exit(-2);
+	  }
+
 }
+
+
 
 
 void runParallel(double h, int flopsPerCell) {

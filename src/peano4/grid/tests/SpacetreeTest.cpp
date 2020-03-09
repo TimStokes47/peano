@@ -7,10 +7,6 @@
 #include "tarch/la/Vector.h"
 
 
-defineTest(peano4::grid::tests::SpacetreeTest)
-
-
-
 tarch::logging::Log peano4::grid::tests::SpacetreeTest::_log("peano4::grid::tests::SpacetreeTest");
 
 
@@ -19,8 +15,12 @@ tarch::logging::Log peano4::grid::tests::SpacetreeTest::_log("peano4::grid::test
 #endif
 
 
+peano4::grid::tests::SpacetreeTest::SpacetreeTest():
+  TestCase( "peano4::grid::tests::SpacetreeTest" ) {
+}
+
+
 void peano4::grid::tests::SpacetreeTest::testRestrictToCoarseGrid() {
-	validate(false);
   #if Dimensions==2
   tarch::la::Vector<Dimensions,int>  positionInPatch;
   tarch::la::Vector<Dimensions,int>  coarsePosition;

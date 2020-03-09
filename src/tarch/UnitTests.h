@@ -4,17 +4,14 @@
 #define _TARCH_UNIT_TESTS_H_
 
 
-#include "tarch/la/tests/GramSchmidtTest.h"
-#include "tarch/la/tests/LUDecompositionTest.h"
-#include "tarch/la/tests/MatrixTest.h"
-#include "tarch/la/tests/MatrixVectorTest.h"
-#include "tarch/la/tests/ScalarTest.h"
-#include "tarch/la/tests/VectorTest.h"
-
-#include "tarch/tests/TestCaseFactory.h"
+#include "tarch/tests/TestCase.h"
 
 
 namespace tarch {
+  /**
+   * Please destroy after usage
+   */
+  tarch::tests::TestCase* getUnitTests();
 }
 
 #endif

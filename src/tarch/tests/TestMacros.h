@@ -24,18 +24,6 @@
     };
 
 
-/**
- * @param name Full qualified name
- */
-#define defineTest(name) \
-  tarch::tests::TestCaseFactory<name> name##Instance( tarch::tests::TestCaseFactory<name>::UnitTest, #name );
-
-#define declareTest(fullqualifiedpath,unqualifiedTestName) \
-  extern tarch::tests::TestCaseFactory<unqualifiedTestName>   unqualifiedTestName##Instance; \
-  static tarch::tests::TestCaseFactory<unqualifiedTestName>*  unqualifiedTestName##InstancePointer = &unqualifiedTestName##Instance;
-
-
-
 #define testNumericalEquals(lhs,rhs) \
   (std::abs((rhs) -(lhs)) <= 1.0e-10)
 

@@ -58,8 +58,8 @@ class tarch::tests::TreeTestCaseCollection: public tarch::tests::TestCase {
      */
     TreeTestCaseCollection(
       const std::string& testCaseCollectionName,
-      bool deleteTestCases,
-      bool writeToLog
+      bool deleteTestCases = true,
+      bool writeToLog = true
     );
 
     /**
@@ -88,7 +88,12 @@ class tarch::tests::TreeTestCaseCollection: public tarch::tests::TestCase {
      *
      * @Note: default is set to false (i.e. no destruction)
      */
-    void addTestCase( const std::string& path, const std::string& fullQualifiedPath, TestCase* testCase );
+    void addTestCase( const std::string& fullQualifiedPath, TestCase* testCase );
+
+    /**
+     * Same as above, but fully qualified test case name is extracted from passed object.
+     */
+    void addTestCase( TestCase* testCase );
 };
 
 

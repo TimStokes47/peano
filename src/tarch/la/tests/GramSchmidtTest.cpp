@@ -5,20 +5,19 @@
 #include "tarch/la/ScalarOperations.h"
 
 
-defineTest(tarch::la::GramSchmidtTest)
 
 
-tarch::la::GramSchmidtTest::GramSchmidtTest():
+tarch::la::tests::GramSchmidtTest::GramSchmidtTest():
   TestCase ("tarch::la::GramSchmidtTest") {
 }
 
 
-void tarch::la::GramSchmidtTest::run() {
+void tarch::la::tests::GramSchmidtTest::run() {
   testMethod (testModifiedGramSchmidt);
 }
 
 
-void tarch::la::GramSchmidtTest::testModifiedGramSchmidt() {
+void tarch::la::tests::GramSchmidtTest::testModifiedGramSchmidt() {
   Matrix<4,4,double> A;
 
   // Set values according to Hilbert matrix.

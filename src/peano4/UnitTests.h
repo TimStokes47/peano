@@ -4,9 +4,14 @@
 #define _PEANO4_UNIT_TESTS_H_
 
 
-#include "peano4/grid/tests/SpacetreeTest.h"
-#include "peano4/parallel/tests/NodeTest.h"
-#include "peano4/parallel/tests/PingPongTest.h"
+#include "tarch/tests/TestCase.h"
 
+
+namespace peano4 {
+  /**
+   * Please destroy after usage
+   */
+  tarch::tests::TestCase* getUnitTests();
+}
 
 #endif

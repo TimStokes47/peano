@@ -5,15 +5,13 @@
 #include <sstream>
 #include <map>
 
-defineTest(tarch::la::VectorTest)
 
-
-tarch::la::VectorTest::VectorTest ():
-  TestCase ("tarch::la::VectorTest") {
+tarch::la::tests::VectorTest::VectorTest ():
+  TestCase ("tarch::la::tests::VectorTest") {
 }
 
 
-void tarch::la::VectorTest::run ()
+void tarch::la::tests::VectorTest::run ()
 {
   testMethod (testConstruction);
   testMethod (testAssignment);
@@ -27,7 +25,7 @@ void tarch::la::VectorTest::run ()
 }
 
 
-void tarch::la::VectorTest::testVectorVectorCompare() {
+void tarch::la::tests::VectorTest::testVectorVectorCompare() {
 //  Vector<2,double> vector00;
 //  Vector<2,double> vector01;
 //  Vector<2,double> vector10;
@@ -51,7 +49,7 @@ void tarch::la::VectorTest::testVectorVectorCompare() {
 }
 
 
-void tarch::la::VectorTest:: testConstruction() {
+void tarch::la::tests::VectorTest:: testConstruction() {
   // Test construction with uniform initialization
   Vector<1,int> vector1(1);
   validateEquals (vector1[0], 1);
@@ -85,7 +83,7 @@ void tarch::la::VectorTest:: testConstruction() {
 }
 
 
-void tarch::la::VectorTest::testAssignment() {
+void tarch::la::tests::VectorTest::testAssignment() {
   // Assignment using functionality from VectorAssign.h:
   // Assign a list of scalars
   Vector<3,int> vector;
@@ -127,7 +125,7 @@ void tarch::la::VectorTest::testAssignment() {
 }
 
 
-void tarch::la::VectorTest::testVectorOperations() {
+void tarch::la::tests::VectorTest::testVectorOperations() {
   Vector<3,int> vector;
 
   assignList(vector) = 1, -2, 2;
@@ -154,7 +152,7 @@ void tarch::la::VectorTest::testVectorOperations() {
 }
 
 
-void tarch::la::VectorTest:: testVectorScalarOperations() {
+void tarch::la::tests::VectorTest:: testVectorScalarOperations() {
   Vector<3,int> vector(0);
 
   // Compound assignment operators
@@ -206,7 +204,7 @@ void tarch::la::VectorTest:: testVectorScalarOperations() {
 }
 
 
-void tarch::la::VectorTest:: testVectorVectorOperations() {
+void tarch::la::tests::VectorTest:: testVectorVectorOperations() {
   Vector<3,int> vector(1);
 
   // Addition assignment
@@ -321,7 +319,7 @@ void tarch::la::VectorTest:: testVectorVectorOperations() {
   validateEquals (i,-1);
 }
 
-void tarch::la::VectorTest::testWrappedVector() {
+void tarch::la::tests::VectorTest::testWrappedVector() {
   Vector<3,int> vector;
   Vector<6,int> longVector(1);
   assignList(vector) = 2, 3, 4;
@@ -340,7 +338,7 @@ void tarch::la::VectorTest::testWrappedVector() {
 }
 
 
-void tarch::la::VectorTest::testVectorCompare () {
+void tarch::la::tests::VectorTest::testVectorCompare () {
   typedef Vector<2,double> Vector;
   std::map<Vector,int,VectorCompare<2> > vectors;
   double eps = NUMERICAL_ZERO_DIFFERENCE;

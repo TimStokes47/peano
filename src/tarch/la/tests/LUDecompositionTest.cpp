@@ -5,25 +5,24 @@
 #include "tarch/la/Matrix.h"
 #include "tarch/la/Vector.h"
 
-defineTest(tarch::la::LUDecompositionTest)
 
 
-tarch::la::LUDecompositionTest::LUDecompositionTest():
+tarch::la::tests::LUDecompositionTest::LUDecompositionTest():
   TestCase ("tarch::la::LUDecompositionTest") {
 }
 
 
-void tarch::la::LUDecompositionTest::run() {
+void tarch::la::tests::LUDecompositionTest::run() {
   testMethod (testLUNoPivoting);
   testMethod (testLU);
 }
 
 
-void tarch::la::LUDecompositionTest::testLUNoPivoting() {
+void tarch::la::tests::LUDecompositionTest::testLUNoPivoting() {
 }
 
 
-void tarch::la::LUDecompositionTest::testLU() {
+void tarch::la::tests::LUDecompositionTest::testLU() {
   // Test is obviously buggy. The pivot values are doubles but the test uses
   // them as integer in line 57.
 /*

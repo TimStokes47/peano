@@ -2,6 +2,9 @@
 #include "tarch/Assertions.h"
 
 
+#include <iostream>
+
+
 tarch::logging::Log tarch::tests::TreeTestCaseCollection::_log("tarch::tests::TreeTestCaseCollection");
 
 
@@ -104,13 +107,18 @@ void tarch::tests::TreeTestCaseCollection::run( const std::string& prefix ) {
 }
 
 
-void tarch::tests::TreeTestCaseCollection::addTestCase( const std::string& path, const std::string& fullQualifiedPath, TestCase* testCase ) {
-  if ( isNameWithoutHierarchy(path) ) {
+void tarch::tests::TreeTestCaseCollection::addTestCase( TestCase* testCase ) {
+  addTestCase( testCase->getTestCaseName(), testCase );
+}
+
+
+void tarch::tests::TreeTestCaseCollection::addTestCase( const std::string& fullQualifiedPath, TestCase* testCase ) {
+  if ( isNameWithoutHierarchy(fullQualifiedPath) ) {
     _testCases.push_back(testCase);
   }
   else {
-    std::string firstPartOfIdentifier  = getFirstIdentifierInHierarchy( path );
-    std::string secondPartOfIdentifier = getRemainingPathWithoutIdentifier( path );
+    std::string firstPartOfIdentifier  = getFirstIdentifierInHierarchy( fullQualifiedPath );
+    std::string secondPartOfIdentifier = getRemainingPathWithoutIdentifier( fullQualifiedPath );
     if (_subTests.find(firstPartOfIdentifier) == _subTests.end() ) {
       _subTests.insert(
         std::pair<std::string,TreeTestCaseCollection*>(
@@ -119,6 +127,6 @@ void tarch::tests::TreeTestCaseCollection::addTestCase( const std::string& path,
         )
       );
     }
-    _subTests[firstPartOfIdentifier]->addTestCase(secondPartOfIdentifier,fullQualifiedPath, testCase);
+    _subTests[firstPartOfIdentifier]->addTestCase(secondPartOfIdentifier, testCase);
   }
 }

@@ -3,7 +3,7 @@
 #ifndef _TOOLBOX_FINITEELEMEMTS_TESTS_STENCIL_FACTORY_TEST_H_
 #define _TOOLBOX_FINITEELEMEMTS_TESTS_STENCIL_FACTORY_TEST_H_
 
-#include "tarch/tests/TestCaseFactory.h"
+#include "tarch/tests/TestCase.h"
 #include "tarch/logging/Log.h"
 
 
@@ -11,7 +11,6 @@ namespace toolbox {
   namespace finiteelements {
     namespace tests {
       class StencilFactoryTest;
-      declareTest(toolbox::finiteelements::tests,StencilFactoryTest)
     }
   }
 }
@@ -26,6 +25,7 @@ class toolbox::finiteelements::tests::StencilFactoryTest: public tarch::tests::T
 
     void testIntegrationWithN1();
   public:
+    StencilFactoryTest();
     void run() override;
 };
 

@@ -7,15 +7,17 @@
 #include "tarch/multicore/Core.h"
 
 
-defineTest(peano4::parallel::tests::PingPongTest)
-
-
 tarch::logging::Log peano4::parallel::tests::PingPongTest::_log("peano4::parallel::tests::PingPongTest");
 
 
 #ifdef UseTestSpecificCompilerSettings
 #pragma optimize("",off)
 #endif
+
+
+peano4::parallel::tests::PingPongTest::PingPongTest():
+  TestCase( "peano4::parallel::tests::PingPongTest" ) {
+}
 
 
 void peano4::parallel::tests::PingPongTest::testBuiltInType() {

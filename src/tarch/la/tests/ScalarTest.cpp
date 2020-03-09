@@ -1,26 +1,22 @@
 #include "tarch/la/tests/ScalarTest.h"
 
 #include "tarch/la/ScalarOperations.h"
-#include "tarch/tests/TestCaseFactory.h"
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-defineTest(tarch::la::ScalarTest)
 
-
-
-tarch::la::ScalarTest::ScalarTest():
+tarch::la::tests::ScalarTest::ScalarTest():
   TestCase("tarch::la::ScalarTest") {
 }
 
 
-void tarch::la::ScalarTest::run () {
+void tarch::la::tests::ScalarTest::run () {
   testMethod (testComparison);
   testMethod (testAbs);
 }
 
-void tarch::la::ScalarTest::testComparison()
+void tarch::la::tests::ScalarTest::testComparison()
 {
   double a = 1.0;
   double b = 2.0;
@@ -52,7 +48,7 @@ void tarch::la::ScalarTest::testComparison()
   validate (equals(a, a + 10.0 * eps, 10.0 * eps));
 }
 
-void tarch::la::ScalarTest::testAbs()
+void tarch::la::tests::ScalarTest::testAbs()
 {
   double a = -1.0;
   int b = -1;

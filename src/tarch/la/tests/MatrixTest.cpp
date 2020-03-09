@@ -9,15 +9,13 @@
 #include <sstream>
 
 
-defineTest(tarch::la::MatrixTest)
 
-
-tarch::la::MatrixTest::MatrixTest():
+tarch::la::tests::MatrixTest::MatrixTest():
   TestCase ("tarch::la::MatrixTest") {
 }
 
 
-void tarch::la::MatrixTest::run() {
+void tarch::la::tests::MatrixTest::run() {
   testMethod (testConstruction);
   testMethod (testAssignment);
   testMethod (testMatrixOperations);
@@ -26,7 +24,7 @@ void tarch::la::MatrixTest::run() {
 }
 
 
-void tarch::la::MatrixTest::testConstruction() {
+void tarch::la::tests::MatrixTest::testConstruction() {
   Matrix<1,2,int> matrix(1);
   validateEquals (matrix.size(), 2);
   validateEquals (matrix.rows(), 1);
@@ -40,7 +38,7 @@ void tarch::la::MatrixTest::testConstruction() {
 }
 
 
-void tarch::la::MatrixTest:: testAssignment() {
+void tarch::la::tests::MatrixTest:: testAssignment() {
   Matrix<2,2,int> matrix(1);
   assignList(matrix) = 1, 2, 3, 4;
   validateEquals (matrix(0,0), 1);
@@ -55,7 +53,7 @@ void tarch::la::MatrixTest:: testAssignment() {
 }
 
 
-void tarch::la::MatrixTest::testMatrixOperations () {
+void tarch::la::tests::MatrixTest::testMatrixOperations () {
   // Test streaming
   Matrix<2,2,int> matrix2;
   assignList(matrix2) = 1, 2, 3, 4;
@@ -71,7 +69,7 @@ void tarch::la::MatrixTest::testMatrixOperations () {
 }
 
 
-void tarch::la::MatrixTest::testMatrixMatrixOperations ()
+void tarch::la::tests::MatrixTest::testMatrixMatrixOperations ()
 {
   Matrix<2,3,int> lMatrix;
   Matrix<3,2,int> rMatrix;
@@ -104,7 +102,7 @@ void tarch::la::MatrixTest::testMatrixMatrixOperations ()
 }
 
 
-void tarch::la::MatrixTest:: testTransposedMatrix ()
+void tarch::la::tests::MatrixTest:: testTransposedMatrix ()
 {
   Matrix<3,2,int> matrix;
   assignList(matrix) = 1, 2,

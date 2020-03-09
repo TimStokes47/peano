@@ -4,8 +4,6 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
-defineTest(toolbox::multiprecision::tests::CompressedFloatingPointNumbersTest)
-
 
 #ifdef UseTestSpecificCompilerSettings
 #pragma optimize("",off)

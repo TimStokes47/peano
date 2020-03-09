@@ -6,8 +6,6 @@
 #include "peano4/grid/Spacetree.h"
 
 
-defineTest(peano4::parallel::tests::NodeTest)
-
 
 tarch::logging::Log peano4::parallel::tests::NodeTest::_log("peano4::parallel::tests::NodeTest");
 
@@ -15,6 +13,11 @@ tarch::logging::Log peano4::parallel::tests::NodeTest::_log("peano4::parallel::t
 #ifdef UseTestSpecificCompilerSettings
 #pragma optimize("",off)
 #endif
+
+
+peano4::parallel::tests::NodeTest::NodeTest():
+  TestCase( "peano4::parallel::tests::NodeTest" ) {
+}
 
 
 void peano4::parallel::tests::NodeTest::testTagCalculation() {

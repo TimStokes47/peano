@@ -3,19 +3,22 @@
 #ifndef _LA_TARCH_TESTS_MATRIXVECTORTEST_H_
 #define _LA_TARCH_TESTS_MATRIXVECTORTEST_H_
 
-#include "tarch/tests/TestCaseFactory.h"
+
+#include "tarch/tests/TestCase.h"
+
 
 namespace tarch {
   namespace la {
-    class MatrixVectorTest;
-    declareTest(tarch::la,MatrixVectorTest)
+    namespace tests {
+      class MatrixVectorTest;
+    }
   }
 }
 
 /**
  * Provides tests for types Vector, DynamicVector and all Vector functionality.
  */
-class tarch::la::MatrixVectorTest : public tarch::tests::TestCase
+class tarch::la::tests::MatrixVectorTest : public tarch::tests::TestCase
 {
 private:
 

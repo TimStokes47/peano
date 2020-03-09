@@ -10,15 +10,14 @@
 #include <sstream>
 
 
-defineTest(tarch::la::MatrixVectorTest)
 
 
-tarch::la::MatrixVectorTest::MatrixVectorTest():
+tarch::la::tests::MatrixVectorTest::MatrixVectorTest():
   TestCase ("tarch::la::MatrixVectorTest") {
 }
 
 
-void tarch::la::MatrixVectorTest::run() {
+void tarch::la::tests::MatrixVectorTest::run() {
   testMethod (testMultiplication);
   testMethod (testForwardSubstitution);
   testMethod (testBackSubstitution);
@@ -26,7 +25,7 @@ void tarch::la::MatrixVectorTest::run() {
 }
 
 
-void tarch::la::MatrixVectorTest::testMultiplication() {
+void tarch::la::tests::MatrixVectorTest::testMultiplication() {
   Matrix<2,2,int> matrix;
   Vector<2,int> vector;
   assignList(matrix) = 1, 2, 3, 4;
@@ -39,15 +38,15 @@ void tarch::la::MatrixVectorTest::testMultiplication() {
 
 }
 
-void tarch::la::MatrixVectorTest::testForwardSubstitution () {
+void tarch::la::tests::MatrixVectorTest::testForwardSubstitution () {
 }
 
 
-void tarch::la::MatrixVectorTest::testBackSubstitution () {
+void tarch::la::tests::MatrixVectorTest::testBackSubstitution () {
 }
 
 
-void tarch::la::MatrixVectorTest::testSolveSystem3x3() {
+void tarch::la::tests::MatrixVectorTest::testSolveSystem3x3() {
 //  Matrix<3,3,double> matrix;
 //  assignList(matrix) = 1.0, 2.0, 3.0,
 //           4.0, 5.0, 6.0,

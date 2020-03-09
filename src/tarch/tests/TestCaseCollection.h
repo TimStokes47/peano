@@ -57,7 +57,7 @@ class tarch::tests::TestCaseCollection: public tarch::tests::TestCase {
      *
      * @param testCaseCollectionName Name of the test case collection.
      */
-    TestCaseCollection(const std::string& testCaseCollectionName, bool deleteTestCases = false, bool writeToLog = true);
+    TestCaseCollection(const std::string& testCaseCollectionName, bool deleteTestCases = true, bool writeToLog = true);
 
     /**
      * Destructor
@@ -76,9 +76,7 @@ class tarch::tests::TestCaseCollection: public tarch::tests::TestCase {
      * management.
      *
      * You have to specify in the constructor of a TestCaseCollection whether
-     * it should delete testcases contained on construction.
-     *
-     * @Note: default is set to false (i.e. no destruction)
+     * it should delete test cases contained on construction.
      */
     void addTestCase( TestCase* testCase );
 };

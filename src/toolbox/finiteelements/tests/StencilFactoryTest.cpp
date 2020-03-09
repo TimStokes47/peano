@@ -6,15 +6,17 @@
 #include "tarch/la/Vector.h"
 
 
-defineTest(toolbox::finiteelements::tests::StencilFactoryTest)
-
-
 tarch::logging::Log toolbox::finiteelements::tests::StencilFactoryTest::_log( "toolbox::finiteelements::tests::StencilFactoryTest" );
 
 
 #ifdef UseTestSpecificCompilerSettings
 #pragma optimize("",off)
 #endif
+
+
+toolbox::finiteelements::tests::StencilFactoryTest::StencilFactoryTest():
+  TestCase("toolbox::finiteelements::tests::StencilFactoryTest") {
+}
 
 
 void toolbox::finiteelements::tests::StencilFactoryTest::testIntegrationWithN1() {

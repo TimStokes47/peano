@@ -3,19 +3,20 @@
 #ifndef _LA_TARCH_TESTS_VECTORTEST_H_
 #define _LA_TARCH_TESTS_VECTORTEST_H_
 
-#include "tarch/tests/TestCaseFactory.h"
+#include "tarch/tests/TestCase.h"
 
 namespace tarch {
   namespace la {
-    class VectorTest;
-    declareTest(tarch::la,VectorTest)
+    namespace tests {
+      class VectorTest;
+    }
   }
 }
 
 /**
  * Provides tests for types Vector, DynamicVector and all Vector functionality.
  */
-class tarch::la::VectorTest : public tarch::tests::TestCase
+class tarch::la::tests::VectorTest : public tarch::tests::TestCase
 {
 private:
 

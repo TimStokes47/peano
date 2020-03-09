@@ -5,14 +5,13 @@
 
 #include "tarch/tests/TestCase.h"
 #include "tarch/logging/Log.h"
-#include "tarch/tests/TestCaseFactory.h"
+#include "tarch/tests/TestCase.h"
 
 
 namespace peano4 {
   namespace grid {
     namespace tests {
       class SpacetreeTest;
-      declareTest(peano4::grid::tests,SpacetreeTest)
     }
   }
 }
@@ -32,6 +31,7 @@ class peano4::grid::tests::SpacetreeTest: public tarch::tests::TestCase {
     void testRestrictToCoarseGrid();
     void testCreateLeaveCellTraversalEvent();
   public:
+    SpacetreeTest();
     void run() override;
 };
 
