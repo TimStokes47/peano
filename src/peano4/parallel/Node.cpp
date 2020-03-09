@@ -58,8 +58,6 @@ peano4::parallel::Node::Node():
 peano4::parallel::Node::~Node() {
   assertionMsg(
     tarch::mpi::Rank::getInstance().getNumberOfRanks()==1
-	or
-	_currentProgramStep==UndefProgramStep
     or
     _currentProgramStep==Terminate,
 	"forgot to terminate node properly through peano4::parallel::Node::getInstance().shutdown()"
@@ -403,7 +401,10 @@ int peano4::parallel::Node::getBlockingTreeManagementTag() const {
 void peano4::parallel::Node::shutdown() {
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     setNextProgramStep(peano4::parallel::Node::Terminate);
-    continueToRun();
+  }
+
+  if (continueToRun()) {
+	logError( "shutdown()", "shutdown on node " << tarch::mpi::Rank::getInstance().getRank() << " was told that code still should continue to run" );
   }
 }
 

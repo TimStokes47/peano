@@ -138,17 +138,6 @@ class peano4::parallel::Node {
 
     /**
      * The standard destructor calls MPI_Finalize().
-     *
-     * Originally, I had an assertion in there that checked for
-     * <pre>
- tarch::mpi::Rank::getInstance().getNumberOfRanks()==1
- or
- _currentProgramStep==Terminate,
-       <\pre>
-     *
-     * Unit tests for example don't rely on Peano's step
-     * information exchange and thus would trigger this assertion. So
-     * I have to weaken it.
      */
     virtual ~Node();
 
@@ -309,6 +298,9 @@ class peano4::parallel::Node {
 
     /**
      * The shutdown is invoked by peano4::shutdownParallelEnvironment().
+     *
+     * If we run it on the global master, we set the program state to terminate
+     * and distribute this message. If we run on a client, we ask whether we
      */
     void shutdown();
 
