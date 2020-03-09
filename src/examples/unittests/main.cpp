@@ -76,8 +76,6 @@ int main(int argc, char** argv) {
   else {
 	int cores = std::atoi( argv[1] );
     tarch::multicore::Core::getInstance().configure(cores);
-    std::cout << "(a)" << std::endl;
-
     runTests();
   }
 
