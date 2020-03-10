@@ -11,6 +11,8 @@
 #if defined(SharedCPP)
 #include <sstream>
 
+#include "CPP.h"
+
 
 tarch::logging::Log tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
@@ -50,6 +52,7 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
 
 
 void tarch::multicore::Core::shutDown() {
+  tarch::multicore::cpp::shutdownConsumerTasks();
 }
 
 

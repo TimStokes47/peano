@@ -9,6 +9,9 @@
 #include <mutex>
 #include <atomic>
 
+#include "CPP.h"
+#include "tarch/logging/Log.h"
+
 
 /**
  * This class is a 1:1 mirror of my TBB implementation. Please see
@@ -118,5 +121,16 @@ void tarch::multicore::spawnAndWait(
 int tarch::multicore::getNumberOfPendingTasks() {
   return nonblockingTasks.size();
 }
+
+
+void tarch::multicore::cpp::shutdownConsumerTasks() {
+  static tarch::logging::Log _log( "tarch::multicore::cpp" );
+  logTraceInWith1Argument( "shutdownConsumerTasks()", numberOfConsumerTasks.fetch_add(0) );
+  while (numberOfConsumerTasks.fetch_add(0)>0) {
+	yield();
+  }
+  logTraceOut( "shutdownConsumerTasks()" );
+}
+
 
 #endif
