@@ -148,11 +148,17 @@ parameters:
 %  setenv TBB_SHLIB "-L/ddn/apps/Cluster-Apps/intel/xe_2018.2/tbb/lib/intel64/gcc4.7 -ltbb"
  
 \begin{code}
- setenv TBB_INC "-I/ddn/apps/Cluster-Apps/intel/2019.5/tbb/include"
- setenv TBB_SHLIB "-L/ddn/apps/Cluster-Apps/intel/2019.5/tbb/lib/intel64/gcc4.7 -ltbb"
- 
- setenv CXXFLAGS "$TBB_INC  -DTBB_USE_ASSERT -DTBB_USE_THREADING_TOOLS"
- setenv LDFLAGS "$TBB_SHLIB -ltbb_debug"
+ setenv CXXFLAGS "-I/ddn/apps/Cluster-Apps/intel/2019.5/tbb/include"
+ setenv LDFLAGS "-L/ddn/apps/Cluster-Apps/intel/2019.5/tbb/lib/intel64/gcc4.7 -ltbb"
+ setenv CXX icpc
+ ./configure --with-multithreading=tbb --with-mpi=mpicxx
+\end{code}
+
+or, if you need debug information or Intel tool support:
+
+\begin{code}
+ setenv CXXFLAGS "-I/ddn/apps/Cluster-Apps/intel/2019.5/tbb/include"
+ setenv LDFLAGS "-L/ddn/apps/Cluster-Apps/intel/2019.5/tbb/lib/intel64/gcc4.7 -ltbb_debug"
  setenv CXX icpc
  ./configure --with-multithreading=tbb --with-mpi=mpicxx
 \end{code}
