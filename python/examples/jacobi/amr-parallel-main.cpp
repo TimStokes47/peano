@@ -72,14 +72,18 @@ class ProgramRun {
         case 10:
           {
             if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>1 ) {
-              int cellsPerRank = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::mpi::Rank::getInstance().getNumberOfRanks();
-              logInfo( "ProgramRun::step()", "should host " << cellsPerRank << " cells per rank (total number of cells: " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() << ")" );
-
-              for (int rank=1; rank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
-                if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerRank,rank)) {
-                  logWarning( "runParallel(...)", "failed to assign rank " << rank << " " << cellsPerRank << " cell(s)" );
+              if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
+                int cellsPerRank = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::mpi::Rank::getInstance().getNumberOfRanks();
+                logInfo( "ProgramRun::step()", "should host " << cellsPerRank << " cells per rank (total number of cells: " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() << ")" );
+                for (int rank=1; rank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
+                  if ( not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerRank,rank)) {
+                    logWarning( "runParallel(...)", "failed to assign rank " << rank << " " << cellsPerRank << " cell(s)" );
+                  }
                 }
               }
+
+              examples::jacobi::observers::SetupScenario  observer;
+              peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
             }
           }
           break;
@@ -158,13 +162,17 @@ class ProgramRun {
       // ===========================================================
       bool hasSplitRanks        = false;
       bool hasSplitSharedMemory = false;
+
+//      const int numberOfLocalUnrefinedCellsBeforeFirstMPISplit = tarch::mpi::Rank::getInstance().getNumberOfRanks();
+      const int numberOfLocalUnrefinedCellsBeforeFirstMPISplit = ThreePowerD * ThreePowerD * ThreePowerD;
+
       do {
         if (
           gridDecompositionStrategy != GridDecompositionStrategy::BuildUpGridCompletelyBeforeWeDecompose
           and
           not hasSplitRanks
           and
-          peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > tarch::mpi::Rank::getInstance().getNumberOfRanks()
+          peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > numberOfLocalUnrefinedCellsBeforeFirstMPISplit
         ) {
           peano4::parallel::Node::getInstance().setNextProgramStep(10); // split mpi
           step();
@@ -173,7 +181,7 @@ class ProgramRun {
           hasSplitRanks = true;
         }
         else if (
-          peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > tarch::mpi::Rank::getInstance().getNumberOfRanks()
+          peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() > numberOfLocalUnrefinedCellsBeforeFirstMPISplit
           and
           not hasSplitRanks
         ) {
@@ -261,43 +269,45 @@ int main(int argc, char** argv) {
     "",
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
+
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "peano4", 
-    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "peano4", 
-    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "peano4", 
-    // @todo Black
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
+
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "tarch", 
-    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "tarch", 
-    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "tarch", 
-    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
+
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug,
     tarch::logging::LogFilter::FilterListEntry::AnyRank,
