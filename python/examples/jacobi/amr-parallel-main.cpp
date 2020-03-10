@@ -46,6 +46,10 @@ class ProgramRun {
 
 
     void step() {
+      #if PeanoDebug>0
+      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+      #endif
+
       int stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
       logInfo( "ProgramRun::step()", "run step " << stepIdentifier );
 
@@ -142,10 +146,6 @@ class ProgramRun {
         default:
           assertionMsg(false, "step unknown");
       }
-
-      #if PeanoDebug>0
-      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-      #endif
     }
 
 
@@ -368,7 +368,11 @@ int main(int argc, char** argv) {
   ProgramRun programRun;
   
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
+    #if PeanoDebug>1
+    const int MaxIterations = 2;
+    #else  
     const int MaxIterations = 20;
+    #endif
     programRun.runGlobalMaster(MaxIterations);
   }
   else {
