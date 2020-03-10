@@ -1,100 +1,66 @@
-\chapter{Selected HPC platforms}
+\chapter{Selected HPC platforms and tools}
 
 
 \section{SuperMUC-NG}
 
-%
-Some remarks on Peano4 on SuperMUC-NG:
+% 
+% \begin{code}
+%  ssh lu57zat6@skx.supermuc.lrz.de
+%  cd $WORK
+%  export CXX icpc
+% \end{code}
+% So geht es auch auf dem Login-Knoten. Aber da gehen keine Tools.
+% export I_MPI_HYDRA_BOOTSTRAP=fork
 
-
-\begin{code}
- ssh lu57zat6@skx.supermuc.lrz.de
- cd $WORK
- export CXX icpc
-\end{code}
-
-\noindent
 All Intel tools are properly preloaded on SuperMUC-NG.
 Hence, we can directly translate the code with MPI. 
 However, TBB seems not to be a standard package within the Intel module anymore. 
 So if you need TBB, you have to load it manually.
+LRZ's module environment sets all pathes and settings coming along with TBB in
+environment variables \texttt{TBB\_INC} and \texttt{TBB\_SHLIB}.
+To pass these variables into Peano, map them onto \texttt{CXXFLAGS} or
+\texttt{LDFLAGS}.
 
 \begin{code}
-module load tbb
-export CXXFLAGS="$TBB_INC  -DTBB_USE_ASSERT -DTBB_USE_THREADING_TOOLS"
-export LDFLAGS="$TBB_SHLIB"
-./configure --with-multithreading=tbb --with-mpi=mpiicpc
+ module load tbb
+ export CXXFLAGS="$TBB_INC"
+ export LDFLAGS="$TBB_SHLIB"
+ ./configure --with-multithreading=tbb --with-mpi=mpiicpc
+ make clean
+ make -j
 \end{code}
 
 
-% So geht es auch auf dem Login-Knoten:
-% export I_MPI_HYDRA_BOOTSTRAP=fork
-
 \noindent
-If you want to use the legacy DaStGen variant with Java, you will have to load
+If you want to use the legacy DaStGen variant with Java, you have to load
 Java manually.
 Python3 in contrast is preloaded by default.
 
 
-
-\paragraph{Intel Trace Analyser and Correctness Checks}
-
-
-We follow the description from \url{https://software.intel.com/en-us/itc-user-and-reference-guide-configuring-intel-trace-collector}:
-
-\begin{itemize}
-  \item Run your code with mpirun but pass the arguments \texttt{-check_mpi}, too. This will create a file \texttt{peano4.stf}.
-  \item Run \texttt{itcconfig peano4.stf}. For this, you need X-forwarding.
-  \item Let the environment variable point to the new config file: \texttt{export VT_CONFIG=peano4.conf}.
-  \item Rerun the test with the \texttt{check_mpi} argument.
-\end{itemize}
-
-
-
-
-Thread and Signal Safety
-The MPI standard requires that MPI_Finalize be called only by the same thread that initialized MPI with either MPI_Init or MPI_Init_thread.
-
-
-nimm das -openmp raus aus dem Script, dann braucht es das -parallel im Linker net
-
--mt_mpi
-
-
-mpiexec is hte only support thing. no mpirun no srun
-
-https://doku.lrz.de/display/PUBLIC/Job+Processing+with+SLURM+on+SuperMUC-NG
-
-
-
-
-https://software.intel.com/en-us/application-snapshot-user-guide-creating-configuration-file-for-intel-trace-collector
-
-https://doku.lrz.de/display/PUBLIC/Intel+Tracing+Tools%3A+Profiling+and+Correctness+checking+of+MPI+programs#IntelTracingTools:ProfilingandCorrectnesscheckingofMPIprograms-ConfigurationFile
-
-
-
-
-export VT_CONFIG=configure-itac.conf
-
-
-
-vi configure-itac.conf
-a
-
-
-
-
+\begin{remark}
+ I found it reasonable to always deactivate the energy environment by the LRZ.
+ In particular if you combine Peano4 with teaMPI or the Intel tools, the energy
+ tools don't work anymore, as they plug into the same MPI interface (PMPI),
+ i.e.~they compete for the same hook-in points. So my SLURM scripts always
+ contain the line
+ \begin{code}
+#SBATCH --ear=off
+module load slurm_setup
+ \end{code}
+ Please note that load of the package \texttt{slurm\_setup} which seems to be
+ required, too.
+ Furthermore, LRZ recommends that you use \texttt{mpiexec} rather than
+ \texttt{srun}.
+\end{remark}
 
 
 \section{Hamilton}
 
-Some remarks on Peano4 on Hamilton, Durham's local supercomputer:
+%  ssh frmh84@hamilton.dur.ac.uk
+%  cd $SCRATCH
 
 \begin{code}
- ssh frmh84@hamilton.dur.ac.uk
  module purge
- # module load intel/xe_2018.2
  module load intel/2019.5
  module load intelmpi/intel/2019.6
  # for the Python API
@@ -102,11 +68,14 @@ Some remarks on Peano4 on Hamilton, Durham's local supercomputer:
  module unload gcc/8.2.0
  # for legacy DaStGen
  module load java/1.8.0
- cd $SCRATCH
- cd /ddn/data/frmh84/
- setenv CXX icpc
- ./configure --with-multithreading=what-you-prefer --with-mpi=mpicxx
+ setenv CXX mpicxx
+ setenv CXXFLAGS "-I/ddn/apps/Cluster-Apps/intel/2019.5/tbb/include"
+ setenv LDFLAGS "-L/ddn/apps/Cluster-Apps/intel/2019.5/tbb/lib/intel64/gcc4.7 -ltbb"
+ ./configure --with-multithreading=tbb --with-mpi=mpicxx
+ make clean
+ make -j
 \end{code}
+
 
 \begin{remark}
  It is confirmed that the Python module should not load gcc, and that this will
@@ -115,69 +84,96 @@ Some remarks on Peano4 on Hamilton, Durham's local supercomputer:
  If you skip it, then the Intel linker will fail.
 \end{remark}
 
-\begin{remark}
-The Java module is required if and only if you use the legacy DaStGen feature to
-model data structures.
-\end{remark}
-
-
-\paragraph{Intel MPI}
-
-If you you Intel MPI, it seems that you now have to add the \texttt{-parallel}
-flag to your makefile if you use the Python API. Otherwise, your linker will
-fail.
-I haven't yet found out which ``misconfiguration'' in Peano4 causes this
-dependency.
-As the flag is not required on other systems, the Python's API output does not
-by default add this field.
-So either modify the makefile manually or set it as additional \texttt{LDFLAGS}
-entry before you compile.
-The core b.t.w.~seems to be fine without the flag for whatever reason.
-
-
-
-\paragraph{Intel's Threading Building Blocks (TBB)}
-
-Intel's Threading Building Blocks are available through the environment
-variables \texttt{TBB\_INC} and \texttt{TBB\_SHLIB}, as soon as you have 
-loaded the Intel compiler.
-To pipe them into configure, we have to map them onto the appropriate autotools
-parameters:
-
-%  setenv TBB_INC "-I/ddn/apps/Cluster-Apps/intel/xe_2018.2/tbb/include"
-%  setenv TBB_SHLIB "-L/ddn/apps/Cluster-Apps/intel/xe_2018.2/tbb/lib/intel64/gcc4.7 -ltbb"
- 
-\begin{code}
- setenv CXXFLAGS "-I/ddn/apps/Cluster-Apps/intel/2019.5/tbb/include"
- setenv LDFLAGS "-L/ddn/apps/Cluster-Apps/intel/2019.5/tbb/lib/intel64/gcc4.7 -ltbb"
- setenv CXX icpc
- ./configure --with-multithreading=tbb --with-mpi=mpicxx
-\end{code}
-
-or, if you need debug information or Intel tool support:
-
-\begin{code}
- setenv CXXFLAGS "-I/ddn/apps/Cluster-Apps/intel/2019.5/tbb/include"
- setenv LDFLAGS "-L/ddn/apps/Cluster-Apps/intel/2019.5/tbb/lib/intel64/gcc4.7 -ltbb_debug"
- setenv CXX icpc
- ./configure --with-multithreading=tbb --with-mpi=mpicxx
-\end{code}
-
+\noindent
+The Java module is again required if and only if you use the legacy DaStGen
+feature to model data structures.
+If you decide to use the C++ multithreading, you can leave out the TBB-specific
+settings.
 
 
 \section{Local workstations}
+
+
 If you don't have a proper module file, you might have to configure your environment manually to use TBB:
 \begin{code}
-export CXXFLAGS=-I/opt/intel/tbb/include
-export LDFLAGS="-L/opt/intel/tbb/lib/intel64/gcc4.7 -ltbb -pthread"
-
-./configure --with-multithreading=tbb --with-mpi=/opt/mpi/mpicxx
+ export CXXFLAGS=-I/opt/intel/tbb/include
+ export LDFLAGS="-L/opt/intel/tbb/lib/intel64/gcc4.7 -ltbb -pthread"
+ ./configure --with-multithreading=tbb --with-mpi=/opt/mpi/mpicxx
 \end{code}
 
-I found bash sometimes to be picky when setting the TBB libraries. The path and the library literally have to be set separately.
 
 
+\section{The Intel tools}
+\label{section:supercomputers:IntelTools}
+
+\paragraph{Intel's Threading Building Blocks (TBB)}
+
+The above descriptions all include the TBB tools in the release version.
+If you want to debug with TBB or to use the Intel tools, then I recommend to
+link against \texttt{tbb\_debug} and to set a few extra command line arguments:
+
+\begin{code}
+ export PEANO_CXXFLAGS="-DTBB_USE_ASSERT -DTBB_USE_THREADING_TOOLS"
+ export LDFLAGS="see-above   -ltbb_debug"
+\end{code}
 
 
+\paragraph{Intel Trace Analyser and MPI Correctness Checks}
+
+If you want to use the Intel tracing or the correctness checks, you have to
+translate the code with the linker flags \texttt{-trace} or \texttt{check\_mpi},
+respectively.
+To set them, please use the \texttt{PEANO\_LDFLAGS}.
+If you try to overwrite \texttt{LDFLAGS}, configure sometimes complains.
 
 
+\begin{code}
+ export PEANO_LDFLAGS=-trace
+ export PEANO_LDFLAGS=-check_mpi
+ ./configure --with-multithreading=tbb --with-mpi=/opt/mpi/mpicxx
+ make clean
+ make -j
+\end{code}
+
+
+\noindent
+As Peano consists of multiple libraries which are (partially) linked before you
+include them into your executable, you have to rebuild the whole project again.
+If you don't do this, you will get error messages that data is corrupted or MPI
+datatypes are not defined.
+
+
+% 
+% \paragraph{Intel MPI}
+% 
+% If you you Intel MPI, it seems that you now have to add the \texttt{-parallel}
+% flag to your makefile if you use the Python API. Otherwise, your linker will
+% fail.
+% I haven't yet found out which ``misconfiguration'' in Peano4 causes this
+% dependency.
+% As the flag is not required on other systems, the Python's API output does not
+% by default add this field.
+% So either modify the makefile manually or set it as additional \texttt{LDFLAGS}
+% entry before you compile.
+% The core b.t.w.~seems to be fine without the flag for whatever reason.
+
+ 
+% nimm das -openmp raus aus dem Script, dann braucht es das -parallel im Linker net
+% 
+% -mt_mpi
+% 
+% 
+% mpiexec is hte only support thing. no mpirun no srun
+% 
+% https://doku.lrz.de/display/PUBLIC/Job+Processing+with+SLURM+on+SuperMUC-NG
+% 
+% 
+% 
+% 
+% https://software.intel.com/en-us/application-snapshot-user-guide-creating-configuration-file-for-intel-trace-collector
+% 
+% https://doku.lrz.de/display/PUBLIC/Intel+Tracing+Tools%3A+Profiling+and+Correctness+checking+of+MPI+programs#IntelTracingTools:ProfilingandCorrectnesscheckingofMPIprograms-ConfigurationFile
+% 
+% 
+% 
+% 

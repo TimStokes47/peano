@@ -22,10 +22,11 @@ the directory.
   that the flag \linebreak \texttt{UseTestSpecificCompilerSettings} is enabled.
   This effectively disables any optimisation for the unit tests. Without the
   flag, unit test can become really big due to template instantiation.
-  \item \textbf{configure crashes when I try to translate with TBB}. I have seen
-  this on a couple of systems and found it annoying. First, ensure that configure
+  \item \textbf{\texttt{./configure} crashes when I try to translate with TBB}.
+  I have seen this on a couple of systems and found it annoying. 
+  First, ensure that configure
   find the TBB header. To ensure it does, check that \texttt{CXXFLAGS} are properly
-		set. Next, set \texttt{LDFLAGS=-Lmypath}. Usually, I add \texttt{-ltbb} to 
+  set. Next, set \texttt{LDFLAGS=-Lmypath}. Usually, I add \texttt{-ltbb} to 
   this parameter and then everything is fine. However, some configures then don't 
   like the configure script anymore. So I instead use \texttt{export PEANO\_LDFLAGS="-ltbb"}. 
   For some systems, it then still remains necessary to add pthreads, too.
@@ -75,12 +76,14 @@ build: 2d, no mpi, C++ threading, debug level=4
     whitelist entry for the routine you are interested in. Ensure that it is the
     right level (\texttt{TargetDebug} or \texttt{TargetTrace}, respectively):
     \begin{code}
-tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-  tarch::logging::LogFilter::FilterListEntry::TargetInfo,
-  tarch::logging::LogFilter::FilterListEntry::AnyRank,
-  "examples::algebraicmg",
-  tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
-));
+tarch::logging::LogFilter::getInstance().addFilterListEntry( 
+  tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+    tarch::logging::LogFilter::FilterListEntry::AnyRank,
+    "examples::algebraicmg",
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+  )
+);
     \end{code}
     \item If you are still unsure which log filters are active, insert
     \begin{code}
@@ -194,7 +197,9 @@ tarch::logging::LogFilter::getInstance().printFilterListToCout();
 \section{External tools}
 \begin{itemize}
   \item \textbf{The Intel tools yield invalid or messed up results}. Ensure 
-    you have built your code with \texttt{-DTBB\_USE\_ASSERT -DTBB\_USE\_THREADING\_TOOLS}.
+    you have built your code with \texttt{-DTBB\_USE\_ASSERT
+    -DTBB\_USE\_THREADING\_TOOLS}. Please consult the supercomputer/tool remarks
+    on page \pageref{section:supercomputers:IntelTools}.
   \item To be continued \dots
 \end{itemize}
 
