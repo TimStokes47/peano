@@ -13,6 +13,12 @@ namespace tarch {
      */
     extern int MaxNumberOfConcurrentHighBandwidthTasks;
     extern int MaxNumberOfConcurrentBackgroundTasks;
+    namespace tbb {
+      /**
+       * I implement this guy in Tasks.cpp
+       */
+      void shutdownConsumerTasks();
+    }
   }
 }
 

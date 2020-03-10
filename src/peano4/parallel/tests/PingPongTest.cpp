@@ -50,9 +50,10 @@ namespace {
         _id(id), _blockingMPI(blockingMPI) {}
    
       bool run() {
+        #ifdef Parallel
         const int out = 23+_id;
         static tarch::logging::Log _log( "peano4::parallel::tests::PingPongSendTask" );
-       logDebug( "PingPongSendTask()", "send message " << out << " to rank 1 with tag " << _id );
+        logDebug( "PingPongSendTask()", "send message " << out << " to rank 1 with tag " << _id );
         if (_blockingMPI) {
           MPI_Send(&out,1,MPI_INT,1,_id,MPI_COMM_WORLD);
         }
@@ -62,6 +63,7 @@ namespace {
           tarch::multicore::yield();
           MPI_Wait(&request,MPI_STATUS_IGNORE);
         }
+        #endif
         return false;
       }
   };
@@ -76,6 +78,7 @@ namespace {
         _id(id), _blockingMPI(blockingMPI) {}
 
       bool run() {
+        #ifdef Parallel
         int in = -12;
         static tarch::logging::Log _log( "peano4::parallel::tests::PingPongSendTask" );
         logDebug( "PingPongReceiveTask()", "receive message from rank 1 with tag " << _id );
@@ -92,6 +95,7 @@ namespace {
           logError( "testMultithreadedPingPong()", "received " << in << " instead of " << (23+_id) << " (blocking mode=" << _blockingMPI << ", tag=" << _id << ")" );
           testErrors++;
         }
+        #endif
         return false;
       }
   };

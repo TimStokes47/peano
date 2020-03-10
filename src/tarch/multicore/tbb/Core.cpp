@@ -30,7 +30,7 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 
 tarch::multicore::Core::Core() {
-  __numberOfThreads = tbb::task_scheduler_init::default_num_threads();
+  __numberOfThreads = ::tbb::task_scheduler_init::default_num_threads();
 }
 
 
@@ -48,13 +48,13 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
   shutDown();
 
   if (numberOfThreads==UseDefaultNumberOfThreads) {
-    __numberOfThreads = tbb::task_scheduler_init::default_num_threads();
+    __numberOfThreads = ::tbb::task_scheduler_init::default_num_threads();
   }
   else {
     __numberOfThreads = numberOfThreads;
   }
 
-  __globalThreadCountControl = new tbb::global_control(tbb::global_control::max_allowed_parallelism,__numberOfThreads);
+  __globalThreadCountControl = new ::tbb::global_control(::tbb::global_control::max_allowed_parallelism,__numberOfThreads);
 
   if (maxNumberOfConcurrentBackgroundTasks==UseDefaultNumberOfThreads) {
     maxNumberOfConcurrentBackgroundTasks = __numberOfThreads;
@@ -76,6 +76,8 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
 
 
 void tarch::multicore::Core::shutDown() {
+  tarch::multicore::tbb::shutdownConsumerTasks();
+
   if (__globalThreadCountControl!=nullptr) {
     delete __globalThreadCountControl;
     __globalThreadCountControl = nullptr;
