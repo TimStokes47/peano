@@ -8,7 +8,6 @@
 
 #ifdef SharedTBB
 
-
 #if !defined(noTBBPrefetchesJobData) and !defined(TBBPrefetchesJobData)
   #define TBBPrefetchesJobData
 #endif
@@ -198,7 +197,7 @@ void tarch::multicore::spawnTask(Task*  task) {
 void tarch::multicore::spawnAndWait(
   const std::vector< tarch::multicore::Task* >&  tasks
 ) {
-  tbb::task_group g;
+  ::tbb::task_group g;
   for (auto& p: tasks) {
     g.run([=]{
       tarch::multicore::Task* task = p;
@@ -212,6 +211,13 @@ void tarch::multicore::spawnAndWait(
 
 int tarch::multicore::getNumberOfPendingTasks() {
   return nonblockingTasks.size();
+}
+
+
+void tarch::multicore::tbb::shutdownConsumerTasks() {
+  while (numberOfConsumerTasks.fetch_and_add(0)>0) {
+	yield();
+  }
 }
 
 
