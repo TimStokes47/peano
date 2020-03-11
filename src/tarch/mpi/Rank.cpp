@@ -129,14 +129,25 @@ void tarch::mpi::Rank::writeTimeOutWarning(
   int                 tag,
   int                 numberOfExpectedMessages
 ) {
-  std::ostringstream out;
-  out << "operation " << className << "::" << methodName << " on node "
-      << getRank() << " had to wait more than " << _timeOutWarning
-      << " seconds for " << numberOfExpectedMessages
-      << " message(s) from node " << communicationPartnerRank << " with tag " << tag << ". Application "
-      << "will terminate after " << _deadlockTimeOut << " seconds because "
-      << "of a deadlock";
-  _log.warning( "writeTimeOutWarning(...)", out.str() );
+  logWarning(
+    "writeTimeOutWarning(...)",
+	"operation " << className << "::" << methodName << " on node "
+    << getRank() << " had to wait more than " << _timeOutWarning
+    << " seconds for " << numberOfExpectedMessages
+    << " message(s) from node " << communicationPartnerRank << " with tag " << tag
+  );
+  if (_deadlockTimeOut>0) {
+    logWarning(
+      "writeTimeOutWarning(...)",
+	  "application will terminate after " << _deadlockTimeOut << " seconds because of a deadlock"
+	);
+  }
+  else {
+    logWarning(
+      "writeTimeOutWarning(...)",
+      "no deadlock treshold set, i.e. application will not terminate because of any deadlock"
+    );
+  }
 }
 
 
