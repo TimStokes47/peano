@@ -113,8 +113,16 @@ If you want to debug with TBB or to use the Intel tools, then I recommend to
 link against \texttt{tbb\_debug} and to set a few extra command line arguments:
 
 \begin{code}
- export PEANO_CXXFLAGS="-DTBB_USE_ASSERT -DTBB_USE_THREADING_TOOLS"
+ export PEANO_CXXFLAGS="-DTBB_USE_ASSERT -DTBB_USE_THREADING_TOOLS "
  export LDFLAGS="see-above   -ltbb_debug"
+\end{code}
+
+\noindent
+Some systems such as SuperMUC-NG provide a dedicated debug environments,
+i.e.~here you can use
+\begin{code}
+ export CXXFLAGS="$TBB_INC -DTBB_USE_ASSERT -DTBB_USE_THREADING_TOOLS "
+ export LDFLAGS="$TBB_SHLIB_DEBUG"
 \end{code}
 
 
@@ -130,7 +138,7 @@ If you try to overwrite \texttt{LDFLAGS}, configure sometimes complains.
 \begin{code}
  export PEANO_LDFLAGS=-trace
  export PEANO_LDFLAGS=-check_mpi
- ./configure --with-multithreading=tbb --with-mpi=/opt/mpi/mpicxx
+ ./configure --with-multithreading=tbb --with-mpi=mpicxx
  make clean
  make -j
 \end{code}
