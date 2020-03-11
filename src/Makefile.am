@@ -18,33 +18,22 @@ SUBDIRS = . \
 # that I have a couple of singletons and I did struggle with singletons and 
 # shared libraries. 
 #
-noinst_LTLIBRARIES = libTarch.la libTarch_debug.la libTarch_trace.la \
-                libPeano4Core2d.la libPeano4Core2d_debug.la libPeano4Core2d_trace.la \
-                libPeano4Core3d.la libPeano4Core3d_debug.la libPeano4Core3d_trace.la
+lib_LIBRARIES = libTarch.a        libTarch_debug.a        libTarch_trace.a \
+                libPeano4Core2d.a libPeano4Core2d_debug.a libPeano4Core2d_trace.a \
+                libPeano4Core3d.a libPeano4Core3d_debug.a libPeano4Core3d_trace.a
 
 
-libTarch_la_CXXFLAGS = -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libTarch_trace_la_CXXFLAGS = -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
-libTarch_debug_la_CXXFLAGS = -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
-
-libTarch_la_LDFLAGS = $(PEANO_LDFLAGS)
-libTarch_trace_la_LDFLAGS = $(PEANO_LDFLAGS)
-libTarch_debug_la_LDFLAGS = $(PEANO_LDFLAGS)
+libTarch_a_CXXFLAGS = -DPeanoDebug=0 $(PEANO_CXXFLAGS)
+libTarch_trace_a_CXXFLAGS = -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
+libTarch_debug_a_CXXFLAGS = -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
 
 
-libPeano4Core2d_la_CXXFLAGS        = -DDimensions=2 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libPeano4Core2d_trace_la_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
-libPeano4Core2d_debug_la_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
-libPeano4Core3d_la_CXXFLAGS        = -DDimensions=3 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libPeano4Core3d_trace_la_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
-libPeano4Core3d_debug_la_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
-
-libPeano4Core2d_la_LDFLAGS        = $(PEANO_LDFLAGS)
-libPeano4Core2d_trace_la_LDFLAGS  = $(PEANO_LDFLAGS)
-libPeano4Core2d_debug_la_LDFLAGS  = $(PEANO_LDFLAGS)
-libPeano4Core3d_la_LDFLAGS        = $(PEANO_LDFLAGS)
-libPeano4Core3d_trace_la_LDFLAGS  = $(PEANO_LDFLAGS)
-libPeano4Core3d_debug_la_LDFLAGS  = $(PEANO_LDFLAGS)
+libPeano4Core2d_a_CXXFLAGS        = -DDimensions=2 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
+libPeano4Core2d_trace_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core2d_debug_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core3d_a_CXXFLAGS        = -DDimensions=3 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
+libPeano4Core3d_trace_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core3d_debug_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
 
 #
 # All sources below
@@ -155,14 +144,14 @@ Tarch_SOURCES= tarch/tarch.cpp \
 #
 # Map defined source sequences onto libraries
 #
-libTarch_la_SOURCES       = $(Tarch_SOURCES)
-libTarch_trace_la_SOURCES = $(Tarch_SOURCES)
-libTarch_debug_la_SOURCES = $(Tarch_SOURCES)
+libTarch_a_SOURCES       = $(Tarch_SOURCES)
+libTarch_trace_a_SOURCES = $(Tarch_SOURCES)
+libTarch_debug_a_SOURCES = $(Tarch_SOURCES)
 
-libPeano4Core2d_la_SOURCES       = $(Peano4Core_SOURCES)
-libPeano4Core2d_trace_la_SOURCES = $(Peano4Core_SOURCES)
-libPeano4Core2d_debug_la_SOURCES = $(Peano4Core_SOURCES)
-libPeano4Core3d_la_SOURCES       = $(Peano4Core_SOURCES)
-libPeano4Core3d_trace_la_SOURCES = $(Peano4Core_SOURCES)
-libPeano4Core3d_debug_la_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core2d_a_SOURCES       = $(Peano4Core_SOURCES)
+libPeano4Core2d_trace_a_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core2d_debug_a_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core3d_a_SOURCES       = $(Peano4Core_SOURCES)
+libPeano4Core3d_trace_a_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core3d_debug_a_SOURCES = $(Peano4Core_SOURCES)
 
