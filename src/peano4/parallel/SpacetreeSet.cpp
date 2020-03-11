@@ -64,7 +64,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
   if (
     peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState(),true)
   ) {
-	logTraceInWith1Argument( "receiveDanglingMessages()", "getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState");
+    logTraceIn( "receiveDanglingMessages()" );
     peano4::parallel::TreeManagementMessage message;
     message.receive(MPI_ANY_SOURCE,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
@@ -86,7 +86,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       default:
     	assertionMsg( false, "should not be called" );
     }
-	logTraceOutWith1Argument( "receiveDanglingMessages()", "getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState");
+    logTraceOut( "receiveDanglingMessages()" );
   }
 
   if (
@@ -94,7 +94,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
     and
     peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichChangesASpacetreeState(),true)
   ) {
-    logTraceInWith1Argument( "receiveDanglingMessages()", "getAsynchronousTreeManagementTagWhichChangesASpacetreeState");
+    logTraceIn( "receiveDanglingMessages()" );
     peano4::parallel::TreeManagementMessage message;
     message.receive(MPI_ANY_SOURCE,peano4::parallel::Node::getInstance().getAsynchronousTreeManagementTagWhichChangesASpacetreeState(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
@@ -128,7 +128,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       default:
     	assertionMsg( false, "should not be called" );
     }
-    logTraceOutWith1Argument( "receiveDanglingMessages()", "getAsynchronousTreeManagementTagWhichChangesASpacetreeState");
+    logTraceOut( "receiveDanglingMessages()" );
   }
   #endif
 }
