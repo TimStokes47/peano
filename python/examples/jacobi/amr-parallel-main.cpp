@@ -3,8 +3,6 @@
 
 #include "tarch/logging/Log.h"
 
-#include "tarch/tests/TestCaseRegistry.h"
-
 #include "tarch/logging/LogFilter.h"
 #include "tarch/logging/CommandLineLogger.h"
 
@@ -334,16 +332,8 @@ int main(int argc, char** argv) {
   );
 
 
-  #if PeanoDebug>=2
-  tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
-  int unitTestsErrors = tarch::tests::TestCaseRegistry::getInstance()
-                       .getTestCaseCollection()
-                       .getNumberOfErrors();
-
-  if (unitTestsErrors != 0) {
-    logError("main()", "unit tests failed. Quit.");
-    exit(ExitCodeUnitTestsFailed);
-  }
+  #if PeanoDebug>=1
+  tarch::mpi::Rank::getInstance().setDeadlockTimeOut(0);
   #endif
 
 
@@ -368,7 +358,7 @@ int main(int argc, char** argv) {
   ProgramRun programRun;
   
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
-    #if PeanoDebug>1
+    #if PeanoDebug>=1
     const int MaxIterations = 2;
     #else  
     const int MaxIterations = 20;
