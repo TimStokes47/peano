@@ -1,5 +1,6 @@
 #include "PingPongTest.h"
 #include "../StartTraversalMessage.h"
+#include "../TreeManagementMessage.h"
 
 
 #include "tarch/la/Vector.h"
@@ -307,10 +308,29 @@ void peano4::parallel::tests::PingPongTest::testDaStGenArray() {
 }
 
 
+void peano4::parallel::tests::PingPongTest::testDaStGenArrayTreeManagementMessage() {
+  #ifdef Parallel
+  peano4::parallel::TreeManagementMessage message;
+  const int Tag = 14;
+  if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
+    message.send(1, Tag, true, peano4::parallel::TreeManagementMessage::ExchangeMode::Blocking);
+  }
+  else if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
+    while ( not peano4::parallel::TreeManagementMessage::isMessageInQueue(Tag,true) ) {
+    }
+    message.receive(0, Tag, true, peano4::parallel::TreeManagementMessage::ExchangeMode::Blocking);
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  #endif
+}
+
+
 void peano4::parallel::tests::PingPongTest::run() {
   testMethod(  testBuiltInType );
   testMethod(  testDaStGenType );
   testMethod(  testDaStGenArray );
+
+  testMethod(  testDaStGenArrayTreeManagementMessage );
 
   testMethod(  testMultithreadedPingPongWithBlockingReceives );
   testMethod(  testMultithreadedPingPongWithBlockingSends );
