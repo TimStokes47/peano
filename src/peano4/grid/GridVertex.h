@@ -29,7 +29,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   04/03/2020 19:13
+    * @date   12/03/2020 19:36
     */
    class peano4::grid::GridVertex { 
       
@@ -252,7 +252,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   04/03/2020 19:13
+    * @date   12/03/2020 19:36
     */
    class peano4::grid::GridVertexPacked { 
       
@@ -269,7 +269,7 @@ namespace peano4 {
              |  hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep	| startbit 4	| #bits 1
              |  isAntecessorOfRefinedVertexInCurrentTreeSweep	| startbit 5	| #bits 1
              */
-            short int _packedRecords0;
+            int _packedRecords0;
             
             /**
              * Generated
@@ -478,7 +478,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   04/03/2020 19:13
+       * @date   12/03/2020 19:36
        */
       class peano4::grid::GridVertex { 
          
@@ -735,7 +735,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   04/03/2020 19:13
+       * @date   12/03/2020 19:36
        */
       class peano4::grid::GridVertexPacked { 
          
@@ -754,7 +754,7 @@ namespace peano4 {
                 |  hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep	| startbit 4	| #bits 1
                 |  isAntecessorOfRefinedVertexInCurrentTreeSweep	| startbit 5	| #bits 1
                 */
-               short int _packedRecords0;
+               int _packedRecords0;
                
                /**
                 * Generated
