@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   12/03/2020 19:35
+ * @date   12/03/2020 20:04
  */
 class peano4::grid::AutomatonState { 
    
@@ -232,7 +232,7 @@ class peano4::grid::AutomatonState {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   12/03/2020 19:35
+ * @date   12/03/2020 20:04
  */
 class peano4::grid::AutomatonStatePacked { 
    
