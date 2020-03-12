@@ -10,8 +10,6 @@
 ##SBATCH --ear=off
 source /etc/profile.d/modules.sh
 
-module load intel/2019.5
-module load intelmpi/intel/2019.6
 module load tbb
 
 
