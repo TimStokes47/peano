@@ -2,7 +2,7 @@
 // have to know whether we are using MPI
 #include "config.h"
 
-Packed-Type: short int;
+Packed-Type: int;
 
 Constant: Dimensions hint-value 4;
 Constant: TwoPowerD;
@@ -29,7 +29,7 @@ class peano4::grid::GridVertex {
   /**
  	   * Should be from 0 to TwoPowerD
    */
-  discard    packed parallelise int  numberOfAdjacentRefinedLocalCells;
+  discard parallelise int  numberOfAdjacentRefinedLocalCells;
 
   /**
    * A vertex is outside, if all @f$ 2^d @f$ adjacent cells are outside. In this
