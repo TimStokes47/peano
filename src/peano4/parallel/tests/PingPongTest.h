@@ -30,6 +30,8 @@ class peano4::parallel::tests::PingPongTest: public tarch::tests::TestCase {
     void testDaStGenType();
     void testDaStGenArray();
 
+    void testDaStGenArrayTreeManagementMessage();
+
     void testMultithreadedPingPongWithBlockingReceives();
     void testMultithreadedPingPongWithBlockingSends();
     void testMultithreadedPingPongWithBlockingSendsAndReceives();
