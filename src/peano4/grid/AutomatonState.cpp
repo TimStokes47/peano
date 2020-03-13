@@ -430,8 +430,8 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
               MPI_INT		 //level
             , MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
-            , MPI_C_BOOL		 //inverted
-            , MPI_C_BOOL		 //evenFlags
+            , MPI_BYTE		 //inverted
+            , MPI_BYTE		 //evenFlags
             , MPI_SHORT		 //accessNumber
             #ifndef MPI2
             , MPI_UB

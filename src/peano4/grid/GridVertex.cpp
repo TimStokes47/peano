@@ -283,7 +283,7 @@
                #endif
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
-               , MPI_C_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+               , MPI_BYTE		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , MPI_UB
@@ -384,8 +384,8 @@
                #endif
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
-               , MPI_C_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
-               , MPI_C_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+               , MPI_BYTE		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+               , MPI_BYTE		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , MPI_INT		 //backupOfAdjacentRanks
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
@@ -1894,7 +1894,7 @@ switch (mode) {
                   #endif
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
-                  , MPI_C_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+                  , MPI_BYTE		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
@@ -2011,8 +2011,8 @@ switch (mode) {
                   #endif
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
-                  , MPI_C_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
-                  , MPI_C_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+                  , MPI_BYTE		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+                  , MPI_BYTE		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_INT		 //backupOfAdjacentRanks
