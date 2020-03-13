@@ -399,17 +399,18 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonState::Datatype );
-         int errorCode = MPI_Type_commit( &AutomatonState::Datatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonState::Datatype );
+         errorCode += MPI_Type_commit( &AutomatonState::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::Datatype);
-         int errorCode = MPI_Type_commit( &AutomatonState::Datatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::Datatype);
+         errorCode += MPI_Type_commit( &AutomatonState::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -429,8 +430,8 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
               MPI_INT		 //level
             , MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
-            , MPI_CXX_BOOL		 //inverted
-            , MPI_CXX_BOOL		 //evenFlags
+            , MPI_C_BOOL		 //inverted
+            , MPI_C_BOOL		 //evenFlags
             , MPI_SHORT		 //accessNumber
             #ifndef MPI2
             , MPI_UB
@@ -515,17 +516,18 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonState::FullDatatype );
-         int errorCode = MPI_Type_commit( &AutomatonState::FullDatatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonState::FullDatatype );
+         errorCode += MPI_Type_commit( &AutomatonState::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::FullDatatype);
-         int errorCode = MPI_Type_commit( &AutomatonState::FullDatatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::FullDatatype);
+         errorCode += MPI_Type_commit( &AutomatonState::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1252,17 +1254,18 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonStatePacked::Datatype );
-         int errorCode = MPI_Type_commit( &AutomatonStatePacked::Datatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonStatePacked::Datatype );
+         errorCode += MPI_Type_commit( &AutomatonStatePacked::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::Datatype);
-         int errorCode = MPI_Type_commit( &AutomatonStatePacked::Datatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::Datatype);
+         errorCode += MPI_Type_commit( &AutomatonStatePacked::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1360,17 +1363,18 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonStatePacked::FullDatatype );
-         int errorCode = MPI_Type_commit( &AutomatonStatePacked::FullDatatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonStatePacked::FullDatatype );
+         errorCode += MPI_Type_commit( &AutomatonStatePacked::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::FullDatatype);
-         int errorCode = MPI_Type_commit( &AutomatonStatePacked::FullDatatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::FullDatatype);
+         errorCode += MPI_Type_commit( &AutomatonStatePacked::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          

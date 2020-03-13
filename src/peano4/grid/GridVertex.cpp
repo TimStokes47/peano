@@ -283,7 +283,7 @@
                #endif
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
-               , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+               , MPI_C_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , MPI_UB
@@ -354,17 +354,18 @@
                disp[i] = disp[i] - base;
                
             }
+            int errorCode = 0;
             #ifdef MPI2
             MPI_Datatype tmpType; 
-            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Aint typeExtent; 
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), &typeExtent);
             typeExtent = MPI_Aint_diff(typeExtent, base);
-            MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertex::Datatype );
-            int errorCode = MPI_Type_commit( &GridVertex::Datatype );
+            errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertex::Datatype );
+            errorCode += MPI_Type_commit( &GridVertex::Datatype );
             #else
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::Datatype);
-            int errorCode = MPI_Type_commit( &GridVertex::Datatype );
+            errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::Datatype);
+            errorCode += MPI_Type_commit( &GridVertex::Datatype );
             #endif
             if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
             
@@ -383,8 +384,8 @@
                #endif
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
-               , MPI_CXX_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
-               , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+               , MPI_C_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+               , MPI_C_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , MPI_INT		 //backupOfAdjacentRanks
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
@@ -470,17 +471,18 @@
                disp[i] = disp[i] - base;
                
             }
+            int errorCode = 0;
             #ifdef MPI2
             MPI_Datatype tmpType; 
-            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Aint typeExtent; 
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), &typeExtent);
             typeExtent = MPI_Aint_diff(typeExtent, base);
-            MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertex::FullDatatype );
-            int errorCode = MPI_Type_commit( &GridVertex::FullDatatype );
+            errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertex::FullDatatype );
+            errorCode += MPI_Type_commit( &GridVertex::FullDatatype );
             #else
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::FullDatatype);
-            int errorCode = MPI_Type_commit( &GridVertex::FullDatatype );
+            errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::FullDatatype);
+            errorCode += MPI_Type_commit( &GridVertex::FullDatatype );
             #endif
             if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
             
@@ -1150,17 +1152,18 @@ switch (mode) {
                disp[i] = disp[i] - base;
                
             }
+            int errorCode = 0;
             #ifdef MPI2
             MPI_Datatype tmpType; 
-            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Aint typeExtent; 
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), &typeExtent);
             typeExtent = MPI_Aint_diff(typeExtent, base);
-            MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertexPacked::Datatype );
-            int errorCode = MPI_Type_commit( &GridVertexPacked::Datatype );
+            errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertexPacked::Datatype );
+            errorCode += MPI_Type_commit( &GridVertexPacked::Datatype );
             #else
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::Datatype);
-            int errorCode = MPI_Type_commit( &GridVertexPacked::Datatype );
+            errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::Datatype);
+            errorCode += MPI_Type_commit( &GridVertexPacked::Datatype );
             #endif
             if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
             
@@ -1250,17 +1253,18 @@ switch (mode) {
                disp[i] = disp[i] - base;
                
             }
+            int errorCode = 0;
             #ifdef MPI2
             MPI_Datatype tmpType; 
-            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Aint typeExtent; 
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), &typeExtent);
             typeExtent = MPI_Aint_diff(typeExtent, base);
-            MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertexPacked::FullDatatype );
-            int errorCode = MPI_Type_commit( &GridVertexPacked::FullDatatype );
+            errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertexPacked::FullDatatype );
+            errorCode += MPI_Type_commit( &GridVertexPacked::FullDatatype );
             #else
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::FullDatatype);
-            int errorCode = MPI_Type_commit( &GridVertexPacked::FullDatatype );
+            errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::FullDatatype);
+            errorCode += MPI_Type_commit( &GridVertexPacked::FullDatatype );
             #endif
             if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
             
@@ -1890,7 +1894,7 @@ switch (mode) {
                   #endif
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
-                  , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+                  , MPI_C_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
@@ -1977,17 +1981,18 @@ switch (mode) {
                   disp[i] = disp[i] - base;
                   
                }
+               int errorCode = 0;
                #ifdef MPI2
                MPI_Datatype tmpType; 
-               MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+               errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
                MPI_Aint typeExtent; 
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), &typeExtent);
                typeExtent = MPI_Aint_diff(typeExtent, base);
-               MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertex::Datatype );
-               int errorCode = MPI_Type_commit( &GridVertex::Datatype );
+               errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertex::Datatype );
+               errorCode += MPI_Type_commit( &GridVertex::Datatype );
                #else
-               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::Datatype);
-               int errorCode = MPI_Type_commit( &GridVertex::Datatype );
+               errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::Datatype);
+               errorCode += MPI_Type_commit( &GridVertex::Datatype );
                #endif
                if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
                
@@ -2006,8 +2011,8 @@ switch (mode) {
                   #endif
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
-                  , MPI_CXX_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
-                  , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
+                  , MPI_C_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+                  , MPI_C_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_INT		 //backupOfAdjacentRanks
@@ -2109,17 +2114,18 @@ switch (mode) {
                   disp[i] = disp[i] - base;
                   
                }
+               int errorCode = 0;
                #ifdef MPI2
                MPI_Datatype tmpType; 
-               MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+               errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
                MPI_Aint typeExtent; 
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), &typeExtent);
                typeExtent = MPI_Aint_diff(typeExtent, base);
-               MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertex::FullDatatype );
-               int errorCode = MPI_Type_commit( &GridVertex::FullDatatype );
+               errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertex::FullDatatype );
+               errorCode += MPI_Type_commit( &GridVertex::FullDatatype );
                #else
-               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::FullDatatype);
-               int errorCode = MPI_Type_commit( &GridVertex::FullDatatype );
+               errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::FullDatatype);
+               errorCode += MPI_Type_commit( &GridVertex::FullDatatype );
                #endif
                if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
                
@@ -2883,17 +2889,18 @@ switch (mode) {
                   disp[i] = disp[i] - base;
                   
                }
+               int errorCode = 0;
                #ifdef MPI2
                MPI_Datatype tmpType; 
-               MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+               errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
                MPI_Aint typeExtent; 
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), &typeExtent);
                typeExtent = MPI_Aint_diff(typeExtent, base);
-               MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertexPacked::Datatype );
-               int errorCode = MPI_Type_commit( &GridVertexPacked::Datatype );
+               errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertexPacked::Datatype );
+               errorCode += MPI_Type_commit( &GridVertexPacked::Datatype );
                #else
-               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::Datatype);
-               int errorCode = MPI_Type_commit( &GridVertexPacked::Datatype );
+               errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::Datatype);
+               errorCode += MPI_Type_commit( &GridVertexPacked::Datatype );
                #endif
                if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
                
@@ -2999,17 +3006,18 @@ switch (mode) {
                   disp[i] = disp[i] - base;
                   
                }
+               int errorCode = 0;
                #ifdef MPI2
                MPI_Datatype tmpType; 
-               MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+               errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
                MPI_Aint typeExtent; 
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), &typeExtent);
                typeExtent = MPI_Aint_diff(typeExtent, base);
-               MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertexPacked::FullDatatype );
-               int errorCode = MPI_Type_commit( &GridVertexPacked::FullDatatype );
+               errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridVertexPacked::FullDatatype );
+               errorCode += MPI_Type_commit( &GridVertexPacked::FullDatatype );
                #else
-               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::FullDatatype);
-               int errorCode = MPI_Type_commit( &GridVertexPacked::FullDatatype );
+               errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::FullDatatype);
+               errorCode += MPI_Type_commit( &GridVertexPacked::FullDatatype );
                #endif
                if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
                

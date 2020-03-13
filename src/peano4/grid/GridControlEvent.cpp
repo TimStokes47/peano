@@ -332,17 +332,18 @@ peano4::grid::GridControlEventPacked peano4::grid::GridControlEvent::convert() c
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEvent::Datatype );
-         int errorCode = MPI_Type_commit( &GridControlEvent::Datatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEvent::Datatype );
+         errorCode += MPI_Type_commit( &GridControlEvent::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEvent::Datatype);
-         int errorCode = MPI_Type_commit( &GridControlEvent::Datatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEvent::Datatype);
+         errorCode += MPI_Type_commit( &GridControlEvent::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -432,17 +433,18 @@ peano4::grid::GridControlEventPacked peano4::grid::GridControlEvent::convert() c
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEvent::FullDatatype );
-         int errorCode = MPI_Type_commit( &GridControlEvent::FullDatatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEvent::FullDatatype );
+         errorCode += MPI_Type_commit( &GridControlEvent::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEvent::FullDatatype);
-         int errorCode = MPI_Type_commit( &GridControlEvent::FullDatatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEvent::FullDatatype);
+         errorCode += MPI_Type_commit( &GridControlEvent::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1040,17 +1042,18 @@ peano4::grid::GridControlEvent peano4::grid::GridControlEventPacked::convert() c
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEventPacked::Datatype );
-         int errorCode = MPI_Type_commit( &GridControlEventPacked::Datatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEventPacked::Datatype );
+         errorCode += MPI_Type_commit( &GridControlEventPacked::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEventPacked::Datatype);
-         int errorCode = MPI_Type_commit( &GridControlEventPacked::Datatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEventPacked::Datatype);
+         errorCode += MPI_Type_commit( &GridControlEventPacked::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1140,17 +1143,18 @@ peano4::grid::GridControlEvent peano4::grid::GridControlEventPacked::convert() c
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEventPacked::FullDatatype );
-         int errorCode = MPI_Type_commit( &GridControlEventPacked::FullDatatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEventPacked::FullDatatype );
+         errorCode += MPI_Type_commit( &GridControlEventPacked::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEventPacked::FullDatatype);
-         int errorCode = MPI_Type_commit( &GridControlEventPacked::FullDatatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEventPacked::FullDatatype);
+         errorCode += MPI_Type_commit( &GridControlEventPacked::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
