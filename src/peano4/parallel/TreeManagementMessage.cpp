@@ -1,4 +1,4 @@
-#include "peano4/parallel/TreeManagementMessage.h"
+#include "TreeManagementMessage.h"
 
 peano4::parallel::TreeManagementMessage::PersistentRecords::PersistentRecords() {
    
@@ -233,18 +233,20 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessage::Datatype );
-         MPI_Type_commit( &TreeManagementMessage::Datatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessage::Datatype );
+         errorCode += MPI_Type_commit( &TreeManagementMessage::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessage::Datatype);
-         MPI_Type_commit( &TreeManagementMessage::Datatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessage::Datatype);
+         errorCode += MPI_Type_commit( &TreeManagementMessage::Datatype );
          #endif
+         if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
       }
       {
@@ -324,18 +326,20 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessage::FullDatatype );
-         MPI_Type_commit( &TreeManagementMessage::FullDatatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessage::FullDatatype );
+         errorCode += MPI_Type_commit( &TreeManagementMessage::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessage::FullDatatype);
-         MPI_Type_commit( &TreeManagementMessage::FullDatatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessage::FullDatatype);
+         errorCode += MPI_Type_commit( &TreeManagementMessage::FullDatatype );
          #endif
+         if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
       }
       
@@ -877,18 +881,20 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessagePacked::Datatype );
-         MPI_Type_commit( &TreeManagementMessagePacked::Datatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessagePacked::Datatype );
+         errorCode += MPI_Type_commit( &TreeManagementMessagePacked::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessagePacked::Datatype);
-         MPI_Type_commit( &TreeManagementMessagePacked::Datatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessagePacked::Datatype);
+         errorCode += MPI_Type_commit( &TreeManagementMessagePacked::Datatype );
          #endif
+         if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
       }
       {
@@ -968,18 +974,20 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessagePacked::FullDatatype );
-         MPI_Type_commit( &TreeManagementMessagePacked::FullDatatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessagePacked::FullDatatype );
+         errorCode += MPI_Type_commit( &TreeManagementMessagePacked::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessagePacked::FullDatatype);
-         MPI_Type_commit( &TreeManagementMessagePacked::FullDatatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessagePacked::FullDatatype);
+         errorCode += MPI_Type_commit( &TreeManagementMessagePacked::FullDatatype );
          #endif
+         if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
       }
       

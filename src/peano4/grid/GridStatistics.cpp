@@ -358,7 +358,7 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , MPI_INT		 //numberOfRemoteUnrefinedCells
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
-            , MPI_CXX_BOOL		 //coarseningHasBeenVetoed
+            , MPI_C_BOOL		 //coarseningHasBeenVetoed
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -463,17 +463,18 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatistics::Datatype );
-         int errorCode = MPI_Type_commit( &GridStatistics::Datatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatistics::Datatype );
+         errorCode += MPI_Type_commit( &GridStatistics::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::Datatype);
-         int errorCode = MPI_Type_commit( &GridStatistics::Datatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::Datatype);
+         errorCode += MPI_Type_commit( &GridStatistics::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -499,7 +500,7 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
             , MPI_INT		 //stationarySweeps
-            , MPI_CXX_BOOL		 //coarseningHasBeenVetoed
+            , MPI_C_BOOL		 //coarseningHasBeenVetoed
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -611,17 +612,18 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatistics::FullDatatype );
-         int errorCode = MPI_Type_commit( &GridStatistics::FullDatatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatistics::FullDatatype );
+         errorCode += MPI_Type_commit( &GridStatistics::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::FullDatatype);
-         int errorCode = MPI_Type_commit( &GridStatistics::FullDatatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::FullDatatype);
+         errorCode += MPI_Type_commit( &GridStatistics::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1389,17 +1391,18 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatisticsPacked::Datatype );
-         int errorCode = MPI_Type_commit( &GridStatisticsPacked::Datatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatisticsPacked::Datatype );
+         errorCode += MPI_Type_commit( &GridStatisticsPacked::Datatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::Datatype);
-         int errorCode = MPI_Type_commit( &GridStatisticsPacked::Datatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::Datatype);
+         errorCode += MPI_Type_commit( &GridStatisticsPacked::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1537,17 +1540,18 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             disp[i] = disp[i] - base;
             
          }
+         int errorCode = 0;
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), &typeExtent);
          typeExtent = MPI_Aint_diff(typeExtent, base);
-         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatisticsPacked::FullDatatype );
-         int errorCode = MPI_Type_commit( &GridStatisticsPacked::FullDatatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatisticsPacked::FullDatatype );
+         errorCode += MPI_Type_commit( &GridStatisticsPacked::FullDatatype );
          #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::FullDatatype);
-         int errorCode = MPI_Type_commit( &GridStatisticsPacked::FullDatatype );
+         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::FullDatatype);
+         errorCode += MPI_Type_commit( &GridStatisticsPacked::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
