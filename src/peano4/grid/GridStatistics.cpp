@@ -358,7 +358,7 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , MPI_INT		 //numberOfRemoteUnrefinedCells
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
-            , MPI_C_BOOL		 //coarseningHasBeenVetoed
+            , MPI_BYTE		 //coarseningHasBeenVetoed
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -500,7 +500,7 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
             , MPI_INT		 //stationarySweeps
-            , MPI_C_BOOL		 //coarseningHasBeenVetoed
+            , MPI_BYTE		 //coarseningHasBeenVetoed
             #ifndef MPI2
             , MPI_UB
             #endif

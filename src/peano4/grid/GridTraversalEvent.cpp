@@ -608,7 +608,7 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             #endif
               MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
-            , MPI_C_BOOL		 //isRefined
+            , MPI_BYTE		 //isRefined
             , MPI_INT		 //vertexDataFrom
             , MPI_INT		 //vertexDataTo
             , MPI_INT		 //faceDataFrom
@@ -765,7 +765,7 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             #endif
               MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
-            , MPI_C_BOOL		 //isRefined
+            , MPI_BYTE		 //isRefined
             , MPI_INT		 //vertexDataFrom
             , MPI_INT		 //vertexDataTo
             , MPI_INT		 //faceDataFrom
