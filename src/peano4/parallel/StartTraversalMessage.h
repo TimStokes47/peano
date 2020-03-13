@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/03/2020 13:09
+ * @date   13/03/2020 13:34
  */
 class peano4::parallel::StartTraversalMessage { 
    
@@ -157,7 +157,7 @@ class peano4::parallel::StartTraversalMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/03/2020 13:09
+ * @date   13/03/2020 13:34
  */
 class peano4::parallel::StartTraversalMessagePacked { 
    
