@@ -30,7 +30,15 @@ tarch::logging::Log tarch::mpi::Rank::_log("tarch::mpi::Rank");
 bool tarch::mpi::Rank::_initIsCalled = false;
 
 namespace {
-  int tagCounter = 0;
+  /**
+   * Used to realise the barrier. Please note that this flag's initialisation
+   * is tricky. Normally, we initialise such tags within a singleton in the
+   * singleton's constructor. We use rank's reserveFreeTag() to do so. This
+   * can't work here, as reserveFreeTag() is a member routine of Rank. We can't
+   * use it in the constructor. So we hardcode it.
+   */ 
+  constexpr int BarrierTag = 0;
+  int tagCounter = BarrierTag+1;
 }
 
 
@@ -244,7 +252,6 @@ std::string tarch::mpi::MPIStatusToString( const MPI_Status& status ) {
 
 #ifdef Parallel
 tarch::mpi::Rank::Rank():
-  _barrierTag( -1 ),
   _rank(-1),
   _numberOfProcessors(-1),
   _communicator( MPI_COMM_WORLD),
@@ -254,7 +261,6 @@ tarch::mpi::Rank::Rank():
 }
 #else
 tarch::mpi::Rank::Rank():
-  _barrierTag( -1 ),
   _rank(0),
   _numberOfProcessors(1),
   _communicator(-1),
@@ -277,16 +283,16 @@ void tarch::mpi::Rank::barrier() {
     assertion( getGlobalMasterRank()==0 );
     IntegerMessage message;
     for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
-      message.receive( rank, _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+      message.receive( rank, BarrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
     }
     for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
-      message.send( rank, _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+      message.send( rank, BarrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
     }
   }
   else {
     IntegerMessage message(0);
-    message.send( getGlobalMasterRank(), _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
-    message.receive( getGlobalMasterRank(), _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+    message.send( getGlobalMasterRank(), BarrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+    message.receive( getGlobalMasterRank(), BarrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
   }
   logTraceOut( "barrier()" );
   #endif
@@ -415,11 +421,6 @@ int tarch::mpi::Rank::getRank() const {
 
 tarch::mpi::Rank& tarch::mpi::Rank::getInstance() {
   static Rank singleton;
-
-  if ( singleton._barrierTag < 0 ) {
-    singleton._barrierTag = reserveFreeTag("tarch::mpi::Rank - barrier tag");
-  }
-
   return singleton;
 }
 
