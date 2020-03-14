@@ -300,7 +300,11 @@ class peano4::parallel::Node {
      * The shutdown is invoked by peano4::shutdownParallelEnvironment().
      *
      * If we run it on the global master, we set the program state to terminate
-     * and distribute this message. If we run on a client, we ask whether we
+     * and distribute this message. For this, we hijack the routine continueToRun().
+     * This is really a hack. We in particular have to be careful and may not
+     * call the continue operation on the other ranks. They typically are stuck
+     * in a continue while loop in their main routine and just wait for the
+     * global master to send out this terminate command.
      */
     void shutdown();
 
