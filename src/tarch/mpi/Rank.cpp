@@ -244,7 +244,7 @@ std::string tarch::mpi::MPIStatusToString( const MPI_Status& status ) {
 
 #ifdef Parallel
 tarch::mpi::Rank::Rank():
-  _barrierTag( tarch::mpi::Rank::reserveFreeTag("tarch::mpi::Rank - barrier tag") ),
+  _barrierTag( -1 ),
   _rank(-1),
   _numberOfProcessors(-1),
   _communicator( MPI_COMM_WORLD),
@@ -254,7 +254,7 @@ tarch::mpi::Rank::Rank():
 }
 #else
 tarch::mpi::Rank::Rank():
-  _barrierTag( tarch::mpi::Rank::reserveFreeTag("tarch::mpi::Rank - barrier tag") ),
+  _barrierTag( -1 ),
   _rank(0),
   _numberOfProcessors(1),
   _communicator(-1),
@@ -415,6 +415,11 @@ int tarch::mpi::Rank::getRank() const {
 
 tarch::mpi::Rank& tarch::mpi::Rank::getInstance() {
   static Rank singleton;
+
+  if ( singleton._barrierTag < 0 ) {
+    singleton._barrierTag = reserveFreeTag("tarch::mpi::Rank - barrier tag");
+  }
+
   return singleton;
 }
 
