@@ -66,6 +66,9 @@ namespace tarch {
 class tarch::mpi::Rank {
   public:
     static const int DEADLOCK_EXIT_CODE = -2;
+
+ // @todo docu
+    const int  _barrierTag;
   private:
     /**
      * Logging device.
@@ -109,9 +112,9 @@ class tarch::mpi::Rank {
     Rank();
 
     /**
-     * The copy constructor is private.
+     * You may not copy a singleton.
      */
-    Rank( const Rank& node );
+    Rank( const Rank& node ) = delete;
 
     /**
      * Receive any Message Pending in the MPI/Receive Buffers

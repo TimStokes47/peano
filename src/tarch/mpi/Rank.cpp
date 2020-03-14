@@ -244,6 +244,7 @@ std::string tarch::mpi::MPIStatusToString( const MPI_Status& status ) {
 
 #ifdef Parallel
 tarch::mpi::Rank::Rank():
+  _barrierTag( tarch::mpi::Rank::reserveFreeTag("tarch::mpi::Rank - barrier tag") ),
   _rank(-1),
   _numberOfProcessors(-1),
   _communicator( MPI_COMM_WORLD),
@@ -253,6 +254,7 @@ tarch::mpi::Rank::Rank():
 }
 #else
 tarch::mpi::Rank::Rank():
+  _barrierTag( tarch::mpi::Rank::reserveFreeTag("tarch::mpi::Rank - barrier tag") ),
   _rank(0),
   _numberOfProcessors(1),
   _communicator(-1),
@@ -263,27 +265,30 @@ tarch::mpi::Rank::Rank():
 #endif
 
 
-#ifdef Parallel
-tarch::mpi::Rank::Rank(const Rank& node):
-  _rank(-1),
-  _numberOfProcessors(-1),
-  _communicator( MPI_COMM_WORLD) {
-}
-#else
-tarch::mpi::Rank::Rank(const Rank& node):
-  _rank(0),
-  _numberOfProcessors(-1),
-  _communicator(-1) {
-}
-#endif
-
-
 tarch::mpi::Rank::~Rank() {
 }
 
 
 void tarch::mpi::Rank::barrier() {
   #ifdef Parallel
+  logTraceIn( "barrier()" );
+
+  if ( isGlobalMaster() ) {
+    assertion( getGlobalMasterRank()==0 );
+    IntegerMessage message;
+    for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
+      message.receive( rank, _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+    }
+   for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
+      message.send( rank, _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+    }
+  }
+  else {
+    IntegerMessage message(0);
+    message.send( getGlobalMasterRank(), _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+    message.receive( getGlobalMasterRank(), _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+  }
+/**
   MPI_Request request;
   MPI_Ibarrier( _communicator, &request );
 
@@ -292,13 +297,14 @@ void tarch::mpi::Rank::barrier() {
     receiveDanglingMessages();
     MPI_Test(&request, &success, MPI_STATUS_IGNORE);
   }
-  
-  logDebug( "barrier()", "barrier passed" );
+**/
+  logTraceOut( "barrier()" );
   #endif
 }
 
 
 void tarch::mpi::Rank::shutdown() {
+  logTraceIn( "shutdown()" );
   #ifdef Parallel
   assertion( _rank!=-1 );
 
@@ -306,7 +312,6 @@ void tarch::mpi::Rank::shutdown() {
   StringMessage::shutdownDatatype();
 
   logDebug( "shutdown()", "number of blocked critical sections: " << tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getInstance().getNumberOfLockedSemaphores() );
-  barrier();
 
   int errorCode = MPI_Finalize();
   if (errorCode) {
@@ -317,6 +322,7 @@ void tarch::mpi::Rank::shutdown() {
   #endif
 
   _rank         = -1;
+  logTraceOut( "shutdown()" );
 }
 
 
