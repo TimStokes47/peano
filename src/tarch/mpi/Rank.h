@@ -67,7 +67,9 @@ class tarch::mpi::Rank {
   public:
     static const int DEADLOCK_EXIT_CODE = -2;
 
- // @todo docu
+    /**
+     * @see barrier()
+     */
     const int  _barrierTag;
   private:
     /**
@@ -157,10 +159,37 @@ class tarch::mpi::Rank {
     static void releaseTag(int tag);
 
     /**
-     * I provide a custom barrier. This barrier is realised through a non-blocking
-     * barrier which calls receiveDanglingMessages(). This way, it is important that
-     * you insert a (logical) barrier, but you still can answer to load balancing
-     * queries or global locks.
+     * Global MPI barrier
+     *
+     * I provide a custom barrier. It semantically differs from a native
+     * MPI_Barrier as MPI barriers would not invoke receiveDanglingMessages(),
+     * i.e. all service features of a rank are effectively blocked by a plain
+     * barrier. This one does still keep them up and running.
+     *
+     * Originally, I wanted to realise this barrier through a non-blocking
+     * barrier which calls receiveDanglingMessages():
+     * <pre>
+
+  MPI_Request request;
+  MPI_Ibarrier( _communicator, &request );
+
+  int success = 0;
+  while (not success) {
+    receiveDanglingMessages();
+    MPI_Test(&request, &success, MPI_STATUS_IGNORE);
+  }
+
+      </pre>
+     * This realisation did not work. It led to deadlocks. I think the reason is
+     * that MPI_Test might act only locally:
+     *
+     * https://scicomp.stackexchange.com/questions/29671/can-i-mpi-test-for-an-ibarrier
+     *
+     * So it is actually ill-suited here. I now realise the barrier as a ping
+     * pong between each rank and the global master. An integer is sent by
+     * everyone to the global master which in turn sends back and integer to
+     * each rank.
+     *
      */
     void barrier();
 

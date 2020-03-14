@@ -279,7 +279,7 @@ void tarch::mpi::Rank::barrier() {
     for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
       message.receive( rank, _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
     }
-   for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
+    for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
       message.send( rank, _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
     }
   }
@@ -288,16 +288,6 @@ void tarch::mpi::Rank::barrier() {
     message.send( getGlobalMasterRank(), _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
     message.receive( getGlobalMasterRank(), _barrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
   }
-/**
-  MPI_Request request;
-  MPI_Ibarrier( _communicator, &request );
-
-  int success = 0;
-  while (not success) {
-    receiveDanglingMessages();
-    MPI_Test(&request, &success, MPI_STATUS_IGNORE);
-  }
-**/
   logTraceOut( "barrier()" );
   #endif
 }

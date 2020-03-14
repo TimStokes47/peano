@@ -110,7 +110,18 @@ tarch::logging::LogFilter::getInstance().printFilterListToCout();
 
 
 
-% \section{TBB troubleshooting}
+\section{MPI troubleshooting}
+\begin{itemize}
+  \item \textbf{My code crashes unexpectedly with malloc/free errors}. Please
+  rerun your code with Intel MPI and the flag \texttt{-check\_mpi}. You should
+  not get any error reports. If you do, we have had serious problems as some of
+  Peano's classes use \texttt{MPI\_C\_BOOL} or \texttt{MPI\_CXX\_BOOL}. They
+  seem not be supported properly.
+  \item To be continued \dots
+\end{itemize}
+
+
+
 % 
 % \begin{itemize}
 %   \item \textbf{ I get tons of warning alike ``warning \#603: ``typeid'' is reserved for future use as a keyword'' }.
