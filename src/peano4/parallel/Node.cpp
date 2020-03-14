@@ -22,22 +22,26 @@ tarch::logging::Log  peano4::parallel::Node::_log("peano4::parallel::Node");
 
 void peano4::parallel::Node::initMPIDatatypes() {
   #ifdef Parallel
+  logTraceIn( "initMPIDatatypes()" );
   StartTraversalMessage::initDatatype();
   TreeManagementMessage::initDatatype();
 
   peano4::grid::AutomatonState::initDatatype();
   peano4::grid::GridVertex::initDatatype();
+  logTraceOut( "initMPIDatatypes()" );
   #endif
 }
 
 
 void peano4::parallel::Node::shutdownMPIDatatypes() {
   #ifdef Parallel
+  logTraceIn( "shutdownMPIDatatypes()" );
   StartTraversalMessage::shutdownDatatype();
   TreeManagementMessage::shutdownDatatype();
 
   peano4::grid::AutomatonState::shutdownDatatype();
   peano4::grid::GridVertex::shutdownDatatype();
+  logTraceOut( "shutdownMPIDatatypes()" );
   #endif
 }
 
@@ -356,12 +360,13 @@ bool peano4::parallel::Node::continueToRun() {
     for (int i=1; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++ ) {
       StartTraversalMessage message;
       message.setStepIdentifier(_currentProgramStep);
+
       logDebug( "continueToRun()", "send out " << message.toString() << " to rank " << i);
       message.send(i,_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
     }
   }
   else {
-	StartTraversalMessage message;
+    StartTraversalMessage message;
     message.receive(tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
     logDebug( "continueToRun()", "received message " << message.toString() );
     _currentProgramStep = message.getStepIdentifier();
@@ -399,14 +404,17 @@ int peano4::parallel::Node::getBlockingTreeManagementTag() const {
 
 
 void peano4::parallel::Node::shutdown() {
+  logTraceIn( "shutdown()" );
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     setNextProgramStep(peano4::parallel::Node::Terminate);
   }
 
-  if (continueToRun()) {
-	logError( "shutdown()", "shutdown on node " << tarch::mpi::Rank::getInstance().getRank() << " was told that code still should continue to run" );
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    continueToRun();
   }
+  logTraceOut( "shutdown()" );
 }
+
 
 
 int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, ExchangeMode exchange ) const {
