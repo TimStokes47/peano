@@ -65,20 +65,6 @@ class tarch::mpi::Rank {
   public:
     static const int DEADLOCK_EXIT_CODE = -2;
 
-    /**
-     * Used to realise the barrier. Please note that this flag's initialisation
-     * is tricky. Normally, we initialise such tags within a singleton in the
-     * singleton's constructor. We use rank's reserveFreeTag() to do so. This
-     * can't work here, as reserveFreeTag() is a member routine of Rank. We can't
-     * use it in the constructor. So we set it to a dummy and initialise it
-     * explicitly within getInstance().
-     *
-     * The above explanation also clarifies why this attribute cannot be const
-     * even though it can't change logically.
-     *
-     * @see barrier()
-     */
-    int  _barrierTag;
   private:
     /**
      * Logging device.
@@ -118,8 +104,6 @@ class tarch::mpi::Rank {
      * The standard constructor assignes the attributes default values and
      * checks whether the program is compiled using the -DParallel option.
      * If this is not the case, a warning is logged.
-     *
-     * @see _barrierTag
      */
     Rank();
 
@@ -214,7 +198,6 @@ class tarch::mpi::Rank {
      * instance, one has to call the init() operation on the instance returned.
      *
      * @return The singleton instance
-     * @see _barrierTag
      */
     static Rank& getInstance();
 
