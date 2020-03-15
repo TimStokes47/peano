@@ -35,7 +35,11 @@ tarch::multicore::Core::Core() {
 
 
 tarch::multicore::Core::~Core() {
-  shutDown();
+  logTraceIn( "~Core()" );
+  if (__globalThreadCountControl!=nullptr) {
+    logWarning( "~Core()", "please call shutDown() on core prior to shutdown" );
+  }
+  logTraceOut( "~Core()" );
 }
 
 
