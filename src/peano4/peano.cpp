@@ -109,7 +109,7 @@ int peano4::initSharedMemoryEnvironment() {
 
 void peano4::shutdownSharedMemoryEnvironment() {
   #ifdef SharedMemoryParallelisation
-  tarch::multicore::Core::getInstance().shutDown();
+  tarch::multicore::Core::getInstance().shutdown();
   #endif
 }
 

@@ -68,9 +68,7 @@ class peano4::parallel::Node {
     int                         _currentProgramStep;
 
     int                         _rankOrchestrationTag;
-    int                         _blockingTreeManagementTag;
-    int                         _asynchronousTreeManagementTagWhichChangesSpacetreeState;
-    int                         _asynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState;
+
     /**
      * We do actually reserve ReservedMPITagsForDataExchange tags in one rush,
      * but this one is the smallest one
@@ -271,30 +269,6 @@ class peano4::parallel::Node {
     void setNextProgramStep( int number );
 
     int getCurrentProgramStep() const;
-
-    /**
-     * This one has to be used if you wanna send out a message to another rank
-     * which may not be grabbed by receiveDanglingMessages() in-between. This
-     * is typical an answer to a request.
-     */
-    int getBlockingTreeManagementTag() const;
-
-    /**
-     * Used to invoke an asynchronous service on another rank.
-     *
-     * @see getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState()
-     */
-    int getAsynchronousTreeManagementTagWhichChangesASpacetreeState() const;
-
-    /**
-     * An example for such a message is TreeManagementMessage::RequestNewRemoteTree.
-     * This routine only reserves an id but does not alter the actual spacetrees.
-     * Consequently, we can always serve it even if we are right in the processing/
-     * traversal of trees and consequently may not alter tree and stack entries.
-     * Other routines such as those inserting new trees can only be handled at certain
-     * points of the algorithm.
-     */
-    int getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState() const;
 
     /**
      * The shutdown is invoked by peano4::shutdownParallelEnvironment().

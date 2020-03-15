@@ -31,7 +31,7 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
 }
 
 
-void tarch::multicore::Core::shutDown() {
+void tarch::multicore::Core::shutdown() {
 }
 
 

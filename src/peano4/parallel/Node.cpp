@@ -49,9 +49,6 @@ void peano4::parallel::Node::shutdownMPIDatatypes() {
 peano4::parallel::Node::Node():
   _currentProgramStep(UndefProgramStep),
   _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - rank orchestration") ),
-  _blockingTreeManagementTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - blocking tree management") ),
-  _asynchronousTreeManagementTagWhichChangesSpacetreeState( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - asynchronous tree management which changes spacetree state") ),
-  _asynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - asynchronous tree management which does not change spacetree state") ),
   _dataExchangeBaseTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - data management", ReservedMPITagsForDataExchange) ) {
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     registerId( 0, -1);
@@ -388,21 +385,6 @@ int peano4::parallel::Node::getCurrentProgramStep() const {
 }
 
 
-int peano4::parallel::Node::getAsynchronousTreeManagementTagWhichChangesASpacetreeState() const {
-  return _asynchronousTreeManagementTagWhichChangesSpacetreeState;
-}
-
-
-int peano4::parallel::Node::getAsynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState() const {
-  return _asynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState;
-}
-
-
-int peano4::parallel::Node::getBlockingTreeManagementTag() const {
-  return _blockingTreeManagementTag;
-}
-
-
 void peano4::parallel::Node::shutdown() {
   logTraceIn( "shutdown()" );
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
@@ -442,18 +424,6 @@ int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int recei
 std::string peano4::parallel::Node::getSemanticsForTag( int tag ) {
   if (tag==getInstance()._rankOrchestrationTag) {
     return "rank orchestration tag";
-  }
-
-  if (tag==getInstance()._blockingTreeManagementTag) {
-    return "blocking tree management tag";
-  }
-
-  if (tag==getInstance()._asynchronousTreeManagementTagWhichChangesSpacetreeState) {
-    return "asynchronous tree management tag which changes spacetree state";
-  }
-
-  if (tag==getInstance()._asynchronousTreeManagementTagWhichDoesNotChangeASpacetreeState) {
-    return "asynchronous tree management tag which does not change spacetree state";
   }
 
   if (tag>=getInstance()._dataExchangeBaseTag and tag<ReservedMPITagsForDataExchange) {

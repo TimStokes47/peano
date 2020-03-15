@@ -123,6 +123,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
       peano4::grid::GridStatistics&         to
     );
 
+    const int     _requestMessageTag;
+    const int     _answerMessageTag;
+
     std::list< peano4::grid::Spacetree >  _spacetrees;
 
     /**
@@ -145,6 +148,11 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     std::map< int, peano4::grid::TraversalObserver* >    _clonedObserver;
 
     peano4::grid::Spacetree& getSpacetree(int id);
+
+    /**
+     * @return tag that one should use to answer one particular spacetree
+     */
+    int getAnswerTag( int targetSpacetreeId ) const;
 
     /**
      *

@@ -77,7 +77,7 @@ class tarch::multicore::Core {
     /**
      * Shutdown parallel environment.
      */
-    void shutDown();
+    void shutdown();
 
     /**
      * @return Shared memory environment is up and running. Most shared

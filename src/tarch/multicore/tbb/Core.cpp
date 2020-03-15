@@ -37,7 +37,7 @@ tarch::multicore::Core::Core() {
 tarch::multicore::Core::~Core() {
   logTraceIn( "~Core()" );
   if (__globalThreadCountControl!=nullptr) {
-    logWarning( "~Core()", "please call shutDown() on core prior to shutdown" );
+    logWarning( "~Core()", "please call shutdown() on core prior to shutdown" );
   }
   logTraceOut( "~Core()" );
 }
@@ -49,7 +49,7 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
 }
 
 void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConcurrentBackgroundTasks, int maxNumberOfConcurrentBandwidthBoundTasks ) {
-  shutDown();
+  shutdown();
 
   if (numberOfThreads==UseDefaultNumberOfThreads) {
     __numberOfThreads = ::tbb::task_scheduler_init::default_num_threads();
@@ -79,7 +79,8 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
 }
 
 
-void tarch::multicore::Core::shutDown() {
+void tarch::multicore::Core::shutdown() {
+  logTraceIn( "shutdown()" );
   tarch::multicore::tbb::shutdownConsumerTasks();
 
   if (__globalThreadCountControl!=nullptr) {
@@ -88,6 +89,7 @@ void tarch::multicore::Core::shutDown() {
   }
 
   __numberOfThreads = -1;
+  logTraceOut( "shutdown()" );
 }
 
 
