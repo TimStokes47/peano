@@ -293,6 +293,15 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * We poll the tree management messages.
      *
      * If a new spacetree request drops in, we book the tree and send it back.
+     *
+     * <h2> Message exchange modes </h2>
+     *
+     * I have to be careful with nonblocking data exchange here. Some messages
+     * belong logically together. So if I receive the first of two messages in
+     * a row and then go to receiveDanglingMessages again, part two of the message
+     * might drop in and I might consider it to be another part one. That may not
+     * happen. So as soon as the iprobe says "go", I switch to blocking data
+     * exchange here.
      */
     void receiveDanglingMessages() override;
 
