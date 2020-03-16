@@ -68,7 +68,7 @@ int peano4::parallel::SpacetreeSet::getAnswerTag( int targetSpacetreeId ) const 
 
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
   #ifdef Parallel
-  if ( peano4::parallel::TreeManagementMessage::isMessageInQueue(_requestMessageTag,true) ) {
+  if ( peano4::parallel::TreeManagementMessage::isMessageInQueue(_requestMessageTag) ) {
     logTraceIn( "receiveDanglingMessages()" );
 
     peano4::parallel::TreeManagementMessage message;

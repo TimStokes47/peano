@@ -20,14 +20,28 @@ convertSources = \
   output/PeanoWriter.cpp \
   output/VTUWriter.cpp
   
-#VTK_LIBRARY_EXTENSION = -8.90
-VTK_LIBRARY_EXTENSION = 
-VTK_REQUIRED_LIBS     =  -lvtkIOXML$(VTK_LIBRARY_EXTENSION) \
-                         -lvtkCommonExecutionModel$(VTK_LIBRARY_EXTENSION) \
-                         -lvtkCommonCore$(VTK_LIBRARY_EXTENSION) \
-                         -lvtkCommonDataModel$(VTK_LIBRARY_EXTENSION) \
-                         -lvtkFiltersCore$(VTK_LIBRARY_EXTENSION) \
-                         -lvtkFiltersGeneral$(VTK_LIBRARY_EXTENSION)
+VTK_REQUIRED_LIBS     =  -lvtkCommon
+
+#VTK_REQUIRED_LIBS     =  -lvtkIOXML$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkCommonExecutionModel$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkCommonCore$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkCommonDataModel$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkFiltersCore$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkFiltersGeneral$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkIOXMLParser$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkIOCore$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkCommonSystem$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkCommonTransforms$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkCommonMisc$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkCommonMath$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtksys$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkloguru$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkCommonComputationalGeometry$(VTK_LIBRARY_EXTENSION) \
+#                         -lvtkexpat$(VTK_LIBRARY_EXTENSION) 
+
+
+#      VTK_LIBS="-lvtkCommon -lvtkDICOMParser -lvtkexpat -lvtkFiltering -lvtkfreetype -lvtkftgl -lvtkGraphics -lvtkHybrid -lvtkImaging -lvtkIO -lvtkjpeg -lvtkpng -lvtkRendering -lvtktiff -lvtkzlib"
+
 
 convert_CXXFLAGS  = $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS)
 convert_LDADD     = -lTarch

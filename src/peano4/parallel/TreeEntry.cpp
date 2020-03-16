@@ -519,25 +519,13 @@ switch (mode) {
    
    
    
-   bool peano4::parallel::TreeEntry::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
-      MPI_Status status;
+   bool peano4::parallel::TreeEntry::isMessageInQueue(int tag) {
       int  flag        = 0;
       MPI_Iprobe(
          MPI_ANY_SOURCE, tag,
-         tarch::mpi::Rank::getInstance().getCommunicator(), &flag, &status
+         tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE
       );
-      if (flag) {
-         int  messageCounter;
-         if (exchangeOnlyAttributesMarkedWithParallelise) {
-            MPI_Get_count(&status, Datatype, &messageCounter);
-         }
-         else {
-            MPI_Get_count(&status, FullDatatype, &messageCounter);
-         }
-         return messageCounter > 0;
-      }
-      else return false;
-      
+      return flag;
    }
    
    int peano4::parallel::TreeEntry::getSenderRank() const {
@@ -1067,25 +1055,13 @@ switch (mode) {
    
    
    
-   bool peano4::parallel::TreeEntryPacked::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
-      MPI_Status status;
+   bool peano4::parallel::TreeEntryPacked::isMessageInQueue(int tag) {
       int  flag        = 0;
       MPI_Iprobe(
          MPI_ANY_SOURCE, tag,
-         tarch::mpi::Rank::getInstance().getCommunicator(), &flag, &status
+         tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE
       );
-      if (flag) {
-         int  messageCounter;
-         if (exchangeOnlyAttributesMarkedWithParallelise) {
-            MPI_Get_count(&status, Datatype, &messageCounter);
-         }
-         else {
-            MPI_Get_count(&status, FullDatatype, &messageCounter);
-         }
-         return messageCounter > 0;
-      }
-      else return false;
-      
+      return flag;
    }
    
    int peano4::parallel::TreeEntryPacked::getSenderRank() const {
