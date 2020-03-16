@@ -107,23 +107,8 @@ namespace peano4 {
    * Shutdown all the parallel environment, i.e. free all MPI datatypes and
    * close down MPI.
    *
-   * We first call shutdown on Peano's Node instance. This routine sends each
-   * rank a terminate call, i.e. if they are in a while loop and wait for new
-   * instructions from the global master then they will now go down. After
-   * that, I added a barrier. This barrier is necessary. If the very last
-   * activity of all ranks is for example to plot stuff, they typically use
-   * global semaphores as well. To make these semaphores work, we still require
-   * that all nodes call receiveDanglingMessages(). It is only after everyone
-   * has done their dump, that we can shut down the whole system. This is the
-   * reason the barrier has to come after the node's shutdown and then has to
-   * be a Peano4 barrier which still invokes receiveDanglingMessages() on all
-   * services.
-   *
-   * Once everybody has passe the barrier, we can free the MPI datatypes, and
-   * finally call MPI's finalise command.
-   *
-   *
    * @see peano4::parallel::Node::shutdown()
+   * @see shutdownSharedMemoryEnvironment()
    */
   void shutdownParallelEnvironment();
 
@@ -136,6 +121,19 @@ namespace peano4 {
    * If an error occurs, it returns -3.
    */
   int initSharedMemoryEnvironment();
+
+  /**
+   * This routine adds a barrier. This barrier is necessary. If the very last
+   * activity of all ranks is for example to plot stuff, they typically use
+   * global semaphores as well. To make these semaphores work, we still require
+   * that all nodes call receiveDanglingMessages(). It is only after everyone
+   * has done their dump, that we can shut down the whole system. This is the
+   * reason the barrier has to come after the node's shutdown and then has to
+   * be a Peano4 barrier which still invokes receiveDanglingMessages() on all
+   * services.
+   *
+   * Once this routine has terminated, do not add a barrier() anymore!
+   */
   void shutdownSharedMemoryEnvironment();
 }
 
