@@ -92,7 +92,7 @@ AC_ARG_WITH(
     case "${withval}" in
       no)     AC_MSG_RESULT([no multithreading]);                    multithreading=false ;;
       cpp)    AC_MSG_RESULT([cpp (C++11)]);                          multithreading=cpp ;;
-      tbb)    AC_MSG_RESULT([tbb (Intel Threading Building Blocks)]); multithreading=tbb ;;
+      tbb)    AC_MSG_RESULT([tbb (Intel Threading Building Blocks) - please ensure that CXXFLAGS and LDFLAGS are properly set]); multithreading=tbb ;;
       *)      AC_MSG_FAILURE([default=no (no multithreading). Use cpp or tbb to define target]);            multithreading=false ;;
     esac
   ], 
@@ -139,11 +139,11 @@ fi
 # VTK Options
 #
 AC_ARG_WITH(vtk,
-  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools, too [default=no, vtk include path (such as /usr/include/vtk-8.1)]]),
+  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools, too [default=no]]),
   [ AC_MSG_CHECKING(for vtk)
     case "${withval}" in
-      no)    AC_MSG_RESULT(no);                               vtk=false ;;
-      *)     AC_MSG_RESULT(use vtk sources path ${withval});  vtk=${withval}  ;;
+      no)    AC_MSG_RESULT(no);     vtk=false ;;
+      *)     AC_MSG_RESULT(yes);    vtk=true  ;;
     esac ],
   [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
   
@@ -151,7 +151,6 @@ AC_ARG_WITH(vtk,
 AM_CONDITIONAL([UseVTK],[test "$vtk" != false])
 if test "$vtk" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
-  PEANO_CXXFLAGS+=" -I${vtk}"
 fi
 
 
