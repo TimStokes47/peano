@@ -86,10 +86,10 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           message.setAction(TreeManagementMessage::Action::Acknowledgement);
           message.send(
             message.getSenderRank(),
-			getAnswerTag(message.getMasterSpacetreeId()),
-			true,
-			TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
-		  );
+            getAnswerTag(message.getMasterSpacetreeId()),
+            true,
+            TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
+          );
           logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << message.getMasterSpacetreeId() );
         }
         break;
@@ -112,8 +112,8 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           message.setAction(TreeManagementMessage::Action::Acknowledgement);
           message.send(
             message.getSenderRank(),
-			getAnswerTag(message.getMasterSpacetreeId()),true,
-			TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
+            getAnswerTag(message.getMasterSpacetreeId()),true,
+            TreeManagementMessage::ExchangeMode::Blocking
           );
         }
         break;
