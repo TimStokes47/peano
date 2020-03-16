@@ -143,6 +143,7 @@ AC_ARG_WITH(vtk,
   [ AC_MSG_CHECKING(for vtk)
     case "${withval}" in
       no)    AC_MSG_RESULT(no);     vtk=false ;;
+      yes)   AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=""  ;;
       *)     AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=${withval}  ;;
     esac ],
   [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
