@@ -49,15 +49,8 @@ class myproject::tests::TestCase : public tarch::tests::TestCase {
 };
 \end{code}
 
-The test implementation has to follow two conventions:
-\begin{enumerate}
-  \item The test has to register itself as test in the global
-  \texttt{TestCaseFactory}. It provides a macro \texttt{registerTest} to do so:
-    \begin{code}
-#include "tarch/tests/TestCaseFactory.h"
-registerTest(myproject::tests::TestCase)
-    \end{code}
-  \item The test's \texttt{run} operation has to register the individual void
+\noindent
+The test's \texttt{run} operation has to register the individual void
   routines running the actual tests:
   \begin{code}
 void exahype::tests::TestCase::run() {
@@ -65,28 +58,33 @@ void exahype::tests::TestCase::run() {
   testMethod(test2);
 }
   \end{code}
-\end{enumerate}
 
-\noindent
-Again, the pregenerated empty test shows how to use the unit test framework
-correctly.
 
 
 
 \section{Running the tests}
-Once these steps are handled, you can run the tests within your \texttt{main}:
+Once these steps are handled, you can run the tests within your \texttt{main}.
+For the core and tarch routines, I provide factory methods  
 
 \begin{code}
-tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
-int numberOfFailedTests = tarch::tests::TestCaseRegistry::getInstance()
-                         .getTestCaseCollection()
-                         .getNumberOfErrors();
+tarch::getUnitTests();
+peano4::getUnitTests();
 \end{code}
 
 \noindent
-The call invokes all the unit tests that have registered---this is Peano's core
-unit tests, your own test cases, and all other test cases someone else
-(toolboxes you use, e.g.) has registered for your project.
+which deliver a test suite. To run them, I typically insert snippets alike
+\begin{code}
+  int unitTestsErrors = 0;
+  tarch::tests::TestCase* tests = nullptr;
+
+  tests = tarch::getUnitTests();
+  tests->run();
+  unitTestsErrors += tests->getNumberOfErrors();
+  delete tests;
+\end{code}
+
+\noindent
+into my main.
 It returns an output similar to
 \begin{code}
 running test case collection "exahype2.tests.c" ...... ok                                                                                                                
@@ -118,27 +116,6 @@ line number.
   level, they are removed from the production code.
 \end{remark}
 
-
-
-  Peano provides two types of test registries: the standard test registry as
-  used in this section is meant for standard unit tests. There is a second
-  registry for integration tests. Integration tests are unit tests that register
-  via the macro \texttt{registerIntegrationTest}. They have to be invoked
-  explicitly in the \texttt{main} via the \texttt{IntegrationTestCaseRegistry}. 
-  The idea is that there might be (unit) tests that last very long or require a
-  certain environment, so you don't want to run them all the time, while other
-  tests are ran on a regular basis. If you distinguish between unit tests (that
-  you run frequently) and integration tests, you can host both of them within
-  the same source code concept. 
-
-
-\begin{remark}
- I have some (few) tests which write files and/or require manual intervention.
- In the classic sense, they are thus not unit tests, and I therefore classify
- them as regression tests.
- The regression test suite thus is just a larger test suite which is more
- expensive and which I therefore don't run that often.
-\end{remark}
 
 
 \section{Test routines}

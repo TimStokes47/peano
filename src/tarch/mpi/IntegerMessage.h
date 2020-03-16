@@ -29,7 +29,7 @@ namespace tarch {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/03/2020 13:48
+ * @date   16/03/2020 11:37
  */
 class tarch::mpi::IntegerMessage { 
    
@@ -132,7 +132,7 @@ class tarch::mpi::IntegerMessage {
             
             void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
             
-            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            static bool isMessageInQueue(int tag);
             
             int getSenderRank() const;
             #endif
@@ -147,7 +147,7 @@ class tarch::mpi::IntegerMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/03/2020 13:48
+ * @date   16/03/2020 11:37
  */
 class tarch::mpi::IntegerMessagePacked { 
    
@@ -244,7 +244,7 @@ class tarch::mpi::IntegerMessagePacked {
             
             void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
             
-            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            static bool isMessageInQueue(int tag);
             
             int getSenderRank() const;
             #endif

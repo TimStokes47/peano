@@ -103,6 +103,15 @@ If you don't have a proper module file, you might have to configure your environ
 \end{code}
 
 
+If you want to build against VTK, you have to set the pathes accordingly. 
+On my machine, it looks similar to
+\begin{code}
+ export CXXFLAGS=-I/opt/vtk/include/vtk-9.0
+ export LDFLAGS=-L/opt/vtk/lib64
+ ./configure --with-vtk=-9.0
+\end{code}
+
+
 
 \section{The Intel tools}
 \label{section:supercomputers:IntelTools}

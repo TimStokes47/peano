@@ -74,14 +74,12 @@ below:
    \\
   \texttt{--with-vtk} & Inform Peano that VTK is available on the system and
   that it should build all the visualisation and postprocessing tools that rely
-  upon VTK. You have to pass the directory where the VTK header files are to be
-  found, i.e.~you call something alike \texttt{--with-vtk=/usr/include/vtk-8.1}.
+  upon VTK.
    \\
   \texttt{--with-hdf5} & Make Peano support HDF5 output. 
    \\
   \texttt{--with-delta} & Configure Peano such that the geometry library
-  $\Delta $ is used. You have to make \texttt{--with-delta=/mydeltasrc} point
-  to the $\Delta $ directory.
+  $\Delta $ is used.
  \end{tabular}
 \end{center}
 
@@ -109,7 +107,8 @@ Peano currently is delivered as a set of archives, i.e.~static libraries:
   \item There is a technical architecture (\texttt{Tarch}) and the actual
   \texttt{Peano4Core}.
   \item Each archive variant is available as a release version, as a debug
-  version, and as a tracing version. 
+  version, as a version with tracing and assertions and as a tracing-only
+  version.
   \item Each archive variant is available as 2d build and as 3d build. If you
   need higher dimensions, you have to build the required libraries manually.
 \end{itemize}
@@ -122,6 +121,9 @@ The version terminology is as follows:
   assertions, of all tracing and all debug messages is available; though you can
   always filter on the application-level which information you want to see
   (cmp.~Chapter \ref{section:logging}).
+  \item {\bf asserts} Thsee versions of the archives all have the postfix
+  \texttt{\_asserts}. If you link against these versions, all assertions are on.
+  The code also contains tracing macros (see below).
   \item {\bf tracing} The release versions of the archives all have the postfix
   \texttt{\_trace}. If you link against these versions, all assertions and debug
   messages are removed, but some tracing is active. You can switch on/off the
@@ -142,28 +144,19 @@ version and one with only tracing enabled.
 Several examples furthermore come along as 2d and 3d build.
 
 
+\section{Installation test}
 
+Once you have compiled Peano4, I recommend that you run the unit tests in
+directory
 
-% \subsection*{Further reading}
-% 
-% \begin{itemize}
-%   \item Weinzierl, Tobias and Mehl, Miriam (2011). {\em Peano---A Traversal and
-%   Storage Scheme for Octree-Like Adaptive Cartesian Multiscale Grids}. SIAM
-%   Journal on Scientific Computing 33(5): 2732-2760.
-%   \item Bungartz, Hans-Joachim, Eckhardt, Wolfgang, Weinzierl, Tobias and
-%   Zenger, Christoph (2010). {\em A Precompiler to Reduce the Memory Footprint of
-%   Multiscale PDE Solvers in C++}. Future Generation Computer Systems 26(1): 175-182.
-%   \item Bungartz, Hans-Joachim, Mehl, Miriam, Neckel, Tobias and Weinzierl,
-%   Tobias (2010). {\em The PDE framework Peano applied to fluid dynamics: an efficient
-%   implementation of a parallel multiscale fluid dynamics solver on octree-like adaptive Cartesian grids}. Computational Mechanics 46(1): 103-114.
-%   \item   Weinzierl, Tobias (2009). {\em A Framework for Parallel PDE Solvers on
-%   Multiscale Adaptive Cartesian Grids}. M\"unchen: Verlag Dr. Hut.
-%   \item Bungartz, Hans-Joachim, Mehl, Miriam, Weinzierl, Tobias and Eckhardt,
-%   Wolfgang (2008). {\em DaStGen---A Data Structure Generator for Parallel C++
-%   HPC Software}. In ICCS 2008: Advancing Science through Computation, Part III.
-%   Bubak, van Albada, Sloot and Dongarra, Heidelberg, Berlin: Springer-Verlag.
-%   5103: 213-222.
-%   \item Brenk, Markus, Bungartz, Hans-Joachim, Mehl, Miriam, Muntean, Ioan
-%   Lucian, Neckel, Tobias and Weinzierl, Tobias (2008). {\em Numerical Simulation
-%   of Particle Transport in a Drift Ratchet}. SIAM Journal of Scientific Computing 30(6): 2777-2798.
-% \end{itemize}
+\begin{code}
+  src/examples/unittests/UnitTests2d
+  src/examples/unittests/UnitTests3d
+\end{code}
+
+\noindent
+You can run these builds with different core counts and also MPI support if you
+have compiled with MPI.
+The executables contain both node correctness tests and MPI ping-pong tests,
+i.e.~you can both assess a valid build plus a working MPI environment.
+

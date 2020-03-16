@@ -63,8 +63,8 @@ AC_PROG_CXX
 #
 # @todo I should remove the MPI2 flag once I've written a new DaStGen
 #
-PEANO_CXXFLAGS+="-std=c++14 -DMPI2"
-PEANO_LDFLAGS+=""
+PEANO_CXXFLAGS+=" -std=c++14 -DMPI2 "
+PEANO_LDFLAGS+=" "
 
 # Think I do not need a C compiler
 #AC_PROG_CC
@@ -91,8 +91,8 @@ AC_ARG_WITH(
     AC_MSG_CHECKING(for multithreading)
     case "${withval}" in
       no)     AC_MSG_RESULT([no multithreading]);                    multithreading=false ;;
-      cpp)    AC_MSG_RESULT([cpp (C++11)]);                          multithreading=cpp ;;
-      tbb)    AC_MSG_RESULT([tbb (Intel Threading Building Blocks)]); multithreading=tbb ;;
+      cpp)    AC_MSG_RESULT([build with C++11 threading support]);                          multithreading=cpp ;;
+      tbb)    AC_MSG_RESULT([build with TBB (Intel Threading Building Blocks) support - please ensure that CXXFLAGS and LDFLAGS are properly set]); multithreading=tbb ;;
       *)      AC_MSG_FAILURE([default=no (no multithreading). Use cpp or tbb to define target]);            multithreading=false ;;
     esac
   ], 
@@ -139,11 +139,12 @@ fi
 # VTK Options
 #
 AC_ARG_WITH(vtk,
-  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools, too [default=no, vtk include path (such as /usr/include/vtk-8.1)]]),
+  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools, too [default=no, postfix]. postfix can be empty but if you have a particular VTK version where all libraries end with -9.0, e.g., then pass this one as a postfix]),
   [ AC_MSG_CHECKING(for vtk)
     case "${withval}" in
-      no)    AC_MSG_RESULT(no);                               vtk=false ;;
-      *)     AC_MSG_RESULT(use vtk sources path ${withval});  vtk=${withval}  ;;
+      no)    AC_MSG_RESULT(no);     vtk=false ;;
+      yes)   AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=""  ;;
+      *)     AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=${withval}  ;;
     esac ],
   [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
   
@@ -151,19 +152,21 @@ AC_ARG_WITH(vtk,
 AM_CONDITIONAL([UseVTK],[test "$vtk" != false])
 if test "$vtk" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
-  PEANO_CXXFLAGS+=" -I${vtk}"
+  VTK_LIBRARY_EXTENSION=$vtk
 fi
+AC_SUBST([VTK_LIBRARY_EXTENSION])
+
 
 
 #
 # HDF5
 #
 AC_ARG_WITH(hdf5,
-  AC_HELP_STRING([--with-hdf5], [enable HDF5 support [default=no, yes]]),
+  AC_HELP_STRING([--with-hdf5], [enable HDF5 support [default=no]]),
   [ AC_MSG_CHECKING(for hdf5)
     case "${withval}" in
       no)    AC_MSG_RESULT(no);                                hdf5=false ;;
-      *)     AC_MSG_RESULT(use hdf5 sources path ${withval});  hdf5=true  ;;
+      *)     AC_MSG_RESULT(build with HDF5 support - please ensure that CXXFLAGS and LDFLAGS are properly set);  hdf5=true  ;;
     esac ],
   [ AC_MSG_CHECKING(for hdf5); AC_MSG_RESULT(no); hdf5=false ])
  
@@ -175,8 +178,6 @@ if test "$with_hdf5" = "yes"; then
   fi
   if test "$with_hdf5" = "yes"; then
     AC_DEFINE([UseHDF5], [1], [UseHDF5])
-    PEANO_CXXFLAGS+=" ${HDF5_CPPFLAGS}"
-    PEANO_LDFLAGS+=" ${HDF5_LDFLAGS} ${HDF5_LIBS}"
   else
     AC_MSG_ERROR([Unable to find HDF5, we need HDF5.])
   fi
@@ -188,11 +189,11 @@ fi
 # Delta
 #
 AC_ARG_WITH(delta,
-  AC_HELP_STRING([--with-delta], [enable Delta [default=no, path to Delta include files]]),
+  AC_HELP_STRING([--with-delta], [enable Delta [default=no]]),
   [ AC_MSG_CHECKING(for delta)
     case "${withval}" in
       no)    AC_MSG_RESULT(no);                                 delta=false ;;
-      *)     AC_MSG_RESULT(use delta sources path ${withval});  delta=${withval}  ;;
+      *)     AC_MSG_RESULT(build against Delta installation - please ensure that CXXFLAGS and LDFLAGS are properly set);  delta=${withval}  ;;
     esac ],
   [ AC_MSG_CHECKING(for delta); AC_MSG_RESULT(no); delta=false ])
 # This whole autotools thing is not very nice: If I wanna use an if ... endif (
@@ -203,7 +204,6 @@ AC_ARG_WITH(delta,
 AM_CONDITIONAL([UseDelta],[test "$delta" != false])
 if test "$delta" != false; then
   AC_DEFINE([UseDelta], [1], [UseDelta])
-  PEANO_CXXFLAGS+=" -I${delta}"
 fi
 
 

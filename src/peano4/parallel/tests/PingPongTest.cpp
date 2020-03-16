@@ -316,7 +316,7 @@ void peano4::parallel::tests::PingPongTest::testDaStGenArrayTreeManagementMessag
     message.send(1, Tag, true, peano4::parallel::TreeManagementMessage::ExchangeMode::Blocking);
   }
   else if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
-    while ( not peano4::parallel::TreeManagementMessage::isMessageInQueue(Tag,true) ) {
+    while ( not peano4::parallel::TreeManagementMessage::isMessageInQueue(Tag) ) {
     }
     message.receive(0, Tag, true, peano4::parallel::TreeManagementMessage::ExchangeMode::Blocking);
   }

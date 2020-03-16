@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/03/2020 13:47
+ * @date   16/03/2020 11:39
  */
 class peano4::grid::AutomatonState { 
    
@@ -217,7 +217,7 @@ class peano4::grid::AutomatonState {
             
             void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
             
-            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            static bool isMessageInQueue(int tag);
             
             int getSenderRank() const;
             #endif
@@ -232,7 +232,7 @@ class peano4::grid::AutomatonState {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/03/2020 13:47
+ * @date   16/03/2020 11:39
  */
 class peano4::grid::AutomatonStatePacked { 
    
@@ -425,7 +425,7 @@ class peano4::grid::AutomatonStatePacked {
             
             void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
             
-            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            static bool isMessageInQueue(int tag);
             
             int getSenderRank() const;
             #endif
