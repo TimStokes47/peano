@@ -139,11 +139,11 @@ fi
 # VTK Options
 #
 AC_ARG_WITH(vtk,
-  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools, too [default=no]]),
+  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools, too [default=no, postfix]. postfix can be empty but if you have a particular VTK version where all libraries end with -9.0, e.g., then pass this one as a postfix]),
   [ AC_MSG_CHECKING(for vtk)
     case "${withval}" in
       no)    AC_MSG_RESULT(no);     vtk=false ;;
-      *)     AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=true  ;;
+      *)     AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=${withval}  ;;
     esac ],
   [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
   
@@ -151,7 +151,10 @@ AC_ARG_WITH(vtk,
 AM_CONDITIONAL([UseVTK],[test "$vtk" != false])
 if test "$vtk" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
+  VTK_LIBRARY_EXTENSION=$vtk
 fi
+AC_SUBST([VTK_LIBRARY_EXTENSION])
+
 
 
 #
