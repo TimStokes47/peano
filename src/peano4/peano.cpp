@@ -77,6 +77,14 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
   }
   #endif
 
+  #ifdef SharedMemoryParallelisation
+  if ( tarch::multicore::Core::getInstance().isInitialised() ) {
+  }
+  else {
+    result = -3;
+  }
+  #endif
+
   writeCopyrightMessage();
 
   return result;
@@ -85,29 +93,10 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
 
 void peano4::shutdownParallelEnvironment() {
   peano4::parallel::Node::getInstance().shutdown();
+
+  tarch::mpi::Rank::getInstance().barrier();
+
+  tarch::multicore::Core::getInstance().shutdown();
   peano4::parallel::Node::shutdownMPIDatatypes();
   tarch::mpi::Rank::getInstance().shutdown();
 }
-
-
-int peano4::initSharedMemoryEnvironment() {
-  int result = 0;
-  #ifdef SharedMemoryParallelisation
-  if ( tarch::multicore::Core::getInstance().isInitialised() ) {
-  }
-  else {
-    result = -3;
-  }
-  #endif
-  writeCopyrightMessage();
-  return result;
-}
-
-
-void peano4::shutdownSharedMemoryEnvironment() {
-  #ifdef SharedMemoryParallelisation
-  tarch::mpi::Rank::getInstance().barrier();
-  tarch::multicore::Core::getInstance().shutdown();
-  #endif
-}
-
