@@ -85,15 +85,14 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
 
 void peano4::shutdownParallelEnvironment() {
   peano4::parallel::Node::getInstance().shutdown();
-// @todo fuer globale Semaphoren. Has to come after shutdown the shutdown tells the other continues to stop.
-  tarch::mpi::Rank::getInstance().barrier();
-
   peano4::parallel::Node::shutdownMPIDatatypes();
   tarch::mpi::Rank::getInstance().shutdown();
 }
 
 
 int peano4::initSharedMemoryEnvironment() {
+  tarch::mpi::Rank::getInstance().barrier();
+
   int result = 0;
   #ifdef SharedMemoryParallelisation
   if ( tarch::multicore::Core::getInstance().isInitialised() ) {
