@@ -91,8 +91,6 @@ void peano4::shutdownParallelEnvironment() {
 
 
 int peano4::initSharedMemoryEnvironment() {
-  tarch::mpi::Rank::getInstance().barrier();
-
   int result = 0;
   #ifdef SharedMemoryParallelisation
   if ( tarch::multicore::Core::getInstance().isInitialised() ) {
@@ -108,6 +106,7 @@ int peano4::initSharedMemoryEnvironment() {
 
 void peano4::shutdownSharedMemoryEnvironment() {
   #ifdef SharedMemoryParallelisation
+  tarch::mpi::Rank::getInstance().barrier();
   tarch::multicore::Core::getInstance().shutdown();
   #endif
 }

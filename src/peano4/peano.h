@@ -132,7 +132,7 @@ namespace peano4 {
    * be a Peano4 barrier which still invokes receiveDanglingMessages() on all
    * services.
    *
-   * Once this routine has terminated, do not add a barrier() anymore!
+   * Once this routine has terminated, do not add any barrier() anymore!
    */
   void shutdownSharedMemoryEnvironment();
 }
