@@ -152,9 +152,27 @@ AC_ARG_WITH(vtk,
 AM_CONDITIONAL([UseVTK],[test "$vtk" != false])
 if test "$vtk" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
-  VTK_LIBRARY_EXTENSION=$vtk
+  VTK_LIBRARY_SUFFIX=$vtk
 fi
-AC_SUBST([VTK_LIBRARY_EXTENSION])
+AC_SUBST([VTK_LIBRARY_SUFFIX])
+
+
+AC_ARG_WITH(vtk_version,
+  AC_HELP_STRING([--with-vtk-version], [specify vtk version (major) [default=8]]),
+  [ AC_MSG_CHECKING(for vtk-version)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(not set - use default (major release 8));     vtk_version="8" ;;
+      *)     AC_MSG_RESULT(build against VTK version ${withval});    vtk_version=${withval}  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for vtk-version); AC_MSG_RESULT(not set - use default (major release 8)); vtk_version="8" ])
+  
+
+AM_CONDITIONAL([VTK_LIBRARY_VERSION_8],[test "$vtk_version" = "8"])
+AM_CONDITIONAL([VTK_LIBRARY_VERSION_9],[test "$vtk_version" = "9"])
+#if test "$vtk-version" != false; then
+#VTK_LIBRARY_VERSION=$vtk_version
+#fi
+#AC_SUBST([VTK_LIBRARY_VERSION])
 
 
 
