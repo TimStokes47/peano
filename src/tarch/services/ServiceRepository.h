@@ -3,19 +3,18 @@
 #ifndef _TARCH_SERVICES_SERVICE_REPOSITORY_H_
 #define _TARCH_SERVICES_SERVICE_REPOSITORY_H_
 
-#ifdef Parallel
-#include <mpi.h>
-#endif
+
+#include <vector>
+#include <string>
+
 #include "tarch/services/Service.h"
+
 
 namespace tarch {
   namespace services {
     class ServiceRepository;
   }
 }
-
-#include <vector>
-#include <string>
 
 
 /**
@@ -49,6 +48,7 @@ class tarch::services::ServiceRepository: public tarch::services::Service {
      */
     void addService( Service* const service, const std::string& name );
     bool hasService( Service* service ) const;
+    void removeService( Service* const service );
 
     /**
      * Answer to MPI Messages
