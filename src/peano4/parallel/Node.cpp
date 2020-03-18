@@ -150,12 +150,14 @@ void peano4::parallel::Node::registerId(int id, int masterId) {
   assertion( isGlobalMaster(id) or _treeEntries.count(masterId)==1 );
   #endif
 
+  logTraceInWith2Arguments( "registerId(int,int)", id, masterId );
   TreeEntry newEntry;
 
   newEntry.setId( id );
   newEntry.setMaster( masterId );
 
   _treeEntries.insert( std::pair<int,TreeEntry>(id, newEntry) );
+  logTraceOut( "registerId(int,int)" );
 }
 
 
