@@ -26,6 +26,8 @@ tarch::mpi::BooleanSemaphore::BooleanSemaphore( const std::string& identifier ):
 
 
 tarch::mpi::BooleanSemaphore::~BooleanSemaphore() {
+  logTraceIn( "~BooleanSemaphore()" );
+  logTraceOut( "~BooleanSemaphore()" );
 }
 
 
