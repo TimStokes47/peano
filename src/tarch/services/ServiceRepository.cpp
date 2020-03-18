@@ -35,6 +35,16 @@ void tarch::services::ServiceRepository::addService( Service* const service, con
 }
 
 
+void tarch::services::ServiceRepository::removeService( Service* const service ) {
+  for (std::vector<ServiceEntry>::iterator p=_services.begin(); p!=_services.end(); ) {
+	if ( p->_service==service) {
+	  p = _services.erase(p);
+	}
+	else p++;
+  }
+}
+
+
 bool tarch::services::ServiceRepository::hasService( Service* service ) const {
   for (
       ServiceContainer::const_iterator p = _services.begin();
