@@ -81,18 +81,19 @@ namespace peano4 {
    * you call any other operation that could result in an error. I suggest
    * to call it right after fillLookupTables().
    *
+   * Please note that Peano4 considers both shared memory and distributed
+   * memory to be a parallel environment.
+   *
    * init might change the variables passed. If you want to parse the
    * command line arguments, use the values returned. If you use the
    * arguments directly without calling initParallelEnvironment() they
    * might contain MPI values not important to the program.
    *
-   * \section Rationale
+   * <h2> Usage/implementation details </h2>
    *
    * You may not use the trace macros before this operation has invoked the init
    * operation. Otherwise, the getRank() assertion fails, as the node has not
    * been configured correctly.
-   *
-   * \section Usage
    *
    * Invoke with an address operator before that.
    * <pre>
@@ -105,36 +106,30 @@ namespace peano4 {
 
   /**
    * Shutdown all the parallel environment, i.e. free all MPI datatypes and
-   * close down MPI.
+   * close down MPI. This also turns off the shared memory environment.
    *
-   * @see peano4::parallel::Node::shutdown()
-   * @see shutdownSharedMemoryEnvironment()
-   */
-  void shutdownParallelEnvironment();
-
-  /**
-   * Init shared memory environment.
+   * We first tell the node that it should shut down. This implies that the
+   * node sends out a termination message, i.e. all ranks that wait in
+   * continueToRun() are told that this is it. They go down.
    *
-   * If you work in a hybrid environment, i.e. if you use MPI and shared memory
-   * parallelisation, please invoke initParallelEnvironment() before.
-   *
-   * If an error occurs, it returns -3.
-   */
-  int initSharedMemoryEnvironment();
-
-  /**
-   * This routine adds a barrier. This barrier is necessary. If the very last
+   * The routine next adds a barrier. This barrier is necessary. If the very last
    * activity of all ranks is for example to plot stuff, they typically use
    * global semaphores as well. To make these semaphores work, we still require
    * that all nodes call receiveDanglingMessages(). It is only after everyone
-   * has done their dump, that we can shut down the whole system. This is the
+   * has done their dump, that we can shut down the shared memory system. This is the
    * reason the barrier has to come after the node's shutdown and then has to
    * be a Peano4 barrier which still invokes receiveDanglingMessages() on all
    * services.
    *
+   * Once all shared memory tasks have terminated, we free the MPI datatypes.
+   *
+   * Eventually, we shut down the MPI rank.
+   *
    * Once this routine has terminated, do not add any barrier() anymore!
+   *
+   * @see peano4::parallel::Node::shutdown()
    */
-  void shutdownSharedMemoryEnvironment();
+  void shutdownParallelEnvironment();
 }
 
 

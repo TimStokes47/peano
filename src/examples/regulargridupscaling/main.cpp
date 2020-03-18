@@ -185,7 +185,6 @@ int main(int argc, char** argv) {
   const int ExitCodeUnitTestsFailed = 1;
 
   peano4::initParallelEnvironment(&argc,&argv);
-  peano4::initSharedMemoryEnvironment();
   peano4::fillLookupTables();
 
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
@@ -248,7 +247,6 @@ int main(int argc, char** argv) {
 
   runParallel(meshWidth,flopsPerCell);
 
-  peano4::shutdownSharedMemoryEnvironment();
   peano4::shutdownParallelEnvironment();
 
   return 0;

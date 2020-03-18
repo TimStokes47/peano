@@ -256,7 +256,6 @@ int main(int argc, char** argv) {
   const int ExitCodeUnitTestsFailed = 1;
 
   peano4::initParallelEnvironment(&argc,&argv);
-  peano4::initSharedMemoryEnvironment();
   peano4::fillLookupTables();
 
   examples::jacobi::observers::DataRepository::initDatatypes();
@@ -333,7 +332,7 @@ int main(int argc, char** argv) {
 
 
   #if PeanoDebug>=1
-  tarch::mpi::Rank::getInstance().setDeadlockTimeOut(0);
+  //tarch::mpi::Rank::getInstance().setDeadlockTimeOut(0);
   #endif
 
 
@@ -373,7 +372,6 @@ int main(int argc, char** argv) {
 
   examples::jacobi::observers::DataRepository::shutdownDatatypes();
 
-  peano4::shutdownSharedMemoryEnvironment();
   peano4::shutdownParallelEnvironment();
 
   return ExitCodeSuccess;
