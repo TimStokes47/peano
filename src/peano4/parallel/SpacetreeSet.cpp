@@ -58,6 +58,8 @@ void peano4::parallel::SpacetreeSet::init(
 
 
 peano4::parallel::SpacetreeSet::~SpacetreeSet() {
+  logTraceIn( "~SpacetreeSet()" );
+  logTraceOut( "~SpacetreeSet()" );
 }
 
 
@@ -387,7 +389,7 @@ std::set<int> peano4::parallel::SpacetreeSet::getLocalTreesMergingWithWorkers() 
 void peano4::parallel::SpacetreeSet::createNewTrees() {
   for (const auto& tree: _spacetrees) {
     for (auto& p: tree._splitting) {
-	    addSpacetree( tree._id, p );
+      addSpacetree( tree._id, p );
     }
   }
 }
@@ -613,17 +615,18 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
     if (tarch::mpi::Rank::getInstance().getRank()!=targetRank) {
       #ifdef Parallel
       logDebug( "split(int,int,int)", "request new tree on rank " << targetRank );
-      peano4::parallel::TreeManagementMessage message(treeId,-1,peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree);
-      message.send(targetRank,_requestMessageTag,true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+      peano4::parallel::TreeManagementMessage requestMessage(treeId,-1,peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree);
+      requestMessage.send(targetRank,_requestMessageTag,true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
-      message.receive(
+      peano4::parallel::TreeManagementMessage answerMessage;
+      answerMessage.receive(
         targetRank,
         getAnswerTag(treeId),
         true,
-		TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
+	TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
       );
-      assertion(message.getAction()==TreeManagementMessage::Action::Acknowledgement);
-      newSpacetreeId = message.getWorkerSpacetreeId();
+      assertion(answerMessage.getAction()==TreeManagementMessage::Action::Acknowledgement);
+      newSpacetreeId = answerMessage.getWorkerSpacetreeId();
       #else
       newSpacetreeId = -1;
       assertionMsg( false, "can't split into tree on a different rank if not compiled with mpi");
