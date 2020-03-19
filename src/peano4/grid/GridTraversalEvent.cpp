@@ -730,23 +730,33 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridTraversalEvent::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridTraversalEvent::Datatype );
          errorCode += MPI_Type_commit( &GridTraversalEvent::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEvent::Datatype);
-         errorCode += MPI_Type_commit( &GridTraversalEvent::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEvent::Datatype);
+         int errorCode = MPI_Type_commit( &GridTraversalEvent::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -887,23 +897,33 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridTraversalEvent::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridTraversalEvent::FullDatatype );
          errorCode += MPI_Type_commit( &GridTraversalEvent::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEvent::FullDatatype);
-         errorCode += MPI_Type_commit( &GridTraversalEvent::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEvent::FullDatatype);
+         int errorCode = MPI_Type_commit( &GridTraversalEvent::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -2281,23 +2301,33 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridTraversalEventPacked::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridTraversalEventPacked::Datatype );
          errorCode += MPI_Type_commit( &GridTraversalEventPacked::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEventPacked::Datatype);
-         errorCode += MPI_Type_commit( &GridTraversalEventPacked::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEventPacked::Datatype);
+         int errorCode = MPI_Type_commit( &GridTraversalEventPacked::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -2422,23 +2452,33 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridTraversalEventPacked::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridTraversalEventPacked::FullDatatype );
          errorCode += MPI_Type_commit( &GridTraversalEventPacked::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEventPacked::FullDatatype);
-         errorCode += MPI_Type_commit( &GridTraversalEventPacked::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEventPacked::FullDatatype);
+         int errorCode = MPI_Type_commit( &GridTraversalEventPacked::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          

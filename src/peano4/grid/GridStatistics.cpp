@@ -458,23 +458,33 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatistics::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridStatistics::Datatype );
          errorCode += MPI_Type_commit( &GridStatistics::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::Datatype);
-         errorCode += MPI_Type_commit( &GridStatistics::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::Datatype);
+         int errorCode = MPI_Type_commit( &GridStatistics::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -607,23 +617,33 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatistics::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridStatistics::FullDatatype );
          errorCode += MPI_Type_commit( &GridStatistics::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::FullDatatype);
-         errorCode += MPI_Type_commit( &GridStatistics::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::FullDatatype);
+         int errorCode = MPI_Type_commit( &GridStatistics::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1374,23 +1394,33 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatisticsPacked::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridStatisticsPacked::Datatype );
          errorCode += MPI_Type_commit( &GridStatisticsPacked::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::Datatype);
-         errorCode += MPI_Type_commit( &GridStatisticsPacked::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::Datatype);
+         int errorCode = MPI_Type_commit( &GridStatisticsPacked::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1523,23 +1553,33 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &GridStatisticsPacked::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridStatisticsPacked::FullDatatype );
          errorCode += MPI_Type_commit( &GridStatisticsPacked::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::FullDatatype);
-         errorCode += MPI_Type_commit( &GridStatisticsPacked::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::FullDatatype);
+         int errorCode = MPI_Type_commit( &GridStatisticsPacked::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          

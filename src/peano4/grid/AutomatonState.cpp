@@ -394,23 +394,33 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonState::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &AutomatonState::Datatype );
          errorCode += MPI_Type_commit( &AutomatonState::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::Datatype);
-         errorCode += MPI_Type_commit( &AutomatonState::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::Datatype);
+         int errorCode = MPI_Type_commit( &AutomatonState::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -511,23 +521,33 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonState::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &AutomatonState::FullDatatype );
          errorCode += MPI_Type_commit( &AutomatonState::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::FullDatatype);
-         errorCode += MPI_Type_commit( &AutomatonState::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::FullDatatype);
+         int errorCode = MPI_Type_commit( &AutomatonState::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1237,23 +1257,33 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonStatePacked::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &AutomatonStatePacked::Datatype );
          errorCode += MPI_Type_commit( &AutomatonStatePacked::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::Datatype);
-         errorCode += MPI_Type_commit( &AutomatonStatePacked::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::Datatype);
+         int errorCode = MPI_Type_commit( &AutomatonStatePacked::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -1346,23 +1376,33 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &AutomatonStatePacked::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &AutomatonStatePacked::FullDatatype );
          errorCode += MPI_Type_commit( &AutomatonStatePacked::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::FullDatatype);
-         errorCode += MPI_Type_commit( &AutomatonStatePacked::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::FullDatatype);
+         int errorCode = MPI_Type_commit( &AutomatonStatePacked::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          

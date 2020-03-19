@@ -92,8 +92,8 @@ void tarch::logging::LogFilter::printFilterListToCout() const {
 
 
 tarch::logging::LogFilter& tarch::logging::LogFilter::getInstance() {
-  static LogFilter _singleton;
-  return _singleton;
+  static LogFilter* _singleton = new LogFilter();
+  return *_singleton;
 }
 
 
