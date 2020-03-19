@@ -58,8 +58,7 @@ void peano4::parallel::SpacetreeSet::init(
 
 
 peano4::parallel::SpacetreeSet::~SpacetreeSet() {
-  logTraceIn( "~SpacetreeSet()" );
-  logTraceOut( "~SpacetreeSet()" );
+  tarch::services::ServiceRepository::getInstance().removeService( this );
 }
 
 
