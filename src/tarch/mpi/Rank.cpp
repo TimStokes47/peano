@@ -63,8 +63,8 @@ int tarch::mpi::Rank::reserveFreeTag(const std::string& fullQualifiedMessageName
   // logged properly.
   #if PeanoDebug>0
   if ( getInstance()._rank==getGlobalMasterRank() ) {
-	std::cout << "assigned message " << fullQualifiedMessageName
-               << " the free tag " << result << " (" << numberOfTags << " consecutive tags reserved)" << std::endl;
+    std::cout << "rank " << getInstance()._rank << ": assigned message " << fullQualifiedMessageName
+              << " the free tag " << result << " (" << numberOfTags << " consecutive tags reserved)" << std::endl;
   }
   #endif
   return result;
@@ -304,10 +304,12 @@ void tarch::mpi::Rank::shutdown() {
   #ifdef Parallel
   assertion( _rank!=-1 );
 
+  #if PeanoDebug>=1
+  plotMessageQueues();
+  #endif
+
   IntegerMessage::shutdownDatatype();
   StringMessage::shutdownDatatype();
-
-  logDebug( "shutdown()", "number of blocked critical sections: " << tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getInstance().getNumberOfLockedSemaphores() );
 
   int errorCode = MPI_Finalize();
   if (errorCode) {
