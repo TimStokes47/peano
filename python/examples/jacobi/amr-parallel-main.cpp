@@ -94,11 +94,11 @@ class ProgramRun {
             if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
               int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
 
-              logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core" );
+              logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core (total count " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() << " cells) - split up in one rush" );
 
               if ( not peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().empty() ) {
                 int localTree = *( peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().begin() );
-                logInfo( "ProgramRun::step()", "fork local tree " << localTree );
+                logInfo( "ProgramRun::step()", "fork local tree " << localTree << " " << (tarch::multicore::Core::getInstance().getNumberOfThreads()-1) << " times" );
                 for (int thread=1; thread<tarch::multicore::Core::getInstance().getNumberOfThreads(); thread++) {
                   if ( not peano4::parallel::SpacetreeSet::getInstance().split(localTree,cellsPerCore,tarch::mpi::Rank::getInstance().getRank())) {
                     logWarning( "runParallel(...)", "failed to assign thread " << thread << " " << cellsPerCore << " cell(s)" );
@@ -115,8 +115,8 @@ class ProgramRun {
             if (tarch::multicore::Core::getInstance().getNumberOfThreads()>1) {
               static int cellsPerCore = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::multicore::Core::getInstance().getNumberOfThreads();
 
-              logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core" );
-
+              logInfo( "ProgramRun::step()", "should host " << cellsPerCore << " cells per core (total count " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() << " cells) - split up incrementally" );
+ 
               if ( not peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().empty() ) {
                 int localTree = *( peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().begin() );
                 logInfo( "ProgramRun::step()", "fork local tree " << localTree );
@@ -124,6 +124,7 @@ class ProgramRun {
                   logWarning( "runParallel(...)", "failed to assign new thread " << cellsPerCore << " cell(s)" );
                 }
                 examples::jacobi::observers::SetupScenario  observer;
+                peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
                 peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
               }
             }
@@ -149,22 +150,26 @@ class ProgramRun {
 
     enum class GridDecompositionStrategy {
       BuildUpGridCompletelyBeforeWeDecompose,
-	  SplitUpMPIASAPAndThenSplitUpIntoAllThreadsInOneRush,
-	  SplitUpMPIASAPAndThenSplitUpIntoThreadsOneByOne
+      SplitUpMPIASAPAndThenSplitUpIntoAllThreadsInOneRush,
+      SplitUpMPIASAPAndThenSplitUpIntoThreadsOneByOne
     };
 
 
+    #if defined(Parallel)
     void runGlobalMaster(int iterations, GridDecompositionStrategy gridDecompositionStrategy = GridDecompositionStrategy::SplitUpMPIASAPAndThenSplitUpIntoThreadsOneByOne ) {
+    #else
+    void runGlobalMaster(int iterations, GridDecompositionStrategy gridDecompositionStrategy = GridDecompositionStrategy::SplitUpMPIASAPAndThenSplitUpIntoAllThreadsInOneRush ) {
+    #endif
       // Construct grid until we are told that it hasn't changed for
       // more than two iterations.
       // ===========================================================
-      #if Parallel
+      #if defined(Parallel)
       bool hasSplitRanks        = false;
       #else
       bool hasSplitRanks        = true;
       #endif
       
-      #if SharedMemoryParallelisation
+      #if defined(SharedMemoryParallelisation)
       bool hasSplitSharedMemory = false;
       #else
       bool hasSplitSharedMemory = false;
