@@ -64,6 +64,8 @@ class tarch::mpi::BooleanSemaphore {
 
         BooleanSemaphoreService();
 
+        BooleanSemaphoreService( const BooleanSemaphoreService& copy ) = delete;
+
         /**
          * If a remote rank does request a lock, I don't reserve it
          * straightaway. Instead, I buffer it in _pendingLockRequests.
@@ -85,6 +87,8 @@ class tarch::mpi::BooleanSemaphore {
 
         void addMapEntryLazily(int number);
       public:
+        ~BooleanSemaphoreService();
+
         /**
          * We rely on the fact that no multiple threads can access the
          * receiveDangling thing at the same time.

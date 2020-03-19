@@ -26,8 +26,6 @@ tarch::mpi::BooleanSemaphore::BooleanSemaphore( const std::string& identifier ):
 
 
 tarch::mpi::BooleanSemaphore::~BooleanSemaphore() {
-  logTraceIn( "~BooleanSemaphore()" );
-  logTraceOut( "~BooleanSemaphore()" );
 }
 
 
@@ -38,6 +36,10 @@ tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::BooleanSemaphoreService()
   tarch::services::ServiceRepository::getInstance().addService( this, "tarch::mpi::BooleanSemaphore::BooleanSemaphoreService" );
 }
 
+
+tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::~BooleanSemaphoreService() {
+  tarch::services::ServiceRepository::getInstance().removeService( this );
+}
 
 
 std::string tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::toString() const {
