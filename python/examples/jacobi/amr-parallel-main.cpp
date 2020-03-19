@@ -158,8 +158,17 @@ class ProgramRun {
       // Construct grid until we are told that it hasn't changed for
       // more than two iterations.
       // ===========================================================
+      #if Parallel
       bool hasSplitRanks        = false;
+      #else
+      bool hasSplitRanks        = true;
+      #endif
+      
+      #if SharedMemoryParallelisation
       bool hasSplitSharedMemory = false;
+      #else
+      bool hasSplitSharedMemory = false;
+      #endif
 
 //      const int numberOfLocalUnrefinedCellsBeforeFirstMPISplit = tarch::mpi::Rank::getInstance().getNumberOfRanks();
       const int numberOfLocalUnrefinedCellsBeforeFirstMPISplit = ThreePowerD * ThreePowerD * ThreePowerD;
@@ -184,7 +193,7 @@ class ProgramRun {
           not hasSplitRanks
         ) {
           hasSplitRanks = true;
-        }
+        }        
         else if (
           gridDecompositionStrategy != GridDecompositionStrategy::BuildUpGridCompletelyBeforeWeDecompose
           and
