@@ -87,6 +87,11 @@ class tarch::mpi::BooleanSemaphore {
 
         void addMapEntryLazily(int number);
       public:
+        /**
+         * Destructor of the service. As the service is a singleton and a service
+         * (hence the name), it has to deregister itself. Otherwise, the overall
+         * service landscape still might try to call receiveDanglingMessages().
+         */
         ~BooleanSemaphoreService();
 
         /**

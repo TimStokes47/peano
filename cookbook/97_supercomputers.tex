@@ -148,7 +148,7 @@ If you try to overwrite \texttt{LDFLAGS}, configure sometimes complains.
 \begin{code}
  export PEANO_LDFLAGS=-trace
  export PEANO_LDFLAGS=-check_mpi
- ./configure --with-multithreading=tbb --with-mpi=mpicxx
+ ./configure --with-multithreading=tbb --with-mpi=mpiicpc
  make clean
  make -j
 \end{code}
