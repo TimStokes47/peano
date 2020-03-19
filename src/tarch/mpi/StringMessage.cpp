@@ -170,23 +170,33 @@ tarch::mpi::StringMessagePacked tarch::mpi::StringMessage::convert() const{
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &StringMessage::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &StringMessage::Datatype );
          errorCode += MPI_Type_commit( &StringMessage::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessage::Datatype);
-         errorCode += MPI_Type_commit( &StringMessage::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessage::Datatype);
+         int errorCode = MPI_Type_commit( &StringMessage::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -255,23 +265,33 @@ tarch::mpi::StringMessagePacked tarch::mpi::StringMessage::convert() const{
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &StringMessage::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &StringMessage::FullDatatype );
          errorCode += MPI_Type_commit( &StringMessage::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessage::FullDatatype);
-         errorCode += MPI_Type_commit( &StringMessage::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessage::FullDatatype);
+         int errorCode = MPI_Type_commit( &StringMessage::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -698,23 +718,33 @@ tarch::mpi::StringMessage tarch::mpi::StringMessagePacked::convert() const{
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &StringMessagePacked::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &StringMessagePacked::Datatype );
          errorCode += MPI_Type_commit( &StringMessagePacked::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessagePacked::Datatype);
-         errorCode += MPI_Type_commit( &StringMessagePacked::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessagePacked::Datatype);
+         int errorCode = MPI_Type_commit( &StringMessagePacked::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -783,23 +813,33 @@ tarch::mpi::StringMessage tarch::mpi::StringMessagePacked::convert() const{
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &StringMessagePacked::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &StringMessagePacked::FullDatatype );
          errorCode += MPI_Type_commit( &StringMessagePacked::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessagePacked::FullDatatype);
-         errorCode += MPI_Type_commit( &StringMessagePacked::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessagePacked::FullDatatype);
+         int errorCode = MPI_Type_commit( &StringMessagePacked::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          

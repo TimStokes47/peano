@@ -228,23 +228,33 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessage::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &TreeManagementMessage::Datatype );
          errorCode += MPI_Type_commit( &TreeManagementMessage::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessage::Datatype);
-         errorCode += MPI_Type_commit( &TreeManagementMessage::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessage::Datatype);
+         int errorCode = MPI_Type_commit( &TreeManagementMessage::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -321,23 +331,33 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessage::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &TreeManagementMessage::FullDatatype );
          errorCode += MPI_Type_commit( &TreeManagementMessage::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessage::FullDatatype);
-         errorCode += MPI_Type_commit( &TreeManagementMessage::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessage::FullDatatype);
+         int errorCode = MPI_Type_commit( &TreeManagementMessage::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -864,23 +884,33 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessagePacked::Datatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &TreeManagementMessagePacked::Datatype );
          errorCode += MPI_Type_commit( &TreeManagementMessagePacked::Datatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessagePacked::Datatype);
-         errorCode += MPI_Type_commit( &TreeManagementMessagePacked::Datatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessagePacked::Datatype);
+         int errorCode = MPI_Type_commit( &TreeManagementMessagePacked::Datatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          
@@ -957,23 +987,33 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]))), &base);
          #endif
+         #ifdef MPI2
+         MPI_Aint typeOffset = disp[0] - base;
+         for (int i=Attributes-1; i>=0; i--) {
+         
+            disp[i] = disp[i] - disp[0];
+            
+         }
+         #else
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
-         int errorCode = 0;
+         #endif
+         int errorCode = 0; 
          #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, base);
-         errorCode += MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeManagementMessagePacked::FullDatatype );
+         typeExtent = typeExtent - base - typeOffset;
+         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &TreeManagementMessagePacked::FullDatatype );
          errorCode += MPI_Type_commit( &TreeManagementMessagePacked::FullDatatype );
+         errorCode += MPI_Type_free(&tmpType);
          #else
-         errorCode += MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessagePacked::FullDatatype);
-         errorCode += MPI_Type_commit( &TreeManagementMessagePacked::FullDatatype );
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeManagementMessagePacked::FullDatatype);
+         int errorCode = MPI_Type_commit( &TreeManagementMessagePacked::FullDatatype );
          #endif
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
          

@@ -29,7 +29,7 @@ namespace tarch {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   16/03/2020 11:37
+ * @date   19/03/2020 21:08
  */
 class tarch::mpi::IntegerMessage { 
    
@@ -147,7 +147,7 @@ class tarch::mpi::IntegerMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   16/03/2020 11:37
+ * @date   19/03/2020 21:08
  */
 class tarch::mpi::IntegerMessagePacked { 
    
