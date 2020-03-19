@@ -78,7 +78,9 @@ In this case, the cell plus all of its children is deployed.
  held redundantly. In principle, you can issue as many splits in one rush as you
  like. In practice, it often makes sense to constrain the maximum number of
  splits issued per grid traversal. This ensures that you don't run out of
- memory.
+ memory. Also, splits require the Peano core to run some steps serially. 
+ So also from a time-to-solution point of view, limiting the number of splits
+ (in particular if they affect the same rank) is a good idea.
 \end{remark}
 
 
