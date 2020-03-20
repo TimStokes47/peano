@@ -142,11 +142,13 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "receive " << message.getValue() << " entries"
           );
-          stackContainer.getForPush(spacetreeId,destinationStack)->startReceive(
-            sourceRank, tag, message.getValue()
-          );
-          stackContainer.getForPush(spacetreeId,destinationStack)->finishSendOrReceive();
-          stackContainer.getForPush(spacetreeId,destinationStack)->reverse();
+          if (message.getValue()>0) {
+            stackContainer.getForPush(spacetreeId,destinationStack)->startReceive(
+              sourceRank, tag, message.getValue()
+            );
+            stackContainer.getForPush(spacetreeId,destinationStack)->finishSendOrReceive();
+            stackContainer.getForPush(spacetreeId,destinationStack)->reverse();
+          }
           #else
           assertionMsg( false, "should never be entered" );
           #endif
