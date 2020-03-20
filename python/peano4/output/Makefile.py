@@ -12,7 +12,8 @@ import re
 class CompileMode(Enum):
   Debug = 0
   Trace = 1
-  Release = 2
+  Asserts = 2
+  Release = 3
   
 
 class Makefile(object):
@@ -83,6 +84,9 @@ class Makefile(object):
     if mode==CompileMode.Debug:
       self.d["CXX_MODE_FLAGS"]  = "-g -O0 -DPeanoDebug=4"
       self.d["LIBRARY_POSTFIX"] = "_debug"
+    elif mode==CompileMode.Asserts:
+      self.d["CXX_MODE_FLAGS"]  = "-g -O2 -DPeanoDebug=2"
+      self.d["LIBRARY_POSTFIX"] = "_asserts"
     elif mode==CompileMode.Trace:
       self.d["CXX_MODE_FLAGS"]  = "-g -O2 -DPeanoDebug=1"
       self.d["LIBRARY_POSTFIX"] = "_trace"
