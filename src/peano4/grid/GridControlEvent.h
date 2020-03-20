@@ -27,7 +27,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:09
+ * @date   20/03/2020 08:16
  */
 class peano4::grid::GridControlEvent { 
    
@@ -100,7 +100,7 @@ class peano4::grid::GridControlEvent {
          /**
           * Generated
           */
-         virtual ~GridControlEvent();
+         ~GridControlEvent();
          
          /**
           * Generated
@@ -209,7 +209,7 @@ class peano4::grid::GridControlEvent {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:09
+ * @date   20/03/2020 08:16
  */
 class peano4::grid::GridControlEventPacked { 
    
@@ -278,7 +278,7 @@ class peano4::grid::GridControlEventPacked {
          /**
           * Generated
           */
-         virtual ~GridControlEventPacked();
+         ~GridControlEventPacked();
          
          /**
           * Generated

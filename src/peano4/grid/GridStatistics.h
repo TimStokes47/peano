@@ -27,7 +27,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:09
+ * @date   20/03/2020 08:16
  */
 class peano4::grid::GridStatistics { 
    
@@ -180,7 +180,7 @@ class peano4::grid::GridStatistics {
          /**
           * Generated
           */
-         virtual ~GridStatistics();
+         ~GridStatistics();
          
          /**
           * Generated
@@ -345,7 +345,7 @@ class peano4::grid::GridStatistics {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:09
+ * @date   20/03/2020 08:16
  */
 class peano4::grid::GridStatisticsPacked { 
    
@@ -502,7 +502,7 @@ class peano4::grid::GridStatisticsPacked {
          /**
           * Generated
           */
-         virtual ~GridStatisticsPacked();
+         ~GridStatisticsPacked();
          
          /**
           * Generated

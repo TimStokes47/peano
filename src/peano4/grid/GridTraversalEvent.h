@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:09
+ * @date   20/03/2020 08:16
  */
 class peano4::grid::GridTraversalEvent { 
    
@@ -132,7 +132,7 @@ class peano4::grid::GridTraversalEvent {
          /**
           * Generated
           */
-         virtual ~GridTraversalEvent();
+         ~GridTraversalEvent();
          
           tarch::la::Vector<Dimensions,double> getX() const ;
          
@@ -289,7 +289,7 @@ class peano4::grid::GridTraversalEvent {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:09
+ * @date   20/03/2020 08:16
  */
 class peano4::grid::GridTraversalEventPacked { 
    
@@ -415,7 +415,7 @@ class peano4::grid::GridTraversalEventPacked {
          /**
           * Generated
           */
-         virtual ~GridTraversalEventPacked();
+         ~GridTraversalEventPacked();
          
           tarch::la::Vector<Dimensions,double> getX() const ;
          

@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:09
+ * @date   20/03/2020 08:16
  */
 class peano4::parallel::TreeManagementMessage { 
    
@@ -108,7 +108,7 @@ class peano4::parallel::TreeManagementMessage {
          /**
           * Generated
           */
-         virtual ~TreeManagementMessage();
+         ~TreeManagementMessage();
          
          /**
           * Generated
@@ -213,7 +213,7 @@ class peano4::parallel::TreeManagementMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:09
+ * @date   20/03/2020 08:16
  */
 class peano4::parallel::TreeManagementMessagePacked { 
    
@@ -295,7 +295,7 @@ class peano4::parallel::TreeManagementMessagePacked {
          /**
           * Generated
           */
-         virtual ~TreeManagementMessagePacked();
+         ~TreeManagementMessagePacked();
          
          /**
           * Generated

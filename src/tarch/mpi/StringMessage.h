@@ -29,7 +29,7 @@ namespace tarch {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:08
+ * @date   20/03/2020 08:16
  */
 class tarch::mpi::StringMessage { 
    
@@ -77,7 +77,7 @@ class tarch::mpi::StringMessage {
          /**
           * Generated
           */
-         virtual ~StringMessage();
+         ~StringMessage();
          
          /**
           * Generated
@@ -160,7 +160,7 @@ class tarch::mpi::StringMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   19/03/2020 21:08
+ * @date   20/03/2020 08:16
  */
 class tarch::mpi::StringMessagePacked { 
    
@@ -198,7 +198,7 @@ class tarch::mpi::StringMessagePacked {
          /**
           * Generated
           */
-         virtual ~StringMessagePacked();
+         ~StringMessagePacked();
          
          /**
           * Generated
