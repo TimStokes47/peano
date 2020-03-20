@@ -331,7 +331,9 @@ class peano4::stacks::STDVectorStack {
 //    void startReceive(int rank, int tag, int numberOfElements) requires HasMPIDatatype<T> {
     void startReceive(int rank, int tag, int numberOfElements) {
       #ifdef Parallel
-      assertion( _ioMode==IOMode::None );
+      assertion3( _ioMode==IOMode::None, rank, tag, numberOfElements );
+      assertion3( numberOfElements>0, rank, tag, numberOfElements );
+
       _ioMode = IOMode::MPIReceive;
       _ioTag  = tag;
       _ioRank = rank;

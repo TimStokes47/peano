@@ -25,7 +25,8 @@ void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag) {
 template <>
 void peano4::stacks::STDVectorStack<double>::startReceive(int rank, int tag, int numberOfElements) {
   #ifdef Parallel
-  assertion( _ioMode==IOMode::None );
+  assertion3( _ioMode==IOMode::None, rank, tag, numberOfElements );
+  assertion3( numberOfElements>0, rank, tag, numberOfElements );
   _ioMode = IOMode::MPIReceive;
   _ioTag  = tag;
   _ioRank = rank;
@@ -33,8 +34,9 @@ void peano4::stacks::STDVectorStack<double>::startReceive(int rank, int tag, int
   _data.resize(numberOfElements);
   _currentElement = numberOfElements;
 
-  assertion( _ioMPIRequest == nullptr );
+  assertion3( _ioMPIRequest == nullptr, rank, tag, numberOfElements );
   _ioMPIRequest = new MPI_Request;
+  assertion(_data.size()>0);
   int result = MPI_Irecv( _data.data(), _data.size(), MPI_DOUBLE, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
   if  (result!=MPI_SUCCESS) {
     logError( "startReceive(int,int)", "was not able to receive " << numberOfElements << " values from node " << rank << " on tag " << tag
