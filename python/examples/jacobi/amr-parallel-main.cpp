@@ -346,14 +346,14 @@ int main(int argc, char** argv) {
 
 
   #if PeanoDebug>=1
-  //tarch::mpi::Rank::getInstance().setDeadlockTimeOut(0);
+  tarch::mpi::Rank::getInstance().setDeadlockTimeOut(0);
   #endif
 
 
   int coreCount = 1;
   if (argc==2) {
     #ifdef SharedMemoryParallelisation
-    coreCount = std::atof( argv[1] );
+    coreCount = std::atoi( argv[1] );
     logInfo( "main()", "use " << coreCount << " core(s)" );
     #else
     logWarning( "main()", "you should not set the thread count if you translate without multicore support" );
