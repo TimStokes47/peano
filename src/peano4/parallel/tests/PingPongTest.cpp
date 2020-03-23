@@ -2,6 +2,8 @@
 #include "../StartTraversalMessage.h"
 #include "../TreeManagementMessage.h"
 
+#include "tarch/mpi/IntegerMessage.h"
+
 
 #include "tarch/la/Vector.h"
 #include "tarch/mpi/Rank.h"
@@ -244,7 +246,7 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonbloc
 }
 
 
-void peano4::parallel::tests::PingPongTest::testDaStGenType() {
+void peano4::parallel::tests::PingPongTest::testDaStGenTypeStartTraversalMessage() {
   #ifdef Parallel
   StartTraversalMessage out;
   out.setStepIdentifier(23);
@@ -255,6 +257,28 @@ void peano4::parallel::tests::PingPongTest::testDaStGenType() {
     StartTraversalMessage in;
     in.receive(0,0,false,StartTraversalMessage::ExchangeMode::Blocking);
     validateEqualsWithParams2( in.getStepIdentifier(), out.getStepIdentifier(), in.toString(), out.toString() );
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  #endif
+}
+
+
+void peano4::parallel::tests::PingPongTest::testDaStGenTypeIntegerMessage() {
+  #ifdef Parallel
+  tarch::mpi::IntegerMessage out;
+  out.setValue(23);
+  if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
+    MPI_Send(&out,1,tarch::mpi::IntegerMessage::Datatype,1,0,MPI_COMM_WORLD);
+    out.send(1,0,false,tarch::mpi::IntegerMessage::ExchangeMode::Blocking);
+  }
+  if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
+    tarch::mpi::IntegerMessage inThroughMPI(72);
+    MPI_Recv(&inThroughMPI,1,tarch::mpi::IntegerMessage::Datatype,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    validateEqualsWithParams2( inThroughMPI.getValue(),     out.getValue(), inThroughMPI.toString(),     out.toString() );
+
+    tarch::mpi::IntegerMessage inThroughDaStGen(73);
+    inThroughDaStGen.receive(0,0,false,tarch::mpi::IntegerMessage::ExchangeMode::Blocking);
+    validateEqualsWithParams2( inThroughDaStGen.getValue(), out.getValue(), inThroughDaStGen.toString(), out.toString() );
   }
   MPI_Barrier(MPI_COMM_WORLD);
   #endif
@@ -326,8 +350,12 @@ void peano4::parallel::tests::PingPongTest::testDaStGenArrayTreeManagementMessag
 
 
 void peano4::parallel::tests::PingPongTest::run() {
+  logTraceIn( "run()" );
+
   testMethod(  testBuiltInType );
-  testMethod(  testDaStGenType );
+
+  testMethod(  testDaStGenTypeIntegerMessage );
+  testMethod(  testDaStGenTypeStartTraversalMessage );
   testMethod(  testDaStGenArray );
 
   testMethod(  testDaStGenArrayTreeManagementMessage );
@@ -339,6 +367,8 @@ void peano4::parallel::tests::PingPongTest::run() {
   testMethod(  testMultithreadedPingPongWithNonblockingReceives );
   testMethod(  testMultithreadedPingPongWithNonblockingSends );
   testMethod(  testMultithreadedPingPongWithNonblockingSendsAndReceives );
+
+  logTraceOut( "run()" );
 }
 
 

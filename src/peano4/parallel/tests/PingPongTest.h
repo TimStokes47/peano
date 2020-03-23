@@ -27,7 +27,20 @@ class peano4::parallel::tests::PingPongTest: public tarch::tests::TestCase {
     static tarch::logging::Log _log;
 
     void testBuiltInType();
-    void testDaStGenType();
+
+    /**
+     * It is really important that we test - for the DaStGen-generated data
+     * types - both the built-in operation and the usage with MPI_Send and
+     * MPI_Recv. I had the case that the generated datatypes had a vtable,
+     * i.e. an addition four bytes. These bytes are then added to the object
+     * (at the front), but I had situations where they seem not to be
+     * incorporated into the this pointer. In any case, programmmers should
+     * not try to exchange data types with vtables, but if they do then we'll
+     * see bugs when we try to exchange the generated MPI_Send with a send()
+     * call on the DaStGen object.
+     */
+    void testDaStGenTypeIntegerMessage();
+    void testDaStGenTypeStartTraversalMessage();
     void testDaStGenArray();
 
     void testDaStGenArrayTreeManagementMessage();
