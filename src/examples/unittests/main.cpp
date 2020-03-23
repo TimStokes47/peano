@@ -79,17 +79,27 @@ int main(int argc, char** argv) {
 
   #ifdef Parallel
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {
-	logWarning( "main()", "it is recommended that you run the unit tests with more than one MPI rank, too");
+	  logWarning( "main()", "it is recommended that you run the unit tests with more than one MPI rank, too");
   }
   #endif
 
-  if (argc!=2) {
-	logError( "main()", "usage: ./" + std::string(argv[0]) + " core-count" );
+  int cores = 1;
+  if (argc!=2 and tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    logWarning( "main()", "usage: ./" + std::string(argv[0]) + " core-count (use default core count=1 now)" );
   }
   else {
-	int cores = std::atoi( argv[1] );
-    tarch::multicore::Core::getInstance().configure(cores);
-    runTests();
+    cores = std::atoi( argv[1] );
+  }
+
+  tarch::multicore::Core::getInstance().configure(cores);
+
+  runTests();
+
+  if (not tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    while ( peano4::parallel::Node::getInstance().continueToRun() ) {
+      // Do nothing. This is just to ensure that everything shuts down properly
+      // and is properly installed.
+    }
   }
 
   peano4::shutdownParallelEnvironment();
