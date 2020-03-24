@@ -14,11 +14,16 @@ class DataModel(object):
   def __init__(self, full_qualified_name):
     self._full_qualified_name = full_qualified_name
     self._attributes          = []
+    self._aspects             = []
     
     
   def add_attribute(self,attribute):
     self._attributes.append(attribute)
 
+
+  def add_aspect(self,aspect):
+    aspect.set_model(self)
+    self._aspects.append(aspect)
 
   _Header_Template = """
 //
@@ -31,6 +36,8 @@ class DataModel(object):
 #ifndef {INCLUDE_GUARD}
 #define {INCLUDE_GUARD}
   
+{ASPECT_INCLUDES}
+  
 {OPEN_NAMESPACES}
   struct {UNQUALIFIED_CLASS_NAME};
 {CLOSE_NAMESPACES}
@@ -39,12 +46,13 @@ class DataModel(object):
 struct {FULL_QUALIFIED_CLASS_NAME} {{
   private:
 {ATTRIBUTE_DECLARATIONS}
+
+{ASPECT_ATTRIBUTES}
     
-    #ifdef Parallel
-    int _senderDestinationRank;
-    #endif
   public:
 {METHOD_DECLARATIONS}
+
+{ASPECT_METHOD_DECLARATIONS}
 }};
   
 #endif
@@ -72,13 +80,18 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
     for attribute in flattened_attributes:
       d[ "ATTRIBUTE_DECLARATIONS" ]  += "    " + attribute[1] + "   " + attribute[0] + ";\n"
 
-    d[ "METHOD_DECLARATIONS" ]        = """
-    #ifdef Parallel
-    int getSender() const;
-    #endif
-"""
+    d[ "METHOD_DECLARATIONS" ]        = ""
     for method in flattened_method_declarations:
       d[ "METHOD_DECLARATIONS" ]     += "    " + method[1] + "   " + method[0] + ";\n"
+
+    d[ "ASPECT_ATTRIBUTES" ]             = ""
+    d[ "ASPECT_METHOD_DECLARATIONS" ]    = ""
+    d[ "ASPECT_INCLUDES" ]               = ""
+    for i in self._aspects:
+      d[ "ASPECT_ATTRIBUTES" ]          += i.get_attributes() + "\n"
+      d[ "ASPECT_METHOD_DECLARATIONS" ] += i.get_method_declarations(self._full_qualified_name) + "\n"
+      d[ "ASPECT_INCLUDES" ]            += i.get_include() + "\n"
+        
 
     with open( full_qualified_filename, "w" ) as output:
       output.write( self._Header_Template.format(**d) )
@@ -95,7 +108,7 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
     #for i in dastgen2.get_namespaces( self._full_qualified_name ):
 
     with open( full_qualified_filename, "w" ) as output:
-      output.write( "#include \"" + dastgen2.get_unqualified_class_name(self._full_qualified_name) + "\"\n\n\n" )
+      output.write( "#include \"" + dastgen2.get_unqualified_class_name(self._full_qualified_name) + ".h\"\n\n\n" )
 
       for attribute in self._attributes:
         for method in attribute.get_methods():
@@ -103,4 +116,5 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
           output.write( attribute.get_method_body( method[0]) )
           output.write( "}\n\n\n" )
           
-      output.write( "#ifdef Parallel" )
+      for aspect in self._aspects:
+        output.write( aspect.get_implementation(self._full_qualified_name) )

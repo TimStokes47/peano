@@ -1,4 +1,5 @@
 import dastgen2.attributes
+import dastgen2.aspects
 
 from .DataModel import DataModel
 from .Utils     import get_include_guard
