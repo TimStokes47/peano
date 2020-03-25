@@ -35,6 +35,8 @@ class DataModel(object):
 //  
 #ifndef {INCLUDE_GUARD}
 #define {INCLUDE_GUARD}
+
+#include <string>
   
 {ASPECT_INCLUDES}
   
@@ -53,6 +55,7 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
 {METHOD_DECLARATIONS}
 
 {ASPECT_METHOD_DECLARATIONS}
+    std::string toString() const;
 }};
   
 #endif
@@ -109,6 +112,17 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
 
     with open( full_qualified_filename, "w" ) as output:
       output.write( "#include \"" + dastgen2.get_unqualified_class_name(self._full_qualified_name) + ".h\"\n\n\n" )
+
+      output.write( "#include <sstream>\n\n\n" )
+
+      output.write( "std::string " + self._full_qualified_name + "::toString() const {\n" )
+      output.write( "  std::ostringstream out;\n" )
+      output.write( "  out << \"(\";\n" )
+      for attribute in self._attributes:
+        output.write( "  out << " + attribute.get_to_string() + ";\n"  )
+      output.write( "  out << \")\";\n" )
+      output.write( "  return out.str();\n" )
+      output.write( "}\n\n\n" )
 
       for attribute in self._attributes:
         for method in attribute.get_methods():

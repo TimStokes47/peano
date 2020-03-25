@@ -27,7 +27,9 @@ class MPI(object):
   def get_attributes(self):
     return """
     #ifdef Parallel
-    static MPI_Datatype  Datatype;
+    public:
+      static MPI_Datatype  Datatype;
+    private:
     int                  _senderDestinationRank;
     #endif
 """
@@ -75,13 +77,13 @@ class MPI(object):
      * the number of bytes, so you have to know which type drops in once there
      * is a message on a tag.
      */            
-    static bool isMessageInQueue(int tag);
+    static bool isMessageInQueue(int tag, MPI_Comm communicator);
     #endif
 """
 
 
   def get_implementation(self,full_qualified_name):
-    return """
+    result = """
 #ifdef Parallel
 
 MPI_Datatype """ + full_qualified_name + """::Datatype;
@@ -92,10 +94,64 @@ int """ + full_qualified_name + """::getSenderRank() const {
 
 
 void """ + full_qualified_name + """::initDatatype() {
+  const int NumberOfAttributes = """
+    result += str(len(self._data_model._attributes))
+    result += """;
+  """
+    result += full_qualified_name + """  instances[2];
+    
+  MPI_Datatype subtypes[] = { """
+  
+    for i in self._data_model._attributes:
+      if self._data_model._attributes.index(i)!=0:
+        result += ", "
+      result += i.get_native_MPI_type()[0]
+  
+  
+    result += """ };
+    
+  int blocklen[] = { """ 
+  
+    for i in self._data_model._attributes:
+      if self._data_model._attributes.index(i)!=0:
+        result += ", "
+      result += str(i.get_native_MPI_type()[1])
+    
+    result += """ };
+    
+  MPI_Aint  baseFirstInstance;
+  MPI_Aint  baseSecondInstance;
+  MPI_Get_address( &instances[0], &baseFirstInstance );
+  MPI_Get_address( &instances[1], &baseSecondInstance );
+  MPI_Aint  disp[ NumberOfAttributes ];
+  int       currentAddress = 0;
+"""
+    for i in self._data_model._attributes:
+      result += "  MPI_Get_address( &(instances[0]."
+      result += i.get_plain_C_attributes()[0][0]
+      result += "), &disp[currentAddress] );\n"
+      result += "  currentAddress++;\n"
+      
+    result += """
+  MPI_Aint offset = disp[0] - baseFirstInstance;
+  MPI_Aint extent = baseSecondInstance - baseFirstInstance - offset;
+  for (int i=0; i<"""
+    result += str(len(self._data_model._attributes)) 
+    result += """; i++) {
+    disp[i] = disp[i] - disp[0];
+  }
+
+  int errorCode = 0; 
+  MPI_Datatype tmpType; 
+  errorCode += MPI_Type_create_struct( NumberOfAttributes, blocklen, disp, subtypes, &tmpType );
+  errorCode += MPI_Type_create_resized( tmpType, offset, extent, &Datatype );
+  errorCode += MPI_Type_commit( &Datatype );
+  if (errorCode) std::cerr << "error committing MPI datatype in " << __FILE__ << ":" << __LINE__ << std::endl;
 }
 
 
 void """ + full_qualified_name + """::shutdownDatatype() {
+  MPI_Type_free( &Datatype );
 }
 
 
@@ -106,36 +162,38 @@ void """ + full_qualified_name + """::send(const """ + full_qualified_name + """
 
 void """ + full_qualified_name + """::receive(""" + full_qualified_name + """& buffer, int source, int tag, MPI_Comm communicator ) {
   MPI_Status status;
-  MPI_Recv( &buffer, 1, Datatype, destination, tag, communicator, &status);
-  _senderDestinationRank = status.MPI_Sender;
+  MPI_Recv( &buffer, 1, Datatype, source, tag, communicator, &status);
+  buffer._senderDestinationRank = status.MPI_SOURCE;
 }
 
 
 void """ + full_qualified_name + """::send(const """ + full_qualified_name + """& buffer, int destination, int tag, std::function<void()> waitFunctor, MPI_Comm communicator ) {
-  MPI_Request* sendRequestHandle = new MPI_Request(); 
-  int          flag = 0; 
-  MPI_Isend( &buffer, 1, Datatype, tag, communicator, sendRequestHandle ); 
-  MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
+  MPI_Request sendRequestHandle; 
+  int         flag = 0; 
+  MPI_Isend( &buffer, 1, Datatype, destination, tag, communicator, &sendRequestHandle ); 
+  MPI_Test( &sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
   while (!flag) { 
     waitFunctor();
-    MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
+    MPI_Test( &sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
   }
 }
 
 
-void """ + full_qualified_name + """::receive(int source, int tag, """ + full_qualified_name + """& buffer, std::function<void()> waitFunctor, MPI_Comm communicator ) {  MPI_Request* sendRequestHandle = new MPI_Request(); 
-  MPI_Request* receiveRequestHandle = new MPI_Request(); 
-  int          flag = 0; 
-  MPI_Irecv( &buffer, 1, Datatype, tag, communicator, receiveRequestHandle ); 
-  MPI_Test( receiveRequestHandle, &flag, MPI_STATUS_IGNORE ); 
+void """ + full_qualified_name + """::receive(""" + full_qualified_name + """& buffer, int source, int tag, std::function<void()> waitFunctor, MPI_Comm communicator ) {   
+  MPI_Status  status;
+  MPI_Request receiveRequestHandle; 
+  int         flag = 0; 
+  MPI_Irecv( &buffer, 1, Datatype, source, tag, communicator, &receiveRequestHandle ); 
+  MPI_Test( &receiveRequestHandle, &flag, &status ); 
   while (!flag) { 
     waitFunctor();
-    MPI_Test( receiveRequestHandle, &flag, MPI_STATUS_IGNORE ); 
+    MPI_Test( &receiveRequestHandle, &flag, &status ); 
   }
+  buffer._senderDestinationRank = status.MPI_SOURCE;
 }
 
 
-bool """ + full_qualified_name + """::isMessageInQueue(int tag, MPI_Comm communicator, MPI_Comm communicator) {
+bool """ + full_qualified_name + """::isMessageInQueue(int tag, MPI_Comm communicator) {
   int  flag        = 0;
   MPI_Iprobe(
     MPI_ANY_SOURCE, tag,
@@ -145,7 +203,8 @@ bool """ + full_qualified_name + """::isMessageInQueue(int tag, MPI_Comm communi
 }
 
 #endif
-"""    
+""" 
+    return result;    
 
 
 

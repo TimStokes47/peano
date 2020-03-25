@@ -44,3 +44,25 @@ class Attribute(object):
     """
     return
 
+
+  @abc.abstractmethod
+  def get_native_MPI_type(self):
+    """
+     
+      Return native (built-in) MPI datatype. Return None if there's no 
+      direct mapping. The actual result is not a string only,m 
+      
+    """
+    return 
+
+
+  @abc.abstractmethod
+  def get_to_string(self):
+    """
+    
+      Return string representation of attribute. Should be something
+      that can be streamed via << into a sstream. So the result has 
+      to be of type string.
+
+    """
+    return
