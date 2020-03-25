@@ -139,7 +139,7 @@ void tarch::mpi::Rank::writeTimeOutWarning(
 ) {
   logWarning(
     "writeTimeOutWarning(...)",
-	"operation " << className << "::" << methodName << " on node "
+    "operation " << className << "::" << methodName << " on node "
     << getRank() << " had to wait more than " << _timeOutWarning
     << " seconds for " << numberOfExpectedMessages
     << " message(s) from node " << communicationPartnerRank << " with tag " << tag
@@ -147,8 +147,8 @@ void tarch::mpi::Rank::writeTimeOutWarning(
   if (_deadlockTimeOut>0) {
     logWarning(
       "writeTimeOutWarning(...)",
-	  "application will terminate after " << _deadlockTimeOut << " seconds because of a deadlock"
-	);
+  	  "application will terminate after " << _deadlockTimeOut << " seconds because of a deadlock"
+	  );
   }
   else {
     logWarning(

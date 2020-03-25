@@ -595,17 +595,11 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
    
    void peano4::grid::GridTraversalEvent::initDatatype() {
       {
-         GridTraversalEvent dummyGridTraversalEvent[16];
+         logTraceIn( "initDatatype()" );
+         GridTraversalEvent dummyGridTraversalEvent[2];
          
-         #ifdef MPI2
          const int Attributes = 11;
-         #else
-         const int Attributes = 11+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
             , MPI_BYTE		 //isRefined
@@ -617,16 +611,10 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , MPI_INT		 //relativePositionToFather
             , MPI_INT		 //exchangeVertexData
             , MPI_INT		 //exchangeFaceData
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               Dimensions		 //x
             , Dimensions		 //h
             , TwoPowerD		 //isRefined
@@ -638,114 +626,46 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , Dimensions		 //relativePositionToFather
             , TwoPowerDTimesTwoPowerDMinusOne		 //exchangeVertexData
             , TwoPowerD		 //exchangeFaceData
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._isRefined))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._isRefined))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._vertexDataFrom[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._vertexDataFrom[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._vertexDataTo[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._vertexDataTo[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._faceDataFrom[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._faceDataFrom[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._faceDataTo[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._faceDataTo[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._cellData))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._cellData))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._exchangeVertexData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._exchangeVertexData[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._exchangeFaceData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._exchangeFaceData[0]))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -753,26 +673,17 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridTraversalEvent::Datatype );
          errorCode += MPI_Type_commit( &GridTraversalEvent::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEvent::Datatype);
-         int errorCode = MPI_Type_commit( &GridTraversalEvent::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         GridTraversalEvent dummyGridTraversalEvent[16];
+         logTraceIn( "initDatatype()" );
+         GridTraversalEvent dummyGridTraversalEvent[2];
          
-         #ifdef MPI2
          const int Attributes = 11;
-         #else
-         const int Attributes = 11+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
             , MPI_BYTE		 //isRefined
@@ -784,16 +695,10 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , MPI_INT		 //relativePositionToFather
             , MPI_INT		 //exchangeVertexData
             , MPI_INT		 //exchangeFaceData
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               Dimensions		 //x
             , Dimensions		 //h
             , TwoPowerD		 //isRefined
@@ -805,114 +710,46 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
             , Dimensions		 //relativePositionToFather
             , TwoPowerDTimesTwoPowerDMinusOne		 //exchangeVertexData
             , TwoPowerD		 //exchangeFaceData
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._isRefined))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._isRefined))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._vertexDataFrom[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._vertexDataFrom[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._vertexDataTo[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._vertexDataTo[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._faceDataFrom[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._faceDataFrom[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._faceDataTo[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._faceDataTo[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._cellData))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._cellData))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._exchangeVertexData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._exchangeVertexData[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._exchangeFaceData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]._persistentRecords._exchangeFaceData[0]))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEvent[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -920,12 +757,9 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridTraversalEvent::FullDatatype );
          errorCode += MPI_Type_commit( &GridTraversalEvent::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEvent::FullDatatype);
-         int errorCode = MPI_Type_commit( &GridTraversalEvent::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -933,8 +767,10 @@ peano4::grid::GridTraversalEventPacked peano4::grid::GridTraversalEvent::convert
    
    
    void peano4::grid::GridTraversalEvent::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &GridTraversalEvent::Datatype );
       MPI_Type_free( &GridTraversalEvent::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    
@@ -2182,17 +2018,11 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
    
    void peano4::grid::GridTraversalEventPacked::initDatatype() {
       {
-         GridTraversalEventPacked dummyGridTraversalEventPacked[16];
+         logTraceIn( "initDatatype()" );
+         GridTraversalEventPacked dummyGridTraversalEventPacked[2];
          
-         #ifdef MPI2
          const int Attributes = 9;
-         #else
-         const int Attributes = 9+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
             , MPI_INT		 //relativePositionToFather
@@ -2202,16 +2032,10 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             , MPI_LONG		 //_packedRecords1
             , MPI_LONG		 //_packedRecords2
             , MPI_LONG		 //_packedRecords3
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               Dimensions		 //x
             , Dimensions		 //h
             , Dimensions		 //relativePositionToFather
@@ -2221,102 +2045,42 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             , 1		 //_packedRecords1
             , 1		 //_packedRecords2
             , 1		 //_packedRecords3
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._exchangeVertexData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._exchangeVertexData[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._exchangeFaceData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._exchangeFaceData[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords1))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords1))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords2))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords2))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords3))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords3))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -2324,26 +2088,17 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridTraversalEventPacked::Datatype );
          errorCode += MPI_Type_commit( &GridTraversalEventPacked::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEventPacked::Datatype);
-         int errorCode = MPI_Type_commit( &GridTraversalEventPacked::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         GridTraversalEventPacked dummyGridTraversalEventPacked[16];
+         logTraceIn( "initDatatype()" );
+         GridTraversalEventPacked dummyGridTraversalEventPacked[2];
          
-         #ifdef MPI2
          const int Attributes = 9;
-         #else
-         const int Attributes = 9+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
             , MPI_INT		 //relativePositionToFather
@@ -2353,16 +2108,10 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             , MPI_LONG		 //_packedRecords1
             , MPI_LONG		 //_packedRecords2
             , MPI_LONG		 //_packedRecords3
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               Dimensions		 //x
             , Dimensions		 //h
             , Dimensions		 //relativePositionToFather
@@ -2372,102 +2121,42 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
             , 1		 //_packedRecords1
             , 1		 //_packedRecords2
             , 1		 //_packedRecords3
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._relativePositionToFather[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._exchangeVertexData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._exchangeVertexData[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._exchangeFaceData[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._exchangeFaceData[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords1))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords1))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords2))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords2))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords3))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]._persistentRecords._packedRecords3))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridTraversalEventPacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -2475,12 +2164,9 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridTraversalEventPacked::FullDatatype );
          errorCode += MPI_Type_commit( &GridTraversalEventPacked::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridTraversalEventPacked::FullDatatype);
-         int errorCode = MPI_Type_commit( &GridTraversalEventPacked::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -2488,8 +2174,10 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventPacked::convert
    
    
    void peano4::grid::GridTraversalEventPacked::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &GridTraversalEventPacked::Datatype );
       MPI_Type_free( &GridTraversalEventPacked::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    

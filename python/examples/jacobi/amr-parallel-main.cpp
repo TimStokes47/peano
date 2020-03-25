@@ -233,8 +233,20 @@ class ProgramRun {
 
         peano4::parallel::Node::getInstance().setNextProgramStep(0); // construct mesh
         step();
+
+        if (peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()>5) {
+          logWarning( "runGlobalMaster()", "grid likely too small to keep all cores/ranks busy" );
+          hasSplitRanks = true;
+          hasSplitSharedMemory = true;
+        }
       }
-      while (peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<2);
+      while (
+        peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<2
+        or
+        not hasSplitRanks
+        or
+        not hasSplitSharedMemory
+      );
 
       peano4::parallel::Node::getInstance().setNextProgramStep(1); // setup scenario
       step();

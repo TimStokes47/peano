@@ -71,7 +71,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
 	    if ( directory.empty() ) directory = ".";
       const std::string filename = directory + "/" + Parser::removeHyphens(tokens[1]);
 
-      #pragma task nowait
+      #pragma omp task
       {
         PeanoTextPatchFileReader subReader(filename);
         subReader.parse();

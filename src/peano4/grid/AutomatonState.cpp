@@ -323,93 +323,45 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
    
    void peano4::grid::AutomatonState::initDatatype() {
       {
-         AutomatonState dummyAutomatonState[16];
+         logTraceIn( "initDatatype()" );
+         AutomatonState dummyAutomatonState[2];
          
-         #ifdef MPI2
          const int Attributes = 3;
-         #else
-         const int Attributes = 3+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //level
             , MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //level
             , Dimensions		 //x
             , Dimensions		 //h
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._level))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._level))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -417,126 +369,63 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &AutomatonState::Datatype );
          errorCode += MPI_Type_commit( &AutomatonState::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::Datatype);
-         int errorCode = MPI_Type_commit( &AutomatonState::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         AutomatonState dummyAutomatonState[16];
+         logTraceIn( "initDatatype()" );
+         AutomatonState dummyAutomatonState[2];
          
-         #ifdef MPI2
          const int Attributes = 6;
-         #else
-         const int Attributes = 6+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //level
             , MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
             , MPI_BYTE		 //inverted
             , MPI_BYTE		 //evenFlags
             , MPI_SHORT		 //accessNumber
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //level
             , Dimensions		 //x
             , Dimensions		 //h
             , 1		 //inverted
             , Dimensions		 //evenFlags
             , DimensionsTimesTwo		 //accessNumber
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._level))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._level))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._inverted))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._inverted))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._evenFlags))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._evenFlags))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._accessNumber[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._accessNumber[0]))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -544,12 +433,9 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &AutomatonState::FullDatatype );
          errorCode += MPI_Type_commit( &AutomatonState::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonState::FullDatatype);
-         int errorCode = MPI_Type_commit( &AutomatonState::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -557,8 +443,10 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
    
    
    void peano4::grid::AutomatonState::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &AutomatonState::Datatype );
       MPI_Type_free( &AutomatonState::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    
@@ -1186,93 +1074,45 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
    
    void peano4::grid::AutomatonStatePacked::initDatatype() {
       {
-         AutomatonStatePacked dummyAutomatonStatePacked[16];
+         logTraceIn( "initDatatype()" );
+         AutomatonStatePacked dummyAutomatonStatePacked[2];
          
-         #ifdef MPI2
          const int Attributes = 3;
-         #else
-         const int Attributes = 3+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //level
             , MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //level
             , Dimensions		 //x
             , Dimensions		 //h
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._level))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._level))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -1280,118 +1120,59 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &AutomatonStatePacked::Datatype );
          errorCode += MPI_Type_commit( &AutomatonStatePacked::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::Datatype);
-         int errorCode = MPI_Type_commit( &AutomatonStatePacked::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         AutomatonStatePacked dummyAutomatonStatePacked[16];
+         logTraceIn( "initDatatype()" );
+         AutomatonStatePacked dummyAutomatonStatePacked[2];
          
-         #ifdef MPI2
          const int Attributes = 5;
-         #else
-         const int Attributes = 5+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //level
             , MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
             , MPI_SHORT		 //accessNumber
             , MPI_SHORT		 //_packedRecords0
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //level
             , Dimensions		 //x
             , Dimensions		 //h
             , DimensionsTimesTwo		 //accessNumber
             , 1		 //_packedRecords0
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._level))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._level))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._accessNumber[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._accessNumber[0]))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -1399,12 +1180,9 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &AutomatonStatePacked::FullDatatype );
          errorCode += MPI_Type_commit( &AutomatonStatePacked::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &AutomatonStatePacked::FullDatatype);
-         int errorCode = MPI_Type_commit( &AutomatonStatePacked::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -1412,8 +1190,10 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
    
    
    void peano4::grid::AutomatonStatePacked::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &AutomatonStatePacked::Datatype );
       MPI_Type_free( &AutomatonStatePacked::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    

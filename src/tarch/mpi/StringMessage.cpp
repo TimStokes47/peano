@@ -107,85 +107,41 @@ tarch::mpi::StringMessagePacked tarch::mpi::StringMessage::convert() const{
    
    void tarch::mpi::StringMessage::initDatatype() {
       {
-         StringMessage dummyStringMessage[16];
+         logTraceIn( "initDatatype()" );
+         StringMessage dummyStringMessage[2];
          
-         #ifdef MPI2
          const int Attributes = 2;
-         #else
-         const int Attributes = 2+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //length
             , MPI_SHORT		 //data
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //length
             , MPI_MAX_NAME_STRING		 //data
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._length))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._length))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._data[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._data[0]))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -193,94 +149,47 @@ tarch::mpi::StringMessagePacked tarch::mpi::StringMessage::convert() const{
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &StringMessage::Datatype );
          errorCode += MPI_Type_commit( &StringMessage::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessage::Datatype);
-         int errorCode = MPI_Type_commit( &StringMessage::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         StringMessage dummyStringMessage[16];
+         logTraceIn( "initDatatype()" );
+         StringMessage dummyStringMessage[2];
          
-         #ifdef MPI2
          const int Attributes = 2;
-         #else
-         const int Attributes = 2+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //length
             , MPI_SHORT		 //data
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //length
             , MPI_MAX_NAME_STRING		 //data
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._length))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._length))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._data[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]._data[0]))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessage[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -288,12 +197,9 @@ tarch::mpi::StringMessagePacked tarch::mpi::StringMessage::convert() const{
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &StringMessage::FullDatatype );
          errorCode += MPI_Type_commit( &StringMessage::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessage::FullDatatype);
-         int errorCode = MPI_Type_commit( &StringMessage::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -301,8 +207,10 @@ tarch::mpi::StringMessagePacked tarch::mpi::StringMessage::convert() const{
    
    
    void tarch::mpi::StringMessage::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &StringMessage::Datatype );
       MPI_Type_free( &StringMessage::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    
@@ -655,85 +563,41 @@ tarch::mpi::StringMessage tarch::mpi::StringMessagePacked::convert() const{
    
    void tarch::mpi::StringMessagePacked::initDatatype() {
       {
-         StringMessagePacked dummyStringMessagePacked[16];
+         logTraceIn( "initDatatype()" );
+         StringMessagePacked dummyStringMessagePacked[2];
          
-         #ifdef MPI2
          const int Attributes = 2;
-         #else
-         const int Attributes = 2+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //length
             , MPI_SHORT		 //data
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //length
             , MPI_MAX_NAME_STRING		 //data
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._length))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._length))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._data[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._data[0]))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -741,94 +605,47 @@ tarch::mpi::StringMessage tarch::mpi::StringMessagePacked::convert() const{
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &StringMessagePacked::Datatype );
          errorCode += MPI_Type_commit( &StringMessagePacked::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessagePacked::Datatype);
-         int errorCode = MPI_Type_commit( &StringMessagePacked::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         StringMessagePacked dummyStringMessagePacked[16];
+         logTraceIn( "initDatatype()" );
+         StringMessagePacked dummyStringMessagePacked[2];
          
-         #ifdef MPI2
          const int Attributes = 2;
-         #else
-         const int Attributes = 2+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //length
             , MPI_SHORT		 //data
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //length
             , MPI_MAX_NAME_STRING		 //data
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._length))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._length))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._data[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]._data[0]))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStringMessagePacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -836,12 +653,9 @@ tarch::mpi::StringMessage tarch::mpi::StringMessagePacked::convert() const{
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &StringMessagePacked::FullDatatype );
          errorCode += MPI_Type_commit( &StringMessagePacked::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StringMessagePacked::FullDatatype);
-         int errorCode = MPI_Type_commit( &StringMessagePacked::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -849,8 +663,10 @@ tarch::mpi::StringMessage tarch::mpi::StringMessagePacked::convert() const{
    
    
    void tarch::mpi::StringMessagePacked::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &StringMessagePacked::Datatype );
       MPI_Type_free( &StringMessagePacked::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    

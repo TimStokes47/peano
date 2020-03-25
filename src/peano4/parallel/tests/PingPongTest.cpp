@@ -270,6 +270,7 @@ void peano4::parallel::tests::PingPongTest::testDaStGenTypeIntegerMessage() {
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     MPI_Send(&out,1,tarch::mpi::IntegerMessage::Datatype,1,0,MPI_COMM_WORLD);
     out.send(1,0,false,tarch::mpi::IntegerMessage::ExchangeMode::Blocking);
+    validateEquals( (&out), (out.this) );
   }
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
     tarch::mpi::IntegerMessage inThroughMPI(72);

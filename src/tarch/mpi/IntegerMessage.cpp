@@ -69,164 +69,99 @@ tarch::mpi::IntegerMessagePacked tarch::mpi::IntegerMessage::convert() const{
    
    void tarch::mpi::IntegerMessage::initDatatype() {
       {
-         IntegerMessage dummyIntegerMessage[16];
-         
-         #ifdef MPI2
+         logTraceIn( "initDatatype()" );
+         // braucht mer net
+         IntegerMessage anotherMessage;
+         IntegerMessage dummyIntegerMessage[2];
+
+         logWarning( "initDataype()", "anotherMessage=" << (&anotherMessage) );
+         logWarning( "initDataype()", "anotherMessage=" << (&dummyIntegerMessage[0]) );
+
          const int Attributes = 1;
-         #else
-         const int Attributes = 1+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //value
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //value
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]._value))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]._value))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
+         // umbauen
          for (int i=Attributes-1; i>=0; i--) {
          
-            disp[i] = disp[i] - disp[0];
-            
-         }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
+           // base
             disp[i] = disp[i] - base;
             
          }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         //errorCode += MPI_Type_commit( &tmpType );  war eh ein debug
          MPI_Aint typeExtent; 
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[1]))), &typeExtent);
          typeExtent = typeExtent - base - typeOffset;
-         errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &IntegerMessage::Datatype );
+         //errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &IntegerMessage::Datatype );
+         errorCode += MPI_Type_create_resized( tmpType, 0, 12, &IntegerMessage::Datatype );
          errorCode += MPI_Type_commit( &IntegerMessage::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerMessage::Datatype);
-         int errorCode = MPI_Type_commit( &IntegerMessage::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+
+         // wichtig! => nett, aber bringt nix, weil er polymorphic ist
+         assertion( not std::is_polymorphic<IntegerMessage>::value );
+
+         logWarning(
+           "initDatatype()", "typeOffset=" << typeOffset << ", typeExtent=" << typeExtent <<
+           ", disp[0]=" << disp[0] << ", sizeof(IntegerMessage)=" << sizeof(IntegerMessage) <<
+           ", sizeof(int)=" << sizeof(int)
+         );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         IntegerMessage dummyIntegerMessage[16];
+         logTraceIn( "initDatatype()" );
+         IntegerMessage dummyIntegerMessage[2];
          
-         #ifdef MPI2
          const int Attributes = 1;
-         #else
-         const int Attributes = 1+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //value
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //value
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]._value))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]._value))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessage[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -234,12 +169,9 @@ tarch::mpi::IntegerMessagePacked tarch::mpi::IntegerMessage::convert() const{
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &IntegerMessage::FullDatatype );
          errorCode += MPI_Type_commit( &IntegerMessage::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerMessage::FullDatatype);
-         int errorCode = MPI_Type_commit( &IntegerMessage::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -247,8 +179,10 @@ tarch::mpi::IntegerMessagePacked tarch::mpi::IntegerMessage::convert() const{
    
    
    void tarch::mpi::IntegerMessage::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &IntegerMessage::Datatype );
       MPI_Type_free( &IntegerMessage::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    
@@ -256,10 +190,17 @@ tarch::mpi::IntegerMessagePacked tarch::mpi::IntegerMessage::convert() const{
       // ============================= 
 // start injected snippet/aspect 
 // ============================= 
+
+   int* tmp = (int*)this;
+   volatile IntegerMessage tmpSendCopy( *this );
+   tmpSendCopy._value = _value;
+
+   logWarning( "send(...)", *(tmp+0) << " x " << *(tmp+1) << " x " << *(tmp+2) );
+
 switch (mode) { 
   case ExchangeMode::Blocking: 
     {
-      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::mpi::Rank::getInstance().getCommunicator()); 
+      const int result = MPI_Send((const void*)&tmpSendCopy, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::mpi::Rank::getInstance().getCommunicator());
        if  (result!=MPI_SUCCESS) { 
          std::ostringstream msg; 
          msg << "was not able to send message tarch::mpi::IntegerMessage " 
@@ -346,11 +287,15 @@ switch (mode) {
       // ============================= 
 // start injected snippet/aspect 
 // ============================= 
-MPI_Status status; 
+     int* tmp = (int*)this;
+     logWarning( "receive(...)", "before receive: " << *(tmp+0) << " x " << *(tmp+1) << " x " << *(tmp+2) );
+
+     MPI_Status status;
+     volatile IntegerMessage tmpReceiveCopy;
 switch (mode) { 
   case ExchangeMode::Blocking: 
     { 
-      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
+      const int   result = MPI_Recv( (void*)&tmpReceiveCopy, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE );
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive tarch::mpi::IntegerMessage from rank " 
@@ -471,7 +416,10 @@ switch (mode) {
 // end injected snippet/aspect 
 // =========================== 
 
-      
+  _value = tmpReceiveCopy._value;
+  // *this = tmpReceiveCopy;
+logWarning( "receive(...)", "after receive: " << *(tmp+0) << " x " << *(tmp+1) << " x " << *(tmp+2) );
+
      _senderDestinationRank = source==MPI_ANY_SOURCE ? status.MPI_SOURCE : source;
    }
    
@@ -563,77 +511,37 @@ tarch::mpi::IntegerMessage tarch::mpi::IntegerMessagePacked::convert() const{
    
    void tarch::mpi::IntegerMessagePacked::initDatatype() {
       {
-         IntegerMessagePacked dummyIntegerMessagePacked[16];
+         logTraceIn( "initDatatype()" );
+         IntegerMessagePacked dummyIntegerMessagePacked[2];
          
-         #ifdef MPI2
          const int Attributes = 1;
-         #else
-         const int Attributes = 1+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //value
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //value
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]._value))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]._value))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -641,86 +549,48 @@ tarch::mpi::IntegerMessage tarch::mpi::IntegerMessagePacked::convert() const{
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &IntegerMessagePacked::Datatype );
          errorCode += MPI_Type_commit( &IntegerMessagePacked::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerMessagePacked::Datatype);
-         int errorCode = MPI_Type_commit( &IntegerMessagePacked::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+
+         logWarning(
+           "initDatatype()", "typeOffset=" << typeOffset << ", typeExtent=" << typeExtent <<
+           ", disp[0]" << disp[0]
+         );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         IntegerMessagePacked dummyIntegerMessagePacked[16];
+         logTraceIn( "initDatatype()" );
+         IntegerMessagePacked dummyIntegerMessagePacked[2];
          
-         #ifdef MPI2
          const int Attributes = 1;
-         #else
-         const int Attributes = 1+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //value
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //value
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]._value))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]._value))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerMessagePacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -728,12 +598,9 @@ tarch::mpi::IntegerMessage tarch::mpi::IntegerMessagePacked::convert() const{
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &IntegerMessagePacked::FullDatatype );
          errorCode += MPI_Type_commit( &IntegerMessagePacked::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerMessagePacked::FullDatatype);
-         int errorCode = MPI_Type_commit( &IntegerMessagePacked::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -741,8 +608,10 @@ tarch::mpi::IntegerMessage tarch::mpi::IntegerMessagePacked::convert() const{
    
    
    void tarch::mpi::IntegerMessagePacked::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &IntegerMessagePacked::Datatype );
       MPI_Type_free( &IntegerMessagePacked::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    

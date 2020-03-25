@@ -339,17 +339,11 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
    
    void peano4::grid::GridStatistics::initDatatype() {
       {
-         GridStatistics dummyGridStatistics[16];
+         logTraceIn( "initDatatype()" );
+         GridStatistics dummyGridStatistics[2];
          
-         #ifdef MPI2
          const int Attributes = 9;
-         #else
-         const int Attributes = 9+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //numberOfRefinedVertices
             , MPI_INT		 //numberOfUnrefinedVertices
             , MPI_INT		 //numberOfErasingVertices
@@ -359,16 +353,10 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
             , MPI_BYTE		 //coarseningHasBeenVetoed
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //numberOfRefinedVertices
             , 1		 //numberOfUnrefinedVertices
             , 1		 //numberOfErasingVertices
@@ -378,102 +366,42 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , 1		 //numberOfLocalRefinedCells
             , 1		 //numberOfRemoteRefinedCells
             , 1		 //coarseningHasBeenVetoed
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefinedVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefinedVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfUnrefinedVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfUnrefinedVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfErasingVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfErasingVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._coarseningHasBeenVetoed))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._coarseningHasBeenVetoed))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -481,26 +409,17 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridStatistics::Datatype );
          errorCode += MPI_Type_commit( &GridStatistics::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::Datatype);
-         int errorCode = MPI_Type_commit( &GridStatistics::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         GridStatistics dummyGridStatistics[16];
+         logTraceIn( "initDatatype()" );
+         GridStatistics dummyGridStatistics[2];
          
-         #ifdef MPI2
          const int Attributes = 10;
-         #else
-         const int Attributes = 10+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //numberOfRefinedVertices
             , MPI_INT		 //numberOfUnrefinedVertices
             , MPI_INT		 //numberOfErasingVertices
@@ -511,16 +430,10 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , MPI_INT		 //numberOfRemoteRefinedCells
             , MPI_INT		 //stationarySweeps
             , MPI_BYTE		 //coarseningHasBeenVetoed
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //numberOfRefinedVertices
             , 1		 //numberOfUnrefinedVertices
             , 1		 //numberOfErasingVertices
@@ -531,108 +444,44 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , 1		 //numberOfRemoteRefinedCells
             , 1		 //stationarySweeps
             , 1		 //coarseningHasBeenVetoed
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefinedVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefinedVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfUnrefinedVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfUnrefinedVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfErasingVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfErasingVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._stationarySweeps))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._stationarySweeps))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._coarseningHasBeenVetoed))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._coarseningHasBeenVetoed))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -640,12 +489,9 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridStatistics::FullDatatype );
          errorCode += MPI_Type_commit( &GridStatistics::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatistics::FullDatatype);
-         int errorCode = MPI_Type_commit( &GridStatistics::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -653,8 +499,10 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
    
    
    void peano4::grid::GridStatistics::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &GridStatistics::Datatype );
       MPI_Type_free( &GridStatistics::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    
@@ -1275,17 +1123,11 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
    
    void peano4::grid::GridStatisticsPacked::initDatatype() {
       {
-         GridStatisticsPacked dummyGridStatisticsPacked[16];
+         logTraceIn( "initDatatype()" );
+         GridStatisticsPacked dummyGridStatisticsPacked[2];
          
-         #ifdef MPI2
          const int Attributes = 9;
-         #else
-         const int Attributes = 9+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //numberOfRefinedVertices
             , MPI_INT		 //numberOfUnrefinedVertices
             , MPI_INT		 //numberOfErasingVertices
@@ -1295,16 +1137,10 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
             , MPI_SHORT		 //_packedRecords0
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //numberOfRefinedVertices
             , 1		 //numberOfUnrefinedVertices
             , 1		 //numberOfErasingVertices
@@ -1314,102 +1150,42 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , 1		 //numberOfLocalRefinedCells
             , 1		 //numberOfRemoteRefinedCells
             , 1		 //_packedRecords0
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefinedVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefinedVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfUnrefinedVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfUnrefinedVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfErasingVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfErasingVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -1417,26 +1193,17 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridStatisticsPacked::Datatype );
          errorCode += MPI_Type_commit( &GridStatisticsPacked::Datatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::Datatype);
-         int errorCode = MPI_Type_commit( &GridStatisticsPacked::Datatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       {
-         GridStatisticsPacked dummyGridStatisticsPacked[16];
+         logTraceIn( "initDatatype()" );
+         GridStatisticsPacked dummyGridStatisticsPacked[2];
          
-         #ifdef MPI2
          const int Attributes = 10;
-         #else
-         const int Attributes = 10+2;
-         #endif
          MPI_Datatype subtypes[Attributes] = {
-            #ifndef MPI2
-              MPI_LB,
-            #endif
               MPI_INT		 //numberOfRefinedVertices
             , MPI_INT		 //numberOfUnrefinedVertices
             , MPI_INT		 //numberOfErasingVertices
@@ -1447,16 +1214,10 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , MPI_INT		 //numberOfRemoteRefinedCells
             , MPI_INT		 //stationarySweeps
             , MPI_SHORT		 //_packedRecords0
-            #ifndef MPI2
-            , MPI_UB
-            #endif
             
          };
          
          int blocklen[Attributes] = {
-            #ifndef MPI2
-            1, // lower bound
-            #endif
               1		 //numberOfRefinedVertices
             , 1		 //numberOfUnrefinedVertices
             , 1		 //numberOfErasingVertices
@@ -1467,108 +1228,44 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , 1		 //numberOfRemoteRefinedCells
             , 1		 //stationarySweeps
             , 1		 //_packedRecords0
-            #ifndef MPI2
-            , 1 // upper bound
-            #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         int       currentAddress = -1;
-         #ifndef MPI2
-         currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]))), &disp[currentAddress]);
-         #endif
-         currentAddress++;
-         #ifdef MPI2
+         int       currentAddress = 0;
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefinedVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefinedVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfUnrefinedVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfUnrefinedVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfErasingVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfErasingVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._stationarySweeps))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._stationarySweeps))), 		&disp[currentAddress] );
-         #endif
          currentAddress++;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-         #endif
-         #ifndef MPI2
          currentAddress++;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), &disp[currentAddress]);
-         #endif
          for (int i=1; i<Attributes; i++) {
          
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]))), &base);
-         #endif
-         #ifdef MPI2
          MPI_Aint typeOffset = disp[0] - base;
          for (int i=Attributes-1; i>=0; i--) {
          
             disp[i] = disp[i] - disp[0];
             
          }
-         #else
-         for (int i=0; i<Attributes; i++) {
-         
-            disp[i] = disp[i] - base;
-            
-         }
-         #endif
          int errorCode = 0; 
-         #ifdef MPI2
          MPI_Datatype tmpType; 
          errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Aint typeExtent; 
@@ -1576,12 +1273,9 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          typeExtent = typeExtent - base - typeOffset;
          errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridStatisticsPacked::FullDatatype );
          errorCode += MPI_Type_commit( &GridStatisticsPacked::FullDatatype );
-         errorCode += MPI_Type_free(&tmpType);
-         #else
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridStatisticsPacked::FullDatatype);
-         int errorCode = MPI_Type_commit( &GridStatisticsPacked::FullDatatype );
-         #endif
+         // errorCode += MPI_Type_free(&tmpType);
          if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+         logTraceOut( "initDatatype()" );
          
       }
       
@@ -1589,8 +1283,10 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
    
    
    void peano4::grid::GridStatisticsPacked::shutdownDatatype() {
+      logTraceIn( "shutdownDatatype()" );
       MPI_Type_free( &GridStatisticsPacked::Datatype );
       MPI_Type_free( &GridStatisticsPacked::FullDatatype );
+      logTraceOut( "shutdownDatatype()" );
       
    }
    

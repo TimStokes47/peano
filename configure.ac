@@ -63,7 +63,7 @@ AC_PROG_CXX
 #
 # @todo I should remove the MPI2 flag once I've written a new DaStGen
 #
-PEANO_CXXFLAGS+=" -std=c++14 -DMPI2 "
+PEANO_CXXFLAGS+=" -std=c++14 "
 PEANO_LDFLAGS+=" "
 
 # Think I do not need a C compiler

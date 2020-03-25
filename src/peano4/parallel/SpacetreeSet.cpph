@@ -34,16 +34,15 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
             );
             const int sourceStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(childId);
             const int size        = stackContainer.getForPush(spacetreeId,sourceStack)->size();
-            logDebug(
-              "exchangeAllVerticalDataExchangeStacks(...)",
-              "send out stack " << sourceStack << " (vertical fork communication) from tree " << spacetreeId << " to rank " << destinationRank << " hosting tree " << childId << " with tag " << tag
-            );
             tarch::mpi::IntegerMessage message( size );
-            message.send( destinationRank, tag, true, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-            logDebug(
+            // @todo Debug
+            logWarning(
               "exchangeAllVerticalDataExchangeStacks(...)",
-              "holds " << message.getValue() << " entries"
+              "send out stack " << sourceStack << " (vertical fork communication) from tree " << spacetreeId <<
+              " to rank " << destinationRank << " hosting tree " << childId << " with tag " << tag <<
+              ". Holds " << message.getValue() << " entries"
             );
+            message.send( destinationRank, tag, true, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
             assertion(message.getValue()>=0);
             if (message.getValue()>0) {
               stackContainer.getForPush(spacetreeId,sourceStack)->startSend(
@@ -132,13 +131,15 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
             spacetreeId,
             peano4::parallel::Node::ExchangeMode::ForkJoinData
           );
-          logDebug(
+          // @todo Debug
+          logWarning(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "receive stack " << destinationStack << " from tree " << parentId << " on rank " << sourceRank << " through tag " << tag
           );
           tarch::mpi::IntegerMessage message;
           message.receive( sourceRank, tag, true, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-          logDebug(
+          // @todo Debug
+          logWarning(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "receive " << message.getValue() << " entries"
           );

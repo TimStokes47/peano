@@ -55,7 +55,8 @@ dastgen_model.add_double_scalar( "eps" )
 dastgen_model.add_double_scalar( "diag" )
 dastgen_model.add_double_scalar( "res" )
 dastgen_model.add_enum( "VertexType", ["Boundary", "Inside"] )
-peano4.datamodel.DaStGenToLegacyTool.DaStGenJarFile = "/ddn/data/frmh84/DaStGen/DaStGen.jar"
+#peano4.datamodel.DaStGenToLegacyTool.DaStGenJarFile = "/ddn/data/frmh84/DaStGen/DaStGen.jar"
+peano4.datamodel.DaStGenToLegacyTool.DaStGenJarFile = "~/git/DaStGen/DaStGen.jar"
 project.datamodel.add_vertex( dastgen_model )
 
 
@@ -64,8 +65,8 @@ project.datamodel.add_vertex( dastgen_model )
 #
 create_grid = peano4.solversteps.Step( "CreateGrid", False )
 create_grid.use_vertex( dastgen_model )
-create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.9) )
-#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.05) )
+#create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.9) )
+create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.05) )
 #create_grid.add_action_set( peano4.toolbox.CreateRegularGrid(0.02) )
 project.solversteps.add_step(create_grid)
 
@@ -153,12 +154,13 @@ project.output.makefile.add_library( "ToolboxMultiprecision", project.output.mak
 project.output.makefile.add_header_search_path( "/opt/tbb/include" ) 
 project.output.makefile.set_dimension( 2 )
 #project.output.makefile.set_mode( peano4.output.CompileMode.Debug )
-project.output.makefile.set_mode( peano4.output.CompileMode.Release )
+project.output.makefile.set_mode( peano4.output.CompileMode.Asserts )
+#project.output.makefile.set_mode( peano4.output.CompileMode.Release )
 project.generate(peano4.output.Overwrite.Default)
 project.build(True)
 start_time_stamp = time.time()
-run_successful = project.run( ["4"] )
-#run_successful = project.run( ["1"], ["mpirun", "-n", "2"] )
+#run_successful = project.run( ["4"] )
+run_successful = project.run( ["1"], ["mpirun", "-n", "2"] )
 print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
 
 

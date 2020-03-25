@@ -21,6 +21,7 @@ peano4::parallel::tests::NodeTest::NodeTest():
 
 
 void peano4::parallel::tests::NodeTest::testTagCalculation() {
+  logTraceIn( "testTagCalculation()" );
   int tagA = peano4::parallel::Node::getInstance().getGridDataExchangeTag(0,5,peano4::parallel::Node::ExchangeMode::HorizontalData);
   int tagB = peano4::parallel::Node::getInstance().getGridDataExchangeTag(5,0,peano4::parallel::Node::ExchangeMode::HorizontalData);
   validateWithParams2(tagA!=tagB, tagA, tagB);
@@ -36,6 +37,7 @@ void peano4::parallel::tests::NodeTest::testTagCalculation() {
    peano4::parallel::Node::getInstance().getLocalTreeId(1)
   );
 */
+  logTraceOut( "testTagCalculation()" );
 }
 
 
@@ -52,8 +54,10 @@ void peano4::parallel::tests::NodeTest::testGetPeriodicBoundaryNumber() {
 
 
 void peano4::parallel::tests::NodeTest::run() {
+  logTraceIn( "run()" );
   testMethod( testGetPeriodicBoundaryNumber );
   testMethod( testTagCalculation );
+  logTraceOut( "run()" );
 }
 
 

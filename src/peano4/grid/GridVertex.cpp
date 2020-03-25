@@ -270,101 +270,49 @@
       
       void peano4::grid::GridVertex::initDatatype() {
          {
-            GridVertex dummyGridVertex[16];
+            logTraceIn( "initDatatype()" );
+            GridVertex dummyGridVertex[2];
             
-            #ifdef MPI2
             const int Attributes = 4;
-            #else
-            const int Attributes = 4+2;
-            #endif
             MPI_Datatype subtypes[Attributes] = {
-               #ifndef MPI2
-                 MPI_LB,
-               #endif
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
                , MPI_BYTE		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
-               #ifndef MPI2
-               , MPI_UB
-               #endif
                
             };
             
             int blocklen[Attributes] = {
-               #ifndef MPI2
-               1, // lower bound
-               #endif
                  1		 //state
                , TwoPowerD		 //adjacentRanks
                , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , 1		 //numberOfAdjacentRefinedLocalCells
-               #ifndef MPI2
-               , 1 // upper bound
-               #endif
                
             };
             
             MPI_Aint  disp[Attributes];
-            int       currentAddress = -1;
-            #ifndef MPI2
-            currentAddress++;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &disp[currentAddress]);
-            #endif
-            currentAddress++;
-            #ifdef MPI2
+            int       currentAddress = 0;
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._state))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._state))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-            #endif
-            #ifndef MPI2
             currentAddress++;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), &disp[currentAddress]);
-            #endif
             for (int i=1; i<Attributes; i++) {
             
                assertion1( disp[i] > disp[i-1], i );
             }
             MPI_Aint base;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &base);
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &base);
-            #endif
-            #ifdef MPI2
             MPI_Aint typeOffset = disp[0] - base;
             for (int i=Attributes-1; i>=0; i--) {
             
                disp[i] = disp[i] - disp[0];
                
             }
-            #else
-            for (int i=0; i<Attributes; i++) {
-            
-               disp[i] = disp[i] - base;
-               
-            }
-            #endif
             int errorCode = 0; 
-            #ifdef MPI2
             MPI_Datatype tmpType; 
             errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Aint typeExtent; 
@@ -372,126 +320,63 @@
             typeExtent = typeExtent - base - typeOffset;
             errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridVertex::Datatype );
             errorCode += MPI_Type_commit( &GridVertex::Datatype );
-            errorCode += MPI_Type_free(&tmpType);
-            #else
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::Datatype);
-            int errorCode = MPI_Type_commit( &GridVertex::Datatype );
-            #endif
+            // errorCode += MPI_Type_free(&tmpType);
             if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+            logTraceOut( "initDatatype()" );
             
          }
          {
-            GridVertex dummyGridVertex[16];
+            logTraceIn( "initDatatype()" );
+            GridVertex dummyGridVertex[2];
             
-            #ifdef MPI2
             const int Attributes = 6;
-            #else
-            const int Attributes = 6+2;
-            #endif
             MPI_Datatype subtypes[Attributes] = {
-               #ifndef MPI2
-                 MPI_LB,
-               #endif
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
                , MPI_BYTE		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
                , MPI_BYTE		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , MPI_INT		 //backupOfAdjacentRanks
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
-               #ifndef MPI2
-               , MPI_UB
-               #endif
                
             };
             
             int blocklen[Attributes] = {
-               #ifndef MPI2
-               1, // lower bound
-               #endif
                  1		 //state
                , TwoPowerD		 //adjacentRanks
                , 1		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
                , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , TwoPowerD		 //backupOfAdjacentRanks
                , 1		 //numberOfAdjacentRefinedLocalCells
-               #ifndef MPI2
-               , 1 // upper bound
-               #endif
                
             };
             
             MPI_Aint  disp[Attributes];
-            int       currentAddress = -1;
-            #ifndef MPI2
-            currentAddress++;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &disp[currentAddress]);
-            #endif
-            currentAddress++;
-            #ifdef MPI2
+            int       currentAddress = 0;
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._state))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._state))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-            #endif
-            #ifndef MPI2
             currentAddress++;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), &disp[currentAddress]);
-            #endif
             for (int i=1; i<Attributes; i++) {
             
                assertion1( disp[i] > disp[i-1], i );
             }
             MPI_Aint base;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &base);
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &base);
-            #endif
-            #ifdef MPI2
             MPI_Aint typeOffset = disp[0] - base;
             for (int i=Attributes-1; i>=0; i--) {
             
                disp[i] = disp[i] - disp[0];
                
             }
-            #else
-            for (int i=0; i<Attributes; i++) {
-            
-               disp[i] = disp[i] - base;
-               
-            }
-            #endif
             int errorCode = 0; 
-            #ifdef MPI2
             MPI_Datatype tmpType; 
             errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Aint typeExtent; 
@@ -499,12 +384,9 @@
             typeExtent = typeExtent - base - typeOffset;
             errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridVertex::FullDatatype );
             errorCode += MPI_Type_commit( &GridVertex::FullDatatype );
-            errorCode += MPI_Type_free(&tmpType);
-            #else
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::FullDatatype);
-            int errorCode = MPI_Type_commit( &GridVertex::FullDatatype );
-            #endif
+            // errorCode += MPI_Type_free(&tmpType);
             if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+            logTraceOut( "initDatatype()" );
             
          }
          
@@ -512,8 +394,10 @@
       
       
       void peano4::grid::GridVertex::shutdownDatatype() {
+         logTraceIn( "shutdownDatatype()" );
          MPI_Type_free( &GridVertex::Datatype );
          MPI_Type_free( &GridVertex::FullDatatype );
+         logTraceOut( "shutdownDatatype()" );
          
       }
       
@@ -1084,93 +968,45 @@ switch (mode) {
       
       void peano4::grid::GridVertexPacked::initDatatype() {
          {
-            GridVertexPacked dummyGridVertexPacked[16];
+            logTraceIn( "initDatatype()" );
+            GridVertexPacked dummyGridVertexPacked[2];
             
-            #ifdef MPI2
             const int Attributes = 3;
-            #else
-            const int Attributes = 3+2;
-            #endif
             MPI_Datatype subtypes[Attributes] = {
-               #ifndef MPI2
-                 MPI_LB,
-               #endif
                  MPI_INT		 //adjacentRanks
                , MPI_INT		 //_packedRecords0
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
-               #ifndef MPI2
-               , MPI_UB
-               #endif
                
             };
             
             int blocklen[Attributes] = {
-               #ifndef MPI2
-               1, // lower bound
-               #endif
                  TwoPowerD		 //adjacentRanks
                , 1		 //_packedRecords0
                , 1		 //numberOfAdjacentRefinedLocalCells
-               #ifndef MPI2
-               , 1 // upper bound
-               #endif
                
             };
             
             MPI_Aint  disp[Attributes];
-            int       currentAddress = -1;
-            #ifndef MPI2
-            currentAddress++;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &disp[currentAddress]);
-            #endif
-            currentAddress++;
-            #ifdef MPI2
+            int       currentAddress = 0;
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-            #endif
-            #ifndef MPI2
             currentAddress++;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), &disp[currentAddress]);
-            #endif
             for (int i=1; i<Attributes; i++) {
             
                assertion1( disp[i] > disp[i-1], i );
             }
             MPI_Aint base;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &base);
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &base);
-            #endif
-            #ifdef MPI2
             MPI_Aint typeOffset = disp[0] - base;
             for (int i=Attributes-1; i>=0; i--) {
             
                disp[i] = disp[i] - disp[0];
                
             }
-            #else
-            for (int i=0; i<Attributes; i++) {
-            
-               disp[i] = disp[i] - base;
-               
-            }
-            #endif
             int errorCode = 0; 
-            #ifdef MPI2
             MPI_Datatype tmpType; 
             errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Aint typeExtent; 
@@ -1178,110 +1014,55 @@ switch (mode) {
             typeExtent = typeExtent - base - typeOffset;
             errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridVertexPacked::Datatype );
             errorCode += MPI_Type_commit( &GridVertexPacked::Datatype );
-            errorCode += MPI_Type_free(&tmpType);
-            #else
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::Datatype);
-            int errorCode = MPI_Type_commit( &GridVertexPacked::Datatype );
-            #endif
+            // errorCode += MPI_Type_free(&tmpType);
             if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+            logTraceOut( "initDatatype()" );
             
          }
          {
-            GridVertexPacked dummyGridVertexPacked[16];
+            logTraceIn( "initDatatype()" );
+            GridVertexPacked dummyGridVertexPacked[2];
             
-            #ifdef MPI2
             const int Attributes = 4;
-            #else
-            const int Attributes = 4+2;
-            #endif
             MPI_Datatype subtypes[Attributes] = {
-               #ifndef MPI2
-                 MPI_LB,
-               #endif
                  MPI_INT		 //adjacentRanks
                , MPI_INT		 //_packedRecords0
                , MPI_INT		 //backupOfAdjacentRanks
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
-               #ifndef MPI2
-               , MPI_UB
-               #endif
                
             };
             
             int blocklen[Attributes] = {
-               #ifndef MPI2
-               1, // lower bound
-               #endif
                  TwoPowerD		 //adjacentRanks
                , 1		 //_packedRecords0
                , TwoPowerD		 //backupOfAdjacentRanks
                , 1		 //numberOfAdjacentRefinedLocalCells
-               #ifndef MPI2
-               , 1 // upper bound
-               #endif
                
             };
             
             MPI_Aint  disp[Attributes];
-            int       currentAddress = -1;
-            #ifndef MPI2
-            currentAddress++;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &disp[currentAddress]);
-            #endif
-            currentAddress++;
-            #ifdef MPI2
+            int       currentAddress = 0;
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
-            #endif
             currentAddress++;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-            #endif
-            #ifndef MPI2
             currentAddress++;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), &disp[currentAddress]);
-            #endif
             for (int i=1; i<Attributes; i++) {
             
                assertion1( disp[i] > disp[i-1], i );
             }
             MPI_Aint base;
-            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &base);
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &base);
-            #endif
-            #ifdef MPI2
             MPI_Aint typeOffset = disp[0] - base;
             for (int i=Attributes-1; i>=0; i--) {
             
                disp[i] = disp[i] - disp[0];
                
             }
-            #else
-            for (int i=0; i<Attributes; i++) {
-            
-               disp[i] = disp[i] - base;
-               
-            }
-            #endif
             int errorCode = 0; 
-            #ifdef MPI2
             MPI_Datatype tmpType; 
             errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Aint typeExtent; 
@@ -1289,12 +1070,9 @@ switch (mode) {
             typeExtent = typeExtent - base - typeOffset;
             errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridVertexPacked::FullDatatype );
             errorCode += MPI_Type_commit( &GridVertexPacked::FullDatatype );
-            errorCode += MPI_Type_free(&tmpType);
-            #else
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::FullDatatype);
-            int errorCode = MPI_Type_commit( &GridVertexPacked::FullDatatype );
-            #endif
+            // errorCode += MPI_Type_free(&tmpType);
             if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+            logTraceOut( "initDatatype()" );
             
          }
          
@@ -1302,8 +1080,10 @@ switch (mode) {
       
       
       void peano4::grid::GridVertexPacked::shutdownDatatype() {
+         logTraceIn( "shutdownDatatype()" );
          MPI_Type_free( &GridVertexPacked::Datatype );
          MPI_Type_free( &GridVertexPacked::FullDatatype );
+         logTraceOut( "shutdownDatatype()" );
          
       }
       
@@ -1897,117 +1677,57 @@ switch (mode) {
          
          void peano4::grid::GridVertex::initDatatype() {
             {
-               GridVertex dummyGridVertex[16];
+               logTraceIn( "initDatatype()" );
+               GridVertex dummyGridVertex[2];
                
-               #ifdef MPI2
                const int Attributes = 6;
-               #else
-               const int Attributes = 6+2;
-               #endif
                MPI_Datatype subtypes[Attributes] = {
-                  #ifndef MPI2
-                    MPI_LB,
-                  #endif
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
                   , MPI_BYTE		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
-                  #ifndef MPI2
-                  , MPI_UB
-                  #endif
                   
                };
                
                int blocklen[Attributes] = {
-                  #ifndef MPI2
-                  1, // lower bound
-                  #endif
                     1		 //state
                   , TwoPowerD		 //adjacentRanks
                   , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , Dimensions		 //x
                   , 1		 //level
                   , 1		 //numberOfAdjacentRefinedLocalCells
-                  #ifndef MPI2
-                  , 1 // upper bound
-                  #endif
                   
                };
                
                MPI_Aint  disp[Attributes];
-               int       currentAddress = -1;
-               #ifndef MPI2
-               currentAddress++;
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &disp[currentAddress]);
-               #endif
-               currentAddress++;
-               #ifdef MPI2
+               int       currentAddress = 0;
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._state))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._state))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-               #endif
-               #ifndef MPI2
                currentAddress++;
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), &disp[currentAddress]);
-               #endif
                for (int i=1; i<Attributes; i++) {
                
                   assertion1( disp[i] > disp[i-1], i );
                }
                MPI_Aint base;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &base);
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &base);
-               #endif
-               #ifdef MPI2
                MPI_Aint typeOffset = disp[0] - base;
                for (int i=Attributes-1; i>=0; i--) {
                
                   disp[i] = disp[i] - disp[0];
                   
                }
-               #else
-               for (int i=0; i<Attributes; i++) {
-               
-                  disp[i] = disp[i] - base;
-                  
-               }
-               #endif
                int errorCode = 0; 
-               #ifdef MPI2
                MPI_Datatype tmpType; 
                errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
                MPI_Aint typeExtent; 
@@ -2015,26 +1735,17 @@ switch (mode) {
                typeExtent = typeExtent - base - typeOffset;
                errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridVertex::Datatype );
                errorCode += MPI_Type_commit( &GridVertex::Datatype );
-               errorCode += MPI_Type_free(&tmpType);
-               #else
-               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::Datatype);
-               int errorCode = MPI_Type_commit( &GridVertex::Datatype );
-               #endif
+               // errorCode += MPI_Type_free(&tmpType);
                if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+               logTraceOut( "initDatatype()" );
                
             }
             {
-               GridVertex dummyGridVertex[16];
+               logTraceIn( "initDatatype()" );
+               GridVertex dummyGridVertex[2];
                
-               #ifdef MPI2
                const int Attributes = 8;
-               #else
-               const int Attributes = 8+2;
-               #endif
                MPI_Datatype subtypes[Attributes] = {
-                  #ifndef MPI2
-                    MPI_LB,
-                  #endif
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
                   , MPI_BYTE		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
@@ -2043,16 +1754,10 @@ switch (mode) {
                   , MPI_INT		 //level
                   , MPI_INT		 //backupOfAdjacentRanks
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
-                  #ifndef MPI2
-                  , MPI_UB
-                  #endif
                   
                };
                
                int blocklen[Attributes] = {
-                  #ifndef MPI2
-                  1, // lower bound
-                  #endif
                     1		 //state
                   , TwoPowerD		 //adjacentRanks
                   , 1		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
@@ -2061,96 +1766,40 @@ switch (mode) {
                   , 1		 //level
                   , TwoPowerD		 //backupOfAdjacentRanks
                   , 1		 //numberOfAdjacentRefinedLocalCells
-                  #ifndef MPI2
-                  , 1 // upper bound
-                  #endif
                   
                };
                
                MPI_Aint  disp[Attributes];
-               int       currentAddress = -1;
-               #ifndef MPI2
-               currentAddress++;
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &disp[currentAddress]);
-               #endif
-               currentAddress++;
-               #ifdef MPI2
+               int       currentAddress = 0;
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._state))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._state))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-               #endif
-               #ifndef MPI2
                currentAddress++;
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), &disp[currentAddress]);
-               #endif
                for (int i=1; i<Attributes; i++) {
                
                   assertion1( disp[i] > disp[i-1], i );
                }
                MPI_Aint base;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &base);
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]))), &base);
-               #endif
-               #ifdef MPI2
                MPI_Aint typeOffset = disp[0] - base;
                for (int i=Attributes-1; i>=0; i--) {
                
                   disp[i] = disp[i] - disp[0];
                   
                }
-               #else
-               for (int i=0; i<Attributes; i++) {
-               
-                  disp[i] = disp[i] - base;
-                  
-               }
-               #endif
                int errorCode = 0; 
-               #ifdef MPI2
                MPI_Datatype tmpType; 
                errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
                MPI_Aint typeExtent; 
@@ -2158,12 +1807,9 @@ switch (mode) {
                typeExtent = typeExtent - base - typeOffset;
                errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridVertex::FullDatatype );
                errorCode += MPI_Type_commit( &GridVertex::FullDatatype );
-               errorCode += MPI_Type_free(&tmpType);
-               #else
-               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertex::FullDatatype);
-               int errorCode = MPI_Type_commit( &GridVertex::FullDatatype );
-               #endif
+               // errorCode += MPI_Type_free(&tmpType);
                if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+               logTraceOut( "initDatatype()" );
                
             }
             
@@ -2171,8 +1817,10 @@ switch (mode) {
          
          
          void peano4::grid::GridVertex::shutdownDatatype() {
+            logTraceIn( "shutdownDatatype()" );
             MPI_Type_free( &GridVertex::Datatype );
             MPI_Type_free( &GridVertex::FullDatatype );
+            logTraceOut( "shutdownDatatype()" );
             
          }
          
@@ -2821,109 +2469,53 @@ switch (mode) {
          
          void peano4::grid::GridVertexPacked::initDatatype() {
             {
-               GridVertexPacked dummyGridVertexPacked[16];
+               logTraceIn( "initDatatype()" );
+               GridVertexPacked dummyGridVertexPacked[2];
                
-               #ifdef MPI2
                const int Attributes = 5;
-               #else
-               const int Attributes = 5+2;
-               #endif
                MPI_Datatype subtypes[Attributes] = {
-                  #ifndef MPI2
-                    MPI_LB,
-                  #endif
                     MPI_INT		 //adjacentRanks
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_INT		 //_packedRecords0
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
-                  #ifndef MPI2
-                  , MPI_UB
-                  #endif
                   
                };
                
                int blocklen[Attributes] = {
-                  #ifndef MPI2
-                  1, // lower bound
-                  #endif
                     TwoPowerD		 //adjacentRanks
                   , Dimensions		 //x
                   , 1		 //level
                   , 1		 //_packedRecords0
                   , 1		 //numberOfAdjacentRefinedLocalCells
-                  #ifndef MPI2
-                  , 1 // upper bound
-                  #endif
                   
                };
                
                MPI_Aint  disp[Attributes];
-               int       currentAddress = -1;
-               #ifndef MPI2
-               currentAddress++;
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &disp[currentAddress]);
-               #endif
-               currentAddress++;
-               #ifdef MPI2
+               int       currentAddress = 0;
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._level))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._level))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-               #endif
-               #ifndef MPI2
                currentAddress++;
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), &disp[currentAddress]);
-               #endif
                for (int i=1; i<Attributes; i++) {
                
                   assertion1( disp[i] > disp[i-1], i );
                }
                MPI_Aint base;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &base);
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &base);
-               #endif
-               #ifdef MPI2
                MPI_Aint typeOffset = disp[0] - base;
                for (int i=Attributes-1; i>=0; i--) {
                
                   disp[i] = disp[i] - disp[0];
                   
                }
-               #else
-               for (int i=0; i<Attributes; i++) {
-               
-                  disp[i] = disp[i] - base;
-                  
-               }
-               #endif
                int errorCode = 0; 
-               #ifdef MPI2
                MPI_Datatype tmpType; 
                errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
                MPI_Aint typeExtent; 
@@ -2931,126 +2523,63 @@ switch (mode) {
                typeExtent = typeExtent - base - typeOffset;
                errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridVertexPacked::Datatype );
                errorCode += MPI_Type_commit( &GridVertexPacked::Datatype );
-               errorCode += MPI_Type_free(&tmpType);
-               #else
-               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::Datatype);
-               int errorCode = MPI_Type_commit( &GridVertexPacked::Datatype );
-               #endif
+               // errorCode += MPI_Type_free(&tmpType);
                if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+               logTraceOut( "initDatatype()" );
                
             }
             {
-               GridVertexPacked dummyGridVertexPacked[16];
+               logTraceIn( "initDatatype()" );
+               GridVertexPacked dummyGridVertexPacked[2];
                
-               #ifdef MPI2
                const int Attributes = 6;
-               #else
-               const int Attributes = 6+2;
-               #endif
                MPI_Datatype subtypes[Attributes] = {
-                  #ifndef MPI2
-                    MPI_LB,
-                  #endif
                     MPI_INT		 //adjacentRanks
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_INT		 //_packedRecords0
                   , MPI_INT		 //backupOfAdjacentRanks
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
-                  #ifndef MPI2
-                  , MPI_UB
-                  #endif
                   
                };
                
                int blocklen[Attributes] = {
-                  #ifndef MPI2
-                  1, // lower bound
-                  #endif
                     TwoPowerD		 //adjacentRanks
                   , Dimensions		 //x
                   , 1		 //level
                   , 1		 //_packedRecords0
                   , TwoPowerD		 //backupOfAdjacentRanks
                   , 1		 //numberOfAdjacentRefinedLocalCells
-                  #ifndef MPI2
-                  , 1 // upper bound
-                  #endif
                   
                };
                
                MPI_Aint  disp[Attributes];
-               int       currentAddress = -1;
-               #ifndef MPI2
-               currentAddress++;
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &disp[currentAddress]);
-               #endif
-               currentAddress++;
-               #ifdef MPI2
+               int       currentAddress = 0;
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._x[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._level))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._level))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._backupOfAdjacentRanks[0]))), 		&disp[currentAddress] );
-               #endif
                currentAddress++;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[currentAddress] );
-               #endif
-               #ifndef MPI2
                currentAddress++;
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), &disp[currentAddress]);
-               #endif
                for (int i=1; i<Attributes; i++) {
                
                   assertion1( disp[i] > disp[i-1], i );
                }
                MPI_Aint base;
-               #ifdef MPI2
                MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &base);
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]))), &base);
-               #endif
-               #ifdef MPI2
                MPI_Aint typeOffset = disp[0] - base;
                for (int i=Attributes-1; i>=0; i--) {
                
                   disp[i] = disp[i] - disp[0];
                   
                }
-               #else
-               for (int i=0; i<Attributes; i++) {
-               
-                  disp[i] = disp[i] - base;
-                  
-               }
-               #endif
                int errorCode = 0; 
-               #ifdef MPI2
                MPI_Datatype tmpType; 
                errorCode += MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
                MPI_Aint typeExtent; 
@@ -3058,12 +2587,9 @@ switch (mode) {
                typeExtent = typeExtent - base - typeOffset;
                errorCode += MPI_Type_create_resized( tmpType, typeOffset, typeExtent, &GridVertexPacked::FullDatatype );
                errorCode += MPI_Type_commit( &GridVertexPacked::FullDatatype );
-               errorCode += MPI_Type_free(&tmpType);
-               #else
-               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridVertexPacked::FullDatatype);
-               int errorCode = MPI_Type_commit( &GridVertexPacked::FullDatatype );
-               #endif
+               // errorCode += MPI_Type_free(&tmpType);
                if (errorCode) logError( "initDatatype()", "error committing datatype: " << errorCode );
+               logTraceOut( "initDatatype()" );
                
             }
             
@@ -3071,8 +2597,10 @@ switch (mode) {
          
          
          void peano4::grid::GridVertexPacked::shutdownDatatype() {
+            logTraceIn( "shutdownDatatype()" );
             MPI_Type_free( &GridVertexPacked::Datatype );
             MPI_Type_free( &GridVertexPacked::FullDatatype );
+            logTraceOut( "shutdownDatatype()" );
             
          }
          
