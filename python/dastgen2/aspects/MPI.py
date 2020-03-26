@@ -104,9 +104,12 @@ void """ + full_qualified_name + """::initDatatype() {
     for i in self._data_model._attributes:
       flattened_mpi_attributes += i.get_native_MPI_type()
       
+    wrote_first = False
     for i in flattened_mpi_attributes:
-      if flattened_mpi_attributes.index(i)!=0:
+      if wrote_first:
         result += ", "
+      else:
+        wrote_first = True
       result += i[0]
   
   
@@ -114,9 +117,12 @@ void """ + full_qualified_name + """::initDatatype() {
     
   int blocklen[] = { """ 
   
+    wrote_first = False
     for i in flattened_mpi_attributes:
-      if flattened_mpi_attributes.index(i)!=0:
+      if wrote_first:
         result += ", "
+      else:
+        wrote_first = True
       result += str(i[1])
     
     result += """ };
@@ -142,9 +148,9 @@ void """ + full_qualified_name + """::initDatatype() {
     result += """
   MPI_Aint offset = disp[0] - baseFirstInstance;
   MPI_Aint extent = baseSecondInstance - baseFirstInstance - offset;
-  for (int i=0; i<"""
+  for (int i="""
     result += str(len(self._data_model._attributes)) 
-    result += """; i++) {
+    result += """-1; i>=0; i--) {
     disp[i] = disp[i] - disp[0];
   }
 

@@ -4,19 +4,11 @@ from .Attribute import Attribute
 
 
 class Integer(Attribute):
-  """ 
-  Represents on DaStGen2 object, i.e. one data model.
-  
-  namespace Sequence of strings representing the (nested) namespace. Pass in 
-    [ "examples", "algebraicmg" ] for example if you wanna write a solver that 
-    is embedded into the namespace examples::algebraicmg.
-    
-  """
   def __init__(self, name):
     Attribute.__init__(self, name)
     
-  def get_methods(self):
-    accessor_name = self._name.capitalize()
+  def get_methods(self,_full_qualified_class_name):
+    accessor_name = self._name[:1].title() + self._name[1:]
     return [ 
       ("get" + accessor_name + "() const", "int"),
       ("set" + accessor_name + "(int value)", "void")

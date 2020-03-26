@@ -12,8 +12,18 @@ class Attribute(object):
   def __init__(self, name):
     self._name = name
 
+  def get_public_fields(self):
+    """
+    
+      Return string that is to be embedded into the public part of the class
+      definition. Most attributes don't add anything here, but some (alike
+      enumerations) need to.
+    
+    """
+    return ""
+
   @abc.abstractmethod
-  def get_methods(self):
+  def get_methods(self,_full_qualified_class_name):
     """
       
       Return sequence of methods that are defined for this attribute. Each

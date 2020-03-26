@@ -5,18 +5,22 @@ from .Attribute import Attribute
 
 class String(Attribute):
   """ 
-  Represents on DaStGen2 object, i.e. one data model.
   
-  namespace Sequence of strings representing the (nested) namespace. Pass in 
-    [ "examples", "algebraicmg" ] for example if you wanna write a solver that 
-    is embedded into the namespace examples::algebraicmg.
+  Wrapper around C++ string which is not a dataype supported by
+  MPI natively.
     
+  max_length  Maximum length of the strings that can be handled.
+              The shorter you keep this value, the smaller the 
+              MPI message size, as we don't use dynamic data 
+              structures. We always map the C++ string onto an
+              array with max_length entries.
+              
   """
   def __init__(self, name, max_length=80):
     Attribute.__init__(self, name)
     self._max_length = max_length
     
-  def get_methods(self):
+  def get_methods(self,_full_qualified_name):
     accessor_name = self._name.capitalize()
     return [ 
       ("get" + accessor_name + "() const", "std::string"),
@@ -59,5 +63,5 @@ class String(Attribute):
       Return string representation of attribute.
 
     """
-    return "_" + self._name
+    return "get" +  self._name.capitalize() + "()"
 

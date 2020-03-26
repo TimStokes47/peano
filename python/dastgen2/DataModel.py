@@ -46,18 +46,21 @@ class DataModel(object):
 
 
 struct {FULL_QUALIFIED_CLASS_NAME} {{
+  public:
+{PUBLIC_FIELDS}
+
+{METHOD_DECLARATIONS}
+
+{ASPECT_METHOD_DECLARATIONS}
+    std::string toString() const;
+  
   private:
 {ATTRIBUTE_DECLARATIONS}
 
 {ASPECT_ATTRIBUTES}
     
-  public:
-{METHOD_DECLARATIONS}
-
-{ASPECT_METHOD_DECLARATIONS}
-    std::string toString() const;
 }};
-  
+
 #endif
   """
 
@@ -72,12 +75,15 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
     for i in dastgen2.get_namespaces( self._full_qualified_name ):
       d[ "OPEN_NAMESPACES" ]         += "namespace " + i + "{\n"
       d[ "CLOSE_NAMESPACES" ]        += "}\n"
+
+    d[ "PUBLIC_FIELDS" ]              = ""
         
     flattened_attributes = []
     flattened_method_declarations = []
     for attribute in self._attributes:
       flattened_attributes           += attribute.get_plain_C_attributes()
-      flattened_method_declarations  += attribute.get_methods()
+      flattened_method_declarations  += attribute.get_methods(self._full_qualified_name)
+      d[ "PUBLIC_FIELDS" ]           += attribute.get_public_fields()
 
     d[ "ATTRIBUTE_DECLARATIONS" ]     = ""
     for attribute in flattened_attributes:
@@ -119,13 +125,15 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
       output.write( "  std::ostringstream out;\n" )
       output.write( "  out << \"(\";\n" )
       for attribute in self._attributes:
+        if self._attributes.index(attribute)!=0:
+          output.write( """  out << "\\n"; \n""" )
         output.write( "  out << " + attribute.get_to_string() + ";\n"  )
       output.write( "  out << \")\";\n" )
       output.write( "  return out.str();\n" )
       output.write( "}\n\n\n" )
 
       for attribute in self._attributes:
-        for method in attribute.get_methods():
+        for method in attribute.get_methods(self._full_qualified_name):
           output.write( method[1] + "   " + self._full_qualified_name + "::" + method[0] + " {\n" )
           output.write( attribute.get_method_body( method[0]) )
           output.write( "}\n\n\n" )
