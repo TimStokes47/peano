@@ -1,7 +1,10 @@
 #include "StringMessage.h"
 
 
+
 #include <sstream>
+#include <algorithm>
+
 
 
 std::string tarch::mpi::StringMessage::toString() const {

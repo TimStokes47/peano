@@ -12,7 +12,9 @@
 #include <string>
   
 
+#include "tarch/la/Vector.h"
 #include "tarch/mpi/Rank.h"
+#include "peano4/utils/Globals.h"
 
 
 #ifdef Parallel

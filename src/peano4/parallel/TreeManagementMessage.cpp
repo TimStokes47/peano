@@ -1,16 +1,19 @@
 #include "TreeManagementMessage.h"
 
 
+
 #include <sstream>
+#include <algorithm>
+
 
 
 std::string peano4::parallel::TreeManagementMessage::toString() const {
   std::ostringstream out;
   out << "(";
   out << _masterSpacetreeId;
-  out << "\n"; 
+  out << ","; 
   out << _workerSpacetreeId;
-  out << "\n"; 
+  out << ","; 
   out << (_action==Action::RequestNewRemoteTree? "RequestNewRemoteTree" : "")  << (_action==Action::CreateNewRemoteTree? "CreateNewRemoteTree" : "")  << (_action==Action::RemoveChildTreeFromBooksAsChildBecameEmpty? "RemoveChildTreeFromBooksAsChildBecameEmpty" : "")  << (_action==Action::JoinWithWorker? "JoinWithWorker" : "")  << (_action==Action::Acknowledgement? "Acknowledgement" : "") ;
   out << ")";
   return out.str();

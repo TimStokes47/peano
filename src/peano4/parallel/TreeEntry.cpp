@@ -1,14 +1,17 @@
 #include "TreeEntry.h"
 
 
+
 #include <sstream>
+#include <algorithm>
+
 
 
 std::string peano4::parallel::TreeEntry::toString() const {
   std::ostringstream out;
   out << "(";
   out << _id;
-  out << "\n"; 
+  out << ","; 
   out << _master;
   out << ")";
   return out.str();

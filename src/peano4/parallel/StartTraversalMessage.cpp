@@ -1,7 +1,10 @@
 #include "StartTraversalMessage.h"
 
 
+
 #include <sstream>
+#include <algorithm>
+
 
 
 std::string peano4::parallel::StartTraversalMessage::toString() const {

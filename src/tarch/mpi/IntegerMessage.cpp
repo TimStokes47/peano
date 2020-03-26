@@ -1,7 +1,10 @@
 #include "IntegerMessage.h"
 
 
+
 #include <sstream>
+#include <algorithm>
+
 
 
 std::string tarch::mpi::IntegerMessage::toString() const {
