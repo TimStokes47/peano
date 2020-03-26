@@ -19,7 +19,9 @@ class MPI(object):
 
   def get_include(self):
     return """
+#include "tarch/la/Vector.h"
 #include "tarch/mpi/Rank.h"
+#include "peano4/utils/Globals.h"
 """
   
   def get_attributes(self):

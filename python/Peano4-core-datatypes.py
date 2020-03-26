@@ -80,3 +80,23 @@ start_traversal_message.add_aspect( dastgen2.aspects.MPI() )
 
 start_traversal_message.write_header_file("../src/peano4/parallel/StartTraversalMessage.h")
 start_traversal_message.write_implementation_file("../src/peano4/parallel/StartTraversalMessage.cpp")
+
+
+
+
+
+#
+# peano4::grid::GridControlEvent
+#
+grid_control_event = dastgen2.DataModel( "peano4::grid::GridControlEvent" )
+
+grid_control_event.add_attribute( dastgen2.attributes.Enumeration( "refinementControl", [ "Refine", "Erase" ] ))
+grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "offset", "Dimensions" ))
+grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "width", "Dimensions" ))
+grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "h", "Dimensions" ))
+
+grid_control_event.add_aspect( peano4.dastgen2.MPI() )
+grid_control_event.add_aspect( dastgen2.aspects.MPI() )
+
+grid_control_event.write_header_file("../src/peano4/grid/GridControlEvent.h")
+grid_control_event.write_implementation_file("../src/peano4/grid/GridControlEvent.cpp")

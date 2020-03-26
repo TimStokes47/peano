@@ -119,14 +119,21 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
     with open( full_qualified_filename, "w" ) as output:
       output.write( "#include \"" + dastgen2.get_unqualified_class_name(self._full_qualified_name) + ".h\"\n\n\n" )
 
-      output.write( "#include <sstream>\n\n\n" )
+      output.write( """
+#include <sstream>
+#include <algorithm>
+
+
+
+""" )
+
 
       output.write( "std::string " + self._full_qualified_name + "::toString() const {\n" )
       output.write( "  std::ostringstream out;\n" )
       output.write( "  out << \"(\";\n" )
       for attribute in self._attributes:
         if self._attributes.index(attribute)!=0:
-          output.write( """  out << "\\n"; \n""" )
+          output.write( """  out << ","; \n""" )
         output.write( "  out << " + attribute.get_to_string() + ";\n"  )
       output.write( "  out << \")\";\n" )
       output.write( "  return out.str();\n" )

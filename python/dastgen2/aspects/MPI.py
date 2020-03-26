@@ -139,7 +139,7 @@ void """ + full_qualified_name + """::initDatatype() {
   int       currentAddress = 0;
 """
     for i in self._data_model._attributes:
-      for ii in i.get_plain_C_attributes():
+      for ii in i.get_first_plain_C_attribute():
         result += "  MPI_Get_address( &(instances[0]."
         result += ii[0]
         result += "), &disp[currentAddress] );\n"

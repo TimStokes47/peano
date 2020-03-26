@@ -17,7 +17,7 @@ class Enumeration(Attribute):
     self._variants = variants
     
   def _enum_name(self):
-    return self._name.capitalize()
+    return self._name[:1].title() + self._name[1:]
 
   def get_public_fields(self):
     result = "    enum class " + self._enum_name() + """: int {
@@ -66,7 +66,7 @@ class Enumeration(Attribute):
     for i in self._variants:
       if self._variants.index(i) != 0:
         result += " << "
-      result += "(_action=="
+      result += "(_" + self._name + "=="
       result += self._enum_name()
       result += "::"
       result += i

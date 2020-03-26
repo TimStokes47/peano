@@ -44,6 +44,10 @@ class Attribute(object):
     return
 
 
+  def get_first_plain_C_attribute(self):
+    return self.get_plain_C_attributes()
+
+
   @abc.abstractmethod
   def get_method_body(self,signature):
     """
