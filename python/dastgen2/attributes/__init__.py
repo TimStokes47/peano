@@ -1,3 +1,4 @@
+from .Boolean     import Boolean
 from .Double      import Double
 from .DoubleArray import DoubleArray
 from .Enumeration import Enumeration

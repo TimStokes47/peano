@@ -100,3 +100,37 @@ grid_control_event.add_aspect( dastgen2.aspects.MPI() )
 
 grid_control_event.write_header_file("../src/peano4/grid/GridControlEvent.h")
 grid_control_event.write_implementation_file("../src/peano4/grid/GridControlEvent.cpp")
+
+
+
+
+
+#
+# peano4::grid::GridStatistics
+#
+grid_statistics = dastgen2.DataModel( "peano4::grid::GridStatistics" )
+
+grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "offset", "Dimensions" ))
+grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "width", "Dimensions" ))
+grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "h", "Dimensions" ))
+
+
+grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfRefinedVertices" ) )
+grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfUnrefinedVertices" ) )
+grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfErasingVertices" ) )
+grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfRefiningVertices" ) )
+
+grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfLocalUnrefinedCells" ) )
+grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfRemoteUnrefinedCells" ) )
+grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfLocalRefinedCells" ) )
+grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfRemoteRefinedCells" ) )
+
+grid_statistics.add_attribute( dastgen2.attributes.Integer( "stationarySweeps" ) )
+
+grid_statistics.add_attribute( dastgen2.attributes.Boolean( "coarseningHasBeenVetoed" ) )
+  
+grid_statistics.add_aspect( peano4.dastgen2.MPI() )
+grid_statistics.add_aspect( dastgen2.aspects.MPI() )
+
+grid_statistics.write_header_file("../src/peano4/grid/GridStatistics.h")
+grid_statistics.write_implementation_file("../src/peano4/grid/GridStatistics.cpp")
