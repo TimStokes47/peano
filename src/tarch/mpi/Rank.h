@@ -309,7 +309,7 @@ class tarch::mpi::Rank {
       const std::string&  methodName,
       int                 communicationPartnerRank,
       int                 tag,
-      int                 numberOfExpectedMessages,
+      int                 numberOfExpectedMessages = 1,
       const std::string&  comment = ""
     );
 
@@ -318,7 +318,7 @@ class tarch::mpi::Rank {
       const std::string&  methodName,
       int                 communicationPartnerRank,
       int                 tag,
-      int                 numberOfExpectedMessages
+      int                 numberOfExpectedMessages = 1
     );
 
     void plotMessageQueues();

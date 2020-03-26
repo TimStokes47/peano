@@ -7,7 +7,7 @@
 
 #include "tarch/mpi/Rank.h"
 #include "tarch/mpi/StringMessage.h"
-#include "tarch/mpi/StringTools.h"
+#include "tarch/mpi/IntegerMessage.h"
 
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
@@ -213,17 +213,14 @@ void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
     for (int rank=0; rank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
       if (rank!=tarch::mpi::Rank::getGlobalMasterRank()) {
         int entries;
-        MPI_Recv( &entries, 1, MPI_INT, rank, _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE );
-        logInfo( "startNewSnapshot(...)", "will receive " << entries << " snapshots from rank " << rank);
+        tarch::mpi::IntegerMessage snapshotCounter;
+        tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages( snapshotCounter, rank, _plotterMessageTag );
+        logInfo( "startNewSnapshot(...)", "will receive " << snapshotCounter.getValue() << " snapshots from rank " << rank);
 
-        for (int i=0; i<entries; i++) {
+        for (int i=0; i<snapshotCounter.getValue(); i++) {
           tarch::mpi::StringMessage message;
-          message.receive( rank, _plotterMessageTag, false, tarch::mpi::StringMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
-          std::string newEntry = tarch::mpi::StringTools::convert(message);
-          for (auto& p: _clonedSpacetreeIds) {
-        	assertion3( p!=newEntry, p, newEntry, rank );
-          }
-          _clonedSpacetreeIds.push_back( newEntry );
+          tarch::mpi::StringMessage::receiveAndPollDanglingMessages( message, rank, _plotterMessageTag );
+          _clonedSpacetreeIds.push_back( message.getData() );
         }
       }
     }
@@ -243,11 +240,13 @@ void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
   else {
     #ifdef Parallel
     assertion(isParallelRun);
-    int entries = _clonedSpacetreeIds.size();
-    MPI_Send( &entries, 1, MPI_INT, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
+    tarch::mpi::IntegerMessage entriesMessage;
+    entriesMessage.setValue( _clonedSpacetreeIds.size() );
+    tarch::mpi::IntegerMessage::sendAndPollDanglingMessages(entriesMessage, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag);
     for (auto& p: _clonedSpacetreeIds) {
-      tarch::mpi::StringMessage message = tarch::mpi::StringTools::convert(p);
-      message.send(tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag, false, tarch::mpi::StringMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+      tarch::mpi::StringMessage message;
+      message.setData( p );
+      tarch::mpi::StringMessage::sendAndPollDanglingMessages(message, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag);
     }
     #else
     assertionMsg( false, "should never enter" );

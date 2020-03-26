@@ -34,7 +34,8 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
             );
             const int sourceStack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(childId);
             const int size        = stackContainer.getForPush(spacetreeId,sourceStack)->size();
-            tarch::mpi::IntegerMessage message( size );
+            tarch::mpi::IntegerMessage message;
+            message.setValue( size );
             // @todo Debug
             logWarning(
               "exchangeAllVerticalDataExchangeStacks(...)",
@@ -42,7 +43,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
               " to rank " << destinationRank << " hosting tree " << childId << " with tag " << tag <<
               ". Holds " << message.getValue() << " entries"
             );
-            message.send( destinationRank, tag, true, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+            tarch::mpi::IntegerMessage::sendAndPollDanglingMessages( message, destinationRank, tag );
             assertion(message.getValue()>=0);
             if (message.getValue()>0) {
               stackContainer.getForPush(spacetreeId,sourceStack)->startSend(
@@ -137,8 +138,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
             "receive stack " << destinationStack << " from tree " << parentId << " on rank " << sourceRank << " through tag " << tag
           );
           tarch::mpi::IntegerMessage message;
-          message.receive( sourceRank, tag, true, tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-          // @todo Debug
+          tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages( message, sourceRank, tag );
           logWarning(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "receive " << message.getValue() << " entries"

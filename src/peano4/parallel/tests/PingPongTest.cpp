@@ -269,16 +269,23 @@ void peano4::parallel::tests::PingPongTest::testDaStGenTypeIntegerMessage() {
   out.setValue(23);
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     MPI_Send(&out,1,tarch::mpi::IntegerMessage::Datatype,1,0,MPI_COMM_WORLD);
-    out.send(1,0,false,tarch::mpi::IntegerMessage::ExchangeMode::Blocking);
-    validateEquals( (&out), (out.this) );
+    tarch::mpi::IntegerMessage::send(
+      out, 1, 0,
+      tarch::mpi::Rank::getInstance().getCommunicator()
+    );
   }
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
-    tarch::mpi::IntegerMessage inThroughMPI(72);
+    tarch::mpi::IntegerMessage inThroughMPI;
+    inThroughMPI.setValue(72);
     MPI_Recv(&inThroughMPI,1,tarch::mpi::IntegerMessage::Datatype,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     validateEqualsWithParams2( inThroughMPI.getValue(),     out.getValue(), inThroughMPI.toString(),     out.toString() );
 
-    tarch::mpi::IntegerMessage inThroughDaStGen(73);
-    inThroughDaStGen.receive(0,0,false,tarch::mpi::IntegerMessage::ExchangeMode::Blocking);
+    tarch::mpi::IntegerMessage inThroughDaStGen;
+    inThroughDaStGen.setValue(73);
+    tarch::mpi::IntegerMessage::receive(
+      inThroughDaStGen, 0, 0,
+      tarch::mpi::Rank::getInstance().getCommunicator()
+    );
     validateEqualsWithParams2( inThroughDaStGen.getValue(), out.getValue(), inThroughDaStGen.toString(), out.toString() );
   }
   MPI_Barrier(MPI_COMM_WORLD);

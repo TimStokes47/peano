@@ -283,16 +283,109 @@ void tarch::mpi::Rank::barrier() {
     assertion( getGlobalMasterRank()==0 );
     IntegerMessage message;
     for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
-      message.receive( rank, BarrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+      IntegerMessage::receive(
+        message, rank, BarrierTag,
+        [&]() {
+          int  timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+          int  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+          bool triggeredTimeoutWarning = false;
+          if (
+            tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
+            (clock()>timeOutWarning) &&
+            (!triggeredTimeoutWarning)
+          ) {
+            tarch::mpi::Rank::getInstance().writeTimeOutWarning( "__FILE__", "__LINE__",rank, BarrierTag );
+            triggeredTimeoutWarning = true;
+          }
+          if (
+            tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
+            (clock()>timeOutShutdown)
+          ) {
+            tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "__FILE__", "__LINE__",rank, BarrierTag );
+          }
+          tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+        },
+        tarch::mpi::Rank::getInstance().getCommunicator()
+      );
     }
     for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
-      message.send( rank, BarrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+      IntegerMessage::send(
+        message, rank, BarrierTag,
+        [&]() {
+          int  timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+          int  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+          bool triggeredTimeoutWarning = false;
+          if (
+            tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
+            (clock()>timeOutWarning) &&
+            (!triggeredTimeoutWarning)
+          ) {
+            tarch::mpi::Rank::getInstance().writeTimeOutWarning( "__FILE__", "__LINE__",rank, BarrierTag );
+            triggeredTimeoutWarning = true;
+          }
+          if (
+            tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
+            (clock()>timeOutShutdown)
+          ) {
+            tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "__FILE__", "__LINE__",rank, BarrierTag );
+          }
+          tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+        },
+        tarch::mpi::Rank::getInstance().getCommunicator()
+      );
     }
   }
   else {
-    IntegerMessage message(0);
-    message.send( getGlobalMasterRank(), BarrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
-    message.receive( getGlobalMasterRank(), BarrierTag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+    IntegerMessage message;
+    message.setValue(0);
+    IntegerMessage::send(
+      message, getGlobalMasterRank(), BarrierTag,
+      [&]() {
+        int  timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+        int  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+        bool triggeredTimeoutWarning = false;
+        if (
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
+          (clock()>timeOutWarning) &&
+          (!triggeredTimeoutWarning)
+        ) {
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( "__FILE__", "__LINE__",getGlobalMasterRank(), BarrierTag );
+          triggeredTimeoutWarning = true;
+        }
+        if (
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
+          (clock()>timeOutShutdown)
+        ) {
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "__FILE__", "__LINE__",getGlobalMasterRank(), BarrierTag );
+        }
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      },
+      tarch::mpi::Rank::getInstance().getCommunicator()
+    );
+    IntegerMessage::receive(
+      message, getGlobalMasterRank(), BarrierTag,
+      [&]() {
+        int  timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+        int  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+        bool triggeredTimeoutWarning = false;
+        if (
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
+          (clock()>timeOutWarning) &&
+          (!triggeredTimeoutWarning)
+        ) {
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( "__FILE__", "__LINE__",getGlobalMasterRank(), BarrierTag );
+          triggeredTimeoutWarning = true;
+        }
+        if (
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
+          (clock()>timeOutShutdown)
+        ) {
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "__FILE__", "__LINE__",getGlobalMasterRank(), BarrierTag );
+        }
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      },
+      tarch::mpi::Rank::getInstance().getCommunicator()
+    );
   }
   logTraceOut( "barrier()" );
   #endif
@@ -398,7 +491,7 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
     #if defined( SharedMemoryParallelisation )
     logInfo( "init(...)", "initialised MPI with MPI_THREAD_MULTIPLE" );
     #else
-    logInfo( "init(...)", "initialised MPI with default mode, i.e. with MPI_Init(...)" );
+    logInfo( "init(...)", "initialised MPI with default mode, i.e. with MPI_Init(...), as no shared memory required" );
     #endif
   }
     
