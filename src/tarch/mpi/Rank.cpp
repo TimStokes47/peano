@@ -489,9 +489,9 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
 
   if (_rank==0) {
     #if defined( SharedMemoryParallelisation )
-    logInfo( "init(...)", "initialised MPI with MPI_THREAD_MULTIPLE" );
+    logDebug( "init(...)", "initialised MPI with MPI_THREAD_MULTIPLE" );
     #else
-    logInfo( "init(...)", "initialised MPI with default mode, i.e. with MPI_Init(...), as no shared memory required" );
+    logDebug( "init(...)", "initialised MPI with default mode, i.e. with MPI_Init(...), as no shared memory required" );
     #endif
   }
     

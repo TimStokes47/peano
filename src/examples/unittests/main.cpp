@@ -41,9 +41,6 @@ int main(int argc, char** argv) {
   const int ExitCodeSuccess         = 0;
   const int ExitCodeUnitTestsFailed = 1;
 
-  peano4::initParallelEnvironment(&argc,&argv);
-  peano4::fillLookupTables();
-
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
@@ -76,6 +73,9 @@ int main(int argc, char** argv) {
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, 0, "peano4", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
+
+  peano4::initParallelEnvironment(&argc,&argv);
+  peano4::fillLookupTables();
 
   #ifdef Parallel
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {

@@ -7,22 +7,11 @@
 #include "config.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
-#if !defined(CompilerDefinesMPIMaxNameString)
-#define MPI_MAX_NAME_STRING            80
-#endif
-
 
 #ifdef Parallel
 #include <mpi.h>
-#else
-typedef int    MPI_Datatype;
-typedef int    MPI_Comm;
-typedef int    MPI_Status;
-typedef int    MPI_Request;
 #endif
 
-
-#include <string>
 
 
 
