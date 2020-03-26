@@ -49,3 +49,34 @@ tree_management_message.add_aspect( dastgen2.aspects.MPI() )
 
 tree_management_message.write_header_file("../src/peano4/parallel/TreeManagementMessage.h")
 tree_management_message.write_implementation_file("../src/peano4/parallel/TreeManagementMessage.cpp")
+
+
+
+
+#
+# peano4::parallel::TreeEntry
+#
+tree_management_message = dastgen2.DataModel( "peano4::parallel::TreeEntry" )
+tree_management_message.add_attribute( dastgen2.attributes.Integer( "id" ) )
+tree_management_message.add_attribute( dastgen2.attributes.Integer( "master" ) )
+
+tree_management_message.add_aspect( peano4.dastgen2.MPI() )
+tree_management_message.add_aspect( dastgen2.aspects.MPI() )
+
+tree_management_message.write_header_file("../src/peano4/parallel/TreeEntry.h")
+tree_management_message.write_implementation_file("../src/peano4/parallel/TreeEntry.cpp")
+
+
+
+
+#
+# peano4::parallel::StartTraversalMessage
+#
+start_traversal_message = dastgen2.DataModel( "peano4::parallel::StartTraversalMessage" )
+start_traversal_message.add_attribute( dastgen2.attributes.Integer( "stepIdentifier" ) )
+
+start_traversal_message.add_aspect( peano4.dastgen2.MPI() )
+start_traversal_message.add_aspect( dastgen2.aspects.MPI() )
+
+start_traversal_message.write_header_file("../src/peano4/parallel/StartTraversalMessage.h")
+start_traversal_message.write_implementation_file("../src/peano4/parallel/StartTraversalMessage.cpp")

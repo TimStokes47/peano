@@ -359,14 +359,13 @@ bool peano4::parallel::Node::continueToRun() {
     for (int i=1; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++ ) {
       StartTraversalMessage message;
       message.setStepIdentifier(_currentProgramStep);
-
       logDebug( "continueToRun()", "send out " << message.toString() << " to rank " << i);
-      message.send(i,_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+      StartTraversalMessage::sendAndPollDanglingMessages(message, i,_rankOrchestrationTag);
     }
   }
   else {
     StartTraversalMessage message;
-    message.receive(tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    StartTraversalMessage::receiveAndPollDanglingMessages(message, tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag);
     logDebug( "continueToRun()", "received message " << message.toString() );
     _currentProgramStep = message.getStepIdentifier();
   }

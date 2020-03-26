@@ -251,11 +251,11 @@ void peano4::parallel::tests::PingPongTest::testDaStGenTypeStartTraversalMessage
   StartTraversalMessage out;
   out.setStepIdentifier(23);
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
-    out.send(1,0,false,StartTraversalMessage::ExchangeMode::Blocking);
+    StartTraversalMessage::send( out, 1, 0, MPI_COMM_WORLD );
   }
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
     StartTraversalMessage in;
-    in.receive(0,0,false,StartTraversalMessage::ExchangeMode::Blocking);
+    StartTraversalMessage::receive( in, 0, 0, MPI_COMM_WORLD );
     validateEqualsWithParams2( in.getStepIdentifier(), out.getStepIdentifier(), in.toString(), out.toString() );
   }
   MPI_Barrier(MPI_COMM_WORLD);
@@ -301,11 +301,11 @@ void peano4::parallel::tests::PingPongTest::testDaStGenArray() {
   out[2].setStepIdentifier(25);
   out[3].setStepIdentifier(26);
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
-    MPI_Send(out,4,StartTraversalMessage::FullDatatype,1,0,MPI_COMM_WORLD);
+    MPI_Send(out,4,StartTraversalMessage::Datatype,1,0,MPI_COMM_WORLD);
   }
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
     StartTraversalMessage in[10];
-    MPI_Recv(in,4,StartTraversalMessage::FullDatatype,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    MPI_Recv(in,4,StartTraversalMessage::Datatype,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     validateEqualsWithParams8(
       in[0].getStepIdentifier(), out[0].getStepIdentifier(),
 	  in[0].toString(), out[0].toString(),
