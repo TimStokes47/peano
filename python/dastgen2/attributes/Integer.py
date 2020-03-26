@@ -35,7 +35,7 @@ class Integer(Attribute):
     return ""
   
   def get_native_MPI_type(self):
-    return ("MPI_INT", 1) 
+    return [ ("MPI_INT", 1) ]
   
   def get_to_string(self):
     """

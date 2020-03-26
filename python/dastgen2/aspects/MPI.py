@@ -94,30 +94,36 @@ int """ + full_qualified_name + """::getSenderRank() const {
 
 
 void """ + full_qualified_name + """::initDatatype() {
-  const int NumberOfAttributes = """
-    result += str(len(self._data_model._attributes))
-    result += """;
   """
     result += full_qualified_name + """  instances[2];
     
   MPI_Datatype subtypes[] = { """
-  
+
+
+    flattened_mpi_attributes = []
     for i in self._data_model._attributes:
-      if self._data_model._attributes.index(i)!=0:
+      flattened_mpi_attributes += i.get_native_MPI_type()
+      
+    for i in flattened_mpi_attributes:
+      if flattened_mpi_attributes.index(i)!=0:
         result += ", "
-      result += i.get_native_MPI_type()[0]
+      result += i[0]
   
   
     result += """ };
     
   int blocklen[] = { """ 
   
-    for i in self._data_model._attributes:
-      if self._data_model._attributes.index(i)!=0:
+    for i in flattened_mpi_attributes:
+      if flattened_mpi_attributes.index(i)!=0:
         result += ", "
-      result += str(i.get_native_MPI_type()[1])
+      result += str(i[1])
     
     result += """ };
+
+  const int NumberOfAttributes = """
+    result += str(len(flattened_mpi_attributes))
+    result += """;
     
   MPI_Aint  baseFirstInstance;
   MPI_Aint  baseSecondInstance;
@@ -127,10 +133,11 @@ void """ + full_qualified_name + """::initDatatype() {
   int       currentAddress = 0;
 """
     for i in self._data_model._attributes:
-      result += "  MPI_Get_address( &(instances[0]."
-      result += i.get_plain_C_attributes()[0][0]
-      result += "), &disp[currentAddress] );\n"
-      result += "  currentAddress++;\n"
+      for ii in i.get_plain_C_attributes():
+        result += "  MPI_Get_address( &(instances[0]."
+        result += ii[0]
+        result += "), &disp[currentAddress] );\n"
+        result += "  currentAddress++;\n"
       
     result += """
   MPI_Aint offset = disp[0] - baseFirstInstance;

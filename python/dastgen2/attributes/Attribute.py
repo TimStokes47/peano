@@ -50,7 +50,8 @@ class Attribute(object):
     """
      
       Return native (built-in) MPI datatype. Return None if there's no 
-      direct mapping. The actual result is not a string only,m 
+      direct mapping. The actual result is not a string only, but a list
+      of tuples from native type to cardinality.
       
     """
     return 
