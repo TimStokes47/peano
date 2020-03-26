@@ -69,11 +69,11 @@ int peano4::parallel::SpacetreeSet::getAnswerTag( int targetSpacetreeId ) const 
 
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
   #ifdef Parallel
-  if ( peano4::parallel::TreeManagementMessage::isMessageInQueue(_requestMessageTag) ) {
+  if ( peano4::parallel::TreeManagementMessage::isMessageInQueue(_requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator()) ) {
     logTraceIn( "receiveDanglingMessages()" );
 
     peano4::parallel::TreeManagementMessage message;
-    message.receive(MPI_ANY_SOURCE,_requestMessageTag,true,TreeManagementMessage::ExchangeMode::Blocking);
+    peano4::parallel::TreeManagementMessage::receive( message, MPI_ANY_SOURCE, _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
 
     switch ( message.getAction() ) {
       case peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree:
@@ -85,12 +85,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
 
           message.setWorkerSpacetreeId( newSpacetreeId );
           message.setAction(TreeManagementMessage::Action::Acknowledgement);
-          message.send(
-            message.getSenderRank(),
-            getAnswerTag(message.getMasterSpacetreeId()),
-            true,
-            TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
-          );
+          peano4::parallel::TreeManagementMessage::sendAndPollDanglingMessages(message, message.getSenderRank(), getAnswerTag(message.getMasterSpacetreeId()) );
           logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << message.getMasterSpacetreeId() );
         }
         break;
@@ -111,11 +106,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           _spacetrees.push_back( std::move(newTree) );
           logDebug( "receiveDanglingMessages(...)", "created the new tree " << _spacetrees.back().toString() );
           message.setAction(TreeManagementMessage::Action::Acknowledgement);
-          message.send(
-            message.getSenderRank(),
-            getAnswerTag(message.getMasterSpacetreeId()),true,
-            TreeManagementMessage::ExchangeMode::Blocking
-          );
+          peano4::parallel::TreeManagementMessage::sendAndPollDanglingMessages(message, message.getSenderRank(), getAnswerTag(message.getMasterSpacetreeId()) );
         }
         break;
       case peano4::parallel::TreeManagementMessage::Action::Acknowledgement:
@@ -140,21 +131,19 @@ void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId )
     #ifdef Parallel
     const int targetRank = peano4::parallel::Node::getInstance().getRank(newTreeId);
 
-    TreeManagementMessage message(masterId, newTreeId, TreeManagementMessage::CreateNewRemoteTree);
-    message.send(targetRank,_requestMessageTag,true,TreeManagementMessage::ExchangeMode::Blocking);
+    TreeManagementMessage message;
+    message.setMasterSpacetreeId(masterId);
+    message.setWorkerSpacetreeId(newTreeId);
+    message.setAction( TreeManagementMessage::Action::CreateNewRemoteTree );
+    TreeManagementMessage::send( message,  targetRank, _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
 
     const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(masterId,newTreeId,peano4::parallel::Node::ExchangeMode::ForkJoinData);
     peano4::grid::AutomatonState state = _spacetrees.begin()->_root;
 
     logDebug( "addSpacetree(int,int)", "send state " << state.toString() << " to rank " << targetRank << " via tag " << tag );
     state.send(targetRank,tag,false,peano4::grid::AutomatonState::ExchangeMode::Blocking);
+    TreeManagementMessage::receive( message,  targetRank, getAnswerTag(masterId), tarch::mpi::Rank::getInstance().getCommunicator() );
 
-    message.receive(
-      targetRank,
-	  getAnswerTag(masterId),
-	  true,
-	  TreeManagementMessage::ExchangeMode::Blocking
-	);
     assertion(message.getAction()==TreeManagementMessage::Action::Acknowledgement);
     #else
     assertionMsg( false, "should never enter this branch without -DParallel" );
@@ -614,16 +603,14 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
     if (tarch::mpi::Rank::getInstance().getRank()!=targetRank) {
       #ifdef Parallel
       logDebug( "split(int,int,int)", "request new tree on rank " << targetRank );
-      peano4::parallel::TreeManagementMessage requestMessage(treeId,-1,peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree);
-      requestMessage.send(targetRank,_requestMessageTag,true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+      peano4::parallel::TreeManagementMessage requestMessage;
+      requestMessage.setMasterSpacetreeId(treeId);
+      requestMessage.setWorkerSpacetreeId(-1);
+      requestMessage.setAction( peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree );
+      TreeManagementMessage::sendAndPollDanglingMessages(requestMessage, targetRank, _requestMessageTag);
 
       peano4::parallel::TreeManagementMessage answerMessage;
-      answerMessage.receive(
-        targetRank,
-        getAnswerTag(treeId),
-        true,
-	TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
-      );
+      TreeManagementMessage::receiveAndPollDanglingMessages(answerMessage, targetRank, getAnswerTag(treeId));
       assertion(answerMessage.getAction()==TreeManagementMessage::Action::Acknowledgement);
       newSpacetreeId = answerMessage.getWorkerSpacetreeId();
       #else

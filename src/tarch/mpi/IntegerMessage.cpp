@@ -111,7 +111,7 @@ void tarch::mpi::IntegerMessage::initDatatype() {
 
   MPI_Aint offset = disp[0] - baseFirstInstance;
   MPI_Aint extent = baseSecondInstance - baseFirstInstance - offset;
-  for (int i=0; i<1; i++) {
+  for (int i=1-1; i>=0; i--) {
     disp[i] = disp[i] - disp[0];
   }
 

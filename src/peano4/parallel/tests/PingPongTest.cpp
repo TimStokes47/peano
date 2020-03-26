@@ -345,12 +345,14 @@ void peano4::parallel::tests::PingPongTest::testDaStGenArrayTreeManagementMessag
   peano4::parallel::TreeManagementMessage message;
   const int Tag = 14;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
-    message.send(1, Tag, true, peano4::parallel::TreeManagementMessage::ExchangeMode::Blocking);
+    message.setAction( TreeManagementMessage::Action::Acknowledgement );
+    peano4::parallel::TreeManagementMessage::send( message, 1, Tag, MPI_COMM_WORLD );
   }
   else if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
-    while ( not peano4::parallel::TreeManagementMessage::isMessageInQueue(Tag) ) {
+    while ( not peano4::parallel::TreeManagementMessage::isMessageInQueue(Tag, MPI_COMM_WORLD) ) {
     }
-    message.receive(0, Tag, true, peano4::parallel::TreeManagementMessage::ExchangeMode::Blocking);
+    peano4::parallel::TreeManagementMessage::receive( message, 0, Tag, MPI_COMM_WORLD );
+    validateWithParams1( message.getAction()==TreeManagementMessage::Action::Acknowledgement, message.toString() );
   }
   MPI_Barrier(MPI_COMM_WORLD);
   #endif

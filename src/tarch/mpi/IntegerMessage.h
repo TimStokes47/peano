@@ -32,22 +32,9 @@ namespace mpi{
 
 
 struct tarch::mpi::IntegerMessage {
-  private:
-    int   _value;
-
-
-
-
-    #ifdef Parallel
-    public:
-      static MPI_Datatype  Datatype;
-    private:
-    int                  _senderDestinationRank;
-    #endif
-
-
-    
   public:
+
+
     int   getValue() const;
     void   setValue(int value);
 
@@ -105,7 +92,23 @@ struct tarch::mpi::IntegerMessage {
 
 
     std::string toString() const;
-};
   
+  private:
+    int   _value;
+
+
+
+
+    #ifdef Parallel
+    public:
+      static MPI_Datatype  Datatype;
+    private:
+    int                  _senderDestinationRank;
+    #endif
+
+
+    
+};
+
 #endif
   
