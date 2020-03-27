@@ -202,7 +202,7 @@ int peano4::grid::AutomatonState::getSenderRank() const {
 void peano4::grid::AutomatonState::initDatatype() {
   peano4::grid::AutomatonState  instances[2];
     
-  MPI_Datatype subtypes[] = { MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_CXX_BOOL, MPI_UNSIGNED_LONG, MPI_INT };
+  MPI_Datatype subtypes[] = { MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_BYTE, MPI_UNSIGNED_LONG, MPI_INT };
     
   int blocklen[] = { 1, Dimensions, Dimensions, 1, 1, DimensionsTimesTwo };
 
@@ -238,7 +238,8 @@ void peano4::grid::AutomatonState::initDatatype() {
   errorCode += MPI_Type_create_struct( NumberOfAttributes, blocklen, disp, subtypes, &tmpType );
   errorCode += MPI_Type_create_resized( tmpType, offset, extent, &Datatype );
   errorCode += MPI_Type_commit( &Datatype );
-  if (errorCode) std::cerr << "error committing MPI datatype in " << __FILE__ << ":" << __LINE__ << std::endl;
+  errorCode += MPI_Type_free( &tmpType );
+  if (errorCode) std::cerr << "error constructing MPI datatype in " << __FILE__ << ":" << __LINE__ << std::endl;
 }
 
 

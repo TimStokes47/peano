@@ -27,7 +27,16 @@ class Boolean(Attribute):
     return ""
   
   def get_native_MPI_type(self):
-    return [ ("MPI_CXX_BOOL", 1) ]
+    """
+    
+      I originally wanted to map the booleans to MPI_CXX_BOOL. But 
+      neither CXX_BOOL nor C_BOOL work for the Intel archtiectures. 
+      All the datatypes that I use then seg fault. If I however map
+      the bool to an integer, then it seems to work. 
+      
+    """
+    #return [ ("MPI_C_BOOL", 1) ]
+    return [ ("MPI_BYTE", 1) ]
   
   def get_to_string(self):
     """

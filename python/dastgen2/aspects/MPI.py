@@ -159,7 +159,8 @@ void """ + full_qualified_name + """::initDatatype() {
   errorCode += MPI_Type_create_struct( NumberOfAttributes, blocklen, disp, subtypes, &tmpType );
   errorCode += MPI_Type_create_resized( tmpType, offset, extent, &Datatype );
   errorCode += MPI_Type_commit( &Datatype );
-  if (errorCode) std::cerr << "error committing MPI datatype in " << __FILE__ << ":" << __LINE__ << std::endl;
+  errorCode += MPI_Type_free( &tmpType );
+  if (errorCode) std::cerr << "error constructing MPI datatype in " << __FILE__ << ":" << __LINE__ << std::endl;
 }
 
 

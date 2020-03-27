@@ -92,10 +92,8 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       case peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree:
         {
           assertion( _state==SpacetreeSetState::Waiting );
-          const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(message.getMasterSpacetreeId(),message.getWorkerSpacetreeId(),peano4::parallel::Node::ExchangeMode::ForkJoinData);
-          logDebug( "receiveDanglingMessages(...)", "wait for new state on tag " << tag );
           peano4::grid::AutomatonState state;
-          peano4::grid::AutomatonState::receive( state, message.getSenderRank(), tag, tarch::mpi::Rank::getInstance().getCommunicator() );
+          peano4::grid::AutomatonState::receive( state, message.getSenderRank(), _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
           peano4::grid::Spacetree newTree(
             message.getWorkerSpacetreeId(),
             message.getMasterSpacetreeId(),
@@ -106,6 +104,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           _spacetrees.push_back( std::move(newTree) );
           logDebug( "receiveDanglingMessages(...)", "created the new tree " << _spacetrees.back().toString() );
           message.setAction(TreeManagementMessage::Action::Acknowledgement);
+          //const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(message.getMasterSpacetreeId(),message.getWorkerSpacetreeId(),peano4::parallel::Node::ExchangeMode::ForkJoinData);
           peano4::parallel::TreeManagementMessage::sendAndPollDanglingMessages(message, message.getSenderRank(), getAnswerTag(message.getMasterSpacetreeId()) );
         }
         break;
