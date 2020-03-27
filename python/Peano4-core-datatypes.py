@@ -110,11 +110,6 @@ grid_control_event.write_implementation_file("../src/peano4/grid/GridControlEven
 #
 grid_statistics = dastgen2.DataModel( "peano4::grid::GridStatistics" )
 
-grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "offset", "Dimensions" ))
-grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "width", "Dimensions" ))
-grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "h", "Dimensions" ))
-
-
 grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfRefinedVertices" ) )
 grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfUnrefinedVertices" ) )
 grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfErasingVertices" ) )
@@ -134,3 +129,89 @@ grid_statistics.add_aspect( dastgen2.aspects.MPI() )
 
 grid_statistics.write_header_file("../src/peano4/grid/GridStatistics.h")
 grid_statistics.write_implementation_file("../src/peano4/grid/GridStatistics.cpp")
+
+
+
+
+#
+# peano4::grid::AutomatonState
+#
+automaton_state = dastgen2.DataModel( "peano4::grid::AutomatonState" )
+
+automaton_state.add_attribute( dastgen2.attributes.Integer( "level" ) )
+automaton_state.add_attribute( peano4.dastgen2.Peano4DoubleArray( "x", "Dimensions" ))
+automaton_state.add_attribute( peano4.dastgen2.Peano4DoubleArray( "h", "Dimensions" ))
+
+automaton_state.add_attribute( dastgen2.attributes.Boolean( "inverted" ) )
+automaton_state.add_attribute( dastgen2.attributes.BooleanArray( "evenFlags", "Dimensions" ) )
+
+# @todo Should be char array likely 
+automaton_state.add_attribute( peano4.dastgen2.Peano4IntegerArray( "accessNumber", "DimensionsTimesTwo" ) )
+
+automaton_state.add_aspect( peano4.dastgen2.MPI() )
+automaton_state.add_aspect( dastgen2.aspects.MPI() )
+
+automaton_state.write_header_file("../src/peano4/grid/AutomatonState.h")
+automaton_state.write_implementation_file("../src/peano4/grid/AutomatonState.cpp")
+
+
+
+
+
+
+#
+# peano4::grid::GridTraversalEvent
+#
+grid_traversal_event = dastgen2.DataModel( "peano4::grid::GridTraversalEvent" )
+
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "x", "Dimensions" ))
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "h", "Dimensions" ))
+grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isRefined", "TwoPowerD" ) )
+
+# @todo Should be char array likely with -4 to 9
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "vertexDataFrom", "TwoPowerD" ) )
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "vertexDataTo", "TwoPowerD" ) )
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "faceDataFrom", "TwoTimesD" ) )
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "faceDataTo", "TwoTimesD" ) )
+
+grid_traversal_event.add_attribute( dastgen2.attributes.Integer( "cellData" ) )
+
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "relativePositionToFather", "Dimensions" ) )
+
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "exchangeVertexData", "TwoPowerDTimesTwoPowerDMinusOne" ) )
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "exchangeFaceData", "TwoPowerD" ) )
+
+grid_traversal_event.add_aspect( peano4.dastgen2.MPI() )
+grid_traversal_event.add_aspect( dastgen2.aspects.MPI() )
+
+grid_traversal_event.write_header_file("../src/peano4/grid/GridTraversalEvent.h")
+grid_traversal_event.write_implementation_file("../src/peano4/grid/GridTraversalEvent.cpp")
+
+
+
+#
+# peano4::grid::GridVertex
+#
+grid_vertex = dastgen2.DataModel( "peano4::grid::GridVertex" )
+
+grid_vertex.add_attribute( dastgen2.attributes.Enumeration( "state", [ "HangingVertex", "New", "Unrefined", "Refined", "RefinementTriggered", "Refining", "EraseTriggered", "Erasing", "Delete" ] ) )
+
+grid_vertex.add_attribute( peano4.dastgen2.Peano4IntegerArray( "adjacentRanks", "TwoPowerD" ) )
+grid_vertex.add_attribute( peano4.dastgen2.Peano4IntegerArray( "backupOfAdjacentRanks", "TwoPowerD" ) )
+
+grid_vertex.add_attribute( dastgen2.attributes.Boolean( "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep" ) )
+grid_vertex.add_attribute( dastgen2.attributes.Boolean( "isAntecessorOfRefinedVertexInCurrentTreeSweep" ) )
+
+grid_vertex.add_attribute( dastgen2.attributes.Integer( "numberOfAdjacentRefinedLocalCells" ) )
+
+# Brauch ich nur im Debug mode. Das wird bisher net unterstuetzt
+grid_vertex.add_attribute( peano4.dastgen2.Peano4DoubleArray( "x", "Dimensions" ))
+grid_vertex.add_attribute( dastgen2.attributes.Integer( "level" ) )
+
+grid_vertex.add_aspect( peano4.dastgen2.MPI() )
+grid_vertex.add_aspect( dastgen2.aspects.MPI() )
+
+grid_vertex.write_header_file("../src/peano4/grid/GridVertex.h")
+grid_vertex.write_implementation_file("../src/peano4/grid/GridVertex.cpp")
+
+

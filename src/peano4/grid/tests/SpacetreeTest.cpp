@@ -59,18 +59,12 @@ void peano4::grid::tests::SpacetreeTest::testRestrictToCoarseGrid() {
 void peano4::grid::tests::SpacetreeTest::testCreateLeaveCellTraversalEvent() {
   GridVertex vertices[TwoPowerD];
   dfor2(k)
-    tarch::la::Vector<Dimensions,double> x = k.convertScalar<double>();
-    vertices[kScalar] = GridVertex(
-       GridVertex::State::Refined,     // const State& state
-       tarch::la::Vector<TwoPowerD,int>(peano4::grid::Spacetree::InvalidRank),            // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
-	   true,
-	   true                                              // antecessor of refined vertex
-       #ifdef PeanoDebug
-       ,
-       x,                                                // const tarch::la::Vector<Dimensions,double>& x
-       0                                                 // level
-       #endif
-    );
+    vertices[kScalar].setState( GridVertex::State::Refined );
+    vertices[kScalar].setAdjacentRanks( tarch::la::Vector<TwoPowerD,int>(peano4::grid::Spacetree::InvalidRank) );
+    vertices[kScalar].setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(true);
+    vertices[kScalar].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
+    vertices[kScalar].setX(k.convertScalar<double>());
+    vertices[kScalar].setLevel(0);
   }
 
   // AutomatonState(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber);

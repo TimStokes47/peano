@@ -67,7 +67,8 @@ void peano4::grid::PeanoCurve::removeFaceAccessNumber(AutomatonState& cell, int 
   assertion( face >= 0 );
   assertion( face < 2*Dimensions );
 
-  tarch::la::Vector<DimensionsTimesTwo,short int> accessNumber = cell.getAccessNumber();
+  // use auto here as I tend to change the type of the access flags
+  auto accessNumber = cell.getAccessNumber();
   int oldFaceNumber = accessNumber(face);
 
   if (accessNumber(face)>0) {
@@ -114,7 +115,8 @@ void peano4::grid::PeanoCurve::setFaceAccessNumber(AutomatonState& cell, int fac
   assertion( value != 0 );
   assertion( cell.getAccessNumber()(face) == 0 );
 
-  tarch::la::Vector<DimensionsTimesTwo,short int> accessNumber = cell.getAccessNumber();
+  // use auto here as I tend to change the type of the access flags
+  auto accessNumber = cell.getAccessNumber();
 
   if (value > 0 ) {
     for (int i=0; i<2*Dimensions; i++)
