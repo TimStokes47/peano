@@ -43,6 +43,12 @@ class DaStGen2Generator(object):
 
 
 class DaStGen2(DoF):
+  """
+  
+    A DaStGen2 data type generator. To add fields to this object, just
+    use the DaStGen2 instance data of this field, i.e. data.add_attribute().
+    
+  """  
   def __init__(self, name):
     super(DaStGen2, self).__init__(name)
     self.generator        = DaStGen2Generator(self)
@@ -52,4 +58,8 @@ class DaStGen2(DoF):
     self.data.add_aspect( peano4.dastgen2.MPI() )
     self.data.add_aspect( dastgen2.aspects.MPI() )
 
+    
+    #@todo ifdef PeanoDebug
+    self.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "debugX", "Dimensions" ) )
+    self.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "debugH", "Dimensions" ) )
 

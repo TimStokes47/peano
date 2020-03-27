@@ -24,6 +24,7 @@ import peano4.output
 import peano4.visualisation
 import peano4.toolbox
 
+import dastgen2
 
 
 #
@@ -62,6 +63,12 @@ if use_legacy_dastgen:
   project.datamodel.add_vertex( dastgen_model )
 else:
   dastgen_model = peano4.datamodel.DaStGen2( "MG" )
+  dastgen_model.data.add_attribute( dastgen2.attributes.Double("u") )
+  dastgen_model.data.add_attribute( dastgen2.attributes.Double("rhs") )
+  dastgen_model.data.add_attribute( dastgen2.attributes.Double("eps") )
+  dastgen_model.data.add_attribute( dastgen2.attributes.Double("diag") )
+  dastgen_model.data.add_attribute( dastgen2.attributes.Double("res") )
+  dastgen_model.data.add_attribute( dastgen2.attributes.Enumeration("vertexType", ["Boundary", "Inside"]) )
 
   project.datamodel.add_vertex( dastgen_model )
 
