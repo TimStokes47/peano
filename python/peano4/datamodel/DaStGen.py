@@ -4,6 +4,7 @@ from .DaStGenToLegacyTool import DaStGenToLegacyTool
 from .DoF                 import DoF
 
 
+
 class DaStGen(DoF):
   def __init__(self, name):
     """

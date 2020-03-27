@@ -48,16 +48,23 @@ project = peano4.Project( ["examples", "jacobi"], "amr-parallel", "." )
 # grid entities. One way to associate stuff is to use our DaStGen legacy format.
 # This is our strategy here.
 #
-dastgen_model = peano4.datamodel.DaStGen( "MG" )
-dastgen_model.add_double_scalar( "u" )
-dastgen_model.add_double_scalar( "rhs" )
-dastgen_model.add_double_scalar( "eps" )
-dastgen_model.add_double_scalar( "diag" )
-dastgen_model.add_double_scalar( "res" )
-dastgen_model.add_enum( "VertexType", ["Boundary", "Inside"] )
-#peano4.datamodel.DaStGenToLegacyTool.DaStGenJarFile = "/ddn/data/frmh84/DaStGen/DaStGen.jar"
-peano4.datamodel.DaStGenToLegacyTool.DaStGenJarFile = "~/git/DaStGen/DaStGen.jar"
-project.datamodel.add_vertex( dastgen_model )
+use_legacy_dastgen = False
+if use_legacy_dastgen:
+  dastgen_model = peano4.datamodel.DaStGen( "MG" )
+  dastgen_model.add_double_scalar( "u" )
+  dastgen_model.add_double_scalar( "rhs" )
+  dastgen_model.add_double_scalar( "eps" )
+  dastgen_model.add_double_scalar( "diag" )
+  dastgen_model.add_double_scalar( "res" )
+  dastgen_model.add_enum( "VertexType", ["Boundary", "Inside"] )
+  #peano4.datamodel.DaStGenToLegacyTool.DaStGenJarFile = "/ddn/data/frmh84/DaStGen/DaStGen.jar"
+  peano4.datamodel.DaStGenToLegacyTool.DaStGenJarFile = "~/git/DaStGen/DaStGen.jar"
+  project.datamodel.add_vertex( dastgen_model )
+else:
+  dastgen_model = peano4.datamodel.DaStGen2( "MG" )
+
+  project.datamodel.add_vertex( dastgen_model )
+
 
 
 #

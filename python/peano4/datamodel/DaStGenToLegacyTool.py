@@ -18,8 +18,8 @@ class DaStGenToLegacyTool(object):
   This converter requires my good old DaStGen Java tool, writes a spec file for 
   DaStGen and finally invokes the tool.
   """
-  def __init__(self,patch):
-    self.data = patch
+  def __init__(self,data):
+    self.data = data
 
 
   def get_stack_container(self):

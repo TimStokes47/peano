@@ -1,6 +1,7 @@
 # This file is part of the DaStGen2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import dastgen2
+from numpy import full
 
 
 class DataModel(object):
@@ -15,6 +16,10 @@ class DataModel(object):
     self._full_qualified_name = full_qualified_name
     self._attributes          = []
     self._aspects             = []
+
+
+  def set_full_qualified_name(self, full_qualified_name):
+    self._full_qualified_name = full_qualified_name
     
     
   def add_attribute(self,attribute):

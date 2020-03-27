@@ -3,6 +3,7 @@
 
 from .DaStGen                    import DaStGen
 from .DaStGenToLegacyTool        import DaStGenToLegacyTool
+from .DaStGen2                   import DaStGen2
 from .DynamicArrayOverPrimitives import DynamicArrayOverPrimitives
 from .DynamicArrayOverPrimitivesToStdVector import DynamicArrayOverPrimitivesToStdVector
 from .Model                      import Model
