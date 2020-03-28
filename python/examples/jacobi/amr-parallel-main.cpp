@@ -125,7 +125,7 @@ class ProgramRun {
                 }
                 examples::jacobi::observers::SetupScenario  observer;
                 peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
-                peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+                //peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
               }
             }
           }
