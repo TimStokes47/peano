@@ -21,7 +21,7 @@ def read_build_report( filename, dimensions, mpi, multithreading ):
     Return a tuple. The first entry means whether the build is there, the second means that the unit tests have passed
   """
   try:
-    print( "parse " + filename + " (" + dimensions + ", " + mpi + "," + multithreading + ") ..." )
+    print( "parse " + filename + " (" + dimensions + ", " + mpi + ", " + multithreading + ") ..." )
     file = open(filename, "r")
     found_build_summary  = False
     mpi_level_complaint  = False
@@ -31,14 +31,14 @@ def read_build_report( filename, dimensions, mpi, multithreading ):
       if "build: " in line:
         if dimensions in line and mpi in line and multithreading in line:
           found_build_summary = True
-      if "running global test case collection" in line and "ok" in line and found_build_summary:
+      if "running test case collection ..." in line and "ok" in line and found_build_summary:
         if mpi_level_complaint:
           print( "mpi issues\n" )
           return BuildReport.MPILevelNoSupported
         else:
           print( "success\n" )
           return BuildReport.Success
-      elif "running global test case collection" in line and found_build_summary:
+      elif "running test case collection ..." in line and found_build_summary:
         print("unit tests failed\n")
         return BuildReport.UnitTestsFailed
       elif "running global test case collection" in line:
