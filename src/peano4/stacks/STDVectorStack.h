@@ -58,7 +58,9 @@ class peano4::stacks::STDVectorStack {
     IOMode              _ioMode;
     int                 _ioRank;
     int                 _ioTag;
+    #ifdef Parallel
     MPI_Request*        _ioMPIRequest;
+    #endif
 
   public:
     /**
@@ -69,9 +71,12 @@ class peano4::stacks::STDVectorStack {
     STDVectorStack():
       _data(),
 	  _currentElement(0),
-	  _ioMode(IOMode::None),
-	  _ioMPIRequest(nullptr) {
-    }
+	  _ioMode(IOMode::None)
+      #ifdef Parallel
+      ,
+	  _ioMPIRequest(nullptr)
+      #endif
+    {}
 
     ~STDVectorStack() {
     }
@@ -83,10 +88,16 @@ class peano4::stacks::STDVectorStack {
     STDVectorStack<T>( const STDVectorStack<T>& stack ):
 	  _data(),
       _currentElement(0),
-	  _ioMode(IOMode::None),
-	  _ioMPIRequest(nullptr) {
+	  _ioMode(IOMode::None)
+      #ifdef Parallel
+	  ,
+	  _ioMPIRequest(nullptr)
+      #endif
+	{
       assertionMsg( stack._currentElement==0, "may not copy non-empty stack" );
+      #ifdef Parallel
       assertionMsg( stack._ioMPIRequest==nullptr, "may not copy sending/receiving stack" );
+      #endif
     }
 
 
