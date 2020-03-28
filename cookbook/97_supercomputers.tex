@@ -55,6 +55,8 @@ module load slurm_setup
 \end{remark}
 
 
+
+
 \section{Hamilton}
 
 %  ssh frmh84@hamilton.dur.ac.uk
@@ -168,6 +170,27 @@ As Peano consists of multiple libraries which are (partially) linked before you
 include them into your executable, you have to rebuild the whole project again.
 If you don't do this, you will get error messages that data is corrupted or MPI
 datatypes are not defined.
+
+
+
+\begin{remark}
+ I had crashes in the code as soon as I switched
+ \begin{code}
+ export VT_CHECK_TRACING=on
+ \end{code}
+ on. So this seems not to work with Peano.
+\end{remark}
+
+
+
+\begin{remark}
+ I had deadlocks in my code with
+ \begin{code}
+ export LD_PRELOAD=libVTfs.so
+ \end{code}
+ as soon as I did remove the \texttt{-check\_mpi} flag from \texttt{mpirun}.
+\end{remark}
+
 
 
 
