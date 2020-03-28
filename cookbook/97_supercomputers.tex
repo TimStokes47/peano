@@ -171,10 +171,23 @@ datatypes are not defined.
 
 
 
-\section{The Intel tools}
-\label{section:supercomputers:IntelTools}
+\section{Using MUST}
+\label{section:supercomputers:MUST}
 
-export PATH=/usr/local/must/bin/:$PATH
+Using MUST is straightfoward with Peano:
+\begin{code}
+  export PATH=/usr/local/must/bin/:$PATH
+\end{code}
+
+
+\noindent
+You have to be careful however not to use the \texttt{-check\_mpi} flag with the
+Intel tools if you want to run MUST.
+With the Intel checker, MUST does not produce any output.
+Once the MUST path is set properly, you replace the \texttt{mpirun} with
+\texttt{mustrun}.
+We've checked all core components of Peano to pass through MUST without any
+problems.
 
 
 % 
