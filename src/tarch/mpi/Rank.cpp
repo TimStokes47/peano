@@ -190,10 +190,10 @@ void tarch::mpi::Rank::suspendTimeouts( bool timeoutsDisabled ) {
 }
 
 
+#ifdef Parallel
 std::string tarch::mpi::MPIReturnValueToString( int result ) {
   std::ostringstream out;
 
-  #ifdef Parallel
   int   resultlen;
   char* string = new char[MPI_MAX_ERROR_STRING];  // (char *)malloc(MPI_MAX_ERROR_STRING * sizeof(char));
   MPI_Error_string(result, string, &resultlen);
@@ -227,9 +227,6 @@ std::string tarch::mpi::MPIReturnValueToString( int result ) {
   }
 
   delete[] string;
-  #else
-  out << "compiled without -DParallel";
-  #endif
 
   return out.str();
 }
@@ -237,17 +234,14 @@ std::string tarch::mpi::MPIReturnValueToString( int result ) {
 
 std::string tarch::mpi::MPIStatusToString( const MPI_Status& status ) {
   std::ostringstream out;
-  #ifdef Parallel
   out << "status flag:"
       << " MPI_ERROR=" << status.MPI_ERROR
       << " (" << MPIReturnValueToString(status.MPI_ERROR)
       << ") ,MPI_SOURCE=" << status.MPI_SOURCE
       << ",MPI_TAG=" << status.MPI_TAG;
-  #else
-  out << "compiled without -DParallel";
-  #endif
   return out.str();
 }
+#endif
 
 
 #ifdef Parallel
@@ -263,7 +257,6 @@ tarch::mpi::Rank::Rank():
 tarch::mpi::Rank::Rank():
   _rank(0),
   _numberOfProcessors(1),
-  _communicator(-1),
   _timeOutWarning(0),
   _deadlockTimeOut(0),
   _areTimeoutsEnabled(true) {
@@ -447,7 +440,9 @@ void tarch::mpi::Rank::logStatus() const {
   #endif
 
   statusMessage << ", rank=" << _rank;
+  #ifdef Parallel
   statusMessage << ", communicator=" << _communicator;
+  #endif
   statusMessage << ", #processors=" << _numberOfProcessors;
 
   _log.info( "logStatus()", statusMessage.str() );
@@ -520,10 +515,12 @@ tarch::mpi::Rank& tarch::mpi::Rank::getInstance() {
 }
 
 
+#ifdef Parallel
 MPI_Comm tarch::mpi::Rank::getCommunicator() const {
   assertion(_initIsCalled);
   return _communicator;
 }
+#endif
 
 
 int tarch::mpi::Rank::getNumberOfRanks() const {
@@ -546,9 +543,11 @@ void tarch::mpi::Rank::setDeadlockTimeOut( const clock_t & value ) {
 }
 
 
+#ifdef Parallel
 void tarch::mpi::Rank::setCommunicator( MPI_Comm communicator ) {
   _communicator = communicator;
 }
+#endif
 
 
 void tarch::mpi::Rank::receiveDanglingMessages() {

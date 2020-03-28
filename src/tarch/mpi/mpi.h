@@ -10,11 +10,6 @@
 
 #ifdef Parallel
 #include <mpi.h>
-#else
-typedef int    MPI_Datatype;
-typedef int    MPI_Comm;
-typedef int    MPI_Status;
-typedef int    MPI_Request;
 #endif
 
 

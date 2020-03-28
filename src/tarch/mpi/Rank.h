@@ -25,6 +25,7 @@ namespace tarch {
   namespace mpi {
     class Rank;
 
+    #ifdef Parallel
     /**
      * Returns a string representation of the mpi status. For a detailed
      * description of the mpi status itself see the file mpi.h.
@@ -32,6 +33,7 @@ namespace tarch {
     std::string MPIStatusToString( const MPI_Status& status );
 
     std::string MPIReturnValueToString( int result );
+    #endif
   }
 }
 
@@ -86,10 +88,12 @@ class tarch::mpi::Rank {
      */
     int _numberOfProcessors;
 
+    #ifdef Parallel
     /**
      * MPI Communicator this process belongs to.
      */
     MPI_Comm _communicator;
+    #endif
 
     /**
      * How long shall the application wait until it writes a time-out warning
@@ -267,10 +271,12 @@ class tarch::mpi::Rank {
      */
     static int getGlobalMasterRank();
 
+    #ifdef Parallel
     /**
      * @return Communicator of Peano
      */
     MPI_Comm getCommunicator() const;
+    #endif
 
     /**
      * @return Number of Nodes Available
@@ -387,10 +393,12 @@ class tarch::mpi::Rank {
      */
     void setDeadlockTimeOut( const std::clock_t & value );
 
+    #ifdef Parallel
     /**
      * Set communicator to be used by Peano
      */
     void setCommunicator( MPI_Comm communicator );
+    #endif
 
     /**
      * Receive Dangling MPI Messages
