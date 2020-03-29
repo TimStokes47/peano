@@ -88,7 +88,7 @@ class Step:
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + ""]
     return result
 
   def get_face_operations_signature(self):
@@ -102,7 +102,7 @@ class Step:
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + ""]
     return result
 
 
@@ -119,7 +119,7 @@ class Step:
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + ""]
     return result
       
 
@@ -130,14 +130,14 @@ class Step:
     for i in self.face_data:
       result += ["fineGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["fineGridCell" + i.name,i.get_enumeration_type() + ""]
+      result += ["fineGridCell" + i.name,i.get_full_qualified_type() + ""]
       
     for i in self.vertex_data:
       result += ["coarseGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_enumeration_type() + ""]
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + ""]
 
     return result
       

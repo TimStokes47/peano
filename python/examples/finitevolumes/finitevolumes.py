@@ -62,8 +62,8 @@ project.datamodel.add_face(patch_overlap)
 create_grid = peano4.solversteps.Step( "CreateGrid" )
 create_grid.use_face(patch_overlap)
 create_grid.use_cell(patch)
-create_grid.add_mapping( peano4.toolbox.PlotGridInPeanoBlockFormat("grid-dump", patch) )
-create_grid.add_mapping( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
+create_grid.add_action_set( peano4.toolbox.PlotGridInPeanoBlockFormat("grid-dump", patch) )
+create_grid.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 project.solversteps.add_step(create_grid)
 
 
@@ -76,9 +76,9 @@ project.solversteps.add_step(create_grid)
 #that I can 
 print_solution = peano4.solversteps.Step( "PlotSolution" )
 print_solution.use_cell(patch)
-print_solution.remove_all_mappings()
+print_solution.remove_all_actions()
 plotter = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
-print_solution.add_mapping( plotter )
+print_solution.add_action_set( plotter )
 project.solversteps.add_step(print_solution)
 
 
@@ -96,7 +96,7 @@ perform_time_step      = peano4.solversteps.Step( "PerformTimeStep" )
 solve_Riemann_problems.use_face(patch_overlap)
 perform_time_step.use_face(patch_overlap)
 perform_time_step.use_cell(patch)
-perform_time_step.add_mapping( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
+perform_time_step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 project.solversteps.add_step(solve_Riemann_problems)
 project.solversteps.add_step(perform_time_step)
 
@@ -108,8 +108,8 @@ project.solversteps.add_step(perform_time_step)
 # routine to set the dimension. We take the default here.
 #
 project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano" )
-project.export_constant( patch_size, "PatchSize" )
-project.export_constant( unknowns, "NumberOfUnknownsPerCell" )
+project.constants.export( patch_size, "PatchSize" )
+project.constants.export( unknowns, "NumberOfUnknownsPerCell" )
 
 
 #

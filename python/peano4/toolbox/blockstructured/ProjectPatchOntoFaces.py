@@ -1,10 +1,10 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.Mapping import Mapping
+from peano4.solversteps.ActionSet import ActionSet
 
 
 
-class ProjectPatchOntoFaces(Mapping):
+class ProjectPatchOntoFaces(ActionSet):
   """
   This class assumes that you have NxNxN patch within your block. It also assumes that 
   you have an 2MxNxN patch on your faces. M<N. The code interprets these face-associated
@@ -49,7 +49,7 @@ class ProjectPatchOntoFaces(Mapping):
     return "  return std::vector< peano4::grid::GridControlEvent >();\n" 
 
 
-  def get_mapping_name(self):
+  def get_action_set_name(self):
     return __name__.replace(".py", "").replace(".", "_")
 
 
@@ -110,7 +110,7 @@ class ProjectPatchOntoFaces(Mapping):
 
   def get_body_of_operation(self,operation_name):
     result = "\n"
-    if operation_name==Mapping.OPERATION_TOUCH_CELL_LAST_TIME:
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
       result = self.__Template_TouchCellFirstTime.format(**self.d)
       pass 
     return result

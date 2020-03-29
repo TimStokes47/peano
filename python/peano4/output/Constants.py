@@ -36,7 +36,7 @@ class Constants(object):
       integer, a float or a string as well. If you want to export booleans
       or just define variants, you have to use the other routines.
     """
-    new_entry = "constexpr auto " + name + " = " + str(value) + ";"
+    new_entry = "constexpr auto " + str(name) + " = " + str(value) + ";"
     self.d[ "ADD_CONSTANTS" ] += "  " + new_entry + "\n"
     pass
 

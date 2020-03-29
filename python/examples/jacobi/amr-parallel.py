@@ -18,9 +18,6 @@ import os
 import time
 
 import peano4
-import peano4.datamodel
-import peano4.solversteps
-import peano4.output
 import peano4.visualisation
 import peano4.toolbox
 
