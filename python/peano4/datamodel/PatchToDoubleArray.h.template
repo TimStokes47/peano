@@ -12,6 +12,7 @@
 
 
 #include "tarch/la/Vector.h"
+#include "peano4/utils/Globals.h"
 
 
 {OPEN_NAMESPACE}
@@ -22,14 +23,14 @@
 struct {FULL_QUALIFIED_CLASSNAME} {{
   #ifdef PeanoDebug
   private:
-    tarch::la::vector<double,Dimensions> _debugX;
-    tarch::la::vector<double,Dimensions> _debugH;
+    tarch::la::Vector<Dimensions,double> _debugX;
+    tarch::la::Vector<Dimensions,double> _debugH;
   
   public:
-    void setDebugX( const tarch::la::vector<double,Dimensions>& data );
-    void setDebugH( const tarch::la::vector<double,Dimensions>& data );
-    tarch::la::vector<double,Dimensions> getDebugX() const;
-    tarch::la::vector<double,Dimensions> getDebugH() const;
+    void setDebugX( const tarch::la::Vector<Dimensions,double>& data );
+    void setDebugH( const tarch::la::Vector<Dimensions,double>& data );
+    tarch::la::Vector<Dimensions,double> getDebugX() const;
+    tarch::la::Vector<Dimensions,double> getDebugH() const;
   #endif
 
   #if Dimensions==2

@@ -18,6 +18,7 @@ class DefaultSequence:
          different experiments. Please do not give the file an extension.
     """
     output.makefile.add_cpp_file( main_name + ".cpp" )
+    print( "generated " + main_name + ".cpp")
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )    
     generated_files = peano4.output.TemplatedHeaderImplementationFilePair(
       templatefile_prefix+".h.template",

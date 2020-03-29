@@ -34,7 +34,7 @@ for f in output_files:
 # Create a project and configure it to end up in a subnamespace (and thus
 # subdirectory). 
 #
-project = peano4.Project( ["examples", "finitevolumes"], "." )
+project = peano4.Project( ["examples", "finitevolumes"], "finitevolumes", "." )
 
 
 #
@@ -108,8 +108,8 @@ project.solversteps.add_step(perform_time_step)
 # routine to set the dimension. We take the default here.
 #
 project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano" )
-project.constants.export( patch_size, "PatchSize" )
-project.constants.export( unknowns, "NumberOfUnknownsPerCell" )
+project.constants.export( "PatchSize", patch_size )
+project.constants.export( "NumberOfUnknownsPerCell", unknowns )
 
 
 #

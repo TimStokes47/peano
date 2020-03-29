@@ -60,15 +60,11 @@ class Observer(object):
         self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ] += ",";
         self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_PICK_ENTRY" ]   += ",";
         self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS_PICK_ENTRY" ] += ",";
-      self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]     += "&DataRepository::_" + cell.get_logical_type_name() + "Stack.getForPop( DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack))->top(0) )";
-      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]   += "&DataRepository::_" + cell.get_logical_type_name() + "Stack.getForPop( DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack))->top(1) )";
+      self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]     += "DataRepository::_" + cell.get_logical_type_name() + "Stack.getForPop( DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack))->top(0)";
+      self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]   += "DataRepository::_" + cell.get_logical_type_name() + "Stack.getForPop( DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack))->top(1)";
       self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_PICK_ENTRY" ]     += "DataRepository::_" + cell.get_logical_type_name() + "Stack.getForPop( DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack))->top(0)";
       self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS_PICK_ENTRY" ]   += "DataRepository::_" + cell.get_logical_type_name() + "Stack.getForPop( DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack))->top(1)";
       
-    #if len(cells)==0:
-    #  self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_CELL_EVENT" ]       = "peano4::datamanagement::CellWrapper<void>(event)"
-    #  self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS_CELL_EVENT" ]     = "peano4::datamanagement::CellWrapper<void>(event, event.getRelativePositionToFather())"
-    #else:          
     self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_CELL_EVENT" ]       = self.d[ "MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS" ]
     self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS_CELL_EVENT" ]     = self.d[ "MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS" ]
            
@@ -468,6 +464,29 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inFaceStack))->pop();
       }}
       
+      
+      #if PeanoDebug>0  
+      if (
+        inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        or
+        inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+      ) {{
+        peano4::datamanagement::FaceMarker  marker(event);
+        data.setDebugX( marker.x(outFaceStackPosition) );
+        data.setDebugH( marker.h() );
+      }}
+      else if (
+        peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
+      ) {{
+        peano4::datamanagement::VertexMarker  marker(event);
+        assertionVectorNumericalEquals4( data.getDebugX(), marker.x(outFaceStackPosition), data.getDebugX(), marker.toString(), outFaceStackPosition, _spacetreeId );
+        assertionVectorNumericalEquals3( data.getDebugH(), marker.h(), data.getDebugX(), marker.toString(), _spacetreeId );
+      }}
+      #endif
+      
+      // @todo Stream out faces when we fork
+      // @todo Exchange neighbour data
+      
       view.set(outFaceStackPosition,data);
     }}
   }}
@@ -479,20 +498,18 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   {{
     peano4::datamanagement::FaceMarker marker( event );
     for (int i=0; i<TwoTimesD; i++) {{
-      int inFaceStack           = event.getFaceDataFrom(i);
-      int outFaceStackPosition  = event.getFaceDataTo(i);
-
-      const int pick = outFaceStackPosition;
+      int inFaceStack = event.getFaceDataFrom(i);
+      int pick        = event.getFaceDataTo(i);
       
       if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
         {ACTIVE_ACTION_SET}.createPersistentFace(
-           marker.select(vertexPosition)
+           marker.select(outFaceStackPosition)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         );
         {ACTIVE_ACTION_SET}.touchFaceFirstTime(
-           marker.select(vertexPosition)
+           marker.select(outFaceStackPosition)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
@@ -500,13 +517,13 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       else if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {{
         {ACTIVE_ACTION_SET}.createHangingFace(
-           marker.select(vertexPosition)
+           marker.select(outFaceStackPosition)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         );
         {ACTIVE_ACTION_SET}.touchFaceFirstTime(
-           marker.select(vertexPosition)
+           marker.select(outFaceStackPosition)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
@@ -514,7 +531,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       else if (peano4::grid::PeanoCurve::isInOutStack(inFaceStack)) {{
         {ACTIVE_ACTION_SET}.touchFaceFirstTime(
-           marker.select(vertexPosition)
+           marker.select(outFaceStackPosition)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
@@ -543,9 +560,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
   TemplateEnterCell_CellLoad_MappingCall = """  
   // Invoke creational events on cell {name}
-  peano4::datamanagement::CellMarker marker( event );
-  
   if (event.getCellData()==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+    peano4::datamanagement::CellMarker marker( event );
     {ACTIVE_ACTION_SET}.createCell(
         marker,
         {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,}
@@ -561,16 +577,12 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
   TemplateEnterCell_MappingCall = """  
   {{
-//    if ( 
-//      event.getCellData()!=peano4::grid::TraversalObserver::NoData
-//    ) {{
-      peano4::datamanagement::CellMarker marker( event );
-      {ACTIVE_ACTION_SET}.touchCellFirstTime(
-         marker,
-         {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_CELL_EVENT}
-        {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS_CELL_EVENT}
-      );
-//    }}
+    peano4::datamanagement::CellMarker marker( event );
+    {ACTIVE_ACTION_SET}.touchCellFirstTime(
+       marker,
+       {MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_CELL_EVENT}
+      {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS_CELL_EVENT}
+    );
   }}
 """
 
@@ -639,13 +651,13 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 
 
   TemplateLeaveCell_CellStore_MappingCall = """  
-  peano4::datamanagement::CellMarker marker( event );
   if (event.getCellData()==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+    peano4::datamanagement::CellMarker marker( event );
     {ACTIVE_ACTION_SET}.destroyCell(
     marker
-        {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
-        ,{MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_PICK_ENTRY}
-        {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
+      {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS}
+      ,{MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS_PICK_ENTRY}
+      {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
     );
   }}
 """
@@ -673,19 +685,17 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     
     for (int i=0; i<TwoTimesD; i++) {{
       int outFaceStack      = event.getFaceDataTo(i);
-      int faceStackPosition = event.getFaceDataIn(i);
-      
-      const int pick = faceStackPosition;
+      int pick              = event.getFaceDataFrom(i);
 
       if (outFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
         {ACTIVE_ACTION_SET}.touchFaceLastTime(
-           marker.select(faceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         );
         {ACTIVE_ACTION_SET}.destroyPersistentFace(
-           marker.select(faceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
@@ -693,13 +703,13 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       }}
       else if (outFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {{
         {ACTIVE_ACTION_SET}.touchFaceLastTime(
-           marker.select(faceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         );
         {ACTIVE_ACTION_SET}.destroyHangingFace(
-           marker.select(faceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
@@ -707,7 +717,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       }}
       else if (peano4::grid::PeanoCurve::isInOutStack(outFaceStack)) {{
         {ACTIVE_ACTION_SET}.touchFaceLastTime(
-           marker.select(faceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}

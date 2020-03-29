@@ -16,6 +16,9 @@ class Step:
     should do when it runs over the grid. As users have to specify which pieces
     of data from the data model are used by the solver step, it can handle all
     the user data stack flow.
+    
+    This class also is responsible to generate all function signatures of all 
+    the steps, observers and action sets. 
   """
   def __init__(self,name,add_user_defined_actions = True):
     """
@@ -88,7 +91,7 @@ class Step:
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + ""]
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
     return result
 
   def get_face_operations_signature(self):
@@ -102,7 +105,7 @@ class Step:
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + ""]
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
     return result
 
 
@@ -119,7 +122,7 @@ class Step:
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + ""]
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
     return result
       
 
@@ -130,14 +133,14 @@ class Step:
     for i in self.face_data:
       result += ["fineGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["fineGridCell" + i.name,i.get_full_qualified_type() + ""]
+      result += ["fineGridCell" + i.name,i.get_full_qualified_type() + "&"]
       
     for i in self.vertex_data:
       result += ["coarseGridVertices" + i.name, i.get_enumeration_type() + "" ]
     for i in self.face_data:
       result += ["coarseGridFaces" + i.name, i.get_enumeration_type() + "" ]
     for i in self.cell_data:
-      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + ""]
+      result += ["coarseGridCell" + i.name,i.get_full_qualified_type() + "&"]
 
     return result
       
