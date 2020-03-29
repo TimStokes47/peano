@@ -74,22 +74,28 @@ int main(int argc, char** argv) {{
 //  ));
 
   peano4::initParallelEnvironment(&argc,&argv);
-  peano4::initSharedMemoryEnvironment();
   peano4::fillLookupTables();
   
-  {FULL_QUALIFIED_CLASSNAME}::observers::DataRepository::initDatatypes();
+  {FULL_NAMESPACE}::observers::DataRepository::initDatatypes();
 
 
   #if PeanoDebug>=2
-  tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
-  int unitTestsErrors = tarch::tests::TestCaseRegistry::getInstance()
-                       .getTestCaseCollection()
-                       .getNumberOfErrors();
-
-  if (unitTestsErrors != 0) {{
-    logError("main()", "unit tests failed. Quit.");
+  tarch::tests::TestCase* peanoCoreTests = peano4::getUnitTests();
+  peanoCoreTests->run();
+  if (peanoCoreTests->getNumberOfErrors() != 0) {{
+    logError("main()", "Peano4 core unit tests failed. Quit.");
     exit(ExitCodeUnitTestsFailed);
   }}
+  delete peanoCoreTests;
+
+  tarch::tests::TestCase* peanoTarchTests = tarch::getUnitTests();
+  peanoTarchTests->run();
+  if (peanoTarchTests->getNumberOfErrors() != 0) {{
+    logError("main()", "technical architecture (tarch) unit tests failed. Quit.");
+    exit(ExitCodeUnitTestsFailed);
+  }}
+  delete peanoTarchTests;
+ 
   #endif
 
   peano4::parallel::SpacetreeSet::getInstance().init(
@@ -110,9 +116,8 @@ int main(int argc, char** argv) {{
     }}
   }}
 
-  {FULL_QUALIFIED_CLASSNAME}::observers::DataRepository::shutdownDatatypes();
+  {FULL_NAMESPACE}::observers::DataRepository::shutdownDatatypes();
 
-  peano4::shutdownSharedMemoryEnvironment();
   peano4::shutdownParallelEnvironment();
 
   return ExitCodeSuccess;

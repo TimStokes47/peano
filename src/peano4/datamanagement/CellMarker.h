@@ -33,6 +33,9 @@ struct peano4::datamanagement::CellMarker {
 
     bool isRefined() const;
 
+    /**
+     * The x coordinate of a cell is its centre.
+     */
     tarch::la::Vector<Dimensions,double>  x() const;
 
     tarch::la::Vector<Dimensions,double>  h() const;

@@ -90,7 +90,7 @@ class ProjectPatchOntoFaces(ActionSet):
         int overlapCellSerialised = serialisePatchIndex(overlapCell,d);
         for (int j=0; j<{UNKNOWNS}; j++) {{
           fineGridFacesQ(d).value[overlapCellSerialised*{UNKNOWNS}+j] = 
-            fineGridCellQ.data().value[patchCellSerialised*{UNKNOWNS}+j];
+            fineGridCellQ.value[patchCellSerialised*{UNKNOWNS}+j];
         }}
 
         patchCell(d)   = i+{DOFS_PER_AXIS}-{OVERLAP};
@@ -100,7 +100,7 @@ class ProjectPatchOntoFaces(ActionSet):
         overlapCellSerialised = serialisePatchIndex(overlapCell,d);
         for (int j=0; j<{UNKNOWNS}; j++) {{
           fineGridFacesQ(d+Dimensions).value[overlapCellSerialised*{UNKNOWNS}+j] = 
-            fineGridCellQ.data().value[patchCellSerialised*{UNKNOWNS}+j];
+            fineGridCellQ.value[patchCellSerialised*{UNKNOWNS}+j];
         }}
       }}
     }}

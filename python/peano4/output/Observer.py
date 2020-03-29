@@ -467,16 +467,16 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       
       #if PeanoDebug>0  
       if (
-        inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         or
-        inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
       ) {{
         peano4::datamanagement::FaceMarker  marker(event);
         data.setDebugX( marker.x(outFaceStackPosition) );
         data.setDebugH( marker.h() );
       }}
       else if (
-        peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
+        peano4::grid::PeanoCurve::isInOutStack(inFaceStack)
       ) {{
         peano4::datamanagement::VertexMarker  marker(event);
         assertionVectorNumericalEquals4( data.getDebugX(), marker.x(outFaceStackPosition), data.getDebugX(), marker.toString(), outFaceStackPosition, _spacetreeId );
@@ -503,13 +503,13 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       
       if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
         {ACTIVE_ACTION_SET}.createPersistentFace(
-           marker.select(outFaceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         );
         {ACTIVE_ACTION_SET}.touchFaceFirstTime(
-           marker.select(outFaceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
@@ -517,13 +517,13 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       else if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {{
         {ACTIVE_ACTION_SET}.createHangingFace(
-           marker.select(outFaceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         );
         {ACTIVE_ACTION_SET}.touchFaceFirstTime(
-           marker.select(outFaceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
@@ -531,7 +531,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       else if (peano4::grid::PeanoCurve::isInOutStack(inFaceStack)) {{
         {ACTIVE_ACTION_SET}.touchFaceFirstTime(
-           marker.select(outFaceStackPosition)
+           marker.select(pick)
           {,MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS}
           ,{MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS_PICK_ENTRY}
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
@@ -734,7 +734,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     for (int i=0; i<TwoTimesD; i++) {{
       int inFaceStackPosition  = event.getFaceDataFrom(i);
       int outFaceStack         = event.getFaceDataTo(i);
-      logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "face " << inFaceStack << "->pos-" << outFaceStack );
+      logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "pos-" << inFaceStackPosition << "->stack " << outFaceStack );
       
       {full_qualified_type} data = view.get(inFaceStackPosition);
       if (

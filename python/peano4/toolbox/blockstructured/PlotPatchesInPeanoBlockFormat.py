@@ -119,7 +119,7 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
   assertion( _dataWriter!=nullptr );
   
   const int patchIndex = _writer->plotPatch(
-    marker.centre() - marker.h() * PatchScaling * 0.5,
+    marker.x() - marker.h() * PatchScaling * 0.5,
     marker.h() * PatchScaling
   );
  
