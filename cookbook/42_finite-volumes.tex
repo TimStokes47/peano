@@ -65,9 +65,13 @@ project.datamodel.add_face(patch_overlap)
 \end{code}
 
 
-Before we generate the code, export
+Before we generate the code, we export some of the Python constants that we use
+into C/C++, so we have it available there, too:
+
+\begin{code}
 project.constants.export( "PatchSize", patch_size )
 project.constants.export( "NumberOfUnknownsPerCell", unknowns )
+\end{code}
 
 
 All the stuff we use, we use the toolbox and some vis
