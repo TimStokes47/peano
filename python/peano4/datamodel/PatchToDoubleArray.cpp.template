@@ -5,3 +5,27 @@ std::string {FULL_QUALIFIED_CLASSNAME}::toString() const {{
   std::string result = std::string("()");
   return result;
 }}
+
+
+#ifdef PeanoDebug
+
+void {FULL_QUALIFIED_CLASSNAME}::setDebugX( const tarch::la::Vector<Dimensions,double>& data ) {{
+  _debugX = data;
+}}
+
+
+void {FULL_QUALIFIED_CLASSNAME}::setDebugH( const tarch::la::Vector<Dimensions,double>& data ) {{
+  _debugH = data;
+}}
+
+
+tarch::la::Vector<Dimensions,double> {FULL_QUALIFIED_CLASSNAME}::getDebugX() const {{
+  return _debugX;
+}}
+
+
+tarch::la::Vector<Dimensions,double> {FULL_QUALIFIED_CLASSNAME}::getDebugH() const {{
+  return _debugH;
+}}
+
+#endif

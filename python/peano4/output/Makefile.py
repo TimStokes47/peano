@@ -99,27 +99,30 @@ class Makefile(object):
 
   def parse_configure_script_outcome(self,directory):
     """
+    
     directory should point to the directory which holds the ./configure script.
     It furthermore has to be invoked after configure has passed successfully. 
-    This script does not accept relative paths.
+    This script does not accept relative paths. I then search for the subdirector
+    src and parse the Makefile there.
+    
     """
-    input_file = directory + "/Makefile"
+    input_file = directory + "/src/Makefile"
     input = open( input_file, "r" )
     print( "parse configure outcome " + input_file + " to extract compile settings" )
     for line in input:
-      if re.match( "CXX *=", line):
+      if re.match( "CXX *=", line) and line.startswith( "CXX" ):
         compiler = line.split("=")[-1].strip()
         print( "used compiler is " + compiler )
         self.d["CXX"] = compiler
-      if re.search( "CXXFLAGS *=", line):
+      if re.search( "CXXFLAGS *=", line) and line.startswith( "CXXFLAGS" ):
         flags = line.split("=",1)[1].strip()
         self.d["CXXFLAGS"] += flags
         self.d["CXXFLAGS"] += " "
-      if re.search( "LDFLAGS *=", line):
+      if re.search( "LDFLAGS *=", line) and line.startswith( "LDFLAGS" ):
         flags = line.split("=",1)[1].strip()
         self.d["LDFLAGS"] += flags
         self.d["LDFLAGS"] += " "
-      if re.search( "LIBS *=", line):
+      if re.search( "LIBS *=", line) and line.startswith( "LIBS" ):
         flags = line.split("=",1)[1].strip()
         self.d["LIBS"] += flags
         self.d["LIBS"] += " "
