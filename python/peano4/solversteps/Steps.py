@@ -1,5 +1,6 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+from .StepsToStepRepository import StepsToStepRepository
 
 
 class Steps(object):
@@ -9,14 +10,17 @@ class Steps(object):
   """
   
   def __init__(self,project):
-    self.__project = project
-    self.__steps = []
+    self._project = project
+    self._steps = []
+    self._namespace   = project.namespace
+    self.generator = StepsToStepRepository(self)
     
   def add_step(self,step):
-    step.set_project(self.__project)
-    self.__steps.append(step)
+    step.set_project(self._project)
+    self._steps.append(step)
     
   def construct_output(self,output):
-    for step in self.__steps:
+    for step in self._steps:
       step.construct_output(output)
+    self.generator.construct_output(output)
       

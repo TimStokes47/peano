@@ -9,6 +9,8 @@
 **/*.o
 **/Makefile.in
 **/*.pyc
+**/*.vtu
+**/*.peano-patch-file
 src/stamp-h1
 
 /ar-lib
@@ -24,3 +26,4 @@ src/stamp-h1
 /ltmain.sh
 /missing
 /aclocal.m4
+/cookbook/

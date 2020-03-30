@@ -10,6 +10,7 @@
 #include "peano4/parallel/SpacetreeSet.h"
 
 #include "observers/DataRepository.h"
+#include "observers/StepRepository.h"
 
 #include "peano4/UnitTests.h"
 #include "tarch/UnitTests.h"

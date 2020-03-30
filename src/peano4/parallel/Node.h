@@ -38,6 +38,11 @@ class peano4::parallel::Node {
   public:
     static constexpr int        Terminate = -2;
     static constexpr int        MaxSpacetreesPerRank = 64;
+
+    /**
+     * Value for _currentProgramStep.
+     */
+    static constexpr int        UndefProgramStep = -1;
   private:
     friend class peano4::parallel::tests::NodeTest;
 
@@ -48,10 +53,6 @@ class peano4::parallel::Node {
 
     tarch::multicore::BooleanSemaphore  _semaphore;
 
-    /**
-     * Value for _currentProgramStep.
-     */
-    static constexpr int        UndefProgramStep = -1;
     /**
      * We need one stack for outgoing data, one for incoming
      * (boundary) data. And then we need one in/out stack for
