@@ -37,6 +37,9 @@ struct tarch::mpi::StringMessage {
   public:
 
 
+    StringMessage() {}
+    StringMessage(char  __data[80], int  __dataLength);
+
     std::string   getData() const;
     void   setData(const std::string& value);
 

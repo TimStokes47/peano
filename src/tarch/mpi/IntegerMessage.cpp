@@ -7,6 +7,12 @@
 
 
 
+tarch::mpi::IntegerMessage::IntegerMessage(int  __value):
+    _value(__value)
+  {}
+
+
+
 std::string tarch::mpi::IntegerMessage::toString() const {
   std::ostringstream out;
   out << "(";
@@ -24,6 +30,9 @@ int   tarch::mpi::IntegerMessage::getValue() const {
 void   tarch::mpi::IntegerMessage::setValue(int value) {
   _value = value;
 }
+
+
+
 
 
 

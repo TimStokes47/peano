@@ -37,6 +37,9 @@ struct peano4::parallel::TreeEntry {
   public:
 
 
+    TreeEntry() {}
+    TreeEntry(int  __id, int  __master);
+
     int   getId() const;
     void   setId(int value);
     int   getMaster() const;

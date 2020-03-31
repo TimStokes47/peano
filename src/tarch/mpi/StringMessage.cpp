@@ -37,6 +37,9 @@ void   tarch::mpi::StringMessage::setData(const std::string& value) {
 
 
 
+
+
+
 #ifdef Parallel
 void tarch::mpi::StringMessage::sendAndPollDanglingMessages(const tarch::mpi::StringMessage& message, int destination, int tag ) {
   tarch::mpi::StringMessage::send(

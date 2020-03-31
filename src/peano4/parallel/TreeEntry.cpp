@@ -7,6 +7,13 @@
 
 
 
+peano4::parallel::TreeEntry::TreeEntry(int  __id, int  __master):
+    _id(__id)
+  , _master(__master)
+  {}
+
+
+
 std::string peano4::parallel::TreeEntry::toString() const {
   std::ostringstream out;
   out << "(";
@@ -36,6 +43,9 @@ int   peano4::parallel::TreeEntry::getMaster() const {
 void   peano4::parallel::TreeEntry::setMaster(int value) {
   _master = value;
 }
+
+
+
 
 
 

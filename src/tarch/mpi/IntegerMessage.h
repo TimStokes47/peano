@@ -37,6 +37,9 @@ struct tarch::mpi::IntegerMessage {
   public:
 
 
+    IntegerMessage() {}
+    IntegerMessage(int  __value);
+
     int   getValue() const;
     void   setValue(int value);
 

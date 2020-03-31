@@ -7,6 +7,22 @@
 
 
 
+peano4::grid::GridTraversalEvent::GridTraversalEvent(tarch::la::Vector<Dimensions,double>  __x, tarch::la::Vector<Dimensions,double>  __h, std::bitset<TwoPowerD>  __isRefined, tarch::la::Vector<TwoPowerD,int>  __vertexDataFrom, tarch::la::Vector<TwoPowerD,int>  __vertexDataTo, tarch::la::Vector<TwoTimesD,int>  __faceDataFrom, tarch::la::Vector<TwoTimesD,int>  __faceDataTo, int  __cellData, tarch::la::Vector<Dimensions,int>  __relativePositionToFather, tarch::la::Vector<TwoPowerDTimesTwoPowerDMinusOne,int>  __exchangeVertexData, tarch::la::Vector<TwoPowerD,int>  __exchangeFaceData):
+    _x(__x)
+  , _h(__h)
+  , _isRefined(__isRefined)
+  , _vertexDataFrom(__vertexDataFrom)
+  , _vertexDataTo(__vertexDataTo)
+  , _faceDataFrom(__faceDataFrom)
+  , _faceDataTo(__faceDataTo)
+  , _cellData(__cellData)
+  , _relativePositionToFather(__relativePositionToFather)
+  , _exchangeVertexData(__exchangeVertexData)
+  , _exchangeFaceData(__exchangeFaceData)
+  {}
+
+
+
 std::string peano4::grid::GridTraversalEvent::toString() const {
   std::ostringstream out;
   out << "(";
@@ -249,6 +265,9 @@ int   peano4::grid::GridTraversalEvent::getExchangeFaceData(int index) const {
 void   peano4::grid::GridTraversalEvent::setExchangeFaceData(int index, int value) {
   _exchangeFaceData(index) = value;
 }
+
+
+
 
 
 

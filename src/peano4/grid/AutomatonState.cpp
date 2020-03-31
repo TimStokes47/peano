@@ -7,6 +7,17 @@
 
 
 
+peano4::grid::AutomatonState::AutomatonState(int  __level, tarch::la::Vector<Dimensions,double>  __x, tarch::la::Vector<Dimensions,double>  __h, bool  __inverted, std::bitset<Dimensions>  __evenFlags, tarch::la::Vector<DimensionsTimesTwo,int>  __accessNumber):
+    _level(__level)
+  , _x(__x)
+  , _h(__h)
+  , _inverted(__inverted)
+  , _evenFlags(__evenFlags)
+  , _accessNumber(__accessNumber)
+  {}
+
+
+
 std::string peano4::grid::AutomatonState::toString() const {
   std::ostringstream out;
   out << "(";
@@ -129,6 +140,9 @@ int   peano4::grid::AutomatonState::getAccessNumber(int index) const {
 void   peano4::grid::AutomatonState::setAccessNumber(int index, int value) {
   _accessNumber(index) = value;
 }
+
+
+
 
 
 

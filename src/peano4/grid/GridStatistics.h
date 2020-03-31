@@ -37,6 +37,9 @@ struct peano4::grid::GridStatistics {
   public:
 
 
+    GridStatistics() {}
+    GridStatistics(int  __numberOfRefinedVertices, int  __numberOfUnrefinedVertices, int  __numberOfErasingVertices, int  __numberOfRefiningVertices, int  __numberOfLocalUnrefinedCells, int  __numberOfRemoteUnrefinedCells, int  __numberOfLocalRefinedCells, int  __numberOfRemoteRefinedCells, int  __stationarySweeps, bool  __coarseningHasBeenVetoed);
+
     int   getNumberOfRefinedVertices() const;
     void   setNumberOfRefinedVertices(int value);
     int   getNumberOfUnrefinedVertices() const;

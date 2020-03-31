@@ -39,6 +39,9 @@ struct peano4::parallel::TreeManagementMessage {
       RequestNewRemoteTree=0, CreateNewRemoteTree=1, RemoveChildTreeFromBooksAsChildBecameEmpty=2, JoinWithWorker=3, Acknowledgement=4    
     };
 
+    TreeManagementMessage() {}
+    TreeManagementMessage(int  __masterSpacetreeId, int  __workerSpacetreeId, Action  __action);
+
     int   getMasterSpacetreeId() const;
     void   setMasterSpacetreeId(int value);
     int   getWorkerSpacetreeId() const;

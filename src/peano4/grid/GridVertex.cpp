@@ -7,6 +7,19 @@
 
 
 
+peano4::grid::GridVertex::GridVertex(State  __state, tarch::la::Vector<TwoPowerD,int>  __adjacentRanks, tarch::la::Vector<TwoPowerD,int>  __backupOfAdjacentRanks, bool  __hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, bool  __isAntecessorOfRefinedVertexInCurrentTreeSweep, int  __numberOfAdjacentRefinedLocalCells, tarch::la::Vector<Dimensions,double>  __x, int  __level):
+    _state(__state)
+  , _adjacentRanks(__adjacentRanks)
+  , _backupOfAdjacentRanks(__backupOfAdjacentRanks)
+  , _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(__hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)
+  , _isAntecessorOfRefinedVertexInCurrentTreeSweep(__isAntecessorOfRefinedVertexInCurrentTreeSweep)
+  , _numberOfAdjacentRefinedLocalCells(__numberOfAdjacentRefinedLocalCells)
+  , _x(__x)
+  , _level(__level)
+  {}
+
+
+
 std::string peano4::grid::GridVertex::toString() const {
   std::ostringstream out;
   out << "(";
@@ -138,6 +151,9 @@ int   peano4::grid::GridVertex::getLevel() const {
 void   peano4::grid::GridVertex::setLevel(int value) {
   _level = value;
 }
+
+
+
 
 
 

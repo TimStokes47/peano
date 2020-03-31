@@ -37,6 +37,9 @@ struct peano4::grid::AutomatonState {
   public:
 
 
+    AutomatonState() {}
+    AutomatonState(int  __level, tarch::la::Vector<Dimensions,double>  __x, tarch::la::Vector<Dimensions,double>  __h, bool  __inverted, std::bitset<Dimensions>  __evenFlags, tarch::la::Vector<DimensionsTimesTwo,int>  __accessNumber);
+
     int   getLevel() const;
     void   setLevel(int value);
     tarch::la::Vector<Dimensions,double>   getX() const;

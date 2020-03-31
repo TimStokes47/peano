@@ -1,4 +1,6 @@
 #include "CreateGrid.h"
+#include "Constants.h"
+#include "peano4/utils/Loop.h"
 
 
 tarch::logging::Log examples::finitevolumes::actions::CreateGrid::_log( "examples::finitevolumes::actions::CreateGrid");
@@ -15,8 +17,16 @@ examples::finitevolumes::actions::CreateGrid::~CreateGrid() {
 
 
 std::vector< peano4::grid::GridControlEvent > examples::finitevolumes::actions::CreateGrid::getGridControlEvents() {
-// @todo Please implement
-return std::vector< peano4::grid::GridControlEvent >();
+  std::vector< peano4::grid::GridControlEvent > result;
+
+  result.push_back(peano4::grid::GridControlEvent(
+    peano4::grid::GridControlEvent::RefinementControl::Refine,
+    tarch::la::Vector<Dimensions,double>(0.0),
+    tarch::la::Vector<Dimensions,double>(1.0),
+    tarch::la::Vector<Dimensions,double>(0.1)
+  ));
+
+  return result;
 }
 
 
@@ -133,10 +143,11 @@ void examples::finitevolumes::actions::CreateGrid::createCell(
   peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
   examples::finitevolumes::celldata::Q& coarseGridCellQ
 ) {
-  const double subcellWidth = h(0) / PatchSize;
+  const double cellWidth    = marker.h()(0);
+  const double subcellWidth = cellWidth / PatchSize;
   dfor(k,PatchSize) {
     const tarch::la::Vector<Dimensions,double> subcellCentre =
-      center - 0.5*h + k.convertScalar<double>() * subcellWidth + subcellWidth;
+      marker.x() - 0.5*cellWidth + k.convertScalar<double>() * subcellWidth + subcellWidth;
     int dofIndex = peano4::utils::dLinearised(k,PatchSize) * NumberOfUnknownsPerCell;
     double initialValue = 0.01;
     if (

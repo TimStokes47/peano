@@ -39,6 +39,9 @@ struct peano4::grid::GridControlEvent {
       Refine=0, Erase=1    
     };
 
+    GridControlEvent() {}
+    GridControlEvent(RefinementControl  __refinementControl, tarch::la::Vector<Dimensions,double>  __offset, tarch::la::Vector<Dimensions,double>  __width, tarch::la::Vector<Dimensions,double>  __h);
+
     peano4::grid::GridControlEvent::RefinementControl   getRefinementControl() const;
     void   setRefinementControl(RefinementControl value);
     tarch::la::Vector<Dimensions,double>   getOffset() const;

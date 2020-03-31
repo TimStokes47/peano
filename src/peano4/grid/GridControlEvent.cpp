@@ -7,6 +7,15 @@
 
 
 
+peano4::grid::GridControlEvent::GridControlEvent(RefinementControl  __refinementControl, tarch::la::Vector<Dimensions,double>  __offset, tarch::la::Vector<Dimensions,double>  __width, tarch::la::Vector<Dimensions,double>  __h):
+    _refinementControl(__refinementControl)
+  , _offset(__offset)
+  , _width(__width)
+  , _h(__h)
+  {}
+
+
+
 std::string peano4::grid::GridControlEvent::toString() const {
   std::ostringstream out;
   out << "(";
@@ -90,6 +99,9 @@ double   peano4::grid::GridControlEvent::getH(int index) const {
 void   peano4::grid::GridControlEvent::setH(int index, double value) {
   _h(index) = value;
 }
+
+
+
 
 
 

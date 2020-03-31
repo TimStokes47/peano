@@ -40,7 +40,7 @@ project = peano4.Project( ["examples", "finitevolumes"], "finitevolumes", "." )
 #
 # The solver will be patch-based, i.e. we will have one patch per cell.
 #
-patch_size = 4
+patch_size = 7
 unknowns   = 5
 patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, "Q" )
 project.datamodel.add_cell(patch)
@@ -62,7 +62,7 @@ project.datamodel.add_face(patch_overlap)
 create_grid = peano4.solversteps.Step( "CreateGrid" )
 create_grid.use_face(patch_overlap)
 create_grid.use_cell(patch)
-create_grid.add_action_set( peano4.toolbox.PlotGridInPeanoBlockFormat("grid-dump", patch) )
+#create_grid.add_action_set( peano4.toolbox.PlotGridInPeanoBlockFormat("grid-dump", patch) )
 create_grid.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 project.solversteps.add_step(create_grid)
 

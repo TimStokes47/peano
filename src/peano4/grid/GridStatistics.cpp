@@ -7,6 +7,21 @@
 
 
 
+peano4::grid::GridStatistics::GridStatistics(int  __numberOfRefinedVertices, int  __numberOfUnrefinedVertices, int  __numberOfErasingVertices, int  __numberOfRefiningVertices, int  __numberOfLocalUnrefinedCells, int  __numberOfRemoteUnrefinedCells, int  __numberOfLocalRefinedCells, int  __numberOfRemoteRefinedCells, int  __stationarySweeps, bool  __coarseningHasBeenVetoed):
+    _numberOfRefinedVertices(__numberOfRefinedVertices)
+  , _numberOfUnrefinedVertices(__numberOfUnrefinedVertices)
+  , _numberOfErasingVertices(__numberOfErasingVertices)
+  , _numberOfRefiningVertices(__numberOfRefiningVertices)
+  , _numberOfLocalUnrefinedCells(__numberOfLocalUnrefinedCells)
+  , _numberOfRemoteUnrefinedCells(__numberOfRemoteUnrefinedCells)
+  , _numberOfLocalRefinedCells(__numberOfLocalRefinedCells)
+  , _numberOfRemoteRefinedCells(__numberOfRemoteRefinedCells)
+  , _stationarySweeps(__stationarySweeps)
+  , _coarseningHasBeenVetoed(__coarseningHasBeenVetoed)
+  {}
+
+
+
 std::string peano4::grid::GridStatistics::toString() const {
   std::ostringstream out;
   out << "(";
@@ -132,6 +147,9 @@ bool   peano4::grid::GridStatistics::getCoarseningHasBeenVetoed() const {
 void   peano4::grid::GridStatistics::setCoarseningHasBeenVetoed(bool value) {
   _coarseningHasBeenVetoed = value;
 }
+
+
+
 
 
 

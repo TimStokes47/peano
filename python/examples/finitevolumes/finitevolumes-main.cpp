@@ -11,7 +11,9 @@
 
 #include "observers/DataRepository.h"
 #include "observers/StepRepository.h"
+
 #include "observers/CreateGrid.h"
+#include "observers/PlotSolution.h"
 
 #include "peano4/UnitTests.h"
 #include "tarch/UnitTests.h"
@@ -38,11 +40,23 @@ bool selectNextAlgorithmicStep() {
 	  )
     );
   }
+  else if (
+    counter==0
+	and
+	peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()>=5
+  ) {
+    peano4::parallel::Node::getInstance().setNextProgramStep(
+      examples::finitevolumes::observers::StepRepository::toProgramStep(
+        examples::finitevolumes::observers::StepRepository::Steps::PlotSolution
+	  )
+    );
+    counter++;
+  }
   else {
     counter++;
   }
 
-  return counter < 1;
+  return counter < 2;
 }
 
 
@@ -52,6 +66,12 @@ void step() {
     case examples::finitevolumes::observers::StepRepository::Steps::CreateGrid:
       {
         examples::finitevolumes::observers::CreateGrid  observer;
+	    peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+	  }
+	  break;
+    case examples::finitevolumes::observers::StepRepository::Steps::PlotSolution:
+      {
+        examples::finitevolumes::observers::PlotSolution  observer;
 	    peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
 	  }
 	  break;

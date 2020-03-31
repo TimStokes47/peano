@@ -37,6 +37,9 @@ struct peano4::grid::GridTraversalEvent {
   public:
 
 
+    GridTraversalEvent() {}
+    GridTraversalEvent(tarch::la::Vector<Dimensions,double>  __x, tarch::la::Vector<Dimensions,double>  __h, std::bitset<TwoPowerD>  __isRefined, tarch::la::Vector<TwoPowerD,int>  __vertexDataFrom, tarch::la::Vector<TwoPowerD,int>  __vertexDataTo, tarch::la::Vector<TwoTimesD,int>  __faceDataFrom, tarch::la::Vector<TwoTimesD,int>  __faceDataTo, int  __cellData, tarch::la::Vector<Dimensions,int>  __relativePositionToFather, tarch::la::Vector<TwoPowerDTimesTwoPowerDMinusOne,int>  __exchangeVertexData, tarch::la::Vector<TwoPowerD,int>  __exchangeFaceData);
+
     tarch::la::Vector<Dimensions,double>   getX() const;
     void   setX(const tarch::la::Vector<Dimensions,double>& value);
     double   getX(int index) const;

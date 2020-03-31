@@ -38,8 +38,6 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
   _writer      = nullptr;
   _dataWriter  = nullptr;
   _treeNumber  = treeNumber;
-
-  assertion( _treeNumber>=0 );
   
   logDebug( "PlotGrid2PlotGridInPeanoBlockFormat1()", "created tree instance for " << treeNumber );
   

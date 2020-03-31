@@ -39,6 +39,9 @@ struct peano4::grid::GridVertex {
       HangingVertex=0, New=1, Unrefined=2, Refined=3, RefinementTriggered=4, Refining=5, EraseTriggered=6, Erasing=7, Delete=8    
     };
 
+    GridVertex() {}
+    GridVertex(State  __state, tarch::la::Vector<TwoPowerD,int>  __adjacentRanks, tarch::la::Vector<TwoPowerD,int>  __backupOfAdjacentRanks, bool  __hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, bool  __isAntecessorOfRefinedVertexInCurrentTreeSweep, int  __numberOfAdjacentRefinedLocalCells, tarch::la::Vector<Dimensions,double>  __x, int  __level);
+
     peano4::grid::GridVertex::State   getState() const;
     void   setState(State value);
     tarch::la::Vector<TwoPowerD,int>   getAdjacentRanks() const;

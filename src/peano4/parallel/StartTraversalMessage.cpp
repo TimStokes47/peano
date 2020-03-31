@@ -7,6 +7,12 @@
 
 
 
+peano4::parallel::StartTraversalMessage::StartTraversalMessage(int  __stepIdentifier):
+    _stepIdentifier(__stepIdentifier)
+  {}
+
+
+
 std::string peano4::parallel::StartTraversalMessage::toString() const {
   std::ostringstream out;
   out << "(";
@@ -24,6 +30,9 @@ int   peano4::parallel::StartTraversalMessage::getStepIdentifier() const {
 void   peano4::parallel::StartTraversalMessage::setStepIdentifier(int value) {
   _stepIdentifier = value;
 }
+
+
+
 
 
 

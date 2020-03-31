@@ -7,6 +7,14 @@
 
 
 
+peano4::parallel::TreeManagementMessage::TreeManagementMessage(int  __masterSpacetreeId, int  __workerSpacetreeId, Action  __action):
+    _masterSpacetreeId(__masterSpacetreeId)
+  , _workerSpacetreeId(__workerSpacetreeId)
+  , _action(__action)
+  {}
+
+
+
 std::string peano4::parallel::TreeManagementMessage::toString() const {
   std::ostringstream out;
   out << "(";
@@ -48,6 +56,9 @@ peano4::parallel::TreeManagementMessage::Action   peano4::parallel::TreeManageme
 void   peano4::parallel::TreeManagementMessage::setAction(Action value) {
   _action = value;
 }
+
+
+
 
 
 
