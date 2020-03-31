@@ -320,7 +320,7 @@ std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGri
 
   TemplateEnterCell_Prologue = """  
 void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining ) {{
-  logTraceInWith2Arguments( "enterCell(peano4::grid::GridTraversalEvent)", _spacetreeId, event.toString() );
+  logTraceInWith2Arguments( "enterCell(...)", _spacetreeId, event.toString() );
 """
 
 
@@ -331,7 +331,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     for (int i=0; i<TwoPowerD; i++) {{
       int inVertexStack          = event.getVertexDataFrom(i);
       int outVertexStackPosition = event.getVertexDataTo(i);
-      logDebug("enterCell(...)", "vertex " << inVertexStack << "->pos-" << outVertexStackPosition );
+      logDebug("enterCell(...)", "vertex stack " << inVertexStack << "->pos-" << outVertexStackPosition );
 
       {full_qualified_type} data;
       if (
@@ -453,7 +453,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     for (int i=0; i<TwoTimesD; i++) {{
       int inFaceStack          = event.getFaceDataFrom(i);
       int outFaceStackPosition = event.getFaceDataTo(i);
-      logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStackPosition );
+      logDebug("enterCell(...)", "face stack " << inFaceStack << "->pos-" << outFaceStackPosition );
       
       {full_qualified_type} data ;
       if (
@@ -478,9 +478,9 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       else if (
         peano4::grid::PeanoCurve::isInOutStack(inFaceStack)
       ) {{
-        peano4::datamanagement::VertexMarker  marker(event);
-        assertionVectorNumericalEquals4( data.getDebugX(), marker.x(outFaceStackPosition), data.getDebugX(), marker.toString(), outFaceStackPosition, _spacetreeId );
-        assertionVectorNumericalEquals3( data.getDebugH(), marker.h(), data.getDebugX(), marker.toString(), _spacetreeId );
+        peano4::datamanagement::FaceMarker  marker(event);
+        assertionVectorNumericalEquals5( data.getDebugX(), marker.x(outFaceStackPosition), data.getDebugX(), data.getDebugH(), marker.toString(), outFaceStackPosition, _spacetreeId );
+        assertionVectorNumericalEquals5( data.getDebugH(), marker.h(),                     data.getDebugX(), data.getDebugH(), marker.toString(), outFaceStackPosition, _spacetreeId );
       }}
       #endif
       
@@ -547,7 +547,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   {{
     const int inCellStack  = event.getCellData();
     const int outCellStack = peano4::grid::PeanoCurve::CallStack;
-    logDebug("enterCell(peano4::grid::GridTraversalEvent)", "cell " << inCellStack << "->pos-" << outCellStack );
+    logDebug("enterCell(...)", "cell stack " << inCellStack << "->pos-" << outCellStack );
 
     {full_qualified_type} data;
     if (inCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
@@ -588,7 +588,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
 
   TemplateEnterCell_Epilogue = """
-  logTraceOut( "enterCell(peano4::grid::GridTraversalEvent)" );
+  logTraceOut( "enterCell(...)" );
 }}
 """
 
@@ -633,7 +633,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
   TemplateLeaveCell_Prologue = """  
 void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining ) {{
-  logTraceInWith2Arguments( "leaveCell(peano4::grid::GridTraversalEvent)", _spacetreeId, event.toString() );
+  logTraceInWith2Arguments( "leaveCell(...)", _spacetreeId, event.toString() );
 """
 
 
@@ -668,7 +668,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
   {{
     const int inCellStack   = peano4::grid::PeanoCurve::CallStack;
     const int outCellStack  = event.getCellData();
-    logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "cell " << inCellStack << "->pos-" << outCellStack );
+    logDebug("leaveCell(...)", "cell stack " << inCellStack << "->pos-" << outCellStack );
 
     {full_qualified_type} data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inCellStack))->pop();
     if (outCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
@@ -734,7 +734,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     for (int i=0; i<TwoTimesD; i++) {{
       int inFaceStackPosition  = event.getFaceDataFrom(i);
       int outFaceStack         = event.getFaceDataTo(i);
-      logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "pos-" << inFaceStackPosition << "->stack " << outFaceStack );
+      logDebug("leaveCell(...)", "pos-" << inFaceStackPosition << "->face stack " << outFaceStack );
       
       {full_qualified_type} data = view.get(inFaceStackPosition);
       if (
@@ -801,7 +801,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     for (int i=0; i<TwoPowerD; i++) {{
       int inVertexStackPosition  = event.getVertexDataFrom(i);
       int outVertexStack         = event.getVertexDataTo(i);
-      logDebug("leaveCell(peano4::grid::GridTraversalEvent)", "vertex pos-" << inVertexStackPosition << "->" << outVertexStack );
+      logDebug("leaveCell(...)", "pos-" << inVertexStackPosition << "->vertex stack " << outVertexStack );
       
       {full_qualified_type} data = view.get(inVertexStackPosition);
       
