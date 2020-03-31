@@ -87,11 +87,6 @@ switch (stepIdentifier) {
 \noindent
 Nothing stops you from triggering multiple traversals (or none at all) within a
 step.
-The numbers within the case statements are kind of magic constants and you can
-redefine them. 
-However, I recommend to read the documentation of \texttt{setNextProgramStep()}
-(there are some predefined constants that you should not use), and I recommend
-that you use the predefined enums in \texttt{observers::StepRepository}.
 
 
 \begin{remark}
@@ -102,6 +97,21 @@ that you use the predefined enums in \texttt{observers::StepRepository}.
  exactly the same number of iterations.
 \end{remark}
 
+
+\noindent
+The numbers within the case statements are kind of magic constants and you can
+redefine them. 
+However, I recommend to read the documentation of \texttt{setNextProgramStep()}
+(there are some predefined constants that you should not use), and I recommend
+that you use the predefined enums in \texttt{observers::StepRepository} if you
+work with the Python API, too.
+In this repository, there are predefined integers for all of the algorithm steps
+you've defined. 
+
+
+With the above structure, the Peano execution trace is close to trivial:
+You simply run through your grid $n$ times and after each step, the core
+exchanges all of the data.
 
 
 \section*{MPI and shared memory programming}
