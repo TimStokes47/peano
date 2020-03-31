@@ -931,16 +931,16 @@
      * Otherwise assertion will fail. The machine precision is evaluated via
      * equals().
      */
-    #define assertionVectorNumericalEquals(lhs,rhs) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals1(lhs(d),rhs(d),d); }
-    #define assertionVectorNumericalEquals1(lhs,rhs,param0) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals2(lhs(d),rhs(d),d,param0); }
-    #define assertionVectorNumericalEquals2(lhs,rhs,param0,param1) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals3(lhs(d),rhs(d),d,param0,param1); }
-    #define assertionVectorNumericalEquals3(lhs,rhs,param0,param1,param2) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals4(lhs(d),rhs(d),d,param0,param1,param2); }
-    #define assertionVectorNumericalEquals4(lhs,rhs,param0,param1,param2,param3) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals5(lhs(d),rhs(d),d,param0,param1,param2,param3); }
-    #define assertionVectorNumericalEquals5(lhs,rhs,param0,param1,param2,param3,param4) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals6(lhs(d),rhs(d),d,param0,param1,param2,param3,param4); }
-    #define assertionVectorNumericalEquals6(lhs,rhs,param0,param1,param2,param3,param4,param5) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals7(lhs(d),rhs(d),d,param0,param1,param2,param3,param4,param5); }
-    #define assertionVectorNumericalEquals7(lhs,rhs,param0,param1,param2,param3,param4,param5,param6) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals8(lhs(d),rhs(d),d,param0,param1,param2,param3,param4,param5,param6); }
-    #define assertionVectorNumericalEquals8(lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals9(lhs(d),rhs(d),d,param0,param1,param2,param3,param4,param5,param6,param7); }
-    #define assertionVectorNumericalEquals9(lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7,param8) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals10(lhs(d),rhs(d),d,param0,param1,param2,param3,param4,param5,param6,param7,param8); }
+    #define assertionVectorNumericalEquals(lhs,rhs) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals3(lhs(d),rhs(d),lhs,rhs,d); }
+    #define assertionVectorNumericalEquals1(lhs,rhs,param0) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals4(lhs(d),rhs(d),lhs,rhs,d,param0); }
+    #define assertionVectorNumericalEquals2(lhs,rhs,param0,param1) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals5(lhs(d),rhs(d),lhs,rhs,d,param0,param1); }
+    #define assertionVectorNumericalEquals3(lhs,rhs,param0,param1,param2) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals6(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2); }
+    #define assertionVectorNumericalEquals4(lhs,rhs,param0,param1,param2,param3) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals7(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3); }
+    #define assertionVectorNumericalEquals5(lhs,rhs,param0,param1,param2,param3,param4) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals8(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4); }
+    #define assertionVectorNumericalEquals6(lhs,rhs,param0,param1,param2,param3,param4,param5) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals9(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4,param5); }
+    #define assertionVectorNumericalEquals7(lhs,rhs,param0,param1,param2,param3,param4,param5,param6) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals10(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4,param5,param6); }
+    #define assertionVectorNumericalEquals8(lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals11(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4,param5,param6,param7); }
+    #define assertionVectorNumericalEquals9(lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7,param8) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals12(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4,param5,param6,param7,param8); }
 
     /**
      * @see ASSERTION_EXIT_CODE
