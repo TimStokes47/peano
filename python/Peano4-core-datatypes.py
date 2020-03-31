@@ -24,7 +24,7 @@ integer_message.write_implementation_file("../src/tarch/mpi/IntegerMessage.cpp")
 #
 # tarch::mpi::StringMessage
 #
-string_message = dastgen2.DataModel( "tarch::mpi::StringMessage" )
+string_message = dastgen2.DataModel( "tarch::mpi::StringMessage", False )
 string_message.add_attribute( dastgen2.attributes.String( "data" ) )
 
 string_message.add_aspect( peano4.dastgen2.MPI() )
