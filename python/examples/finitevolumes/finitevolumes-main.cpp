@@ -27,7 +27,9 @@ tarch::logging::Log _log("::");
  * @return continues to run
  */
 bool selectNextAlgorithmicStep() {
-  static int counter = 0;
+  static int counter           = 0;
+  bool       continueToSolve   = true;
+  const int  NumberOfTimeSteps = 20;
 
   if (
     counter==0
@@ -39,11 +41,12 @@ bool selectNextAlgorithmicStep() {
         examples::finitevolumes::observers::StepRepository::Steps::CreateGrid
 	  )
     );
+    continueToSolve = true;
   }
   else if (
-    counter==0
-	and
-	peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()>=5
+    ( counter==0 and peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()>=5 )
+	or
+	counter >= NumberOfTimeSteps + 1
   ) {
     peano4::parallel::Node::getInstance().setNextProgramStep(
       examples::finitevolumes::observers::StepRepository::toProgramStep(
@@ -51,18 +54,35 @@ bool selectNextAlgorithmicStep() {
 	  )
     );
     counter++;
+    continueToSolve = counter <= NumberOfTimeSteps + 2;
+  }
+  else if ( counter>=1 and counter < NumberOfTimeSteps+1
+  ) {
+    peano4::parallel::Node::getInstance().setNextProgramStep(
+      examples::finitevolumes::observers::StepRepository::toProgramStep(
+        examples::finitevolumes::observers::StepRepository::Steps::TimeStep
+	  )
+    );
+    counter++;
+    continueToSolve = true;
   }
   else {
     counter++;
+    continueToSolve = false;
   }
 
-  return counter < 2;
+  return continueToSolve;
 }
 
 
 void step() {
-  int stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
-  switch ( examples::finitevolumes::observers::StepRepository::toStepEnum(stepIdentifier) ) {
+  int  stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
+  auto stepName       = examples::finitevolumes::observers::StepRepository::toStepEnum(stepIdentifier);
+
+  static tarch::logging::Log _log("");
+  logInfo( "step()", "run step " << examples::finitevolumes::observers::StepRepository::toString(stepName) );
+
+  switch ( stepName ) {
     case examples::finitevolumes::observers::StepRepository::Steps::CreateGrid:
       {
         examples::finitevolumes::observers::CreateGrid  observer;
@@ -132,7 +152,7 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetTrace,
     tarch::logging::LogFilter::FilterListEntry::AnyRank,
     "examples",
-    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo,

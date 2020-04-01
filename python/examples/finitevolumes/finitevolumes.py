@@ -83,21 +83,15 @@ project.solversteps.add_step(print_solution)
 
 
 #
-# We also need the actual solve. Basically, what we'll do is that we will run
-# over the grid twice per time step: In the first step, we evaluate all the 
-# Riemann problems. In the second step, we update the time. The Riemann solves
-# assume that all the patch data is already projected onto the faces, i.e. the 
-# faces hold all overlap data. As a result, they do not need the patch data. It
-# is only the timestepping which needs both types of data: faces (that is all 
-# overlaps) plus the actual cell data. 
+# Haven't documented anything yet
 #
-solve_Riemann_problems = peano4.solversteps.Step( "SolveRiemannProblems" )
-perform_time_step      = peano4.solversteps.Step( "PerformTimeStep" )
-solve_Riemann_problems.use_face(patch_overlap)
-perform_time_step.use_face(patch_overlap)
+# @todo Dsa ist schon gefused, weil wir ja die Reihenfolge umgedreht haben. Eigentlich muss das action set andersrum laufen
+#
+perform_time_step      = peano4.solversteps.Step( "TimeStep" )
 perform_time_step.use_cell(patch)
+perform_time_step.use_face(patch_overlap)
+perform_time_step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap) )
 perform_time_step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
-project.solversteps.add_step(solve_Riemann_problems)
 project.solversteps.add_step(perform_time_step)
 
 
