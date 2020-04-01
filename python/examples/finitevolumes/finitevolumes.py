@@ -76,6 +76,7 @@ project.solversteps.add_step(create_grid)
 #that I can 
 print_solution = peano4.solversteps.Step( "PlotSolution" )
 print_solution.use_cell(patch)
+print_solution.use_face(patch_overlap)
 print_solution.remove_all_actions()
 plotter = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
 print_solution.add_action_set( plotter )
@@ -90,8 +91,126 @@ project.solversteps.add_step(print_solution)
 perform_time_step      = peano4.solversteps.Step( "TimeStep" )
 perform_time_step.use_cell(patch)
 perform_time_step.use_face(patch_overlap)
-perform_time_step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap) )
+functor = """
+  auto flux = [](double Q[5], const tarch::la::Vector<Dimensions,double>& x, int normal, double F[5]) -> void {{
+    assertion5( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4] );    
+    assertion5( Q[1]==Q[1], Q[0], Q[1], Q[2], Q[3], Q[4] );    
+    assertion5( Q[2]==Q[2], Q[0], Q[1], Q[2], Q[3], Q[4] );    
+    assertion5( Q[3]==Q[3], Q[0], Q[1], Q[2], Q[3], Q[4] );    
+    assertion5( Q[4]==Q[4], Q[0], Q[1], Q[2], Q[3], Q[4] );    
+    
+    assertion5( Q[0]>1e-12, Q[0], Q[1], Q[2], Q[3], Q[4] );
+    constexpr double gamma = 1.4;
+    const double irho = 1./Q[0];
+    #if DIMENSIONS==3
+    const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]+Q[3]*Q[3]);
+    #else
+    const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]);
+    #endif
+
+    switch (normal) {{
+      case 0:
+        {{
+          F[0] = Q[1];
+          F[1] = irho*Q[1]*Q[1] + p;
+          F[2] = irho*Q[2]*Q[1];
+          F[3] = irho*Q[3]*Q[1];
+          F[4] = irho*(Q[4]+p)*Q[1];
+        }}
+        break;
+      case 1:
+        {{
+          F[0] = Q[2];
+          F[1] = irho*Q[1]*Q[2];
+          F[2] = irho*Q[2]*Q[2] + p;
+          F[3] = irho*Q[3]*Q[2];
+          F[4] = irho*(Q[4]+p)*Q[2];
+        }}
+        break;
+      case 2:
+        {{
+          F[0] = Q[3];
+          F[1] = irho*Q[1]*Q[3];
+          F[2] = irho*Q[2]*Q[3];
+          F[3] = irho*Q[3]*Q[3] + p;
+          F[4] = irho*(Q[4]+p)*Q[3];
+        }}
+        break;
+    }}
+  }};
+
+  auto splitRiemann1d = [&flux](double QL[5], double QR[5], const tarch::la::Vector<Dimensions,double>& x, double dx, double dt, int normal, double F[5]) -> void {{
+    double averageQ[5]; 
+    for (int unknown=0; unknown<5; unknown++) {{
+      averageQ[unknown] = 0.5 * (QL[unknown] + QR[unknown]);    
+      assertion4(averageQ[unknown]==averageQ[unknown], x, dx, dt, normal);
+    }}
+    
+    double averageF[5];
+    flux(averageQ,x,normal,averageF);
+    for (int unknown=0; unknown<5; unknown++) {{
+      assertion( averageF[unknown]==averageF[unknown] );
+      F[unknown] = averageF[unknown];
+// + 0.5 * dt / dx * (QR[unknown] - QL[unknown]);
+    }}
+  }};  
+
+
+    
+  double dt = 0.001;
+  dfor(cell,7) {{ // DOFS_PER_AXIS
+    tarch::la::Vector<Dimensions,double> voxelCentre = centre 
+                                           - static_cast<double>((7/2+1)) * tarch::la::Vector<Dimensions,double>(dx)
+                                           + tarch::la::multiplyComponents(cell.convertScalar<double>(), tarch::la::Vector<Dimensions,double>(dx));
+    
+    tarch::la::Vector<Dimensions,int> currentVoxel = cell + tarch::la::Vector<Dimensions,int>(1); // OVERLAP / Halo layer size
+    int currentVoxelSerialised = peano4::utils::dLinearised(currentVoxel,7 + 2*1);
+    
+    double accumulatedNumericalFlux[] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
+    double numericalFlux[5];
+    for (int d=0; d<Dimensions; d++) {{
+      tarch::la::Vector<Dimensions,int> neighbourVoxel = currentVoxel;
+      tarch::la::Vector<Dimensions,double> x = voxelCentre;
+      
+      neighbourVoxel(d) -= 1;
+      int neighbourVoxelSerialised = peano4::utils::dLinearised(neighbourVoxel,7 + 2*1);
+      x(d) -= 0.5 * dx;
+      assertion(neighbourVoxel(d)>=0);
+
+      splitRiemann1d( 
+        reconstructedPatch + neighbourVoxelSerialised*5,
+        reconstructedPatch + currentVoxelSerialised*5,
+        x, dx, dt, d,
+        numericalFlux
+      );
+      for (int unknown=0; unknown<5; unknown++) accumulatedNumericalFlux[unknown] -= numericalFlux[unknown];
+      
+      neighbourVoxel(d) += 2;
+      neighbourVoxelSerialised = peano4::utils::dLinearised(neighbourVoxel,7 + 2*1);
+      x(d) += 1.0 * dx;
+      
+      splitRiemann1d( 
+        reconstructedPatch + currentVoxelSerialised*5,
+        reconstructedPatch + neighbourVoxelSerialised*5,
+        x, dx, dt, d,
+        numericalFlux
+      );
+      for (int unknown=0; unknown<5; unknown++) accumulatedNumericalFlux[unknown] += numericalFlux[unknown];
+    }}
+
+    int destinationVoxelSerialised = peano4::utils::dLinearised(cell,7);
+    
+    for (int unknown=0; unknown<5; unknown++) {{
+      originalPatch[ destinationVoxelSerialised*5+unknown ] += dt / dx * accumulatedNumericalFlux[unknown];
+    }}
+  }}
+"""
+
+
+perform_time_step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap,functor) )
 perform_time_step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
+# @todo raus
+perform_time_step.add_action_set( plotter )
 project.solversteps.add_step(perform_time_step)
 
 

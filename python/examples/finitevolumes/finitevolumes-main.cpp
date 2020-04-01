@@ -14,6 +14,7 @@
 
 #include "observers/CreateGrid.h"
 #include "observers/PlotSolution.h"
+#include "observers/TimeStep.h"
 
 #include "peano4/UnitTests.h"
 #include "tarch/UnitTests.h"
@@ -29,7 +30,7 @@ tarch::logging::Log _log("::");
 bool selectNextAlgorithmicStep() {
   static int counter           = 0;
   bool       continueToSolve   = true;
-  const int  NumberOfTimeSteps = 20;
+  const int  NumberOfTimeSteps = 4;
 
   if (
     counter==0
@@ -92,6 +93,12 @@ void step() {
     case examples::finitevolumes::observers::StepRepository::Steps::PlotSolution:
       {
         examples::finitevolumes::observers::PlotSolution  observer;
+	    peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+	  }
+	  break;
+    case examples::finitevolumes::observers::StepRepository::Steps::TimeStep:
+      {
+        examples::finitevolumes::observers::TimeStep  observer;
 	    peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
 	  }
 	  break;

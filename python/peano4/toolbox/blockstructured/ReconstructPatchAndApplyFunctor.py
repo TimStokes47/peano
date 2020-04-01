@@ -16,13 +16,33 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
   into this array (gather operation). After that, we can launch the passed functor
   giving it access to the temporary, large array plus the original patch data. 
   
-  patch          Instance of peano4.datamodel.Patch
-  patch_overlap  Instance of peano4.datamodel.Patch. Consult remark above about how the
-                 dimensions of this overlap patch have to match. 
   """
   
   
-  def __init__(self,patch,patch_overlap):
+  def __init__(self,patch,patch_overlap,functor_implementation):
+    """
+
+  patch          Instance of peano4.datamodel.Patch
+  patch_overlap  Instance of peano4.datamodel.Patch. Consult remark above about how the
+                 dimensions of this overlap patch have to match. 
+  functor_implementation Plain C++ code
+  
+  
+  <h2> functor_implementation </h2> 
+  
+  The functor implementation is a plain C/C++ 
+  
+  - If you want to use brackets in your implementation, please use double brackets {{ }} as 
+    the template system otherwise gets confused.
+  - The following C++ variables are defined:
+  
+    reconstructedPatch 
+    originalPatch
+    
+    Both are plain double pointers.
+  
+   
+    """
     self.d = {}
     if patch_overlap.dim[0] % 2 != 0:
       print( "Error: Patch associated to face has to have even number of cells. Otherwise, it is not a symmetric overlap." )
@@ -34,11 +54,17 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
       print( "Error: Patch of overlap and patch of cell have to match" )
       assert( patch_overlap.dim[1] == patch.dim[0] )
       
-    #self.d[ "FILENAME" ]           = filename
     self.d[ "UNKNOWNS" ]           = str(patch.no_of_unknowns)
     self.d[ "DOFS_PER_AXIS" ]      = str(patch.dim[0])
     self.d[ "OVERLAP" ]            = str(patch_overlap.dim[0]/2)
-
+    self.d[ "NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_2D" ] = str(patch.no_of_unknowns * patch.dim[0] * patch.dim[0])
+    self.d[ "NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_3D" ] = str(patch.no_of_unknowns * patch.dim[0] * patch.dim[0])
+    self.d[ "NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_2D" ] = str(patch.no_of_unknowns * (patch_overlap.dim[0] + patch.dim[0]) * (patch_overlap.dim[0] + patch.dim[0]))
+    self.d[ "NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_3D" ] = str(patch.no_of_unknowns * (patch_overlap.dim[0] + patch.dim[0]) * (patch_overlap.dim[0] + patch.dim[0]) * (patch_overlap.dim[0] + patch.dim[0]))
+    self.d[ "FACES_ACCESSOR" ]     = "fineGridFaces"  + patch_overlap.name
+    self.d[ "CELL_ACCESSOR" ]      = "fineGridCell" + patch.name
+    
+    self.d[ "FUNCTOR_IMPLEMENTATION" ]      = functor_implementation
 
 
   def get_constructor_body(self):
@@ -78,16 +104,10 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
   }};
 
   #if Dimensions==2
-  constexpr int NumberOfDoubleValuesInReconstructedPatch = ({DOFS_PER_AXIS}+{OVERLAP}*2)
-                                                         * ({DOFS_PER_AXIS}+{OVERLAP}*2)
-                                                         * {UNKNOWNS};
+  double reconstructedPatch[{NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_2D}];
   #elif Dimensions==3
-  constexpr int NumberOfDoubleValuesInReconstructedPatch = ({DOFS_PER_AXIS}+{OVERLAP}*2)
-                                                         * ({DOFS_PER_AXIS}+{OVERLAP}*2)
-                                                         * ({DOFS_PER_AXIS}+{OVERLAP}*2)
-                                                         * {UNKNOWNS};
+  double reconstructedPatch[{NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_3D}];
   #endif
-  double reconstructedPatch[NumberOfDoubleValuesInReconstructedPatch];
 
   //
   // Loop over original patch (k) and copy stuff over.
@@ -97,12 +117,12 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     int sourceCellSerialised       = peano4::utils::dLinearised(sourceCell,{DOFS_PER_AXIS});
     int destinationCellSerialised  = peano4::utils::dLinearised(destinationCell,{DOFS_PER_AXIS} + 2*{OVERLAP});
     for (int j=0; j<{UNKNOWNS}; j++) {{
-      *(reconstructedPatch + (destinationCellSerialised*{UNKNOWNS}+j)) = fineGridCellQ.value[ sourceCellSerialised*{UNKNOWNS}+j ];
+      *(reconstructedPatch + (destinationCellSerialised*{UNKNOWNS}+j)) = {CELL_ACCESSOR}.value[ sourceCellSerialised*{UNKNOWNS}+j ];
     }}
   }}
   
   //
-  // Brind in the auxiliary patches, i.e. befill halo
+  // Bring in the auxiliary patches, i.e. befill halo
   //
   for(int d=0; d<Dimensions; d++) {{
     //
@@ -120,7 +140,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
         int destinationCellSerialised   = peano4::utils::dLinearised(destinationCell,{DOFS_PER_AXIS} + 2*{OVERLAP});
         int sourceCellSerialised        = serialisePatchIndex(sourceCell,d);
         for (int j=0; j<{UNKNOWNS}; j++) {{
-          reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = fineGridFacesQ(d+Dimensions).value[ sourceCellSerialised*{UNKNOWNS}+j ];
+          reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = {FACES_ACCESSOR}(d+Dimensions).value[ sourceCellSerialised*{UNKNOWNS}+j ];
         }}
 
         destinationCell(d) = i+{DOFS_PER_AXIS}+{OVERLAP};
@@ -129,17 +149,28 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
         destinationCellSerialised   = peano4::utils::dLinearised(destinationCell,{DOFS_PER_AXIS} + 2*{OVERLAP});
         sourceCellSerialised        = serialisePatchIndex(sourceCell,d);
         for (int j=0; j<{UNKNOWNS}; j++) {{
-          reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = fineGridFacesQ(d+Dimensions).value[ sourceCellSerialised*{UNKNOWNS}+j ];
+          reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = {FACES_ACCESSOR}(d+Dimensions).value[ sourceCellSerialised*{UNKNOWNS}+j ];
         }}
       }}
     }}
   }}
+
+  #if Dimensions==2
+  auto f = [&]( double reconstructedPatch[{NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_2D}], double originalPatch[{NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_2D}], const tarch::la::Vector<Dimensions,double>& centre, double dx ) -> void {{
+  #elif Dimensions==3
+  auto f = [&]( double reconstructedPatch[{NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_3D}], double originalPatch[{NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_3D}], const tarch::la::Vector<Dimensions,double>& centre, double dx ) -> void {{
+  #endif
+{FUNCTOR_IMPLEMENTATION}
+  }};
+    
+
+  f( reconstructedPatch, {CELL_ACCESSOR}.value, marker.x().data(), marker.h()(0)/{DOFS_PER_AXIS} );
 """
 
 
   def get_body_of_operation(self,operation_name):
     result = "\n"
-    if operation_name==ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = self.__Template_TouchCellFirstTime.format(**self.d)
       pass 
     return result
@@ -151,5 +182,6 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
 
   def get_includes(self):
     return """
+#include <functional>
 #include "peano4/utils/Loop.h"
 """

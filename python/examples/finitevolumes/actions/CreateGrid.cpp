@@ -23,7 +23,8 @@ std::vector< peano4::grid::GridControlEvent > examples::finitevolumes::actions::
     peano4::grid::GridControlEvent::RefinementControl::Refine,
     tarch::la::Vector<Dimensions,double>(0.0),
     tarch::la::Vector<Dimensions,double>(1.0),
-    tarch::la::Vector<Dimensions,double>(0.1)
+    tarch::la::Vector<Dimensions,double>(0.3)
+//    tarch::la::Vector<Dimensions,double>(0.1)
   ));
 
   return result;
@@ -156,7 +157,7 @@ void examples::finitevolumes::actions::CreateGrid::createCell(
       initialValue = 1.0;
     }
     for (int i=0; i<NumberOfUnknownsPerCell; i++) {
-      fineGridCellQ.value[dofIndex] = 0.0;
+      fineGridCellQ.value[dofIndex] = 0.01;
       dofIndex++;
     }
     fineGridCellQ.value[dofIndex-1] = initialValue;

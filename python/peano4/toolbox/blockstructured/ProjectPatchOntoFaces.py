@@ -33,11 +33,11 @@ class ProjectPatchOntoFaces(ActionSet):
       print( "Error: Patch of overlap and patch of cell have to match" )
       assert( patch_overlap.dim[1] == patch.dim[0] )
       
-    #self.d[ "FILENAME" ]           = filename
     self.d[ "UNKNOWNS" ]           = str(patch.no_of_unknowns)
     self.d[ "DOFS_PER_AXIS" ]      = str(patch.dim[0])
     self.d[ "OVERLAP" ]            = str(patch_overlap.dim[0]/2)
-
+    self.d[ "FACES_ACCESSOR" ]     = "fineGridFaces"  + patch_overlap.name
+    self.d[ "CELL_ACCESSOR" ]      = "fineGridCell" + patch.name
 
 
   def get_constructor_body(self):
@@ -92,8 +92,8 @@ class ProjectPatchOntoFaces(ActionSet):
         int patchCellSerialised   = peano4::utils::dLinearised(patchCell,{DOFS_PER_AXIS});
         int overlapCellSerialised = serialisePatchIndex(overlapCell,d);
         for (int j=0; j<{UNKNOWNS}; j++) {{
-          fineGridFacesQ(d).value[overlapCellSerialised*{UNKNOWNS}+j] = 
-            fineGridCellQ.value[patchCellSerialised*{UNKNOWNS}+j];
+          {FACES_ACCESSOR}(d).value[overlapCellSerialised*{UNKNOWNS}+j] = 
+            {CELL_ACCESSOR}.value[patchCellSerialised*{UNKNOWNS}+j];
         }}
 
         patchCell(d)   = i+{DOFS_PER_AXIS}-{OVERLAP};
@@ -102,8 +102,8 @@ class ProjectPatchOntoFaces(ActionSet):
         patchCellSerialised   = peano4::utils::dLinearised(patchCell,{DOFS_PER_AXIS});
         overlapCellSerialised = serialisePatchIndex(overlapCell,d);
         for (int j=0; j<{UNKNOWNS}; j++) {{
-          fineGridFacesQ(d+Dimensions).value[overlapCellSerialised*{UNKNOWNS}+j] = 
-            fineGridCellQ.value[patchCellSerialised*{UNKNOWNS}+j];
+          {FACES_ACCESSOR}(d+Dimensions).value[overlapCellSerialised*{UNKNOWNS}+j] = 
+            {CELL_ACCESSOR}.value[patchCellSerialised*{UNKNOWNS}+j];
         }}
       }}
     }}
