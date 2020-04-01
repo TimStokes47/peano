@@ -148,11 +148,11 @@ void examples::finitevolumes::actions::CreateGrid::createCell(
   const double subcellWidth = cellWidth / PatchSize;
   dfor(k,PatchSize) {
     const tarch::la::Vector<Dimensions,double> subcellCentre =
-      marker.x() - 0.5*cellWidth + k.convertScalar<double>() * subcellWidth + subcellWidth;
+      marker.x() - 0.5*cellWidth + k.convertScalar<double>() * subcellWidth + 0.5 * subcellWidth;
     int dofIndex = peano4::utils::dLinearised(k,PatchSize) * NumberOfUnknownsPerCell;
     double initialValue = 0.01;
     if (
-      tarch::la::norm2( subcellCentre-tarch::la::Vector<Dimensions,double>(0.5) ) < 0.3
+      tarch::la::norm2( subcellCentre-tarch::la::Vector<Dimensions,double>(0.5) ) < 0.01
     ) {
       initialValue = 1.0;
     }

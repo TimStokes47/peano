@@ -132,7 +132,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     //
     dfore(k,{DOFS_PER_AXIS},d,0) {{
       for (int i=0; i<{OVERLAP}; i++) {{
-        tarch::la::Vector<Dimensions,int> destinationCell = k;
+        tarch::la::Vector<Dimensions,int> destinationCell = k + tarch::la::Vector<Dimensions,int>({OVERLAP});
         tarch::la::Vector<Dimensions,int> sourceCell      = k;
         destinationCell(d) = i;
         sourceCell(d)      = i;
@@ -144,7 +144,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
         }}
 
         destinationCell(d) = i+{DOFS_PER_AXIS}+{OVERLAP};
-        sourceCell(d)      = i;
+        sourceCell(d)      = i+{OVERLAP};
 
         destinationCellSerialised   = peano4::utils::dLinearised(destinationCell,{DOFS_PER_AXIS} + 2*{OVERLAP});
         sourceCellSerialised        = serialisePatchIndex(sourceCell,d);

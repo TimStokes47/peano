@@ -40,7 +40,7 @@ project = peano4.Project( ["examples", "finitevolumes"], "finitevolumes", "." )
 #
 # The solver will be patch-based, i.e. we will have one patch per cell.
 #
-patch_size = 7
+patch_size = 13
 unknowns   = 5
 patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, "Q" )
 project.datamodel.add_cell(patch)
@@ -91,6 +91,7 @@ project.solversteps.add_step(print_solution)
 perform_time_step      = peano4.solversteps.Step( "TimeStep" )
 perform_time_step.use_cell(patch)
 perform_time_step.use_face(patch_overlap)
+# @todo Darf ich den Face gleich wieder ueberschreiben? Nachbar bekommt ja dann GS-meassig den neuen mit u.U.
 functor = """
   auto flux = [](double Q[5], const tarch::la::Vector<Dimensions,double>& x, int normal, double F[5]) -> void {{
     assertion5( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4] );    
@@ -155,16 +156,16 @@ functor = """
     }}
   }};  
 
-
-    
-  double dt = 0.001;
-  dfor(cell,7) {{ // DOFS_PER_AXIS
+  constexpr int PatchSize = 13;
+  constexpr int HaloSize  = 1;    
+  double dt = 0.000001;
+  dfor(cell,PatchSize) {{ // DOFS_PER_AXIS
     tarch::la::Vector<Dimensions,double> voxelCentre = centre 
-                                           - static_cast<double>((7/2+1)) * tarch::la::Vector<Dimensions,double>(dx)
+                                           - static_cast<double>((PatchSize/2+HaloSize)) * tarch::la::Vector<Dimensions,double>(dx)
                                            + tarch::la::multiplyComponents(cell.convertScalar<double>(), tarch::la::Vector<Dimensions,double>(dx));
     
-    tarch::la::Vector<Dimensions,int> currentVoxel = cell + tarch::la::Vector<Dimensions,int>(1); // OVERLAP / Halo layer size
-    int currentVoxelSerialised = peano4::utils::dLinearised(currentVoxel,7 + 2*1);
+    tarch::la::Vector<Dimensions,int> currentVoxel = cell + tarch::la::Vector<Dimensions,int>(HaloSize); // OVERLAP / Halo layer size
+    int currentVoxelSerialised = peano4::utils::dLinearised(currentVoxel,PatchSize + 2*HaloSize);
     
     double accumulatedNumericalFlux[] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
     double numericalFlux[5];
@@ -173,7 +174,7 @@ functor = """
       tarch::la::Vector<Dimensions,double> x = voxelCentre;
       
       neighbourVoxel(d) -= 1;
-      int neighbourVoxelSerialised = peano4::utils::dLinearised(neighbourVoxel,7 + 2*1);
+      int neighbourVoxelSerialised = peano4::utils::dLinearised(neighbourVoxel,PatchSize + 2*HaloSize);
       x(d) -= 0.5 * dx;
       assertion(neighbourVoxel(d)>=0);
 
@@ -183,10 +184,10 @@ functor = """
         x, dx, dt, d,
         numericalFlux
       );
-      for (int unknown=0; unknown<5; unknown++) accumulatedNumericalFlux[unknown] -= numericalFlux[unknown];
+      for (int unknown=0; unknown<5; unknown++) accumulatedNumericalFlux[unknown] += numericalFlux[unknown];
       
       neighbourVoxel(d) += 2;
-      neighbourVoxelSerialised = peano4::utils::dLinearised(neighbourVoxel,7 + 2*1);
+      neighbourVoxelSerialised = peano4::utils::dLinearised(neighbourVoxel,PatchSize + 2*HaloSize);
       x(d) += 1.0 * dx;
       
       splitRiemann1d( 
@@ -198,10 +199,11 @@ functor = """
       for (int unknown=0; unknown<5; unknown++) accumulatedNumericalFlux[unknown] += numericalFlux[unknown];
     }}
 
-    int destinationVoxelSerialised = peano4::utils::dLinearised(cell,7);
+    int destinationVoxelSerialised = peano4::utils::dLinearised(cell,PatchSize);
     
     for (int unknown=0; unknown<5; unknown++) {{
       originalPatch[ destinationVoxelSerialised*5+unknown ] += dt / dx * accumulatedNumericalFlux[unknown];
+      //originalPatch[ destinationVoxelSerialised*5+unknown ] = reconstructedPatch[ currentVoxelSerialised*5+unknown ];
     }}
   }}
 """
