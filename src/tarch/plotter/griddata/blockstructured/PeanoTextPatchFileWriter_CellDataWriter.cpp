@@ -50,7 +50,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
   for (int i=0; i<_numberOfUnknowns; i++) {
     if ( std::abs(values[i]) < std::numeric_limits<double>::min() ) values[i] = 0.0;
     _out << " " << values[i];
-    assertion( !std::isnan(values[i]) );
+    assertion1( !std::isnan(values[i]), i );
     _entryCounter++;
   }
   flushIfPatchIsComplete();
