@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurations>
-<configuration id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.2053942234">
+<configuration id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.2076412223">
 <option id="configure" value="configure"/>
 <option id="configdir" value=""/>
 <option id="cache-file" value=""/>
@@ -29,14 +29,14 @@
 <option id="program-prefix" value=""/>
 <option id="program-suffix" value=""/>
 <option id="program-transform-name" value=""/>
-<option id="env_vars" value="CXXFLAGS=&quot;-I/opt/intel/tbb/include&quot; PEANO_CXXFLAGS=&quot;-I/usr/include/vtk-8.2&quot; LDFLAGS=&quot;-L/opt/intel/tbb/lib/intel64/gcc4.8 -ltbb -pthread&quot;"/>
+<option id="env_vars" value=""/>
 <option id="enable-maintainer-mode" value="false"/>
 <flag id="CFLAGS" value="CFLAGS|CXXFLAGS">
 <flagvalue id="cflags-debug" value="false"/>
 <flagvalue id="cflags-gprof" value="false"/>
 <flagvalue id="cflags-gcov" value="false"/>
 </flag>
-<option id="user" value="--with-multithreading=tbb --with-vtk "/>
+<option id="user" value=""/>
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>
 </configuration>
