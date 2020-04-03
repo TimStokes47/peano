@@ -30,7 +30,7 @@ class Convert(object):
       invocation_prefix If you built your code with MPI, you might have to 
         set an explicit invocation prefix. Otherwise, just leave it as it 
         is. Don't add something alike -np 1. The code will add this 
-        automatically, as it is well-awa
+        automatically.
     """
     self.visualisation_tools_path = path
     self.mpi_prefix               = mpi_prefix

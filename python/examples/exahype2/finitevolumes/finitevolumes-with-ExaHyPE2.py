@@ -57,9 +57,8 @@ peano4_project.run( [] )
 
 
 
-
 convert = peano4.visualisation.Convert( "solution" )
-convert.set_visualisation_tools_path( "../../../../visualisation" )
+convert.set_visualisation_tools_path( "../../../../src/visualisation" )
 convert.extract_fine_grid()
 convert.convert_to_vtk()
 
