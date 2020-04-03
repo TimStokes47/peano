@@ -74,7 +74,58 @@ project.constants.export( "NumberOfUnknownsPerCell", unknowns )
 \end{code}
 
 
-All the stuff we use, we use the toolbox and some vis
+\section{Administration of the data structures}
+
+Projecting the patches onto the face data structures and back is a mechnical
+task.
+Therefore, Peano4 offers a toolbox to relieve you from the pain to 
+recode it over and over again.
+Using this toolbox, you add the projections to your algorithmic steps, and the
+API then automatically injects these features (aspects) into your code:
+
+\begin{code}
+perform_time_step      = peano4.solversteps.Step( "TimeStep" )
+perform_time_step.use_cell(patch)
+perform_time_step.use_face(patch_overlap)
+...
+perform_time_step.add_action_set( 
+  peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap,...)
+) 
+perform_time_step.add_action_set( 
+  peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) 
+)
+\end{code}
+
+
+
+\begin{center}
+  \includegraphics[width=0.3\textwidth]{42_finite-volumes/ProjectPatchOntoFaces.pdf}
+\end{center}
+
+
+\noindent
+The image above illustrates what \texttt{ProjectPatchOntoFaces} does:
+It knows the dimensions of both the patches and the face auxiliary data
+structures and thus can ensure that the right data is copied from the cell into
+the $2^d$ faces when we leave a cell throughout the grid traversal.
+
+
+
+The action set \texttt{ReconstructPatchAndApplyFunctor} works slighlty different
+yet can be read, from a patch projection point of view, as transpose of
+\texttt{ProjectPatchOntoFaces}:
+It creates a auxiliary variable \texttt{reconstructedX} with X being the name
+you gave the Unknowns of the patch.
+This auxiliary variable has the dimensions 
+$N+2 \times N+2 \times N+2$\footnote{All tools work with overlaps greater than
+2. But to keep the text simple, I stick to 2.}.
+It then copies over the patch data into this auxiliary patch and uses the faces
+to supplement it with halo data around it.
+So that it, you get the original patch data plus the cells around it in one big
+patch.
+
+
+ All the stuff we use, we use the toolbox and some vis
 
 % 
 % import peano4.visualisation
