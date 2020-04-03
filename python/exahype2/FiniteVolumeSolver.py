@@ -1,7 +1,11 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
+import os
+
 import peano4
 import peano4.datamodel
+import peano4.output.TemplatedHeaderFile
+import peano4.output.TemplatedHeaderImplementationFilePair
 
 from enum import Enum
 
@@ -67,4 +71,37 @@ class FiniteVolumeSolver():
   def add_actions_to_perform_time_step(self, step):
     pass
   
+  
+  def add_implementation_files_to_project(self,namespace,output):
+    """
+    
+      makefile is an instance of peano4.output.Makefile, so you can 
+      add your files to this instance.
+      
+    """
+
+    templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
+    
+    abstractHeaderDictionary = {}
+    implementationDictionary = {}
+        
+    generated_abstract_header_file = peano4.output.TemplatedHeaderFile(
+      templatefile_prefix + "AbstractRusanov.template.h",
+      "Abstract" + self._name, 
+      namespace,
+      ".", 
+      abstractHeaderDictionary,
+      True)
+    generated_solver_files = peano4.output.TemplatedHeaderImplementationFilePair(
+      templatefile_prefix + "Rusanov.template.h",
+      templatefile_prefix + "Rusanov.template.cpp",
+      self._name, 
+      namespace,
+      ".", 
+      implementationDictionary,
+      False)
+
+    output.add( generated_abstract_header_file )
+    output.add( generated_solver_files )
+    #output.makefile.add_cpp_file( namespace[-1] + "/" + class_name + ".cpp" )
 

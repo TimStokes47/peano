@@ -47,6 +47,8 @@ class Project(object):
       solver.add_actions_to_create_grid( create_grid )
       solver.add_actions_to_plot_solution( plot_solution )
       solver.add_actions_to_perform_time_step( perform_time_step )
+      solver.add_implementation_files_to_project( self._project.namespace, self._project.output )
+
     return self._project
 
     

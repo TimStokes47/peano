@@ -9,4 +9,5 @@ from .Makefile             import CompileMode
 from .ActionSet            import ActionSet
 from .Observer             import Observer
 from .Output               import Output
+from .TemplatedHeaderFile  import TemplatedHeaderFile
 from .TemplatedHeaderImplementationFilePair import TemplatedHeaderImplementationFilePair

@@ -69,8 +69,8 @@ class Project (object):
     self.is_generated = True
     self.is_built = False
     if len(self.output.artefacts)>0:
-      print( "remove all the old artefacts from the repository")
-      self.output.clear_artefacts()    
+      print( "some artefacts have already been added to repository ... assume this is intentional (by higher abstraction layer, e.g.)")
+      #self.output.clear_artefacts()    
 
     self.datamodel.construct_output(self.output)
     self.solversteps.construct_output(self.output)

@@ -203,6 +203,25 @@ if test "$with_hdf5" = "yes"; then
 fi 
 
 
+#
+# ExaHypE2
+#
+AC_ARG_WITH(exahype,
+  AC_HELP_STRING([--with-exahype], [enable ExaHyPE2 [default=no]]),
+  [ AC_MSG_CHECKING(for exahype)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);    exahype=false ;;
+      *)     AC_MSG_RESULT(yes);   exahype=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for exahype); AC_MSG_RESULT(no); exahype=false ])
+AM_CONDITIONAL([UseExaHyPE],[test "$exahype" != false])
+if test "$exahype" != false; then
+  AC_DEFINE([UseExaHyPE], [1], [UseExaHyPE])
+fi
+
+
+
+
 
 #
 # Delta
@@ -244,5 +263,6 @@ AC_OUTPUT(
   src/toolbox/multiprecision/Makefile src/toolbox/finiteelements/Makefile
   src/examples/unittests/Makefile src/examples/grid/Makefile src/examples/integerdiffusionthroughfaces/Makefile src/examples/delta/Makefile src/examples/regulargridupscaling/Makefile 
   src/visualisation/Makefile
+  src/exahype2/Makefile
 )
 

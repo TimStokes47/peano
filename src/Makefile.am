@@ -9,7 +9,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 SUBDIRS = . \
           toolbox/finiteelements toolbox/multiprecision \
           examples/unittests examples/grid examples/integerdiffusionthroughfaces examples/delta examples/regulargridupscaling \
-          visualisation
+          visualisation exahype2
 
 
 #
