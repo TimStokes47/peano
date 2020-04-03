@@ -167,6 +167,7 @@ AC_ARG_WITH(vtk_version,
   [ AC_MSG_CHECKING(for vtk-version); AC_MSG_RESULT(not set - use default (major release 8)); vtk_version="8" ])
   
 
+AM_CONDITIONAL([VTK_LIBRARY_VERSION_7],[test "$vtk_version" = "7"])
 AM_CONDITIONAL([VTK_LIBRARY_VERSION_8],[test "$vtk_version" = "8"])
 AM_CONDITIONAL([VTK_LIBRARY_VERSION_9],[test "$vtk_version" = "9"])
 #if test "$vtk-version" != false; then
