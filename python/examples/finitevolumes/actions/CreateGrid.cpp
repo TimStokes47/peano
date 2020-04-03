@@ -58,12 +58,16 @@ void examples::finitevolumes::actions::CreateGrid::createPersistentFace(
       examples::finitevolumes::facedata::Q& fineGridFaceQ,
       peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
       examples::finitevolumes::celldata::Q& coarseGridCellQ) {
-
-// Feel free to comment in and to add arguments if you want to trace them.
-// Ensure the logTraceOut is activated, too, if you switch on traceIn.     
-// logTraceIn( "createPersistentFace()" );
-// @todo Please implement
-// logTraceOut( "createPersistentFace()" );
+  #if Dimensions==2
+  int NumberOfEntries = PatchSize * 2;
+  #else
+  int NumberOfEntries = PatchSize * PatchSize * 2;
+  #endif
+  for (int i=0; i<NumberOfEntries; i++) {
+    for (int unknowns=0; unknowns<NumberOfUnknownsPerCell; unknowns++) {
+      fineGridFaceQ.value[i*NumberOfUnknownsPerCell+unknowns] = 0.0;
+    }
+  }
 }
 
 
@@ -150,17 +154,20 @@ void examples::finitevolumes::actions::CreateGrid::createCell(
     const tarch::la::Vector<Dimensions,double> subcellCentre =
       marker.x() - 0.5*cellWidth + k.convertScalar<double>() * subcellWidth + 0.5 * subcellWidth;
     int dofIndex = peano4::utils::dLinearised(k,PatchSize) * NumberOfUnknownsPerCell;
-    double initialValue = 0.01;
+
+    fineGridCellQ.value[dofIndex+0] = 1.0;  // rho
+    fineGridCellQ.value[dofIndex+1] = 0;    // velocities
+    fineGridCellQ.value[dofIndex+2] = 0;
+    fineGridCellQ.value[dofIndex+3] = 0;
+
     if (
-      tarch::la::norm2( subcellCentre-tarch::la::Vector<Dimensions,double>(0.5) ) < 0.01
+      tarch::la::norm2( subcellCentre-tarch::la::Vector<Dimensions,double>(0.5) ) < 0.03
     ) {
-      initialValue = 1.0;
+      fineGridCellQ.value[dofIndex+4] = 1.0; // inner energy
     }
-    for (int i=0; i<NumberOfUnknownsPerCell; i++) {
-      fineGridCellQ.value[dofIndex] = 0.01;
-      dofIndex++;
+    else {
+      fineGridCellQ.value[dofIndex+4] = 0.0;
     }
-    fineGridCellQ.value[dofIndex-1] = initialValue;
   }
 }
 

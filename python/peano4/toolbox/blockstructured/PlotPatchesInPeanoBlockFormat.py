@@ -126,6 +126,9 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
   
   dfor(k,{DOFS_PER_AXIS}) {{
     double* data = fineGridCell{NAME}.value + currentDoF;
+    for (int i=0; i<{UNKNOWNS}; i++) {{
+      assertion3( not std::isnan(data[i]), i, k, marker.toString() );
+    }}
     _dataWriter->plotCell( cellIndex, data );
     cellIndex++;
     currentDoF += {UNKNOWNS};

@@ -117,7 +117,8 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     int sourceCellSerialised       = peano4::utils::dLinearised(sourceCell,{DOFS_PER_AXIS});
     int destinationCellSerialised  = peano4::utils::dLinearised(destinationCell,{DOFS_PER_AXIS} + 2*{OVERLAP});
     for (int j=0; j<{UNKNOWNS}; j++) {{
-      *(reconstructedPatch + (destinationCellSerialised*{UNKNOWNS}+j)) = {CELL_ACCESSOR}.value[ sourceCellSerialised*{UNKNOWNS}+j ];
+      reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j] = {CELL_ACCESSOR}.value[ sourceCellSerialised*{UNKNOWNS}+j ];
+      assertion2( reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j]==reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j], sourceCell, j );
     }}
   }}
   
@@ -139,8 +140,10 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
         
         int destinationCellSerialised   = peano4::utils::dLinearised(destinationCell,{DOFS_PER_AXIS} + 2*{OVERLAP});
         int sourceCellSerialised        = serialisePatchIndex(sourceCell,d);
+
         for (int j=0; j<{UNKNOWNS}; j++) {{
           reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = {FACES_ACCESSOR}(d+Dimensions).value[ sourceCellSerialised*{UNKNOWNS}+j ];
+          assertion( reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ]==reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] );
         }}
 
         destinationCell(d) = i+{DOFS_PER_AXIS}+{OVERLAP};
@@ -150,6 +153,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
         sourceCellSerialised        = serialisePatchIndex(sourceCell,d);
         for (int j=0; j<{UNKNOWNS}; j++) {{
           reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = {FACES_ACCESSOR}(d+Dimensions).value[ sourceCellSerialised*{UNKNOWNS}+j ];
+          assertion( reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ]==reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] );
         }}
       }}
     }}
@@ -162,7 +166,6 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
   #endif
 {FUNCTOR_IMPLEMENTATION}
   }};
-    
 
   f( reconstructedPatch, {CELL_ACCESSOR}.value, marker.x().data(), marker.h()(0)/{DOFS_PER_AXIS} );
 """
