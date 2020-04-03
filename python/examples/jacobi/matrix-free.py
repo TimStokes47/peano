@@ -123,7 +123,7 @@ project.solversteps.add_step(plot_solution)
 # parse the generated configuration scripts. The makefile would also offer a
 # routine to set the dimension. We take the default here.
 #
-project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano" )
+project.output.makefile.parse_configure_script_outcome( "../../.." )
 
 #
 # Standard triad of operations. You can skip the first two steps if you want as 
@@ -155,7 +155,7 @@ print( "Runtime: " + str(time.time()-start_time_stamp) + "s" )
 # Convert data into vtk, so we can open it in Paraview
 #
 convert = peano4.visualisation.Convert( "epsilon" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+convert.set_visualisation_tools_path( "../../../visualisation" )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
 convert.extract_fine_grid()
 convert.convert_to_vtk()

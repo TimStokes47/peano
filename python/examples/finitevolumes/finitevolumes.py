@@ -274,7 +274,9 @@ project.solversteps.add_step(perform_time_step)
 # parse the generated configuration scripts. The makefile would also offer a
 # routine to set the dimension. We take the default here.
 #
-project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano" )
+# @todo Adopt to your particular system settings
+#
+project.output.makefile.parse_configure_script_outcome( "../../.." )
 project.constants.export( "PatchSize", patch_size )
 project.constants.export( "NumberOfUnknownsPerCell", unknowns )
 

@@ -141,7 +141,7 @@ project.solversteps.add_step(plot_solution)
 # parse the generated configuration scripts. The makefile would also offer a
 # routine to set the dimension. We take the default here.
 #
-project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano" )
+project.output.makefile.parse_configure_script_outcome( "../../.." )
 
 
 #
@@ -175,7 +175,7 @@ project.run( ["64.0", "1"] )
 #convert.convert_to_vtk()
 
 convert = peano4.visualisation.Convert( "epsilon" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+convert.set_visualisation_tools_path( "../../../src/visualisation" )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
 convert.extract_fine_grid()
 convert.convert_to_vtk()

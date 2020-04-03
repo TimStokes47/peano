@@ -183,7 +183,7 @@ if run_successful:
   # Convert data into vtk, so we can open it in Paraview  
   #
   convert = peano4.visualisation.Convert( "epsilon" )
-  convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+  convert.set_visualisation_tools_path( "../../../visualisation" )
   #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation", "/opt/mpi/mpirun" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()

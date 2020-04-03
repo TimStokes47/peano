@@ -37,7 +37,7 @@ for f in output_files:
 # Create a project and configure it to end up in a subnamespace (and thus
 # subdirectory). 
 #
-project = peano4.Project( ["examples", "finitevolumes"], "finitevolumes", "." )
+project = exahype2.FiniteVolumeSolver( ["examples", "exahype2", "finitevolumes"], "finitevolumes", 13, 5, "." )
 
 
 #
@@ -276,6 +276,8 @@ project.solversteps.add_step(perform_time_step)
 # make it copy/clone the settings identified by ./configure, we ask it to 
 # parse the generated configuration scripts. The makefile would also offer a
 # routine to set the dimension. We take the default here.
+#
+# @todo
 #
 project.output.makefile.parse_configure_script_outcome( "/home/tobias/git/Peano" )
 project.constants.export( "PatchSize", patch_size )
