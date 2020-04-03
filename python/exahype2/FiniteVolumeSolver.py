@@ -1,0 +1,20 @@
+# This file is part of the ExaHyPE project and follow-up activities. 
+# For conditions of distribution and use, please see the copyright 
+# notice at www.peano-framework.org
+
+
+import peano4
+
+
+class FiniteVolumeSolver(peano4.Project):
+  """ 
+  Represents on Peano 4 project.
+  
+  namespace Sequence of strings representing the (nested) namespace. Pass in 
+    [ "examples", "algebraicmg" ] for example if you wanna write a solver that 
+    is embedded into the namespace examples::algebraicmg.
+    
+  """
+  def __init__(self, namespace, project_name, patch_size, solver_type, directory = "."):
+    super( FiniteVolumeSolver, self ).__init__(namespace, project_name, directory)
+
