@@ -4,6 +4,10 @@
 #define _PEANO4_DATAMANAGEMENT_FACE_ENUMERATOR_H_
 
 
+#include "peano4/utils/Globals.h"
+#include "tarch/Assertions.h"
+
+
 namespace peano4 {
   namespace datamanagement {
     template <class Face>

@@ -5,10 +5,7 @@
 
 
 #include "peano4/utils/Globals.h"
-#include "peano4/grid/GridTraversalEvent.h"
-#include "tarch/la/Vector.h"
-
-#include <bitset>
+#include "tarch/Assertions.h"
 
 
 namespace peano4 {
@@ -24,27 +21,14 @@ struct peano4::datamanagement::VertexEnumerator {
   private:
     Vertex* _vertices[ TwoPowerD ];
   public:
-	/**
-	 * Usually is only used by the observers, i.e. users should not interact
-	 * with this routine.
-	 */
-	VertexEnumerator(const peano4::grid::GridTraversalEvent&   event) {
-      #if PeanoDebug>0
-	  for (int i=0; i<TwoTimesD; i++) {
-		_vertices[i] = nullptr;
-	  }
-      #endif
-	}
-
-
-	/**
-	 * Constructs vertex enumerator with default layout for consecutively
-	 * stored vertices.
-	 */
-	VertexEnumerator(Vertex* firstVertex) {
-	  for (int i=0; i<TwoTimesD; i++) {
+    /**
+     * Constructs vertex enumerator with default layout for consecutively
+     * stored vertices.
+     */
+    VertexEnumerator(Vertex* firstVertex) {
+      for (int i=0; i<TwoTimesD; i++) {
         _vertices[i] = firstVertex+i;
-	  }
+      }
     }
 
 
