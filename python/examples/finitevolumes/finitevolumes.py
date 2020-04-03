@@ -289,7 +289,7 @@ project.constants.export( "NumberOfUnknownsPerCell", unknowns )
 #
 project.generate(peano4.output.Overwrite.Default)
 project.build()
-project.run( ["myarguments"] )
+success = project.run( ["myarguments"] )
 
 
 #
@@ -301,7 +301,8 @@ project.run( ["myarguments"] )
 #convert.convert_to_vtk()
 
 
-convert = peano4.visualisation.Convert( "solution" )
-convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
-convert.extract_fine_grid()
-convert.convert_to_vtk()
+if success:
+  convert = peano4.visualisation.Convert( "solution" )
+  convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
+  convert.extract_fine_grid()
+  convert.convert_to_vtk()

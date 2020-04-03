@@ -53,14 +53,15 @@ peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
 peano4_project.generate(peano4.output.Overwrite.Default)
 peano4_project.build()
-peano4_project.run( [] )
+success = peano4_project.run( [] )
 
 
 
-convert = peano4.visualisation.Convert( "solution" )
-convert.set_visualisation_tools_path( "../../../../src/visualisation" )
-convert.extract_fine_grid()
-convert.convert_to_vtk()
+if success:
+  convert = peano4.visualisation.Convert( "solution" )
+  convert.set_visualisation_tools_path( "../../../../src/visualisation" )
+  convert.extract_fine_grid()
+  convert.convert_to_vtk()
 
 
 

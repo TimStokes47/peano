@@ -82,8 +82,12 @@ class FiniteVolumeSolver():
 
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
     
-    abstractHeaderDictionary = {}
-    implementationDictionary = {}
+    abstractHeaderDictionary = {
+      "NUMBER_OF_UNKNOWNS" : self._patch.no_of_unknowns
+    }
+    implementationDictionary = {
+      "NUMBER_OF_UNKNOWNS" : self._patch.no_of_unknowns
+    }
         
     generated_abstract_header_file = peano4.output.TemplatedHeaderFile(
       templatefile_prefix + "AbstractRusanov.template.h",
