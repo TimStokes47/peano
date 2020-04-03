@@ -14,7 +14,7 @@ import sys
 
 class Project (object):
   """ 
-  Represents on Peano 4 project.
+  Represents a Peano 4 project.
   
   namespace Sequence of strings representing the (nested) namespace. Pass in 
     [ "examples", "algebraicmg" ] for example if you wanna write a solver that 

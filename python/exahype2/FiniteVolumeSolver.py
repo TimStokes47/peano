@@ -1,20 +1,16 @@
-# This file is part of the ExaHyPE project and follow-up activities. 
-# For conditions of distribution and use, please see the copyright 
-# notice at www.peano-framework.org
+# This file is part of the ExaHyPE2 project. For conditions of distribution and 
+# use, please see the copyright notice at www.peano-framework.org
 import peano4
 from enum import Enum
 
 
 
-class CompileMode(Enum):
-  Debug = 0
-  Trace = 1
-  Asserts = 2
-  Release = 3
+class FiniteVolumeSolverType(Enum):
+  Rusanov = 0
   
 
 
-class FiniteVolumeSolver(peano4.Project):
+class FiniteVolumeSolver():
   """ 
   Represents on Peano 4 project.
   
@@ -22,6 +18,8 @@ class FiniteVolumeSolver(peano4.Project):
     ["examples", "exahype2", "finitevolumes"] for example.
     
   """
-  def __init__(self, namespace, project_name, patch_size, solver_type, directory = "."):
-    super( FiniteVolumeSolver, self ).__init__(namespace, project_name, directory)
-
+  def __init__(self, name, patch_size, unknowns, solver_type = FiniteVolumeSolverType.Rusanov):
+    #    self.patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, "Q" )
+    #
+    #self.datamodel.add_cell(self.patch)
+    pass
