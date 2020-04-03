@@ -836,7 +836,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 
 
   TemplateLeaveCell_Epilogue = """  
-  logTraceOut( "leaveCell(peano4::grid::GridTraversalEvent)" );
+  logTraceOut( "leaveCell(...)" );
 }}
 """
 
