@@ -51,6 +51,8 @@ project.add_finite_volumes_solver("Euler", patch_size, unknowns)
 
 peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
+#Pfad stimmt net
+peano4_project.output.makefile.add_library( "ExaHyPE2Core2d", "../../../../src/exahype2" )
 peano4_project.generate(peano4.output.Overwrite.Default)
 peano4_project.build()
 success = peano4_project.run( [] )
@@ -58,7 +60,7 @@ success = peano4_project.run( [] )
 
 
 if success:
-  convert = peano4.visualisation.Convert( "solution" )
+  convert = peano4.visualisation.Convert( "solutionEuler" )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()

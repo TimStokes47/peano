@@ -62,11 +62,28 @@ class Project(object):
     
     
   def generate_Peano4_project(self):
+    """
+    
+     Build the Peano4 project, i.e. all the action sets et al that you require
+     to run this ExaHyPE2 application. 
+     
+     
+     You will have to add the ExaHyPE2 library later on manually. I would like 
+     to do this here, but most codes first want to parse the config file before
+     they add the library. And, obviously, you still have to make the choice 
+     which variant of the library (release, trace, debug, ...) you want to use.
+
+     So most codes invoke something alike
+     
+     
+     on the result of this routine.     
+     
+    """
     create_grid       = peano4.solversteps.Step( "CreateGrid", False )
     plot_solution     = peano4.solversteps.Step( "PlotSolution", False )
     perform_time_step = peano4.solversteps.Step( "TimeStep", False )
     
-    create_grid.add_action_set( CreateGrid() )
+    create_grid.add_action_set( CreateGrid(self._solvers) )
     
     self._project.solversteps.add_step(create_grid)
     self._project.solversteps.add_step(plot_solution)
