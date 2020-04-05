@@ -419,31 +419,6 @@ endif
 
 
 if VTK_LIBRARY_VERSION_9
-#VTK_REQUIRED_LIBS     =  
-#  -lvtkCommonCore$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkCommonColor$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkCommonComputationalGeometry$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkCommonDataModel$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkCommonExecutionModel$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkCommonMath$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkCommonMisc$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkCommonSystem$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkCommonTransforms$(VTK_LIBRARY_SUFFIX) \
-#  -lvtksys$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkfreetype$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkloguru$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkFiltersParallel$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkFiltersCore$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkFiltersSources$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkIOXML$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkIOExport$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkIOLegacy$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkIOParallel$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkParallelCore$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkRenderingCore$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkRenderingFreeType$(VTK_LIBRARY_SUFFIX) \
-#  -lvtkjsoncpp$(VTK_LIBRARY_SUFFIX)
-  
 VTK_REQUIRED_LIBS     =  \
 -lvtkChartsCore$(VTK_LIBRARY_SUFFIX)                   -lvtkexpat$(VTK_LIBRARY_SUFFIX)                   -lvtkFiltersPoints$(VTK_LIBRARY_SUFFIX)        -lvtkhdf5$(VTK_LIBRARY_SUFFIX)                  -lvtkInteractionImage$(VTK_LIBRARY_SUFFIX)    -lvtkIOImport$(VTK_LIBRARY_SUFFIX)       -lvtkIOTecplotTable$(VTK_LIBRARY_SUFFIX)  -lvtknetcdf$(VTK_LIBRARY_SUFFIX)                 -lvtkRenderingLabel$(VTK_LIBRARY_SUFFIX)          -lvtkViewsContext2D$(VTK_LIBRARY_SUFFIX) \
 -lvtkCommonColor$(VTK_LIBRARY_SUFFIX)                  -lvtkFiltersAMR$(VTK_LIBRARY_SUFFIX)              -lvtkFiltersProgrammable$(VTK_LIBRARY_SUFFIX)  -lvtkhdf5_hl$(VTK_LIBRARY_SUFFIX)               -lvtkInteractionStyle$(VTK_LIBRARY_SUFFIX)    -lvtkIOInfovis$(VTK_LIBRARY_SUFFIX)      -lvtkIOVeraOut$(VTK_LIBRARY_SUFFIX)       -lvtkogg$(VTK_LIBRARY_SUFFIX)                    -lvtkRenderingLOD$(VTK_LIBRARY_SUFFIX)            -lvtkViewsCore$(VTK_LIBRARY_SUFFIX) \
