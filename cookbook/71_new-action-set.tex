@@ -60,7 +60,7 @@ The query's arguments clarifies which operation body is requested
 \begin{code}
   def get_body_of_operation(self,operation_name):
     # An examples where we only do something for :
-    if operation_name == ActionSet.OPERATION_CREATE_CELL:
+    if operation_name == peano4.solversteps.ActionSet.OPERATION_CREATE_CELL:
       return "mycell.add(...)\n"
     return "// Nothing to implement\n"
 \end{code}
