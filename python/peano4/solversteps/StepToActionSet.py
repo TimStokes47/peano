@@ -21,8 +21,8 @@ class StepToActionSet(object):
       subnamespace = ""
       if action_set.user_should_modify_template():
         subnamespace = "actions" 
-        action_set_name = action_set.name
-        print( "user has to modify class " + action_set.name + " in actions directory manually ")
+        action_set_name = action_set.get_action_set_name()
+        print( "user has to modify class " + action_set.get_action_set_name() + " in actions directory manually ")
       else:
         subnamespace = "observers" 
         action_set_name = self.step.name + "2" + action_set.get_action_set_name() + str( self.step.action_sets.index(action_set))

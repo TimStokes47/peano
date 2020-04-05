@@ -54,7 +54,7 @@ class ActionSet:
 
 
   @abstractmethod
-  def get_actionset_name(self):
+  def get_action_set_name(self):
     """
      Returns a description (word) for the mapping which is also used as class name
      for the generated type. As a consequence, the result should be one word (if 

@@ -5,7 +5,7 @@
 
 
 namespace exahype2 {
-  class enum RefinementControl {
+  enum class RefinementControl {
     Keep, Refine, Coarsen
   };
 }

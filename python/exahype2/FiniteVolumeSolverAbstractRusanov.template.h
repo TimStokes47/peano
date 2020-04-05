@@ -12,6 +12,12 @@
 
 #include "exahype2/RefinementControl.h"
 
+#include "tarch/la/Vector.h"
+
+#include "peano4/utils/Globals.h"
+
+
+
 {OPEN_NAMESPACE}
   class {CLASSNAME};
 {CLOSE_NAMESPACE}
@@ -25,7 +31,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
      * @param h Mesh size of finite volume
      * @param t Time
      */
-    virtual exahype2::RefinementControl refinementCriterion(
+    virtual ::exahype2::RefinementControl refinementCriterion(
       double Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h,

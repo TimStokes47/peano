@@ -10,14 +10,15 @@
 #define _{INCLUDE_GUARD}_
 
 
-#include "exahype2/RefinementControl.h"
+#include "Abstract{CLASSNAME}.h"
+
 
 {OPEN_NAMESPACE}
   class {CLASSNAME};
 {CLOSE_NAMESPACE}
 
 
-class {FULL_QUALIFIED_CLASSNAME} {{
+class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
   public:
     /**
      * @param Q Vector of unknowns
@@ -25,7 +26,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
      * @param h Mesh size of finite volume
      * @param t Time
      */
-    exahype2::RefinementControl refinementCriterion(
+    ::exahype2::RefinementControl refinementCriterion(
       double Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h,

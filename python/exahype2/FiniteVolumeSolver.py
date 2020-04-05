@@ -37,6 +37,10 @@ class FiniteVolumeSolver():
   def _unknown_identifier(self):
     return self._name+"Q"
   
+
+  def get_name_of_global_instance(self):
+    return "InstanceOf" + self._name
+
   
   def add_to_Peano4_datamodel( self, datamodel ):
     """
@@ -107,5 +111,5 @@ class FiniteVolumeSolver():
 
     output.add( generated_abstract_header_file )
     output.add( generated_solver_files )
-    #output.makefile.add_cpp_file( namespace[-1] + "/" + class_name + ".cpp" )
+    output.makefile.add_cpp_file( self._name + ".cpp" )
 
