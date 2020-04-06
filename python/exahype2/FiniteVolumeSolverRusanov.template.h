@@ -26,7 +26,7 @@ class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
      * @param h Mesh size of finite volume
      * @param t Time
      */
-    ::exahype2::RefinementControl refinementCriterion(
+    ::exahype2::RefinementCommand refinementCriterion(
       double Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h,

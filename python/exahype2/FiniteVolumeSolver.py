@@ -138,8 +138,8 @@ class FiniteVolumeSolver():
     dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
       {SOLVER_INSTANCE}.adjustSolution(
         fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
-        marker.x(),
-        marker.h(),
+        ::exahype2::getVolumeCentre( marker.x(), marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS}, volume), 
+        ::exahype2::getVolumeSize( marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS} ),
         0.0 // @todo raus im AMR Kontext bzw von aussen kalibrieren
         // Solver muss im namen FixedTimeStep haben und dann nehmen wir 
         // den TimeStamp direkt aus dem Solver (und der muss natuerlich 
@@ -160,7 +160,7 @@ class FiniteVolumeSolver():
 
   def get_refinement_command(self):
     """
-      Return an instance of ::exahype::RefinementControl
+      Return an instance of ::exahype::RefinementCommand
       
       See get_initialisation_invocation for a description which variables you do have 
       in this block. Further to the arguments there, a variable refinementControl is 
@@ -173,7 +173,7 @@ class FiniteVolumeSolver():
   {{
     int index = 0;
     dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
-      refinementControl = refinementControl and {SOLVER_INSTANCE}.refinementCriterion(
+      refinementCommand = refinementCommand and {SOLVER_INSTANCE}.refinementCriterion(
         fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
         marker.x(),
         marker.h(),

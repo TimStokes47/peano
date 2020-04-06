@@ -29,7 +29,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
      * @param Q Vector of unknowns
      * @param t Time
      */
-    virtual ::exahype2::RefinementControl refinementCriterion(
+    virtual ::exahype2::RefinementCommand refinementCriterion(
       double Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
