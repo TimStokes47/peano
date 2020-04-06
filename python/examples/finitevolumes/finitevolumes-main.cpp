@@ -30,7 +30,7 @@ tarch::logging::Log _log("::");
 bool selectNextAlgorithmicStep() {
   static int counter           = 0;
   bool       continueToSolve   = true;
-  const int  NumberOfTimeSteps = 20;
+  const int  NumberOfTimeSteps = 200;
 
   if (
     counter==0

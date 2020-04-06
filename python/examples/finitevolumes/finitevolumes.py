@@ -228,7 +228,8 @@ functor = """
         numericalFlux
       );
       for (int unknown=0; unknown<5; unknown++) {
-        accumulatedNumericalFlux[unknown] -= numericalFlux[unknown];
+        //accumulatedNumericalFlux[unknown] -= numericalFlux[unknown];
+        accumulatedNumericalFlux[unknown] += numericalFlux[unknown];
         assertion(  numericalFlux[unknown]==numericalFlux[unknown] );
         assertion(  accumulatedNumericalFlux[unknown]==accumulatedNumericalFlux[unknown] );
       }
@@ -244,7 +245,8 @@ functor = """
         numericalFlux
       );
       for (int unknown=0; unknown<5; unknown++) {
-        accumulatedNumericalFlux[unknown] += numericalFlux[unknown];
+        //accumulatedNumericalFlux[unknown] += numericalFlux[unknown];
+        accumulatedNumericalFlux[unknown] -= numericalFlux[unknown];
         assertion(  numericalFlux[unknown]==numericalFlux[unknown] );
         assertion(  accumulatedNumericalFlux[unknown]==accumulatedNumericalFlux[unknown] );
       }

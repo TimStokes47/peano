@@ -148,6 +148,7 @@ void examples::finitevolumes::actions::CreateGrid::createCell(
   peano4::datamanagement::FaceEnumerator<examples::finitevolumes::facedata::Q> coarseGridFacesQ,
   examples::finitevolumes::celldata::Q& coarseGridCellQ
 ) {
+  std::cout << "xxxxxxx";
   const double cellWidth    = marker.h()(0);
   const double subcellWidth = cellWidth / PatchSize;
   dfor(k,PatchSize) {
