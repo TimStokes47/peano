@@ -27,14 +27,19 @@ class {FULL_QUALIFIED_CLASSNAME} {{
   public:
     /**
      * @param Q Vector of unknowns
-     * @param x Position of unknowns (finite volume centre)
-     * @param h Mesh size of finite volume
      * @param t Time
      */
     virtual ::exahype2::RefinementControl refinementCriterion(
       double Q[{NUMBER_OF_UNKNOWNS}],
-      const tarch::la::Vector<Dimensions,double>&  x,
-      const tarch::la::Vector<Dimensions,double>&  h,
+      const tarch::la::Vector<Dimensions,double>&  volumeCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      const tarch::la::Vector<Dimensions,double>&  t
+    ) = 0;
+
+    virtual void adjustSolution(
+      double Q[{NUMBER_OF_UNKNOWNS}],
+      const tarch::la::Vector<Dimensions,double>&  volumeCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
       const tarch::la::Vector<Dimensions,double>&  t
     ) = 0;
 }};

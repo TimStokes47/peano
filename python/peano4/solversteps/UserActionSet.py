@@ -41,7 +41,7 @@ class UserActionSet(ActionSet):
      for the generated type. As a consequence, the result should be one word (if 
      possible) and uppercase. Also, every subclass should overwrite this routine.
     """
-    return "UserCode"
+    return self.name
 
 
   def get_attributes(self):

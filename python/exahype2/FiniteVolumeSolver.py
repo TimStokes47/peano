@@ -113,3 +113,85 @@ class FiniteVolumeSolver():
     output.add( generated_solver_files )
     output.makefile.add_cpp_file( self._name + ".cpp" )
 
+
+  def __init_dictionary_with_default_parameters(self,d):
+    d["NUMBER_OF_VOLUMES_PER_AXIS"] = self._patch.dim[0]
+    d["SOLVER_INSTANCE"]            = self.get_name_of_global_instance()
+    d["UNKNOWN_IDENTIFIER"]         = self._unknown_identifier()
+    d["NUMBER_OF_UNKNOWNS"]         = self._patch.no_of_unknowns
+
+ 
+  def get_initialisation_invocation(self):
+    """
+      Return the string initialising the solver. So this routine returns C++ code.
+      You can assume that the following fields are available:
+      
+      (1) const peano4::datamanagement::CellMarker& marker  Which tells you how big the 
+        cell is.
+      (2) A data array of the type corresponding to self._patch. The corresponding 
+        variable is called fineGridCell + _unknown_identifier().
+
+    """
+    template = """
+  {{ 
+    int index = 0;
+    dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
+      {SOLVER_INSTANCE}.adjustSolution(
+        fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
+        marker.x(),
+        marker.h(),
+        0.0 // @todo raus im AMR Kontext bzw von aussen kalibrieren
+        // Solver muss im namen FixedTimeStep haben und dann nehmen wir 
+        // den TimeStamp direkt aus dem Solver (und der muss natuerlich 
+        // hochzaehlen. Alternativ koennen wir auch reduzieren. Waere 
+        // noch schoener.
+      );
+      index += {NUMBER_OF_UNKNOWNS};
+    }}
+  }} 
+  
+"""
+
+    d = {}
+    self.__init_dictionary_with_default_parameters(d)
+
+    return template.format(**d)
+
+
+  def get_refinement_command(self):
+    """
+      Return an instance of ::exahype::RefinementControl
+      
+      See get_initialisation_invocation for a description which variables you do have 
+      in this block. Further to the arguments there, a variable refinementControl is 
+      defined. Do not override this one, but update it via the and operator.
+
+    """
+    # @tood Das in eine exahype::geometry Toolbox raus anstelle in einen Funktor!
+    
+    template = """
+  {{
+    int index = 0;
+    dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
+      refinementControl = refinementControl and {SOLVER_INSTANCE}.refinementCriterion(
+        fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
+        marker.x(),
+        marker.h(),
+        0.0 // @todo raus im AMR Kontext bzw von aussen kalibrieren
+        // Solver muss im namen FixedTimeStep haben und dann nehmen wir 
+        // den TimeStamp direkt aus dem Solver (und der muss natuerlich 
+        // hochzaehlen. Alternativ koennen wir auch reduzieren. Waere 
+        // noch schoener.
+      );
+      index += {NUMBER_OF_UNKNOWNS};
+    }}
+  }} 
+  
+"""
+
+    d = {}
+    self.__init_dictionary_with_default_parameters(d)
+
+    return template.format(**d)
+
+

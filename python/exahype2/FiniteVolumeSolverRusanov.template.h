@@ -32,6 +32,13 @@ class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  t
     ) override;
+
+    void adjustSolution(
+      double Q[{NUMBER_OF_UNKNOWNS}],
+      const tarch::la::Vector<Dimensions,double>&  volumeCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      const tarch::la::Vector<Dimensions,double>&  t
+    ) override;
 }};
 
 

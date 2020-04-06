@@ -11,6 +11,11 @@ namespace exahype2 {
 }
 
 
+/**
+ * If one of the flags says refine, then refine. If one of the two flags says keep and
+ * noone says refine, return keep. Coarsen if and only if both say coarsen.
+ */
+exahype2::RefinementControl operator&&( exahype2::RefinementControl lhs, exahype2::RefinementControl rhs);
 
 
 #endif
