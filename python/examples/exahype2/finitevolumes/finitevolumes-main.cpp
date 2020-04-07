@@ -35,7 +35,7 @@ tarch::logging::Log _log("::");
 bool selectNextAlgorithmicStep() {
   static int counter           = 0;
   bool       continueToSolve   = true;
-  const int  NumberOfTimeSteps = 20;
+  const int  NumberOfTimeSteps = 2;
 
   if (
     counter==0
@@ -153,23 +153,42 @@ int main(int argc, char** argv) {
     "tarch", 
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
- 
+
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetDebug,
+    tarch::logging::LogFilter::FilterListEntry::AnyRank,
+    "examples::exahype2::finitevolumes",
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+  ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace,
+    tarch::logging::LogFilter::FilterListEntry::AnyRank,
+    "examples::exahype2::finitevolumes",
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+  ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+    tarch::logging::LogFilter::FilterListEntry::AnyRank,
+    "examples::exahype2::finitevolumes",
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+  ));
+
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-    "examples::exahype2::finitevolumes", 
+    "exahype2::fv",
     tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-    "examples::exahype2::finitevolumes", 
-    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+    "exahype2::fv",
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-    "examples::exahype2::finitevolumes", 
+    "exahype2::fv",
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
 

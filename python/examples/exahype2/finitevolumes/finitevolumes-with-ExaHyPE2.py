@@ -43,7 +43,7 @@ project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevo
 #
 # Add the Finite Volumes solver
 #
-patch_size = 13
+patch_size = 25
 unknowns   = 5
 project.add_finite_volumes_solver("Euler", patch_size, unknowns)
 
@@ -52,7 +52,7 @@ project.add_finite_volumes_solver("Euler", patch_size, unknowns)
 peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
 #Pfad stimmt net
-peano4_project.output.makefile.add_library( "ExaHyPE2Core2d", "../../../../src/exahype2" )
+peano4_project.output.makefile.add_library( "ExaHyPE2Core2d_debug", "../../../../src/exahype2" )
 peano4_project.generate(peano4.output.Overwrite.Default)
 peano4_project.build()
 success = peano4_project.run( [] )

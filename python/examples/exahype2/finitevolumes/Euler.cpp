@@ -23,7 +23,7 @@ void examples::exahype2::finitevolumes::Euler::adjustSolution(
 ) {
   if (tarch::la::equals(t,0.0) ) {
     // initial conditions
-    bool isInTheCentre = ( tarch::la::norm2( x-tarch::la::Vector<Dimensions,double>(0.5) ) < 0.1 );
+    bool isInTheCentre = ( tarch::la::norm2( x-tarch::la::Vector<Dimensions,double>(0.5) ) < 0.05 );
     Q[0] = 1.0;  // rho
     Q[1] = 0;    // velocities
     Q[2] = 0;
@@ -45,6 +45,8 @@ void examples::exahype2::finitevolumes::Euler::eigenvalues(
   int                                          normal,
   double                                       lambda[5]
 ) {
+  assertion(normal>=0);
+  assertion(normal<Dimensions);
   constexpr double gamma = 1.4;
   const double irho = 1./Q[0];
   #if Dimensions==3
@@ -79,6 +81,8 @@ void examples::exahype2::finitevolumes::Euler::flux(
   int                                          normal,
   double                                       F[5]
 ) {
+  assertion(normal>=0);
+  assertion(normal<Dimensions);
   assertion5( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4] );
   assertion5( Q[1]==Q[1], Q[0], Q[1], Q[2], Q[3], Q[4] );
   assertion5( Q[2]==Q[2], Q[0], Q[1], Q[2], Q[3], Q[4] );

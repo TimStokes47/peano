@@ -15,10 +15,10 @@
 namespace exahype2 {
   namespace fv {
     void applyRusanovToPatch(
-/*      std::function< void(
+      std::function< void(
         double                                       Q[],
-        const tarch::la::Vector<Dimensions,double>&  cellCentre,
-        const tarch::la::Vector<Dimensions,double>&  cellH,
+        const tarch::la::Vector<Dimensions,double>&  faceCentre,
+        const tarch::la::Vector<Dimensions,double>&  volumeH,
         const tarch::la::Vector<Dimensions,double>&  t,
         const tarch::la::Vector<Dimensions,double>&  dt,
         int                                          normal,
@@ -29,9 +29,10 @@ namespace exahype2 {
         const tarch::la::Vector<Dimensions,double>&  faceCentre,
         const tarch::la::Vector<Dimensions,double>&  volumeH,
         const tarch::la::Vector<Dimensions,double>&  t,
+        const tarch::la::Vector<Dimensions,double>&  dt,
         int                                          normal,
-        double                                       F[]
-      ) >   eigenvalues,*/
+        double                                       lambdas[]
+      ) >   eigenvalues,
       const tarch::la::Vector<Dimensions,double>&  patchCentre,
       const tarch::la::Vector<Dimensions,double>&  patchSize,
       double                                       t,

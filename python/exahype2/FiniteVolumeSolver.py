@@ -136,7 +136,7 @@ class FiniteVolumeSolver():
     marker.x(),
     marker.h(),
     0.1, // t
-    0.0001, // dt
+    0.001, // dt
     {NUMBER_OF_VOLUMES_PER_AXIS},
     {HALO_SIZE},
     {NUMBER_OF_UNKNOWNS},
@@ -148,8 +148,8 @@ class FiniteVolumeSolver():
     d = {}
     self.__init_dictionary_with_default_parameters(d)
 
-    step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
     step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(self._patch,self._patch_overlap,template.format(**d),self.__get_default_includes()) )
+    step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
     pass
   
 
@@ -194,7 +194,7 @@ class FiniteVolumeSolver():
 
   def __init_dictionary_with_default_parameters(self,d):
     d["NUMBER_OF_VOLUMES_PER_AXIS"] = self._patch.dim[0]
-    d["HALO_SIZE"]                  = self._patch_overlap.dim[0]
+    d["HALO_SIZE"]                  = self._patch_overlap.dim[0]/2
     d["SOLVER_INSTANCE"]            = self.get_name_of_global_instance()
     d["UNKNOWN_IDENTIFIER"]         = self._unknown_identifier()
     d["NUMBER_OF_UNKNOWNS"]         = self._patch.no_of_unknowns
