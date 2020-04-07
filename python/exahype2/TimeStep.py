@@ -16,79 +16,34 @@ class TimeStep(peano4.solversteps.ActionSet):
 
 
   def get_includes(self):
-    return """
-#include "peano4/utils/Loop.h"
+    result = """
 #include "SolverRepository.h"
-#include "exahype2/PatchUtils.h"
 #include "exahype2/RefinementControl.h"
 """
+    for solver in self._solvers:
+      result += solver.add_includes()
+      
+    return result
 
 
   def get_body_of_operation(self,operation_name):
-    #
-    # ===========================
-    # Create cell
-    # ===========================
-    #
-    if operation_name == peano4.solversteps.ActionSet.OPERATION_CREATE_CELL:
-      result = """
-
-"""      
-      
-      for solver in self._solvers:
-        result += solver.get_initialisation_invocation()
-        
-      result += """
-  ::exahype2::RefinementCommand  refinementCommand = ::exahype2::RefinementCommand::Coarsen;
-"""
-
-      for solver in self._solvers:
-        result += solver.get_refinement_command()
-     
-      result += """
-  _refinementControl.addCommand( marker.x(), marker.h(), refinementCommand, false ); 
-"""
-      return result
-
-    #
-    # ===========================
-    # Begin traversal
-    # ===========================
-    #
-    if operation_name == peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
-      return """
-  _refinementControl.clear();   
-"""
     #
     # ===========================
     # Touch cell the first time
     # ===========================
     #
     if operation_name == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
-      result = """
-
-"""      
-      
+      result = ""
       for solver in self._solvers:
-        result += solver.get_initialisation_invocation()
+        result += solver.get_time_step_invocation()
         
-      result += """
-  ::exahype2::RefinementCommand  refinementCommand = ::exahype2::RefinementCommand::Coarsen;
-"""
-
-      for solver in self._solvers:
-        result += solver.get_refinement_command()
-     
-      result += """
-  _refinementControl.addCommand( marker.x(), marker.h(), refinementCommand, true ); 
-"""
       return result
     return "// Nothing to implement\n"
 
 
   def get_body_of_getGridControlEvents(self):
     return """
-  return _refinementControl.getGridControlEvents();
+  return std::vector< peano4::grid::GridControlEvent >();
 """ 
 
 
@@ -97,4 +52,4 @@ class TimeStep(peano4.solversteps.ActionSet):
      We augment the mapping with an array of grid events and then befill this
      array througout the traversal.
     """
-    return "::exahype2::RefinementControl  _refinementControl;"
+    return ""

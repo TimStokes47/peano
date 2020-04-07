@@ -9,7 +9,8 @@ endif
 
 ExaHyPE2Sources = \
   PatchUtils.cpp \
-  RefinementControl.cpp
+  RefinementControl.cpp \
+  fv/Rusanov.cpp
 
 
  

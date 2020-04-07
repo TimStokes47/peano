@@ -75,6 +75,13 @@ class FiniteVolumeSolver():
   def add_actions_to_perform_time_step(self, step):
     pass
   
+
+  def add_includes(self):
+    return """
+#include "peano4/utils/Loop.h"
+#include "exahype2/PatchUtils.h"
+#include "exahype2/fv/Rusanov.h"
+"""
   
   def add_implementation_files_to_project(self,namespace,output):
     """
@@ -153,7 +160,34 @@ class FiniteVolumeSolver():
 
     return template.format(**d)
 
+  def get_time_step_invocation(self):
+    """
+      Return the string calling the actual solver's time stepping. So this routine 
+      returns C++ code. You can assume that the following fields are available:
+      
+      (1) const peano4::datamanagement::CellMarker& marker  Which tells you how big the 
+        cell is.
+      (2) A data array of the type corresponding to self._patch. The corresponding 
+        variable is called fineGridCell + _unknown_identifier().
 
+    """
+    template = """
+  ::exahype2::fv::Rusanov(
+    {SOLVER_INSTANCE}::flux,      
+    {SOLVER_INSTANCE}::eigenvalues,
+    marker.x(), 
+    marker.h(), 
+    1.0,  // @todo time
+    {NUMBER_OF_VOLUMES_PER_AXIS}
+  );
+"""
+
+    d = {}
+    self.__init_dictionary_with_default_parameters(d)
+
+    return template.format(**d)
+      
+      
   def get_refinement_command(self):
     """
       Return an instance of ::exahype::RefinementCommand
