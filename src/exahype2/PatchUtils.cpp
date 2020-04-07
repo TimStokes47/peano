@@ -24,5 +24,5 @@ tarch::la::Vector<Dimensions,double>  exahype2::getVolumeCentre(
   const tarch::la::Vector<Dimensions,int>&     index
 ) {
   tarch::la::Vector<Dimensions,double> volumeSize = getVolumeSize(h,numberOfVolumesPerPatch);
-  return x - 0.5 * h + 0.5 * volumeSize + tarch::la::multiplyComponents( index.convertScalar<double>(), h);
+  return x - 0.5 * h + 0.5 * volumeSize + tarch::la::multiplyComponents( index.convertScalar<double>(), volumeSize);
 }
