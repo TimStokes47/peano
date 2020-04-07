@@ -28,3 +28,29 @@ void {FULL_QUALIFIED_CLASSNAME}::adjustSolution(
     // other stuff
   }}
 }}
+
+
+
+void {FULL_QUALIFIED_CLASSNAME}::eigenvalues(
+  double                                       Q[{NUMBER_OF_UNKNOWNS}],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  const tarch::la::Vector<Dimensions,double>&  t,
+  int                                          normal,
+  double                                       lambda[{NUMBER_OF_UNKNOWNS}]
+) {{
+  // @todo implement
+}}
+
+
+void {FULL_QUALIFIED_CLASSNAME}::flux(
+  double                                       Q[{NUMBER_OF_UNKNOWNS}],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  const tarch::la::Vector<Dimensions,double>&  t,
+  int                                          normal,
+  double                                       F[{NUMBER_OF_UNKNOWNS}]
+) {{
+	  // @todo implement
+}}
+

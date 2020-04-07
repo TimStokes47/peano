@@ -140,11 +140,7 @@ class FiniteVolumeSolver():
         fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
         ::exahype2::getVolumeCentre( marker.x(), marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS}, volume), 
         ::exahype2::getVolumeSize( marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS} ),
-        0.0 // @todo raus im AMR Kontext bzw von aussen kalibrieren
-        // Solver muss im namen FixedTimeStep haben und dann nehmen wir 
-        // den TimeStamp direkt aus dem Solver (und der muss natuerlich 
-        // hochzaehlen. Alternativ koennen wir auch reduzieren. Waere 
-        // noch schoener.
+        0.0 // @todo falsch offensichtlich
       );
       index += {NUMBER_OF_UNKNOWNS};
     }}

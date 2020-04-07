@@ -4,6 +4,7 @@ import peano4
 import peano4.output.TemplatedHeaderImplementationFilePair
 
 from .CreateGrid         import CreateGrid
+from .TimeStep           import TimeStep
 
 from .FiniteVolumeSolver import FiniteVolumeSolver
 from .FiniteVolumeSolver import FiniteVolumeSolverType
@@ -84,6 +85,7 @@ class Project(object):
     perform_time_step = peano4.solversteps.Step( "TimeStep", False )
     
     create_grid.add_action_set( CreateGrid(self._solvers) )
+    perform_time_step.add_action_set( TimeStep(self._solvers) )
     
     self._project.solversteps.add_step(create_grid)
     self._project.solversteps.add_step(plot_solution)

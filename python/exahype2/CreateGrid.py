@@ -24,6 +24,11 @@ class CreateGrid(peano4.solversteps.ActionSet):
 """
 
 
+#
+# @todo Ich sollte die Aspekte hier aufgliedern, d.h. Initialisation ist was anderes als 
+# AMR. Es macht keinen Sinn, alles in einem Mapping zu haben.
+#
+
   def get_body_of_operation(self,operation_name):
     # An examples where we only do something for :
     if operation_name == peano4.solversteps.ActionSet.OPERATION_CREATE_CELL:
