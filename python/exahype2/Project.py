@@ -3,9 +3,6 @@
 import peano4
 import peano4.output.TemplatedHeaderImplementationFilePair
 
-from .CreateGrid         import CreateGrid
-from .TimeStep           import TimeStep
-
 from .FiniteVolumeSolver import FiniteVolumeSolver
 from .FiniteVolumeSolver import FiniteVolumeSolverType
 

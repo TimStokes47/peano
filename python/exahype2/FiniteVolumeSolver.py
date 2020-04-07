@@ -111,6 +111,28 @@ class FiniteVolumeSolver():
   def add_actions_to_perform_time_step(self, step):
     template = """
   ::exahype2::fv::applyRusanovToPatch(
+    [&](
+      double                                       Q[],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      const tarch::la::Vector<Dimensions,double>&  t,
+      const tarch::la::Vector<Dimensions,double>&  dt,
+      int                                          normal,
+      double                                       F[]
+    ) -> void {{
+      {SOLVER_INSTANCE}.flux( Q, faceCentre, volumeH, t, normal, F );
+    }},
+    [&](
+      double                                       Q[],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      const tarch::la::Vector<Dimensions,double>&  t,
+      const tarch::la::Vector<Dimensions,double>&  dt,
+      int                                          normal,
+      double                                       lambdas[]
+    ) -> void {{
+      {SOLVER_INSTANCE}.eigenvalues( Q, faceCentre, volumeH, t, normal, lambdas );
+    }},
     marker.x(),
     marker.h(),
     0.1, // t
