@@ -75,6 +75,13 @@ class FiniteVolumeSolver():
   def add_actions_to_perform_time_step(self, step):
     pass
   
+
+  def add_includes(self):
+    return """
+#include "peano4/utils/Loop.h"
+#include "exahype2/PatchUtils.h"
+#include "exahype2/fv/Rusanov.h"
+"""
   
   def add_implementation_files_to_project(self,namespace,output):
     """
@@ -138,13 +145,9 @@ class FiniteVolumeSolver():
     dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
       {SOLVER_INSTANCE}.adjustSolution(
         fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
-        marker.x(),
-        marker.h(),
-        0.0 // @todo raus im AMR Kontext bzw von aussen kalibrieren
-        // Solver muss im namen FixedTimeStep haben und dann nehmen wir 
-        // den TimeStamp direkt aus dem Solver (und der muss natuerlich 
-        // hochzaehlen. Alternativ koennen wir auch reduzieren. Waere 
-        // noch schoener.
+        ::exahype2::getVolumeCentre( marker.x(), marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS}, volume), 
+        ::exahype2::getVolumeSize( marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS} ),
+        0.0 // @todo falsch offensichtlich
       );
       index += {NUMBER_OF_UNKNOWNS};
     }}
@@ -157,10 +160,37 @@ class FiniteVolumeSolver():
 
     return template.format(**d)
 
+  def get_time_step_invocation(self):
+    """
+      Return the string calling the actual solver's time stepping. So this routine 
+      returns C++ code. You can assume that the following fields are available:
+      
+      (1) const peano4::datamanagement::CellMarker& marker  Which tells you how big the 
+        cell is.
+      (2) A data array of the type corresponding to self._patch. The corresponding 
+        variable is called fineGridCell + _unknown_identifier().
 
+    """
+    template = """
+  ::exahype2::fv::Rusanov(
+    {SOLVER_INSTANCE}::flux,      
+    {SOLVER_INSTANCE}::eigenvalues,
+    marker.x(), 
+    marker.h(), 
+    1.0,  // @todo time
+    {NUMBER_OF_VOLUMES_PER_AXIS}
+  );
+"""
+
+    d = {}
+    self.__init_dictionary_with_default_parameters(d)
+
+    return template.format(**d)
+      
+      
   def get_refinement_command(self):
     """
-      Return an instance of ::exahype::RefinementControl
+      Return an instance of ::exahype::RefinementCommand
       
       See get_initialisation_invocation for a description which variables you do have 
       in this block. Further to the arguments there, a variable refinementControl is 
@@ -173,7 +203,7 @@ class FiniteVolumeSolver():
   {{
     int index = 0;
     dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
-      refinementControl = refinementControl and {SOLVER_INSTANCE}.refinementCriterion(
+      refinementCommand = refinementCommand and {SOLVER_INSTANCE}.refinementCriterion(
         fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
         marker.x(),
         marker.h(),

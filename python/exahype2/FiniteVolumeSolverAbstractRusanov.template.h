@@ -29,7 +29,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
      * @param Q Vector of unknowns
      * @param t Time
      */
-    virtual ::exahype2::RefinementControl refinementCriterion(
+    virtual ::exahype2::RefinementCommand refinementCriterion(
       double Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
@@ -41,6 +41,24 @@ class {FULL_QUALIFIED_CLASSNAME} {{
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       const tarch::la::Vector<Dimensions,double>&  t
+    ) = 0;
+
+    virtual void eigenvalues(
+      double                                       Q[{NUMBER_OF_UNKNOWNS}],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      const tarch::la::Vector<Dimensions,double>&  t,
+	  int                                          normal,
+      double                                       lambda[{NUMBER_OF_UNKNOWNS}]
+    ) = 0;
+
+    virtual void flux(
+      double                                       Q[{NUMBER_OF_UNKNOWNS}],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      const tarch::la::Vector<Dimensions,double>&  t,
+      int                                          normal,
+      double                                       F[{NUMBER_OF_UNKNOWNS}]
     ) = 0;
 }};
 
