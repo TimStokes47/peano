@@ -19,7 +19,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
   """
   
   
-  def __init__(self,patch,patch_overlap,functor_implementation):
+  def __init__(self,patch,patch_overlap,functor_implementation,additional_includes):
     """
 
   patch          Instance of peano4.datamodel.Patch
@@ -58,13 +58,14 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     self.d[ "DOFS_PER_AXIS" ]      = str(patch.dim[0])
     self.d[ "OVERLAP" ]            = str(patch_overlap.dim[0]/2)
     self.d[ "NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_2D" ] = str(patch.no_of_unknowns * patch.dim[0] * patch.dim[0])
-    self.d[ "NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_3D" ] = str(patch.no_of_unknowns * patch.dim[0] * patch.dim[0])
+    self.d[ "NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_3D" ] = str(patch.no_of_unknowns * patch.dim[0] * patch.dim[0] * patch.dim[0])
     self.d[ "NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_2D" ] = str(patch.no_of_unknowns * (patch_overlap.dim[0] + patch.dim[0]) * (patch_overlap.dim[0] + patch.dim[0]))
     self.d[ "NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_3D" ] = str(patch.no_of_unknowns * (patch_overlap.dim[0] + patch.dim[0]) * (patch_overlap.dim[0] + patch.dim[0]) * (patch_overlap.dim[0] + patch.dim[0]))
     self.d[ "FACES_ACCESSOR" ]     = "fineGridFaces"  + patch_overlap.name
     self.d[ "CELL_ACCESSOR" ]      = "fineGridCell" + patch.name
     
     self.d[ "FUNCTOR_IMPLEMENTATION" ]      = functor_implementation
+    self.additional_includes = additional_includes
 
 
   def get_constructor_body(self):
@@ -160,14 +161,14 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
   }}
 
   #if Dimensions==2
-  auto f = [&]( double reconstructedPatch[{NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_2D}], double originalPatch[{NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_2D}], const tarch::la::Vector<Dimensions,double>& centre, double dx ) -> void {{
+  auto f = [&]( double reconstructedPatch[{NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_2D}], double originalPatch[{NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_2D}] ) -> void {{
   #elif Dimensions==3
-  auto f = [&]( double reconstructedPatch[{NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_3D}], double originalPatch[{NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_3D}], const tarch::la::Vector<Dimensions,double>& centre, double dx ) -> void {{
+  auto f = [&]( double reconstructedPatch[{NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_3D}], double originalPatch[{NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_3D}] ) -> void {{
   #endif
 {FUNCTOR_IMPLEMENTATION}
   }};
 
-  f( reconstructedPatch, {CELL_ACCESSOR}.value, marker.x().data(), marker.h()(0)/{DOFS_PER_AXIS} );
+  f( reconstructedPatch, {CELL_ACCESSOR}.value );
 """
 
 
@@ -187,4 +188,4 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     return """
 #include <functional>
 #include "peano4/utils/Loop.h"
-"""
+""" + self.additional_includes

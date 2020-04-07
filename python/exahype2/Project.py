@@ -84,9 +84,6 @@ class Project(object):
     plot_solution     = peano4.solversteps.Step( "PlotSolution", False )
     perform_time_step = peano4.solversteps.Step( "TimeStep", False )
     
-    create_grid.add_action_set( CreateGrid(self._solvers) )
-    perform_time_step.add_action_set( TimeStep(self._solvers) )
-    
     self._project.solversteps.add_step(create_grid)
     self._project.solversteps.add_step(plot_solution)
     self._project.solversteps.add_step(perform_time_step)

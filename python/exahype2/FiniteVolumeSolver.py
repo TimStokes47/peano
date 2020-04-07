@@ -62,26 +62,75 @@ class FiniteVolumeSolver():
     step.use_cell(self._patch)
     step.use_face(self._patch_overlap)
 
+  
+  def __get_default_includes(self):
+    return """
+#include "tarch/la/Vector.h" 
+
+#include "peano4/utils/Globals.h"
+#include "peano4/utils/Loop.h"
+
+#include "SolverRepository.h"
+
+#include "exahype2/PatchUtils.h"
+#include "exahype2/fv/Rusanov.h"
+"""
+
 
   def add_actions_to_create_grid(self, step):
+    template = """
+  {{ 
+    int index = 0;
+    dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
+      {SOLVER_INSTANCE}.adjustSolution(
+        fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
+        ::exahype2::getVolumeCentre( marker.x(), marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS}, volume), 
+        ::exahype2::getVolumeSize( marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS} ),
+        0.0
+      );
+      index += {NUMBER_OF_UNKNOWNS};
+    }}
+  }} 
+  
+"""
+
+    d = {}
+    self.__init_dictionary_with_default_parameters(d)
+
+    step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
+    step.add_action_set( peano4.toolbox.blockstructured.ApplyFunctorOnPatch(self._patch,template.format(**d),self.__get_default_includes()) )
     pass
   
   
   def add_actions_to_plot_solution(self, step):
     step.add_action_set( peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution" + self._name,self._patch, self._unknown_identifier()) )
+    step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
     pass
   
   
   def add_actions_to_perform_time_step(self, step):
+    template = """
+  ::exahype2::fv::applyRusanovToPatch(
+    marker.x(),
+    marker.h(),
+    0.1, // t
+    0.0001, // dt
+    {NUMBER_OF_VOLUMES_PER_AXIS},
+    {HALO_SIZE},
+    {NUMBER_OF_UNKNOWNS},
+    reconstructedPatch,
+    originalPatch
+  );
+"""
+
+    d = {}
+    self.__init_dictionary_with_default_parameters(d)
+
+    step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
+    step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(self._patch,self._patch_overlap,template.format(**d),self.__get_default_includes()) )
     pass
   
 
-  def add_includes(self):
-    return """
-#include "peano4/utils/Loop.h"
-#include "exahype2/PatchUtils.h"
-#include "exahype2/fv/Rusanov.h"
-"""
   
   def add_implementation_files_to_project(self,namespace,output):
     """
@@ -123,71 +172,16 @@ class FiniteVolumeSolver():
 
   def __init_dictionary_with_default_parameters(self,d):
     d["NUMBER_OF_VOLUMES_PER_AXIS"] = self._patch.dim[0]
+    d["HALO_SIZE"]                  = self._patch_overlap.dim[0]
     d["SOLVER_INSTANCE"]            = self.get_name_of_global_instance()
     d["UNKNOWN_IDENTIFIER"]         = self._unknown_identifier()
     d["NUMBER_OF_UNKNOWNS"]         = self._patch.no_of_unknowns
-
  
-  def get_initialisation_invocation(self):
-    """
-      Return the string initialising the solver. So this routine returns C++ code.
-      You can assume that the following fields are available:
-      
-      (1) const peano4::datamanagement::CellMarker& marker  Which tells you how big the 
-        cell is.
-      (2) A data array of the type corresponding to self._patch. The corresponding 
-        variable is called fineGridCell + _unknown_identifier().
-
-    """
-    template = """
-  {{ 
-    int index = 0;
-    dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
-      {SOLVER_INSTANCE}.adjustSolution(
-        fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
-        ::exahype2::getVolumeCentre( marker.x(), marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS}, volume), 
-        ::exahype2::getVolumeSize( marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS} ),
-        0.0 // @todo falsch offensichtlich
-      );
-      index += {NUMBER_OF_UNKNOWNS};
-    }}
-  }} 
-  
-"""
-
-    d = {}
-    self.__init_dictionary_with_default_parameters(d)
-
-    return template.format(**d)
-
-  def get_time_step_invocation(self):
-    """
-      Return the string calling the actual solver's time stepping. So this routine 
-      returns C++ code. You can assume that the following fields are available:
-      
-      (1) const peano4::datamanagement::CellMarker& marker  Which tells you how big the 
-        cell is.
-      (2) A data array of the type corresponding to self._patch. The corresponding 
-        variable is called fineGridCell + _unknown_identifier().
-
-    """
-    template = """
-  ::exahype2::fv::Rusanov(
-    {SOLVER_INSTANCE}::flux,      
-    {SOLVER_INSTANCE}::eigenvalues,
-    marker.x(), 
-    marker.h(), 
-    1.0,  // @todo time
-    {NUMBER_OF_VOLUMES_PER_AXIS}
-  );
-"""
-
-    d = {}
-    self.__init_dictionary_with_default_parameters(d)
-
-    return template.format(**d)
-      
-      
+ 
+  #
+  # Das muss hier raus! Gehoert in ein Action Set of itself
+  #
+  #
   def get_refinement_command(self):
     """
       Return an instance of ::exahype::RefinementCommand
