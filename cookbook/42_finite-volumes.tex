@@ -1,12 +1,22 @@
 \chapter{A finite volumes code}
 \label{section:python-api-examples:finite-volumes}
 
+
+
+
 We create a simple Finite Volumes solver here.
 The examples starts with a simple regular grid, parallelises this grid, and
 finally adds adaptive mesh refinment (AMR).
 It employs a block-structured formalism and relies heavily on premanufactured
 actions and solver ingredients from the ExaHyPE2/ExaClaw project.
 
+
+\begin{remark}
+Writing all the Finite Volume (FV) core routines manually is a tedious and
+time-consuming process despite the fact that I do offer a toolbox for 
+block-structured code.
+For most applications, I therefore recommend to realise FV codes through ExaHyPE instead.
+\end{remark}
 
 \section{Setting up the data structures}
 
@@ -17,7 +27,7 @@ In general, odd choices of $N$ are advantageous once you enable AMR as we will
 discuss later.
 
 \begin{center}
-  \includegraphics[width=0.6\textwidth]{42_finite-volumes/block-structured.pdf}
+  \includegraphics[width=0.5\textwidth]{42_finite-volumes/block-structured.pdf}
 \end{center}
 
 \begin{code}
@@ -29,16 +39,16 @@ project.datamodel.add_cell(patch)
 \end{code}
 
 \noindent
-In the above example, every voxel within the $N \times N$ patches holds five
+In the above example, every volume within the $N \times N$ patches holds five
 unknowns.
-In general, I prefer the term voxel here, as cell again is ambigous given that
-we construct the Peano4 host mesh from cells.
+In general, I prefer the term volume here, as cell again is ambigous given that
+we construct the \Peano\ host mesh from cells.
 
 
 With one patch per cell, we could traverse the mesh and do something per cell.
 This however is of limited value.
 We have to couple the phenomena what is going on in neighbouring cells.
-Peano realises a strict element-wise traversal, i.e.~there's no way to access
+\Peano\  realises a strict element-wise traversal, i.e.~there's no way to access
 the neighbour cell of a cell directly.
 However, we can hijack the faces.
 
@@ -78,7 +88,7 @@ project.constants.export( "NumberOfUnknownsPerCell", unknowns )
 
 Projecting the patches onto the face data structures and back is a mechnical
 task.
-Therefore, Peano4 offers a toolbox to relieve you from the pain to 
+Therefore, \Peano\  offers a toolbox to relieve you from the pain to 
 recode it over and over again.
 Using this toolbox, you add the projections to your algorithmic steps, and the
 API then automatically injects these features (aspects) into your code:
@@ -99,7 +109,7 @@ perform_time_step.add_action_set(
 
 
 \begin{center}
-  \includegraphics[width=0.3\textwidth]{42_finite-volumes/ProjectPatchOntoFaces.pdf}
+  \includegraphics[width=0.25\textwidth]{42_finite-volumes/ProjectPatchOntoFaces.pdf}
 \end{center}
 
 
@@ -265,8 +275,8 @@ functor and then pass over to the reconstruction aspect:
   assertion( dx>=tarch::la::NUMERICAL_ZERO_DIFFERENCE );
   dfor(cell,PatchSize) { // DOFS_PER_AXIS
     tarch::la::Vector<Dimensions,double> voxelCentre = centre 
-                                           - static_cast<double>((PatchSize/2+HaloSize)) * tarch::la::Vector<Dimensions,double>(dx)
-                                           + tarch::la::multiplyComponents(cell.convertScalar<double>(), tarch::la::Vector<Dimensions,double>(dx));
+      - static_cast<double>((PatchSize/2+HaloSize)) * tarch::la::Vector<Dimensions,double>(dx) 
+      + tarch::la::multiplyComponents(cell.convertScalar<double>(), tarch::la::Vector<Dimensions,double>(dx));
     
     tarch::la::Vector<Dimensions,int> currentVoxel = cell + tarch::la::Vector<Dimensions,int>(HaloSize); // OVERLAP / Halo layer size
     int currentVoxelSerialised = peano4::utils::dLinearised(currentVoxel,PatchSize + 2*HaloSize);
@@ -277,19 +287,31 @@ functor and then pass over to the reconstruction aspect:
 \end{code}
 
 
+\section{Plot results}
 
-\section{ExaHyPE's solvers}
-
-Writing all the Finite Element core routines manually is a tedious and
-time-consuming process.
-It is convenient to go through an ExaHyPE project instead.
-To do so, please ensure that your configure script has been passed the
-\texttt{--with-exahype} command.
-
-
-tedious.
+For the plotting of patch-based AMR, \Peano\ provides predefined action sets,
+too.
+They dump the output into Peano's patch format.
+Chapter \ref{capter:blockstructured-output-format} describes this format. 
+If you build your code with VTK support, \Peano\ offers a conversion script into
+VTK.
 
 
-% 
-% import peano4.visualisation
-% import peano4.toolbox
+
+To use the predefined file dump feature, add an instance of
+\texttt{PlotPatchesInPeanoBlockFormat} to the step of your choice. 
+It then looks similar to
+\begin{code}
+print_solution = peano4.solversteps.Step( "PlotSolution" )
+print_solution.use_cell(patch)
+print_solution.use_face(patch_overlap)
+print_solution.remove_all_actions()
+plotter = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
+print_solution.add_action_set( plotter )
+project.solversteps.add_step(print_solution)
+\end{code}
+
+
+
+
+

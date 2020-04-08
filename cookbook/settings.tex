@@ -302,6 +302,9 @@
 }
 
 
+\newcommand{\Peano}{Peano~4}
+\newcommand{\ExaHyPE}{ExaHyPE~2}
+
 
 \usepackage{listings}
 
@@ -309,7 +312,7 @@
 \lstdefinelanguage{cCCode}[]{C}{
    backgroundcolor=\color{grey},
  %  basicstyle=\tiny,
- %  basicstyle=\small,
+ %  basicstyle=\Small,
    basicstyle=\footnotesize,
    stringstyle=\color{red},
    keywordstyle=\color{blue},
@@ -318,17 +321,17 @@
    framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox,
    rulesepcolor=\color{darkgrey}
  }
- 
+
  
  
      
 \lstnewenvironment{code}[1][]{
 \lstset{
  language=cCCode,#1,
-upquote=true,
-columns=fullflexible,
-literate={*}{{\char42}}1
-         {-}{{\char45}}1
+ upquote=true,
+ columns=fullflexible,
+ literate={*}{{\char42}}1
+          {-}{{\char45}}1
 }}{}
      
      

@@ -1,10 +1,10 @@
 \chapter{Preamble}
 
 
-Peano is an open source framework for solvers on dynamically adaptive
+\Peano\ is an open source framework for solvers on dynamically adaptive
 Cartesian meshes.
 Its core is built with C++, but many tools around it are written in Python.
-Peano is based upon the fact that spacetrees, a generalisation of the classical octree concept, yield a cascade of adaptive Cartesian grids. Consequently, any spacetree traversal is equivalent to an element-wise traversal of the hierarchy of the adaptive Cartesian grids. The software Peano realises such a grid traversal and storage algorithm, and it provides hook-in points for applications performing per-element, per-vertex, and so forth operations on the grid. It also provides interfaces for dynamic load balancing, sophisticated geometry representations, and other features. Some properties are enlisted below.
+\Peano\  is based upon the fact that spacetrees, a generalisation of the classical octree concept, yield a cascade of adaptive Cartesian grids. Consequently, any spacetree traversal is equivalent to an element-wise traversal of the hierarchy of the adaptive Cartesian grids. The software \Peano\  realises such a grid traversal and storage algorithm, and it provides hook-in points for applications performing per-element, per-vertex, and so forth operations on the grid. It also provides interfaces for dynamic load balancing, sophisticated geometry representations, and other features. Some properties are enlisted below.
 
 Peano is currently available in its fourth generation. 
 The development of the original set of Peano codes started around 2002.
@@ -14,14 +14,14 @@ emphasis on reusability, application-independent design and the support for rapi
 This third generation of the code ended around 2019 when we released the
 ExaHyPE code---a hyperbolic equation system solver engine which uses Peano's
 AMR meshes.
-The current guidebook discusses Peano4, which reuses ideas and lessons learned
-from Peano3 as well as lots of code buildling blocks, but can be seen as a
+The current guidebook discusses \Peano\ , which reuses ideas and lessons learned
+from Peano~3 as well as lots of code buildling blocks, but can be seen as a
 major rewrite starting from scratch.
 
 
 \section*{Dependencies and prerequisites}
 
-Peano's core is plain C++17 code. 
+\Peano's core is plain C++17 code. 
 We however use a whole set of tools around it:
 
 \begin{itemize}
@@ -35,10 +35,12 @@ We however use a whole set of tools around it:
   the Intel tool support is not as elaborate.
   \item The Visualization Toolkit (VTK) if you want to use the built-in
   visualisation facilities (optional).
+  \item Doxygen if you want to create HTML pages of PDFs of the in-code
+  documentation.
 \end{itemize}
 
 \noindent
-I test and maintain Peano for Linux only.
+I test and maintain \Peano\  for Linux only.
 If you prefer Windows or MacOS, it should work as long as you provide the
 mandatory tools from above, but I won't be able to help.
 

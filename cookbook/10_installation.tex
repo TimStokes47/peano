@@ -1,6 +1,6 @@
 \chapter{Installation}
 
-There are two ways to obtain Peano: 
+There are two ways to obtain \Peano: 
 You can either download one of the archives we provide on the webpage, or you
 can work directly against a repository clone.
 If you work with the archive, type in a 
@@ -11,11 +11,18 @@ in the directory where you've stored your downloaded file.
 
 
 If you work with the git archive, you have to clone this archive first. 
-I grant access to Peano free of charge.
-However, I ask users to sign up for the software first.
+I grant access to \Peano\  free of charge.
+However, I ask users to sign up for the software if they indend to push
+modifications to the code (which I very much appreciate\footnote{\Peano's
+guidebook (the file you currently read) is hosted within \Peano's git
+repository, too. I'm always happy if people add content to this
+documentation, too.}).
 This way I can report to funding agencies how frequent the software is used, and
 I also have at least some ideas which application areas benefit from the
-software and where it is ran.
+software and where it is actively used and developed.
+If you do not indend to modify the \Peano\ core code base, you can just clone
+the code anomymously.
+
 \begin{code}
 git clone https://gitlab.lrz.de/your-login/Peano.git
 cd Peano
@@ -33,7 +40,7 @@ branch \texttt{p4}.
 \label{section:installation:configure}
 
 
-Peano relies on the autotools to set up its build environment.
+\Peano\  relies on the autotools to set up its build environment.
 Change into the project's directory and type in 
 \begin{code}
 ./configure --help
@@ -53,7 +60,7 @@ Change into the project's directory and type in
 
 
 The \texttt{--help} option should give you some information about the available
-variants of Peano.
+variants of \Peano.
 In principle, a sole \texttt{./configure} call is sufficient, but you might want
 to adopt your build; notably as the default build is serial and does not bring
 along any support for postprocessing.
@@ -62,24 +69,25 @@ below:
 
 \begin{center}
  \begin{tabular}{lp{10cm}}
-  \texttt{--prefix=/mypath} & Will install Peano in \texttt{/mypath}.
+  \texttt{--prefix=/mypath} & Will install \Peano\  in \texttt{/mypath}.
    \\
   \texttt{--with-multithreading} & Switch on multithreading. By default, we
   build without multithreading, but a \texttt{--with-multithreading=cpp}, e.g.,
-  makes Peano use the C++ threading model. 
+  makes \Peano\  use the C++ threading model. 
    \\
-  \texttt{--with-mpi} & Enable the MPI version of Peano. You have to tell the
+  \texttt{--with-mpi} & Enable the MPI version of \Peano. You have to tell the
   build environment however which compile command to use. Please note that
   we need a C++ MPI wrapper. So \texttt{--with-mpi=mpcxx} is a typical call. 
    \\
-  \texttt{--with-vtk} & Inform Peano that VTK is available on the system and
+  \texttt{--with-vtk} & Inform \Peano\  that VTK is available on the system and
   that it should build all the visualisation and postprocessing tools that rely
   upon VTK.
    \\
-  \texttt{--with-hdf5} & Make Peano support HDF5 output. 
+  \texttt{--with-hdf5} & Make \Peano\  support HDF5 output (not stable at the
+  moment).
    \\
-  \texttt{--with-delta} & Configure Peano such that the geometry library
-  $\Delta $ is used.
+  \texttt{--with-delta} & Configure \Peano\  such that the geometry library
+  $\Delta $ is used. Not stable at the moment.
  \end{tabular}
 \end{center}
 
@@ -90,19 +98,19 @@ Once the configuration has been successful, a simple
 \begin{code}
 make
 \end{code}
-should build the Peano core and some examples.
+should build the \Peano\ core and some examples.
 
 
 \begin{code}
 make install
 \end{code}
-finally will deploy the Peano files in the directory specified via the
+finally will deploy the \Peano\ files in the directory specified via the
 \texttt{prefix} before.
 
 
-\section{Peano components and build variants}
+\section{\Peano\ components and build variants}
 
-Peano currently is delivered as a set of archives, i.e.~static libraries:
+\Peano\ currently is delivered as a set of archives, i.e.~static libraries:
 \begin{itemize}
   \item There is a technical architecture (\texttt{Tarch}) and the actual
   \texttt{Peano4Core}.
@@ -136,7 +144,7 @@ The version terminology is as follows:
 
 
 \noindent
-Besides these archives, the Peano installation also comes along with a set of
+Besides these archives, the \Peano\ installation also comes along with a set of
 example applications.
 They are found in the directory \texttt{src/examples}.
 Most examples create by default two variants of the example: a debug
@@ -146,7 +154,7 @@ Several examples furthermore come along as 2d and 3d build.
 
 \section{Installation test}
 
-Once you have compiled Peano4, I recommend that you run the unit tests in
+Once you have compiled \Peano\, I recommend that you run the unit tests in
 directory
 
 \begin{code}
@@ -159,4 +167,42 @@ You can run these builds with different core counts and also MPI support if you
 have compiled with MPI.
 The executables contain both node correctness tests and MPI ping-pong tests,
 i.e.~you can both assess a valid build plus a working MPI environment.
+
+
+\section{Documentation}
+
+There are three major types/resources of documentation of the software:
+\begin{enumerate}
+  \item This guidebook/cookbook that describes how to use the code base from a
+  high abstraction level and with anecdotal examples.
+  \item The documentation of the C++ code. Here, I follow an ``everything is in
+  the code'' philosophy.
+  \item The documentation of the Python code. Here, I follow an ``everything is
+  in the code'' philosophy.
+\end{enumerate}
+
+\noindent
+For the code documentation, ``everything is in the code'' means that all
+documentation is comments within the Python script or C++ header files,
+respectively.
+You can create a webpage from this distributed information through
+the tool \texttt{doxygen}\footnote{\url{http://www.doxygen.nl}.}. 
+
+
+There are two Doxygen configuration files in the repository, i.e.~I keep the
+Python and the C++ documentation output separate.
+To create the documentation, switch into directory \texttt{src} or
+\texttt{python}, respectively. 
+In both directories, the Doxygen config file is called
+\texttt{peano.doxygen-configuration}, i.e.~calling
+
+\begin{code}
+doxygen peano.doxygen-configuration
+\end{code}
+
+\noindent
+gives you the output. If you prefer not to generate and maintain the
+documentation yourself, the \Peano\ webpage hosts the autogenerated
+documentation, too.
+It is updated roughly once a week.
 
