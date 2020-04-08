@@ -14,6 +14,18 @@
 
 namespace exahype2 {
   namespace fv {
+    /**
+     * Apply simple Rusanov with dimensional splitting
+     *
+     * We run over the mesh and compute the fluxes through every single face as
+     * a 1d problem according to the Rusanov flux
+     * @f$
+         F(x) = F( \frac{1}{2} (Q_L+Q_R) ) - \lambda_{\mbox{max}} (Q_R - Q_L)
+       @f$
+     *
+     * where @f$ \lambda_{\mbox{max}} @f$  is the maximum over the eigenvalues both of @f$ Q_R @f$  and @f$ Q_L @f$.
+     *
+     */
     void applyRusanovToPatch(
       std::function< void(
         double                                       Q[],
