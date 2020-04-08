@@ -46,6 +46,43 @@ I discuss the layers bottom-up:
 \end{itemize}
 
 
- namespaces
-Welche Sprachen
-Was muss man nutzen
+\section*{Organisation of guidebook}
+
+The guidebook is split into parts anticipating the layered architecture of the
+code.
+
+In a first part, I discuss the C++ features offered both by the
+tarch and \Peano's core.
+This part is very useful for anybody who writes C++ code within \Peano, and it
+also gives information how \Peano\ works under the hood. 
+Some developers might be able to work completely without the details described
+in this part.
+However, as soon as you have some linear algebra operations for example, you
+might want to be familiar with the core features.
+
+
+In the second part, I give some examples how to work with the Python API. 
+Most people who use this API won't be able to stick to Python only.
+The API is mainly a huge building mechanism generating C++ glue code and C++
+stubs.
+The latter still have to be befilled with actual computations by the user.
+So the API takes away the responsibility to assemble the application, but it
+does not completely hide away C++.
+
+
+In the third part, I discuss how to use big projects built on top of
+\Peano\ that have a very high abstraction level.
+\ExaHyPE/ExaClaw are the two biggest fishes at the moment.
+
+
+A forth part discusses how to extend the Python API. 
+This is relevant for all the developers that do not only want to create a code
+with \Peano\ but want to make their stuff easily available to others.
+After that, I spend a few pages to summarise design decisions (rationale)
+underrlying the code.
+This might help to understand why certain things work the way they do.
+
+
+An appendix gives further information on particular machines, file formats, and
+so forth. 
+It hosts an FAQ and tips how to combine/use \Peano\ with other tools.
