@@ -66,9 +66,7 @@ void exahype2::fv::applyRusanovToPatch(
     for (int unknown=0; unknown<unknowns; unknown++) {
       assertion( QR[unknown]==QR[unknown] );
       assertion( QL[unknown]==QL[unknown] );
-      // @todo Bin mer net sicher mit dem Vorzeichen
-      //const double factor =  normal > Dimensions ? - 0.5 : 0.5;
-      const double factor = 0.0;
+      const double factor =  normal > Dimensions ? - 0.5 : 0.5;
       F[unknown] = averageF[unknown] + factor * lambdaMax * (QR[unknown] - QL[unknown]);
       assertion9( F[unknown]==F[unknown], averageF[unknown], lambdas[unknown], QR[unknown], QL[unknown], unknown, x, dx, dt, normal );
     }
@@ -84,7 +82,9 @@ void exahype2::fv::applyRusanovToPatch(
     logDebug( "applyRusanovToPatch(...)", "handle volume " << cell << " in destination patch, i.e. source volume " << currentVoxel << ": " << plotVolume(Qin + currentVoxelSerialised*unknowns) << " [" << currentVoxelSerialised << "]" );
 
     double accumulatedNumericalFlux[unknowns];
-    for (int i=0; i<unknowns; i++) accumulatedNumericalFlux[i] = 0.0;
+    for (int i=0; i<unknowns; i++) {
+      accumulatedNumericalFlux[i] = 0.0;
+    }
     double numericalFlux[unknowns]; // helper in/out variable
     for (int d=0; d<Dimensions; d++) {
       tarch::la::Vector<Dimensions,int>    neighbourVolume = currentVoxel;
