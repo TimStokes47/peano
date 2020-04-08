@@ -201,9 +201,10 @@ functor = """
   constexpr int PatchSize = 13;
   constexpr int HaloSize  = 1;    
   double dt = 0.0001;
+  double dx = marker.h()(0) / PatchSize;
   assertion( dx>=tarch::la::NUMERICAL_ZERO_DIFFERENCE );
   dfor(cell,PatchSize) {{ // DOFS_PER_AXIS
-    tarch::la::Vector<Dimensions,double> voxelCentre = centre 
+    tarch::la::Vector<Dimensions,double> voxelCentre = marker.x()
                                            - static_cast<double>((PatchSize/2+HaloSize)) * tarch::la::Vector<Dimensions,double>(dx)
                                            + tarch::la::multiplyComponents(cell.convertScalar<double>(), tarch::la::Vector<Dimensions,double>(dx));
     
@@ -263,7 +264,7 @@ functor = """
 """
 
 
-perform_time_step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap,functor) )
+perform_time_step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap,functor,"") )
 perform_time_step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 # @todo raus
 perform_time_step.add_action_set( plotter )
