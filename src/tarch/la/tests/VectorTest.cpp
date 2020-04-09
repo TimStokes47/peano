@@ -320,11 +320,10 @@ void tarch::la::tests::VectorTest:: testVectorVectorOperations() {
 }
 
 void tarch::la::tests::VectorTest::testWrappedVector() {
-  Vector<3,int> vector;
+  Vector<3,int> vector = {2, 3, 4};
   Vector<6,int> longVector(1);
-  assignList(vector) = 2, 3, 4;
   slice(longVector,vector,3);
-  validateEquals (longVector[0], 1);
+  validateEqualsWithParams1(longVector[0], 1, longVector.toString() );
   validateEquals (longVector[1], 1);
   validateEquals (longVector[2], 1);
   validateEquals (longVector[3], 2);
