@@ -7,6 +7,8 @@ peano4::datamanagement::FaceMarker::FaceMarker(
   _cellCentre(event.getX()),
   _h(event.getH()),
   _select(0) {
+
+  // isRefined @todo setzen
 }
 
 
@@ -52,7 +54,13 @@ peano4::datamanagement::FaceMarker& peano4::datamanagement::FaceMarker::select(i
 }
 
 
-bool peano4::datamanagement::FaceMarker::isRefined() const {
-  assertion(false); // not yet implemented
-  return false;
+bool peano4::datamanagement::FaceMarker::isRefined(int i) const {
+  return _isRefined[i];
 }
+
+
+bool peano4::datamanagement::FaceMarker::isRefined() const {
+  assertionMsg(false, "not yet initialised (see constructor)");
+  return isRefined(_select);
+}
+

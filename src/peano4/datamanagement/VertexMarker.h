@@ -59,6 +59,7 @@ struct peano4::datamanagement::VertexMarker {
      * refined.
      */
     bool isRefined() const;
+    bool isRefined(int i) const;
 };
 
 
