@@ -1,6 +1,7 @@
 # This file is part of the DaStGen2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import dastgen2
+import os
 
 
 class DataModel(object):
@@ -143,6 +144,10 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
     d[ "CONSTRUCTOR_ARGUMENTS" ] = self._get_constructor_arguments()
 
 
+    if full_qualified_filename.find( "/" ) != -1:
+      path = full_qualified_filename[ 0 : full_qualified_filename.rfind( "/" ) ]
+      if not os.path.exists(path):
+        os.mkdir( path )
     with open( full_qualified_filename, "w" ) as output:
       output.write( self._Header_Template.format(**d) )
 

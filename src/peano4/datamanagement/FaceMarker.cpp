@@ -54,6 +54,11 @@ peano4::datamanagement::FaceMarker& peano4::datamanagement::FaceMarker::select(i
 }
 
 
+int peano4::datamanagement::FaceMarker::getSelectedFaceNumber() const {
+  return _select;
+}
+
+
 bool peano4::datamanagement::FaceMarker::isRefined(int i) const {
   return _isRefined[i];
 }

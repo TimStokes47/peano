@@ -52,6 +52,11 @@ peano4::datamanagement::VertexMarker& peano4::datamanagement::VertexMarker::sele
 }
 
 
+int peano4::datamanagement::VertexMarker::getSelectedVertexNumber() const {
+  return _select;
+}
+
+
 bool peano4::datamanagement::VertexMarker::isRefined() const {
   return isRefined(_select);
 }

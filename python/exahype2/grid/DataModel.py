@@ -5,7 +5,7 @@ import dastgen2
 
 
 def create_face_label():
-  result = peano4.datamodel.DaStGen2( "FaceLabel" )
+  result = peano4.datamodel.DaStGen2( "Label" )
   result.data.add_attribute( dastgen2.attributes.Boolean("Boundary") )
   return result
 

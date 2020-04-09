@@ -65,7 +65,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     self.d[ "CELL_ACCESSOR" ]      = "fineGridCell" + patch.name
     
     self.d[ "FUNCTOR_IMPLEMENTATION" ]               = functor_implementation
-    self.d[ "TOUCH_FACE_FIRST_TIME_IMPLEMENTATION" ] = touch_face_first_time_functor
+    self.touch_face_first_time_functor               = touch_face_first_time_functor
     self.additional_includes                         = additional_includes
 
 
@@ -178,6 +178,10 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = self.__Template_TouchCellFirstTime.format(**self.d)
       pass 
+    if operation_name==ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+      result = self.touch_face_first_time_functor
+      pass 
+    
     return result
 
 

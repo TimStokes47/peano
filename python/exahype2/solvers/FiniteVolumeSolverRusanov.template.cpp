@@ -1,6 +1,9 @@
 #include "{CLASSNAME}.h"
 
 
+tarch::logging::Log   {FULL_QUALIFIED_CLASSNAME}::_log( "{FULL_QUALIFIED_CLASSNAME}" );
+
+
 
 ::exahype2::RefinementCommand {FULL_QUALIFIED_CLASSNAME}::refinementCriterion(
   double Q[{NUMBER_OF_UNKNOWNS}],

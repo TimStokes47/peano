@@ -29,14 +29,13 @@ void exahype2::fv::applyRusanovToPatch(
   const tarch::la::Vector<Dimensions,double>&  patchSize,
   double                                       t,
   double                                       dt,
-  const tarch::la::Vector<Dimensions,int>&     numberOfVolumesInPatch,
-  int                                          haloSize,
+  int                                          numberOfVolumesPerAxisInPatch,
   int                                          unknowns,
   double                                       Qin[],
   double                                       Qout[]
 ) {
   static tarch::logging::Log _log( "exahype2::fv" );
-  logTraceInWith7Arguments( "applyRusanovToPatch(...)", patchCentre, patchSize, t, dt, numberOfVolumesInPatch, haloSize, unknowns );
+  logTraceInWith6Arguments( "applyRusanovToPatch(...)", patchCentre, patchSize, t, dt, numberOfVolumesPerAxisInPatch, unknowns );
 
   auto plotVolume = [&unknowns](double Q[]) -> std::string {
     std::string result = "(" + std::to_string(Q[0]);
@@ -78,11 +77,11 @@ void exahype2::fv::applyRusanovToPatch(
 
   assertion( dt>=tarch::la::NUMERICAL_ZERO_DIFFERENCE );
 
-  tarch::la::Vector<Dimensions,double> volumeH = exahype2::getVolumeSize(patchSize, numberOfVolumesInPatch);
+  tarch::la::Vector<Dimensions,double> volumeH = exahype2::getVolumeSize(patchSize, numberOfVolumesPerAxisInPatch);
 
-  dfor(cell,numberOfVolumesInPatch) {
-    tarch::la::Vector<Dimensions,int> currentVoxel = cell + tarch::la::Vector<Dimensions,int>(haloSize);
-    int currentVoxelSerialised = peano4::utils::dLinearised(currentVoxel,numberOfVolumesInPatch(0) + 2*haloSize);
+  dfor(cell,numberOfVolumesPerAxisInPatch) {
+    tarch::la::Vector<Dimensions,int> currentVoxel = cell + tarch::la::Vector<Dimensions,int>(1);
+    int currentVoxelSerialised = peano4::utils::dLinearised(currentVoxel,numberOfVolumesPerAxisInPatch + 2);
     logDebug( "applyRusanovToPatch(...)", "handle volume " << cell << " in destination patch, i.e. source volume " << currentVoxel << ": " << plotVolume(Qin + currentVoxelSerialised*unknowns) << " [" << currentVoxelSerialised << "]" );
 
     double accumulatedNumericalFlux[unknowns];
@@ -92,10 +91,10 @@ void exahype2::fv::applyRusanovToPatch(
     double numericalFlux[unknowns]; // helper in/out variable
     for (int d=0; d<Dimensions; d++) {
       tarch::la::Vector<Dimensions,int>    neighbourVolume = currentVoxel;
-      tarch::la::Vector<Dimensions,double> x              = exahype2::getVolumeCentre(patchCentre, patchSize, numberOfVolumesInPatch, cell);
+      tarch::la::Vector<Dimensions,double> x              = exahype2::getVolumeCentre(patchCentre, patchSize, numberOfVolumesPerAxisInPatch, cell);
 
       neighbourVolume(d) -= 1;
-      int neighbourVolumeSerialised = peano4::utils::dLinearised(neighbourVolume,numberOfVolumesInPatch(0) + 2*haloSize);
+      int neighbourVolumeSerialised = peano4::utils::dLinearised(neighbourVolume,numberOfVolumesPerAxisInPatch + 2);
       x(d) -= 0.5 * volumeH(d);
       assertion(neighbourVolume(d)>=0);
 
@@ -113,7 +112,7 @@ void exahype2::fv::applyRusanovToPatch(
       }
 
       neighbourVolume(d) += 2;
-      neighbourVolumeSerialised = peano4::utils::dLinearised(neighbourVolume,numberOfVolumesInPatch(0) + 2*haloSize);
+      neighbourVolumeSerialised = peano4::utils::dLinearised(neighbourVolume,numberOfVolumesPerAxisInPatch + 2);
       x(d) += 1.0 * volumeH(d);
 
       logDebug( "applyRusanovToPatch(...)", "handle neighbour " << neighbourVolume << ": " << plotVolume(Qin + neighbourVolumeSerialised*unknowns) << " [" << neighbourVolumeSerialised << "]" );
@@ -130,7 +129,7 @@ void exahype2::fv::applyRusanovToPatch(
       }
     }
 
-    int destinationVoxelSerialised = peano4::utils::dLinearised(cell,numberOfVolumesInPatch(0));
+    int destinationVoxelSerialised = peano4::utils::dLinearised(cell,numberOfVolumesPerAxisInPatch);
 
     for (int unknown=0; unknown<unknowns; unknown++) {
       Qout[ destinationVoxelSerialised*unknowns+unknown ] += dt / volumeH(0) * accumulatedNumericalFlux[unknown];

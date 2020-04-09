@@ -45,6 +45,7 @@ class SetLabels(ActionSet):
     isBoundary |= tarch::la::equals( marker.x()(d), offset(d) );
     isBoundary |= tarch::la::equals( marker.x()(d), offset(d) + size(d) );
   }}
+  fineGridFaceLabel.setBoundary( isBoundary );
 """
 
     return result

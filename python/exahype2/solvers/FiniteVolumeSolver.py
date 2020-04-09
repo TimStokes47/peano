@@ -74,6 +74,7 @@ class FiniteVolumeSolver():
 
 #include "exahype2/PatchUtils.h"
 #include "exahype2/fv/Rusanov.h"
+#include "exahype2/fv/BoundaryConditions.h"
 """
 
 
@@ -110,12 +111,30 @@ class FiniteVolumeSolver():
   
   def add_actions_to_perform_time_step(self, step):
     touchFaceFirstTimeTemplate = """
-    
-    
-    marker.isBoundary
-    
-    
-    """
+  if (fineGridFaceLabel.getBoundary()) {{
+    ::exahype2::fv::applyBoundaryConditions(
+      [&](
+        double                                       Qinside[],
+        double                                       Qoutside[],
+        const tarch::la::Vector<Dimensions,double>&  faceCentre,
+        const tarch::la::Vector<Dimensions,double>&  volumeH,
+        const tarch::la::Vector<Dimensions,double>&  t,
+        const tarch::la::Vector<Dimensions,double>&  dt,
+        int                                          normal
+      ) -> void {{
+        {SOLVER_INSTANCE}.boundaryConditions( Qinside, Qoutside, faceCentre, volumeH, t, normal );
+      }},
+      marker.x(),
+      marker.h(),
+      0.1, // t
+      0.001, // dt
+      {NUMBER_OF_VOLUMES_PER_AXIS},
+      {NUMBER_OF_UNKNOWNS},
+      marker.getSelectedFaceNumber(),
+      fineGridFace{UNKNOWN_IDENTIFIER}.value
+    );
+  }}
+"""
     
     
     patchFunctorTemplate = """
@@ -147,7 +166,6 @@ class FiniteVolumeSolver():
     0.1, // t
     0.001, // dt
     {NUMBER_OF_VOLUMES_PER_AXIS},
-    {HALO_SIZE},
     {NUMBER_OF_UNKNOWNS},
     reconstructedPatch,
     originalPatch
@@ -213,7 +231,8 @@ class FiniteVolumeSolver():
     d["SOLVER_INSTANCE"]            = self.get_name_of_global_instance()
     d["UNKNOWN_IDENTIFIER"]         = self._unknown_identifier()
     d["NUMBER_OF_UNKNOWNS"]         = self._patch.no_of_unknowns
- 
+    if self._patch_overlap.dim[0]/2!=1:
+      print( "ERROR: Finite Volume solver currently supports only a halo size of 1")
  
   #
   # Das muss hier raus! Gehoert in ein Action Set of itself

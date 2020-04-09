@@ -44,6 +44,8 @@ struct peano4::datamanagement::FaceMarker {
      */
     FaceMarker& select(int face);
 
+    int getSelectedFaceNumber() const;
+
     tarch::la::Vector<Dimensions,double> x(int i) const;
 
     /**

@@ -12,6 +12,8 @@
 
 #include "Abstract{CLASSNAME}.h"
 
+#include "tarch/logging/Log.h"
+
 
 {OPEN_NAMESPACE}
   class {CLASSNAME};
@@ -19,6 +21,9 @@
 
 
 class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
+  private:
+    static tarch::logging::Log   _log;
+
   public:
     /**
      * @param Q Vector of unknowns

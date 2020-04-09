@@ -49,8 +49,7 @@ namespace exahype2 {
       const tarch::la::Vector<Dimensions,double>&  patchSize,
       double                                       t,
       double                                       dt,
-      const tarch::la::Vector<Dimensions,int>&     numberOfVolumesInPatch,
-      int                                          haloSize,
+      int                                          numberOfVolumesPerAxisInPatch,
       int                                          unknowns,
       double                                       Qin[],
       double                                       Qout[]

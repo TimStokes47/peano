@@ -25,13 +25,13 @@ namespace exahype2 {
   tarch::la::Vector<Dimensions,double>  getVolumeCentre(
     const tarch::la::Vector<Dimensions,double>&  x,
     const tarch::la::Vector<Dimensions,double>&  h,
-    const tarch::la::Vector<Dimensions,int>&     numberOfVolumesPerPatch,
+    int                                          numberOfVolumesPerAxisInPatch,
     const tarch::la::Vector<Dimensions,int>&     index
   );
 
   tarch::la::Vector<Dimensions,double>  getVolumeSize(
     const tarch::la::Vector<Dimensions,double>&  h,
-    const tarch::la::Vector<Dimensions,int>&     numberOfVolumesPerPatch
+    int                                          numberOfVolumesPerAxisInPatch
   );
 }
 

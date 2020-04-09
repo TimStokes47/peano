@@ -40,6 +40,8 @@ struct peano4::datamanagement::VertexMarker {
      */
     VertexMarker& select(int number);
 
+    int getSelectedVertexNumber() const;
+
     /**
      * We do enumerate the vertices in a lexicographic way, i.e. we start with the
      * bottom left vertex. Then we run along the first Cartesian axis, then the

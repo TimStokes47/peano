@@ -144,6 +144,10 @@ void examples::exahype2::finitevolumes::Euler::boundaryConditions(
   const tarch::la::Vector<Dimensions,double>&  t,
   int                                          normal
 ) {
-  assertion(false);
+  Qoutside[0] = Qinside[0];
+  Qoutside[1] = Qinside[1];
+  Qoutside[2] = Qinside[2];
+  Qoutside[3] = Qinside[3];
+  Qoutside[4] = Qinside[4];
 }
 
