@@ -149,13 +149,13 @@ namespace tarch {
     template<int Size, typename Scalar>
     bool contains(
       const Vector<Size,Scalar >&  vector,
-	  const Scalar&                value
+      const Scalar&                value
     );
 
     template<int Size, typename Scalar>
     int count(
       const Vector<Size,Scalar >&  vector,
-	  const Scalar&                value
+      const Scalar&                value
     );
   }
 }
