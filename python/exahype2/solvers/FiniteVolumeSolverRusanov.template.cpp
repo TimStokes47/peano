@@ -54,3 +54,15 @@ void {FULL_QUALIFIED_CLASSNAME}::flux(
 	  // @todo implement
 }}
 
+
+void {FULL_QUALIFIED_CLASSNAME}::boundaryConditions(
+  double                                       Qinside[{NUMBER_OF_UNKNOWNS}],
+  double                                       Qoutside[{NUMBER_OF_UNKNOWNS}],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  const tarch::la::Vector<Dimensions,double>&  t,
+  int                                          normal
+) {{
+  // @todo implement
+}}
+

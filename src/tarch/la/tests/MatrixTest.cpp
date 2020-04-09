@@ -2,7 +2,6 @@
 // use, please see the copyright notice at www.peano-framework.org
 #include "MatrixTest.h"
 #include "tarch/la/Matrix.h"
-#include "tarch/la/MatrixAssignList.h"
 #include "tarch/la/MatrixOperations.h"
 #include "tarch/la/MatrixMatrixOperations.h"
 #include <string>
@@ -39,15 +38,13 @@ void tarch::la::tests::MatrixTest::testConstruction() {
 
 
 void tarch::la::tests::MatrixTest:: testAssignment() {
-  Matrix<2,2,int> matrix(1);
-  assignList(matrix) = 1, 2, 3, 4;
+  Matrix<2,2,int> matrix = {1, 2, 3, 4};
   validateEquals (matrix(0,0), 1);
   validateEquals (matrix(0,1), 2);
   validateEquals (matrix(1,0), 3);
   validateEquals (matrix(1,1), 4);
 
-  Matrix<1,2,int> matrix2;
-  assignList(matrix2) = 1, 2;
+  Matrix<1,2,int> matrix2 = {1, 2};
   validateEquals (matrix2(0,0), 1);
   validateEquals (matrix2(0,1), 2);
 }
@@ -55,8 +52,7 @@ void tarch::la::tests::MatrixTest:: testAssignment() {
 
 void tarch::la::tests::MatrixTest::testMatrixOperations () {
   // Test streaming
-  Matrix<2,2,int> matrix2;
-  assignList(matrix2) = 1, 2, 3, 4;
+  Matrix<2,2,int> matrix2 = {1, 2, 3, 4};
   std::ostringstream stream;
   stream << matrix2;
   validateEquals (stream.str(), std::string("[[1,2],[3,4]]"));
@@ -74,11 +70,11 @@ void tarch::la::tests::MatrixTest::testMatrixMatrixOperations ()
   Matrix<2,3,int> lMatrix;
   Matrix<3,2,int> rMatrix;
   Matrix<2,2,int> result(0);
-  assignList(lMatrix) = 1, 2, 3,
-                        4, 5, 6;
-  assignList(rMatrix) = 6, 5,
-                        4, 3,
-                        2, 1;
+  lMatrix = {1, 2, 3,
+             4, 5, 6};
+  rMatrix = {6, 5,
+             4, 3,
+             2, 1};
 
   // Matrix matrix multiplication
   result = lMatrix * rMatrix;
@@ -104,10 +100,9 @@ void tarch::la::tests::MatrixTest::testMatrixMatrixOperations ()
 
 void tarch::la::tests::MatrixTest:: testTransposedMatrix ()
 {
-  Matrix<3,2,int> matrix;
-  assignList(matrix) = 1, 2,
+  Matrix<3,2,int> matrix = {1, 2,
                        3, 4,
-                       5, 6;
+                       5, 6};
   Matrix<2,3,int> transposed = transpose(matrix);
   validateEquals (transposed(0,0), 1);
   validateEquals (transposed(0,1), 3);

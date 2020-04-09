@@ -12,7 +12,6 @@ namespace tarch {
 }
 
 
-#include "tarch/la/MatrixAssignList.h"
 #include "tarch/la/MatrixOperations.h"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "tarch/la/MatrixMatrixOperations.h"
@@ -22,6 +21,7 @@ namespace tarch {
 
 
 #include <string>
+#include <initializer_list>
 
 
 
@@ -41,12 +41,12 @@ class tarch::la::Matrix {
   /**
    * Constructs a non-initialized matrix.
    */
-  Matrix ();
-
+  Matrix();
   /**
    * Constructs an initialized matrix.
    */
-  Matrix (const Scalar& initialValue);
+  Matrix( const Scalar&  value);
+  Matrix( std::initializer_list<Scalar> values );
 
   /**
    * Returns the number of rows in the matrix.
@@ -107,14 +107,6 @@ class tarch::la::Matrix {
 
   template <typename NewScalarType>
   tarch::la::Matrix<Rows,Cols,NewScalarType> convertScalar() const;
-
-
-  /**
-   * Assignment operator for list of comma separated scalar values, that has to
-   * match the number of components of the vector. Otherwise a runtime assertion
-   * goes wrong.
-   */
-  MatrixAssignList<Rows,Cols,Scalar> operator=(const Scalar& value);
 
   /**
    * This routine returns a pointer to the first data element. Not a

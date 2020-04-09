@@ -264,7 +264,7 @@ functor = """
 """
 
 
-perform_time_step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap,functor,"") )
+perform_time_step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap,functor,"","") )
 perform_time_step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 # @todo raus
 perform_time_step.add_action_set( plotter )

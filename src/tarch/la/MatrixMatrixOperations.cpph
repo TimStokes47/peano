@@ -3,7 +3,7 @@ tarch::la::Matrix<Rows,Cols,Scalar> tarch::la::multiply (
   const Matrix<Rows,X,Scalar>& lhs,
   const Matrix<X,Cols,Scalar>& rhs
 ) {
-  Matrix<Rows,Cols,Scalar> result = 0;
+  Matrix<Rows,Cols,Scalar> result(0);
 
   for (int i=0; i < Rows; i++) {
     for (int j=0; j < Cols; j++) {

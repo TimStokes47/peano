@@ -8,7 +8,15 @@ import re
 
 
 class Constants(object):
-  """ Represents all the defines exported by a Project """
+  """
+   
+    Represents all constants that a Project exports from the Python
+    script into C++. I do provide routines to export defines or 
+    constants (via constexpr). For the latter, I rely on the auto 
+    type word unless you use a specialised routine for a particular 
+    type. 
+     
+  """
   default_overwrite = True
    
   def __init__(self,project):

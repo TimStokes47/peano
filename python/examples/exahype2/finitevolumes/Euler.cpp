@@ -135,3 +135,15 @@ void examples::exahype2::finitevolumes::Euler::flux(
   assertion( F[4]==F[4] );
 }
 
+
+void examples::exahype2::finitevolumes::Euler::boundaryConditions(
+  double                                       Qinside[5],
+  double                                       Qoutside[5],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  const tarch::la::Vector<Dimensions,double>&  t,
+  int                                          normal
+) {
+  assertion(false);
+}
+

@@ -12,7 +12,6 @@ namespace tarch {
 }
 
 
-#include "tarch/la/VectorAssignList.h"
 #include "tarch/la/VectorOperations.h"
 #include "tarch/la/VectorScalarOperations.h"
 #include "tarch/la/VectorVectorOperations.h"
@@ -23,6 +22,8 @@ namespace tarch {
 
 
 #include <bitset>
+#include <initializer_list>
+
 
 
 /**
@@ -40,12 +41,14 @@ struct tarch::la::Vector {
 
   public:
     Vector ();
+    Vector( Scalar* values );
+    Vector( std::initializer_list<Scalar> values );
+    Vector( const std::bitset<Size>& values );
 
-    Vector (Scalar* values);
-    Vector (Scalar value0, Scalar value1);
-    Vector (Scalar value0, Scalar value1, Scalar value2);
-
-    Vector( const std::bitset<Size>& value );
+    /**
+     * Construct new vector and initialize all components with initialValue.
+     */
+    Vector (const Scalar& initialValue);
 
     /**
      * Assignment operator for any vector type.
@@ -58,13 +61,6 @@ struct tarch::la::Vector {
     Vector<Size,Scalar>& operator= (const Vector<Size,Scalar>& toAssign);
 
     /**
-     * Assignment operator for list of comma separated scalar values, that has to
-     * match the number of components of the vector. Otherwise a runtime assertion
-     * goes wrong.
-     */
-    VectorAssignList<Size,Scalar> operator=(const Scalar& value);
-
-    /**
      * Copy constructor to copy from any vector type.
      *
      * The only way to accomplish this with enable-if is to specify a second
@@ -73,12 +69,6 @@ struct tarch::la::Vector {
      * @see operator= for a discussion of SSE optimisation.
      */
     Vector(const Vector<Size,Scalar>&  toCopy);
-
-
-    /**
-     * Construct new vector and initialize all components with initialValue.
-     */
-    Vector (const Scalar& initialValue);
 
     /**
      * Returns the number of components of the vector.

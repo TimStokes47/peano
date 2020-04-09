@@ -1,6 +1,7 @@
-from .FiniteVolumeSolver import FiniteVolumeSolver
-from .Project            import Project
+import exahype2.solvers
+import exahype2.grid
 
+from .Project            import Project
 
 
 print( "ExaHyPE2 (C) www.peano-framework.org" )

@@ -28,6 +28,8 @@ using namespace examples::exahype2::finitevolumes;
 tarch::logging::Log _log("::");
 
 
+// @todo Das sollte das Python-Ding direkt generieren (aber net ueberschreiben)
+
 
 /**
  * @return continues to run
@@ -35,7 +37,7 @@ tarch::logging::Log _log("::");
 bool selectNextAlgorithmicStep() {
   static int counter           = 0;
   bool       continueToSolve   = true;
-  const int  NumberOfTimeSteps = 2;
+  const int  NumberOfTimeSteps = 20;
 
   if (
     counter==0

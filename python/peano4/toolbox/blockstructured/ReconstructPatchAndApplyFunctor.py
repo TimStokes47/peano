@@ -19,7 +19,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
   """
   
   
-  def __init__(self,patch,patch_overlap,functor_implementation,additional_includes):
+  def __init__(self,patch,patch_overlap,functor_implementation,touch_face_first_time_functor,additional_includes):
     """
 
   patch          Instance of peano4.datamodel.Patch
@@ -64,8 +64,9 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     self.d[ "FACES_ACCESSOR" ]     = "fineGridFaces"  + patch_overlap.name
     self.d[ "CELL_ACCESSOR" ]      = "fineGridCell" + patch.name
     
-    self.d[ "FUNCTOR_IMPLEMENTATION" ]      = functor_implementation
-    self.additional_includes = additional_includes
+    self.d[ "FUNCTOR_IMPLEMENTATION" ]               = functor_implementation
+    self.d[ "TOUCH_FACE_FIRST_TIME_IMPLEMENTATION" ] = touch_face_first_time_functor
+    self.additional_includes                         = additional_includes
 
 
   def get_constructor_body(self):

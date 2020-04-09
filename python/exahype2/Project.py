@@ -3,10 +3,13 @@
 import peano4
 import peano4.output.TemplatedHeaderImplementationFilePair
 
-from .FiniteVolumeSolver import FiniteVolumeSolver
-from .FiniteVolumeSolver import FiniteVolumeSolverType
 
 import os
+
+import exahype2.grid
+import exahype2.solvers
+#from .FiniteVolumeSolver import FiniteVolumeSolver
+#from .FiniteVolumeSolver import FiniteVolumeSolverType
 
 
 
@@ -21,17 +24,54 @@ class Project(object):
   project". From hereon, you can use this Peano4 project to actually
   set up the Peano4 application.
   
+  The project will have a marker per cell that encodes stuff alike
+  a boundary marker. But it is also used to coordinate different 
+  solver types.
+  
   @see generate_Peano4_project()
   
   """
   def __init__(self, namespace, project_name, directory = "."):
     self._project = peano4.Project(namespace, project_name, directory)
     self._solvers = []
+    self._domain_offset = [0.0, 0.0, 0.0]
+    self._domain_size   = [1.0, 1.0, 1.0]
+    self._dimensions    = 2
     
     
-  def add_finite_volumes_solver(self,name, patch_size, unknowns, solver_type = FiniteVolumeSolverType.Rusanov):
-    self._solvers.append( FiniteVolumeSolver( name, patch_size, unknowns, solver_type) )
+  def add_finite_volumes_solver(self,name, patch_size, unknowns, solver_type = exahype2.solvers.FiniteVolumeSolverType.Rusanov):
+    self._solvers.append( exahype2.solvers.FiniteVolumeSolver( name, patch_size, unknowns, solver_type) )
 
+
+  def __export_constants(self):
+    offset_string = "{" + str(self._domain_offset[0])
+    size_string   = "{" + str(self._domain_size[0])
+    for i in range(1,self._dimensions):
+      offset_string += ","
+      size_string   += ","
+      offset_string += str(self._domain_offset[i])
+      size_string   += str(self._domain_size[i])
+    offset_string += "}"
+    size_string   += "}"
+    self._project.constants.export( "DomainOffset", offset_string )
+    self._project.constants.export( "DomainSize", size_string )
+
+
+  def __configure_makefile(self):
+    self._project.output.makefile.set_dimension(self._dimensions)
+    
+
+  def set_domain_dimensions(self,dimensions,offset,size):
+    """
+    
+      offset and size should be lists with dimensions double entries.
+      
+    """
+    self._domain_offset = offset
+    self._domain_size   = size
+    self._dimensions    = dimensions
+    
+    
   def __generate_solver_repository(self):
     solverRepositoryDictionary = {
       "SOLVER_INCLUDES" : "",
@@ -77,6 +117,9 @@ class Project(object):
      on the result of this routine.     
      
     """
+    self.__export_constants()
+    self.__configure_makefile()
+    
     create_grid       = peano4.solversteps.Step( "CreateGrid", False )
     plot_solution     = peano4.solversteps.Step( "PlotSolution", False )
     perform_time_step = peano4.solversteps.Step( "TimeStep", False )
@@ -85,6 +128,7 @@ class Project(object):
     self._project.solversteps.add_step(plot_solution)
     self._project.solversteps.add_step(perform_time_step)
 
+    
     for solver in self._solvers:
       solver.add_to_Peano4_datamodel( self._project.datamodel )
       solver.add_data_movements_to_Peano4_solver_step( create_grid )
@@ -96,6 +140,17 @@ class Project(object):
       solver.add_implementation_files_to_project( self._project.namespace, self._project.output )
 
     self.__generate_solver_repository();
+
+    face_label = exahype2.grid.create_face_label()  
+    self._project.datamodel.add_face(face_label)
+    create_grid.use_face(face_label)
+    plot_solution.use_face(face_label)
+    perform_time_step.use_face(face_label)
+    
+    set_labels_action_set = exahype2.grid.SetLabels()
+    create_grid.add_action_set( set_labels_action_set )
+    plot_solution.add_action_set( set_labels_action_set )
+    perform_time_step.add_action_set( set_labels_action_set )
 
     return self._project
 

@@ -109,7 +109,16 @@ class FiniteVolumeSolver():
   
   
   def add_actions_to_perform_time_step(self, step):
-    template = """
+    touchFaceFirstTimeTemplate = """
+    
+    
+    marker.isBoundary
+    
+    
+    """
+    
+    
+    patchFunctorTemplate = """
   ::exahype2::fv::applyRusanovToPatch(
     [&](
       double                                       Q[],
@@ -148,7 +157,13 @@ class FiniteVolumeSolver():
     d = {}
     self.__init_dictionary_with_default_parameters(d)
 
-    step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(self._patch,self._patch_overlap,template.format(**d),self.__get_default_includes()) )
+    step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(
+      self._patch,
+      self._patch_overlap,
+      patchFunctorTemplate.format(**d),
+      touchFaceFirstTimeTemplate.format(**d),
+      self.__get_default_includes()
+    ))
     step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
     pass
   

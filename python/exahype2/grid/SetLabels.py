@@ -4,13 +4,14 @@ from peano4.solversteps.ActionSet import ActionSet
 
 
 
-class CreateRegularGrid(ActionSet):
-  def __init__(self,maximum_cell_width):
+class SetLabels(ActionSet):
+  def __init__(self):
     """
       maximum_cell_width
     """
-    self.d = {}
-    self.d[ "H_MAX" ]     = str(maximum_cell_width)
+    pass
+    #self.d = {}
+    #self.d[ "H_MAX" ]     = str(maximum_cell_width)
 
 
   def get_constructor_body(self):
@@ -21,20 +22,8 @@ class CreateRegularGrid(ActionSet):
     return ""
 
 
-  __Template_GridControlEvents = """
-  std::vector< peano4::grid::GridControlEvent > result;
-  peano4::grid::GridControlEvent newEntry;
-  newEntry.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
-  newEntry.setOffset(tarch::la::Vector<Dimensions,double>( -std::numeric_limits<double>::max()/2.0 ));
-  newEntry.setWidth(tarch::la::Vector<Dimensions,double>(  std::numeric_limits<double>::max()/2.0 ));
-  newEntry.setH(tarch::la::Vector<Dimensions,double>( {H_MAX} ));
-  result.push_back(newEntry);
-  return result;
-"""
-
-
-  def get_body_of_getGridControlEvents(self):
-    return self.__Template_GridControlEvents.format(**self.d)
+  #def get_body_of_getGridControlEvents(self):
+  #  return self.__Template_GridControlEvents.format(**self.d)
 
 
   def get_action_set_name(self):
@@ -47,6 +36,17 @@ class CreateRegularGrid(ActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = "\n"
+    if operation_name==ActionSet.OPERATION_CREATE_PERSISTENT_FACE or operation_name==ActionSet.OPERATION_CREATE_HANGING_FACE:
+      result += """
+  tarch::la::Vector<Dimensions, double> offset(DomainOffset);
+  tarch::la::Vector<Dimensions, double> size(DomainSize);
+  bool isBoundary = false;
+  for (int d=0; d<Dimensions; d++) {{
+    isBoundary |= tarch::la::equals( marker.x()(d), offset(d) );
+    isBoundary |= tarch::la::equals( marker.x()(d), offset(d) + size(d) );
+  }}
+"""
+
     return result
 
 
@@ -55,5 +55,7 @@ class CreateRegularGrid(ActionSet):
 
 
   def get_includes(self):
-    return ""
+    return """
+#include "Constants.h"
+"""    
 

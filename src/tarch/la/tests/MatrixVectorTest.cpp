@@ -1,10 +1,8 @@
 #include "MatrixVectorTest.h"
 #include "tarch/la/Matrix.h"
-#include "tarch/la/MatrixAssignList.h"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "tarch/la/Vector.h"
 #include "tarch/la/VectorOperations.h"
-#include "tarch/la/VectorAssignList.h"
 #include "tarch/la/MatrixVectorOperations.h"
 #include <string>
 #include <sstream>
@@ -28,8 +26,8 @@ void tarch::la::tests::MatrixVectorTest::run() {
 void tarch::la::tests::MatrixVectorTest::testMultiplication() {
   Matrix<2,2,int> matrix;
   Vector<2,int> vector;
-  assignList(matrix) = 1, 2, 3, 4;
-  assignList(vector) = 1, 2;
+  matrix = {1, 2, 3, 4};
+  vector = {1, 2};
 
   Vector<2,int> result(0);
   result = multiply(matrix, vector);
