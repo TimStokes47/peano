@@ -120,7 +120,7 @@ to use:
 \begin{code}
 patch_size = 25
 unknowns   = 5
-project.add_finite_volumes_solver("Euler", patch_size, unknowns)
+project.add_finite_volumes_solver("Euler", patch_size, unknowns, 0.0001)
 \end{code}
 \noindent
 The solver is called \texttt{Euler}.
@@ -152,18 +152,6 @@ success = peano4_project.run( [] )
 within the Python workbench. 
 Alternatively, you can invoke the code directly from the command line. 
 
-
-
-\ExaHyPE\ codes by default yield snapshots in \Peano's block format. 
-If you have configured \Peano\ with VTK support, you can directly convert it
-into VTK and visualise through Paraview or VisIt, e.g.:
-\begin{code}
-if success:
-  convert = peano4.visualisation.Convert( "solutionEuler" )
-  convert.set_visualisation_tools_path( "../../../../src/visualisation" )
-  convert.extract_fine_grid()
-  convert.convert_to_vtk()
-\end{code}
 
 
 \subsection{Implementing the Euler solver}
@@ -291,6 +279,56 @@ I found them useful when I wrote \ExaHyPE\ in the first place.
 With these implementations in place, you can finally type in \texttt{make} in
 the project directory and rerun the code.
 Alternatively, just re-execute the whole Python script.
-You'll get your first wave equation solver:
+You'll get your first wave equation solver
+
+Some simple boundary conditions close the system:
+
+\begin{code}
+void examples::exahype2::finitevolumes::Euler::boundaryConditions(
+  double                                       Qinside[5],
+  double                                       Qoutside[5],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  const tarch::la::Vector<Dimensions,double>&  t,
+  int                                          normal
+) {
+  Qoutside[0] = Qinside[0];
+  Qoutside[1] = Qinside[1];
+  Qoutside[2] = Qinside[2];
+  Qoutside[3] = Qinside[3];
+  Qoutside[4] = Qinside[4];
+}
+\end{code}
 
 
+
+\subsection{Configuring the overall run}
+
+\ExaHyPE's Python interface gives you the opportunity to specify exactly which
+domain you want to use, how often to plot, and when to shut down the simulation.
+For a first trial, we set the parameters as follows:
+\begin{code}
+project.set_global_simulation_parameters(
+  2,         # Dimensions
+  [0.0,0.0], # Offset of computational domain
+  [1.0,1.0], # Size of computational domain
+  0.2,       # Terminal time, i.e. we simulate from 0 to 0.2
+  0.0,       # First snapshot of solution is done after grid construction, i.e. at time 0
+  0.001      # We then plot every 0.001 time units
+)
+\end{code}
+\noindent
+This is all. We now can run the code.
+
+
+
+\ExaHyPE\ codes by default yield snapshots in \Peano's block format. 
+If you have configured \Peano\ with VTK support, you can directly convert it
+into VTK and visualise through Paraview or VisIt, e.g.:
+\begin{code}
+if success:
+  convert = peano4.visualisation.Convert( "solutionEuler" )
+  convert.set_visualisation_tools_path( "../../../../src/visualisation" )
+  convert.extract_fine_grid()
+  convert.convert_to_vtk()
+\end{code}
