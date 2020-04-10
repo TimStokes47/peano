@@ -35,48 +35,46 @@ tarch::logging::Log _log("::");
  * @return continues to run
  */
 bool selectNextAlgorithmicStep() {
-  static int counter           = 0;
-  bool       continueToSolve   = true;
-  const int  NumberOfTimeSteps = 20;
+  static bool   gridConstructed   = false;
+  static double nextPlotTimeStamp = FirstPlotTimeStamp;
+  static bool   haveWrittenVeryLastSnapshot = false;
+  bool          continueToSolve   = true;
 
-  if (
-    counter==0
-  and
-  peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()<5
-  ) {
+  if (not gridConstructed) {
     peano4::parallel::Node::getInstance().setNextProgramStep(
-      observers::StepRepository::toProgramStep(
-        observers::StepRepository::Steps::CreateGrid
-    )
+      observers::StepRepository::toProgramStep( observers::StepRepository::Steps::CreateGrid )
     );
-    continueToSolve = true;
-  }
-  else if (
-    ( counter==0 and peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()>=5 )
-  or
-  counter >= NumberOfTimeSteps + 1
-  ) {
-    peano4::parallel::Node::getInstance().setNextProgramStep(
-      observers::StepRepository::toProgramStep(
-        observers::StepRepository::Steps::PlotSolution
-      )
-    );
-    counter++;
-    continueToSolve = counter <= NumberOfTimeSteps + 2;
-  }
-  else if ( counter>=1 and counter < NumberOfTimeSteps+1
-  ) {
-    peano4::parallel::Node::getInstance().setNextProgramStep(
-      observers::StepRepository::toProgramStep(
-        observers::StepRepository::Steps::TimeStep
-      )
-    );
-    counter++;
+    if ( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()>=5 ) {
+      gridConstructed = true;
+    }
     continueToSolve = true;
   }
   else {
-    counter++;
-    continueToSolve = false;
+    if ( observers::getMinTimeStamp()>=nextPlotTimeStamp  and TimeInBetweenPlots>0.0 ) {
+      nextPlotTimeStamp += TimeInBetweenPlots;
+      peano4::parallel::Node::getInstance().setNextProgramStep(
+        observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
+      );
+      continueToSolve = true;
+    }
+    else if ( observers::getMinTimeStamp()<TerminalTime ) {
+      peano4::parallel::Node::getInstance().setNextProgramStep(
+        observers::StepRepository::toProgramStep( observers::StepRepository::Steps::TimeStep )
+      );
+      continueToSolve = true;
+    }
+    else {
+      if (not haveWrittenVeryLastSnapshot and TimeInBetweenPlots>0.0) {
+        haveWrittenVeryLastSnapshot = true;
+        peano4::parallel::Node::getInstance().setNextProgramStep(
+          observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
+        );
+        continueToSolve = true;
+      }
+      else {
+        continueToSolve = false;
+      }
+    }
   }
 
   return continueToSolve;

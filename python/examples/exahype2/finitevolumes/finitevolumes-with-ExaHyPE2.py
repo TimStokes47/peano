@@ -48,6 +48,19 @@ unknowns   = 5
 project.add_finite_volumes_solver("Euler", patch_size, unknowns, 0.001)
 
 
+#
+# Lets configure some global parameters
+#
+project.set_global_simulation_parameters(
+  2, # dimensions
+  [0.0,0.0],
+  [1.0,1.0],
+  0.2,
+  0.0,
+  0.01
+)
+
+
 
 peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
@@ -59,6 +72,7 @@ success = peano4_project.run( [] )
 
 
 
+success = True
 if success:
   convert = peano4.visualisation.Convert( "solutionEuler" )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )

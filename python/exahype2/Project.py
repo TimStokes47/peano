@@ -38,6 +38,8 @@ class Project(object):
     self._domain_size   = [1.0, 1.0, 1.0]
     self._dimensions    = 2
     self._terminal_time = 1.0
+    self._first_plot_time_stamp = 0.0
+    self._time_in_between_plots = 0.1
 
     
     
@@ -58,23 +60,28 @@ class Project(object):
     self._project.constants.export( "DomainOffset", offset_string )
     self._project.constants.export( "DomainSize", size_string )
     self._project.constants.export( "TerminalTime", str(self._terminal_time) )
-    
+    self._project.constants.export( "FirstPlotTimeStamp", str(self._first_plot_time_stamp) )
+    self._project.constants.export( "TimeInBetweenPlots", str(self._time_in_between_plots) )
 
 
   def __configure_makefile(self):
     self._project.output.makefile.set_dimension(self._dimensions)
     
 
-  def set_domain_dimensions_and_time_span(self,dimensions,offset,size,terminal_time):
+  def set_global_simulation_parameters(self,dimensions,offset,size,terminal_time,first_plot_time_stamp,time_in_between_plots):
     """
     
       offset and size should be lists with dimensions double entries.
+      
+      time_in_between_plots Set to zero if you don't want to have any plots
       
     """
     self._domain_offset = offset
     self._domain_size   = size
     self._dimensions    = dimensions
     self._terminal_time = terminal_time
+    self._first_plot_time_stamp = first_plot_time_stamp
+    self._time_in_between_plots = time_in_between_plots
     
     
   def __generate_solver_repository(self):
