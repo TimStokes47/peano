@@ -132,7 +132,7 @@ void exahype2::fv::applyRusanovToPatch(
     int destinationVoxelSerialised = peano4::utils::dLinearised(cell,numberOfVolumesPerAxisInPatch);
 
     for (int unknown=0; unknown<unknowns; unknown++) {
-      Qout[ destinationVoxelSerialised*unknowns+unknown ] += dt / volumeH(0) * accumulatedNumericalFlux[unknown];
+      Qout[ destinationVoxelSerialised*unknowns+unknown ] = Qin[ currentVoxelSerialised*unknowns+unknown ] + dt / volumeH(0) * accumulatedNumericalFlux[unknown];
     }
   }
 

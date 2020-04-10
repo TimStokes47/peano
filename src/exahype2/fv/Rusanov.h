@@ -25,6 +25,9 @@ namespace exahype2 {
      *
      * where @f$ \lambda_{\mbox{max}} @f$  is the maximum over the eigenvalues both of @f$ Q_R @f$  and @f$ Q_L @f$.
      *
+     * The outcome of F is not added to the solution in Q. Instead, I use the
+     * reconstructred value, add F, and then write this result into Q. This is,
+     * this operation is idempotent.
      */
     void applyRusanovToPatch(
       std::function< void(
