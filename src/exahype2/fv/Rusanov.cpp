@@ -45,33 +45,36 @@ void exahype2::fv::applyRusanovToPatch(
   };
 
   auto splitRiemann1d = [&flux, &eigenvalues, &unknowns](double QL[], double QR[], const tarch::la::Vector<Dimensions,double>& x, double dx, double t, double dt, int normal, double F[]) -> void {
+    assertion(normal>=0);
+    assertion(normal<Dimensions);
+
     double averageQ[unknowns];
-    for (int unknown=0; unknown<unknowns; unknown++) {{
+    for (int unknown=0; unknown<unknowns; unknown++) {
       averageQ[unknown] = 0.5 * (QL[unknown] + QR[unknown]);
       assertion4(averageQ[unknown]==averageQ[unknown], x, dx, dt, normal);
-    }}
+    }
 
-    double averageF[unknowns];
+    double FOverAverageQ[unknowns];
     double lambdas[unknowns];
-    flux(averageQ,x,dx,t,dt,normal % Dimensions,averageF);
+    flux(averageQ,x,dx,t,dt,normal,FOverAverageQ);
 
     double lambdaMax = 0.0;
-    eigenvalues(QL,x,dx,t,dt,normal % Dimensions,lambdas);
-    for (int unknown=0; unknown<unknowns; unknown++) {{
+    eigenvalues(QL,x,dx,t,dt,normal,lambdas);
+    for (int unknown=0; unknown<unknowns; unknown++) {
       assertion(lambdas[unknown]==lambdas[unknown]);
       lambdaMax = std::max(lambdaMax,lambdas[unknown]);
-    }}
+    }
     eigenvalues(QR,x,dx,t,dt,normal % Dimensions,lambdas);
-    for (int unknown=0; unknown<unknowns; unknown++) {{
+    for (int unknown=0; unknown<unknowns; unknown++) {
       assertion(lambdas[unknown]==lambdas[unknown]);
       lambdaMax = std::max(lambdaMax,lambdas[unknown]);
-    }}
+    }
 
     for (int unknown=0; unknown<unknowns; unknown++) {
       assertion( QR[unknown]==QR[unknown] );
       assertion( QL[unknown]==QL[unknown] );
-      F[unknown] = averageF[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]);
-      assertion9( F[unknown]==F[unknown], averageF[unknown], lambdas[unknown], QR[unknown], QL[unknown], unknown, x, dx, dt, normal );
+      F[unknown] = FOverAverageQ[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]);
+      assertion9( F[unknown]==F[unknown], FOverAverageQ[unknown], lambdas[unknown], QR[unknown], QL[unknown], unknown, x, dx, dt, normal );
     }
   };
 
@@ -119,7 +122,7 @@ void exahype2::fv::applyRusanovToPatch(
       splitRiemann1d(
         Qin + currentVoxelSerialised*unknowns,
         Qin + neighbourVolumeSerialised*unknowns,
-        x, volumeH(d), t, dt, d + Dimensions,
+        x, volumeH(d), t, dt, d,
         numericalFlux
       );
       for (int unknown=0; unknown<unknowns; unknown++) {
