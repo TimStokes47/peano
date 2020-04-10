@@ -37,6 +37,8 @@ class Project(object):
     self._domain_offset = [0.0, 0.0, 0.0]
     self._domain_size   = [1.0, 1.0, 1.0]
     self._dimensions    = 2
+    self._terminal_time = 1.0
+
     
     
   def add_finite_volumes_solver(self,name, patch_size, unknowns, solver_type = exahype2.solvers.FiniteVolumeSolverType.Rusanov):
@@ -55,13 +57,15 @@ class Project(object):
     size_string   += "}"
     self._project.constants.export( "DomainOffset", offset_string )
     self._project.constants.export( "DomainSize", size_string )
+    self._project.constants.export( "TerminalTime", str(self._terminal_time) )
+    
 
 
   def __configure_makefile(self):
     self._project.output.makefile.set_dimension(self._dimensions)
     
 
-  def set_domain_dimensions(self,dimensions,offset,size):
+  def set_domain_dimensions_and_time_span(self,dimensions,offset,size,terminal_time):
     """
     
       offset and size should be lists with dimensions double entries.
@@ -70,19 +74,32 @@ class Project(object):
     self._domain_offset = offset
     self._domain_size   = size
     self._dimensions    = dimensions
+    self._terminal_time = terminal_time
     
     
   def __generate_solver_repository(self):
     solverRepositoryDictionary = {
       "SOLVER_INCLUDES" : "",
       "SOLVER_DECLARATIONS" : "",
-      "SOLVER_DEFINITIONS" : ""
+      "SOLVER_DEFINITIONS" : "",
+      "SEQUENCE_OF_GET_MAX_TIME_STEP_SIZE_CALLS": "0.0",
+      "SEQUENCE_OF_GET_MIN_TIME_STEP_SIZE_CALLS": "std::numeric_limits<double>::max()",
+      "SEQUENCE_OF_GET_MAX_TIME_STAMP_CALLS": "0.0",
+      "SEQUENCE_OF_GET_MIN_TIME_STAMP_CALLS": "std::numeric_limits<double>::max()",
+      "SEQUENCE_OF_START_TIME_STEP_CALLS": "",
+      "SEQUENCE_OF_FINISH_TIME_STEP_CALLS": "",
     }
 
     for solver in self._solvers:
       solverRepositoryDictionary[ "SOLVER_INCLUDES" ]     += """#include "../""" + solver._name + """.h" \n"""
       solverRepositoryDictionary[ "SOLVER_DECLARATIONS" ] += "  extern " + solver._name + "  " + solver.get_name_of_global_instance() + ";\n"
       solverRepositoryDictionary[ "SOLVER_DEFINITIONS" ]  += solver._name + "  " + solver.get_name_of_global_instance() + ";\n"
+      solverRepositoryDictionary[ "SEQUENCE_OF_GET_MAX_TIME_STEP_SIZE_CALLS" ]  += "," + solver.get_name_of_global_instance() + ".getMaxTimeStepSize()"
+      solverRepositoryDictionary[ "SEQUENCE_OF_GET_MIN_TIME_STEP_SIZE_CALLS" ]  += "," + solver.get_name_of_global_instance() + ".getMinTimeStepSize()"
+      solverRepositoryDictionary[ "SEQUENCE_OF_GET_MAX_TIME_STAMP_CALLS" ]      += "," + solver.get_name_of_global_instance() + ".getMaxTimeStamp()"
+      solverRepositoryDictionary[ "SEQUENCE_OF_GET_MIN_TIME_STAMP_CALLS" ]      += "," + solver.get_name_of_global_instance() + ".getMinTimeStamp()"
+      solverRepositoryDictionary[ "SEQUENCE_OF_START_TIME_STEP_CALLS" ]         += solver.get_name_of_global_instance() + ".startTimeStep(minTimeStamp, maxTimeStamp, minTimeStepSize, maxTimeStepSize); "
+      solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_TIME_STEP_CALLS" ]        += solver.get_name_of_global_instance() + ".finishTimeStep(); "
 
 
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )

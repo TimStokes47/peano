@@ -15,6 +15,21 @@
 
 {OPEN_NAMESPACE}
 {SOLVER_DECLARATIONS}
+
+double getMinTimeStamp();
+double getMaxTimeStamp();
+double getMinTimeStepSize();
+double getMaxTimeStepSize();
+
+void startTimeStep(
+  double globalMinTimeStamp,
+  double globalMaxTimeStamp,
+  double globalMinTimeStepSize,
+  double globalMaxTimeStepSize
+);
+
+void finishTimeStep();
+
 {CLOSE_NAMESPACE}
 
 

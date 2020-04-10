@@ -16,6 +16,8 @@
 
 #include "peano4/utils/Globals.h"
 
+#include "tarch/multicore/BooleanSemaphore.h"
+
 
 
 {OPEN_NAMESPACE}
@@ -23,8 +25,20 @@
 {CLOSE_NAMESPACE}
 
 
+
 class {FULL_QUALIFIED_CLASSNAME} {{
+  protected:
+    tarch::multicore::BooleanSemaphore  _semaphore;
+
+    double _timeStamp;
   public:
+    {CLASSNAME}();
+
+    double getMinTimeStamp() const;
+    double getMaxTimeStamp() const;
+    double getMinTimeStepSize() const;
+    double getMaxTimeStepSize() const;
+
     /**
      * @param Q Vector of unknowns
      * @param t Time
@@ -90,6 +104,23 @@ class {FULL_QUALIFIED_CLASSNAME} {{
       const tarch::la::Vector<Dimensions,double>&  t,
       int                                          normal
     ) = 0;
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void startTimeStep(
+      double globalMinTimeStamp,
+      double globalMaxTimeStamp,
+      double globalMinTimeStepSize,
+      double globalMaxTimeStepSize
+    );
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void finishTimeStep();
 }};
 
 

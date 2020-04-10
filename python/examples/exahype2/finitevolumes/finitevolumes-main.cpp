@@ -88,7 +88,7 @@ void step() {
   auto stepName       = observers::StepRepository::toStepEnum(stepIdentifier);
 
   static tarch::logging::Log _log("");
-  logInfo( "step()", "run step " << observers::StepRepository::toString(stepName) );
+  logInfo( "step()", "run " << observers::StepRepository::toString(stepName) );
 
   switch ( stepName ) {
     case observers::StepRepository::Steps::CreateGrid:
@@ -105,8 +105,19 @@ void step() {
       break;
     case observers::StepRepository::Steps::TimeStep:
       {
+        const double minTimeStamp    = observers::getMinTimeStamp();
+        const double maxTimeStamp    = observers::getMaxTimeStamp();
+        const double minTimeStepSize = observers::getMinTimeStepSize();
+        const double maxTimeStepSize = observers::getMaxTimeStepSize();
+
+        logInfo( "step()", "t_{min}  = " << minTimeStamp );
+        logInfo( "step()", "t_{max}  = " << maxTimeStamp );
+        logInfo( "step()", "dt_{min} = " << minTimeStepSize );
+        logInfo( "step()", "dt_{max} = " << maxTimeStepSize );
+        observers::startTimeStep( minTimeStamp, maxTimeStamp, minTimeStepSize, maxTimeStepSize );
         observers::TimeStep  observer;
         peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+        observers::finishTimeStep();
       }
       break;
   }
@@ -166,7 +177,7 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetTrace,
     tarch::logging::LogFilter::FilterListEntry::AnyRank,
     "examples::exahype2::finitevolumes",
-    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo,
@@ -185,7 +196,7 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
     "exahype2::fv",
-    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, 

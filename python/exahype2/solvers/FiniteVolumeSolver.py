@@ -18,13 +18,15 @@ class FiniteVolumeSolverType(Enum):
 
 class FiniteVolumeSolver():
   """ 
-  Represents on Peano 4 project.
+  A finite volume solver with fixed time step sizes that works on patch-based
+  AMR with a halo layer of one.
   
   namespace Sequence of strings representing the (nested) namespace. Pass in 
     ["examples", "exahype2", "finitevolumes"] for example.
     
   """
-  def __init__(self, name, patch_size, unknowns, solver_type = FiniteVolumeSolverType.Rusanov):
+  def __init__(self, name, patch_size, unknowns, time_step_size, solver_type = FiniteVolumeSolverType.Rusanov):
+    self._time_step_size = time_step_size
     self._name  = name
     self._patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, self._unknown_identifier() )
     if solver_type==FiniteVolumeSolverType.Rusanov:
@@ -126,8 +128,8 @@ class FiniteVolumeSolver():
       }},
       marker.x(),
       marker.h(),
-      0.1, // t
-      0.001, // dt
+      {SOLVER_INSTANCE}.getMinTimeStamp(),
+      {TIME_STEP_SIZE},
       {NUMBER_OF_VOLUMES_PER_AXIS},
       {NUMBER_OF_UNKNOWNS},
       marker.getSelectedFaceNumber(),
@@ -163,8 +165,8 @@ class FiniteVolumeSolver():
     }},
     marker.x(),
     marker.h(),
-    0.1, // t
-    0.001, // dt
+    {SOLVER_INSTANCE}.getMinTimeStamp(),
+    {TIME_STEP_SIZE}, 
     {NUMBER_OF_VOLUMES_PER_AXIS},
     {NUMBER_OF_UNKNOWNS},
     reconstructedPatch,
@@ -198,14 +200,16 @@ class FiniteVolumeSolver():
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
     
     abstractHeaderDictionary = {
-      "NUMBER_OF_UNKNOWNS" : self._patch.no_of_unknowns
+      "NUMBER_OF_UNKNOWNS" : self._patch.no_of_unknowns,
+      "TIME_STEP_SIZE":      self._time_step_size
     }
     implementationDictionary = {
       "NUMBER_OF_UNKNOWNS" : self._patch.no_of_unknowns
     }
         
-    generated_abstract_header_file = peano4.output.TemplatedHeaderFile(
+    generated_abstract_header_file = peano4.output.TemplatedHeaderImplementationFilePair(
       templatefile_prefix + "AbstractRusanov.template.h",
+      templatefile_prefix + "AbstractRusanov.template.cpp",
       "Abstract" + self._name, 
       namespace,
       ".", 
@@ -222,10 +226,12 @@ class FiniteVolumeSolver():
 
     output.add( generated_abstract_header_file )
     output.add( generated_solver_files )
+    output.makefile.add_cpp_file( "Abstract" + self._name + ".cpp" )
     output.makefile.add_cpp_file( self._name + ".cpp" )
 
 
   def __init_dictionary_with_default_parameters(self,d):
+    d["TIME_STEP_SIZE"]             = self._time_step_size
     d["NUMBER_OF_VOLUMES_PER_AXIS"] = self._patch.dim[0]
     d["HALO_SIZE"]                  = self._patch_overlap.dim[0]/2
     d["SOLVER_INSTANCE"]            = self.get_name_of_global_instance()
@@ -257,11 +263,7 @@ class FiniteVolumeSolver():
         fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
         marker.x(),
         marker.h(),
-        0.0 // @todo raus im AMR Kontext bzw von aussen kalibrieren
-        // Solver muss im namen FixedTimeStep haben und dann nehmen wir 
-        // den TimeStamp direkt aus dem Solver (und der muss natuerlich 
-        // hochzaehlen. Alternativ koennen wir auch reduzieren. Waere 
-        // noch schoener.
+        {SOLVER_INSTANCE}.getMinTimeStamp()
       );
       index += {NUMBER_OF_UNKNOWNS};
     }}
