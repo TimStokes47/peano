@@ -28,8 +28,6 @@ using namespace examples::exahype2::finitevolumes;
 tarch::logging::Log _log("::");
 
 
-// @todo Das sollte das Python-Ding direkt generieren (aber net ueberschreiben)
-
 
 /**
  * @return continues to run

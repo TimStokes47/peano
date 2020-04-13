@@ -55,7 +55,7 @@ project.set_global_simulation_parameters(
   2, # dimensions
   [0.0,0.0],
   [1.0,1.0],
-  0.2,
+  0.1,
   0.0,
   0.01
 )

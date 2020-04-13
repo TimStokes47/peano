@@ -4,10 +4,32 @@ import peano4.output.TemplatedHeaderImplementationFilePair
 import os
 
 
-class DefaultSequence:
-  def __init__(self,project):
-    self.project = project
+class DefaultSequence(object):
+  """
+  
+    The default sequence sketches what Peano does if there's no main. You can 
+    alter it. The project holds an instance of this object through its main 
+    attribute. So it holds an instance of this class. As a consequence, you can
+    either change this object's attributes or you can replace this object if
+    the object of you choice.
     
+    Most people who wanna redefine the main create a subclass of DefaultSequence
+    and overwrite _get_header_file_template() and _get_implementation_file_template().
+    Some also redefine the default overwrite policy by changing the attribute
+    overwrite.
+    
+  """
+  def __init__(self,project):  
+    self.project   = project
+    self.overwrite = False
+    
+  def _get_header_file_template(self):
+    templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )    
+    return templatefile_prefix+".h.template"
+    
+  def _get_implementation_file_template(self):
+    templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )    
+    return templatefile_prefix+".cpp.template"
     
   def construct_output(self,output,main_name):
     """
@@ -19,13 +41,12 @@ class DefaultSequence:
     """
     output.makefile.add_cpp_file( main_name + ".cpp" )
     print( "generated " + main_name + ".cpp")
-    templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )    
     generated_files = peano4.output.TemplatedHeaderImplementationFilePair(
-      templatefile_prefix+".h.template",
-      templatefile_prefix+".cpp.template",
+      self._get_header_file_template(),
+      self._get_implementation_file_template(),
       main_name, 
       self.project.namespace,
       ".", 
       {"MAIN_NAME": main_name},
-      False)
+      self.overwrite)
     output.add(generated_files)

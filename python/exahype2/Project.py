@@ -175,6 +175,8 @@ class Project(object):
     create_grid.add_action_set( set_labels_action_set )
     plot_solution.add_action_set( set_labels_action_set )
     perform_time_step.add_action_set( set_labels_action_set )
+    
+    self._project.main = exahype2.ExaHyPEMain(self._project)
 
     return self._project
 
