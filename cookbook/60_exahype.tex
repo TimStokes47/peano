@@ -332,3 +332,51 @@ if success:
   convert.extract_fine_grid()
   convert.convert_to_vtk()
 \end{code}
+
+
+\section{Running on a parallel computer}
+
+To run \ExaHyPE\ in parallel, you have to build \Peano\ with support for
+multithreading and/or MPI.
+Once this is done, the engine more or less runs in parallel out of the box, as I
+offer a couple of default load balancing and decomposition strategies. 
+So here's a summary of what has to be done:
+
+
+
+\begin{enumerate}
+  \item Rerun the configure script with MPI and/or shared memory enabled. If you
+  have done so already, you can skip this step.
+  \item Identify one solver of your code that serves as load balancer. If you
+  use only one solver, then this is trivial.
+  \item Add an instance of \texttt{toolbox::loadbalancing::RecursiveGuided} to
+  this solver. You can later on use more sophisticated balancing strategies, but
+  this seems to be a good starting point. Here's a simpel example:
+  \begin{code}
+class examples::exahype2::finitevolumes::Euler: public AbstractEuler {
+  private:
+    toolbox::loadbalancing::RecursiveGuided  _loadBalancer;
+  public:
+    [...]
+};
+  \end{code}
+%   \item Ensure you call the object's routines in the solver's     virtual void startTimeStep(
+%       double globalMinTimeStamp,
+%       double globalMaxTimeStamp,
+%       double globalMinTimeStepSize,
+%       double globalMaxTimeStepSize
+%     );
+% 
+%     /**
+%      * If you hook into this routine, ensure the abstract base class
+%      * operation is still invoked.
+%      */
+%     virtual void finishTimeStep();
+  \item If you rely on \Peano's VTK conversion utilities, i.e.~if you have
+  configured your code with VTK, then the conversion tools can handle parallel
+  data dumps. My implementation likely is not the best one possible, as I do
+  dump data files in parallel, but the conversion tool then merges all of the
+  data into one big VTK/VTU file. For most of the applications, the
+  premanufactured VTK dump is a good start though.
+\end{enumerate}
+

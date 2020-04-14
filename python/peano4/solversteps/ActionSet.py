@@ -13,6 +13,10 @@ class ActionSet(object):
     return "// @todo Should be overwritten\n"
 
 
+  def get_static_initialisations(self,full_qualified_classname):
+    return ""
+
+
   @abstractmethod
   def get_destructor_body(self):
     return "// @todo Should be overwritten\n"

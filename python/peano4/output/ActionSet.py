@@ -182,6 +182,9 @@ class ActionSet(object):
 
       outputfile.write( "tarch::logging::Log " + self.__get_full_qualified_class_name() + "::_log( \""+ self.__get_full_qualified_class_name() + "\");\n\n\n" )
 
+      outputfile.write( self.implementation.get_static_initialisations(self.__get_full_qualified_class_name()) )
+      outputfile.write( "\n\n\n" )
+
       outputfile.write( self.__get_full_qualified_class_name() + "::" + self.classname + "(int treeNumber) {\n" )
       outputfile.write( self.implementation.get_constructor_body() )
       outputfile.write( "}\n\n\n" )

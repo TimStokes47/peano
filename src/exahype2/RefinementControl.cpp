@@ -41,14 +41,13 @@ exahype2::RefinementControl::RefinementControl() {
 
 
 void exahype2::RefinementControl::clear() {
-  // @todo change
-  logInfo( "clear()", "clear list of control events" );
+  logDebug( "clear()", "clear list of control events" );
   _events.clear();
 }
 
 
 std::vector< peano4::grid::GridControlEvent >  exahype2::RefinementControl::getGridControlEvents() const {
-  logInfo( "getGridControlEvents()", "return " << _events.size() << " grid control events" );
+  logDebug( "getGridControlEvents()", "return " << _events.size() << " grid control events" );
   return _events;
 }
 
@@ -60,18 +59,18 @@ void exahype2::RefinementControl::addCommand(
   bool                                         invokedByGridConstruction
 ) {
   logTraceInWith4Arguments( "addCommand()", x, h, toString(command), invokedByGridConstruction );
+  const double Tolerance = 0.10;
   switch (command) {
     case ::exahype2::RefinementCommand::Refine:
       {
         peano4::grid::GridControlEvent newEvent(
           peano4::grid::GridControlEvent::RefinementControl::Refine,
-          x-h*1.05,
-          h*1.1,
-          h/3.0*0.9
+          x-h*(1.0+Tolerance/2.0),
+          h*(1.0+Tolerance),
+          h/3.0*(1.0+Tolerance)
         );
         _events.push_back( newEvent );
-        // @todo Debug
-        logInfo( "addCommend()", "added refinement for x=" << x << ", h=" << h << ": " << newEvent.toString() << " (total of " << _events.size() << " instructions)" );
+        logDebug( "addCommend()", "added refinement for x=" << x << ", h=" << h << ": " << newEvent.toString() << " (total of " << _events.size() << " instructions)" );
       }
       break;
     case ::exahype2::RefinementCommand::Keep:

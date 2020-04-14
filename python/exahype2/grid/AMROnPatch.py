@@ -30,15 +30,19 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
   def get_body_of_operation(self,operation_name):
     result = ""
     if operation_name==peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
-      result = ""
+      result = "_refinementControl.clear();"
     
     result += super(AMROnPatch,self).get_body_of_operation(operation_name)
     return result
 
 
+  def get_static_initialisations(self,full_qualified_classname):
+    return "::exahype2::RefinementControl " + full_qualified_classname + "::_refinementControl;"
+
+
   def get_attributes(self):
     return """
-    ::exahype2::RefinementControl  _refinementControl;
+    static ::exahype2::RefinementControl  _refinementControl;
 """
 
 
