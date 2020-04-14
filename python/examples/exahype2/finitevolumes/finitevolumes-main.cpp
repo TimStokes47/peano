@@ -185,22 +185,40 @@ int main(int argc, char** argv) {
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-    "exahype2::fv",
+    "exahype2",
     tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-    "exahype2::fv",
+    "exahype2",
     tarch::logging::LogFilter::FilterListEntry::BlackListEntry
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, 
     tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-    "exahype2::fv",
+    "exahype2",
     tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
   ));
 
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
+    tarch::logging::LogFilter::FilterListEntry::AnyRank, 
+    "toolbox",
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+  ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
+    tarch::logging::LogFilter::FilterListEntry::AnyRank, 
+    "toolbox",
+    tarch::logging::LogFilter::FilterListEntry::BlackListEntry
+  ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetInfo, 
+    tarch::logging::LogFilter::FilterListEntry::AnyRank, 
+    "toolbox",
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+  ));
   peano4::initParallelEnvironment(&argc,&argv);
   peano4::fillLookupTables();
   

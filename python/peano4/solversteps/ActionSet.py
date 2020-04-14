@@ -3,7 +3,7 @@
 from abc import abstractmethod
  
 
-class ActionSet:
+class ActionSet(object):
   def __init__(self):
     pass
 

@@ -13,6 +13,11 @@ namespace exahype2 {
     Keep, Refine, Coarsen
   };
 
+  /**
+   * The default is coarsen as this is the lowest priority command.
+   */
+  RefinementCommand getDefaultRefinementCommand();
+
   class RefinementControl;
 }
 
@@ -31,26 +36,26 @@ std::string toString( exahype2::RefinementCommand value );
  */
 class exahype2::RefinementControl {
   public:
-	RefinementControl();
+    RefinementControl();
 
-	void clear();
+    void clear();
 
-	std::vector< peano4::grid::GridControlEvent >  getGridControlEvents() const;
+    std::vector< peano4::grid::GridControlEvent >  getGridControlEvents() const;
 
-	/**
-	 * @param x Centre of the cell for which this command is triggered
-	 * @param h Size of this cell
-	 */
-	void addCommand(
+    /**
+	   * @param x Centre of the cell for which this command is triggered
+	   * @param h Size of this cell
+	   */
+	  void addCommand(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h,
       exahype2::RefinementCommand                  command,
-	  bool                                         invokedByGridConstruction
-	);
+	    bool                                         invokedByGridConstruction
+	  );
   private:
-	static tarch::logging::Log  _log;
+	  static tarch::logging::Log  _log;
 
-	std::vector< peano4::grid::GridControlEvent >  _events;
+	  std::vector< peano4::grid::GridControlEvent >  _events;
 };
 
 #endif

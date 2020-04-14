@@ -28,7 +28,7 @@ import exahype2
 #
 # Lets first clean up all plot files, so we don't get a mismatch
 #
-output_files = [ f for f in os.listdir(".") if f.endswith(".peano-patch-file") ]
+output_files = [ f for f in os.listdir(".") if f.endswith(".peano-patch-file") or f.endswith(".vtu") ]
 for f in output_files:
   os.remove(f)
 
@@ -55,7 +55,7 @@ project.set_global_simulation_parameters(
   2, # dimensions
   [0.0,0.0],
   [1.0,1.0],
-  0.1,
+  0.01,
   0.0,
   0.01
 )

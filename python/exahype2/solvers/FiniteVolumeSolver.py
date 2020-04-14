@@ -7,6 +7,8 @@ import peano4.datamodel
 import peano4.output.TemplatedHeaderFile
 import peano4.output.TemplatedHeaderImplementationFilePair
 
+import exahype2.grid.AMROnPatch
+
 from enum import Enum
 
 
@@ -55,10 +57,11 @@ class FiniteVolumeSolver():
     datamodel.add_face(self._patch_overlap)
  
  
-  def add_data_movements_to_Peano4_solver_step(self, step):
+  def add_use_data_statements_to_Peano4_solver_step(self, step):
     """
      
-      Inform Peano4 step which data are to be moved around
+      Inform Peano4 step which data are to be moved around via the 
+      use_cell and use_face commands.
     
     """
     step.use_cell(self._patch)
@@ -80,8 +83,7 @@ class FiniteVolumeSolver():
 """
 
 
-  def add_actions_to_create_grid(self, step):
-    template = """
+  _CreateCellTemplate = """
   {{ 
     int index = 0;
     dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
@@ -89,7 +91,7 @@ class FiniteVolumeSolver():
         fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
         ::exahype2::getVolumeCentre( marker.x(), marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS}, volume), 
         ::exahype2::getVolumeSize( marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS} ),
-        0.0
+        {SOLVER_INSTANCE}.getMinTimeStamp()
       );
       index += {NUMBER_OF_UNKNOWNS};
     }}
@@ -97,17 +99,42 @@ class FiniteVolumeSolver():
   
 """
 
+  _AMRTemplate = """
+  {{ 
+    ::exahype2::RefinementCommand refinementCriterion = ::exahype2::getDefaultRefinementCommand();
+    int index = 0;
+    dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
+      refinementCriterion = refinementCriterion and {SOLVER_INSTANCE}.refinementCriterion(
+        fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
+        ::exahype2::getVolumeCentre( marker.x(), marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS}, volume), 
+        ::exahype2::getVolumeSize( marker.h(), {NUMBER_OF_VOLUMES_PER_AXIS} ),
+        {SOLVER_INSTANCE}.getMinTimeStamp()
+      );
+      index += {NUMBER_OF_UNKNOWNS};
+    }}
+    _refinementControl.addCommand( marker.x(), marker.h(), refinementCriterion, {IS_GRID_CREATION} );
+  }} 
+  
+"""
+
+  def add_actions_to_create_grid(self, step):
     d = {}
     self.__init_dictionary_with_default_parameters(d)
-
+    d["IS_GRID_CREATION"] = "true"
+    
     step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
-    step.add_action_set( peano4.toolbox.blockstructured.ApplyFunctorOnPatch(self._patch,template.format(**d),self.__get_default_includes()) )
+    step.add_action_set( peano4.toolbox.blockstructured.ApplyFunctorOnPatch(self._patch,self._CreateCellTemplate.format(**d),self.__get_default_includes()) )
+    step.add_action_set( exahype2.grid.AMROnPatch(self._patch,self._AMRTemplate.format(**d),  self.__get_default_includes()) )
     pass
   
   
   def add_actions_to_plot_solution(self, step):
+    d = {}
+    self.__init_dictionary_with_default_parameters(d)
+    
     step.add_action_set( peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution" + self._name,self._patch, self._unknown_identifier()) )
     step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
+    step.add_action_set( peano4.toolbox.blockstructured.ApplyFunctorOnPatch(self._patch,self._CreateCellTemplate.format(**d),self.__get_default_includes()) )
     pass
   
   
@@ -176,6 +203,7 @@ class FiniteVolumeSolver():
 
     d = {}
     self.__init_dictionary_with_default_parameters(d)
+    d["IS_GRID_CREATION"] = "false"
 
     step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(
       self._patch,
@@ -185,6 +213,8 @@ class FiniteVolumeSolver():
       self.__get_default_includes()
     ))
     step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
+    step.add_action_set( peano4.toolbox.blockstructured.ApplyFunctorOnPatch(self._patch,self._CreateCellTemplate.format(**d),self.__get_default_includes()) )
+    step.add_action_set( exahype2.grid.AMROnPatch(self._patch,self._AMRTemplate.format(**d),  self.__get_default_includes()) )
     pass
   
 
@@ -240,40 +270,3 @@ class FiniteVolumeSolver():
     if self._patch_overlap.dim[0]/2!=1:
       print( "ERROR: Finite Volume solver currently supports only a halo size of 1")
  
-  #
-  # Das muss hier raus! Gehoert in ein Action Set of itself
-  #
-  #
-  def get_refinement_command(self):
-    """
-      Return an instance of ::exahype::RefinementCommand
-      
-      See get_initialisation_invocation for a description which variables you do have 
-      in this block. Further to the arguments there, a variable refinementControl is 
-      defined. Do not override this one, but update it via the and operator.
-
-    """
-    # @tood Das in eine exahype::geometry Toolbox raus anstelle in einen Funktor!
-    
-    template = """
-  {{
-    int index = 0;
-    dfor( volume, {NUMBER_OF_VOLUMES_PER_AXIS} ) {{
-      refinementCommand = refinementCommand and {SOLVER_INSTANCE}.refinementCriterion(
-        fineGridCell{UNKNOWN_IDENTIFIER}.value + index,
-        marker.x(),
-        marker.h(),
-        {SOLVER_INSTANCE}.getMinTimeStamp()
-      );
-      index += {NUMBER_OF_UNKNOWNS};
-    }}
-  }} 
-  
-"""
-
-    d = {}
-    self.__init_dictionary_with_default_parameters(d)
-
-    return template.format(**d)
-
-

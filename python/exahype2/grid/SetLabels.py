@@ -5,13 +5,14 @@ from peano4.solversteps.ActionSet import ActionSet
 
 
 class SetLabels(ActionSet):
+  """
+  
+   SetLabels is an action set which is automatically merged into all ExaHyPE2
+   steps by the project. There's nothing for the user solvers to be done here.
+  
+  """
   def __init__(self):
-    """
-      maximum_cell_width
-    """
     pass
-    #self.d = {}
-    #self.d[ "H_MAX" ]     = str(maximum_cell_width)
 
 
   def get_constructor_body(self):

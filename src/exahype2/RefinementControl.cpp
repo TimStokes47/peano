@@ -1,6 +1,11 @@
 #include "RefinementControl.h"
 
 
+exahype2::RefinementCommand exahype2::getDefaultRefinementCommand() {
+  return RefinementCommand::Coarsen;
+}
+
+
 exahype2::RefinementCommand operator&&( exahype2::RefinementCommand lhs, exahype2::RefinementCommand rhs) {
   if (
     lhs == exahype2::RefinementCommand::Refine or rhs == exahype2::RefinementCommand::Refine
@@ -36,12 +41,14 @@ exahype2::RefinementControl::RefinementControl() {
 
 
 void exahype2::RefinementControl::clear() {
+  // @todo change
+  logInfo( "clear()", "clear list of control events" );
   _events.clear();
 }
 
 
 std::vector< peano4::grid::GridControlEvent >  exahype2::RefinementControl::getGridControlEvents() const {
-	// @todo Could consolidate data here
+  logInfo( "getGridControlEvents()", "return " << _events.size() << " grid control events" );
   return _events;
 }
 
@@ -56,13 +63,15 @@ void exahype2::RefinementControl::addCommand(
   switch (command) {
     case ::exahype2::RefinementCommand::Refine:
       {
-    	logInfo( "addCommend()", "added refinement for x=" << x << ", h=" << h );
-        _events.push_back( peano4::grid::GridControlEvent(
+        peano4::grid::GridControlEvent newEvent(
           peano4::grid::GridControlEvent::RefinementControl::Refine,
           x-h*1.05,
           h*1.1,
           h/3.0*0.9
-        ));
+        );
+        _events.push_back( newEvent );
+        // @todo Debug
+        logInfo( "addCommend()", "added refinement for x=" << x << ", h=" << h << ": " << newEvent.toString() << " (total of " << _events.size() << " instructions)" );
       }
       break;
     case ::exahype2::RefinementCommand::Keep:
