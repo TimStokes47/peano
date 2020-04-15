@@ -28,7 +28,7 @@ import exahype2
 #
 # Lets first clean up all plot files, so we don't get a mismatch
 #
-output_files = [ f for f in os.listdir(".") if f.endswith(".peano-patch-file") ]
+output_files = [ f for f in os.listdir(".") if f.endswith(".peano-patch-file") or f.endswith(".vtu") ]
 for f in output_files:
   os.remove(f)
 
@@ -55,7 +55,7 @@ project.set_global_simulation_parameters(
   2, # dimensions
   [0.0,0.0],
   [1.0,1.0],
-  0.2,
+  0.1,
   0.0,
   0.01
 )
@@ -64,7 +64,6 @@ project.set_global_simulation_parameters(
 
 peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
-#Pfad stimmt net
 peano4_project.output.makefile.add_library( "ExaHyPE2Core2d_debug", "../../../../src/exahype2" )
 peano4_project.generate(peano4.output.Overwrite.Default)
 peano4_project.build()

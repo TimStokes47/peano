@@ -260,7 +260,7 @@ AC_SUBST([PEANO_LDFLAGS])
 AC_OUTPUT(
   Makefile 
   src/Makefile 
-  src/toolbox/multiprecision/Makefile src/toolbox/finiteelements/Makefile
+  src/toolbox/multiprecision/Makefile src/toolbox/finiteelements/Makefile src/toolbox/loadbalancing/Makefile
   src/examples/unittests/Makefile src/examples/grid/Makefile src/examples/integerdiffusionthroughfaces/Makefile src/examples/delta/Makefile src/examples/regulargridupscaling/Makefile 
   src/visualisation/Makefile
   src/exahype2/Makefile

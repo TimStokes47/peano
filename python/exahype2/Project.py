@@ -155,12 +155,15 @@ class Project(object):
     
     for solver in self._solvers:
       solver.add_to_Peano4_datamodel( self._project.datamodel )
-      solver.add_data_movements_to_Peano4_solver_step( create_grid )
-      solver.add_data_movements_to_Peano4_solver_step( plot_solution )
-      solver.add_data_movements_to_Peano4_solver_step( perform_time_step )
+      
+      solver.add_use_data_statements_to_Peano4_solver_step( create_grid )
+      solver.add_use_data_statements_to_Peano4_solver_step( plot_solution )
+      solver.add_use_data_statements_to_Peano4_solver_step( perform_time_step )
+      
       solver.add_actions_to_create_grid( create_grid )
       solver.add_actions_to_plot_solution( plot_solution )
       solver.add_actions_to_perform_time_step( perform_time_step )
+      
       solver.add_implementation_files_to_project( self._project.namespace, self._project.output )
 
     self.__generate_solver_repository();
@@ -175,6 +178,8 @@ class Project(object):
     create_grid.add_action_set( set_labels_action_set )
     plot_solution.add_action_set( set_labels_action_set )
     perform_time_step.add_action_set( set_labels_action_set )
+    
+    self._project.main = exahype2.ExaHyPEMain(self._project)
 
     return self._project
 

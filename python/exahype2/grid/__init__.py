@@ -2,5 +2,6 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .DataModel import create_face_label
 
-from .SetLabels import SetLabels
+from exahype2.grid.AMROnPatch import AMROnPatch
+from .SetLabels               import SetLabels
 

@@ -3,7 +3,7 @@
 from abc import abstractmethod
  
 
-class ActionSet:
+class ActionSet(object):
   def __init__(self):
     pass
 
@@ -11,6 +11,10 @@ class ActionSet:
   @abstractmethod
   def get_constructor_body(self):
     return "// @todo Should be overwritten\n"
+
+
+  def get_static_initialisations(self,full_qualified_classname):
+    return ""
 
 
   @abstractmethod

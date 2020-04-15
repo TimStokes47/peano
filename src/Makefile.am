@@ -7,7 +7,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 # within configure.ac as well as its very last line).
 #
 SUBDIRS = . \
-          toolbox/finiteelements toolbox/multiprecision \
+          toolbox/finiteelements toolbox/multiprecision toolbox/loadbalancing \
           examples/unittests examples/grid examples/integerdiffusionthroughfaces examples/delta examples/regulargridupscaling \
           visualisation exahype2
 
