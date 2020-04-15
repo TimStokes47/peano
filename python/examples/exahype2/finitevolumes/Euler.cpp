@@ -23,8 +23,9 @@ void examples::exahype2::finitevolumes::Euler::adjustSolution(
 ) {
   if (tarch::la::equals(t,0.0) ) {
     // initial conditions
-    bool isInTheCentre = ( tarch::la::norm2( x-tarch::la::Vector<Dimensions,double>(0.5) ) < 0.05 );
-    Q[0] = 1.0;  // rho
+    //bool isInTheCentre = ( tarch::la::norm2( x-tarch::la::Vector<Dimensions,double>(0.5) ) < 0.05 );
+    bool isInTheCentre = x(0)<=0.5;
+    Q[0] = 0.1;  // rho
     Q[1] = 0;    // velocities
     Q[2] = 0;
     Q[3] = 0;

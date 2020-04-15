@@ -32,7 +32,8 @@ class FiniteVolumeSolver():
     self._name  = name
     self._patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, self._unknown_identifier() )
     if solver_type==FiniteVolumeSolverType.Rusanov:
-      self._patch_overlap = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, self._unknown_identifier() )
+      self._patch_overlap     = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, self._unknown_identifier() )
+      self._patch_overlap_old = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, self._unknown_identifier() + "Old" )
     else:
       print( "Error: unknown FV solver type" )
     pass
@@ -55,6 +56,7 @@ class FiniteVolumeSolver():
     """
     datamodel.add_cell(self._patch)
     datamodel.add_face(self._patch_overlap)
+    datamodel.add_face(self._patch_overlap_old)
  
  
   def add_use_data_statements_to_Peano4_solver_step(self, step):
@@ -66,6 +68,7 @@ class FiniteVolumeSolver():
     """
     step.use_cell(self._patch)
     step.use_face(self._patch_overlap)
+    step.use_face(self._patch_overlap_old)
 
   
   def __get_default_includes(self):
@@ -205,9 +208,13 @@ class FiniteVolumeSolver():
     self.__init_dictionary_with_default_parameters(d)
     d["IS_GRID_CREATION"] = "false"
 
+    step.add_action_set( peano4.toolbox.blockstructured.BackupPatchOverlap(
+      self._patch_overlap,
+      self._patch_overlap_old
+    ))
     step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(
       self._patch,
-      self._patch_overlap,
+      self._patch_overlap_old,
       patchFunctorTemplate.format(**d),
       touchFaceFirstTimeTemplate.format(**d),
       self.__get_default_includes()
