@@ -1,10 +1,6 @@
 #include "ParallelEuler.h"
 
 
-#include "peano4/parallel/SpacetreeSet.h"
-
-
-
 ::exahype2::RefinementCommand examples::exahype2::finitevolumes::ParallelEuler::refinementCriterion(
   double Q[5],
   const tarch::la::Vector<Dimensions,double>&  x,
@@ -157,5 +153,5 @@ void examples::exahype2::finitevolumes::ParallelEuler::boundaryConditions(
 
 void examples::exahype2::finitevolumes::ParallelEuler::finishTimeStep() {
   AbstractParallelEuler::finishTimeStep();
-  _loadBalancer.finishTimeStep( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() );
+  _loadBalancer.finishTimeStep();
 }

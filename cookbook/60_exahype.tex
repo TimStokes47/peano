@@ -373,7 +373,7 @@ peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
 peano4_project.output.makefile.add_library( "ExaHyPE2Core2d_debug", "../../../../src/exahype2" )
 peano4_project.output.makefile.add_library( 
-  "ToolboxLoadBalancing_debug", "../../../../src/toolbox/loadbalancing" )
+  "ToolboxLoadBalancing2d_debug", "../../../../src/toolbox/loadbalancing" )
 [...]
   \end{code}
   \item We hook into the solver's \texttt{finishTimeStep} call to brief the load
@@ -390,13 +390,9 @@ class Euler: [...]
   \begin{code}
 void examples::exahype2::finitevolumes::Euler::finishTimeStep() {
   AbstractEuler::finishTimeStep();
-  _loadBalancer.finishTimeStep( 
-    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().
-      getNumberOfLocalUnrefinedCells()
-  ); 
+  _loadBalancer.finishTimeStep(); 
 }
   \end{code}
-  You will need to add the corresponding include as well.
   \item If you rely on \Peano's VTK conversion utilities, i.e.~if you have
   configured your code with VTK, then the conversion tools can handle parallel
   data dumps. My implementation likely is not the best one possible, as I do
