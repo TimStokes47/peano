@@ -8,7 +8,7 @@
   const tarch::la::Vector<Dimensions,double>&  h,
   const tarch::la::Vector<Dimensions,double>&  t
 ) {
-  if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0.0 ) {
+  if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0 ) {
     return ::exahype2::RefinementCommand::Refine;
   }
   else return ::exahype2::RefinementCommand::Keep;

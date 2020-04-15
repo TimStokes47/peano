@@ -11,6 +11,8 @@
 #include "tarch/Assertions.h"
 #include "tarch/la/ScalarOperations.h"
 
+#include "tarch/multicore/multicore.h"
+
 
 tarch::logging::Log visualisation::input::PeanoTextPatchFileReader::_log( "visualisation::input::PeanoTextPatchFileReader" );
 
@@ -44,8 +46,10 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
     logError( "parse()", "file " << _file << " is empty (or does not exist)" );
   }
 
+  #if !defined(SharedTBB)
   #pragma omp parallel
   #pragma omp single
+  #endif
   {
   for(uint i = 0; i < lines.size(); i++) {
     std::string line = lines[i];
@@ -64,14 +68,20 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
       }
     }
     else if ( tokens[0]=="end" and tokens[1]=="dataset" ) { //new snapshot
+      #if !defined(SharedTBB)
       #pragma omp taskwait
+      #endif
 	  }
     else if ( tokens[0]=="include") {
 	    std::string directory = Parser::getDirectory(_file);
 	    if ( directory.empty() ) directory = ".";
       const std::string filename = directory + "/" + Parser::removeHyphens(tokens[1]);
 
+      logInfo ( "parse()", "create a new reader (with new task) for file " << filename << " resulting from token " << tokens[1] );
+
+      #if !defined(SharedTBB)
       #pragma omp task
+      #endif
       {
         PeanoTextPatchFileReader subReader(filename);
         subReader.parse();
@@ -80,7 +90,9 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
           logError( "parse()", "included file " << filename << " seems to host multiple data sets. This is not supported" );
         }
         else {
+          #if !defined(SharedTBB)
           #pragma omp critical
+          #endif
           _data.back().merge(subData[0]);
         }
       }
