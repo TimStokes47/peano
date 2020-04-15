@@ -34,7 +34,7 @@ class toolbox::loadbalancing::RecursiveGuided {
   public:
     RecursiveGuided();
 
-    void finishTimeStep();
+    void finishTimeStep( int totalNumberOfInnerUnrefinedCellsOnThisRank );
   private:
     bool _hasSpreadOutOverAllRanks;
 

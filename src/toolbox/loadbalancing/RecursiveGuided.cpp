@@ -1,11 +1,10 @@
 #include "RecursiveGuided.h"
 
 
+#include "tarch/Assertions.h"
 #include "tarch/mpi/Rank.h"
 #include "tarch/multicore/Core.h"
 
-
-#include "peano4/parallel/SpacetreeSet.h"
 
 
 toolbox::loadbalancing::RecursiveGuided::RecursiveGuided():
@@ -17,8 +16,8 @@ toolbox::loadbalancing::RecursiveGuided::RecursiveGuided():
 }
 
 
-void toolbox::loadbalancing::RecursiveGuided::finishTimeStep() {
-  _localNumberOfInnerUnrefinedCell = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
+void toolbox::loadbalancing::RecursiveGuided::finishTimeStep( int totalNumberOfInnerUnrefinedCellsOnThisRank ) {
+  _localNumberOfInnerUnrefinedCell = totalNumberOfInnerUnrefinedCellsOnThisRank;
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {
     _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
   }
