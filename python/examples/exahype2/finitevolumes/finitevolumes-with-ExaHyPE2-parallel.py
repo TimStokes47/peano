@@ -43,7 +43,8 @@ project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevo
 #
 # Add the Finite Volumes solver
 #
-patch_size = 25
+#patch_size = 25
+patch_size = 5
 unknowns   = 5
 project.add_finite_volumes_solver("ParallelEuler", patch_size, unknowns, 0.001)
 
@@ -55,9 +56,12 @@ project.set_global_simulation_parameters(
   2, # dimensions
   [0.0,0.0],
   [1.0,1.0],
-  0.1,
+  0.5,
   0.0,
-  0.01
+  0.001
+  #0.1,
+  #0.0,
+  #0.01
 )
 
 

@@ -49,6 +49,8 @@ class toolbox::loadbalancing::RecursiveGuided {
     int _globalNumberOfInnerUnrefinedCell;
 
     void updateGlobalView();
+
+    int getMaximumSpacetreeSize() const;
 };
 
 

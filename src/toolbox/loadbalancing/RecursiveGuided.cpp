@@ -29,6 +29,14 @@ void toolbox::loadbalancing::RecursiveGuided::updateGlobalView() {
 }
 
 
+int toolbox::loadbalancing::RecursiveGuided::getMaximumSpacetreeSize() const {
+  return _globalNumberOfInnerUnrefinedCell
+       / tarch::mpi::Rank::getInstance().getNumberOfRanks()
+       / tarch::multicore::Core::getInstance().getNumberOfThreads()
+       / 2;
+}
+
+
 void toolbox::loadbalancing::RecursiveGuided::finishTimeStep() {
   updateGlobalView();
 }
