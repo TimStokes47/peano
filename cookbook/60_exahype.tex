@@ -390,9 +390,13 @@ class Euler: [...]
   \begin{code}
 void examples::exahype2::finitevolumes::Euler::finishTimeStep() {
   AbstractEuler::finishTimeStep();
-  _loadBalancer.finishTimeStep();
+  _loadBalancer.finishTimeStep( 
+    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().
+      getNumberOfLocalUnrefinedCells()
+  ); 
 }
   \end{code}
+  You will need to add the corresponding include as well.
   \item If you rely on \Peano's VTK conversion utilities, i.e.~if you have
   configured your code with VTK, then the conversion tools can handle parallel
   data dumps. My implementation likely is not the best one possible, as I do
