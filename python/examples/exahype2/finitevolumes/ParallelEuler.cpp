@@ -1,7 +1,6 @@
 #include "ParallelEuler.h"
 
 
-
 ::exahype2::RefinementCommand examples::exahype2::finitevolumes::ParallelEuler::refinementCriterion(
   double Q[5],
   const tarch::la::Vector<Dimensions,double>&  x,

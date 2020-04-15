@@ -47,6 +47,8 @@ class toolbox::loadbalancing::RecursiveGuided {
      * Status variable required to compute good load balancing
      */
     int _globalNumberOfInnerUnrefinedCell;
+
+    void updateGlobalView();
 };
 
 
