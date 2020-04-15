@@ -348,7 +348,11 @@ So here's a summary of what has to be done:
   \item Rerun the configure script with MPI and/or shared memory enabled. If you
   have done so already, you can skip this step.
   \item Identify one solver of your code that serves as load balancer. If you
-  use only one solver, then this is trivial.
+  use only one solver, then this is trivial. I continue to develop the Euler
+  example from the previous sections, so my solver of choice is \texttt{Euler}.
+  In the examples I ship with the code, I however relabel it into
+  \texttt{ParallelEuler}, so users doing the first steps are not flooded with
+  parallelisation details.
   \item Add an instance of \texttt{toolbox::loadbalancing::RecursiveGuided} to
   this solver. You can later on use more sophisticated balancing strategies, but
   this seems to be a good starting point. Here's a simpel example:
@@ -360,18 +364,35 @@ class examples::exahype2::finitevolumes::Euler: public AbstractEuler {
     [...]
 };
   \end{code}
-%   \item Ensure you call the object's routines in the solver's     virtual void startTimeStep(
-%       double globalMinTimeStamp,
-%       double globalMaxTimeStamp,
-%       double globalMinTimeStepSize,
-%       double globalMaxTimeStepSize
-%     );
-% 
-%     /**
-%      * If you hook into this routine, ensure the abstract base class
-%      * operation is still invoked.
-%      */
-%     virtual void finishTimeStep();
+    You will have to add the corresponding include, too.
+  \item All the premanufactored (toolbox) load balancers are packaged into a
+  library of their own. You have to add this library to your \Peano\ project in
+  the Python script:
+  \begin{code}
+peano4_project = project.generate_Peano4_project()
+peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
+peano4_project.output.makefile.add_library( "ExaHyPE2Core2d_debug", "../../../../src/exahype2" )
+peano4_project.output.makefile.add_library( 
+  "ToolboxLoadBalancing_debug", "../../../../src/toolbox/loadbalancing" )
+[...]
+  \end{code}
+  \item We hook into the solver's \texttt{finishTimeStep} call to brief the load
+  balancing. For this, we override the routine in our solver:
+  \begin{code}
+class Euler: [...]
+    void finishTimeStep() override;
+  \end{code}
+  This routine always has been there but is implemented as a dummy in the
+  abstract solver base class.
+  \item When we implement \texttt{finishTimeStep}, we have to ensure we still
+  invoke the base class' dummy implementation (we don't want to alter semantics)
+  and then we actually tell the load balancing to become active:
+  \begin{code}
+void examples::exahype2::finitevolumes::Euler::finishTimeStep() {
+  AbstractEuler::finishTimeStep();
+  _loadBalancer.finishTimeStep();
+}
+  \end{code}
   \item If you rely on \Peano's VTK conversion utilities, i.e.~if you have
   configured your code with VTK, then the conversion tools can handle parallel
   data dumps. My implementation likely is not the best one possible, as I do
