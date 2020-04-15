@@ -11,17 +11,21 @@ class BackupPatchOverlap(ActionSet):
   
   patch_overlap_in
   patch_overlap_out
+  invoke_in_touch_first If you set this one to True, then I do the copying
+    in touchFaceFirstTime. Otherwise, I do it in touchFaceLastTime
   
   """
   
   
-  def __init__(self,patch_overlap_in,patch_overlap_out):
+  def __init__(self,patch_overlap_in,patch_overlap_out,invoke_in_touch_first):
     self.d = {}
     self.d[ "UNKNOWNS" ]           = str(patch_overlap_in.no_of_unknowns)
     self.d[ "DOFS_PER_AXIS" ]      = str(patch_overlap_in.dim[1])
     self.d[ "OVERLAP" ]            = str(patch_overlap_in.dim[0]/2)
     self.d[ "FACES_ACCESSOR_IN" ]  = "fineGridFace"  + patch_overlap_in.name
     self.d[ "FACES_ACCESSOR_OUT" ] = "fineGridFace"  + patch_overlap_out.name
+    
+    self.invoke_in_touch_first = invoke_in_touch_first
 
 
   def get_constructor_body(self):
@@ -44,7 +48,7 @@ class BackupPatchOverlap(ActionSet):
     return False
 
 
-  __Template_TouchFaceFirstTime = """
+  __Template = """
     int counter = 0;
     dfore(k,{DOFS_PER_AXIS},0,0) {{
       for (int i=0; i<{OVERLAP}*2; i++) {{
@@ -60,8 +64,11 @@ class BackupPatchOverlap(ActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = "\n"
-    if operation_name==ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
-      result = self.__Template_TouchFaceFirstTime.format(**self.d)
+    if self.invoke_in_touch_first and operation_name==ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+      result = self.__Template.format(**self.d)
+      pass 
+    if not self.invoke_in_touch_first and operation_name==ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
+      result = self.__Template.format(**self.d)
       pass 
     return result
 

@@ -33,7 +33,7 @@ class FiniteVolumeSolver():
     self._patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, self._unknown_identifier() )
     if solver_type==FiniteVolumeSolverType.Rusanov:
       self._patch_overlap     = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, self._unknown_identifier() )
-      self._patch_overlap_old = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, self._unknown_identifier() + "Old" )
+      self._patch_overlap_new = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, self._unknown_identifier() + "Old" )
     else:
       print( "Error: unknown FV solver type" )
     pass
@@ -56,7 +56,7 @@ class FiniteVolumeSolver():
     """
     datamodel.add_cell(self._patch)
     datamodel.add_face(self._patch_overlap)
-    datamodel.add_face(self._patch_overlap_old)
+    datamodel.add_face(self._patch_overlap_new)
  
  
   def add_use_data_statements_to_Peano4_solver_step(self, step):
@@ -68,7 +68,7 @@ class FiniteVolumeSolver():
     """
     step.use_cell(self._patch)
     step.use_face(self._patch_overlap)
-    step.use_face(self._patch_overlap_old)
+    step.use_face(self._patch_overlap_new)
 
   
   def __get_default_includes(self):
@@ -208,20 +208,21 @@ class FiniteVolumeSolver():
     self.__init_dictionary_with_default_parameters(d)
     d["IS_GRID_CREATION"] = "false"
 
-    step.add_action_set( peano4.toolbox.blockstructured.BackupPatchOverlap(
-      self._patch_overlap,
-      self._patch_overlap_old
-    ))
     step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(
       self._patch,
-      self._patch_overlap_old,
+      self._patch_overlap,
       patchFunctorTemplate.format(**d),
       touchFaceFirstTimeTemplate.format(**d),
       self.__get_default_includes()
     ))
-    step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap) )
+    step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap_new) )
     step.add_action_set( peano4.toolbox.blockstructured.ApplyFunctorOnPatch(self._patch,self._CreateCellTemplate.format(**d),self.__get_default_includes()) )
     step.add_action_set( exahype2.grid.AMROnPatch(self._patch,self._AMRTemplate.format(**d),  self.__get_default_includes()) )
+    step.add_action_set( peano4.toolbox.blockstructured.BackupPatchOverlap(
+      self._patch_overlap_new,
+      self._patch_overlap,
+      False
+    ))
     pass
   
 

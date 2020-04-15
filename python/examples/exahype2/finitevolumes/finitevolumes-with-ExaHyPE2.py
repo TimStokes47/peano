@@ -52,10 +52,10 @@ project.add_finite_volumes_solver("Euler", patch_size, unknowns, 0.001)
 # Lets configure some global parameters
 #
 project.set_global_simulation_parameters(
-  2, # dimensions
+  2,            # dimensions
   [0.0,0.0],
   [1.0,1.0],
-  0.1,
+  0.5,          # end time
   0.0,
   0.01
 )
