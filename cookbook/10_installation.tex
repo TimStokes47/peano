@@ -30,9 +30,11 @@ git checkout p4
 \end{code}
 
 
+\noindent
 I still maintain the ``old'' Peano in the repository (version 3), and most users
 consider this to be the standard Peano generation.
-For the present document, it is thus important that you manually switch to the
+So my Peano master points to version 3.
+For the present document, it is important that you manually switch to the
 branch \texttt{p4}.
 
 
@@ -41,7 +43,11 @@ branch \texttt{p4}.
 
 
 \Peano\  relies on the autotools to set up its build environment.
-Change into the project's directory and type in 
+Change into the project's directory and type in\footnote{This step will fail if
+you work against the git checkout where I don't store the configure script's
+outcomes. If you work against the git version, please type in
+\texttt{libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .;
+automake --add-missing} before you continue.}
 \begin{code}
 ./configure --help
 \end{code}
