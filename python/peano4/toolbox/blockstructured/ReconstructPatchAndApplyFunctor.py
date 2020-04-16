@@ -144,9 +144,10 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
         int sourceCellSerialised        = serialisePatchIndex(sourceCell,d);
 
         for (int j=0; j<{UNKNOWNS}; j++) {{
-          reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = {FACES_ACCESSOR}(d+Dimensions).value[ sourceCellSerialised*{UNKNOWNS}+j ];
+          reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = {FACES_ACCESSOR}(d).value[ sourceCellSerialised*{UNKNOWNS}+j ];
           assertion( reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ]==reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] );
         }}
+        //std::cout << "face " << (d) << ": " << sourceCell << " -> " << destinationCell << "  (" << sourceCellSerialised << " -> " << destinationCellSerialised << ")" << std::endl;
 
         destinationCell(d) = i+{DOFS_PER_AXIS}+{OVERLAP};
         sourceCell(d)      = i+{OVERLAP};
@@ -157,6 +158,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
           reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = {FACES_ACCESSOR}(d+Dimensions).value[ sourceCellSerialised*{UNKNOWNS}+j ];
           assertion( reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ]==reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] );
         }}
+        //std::cout << "face " << (d+Dimensions) << ": " << sourceCell << " -> " << destinationCell << "  (" << sourceCellSerialised << " -> " << destinationCellSerialised << ")" << std::endl;
       }}
     }}
   }}

@@ -41,6 +41,43 @@ class Project(object):
     self._first_plot_time_stamp = 0.0
     self._time_in_between_plots = 0.1
 
+  def getLibrary( self, mode ):
+    """
+    
+    dimensions is either 2 or 3
+    mode is from peano4.output.CompileMode
+    
+    """
+    if mode==peano4.output.CompileMode.Debug and self._dimensions==2:
+        return self.Library2dDebug
+    if mode==peano4.output.CompileMode.Debug and self._dimensions==3:
+        return self.Library3dDebug
+    if mode==peano4.output.CompileMode.Trace and self._dimensions==2:
+        return self.Library2dTrace
+    if mode==peano4.output.CompileMode.Trace and self._dimensions==3:
+        return self.Library3dTrace
+    if mode==peano4.output.CompileMode.Asserts and self._dimensions==2:
+        return self.Library2dAsserts
+    if mode==peano4.output.CompileMode.Asserts and self._dimensions==3:
+        return self.Library3dAsserts
+    if mode==peano4.output.CompileMode.Release and self._dimensions==2:
+        return self.Library2dRelease
+    if mode==peano4.output.CompileMode.Release and self._dimensions==3:
+        return self.Library3dRelease
+    return "undef"
+
+
+  Library2dDebug = "ExaHyPE2Core2d_debug"
+  Library3dDebug = "ExaHyPE2Core3d_debug"
+    
+  Library2dRelease = "ExaHyPE2Core2d"
+  Library3dRelease = "ExaHyPE2Core3d"
+
+  Library2dTrace = "ExaHyPE2Core2d_trace"
+  Library3dTrace = "ExaHyPE2Core3d_trace"
+
+  Library2dAsserts = "ExaHyPE2Core2d_asserts"
+  Library3dAsserts = "ExaHyPE2Core3d_asserts"
     
     
   def add_finite_volumes_solver(self,name, patch_size, unknowns, solver_type = exahype2.solvers.FiniteVolumeSolverType.Rusanov):
