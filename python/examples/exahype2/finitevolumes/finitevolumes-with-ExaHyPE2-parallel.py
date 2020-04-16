@@ -43,32 +43,36 @@ project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevo
 #
 # Add the Finite Volumes solver
 #
-#patch_size = 25
-patch_size = 5
+patch_size = 25
 unknowns   = 5
 project.add_finite_volumes_solver("ParallelEuler", patch_size, unknowns, 0.001)
+
+
+dimensions = 2
+build_mode = peano4.output.CompileMode.Asserts
 
 
 #
 # Lets configure some global parameters
 #
-project.set_global_simulation_parameters(
-  2, # dimensions
-  [0.0,0.0],
-  [1.0,1.0],
-  0.5,
-  0.0,
-  0.001
-  #0.1,
-  #0.0,
-  #0.01
-)
+if dimensions==2:
+  project.set_global_simulation_parameters(
+    dimensions,  [0.0,0.0],  [1.0,1.0],
+    0.4,          # end time
+    0.0, 0.01     # snapshots
+  )
+else:
+  project.set_global_simulation_parameters(
+    dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
+    0.4,          # end time
+    0.0, 0.01
+  )
 
 
 
 peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
-peano4_project.output.makefile.add_library( "ExaHyPE2Core2d_debug", "../../../../src/exahype2" )
+peano4_project.output.makefile.add_library( project.getLibrary(build_mode), "../../../../src/exahype2" )
 peano4_project.output.makefile.add_library( "ToolboxLoadBalancing2d_debug", "../../../../src/toolbox/loadbalancing" )
 peano4_project.generate(peano4.output.Overwrite.Default)
 peano4_project.build()

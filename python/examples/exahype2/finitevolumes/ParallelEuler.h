@@ -10,11 +10,11 @@
 #define _EXAMPLES_EXAHYPE2_FINITEVOLUMES_PARALLELEULER_
 
 
+#include "../../../../src/toolbox/loadbalancing/RecursiveSubdivision.h"
 #include "AbstractParallelEuler.h"
 
 #include "tarch/logging/Log.h"
 
-#include "toolbox/loadbalancing/RecursiveGuided.h"
 
 namespace examples{
 namespace exahype2{
@@ -31,7 +31,7 @@ class examples::exahype2::finitevolumes::ParallelEuler: public AbstractParallelE
   private:
     static tarch::logging::Log   _log;
 
-    toolbox::loadbalancing::RecursiveGuided _loadBalancer;
+    toolbox::loadbalancing::RecursiveSubdivision  _loadBalancer;
   public:
     /**
      * @param Q Vector of unknowns

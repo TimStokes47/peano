@@ -6,7 +6,7 @@ lib_LIBRARIES = libToolboxLoadBalancing2d.a libToolboxLoadBalancing2d_debug.a li
 
 
 ToolboxLoadBalancing_SOURCES = \
-  RecursiveGuided.cpp
+  RecursiveSubdivision.cpp
   
 
 libToolboxLoadBalancing2d_a_CXXFLAGS         = -DDimensions=2 -DPeanoDebug=0 $(PEANO_CXXFLAGS)

@@ -415,8 +415,6 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   exchangeDataBetweenExistingAndNewTreesAndRerunClones(observer);
   _state = SpacetreeSetState::Waiting;
 
-  mergeStatistics();
-
   _state = SpacetreeSetState::TraverseTreesAndExchangeData;
   exchangeDataBetweenTrees(observer);
   _state = SpacetreeSetState::Waiting;
@@ -427,21 +425,6 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   deleteClonedObservers();
 
   logTraceOut( "traverse(...)" );
-}
-
-
-void peano4::parallel::SpacetreeSet::mergeStatistics() {
-  logTraceIn( "mergeStatistics(...)" );
-  for (auto&  from: _spacetrees) {
-    if (
-      from._id != _spacetrees.begin()->_id
-	  and
-	  from._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit
-	) {
-      merge(from._statistics, _spacetrees.begin()->_statistics );
-    }
-  }
-  logTraceOut( "mergeStatistics(...)" );
 }
 
 
@@ -537,8 +520,26 @@ void peano4::parallel::SpacetreeSet::merge(
 }
 
 
+peano4::grid::GridStatistics  peano4::parallel::SpacetreeSet::getGridStatistics(int treeId) const {
+  assertion( isLocalSpacetree(treeId) );
+  return getSpacetree(treeId).getGridStatistics();
+}
+
+
 peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics() const {
-  return _spacetrees.begin()->getGridStatistics();
+  logTraceIn( "getGridStatistics()" );
+  peano4::grid::GridStatistics result( _spacetrees.begin()->_statistics );
+  for (auto&  from: _spacetrees) {
+    if (
+      from._id != _spacetrees.begin()->_id
+      and
+      from._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit
+  ) {
+      merge(from._statistics, result );
+    }
+  }
+  logTraceOutWith1Argument( "getGridStatistics()", result.toString() );
+  return result;
 }
 
 
@@ -665,6 +666,15 @@ std::string peano4::parallel::SpacetreeSet::toString(VerticalDataExchangeMode mo
 
 
 peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
+  for (auto& p: _spacetrees) {
+    if (p._id==id) return p;
+  }
+  assertion3( false, "no spacetree found", id, tarch::mpi::Rank::getInstance().getRank() );
+  return *_spacetrees.begin(); // just here to avoid warning
+}
+
+
+const peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) const {
   for (auto& p: _spacetrees) {
     if (p._id==id) return p;
   }

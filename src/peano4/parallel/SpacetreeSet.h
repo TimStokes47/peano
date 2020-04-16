@@ -118,7 +118,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     };
 
 
-    void merge(
+    static void merge(
       const peano4::grid::GridStatistics&   from,
       peano4::grid::GridStatistics&         to
     );
@@ -148,6 +148,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     std::map< int, peano4::grid::TraversalObserver* >    _clonedObserver;
 
     peano4::grid::Spacetree& getSpacetree(int id);
+
+    const peano4::grid::Spacetree& getSpacetree(int id) const;
 
     /**
      * @return tag that one should use to answer one particular spacetree
@@ -265,8 +267,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     void cleanUpTrees();
 
-    void mergeStatistics();
-
     /**
      * I need this routine for technical reasons: Prior to the sweep of trees,
      * I have to identify all of those trees which wanna merge with their
@@ -368,6 +368,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     peano4::grid::GridStatistics  getGridStatistics() const;
 
+    peano4::grid::GridStatistics  getGridStatistics(int treeId) const;
+
     /**
      * If the target tree shall be stored on the local node, then you pass
      *
@@ -424,6 +426,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     bool isLocalSpacetree(int treeId) const;
 
+    /**
+     * @return Set of ids of local spacetrees
+     */
     std::set<int> getLocalSpacetrees() const;
 };
 
