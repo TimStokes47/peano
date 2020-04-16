@@ -48,17 +48,14 @@ void exahype2::fv::applyRusanovToPatch(
     assertion(normal>=0);
     assertion(normal<Dimensions);
 
-    double averageQ[unknowns];
-    for (int unknown=0; unknown<unknowns; unknown++) {
-      averageQ[unknown] = 0.5 * (QL[unknown] + QR[unknown]);
-      assertion4(averageQ[unknown]==averageQ[unknown], x, dx, dt, normal);
-    }
+    double FL[unknowns];
+    double FR[unknowns];
+    flux(QL,x,dx,t,dt,normal,FL);
+    flux(QR,x,dx,t,dt,normal,FR);
 
-    double FOverAverageQ[unknowns];
     double lambdas[unknowns];
-    flux(averageQ,x,dx,t,dt,normal,FOverAverageQ);
-
     double lambdaMax = 0.0;
+
     eigenvalues(QL,x,dx,t,dt,normal,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
       assertion(lambdas[unknown]==lambdas[unknown]);
@@ -71,10 +68,7 @@ void exahype2::fv::applyRusanovToPatch(
     }
 
     for (int unknown=0; unknown<unknowns; unknown++) {
-      assertion( QR[unknown]==QR[unknown] );
-      assertion( QL[unknown]==QL[unknown] );
-      F[unknown] = FOverAverageQ[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]);
-      assertion9( F[unknown]==F[unknown], FOverAverageQ[unknown], lambdas[unknown], QR[unknown], QL[unknown], unknown, x, dx, dt, normal );
+      F[unknown] = 0.5 * FL[unknown] + 0.5 * FR[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]);
     }
   };
 

@@ -2,18 +2,11 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .Helper import Overwrite
 from .Helper import writeFile
-from enum import Enum
+from .CompileMode import CompileMode
 
 
 import os
 import re
-
-
-class CompileMode(Enum):
-  Debug = 0
-  Trace = 1
-  Asserts = 2
-  Release = 3
   
 
 class Makefile(object):

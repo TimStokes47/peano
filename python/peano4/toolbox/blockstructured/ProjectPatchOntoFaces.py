@@ -95,6 +95,7 @@ class ProjectPatchOntoFaces(ActionSet):
           {FACES_ACCESSOR}(d).value[overlapCellSerialised*{UNKNOWNS}+j] = 
             {CELL_ACCESSOR}.value[patchCellSerialised*{UNKNOWNS}+j];
         }}
+        //std::cout << patchCell << " -> face " << (d) << ": " << overlapCell << "  (" << patchCellSerialised << " -> " << overlapCellSerialised << ")" << std::endl;
 
         patchCell(d)   = i+{DOFS_PER_AXIS}-{OVERLAP};
         overlapCell(d) = i;
@@ -105,6 +106,7 @@ class ProjectPatchOntoFaces(ActionSet):
           {FACES_ACCESSOR}(d+Dimensions).value[overlapCellSerialised*{UNKNOWNS}+j] = 
             {CELL_ACCESSOR}.value[patchCellSerialised*{UNKNOWNS}+j];
         }}
+        //std::cout << patchCell << " -> face " << (d+Dimensions) << ": " << overlapCell << "  (" << patchCellSerialised << " -> " << overlapCellSerialised << ")" << std::endl;
       }}
     }}
   }}

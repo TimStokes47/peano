@@ -81,7 +81,7 @@ class Project (object):
     print( "generation complete" )
 
           
-  def build(self, make_clean_first=True, additional_libraries = []):
+  def build(self, make_clean_first=True, additional_libraries = [], number_of_parallel_builds = 4):
     """
     Invokes the underlying make/C build mechanism on the project. 
     We invoke the make command via a subprocess. That's it.
@@ -101,7 +101,7 @@ class Project (object):
     if self.is_built:
       print( "start to compile ..." )
       try:
-        subprocess.check_call(["make", "-j"])
+        subprocess.check_call(["make", "-j"+str(number_of_parallel_builds)])
         print( "compile complete" )
       except Exception as e:
         print( "compile was not successful: " + str(e) )
