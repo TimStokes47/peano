@@ -490,6 +490,11 @@ class peano4::grid::Spacetree {
       TraversalObserver&                        observer
     );
 
+    /**
+     * Is called directly after the invocation of createNewPersistentVertex() or updateVertexAfterLoad().
+     * So we basically stream a stationary tree to the new target tree where all AMR refine routines are
+     * readily realised. Erase() in turn is not realised yet.
+     */
     void sendOutVertexToSplittingTrees(
       GridVertex&                               vertex,
       TraversalObserver&                        observer

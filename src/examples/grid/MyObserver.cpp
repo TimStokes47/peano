@@ -46,19 +46,19 @@ void examples::grid::MyObserver::endTraversal(
 
 
 void examples::grid::MyObserver::enterCell(
-  const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const peano4::grid::GridTraversalEvent&  event
 ) {
   #if PeanoDebug>0
-  TraversalVTKPlotter::enterCell(event,splitting,joining);
+  TraversalVTKPlotter::enterCell(event);
   #endif
 }
 
 
 void examples::grid::MyObserver::leaveCell(
-  const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const peano4::grid::GridTraversalEvent&  event
 ) {
   #if PeanoDebug>0
-  TraversalVTKPlotter::leaveCell(event,splitting,joining);
+  TraversalVTKPlotter::leaveCell(event);
   #endif
 }
 

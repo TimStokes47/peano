@@ -99,6 +99,7 @@ void updateDomainDecomposition() {
         and
         peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,targetRank)
       ) {
+        logInfo( "updateDomainDecomposition()", "split rank 0 into 1 and 2 -> success" );
         phase++;
       }
     }
@@ -113,7 +114,11 @@ void updateDomainDecomposition() {
 
     if ( peano4::parallel::SpacetreeSet::getInstance().isLocalSpacetree(spacetreeOfInterest) ) {
       if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3,targetRank) ) {
+        logInfo( "updateDomainDecomposition()", "split rank 1 -> failed" );
         phase++;
+      }
+      else {
+        logInfo( "updateDomainDecomposition()", "split rank 1 -> success" );
       }
     }
     else phase++;

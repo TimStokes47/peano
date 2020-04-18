@@ -49,7 +49,7 @@ project.add_finite_volumes_solver("ParallelEuler", patch_size, unknowns, 0.001)
 
 
 dimensions = 2
-build_mode = peano4.output.CompileMode.Asserts
+build_mode = peano4.output.CompileMode.Trace
 
 
 #

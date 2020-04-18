@@ -23,7 +23,7 @@ void peano4::grid::EmptyTraversalObserver::endTraversal(
 
 
 void peano4::grid::EmptyTraversalObserver::enterCell(
-  const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const GridTraversalEvent&  event
 ) {
   logTraceInWith1Argument( "enterCell(...)", event.toString() );
   logTraceOut( "enterCell(...)" );
@@ -32,7 +32,7 @@ void peano4::grid::EmptyTraversalObserver::enterCell(
 
 
 void peano4::grid::EmptyTraversalObserver::leaveCell(
-  const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const GridTraversalEvent&  event
 ) {
   logTraceInWith1Argument( "leaveCell(...)", event.toString() );
   logTraceOut( "leaveCell(...)" );

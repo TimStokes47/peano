@@ -112,7 +112,8 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
 
         if (sourceRank==tarch::mpi::Rank::getInstance().getRank()) {
           const int sourceStack      = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(spacetreeId);
-          logDebug(
+          // @todo Debug
+          logInfo(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "move stack " << sourceStack << " from tree " << parentId << " into stack " << destinationStack << " from tree " << spacetreeId <<
             ": " << stackContainer.getForPush(parentId,sourceStack)->toString()

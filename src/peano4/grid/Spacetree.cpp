@@ -1638,10 +1638,8 @@ void peano4::grid::Spacetree::descend(
     observer.enterCell(
       createEnterCellTraversalEvent(
         vertices, fineGridVertices, fineGridStates[peano4::utils::dLinearised(k,3)], k
-      ),
-	  _splitting,
-	  _joining
-	);
+      )
+    );
 
     //
     // DFS
@@ -1675,10 +1673,8 @@ void peano4::grid::Spacetree::descend(
     observer.leaveCell(
       createLeaveCellTraversalEvent(
         vertices, fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)],k
-      ),
-	  _splitting,
-	  _joining
-	);
+      )
+    );
 
     splitOrJoinCell(
       vertices,
@@ -1709,31 +1705,6 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
   event.setH( state.getH() );
   event.setIsRefined( areVerticesRefined(fineGridVertices) );
   event.setRelativePositionToFather( relativePositionToFather );
-
-/*
-  if ( _spacetreeState==SpacetreeState::NewFromSplit ) {
-    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamIn);
-    logDebug( "createEnterCellTraversalEvent(...)", "if data is moved, it will be streamed in" );
-  }
-  else if ( _spacetreeState==SpacetreeState::Joining ) {
-    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamOut);
-    logDebug( "createEnterCellTraversalEvent(...)", "if data is moved, it will be streamed out" );
-  }
-  else if ( not _splitting.empty() ) {
-    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamOut);
-    logDebug( "createEnterCellTraversalEvent(...)", "if data is moved, it will be streamed out" );
-  }
-  else if ( not _joining.empty() ) {
-    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::StreamIn);
-    logDebug( "createEnterCellTraversalEvent(...)", "if data is moved, it will be streamed in" );
-  }
-  else {
-    event.setLoadBalancingDataExchange(GridTraversalEvent::LoadBalancingDataExchange::NoRebalancing);
-  }
-  event.setStreamVertexDataRank( TraversalObserver::NoRebalancing );
-  event.setStreamFaceDataRank( TraversalObserver::NoRebalancing );
-  event.setStreamCellDataRank( TraversalObserver::NoRebalancing );
-*/
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
@@ -1804,28 +1775,6 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
         break;
     }
     event.setFaceDataTo(i,faceIndex);
-
-//    event.setStreamFaceDataRank( i, TraversalObserver::NoRebalancing );
-    if ( type!=FaceType::Hanging ) {
-/*
-      std::pair<bool,bool> local = isSpacetreeFaceLocal(coarseGridVertices, fineGridVertices, relativePositionToFather, i);
-      bool parentFaceIsLocal   = local.second;
-      bool faceIsLocal         = local.first;
-
-      if ( faceIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
-        assertionMsg( false, "not yet implemented" );
-      }
-      else if ( faceIsLocal and _spacetreeState==SpacetreeState::Joining ) {
-        assertionMsg( false, "not yet implemented" );
-      }
-      else if ( not faceIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-        event.setStreamFaceDataRank( i, getTreeOwningSpacetreeNode(fineGridVertices) );
-      }
-      else if ( not faceIsLocal and _joining.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-        assertionMsg( false, "not yet implemented" );
-      }
-*/
-    }
   }
 
   {
@@ -1870,70 +1819,7 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
     }
   }
 
-/*
-
-
-  event.setExchangeVertexData(TraversalObserver::NoData);
-
-  int counter = 0;
-  for (int i=0; i<TwoPowerD; i++) {
-    for (int j=0; j<TwoPowerD; j++) {
-      int currentRank = fineGridVertices[i].getAdjacentRanks(j);
-
-      bool isAdjacentToLocalPartition = isVertexAdjacentToLocalSpacetree(
-        fineGridVertices[i],
-        isEnterCell, // splitting local
-        isLeaveCell  // joining local
-      );
-
-      bool communicatingWithThisRankIsAllowedBySplit =
-        // If this holds, then we just prepare to send something out, but
-        // should not do yet.
-        _splitTriggered.count(currentRank)==0
-        and
-        // If we currently split, we should only send out data (leave cell)
-        // but we should not (yet) receive data from this rank.
-        (
-          _splitting.count(currentRank)==0 or isLeaveCell
-        )
-        and
-        // If we just set this node up through a clone, then we should send
-        // out data (for the other guys for the next step), but we should not
-        // (yet) receive.
-        (
-          _spacetreeState!=SpacetreeState::NewFromSplit or isLeaveCell
-        );
-
-      bool communicatingWithThisRankIsAllowedByJoin =
-        // If we currently join in a rank, then we are fine with receiving
-        // from this rank, but we should not send out stuff anymore.
-        (_joining.count(currentRank)==0 or isEnterCell)
-        and
-        (_spacetreeState!=SpacetreeState::Joining or isEnterCell);
-
-      if (
-        i!=TwoPowerD-j-1
-        and
-        isAdjacentToLocalPartition
-        and
-        communicatingWithThisRankIsAllowedBySplit
-        and
-        communicatingWithThisRankIsAllowedByJoin
-        and
-        currentRank!=_id
-      ) {
-        event.setExchangeVertexData(counter,currentRank);
-        counter++;
-      }
-      else if ( i!=TwoPowerD-j-1 ) {
-        // @todo Debug
-        logInfo( "createNeighbourExchangeLists(...)", isAdjacentToLocalPartition << "x" << communicatingWithThisRankIsAllowedBySplit << "x" << communicatingWithThisRankIsAllowedByJoin );
-        counter++;
-      }
-    }
-  }
-  assertionEquals( counter, TwoPowerD*(TwoPowerD-1) );
-*/
+   // @todo Faces fehlen hier
 
   logTraceOutWith3Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell, isLeaveCell );
 }
