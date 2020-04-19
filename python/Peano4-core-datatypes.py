@@ -110,11 +110,6 @@ grid_control_event.write_implementation_file("../src/peano4/grid/GridControlEven
 #
 grid_statistics = dastgen2.DataModel( "peano4::grid::GridStatistics" )
 
-grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfRefinedVertices" ) )
-grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfUnrefinedVertices" ) )
-grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfErasingVertices" ) )
-grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfRefiningVertices" ) )
-
 grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfLocalUnrefinedCells" ) )
 grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfRemoteUnrefinedCells" ) )
 grid_statistics.add_attribute( dastgen2.attributes.Integer( "numberOfLocalRefinedCells" ) )
@@ -167,6 +162,8 @@ grid_traversal_event = dastgen2.DataModel( "peano4::grid::GridTraversalEvent" )
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "x", "Dimensions" ))
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "h", "Dimensions" ))
 grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isRefined", "TwoPowerD" ) )
+grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isLocal",   "TwoPowerD" ) )
+grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isHanging", "TwoPowerD" ) )
 
 # @todo Should be char array likely with -4 to 9
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "vertexDataFrom", "TwoPowerD" ) )
