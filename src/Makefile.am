@@ -49,6 +49,7 @@ Peano4Core_SOURCES = \
   peano4/UnitTests.cpp \
   peano4/grid/AutomatonState.cpp \
   peano4/grid/EmptyTraversalObserver.cpp \
+  peano4/grid/grid.cpp \
   peano4/grid/GridControlEvent.cpp \
   peano4/grid/GridVertex.cpp \
   peano4/grid/GridStatistics.cpp \
