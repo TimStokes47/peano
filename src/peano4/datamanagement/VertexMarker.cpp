@@ -7,13 +7,9 @@ peano4::datamanagement::VertexMarker::VertexMarker(
   _cellCentre(event.getX()),
   _h(event.getH()),
   _select(0) {
-/*
-  ,
-}
-  _isRefined(event.getIsRefined()) {
-*/
   for (int i=0; i<TwoPowerD; i++) {
     _isRefined[i]  = event.getIsRefined(i);
+    _isLocal[i]    = event.getIsLocal(i);
   }
 }
 
@@ -65,4 +61,15 @@ bool peano4::datamanagement::VertexMarker::isRefined() const {
 bool peano4::datamanagement::VertexMarker::isRefined(int i) const {
   return _isRefined[i];
 }
+
+
+bool peano4::datamanagement::VertexMarker::isLocal() const {
+  return isLocal(_select);
+}
+
+
+bool peano4::datamanagement::VertexMarker::isLocal(int i) const {
+  return _isLocal[i];
+}
+
 
