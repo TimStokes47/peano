@@ -56,11 +56,15 @@ class peano4::grid::Spacetree {
     static bool isVertexRefined(GridVertex  vertex);
 
     /**
+     * A vertex is unrefined if it is hanging.
+     *
      * @return bitset of vertices for which isVertexRefined() holds. If you wanna
      *   find out whether a cell is refined, you can compare the result to zero.
      *   You can also use isSpacetreeNodeRefined() instead.
      */
-    static std::bitset<TwoPowerD> areVerticesRefined(GridVertex  vertices[TwoPowerD]);
+    std::bitset<TwoPowerD> areVerticesRefined(GridVertex  vertices[TwoPowerD]) const;
+    std::bitset<TwoPowerD> areVerticesLocal  (GridVertex  vertices[TwoPowerD]) const;
+    std::bitset<TwoPowerD> areVerticesHanging(GridVertex  vertices[TwoPowerD]) const;
 
     /**
      * A spacetree node is refined if any of its adjacent vertices holds one of
@@ -105,6 +109,13 @@ class peano4::grid::Spacetree {
     };
 
     enum class SpacetreeState {
+      /**
+       * Not yet a new root. Just got created, so we have to run through the
+       * cloned data once, just to get it into the right order, and then we
+       * can really mirror the master's traversal and send out stuff (in state
+       * NewRoot).
+       */
+      EmptyRun,
       NewRoot,
       /**
        * Set if this tree results from a split and if this is the first
@@ -235,11 +246,6 @@ class peano4::grid::Spacetree {
       GridVertex            coarseGridVertices[TwoPowerD],
       GridVertex            fineGridVertices[TwoPowerD]
     );
-
-    /**
-     * Clear the statistics
-     */
-    void clearStatistics();
 
     /**
      * If a cell is given away to another rank, we have to mark the vertices
@@ -491,16 +497,6 @@ class peano4::grid::Spacetree {
     );
 
     /**
-     * Is called directly after the invocation of createNewPersistentVertex() or updateVertexAfterLoad().
-     * So we basically stream a stationary tree to the new target tree where all AMR refine routines are
-     * readily realised. Erase() in turn is not realised yet.
-     */
-    void sendOutVertexToSplittingTrees(
-      GridVertex&                               vertex,
-      TraversalObserver&                        observer
-    );
-
-    /**
      * Some of the entries in the event are modelled as array (for example the
      * set of neighbours of a vertex), though they are logically sets. So I
      * befill the lists and then eventually remove duplicates from the lists
@@ -677,20 +673,6 @@ class peano4::grid::Spacetree {
     ) const;
 
     /**
-     *
-     *
-     * <h2> Computational domain </h2>
-     *
-     * Some of the steps of this routine have to be done totally agnostic of
-     * whether the vertex is inside the domain or not. The coarsening for
-     * example has to be done outside of the domain as well.
-     *
-     * For the post-refinement, we also have to take into account outer
-     * vertices. A vertex is to be refined, if it is unrefined and surrounded
-     * by $2^d$ refined cells. In this case, it still technically is a hanging
-     * vertex which should be avoided. This notably can happen outside.
-     *
-     *
      * <h2> Restriction of veto flags </h2>
      *
      * We make each vertex hold a flag isAntecessorOfRefinedVertex. If it is
