@@ -16,7 +16,7 @@ tarch::mpi::IntegerMessage::IntegerMessage(int  __value):
 std::string tarch::mpi::IntegerMessage::toString() const {
   std::ostringstream out;
   out << "(";
-  out << _value;
+  out << "value=" << _value;
   out << ")";
   return out.str();
 }

@@ -10,7 +10,7 @@
 std::string tarch::mpi::StringMessage::toString() const {
   std::ostringstream out;
   out << "(";
-  out << getData();
+  out << "data=" << getData();
   out << ")";
   return out.str();
 }
