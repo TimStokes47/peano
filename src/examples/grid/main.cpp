@@ -275,9 +275,10 @@ int main(int argc, char** argv) {
   }
   else {
     logInfo( "main(...)", "use a random periodic boundary condition choice" );
+    srand( time(NULL) );
     periodicBC = 0;
     for (int i=0; i<Dimensions; i++) {
-      periodicBC[i] = rand() > RAND_MAX / 5;
+      periodicBC[i] = rand() < RAND_MAX / 5;
     }
   }
 
