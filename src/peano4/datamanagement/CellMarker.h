@@ -27,9 +27,9 @@ struct peano4::datamanagement::CellMarker {
     tarch::la::Vector<Dimensions,double>  _h;
 
     bool _isRefined;
+    bool _isLocal;
   public:
     CellMarker(const peano4::grid::GridTraversalEvent& event);
-  //CellMarker(const peano4::grid::GridTraversalEvent& event,const tarch::la::Vector<Dimensions,int>&  relativePositionToFather);
 
     bool isRefined() const;
 
@@ -41,6 +41,8 @@ struct peano4::datamanagement::CellMarker {
     tarch::la::Vector<Dimensions,double>  h() const;
 
     std::string toString() const;
+
+    bool isLocal() const;
 };
 
 
