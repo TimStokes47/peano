@@ -897,6 +897,10 @@ class peano4::grid::Spacetree {
 
     /**
      * Only used by SpacetreeSet to create children of the original tree.
+     *
+     * We have to set the stats's stationary counter manually, as clear() does not
+     * reset it. We furthermore set it to -2, as we'll need two iterations to set
+     * a new remote spacetree up.
      */
     Spacetree(
       int newId,

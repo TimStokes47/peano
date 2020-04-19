@@ -28,6 +28,10 @@ java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Pean
      */
     class GridStatistics;
 
+    /**
+     * The term clear() is not 100% correct, as the number of stationary traversals
+     * is not reset to a dummy but instead incremented.
+     */
     void clear( GridStatistics& statistics, bool isGlobalMasterTree );
   }
 }

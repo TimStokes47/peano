@@ -74,7 +74,7 @@ peano4::grid::Spacetree::Spacetree(
   _root.setInverted( traversalInverted );
   _root.setEvenFlags( 0 );
 
-  _statistics.setStationarySweeps(0);
+  _statistics.setStationarySweeps(-2);
   clear( _statistics, _id==0 );
 
   logInfo( "Spacetree(...)", "created spacetree " << _id << " with master tree " << masterId );
@@ -704,10 +704,12 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
         logDebug( "updateVertexAfterLoad(...)", "vertex " << vertex.toString() << " may not be erased on tree " << _id << " as it is father of further refined vertices. Unroll flag" );
         vertex.setState( GridVertex::State::Refined );
   	    _statistics.setCoarseningHasBeenVetoed(true);
+        _statistics.setStationarySweeps( 0 );
  	    }
 	    else {
         logDebug( "updateVertexAfterLoad(...)", "erase vertex " << vertex.toString() << " outside of domain on tree " << _id );
         vertex.setState( GridVertex::State::Erasing );
+        _statistics.setStationarySweeps( 0 );
       }
     }
 
