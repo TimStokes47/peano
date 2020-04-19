@@ -201,16 +201,6 @@ int peano4::parallel::Node::getInputStackNumberForVerticalDataExchange(int id) {
 }
 
 
-int peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(int id) {
-  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 4;
-}
-
-
-int peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange(int id) {
-  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 5;
-}
-
-
 std::bitset<2*Dimensions> peano4::parallel::Node::getPeriodicBoundaryNumber(const tarch::la::Vector<TwoPowerD,int>& flags) {
   std::bitset<2*Dimensions> result;
 

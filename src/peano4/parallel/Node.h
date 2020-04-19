@@ -194,9 +194,6 @@ class peano4::parallel::Node {
     static int getInputStackNumberForVerticalDataExchange(int id);
     static int getOutputStackNumberForVerticalDataExchange(int id);
 
-    static int getInputStackNumberForForkJoinDataExchange(int id);
-    static int getOutputStackNumberForForkJoinDataExchange(int id);
-
     /**
      * Counterpart of getOutputStackNumberOfBoundaryExchange(int)
      */
@@ -286,12 +283,10 @@ class peano4::parallel::Node {
     enum class ExchangeMode {
       HorizontalData,
       ForkJoinData,
-	  VerticalData
+      VerticalData
     };
 
-
     static std::string toString( ExchangeMode mode );
-
 
     /**
      * I use two tags per spacetree per rank: one for boundary data
