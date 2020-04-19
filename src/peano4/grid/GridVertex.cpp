@@ -23,21 +23,21 @@ peano4::grid::GridVertex::GridVertex(State  __state, tarch::la::Vector<TwoPowerD
 std::string peano4::grid::GridVertex::toString() const {
   std::ostringstream out;
   out << "(";
-  out << (_state==State::HangingVertex? "HangingVertex" : "")  << (_state==State::New? "New" : "")  << (_state==State::Unrefined? "Unrefined" : "")  << (_state==State::Refined? "Refined" : "")  << (_state==State::RefinementTriggered? "RefinementTriggered" : "")  << (_state==State::Refining? "Refining" : "")  << (_state==State::EraseTriggered? "EraseTriggered" : "")  << (_state==State::Erasing? "Erasing" : "")  << (_state==State::Delete? "Delete" : "") ;
+  out << "state=" << (_state==State::HangingVertex? "HangingVertex" : "")  << (_state==State::New? "New" : "")  << (_state==State::Unrefined? "Unrefined" : "")  << (_state==State::Refined? "Refined" : "")  << (_state==State::RefinementTriggered? "RefinementTriggered" : "")  << (_state==State::Refining? "Refining" : "")  << (_state==State::EraseTriggered? "EraseTriggered" : "")  << (_state==State::Erasing? "Erasing" : "")  << (_state==State::Delete? "Delete" : "") ;
   out << ","; 
-  out << _adjacentRanks;
+  out << "adjacentRanks=" << _adjacentRanks;
   out << ","; 
-  out << _backupOfAdjacentRanks;
+  out << "backupOfAdjacentRanks=" << _backupOfAdjacentRanks;
   out << ","; 
-  out << _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
+  out << "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep=" << _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
   out << ","; 
-  out << _isAntecessorOfRefinedVertexInCurrentTreeSweep;
+  out << "isAntecessorOfRefinedVertexInCurrentTreeSweep=" << _isAntecessorOfRefinedVertexInCurrentTreeSweep;
   out << ","; 
-  out << _numberOfAdjacentRefinedLocalCells;
+  out << "numberOfAdjacentRefinedLocalCells=" << _numberOfAdjacentRefinedLocalCells;
   out << ","; 
-  out << _x;
+  out << "x=" << _x;
   out << ","; 
-  out << _level;
+  out << "level=" << _level;
   out << ")";
   return out.str();
 }
