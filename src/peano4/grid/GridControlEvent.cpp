@@ -19,13 +19,13 @@ peano4::grid::GridControlEvent::GridControlEvent(RefinementControl  __refinement
 std::string peano4::grid::GridControlEvent::toString() const {
   std::ostringstream out;
   out << "(";
-  out << (_refinementControl==RefinementControl::Refine? "Refine" : "")  << (_refinementControl==RefinementControl::Erase? "Erase" : "") ;
+  out << "refinementControl=" << (_refinementControl==RefinementControl::Refine? "Refine" : "")  << (_refinementControl==RefinementControl::Erase? "Erase" : "") ;
   out << ","; 
-  out << _offset;
+  out << "offset=" << _offset;
   out << ","; 
-  out << _width;
+  out << "width=" << _width;
   out << ","; 
-  out << _h;
+  out << "h=" << _h;
   out << ")";
   return out.str();
 }

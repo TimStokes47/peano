@@ -38,16 +38,8 @@ struct peano4::grid::GridStatistics {
 
 
     GridStatistics() {}
-    GridStatistics(int  __numberOfRefinedVertices, int  __numberOfUnrefinedVertices, int  __numberOfErasingVertices, int  __numberOfRefiningVertices, int  __numberOfLocalUnrefinedCells, int  __numberOfRemoteUnrefinedCells, int  __numberOfLocalRefinedCells, int  __numberOfRemoteRefinedCells, int  __stationarySweeps, bool  __coarseningHasBeenVetoed);
+    GridStatistics(int  __numberOfLocalUnrefinedCells, int  __numberOfRemoteUnrefinedCells, int  __numberOfLocalRefinedCells, int  __numberOfRemoteRefinedCells, int  __stationarySweeps, bool  __coarseningHasBeenVetoed);
 
-    int   getNumberOfRefinedVertices() const;
-    void   setNumberOfRefinedVertices(int value);
-    int   getNumberOfUnrefinedVertices() const;
-    void   setNumberOfUnrefinedVertices(int value);
-    int   getNumberOfErasingVertices() const;
-    void   setNumberOfErasingVertices(int value);
-    int   getNumberOfRefiningVertices() const;
-    void   setNumberOfRefiningVertices(int value);
     int   getNumberOfLocalUnrefinedCells() const;
     void   setNumberOfLocalUnrefinedCells(int value);
     int   getNumberOfRemoteUnrefinedCells() const;
@@ -117,10 +109,6 @@ struct peano4::grid::GridStatistics {
     std::string toString() const;
   
   private:
-    int   _numberOfRefinedVertices;
-    int   _numberOfUnrefinedVertices;
-    int   _numberOfErasingVertices;
-    int   _numberOfRefiningVertices;
     int   _numberOfLocalUnrefinedCells;
     int   _numberOfRemoteUnrefinedCells;
     int   _numberOfLocalRefinedCells;

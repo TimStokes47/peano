@@ -7,10 +7,12 @@
 
 
 
-peano4::grid::GridTraversalEvent::GridTraversalEvent(tarch::la::Vector<Dimensions,double>  __x, tarch::la::Vector<Dimensions,double>  __h, std::bitset<TwoPowerD>  __isRefined, tarch::la::Vector<TwoPowerD,int>  __vertexDataFrom, tarch::la::Vector<TwoPowerD,int>  __vertexDataTo, tarch::la::Vector<TwoTimesD,int>  __faceDataFrom, tarch::la::Vector<TwoTimesD,int>  __faceDataTo, int  __cellData, tarch::la::Vector<Dimensions,int>  __relativePositionToFather, tarch::la::Vector<TwoPowerDTimesTwoPowerDMinusOne,int>  __exchangeVertexData, tarch::la::Vector<TwoPowerD,int>  __exchangeFaceData):
+peano4::grid::GridTraversalEvent::GridTraversalEvent(tarch::la::Vector<Dimensions,double>  __x, tarch::la::Vector<Dimensions,double>  __h, std::bitset<TwoPowerD>  __isRefined, std::bitset<TwoPowerD>  __isLocal, std::bitset<TwoPowerD>  __isHanging, tarch::la::Vector<TwoPowerD,int>  __vertexDataFrom, tarch::la::Vector<TwoPowerD,int>  __vertexDataTo, tarch::la::Vector<TwoTimesD,int>  __faceDataFrom, tarch::la::Vector<TwoTimesD,int>  __faceDataTo, int  __cellData, tarch::la::Vector<Dimensions,int>  __relativePositionToFather, tarch::la::Vector<TwoPowerDTimesTwoPowerDMinusOne,int>  __exchangeVertexData, tarch::la::Vector<TwoPowerD,int>  __exchangeFaceData):
     _x(__x)
   , _h(__h)
   , _isRefined(__isRefined)
+  , _isLocal(__isLocal)
+  , _isHanging(__isHanging)
   , _vertexDataFrom(__vertexDataFrom)
   , _vertexDataTo(__vertexDataTo)
   , _faceDataFrom(__faceDataFrom)
@@ -26,27 +28,31 @@ peano4::grid::GridTraversalEvent::GridTraversalEvent(tarch::la::Vector<Dimension
 std::string peano4::grid::GridTraversalEvent::toString() const {
   std::ostringstream out;
   out << "(";
-  out << _x;
+  out << "x=" << _x;
   out << ","; 
-  out << _h;
+  out << "h=" << _h;
   out << ","; 
-  out << _isRefined;
+  out << "isRefined=" << _isRefined;
   out << ","; 
-  out << _vertexDataFrom;
+  out << "isLocal=" << _isLocal;
   out << ","; 
-  out << _vertexDataTo;
+  out << "isHanging=" << _isHanging;
   out << ","; 
-  out << _faceDataFrom;
+  out << "vertexDataFrom=" << _vertexDataFrom;
   out << ","; 
-  out << _faceDataTo;
+  out << "vertexDataTo=" << _vertexDataTo;
   out << ","; 
-  out << _cellData;
+  out << "faceDataFrom=" << _faceDataFrom;
   out << ","; 
-  out << _relativePositionToFather;
+  out << "faceDataTo=" << _faceDataTo;
   out << ","; 
-  out << _exchangeVertexData;
+  out << "cellData=" << _cellData;
   out << ","; 
-  out << _exchangeFaceData;
+  out << "relativePositionToFather=" << _relativePositionToFather;
+  out << ","; 
+  out << "exchangeVertexData=" << _exchangeVertexData;
+  out << ","; 
+  out << "exchangeFaceData=" << _exchangeFaceData;
   out << ")";
   return out.str();
 }
@@ -114,6 +120,56 @@ void   peano4::grid::GridTraversalEvent::setIsRefined(int index, bool value) {
 
 void   peano4::grid::GridTraversalEvent::flipIsRefined(int index) {
   _isRefined.flip(index);
+}
+
+
+std::bitset<TwoPowerD>   peano4::grid::GridTraversalEvent::getIsLocal() const {
+  return _isLocal;
+}
+
+
+void   peano4::grid::GridTraversalEvent::setIsLocal(const std::bitset<TwoPowerD>&  value) {
+  _isLocal = value;
+}
+
+
+bool   peano4::grid::GridTraversalEvent::getIsLocal(int index) const {
+  return _isLocal[index];
+}
+
+
+void   peano4::grid::GridTraversalEvent::setIsLocal(int index, bool value) {
+  _isLocal[index] = value;
+}
+
+
+void   peano4::grid::GridTraversalEvent::flipIsLocal(int index) {
+  _isLocal.flip(index);
+}
+
+
+std::bitset<TwoPowerD>   peano4::grid::GridTraversalEvent::getIsHanging() const {
+  return _isHanging;
+}
+
+
+void   peano4::grid::GridTraversalEvent::setIsHanging(const std::bitset<TwoPowerD>&  value) {
+  _isHanging = value;
+}
+
+
+bool   peano4::grid::GridTraversalEvent::getIsHanging(int index) const {
+  return _isHanging[index];
+}
+
+
+void   peano4::grid::GridTraversalEvent::setIsHanging(int index, bool value) {
+  _isHanging[index] = value;
+}
+
+
+void   peano4::grid::GridTraversalEvent::flipIsHanging(int index) {
+  _isHanging.flip(index);
 }
 
 
@@ -341,11 +397,11 @@ int peano4::grid::GridTraversalEvent::getSenderRank() const {
 void peano4::grid::GridTraversalEvent::initDatatype() {
   peano4::grid::GridTraversalEvent  instances[2];
     
-  MPI_Datatype subtypes[] = { MPI_DOUBLE, MPI_DOUBLE, MPI_UNSIGNED_LONG, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT };
+  MPI_Datatype subtypes[] = { MPI_DOUBLE, MPI_DOUBLE, MPI_UNSIGNED_LONG, MPI_UNSIGNED_LONG, MPI_UNSIGNED_LONG, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT };
     
-  int blocklen[] = { Dimensions, Dimensions, 1, TwoPowerD, TwoPowerD, TwoTimesD, TwoTimesD, 1, Dimensions, TwoPowerDTimesTwoPowerDMinusOne, TwoPowerD };
+  int blocklen[] = { Dimensions, Dimensions, 1, 1, 1, TwoPowerD, TwoPowerD, TwoTimesD, TwoTimesD, 1, Dimensions, TwoPowerDTimesTwoPowerDMinusOne, TwoPowerD };
 
-  const int NumberOfAttributes = 11;
+  const int NumberOfAttributes = 13;
     
   MPI_Aint  baseFirstInstance;
   MPI_Aint  baseSecondInstance;
@@ -358,6 +414,10 @@ void peano4::grid::GridTraversalEvent::initDatatype() {
   MPI_Get_address( &(instances[0]._h.data()[0]), &disp[currentAddress] );
   currentAddress++;
   MPI_Get_address( &(instances[0]._isRefined), &disp[currentAddress] );
+  currentAddress++;
+  MPI_Get_address( &(instances[0]._isLocal), &disp[currentAddress] );
+  currentAddress++;
+  MPI_Get_address( &(instances[0]._isHanging), &disp[currentAddress] );
   currentAddress++;
   MPI_Get_address( &(instances[0]._vertexDataFrom.data()[0]), &disp[currentAddress] );
   currentAddress++;
@@ -378,7 +438,7 @@ void peano4::grid::GridTraversalEvent::initDatatype() {
 
   MPI_Aint offset = disp[0] - baseFirstInstance;
   MPI_Aint extent = baseSecondInstance - baseFirstInstance - offset;
-  for (int i=11-1; i>=0; i--) {
+  for (int i=13-1; i>=0; i--) {
     disp[i] = disp[i] - disp[0];
   }
 

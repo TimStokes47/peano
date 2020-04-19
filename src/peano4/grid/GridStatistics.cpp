@@ -7,12 +7,8 @@
 
 
 
-peano4::grid::GridStatistics::GridStatistics(int  __numberOfRefinedVertices, int  __numberOfUnrefinedVertices, int  __numberOfErasingVertices, int  __numberOfRefiningVertices, int  __numberOfLocalUnrefinedCells, int  __numberOfRemoteUnrefinedCells, int  __numberOfLocalRefinedCells, int  __numberOfRemoteRefinedCells, int  __stationarySweeps, bool  __coarseningHasBeenVetoed):
-    _numberOfRefinedVertices(__numberOfRefinedVertices)
-  , _numberOfUnrefinedVertices(__numberOfUnrefinedVertices)
-  , _numberOfErasingVertices(__numberOfErasingVertices)
-  , _numberOfRefiningVertices(__numberOfRefiningVertices)
-  , _numberOfLocalUnrefinedCells(__numberOfLocalUnrefinedCells)
+peano4::grid::GridStatistics::GridStatistics(int  __numberOfLocalUnrefinedCells, int  __numberOfRemoteUnrefinedCells, int  __numberOfLocalRefinedCells, int  __numberOfRemoteRefinedCells, int  __stationarySweeps, bool  __coarseningHasBeenVetoed):
+    _numberOfLocalUnrefinedCells(__numberOfLocalUnrefinedCells)
   , _numberOfRemoteUnrefinedCells(__numberOfRemoteUnrefinedCells)
   , _numberOfLocalRefinedCells(__numberOfLocalRefinedCells)
   , _numberOfRemoteRefinedCells(__numberOfRemoteRefinedCells)
@@ -25,67 +21,19 @@ peano4::grid::GridStatistics::GridStatistics(int  __numberOfRefinedVertices, int
 std::string peano4::grid::GridStatistics::toString() const {
   std::ostringstream out;
   out << "(";
-  out << _numberOfRefinedVertices;
+  out << "numberOfLocalUnrefinedCells=" << _numberOfLocalUnrefinedCells;
   out << ","; 
-  out << _numberOfUnrefinedVertices;
+  out << "numberOfRemoteUnrefinedCells=" << _numberOfRemoteUnrefinedCells;
   out << ","; 
-  out << _numberOfErasingVertices;
+  out << "numberOfLocalRefinedCells=" << _numberOfLocalRefinedCells;
   out << ","; 
-  out << _numberOfRefiningVertices;
+  out << "numberOfRemoteRefinedCells=" << _numberOfRemoteRefinedCells;
   out << ","; 
-  out << _numberOfLocalUnrefinedCells;
+  out << "stationarySweeps=" << _stationarySweeps;
   out << ","; 
-  out << _numberOfRemoteUnrefinedCells;
-  out << ","; 
-  out << _numberOfLocalRefinedCells;
-  out << ","; 
-  out << _numberOfRemoteRefinedCells;
-  out << ","; 
-  out << _stationarySweeps;
-  out << ","; 
-  out << _coarseningHasBeenVetoed;
+  out << "coarseningHasBeenVetoed=" << _coarseningHasBeenVetoed;
   out << ")";
   return out.str();
-}
-
-
-int   peano4::grid::GridStatistics::getNumberOfRefinedVertices() const {
-  return _numberOfRefinedVertices;
-}
-
-
-void   peano4::grid::GridStatistics::setNumberOfRefinedVertices(int value) {
-  _numberOfRefinedVertices = value;
-}
-
-
-int   peano4::grid::GridStatistics::getNumberOfUnrefinedVertices() const {
-  return _numberOfUnrefinedVertices;
-}
-
-
-void   peano4::grid::GridStatistics::setNumberOfUnrefinedVertices(int value) {
-  _numberOfUnrefinedVertices = value;
-}
-
-
-int   peano4::grid::GridStatistics::getNumberOfErasingVertices() const {
-  return _numberOfErasingVertices;
-}
-
-
-void   peano4::grid::GridStatistics::setNumberOfErasingVertices(int value) {
-  _numberOfErasingVertices = value;
-}
-
-
-int   peano4::grid::GridStatistics::getNumberOfRefiningVertices() const {
-  return _numberOfRefiningVertices;
-}
-
-
-void   peano4::grid::GridStatistics::setNumberOfRefiningVertices(int value) {
-  _numberOfRefiningVertices = value;
 }
 
 
@@ -223,11 +171,11 @@ int peano4::grid::GridStatistics::getSenderRank() const {
 void peano4::grid::GridStatistics::initDatatype() {
   peano4::grid::GridStatistics  instances[2];
     
-  MPI_Datatype subtypes[] = { MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_BYTE };
+  MPI_Datatype subtypes[] = { MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_BYTE };
     
-  int blocklen[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+  int blocklen[] = { 1, 1, 1, 1, 1, 1 };
 
-  const int NumberOfAttributes = 10;
+  const int NumberOfAttributes = 6;
     
   MPI_Aint  baseFirstInstance;
   MPI_Aint  baseSecondInstance;
@@ -235,14 +183,6 @@ void peano4::grid::GridStatistics::initDatatype() {
   MPI_Get_address( &instances[1], &baseSecondInstance );
   MPI_Aint  disp[ NumberOfAttributes ];
   int       currentAddress = 0;
-  MPI_Get_address( &(instances[0]._numberOfRefinedVertices), &disp[currentAddress] );
-  currentAddress++;
-  MPI_Get_address( &(instances[0]._numberOfUnrefinedVertices), &disp[currentAddress] );
-  currentAddress++;
-  MPI_Get_address( &(instances[0]._numberOfErasingVertices), &disp[currentAddress] );
-  currentAddress++;
-  MPI_Get_address( &(instances[0]._numberOfRefiningVertices), &disp[currentAddress] );
-  currentAddress++;
   MPI_Get_address( &(instances[0]._numberOfLocalUnrefinedCells), &disp[currentAddress] );
   currentAddress++;
   MPI_Get_address( &(instances[0]._numberOfRemoteUnrefinedCells), &disp[currentAddress] );
@@ -258,7 +198,7 @@ void peano4::grid::GridStatistics::initDatatype() {
 
   MPI_Aint offset = disp[0] - baseFirstInstance;
   MPI_Aint extent = baseSecondInstance - baseFirstInstance - offset;
-  for (int i=10-1; i>=0; i--) {
+  for (int i=6-1; i>=0; i--) {
     disp[i] = disp[i] - disp[0];
   }
 
