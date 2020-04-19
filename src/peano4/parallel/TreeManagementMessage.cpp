@@ -18,11 +18,11 @@ peano4::parallel::TreeManagementMessage::TreeManagementMessage(int  __masterSpac
 std::string peano4::parallel::TreeManagementMessage::toString() const {
   std::ostringstream out;
   out << "(";
-  out << _masterSpacetreeId;
+  out << "masterSpacetreeId=" << _masterSpacetreeId;
   out << ","; 
-  out << _workerSpacetreeId;
+  out << "workerSpacetreeId=" << _workerSpacetreeId;
   out << ","; 
-  out << (_action==Action::RequestNewRemoteTree? "RequestNewRemoteTree" : "")  << (_action==Action::CreateNewRemoteTree? "CreateNewRemoteTree" : "")  << (_action==Action::RemoveChildTreeFromBooksAsChildBecameEmpty? "RemoveChildTreeFromBooksAsChildBecameEmpty" : "")  << (_action==Action::JoinWithWorker? "JoinWithWorker" : "")  << (_action==Action::Acknowledgement? "Acknowledgement" : "") ;
+  out << "action=" << (_action==Action::RequestNewRemoteTree? "RequestNewRemoteTree" : "")  << (_action==Action::CreateNewRemoteTree? "CreateNewRemoteTree" : "")  << (_action==Action::RemoveChildTreeFromBooksAsChildBecameEmpty? "RemoveChildTreeFromBooksAsChildBecameEmpty" : "")  << (_action==Action::JoinWithWorker? "JoinWithWorker" : "")  << (_action==Action::Acknowledgement? "Acknowledgement" : "") ;
   out << ")";
   return out.str();
 }

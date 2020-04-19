@@ -17,9 +17,9 @@ peano4::parallel::TreeEntry::TreeEntry(int  __id, int  __master):
 std::string peano4::parallel::TreeEntry::toString() const {
   std::ostringstream out;
   out << "(";
-  out << _id;
+  out << "id=" << _id;
   out << ","; 
-  out << _master;
+  out << "master=" << _master;
   out << ")";
   return out.str();
 }
