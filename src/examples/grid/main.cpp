@@ -16,7 +16,7 @@
 tarch::logging::Log _log("examples::grid");
 
 
-std::bitset<Dimensions> periodicBC = 3;
+std::bitset<Dimensions> periodicBC = 0;
 
 #include "peano4/UnitTests.h"
 #include "tarch/UnitTests.h"
@@ -219,9 +219,6 @@ void runParallel() {
       updateDomainDecomposition();
     }
 
-    logInfo( "runParallel(...)", "plot final grid" );
-    peano4::grid::TraversalVTKPlotter plotterObserver( "grid-parallel" );
-    peano4::parallel::SpacetreeSet::getInstance().traverse( plotterObserver );
     logInfo( "runParallel(...)", "terminated successfully" );
   }
   else { // not the global master
@@ -272,6 +269,18 @@ int main(int argc, char** argv) {
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
   runTests();
+
+  if (argc==2) {
+    periodicBC = std::atoi( argv[1] );
+  }
+  else {
+    logInfo( "main(...)", "use a random periodic boundary condition choice" );
+    periodicBC = 0;
+    for (int i=0; i<Dimensions; i++) {
+      periodicBC[i] = rand() > RAND_MAX / 5;
+    }
+  }
+
   #if defined(Parallel) or defined(SharedMemoryParallelisation)
   runParallel();
   #else
