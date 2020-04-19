@@ -170,7 +170,7 @@ struct {FULL_QUALIFIED_CLASS_NAME} {{
       for attribute in self._attributes:
           if self._attributes.index(attribute) != 0:
               output.write("""  out << ","; \n""")
-          output.write("  out << " + attribute.get_to_string() + ";\n")
+          output.write("  out << \"" + attribute._name + "=\" << " + attribute.get_to_string() + ";\n")
       
       output.write("  out << \")\";\n")
       output.write("  return out.str();\n")
