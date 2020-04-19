@@ -904,19 +904,7 @@ class peano4::grid::Spacetree {
       const tarch::la::Vector<Dimensions,double>&  offset,
       const tarch::la::Vector<Dimensions,double>&  width,
       bool  traversalInverted
-	);
-
-    /**
-     * Don't copy a tree as it is tied to some stacks.
-     */
-//    Spacetree( const Spacetree& ) = delete;
-
-    /**
-     * Don't copy a tree as it is tied to some stacks.
-     *
-     * Unfortunately, this does not work, as we need it for the vector.
-     */
-//    Spacetree& operator=( const Spacetree& ) = delete;
+    );
 
     /**
      * Join with master. Call this routine only for degenerated trees,
@@ -944,9 +932,6 @@ class peano4::grid::Spacetree {
 
     bool maySplit() const;
 
-    // @tood Remove. Should be in statistics
-//    bool _coarseningHasBeenVetoed;
-
     /**
      * @return Id of splitting tree or -1 if there's none.
      */
@@ -960,8 +945,6 @@ class peano4::grid::Spacetree {
     );
 
     ~Spacetree();
-
-//    Spacetree( Spacetree&& );
 
     /**
      * @param calledFromSpacetreeSet If you use traverse directly, please do

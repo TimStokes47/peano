@@ -46,6 +46,7 @@ peano4::grid::Spacetree::Spacetree(
     _root.setAccessNumber( i,0 );
   }
 
+  _statistics.setStationarySweeps(0);
   clear( _statistics, _id==0 );
 
   logInfo( "Spacetree(...)", "create spacetree with " << offset << "x" << width );
@@ -73,6 +74,7 @@ peano4::grid::Spacetree::Spacetree(
   _root.setInverted( traversalInverted );
   _root.setEvenFlags( 0 );
 
+  _statistics.setStationarySweeps(0);
   clear( _statistics, _id==0 );
 
   logInfo( "Spacetree(...)", "created spacetree " << _id << " with master tree " << masterId );
