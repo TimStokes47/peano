@@ -153,6 +153,18 @@ class peano4::grid::PeanoCurve {
      */
     static int getFaceNumberAlongCurve(const AutomatonState& state, int logicalFaceNumber );
 
+    /**
+     * It is important to get the input/output stack ordering per stack type
+     * consistent among all grid entities. That is, in principle it does not
+     * matter whether we stream 1 to 2 and then back or 2 to 1 and then back.
+     * But if vertices stream from 1 to 2 first, then faces should do so as
+     * well. This allows the stack administration in the parallel case to map
+     * all stacks consistently (it doesn't have to search which input/output
+     * stack is full).
+     *
+     * @see getInputStackNumber()
+     * @see getOutputStackNumber()
+     */
     static int getFaceReadStackNumber(const AutomatonState& state, int face );
     static int getFaceWriteStackNumber(const AutomatonState& state, int face );
 
