@@ -30,10 +30,38 @@ git checkout p4
 \end{code}
 
 
+\begin{remark}
 I still maintain the ``old'' Peano in the repository (version 3), and most users
 consider this to be the standard Peano generation.
 For the present document, it is thus important that you manually switch to the
 branch \texttt{p4}.
+\end{remark}
+
+
+
+\section{Prepare the configure environment}
+
+This step should only required if you work directly against the git repository.
+If you prefer to download a snapshot of \Peano, then you can skip this section
+and continue with \ref{section:installation:configure}.
+
+
+\begin{itemize}
+  \item Ensure you have the autotool packages installed on your system. They
+  typically are shipped in the packages \texttt{autoconf}, \texttt{automake} and
+  \texttt{libtool}.
+  \item Set up the configure environment: 
+ \begin{code}
+ libtoolize; aclocal; autoconf; autoheader; 
+ cp src/config.h.in .; 
+ automake --add-missing
+ \end{code}
+\end{itemize}
+
+
+\noindent
+These steps should only be required once, unless you push major revisions to the
+development branch.
 
 
 \section{Configure}
@@ -45,18 +73,6 @@ Change into the project's directory and type in
 \begin{code}
 ./configure --help
 \end{code}
-
-
-\begin{remark}
- If you clone the repository, i.e.~if you work directly against the git, you
- will have to create the configure scripts manually. 
- This can be achived by running the following six commands:  
- \begin{code}
- libtoolize; aclocal; autoconf; autoheader; 
- cp src/config.h.in .; 
- automake --add-missing
- \end{code}
-\end{remark}
 
 
 The \texttt{--help} option should give you some information about the available
@@ -73,7 +89,8 @@ below:
    \\
   \texttt{--with-multithreading} & Switch on multithreading. By default, we
   build without multithreading, but a \texttt{--with-multithreading=cpp}, e.g.,
-  makes \Peano\  use the C++ threading model. 
+  makes \Peano\  use the C++ threading model. Please consult \texttt{--help} for
+  details.
    \\
   \texttt{--with-mpi} & Enable the MPI version of \Peano. You have to tell the
   build environment however which compile command to use. Please note that
@@ -85,14 +102,22 @@ below:
   provide additional parameters depending on your installation). I dedicate
   Chapter \ref{chapter:vtk} on VTK. 
    \\
-  \texttt{--with-hdf5} & Make \Peano\  support HDF5 output (not stable at the
-  moment).
+  \texttt{--with-hdf5} & Make \Peano\  support HDF5 output. Not stable at the
+  moment.
    \\
   \texttt{--with-delta} & Configure \Peano\  such that the geometry library
   $\Delta $ is used. Not stable at the moment.
  \end{tabular}
 \end{center}
 
+
+\begin{remark}
+ I recommend that you start a first test without any additional flavours of
+ \Peano, i.e.~to work with a plain \texttt{./configure} call. Once the tests
+ pass, I recommend that you first add IO (VTK) and then parallelisation. After
+ each invocation of the configure script with different parameters, you will
+ have to rebuild (and maybe reinstall) the code.
+\end{remark}
 
 \section{Build}
 
@@ -108,6 +133,37 @@ make install
 \end{code}
 finally will deploy the \Peano\ files in the directory specified via the
 \texttt{prefix} before.
+If you haven't set the prefix, then the default will likely be a system
+directory.
+Unless you have superuser rights, the installation then will fail.
+So I recommend that you install \Peano\ into a local directory specifying it via
+the \texttt{--with-prefix} option.
+
+
+\begin{remark}
+ To develop with \Peano, you don't have to install it. You can instead just skip
+ the installation and work in the download directory.
+\end{remark}
+
+
+
+
+\section{Installation test}
+
+Once you have compiled \Peano\, I recommend that you run the unit tests in
+directory
+
+\begin{code}
+  src/examples/unittests/UnitTests2d
+  src/examples/unittests/UnitTests3d
+\end{code}
+
+\noindent
+You can run these builds with different core counts and also MPI support if you
+have compiled with MPI.
+The executables contain both node correctness tests and MPI ping-pong tests,
+i.e.~you can both assess a valid build plus a working MPI environment.
+
 
 
 \section{\Peano\ components and build variants}
@@ -153,22 +209,6 @@ Most examples create by default two variants of the example: a debug
 version and one with only tracing enabled.
 Several examples furthermore come along as 2d and 3d build.
 
-
-\section{Installation test}
-
-Once you have compiled \Peano\, I recommend that you run the unit tests in
-directory
-
-\begin{code}
-  src/examples/unittests/UnitTests2d
-  src/examples/unittests/UnitTests3d
-\end{code}
-
-\noindent
-You can run these builds with different core counts and also MPI support if you
-have compiled with MPI.
-The executables contain both node correctness tests and MPI ping-pong tests,
-i.e.~you can both assess a valid build plus a working MPI environment.
 
 
 \section{Documentation}
