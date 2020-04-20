@@ -109,7 +109,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::endTraversal(
 
 
 void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
-  const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const peano4::grid::GridTraversalEvent&  event
 ) {
   logTraceInWith1Argument("enterCell(...)",event.toString());
 
@@ -212,7 +212,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
 
 
 void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
-  const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const peano4::grid::GridTraversalEvent&  event
 ) {
   logTraceInWith1Argument("leaveCell(...)",event.toString());
 

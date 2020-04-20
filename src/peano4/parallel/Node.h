@@ -55,11 +55,10 @@ class peano4::parallel::Node {
 
     /**
      * We need one stack for outgoing data, one for incoming
-     * (boundary) data. And then we need one in/out stack for
-     * splits and joins. But this nomenclature is slightly wrong.
-     * We should rather speak of horizontal and vertical data.
+     * data, and we distinguish horizontal and vertical data
+     * flow.
      */
-    static constexpr int        StacksPerCommunicationPartner = 6;
+    static constexpr int        StacksPerCommunicationPartner = 4;
 
     /**
      * The MPI standard specifies that the tag upper bound must be at least 32767.
@@ -194,9 +193,6 @@ class peano4::parallel::Node {
     static int getInputStackNumberForVerticalDataExchange(int id);
     static int getOutputStackNumberForVerticalDataExchange(int id);
 
-    static int getInputStackNumberForForkJoinDataExchange(int id);
-    static int getOutputStackNumberForForkJoinDataExchange(int id);
-
     /**
      * Counterpart of getOutputStackNumberOfBoundaryExchange(int)
      */
@@ -233,9 +229,6 @@ class peano4::parallel::Node {
 
     static bool isVerticalDataExchangeOutputStackNumber(int number);
     static bool isVerticalDataExchangeInputStackNumber(int number);
-
-    static bool isForkJoinDataExchangeOutputStackNumber(int number);
-    static bool isForkJoinDataExchangeInputStackNumber(int number);
 
     static bool isPeriodicBoundaryExchangeOutputStackNumber(int number);
     static int  getPeriodicBoundaryExchangeInputStackNumberForOutputStack(int outputStackNumber);
@@ -285,13 +278,10 @@ class peano4::parallel::Node {
 
     enum class ExchangeMode {
       HorizontalData,
-      ForkJoinData,
-	  VerticalData
+      VerticalData
     };
 
-
     static std::string toString( ExchangeMode mode );
-
 
     /**
      * I use two tags per spacetree per rank: one for boundary data

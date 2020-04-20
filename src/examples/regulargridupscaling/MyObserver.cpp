@@ -48,7 +48,7 @@ void examples::regulargridupscaling::MyObserver::endTraversal(
 
 
 void examples::regulargridupscaling::MyObserver::enterCell(
-  const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const peano4::grid::GridTraversalEvent&  event
 ) {
   if (
     event.getIsRefined()==false
@@ -92,7 +92,7 @@ void examples::regulargridupscaling::MyObserver::enterCell(
 
 
 void examples::regulargridupscaling::MyObserver::leaveCell(
-  const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const peano4::grid::GridTraversalEvent&  event
 ) {
 }
 

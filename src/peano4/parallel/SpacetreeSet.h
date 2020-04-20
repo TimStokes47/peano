@@ -83,10 +83,15 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     static std::string toString(VerticalDataExchangeMode mode);
 
-   /**
-     * Counterpart of exchangeStacksAsynchronously() which directly transfers
-     * data within a traversal. We use it for synchronous data vertical data
-     * exchange and for the transfer of data throughout splits and merges.
+    /**
+     * <h2> Prepare new children after fork </h2>
+     *
+     * When we prepare new children, we have to map output stack on output stack, as both
+     * trees are not yet inverted at the time we invoke this routine. That is, the master's
+     * output stack is mapped on to the new child's outpu stack. The master is inverted
+     * automatically later on (that's the last thing we do throughout the traversal). For
+     * the new child, we have to invert manually however. This is done in
+     * exchangeDataBetweenExistingAndNewTreesAndRerunNewTrees().
      *
      * @param childrenIds Depending on the context, this is either the children or
      *   the new children that are just about to be kicked off
@@ -114,14 +119,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     enum class SpacetreeSetState {
       Waiting,
-	  TraverseTreesAndExchangeData
+      TraverseTreesAndExchangeData
     };
-
-
-    void merge(
-      const peano4::grid::GridStatistics&   from,
-      peano4::grid::GridStatistics&         to
-    );
 
     const int     _requestMessageTag;
     const int     _answerMessageTag;
@@ -148,6 +147,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     std::map< int, peano4::grid::TraversalObserver* >    _clonedObserver;
 
     peano4::grid::Spacetree& getSpacetree(int id);
+
+    const peano4::grid::Spacetree& getSpacetree(int id) const;
 
     /**
      * @return tag that one should use to answer one particular spacetree
@@ -203,7 +204,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     /**
      * @see traverse()
      */
-    void exchangeDataBetweenExistingAndNewTreesAndRerunClones(peano4::grid::TraversalObserver& observer);
+    void exchangeDataBetweenExistingAndNewTreesAndRerunNewTrees(peano4::grid::TraversalObserver& observer);
 
     /**
      * Counterpart to exchangeDataBetweenExistingAndNewTreesAndRerunClones(), i.e.
@@ -264,8 +265,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * the merging trees in parallel.
      */
     void cleanUpTrees();
-
-    void mergeStatistics();
 
     /**
      * I need this routine for technical reasons: Prior to the sweep of trees,
@@ -368,6 +367,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     peano4::grid::GridStatistics  getGridStatistics() const;
 
+    peano4::grid::GridStatistics  getGridStatistics(int treeId) const;
+
     /**
      * If the target tree shall be stored on the local node, then you pass
      *
@@ -415,6 +416,14 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * The reason is simple: When we split a tree, this tree pipes its data
      * (synchronously) into the new worker. In a shared memory environmment,
      * we thus have to run all 'running' (read non-splitting) trees first.
+     *
+     * @param treeId  Id of tree that should split, i.e. give away cells to a
+     *   new tree
+     * @param cells   Number of cells to deploy to a new tree. This count refers
+     *   to the status-quo, i.e. if dynamic adaptivity makes an unrefined node
+     *   of the tree unfold in the next step, the new @f$ 3^d @f$ children do
+     *   count only with one towards this quota.
+     * @param targetRank  Rank which should host the new tree.
      */
     bool split(int treeId, int cells, int targetRank);
 
@@ -424,6 +433,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     bool isLocalSpacetree(int treeId) const;
 
+    /**
+     * @return Set of ids of local spacetrees
+     */
     std::set<int> getLocalSpacetrees() const;
 };
 

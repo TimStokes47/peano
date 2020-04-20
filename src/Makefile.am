@@ -49,6 +49,7 @@ Peano4Core_SOURCES = \
   peano4/UnitTests.cpp \
   peano4/grid/AutomatonState.cpp \
   peano4/grid/EmptyTraversalObserver.cpp \
+  peano4/grid/grid.cpp \
   peano4/grid/GridControlEvent.cpp \
   peano4/grid/GridVertex.cpp \
   peano4/grid/GridStatistics.cpp \
@@ -59,6 +60,7 @@ Peano4Core_SOURCES = \
   peano4/grid/TraversalVTKPlotter.cpp \
   peano4/grid/tests/SpacetreeTest.cpp \
   peano4/parallel/Node.cpp \
+  peano4/parallel/parallel.cpp \
   peano4/parallel/SpacetreeSet.cpp \
   peano4/parallel/StartTraversalMessage.cpp \
   peano4/parallel/Tasks.cpp \

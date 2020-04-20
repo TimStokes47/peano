@@ -16,7 +16,7 @@
 tarch::logging::Log _log("examples::grid");
 
 
-std::bitset<Dimensions> periodicBC = 3;
+std::bitset<Dimensions> periodicBC = 0;
 
 #include "peano4/UnitTests.h"
 #include "tarch/UnitTests.h"
@@ -67,14 +67,7 @@ void runSerial() {
     emptyObserver.endTraversalOnRank(false);
     #endif
 
-    logInfo( "runSerial(...)", "refined vertices = " << spacetree.getGridStatistics().getNumberOfRefinedVertices() );
-    logInfo( "runSerial(...)", "unrefined vertices = " << spacetree.getGridStatistics().getNumberOfUnrefinedVertices() );
-    logInfo( "runSerial(...)", "refining vertices = " << spacetree.getGridStatistics().getNumberOfRefiningVertices() );
-    logInfo( "runSerial(...)", "erasing vertices = " << spacetree.getGridStatistics().getNumberOfErasingVertices() );
-    logInfo( "runSerial(...)", "local unrefined cells = " << spacetree.getGridStatistics().getNumberOfLocalUnrefinedCells());
-    logInfo( "runSerial(...)", "local refined cell = " << spacetree.getGridStatistics().getNumberOfLocalRefinedCells() );
-    logInfo( "runSerial(...)", "remote unrefined cells = " << spacetree.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-    logInfo( "runSerial(...)", "remote refined cells = " << spacetree.getGridStatistics().getNumberOfRemoteRefinedCells() );
+    logInfo( "runSerial(...)", "grid statistics = " << spacetree.getGridStatistics().toString() );
   }
 
 
@@ -99,6 +92,7 @@ void updateDomainDecomposition() {
         and
         peano4::parallel::SpacetreeSet::getInstance().split(0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,targetRank)
       ) {
+        logInfo( "updateDomainDecomposition()", "split rank 0 into 1 and 2 -> success" );
         phase++;
       }
     }
@@ -113,7 +107,11 @@ void updateDomainDecomposition() {
 
     if ( peano4::parallel::SpacetreeSet::getInstance().isLocalSpacetree(spacetreeOfInterest) ) {
       if ( not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3,targetRank) ) {
+        logInfo( "updateDomainDecomposition()", "split rank 1 -> failed" );
         phase++;
+      }
+      else {
+        logInfo( "updateDomainDecomposition()", "split rank 1 -> success" );
       }
     }
     else phase++;
@@ -202,21 +200,11 @@ void runParallel() {
       emptyObserver.endTraversalOnRank(true);
       #endif
 
-      logInfo( "runParallel(...)", "refined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefinedVertices() );
-      logInfo( "runParallel(...)", "unrefined vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfUnrefinedVertices() );
-      logInfo( "runParallel(...)", "refining vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRefiningVertices() );
-      logInfo( "runParallel(...)", "erasing vertices = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfErasingVertices() );
-      logInfo( "runParallel(...)", "local unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells());
-      logInfo( "runParallel(...)", "local refined cell= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalRefinedCells() );
-      logInfo( "runParallel(...)", "remote unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-      logInfo( "runParallel(...)", "remote refined cells= " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
+      logInfo( "runParallel(...)", "grid statistics = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().toString() );
 
       updateDomainDecomposition();
     }
 
-    logInfo( "runParallel(...)", "plot final grid" );
-    peano4::grid::TraversalVTKPlotter plotterObserver( "grid-parallel" );
-    peano4::parallel::SpacetreeSet::getInstance().traverse( plotterObserver );
     logInfo( "runParallel(...)", "terminated successfully" );
   }
   else { // not the global master
@@ -267,6 +255,19 @@ int main(int argc, char** argv) {
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
   runTests();
+
+  if (argc==2) {
+    periodicBC = std::atoi( argv[1] );
+  }
+  else {
+    logInfo( "main(...)", "use a random periodic boundary condition choice" );
+    srand( time(NULL) );
+    periodicBC = 0;
+    for (int i=0; i<Dimensions; i++) {
+      periodicBC[i] = rand() < RAND_MAX / 5;
+    }
+  }
+
   #if defined(Parallel) or defined(SharedMemoryParallelisation)
   runParallel();
   #else

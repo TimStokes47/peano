@@ -110,16 +110,12 @@ void peano4::grid::TraversalVTKPlotter::closeFile() {
 
 
 void peano4::grid::TraversalVTKPlotter::enterCell(
-  const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const GridTraversalEvent&  event
 ) {
-  bool cellIsRefined = event.getIsRefined()!=0;
-  bool plot = not cellIsRefined
-              and
-              event.getCellData()!=TraversalObserver::NoData;
-  // @todo Fix this part again. Leads to flickering
-//              and
-//              event.getSendReceiveVerticalCellData()!=GridTraversalEvent::VerticalDataExchange::CopyToWorker;
-
+  bool plot = event.getIsRefined()==0;
+  for (int i=0; i<TwoPowerD; i++) {
+    plot &= (event.getIsHanging(i) or event.getIsLocal(i));
+  }
   if (plot) {
     plotCell(event);
   }
@@ -156,7 +152,7 @@ void peano4::grid::TraversalVTKPlotter::plotCell(
 
 
 void peano4::grid::TraversalVTKPlotter::leaveCell(
-  const GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+  const GridTraversalEvent&  event
 ) {
 }
 

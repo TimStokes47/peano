@@ -1,5 +1,33 @@
 \chapter{Troubleshooting}
 
+
+\section{Python API}
+
+\begin{itemize}
+  \item \textbf{\texttt{import peano4} yields not found error}. You haven't set
+  your \texttt{PYTHONPATH} properly. Ensure that it points to \Peano's
+  \texttt{python} subdirectory. So use something similar to 
+  \begin{code}
+export PYTHONPATH=~/git/Peano/python
+  \end{code}
+  \item \textbf{/usr/bin/ld: cannot find -lExaHyPE2Core3d\_trace}. Your Python
+  script has not been able to locate the \Peano\ libraries. You can either tweak
+  your systems parameters, i.e.~set the search pathes, or you can manually add
+  the library:
+\begin{code}
+peano4_project.output.makefile.add_library(
+  project.getLibrary(peano4.output.CompileMode.Debug), 
+  "mypath/src/exahype2" 
+)
+\end{code}
+%   \item \textbf{No unit tests seem to run.} Peano4 builds a set of libraries that are linked into 
+%     the actual application. It seems that some linkers consider the unit tests to be dead code,
+%     as the actual test routines indeed are never called (by the library). See the documentation in 
+%     \texttt{tarch/tests/TestCase.h} for some details. 
+  \item To be continued \dots
+\end{itemize}
+
+
 \section{Compilation}
 
 Peano relies on a header \texttt{tarch/compiler/CompilerSpecificSettings.h}.
@@ -47,10 +75,11 @@ the directory.
 \section{Linking}
 
 \begin{itemize}
-  \item \textbf{No unit tests seem to run.} Peano4 builds a set of libraries that are linked into 
-    the actual application. It seems that some linkers consider the unit tests to be dead code,
-    as the actual test routines indeed are never called (by the library). See the documentation in 
-    \texttt{tarch/tests/TestCase.h} for some details. 
+%   \item \textbf{No unit tests seem to run.} Peano4 builds a set of libraries that are linked into 
+%     the actual application. It seems that some linkers consider the unit tests to be dead code,
+%     as the actual test routines indeed are never called (by the library). See the documentation in 
+%     \texttt{tarch/tests/TestCase.h} for some details. 
+  \item To be continued \dots
 \end{itemize}
 
 

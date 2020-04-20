@@ -1,5 +1,6 @@
 #include "Node.h"
 #include "tarch/mpi/IntegerMessage.h"
+#include "peano4/grid/PeanoCurve.h"
 
 
 template <class Container>
@@ -13,6 +14,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
   switch (mode) {
     case VerticalDataExchangeMode::SendOutDataForDryRunOfNewSpacetree:
       {
+/*
         std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
         for (auto& sourceStackKey: keys) {
           if (
@@ -55,6 +57,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
             #endif
           }
         }
+*/
       }
       break;
     case VerticalDataExchangeMode::Running:
@@ -105,21 +108,23 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
       break;
     case VerticalDataExchangeMode::PrepareDryRunForNewSpacetree:
       {
-        const int sourceRank      = Node::getInstance().getRank( parentId );
+        const int sourceRank = Node::getInstance().getRank( parentId );
         assertion( Node::getInstance().getRank( spacetreeId ) == tarch::mpi::Rank::getInstance().getRank() );
 
-        const int destinationStack = peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange(parentId);
+        // @todo Muss output sein, weil wir spaeter invertieren. Doku!
+        // Seit ich invertiere, geht das nimmer!
+        int  destinationStack = peano4::grid::PeanoCurve::getOutputStackNumber( getInstance().getSpacetree(spacetreeId)._root );
 
         if (sourceRank==tarch::mpi::Rank::getInstance().getRank()) {
-          const int sourceStack      = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(spacetreeId);
-          logDebug(
+          // It is input as I have already inverted the automaton state at this point
+          const int sourceStack      = peano4::grid::PeanoCurve::getInputStackNumber( getInstance().getSpacetree(parentId)._root );
+          logInfo(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "move stack " << sourceStack << " from tree " << parentId << " into stack " << destinationStack << " from tree " << spacetreeId <<
             ": " << stackContainer.getForPush(parentId,sourceStack)->toString()
           );
           stackContainer.getForPush(spacetreeId,destinationStack)->clone( *stackContainer.getForPush(parentId,sourceStack) );
-          stackContainer.getForPush(spacetreeId,destinationStack)->reverse();
-          stackContainer.getForPush(parentId,sourceStack)->clear();
+
           logDebug(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "size of stack " << destinationStack << " on tree " << spacetreeId << ": " << stackContainer.getForPush(spacetreeId,destinationStack)->size()

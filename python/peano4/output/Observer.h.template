@@ -49,11 +49,11 @@ class {FULL_QUALIFIED_CLASSNAME}: public peano4::grid::TraversalObserver {{
     {CLASSNAME}(int spacetreeId = SpacetreePrototype);
     
 	void enterCell(
-      const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+      const peano4::grid::GridTraversalEvent&  event
     ) override;
 
 	void leaveCell(
-	  const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining
+	  const peano4::grid::GridTraversalEvent&  event
     ) override;
 
 	TraversalObserver* clone(int spacetreeId) override;

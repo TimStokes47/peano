@@ -91,6 +91,7 @@ void step() {{
       {{
         observers::CreateGrid  observer;
         peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+        observers::finishTimeStep();
       }}
       break;
     case observers::StepRepository::Steps::PlotSolution:

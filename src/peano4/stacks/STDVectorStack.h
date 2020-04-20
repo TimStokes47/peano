@@ -430,10 +430,6 @@ class peano4::stacks::STDVectorStack {
     }
 
 
-    void reverse() {
-      std::reverse(std::begin(_data), std::end(_data));
-    }
-
     std::string toString() const {
       std::ostringstream msg;
       msg << "(size:" << size()

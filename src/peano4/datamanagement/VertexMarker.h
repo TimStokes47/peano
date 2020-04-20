@@ -32,6 +32,7 @@ struct peano4::datamanagement::VertexMarker {
     int _select;
 
     std::bitset<TwoPowerD>  _isRefined;
+    std::bitset<TwoPowerD>  _isLocal;
   public:
     VertexMarker(const peano4::grid::GridTraversalEvent& event);
 
@@ -62,6 +63,9 @@ struct peano4::datamanagement::VertexMarker {
      */
     bool isRefined() const;
     bool isRefined(int i) const;
+
+    bool isLocal() const;
+    bool isLocal(int i) const;
 };
 
 

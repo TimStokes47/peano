@@ -3,6 +3,7 @@
 #include "TreeManagementMessage.h"
 
 
+#include "peano4/grid/grid.h"
 #include "peano4/grid/PeanoCurve.h"
 
 
@@ -198,6 +199,7 @@ void peano4::parallel::SpacetreeSet::createObserverCloneIfRequired(peano4::grid:
 }
 
 
+// @todo Braucht man wahrschelincih net
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseMaster(const std::set<int>& trees, peano4::grid::TraversalObserver& observer) {
   logTraceIn( "exchangeDataBetweenMergingTreesAndTraverseMaster(...)" );
 
@@ -232,6 +234,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenMergingTreesAndTraverseM
 }
 
 
+// @todo Name ist vermutlich falsch; denn es sind ja nur die neuen, die ich net machen darf
 void peano4::parallel::SpacetreeSet::traverseNonMergingExistingTrees(peano4::grid::TraversalObserver& observer) {
   logTraceIn( "traverseNonMergingExistingTrees(...)" );
   std::vector< tarch::multicore::Task* > traverseTasksForRunningTrees;
@@ -242,9 +245,10 @@ void peano4::parallel::SpacetreeSet::traverseNonMergingExistingTrees(peano4::gri
       case peano4::grid::Spacetree::SpacetreeState::NewRoot:
       case peano4::grid::Spacetree::SpacetreeState::Running:
       case peano4::grid::Spacetree::SpacetreeState::JoinTriggered:
-      case peano4::grid::Spacetree::SpacetreeState::Joining:
-        traverse = p._joining.empty();
+        traverse = true;
         break;
+      case peano4::grid::Spacetree::SpacetreeState::Joining:
+      case peano4::grid::Spacetree::SpacetreeState::EmptyRun:
       case peano4::grid::Spacetree::SpacetreeState::NewFromSplit:
         traverse = false;
         break;
@@ -276,32 +280,39 @@ Man darf Traversierung nie mit Datenaustausch koppelnr
 */
 
 
-void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRerunClones(
+void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRerunNewTrees(
   peano4::grid::TraversalObserver&  observer
 ) {
   logTraceIn( "exchangeDataBetweenExistingAndNewTreesAndRerunClones(...)" );
 
   std::vector< tarch::multicore::Task* > traverseTasksForNewTrees;
+  std::vector< tarch::multicore::Task* > traverseTasksForEmptyRuns;
 
   for (auto& p: _spacetrees) {
 	switch (p._spacetreeState) {
-	  case peano4::grid::Spacetree::SpacetreeState::NewFromSplit:
+    case peano4::grid::Spacetree::SpacetreeState::EmptyRun:
 	    {
-          logInfo( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " is new. Initialise it through clone" );
+        logInfo( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " is new. Initialise it through clone" );
 
-          exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, VerticalDataExchangeMode::PrepareDryRunForNewSpacetree);
-          createObserverCloneIfRequired(observer,p._id);
-          _clonedObserver[p._id]->exchangeAllVerticalDataExchangeStacks( p._masterId, VerticalDataExchangeMode::PrepareDryRunForNewSpacetree);
+        exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, VerticalDataExchangeMode::PrepareDryRunForNewSpacetree);
+        createObserverCloneIfRequired(observer,p._id);
+        _clonedObserver[p._id]->exchangeAllVerticalDataExchangeStacks( p._masterId, VerticalDataExchangeMode::PrepareDryRunForNewSpacetree);
 
-          finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
-          _clonedObserver[p._id]->finishAllOutstandingSendsAndReceives();
+        finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
+        _clonedObserver[p._id]->finishAllOutstandingSendsAndReceives();
 
-          logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " and its master " << p._masterId << " exchanged all vertical data");
-          traverseTasksForNewTrees.push_back( new TraverseTask(
-            p, *this, observer
-          ));
-	    }
-	    break;
+        logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "tree " << p._id << " and its master " << p._masterId << " exchanged all vertical data, so now I can rerun the new worker twice");
+        traverseTasksForNewTrees.push_back( new TraverseTask(
+          p, *this, observer
+        ));
+        traverseTasksForEmptyRuns.push_back( new TraverseTask(
+          p, *this, observer
+        ));
+
+        // @see exchangeAllVerticalDataExchangeStacks()
+        p._root.setInverted( not p._root.getInverted() );
+   }
+   break;
 	  case peano4::grid::Spacetree::SpacetreeState::NewRoot:
 	  case peano4::grid::Spacetree::SpacetreeState::JoinTriggered:
 	  case peano4::grid::Spacetree::SpacetreeState::Joining:
@@ -309,20 +320,22 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRe
 		break;
 	  case peano4::grid::Spacetree::SpacetreeState::Running:
 	    {
-          logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "send out data for try runs to all new subtrees of " << p._id );
-          exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, VerticalDataExchangeMode::SendOutDataForDryRunOfNewSpacetree);
-          createObserverCloneIfRequired(observer,p._id);
-          _clonedObserver[p._id]->exchangeAllVerticalDataExchangeStacks( p._masterId, VerticalDataExchangeMode::SendOutDataForDryRunOfNewSpacetree);
-          finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
-          _clonedObserver[p._id]->finishAllOutstandingSendsAndReceives();
-          logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "sent out data for dry runs to all new subtrees of " << p._id );
+        logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "send out data for try runs to all new subtrees of " << p._id );
+        exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, VerticalDataExchangeMode::SendOutDataForDryRunOfNewSpacetree);
+        createObserverCloneIfRequired(observer,p._id);
+        _clonedObserver[p._id]->exchangeAllVerticalDataExchangeStacks( p._masterId, VerticalDataExchangeMode::SendOutDataForDryRunOfNewSpacetree);
+        finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
+        _clonedObserver[p._id]->finishAllOutstandingSendsAndReceives();
+        logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "sent out data for dry runs to all new subtrees of " << p._id );
 	    }
 	    break;
     }
   }
 
   static int multitasking = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenExistingAndNewTreesAndRerunClones" );
-  peano4::parallel::Tasks run(traverseTasksForNewTrees,peano4::parallel::Tasks::TaskType::Task,multitasking,true);
+  peano4::parallel::Tasks emptyRuns(traverseTasksForEmptyRuns,peano4::parallel::Tasks::TaskType::Task,multitasking,true);
+  logDebug( "exchangeDataBetweenExistingAndNewTreesAndRerunClones()", "empty traversal complete. Now rerun and send out data");
+  peano4::parallel::Tasks newRuns(traverseTasksForNewTrees,peano4::parallel::Tasks::TaskType::Task,multitasking,true);
 
   logTraceOut( "exchangeDataBetweenExistingAndNewTreesAndRerunClones(...)" );
 }
@@ -332,7 +345,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees(peano4::grid::Trav
   logTraceIn( "exchangeDataBetweenTrees(...)" );
 
   for (auto& p: _spacetrees) {
-    if (p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
+    if (p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::EmptyRun) {
       logDebug( "exchangeDataBetweenTrees(TraversalObserver&)", "manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
       exchangeAllVerticalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, p._masterId, VerticalDataExchangeMode::Running );
       exchangeAllHorizontalDataExchangeStacks( peano4::grid::Spacetree::_vertexStack, p._id, true );
@@ -403,19 +416,25 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
   // Have to extract these first, as there might be more with this flag once
   // we've done our local traversals
-  std::set<int>  mergingTrees     = getLocalTreesMergingWithWorkers();
+  // @todo Jetzt erst mal alle merging trees; evtl. koennen wir die sogar einfach
+  //       normal machen, schliesslich haben die keine refined Cells mehr per
+  //       Definition
+//  std::set<int>  mergingTrees     = getLocalTreesMergingWithWorkers();
 
+
+  // meiner Meinung nach sollten hier die Joining zuerst kommen
+
+  // Der Name ist bloed
   traverseNonMergingExistingTrees(observer);
 
-  exchangeDataBetweenMergingTreesAndTraverseMaster(mergingTrees,observer);
+//  exchangeDataBetweenMergingTreesAndTraverseMaster(mergingTrees,observer);
+
 
   // @todo
   // Leert offensichtlich alles fusion Stacks. Sollte es aber net. Das ist nicht sauber!
   // Sobald das sauber ist, kann man die beiden exchange Dinger wieder vertauschen
-  exchangeDataBetweenExistingAndNewTreesAndRerunClones(observer);
+  exchangeDataBetweenExistingAndNewTreesAndRerunNewTrees(observer);
   _state = SpacetreeSetState::Waiting;
-
-  mergeStatistics();
 
   _state = SpacetreeSetState::TraverseTreesAndExchangeData;
   exchangeDataBetweenTrees(observer);
@@ -427,21 +446,6 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   deleteClonedObservers();
 
   logTraceOut( "traverse(...)" );
-}
-
-
-void peano4::parallel::SpacetreeSet::mergeStatistics() {
-  logTraceIn( "mergeStatistics(...)" );
-  for (auto&  from: _spacetrees) {
-    if (
-      from._id != _spacetrees.begin()->_id
-	  and
-	  from._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit
-	) {
-      merge(from._statistics, _spacetrees.begin()->_statistics );
-    }
-  }
-  logTraceOut( "mergeStatistics(...)" );
 }
 
 
@@ -524,21 +528,26 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
 }
 
 
-
-
-void peano4::parallel::SpacetreeSet::merge(
-  const peano4::grid::GridStatistics&   from,
-  peano4::grid::GridStatistics&         to
-) {
-  to.setNumberOfErasingVertices( to.getNumberOfErasingVertices() + from.getNumberOfErasingVertices() );
-  to.setNumberOfRefiningVertices( to.getNumberOfRefiningVertices() + from.getNumberOfRefiningVertices() );
-  to.setNumberOfUnrefinedVertices( to.getNumberOfUnrefinedVertices() + from.getNumberOfUnrefinedVertices() );
-  to.setNumberOfRefinedVertices( to.getNumberOfRefinedVertices() + from.getNumberOfRefinedVertices() );
+peano4::grid::GridStatistics  peano4::parallel::SpacetreeSet::getGridStatistics(int treeId) const {
+  assertion( isLocalSpacetree(treeId) );
+  return getSpacetree(treeId).getGridStatistics();
 }
 
 
 peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics() const {
-  return _spacetrees.begin()->getGridStatistics();
+  logTraceIn( "getGridStatistics()" );
+  peano4::grid::GridStatistics result( _spacetrees.begin()->_statistics );
+  for (auto&  from: _spacetrees) {
+    if (
+      from._id != _spacetrees.begin()->_id
+      and
+      from._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit
+  ) {
+      result = result + from._statistics;
+    }
+  }
+  logTraceOutWith1Argument( "getGridStatistics()", result.toString() );
+  return result;
 }
 
 
@@ -671,3 +680,13 @@ peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
   assertion3( false, "no spacetree found", id, tarch::mpi::Rank::getInstance().getRank() );
   return *_spacetrees.begin(); // just here to avoid warning
 }
+
+
+const peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) const {
+  for (auto& p: _spacetrees) {
+    if (p._id==id) return p;
+  }
+  assertion3( false, "no spacetree found", id, tarch::mpi::Rank::getInstance().getRank() );
+  return *_spacetrees.begin(); // just here to avoid warning
+}
+

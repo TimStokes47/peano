@@ -319,7 +319,7 @@ std::vector< peano4::grid::GridControlEvent > {FULL_QUALIFIED_CLASSNAME}::getGri
 
 
   TemplateEnterCell_Prologue = """  
-void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining ) {{
+void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEvent&  event ) {{
   logTraceInWith2Arguments( "enterCell(...)", _spacetreeId, event.toString() );
 """
 
@@ -339,6 +339,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         and
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
       ) {{
+        assertion4( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inVertexStack))->empty(), event.toString(), peano4::datamanagement::VertexMarker(event).toString(), _spacetreeId, inVertexStack);
         data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inVertexStack))->pop();
       }}
     
@@ -368,14 +369,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         and
         peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
       ) {{
-        // Stream out for splits
-        for (auto p: splitting) {{
-          const int  stack = peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange( p );
-          DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,stack))->push(data);
-          logDebug("enterCell(...)", "vertex from position pos-" << outVertexStackPosition << " is streamed to output stream " << stack << " for tree " << p );
-        }}
-
-        // Merge with neighbour
+        // @todo: Merge with neighbour. Schon da, aber user-merge ops invocation fehlt noch
         for (int i=0; i<TwoPowerD-1; i++) {{
           int currentEntryInExchangeList = event.getExchangeVertexData( i+outVertexStackPosition*(TwoPowerD-1) );
           if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
@@ -461,6 +455,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         and
         inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
       ) {{
+        assertion4( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inFaceStack))->empty(), event.toString(), peano4::datamanagement::FaceMarker(event).toString(), _spacetreeId,inFaceStack );
         data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inFaceStack))->pop();
       }}
       
@@ -483,10 +478,23 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         assertionVectorNumericalEquals5( data.getDebugH(), marker.h(),                     data.getDebugX(), data.getDebugH(), marker.toString(), outFaceStackPosition, _spacetreeId );
       }}
       #endif
-      
-      // @todo Stream out faces when we fork
-      // @todo Exchange neighbour data
-      
+
+      // @todo Implement: Merge with neighbour
+        /*
+        for (int i=0; i<TwoPowerD-1; i++) {{
+          int currentEntryInExchangeList = event.getExchangeVertexData( i+outVertexStackPosition*(TwoPowerD-1) );
+          if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
+            const int stack = peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange( currentEntryInExchangeList );
+            logDebug("enterCell(...)", "merge local vertex on tree " << _spacetreeId << " with incoming neighbour from stack " << stack << " (neighbour " << currentEntryInExchangeList << ")" );
+            assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
+            {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
+            
+            assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), _spacetreeId );
+            assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), _spacetreeId );
+          }}
+        }}
+        */
+            
       view.set(outFaceStackPosition,data);
     }}
   }}
@@ -551,6 +559,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
     {full_qualified_type} data;
     if (inCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+      assertion3( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inCellStack))->empty(), event.toString(), _spacetreeId, inCellStack);
       data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inCellStack))->pop();
     }}
     DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,outCellStack))->push(data);
@@ -632,7 +641,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
 
 
   TemplateLeaveCell_Prologue = """  
-void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEvent&  event, const std::set< int >& splitting, const std::set< int >& joining ) {{
+void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEvent&  event ) {{
   logTraceInWith2Arguments( "leaveCell(...)", _spacetreeId, event.toString() );
 """
 
@@ -879,7 +888,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 
   TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Prologue = """
 void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {{
-  logTraceInWith1Argument( "exchangeAllVerticalDataExchangeStacks(...)", masterId );
+  logTraceInWith2Arguments( "exchangeAllVerticalDataExchangeStacks(...)", masterId, _spacetreeId  );
 """
 
   TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Exchange = """
@@ -901,7 +910,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int mast
 
   TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Prologue = """
 void {FULL_QUALIFIED_CLASSNAME}::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {{
-  logTraceInWith1Argument( "exchangeAllHorizontalDataExchangeStacks(...)", symmetricDataCardinality );
+  logTraceInWith2Arguments( "exchangeAllHorizontalDataExchangeStacks(...)", symmetricDataCardinality, _spacetreeId  );
 """
 
   TemplateExchangeRoutines_exchangeAllHorizontalDataExchangeStacks_Exchange = """
@@ -922,7 +931,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllHorizontalDataExchangeStacks( bool s
 
   TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Prologue = """
 void {FULL_QUALIFIED_CLASSNAME}::exchangeAllPeriodicBoundaryDataStacks() {{
-  logTraceIn( "exchangeAllPeriodicBoundaryDataStacks()" );
+  logTraceInWith1Argument( "exchangeAllPeriodicBoundaryDataStacks()", _spacetreeId  );
 """
 
   TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Exchange = """
@@ -942,6 +951,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllPeriodicBoundaryDataStacks() {{
 
   TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Prologue = """
 void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives() {{
+  logTraceInWith1Argument( "finishAllOutstandingSendsAndReceives()", _spacetreeId );
 """
 
   TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Exchange = """
@@ -952,6 +962,7 @@ void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives() {{
 """
 
   TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Epilogue = """
+  logTraceOut( "finishAllOutstandingSendsAndReceives()");
 }}
 """
 

@@ -21,17 +21,17 @@ peano4::grid::AutomatonState::AutomatonState(int  __level, tarch::la::Vector<Dim
 std::string peano4::grid::AutomatonState::toString() const {
   std::ostringstream out;
   out << "(";
-  out << _level;
+  out << "level=" << _level;
   out << ","; 
-  out << _x;
+  out << "x=" << _x;
   out << ","; 
-  out << _h;
+  out << "h=" << _h;
   out << ","; 
-  out << _inverted;
+  out << "inverted=" << _inverted;
   out << ","; 
-  out << _evenFlags;
+  out << "evenFlags=" << _evenFlags;
   out << ","; 
-  out << _accessNumber;
+  out << "accessNumber=" << _accessNumber;
   out << ")";
   return out.str();
 }

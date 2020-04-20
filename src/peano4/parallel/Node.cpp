@@ -61,7 +61,7 @@ peano4::parallel::Node::~Node() {
     tarch::mpi::Rank::getInstance().getNumberOfRanks()==1
     or
     _currentProgramStep==Terminate,
-	"forgot to terminate node properly through peano4::parallel::Node::getInstance().shutdown()"
+    "forgot to terminate node properly through peano4::parallel::Node::getInstance().shutdown()"
   );
 }
 
@@ -70,8 +70,6 @@ std::string peano4::parallel::Node::toString( ExchangeMode mode ) {
   switch (mode) {
     case ExchangeMode::HorizontalData:
       return "horizontal-data";
-    case ExchangeMode::ForkJoinData:
-      return "fork-join-data";
     case ExchangeMode::VerticalData:
       return "vertical-data";
   }
@@ -201,16 +199,6 @@ int peano4::parallel::Node::getInputStackNumberForVerticalDataExchange(int id) {
 }
 
 
-int peano4::parallel::Node::getOutputStackNumberForForkJoinDataExchange(int id) {
-  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 4;
-}
-
-
-int peano4::parallel::Node::getInputStackNumberForForkJoinDataExchange(int id) {
-  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 5;
-}
-
-
 std::bitset<2*Dimensions> peano4::parallel::Node::getPeriodicBoundaryNumber(const tarch::la::Vector<TwoPowerD,int>& flags) {
   std::bitset<2*Dimensions> result;
 
@@ -335,18 +323,6 @@ bool peano4::parallel::Node::isVerticalDataExchangeInputStackNumber(int id) {
 }
 
 
-bool peano4::parallel::Node::isForkJoinDataExchangeOutputStackNumber(int id) {
-  return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
-    and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 4 );
-}
-
-
-bool peano4::parallel::Node::isForkJoinDataExchangeInputStackNumber(int id) {
-  return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
-     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 5 );
-}
-
-
 int peano4::parallel::Node::getTreeNumberTiedToExchangeStackNumber(int number) {
   return (number-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) / StacksPerCommunicationPartner;
 }
@@ -404,16 +380,13 @@ int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int recei
   logTraceInWith3Arguments( "getGridDataExchangeTag(int,int,ExchangeMode)", sendingTreeId, receivingTreeId, toString(exchange) );
 
   int result  = _dataExchangeBaseTag;
-  result     += 3 * (getLocalTreeId(sendingTreeId) * MaxSpacetreesPerRank + getLocalTreeId(receivingTreeId));
+  result     += StacksPerCommunicationPartner/2 * (getLocalTreeId(sendingTreeId) * MaxSpacetreesPerRank + getLocalTreeId(receivingTreeId));
   switch (exchange) {
     case ExchangeMode::HorizontalData:
       result += 0;
       break;
-    case ExchangeMode::ForkJoinData:
-      result += 1;
-      break;
     case ExchangeMode::VerticalData:
-      result += 2;
+      result += 1;
       break;
   }
 
@@ -430,10 +403,9 @@ std::string peano4::parallel::Node::getSemanticsForTag( int tag ) {
   if (tag>=getInstance()._dataExchangeBaseTag and tag<ReservedMPITagsForDataExchange) {
     std::string result = "data exchange tag for ";
 
-    switch ( (tag-getInstance()._dataExchangeBaseTag) % 3) {
+    switch ( (tag-getInstance()._dataExchangeBaseTag) % (StacksPerCommunicationPartner/2)) {
       case 0: result += "horizontal data"; break;
-      case 1: result += "fork/join data"; break;
-      case 2: result += "vertical data"; break;
+      case 1: result += "vertical data"; break;
     }
 
     return result;

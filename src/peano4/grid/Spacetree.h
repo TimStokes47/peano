@@ -56,11 +56,15 @@ class peano4::grid::Spacetree {
     static bool isVertexRefined(GridVertex  vertex);
 
     /**
+     * A vertex is unrefined if it is hanging.
+     *
      * @return bitset of vertices for which isVertexRefined() holds. If you wanna
      *   find out whether a cell is refined, you can compare the result to zero.
      *   You can also use isSpacetreeNodeRefined() instead.
      */
-    static std::bitset<TwoPowerD> areVerticesRefined(GridVertex  vertices[TwoPowerD]);
+    std::bitset<TwoPowerD> areVerticesRefined(GridVertex  vertices[TwoPowerD]) const;
+    std::bitset<TwoPowerD> areVerticesLocal  (GridVertex  vertices[TwoPowerD]) const;
+    std::bitset<TwoPowerD> areVerticesHanging(GridVertex  vertices[TwoPowerD]) const;
 
     /**
      * A spacetree node is refined if any of its adjacent vertices holds one of
@@ -105,6 +109,13 @@ class peano4::grid::Spacetree {
     };
 
     enum class SpacetreeState {
+      /**
+       * Not yet a new root. Just got created, so we have to run through the
+       * cloned data once, just to get it into the right order, and then we
+       * can really mirror the master's traversal and send out stuff (in state
+       * NewRoot).
+       */
+      EmptyRun,
       NewRoot,
       /**
        * Set if this tree results from a split and if this is the first
@@ -235,11 +246,6 @@ class peano4::grid::Spacetree {
       GridVertex            coarseGridVertices[TwoPowerD],
       GridVertex            fineGridVertices[TwoPowerD]
     );
-
-    /**
-     * Clear the statistics
-     */
-    void clearStatistics();
 
     /**
      * If a cell is given away to another rank, we have to mark the vertices
@@ -490,11 +496,6 @@ class peano4::grid::Spacetree {
       TraversalObserver&                        observer
     );
 
-    void sendOutVertexToSplittingTrees(
-      GridVertex&                               vertex,
-      TraversalObserver&                        observer
-    );
-
     /**
      * Some of the entries in the event are modelled as array (for example the
      * set of neighbours of a vertex), though they are logically sets. So I
@@ -672,20 +673,6 @@ class peano4::grid::Spacetree {
     ) const;
 
     /**
-     *
-     *
-     * <h2> Computational domain </h2>
-     *
-     * Some of the steps of this routine have to be done totally agnostic of
-     * whether the vertex is inside the domain or not. The coarsening for
-     * example has to be done outside of the domain as well.
-     *
-     * For the post-refinement, we also have to take into account outer
-     * vertices. A vertex is to be refined, if it is unrefined and surrounded
-     * by $2^d$ refined cells. In this case, it still technically is a hanging
-     * vertex which should be avoided. This notably can happen outside.
-     *
-     *
      * <h2> Restriction of veto flags </h2>
      *
      * We make each vertex hold a flag isAntecessorOfRefinedVertex. If it is
@@ -910,6 +897,10 @@ class peano4::grid::Spacetree {
 
     /**
      * Only used by SpacetreeSet to create children of the original tree.
+     *
+     * We have to set the stats's stationary counter manually, as clear() does not
+     * reset it. We furthermore set it to -2, as we'll need two iterations to set
+     * a new remote spacetree up.
      */
     Spacetree(
       int newId,
@@ -917,19 +908,7 @@ class peano4::grid::Spacetree {
       const tarch::la::Vector<Dimensions,double>&  offset,
       const tarch::la::Vector<Dimensions,double>&  width,
       bool  traversalInverted
-	);
-
-    /**
-     * Don't copy a tree as it is tied to some stacks.
-     */
-//    Spacetree( const Spacetree& ) = delete;
-
-    /**
-     * Don't copy a tree as it is tied to some stacks.
-     *
-     * Unfortunately, this does not work, as we need it for the vector.
-     */
-//    Spacetree& operator=( const Spacetree& ) = delete;
+    );
 
     /**
      * Join with master. Call this routine only for degenerated trees,
@@ -957,9 +936,6 @@ class peano4::grid::Spacetree {
 
     bool maySplit() const;
 
-    // @tood Remove. Should be in statistics
-//    bool _coarseningHasBeenVetoed;
-
     /**
      * @return Id of splitting tree or -1 if there's none.
      */
@@ -973,8 +949,6 @@ class peano4::grid::Spacetree {
     );
 
     ~Spacetree();
-
-//    Spacetree( Spacetree&& );
 
     /**
      * @param calledFromSpacetreeSet If you use traverse directly, please do

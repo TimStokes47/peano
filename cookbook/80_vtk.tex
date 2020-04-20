@@ -1,4 +1,59 @@
-\chapter{Peano VTK dumps}
+\chapter{The visualisation toolkit (VTK)}
+\label{chapter:vtk}
+
+\section{Installing \Peano\ with VTK support}
+Installing VTK can be challenging. 
+Here's some things you might want to consider/check:
+
+\begin{itemize}
+  \item When you translate with \texttt{--with-vtk}, then \Peano\ assumes that
+  all vtk libraries are built without any version extension. Many VTK
+  installations however append the version number to the library, i.e.~they
+  create a library \texttt{libvtkCommonCore-8.90.so} instead of
+  \texttt{libvtkCommonCore.so} if you use VTK 8.9. If you are not sure, run
+  \texttt{find / -name libvtk*.so} and see what it finds. After that, tell the
+  configuration explicitly which VTK extension to use:
+  \begin{code}
+--with-vtk=8.90
+  \end{code}
+  BTW: Not all Linux distributions install VTK with these extensions, so you
+  have to check manually on your system.
+  \item If you configure with \texttt{--with-vtk} but the makefile cannot find
+  the headers, you have to add the correct search path. You can either set the 
+\begin{code}
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/vtk
+\end{code}
+  or you set the corresponding environment variable prior to the configure
+  script. I always recommend that latter route, as our Python API inherits all
+  of the configure variables, i.e.~it will then know where to search for VTK:
+\begin{code}
+export CXXFLAGS="-I/usr/local/include/vtk-8.90"
+\end{code}
+  The first setting btw stems from a Fedora system, the latter example from an
+  Ubuntu installation, while OpenSUSE in our test farm got the includes
+  automatically right.
+  \item If your compile passes through but fails in the linking state (object
+  not found), then you have to check if the VTK libraries are in the search
+  path. If they are not (very likely), then add them prior to the compile call:
+\begin{code}
+export LDFLAGS="-L/opt/vtk/lib64"
+\end{code}
+  \item Unfortunately, the packaging of VTK seem to change with every major
+  revision. That is, the number of libraries shipped with VTK as well as their
+  names change. We currently support the generations 7, 8 and 9 of VTK. 8 is the
+  default. To change the version against which you build, please tell configure
+  via
+\begin{code}
+--vtk-version=9
+\end{code}
+  Depending on the version chosen, \Peano\ will try to link against a different
+  set of library files.
+\end{itemize}
+
+    
+    
+    
+\section{Tweaking your pictures}
 
 Peano's default VTK plotters project Peano's tree-based grid onto an
 unstructured mesh, as VTK does not support tree meshes.
@@ -16,6 +71,27 @@ The underlying mechanism is straightforward:
   cell of the unstructured output mesh.
 \end{enumerate}
 
+
+The block format/the conversion tools in contrast generate all the points
+multiple times.
+If you have to cells sharing a vertex, the vertex is dumped twice.
+For patch-based problems, this is okish, as the number of vertices that are
+shared is way smaller than the total number of vertices in the domain (vertices
+within a patch are not dumped multiple times).
+As a consequence of the redundant vertex dumps, isosurfaces, e.g., might not
+work.
+If you need them, it is reasonable to project/map the actual data onto a regular
+mesh first.
+
+
+If your PDE has $m$ quantities, Peano's block format dumps them into a vector of
+cardinality $m$ per vertex or cell, respectively. 
+Most visualisation filters/tools however require data to be either scalar or 
+vector data. 
+In Paraview, use the calculator filter to extract only some quantities from the 
+data dump.
+Alternatively, you can ask the convert tool to extract only some data into the
+vtu output.
 
 \noindent
 Please note that most visualisation codes (such as Paraview) do interpolate
