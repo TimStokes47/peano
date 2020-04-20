@@ -9,6 +9,7 @@ peano4::datamanagement::FaceMarker::FaceMarker(
   _select(0) {
 
   // isRefined @todo setzen
+  // isLocal @todo setzen
 }
 
 
@@ -65,7 +66,17 @@ bool peano4::datamanagement::FaceMarker::isRefined(int i) const {
 
 
 bool peano4::datamanagement::FaceMarker::isRefined() const {
-  assertionMsg(false, "not yet initialised (see constructor)");
   return isRefined(_select);
 }
+
+
+bool peano4::datamanagement::FaceMarker::isLocal(int i) const {
+  return _isLocal[i];
+}
+
+
+bool peano4::datamanagement::FaceMarker::isLocal() const {
+  return isLocal(_select);
+}
+
 

@@ -32,6 +32,7 @@ struct peano4::datamanagement::FaceMarker {
     tarch::la::Vector<Dimensions,double>  _h;
 
     std::bitset<2*Dimensions>              _isRefined;
+    std::bitset<2*Dimensions>              _isLocal;
 
     int _select;
   public:
@@ -74,6 +75,9 @@ struct peano4::datamanagement::FaceMarker {
 
     bool isRefined() const;
     bool isRefined(int i) const;
+
+    bool isLocal() const;
+    bool isLocal(int i) const;
 };
 
 
