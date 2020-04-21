@@ -111,6 +111,6 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishTimeStep() {
   ) {
     int heaviestSpacetree = getIdOfHeaviestLocalSpacetree();
     logWarning( "finishTimeStep()", "biggest local tree " << heaviestSpacetree << " is too heavy. Split it up" );
-    assertionMsg(false, "not implemented yet");
+    //assertionMsg(false, "not implemented yet");
   }
 }

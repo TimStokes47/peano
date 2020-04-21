@@ -7,7 +7,7 @@ peano4::datamanagement::FaceMarker::FaceMarker(
   _cellCentre(event.getX()),
   _h(event.getH()),
   _select(0) {
-
+  assertion(false);
   // isRefined @todo setzen
   // isLocal @todo setzen
 }
