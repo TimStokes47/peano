@@ -162,8 +162,13 @@ grid_traversal_event = dastgen2.DataModel( "peano4::grid::GridTraversalEvent" )
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "x", "Dimensions" ))
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "h", "Dimensions" ))
 grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isRefined", "TwoPowerD" ) )
-grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isLocal",   "TwoPowerD" ) )
-grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isHanging", "TwoPowerD" ) )
+# I can derive all refinement information from the vertices (or-based refinement),
+# but I can't derive the locality information from there. So I have to store it
+# explicitly. For my new DaStGen 2, it would be cool if I could add comments to the
+# generated output. This helps quite a lot within C++'s/Eclipse's autocompletion.
+grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isVertexLocal", "TwoPowerD" ) )
+grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isFaceLocal",   "TwoTimesD" ) )
+grid_traversal_event.add_attribute( dastgen2.attributes.Boolean(      "isCellLocal"                ) )
 
 # @todo Should be char array likely with -4 to 9
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "vertexDataFrom", "TwoPowerD" ) )
@@ -176,7 +181,8 @@ grid_traversal_event.add_attribute( dastgen2.attributes.Integer( "cellData" ) )
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "relativePositionToFather", "Dimensions" ) )
 
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "exchangeVertexData", "TwoPowerDTimesTwoPowerDMinusOne" ) )
-grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "exchangeFaceData", "TwoPowerD" ) )
+grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "exchangeFaceData", "TwoTimesD" ) )
+grid_traversal_event.add_attribute( dastgen2.attributes.Integer( "exchangeCellData" ) )
 
 grid_traversal_event.add_aspect( peano4.dastgen2.MPI() )
 grid_traversal_event.add_aspect( dastgen2.aspects.MPI() )

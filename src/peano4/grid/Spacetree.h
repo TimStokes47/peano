@@ -63,8 +63,9 @@ class peano4::grid::Spacetree {
      *   You can also use isSpacetreeNodeRefined() instead.
      */
     std::bitset<TwoPowerD> areVerticesRefined(GridVertex  vertices[TwoPowerD]) const;
-    std::bitset<TwoPowerD> areVerticesLocal  (GridVertex  vertices[TwoPowerD]) const;
-    std::bitset<TwoPowerD> areVerticesHanging(GridVertex  vertices[TwoPowerD]) const;
+
+    std::bitset<TwoPowerD> areVerticesLocal(GridVertex  vertices[TwoPowerD]) const;
+    std::bitset<TwoTimesD> areFacesLocal(GridVertex  vertices[TwoPowerD]) const;
 
     /**
      * A spacetree node is refined if any of its adjacent vertices holds one of
@@ -520,6 +521,13 @@ class peano4::grid::Spacetree {
       GridVertex           fineGridVertices[TwoPowerD],
       GridTraversalEvent&  event,
       bool                 isEnterCell
+    ) const;
+
+    GridTraversalEvent createGenericCellTraversalEvent(
+      GridVertex              coarseGridVertices[TwoPowerD],
+      GridVertex              fineGridVertices[TwoPowerD],
+      const AutomatonState&   state,
+      const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
     ) const;
 
     /**

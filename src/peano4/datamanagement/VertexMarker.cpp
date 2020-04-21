@@ -9,7 +9,7 @@ peano4::datamanagement::VertexMarker::VertexMarker(
   _select(0) {
   for (int i=0; i<TwoPowerD; i++) {
     _isRefined[i]  = event.getIsRefined(i);
-    _isLocal[i]    = event.getIsLocal(i);
+    _isLocal[i]    = event.getIsVertexLocal(i);
   }
 }
 

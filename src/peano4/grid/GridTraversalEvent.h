@@ -38,7 +38,7 @@ struct peano4::grid::GridTraversalEvent {
 
 
     GridTraversalEvent() {}
-    GridTraversalEvent(tarch::la::Vector<Dimensions,double>  __x, tarch::la::Vector<Dimensions,double>  __h, std::bitset<TwoPowerD>  __isRefined, std::bitset<TwoPowerD>  __isLocal, std::bitset<TwoPowerD>  __isHanging, tarch::la::Vector<TwoPowerD,int>  __vertexDataFrom, tarch::la::Vector<TwoPowerD,int>  __vertexDataTo, tarch::la::Vector<TwoTimesD,int>  __faceDataFrom, tarch::la::Vector<TwoTimesD,int>  __faceDataTo, int  __cellData, tarch::la::Vector<Dimensions,int>  __relativePositionToFather, tarch::la::Vector<TwoPowerDTimesTwoPowerDMinusOne,int>  __exchangeVertexData, tarch::la::Vector<TwoPowerD,int>  __exchangeFaceData);
+    GridTraversalEvent(tarch::la::Vector<Dimensions,double>  __x, tarch::la::Vector<Dimensions,double>  __h, std::bitset<TwoPowerD>  __isRefined, std::bitset<TwoPowerD>  __isVertexLocal, std::bitset<TwoTimesD>  __isFaceLocal, bool  __isCellLocal, tarch::la::Vector<TwoPowerD,int>  __vertexDataFrom, tarch::la::Vector<TwoPowerD,int>  __vertexDataTo, tarch::la::Vector<TwoTimesD,int>  __faceDataFrom, tarch::la::Vector<TwoTimesD,int>  __faceDataTo, int  __cellData, tarch::la::Vector<Dimensions,int>  __relativePositionToFather, tarch::la::Vector<TwoPowerDTimesTwoPowerDMinusOne,int>  __exchangeVertexData, tarch::la::Vector<TwoTimesD,int>  __exchangeFaceData, int  __exchangeCellData);
 
     tarch::la::Vector<Dimensions,double>   getX() const;
     void   setX(const tarch::la::Vector<Dimensions,double>& value);
@@ -53,16 +53,18 @@ struct peano4::grid::GridTraversalEvent {
     bool   getIsRefined(int index) const;
     void   setIsRefined(int index, bool value);
     void   flipIsRefined(int index);
-    std::bitset<TwoPowerD>   getIsLocal() const;
-    void   setIsLocal(const std::bitset<TwoPowerD>&  value);
-    bool   getIsLocal(int index) const;
-    void   setIsLocal(int index, bool value);
-    void   flipIsLocal(int index);
-    std::bitset<TwoPowerD>   getIsHanging() const;
-    void   setIsHanging(const std::bitset<TwoPowerD>&  value);
-    bool   getIsHanging(int index) const;
-    void   setIsHanging(int index, bool value);
-    void   flipIsHanging(int index);
+    std::bitset<TwoPowerD>   getIsVertexLocal() const;
+    void   setIsVertexLocal(const std::bitset<TwoPowerD>&  value);
+    bool   getIsVertexLocal(int index) const;
+    void   setIsVertexLocal(int index, bool value);
+    void   flipIsVertexLocal(int index);
+    std::bitset<TwoTimesD>   getIsFaceLocal() const;
+    void   setIsFaceLocal(const std::bitset<TwoTimesD>&  value);
+    bool   getIsFaceLocal(int index) const;
+    void   setIsFaceLocal(int index, bool value);
+    void   flipIsFaceLocal(int index);
+    bool   getIsCellLocal() const;
+    void   setIsCellLocal(bool value);
     tarch::la::Vector<TwoPowerD,int>   getVertexDataFrom() const;
     void   setVertexDataFrom(const tarch::la::Vector<TwoPowerD,int>& value);
     int   getVertexDataFrom(int index) const;
@@ -89,10 +91,12 @@ struct peano4::grid::GridTraversalEvent {
     void   setExchangeVertexData(const tarch::la::Vector<TwoPowerDTimesTwoPowerDMinusOne,int>& value);
     int   getExchangeVertexData(int index) const;
     void   setExchangeVertexData(int index, int value);
-    tarch::la::Vector<TwoPowerD,int>   getExchangeFaceData() const;
-    void   setExchangeFaceData(const tarch::la::Vector<TwoPowerD,int>& value);
+    tarch::la::Vector<TwoTimesD,int>   getExchangeFaceData() const;
+    void   setExchangeFaceData(const tarch::la::Vector<TwoTimesD,int>& value);
     int   getExchangeFaceData(int index) const;
     void   setExchangeFaceData(int index, int value);
+    int   getExchangeCellData() const;
+    void   setExchangeCellData(int value);
 
 
 
@@ -153,8 +157,9 @@ struct peano4::grid::GridTraversalEvent {
     tarch::la::Vector<Dimensions,double>   _x;
     tarch::la::Vector<Dimensions,double>   _h;
     std::bitset<TwoPowerD>   _isRefined;
-    std::bitset<TwoPowerD>   _isLocal;
-    std::bitset<TwoPowerD>   _isHanging;
+    std::bitset<TwoPowerD>   _isVertexLocal;
+    std::bitset<TwoTimesD>   _isFaceLocal;
+    bool   _isCellLocal;
     tarch::la::Vector<TwoPowerD,int>   _vertexDataFrom;
     tarch::la::Vector<TwoPowerD,int>   _vertexDataTo;
     tarch::la::Vector<TwoTimesD,int>   _faceDataFrom;
@@ -162,7 +167,8 @@ struct peano4::grid::GridTraversalEvent {
     int   _cellData;
     tarch::la::Vector<Dimensions,int>   _relativePositionToFather;
     tarch::la::Vector<TwoPowerDTimesTwoPowerDMinusOne,int>   _exchangeVertexData;
-    tarch::la::Vector<TwoPowerD,int>   _exchangeFaceData;
+    tarch::la::Vector<TwoTimesD,int>   _exchangeFaceData;
+    int   _exchangeCellData;
 
 
 

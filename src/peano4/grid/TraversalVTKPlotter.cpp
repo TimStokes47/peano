@@ -112,10 +112,7 @@ void peano4::grid::TraversalVTKPlotter::closeFile() {
 void peano4::grid::TraversalVTKPlotter::enterCell(
   const GridTraversalEvent&  event
 ) {
-  bool plot = event.getIsRefined()==0;
-  for (int i=0; i<TwoPowerD; i++) {
-    plot &= (event.getIsHanging(i) or event.getIsLocal(i));
-  }
+  bool plot = event.getIsRefined()==0 and event.getIsCellLocal();
   if (plot) {
     plotCell(event);
   }

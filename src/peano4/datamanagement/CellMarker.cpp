@@ -7,10 +7,7 @@ peano4::datamanagement::CellMarker::CellMarker(
   _centre(event.getX()),
   _h(event.getH()),
   _isRefined(event.getIsRefined()!=0),
-  _isLocal(true) {
-  for (int i=0; i<TwoPowerD; i++) {
-    _isLocal &= (event.getIsHanging(i) or event.getIsLocal(i));
-  }
+  _isLocal(event.getIsCellLocal()) {
 }
 
 

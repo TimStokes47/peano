@@ -36,6 +36,10 @@ struct peano4::datamanagement::FaceMarker {
 
     int _select;
   public:
+    /**
+     * The derivation of _isLocal and _isRefined is very similar to
+     * peano4::grid::Spacetree::getFaceType().
+     */
     FaceMarker(const peano4::grid::GridTraversalEvent& event);
 
     /**

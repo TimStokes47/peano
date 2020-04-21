@@ -7,9 +7,19 @@ peano4::datamanagement::FaceMarker::FaceMarker(
   _cellCentre(event.getX()),
   _h(event.getH()),
   _select(0) {
-  assertion(false);
-  // isRefined @todo setzen
-  // isLocal @todo setzen
+
+
+  for (int faceNumber=0; faceNumber<2*Dimensions; faceNumber++) {
+    _isRefined[faceNumber] = false;
+    _isLocal[faceNumber]   = event.getIsFaceLocal(faceNumber);
+
+    const int normal = faceNumber % Dimensions;
+    for (int i=0; i<TwoPowerD; i++) {
+      std::bitset<Dimensions> studiedVertex = i;
+      studiedVertex.set(normal,faceNumber>=Dimensions);
+      _isRefined.set( faceNumber, _isRefined[faceNumber] or event.getIsRefined(studiedVertex.to_ulong()) );
+    }
+  }
 }
 
 

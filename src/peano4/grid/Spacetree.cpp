@@ -351,12 +351,25 @@ std::bitset<TwoPowerD> peano4::grid::Spacetree::areVerticesLocal(GridVertex  ver
 }
 
 
-std::bitset<TwoPowerD> peano4::grid::Spacetree::areVerticesHanging(GridVertex  vertices[TwoPowerD]) const {
-  std::bitset<TwoPowerD> bitset;
-  for (int i=0; i<TwoPowerD; i++) {
-    bitset.set(i,vertices[i].getState()==GridVertex::State::HangingVertex);
+std::bitset<TwoTimesD> peano4::grid::Spacetree::areFacesLocal(GridVertex  vertices[TwoPowerD]) const {
+  std::bitset<TwoTimesD> result;
+  for (int faceNumber=0; faceNumber<2*Dimensions; faceNumber++) {
+    bool isLocal = false;
+
+    const int normal = faceNumber % Dimensions;
+    for (int i=0; i<TwoPowerD; i++) {
+      std::bitset<Dimensions> studiedVertex = i;
+      studiedVertex.set(normal,faceNumber>=Dimensions);
+      std::bitset<Dimensions> studiedEntry  = TwoPowerD - studiedVertex.to_ulong();
+      studiedEntry.set(normal,0);
+      isLocal |= vertices[studiedVertex.to_ulong()].getAdjacentRanks( studiedEntry.to_ulong() ) == _id;
+      studiedEntry.set(normal,1);
+      isLocal |= vertices[studiedVertex.to_ulong()].getAdjacentRanks( studiedEntry.to_ulong() ) == _id;
+    }
+
+    result[faceNumber] = isLocal;
   }
-  return bitset;
+  return result;
 }
 
 
@@ -512,17 +525,17 @@ peano4::grid::Spacetree::FaceType peano4::grid::Spacetree::getFaceType(
   }
 
   if ( allVerticesAreHanging ) {
-	return FaceType::Hanging;
+    return FaceType::Hanging;
   }
   else if ( allVerticesAreNew ) {
-	assertion( not allVerticesAreHanging );
-	assertion( not allVerticesAreDelete );
-	return FaceType::New;
+    assertion( not allVerticesAreHanging );
+    assertion( not allVerticesAreDelete );
+    return FaceType::New;
   }
   else if ( allVerticesAreDelete ) {
-	assertion( not allVerticesAreHanging );
-	assertion( not allVerticesAreNew );
-	return FaceType::Delete;
+    assertion( not allVerticesAreHanging );
+    assertion( not allVerticesAreNew );
+    return FaceType::Delete;
   }
   else return FaceType::Persistent;
 }
@@ -1530,6 +1543,27 @@ void peano4::grid::Spacetree::descend(
 
 
 
+peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createGenericCellTraversalEvent(
+  GridVertex              coarseGridVertices[TwoPowerD],
+  GridVertex              fineGridVertices[TwoPowerD],
+  const AutomatonState&   state,
+  const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
+) const {
+  GridTraversalEvent  event;
+  event.setX( state.getX() + state.getH()*0.5 );
+  event.setH( state.getH() );
+
+  event.setIsRefined( areVerticesRefined(fineGridVertices) );
+  event.setRelativePositionToFather( relativePositionToFather );
+
+  event.setIsCellLocal(   isSpacetreeNodeLocal(fineGridVertices, true, true) );
+  event.setIsFaceLocal(   areFacesLocal(fineGridVertices) );
+  event.setIsVertexLocal( areVerticesLocal(fineGridVertices) );
+
+  return event;
+}
+
+
 peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTraversalEvent(
   GridVertex                                   coarseGridVertices[TwoPowerD],
   GridVertex                                   fineGridVertices[TwoPowerD],
@@ -1537,14 +1571,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
   const tarch::la::Vector<Dimensions,int>&     relativePositionToFather
 ) const {
   logTraceInWith3Arguments( "createEnterCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather );
-  GridTraversalEvent  event;
-
-  event.setX( state.getX() + state.getH()*0.5 );
-  event.setH( state.getH() );
-  event.setIsRefined( areVerticesRefined(fineGridVertices) );
-  event.setIsLocal( areVerticesLocal(fineGridVertices) );
-  event.setIsHanging( areVerticesHanging(fineGridVertices) );
-  event.setRelativePositionToFather( relativePositionToFather );
+  GridTraversalEvent  event = createGenericCellTraversalEvent(coarseGridVertices, fineGridVertices, state, relativePositionToFather);
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
@@ -1639,17 +1666,82 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
   logTraceInWith2Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell );
   bool isLeaveCell = not isEnterCell;
 
+  // @todo Docu: Don't care about replica, as removeDuplicateEntriesFromAdjancyListInEvent() removed redundancies anyway
   event.setExchangeVertexData(TraversalObserver::NoData);
   for (int i=0; i<TwoPowerD; i++) {
+/*
     int counter = i * (TwoPowerD-1);
     std::set<int> adjacentIds = getAdjacentDomainIds(fineGridVertices[i],isEnterCell,isEnterCell ? true : false);
     for (auto p: adjacentIds) {
       event.setExchangeVertexData(counter,p);
       counter++;
     }
+*/
+    int counter = i * (TwoPowerD-1);
+    bool      isAdjacentToLocalRank = false;
+    for (int j=0; j<TwoPowerD; j++) {
+      isAdjacentToLocalRank |= (fineGridVertices[i].getState()!=GridVertex::State::HangingVertex and  isEnterCell and fineGridVertices[i].getAdjacentRanks(j)==_id);
+      isAdjacentToLocalRank |= (fineGridVertices[i].getState()!=GridVertex::State::HangingVertex and !isEnterCell and fineGridVertices[i].getBackupOfAdjacentRanks(j)==_id);
+    }
+    if (isAdjacentToLocalRank and fineGridVertices[i].getState()!=GridVertex::State::HangingVertex) {
+      for (int j=0; j<TwoPowerD; j++) {
+        if ( isEnterCell and fineGridVertices[i].getAdjacentRanks(j)!=_id and fineGridVertices[i].getAdjacentRanks(j)>=0) {
+          event.setExchangeVertexData(counter,fineGridVertices[i].getAdjacentRanks(j));
+          counter++;
+        }
+        if (!isEnterCell and fineGridVertices[i].getBackupOfAdjacentRanks(j)!=_id and fineGridVertices[i].getAdjacentRanks(j)>=0) {
+          event.setExchangeVertexData(counter,fineGridVertices[i].getBackupOfAdjacentRanks(j));
+          counter++;
+        }
+      }
+    }
   }
 
-   // @todo Faces fehlen hier
+  event.setExchangeFaceData(TraversalObserver::NoData);
+  for (int faceNumber=0; faceNumber<Dimensions*2; faceNumber++) {
+    // Face has @f$ 2^{d-1} @f$ entries but then it has two faces, so we have
+    // @f$ 2 \cdot 2^{d-1} = 2^d @f$ entries in total.
+    tarch::la::Vector< TwoPowerD, int >  adjacentRanksOfFace(_id);
+    bool isAdjacentToLocalRank = false;
+    int  counter               = 0;
+    const int normal = faceNumber % Dimensions;
+    dfore( i, 2, normal, faceNumber<Dimensions ? 0 : 1 ) {
+      int currentVertex = peano4::utils::dLinearised(i,2);
+
+      if ( fineGridVertices[currentVertex].getState()!=GridVertex::State::HangingVertex) {
+        std::bitset<Dimensions> studiedEntry = TwoPowerD - currentVertex;
+
+        studiedEntry[normal]          = 0;
+        isAdjacentToLocalRank        |=  isEnterCell and fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong()) == _id;
+        isAdjacentToLocalRank        |= !isEnterCell and fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong()) == _id;
+        adjacentRanksOfFace(counter)  =  isEnterCell ? fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong()) : fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong());
+      }
+    }
+
+    bool isAdjacentToNeighbour = false;
+    int  neighbour             = _id;
+    if (isAdjacentToLocalRank) {
+      for (int i=0; i<TwoPowerD; i++) {
+        if (adjacentRanksOfFace(i)!=_id and adjacentRanksOfFace(i)>=0) {
+          assertion8(
+            !isAdjacentToNeighbour or neighbour == adjacentRanksOfFace(i),
+            i, isAdjacentToLocalRank, neighbour, adjacentRanksOfFace,
+            fineGridVertices[0].toString(),
+            fineGridVertices[1].toString(),
+            fineGridVertices[2].toString(),
+            fineGridVertices[3].toString()
+          );
+          isAdjacentToNeighbour = true;
+          neighbour             = adjacentRanksOfFace(i);
+        }
+      }
+      if (isAdjacentToNeighbour) {
+        event.setExchangeFaceData(faceNumber,neighbour);
+      }
+    }
+  }
+
+  event.setExchangeCellData(getTreeOwningSpacetreeNode(fineGridVertices));
 
   logTraceOutWith3Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell, isLeaveCell );
 }
@@ -1659,6 +1751,7 @@ void peano4::grid::Spacetree::removeDuplicateEntriesFromAdjancyListInEvent(
   GridTraversalEvent&  event
 ) const {
   logTraceInWith1Argument( "removeDuplicateEntriesFromAdjancyListInEvent(GridTraversalEvent)", event.toString() );
+
   for (int i=0;   i<TwoPowerD; i++)
   for (int j=0;   j<TwoPowerD-1; j++)
   for (int k=j+1; k<TwoPowerD-1; k++) {
@@ -1666,6 +1759,7 @@ void peano4::grid::Spacetree::removeDuplicateEntriesFromAdjancyListInEvent(
       event.setExchangeVertexData( k + i*(TwoPowerD-1), peano4::grid::TraversalObserver::NoData );
     }
   }
+
   logTraceOutWith1Argument( "removeDuplicateEntriesFromAdjancyListInEvent(GridTraversalEvent)", event.toString() );
 }
 
@@ -1677,14 +1771,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
   const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
 ) const {
   logTraceInWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather );
-  GridTraversalEvent  event;
-
-  event.setX( state.getX() + state.getH()*0.5 );
-  event.setH( state.getH() );
-  event.setIsRefined( areVerticesRefined(fineGridVertices) );
-  event.setIsLocal( areVerticesLocal(fineGridVertices) );
-  event.setIsHanging( areVerticesHanging(fineGridVertices) );
-  event.setRelativePositionToFather( relativePositionToFather );
+  GridTraversalEvent  event = createGenericCellTraversalEvent(coarseGridVertices, fineGridVertices, state, relativePositionToFather);
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
