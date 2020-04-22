@@ -101,26 +101,39 @@ void tarch::logging::CommandLineLogger::closeOutputStreamAndReopenNewOne() {
 }
 
 
-std::string tarch::logging::CommandLineLogger::getTimeStampHumanReadable( long int timestampMS ) {
-  long int hours = timestampMS / 3600000;
-  timestampMS = timestampMS - 3600000 * hours;
+std::string tarch::logging::CommandLineLogger::getTimeStampHumanReadable( long int timestampNanoseconds ) {
+  long int timestampSeconds = timestampNanoseconds / 1000 / 1000 / 1000;
+  const int HourScaling = 60 * 60;
+  long int hours = timestampSeconds / HourScaling;
+  timestampSeconds = timestampSeconds - HourScaling * hours;
 
-  //60000 milliseconds in a minute
-  long int minutes = timestampMS / 60000;
-  timestampMS = timestampMS - 60000 * minutes;
+  const int MinutesScaling = 60;
+  long int minutes = timestampSeconds / MinutesScaling;
+  timestampSeconds = timestampSeconds - MinutesScaling * minutes;
 
-  //1000 milliseconds in a second
-  long int secones = timestampMS / 1000;
+  const int SecondsScaling = 1;
+  long int seconds = timestampSeconds / SecondsScaling;
 
   std::stringstream result;
-  result << hours << ":" << minutes << ":" << secones;
+  if (hours<10) {
+    result << "0";
+  }
+  result << hours << ":";
+  if (minutes<10) {
+    result << "0";
+  }
+  result << hours << ":";
+  if (seconds<10) {
+    result << "0";
+  }
+  result << seconds;
   return result.str();
 }
 
 
 std::string tarch::logging::CommandLineLogger::constructMessageString(
   std::string          messageType,
-  long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message
+  long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message
 ) {
   std::string prefix = "";
   for (unsigned int i=0; i<_indent; i++ ) prefix += " ";
@@ -129,12 +142,12 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
 
   if ( getLogTimeStamp() ) {
     std::ostringstream timeStampString;
-    timeStampString << timestampMS;
+    timeStampString << timestampNanoseconds;
     result += addSeparators(NumberOfStandardColumnSpaces,timeStampString.str() );
   }
 
   if ( getLogTimeStampHumanReadable() ) {
-    result += addSeparators(NumberOfStandardColumnSpaces,getTimeStampHumanReadable(timestampMS));
+    result += addSeparators(NumberOfStandardColumnSpaces,getTimeStampHumanReadable(timestampNanoseconds));
   }
 
   if ( getLogMachineName() ) {
@@ -161,14 +174,14 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
 }
 
 
-void tarch::logging::CommandLineLogger::debug(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::debug(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
   #if !defined(PeanoDebug) || PeanoDebug<1
   assertion(false);
   #endif
 
   std::string outputMessage = constructMessageString(
     LogFilter::FilterListEntry::TargetDebug,
-    timestampMS, rank, threadId, trace, message
+    timestampNanoseconds, rank, threadId, trace, message
   );
 
   tarch::multicore::Lock lockCout( _semaphore );
@@ -177,10 +190,10 @@ void tarch::logging::CommandLineLogger::debug(long int timestampMS, int rank, in
 }
 
 
-void tarch::logging::CommandLineLogger::info(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::info(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
   std::string outputMessage = constructMessageString(
     LogFilter::FilterListEntry::TargetInfo,
-    timestampMS, rank, threadId, trace, message
+    timestampNanoseconds, rank, threadId, trace, message
   );
 
   tarch::multicore::Lock lockCout( _semaphore );
@@ -191,10 +204,10 @@ void tarch::logging::CommandLineLogger::info(long int timestampMS, int rank, int
 }
 
 
-void tarch::logging::CommandLineLogger::warning(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::warning(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
     std::string outputMessage = constructMessageString(
       "warning",
-	  timestampMS, rank, threadId, trace, message
+	  timestampNanoseconds, rank, threadId, trace, message
     );
 
     tarch::multicore::Lock lockCout( _semaphore );
@@ -207,10 +220,10 @@ void tarch::logging::CommandLineLogger::warning(long int timestampMS, int rank, 
 }
 
 
-void tarch::logging::CommandLineLogger::error(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::error(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
     std::string outputMessage = constructMessageString(
       "error",
-	  timestampMS, rank, threadId, trace, message
+	  timestampNanoseconds, rank, threadId, trace, message
     );
 
     tarch::multicore::Lock lockCout( _semaphore );
@@ -227,10 +240,10 @@ void tarch::logging::CommandLineLogger::error(long int timestampMS, int rank, in
 }
 
 
-void tarch::logging::CommandLineLogger::traceIn(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::traceIn(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
     std::string outputMessage = constructMessageString(
       "trace",
-	  timestampMS, rank, threadId, trace, message
+	  timestampNanoseconds, rank, threadId, trace, message
     );
 
     tarch::multicore::Lock lockCout( _semaphore );
@@ -239,10 +252,10 @@ void tarch::logging::CommandLineLogger::traceIn(long int timestampMS, int rank, 
 }
 
 
-void tarch::logging::CommandLineLogger::traceOut(long int timestampMS, int rank, int threadId, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::traceOut(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
     std::string outputMessage = constructMessageString(
       "trace",
-      timestampMS, rank, threadId, trace, message
+      timestampNanoseconds, rank, threadId, trace, message
     );
 
     tarch::multicore::Lock lockCout( _semaphore );

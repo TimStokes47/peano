@@ -451,7 +451,7 @@ class tarch::logging::Log {
     #endif
 
     /**
-     * Returns the time stamp in ms.
+     * Returns the time stamp in nanoseconds.
      */
     long int getTimeStamp() const;
 
