@@ -1116,10 +1116,7 @@ std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& 
       isVertexAdjacentToLocalSpacetree(vertex,true,false) :
       isVertexAdjacentToLocalSpacetree(vertex,false,false);
 
-  auto adjacentRanks = vertex.getAdjacentRanks();
-  if ( useAdjacencyListBackups ) {
-    adjacentRanks = vertex.getBackupOfAdjacentRanks();
-  }
+  auto adjacentRanks = useAdjacencyListBackups ? vertex.getBackupOfAdjacentRanks() : vertex.getAdjacentRanks();
 
   std::set<int> neighbourIds;
   for (int i=0; i<TwoPowerD; i++) {
@@ -1669,33 +1666,14 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
   // @todo Docu: Don't care about replica, as removeDuplicateEntriesFromAdjancyListInEvent() removed redundancies anyway
   event.setExchangeVertexData(TraversalObserver::NoData);
   for (int i=0; i<TwoPowerD; i++) {
-/*
     int counter = i * (TwoPowerD-1);
     std::set<int> adjacentIds = getAdjacentDomainIds(fineGridVertices[i],isEnterCell,isEnterCell ? true : false);
     for (auto p: adjacentIds) {
-      event.setExchangeVertexData(counter,p);
+      event.setExchangeVertexData(counter, p);
       counter++;
     }
-*/
-    int counter = i * (TwoPowerD-1);
-    bool      isAdjacentToLocalRank = false;
-    for (int j=0; j<TwoPowerD; j++) {
-      isAdjacentToLocalRank |= (fineGridVertices[i].getState()!=GridVertex::State::HangingVertex and  isEnterCell and fineGridVertices[i].getAdjacentRanks(j)==_id);
-      isAdjacentToLocalRank |= (fineGridVertices[i].getState()!=GridVertex::State::HangingVertex and !isEnterCell and fineGridVertices[i].getBackupOfAdjacentRanks(j)==_id);
-    }
-    if (isAdjacentToLocalRank and fineGridVertices[i].getState()!=GridVertex::State::HangingVertex) {
-      for (int j=0; j<TwoPowerD; j++) {
-        if ( isEnterCell and fineGridVertices[i].getAdjacentRanks(j)!=_id and fineGridVertices[i].getAdjacentRanks(j)>=0) {
-          event.setExchangeVertexData(counter,fineGridVertices[i].getAdjacentRanks(j));
-          counter++;
-        }
-        if (!isEnterCell and fineGridVertices[i].getBackupOfAdjacentRanks(j)!=_id and fineGridVertices[i].getAdjacentRanks(j)>=0) {
-          event.setExchangeVertexData(counter,fineGridVertices[i].getBackupOfAdjacentRanks(j));
-          counter++;
-        }
-      }
-    }
   }
+
 
   event.setExchangeFaceData(TraversalObserver::NoData);
   for (int faceNumber=0; faceNumber<Dimensions*2; faceNumber++) {
@@ -1703,42 +1681,56 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
     // @f$ 2 \cdot 2^{d-1} = 2^d @f$ entries in total.
     tarch::la::Vector< TwoPowerD, int >  adjacentRanksOfFace(_id);
     bool isAdjacentToLocalRank = false;
-    int  counter               = 0;
+    int  neighbour             = TraversalObserver::NoData;
     const int normal = faceNumber % Dimensions;
     dfore( i, 2, normal, faceNumber<Dimensions ? 0 : 1 ) {
       int currentVertex = peano4::utils::dLinearised(i,2);
 
-      if ( fineGridVertices[currentVertex].getState()!=GridVertex::State::HangingVertex) {
-        std::bitset<Dimensions> studiedEntry = TwoPowerD - currentVertex;
+      const bool isLocalVertex =
+        isEnterCell ?
+          isVertexAdjacentToLocalSpacetree(fineGridVertices[currentVertex],true,false) :
+          isVertexAdjacentToLocalSpacetree(fineGridVertices[currentVertex],false,false);
 
-        studiedEntry[normal]          = 0;
-        isAdjacentToLocalRank        |=  isEnterCell and fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong()) == _id;
-        isAdjacentToLocalRank        |= !isEnterCell and fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong()) == _id;
-        adjacentRanksOfFace(counter)  =  isEnterCell ? fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong()) : fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong());
-      }
-    }
+      if (isLocalVertex) {
+        auto addEntryToExchangeList = [&](int entry) -> bool {
+          const bool mandatoryCriteria = entry!=_id
+                           and entry!=InvalidRank
+                           and entry!=RankOfPeriodicBoundaryCondition
+                           and entry!=RankOfCellWitchWillBeJoined;
+          const bool receiverCriteria = _splitting.count(entry)==0;
+          const bool senderCriteria   = _splitTriggered.count(entry)==0;
 
-    bool isAdjacentToNeighbour = false;
-    int  neighbour             = _id;
-    if (isAdjacentToLocalRank) {
-      for (int i=0; i<TwoPowerD; i++) {
-        if (adjacentRanksOfFace(i)!=_id and adjacentRanksOfFace(i)>=0) {
-          assertion8(
-            !isAdjacentToNeighbour or neighbour == adjacentRanksOfFace(i),
-            i, isAdjacentToLocalRank, neighbour, adjacentRanksOfFace,
-            fineGridVertices[0].toString(),
-            fineGridVertices[1].toString(),
-            fineGridVertices[2].toString(),
-            fineGridVertices[3].toString()
+          return isEnterCell ?
+            (mandatoryCriteria and isLocalVertex and receiverCriteria) :
+            (mandatoryCriteria and isLocalVertex and senderCriteria);
+        };
+
+        std::bitset<Dimensions> studiedEntry = TwoPowerD - currentVertex - 1;
+
+        studiedEntry[normal] = 0;
+        int rankEntry = isEnterCell ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
+                                    : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
+        if (addEntryToExchangeList( rankEntry )) {
+          assertion12( neighbour==rankEntry or neighbour==TraversalObserver::NoData,
+            neighbour, rankEntry, _splitting.count(rankEntry), _splitTriggered.count(rankEntry), faceNumber, fineGridVertices[currentVertex].toString(),
+            event.toString(), isEnterCell, currentVertex, normal, studiedEntry, _id
           );
-          isAdjacentToNeighbour = true;
-          neighbour             = adjacentRanksOfFace(i);
+          neighbour = rankEntry;
+        }
+
+        studiedEntry[normal] = 1;
+        rankEntry = isEnterCell ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
+                                : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
+        if (addEntryToExchangeList( rankEntry )) {
+          assertion12( neighbour==rankEntry or neighbour==TraversalObserver::NoData,
+            neighbour, rankEntry, _splitting.count(rankEntry), _splitTriggered.count(rankEntry), faceNumber, fineGridVertices[currentVertex].toString(),
+            event.toString(), isEnterCell, currentVertex, normal, studiedEntry, _id
+          );
+          neighbour             = rankEntry;
         }
       }
-      if (isAdjacentToNeighbour) {
-        event.setExchangeFaceData(faceNumber,neighbour);
-      }
     }
+    event.setExchangeFaceData(neighbour);
   }
 
   event.setExchangeCellData(getTreeOwningSpacetreeNode(fineGridVertices));

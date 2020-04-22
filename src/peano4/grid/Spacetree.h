@@ -423,6 +423,8 @@ class peano4::grid::Spacetree {
      * new worker, i.e. it does not compute anything anymore on the local
      * vertex, but it still has to do the send/receive stuff, i.e. it still
      * has to handle the vertices.
+     *
+     * Hanging vertices are never local to the current spacetree.
      */
     bool isVertexAdjacentToLocalSpacetree(
       GridVertex  vertex,
