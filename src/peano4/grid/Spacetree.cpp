@@ -1675,18 +1675,29 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
   }
 
 
-  event.setExchangeFaceData(TraversalObserver::NoData);
   for (int faceNumber=0; faceNumber<Dimensions*2; faceNumber++) {
     // Face has @f$ 2^{d-1} @f$ entries but then it has two faces, so we have
     // @f$ 2 \cdot 2^{d-1} = 2^d @f$ entries in total.
     tarch::la::Vector< TwoPowerD, int >  adjacentRanksOfFace(_id);
-    bool isAdjacentToLocalRank = false;
-    int  neighbour             = TraversalObserver::NoData;
+    int counter = 0;
     const int normal = faceNumber % Dimensions;
     dfore( i, 2, normal, faceNumber<Dimensions ? 0 : 1 ) {
       int currentVertex = peano4::utils::dLinearised(i,2);
 
-      const bool isLocalVertex =
+      std::bitset<Dimensions> studiedEntry = TwoPowerD - currentVertex - 1;
+      studiedEntry[normal] = 0;
+      int rankEntry = isEnterCell ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
+                                  : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
+      adjacentRanksOfFace(counter) = rankEntry;
+      counter++;
+
+      studiedEntry[normal] = 1;
+      rankEntry = isEnterCell ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
+                              : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
+      adjacentRanksOfFace(counter) = rankEntry;
+      counter++;
+
+      /*const bool isLocalVertex =
         isEnterCell ?
           isVertexAdjacentToLocalSpacetree(fineGridVertices[currentVertex],true,false) :
           isVertexAdjacentToLocalSpacetree(fineGridVertices[currentVertex],false,false);
@@ -1728,9 +1739,33 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
           );
           neighbour             = rankEntry;
         }
+*/
+    }
+
+    bool isAdjacentToLocalRank = false;
+    int  neighbour = TraversalObserver::NoData;
+    for (int i=0; i<TwoPowerD; i++) {
+      //tarch::la::Vector< TwoPowerD, int >  adjacentRanksOfFace(_id);
+      isAdjacentToLocalRank == adjacentRanksOfFace(i)!=_id
+                            or _splitTriggered.count(adjacentRanksOfFace(i))==1;
+
+      const bool mandatoryCriteria = adjacentRanksOfFace(i)!=_id
+                       and adjacentRanksOfFace(i)!=InvalidRank
+                       and adjacentRanksOfFace(i)!=RankOfPeriodicBoundaryCondition
+                       and adjacentRanksOfFace(i)!=RankOfCellWitchWillBeJoined;
+      const bool receiverCriteria = _splitting.count(adjacentRanksOfFace(i))==0;
+      const bool senderCriteria   = _splitTriggered.count(adjacentRanksOfFace(i))==0;
+
+      if (
+         isEnterCell and mandatoryCriteria and receiverCriteria
+        or
+        !isEnterCell and mandatoryCriteria and senderCriteria
+      ) {
+        neighbour = adjacentRanksOfFace(i);
       }
     }
-    event.setExchangeFaceData(neighbour);
+
+    event.setExchangeFaceData(faceNumber,neighbour);
   }
 
   event.setExchangeCellData(getTreeOwningSpacetreeNode(fineGridVertices));

@@ -30,6 +30,7 @@ class peano4::grid::tests::SpacetreeTest: public tarch::tests::TestCase {
 
     void testRestrictToCoarseGrid();
     void testCreateLeaveCellTraversalEvent();
+    void testCreateNeighbourExchangeLists();
   public:
     SpacetreeTest();
     void run() override;

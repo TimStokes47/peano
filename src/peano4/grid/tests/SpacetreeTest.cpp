@@ -1,5 +1,7 @@
 #include "SpacetreeTest.h"
 #include "../Spacetree.h"
+#include "../GridTraversalEvent.h"
+#include "../TraversalObserver.h"
 
 #include "peano4/utils/Globals.h"
 #include "peano4/utils/Loop.h"
@@ -83,9 +85,36 @@ void peano4::grid::tests::SpacetreeTest::testCreateLeaveCellTraversalEvent() {
 }
 
 
+void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
+  #if Dimensions==2
+  Spacetree tree( {0.0,0.0}, {1.0,1.0} );
+
+  GridTraversalEvent event;
+  GridVertex vertices[TwoPowerD];
+  vertices[0].setState( GridVertex::State::Unrefined );
+  vertices[0].setAdjacentRanks( { Spacetree::InvalidRank, 1, Spacetree::InvalidRank, 0 } );
+  vertices[1].setState( GridVertex::State::Unrefined );
+  vertices[1].setAdjacentRanks( { 1, 1, 0, 1 } );
+  vertices[2].setState( GridVertex::State::Unrefined );
+  vertices[2].setAdjacentRanks( { Spacetree::InvalidRank, 0, Spacetree::InvalidRank, 0 } );
+  vertices[3].setState( GridVertex::State::Unrefined );
+  vertices[3].setAdjacentRanks( { 0, 1, 0, 0 } );
+
+  // enter cell; no load balancing going on
+  tree.createNeighbourExchangeLists( vertices, event, true );
+
+  validateEqualsWithParams1( event.getExchangeFaceData(0), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(1), 1,                         event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(2), 1,                         event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(3), TraversalObserver::NoData, event.toString() );
+  #endif
+}
+
+
 void peano4::grid::tests::SpacetreeTest::run() {
   testMethod( testRestrictToCoarseGrid );
   testMethod( testCreateLeaveCellTraversalEvent );
+  testMethod( testCreateNeighbourExchangeLists );
 }
 
 
