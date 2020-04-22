@@ -928,19 +928,24 @@
      *
      * Argument lhs and rhs have to be of type Vector. Their entries have to be
      * equal besides the machine precision.
+     *
      * Otherwise assertion will fail. The machine precision is evaluated via
      * equals().
+     *
+     * This routine does work with integers, too, but its name highlights that it
+     * uses tarch::la::equals(...) to compute the vectors and thus has a certain
+     * "slack" in there if you compare double vectors.
      */
-    #define assertionVectorNumericalEquals(lhs,rhs) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals3(lhs(d),rhs(d),lhs,rhs,d); }
-    #define assertionVectorNumericalEquals1(lhs,rhs,param0) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals4(lhs(d),rhs(d),lhs,rhs,d,param0); }
-    #define assertionVectorNumericalEquals2(lhs,rhs,param0,param1) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals5(lhs(d),rhs(d),lhs,rhs,d,param0,param1); }
-    #define assertionVectorNumericalEquals3(lhs,rhs,param0,param1,param2) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals6(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2); }
-    #define assertionVectorNumericalEquals4(lhs,rhs,param0,param1,param2,param3) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals7(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3); }
-    #define assertionVectorNumericalEquals5(lhs,rhs,param0,param1,param2,param3,param4) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals8(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4); }
-    #define assertionVectorNumericalEquals6(lhs,rhs,param0,param1,param2,param3,param4,param5) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals9(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4,param5); }
-    #define assertionVectorNumericalEquals7(lhs,rhs,param0,param1,param2,param3,param4,param5,param6) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals10(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4,param5,param6); }
-    #define assertionVectorNumericalEquals8(lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals11(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4,param5,param6,param7); }
-    #define assertionVectorNumericalEquals9(lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7,param8) for (int d=0; d<Dimensions; d++) { assertionNumericalEquals12(lhs(d),rhs(d),lhs,rhs,d,param0,param1,param2,param3,param4,param5,param6,param7,param8); }
+    #define assertionVectorNumericalEquals(lhs,rhs)                                                                 assertion2( tarch::la::equals( lhs,rhs ),lhs,rhs);
+    #define assertionVectorNumericalEquals1(lhs,rhs,param0)                                                         assertion3( tarch::la::equals( lhs,rhs ),lhs,rhs,param0);
+    #define assertionVectorNumericalEquals2(lhs,rhs,param0,param1)                                                  assertion4( tarch::la::equals( lhs,rhs ),lhs,rhs,param0,param1);
+    #define assertionVectorNumericalEquals3(lhs,rhs,param0,param1,param2)                                           assertion5( tarch::la::equals( lhs,rhs ),lhs,rhs,param0,param1,param2);
+    #define assertionVectorNumericalEquals4(lhs,rhs,param0,param1,param2,param3)                                    assertion6( tarch::la::equals( lhs,rhs ),lhs,rhs,param0,param1,param2,param3);
+    #define assertionVectorNumericalEquals5(lhs,rhs,param0,param1,param2,param3,param4)                             assertion7( tarch::la::equals( lhs,rhs ),lhs,rhs,param0,param1,param2,param3,param4);
+    #define assertionVectorNumericalEquals6(lhs,rhs,param0,param1,param2,param3,param4,param5)                      assertion8( tarch::la::equals( lhs,rhs ),lhs,rhs,param0,param1,param2,param3,param4,param5);
+    #define assertionVectorNumericalEquals7(lhs,rhs,param0,param1,param2,param3,param4,param5,param6)               assertion9( tarch::la::equals( lhs,rhs ),lhs,rhs,param0,param1,param2,param3,param4,param5,param6);
+    #define assertionVectorNumericalEquals8(lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7)        assertion10( tarch::la::equals( lhs,rhs ),lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7);
+    #define assertionVectorNumericalEquals9(lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7,param8) assertion11( tarch::la::equals( lhs,rhs ),lhs,rhs,param0,param1,param2,param3,param4,param5,param6,param7,param8);
 
     /**
      * @see ASSERTION_EXIT_CODE
