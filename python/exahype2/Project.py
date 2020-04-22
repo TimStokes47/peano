@@ -41,7 +41,7 @@ class Project(object):
     self._first_plot_time_stamp = 0.0
     self._time_in_between_plots = 0.1
 
-  def getLibrary( self, mode ):
+  def get_library( self, mode ):
     """
     
     dimensions is either 2 or 3

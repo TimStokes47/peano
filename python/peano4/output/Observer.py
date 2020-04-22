@@ -362,12 +362,12 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       #endif
 
-      if (
+      if ( 
+        peano4::grid::PeanoCurve::isInOutStack(inVertexStack) 
+        and
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
-        and
-        peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
       ) {{
         // @todo: Merge with neighbour. Schon da, aber user-merge ops invocation fehlt noch
         for (int i=0; i<TwoPowerD-1; i++) {{
@@ -382,7 +382,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
             assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), _spacetreeId );
           }}
         }}
-      }}      
+      }}
 
       view.set(outVertexStackPosition,data);
     }}
@@ -479,21 +479,24 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       #endif
 
-      // @todo Implement: Merge with neighbour
-        /*
-        for (int i=0; i<TwoPowerD-1; i++) {{
-          int currentEntryInExchangeList = event.getExchangeVertexData( i+outVertexStackPosition*(TwoPowerD-1) );
-          if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
-            const int stack = peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange( currentEntryInExchangeList );
-            logDebug("enterCell(...)", "merge local vertex on tree " << _spacetreeId << " with incoming neighbour from stack " << stack << " (neighbour " << currentEntryInExchangeList << ")" );
-            assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
-            {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
+      if ( 
+        inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        peano4::grid::PeanoCurve::isInOutStack(inFaceStack)
+        and
+        event.getExchangeFaceData( outFaceStackPosition )!=peano4::grid::TraversalObserver::NoData
+      ) {{
+        // @todo: Merge with neighbour. Schon da, aber user-merge ops invocation fehlt noch
+        const int stack = peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange( event.getExchangeFaceData( outFaceStackPosition ) );
+        logDebug("enterCell(...)", "merge local face on tree " << _spacetreeId << " with incoming face from stack " << stack );
+        assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
+        {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
             
-            assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), _spacetreeId );
-            assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), _spacetreeId );
-          }}
-        }}
-        */
+        assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), _spacetreeId );
+        assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), _spacetreeId );
+      }}
             
       view.set(outFaceStackPosition,data);
     }}
@@ -746,6 +749,21 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       logDebug("leaveCell(...)", "pos-" << inFaceStackPosition << "->face stack " << outFaceStack );
       
       {full_qualified_type} data = view.get(inFaceStackPosition);
+      
+      if ( 
+        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        peano4::grid::PeanoCurve::isInOutStack(outFaceStack)
+        and
+        event.getExchangeFaceData( inFaceStackPosition )!=peano4::grid::TraversalObserver::NoData
+      ) {{
+        const int stack = peano4::parallel::Node::getOutputStackNumberOfHorizontalDataExchange( event.getExchangeFaceData( inFaceStackPosition ) );
+        logDebug("enterCell(...)", "send local face from tree " << _spacetreeId << " to stack " << stack );
+        DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->push(data);
+      }}
+
       if (
         outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and

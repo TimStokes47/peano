@@ -4,6 +4,12 @@ from enum import Enum
 
 
 class CompileMode(Enum):
+  """
+  
+    The compile mode is required in my get_library() routines. It is also used in the 
+    Makefile template.
+  
+  """
   Debug = 0
   Trace = 1
   Asserts = 2
