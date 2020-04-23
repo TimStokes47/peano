@@ -195,6 +195,10 @@ void examples::exahype2::finitevolumes::Euler::adjustSolution(
 \noindent
 As second and third step, we have to write our actual flux and eigenvalue
 functions as we need them for Rusanov:
+
+\attachfile[icon=Paperclip,description=Download code snippet,author=Peano 4]
+{60_exahype/Euler-eigenvalues.cpp}
+
 \begin{code}
 void examples::exahype2::finitevolumes::Euler::eigenvalues(
   double                                       Q[5],
@@ -204,24 +208,15 @@ void examples::exahype2::finitevolumes::Euler::eigenvalues(
   int                                          normal,
   double                                       lambda[5]
 ) {
-  constexpr double gamma = 1.4;
-  const double irho = 1./Q[0];
-  #if Dimensions==3
-  const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]+Q[3]*Q[3]);
-  #else
-  const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]);
-  #endif
-
-  const double u_n = Q[normal + 1] * irho;
-  const double c   = std::sqrt(gamma * p * irho);
-
-  lambda[0]  = u_n;
-  lambda[1]  = u_n;
-  lambda[2]  = u_n;
-  lambda[3]  = u_n + c;
-  lambda[4]  = u_n - c;
+  [...]
 }
 \end{code}
+
+
+
+\attachfile[icon=Paperclip,description=Download code snippet,author=Peano 4]
+{60_exahype/Euler-flux.cpp}
+
 
 \begin{code}
 void examples::exahype2::finitevolumes::Euler::flux(
@@ -232,43 +227,7 @@ void examples::exahype2::finitevolumes::Euler::flux(
   int                                          normal,
   double                                       F[5]
 ) {
-  constexpr double gamma = 1.4;
-  const double irho = 1./Q[0];
-  #if Dimensions==3
-  const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]+Q[3]*Q[3]);
-  #else
-  const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]);
-  #endif
-
-  switch (normal) {
-    case 0:
-        {
-          F[0] = Q[1];
-          F[1] = irho*Q[1]*Q[1] + p;
-          F[2] = irho*Q[2]*Q[1];
-          F[3] = (Dimensions==3) ? irho*Q[3]*Q[1] : 0.0;
-          F[4] = irho*(Q[4]+p)*Q[1];
-        }
-        break;
-    case 1:
-        {
-          F[0] = Q[2];
-          F[1] = irho*Q[1]*Q[2];
-          F[2] = irho*Q[2]*Q[2] + p;
-          F[3] = (Dimensions==3) ? irho*Q[3]*Q[2] : 0.0;
-          F[4] = irho*(Q[4]+p)*Q[2];
-        }
-        break;
-    case 2:
-        {
-          F[0] = Q[3];
-          F[1] = irho*Q[1]*Q[3];
-          F[2] = irho*Q[2]*Q[3];
-          F[3] = (Dimensions==3) ? irho*Q[3]*Q[3] + p : 0.0;
-          F[4] = irho*(Q[4]+p)*Q[3];
-        }
-        break;
-  }
+  [...]
 }
 \end{code}
 
