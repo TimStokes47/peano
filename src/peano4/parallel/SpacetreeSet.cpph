@@ -298,11 +298,11 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
       int inStack   = Node::getInstance().getInputStackNumberOfHorizontalDataExchange(targetId);
 
       int sendTag       = Node::getInstance().getGridDataExchangeTag( spacetreeId, targetId, Node::ExchangeMode::HorizontalData );
-      logDebug( "exchangeStacksAsynchronously(...)", "send stack " << sourceStackKey.second << " of tree " << sourceStackKey.first << " to rank " << rank << " with tag " << sendTag << ": " << count << " element(s)");
+      logDebug( "exchangeAllHorizontalDataExchangeStacks(...)", "send stack " << sourceStackKey.second << " of tree " << sourceStackKey.first << " to rank " << rank << " with tag " << sendTag << ": " << count << " element(s)");
       stackContainer.getForPush(sourceStackKey)->startSend(rank,sendTag);
 
       int receiveTag    = Node::getInstance().getGridDataExchangeTag( targetId, spacetreeId, Node::ExchangeMode::HorizontalData );
-      logDebug( "exchangeStacksAsynchronously(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
+      logDebug( "exchangeAllHorizontalDataExchangeStacks(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
       assertion(not Node::getInstance().isHorizontalDataExchangeOutputStackNumber(inStack));
       stackContainer.getForPush(spacetreeId,inStack)->startReceive(rank,receiveTag,count);
     }
@@ -323,15 +323,16 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
       const int targetId = Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second);
 
       const int targetStack = Node::getInstance().getInputStackNumberOfHorizontalDataExchange(spacetreeId);
-      logDebug(
-         "exchangeStacksAsynchronously(...)",
+      // @todo Debug
+      logInfo(
+         "exchangeAllHorizontalDataExchangeStacks(...)",
          "map output stream " << sourceStackKey.second << " of tree " <<
          spacetreeId << " onto input stream " << targetStack <<
          " of tree " << targetId <<
          ". Copy/clone " << stackContainer.getForPush(sourceStackKey)->size() << " entries"
       );
 
-      stackContainer.getForPush(targetId,targetStack)->clone( *stackContainer.getForPush(sourceStackKey) );
+      stackContainer.getForPush(targetId,targetStack)->clone( *stackContainer.getForPop(sourceStackKey) );
 
       #if PeanoDebug>0
       const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfHorizontalDataExchange( spacetreeId );

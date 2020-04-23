@@ -91,14 +91,19 @@ void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
 
   GridTraversalEvent event;
   GridVertex vertices[TwoPowerD];
+
   vertices[0].setState( GridVertex::State::Unrefined );
   vertices[0].setAdjacentRanks( { Spacetree::InvalidRank, 1, Spacetree::InvalidRank, 0 } );
+  vertices[0].setBackupOfAdjacentRanks( { Spacetree::InvalidRank, 1, Spacetree::InvalidRank, 0 } );
   vertices[1].setState( GridVertex::State::Unrefined );
   vertices[1].setAdjacentRanks( { 1, 1, 0, 1 } );
+  vertices[1].setBackupOfAdjacentRanks( { 1, 1, 0, 1 } );
   vertices[2].setState( GridVertex::State::Unrefined );
   vertices[2].setAdjacentRanks( { Spacetree::InvalidRank, 0, Spacetree::InvalidRank, 0 } );
+  vertices[2].setBackupOfAdjacentRanks( { Spacetree::InvalidRank, 0, Spacetree::InvalidRank, 0 } );
   vertices[3].setState( GridVertex::State::Unrefined );
   vertices[3].setAdjacentRanks( { 0, 1, 0, 0 } );
+  vertices[3].setBackupOfAdjacentRanks( { 0, 1, 0, 0 } );
 
   // enter cell; no load balancing going on
   tree.createNeighbourExchangeLists( vertices, event, true );
@@ -107,7 +112,54 @@ void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
   validateEqualsWithParams1( event.getExchangeFaceData(1), 1,                         event.toString() );
   validateEqualsWithParams1( event.getExchangeFaceData(2), 1,                         event.toString() );
   validateEqualsWithParams1( event.getExchangeFaceData(3), TraversalObserver::NoData, event.toString() );
-  #endif
+
+  vertices[0].setState( GridVertex::State::Unrefined );
+  vertices[0].setAdjacentRanks( { Spacetree::InvalidRank, 0, Spacetree::InvalidRank, 1 } );
+  vertices[0].setBackupOfAdjacentRanks( { Spacetree::InvalidRank, 0, Spacetree::InvalidRank, 1 } );
+  vertices[1].setState( GridVertex::State::Unrefined );
+  vertices[1].setAdjacentRanks( { 0, 0, 1, 0 } );
+  vertices[1].setBackupOfAdjacentRanks( { 0, 0, 1, 0 } );
+  vertices[2].setState( GridVertex::State::Unrefined );
+  vertices[2].setAdjacentRanks( { Spacetree::InvalidRank, 1, Spacetree::InvalidRank, 1 } );
+  vertices[2].setBackupOfAdjacentRanks( { Spacetree::InvalidRank, 1, Spacetree::InvalidRank, 1 } );
+  vertices[3].setState( GridVertex::State::Unrefined );
+  vertices[3].setAdjacentRanks( { 1, 0, 1, 1 } );
+  vertices[3].setBackupOfAdjacentRanks( { 1, 0, 1, 1 } );
+
+  // enter cell; just triggered the split
+  tree._splitTriggered.insert( std::pair<int,int>(1,1) );
+  tree.createNeighbourExchangeLists( vertices, event, true );
+
+  validateEqualsWithParams1( event.getExchangeFaceData(0), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(1), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(2), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(3), TraversalObserver::NoData, event.toString() );
+
+  tree.createNeighbourExchangeLists( vertices, event, false );
+
+  validateEqualsWithParams1( event.getExchangeFaceData(0), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(1), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(2), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(3), TraversalObserver::NoData, event.toString() );
+
+  // enter cell; just triggered the split
+  tree._splitTriggered.clear();
+  tree._splitting.insert( 1 );
+  tree.createNeighbourExchangeLists( vertices, event, true );
+
+  validateEqualsWithParams1( event.getExchangeFaceData(0), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(1), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(2), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(3), TraversalObserver::NoData, event.toString() );
+
+  tree.createNeighbourExchangeLists( vertices, event, false );
+
+  validateEqualsWithParams1( event.getExchangeFaceData(0), TraversalObserver::NoData, event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(1), 1,                         event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(2), 1,                         event.toString() );
+  validateEqualsWithParams1( event.getExchangeFaceData(3), TraversalObserver::NoData, event.toString() );
+
+#endif
 }
 
 

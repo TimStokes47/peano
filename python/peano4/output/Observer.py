@@ -459,7 +459,6 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inFaceStack))->pop();
       }}
       
-      
       #if PeanoDebug>0  
       if (
         inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
@@ -761,7 +760,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       ) {{
         const int stack = peano4::parallel::Node::getOutputStackNumberOfHorizontalDataExchange( event.getExchangeFaceData( inFaceStackPosition ) );
         logDebug("enterCell(...)", "send local face from tree " << _spacetreeId << " to stack " << stack );
-        DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->push(data);
+        DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,stack))->push(data);
       }}
 
       if (

@@ -1661,9 +1661,9 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
   bool                 isEnterCell
 ) const {
   logTraceInWith2Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell );
-  bool isLeaveCell = not isEnterCell;
 
   // @todo Docu: Don't care about replica, as removeDuplicateEntriesFromAdjancyListInEvent() removed redundancies anyway
+  // @todo Docu: Ich bin mir hier ueberhaupt net sicher. Faces stimmen jedoch.
   event.setExchangeVertexData(TraversalObserver::NoData);
   for (int i=0; i<TwoPowerD; i++) {
     int counter = i * (TwoPowerD-1);
@@ -1674,8 +1674,13 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
     }
   }
 
+  // @todo Ich glaube ich kann einiges aus den Faces auch fuer Vertices und Zellen verwenden.
+  //       Die Logik, was genau lokal ist und was nicht z.B.
+
 
   for (int faceNumber=0; faceNumber<Dimensions*2; faceNumber++) {
+    // Derive all face adjacency information from the vertices
+    // -------------------------------------------------------
     // Face has @f$ 2^{d-1} @f$ entries but then it has two faces, so we have
     // @f$ 2 \cdot 2^{d-1} = 2^d @f$ entries in total.
     tarch::la::Vector< TwoPowerD, int >  adjacentRanksOfFace(_id);
@@ -1696,81 +1701,55 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
                               : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
       adjacentRanksOfFace(counter) = rankEntry;
       counter++;
-
-      /*const bool isLocalVertex =
-        isEnterCell ?
-          isVertexAdjacentToLocalSpacetree(fineGridVertices[currentVertex],true,false) :
-          isVertexAdjacentToLocalSpacetree(fineGridVertices[currentVertex],false,false);
-
-      if (isLocalVertex) {
-        auto addEntryToExchangeList = [&](int entry) -> bool {
-          const bool mandatoryCriteria = entry!=_id
-                           and entry!=InvalidRank
-                           and entry!=RankOfPeriodicBoundaryCondition
-                           and entry!=RankOfCellWitchWillBeJoined;
-          const bool receiverCriteria = _splitting.count(entry)==0;
-          const bool senderCriteria   = _splitTriggered.count(entry)==0;
-
-          return isEnterCell ?
-            (mandatoryCriteria and isLocalVertex and receiverCriteria) :
-            (mandatoryCriteria and isLocalVertex and senderCriteria);
-        };
-
-        std::bitset<Dimensions> studiedEntry = TwoPowerD - currentVertex - 1;
-
-        studiedEntry[normal] = 0;
-        int rankEntry = isEnterCell ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
-                                    : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
-        if (addEntryToExchangeList( rankEntry )) {
-          assertion12( neighbour==rankEntry or neighbour==TraversalObserver::NoData,
-            neighbour, rankEntry, _splitting.count(rankEntry), _splitTriggered.count(rankEntry), faceNumber, fineGridVertices[currentVertex].toString(),
-            event.toString(), isEnterCell, currentVertex, normal, studiedEntry, _id
-          );
-          neighbour = rankEntry;
-        }
-
-        studiedEntry[normal] = 1;
-        rankEntry = isEnterCell ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
-                                : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
-        if (addEntryToExchangeList( rankEntry )) {
-          assertion12( neighbour==rankEntry or neighbour==TraversalObserver::NoData,
-            neighbour, rankEntry, _splitting.count(rankEntry), _splitTriggered.count(rankEntry), faceNumber, fineGridVertices[currentVertex].toString(),
-            event.toString(), isEnterCell, currentVertex, normal, studiedEntry, _id
-          );
-          neighbour             = rankEntry;
-        }
-*/
     }
 
+    // Study whether face is local and who neighbours it
+    // -------------------------------------------------
     bool isAdjacentToLocalRank = false;
     int  neighbour = TraversalObserver::NoData;
     for (int i=0; i<TwoPowerD; i++) {
-      //tarch::la::Vector< TwoPowerD, int >  adjacentRanksOfFace(_id);
-      isAdjacentToLocalRank == adjacentRanksOfFace(i)!=_id
-                            or _splitTriggered.count(adjacentRanksOfFace(i))==1;
-
+      // @todo Das geht meines Erachtens nahc raus. Ist generisch
+      //  Semantik: Zwei Ausgaben: Ist das ein lokaler Rank. Ist das ein potentieller Kommunikationsrank.
       const bool mandatoryCriteria = adjacentRanksOfFace(i)!=_id
-                       and adjacentRanksOfFace(i)!=InvalidRank
-                       and adjacentRanksOfFace(i)!=RankOfPeriodicBoundaryCondition
-                       and adjacentRanksOfFace(i)!=RankOfCellWitchWillBeJoined;
-      const bool receiverCriteria = _splitting.count(adjacentRanksOfFace(i))==0;
-      const bool senderCriteria   = _splitTriggered.count(adjacentRanksOfFace(i))==0;
+                                 and adjacentRanksOfFace(i)!=InvalidRank
+                                 and adjacentRanksOfFace(i)!=RankOfPeriodicBoundaryCondition
+                                 and adjacentRanksOfFace(i)!=RankOfCellWitchWillBeJoined
+                                 and _spacetreeState!=SpacetreeState::EmptyRun;
 
-      if (
-         isEnterCell and mandatoryCriteria and receiverCriteria
-        or
-        !isEnterCell and mandatoryCriteria and senderCriteria
-      ) {
-        neighbour = adjacentRanksOfFace(i);
+      if (isEnterCell) {
+        isAdjacentToLocalRank |= adjacentRanksOfFace(i)==_id
+                              or _splitTriggered.count(adjacentRanksOfFace(i))==1
+                              or _splitting.count(adjacentRanksOfFace(i))==1;
+
+        const bool receiverCriteria = _splitTriggered.count(adjacentRanksOfFace(i))==0
+                                  and _splitting.count(adjacentRanksOfFace(i))==0
+                                  and _spacetreeState!=SpacetreeState::NewFromSplit;
+        if (mandatoryCriteria and receiverCriteria) {
+          neighbour = adjacentRanksOfFace(i);
+        }
       }
+      else {
+        isAdjacentToLocalRank |= adjacentRanksOfFace(i)==_id
+                              or _splitTriggered.count(adjacentRanksOfFace(i))==1;
+
+        const bool senderCriteria   = _splitTriggered.count(adjacentRanksOfFace(i))==0;
+        if (mandatoryCriteria and senderCriteria) {
+          neighbour = adjacentRanksOfFace(i);
+        }
+      }
+
+
     }
 
-    event.setExchangeFaceData(faceNumber,neighbour);
+    logDebug( "createNeighbourExchangeLists()", "temporary data for face " << faceNumber << ": " << adjacentRanksOfFace << ". neighbour=" << neighbour << ", isAdjacentToLocalRank=" << isAdjacentToLocalRank );
+
+    event.setExchangeFaceData(faceNumber,isAdjacentToLocalRank ? neighbour : TraversalObserver::NoData);
   }
 
+  // @todo ob das so stimmt bezweifel ich auch startk
   event.setExchangeCellData(getTreeOwningSpacetreeNode(fineGridVertices));
 
-  logTraceOutWith3Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell, isLeaveCell );
+  logTraceOutWith2Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell );
 }
 
 
