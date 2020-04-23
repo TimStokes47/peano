@@ -250,6 +250,10 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     /**
      * Join the tree into its master. You are not allowed to run this
      * routine unless the tree with treeId holds mayJoinWithMaster().
+     *
+     * @todo Hinschreiben, dass das im Gegenzug trivial ist, d.h. beim
+     * split duplizieren wir alles, aber hier joinen wir nur, wenn eh
+     * schon alles auf Grobgitter da ist. Also ist es trivial.
      */
     void join(int treeId);
 
@@ -328,37 +332,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     /**
      * Invoke traverse on all spacetrees in parallel.
      *
-     * <h2>Split/merge process</h2>
-     *
-     * @image html split-merge-sequence.svg.png
-     *
-     * The splits and merges in P4 are realised in two phases consisting of four
-     * steps. The first
-     * phase is the split-triggered phase. In this phase which is also the first step
-     * of the process, only the origin tree is aware of the data splits. It decides
-     * which cells to get rid off, and updates the local vertices' adjacency
-     * information. This information goes out. Nothing else is done in this traversal.
-     *
-     * Once all traversals have finished, the master tree transitions into the
-     * splitting state, it creates the new child tree, and it copies its whole tree
-     * over to this new rank. Please note that we are talking only about the raw
-     * tree data structure without any user data. This is the second step realised
-     * as preamble to the second grid traversal.
-     *
-     * In the third step, the master runs through its tree. At this point, all
-     * neighbours have sent in their vertex data, as they had not been aware
-     * previously of the split. The master merges this data (plus the user data) into
-     * the local tree. This is a sole merger phase, i.e. no local routines are invoked
-     * besides the merger. Once everything is merged, the master tree streams its whole
-     * tree data plus all user data to the new worker, and it starts to erase all the
-     * tree parts that are not local anymore.
-     *
-     * In the final step, both the new worker and the neighbours traverse their mesh.
-     * The neighbours now recognise the update in the adjacency information and update
-     * their local adjacency information, too. The new worker is very well aware that
-     * it is new and thus tries not to receive anything from a neighbour. Instead, it
-     * streams in data.
-     *
      */
     void traverse(peano4::grid::TraversalObserver& observer);
 
@@ -380,42 +353,54 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      *
      * <h2> Split process </h2>
      *
+     * @image html SpacetreeSet_split.png
+     *
      * If you split a tree, the original tree, i.e. the source of the data,
      * makes the new tree run through two states: split triggered and splitting.
      *
-     * While an id is associated by one tree with split triggered, the tree
-     * does not yet physically exist. The original (source) tree has the
+     * In a usual run, Peano's trees do exchange data in a way similar to the
+     * Jacobi smoothing: Each tree traverses its domain and sends out all
+     * boundary data. I call this horizontal communication as it is data exchange
+     * between non-overlapping domains which can be arranged on one grid level.
+     * In the next iteration, the data from neighbours has arrived and can be
+     * merged in. We obtain a criss-cross communication pattern (blue steps)
+     * where an iteration feeds into the neighbour's iteration n+1.
+     *
+     * While a new id is booked by one tree if a split is triggered, this new tree
+     * does not yet physically exist. The original (source) tree keeps the
      * complete ownership of all data, i.e. it does all refines and coarses and
      * also creates all events. However, it already enters the new, yet to be
      * created, tree's indices into all adjacency lists with are consequently
-     * sent out to the other ranks. After the grid sweep, we mark the new
-     * tree id as splitting.
+     * sent out to the other ranks. This is the yellow step above. After the grid
+     * sweep, we mark the new tree id as splitting. At this point, all neighbours
+     * continue to send to the original tree, as they are not yet aware of any
+     * domain partition updates.
      *
-     * While an id is associated with splitting, we know that all the other
+     * While an id is associated with splitting (orange), we know that all the other
      * trees around start to send data to the new tree that is yet to be
-     * created. The data we've received from our partners however has not been
-     * aware yet of the new rank. So the source tree once again traverses its
-     * tree and does all the admin, i.e. takes care of all refining an
-     * coarsening. This time, it already starts to send out boundary data to
-     * the newish tree. Furthermore, it pipes all read data into a splitting
-     * stream.
+     * created: they receive the information about the updated adjacency and can
+     * send out their stuff to the new tree. Which does not exist yet (grey).
      *
-     * After the splitting tree traversal has terminated, we (i) establish
-     * the new tree and mark it as new. See exchangeDataBetweenNewOrMergingTrees()
-     * and createNewTrees()
-     * for some details on this creation plus the data transfer as
-     * sketched below. (ii) We immediately trigger a grid
-     * sweep over the new tree. This grid sweep however does not receive any
-     * standard data but reads out the splitting stream from above. It also
-     * does not do any further grid modifications (refines or coarsens). But
-     * the new tree does send out data along MPI boundaries. (iii) We mark
-     * the new tree as a standard one.
+     * So the splitting rank (orange) traverses its domain and invokes all
+     * events. It has the semantic ownership. It merges in all boundary data from
+     * neighbours, but is does not send out the boundary data (anymore).
+     * After the splitting tree traversal has terminated, we establish
+     * the new tree by duplicating all the local data. This includes the
+     * user data, too.
+     *
+     * The new tree (light green) subsequently is traversed once as empty
+     * tree. That is, all data travel over the stacks, but no events are invoked
+     * and no communication is happening. The purpose of this empty traversal is
+     * to get all data inot the right order.
+     *
+     * Once the empty traversal has terminated, we run over the new tree
+     * again. This time, we label it as new (dark green). While we still do not
+     * invoke any event, we now do send out data. This is the sole purpose of the
+     * new traversal.
      *
      *
-     * Does not run through new trees for which no data might be available yet.
-     * The reason is simple: When we split a tree, this tree pipes its data
-     * (synchronously) into the new worker. In a shared memory environmment,
-     * we thus have to run all 'running' (read non-splitting) trees first.
+     * @todo Not clear. Koennten auch bei New alles machen?
+     *
      *
      * @param treeId  Id of tree that should split, i.e. give away cells to a
      *   new tree
