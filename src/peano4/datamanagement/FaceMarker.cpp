@@ -6,8 +6,8 @@ peano4::datamanagement::FaceMarker::FaceMarker(
 ):
   _cellCentre(event.getX()),
   _h(event.getH()),
-  _select(0) {
-
+  _select(0),
+  _cellIsLocal(event.getIsCellLocal()) {
 
   for (int faceNumber=0; faceNumber<2*Dimensions; faceNumber++) {
     _isRefined[faceNumber] = false;
@@ -23,16 +23,16 @@ peano4::datamanagement::FaceMarker::FaceMarker(
 }
 
 
-int peano4::datamanagement::FaceMarker::normalAxis() const {
-  return _select % Dimensions;
-}
-
-
 tarch::la::Vector<Dimensions,double> peano4::datamanagement::FaceMarker::x(int i) const {
   tarch::la::Vector<Dimensions,double> result( _cellCentre );
   int normal = i % Dimensions;
   result(normal) += i >= Dimensions ? _h(normal)/2.0 : -_h(normal)/2.0;
   return result;
+}
+
+
+tarch::la::Vector<Dimensions,double> peano4::datamanagement::FaceMarker::x() const {
+  return x(_select);
 }
 
 
@@ -44,18 +44,31 @@ tarch::la::Vector<Dimensions,double> peano4::datamanagement::FaceMarker::normal(
 }
 
 
-tarch::la::Vector<Dimensions,double> peano4::datamanagement::FaceMarker::x() const {
-  return x(_select);
-}
-
-
 tarch::la::Vector<Dimensions,double> peano4::datamanagement::FaceMarker::normal() const {
   return normal(_select);
 }
 
 
+tarch::la::Vector<Dimensions,double> peano4::datamanagement::FaceMarker::outerNormal(int i) const {
+  tarch::la::Vector<Dimensions,double> result( 0.0 );
+  int  index        = i % Dimensions;
+  bool negativeSign = i<Dimensions;
+  if ( not _cellIsLocal ) negativeSign = not negativeSign;
+  result(index) += negativeSign ? - _h(index) : _h(index);
+  return result;
+}
+
+
+tarch::la::Vector<Dimensions,double> peano4::datamanagement::FaceMarker::outerNormal() const {
+  return outerNormal(_select);
+}
+
+
 std::string peano4::datamanagement::FaceMarker::toString() const {
-  return "(" + _cellCentre.toString() + "," + _h.toString() + ")";
+  return "(x=" + _cellCentre.toString() + ",h=" + _h.toString()
+       + ",select=" + std::to_string(_select)
+       + ",is-cell-local=" + std::to_string(_cellIsLocal)
+       + ")";
 }
 
 

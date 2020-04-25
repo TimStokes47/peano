@@ -31,8 +31,10 @@ struct peano4::datamanagement::FaceMarker {
      */
     tarch::la::Vector<Dimensions,double>  _h;
 
-    std::bitset<2*Dimensions>              _isRefined;
-    std::bitset<2*Dimensions>              _isLocal;
+    std::bitset<2*Dimensions>             _isRefined;
+    std::bitset<2*Dimensions>             _isLocal;
+
+    bool                                  _cellIsLocal;
 
     int _select;
   public:
@@ -74,10 +76,12 @@ struct peano4::datamanagement::FaceMarker {
     tarch::la::Vector<Dimensions,double> normal() const;
 
     /**
-     * Returns the coordinate axis that is parallel to the normal of the
-     * currently selected face.
+     * This operation gives you the outer normal of a cell. Different to
+     * normal(int), the normal however is oriented along the domain
+     * boundaries, i.e. it always points outside from the local domain.
      */
-    int normalAxis() const;
+    tarch::la::Vector<Dimensions,double> outerNormal(int i) const;
+    tarch::la::Vector<Dimensions,double> outerNormal() const;
 
     tarch::la::Vector<Dimensions,double>  h() const;
 
