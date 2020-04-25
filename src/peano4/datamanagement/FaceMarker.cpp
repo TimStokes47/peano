@@ -23,6 +23,11 @@ peano4::datamanagement::FaceMarker::FaceMarker(
 }
 
 
+int peano4::datamanagement::FaceMarker::normalAxis() const {
+  return _select % Dimensions;
+}
+
+
 tarch::la::Vector<Dimensions,double> peano4::datamanagement::FaceMarker::x(int i) const {
   tarch::la::Vector<Dimensions,double> result( _cellCentre );
   int normal = i % Dimensions;

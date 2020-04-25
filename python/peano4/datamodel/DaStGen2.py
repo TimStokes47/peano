@@ -55,11 +55,24 @@ class DaStGen2(DoF):
     
     self.data             = dastgen2.DataModel(name)
     
-    self.data.add_aspect( peano4.dastgen2.MPI() )
-    self.data.add_aspect( dastgen2.aspects.MPI() )
 
     
     #@todo ifdef PeanoDebug
     self.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "debugX", "Dimensions" ) )
     self.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "debugH", "Dimensions" ) )
+
+
+  def configure(self,namespace,association):
+    """
+    
+      I always need the MPI aspect, but I can't add the right one before I don't 
+      know whether this DaStGen model is used for vertices, faces or cells. To I 
+      hook into this routine. In theory, I could add the DaStGen2 MPI aspect 
+      straightaway (in the constructor), but I decided to do so in one place. 
+      
+    """
+    super(DaStGen2, self).configure(namespace,association)
+    self.data.add_aspect( dastgen2.aspects.MPI() )
+    self.data.add_aspect( peano4.dastgen2.MPI(association) )
+    
 

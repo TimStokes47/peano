@@ -111,8 +111,6 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
         const int sourceRank = Node::getInstance().getRank( parentId );
         assertion( Node::getInstance().getRank( spacetreeId ) == tarch::mpi::Rank::getInstance().getRank() );
 
-        // @todo Muss output sein, weil wir spaeter invertieren. Doku!
-        // Seit ich invertiere, geht das nimmer!
         int  destinationStack = peano4::grid::PeanoCurve::getOutputStackNumber( getInstance().getSpacetree(spacetreeId)._root );
 
         if (sourceRank==tarch::mpi::Rank::getInstance().getRank()) {
@@ -323,8 +321,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
       const int targetId = Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second);
 
       const int targetStack = Node::getInstance().getInputStackNumberOfHorizontalDataExchange(spacetreeId);
-      // @todo Debug
-      logInfo(
+      logDebug(
          "exchangeAllHorizontalDataExchangeStacks(...)",
          "map output stream " << sourceStackKey.second << " of tree " <<
          spacetreeId << " onto input stream " << targetStack <<

@@ -3,16 +3,22 @@
 import peano4.output.TemplatedHeaderImplementationFilePair
 import os
 
+from .DoF import DoFAssociation
 
 
-class PatchToDoubleArray(object):
+class PatchToDoubleArray():
   """
   Very simple converter which maps the patch 1:1 onto a double array
   """
   def __init__(self,patch):
     self.data = patch
+    self._merge_method_definitions = ""
 
 
+  def set_merge_method_definition(self,implementation):
+    self._merge_method_definitions = implementation
+    
+    
   def get_stack_container(self):
     return "peano4::stacks::STDVectorStack< " + self.data.get_full_qualified_type() + " >";
 
@@ -23,6 +29,23 @@ class PatchToDoubleArray(object):
 
     
   def construct_output(self,output):
+    d = { 
+        "CARDINALITY_2D": str(self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1]), 
+        "CARDINALITY_3D": str(self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1]*self.data.dim[2]),
+        "MERGE_METHOD_DECLARATIONS": "",
+        "MERGE_METHOD_DEFINITIONS": ""
+      }
+
+    if self.data.association==DoFAssociation.Vertex:
+      d["MERGE_METHOD_DECLARATIONS"] = "void mergeHorizontally(const " + self.data.name + "& neighbour, const peano4::datamanagement::VertexMarker& marker);"
+      d["MERGE_METHOD_DEFINITIONS"]  = "void " + self.data.get_full_qualified_type() + "::mergeHorizontally(const " + self.data.name + "& neighbour, const peano4::datamanagement::VertexMarker& marker) {\n" + self._merge_method_definitions + "\n}"
+    elif self.data.association==DoFAssociation.Face:
+      d["MERGE_METHOD_DECLARATIONS"] = "void mergeHorizontally(const " + self.data.name + "& neighbour, const peano4::datamanagement::FaceMarker& marker);"
+      d["MERGE_METHOD_DEFINITIONS"]  = "void " + self.data.get_full_qualified_type() + "::mergeHorizontally(const " + self.data.name + "& neighbour, const peano4::datamanagement::FaceMarker& marker) {\n" + self._merge_method_definitions + "\n}"
+    elif self.data.association==DoFAssociation.Cell:
+      d["MERGE_METHOD_DECLARATIONS"] = ""
+
+
     """
       Pass in a version of output
     """
@@ -33,11 +56,8 @@ class PatchToDoubleArray(object):
       templatefile_prefix+".cpp.template",
       self.data.name, 
       self.data.namespace,
-      self.data.namespace[-1], 
-      { 
-        "CARDINALITY_2D": str(self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1]), 
-        "CARDINALITY_3D": str(self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1]*self.data.dim[2]) 
-      },
+      self.data.namespace[-1],
+      d, 
       True)
     output.add(generated_files)
 

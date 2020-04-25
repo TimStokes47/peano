@@ -13,24 +13,24 @@ class DoFAssociation(Enum):
   
 class DoF(object):
   def __init__(self, name):
-    self.assocation = DoFAssociation.Undef
+    self.association = DoFAssociation.Undef
     self.name      = name
     self.namespace = []
 
   
   
-  def configure(self,namespace,assocation):
+  def configure(self,namespace,association):
     """
     Typically called by model as soon as you add an object to it
     """
     self.namespace = [x for x in namespace]
-    self.assocation = assocation
+    self.association = association
     
-    if assocation==DoFAssociation.Vertex:
+    if association==DoFAssociation.Vertex:
       self.namespace += [ "vertexdata" ]
-    elif assocation==DoFAssociation.Cell:
+    elif association==DoFAssociation.Cell:
       self.namespace += [ "celldata" ]
-    elif assocation==DoFAssociation.Face:
+    elif association==DoFAssociation.Face:
       self.namespace += [ "facedata" ]
     else:
       assert False
@@ -52,11 +52,11 @@ class DoF(object):
       or within action sets. We add a prefix name here.
     """
     result = ""
-    if self.assocation==DoFAssociation.Vertex:
+    if self.association==DoFAssociation.Vertex:
       result += "VertexData"
-    elif self.assocation==DoFAssociation.Cell:
+    elif self.association==DoFAssociation.Cell:
       result += "CellData"
-    elif self.assocation==DoFAssociation.Face:
+    elif self.association==DoFAssociation.Face:
       result += "FaceData"
     else:
       assert False
@@ -65,9 +65,9 @@ class DoF(object):
 
     
   #def has_enumerator(self):
-  #  if self.assocation==DoFAssociation.Vertex:
+  #  if self.association==DoFAssociation.Vertex:
   #    return True
-  #  elif self.assocation==DoFAssociation.Face:
+  #  elif self.association==DoFAssociation.Face:
   #    return True
   #  else:
   #    return False
@@ -78,11 +78,11 @@ class DoF(object):
       What should the data type be called within the data repository.
     """
     result = ""
-    if self.assocation==DoFAssociation.Vertex:
+    if self.association==DoFAssociation.Vertex:
       result += "peano4::datamanagement::VertexEnumerator<"
-    elif self.assocation==DoFAssociation.Face:
+    elif self.association==DoFAssociation.Face:
       result += "peano4::datamanagement::FaceEnumerator<"
-    #elif self.assocation==DoFAssociation.Cell:
+    #elif self.association==DoFAssociation.Cell:
     #  result += "peano4::datamanagement::CellWrapper<"
     else:
       assert False

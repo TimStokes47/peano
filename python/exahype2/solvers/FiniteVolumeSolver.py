@@ -36,7 +36,9 @@ class FiniteVolumeSolver():
       self._patch_overlap_new = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, self._unknown_identifier() + "Old" )
     else:
       print( "Error: unknown FV solver type" )
+    self._patch_overlap.generator.set_merge_method_definition( peano4.toolbox.blockstructured.get_face_overlap_merge_implementation(self._patch_overlap) )
     pass
+  
   
   
   def _unknown_identifier(self):

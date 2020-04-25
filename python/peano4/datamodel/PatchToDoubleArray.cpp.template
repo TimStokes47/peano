@@ -1,6 +1,10 @@
 #include "{CLASSNAME}.h"
 
 
+// Some MPI routines require the loops
+#include "peano4/utils/Loop.h"
+
+
 std::string {FULL_QUALIFIED_CLASSNAME}::toString() const {{
   std::string result = std::string("()");
   return result;
@@ -29,3 +33,7 @@ tarch::la::Vector<Dimensions,double> {FULL_QUALIFIED_CLASSNAME}::getDebugH() con
 }}
 
 #endif
+
+
+{MERGE_METHOD_DEFINITIONS}
+

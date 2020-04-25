@@ -2,15 +2,21 @@
 # use, please see the copyright notice at www.peano-framework.org
 from dastgen2 import *
 
+from peano4.datamodel.DoF import DoFAssociation
+
 
 class MPI(object):
   """ 
   
   Represents Peano's MPI aspect injected into a DaStGen model. 
   It mainly ensures that we include the right headers.
+  
+  The instance is to be added to a DaStGen2 model through add_aspect().
     
+  @param dof_association Should be of type DoFAssociation
   """
-  def __init__(self):
+  def __init__(self, dof_association):
+    self._dof_association = dof_association
     pass
 
 
@@ -22,22 +28,40 @@ class MPI(object):
 #include "tarch/la/Vector.h"
 #include "tarch/mpi/Rank.h"
 #include "peano4/utils/Globals.h"
+#include "peano4/datamanagement/CellMarker.h"
+#include "peano4/datamanagement/FaceMarker.h"
+#include "peano4/datamanagement/VertexMarker.h"
 """
   
   def get_attributes(self):
     return ""
   
   def get_method_declarations(self,full_qualified_name):
-    return """
+    result = """
 #ifdef Parallel
     static void sendAndPollDanglingMessages(const """ + full_qualified_name + """& message, int destination, int tag );
     static void receiveAndPollDanglingMessages(""" + full_qualified_name + """& message, int source, int tag );
 #endif
     """
+    
+    if self._dof_association==DoFAssociation.Vertex:
+      result += """
+void mergeHorizontally(const """ + full_qualified_name + """& neighbour, const peano4::datamanagement::VertexMarker& marker);
+""" 
+    elif self._dof_association==DoFAssociation.Face:
+      result += """
+void mergeHorizontally(const """ + full_qualified_name + """& neighbour, const peano4::datamanagement::FaceMarker& marker);
+""" 
+    elif self._dof_association==DoFAssociation.Cell:
+      pass
+    else:
+      assert False
+    
+    return result
 
 
   def get_implementation(self,full_qualified_name):
-    return """
+    result = """
 #ifdef Parallel
 void """ + full_qualified_name + """::sendAndPollDanglingMessages(const """ + full_qualified_name + """& message, int destination, int tag ) {
   """ + full_qualified_name + """::send(
@@ -94,9 +118,26 @@ void """ + full_qualified_name + """::receiveAndPollDanglingMessages(""" + full_
   );
 }
 #endif
-
     """
+
+
+    if self._dof_association==DoFAssociation.Vertex:
+      result += """
+void """ + full_qualified_name + "::mergeHorizontally(const """ + full_qualified_name + """& neighbour, const peano4::datamanagement::VertexMarker& marker) {
+}
+""" 
+    elif self._dof_association==DoFAssociation.Face:
+      result += """
+void """ + full_qualified_name + "::mergeHorizontally(const """ + full_qualified_name + """& neighbour, const peano4::datamanagement::FaceMarker& marker) {
+}
+""" 
+    elif self._dof_association==DoFAssociation.Cell:
+      pass
+    else:
+      assert False
     
+    
+    return result
 
 
 

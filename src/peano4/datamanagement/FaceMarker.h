@@ -73,6 +73,12 @@ struct peano4::datamanagement::FaceMarker {
     tarch::la::Vector<Dimensions,double> normal(int i) const;
     tarch::la::Vector<Dimensions,double> normal() const;
 
+    /**
+     * Returns the coordinate axis that is parallel to the normal of the
+     * currently selected face.
+     */
+    int normalAxis() const;
+
     tarch::la::Vector<Dimensions,double>  h() const;
 
     std::string toString() const;
