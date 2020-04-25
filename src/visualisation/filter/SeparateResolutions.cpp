@@ -42,7 +42,8 @@ void visualisation::filter::SeparateResolutions::apply( visualisation::data::Dat
       inputVariable.dimensions,
       p.offset,
       p.size,
-      inputVariable.dofsPerAxis,inputVariable.unknowns
+      inputVariable.dofsPerAxis,inputVariable.unknowns,
+      p.originTree
     );
     newPatch.copyData(p,inputVariable.dofsPerAxis,inputVariable.unknowns);
     targetPatchData[ targetVariable ].push_back( newPatch );

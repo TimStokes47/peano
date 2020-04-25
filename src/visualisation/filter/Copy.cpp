@@ -20,7 +20,8 @@ void visualisation::filter::Copy::apply( visualisation::data::DataSet& dataSet, 
       p.offset,
       p.size,
       inputVariable.dofsPerAxis,
-      inputVariable.unknowns
+      inputVariable.unknowns,
+      p.originTree
     );
 
     newPatch.copyData(p,inputVariable.dofsPerAxis,inputVariable.unknowns);

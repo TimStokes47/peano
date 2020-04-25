@@ -15,6 +15,7 @@ convertSources = \
   filter/Intersection.cpp \
   filter/SelectValue.cpp \
   filter/SeparateResolutions.cpp \
+  filter/ConvertTreeIdIntoDataField.cpp \
   input/Parser.cpp \
   input/PeanoTextPatchFileReader.cpp \
   output/PeanoWriter.cpp \

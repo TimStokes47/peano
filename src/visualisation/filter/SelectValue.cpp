@@ -35,7 +35,8 @@ void visualisation::filter::SelectValue::apply( visualisation::data::DataSet& da
         p.offset,
   	    p.size,
         inputVariable.dofsPerAxis,
-        inputVariable.unknowns
+        inputVariable.unknowns,
+        p.originTree
       );
 
       newPatch.copyData(p,inputVariable.dofsPerAxis,inputVariable.unknowns);

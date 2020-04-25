@@ -16,6 +16,7 @@
 #include "filter/Intersection.h"
 #include "filter/SelectValue.h"
 #include "filter/SeparateResolutions.h"
+#include "filter/ConvertTreeIdIntoDataField.h"
 
 
 #include "tarch/Assertions.h"
@@ -160,7 +161,8 @@ enum class Filter {
   Copy,
   ExtractFineGrid,
   SelectValue,
-  SeparateResolutions
+  SeparateResolutions,
+  PlotDomainDecomposition
 };
 
 
@@ -174,6 +176,8 @@ std::string toString( Filter filter ) {
       return "select-value";
     case Filter::SeparateResolutions:
       return "separate-resolutions";
+    case Filter::PlotDomainDecomposition:
+      return "plot-domain-decomposition";
   }
   return "undef";
 }
@@ -215,6 +219,9 @@ void applyFilter( std::string filename, std::string outputDirectory, std::string
         }
         else if (filterName==toString(Filter::ExtractFineGrid)) {
           filter = new visualisation::filter::Intersection( visualisation::filter::Intersection::Strategy::KeepFinerGrid );
+        }
+        else if (filterName==toString(Filter::PlotDomainDecomposition)) {
+          filter = new visualisation::filter::ConvertTreeIdIntoDataField();
         }
         else if (filterName==toString(Filter::SeparateResolutions)) {
           filter = new visualisation::filter::SeparateResolutions();
@@ -319,6 +326,7 @@ int main(int argc, char* argv[]) {
       std::cerr << "\t" << toString(Filter::ExtractFineGrid) << "    Extract fine grid" << std::endl;
       std::cerr << "\t" << toString(Filter::SelectValue) << "         Extract grid patches that hold values of a certain range. Append :from:to to filter to specify range" << std::endl;
       std::cerr << "\t" << toString(Filter::SeparateResolutions) << " Splits up the tree mesh into its resolutions" << std::endl;
+      std::cerr << "\t" << toString(Filter::PlotDomainDecomposition) << " Don't plot any data but display which mesh parts are handled by which tree (please use this as first filter if you apply a series of filters)" << std::endl;
 
       std::cerr << std::endl << std::endl;
       std::cerr << "Output directory plus filename can be the same as the input file. In this case, the original file is overwritten/augmented with new data" << std::endl;

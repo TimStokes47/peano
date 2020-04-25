@@ -27,6 +27,21 @@ visualisation::input::PeanoTextPatchFileReader::~PeanoTextPatchFileReader() {
 }
 
 
+int visualisation::input::PeanoTextPatchFileReader::extractTreeNumberFromFileName() const {
+  int result = -1;
+  const std::string prefix    = "tree";
+  const std::string separator = "-";
+  std::size_t start = _file.find( "tree" + separator );
+  if (start != std::string::npos) {
+    start += std::string("tree" + separator).length();
+    std::size_t end = _file.find( separator, start );
+    std::string identifier = _file.substr( start, end-start );
+    result = std::atoi( identifier.c_str() );
+  }
+  return result;
+}
+
+
 void visualisation::input::PeanoTextPatchFileReader::parse() {
   logInfo( "parse()", "reading file " << _file );
 
@@ -45,6 +60,10 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
   if (lines.empty()) {
     logError( "parse()", "file " << _file << " is empty (or does not exist)" );
   }
+
+  int treeNumber = extractTreeNumberFromFileName();
+  // @todo Debug
+  logError( "parse()", "file " << _file << " will yield data with tree number " << treeNumber );
 
   #if !defined(SharedTBB)
   #pragma omp parallel
@@ -150,7 +169,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
         logError( "parse()", "file " << _file << " is corrupt as begin patch is not terminated properly. Quit parsing" );
       }
       else {
-        parsePatch( _data.size()-1, patchLines );
+        parsePatch( _data.size()-1, treeNumber, patchLines );
       }
     }
     else {
@@ -271,7 +290,7 @@ double* visualisation::input::PeanoTextPatchFileReader::parseMapping( const std:
 */
 
 
-void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCounter, const std::vector<std::string>& text ) {
+void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCounter, int treeNumber, const std::vector<std::string>& text ) {
   assertion( _dimensions==2 or _dimensions==3 );
 
   logDebug( "parsePatch(...)", "create patch described by " << text.size() << " lines" );
@@ -326,7 +345,7 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
       }
       else {
         logDebug( "parsePatch(...)", "found " << data.size() << " entries for " << variableName );
-        addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
+        addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),treeNumber,data);
       }
     }
     else if ( tokens[0]=="begin" and tokens[1]=="vertex-values" ) {
@@ -343,14 +362,14 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCoun
         logError( "parsePatch()", "file " << _file << " is corrupt as begin vertex-values is not terminated properly. Quit parsing" );
       }
       else {
-        addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),data);
+        addDataToPatch(dataSetCounter,variableName,offset.data(),size.data(),treeNumber,data);
       }
     }
   }
 }
 
 
-void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSetCounter, const std::string& variableName, double* offset, double* size, const std::vector< std::string >& textData ) {
+void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSetCounter, const std::string& variableName, double* offset, double* size, int treeNumber, const std::vector< std::string >& textData ) {
   logDebug( "parsePatch(...)", "set data of variable " << variableName << " (parse " << textData.size() << " entries)");
 
   if (!_data[dataSetCounter].hasVariable(variableName)) {
@@ -366,7 +385,7 @@ void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( int dataSet
     return;
   }
 
-  visualisation::data::PatchData newEntry(_dimensions, offset, size, key.dofsPerAxis, key.unknowns);
+  visualisation::data::PatchData newEntry(_dimensions, offset, size, key.dofsPerAxis, key.unknowns, treeNumber);
   for (int i=0; i<expectedDataEntries; i++) {
     try {
       newEntry.data[i] = std::stod(textData[i]);

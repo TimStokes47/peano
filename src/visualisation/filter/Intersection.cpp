@@ -28,8 +28,8 @@ void visualisation::filter::Intersection::apply( visualisation::data::DataSet& d
     for (auto pp: inputData) {
       if (
         not p.samePatch(pp)
-		and
-		p.overlaps(pp)
+        and
+        p.overlaps(pp)
       ) {
         bool allSizesSmaller = true;
         for (int d=0; d<inputVariable.dimensions; d++)
@@ -46,7 +46,8 @@ void visualisation::filter::Intersection::apply( visualisation::data::DataSet& d
         p.offset,
         p.size,
         inputVariable.dofsPerAxis,
-        inputVariable.unknowns
+        inputVariable.unknowns,
+        p.originTree
       );
 
       newPatch.copyData(p,inputVariable.dofsPerAxis,inputVariable.unknowns);

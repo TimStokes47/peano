@@ -25,27 +25,27 @@ namespace visualisation {
  */
 class visualisation::data::PatchData {
   public:
-	  PatchData(int dimensions, double* offset_, double* size_, int dofsPerAxis, int unknownsPerDoF);
+    PatchData(int dimensions, double* offset_, double* size_, int dofsPerAxis, int unknownsPerDoF, int originTree);
 
     bool samePatch( const PatchData& otherPatch );
     bool overlaps( const PatchData& otherPatch );
 
-	/**
-	 * Free internal dynamic data types
-	 */
-	void free();
+    /**
+     * Free internal dynamic data types
+     */
+    void free();
 
-	const int dimensions;
+    const int dimensions;
 
-	/*
-	 * offset of the patch in each dimension
-	 */
-	double offset[MaxDimensions];
+    /*
+     * offset of the patch in each dimension
+     */
+    double offset[MaxDimensions];
 
-	/*
-	 * size of the patch in each dimension
-	 */
-	double size[MaxDimensions];
+    /**
+     * size of the patch in each dimension
+     */
+    double size[MaxDimensions];
 
     /**
      * Mapping from variables onto the actual data. We store data as AoS. It
@@ -53,6 +53,12 @@ class visualisation::data::PatchData {
      * fastest running index.
      */
     double* data;
+
+    /**
+     * Tree that has originally written this piece of data. Or -1 if data does not result
+     * directly from any tree.
+     */
+    int originTree;
 
     void copyData( const PatchData& otherData, int dofsPerAxis, int unknownsPerDoF );
 };

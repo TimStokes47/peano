@@ -37,17 +37,19 @@ namespace visualisation {
  */
 class visualisation::input::PeanoTextPatchFileReader: public visualisation::input::PatchFileReader {
   private:
-	static tarch::logging::Log _log;
+    static tarch::logging::Log _log;
 
-	const std::string  _file;
+    const std::string  _file;
 
-	void    parsePatch( int dataSetCounter, const std::vector<std::string>& patchDescription );
-	void    parseVariablesDeclaration( int dataSetCounter, const std::vector<std::string>& patchDescription, const std::string&  name, visualisation::data::PeanoDataType type );
+    void    parsePatch( int dataSetCounter, int treeNumber, const std::vector<std::string>& patchDescription );
+    void    parseVariablesDeclaration( int dataSetCounter, const std::vector<std::string>& patchDescription, const std::string&  name, visualisation::data::PeanoDataType type );
 
-    void    addDataToPatch( int dataSetCounter, const std::string& variableName, double* offset, double* size, const std::vector< std::string >& textData );
+    void    addDataToPatch( int dataSetCounter, const std::string& variableName, double* offset, double* size, int treeNumber, const std::vector< std::string >& textData );
 
-	int                                          _dimensions;
-	std::vector< visualisation::data::DataSet >  _data;
+    int     extractTreeNumberFromFileName() const;
+
+    int                                          _dimensions;
+    std::vector< visualisation::data::DataSet >  _data;
   public:
 	/**
 	 * Read in one file.
