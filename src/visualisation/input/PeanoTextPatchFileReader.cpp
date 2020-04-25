@@ -62,8 +62,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
   }
 
   int treeNumber = extractTreeNumberFromFileName();
-  // @todo Debug
-  logError( "parse()", "file " << _file << " will yield data with tree number " << treeNumber );
+  logDebug( "parse()", "file " << _file << " will yield data with tree number " << treeNumber );
 
   #if !defined(SharedTBB)
   #pragma omp parallel
