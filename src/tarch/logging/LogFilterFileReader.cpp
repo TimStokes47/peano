@@ -87,6 +87,15 @@ bool tarch::logging::LogFilterFileReader::parseLine(std::ifstream& file, const s
 }
 
 
+std::string tarch::logging::LogFilterFileReader::trimLine( const std::string& line ) {
+  std::size_t first = line.find_first_not_of(' ');
+  if (first == std::string::npos)
+      return "";
+  std::size_t last = line.find_last_not_of(' ');
+  return line.substr(first, (last-first+1));
+}
+
+
 bool tarch::logging::LogFilterFileReader::parsePlainTextFile( const std::string& filename ) {
   bool result = true;
 
@@ -109,8 +118,8 @@ bool tarch::logging::LogFilterFileReader::parsePlainTextFile( const std::string&
   int linenumber = 1;
   std::string line;
   while (!file.eof() && result) {
-
     std::getline(file, line);
+    line = trimLine(line);
     if(line.length() > 0 && line[0]!='#') {
       result = parseLine(file, filename, line, linenumber);
     }

@@ -65,6 +65,8 @@ class tarch::logging::LogFilterFileReader {
      * @return Parsing has been successful
      */
     static bool parseLine(std::ifstream& file, const std::string& filename, const std::string& line, int linenumber);
+
+    static std::string trimLine( const std::string& line );
   public:
     /**
      * Tries to parse a simple text file where each line contains an entry
