@@ -43,12 +43,13 @@ project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevo
 #
 # Add the Finite Volumes solver
 #
-patch_size = 23
-unknowns   = 5
-project.add_finite_volumes_solver("Euler", patch_size, unknowns, 0.001)
+patch_size     = 23
+unknowns       = 5
+time_step_size = 0.001
+project.add_finite_volumes_solver("Euler", patch_size, unknowns, time_step_size)
 
 
-dimensions = 3
+dimensions = 2
 build_mode = peano4.output.CompileMode.Trace
 
 #
@@ -57,14 +58,14 @@ build_mode = peano4.output.CompileMode.Trace
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    0.4,          # end time
-    0.0, 0.01     # snapshots
+    0.5,          # end time
+    0.0, time_step_size*10     # snapshots
   )
 else:
   project.set_global_simulation_parameters(
     dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-    0.4,          # end time
-    0.0, 0.01
+    0.5,          # end time
+    0.0, time_step_size*10
   )
 
 
