@@ -16,8 +16,16 @@ tarch::logging::Log  tarch::logging::LogFilterFileReader::_log( "tarch::logging:
 bool tarch::logging::LogFilterFileReader::interpretTokens( const std::string& levelToken, const std::string& classNameToken, const std::string& rankToken, const std::string& onOffToken ) {
   bool result = true;
 
-  if ( levelToken.compare("debug")!=0 && levelToken.compare("info")!=0 ) {
-    logError( "interpretTokens(...)", "expected \"debug\" or \"info\" but got " << levelToken );
+  if (
+    levelToken.compare( tarch::logging::LogFilter::FilterListEntry::TargetInfo )!=0
+    and
+    levelToken.compare( tarch::logging::LogFilter::FilterListEntry::TargetDebug )!=0
+    and
+    levelToken.compare( tarch::logging::LogFilter::FilterListEntry::TargetTrace )!=0
+    and
+    levelToken.compare( tarch::logging::LogFilter::FilterListEntry::TargetAll   )!=0
+  ) {
+    logError( "interpretTokens(...)", "expected \"debug\", \"info\", \"all\" or \"trace\" but got " << levelToken );
     result = false;
   }
 
@@ -83,6 +91,13 @@ bool tarch::logging::LogFilterFileReader::parsePlainTextFile( const std::string&
   bool result = true;
 
   LogFilter::getInstance().clearFilterList();
+
+  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry::TargetAll,
+    tarch::logging::LogFilter::FilterListEntry::AnyRank,
+    "",
+    tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
+  ));
 
   std::ifstream file;
   file.open(filename.c_str()); // open a file
