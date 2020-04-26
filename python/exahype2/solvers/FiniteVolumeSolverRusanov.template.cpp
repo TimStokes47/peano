@@ -24,12 +24,14 @@ void {FULL_QUALIFIED_CLASSNAME}::adjustSolution(
   const tarch::la::Vector<Dimensions,double>&  h,
   double                                       t
 ) {{
+  logTraceInWith3Arguments( "adjustSolution(...)", x, h, t );
   if (tarch::la::equals(t,0.0) ) {{
     // initial conditions
   }}
   else {{
     // other stuff
   }}
+  logTraceOut( "adjustSolution(...)" );
 }}
 
 
@@ -42,7 +44,9 @@ void {FULL_QUALIFIED_CLASSNAME}::eigenvalues(
   int                                          normal,
   double                                       lambda[{NUMBER_OF_UNKNOWNS}]
 ) {{
+  logTraceInWith4Arguments( "eigenvalues(...)", faceCentre, volumeH, t, normal );
   // @todo implement
+  logTraceOut( "eigenvalues(...)" );
 }}
 
 
@@ -54,7 +58,9 @@ void {FULL_QUALIFIED_CLASSNAME}::flux(
   int                                          normal,
   double                                       F[{NUMBER_OF_UNKNOWNS}]
 ) {{
+  logTraceInWith4Arguments( "flux(...)", faceCentre, volumeH, t, normal );
 	  // @todo implement
+  logTraceOut( "flux(...)" );
 }}
 
 
@@ -66,6 +72,8 @@ void {FULL_QUALIFIED_CLASSNAME}::boundaryConditions(
   double                                       t,
   int                                          normal
 ) {{
+  logTraceInWith4Arguments( "boundaryConditions(...)", faceCentre, volumeH, t, normal );
   // @todo implement
+  logTraceOut( "boundaryConditions(...)" );
 }}
 
