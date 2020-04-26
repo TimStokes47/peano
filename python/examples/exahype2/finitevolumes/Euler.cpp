@@ -1,6 +1,9 @@
 #include "Euler.h"
 
 
+tarch::logging::Log   examples::exahype2::finitevolumes::Euler::_log( "examples::exahype2::finitevolumes::Euler" );
+
+
 
 ::exahype2::RefinementCommand examples::exahype2::finitevolumes::Euler::refinementCriterion(
   double Q[5],
@@ -146,10 +149,12 @@ void examples::exahype2::finitevolumes::Euler::boundaryConditions(
   double                                       t,
   int                                          normal
 ) {
+  logTraceInWith4Arguments( "boundaryConditions(...)", faceCentre, volumeH, t, normal );
   Qoutside[0] = Qinside[0];
   Qoutside[1] = Qinside[1];
   Qoutside[2] = Qinside[2];
   Qoutside[3] = Qinside[3];
   Qoutside[4] = Qinside[4];
+  logTraceOut( "boundaryConditions(...)" );
 }
 
