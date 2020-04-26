@@ -13,8 +13,8 @@ void exahype2::fv::applyBoundaryConditions(
     double                                       Qoutside[],
     const tarch::la::Vector<Dimensions,double>&  faceCentre,
     const tarch::la::Vector<Dimensions,double>&  volumeH,
-    const tarch::la::Vector<Dimensions,double>&  t,
-    const tarch::la::Vector<Dimensions,double>&  dt,
+    double                                       t,
+    double                                       dt,
     int                                          normal
   ) >   boundaryCondition,
   const tarch::la::Vector<Dimensions,double>&  faceCentre,

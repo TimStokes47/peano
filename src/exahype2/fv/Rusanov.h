@@ -34,8 +34,8 @@ namespace exahype2 {
         double                                       Q[],
         const tarch::la::Vector<Dimensions,double>&  faceCentre,
         const tarch::la::Vector<Dimensions,double>&  volumeH,
-        const tarch::la::Vector<Dimensions,double>&  t,
-        const tarch::la::Vector<Dimensions,double>&  dt,
+        double                                       t,
+        double                                       dt,
         int                                          normal,
         double                                       F[]
       ) >   flux,
@@ -43,8 +43,8 @@ namespace exahype2 {
         double                                       Q[],
         const tarch::la::Vector<Dimensions,double>&  faceCentre,
         const tarch::la::Vector<Dimensions,double>&  volumeH,
-        const tarch::la::Vector<Dimensions,double>&  t,
-        const tarch::la::Vector<Dimensions,double>&  dt,
+        double                                       t,
+        double                                       dt,
         int                                          normal,
         double                                       lambdas[]
       ) >   eigenvalues,
