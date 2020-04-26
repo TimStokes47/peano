@@ -45,6 +45,7 @@ bool selectNextAlgorithmicStep() {{
       observers::StepRepository::toProgramStep( observers::StepRepository::Steps::CreateGrid )
     );
     if ( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()>=5 ) {{
+      assertionNumericalEquals( observers::getMinTimeStamp(), 0.0 );
       gridConstructed = true;
     }}
     continueToSolve = true;
@@ -52,6 +53,11 @@ bool selectNextAlgorithmicStep() {{
   else {{
     if ( observers::getMinTimeStamp()>=nextPlotTimeStamp  and TimeInBetweenPlots>0.0 ) {{
       nextPlotTimeStamp += TimeInBetweenPlots;
+      if ( nextPlotTimeStamp < observers::getMinTimeStamp() ) {{
+        logWarning( "selectNextAlgorithmicStep()", "code is asked to plot every dt=" << TimeInBetweenPlots << ", but this seems to be less than the minimal time step size of the solvers" );
+        nextPlotTimeStamp = observers::getMinTimeStamp() + TimeInBetweenPlots;
+        logWarning( "selectNextAlgorithmicStep()", "plot solution at t=" << observers::getMinTimeStamp() << ", but next plot will be due at t=" << nextPlotTimeStamp );
+      }}
       peano4::parallel::Node::getInstance().setNextProgramStep(
         observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
       );
@@ -93,7 +99,6 @@ void step() {{
       {{
         observers::CreateGrid  observer;
         peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
-        observers::finishTimeStep();
       }}
       break;
     case observers::StepRepository::Steps::PlotSolution:
@@ -226,7 +231,7 @@ int main(int argc, char** argv) {{
   const int ExitCodeUnitTestsFailed = 1;
 
   if ( not tarch::logging::LogFilterFileReader::parsePlainTextFile( "exahype.log-filter") ) {{
-    std::cerr << "WARNING: No exahype.log-filter file found. Use default logging configuration" << std::endl;
+    logWarning( "main()", "no exahype.log-filter file found or file has been corrupted. Use default logging configuration" );
     setDefaultLogStatements();
   }}
   
