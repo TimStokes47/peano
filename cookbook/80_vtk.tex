@@ -1,8 +1,8 @@
-\chapter{The visualisation toolkit (VTK)}
+\chapter{The visualisation toolkit (VTK) and integrated IO}
 \label{chapter:vtk}
 
 \section{Installing \Peano\ with VTK support}
-Installing VTK can be challenging. 
+Installing VTK support can be challenging. 
 Here's some things you might want to consider/check:
 
 \begin{itemize}
@@ -24,10 +24,10 @@ Here's some things you might want to consider/check:
 export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/vtk
 \end{code}
   or you set the corresponding environment variable prior to the configure
-  script. I always recommend that latter route, as our Python API inherits all
-  of the configure variables, i.e.~it will then know where to search for VTK:
+  script. I always recommend that latter route, as our Python API inherits all of the configure
+  variables, i.e.~it will then know where to search for VTK:
 \begin{code}
-export CXXFLAGS="-I/usr/local/include/vtk-8.90"
+export CXXFLAGS=$CXXFLAGS:"-I/usr/local/include/vtk-8.90"
 \end{code}
   The first setting btw stems from a Fedora system, the latter example from an
   Ubuntu installation, while OpenSUSE in our test farm got the includes
@@ -116,3 +116,113 @@ visualisation artifacts.
 Please note that the dumped unstructured mesh is a non-conformal mesh. 
 Algorithms such as isosurface identification thus might yield invalid
 results---it depends on your visualisation algorithms.
+
+
+% \section{Using \Peano's Python front-end to interactively visualise data}
+% 
+% I've tested a couple of Python options how to visualise 3d data produced by 
+% \Peano\ directly from the Python API. 
+% None of them really did appeal to me or had support for Python 3 (cmp.~Mayavi2).
+% The only think that seems to work is to use Paraview as a server, and to connect from your
+% Python \Peano\ terminal to this server.
+% \Peano's Python API offers some tools to do so.
+% 
+% 
+% \begin{remark}
+%  If you build Paraview yourself, you have to enable its Python support. If you
+%  use a prepackaged Paraview, you will have to ensure that it includes the
+%  developer and Python parts. For Ubuntu, e.g., we need three packages in total:
+%  \texttt{paraview}, \texttt{paraview-python} and \texttt{paraview-dev}.
+% \end{remark}
+% 
+% The tools wrap around recommendations/examples from
+% \url{https://www.paraview.org/Wiki/ParaView/Python_Scripting}.
+% Before launching any
+% \Peano\ script, fire up your Paraview server
+% \begin{code}
+% > pvserver
+% Waiting for client...
+% Connection URL: cs://YourMachine:11111
+% Accepting connection(s): YourMachine:11111
+% \end{code}
+% 
+% \noindent
+% and take note of the connection details, i.e.~URL. 
+% 
+% 
+% \begin{code}
+% 
+% \end{code}
+% 
+% 
+% \url{https://www.paraview.org/Wiki/ParaView_and_Python}
+% 
+% 
+% #
+% # Test
+% #
+% 
+% from paraview.simple import *
+% 
+% reader = vtkXMLUnstructuredDataWriter( "solutionParallelEuler-0-ParallelEulerQ-domain-decomposition-fine-grid.vtu")
+% 
+% #cone = Cone()
+% #cone.Resolution = 32
+% #cone.Center = [1, 2, 3]
+% GetActiveSource()
+% Shrink()
+% SetActiveSource(cone)
+% shrinkFilter = Shrink(cone)
+% shrinkFilter.UpdatePipeline()
+% Show(shrinkFilter)
+% Render()
+% input()
+% 
+% 
+% 
+% 
+% #
+% # Der Teil funktioniert noch net so richtig ;-(
+% # ---------------------------------------------
+% 
+% #servermanager.Connect( "Bad" )
+% #print( str(GetActiveSource()) )
+% #cone = Cone()
+% #print( str(GetActiveSource()) )
+% #SetActiveSource(cone)  # Braucht man wohl net
+% #
+% #print( str(GetActiveSource()) )
+% #
+% #Show()
+% #Render()
+% 
+% #cone = Cone()
+% #cone.Resolution = 32
+% #cone.Center = [1, 2, 3]
+% #GetActiveSource()
+% #Shrink()
+% #SetActiveSource(cone)
+% 
+% #shrinkFilter = Shrink(cone)
+% #shrinkFilter.UpdatePipeline()
+% #Show(shrinkFilter)
+% #Render()
+% #input()
+% 
+% #Delete(cone)
+% 
+% 
+% #
+% # Es gibt ne Datei servermanager.py, die Bespiele enthaelt. Die geht bei mir aber auch net.
+% #
+% #connection  = servermanager.Connect( "Bad", 11111 )
+% #filters.AppendDatasets()
+% #render_view = CreateRenderView()#
+% 
+% #input()
+% 
+
+
+
+
+ 
