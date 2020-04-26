@@ -152,8 +152,8 @@ class FiniteVolumeSolver():
         double                                       Qoutside[],
         const tarch::la::Vector<Dimensions,double>&  faceCentre,
         const tarch::la::Vector<Dimensions,double>&  volumeH,
-        const tarch::la::Vector<Dimensions,double>&  t,
-        const tarch::la::Vector<Dimensions,double>&  dt,
+        double                                       t,
+        double                                       dt,
         int                                          normal
       ) -> void {{
         {SOLVER_INSTANCE}.boundaryConditions( Qinside, Qoutside, faceCentre, volumeH, t, normal );
@@ -177,8 +177,8 @@ class FiniteVolumeSolver():
       double                                       Q[],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
-      const tarch::la::Vector<Dimensions,double>&  dt,
+      double                                       t,
+      double                                       dt,
       int                                          normal,
       double                                       F[]
     ) -> void {{
@@ -188,8 +188,8 @@ class FiniteVolumeSolver():
       double                                       Q[],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
-      const tarch::la::Vector<Dimensions,double>&  dt,
+      double                                       t,
+      double                                       dt,
       int                                          normal,
       double                                       lambdas[]
     ) -> void {{

@@ -9,7 +9,7 @@ tarch::logging::Log   {FULL_QUALIFIED_CLASSNAME}::_log( "{FULL_QUALIFIED_CLASSNA
   double Q[{NUMBER_OF_UNKNOWNS}],
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  const tarch::la::Vector<Dimensions,double>&  t
+  double                                       t
 ) {{
   if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0 ) {{
     return ::exahype2::RefinementCommand::Refine;
@@ -22,7 +22,7 @@ void {FULL_QUALIFIED_CLASSNAME}::adjustSolution(
   double Q[{NUMBER_OF_UNKNOWNS}],
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  const tarch::la::Vector<Dimensions,double>&  t
+  double                                       t
 ) {{
   if (tarch::la::equals(t,0.0) ) {{
     // initial conditions
@@ -38,7 +38,7 @@ void {FULL_QUALIFIED_CLASSNAME}::eigenvalues(
   double                                       Q[{NUMBER_OF_UNKNOWNS}],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
-  const tarch::la::Vector<Dimensions,double>&  t,
+  double                                       t,
   int                                          normal,
   double                                       lambda[{NUMBER_OF_UNKNOWNS}]
 ) {{
@@ -50,7 +50,7 @@ void {FULL_QUALIFIED_CLASSNAME}::flux(
   double                                       Q[{NUMBER_OF_UNKNOWNS}],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
-  const tarch::la::Vector<Dimensions,double>&  t,
+  double                                       t,
   int                                          normal,
   double                                       F[{NUMBER_OF_UNKNOWNS}]
 ) {{
@@ -63,7 +63,7 @@ void {FULL_QUALIFIED_CLASSNAME}::boundaryConditions(
   double                                       Qoutside[{NUMBER_OF_UNKNOWNS}],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
-  const tarch::la::Vector<Dimensions,double>&  t,
+  double                                       t,
   int                                          normal
 ) {{
   // @todo implement

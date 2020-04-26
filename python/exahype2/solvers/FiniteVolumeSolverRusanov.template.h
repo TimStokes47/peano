@@ -35,22 +35,22 @@ class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
       double Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h,
-      const tarch::la::Vector<Dimensions,double>&  t
+      double                                       t
     ) override;
 
     void adjustSolution(
       double Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t
+      double                                       t
     ) override;
 
     void eigenvalues(
       double                                       Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
-	  int                                          normal,
+      double                                       t,
+      int                                          normal,
       double                                       lambda[{NUMBER_OF_UNKNOWNS}]
     ) override;
 
@@ -58,7 +58,7 @@ class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
       double                                       Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
+      double                                       t,
       int                                          normal,
       double                                       F[{NUMBER_OF_UNKNOWNS}]
     ) override;
@@ -68,7 +68,7 @@ class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
       double                                       Qoutside[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
+      double                                       t,
       int                                          normal
     ) override;
 }};

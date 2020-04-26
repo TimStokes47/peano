@@ -47,7 +47,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
       double Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t
+      double                                       t
     ) = 0;
 
     /**
@@ -60,7 +60,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
       double Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t
+      double                                       t
     ) = 0;
 
     /**
@@ -72,7 +72,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
       double                                       Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
+      double                                       t,
       int                                          normal,
       double                                       lambda[{NUMBER_OF_UNKNOWNS}]
     ) = 0;
@@ -85,7 +85,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
       double                                       Q[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
+      double                                       t,
       int                                          normal,
       double                                       F[{NUMBER_OF_UNKNOWNS}]
     ) = 0;
@@ -101,7 +101,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
       double                                       Qoutside[{NUMBER_OF_UNKNOWNS}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
+      double                                       t,
       int                                          normal
     ) = 0;
 
