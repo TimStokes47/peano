@@ -79,7 +79,6 @@ success = peano4_project.run( [] )
 
 
 
-success = True
 if success:
   convert = peano4.visualisation.Convert( "solutionEuler" )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
