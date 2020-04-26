@@ -395,7 +395,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   {{
     peano4::datamanagement::VertexMarker  marker(event);
     
-    @todo Local/remote fehlt komplett
+    @todo Local/remote fehlt komplett: pick gehoert hier hin
     
     for (int i=0; i<TwoPowerD; i++) {{
       int inVertexStack  = event.getVertexDataFrom(i);
@@ -516,7 +516,9 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     for (int i=0; i<TwoTimesD; i++) {{
       int inFaceStack = event.getFaceDataFrom(i);
       int pick        = event.getFaceDataTo(i);
-      
+
+      marker.select(pick);
+            
       if (
         inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
