@@ -100,6 +100,32 @@ class Convert(object):
         print( "failed to extract grid (" + str(e) + ") with " + str(invocation) )  
 
 
+  def plot_domain_decomposition(self):
+    """
+      This wrapper plots/extracts the domain decomposition. If you are interested in the
+      domain decomposition, then you have to apply this filter as the very first step. The 
+      convert tool tends to flatten all IO data and thus loses the tree information after 
+      the very first conversion - unless you make this the first step. 
+    """
+    selectors = self.__get_selectors()
+
+    print( "extract fine grid from " + self.file_name + " ... ")
+    for selector in selectors:
+      invocation =         self.__invoke() + [
+          "apply-filter",
+          self.file_name + self.extension,
+          selector,
+          self.output_path,
+          "plot-domain-decomposition",
+          selector + "-domain-decomposition"
+        ]
+      try:
+        subprocess.check_call(invocation)
+        print( "complete" )
+      except Exception as e:
+        print( "failed to extract grid (" + str(e) + ") with " + str(invocation) )  
+        
+
   def convert_to_vtk(self):
     """
       Set path where tool can find the convert script. 
