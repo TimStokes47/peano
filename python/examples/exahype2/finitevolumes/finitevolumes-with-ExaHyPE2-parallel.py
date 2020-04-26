@@ -43,8 +43,9 @@ project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevo
 #
 # Add the Finite Volumes solver
 #
-patch_size = 25
-unknowns   = 5
+patch_size     = 25
+unknowns       = 5
+time_step_size = 0.001
 project.add_finite_volumes_solver("ParallelEuler", patch_size, unknowns, 0.001)
 
 
@@ -58,14 +59,14 @@ build_mode = peano4.output.CompileMode.Asserts
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    0.4,          # end time
-    0.0, 0.01     # snapshots
+    0.4,                    # end time
+    0.0, time_step_size     # snapshots
   )
 else:
   project.set_global_simulation_parameters(
     dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-    0.4,          # end time
-    0.0, 0.01
+    0.4,          
+    0.0, time_step_size
   )
 
 
@@ -79,13 +80,10 @@ peano4_project.build()
 success = peano4_project.run( [] )
 
 
-
-success = True
 if success:
   convert = peano4.visualisation.Convert( "solutionParallelEuler" )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
+  convert.plot_domain_decomposition()
   convert.extract_fine_grid()
   convert.convert_to_vtk()
-
-
 
