@@ -6,7 +6,7 @@
   double Q[5],
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  const tarch::la::Vector<Dimensions,double>&  t
+  double                                       t
 ) {
   if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0 ) {
     return ::exahype2::RefinementCommand::Refine;
@@ -19,7 +19,7 @@ void examples::exahype2::finitevolumes::Euler::adjustSolution(
   double Q[5],
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  const tarch::la::Vector<Dimensions,double>&  t
+  double                                       t
 ) {
   if (tarch::la::equals(t,0.0) ) {
     // initial conditions
@@ -43,7 +43,7 @@ void examples::exahype2::finitevolumes::Euler::eigenvalues(
   double                                       Q[5],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
-  const tarch::la::Vector<Dimensions,double>&  t,
+  double                                       t,
   int                                          normal,
   double                                       lambda[5]
 ) {
@@ -79,7 +79,7 @@ void examples::exahype2::finitevolumes::Euler::flux(
   double                                       Q[5],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
-  const tarch::la::Vector<Dimensions,double>&  t,
+  double                                       t,
   int                                          normal,
   double                                       F[5]
 ) {
@@ -143,7 +143,7 @@ void examples::exahype2::finitevolumes::Euler::boundaryConditions(
   double                                       Qoutside[5],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
-  const tarch::la::Vector<Dimensions,double>&  t,
+  double                                       t,
   int                                          normal
 ) {
   Qoutside[0] = Qinside[0];

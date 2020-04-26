@@ -5,7 +5,7 @@
   double Q[5],
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  const tarch::la::Vector<Dimensions,double>&  t
+  double                                       t
 ) {
   if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0 ) {
     return ::exahype2::RefinementCommand::Refine;
@@ -18,7 +18,7 @@ void examples::exahype2::finitevolumes::ParallelEuler::adjustSolution(
   double Q[5],
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  const tarch::la::Vector<Dimensions,double>&  t
+  double                                       t
 ) {
   if (tarch::la::equals(t,0.0) ) {
     // initial conditions
@@ -41,7 +41,7 @@ void examples::exahype2::finitevolumes::ParallelEuler::eigenvalues(
   double                                       Q[5],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
-  const tarch::la::Vector<Dimensions,double>&  t,
+  double                                       t,
   int                                          normal,
   double                                       lambda[5]
 ) {
@@ -77,19 +77,19 @@ void examples::exahype2::finitevolumes::ParallelEuler::flux(
   double                                       Q[5],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
-  const tarch::la::Vector<Dimensions,double>&  t,
+  double                                       t,
   int                                          normal,
   double                                       F[5]
 ) {
   assertion(normal>=0);
   assertion(normal<Dimensions);
-  assertion5( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4] );
-  assertion5( Q[1]==Q[1], Q[0], Q[1], Q[2], Q[3], Q[4] );
-  assertion5( Q[2]==Q[2], Q[0], Q[1], Q[2], Q[3], Q[4] );
-  assertion5( Q[3]==Q[3], Q[0], Q[1], Q[2], Q[3], Q[4] );
-  assertion5( Q[4]==Q[4], Q[0], Q[1], Q[2], Q[3], Q[4] );
+  assertion9( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  assertion9( Q[1]==Q[1], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  assertion9( Q[2]==Q[2], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  assertion9( Q[3]==Q[3], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  assertion9( Q[4]==Q[4], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
 
-  assertion5( Q[0]>1e-12, Q[0], Q[1], Q[2], Q[3], Q[4] );
+  assertion9( Q[0]>1e-12, Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
   constexpr double gamma = 1.4;
   const double irho = 1./Q[0];
   #if Dimensions==3
@@ -141,7 +141,7 @@ void examples::exahype2::finitevolumes::ParallelEuler::boundaryConditions(
   double                                       Qoutside[5],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
-  const tarch::la::Vector<Dimensions,double>&  t,
+  double                                       t,
   int                                          normal
 ) {
   Qoutside[0] = Qinside[0];

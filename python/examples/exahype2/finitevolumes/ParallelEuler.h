@@ -43,22 +43,22 @@ class examples::exahype2::finitevolumes::ParallelEuler: public AbstractParallelE
       double Q[5],
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h,
-      const tarch::la::Vector<Dimensions,double>&  t
+      double                                       t
     ) override;
 
     void adjustSolution(
       double Q[5],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t
+      double                                       t
     ) override;
 
     void eigenvalues(
       double                                       Q[5],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
-	  int                                            normal,
+      double                                       t,
+      int                                          normal,
       double                                       lambda[5]
     ) override;
 
@@ -66,7 +66,7 @@ class examples::exahype2::finitevolumes::ParallelEuler: public AbstractParallelE
       double                                       Q[5],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
+      double                                       t,
       int                                          normal,
       double                                       F[5]
     ) override;
@@ -76,7 +76,7 @@ class examples::exahype2::finitevolumes::ParallelEuler: public AbstractParallelE
       double                                       Qoutside[5],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
-      const tarch::la::Vector<Dimensions,double>&  t,
+      double                                       t,
       int                                          normal
     ) override;
 
