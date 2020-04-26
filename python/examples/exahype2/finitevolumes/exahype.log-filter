@@ -5,13 +5,16 @@
 # General debug settings
 #
 debug  tarch                               -1     black
-debug  peano                               -1     black
+debug  peano4                              -1     black
 debug  examples                            -1     black
+debug  exahype2                            -1     black
 
-info  tarch                               -1     white
-info  peano                               -1     white
-info  examples                            -1     white
-
+info  tarch                                -1     white
+info  peano4                               -1     white
+info  examples                             -1     white
+info  exahype2                             -1     white
+ 
 trace  tarch                               -1     black
-trace  peano                               -1     black
+trace  peano4                              -1     black
 trace  examples                            -1     black
+trace  exahype2                            -1     black
