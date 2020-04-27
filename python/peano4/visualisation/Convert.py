@@ -8,6 +8,9 @@ class Convert(object):
   """
     Convert is a file which wraps around one Peano block file output. Output can 
     be a whole data set or simply one data file.
+    
+    silent Tell the convert tool to shut up. Doesn't omit all outputs though, as 
+      the Python wrapper still write some stats
   """
   
   def __init__(self,file_name, silent = False):
@@ -100,7 +103,7 @@ class Convert(object):
           subprocess.check_call(invocation, stdout=subprocess.PIPE)
         else:
           subprocess.check_call(invocation)
-        print( "complete" )
+          print( "complete" )
       except Exception as e:
         print( "failed to extract grid (" + str(e) + ") with " + str(invocation) )  
 
@@ -129,7 +132,7 @@ class Convert(object):
           subprocess.check_call(invocation, stdout=subprocess.PIPE)
         else:
           subprocess.check_call(invocation)
-        print( "complete" )
+          print( "complete" )
       except Exception as e:
         print( "failed to extract grid (" + str(e) + ") with " + str(invocation) )  
         
@@ -154,7 +157,7 @@ class Convert(object):
           subprocess.check_call(invocation, stdout=subprocess.PIPE)
         else:
           subprocess.check_call(invocation)
-        print( "complete" )
+          print( "complete" )
       except Exception as e:
         print( "failed to convert to vtk (" + str(e) + ") with " + str(invocation) )  
 
