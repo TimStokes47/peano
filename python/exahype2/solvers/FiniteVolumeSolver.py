@@ -14,7 +14,13 @@ from enum import Enum
 
 
 class FiniteVolumeSolverType(Enum):
-  Rusanov = 0
+  """
+    A dimension-generic version of plain Rusanov. It does run
+    over the cells, i.e. evaluates each Riemann problem twice.
+  """
+  Rusanov = 0,
+  Rusanov_Edge = 1
+  
   
 
 
@@ -31,7 +37,8 @@ class FiniteVolumeSolver():
     self._time_step_size = time_step_size
     self._name  = name
     self._patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, self._unknown_identifier() )
-    if solver_type==FiniteVolumeSolverType.Rusanov:
+    self._solver_type = solver_type
+    if solver_type==FiniteVolumeSolverType.Rusanov or  solver_type==FiniteVolumeSolverType.Rusanov_Edge:
       self._patch_overlap     = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, self._unknown_identifier() )
       self._patch_overlap_new = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, self._unknown_identifier() + "Old" )
     else:
@@ -171,9 +178,12 @@ class FiniteVolumeSolver():
 """
     
     
-    patchFunctorTemplate = """
-  //::exahype2::fv::applyRusanovToPatch(
-  ::exahype2::fv::applyRusanovToPatch_FaceLoops2d(
+    patchFunctorTemplate = ""    
+    if self._solver_type==FiniteVolumeSolverType.Rusanov:
+      patchFunctorTemplate += "::exahype2::fv::applyRusanovToPatch"
+    elif self._solver_type==FiniteVolumeSolverType.Rusanov_Edge:
+      patchFunctorTemplate += "::exahype2::fv::applyRusanovToPatch_FaceLoops2d"
+    patchFunctorTemplate += """(
     [&](
       double                                       Q[],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,

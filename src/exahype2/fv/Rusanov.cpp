@@ -63,11 +63,13 @@ namespace {
     eigenvalues(QL,x,dx,t,dt,normal,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
       assertion(lambdas[unknown]==lambdas[unknown]);
+      assertion(lambdas[unknown]>=0.0);
       lambdaMax = std::max(lambdaMax,lambdas[unknown]);
     }
     eigenvalues(QR,x,dx,t,dt,normal % Dimensions,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
       assertion(lambdas[unknown]==lambdas[unknown]);
+      assertion(lambdas[unknown]>=0.0);
       lambdaMax = std::max(lambdaMax,lambdas[unknown]);
     }
 
@@ -77,7 +79,6 @@ namespace {
   };
 }
 
-/*
 
 void exahype2::fv::applyRusanovToPatch(
   std::function< void(
@@ -177,10 +178,6 @@ void exahype2::fv::applyRusanovToPatch(
 
 
 
-*/
-
-
-
 void exahype2::fv::applyRusanovToPatch_FaceLoops2d(
   std::function< void(
         double                                       Q[],
@@ -227,7 +224,7 @@ void exahype2::fv::applyRusanovToPatch_FaceLoops2d(
 
     const int leftVoxelInImage     = x-1
                                    + y * numberOfVolumesPerAxisInPatch;
-    const int rightVoxelInImage     = x
+    const int rightVoxelInImage    = x
                                    + y * numberOfVolumesPerAxisInPatch;
     splitRiemann1d(
       flux, eigenvalues,
@@ -256,9 +253,9 @@ void exahype2::fv::applyRusanovToPatch_FaceLoops2d(
                                    + (y+1) * (2 + numberOfVolumesPerAxisInPatch);
 
     const int lowerVoxelInImage    = x
-                                   + y * numberOfVolumesPerAxisInPatch;
+                                   + (y-1) * numberOfVolumesPerAxisInPatch;
     const int upperVoxelInImage    = x
-                                   + (y+1) * numberOfVolumesPerAxisInPatch;
+                                   + y * numberOfVolumesPerAxisInPatch;
     splitRiemann1d(
       flux, eigenvalues,
       Qin + lowerVoxelInPreimage*unknowns,

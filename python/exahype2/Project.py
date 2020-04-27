@@ -80,8 +80,8 @@ class Project(object):
   Library3dAsserts = "ExaHyPE2Core3d_asserts"
     
     
-  def add_finite_volumes_solver(self,name, patch_size, unknowns, solver_type = exahype2.solvers.FiniteVolumeSolverType.Rusanov):
-    self._solvers.append( exahype2.solvers.FiniteVolumeSolver( name, patch_size, unknowns, solver_type) )
+  def add_finite_volumes_solver(self,name, patch_size, unknowns, time_step_size, solver_type = exahype2.solvers.FiniteVolumeSolverType.Rusanov):
+    self._solvers.append( exahype2.solvers.FiniteVolumeSolver( name, patch_size, unknowns, time_step_size, solver_type) )
 
 
   def __export_constants(self):
