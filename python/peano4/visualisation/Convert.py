@@ -1,6 +1,7 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import subprocess
+import os
 
 
 class Convert(object):
@@ -9,12 +10,13 @@ class Convert(object):
     be a whole data set or simply one data file.
   """
   
-  def __init__(self,file_name):
+  def __init__(self,file_name, silent = False):
     self.visualisation_tools_path = "."
-    self.file_name = file_name
-    self.extension = ".peano-patch-file"
-    self.output_path = "."
+    self.file_name       = file_name
+    self.extension       = ".peano-patch-file"
+    self.output_path     = "."
     self.mpi_prefix      = ""
+    self.silent          = silent
 
 
   def set_input_file_name(self,file_name):
@@ -94,7 +96,10 @@ class Convert(object):
           selector + "-fine-grid"
         ]
       try:
-        subprocess.check_call(invocation)
+        if self.silent:
+          subprocess.check_call(invocation, stdout=subprocess.PIPE)
+        else:
+          subprocess.check_call(invocation)
         print( "complete" )
       except Exception as e:
         print( "failed to extract grid (" + str(e) + ") with " + str(invocation) )  
@@ -120,7 +125,10 @@ class Convert(object):
           selector + "-domain-decomposition"
         ]
       try:
-        subprocess.check_call(invocation)
+        if self.silent:
+          subprocess.check_call(invocation, stdout=subprocess.PIPE)
+        else:
+          subprocess.check_call(invocation)
         print( "complete" )
       except Exception as e:
         print( "failed to extract grid (" + str(e) + ") with " + str(invocation) )  
@@ -142,7 +150,10 @@ class Convert(object):
           "vtu"
         ]
       try:
-        subprocess.check_call(invocation)
+        if self.silent:
+          subprocess.check_call(invocation, stdout=subprocess.PIPE)
+        else:
+          subprocess.check_call(invocation)
         print( "complete" )
       except Exception as e:
         print( "failed to convert to vtk (" + str(e) + ") with " + str(invocation) )  
