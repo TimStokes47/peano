@@ -149,144 +149,121 @@ This patch data is still available as well, so we can use the reconstructed
 array as a preimage and write any outcome into the patch data structure.
 
 
-We begin with defining a simple functor implementing this PDE plus a very simple
-Rusanov flux:
+We begin with defining a two simple functions that implement the PDE---we
+need the flux function and the eigenvalues---and then write a simple 1d Rusanov flux.
+I use some lambda notation here when I write the Rusanov flux, as I want to
+make it generic, i.e.~it accepts a generic flux and eigenvalue realisation
+realised somewhere else in my code. 
+
+\attachfile[icon=Paperclip,description=Download code snippet,author=Peano 4]
+{42_finite-volumes/Euler-flux-and-eigenvalues.cpp}
+
+
+
 \begin{code}
-auto eigenvalues = [](double Q[5], const tarch::la::Vector<Dimensions,double>& x, 
-  int normal, double lambda[5]
-) -> void {
-  constexpr double gamma = 1.4;
-  const double irho = 1./Q[0];
-  #if Dimensions==3
-    const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]+Q[3]*Q[3]);
-  #else
-    const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]);
-  #endif
+// All in besides lambda which is out
+void eigenvalues(
+  double                                       Q[5],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  double                                       t,
+  int                                          normal,
+  double                                       lambda[5]
+) {
+  ...
+}
 
-  const double u_n = Q[normal + 1] * irho;
-  assertion10( gamma * p * irho>=0.0, gamma, p, irho, x, normal, Q[0], Q[1], Q[2], Q[3], Q[4] );
-  const double c   = std::sqrt(gamma * p * irho);
 
-  lambda[0]  = u_n;
-  lambda[1]  = u_n;
-  lambda[2]  = u_n;
-  lambda[3]  = u_n + c;
-  lambda[4]  = u_n - c;
-    
-  assertion4( lambda[0]==lambda[0], u_n, c, x, normal );
-  assertion4( lambda[1]==lambda[1], u_n, c, x, normal );
-  assertion4( lambda[2]==lambda[2], u_n, c, x, normal );
-  assertion4( lambda[3]==lambda[3], u_n, c, x, normal );
-  assertion4( lambda[4]==lambda[4], u_n, c, x, normal );
+// All in besides F which is out
+void flux(
+  double                                       Q[5],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  double                                       t,
+  int                                          normal,
+  double                                       F[5]
+) {
+  ...
 };
-  
-auto flux = [](
-  double Q[5], const tarch::la::Vector<Dimensions,double>& x, int normal, double F[5]
-) -> void {
-  assertion5( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4] );    
-  assertion5( Q[1]==Q[1], Q[0], Q[1], Q[2], Q[3], Q[4] );    
-  assertion5( Q[2]==Q[2], Q[0], Q[1], Q[2], Q[3], Q[4] );    
-  assertion5( Q[3]==Q[3], Q[0], Q[1], Q[2], Q[3], Q[4] );    
-  assertion5( Q[4]==Q[4], Q[0], Q[1], Q[2], Q[3], Q[4] );    
-    
-  assertion5( Q[0]>1e-12, Q[0], Q[1], Q[2], Q[3], Q[4] );
-  constexpr double gamma = 1.4;
-  const double irho = 1./Q[0];
-  #if Dimensions==3
-    const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]+Q[3]*Q[3]);
-  #else
-    const double p = (gamma-1) * (Q[4] - 0.5*irho*Q[1]*Q[1]+Q[2]*Q[2]);
-  #endif
+\end{code}
 
-  switch (normal) {
-    case 0:
-      {
-        F[0] = Q[1];
-        F[1] = irho*Q[1]*Q[1] + p;
-        F[2] = irho*Q[2]*Q[1];
-        F[3] = (Dimensions==3) ? irho*Q[3]*Q[1] : 0.0;
-        F[4] = irho*(Q[4]+p)*Q[1];
-      }
-      break;
-    case 1:
-      {
-        F[0] = Q[2];
-        F[1] = irho*Q[1]*Q[2];
-        F[2] = irho*Q[2]*Q[2] + p;
-        F[3] = (Dimensions==3) ? irho*Q[3]*Q[2] : 0.0;
-        F[4] = irho*(Q[4]+p)*Q[2];
-      }
-      break;
-    case 2:
-      {
-        F[0] = Q[3];
-        F[1] = irho*Q[1]*Q[3];
-        F[2] = irho*Q[2]*Q[3];
-        F[3] = (Dimensions==3) ? irho*Q[3]*Q[3] + p : 0.0;
-        F[4] = irho*(Q[4]+p)*Q[3];
-      }
-      break;
-  }
 
-  assertion( F[0]==F[0] );
-  assertion( F[1]==F[1] );
-  assertion( F[2]==F[2] );
-  assertion( F[3]==F[3] );
-  assertion( F[4]==F[4] );
-};
-
+\begin{code}
 auto splitRiemann1d = [&flux, &eigenvalues](
   double QL[5], double QR[5], const tarch::la::Vector<Dimensions,double>& x,
   double dx, double dt, int normal, double F[5]
-) -> void { double averageQ[5]; 
-  for (int unknown=0; unknown<5; unknown++) {
-    averageQ[unknown] = 0.5 * (QL[unknown] + QR[unknown]);    
-  }
-    
-  double averageF[5];
-  double lambdas[5];
-  flux(averageQ,x,normal,averageF);
-  
+) -> void { 
+  assertion(normal>=0);
+  assertion(normal<Dimensions);
+
+  double FL[unknowns];
+  double FR[unknowns];
+  flux(QL,x,dx,t,dt,normal,FL);
+  flux(QR,x,dx,t,dt,normal,FR);
+
+  double lambdas[unknowns];
   double lambdaMax = 0.0;
-  eigenvalues(averageQ,x,normal,lambdas);
-  for (int unknown=0; unknown<5; unknown++) {
+
+  eigenvalues(QL,x,dx,t,dt,normal,lambdas);
+  for (int unknown=0; unknown<unknowns; unknown++) {
+    assertion(lambdas[unknown]==lambdas[unknown]);
     lambdaMax = std::max(lambdaMax,lambdas[unknown]);
   }
-  
-  for (int unknown=0; unknown<5; unknown++) {
-    F[unknown] = averageF[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]);
+  eigenvalues(QR,x,dx,t,dt,normal % Dimensions,lambdas);
+  for (int unknown=0; unknown<unknowns; unknown++) {
+    assertion(lambdas[unknown]==lambdas[unknown]);
+    lambdaMax = std::max(lambdaMax,lambdas[unknown]);
   }
+
+  for (int unknown=0; unknown<unknowns; unknown++) {
+    F[unknown] = 0.5 * FL[unknown] 
+               + 0.5 * FR[unknown] 
+               - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]); }
 };  
 \end{code}
 
+\begin{remark}
+ An implementation of these routines can either be done manually (download/copy
+ the code snippets), or you can use \ExaHyPE. \ExaHyPE\ does provide generic
+ implementations of these guys in its directories.
+\end{remark}
+
 \noindent
-Let all of this be one string assigned to a variable \texttt{functor}.
+Let the three functions be one string assigned to a variable
+\texttt{functor} in our Python API. 
+We now have to run over the reconstructed patch with $N+2 \times N+2$ cells and
+write it back into the actual user data with cardinality $N \times N$.
 
 
-So this string now contains all the helpers we need to realise a Finite Volume
-scheme, but it does not yet implement the scheme itself.
-This is the final loop that's missing, and we can directly attach it to the
-functor and then pass over to the reconstruction aspect:
+There are lots of options how to do this. 
+We can use Peano's dimension-generic volumes, or we can write it down for our
+particular dimension.
+We can loop over the faces (similar to ClawPack) or loop over the cells and
+compute the Riemann problems twice per face.
+Many more options do arise.
+I don't want to show some codes how to do it here, but I link to the directory
+\texttt{src/exahype2/fv} where I've realised a couple of them.
+
+
+Whatever implementation variant I use, it is convenient now to rely on
+\linebreak \texttt{ReconstructPatchAndApplyFunctor}. 
+I create, in Python, a string that calls my Rusanov solver: 
 
 \begin{code}
-  constexpr int PatchSize = 13;
-  constexpr int HaloSize  = 1;    
-  double dt = 0.0001;
-  assertion( dx>=tarch::la::NUMERICAL_ZERO_DIFFERENCE );
-  dfor(cell,PatchSize) { // DOFS_PER_AXIS
-    tarch::la::Vector<Dimensions,double> voxelCentre = centre 
-      - static_cast<double>((PatchSize/2+HaloSize)) * tarch::la::Vector<Dimensions,double>(dx) 
-      + tarch::la::multiplyComponents(cell.convertScalar<double>(), tarch::la::Vector<Dimensions,double>(dx));
-    
-    tarch::la::Vector<Dimensions,int> currentVoxel = cell + tarch::la::Vector<Dimensions,int>(HaloSize); // OVERLAP / Halo layer size
-    int currentVoxelSerialised = peano4::utils::dLinearised(currentVoxel,PatchSize + 2*HaloSize);
-    
-    double accumulatedNumericalFlux[] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-  ...
-  }
+  myApplyRusanovToPatch( ..., reconstructedPatch, originalPatch );
 \end{code}
 
+\noindent
+This string can hand over all of the cell attributes that I've introduced to my
+\linebreak \texttt{myApplyRusanovToPatch} implementation.
+The important thing is, it also forwards two double pointer
+(\texttt{reconstructedPatch} and \texttt{originalPatch}) to my routine.
+These are the plain user records. 
 
+The string holding this routine is passed into the instantiation of the type
+\linebreak \texttt{ApplyFunctorOnPatch} and thus is injected into the generated code.
+ 
+ 
 \section{Plot results}
 
 For the plotting of patch-based AMR, \Peano\ provides predefined action sets,
@@ -298,7 +275,7 @@ VTK.
 
 
 
-To use the predefined file dump feature, add an instance of
+To use the predefined file dump feature, add an instance of \linebreak
 \texttt{PlotPatchesInPeanoBlockFormat} to the step of your choice. 
 It then looks similar to
 \begin{code}

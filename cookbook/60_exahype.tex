@@ -296,6 +296,8 @@ if success:
 
 \section{Running on a parallel computer}
 
+\marginpar{Currently under construction}
+
 To run \ExaHyPE\ in parallel, you have to build \Peano\ with support for
 multithreading and/or MPI.
 Once this is done, the engine more or less runs in parallel out of the box, as I
@@ -360,4 +362,53 @@ void examples::exahype2::finitevolumes::Euler::finishTimeStep() {
   data into one big VTK/VTU file. For most of the applications, the
   premanufactured VTK dump is a good start though.
 \end{enumerate}
+
+
+\section{Introducing a new solver (numerical scheme)}
+
+This section discusses how to introduce a totally new numerical solver. 
+It does not discuss how to introduce a new PDE, as new PDEs are built on top of
+\ExaHyPE.
+This section gives you an idea how to extend \ExaHyPE\ instead.
+
+\begin{remark}
+  \ExaHyPE\ is a very high level Python API which generates a \Peano\
+   Python project which in turn creates the ``real'' \Peano\ C/C++ code. If you
+   introduce a new numerical scheme/solver to \ExaHyPE, you thus might want to
+   familiarise yourself with \Peano's Python API and how to extend it. This
+   recommendation affects all the gluecode/framework aspects of the software.
+   All the core numerics of \ExaHyPE\ are held as C++ code in the
+   \texttt{src/exahype2} directly and compiled into a separate library. If you
+   introduce new numerical schemes, you might have to extend this library, too.
+\end{remark}
+
+
+\paragraph{A new Finite Volume solver}
+
+
+
+\section*{Links and further reading}
+
+\begin{itemize}
+  \item The ``official'' ExaHyPE release paper is
+  \begin{verbatim}
+@article{Reinarz:2019:ExaHyPE,   
+  author    = {Anne Reinarz and Dominic E. Charrier and Michael Bader 
+    and Luke Bovard and Michael Dumbser and Kenneth Duru and 
+    Francesco Fambri and Alice-Agnes Gabriel and Jean-Mathieu Gallard 
+    and Sven Köppel and Lukas Krenz and Leonhard Rannabauer and 
+    Luciano Rezzolla and Philipp Samfass and Maurizio Tavelli and 
+    Tobias Weinzierl}, 
+  title     = {ExaHyPE: An Engine for Parallel Dynamically Adaptive 
+    Simulations of Wave Problems},   
+  journal   = {},
+  volume    = {},   
+  number    = {},
+  pages     = {},
+  year      = {2019},   
+  note      = {(arXiv:1905.07987)} 
+}   
+  \end{verbatim}
+  If you use the software, it would be great if you could cite this one.
+\end{itemize}
 
