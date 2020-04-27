@@ -90,7 +90,9 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishTimeStep() {
     and
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
-    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()
+    // @todo raus
+//    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()
+    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < 2
   ) {
     int heaviestSpacetree = getIdOfHeaviestLocalSpacetree();
     int cellsPerCore      = std::max(

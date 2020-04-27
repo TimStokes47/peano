@@ -172,7 +172,8 @@ class FiniteVolumeSolver():
     
     
     patchFunctorTemplate = """
-  ::exahype2::fv::applyRusanovToPatch(
+  //::exahype2::fv::applyRusanovToPatch(
+  ::exahype2::fv::applyRusanovToPatch_FaceLoops2d(
     [&](
       double                                       Q[],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,

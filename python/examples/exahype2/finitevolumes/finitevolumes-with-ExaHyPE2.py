@@ -58,13 +58,13 @@ build_mode = peano4.output.CompileMode.Trace
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    0.5,          # end time
-    0.0, time_step_size*10     # snapshots
+    0.04,          # end time
+    0.0, time_step_size     # snapshots
   )
 else:
   project.set_global_simulation_parameters(
     dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-    0.5,          # end time
+    1.0,          # end time
     0.0, time_step_size*10
   )
 
@@ -79,9 +79,10 @@ peano4_project.build()
 success = peano4_project.run( [] )
 
 
+success = True
 
 if success:
-  convert = peano4.visualisation.Convert( "solutionEuler" )
+  convert = peano4.visualisation.Convert( "solutionEuler", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()

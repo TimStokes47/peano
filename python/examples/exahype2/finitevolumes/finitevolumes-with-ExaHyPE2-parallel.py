@@ -80,8 +80,9 @@ peano4_project.build()
 success = peano4_project.run( [] )
 
 
+success = True
 if success:
-  convert = peano4.visualisation.Convert( "solutionParallelEuler" )
+  convert = peano4.visualisation.Convert( "solutionParallelEuler", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.plot_domain_decomposition()
   convert.extract_fine_grid()

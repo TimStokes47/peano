@@ -28,8 +28,12 @@ namespace exahype2 {
      * The outcome of F is added to the solution in Q. The reconstructed array is not
      * touched. So if you find out later that this time step has been too aggressive,
      * then you have to manually backup the patch beforehand.
+     *
+     * Please consult the guidebook for some documentation of this routine. Some
+     * background is given in its ExaHyPE chapter, but the really interesting
+     * details are discussed within the Finite Volume chapter.
      */
-    void applyRusanovToPatch(
+    void applyRusanovToPatch_FaceLoops2d(
       std::function< void(
         double                                       Q[],
         const tarch::la::Vector<Dimensions,double>&  faceCentre,
