@@ -62,15 +62,15 @@ namespace {
 
     eigenvalues(QL,x,dx,t,dt,normal,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
-      assertion5(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal);
-      assertion6(lambdas[unknown]>=0.0,x,dx,t,dt,normal,lambdas[unknown]);
-      lambdaMax = std::max(lambdaMax,lambdas[unknown]);
+      assertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,plotVolume(QL,unknowns),plotVolume(QR,unknowns));
+      //assertion8(lambdas[unknown]>=0.0,x,dx,t,dt,normal,lambdas[unknown],plotVolume(QL,unknowns),plotVolume(QR,unknowns));
+      lambdaMax = std::max(lambdaMax,std::abs(lambdas[unknown]));
     }
     eigenvalues(QR,x,dx,t,dt,normal % Dimensions,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
-      assertion5(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal);
-      assertion6(lambdas[unknown]>=0.0,x,dx,t,dt,normal,lambdas[unknown]);
-      lambdaMax = std::max(lambdaMax,lambdas[unknown]);
+      assertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,plotVolume(QL,unknowns),plotVolume(QR,unknowns));
+      //assertion8(lambdas[unknown]>=0.0,x,dx,t,dt,normal,lambdas[unknown],plotVolume(QL,unknowns),plotVolume(QR,unknowns));
+      lambdaMax = std::max(lambdaMax,std::abs(lambdas[unknown]));
     }
 
     for (int unknown=0; unknown<unknowns; unknown++) {

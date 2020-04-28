@@ -1,6 +1,9 @@
 #include "ParallelEuler.h"
 
 
+tarch::logging::Log  examples::exahype2::finitevolumes::ParallelEuler::_log( "examples::exahype2::finitevolumes::ParallelEuler" );
+
+
 ::exahype2::RefinementCommand examples::exahype2::finitevolumes::ParallelEuler::refinementCriterion(
   double Q[5],
   const tarch::la::Vector<Dimensions,double>&  x,
@@ -144,15 +147,18 @@ void examples::exahype2::finitevolumes::ParallelEuler::boundaryConditions(
   double                                       t,
   int                                          normal
 ) {
+  logTraceInWith4Arguments( "boundaryConditions(...)", faceCentre, volumeH, t, normal );
+  assertion4( Qinside[0]>1e-12, faceCentre, volumeH, t, normal );
   Qoutside[0] = Qinside[0];
   Qoutside[1] = Qinside[1];
   Qoutside[2] = Qinside[2];
   Qoutside[3] = Qinside[3];
   Qoutside[4] = Qinside[4];
+  logTraceOutWith4Arguments( "boundaryConditions(...)", faceCentre, volumeH, t, normal );
 }
 
 
 void examples::exahype2::finitevolumes::ParallelEuler::finishTimeStep() {
   AbstractParallelEuler::finishTimeStep();
-  _loadBalancer.finishTimeStep();
+  //_loadBalancer.finishTimeStep();
 }

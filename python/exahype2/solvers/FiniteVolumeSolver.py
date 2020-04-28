@@ -29,8 +29,15 @@ class FiniteVolumeSolver():
   A finite volume solver with fixed time step sizes that works on patch-based
   AMR with a halo layer of one.
   
+  We use two overlaps in this case: the standard one and one we call new. In the
+  time stepping, we use the new one to project our data to. Then we roll it over
+  at the end of the iteration. This way, we ensure that the one from teh previous
+  iteration is not overwritten by some adjacent cell halfway through the 
+  computation.
+  
   namespace Sequence of strings representing the (nested) namespace. Pass in 
     ["examples", "exahype2", "finitevolumes"] for example.
+    
     
   """
   def __init__(self, name, patch_size, unknowns, time_step_size, solver_type = FiniteVolumeSolverType.Rusanov):
