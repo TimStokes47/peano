@@ -60,13 +60,13 @@ if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
     0.4,                    # end time
-    0.0, time_step_size     # snapshots
+    0.0, time_step_size*20     # snapshots
   )
 else:
   project.set_global_simulation_parameters(
     dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
     0.4,          
-    0.0, time_step_size
+    0.0, time_step_size*20
   )
 
 
