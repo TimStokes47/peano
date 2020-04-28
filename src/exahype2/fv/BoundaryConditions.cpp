@@ -41,11 +41,15 @@ void exahype2::fv::applyBoundaryConditions(
     return result;
   }};
 
-  tarch::la::Vector<Dimensions,double> volumeH = exahype2::getVolumeSize(patchSize, numberOfVolumesPerAxisInPatch);
+  tarch::la::Vector<Dimensions,double> volumeH    = exahype2::getVolumeSize(patchSize, numberOfVolumesPerAxisInPatch);
+  tarch::la::Vector<Dimensions,double> faceOffset = faceCentre - 0.5 * patchSize - 0.5 * volumeH;
+
+  faceOffset(faceNumber%Dimensions) += 0.5 * patchSize(faceNumber%Dimensions);
 
   dfore(volume,numberOfVolumesPerAxisInPatch,faceNumber % Dimensions,0) {
-    tarch::la::Vector<Dimensions,int> insideVolume = volume;
+    tarch::la::Vector<Dimensions,int> insideVolume  = volume;
     tarch::la::Vector<Dimensions,int> outsideVolume = volume;
+    tarch::la::Vector<Dimensions,double> x          = faceOffset + tarch::la::multiplyComponents( volume.convertScalar<double>()+tarch::la::Vector<Dimensions,double>(0.5), volumeH);
 
     if (faceNumber<Dimensions) {
       insideVolume(faceNumber % Dimensions)  = 1;
@@ -62,7 +66,7 @@ void exahype2::fv::applyBoundaryConditions(
     boundaryCondition(
       Q + insideVolumeSerialised * unknowns,
       Q + outsideVolumeSerialised * unknowns,
-      faceCentre, volumeH, t, dt, faceNumber
+      x, volumeH, t, dt, faceNumber
     );
   }
 }

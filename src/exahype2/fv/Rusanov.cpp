@@ -62,14 +62,14 @@ namespace {
 
     eigenvalues(QL,x,dx,t,dt,normal,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
-      assertion(lambdas[unknown]==lambdas[unknown]);
-      assertion(lambdas[unknown]>=0.0);
+      assertion5(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal);
+      assertion6(lambdas[unknown]>=0.0,x,dx,t,dt,normal,lambdas[unknown]);
       lambdaMax = std::max(lambdaMax,lambdas[unknown]);
     }
     eigenvalues(QR,x,dx,t,dt,normal % Dimensions,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
-      assertion(lambdas[unknown]==lambdas[unknown]);
-      assertion(lambdas[unknown]>=0.0);
+      assertion5(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal);
+      assertion6(lambdas[unknown]>=0.0,x,dx,t,dt,normal,lambdas[unknown]);
       lambdaMax = std::max(lambdaMax,lambdas[unknown]);
     }
 
