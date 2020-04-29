@@ -33,6 +33,6 @@ tarch::la::Vector<Dimensions,double>  peano4::datamanagement::CellMarker::h() co
 
 std::string peano4::datamanagement::CellMarker::toString() const {
   std::ostringstream msg;
-  msg << "(" << _centre << "," << _h << "," << _isRefined << ")";
+  msg << "(x=" << _centre << ",h=" << _h << ",refined=" << _isRefined << ")";
   return msg.str();
 }
