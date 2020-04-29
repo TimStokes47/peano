@@ -74,7 +74,8 @@ else:
 # So here's the parallel stuff. This is new compared to the serial
 # prototype we did start off with.
 #
-#project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
+project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
+
 
 
 peano4_project = project.generate_Peano4_project()

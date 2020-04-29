@@ -40,6 +40,18 @@ class Project(object):
     self._terminal_time = 1.0
     self._first_plot_time_stamp = 0.0
     self._time_in_between_plots = 0.1
+    self._load_balancer_name     = ""
+    
+    
+  def  set_load_balancing(self, load_balancer_name):
+    """
+    
+      load_balancer_name   Should be full-qualified name of the load balancer. 
+        By default, I recommend to pass "toolbox::loadbalancing::RecursiveSubdivision"
+        
+    """
+    self._load_balancer_name     = load_balancer_name
+    
 
   def get_library( self, mode ):
     """
@@ -142,8 +154,14 @@ class Project(object):
       solverRepositoryDictionary[ "SEQUENCE_OF_GET_MIN_TIME_STEP_SIZE_CALLS" ]  += "," + solver.get_name_of_global_instance() + ".getMinTimeStepSize()"
       solverRepositoryDictionary[ "SEQUENCE_OF_GET_MAX_TIME_STAMP_CALLS" ]      += "," + solver.get_name_of_global_instance() + ".getMaxTimeStamp()"
       solverRepositoryDictionary[ "SEQUENCE_OF_GET_MIN_TIME_STAMP_CALLS" ]      += "," + solver.get_name_of_global_instance() + ".getMinTimeStamp()"
-      solverRepositoryDictionary[ "SEQUENCE_OF_START_TIME_STEP_CALLS" ]         += solver.get_name_of_global_instance() + ".startTimeStep(minTimeStamp, maxTimeStamp, minTimeStepSize, maxTimeStepSize); "
-      solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_TIME_STEP_CALLS" ]        += solver.get_name_of_global_instance() + ".finishTimeStep(); "
+      solverRepositoryDictionary[ "SEQUENCE_OF_START_TIME_STEP_CALLS" ]         += solver.get_name_of_global_instance() + ".startTimeStep(minTimeStamp, maxTimeStamp, minTimeStepSize, maxTimeStepSize); \n"
+      solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_TIME_STEP_CALLS" ]        += solver.get_name_of_global_instance() + ".finishTimeStep(); \n"
+
+    if self._load_balancer_name != "":
+      solverRepositoryDictionary[ "SOLVER_INCLUDES" ]     += "#include \"" + self._load_balancer_name.replace( "::", "/") + ".h\" \n"
+      solverRepositoryDictionary[ "SOLVER_DECLARATIONS" ] += "  extern " + self._load_balancer_name + "  loadBalancer;\n"
+      solverRepositoryDictionary[ "SOLVER_DEFINITIONS" ]  += self._load_balancer_name + "  loadBalancer;\n"
+      solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_TIME_STEP_CALLS" ]        += "loadBalancer.finishTimeStep(); "
 
 
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
