@@ -85,6 +85,37 @@ void peano4::grid::tests::SpacetreeTest::testCreateLeaveCellTraversalEvent() {
 }
 
 
+void peano4::grid::tests::SpacetreeTest::testAreFacesLocal() {
+  #if Dimensions==2
+  Spacetree tree( {0.0,0.0}, {1.0,1.0} );
+  tree._id = 1;
+
+  GridTraversalEvent event;
+  GridVertex vertices[TwoPowerD];
+
+  vertices[0].setState( GridVertex::State::Unrefined );
+  vertices[0].setAdjacentRanks( { 0, 0, 1, 1 } );
+  vertices[0].setBackupOfAdjacentRanks( { 0, 0, 1, 1 } );
+  vertices[1].setState( GridVertex::State::Unrefined );
+  vertices[1].setAdjacentRanks( { 0, Spacetree::InvalidRank, 1, Spacetree::InvalidRank } );
+  vertices[1].setBackupOfAdjacentRanks( { 0, Spacetree::InvalidRank, 1, Spacetree::InvalidRank } );
+  vertices[2].setState( GridVertex::State::Unrefined );
+  vertices[2].setAdjacentRanks( { 1, 1, Spacetree::InvalidRank, Spacetree::InvalidRank } );
+  vertices[2].setBackupOfAdjacentRanks( { 1, 1, Spacetree::InvalidRank, Spacetree::InvalidRank } );
+  vertices[3].setState( GridVertex::State::Unrefined );
+  vertices[3].setAdjacentRanks( { 1, Spacetree::InvalidRank, Spacetree::InvalidRank, Spacetree::InvalidRank } );
+  vertices[3].setBackupOfAdjacentRanks( { 1, Spacetree::InvalidRank, Spacetree::InvalidRank, Spacetree::InvalidRank } );
+
+  std::bitset<TwoTimesD>  result = tree.areFacesLocal( vertices );
+
+  validateWithParams1( result[0], result );
+  validateWithParams1( result[1], result );
+  validateWithParams1( result[2], result );
+  validateWithParams1( result[3], result );
+#endif
+}
+
+
 void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
   #if Dimensions==2
   Spacetree tree( {0.0,0.0}, {1.0,1.0} );
@@ -167,6 +198,7 @@ void peano4::grid::tests::SpacetreeTest::run() {
   testMethod( testRestrictToCoarseGrid );
   testMethod( testCreateLeaveCellTraversalEvent );
   testMethod( testCreateNeighbourExchangeLists );
+  testMethod( testAreFacesLocal );
 }
 
 
