@@ -161,6 +161,7 @@ The output files are enumerated automatically.
 
 
 \section{Log filter}
+\label{section:logging:log-filter}
 
 The amount of log information often becomes hard to track; notably if you run in
 debug mode.
@@ -196,14 +197,19 @@ tarch::logging::LogFilterFileReader::parsePlainTextFile( "my.log-filter" );
 \noindent
 and the format is very simple:
 \begin{verbatim}
-# Level  Trace    Rank   Black or white list entry
-# (info or debug) (-1 means all ranks)
-debug    tarch    -1     black
-debug    peano    -1     black
-info     tarch    -1     black
-info     peano    -1     black
-trace    tarch    -1     black
-trace    peano    -1     black
+# Level             Trace                    Rank          Black/white
+# info/debug/trace  trace of class affected  -1=all ranks
+  debug             tarch                    -1            black
+  debug             peano4                   -1            black
+  info              tarch                    -1            black
+  info              peano4                   -1            black
+  trace             tarch                    -1            black
+  trace             peano                    -1            black 
+
+# Lines starting with hash are comments
+
+# Switch on info output from one class on one rank only
+info     examples::subdirectory::myClass    15    white
 \end{verbatim}
 
 

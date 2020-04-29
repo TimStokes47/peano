@@ -281,6 +281,8 @@ project.set_global_simulation_parameters(
 This is all. We now can run the code.
 
 
+\subsubsection{IO and logging}
+
 
 \ExaHyPE\ codes by default yield snapshots in \Peano's block format. 
 If you have configured \Peano\ with VTK support, you can directly convert it
@@ -294,74 +296,57 @@ if success:
 \end{code}
 
 
-\section{Running on a parallel computer}
+\ExaHyPE\ searches for a text file \texttt{exahype.log-filter} in the working
+directory.
+If no such file is found (or the file is corrupted), then it will use some
+default filter rules, i.e.~dump the information to the terminal that I consider
+to be most important.
+If you want to adopt the output, I strongly recommend that you add a log filter
+configuration file. 
+The syntax of log filter files is discussed in Section
+\ref{section:logging:log-filter}.
 
-\marginpar{Currently under construction}
+
+
+\section{Running on a parallel computer}
 
 To run \ExaHyPE\ in parallel, you have to build \Peano\ with support for
 multithreading and/or MPI.
-Once this is done, the engine more or less runs in parallel out of the box, as I
-offer a couple of default load balancing and decomposition strategies. 
-So here's a summary of what has to be done:
+Once this is done, the engine more or less runs in parallel out of the box.
 
 
+\paragraph{Domain decomposition}
+The core domain decomposition scheme realised in \ExaHyPE\ is a non-overlapping
+multiscale domain decomposition based upon space-filling curves (SFC).
+To use this scheme, you have to specify an appropriate load balancing scheme.
+Without any load balancing, the code will never split up the domain and thus
+effectively run serially.
 
-\begin{enumerate}
-  \item Rerun the configure script with MPI and/or shared memory enabled. If you
-  have done so already, you can skip this step.
-  \item Identify one solver of your code that serves as load balancer. If you
-  use only one solver, then this is trivial. I continue to develop the Euler
-  example from the previous sections, so my solver of choice is \texttt{Euler}.
-  In the examples I ship with the code, I however relabel it into
-  \texttt{ParallelEuler}, so users doing the first steps are not flooded with
-  parallelisation details.
-  \item Add an instance of \texttt{toolbox::loadbalancing::RecursiveGuided} to
-  this solver. You can later on use more sophisticated balancing strategies, but
-  this seems to be a good starting point. Here's a simpel example:
-  \begin{code}
-class examples::exahype2::finitevolumes::Euler: public AbstractEuler {
-  private:
-    toolbox::loadbalancing::RecursiveGuided  _loadBalancer;
-  public:
-    [...]
-};
-  \end{code}
-    You will have to add the corresponding include, too.
-  \item All the premanufactored (toolbox) load balancers are packaged into a
-  library of their own. You have to add this library to your \Peano\ project in
-  the Python script:
-  \begin{code}
-peano4_project = project.generate_Peano4_project()
-peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
-peano4_project.output.makefile.add_library( "ExaHyPE2Core2d_debug", "../../../../src/exahype2" )
-peano4_project.output.makefile.add_library( 
-  "ToolboxLoadBalancing2d_debug", "../../../../src/toolbox/loadbalancing" )
-[...]
-  \end{code}
-  \item We hook into the solver's \texttt{finishTimeStep} call to brief the load
-  balancing. For this, we override the routine in our solver:
-  \begin{code}
-class Euler: [...]
-    void finishTimeStep() override;
-  \end{code}
-  This routine always has been there but is implemented as a dummy in the
-  abstract solver base class.
-  \item When we implement \texttt{finishTimeStep}, we have to ensure we still
-  invoke the base class' dummy implementation (we don't want to alter semantics)
-  and then we actually tell the load balancing to become active:
-  \begin{code}
-void examples::exahype2::finitevolumes::Euler::finishTimeStep() {
-  AbstractEuler::finishTimeStep();
-  _loadBalancer.finishTimeStep(); 
-}
-  \end{code}
-  \item If you rely on \Peano's VTK conversion utilities, i.e.~if you have
-  configured your code with VTK, then the conversion tools can handle parallel
-  data dumps. My implementation likely is not the best one possible, as I do
-  dump data files in parallel, but the conversion tool then merges all of the
-  data into one big VTK/VTU file. For most of the applications, the
-  premanufactured VTK dump is a good start though.
-\end{enumerate}
+
+I plan to support multiple different dynamic load balancing schemes over time,
+but the straightforward decomposition scheme shipped with \Peano\ at the moment
+is recursive subdivision, a modification of OpenMP's guided scheduling.
+To use it, you have to call
+\begin{code}
+project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
+\end{code}
+
+\noindent
+on your \ExaHyPE\ project. 
+
+
+\paragraph{Task decomposition}
+\ExaHyPE\ realises an additional task decomposition working on top of the domain
+decomposition. 
+This task decomposition is shared memory, only.
+That is, you can use task decomposition without domain decomposition, but then
+you won't benefit from multiple nodes.
+You can however always use domain decomposition without task
+decomposition---though it should be slower in most cases.
+
+\begin{remark}
+This section is under construction.
+\end{remark} 
 
 
 \section{Introducing a numerical scheme}
