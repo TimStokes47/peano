@@ -518,6 +518,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       int pick        = event.getFaceDataTo(i);
 
       marker.select(pick);
+      
+      assertion3( marker.isLocal() or not event.getIsCellLocal(), marker.toString(), event.toString(), i );
             
       if (
         inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
