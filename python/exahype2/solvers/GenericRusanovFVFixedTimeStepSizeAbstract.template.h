@@ -16,7 +16,6 @@
 
 #include "peano4/utils/Globals.h"
 
-#include "tarch/multicore/BooleanSemaphore.h"
 
 
 
@@ -28,8 +27,6 @@
 
 class {FULL_QUALIFIED_CLASSNAME} {{
   protected:
-    tarch::multicore::BooleanSemaphore  _semaphore;
-
     double _timeStamp;
   public:
     {CLASSNAME}();

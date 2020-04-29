@@ -46,7 +46,7 @@ project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevo
 patch_size     = 25
 unknowns       = 5
 time_step_size = 0.001
-project.add_solver(  exahype2.solvers.FiniteVolumeSolver("ParallelEuler", patch_size, unknowns, 0.001, exahype2.solvers.FiniteVolumeSolverType.Rusanov_Edge) )
+project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("ParallelEuler", patch_size, unknowns, 0.001) )
 
 
 dimensions = 2

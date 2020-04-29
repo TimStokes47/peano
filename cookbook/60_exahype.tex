@@ -364,7 +364,7 @@ void examples::exahype2::finitevolumes::Euler::finishTimeStep() {
 \end{enumerate}
 
 
-\section{Introducing a new solver (numerical scheme)}
+\section{Introducing a numerical scheme}
 
 This section discusses how to introduce a totally new numerical solver. 
 It does not discuss how to introduce a new PDE, as new PDEs are built on top of
@@ -384,6 +384,154 @@ This section gives you an idea how to extend \ExaHyPE\ instead.
 
 
 \paragraph{A new Finite Volume solver}
+
+Introducing a new Finite Volume scheme is reasonably straightforward within
+\ExaHyPE.
+It relies directly on \Peano's patch-based AMR.
+
+
+\begin{itemize}
+  \item Create a new subclass of \texttt{exahype2.solver.FV}. The parent class
+  has to be told with which patch overlaps you work.
+  \item Instantiate this class in your user code when you invoke
+  \texttt{add\_solver} on the \ExaHyPE\ project.
+  \item Overwrite \texttt{get\_user\_includes()} to add all the includes for
+  C/C++ code that you'll eventually need. 
+  \item If you class is called \texttt{XYZ}, create four text files:
+  \texttt{XYZAbstract.template.h}, \linebreak \texttt{XYZAbstract.template.cpp},
+  \texttt{XYZ.template.h} and \texttt{XYZ.template.cpp}.
+\end{itemize}
+
+\noindent
+\ExaHyPE's design concept is that each solver yields two types of classes:
+The actual solver and an abstract superclasses. 
+Abstract superclasses are regenerated every time you rerun the Python script.
+Furthermore, they define the whole signature, i.e.~if you alter the signature
+later on, users simply rerun the toolkit. 
+Finally, the abstract superclasses hold default implementations.
+
+
+With \Peano, you can create arbitrary abstract superclasses. 
+They have to implement some general \ExaHyPE\ routines, but the number of operations that they have to
+provide is very small.
+I thought about introducing a general \texttt{exahype2::Solver} class, but then
+this class is not really required anywhere as we work with code generation all
+the way through anyway. 
+So the only thing your solver's abstract superclass has to give \ExaHyPE\ is the
+following set of routines:
+
+\begin{code}
+  double getMinTimeStamp() const;
+  double getMaxTimeStamp() const;
+  double getMinTimeStepSize() const;
+  double getMaxTimeStepSize() const;
+
+  void startTimeStep(
+      double globalMinTimeStamp,
+      double globalMaxTimeStamp,
+      double globalMinTimeStepSize,
+      double globalMaxTimeStepSize
+  );
+
+  void finishTimeStep();
+\end{code}
+\noindent
+You can make them virtual if you want to highlight that a user can reimplement
+them. 
+But there's no need for this. 
+
+
+The core implementation effort clearly has to go into the parts where the actual
+mesh traversal is mapped onto solver calls.
+In \ExaHyPE, this is realised through templates. 
+Any user solver is supposed to define three local variables within its solver
+class:
+\texttt{HandleBoundaryTemplate}, 
+\texttt{CreateCellTemplate}, \texttt{HandleCellTemplate} and
+\texttt{AMRTemplate}.
+There are more, but this is the minimum.
+
+
+Within these templates, you have access to a couple of variables, some symbols,
+and you can furthermore specify your own replacement rules:
+\begin{itemize}
+  \item Within each code block, you have access to a variable marker which is of
+  type \texttt{peano4::datamanagement::FaceMarker} or
+  \texttt{peano4::datamanagement::CellMarker}. It allows you to find out more
+  about the face or cell centre, mesh sizes, \ldots, i.e.~it holds all spatial
+  information.
+  \item Within each code block, the constant \texttt{\{SOLVER\_INSTANCE\}} will
+  be replaced by the Python code with an actual instance of your user's solver.
+  \item The constant
+  \texttt{\{NUMBER\_OF\_VOLUMES\_PER\_AXIS\}} will be replaced by the block size
+  specified by the user. It is the attribute you hand through in the
+  constructor.
+  \item The constant
+  \texttt{\{NUMBER\_OF\_UNKNOWNS\}} will be replaced by the argument you pass to
+  the constructor.
+  \item There are more constants. See \linebreak
+  \texttt{peano4.solvers.FV.\_\_init\_dictionary\_with\_default\_parameters} for
+  information.
+  \item You can introduce more symbolds as \texttt{\{XYZ\}} as long as you add
+  them within your routine
+  \texttt{add\_entries\_to\_text\_replacement\_dictionary}.
+\end{itemize}
+
+
+\noindent
+The template mechanism works similar to aspect-oriented programming, i.e.~it
+simply enables Python to plug some code snippets straight into your the
+generated \ExaHyPE\ code. 
+The interesting thing however is the symbol
+
+\begin{itemize}
+  \item \texttt{fineGridCell\{UNKNOWN\_IDENTIFIER\}.value} which is a double
+    pointer which points to the whole patch hosted by the cell in the volumetric
+    routines \texttt{CreateCellTemplate}, \texttt{HandleCellTemplate} and
+    \texttt{AMRTemplate}. The array it points to has the size \linebreak
+    \texttt{\{NUMBER\_OF\_VOLUMES\_PER\_AXIS\}}$^d \cdot $
+    \texttt{\{NUMBER\_OF\_UNKNOWNS\}}.
+  \item \texttt{fineGridFace\{UNKNOWN\_IDENTIFIER\}.value} is the face
+    equivalent for the boundary conditions. Again, it is a double pointer,
+    though one dimension is not equal to
+    \texttt{\{NUMBER\_OF\_VOLUMES\_PER\_AXIS\}} but equal to the halo overlap.
+    See the Finite Volumes discussion in
+    Chapter~\ref{section:python-api-examples:finite-volumes}.
+  \item \texttt{reconstructedPatch} and \texttt{originalPatch} are only defined
+    within \texttt{HandleCellTemplate}. The former is an alias for
+    \texttt{fineGridFace\{UNKNOWN\_IDENTIFIER\}.value}, i.e.~points to the same
+    location. \texttt{reconstructedPatch} is another pointer which points to the
+    patch from the previous mesh traversal, i.e.~you can overwrite data
+    within \texttt{originalPatch} and still have the old one available.
+    Furthermore, the underlying patch is bigger: It hosts the actual patch data
+    plus its halo.
+\end{itemize}
+
+
+
+
+\begin{remark}
+ If you want to see a really simple example of this solver type, change into the 
+ directory \texttt{src/exahype2/fv} and have a look into \texttt{Rusanov.cpp}.
+ It follows exactly the above recipe.
+\end{remark}
+
+
+\noindent
+I see two different ways how to realise a new solver: 
+You can either code your solver directly within the Python templates.
+Alternatively, you can generate some generic glue code within the template and
+forward calls to some predefined C++ or user code.
+
+
+Both variants have pros and cons and are valid.
+For my generic Rusanov solver (as well as for ADER-DG), we can realise all
+numerics generically within predefined kernels relying only on few user-defined
+functions injecting flux and eigenvalues.
+Furthermore, these functions have the same signature for all applications.
+For a bespoke Finite Volume scheme where the Riemann solver holds the actual
+numerical wisdom and each Riemann solvers requires a bespoke signature, it is
+maybe better to skip that additional level of abstraction.
 
 
 
