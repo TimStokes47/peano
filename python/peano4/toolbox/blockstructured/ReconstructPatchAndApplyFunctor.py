@@ -65,7 +65,11 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     self.d[ "CELL_ACCESSOR" ]      = "fineGridCell" + patch.name
     
     self.d[ "FUNCTOR_IMPLEMENTATION" ]               = functor_implementation
-    self.touch_face_first_time_functor               = touch_face_first_time_functor
+    self.touch_face_first_time_functor               = """
+  logTraceInWith2Arguments( "touchFaceFirstTime(...)", marker.toString(), marker.isLocal() );
+""" + touch_face_first_time_functor + """
+  logTraceOut( "touchFaceFirstTime(...)" );
+"""
     self.additional_includes                         = additional_includes
 
 
@@ -90,6 +94,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
 
 
   __Template_TouchCellFirstTime = """
+  logTraceInWith1Argument( "touchCellFirstTime(...)", marker.toString() );
   auto serialisePatchIndex = [](tarch::la::Vector<Dimensions,int> overlapCell, int normal) {{
     int base   = 1;
     int result = 0;
@@ -111,6 +116,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
   double reconstructedPatch[{NUMBER_OF_DOUBLE_VALUES_IN_RECONSTRUCTED_PATCH_3D}];
   #endif
 
+  logTraceIn( "touchCellFirstTime(...)::loopOverPatch" );
   //
   // Loop over original patch (k) and copy stuff over.
   //
@@ -123,11 +129,13 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
       assertion2( reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j]==reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j], sourceCell, j );
     }}
   }}
+  logTraceOut( "touchCellFirstTime(...)::loopOverPatch" );
   
   //
   // Bring in the auxiliary patches, i.e. befill halo
   //
   for(int d=0; d<Dimensions; d++) {{
+    logTraceInWith1Argument( "touchCellFirstTime(...)::loopOverFace", d );
     //
     // d-loop over all dimensions except d. The vector k's entry d is set
     // to 0. We start with the left/bottom face, i.e. the one closer to the 
@@ -167,6 +175,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
         //std::cout << "face " << (d+Dimensions) << ": " << sourceCell << " -> " << destinationCell << "  (" << sourceCellSerialised << " -> " << destinationCellSerialised << ")" << std::endl;
       }}
     }}
+    logTraceOut( "touchCellFirstTime(...)::loopOverFace" );
   }}
 
   #if Dimensions==2
@@ -178,6 +187,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
   }};
 
   f( reconstructedPatch, {CELL_ACCESSOR}.value );
+  logTraceOut( "touchCellFirstTime(...)" );
 """
 
 

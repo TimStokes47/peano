@@ -65,6 +65,7 @@ class ApplyFunctorOnPatch(ActionSet):
 
 
   __Template_TouchCellFirstTime = """
+  logTraceIn( "touchCellFirstTime(...)" );
   #if Dimensions==2
   auto f = [&]( double patchData[{NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_2D}] ) -> void {{
   #elif Dimensions==3
@@ -74,6 +75,7 @@ class ApplyFunctorOnPatch(ActionSet):
   }};
 
   f( {CELL_ACCESSOR}.value );
+  logTraceOut( "touchCellFirstTime(...)" );
 """
 
 

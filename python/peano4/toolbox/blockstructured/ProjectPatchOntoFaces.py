@@ -61,6 +61,7 @@ class ProjectPatchOntoFaces(ActionSet):
 
 
   __Template_TouchCellFirstTime = """
+  logTraceIn( "touchCellFirstTime(...)" );
   auto serialisePatchIndex = [](tarch::la::Vector<Dimensions,int> overlapCell, int normal) {{
     int base   = 1;
     int result = 0;
@@ -110,7 +111,7 @@ class ProjectPatchOntoFaces(ActionSet):
       }}
     }}
   }}
-
+  logTraceOut( "touchCellFirstTime(...)" );
 """
 
 

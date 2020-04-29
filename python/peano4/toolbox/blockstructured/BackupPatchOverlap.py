@@ -49,6 +49,7 @@ class BackupPatchOverlap(ActionSet):
 
 
   __Template = """
+    logTraceIn( "--backup patch overlap--(...)" );
     int counter = 0;
     dfore(k,{DOFS_PER_AXIS},0,0) {{
       for (int i=0; i<{OVERLAP}*2; i++) {{
@@ -59,6 +60,7 @@ class BackupPatchOverlap(ActionSet):
         }}
       }}
     }}
+    logTraceOut( "--backup patch overlap--(...)" );
 """
 
 
