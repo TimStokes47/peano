@@ -46,7 +46,7 @@ project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevo
 patch_size     = 25
 unknowns       = 5
 time_step_size = 0.001
-project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("ParallelEuler", patch_size, unknowns, 0.001) )
+project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("Euler", patch_size, unknowns, 0.001) )
 
 
 dimensions = 2
@@ -70,6 +70,12 @@ else:
   )
 
 
+#
+# So here's the parallel stuff. This is new compared to the serial
+# prototype we did start off with.
+#
+#project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
+
 
 peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
@@ -82,7 +88,7 @@ success = peano4_project.run( [] )
 
 success = True
 if success:
-  convert = peano4.visualisation.Convert( "solutionParallelEuler", True )
+  convert = peano4.visualisation.Convert( "solutionEuler", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.plot_domain_decomposition()
   convert.extract_fine_grid()
