@@ -61,7 +61,8 @@ class Convert(object):
 
 
   def __get_selectors(self):
-    print( "inspect file " + self.file_name + " ... ")
+    if not self.silent:
+      print( "inspect file " + self.file_name + " ... " )
     convert_result = ""
     result = []
     invocation = self.__invoke() + [ "inspect", self.file_name + self.extension ]
@@ -76,7 +77,8 @@ class Convert(object):
           new_entry = line.split("variable")[-1].split("is")[0].strip()
           result.append( new_entry ) 
       result = set(result)
-      print( "complete. Found selectors " + str(result) )
+      if not self.silent:
+        print( "found selectors " + str(result) )
     except Exception as e:
       print( "failed to inspect (" + str(e) + ") with " + str(invocation) )  
     return result
@@ -143,7 +145,7 @@ class Convert(object):
     """
     selectors = self.__get_selectors()
 
-    print( "convert file " + self.file_name + " ... ")
+    print( "convert file " + self.file_name + " into vtk (vtu binary format) ... ")
     for selector in selectors:
       invocation =         self.__invoke() + [
           "convert-file",
