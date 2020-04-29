@@ -163,6 +163,8 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
       or
       ( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==RankOfCellWitchWillBeJoined )
       or
+      ( _splitTriggered.count(vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)) > 0)
+      or
       (
         splittingIsConsideredLocal and _splitting.count(vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1))>0
       )
@@ -360,11 +362,19 @@ std::bitset<TwoTimesD> peano4::grid::Spacetree::areFacesLocal(GridVertex  vertic
     for (int i=0; i<TwoPowerD; i++) {
       std::bitset<Dimensions> studiedVertex = i;
       studiedVertex.set(normal,faceNumber>=Dimensions);
-      std::bitset<Dimensions> studiedEntry  = TwoPowerD - studiedVertex.to_ulong();
+      std::bitset<Dimensions> studiedEntry  = TwoPowerD - studiedVertex.to_ulong() - 1;
+
       studiedEntry.set(normal,0);
-      isLocal |= vertices[studiedVertex.to_ulong()].getAdjacentRanks( studiedEntry.to_ulong() ) == _id;
+      int currentRank = vertices[studiedVertex.to_ulong()].getAdjacentRanks( studiedEntry.to_ulong() );
+      isLocal |=  currentRank == _id;
+      isLocal |=  _splitTriggered.count(currentRank)>0;
+      isLocal |=  _splitting.count(currentRank)>0;
+
       studiedEntry.set(normal,1);
-      isLocal |= vertices[studiedVertex.to_ulong()].getAdjacentRanks( studiedEntry.to_ulong() ) == _id;
+      currentRank = vertices[studiedVertex.to_ulong()].getAdjacentRanks( studiedEntry.to_ulong() );
+      isLocal |= currentRank == _id;
+      isLocal |=  _splitTriggered.count(currentRank)>0;
+      isLocal |=  _splitting.count(currentRank)>0;
     }
 
     result[faceNumber] = isLocal;

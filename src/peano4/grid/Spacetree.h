@@ -65,6 +65,20 @@ class peano4::grid::Spacetree {
     std::bitset<TwoPowerD> areVerticesRefined(GridVertex  vertices[TwoPowerD]) const;
 
     std::bitset<TwoPowerD> areVerticesLocal(GridVertex  vertices[TwoPowerD]) const;
+
+    /**
+     * Identifies for the 2d faces whether they are local or not.
+     *
+     * <h2> Implementation </h2>
+     *
+     * - I loop over the 2d faces.
+     * - Per face, I loop over all @f$ 2^d @f$ vertices but alter the entry
+     *   along the normal manually. So I'm inefficient, but I don't care.
+     * - Per relevant vertex, I have to check two entries in the adjacency
+     *   list.
+     * - Splitting and split-triggered ranks are still considered to be
+     *   local.
+     */
     std::bitset<TwoTimesD> areFacesLocal(GridVertex  vertices[TwoPowerD]) const;
 
     /**
