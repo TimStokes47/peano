@@ -25,14 +25,8 @@ namespace exahype2 {
      *
      * where @f$ \lambda_{\mbox{max}} @f$  is the maximum over the eigenvalues both of @f$ Q_R @f$  and @f$ Q_L @f$.
      *
-     * The outcome of F is added to the solution in Q. The reconstructed array is not
-     * touched. So if you find out later that this time step has been too aggressive,
-     * then you have to manually backup the patch beforehand.
-     *
-     * Please consult the guidebook for some documentation of this routine. Some
-     * background is given in its ExaHyPE chapter, but the really interesting
-     * details are discussed within the Finite Volume chapter.
      */
+/*
     void applyRusanovToPatch(
       std::function< void(
         double                                       Q[],
@@ -61,6 +55,7 @@ namespace exahype2 {
       double                                       Qin[],
       double                                       Qout[]
     );
+*/
 
     void applyRusanovToPatch_FaceLoops2d(
       std::function< void(

@@ -1,0 +1,109 @@
+#include "Generic.h"
+
+#include "tarch/logging/Log.h"
+
+#include "../PatchUtils.h"
+
+
+std::string exahype2::fv::plotVolume(
+    double Q[],
+    int    unknowns
+) {
+  std::string result = "(" + std::to_string(Q[0]);
+  for (int i=1; i<unknowns; i++) result += "," + std::to_string(Q[i]);
+  result += ")";
+  return result;
+};
+
+
+void exahype2::fv::applySplit1DRiemannToPatch_Overlap1AoS(
+      std::function< void(
+        double                                       QL[],
+        double                                       QR[],
+        const tarch::la::Vector<Dimensions,double>&  faceCentre,
+        double                                       volumeH,
+        double                                       t,
+        double                                       dt,
+        int                                          normal,
+        double                                       F[]
+      ) >   splitRiemannSolve1d,
+      const tarch::la::Vector<Dimensions,double>&  patchCentre,
+      const tarch::la::Vector<Dimensions,double>&  patchSize,
+      double                                       t,
+      double                                       dt,
+      int                                          numberOfVolumesPerAxisInPatch,
+      int                                          unknowns,
+      double                                       Qin[],
+      double                                       Qout[]
+) {
+  static tarch::logging::Log _log( "exahype2::fv" );
+  logTraceInWith6Arguments( "applySplit1DRiemannToPatch_Overlap1AoS(...)", patchCentre, patchSize, t, dt, numberOfVolumesPerAxisInPatch, unknowns );
+
+  assertion( dt>=tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+
+  tarch::la::Vector<Dimensions,double> volumeH = exahype2::getVolumeSize(patchSize, numberOfVolumesPerAxisInPatch);
+
+  double numericalFlux[unknowns]; // helper out variable
+
+  for (int y=0; y<numberOfVolumesPerAxisInPatch; y++)
+  for (int x=0; x<=numberOfVolumesPerAxisInPatch; x++) {
+    const int leftVoxelInPreimage  =  x
+                                   + (y+1) * (2 + numberOfVolumesPerAxisInPatch);
+    const int rightVoxelInPreimage =  x+1
+                                   + (y+1) * (2 + numberOfVolumesPerAxisInPatch);
+
+    const int leftVoxelInImage     = x-1
+                                   + y * numberOfVolumesPerAxisInPatch;
+    const int rightVoxelInImage    = x
+                                   + y * numberOfVolumesPerAxisInPatch;
+
+    splitRiemannSolve1d(
+      Qin + leftVoxelInPreimage*unknowns,
+      Qin + rightVoxelInPreimage*unknowns,
+      x, volumeH(0), t, dt, 0, //  last argument = normal
+      numericalFlux
+    );
+
+    for (int unknown=0; unknown<unknowns; unknown++) {
+      if (x>0) {
+        Qout[ leftVoxelInImage*unknowns+unknown ] -= dt / volumeH(0) * numericalFlux[unknown];
+      }
+      if (x<numberOfVolumesPerAxisInPatch) {
+        Qout[ rightVoxelInImage*unknowns+unknown ] += dt / volumeH(0) * numericalFlux[unknown];
+      }
+    }
+  }
+
+  for (int y=0; y<=numberOfVolumesPerAxisInPatch; y++)
+  for (int x=0; x<numberOfVolumesPerAxisInPatch; x++) {
+    const int lowerVoxelInPreimage =  x+1
+                                   +  y * (2 + numberOfVolumesPerAxisInPatch);
+    const int upperVoxelInPreimage =  x+1
+                                   + (y+1) * (2 + numberOfVolumesPerAxisInPatch);
+
+    const int lowerVoxelInImage    = x
+                                   + (y-1) * numberOfVolumesPerAxisInPatch;
+    const int upperVoxelInImage    = x
+                                   + y * numberOfVolumesPerAxisInPatch;
+
+    splitRiemannSolve1d(
+      Qin + lowerVoxelInPreimage*unknowns,
+      Qin + upperVoxelInPreimage*unknowns,
+      x, volumeH(0), t, dt, 1, //  last argument = normal
+      numericalFlux
+    );
+
+    for (int unknown=0; unknown<unknowns; unknown++) {
+      if (y>0) {
+        Qout[ lowerVoxelInImage*unknowns+unknown ] -= dt / volumeH(0) * numericalFlux[unknown];
+      }
+      if (y<numberOfVolumesPerAxisInPatch) {
+        Qout[ upperVoxelInImage*unknowns+unknown ] += dt / volumeH(0) * numericalFlux[unknown];
+      }
+    }
+  }
+
+  logTraceOut( "applySplit1DRiemannToPatch_Overlap1AoS(...)" );
+}
+
+

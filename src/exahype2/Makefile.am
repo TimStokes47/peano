@@ -11,6 +11,7 @@ ExaHyPE2Sources = \
   PatchUtils.cpp \
   RefinementControl.cpp \
   fv/BoundaryConditions.cpp \
+  fv/Generic.cpp \
   fv/Rusanov.cpp
 
 
