@@ -41,5 +41,11 @@ void finishTimeStep() {{
   {SEQUENCE_OF_FINISH_TIME_STEP_CALLS}
 }}
 
+
+void finishGridConstructionStep() {{
+  {SEQUENCE_OF_FINISH_GRID_CONSTRUCTION_STEP_CALLS}
+}}
+
+
 {CLOSE_NAMESPACE}
 

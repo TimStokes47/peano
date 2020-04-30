@@ -30,6 +30,8 @@ void startTimeStep(
 
 void finishTimeStep();
 
+void finishGridConstructionStep();
+
 {CLOSE_NAMESPACE}
 
 
