@@ -116,7 +116,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
         if (sourceRank==tarch::mpi::Rank::getInstance().getRank()) {
           // It is input as I have already inverted the automaton state at this point
           const int sourceStack      = peano4::grid::PeanoCurve::getInputStackNumber( getInstance().getSpacetree(parentId)._root );
-          logInfo(
+          logDebug(
             "exchangeAllVerticalDataExchangeStacks(...)",
             "move stack " << sourceStack << " from tree " << parentId << " into stack " << destinationStack << " from tree " << spacetreeId <<
             ": " << stackContainer.getForPush(parentId,sourceStack)->toString()
