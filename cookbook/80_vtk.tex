@@ -14,7 +14,7 @@ Here's some things you might want to consider/check:
   \texttt{find / -name libvtk*.so} and see what it finds. After that, tell the
   configuration explicitly which VTK extension to use:
   \begin{code}
---with-vtk=8.90
+--with-vtk=-8.90
   \end{code}
   BTW: Not all Linux distributions install VTK with these extensions, so you
   have to check manually on your system.
@@ -44,13 +44,11 @@ export LDFLAGS="-L/opt/vtk/lib64"
   default. To change the version against which you build, please tell configure
   via
 \begin{code}
---vtk-version=9
+--with-vtk-version=9
 \end{code}
   Depending on the version chosen, \Peano\ will try to link against a different
   set of library files.
 \end{itemize}
-
-    
     
     
 \section{Tweaking your pictures}
@@ -221,8 +219,3 @@ results---it depends on your visualisation algorithms.
 % 
 % #input()
 % 
-
-
-
-
- 
