@@ -1,4 +1,5 @@
 #include "RecursiveSubdivision.h"
+#include "peano4/utils/Globals.h"
 #include "peano4/parallel/SpacetreeSet.h"
 
 #include "tarch/Assertions.h"
@@ -65,7 +66,7 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 }
 
 
-void toolbox::loadbalancing::RecursiveSubdivision::finishTimeStep() {
+void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   updateGlobalView();
 
   if (
@@ -79,6 +80,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishTimeStep() {
 
     _hasSpreadOutOverAllRanks = true;
 
+    logInfo( "finishTimeStep()", "spread over all ranks. Assign each rank " << cellsPerRank << " cells" );
     for (int targetRank=1; targetRank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); targetRank++ ) {
       if (not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerRank,targetRank)) {
         logWarning( "finishTimeStep()", "wanted to split local rank's only tree such that rank " << targetRank << " becomes involed. Failed" );
@@ -90,9 +92,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishTimeStep() {
     and
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
-    // @todo raus
-//    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()
-    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < 2
+    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()
   ) {
     int heaviestSpacetree = getIdOfHeaviestLocalSpacetree();
     int cellsPerCore      = std::max(
@@ -100,7 +100,6 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishTimeStep() {
       getMaximumSpacetreeSize()
     );
 
-    // @todo Debug
     logInfo( "finishTimeStep()", "not all cores are yet occupied on this rank, so split " << cellsPerCore << " cells from tree " << heaviestSpacetree );
     peano4::parallel::SpacetreeSet::getInstance().split(heaviestSpacetree,cellsPerCore,tarch::mpi::Rank::getInstance().getRank());
   }

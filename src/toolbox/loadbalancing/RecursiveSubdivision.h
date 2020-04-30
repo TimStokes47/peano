@@ -49,7 +49,7 @@ class toolbox::loadbalancing::RecursiveSubdivision {
   public:
     RecursiveSubdivision();
 
-    void finishTimeStep();
+    void finishStep();
   private:
     static tarch::logging::Log  _log;
 
