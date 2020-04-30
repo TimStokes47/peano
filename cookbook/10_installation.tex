@@ -164,6 +164,37 @@ i.e.~you can both assess a valid build plus a working MPI environment.
 
 
 
+\section{Python configuration}
+
+\Peano\ is developed with Python 3. Python 2 is not supported. 
+To make any Python example pass, you have to set the Python paths.
+There are multiple ways to do so.
+
+The standard way is to set the \texttt{PYTHONPATH}:
+\begin{code}
+export PYTHONPATH=myPeanoDirectory/python
+\end{code}
+This can even be done in the \texttt{.bashrc}.
+
+Alternatively, you can augment your Python script with 
+\begin{code}
+import sys
+PEANO4_PYTHON_DIR="myPeanoDirectory/python"
+sys.path.append(PEANO4_PYTHON_DIR)
+\end{code}
+
+\noindent
+Please note that most Python scripts require you to set the
+\texttt{LD\_LIBRARY\_PATH}. 
+If you install \Peano, then this path should be automatically right.
+If you work with a local \Peano\ installation, you can either tell \Peano\
+through its API where to search for the library (all routines that add a
+library accept additional search paths), or you can again use the
+\texttt{sys.path.append} command to extend \texttt{LD\_LIBRARY\_PATH}.
+
+
+
+
 \section{\Peano\ components and build variants}
 
 \Peano\ currently is delivered as a set of archives, i.e.~static libraries:
