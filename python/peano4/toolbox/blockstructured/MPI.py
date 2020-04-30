@@ -7,7 +7,8 @@ from peano4.solversteps.ActionSet import ActionSet
 def get_face_overlap_merge_implementation(patch_overlap):
   d = {
     "OVERLAP": patch_overlap.dim[0]/2,
-    "DOFS_PER_AXIS": patch_overlap.dim[1]
+    "DOFS_PER_AXIS": patch_overlap.dim[1],
+    "UNKNOWNS": patch_overlap.no_of_unknowns
   }
   
   
@@ -34,7 +35,7 @@ def get_face_overlap_merge_implementation(patch_overlap):
   //
   #if PeanoDebug>0
   tarch::logging::Log _log( "Q" );
-  logDebug( "mergeHorizontally()", "merge " << marker.toString() ); 
+  logDebug( "mergeHorizontally()", "merge at x=" << marker.toString() << " with an outer normal of " << marker.outerNormal() ); 
   #endif
   
   const int faceNormal = marker.getSelectedFaceNumber() % Dimensions;
@@ -44,7 +45,9 @@ def get_face_overlap_merge_implementation(patch_overlap):
       volume(faceNormal) += marker.outerNormal()(faceNormal)>0 ? j + {OVERLAP} : j;
       
       int volumeSerialised = serialisePatchIndex(volume, faceNormal);
-      value[volumeSerialised] = neighbour.value[volumeSerialised];
+      for (int k=0; k<{UNKNOWNS}; k++) {{
+        value[volumeSerialised*{UNKNOWNS}+k] = neighbour.value[volumeSerialised*{UNKNOWNS}+k];
+      }}
       
       assertion(value[volumeSerialised]==value[volumeSerialised]);
     }}
