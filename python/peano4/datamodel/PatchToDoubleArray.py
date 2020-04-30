@@ -8,7 +8,17 @@ from .DoF import DoFAssociation
 
 class PatchToDoubleArray():
   """
-  Very simple converter which maps the patch 1:1 onto a double array
+  
+  Very simple converter which maps the patch 1:1 onto a double array. 
+  By default, I leave all the MPI merges empty though obviously the 
+  merges often are plain copying over along faces (see the discussion 
+  on Finite Volumes in the guidebook). If you need any proper MPI 
+  handling, use set_merge_method_definition() to inject it. Depending
+  on how you use your patch (as cell or face or vertex data structure)
+  the thing you pass has the respective semantics. The most popular
+  default merge implementation is the one you find in the blockstructured
+  toolbox.
+  
   """
   def __init__(self,patch):
     self.data = patch
