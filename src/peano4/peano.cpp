@@ -21,17 +21,25 @@ void peano4::writeCopyrightMessage() {
     buildInfo += "d";
 
     #ifdef Parallel
-    buildInfo += ", with mpi";
+    buildInfo += ", with mpi (";
+    buildInfo += std::to_string( tarch::mpi::Rank::getInstance().getNumberOfRanks() );
+    buildInfo += " ranks)";
     #else
     buildInfo += ", no mpi";
     #endif
 
     #if defined(SharedOMP)
-    buildInfo += ", omp";
+    buildInfo += ", omp (";
+    buildInfo += std::to_string( tarch::multicore::Core::getInstance().getNumberOfThreads() );
+    buildInfo += " threads)";
     #elif defined(SharedTBB)
-    buildInfo += ", tbb";
+    buildInfo += ", tbb (";
+    buildInfo += std::to_string( tarch::multicore::Core::getInstance().getNumberOfThreads() );
+    buildInfo += " threads)";
     #elif defined(SharedCPP)
-    buildInfo += ", C++ threading";
+    buildInfo += ", C++ threading (";
+    buildInfo += std::to_string( tarch::multicore::Core::getInstance().getNumberOfThreads() );
+    buildInfo += " threads)";
     #else
     buildInfo += ", no threading";
     #endif
