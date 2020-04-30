@@ -11,10 +11,13 @@ tarch::logging::Log   {FULL_QUALIFIED_CLASSNAME}::_log( "{FULL_QUALIFIED_CLASSNA
   const tarch::la::Vector<Dimensions,double>&  h,
   double                                       t
 ) {{
+  logTraceInWith3Arguments( "refinementCriterion(...)", x, h, t );
+  ::exahype2::RefinementCommand result = ::exahype2::RefinementCommand::Keep;
   if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0 ) {{
-    return ::exahype2::RefinementCommand::Refine;
+    result = ::exahype2::RefinementCommand::Refine;
   }}
-  else return ::exahype2::RefinementCommand::Keep;
+  logTraceOutWith1Argument( "refinementCriterion(...)", toString(result) );
+  return result;
 }}
 
 
