@@ -148,8 +148,12 @@ the \texttt{--with-prefix} option.
 
 \section{Installation test}
 
-Once you have compiled \Peano\, I recommend that you run the unit tests in
-directory
+Once you have compiled \Peano\, I recommend that you run all tests using
+
+\begin{code}
+  make check
+\end{code}
+or to run 2D and 3D tests individually, use
 
 \begin{code}
   src/examples/unittests/UnitTests2d
