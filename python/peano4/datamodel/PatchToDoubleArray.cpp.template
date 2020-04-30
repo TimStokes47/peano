@@ -5,6 +5,40 @@
 #include "peano4/utils/Loop.h"
 
 
+ 
+{FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}() {{
+}}
+
+
+{FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(const {CLASSNAME}& other) {{
+  #if PeanoDebug>=1
+  _debugX = other._debugX;
+  _debugH = other._debugH;
+  #endif
+
+  #if Dimensions==2
+  std::copy(other.value, other.value+{CARDINALITY_2D},value);
+  #else
+  std::copy(other.value, other.value+{CARDINALITY_3D},value);
+  #endif
+}}
+
+
+{FULL_QUALIFIED_CLASSNAME}& {FULL_QUALIFIED_CLASSNAME}::operator=(const {CLASSNAME}& other) {{
+  #if PeanoDebug>=1
+  _debugX = other._debugX;
+  _debugH = other._debugH;
+  #endif
+  
+  #if Dimensions==2
+  std::copy(other.value, other.value+{CARDINALITY_2D},value);
+  #else
+  std::copy(other.value, other.value+{CARDINALITY_3D},value);
+  #endif
+  return *this;
+}}
+
+
 std::string {FULL_QUALIFIED_CLASSNAME}::toString() const {{
   std::string result = std::string("()");
   return result;
