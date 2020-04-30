@@ -11,10 +11,14 @@ tarch::logging::Log   examples::exahype2::finitevolumes::Euler::_log( "examples:
   const tarch::la::Vector<Dimensions,double>&  h,
   double                                       t
 ) {
-  if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0 ) {
-    return ::exahype2::RefinementCommand::Refine;
+  logTraceInWith3Arguments( "refinementCriterion(...)", x, h, t );
+  ::exahype2::RefinementCommand result = ::exahype2::RefinementCommand::Keep;
+  // I have to take the voxel count per patch into account as well
+  if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0/25.0/1.5 ) {
+    result = ::exahype2::RefinementCommand::Refine;
   }
-  else return ::exahype2::RefinementCommand::Keep;
+  logTraceOutWith1Argument( "refinementCriterion(...)", toString(result) );
+  return result;
 }
 
 

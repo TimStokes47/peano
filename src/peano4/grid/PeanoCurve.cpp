@@ -167,9 +167,9 @@ int peano4::grid::PeanoCurve::getVertexReadStackNumber(const AutomatonState&  st
 
 
 bool peano4::grid::PeanoCurve::isInOutStack( int number ) {
-  assertion1(number>=0,number);
-  return number < NumberOfBaseStacks;
+  return number>CallStack and number < NumberOfBaseStacks;
 }
+
 
 int peano4::grid::PeanoCurve::getVertexWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex ) {
   int biggestValue = 2*Dimensions+1;

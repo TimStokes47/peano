@@ -59,14 +59,14 @@ build_mode = peano4.output.CompileMode.Asserts
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    0.4,                    # end time
-    0.0, time_step_size*20     # snapshots
+    1.0,                       # end time
+    0.0, time_step_size*50     # snapshots
   )
 else:
   project.set_global_simulation_parameters(
     dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-    0.4,          
-    0.0, time_step_size*20
+    1.0,                       # end time
+    0.0, time_step_size*50
   )
 
 
