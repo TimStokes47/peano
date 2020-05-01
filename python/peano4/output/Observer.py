@@ -499,8 +499,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         
         data.mergeHorizontally( incomingData, marker );
             
-        assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), _spacetreeId );
-        assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), _spacetreeId );
+        assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), _spacetreeId, outFaceStackPosition, event.toString() );
+        assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), _spacetreeId, outFaceStackPosition, event.toString() );
       }}
             
       view.set(outFaceStackPosition,data);
