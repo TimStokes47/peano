@@ -493,14 +493,14 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         event.getExchangeFaceData( outFaceStackPosition )!=peano4::grid::TraversalObserver::NoData
       ) {{
         const int stack = peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange( event.getExchangeFaceData( outFaceStackPosition ) );
-        logDebug("enterCell(...)", "merge local face on tree " << _spacetreeId << " with incoming face from stack " << stack );
+        logDebug("enterCell(...)", "merge local face on tree " << _spacetreeId << " with incoming face from stack " << stack << " (marker=" << marker.toString() << ")" );
         assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
         {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
         
         data.mergeHorizontally( incomingData, marker );
             
-        assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), _spacetreeId );
-        assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), _spacetreeId );
+        assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), _spacetreeId, outFaceStackPosition, event.toString() );
+        assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), _spacetreeId, outFaceStackPosition, event.toString() );
       }}
             
       view.set(outFaceStackPosition,data);
@@ -811,7 +811,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
         event.getExchangeFaceData( inFaceStackPosition )!=peano4::grid::TraversalObserver::NoData
       ) {{
         const int stack = peano4::parallel::Node::getOutputStackNumberOfHorizontalDataExchange( event.getExchangeFaceData( inFaceStackPosition ) );
-        logDebug("enterCell(...)", "send local face from tree " << _spacetreeId << " to stack " << stack );
+        logDebug("enterCell(...)", "send local face from tree " << _spacetreeId << " to stack " << stack << " (data=" << data.toString() << ")" );
         DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,stack))->push(data);
       }}
 

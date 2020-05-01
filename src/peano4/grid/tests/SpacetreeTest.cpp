@@ -136,6 +136,15 @@ void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
   vertices[3].setAdjacentRanks( { 0, 1, 0, 0 } );
   vertices[3].setBackupOfAdjacentRanks( { 0, 1, 0, 0 } );
 
+  event.setIsVertexLocal( 0, true );
+  event.setIsVertexLocal( 1, true );
+  event.setIsVertexLocal( 2, true );
+  event.setIsVertexLocal( 3, true );
+  event.setIsFaceLocal( 0, true );
+  event.setIsFaceLocal( 1, true );
+  event.setIsFaceLocal( 2, true );
+  event.setIsFaceLocal( 3, true );
+
   // enter cell; no load balancing going on
   tree.createNeighbourExchangeLists( vertices, event, true );
 
@@ -156,6 +165,15 @@ void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
   vertices[3].setState( GridVertex::State::Unrefined );
   vertices[3].setAdjacentRanks( { 1, 0, 1, 1 } );
   vertices[3].setBackupOfAdjacentRanks( { 1, 0, 1, 1 } );
+
+  event.setIsVertexLocal( 0, true );
+  event.setIsVertexLocal( 1, true );
+  event.setIsVertexLocal( 2, false );
+  event.setIsVertexLocal( 3, true );
+  event.setIsFaceLocal( 0, false );
+  event.setIsFaceLocal( 1, true );
+  event.setIsFaceLocal( 2, true );
+  event.setIsFaceLocal( 3, false );
 
   // enter cell; just triggered the split
   tree._splitTriggered.insert( std::pair<int,int>(1,1) );

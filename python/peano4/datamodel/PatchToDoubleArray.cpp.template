@@ -45,7 +45,7 @@ std::string {FULL_QUALIFIED_CLASSNAME}::toString() const {{
 }}
 
 
-#ifdef PeanoDebug
+#if PeanoDebug>=1
 
 void {FULL_QUALIFIED_CLASSNAME}::setDebugX( const tarch::la::Vector<Dimensions,double>& data ) {{
   _debugX = data;
