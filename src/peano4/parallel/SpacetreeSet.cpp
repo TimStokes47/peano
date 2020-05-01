@@ -264,7 +264,15 @@ void peano4::parallel::SpacetreeSet::traverseNonMergingExistingTrees(peano4::gri
   if ( not traverseTasksForRunningTrees.empty() ) {
     logDebug( "traverseNonMergingExistingTrees(TraversalObserver&)", "spawn " << traverseTasksForRunningTrees.size() << " concurrent traversal tasks" );
     static int multitaskingRegionForAllOtherTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverseNonMergingExistingTrees" );
-    peano4::parallel::Tasks run(traverseTasksForRunningTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForAllOtherTrees,true);
+    // Don't remove it. Whenever I have to debug the grid core, I usually set the
+    // grid traversals to sequential.
+    peano4::parallel::Tasks run(
+      traverseTasksForRunningTrees,
+      peano4::parallel::Tasks::TaskType::Task,
+      //peano4::parallel::Tasks::TaskType::Sequential,
+      multitaskingRegionForAllOtherTrees,
+      true
+    );
   }
   logTraceOut( "traverseNonMergingExistingTrees(...)" );
 }
