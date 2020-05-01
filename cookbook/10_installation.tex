@@ -211,6 +211,7 @@ library accept additional search paths), or you can again use the
 
 
 \section{\Peano\ components and build variants}
+\label{chapter:installation:build-variants}
 
 \Peano\ currently is delivered as a set of archives, i.e.~static libraries:
 \begin{itemize}
@@ -243,6 +244,14 @@ The version terminology is as follows:
   particular postfix. They disable tracing, any debugging and all assertions.
   These archives should be used by production runs.
 \end{itemize}
+
+
+\begin{remark}
+ Peano's release components still write info messages (they suppress debug,
+ tracing and logging, but not essential information). If you want to filter out
+ these messages, too, you have to apply a log filter (Chapter
+ \ref{section:logging:log-filter}).
+\end{remark}
 
 
 \noindent
