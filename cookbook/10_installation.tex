@@ -187,6 +187,7 @@ PEANO4_PYTHON_DIR="myPeanoDirectory/python"
 sys.path.append(PEANO4_PYTHON_DIR)
 \end{code}
 
+
 \noindent
 Please note that most Python scripts require you to set the
 \texttt{LD\_LIBRARY\_PATH}. 
@@ -196,6 +197,16 @@ through its API where to search for the library (all routines that add a
 library accept additional search paths), or you can again use the
 \texttt{sys.path.append} command to extend \texttt{LD\_LIBRARY\_PATH}.
 
+
+\begin{remark}
+ I personally prefer the variant to go through the environment variable.
+ \Peano's Python API yield plain old makefiles building executables that work
+ completely without any Python. 
+ This way, we ensure that we work smoothly on supercomputers, too, where Python
+ sometimes is not available in the latest version or on the compute nodes.
+ As long as you run through environment variables or the \Peano\ routines to
+ specify paths, your makefiles also will continue to work that way. 
+\end{remark}
 
 
 

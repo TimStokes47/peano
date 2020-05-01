@@ -15,6 +15,7 @@ tarch::logging::Log   examples::exahype2::finitevolumes::Euler::_log( "examples:
   ::exahype2::RefinementCommand result = ::exahype2::RefinementCommand::Keep;
   // I have to take the voxel count per patch into account as well
   if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0/25.0/1.5 ) {
+//  if (tarch::la::equals(t,0.0) and tarch::la::max(h)>1.0/3.0 ) {
     result = ::exahype2::RefinementCommand::Refine;
   }
   logTraceOutWith1Argument( "refinementCriterion(...)", toString(result) );
