@@ -57,12 +57,23 @@ visualisation::output::VTUWriter::~VTUWriter() {
 
 
 #ifdef UseVTK
+vtkSmartPointer<vtkDoubleArray> visualisation::output::VTUWriter::getMetaDataForOnePatch(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data) {
+  vtkSmartPointer<vtkDoubleArray> variableArray = vtkSmartPointer<vtkDoubleArray>::New();
+  variableArray->SetNumberOfComponents( 1 );
+  variableArray->SetName("tree-id");
+
+  for(int i = 0; i < variable.getTotalNumberOfDofsPerPatch(); i++) {
+    double array[] = { data.originTree };
+    variableArray->InsertNextTuple(array);
+  }
+  return variableArray;
+}
+
+
 vtkSmartPointer<vtkDoubleArray> visualisation::output::VTUWriter::getVTUDataForOnePatch(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data) {
   vtkSmartPointer<vtkDoubleArray> variableArray = vtkSmartPointer<vtkDoubleArray>::New();
   variableArray->SetNumberOfComponents( variable.unknowns );
   variableArray->SetName(variable.name.c_str());
-  // @todo
-//  variableArray->SetNumberOfTuples( variable.getTotalNumberOfDofsPerPatch() );
 
   for(int i = 0; i < variable.getTotalNumberOfDofsPerPatch(); i++) {
     variableArray->InsertNextTuple(&(data.data[i*variable.unknowns]));
@@ -70,7 +81,6 @@ vtkSmartPointer<vtkDoubleArray> visualisation::output::VTUWriter::getVTUDataForO
     for (int j=0; j<variable.unknowns; j++) {
       assertion( data.data[i*variable.unknowns+j]==data.data[i*variable.unknowns+j] );
     }
-//    variableArray->InsertNextTuple3(data.data[i*variable.unknowns],data.data[i*variable.unknowns+1],data.data[i*variable.unknowns+2]);
   }
   return variableArray;
 }
@@ -95,11 +105,15 @@ vtkSmartPointer<vtkImageData> visualisation::output::VTUWriter::toImageData(cons
   imageData->SetSpacing(spacing);
 
   vtkSmartPointer<vtkDoubleArray> variableArray = getVTUDataForOnePatch(variable,patchData);
+  vtkSmartPointer<vtkDoubleArray> metaDataArray = getMetaDataForOnePatch(variable,patchData);
+
   if(variable.type == visualisation::data::PeanoDataType::Cell_Values) {
     imageData->GetCellData()->AddArray(variableArray);
+    imageData->GetCellData()->AddArray(metaDataArray);
   }
   else if(variable.type == visualisation::data::PeanoDataType::Vertex_Values) {
     imageData->GetPointData()->AddArray(variableArray);
+    imageData->GetPointData()->AddArray(metaDataArray);
   }
 
   return imageData;
