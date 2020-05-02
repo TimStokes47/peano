@@ -60,7 +60,7 @@ visualisation::output::VTUWriter::~VTUWriter() {
 vtkSmartPointer<vtkDoubleArray> visualisation::output::VTUWriter::getMetaDataForOnePatch(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data) {
   vtkSmartPointer<vtkDoubleArray> variableArray = vtkSmartPointer<vtkDoubleArray>::New();
   variableArray->SetNumberOfComponents( 1 );
-  variableArray->SetName("tree-id");
+  variableArray->SetName("source-file");
 
   for(int i = 0; i < variable.getTotalNumberOfDofsPerPatch(); i++) {
     double array[] = { data.originTree };
