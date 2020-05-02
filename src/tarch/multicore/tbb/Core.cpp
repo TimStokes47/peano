@@ -54,6 +54,7 @@ void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConc
   }
   else {
     __numberOfThreads = numberOfThreads;
+    logInfo( "configure(...)", "manually reset number of threads used to " << numberOfThreads );
   }
 
   __globalThreadCountControl = new ::tbb::global_control(::tbb::global_control::max_allowed_parallelism,__numberOfThreads);

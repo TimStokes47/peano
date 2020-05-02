@@ -75,8 +75,6 @@ else:
 # So here's the parallel stuff. This is new compared to the serial
 # prototype we did start off with.
 #
-
-# @todo Support fuer Parameter des LBs?
 project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
 
 
