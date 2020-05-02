@@ -45,12 +45,13 @@ project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevo
 #
 patch_size     = 25
 unknowns       = 5
-time_step_size = 0.001
-project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("Euler", patch_size, unknowns, 0.0001) )
+time_step_size = 0.0001
+project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("Euler", patch_size, unknowns, time_step_size) )
 
 
 dimensions = 2
-build_mode = peano4.output.CompileMode.Release
+#build_mode = peano4.output.CompileMode.Release
+build_mode = peano4.output.CompileMode.Asserts
 
 
 #
@@ -59,7 +60,7 @@ build_mode = peano4.output.CompileMode.Release
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    1.0,                       # end time
+    0.001,                       # end time
     0.0, time_step_size*50     # snapshots
   )
 else:
@@ -74,6 +75,8 @@ else:
 # So here's the parallel stuff. This is new compared to the serial
 # prototype we did start off with.
 #
+
+# @todo Support fuer Parameter des LBs?
 project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
 
 
