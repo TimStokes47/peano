@@ -322,6 +322,16 @@ To use this scheme, you have to specify an appropriate load balancing scheme.
 Without any load balancing, the code will never split up the domain and thus
 effectively run serially.
 
+\begin{figure}
+ \begin{center}
+  \includegraphics[width=0.54\textwidth]{60_exahype/domain-decomposition.png}
+ \end{center}
+ \caption{
+  Domain decomposition in \ExaHyPE\ for a run with four threads/ranks. Each
+  individual cell hosts a patch.
+ }
+\end{figure}
+
 
 I plan to support multiple different dynamic load balancing schemes over time,
 but the straightforward decomposition scheme shipped with \Peano\ at the moment
@@ -332,7 +342,7 @@ project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
 \end{code}
 
 \noindent
-on your \ExaHyPE\ project. 
+on your \ExaHyPE\ project. You can add  
 
 
 \paragraph{Task decomposition}

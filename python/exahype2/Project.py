@@ -43,14 +43,18 @@ class Project(object):
     self._load_balancer_name     = ""
     
     
-  def  set_load_balancing(self, load_balancer_name):
+  def  set_load_balancing(self, load_balancer_name, load_balancer_arguments = ""):
     """
     
       load_balancer_name   Should be full-qualified name of the load balancer. 
         By default, I recommend to pass "toolbox::loadbalancing::RecursiveSubdivision"
         
+      load_balancer_arguments  If your load balancing requires parameters, add them
+        here. It is a string that will be copied into the C++ class instantiation. 
+        Please add the brackets yourself, i.e. "(3,4,5)" is fine, but "3,4,5" is not. 
     """
-    self._load_balancer_name     = load_balancer_name
+    self._load_balancer_name      = load_balancer_name
+    self._load_balancer_arguments = load_balancer_arguments
     
 
   def get_library( self, mode ):
@@ -161,7 +165,7 @@ class Project(object):
     if self._load_balancer_name != "":
       solverRepositoryDictionary[ "SOLVER_INCLUDES" ]                                 += "#include \"" + self._load_balancer_name.replace( "::", "/") + ".h\" \n"
       solverRepositoryDictionary[ "SOLVER_DECLARATIONS" ]                             += "  extern " + self._load_balancer_name + "  loadBalancer;\n"
-      solverRepositoryDictionary[ "SOLVER_DEFINITIONS" ]                              += self._load_balancer_name + "  loadBalancer;\n"
+      solverRepositoryDictionary[ "SOLVER_DEFINITIONS" ]                              += self._load_balancer_name + "  loadBalancer" + self._load_balancer_arguments + ";\n"
       solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_TIME_STEP_CALLS" ]              += "loadBalancer.finishStep(); "
       solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_GRID_CONSTRUCTION_STEP_CALLS" ] += "loadBalancer.finishStep(); "
 

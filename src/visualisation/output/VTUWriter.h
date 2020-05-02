@@ -72,7 +72,13 @@ class visualisation::output::VTUWriter: public visualisation::output::Writer {
 	 */
 	static vtkSmartPointer<vtkUnstructuredGrid> toUnstructuredGrid(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data);
 
-	static vtkSmartPointer<vtkDoubleArray> getVTUDataForOnePatch(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data);
+    static vtkSmartPointer<vtkDoubleArray> getVTUDataForOnePatch(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data);
+
+    /**
+     * Creates data for the patch but instead of the patch's data, it writes the given
+     * value instead. I need this to visualise the tree association, e.g.
+     */
+    static vtkSmartPointer<vtkDoubleArray> getMetaDataForOnePatch(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data);
     #endif
 
 	/**

@@ -12,12 +12,12 @@
 tarch::logging::Log  toolbox::loadbalancing::RecursiveSubdivision::_log( "toolbox::loadbalancing::RecursiveSubdivision" );
 
 
-toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision():
+toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percentageOfCoresThatShouldInTheoryGetAtLeastOneCell):
+  _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell( percentageOfCoresThatShouldInTheoryGetAtLeastOneCell ),
+  _blacklist(),
   _hasSpreadOutOverAllRanks( tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1 ),
   _localNumberOfInnerUnrefinedCell( 0 ),
-  _globalNumberOfInnerUnrefinedCell( 0 )
-{
-
+  _globalNumberOfInnerUnrefinedCell( 0 ) {
 }
 
 
@@ -44,10 +44,14 @@ int toolbox::loadbalancing::RecursiveSubdivision::getMaximumSpacetreeSize() cons
 
 int toolbox::loadbalancing::RecursiveSubdivision::getIdOfHeaviestLocalSpacetree() const {
   std::set<int> idsOfLocalSpacetrees = peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees();
-  int result = -1;
+  int result = NoHeaviestTreeAvailable;
   int maxLocalUnrefinedCells = -1;
   for (auto p: idsOfLocalSpacetrees) {
-    if ( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(p).getNumberOfLocalUnrefinedCells()>maxLocalUnrefinedCells ) {
+    if (
+      peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(p).getNumberOfLocalUnrefinedCells()>maxLocalUnrefinedCells
+      and
+      _blacklist.count(p)==0
+    ) {
       maxLocalUnrefinedCells = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(p).getNumberOfLocalUnrefinedCells();
       result = p;
     }
@@ -68,23 +72,26 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 
 void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   updateGlobalView();
+  updateBlacklist();
 
   if (
-    not _hasSpreadOutOverAllRanks
-    and
-    _globalNumberOfInnerUnrefinedCell > tarch::mpi::Rank::getInstance().getNumberOfRanks()
+    static_cast<double>(_globalNumberOfInnerUnrefinedCell) < static_cast<double>(
+      tarch::mpi::Rank::getInstance().getNumberOfRanks() * tarch::multicore::Core::getInstance().getNumberOfThreads() * _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell
+    )
   ) {
+    logInfo( "finishStep()", "problem size of " << _globalNumberOfInnerUnrefinedCell << " is too small to keep all cores busy - wait for larger mesh to be constructed" );
+  }
+  else
+  if ( not _hasSpreadOutOverAllRanks ) {
     int cells             = getMaximumSpacetreeSize();
     assertion( cells>tarch::mpi::Rank::getInstance().getNumberOfRanks() );
     int cellsPerRank = cells / tarch::mpi::Rank::getInstance().getNumberOfRanks();
 
     _hasSpreadOutOverAllRanks = true;
 
-    logInfo( "finishTimeStep()", "spread over all ranks. Assign each rank " << cellsPerRank << " cells" );
+    logInfo( "finishStep()", "spread over all ranks. Assign each rank " << cellsPerRank << " cells" );
     for (int targetRank=1; targetRank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); targetRank++ ) {
-      if (not peano4::parallel::SpacetreeSet::getInstance().split(0,cellsPerRank,targetRank)) {
-        logWarning( "finishTimeStep()", "wanted to split local rank's only tree such that rank " << targetRank << " becomes involed. Failed" );
-      }
+      triggerSplit(0, cellsPerRank, targetRank);
     }
   }
   else if (
@@ -92,17 +99,16 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
     and
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
-    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < 2
-//    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()
+    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()
   ) {
-    int heaviestSpacetree = getIdOfHeaviestLocalSpacetree();
-    int cellsPerCore      = std::max(
-      peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells()/2,
-      getMaximumSpacetreeSize()
-    );
+    int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
+    if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
+      int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
+      int cellsPerCore      = std::max(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
 
-    logInfo( "finishTimeStep()", "not all cores are yet occupied on this rank, so split " << cellsPerCore << " cells from tree " << heaviestSpacetree );
-    peano4::parallel::SpacetreeSet::getInstance().split(heaviestSpacetree,cellsPerCore,tarch::mpi::Rank::getInstance().getRank());
+      logInfo( "finishStep()", "not all cores are occupied on this rank, so split " << cellsPerCore << " cells from tree " << heaviestSpacetree << " (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
+      triggerSplit(heaviestSpacetree, cellsPerCore, tarch::mpi::Rank::getInstance().getRank());
+    }
   }
   else if (
     _hasSpreadOutOverAllRanks
@@ -112,7 +118,32 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
     doesBiggestLocalSpactreeViolateOptimalityCondition()
   ) {
     int heaviestSpacetree = getIdOfHeaviestLocalSpacetree();
-    logWarning( "finishTimeStep()", "biggest local tree " << heaviestSpacetree << " is too heavy. Split it up" );
+    logWarning( "finishStep()", "biggest local tree " << heaviestSpacetree << " is too heavy. Split it up" );
     //assertionMsg(false, "not implemented yet");
+    //_blacklist
+  }
+}
+
+
+
+void toolbox::loadbalancing::RecursiveSubdivision::updateBlacklist() {
+  for (std::map<int,int>::iterator p = _blacklist.begin(); p!=_blacklist.end(); ) {
+    if (p->second>0) {
+      p->second--;
+      p++;
+    }
+    else {
+      p = _blacklist.erase(p);
+    }
+  }
+}
+
+
+void toolbox::loadbalancing::RecursiveSubdivision::triggerSplit( int sourceTree, int numberOfCells, int targetRank ) {
+  if (peano4::parallel::SpacetreeSet::getInstance().split(sourceTree,numberOfCells,targetRank)) {
+    _blacklist.insert( std::pair<int,int>(sourceTree,3) );
+  }
+  else {
+    logInfo( "triggerSplit()", "wanted to split local rank " << sourceTree << " but failed" );
   }
 }
