@@ -58,7 +58,7 @@ make install
 
 > **NOTE:** Assumes a VTK-7.1 installation. How to configure for other VTK versions is explained in the [cookbook](#cookbook).
 
-```
+```shell
 libtoolize; aclocal; autoconf; autoheader;
 ./configure --with-exahype --with-vtk=-7.1 --with-vtk-version=7
 make -j
