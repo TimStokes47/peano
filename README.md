@@ -45,7 +45,7 @@ make install
 
 ### 3.2.  Build Peano plus VTK support
 
-> **NOTE:** Assumes a VTK-7.1 installation. How to configure for other VTK versions is explained in the [cookbook](#cookbook).
+> **NOTE:** Assumes a VTK-7.1 installation. How to configure for other VTK versions is explained in the uesr guide.
 
 ```shell
 libtoolize; aclocal; autoconf; autoheader;
@@ -56,7 +56,7 @@ make install
 
 ### 3.3.  Build Peano plus ExaHyPE2 and VTK support
 
-> **NOTE:** Assumes a VTK-7.1 installation. How to configure for other VTK versions is explained in the [cookbook](#cookbook).
+> **NOTE:** Assumes a VTK-7.1 installation. How to configure for other VTK versions is explained in the uesr guide.
 
 ```shell
 libtoolize; aclocal; autoconf; autoheader;
