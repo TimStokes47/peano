@@ -22,8 +22,9 @@
 
 
 module load slurm_setup
+module load tbb
 
 for cores in  1 2 4 8 12 14 28 56
 do
-  ./peano --threads $cores > SuperMUC-NG-$cores-cores.out
+  ./peano4 --threads $cores > SuperMUC-NG-$cores-cores.out
 done
