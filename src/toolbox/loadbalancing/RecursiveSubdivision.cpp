@@ -26,6 +26,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
 
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {
     _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
+    logDebug( "updateGlobalView()", "global number of inner unrefined cells = " << _globalNumberOfInnerUnrefinedCell );
   }
   else {
     assertionMsg( false, "not implemented yet. Need global reduction here" );
@@ -81,8 +82,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   ) {
     logInfo( "finishStep()", "problem size of " << _globalNumberOfInnerUnrefinedCell << " is too small to keep all cores busy - wait for larger mesh to be constructed" );
   }
-  else
-  if ( not _hasSpreadOutOverAllRanks ) {
+  else if ( not _hasSpreadOutOverAllRanks ) {
     int cells             = getMaximumSpacetreeSize();
     assertion( cells>tarch::mpi::Rank::getInstance().getNumberOfRanks() );
     int cellsPerRank = cells / tarch::mpi::Rank::getInstance().getNumberOfRanks();
@@ -99,7 +99,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
     and
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
-    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()
+    static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < tarch::multicore::Core::getInstance().getNumberOfThreads() * _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell
   ) {
     int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
     if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
@@ -113,14 +113,25 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   else if (
     _hasSpreadOutOverAllRanks
     and
-    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() >= tarch::multicore::Core::getInstance().getNumberOfThreads()
+    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()*2
     and
     doesBiggestLocalSpactreeViolateOptimalityCondition()
   ) {
-    int heaviestSpacetree = getIdOfHeaviestLocalSpacetree();
-    logWarning( "finishStep()", "biggest local tree " << heaviestSpacetree << " is too heavy. Split it up" );
-    //assertionMsg(false, "not implemented yet");
-    //_blacklist
+    int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
+    int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
+    if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
+      logInfo(
+        "finishStep()",
+		"biggest local tree " << heaviestSpacetree << " is too heavy as it hosts " <<
+		numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " cells (max size equals " << getMaximumSpacetreeSize() << "). Split it up" );
+      #ifdef Parallel
+      const int targetRank = xxx;
+      #else
+      const int targetRank = 0;
+      #endif
+      int cellsPerCore      = std::max(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
+      triggerSplit(heaviestSpacetree, cellsPerCore, targetRank);
+    }
   }
 }
 
