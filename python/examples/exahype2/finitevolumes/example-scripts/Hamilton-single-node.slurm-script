@@ -7,6 +7,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --mail-type=END
 #SBATCH --mail-user=tobias.weinzierl@durham.ac.uk
+#SBATCH --array=1-24
 
 source /etc/profile.d/modules.sh
 
