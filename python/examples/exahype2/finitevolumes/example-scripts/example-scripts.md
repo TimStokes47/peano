@@ -2,10 +2,9 @@
 
 
 
-## SuperMUC-NG ##
+## Single node tests ##
 
-
-### Single node tests ###
+### Prepare setup ###
 
 See guidebook instructions how to configure the single node environment.
 Please remember to add the --with-exahype argument to configure. Once 
@@ -38,11 +37,27 @@ cd python/examples/exahype2/finitevolumes/
 export PYTHONPATH=../../..
 python3 finitevolumes-with-ExaHyPE2-parallel.py
 
+On csh, I use
+
+setenv PYTHONPATH ../../..
+
+instead.
+
+
+## SuperMUC-NG ##
+
+
+### Single node tests ###
+
 
 Submit jobs with
 
 sbatch --account=myproject example-scripts/SuperMUC-NG-single-node.slurm-script
 
-So I use for exaxmple 
+So I use for example 
 
 sbatch --account=pr48ma example-scripts/SuperMUC-NG-single-node.slurm-script
+
+
+
+
