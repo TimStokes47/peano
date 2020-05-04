@@ -364,6 +364,8 @@ void peano4::parallel::SpacetreeSet::finishAllOutstandingSendsAndReceives( Conta
       stackContainer.getForPush(sourceStackKey)->finishSendOrReceive();
     }
   }
+
+  stackContainer.garbageCollection();
 }
 
 

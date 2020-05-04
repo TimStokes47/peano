@@ -94,6 +94,8 @@ class peano4::maps::HierarchicalStackMap {
      * omit the const qualifier.
      */
     std::set<StackKey>  getKeys();
+
+    void garbageCollection();
 };
 
 
@@ -202,5 +204,17 @@ peano4::maps::HierarchicalStackMap<T>::HierarchicalStackMap():
   _data(peano4::parallel::Node::MaxSpacetreesPerRank) {
 }
 
+
+template <typename T>
+void peano4::maps::HierarchicalStackMap<T>::garbageCollection() {
+  for (auto& p: _data) {
+    for (auto& pp: p._stackNumberToData) {
+      if (pp.second->empty()) {
+    	delete pp.second;
+    	pp.second = new T();
+      }
+    }
+  }
+}
 
 #endif
