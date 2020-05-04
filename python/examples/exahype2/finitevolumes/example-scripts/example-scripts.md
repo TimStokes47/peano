@@ -30,28 +30,23 @@ success = False
 I also edit Euler.cpp and set the refinement criterion as follows:
 
 
-  const double MaxHOfVolume  = 1.0/3.0/3.0/25.0 * 0.9;
+  const double MaxHOfVolume  = 1.0/3.0/3.0/13.0 * 0.9;
 
 
 After these two edits, I run the following steps to build the executable:
 
-
-cd python/examples/exahype2/finitevolumes/
 export PYTHONPATH=../../..
 python3 finitevolumes-with-ExaHyPE2-parallel.py
 
-On csh, I use
+or, on csh, I use
 
 setenv PYTHONPATH ../../..
+python3 finitevolumes-with-ExaHyPE2-parallel.py
 
 instead.
 
 
-## SuperMUC-NG ##
-
-
-### Single node tests ###
-
+### SuperMUC-NG ###
 
 Submit jobs with
 
@@ -61,6 +56,7 @@ So I use for example
 
 sbatch --account=pr48ma example-scripts/SuperMUC-NG-single-node.slurm-script
 
+### Hamilton ###
 
-
+sbatch example-scripts/Hamilton-single-node.slurm-script
 

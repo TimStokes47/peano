@@ -19,12 +19,10 @@
 #Number of nodes and MPI tasks per node:
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
+#SBATCH --array=1-56
 
 
 module load slurm_setup
 module load tbb
 
-for cores in  1 2 4 8 12 14 28 56
-do
-  ./peano4 --threads $cores > SuperMUC-NG-$cores-cores.out
-done
+./peano4 --threads $SLURM_ARRAY_TASK_ID > SuperMUC-NG-$SLURM_ARRAY_TASK_ID-cores.out
