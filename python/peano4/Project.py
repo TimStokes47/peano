@@ -86,7 +86,6 @@ class Project (object):
     Invokes the underlying make/C build mechanism on the project. 
     We invoke the make command via a subprocess. That's it.
     """
-    self.is_built = True
     if not self.is_generated:
       self.generate();
 
@@ -103,6 +102,7 @@ class Project (object):
       try:
         subprocess.check_call(["make", "-j"+str(number_of_parallel_builds)])
         print( "compile complete" )
+        self.is_built = True
       except Exception as e:
         print( "compile was not successful: " + str(e) )
         self.is_built = False
