@@ -3,6 +3,7 @@
 #SBATCH --exclusive
 #SBATCH -p par7.q
 #SBATCH -N 1
+#SBATCH --array=1-24
 #SBATCH --ntasks-per-node=1
 #SBATCH --mail-type=END
 #SBATCH --mail-user=tobias.weinzierl@durham.ac.uk
@@ -21,9 +22,6 @@ module unload gcc/8.2.0
 # make clean
 # make -j
 
-for cores in  1 2 3 4 6 8 12 24
-do
-  ./peano4 --threads $cores > Hamilton-$cores-cores.out
-done
+./peano4 --threads $SLURM_ARRAY_TASK_ID > Hamilton-$SLURM_ARRAY_TASK_ID-cores.out
 
 
