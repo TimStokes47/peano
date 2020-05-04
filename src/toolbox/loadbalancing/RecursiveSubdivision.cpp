@@ -26,7 +26,6 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
 
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {
     _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
-    logDebug( "updateGlobalView()", "global number of inner unrefined cells = " << _globalNumberOfInnerUnrefinedCell );
   }
   else {
     assertionMsg( false, "not implemented yet. Need global reduction here" );
