@@ -122,7 +122,7 @@ std::string tarch::logging::CommandLineLogger::getTimeStampHumanReadable( long i
   if (minutes<10) {
     result << "0";
   }
-  result << hours << ":";
+  result << minutes << ":";
   if (seconds<10) {
     result << "0";
   }
