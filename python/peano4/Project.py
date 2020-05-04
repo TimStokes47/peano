@@ -93,11 +93,12 @@ class Project (object):
       print( "clean up project ..." )
       try:
         subprocess.check_call(["make", "clean"])
+        self.is_built = False
         print( "clean complete" )
       except Exception as e:
         print( "clean failed (" + str(e) + ") - continue anyway" )
 
-    if self.is_built:
+    if not self.is_built:
       print( "start to compile ..." )
       try:
         subprocess.check_call(["make", "-j"+str(number_of_parallel_builds)])
