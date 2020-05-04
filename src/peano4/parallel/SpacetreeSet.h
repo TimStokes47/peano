@@ -103,6 +103,15 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
       VerticalDataExchangeMode mode
     );
 
+    /**
+     * This routine finishes all the sends and receives that are still active,
+     * i.e. it searched for pending MPI requests and waits for them to finish.
+     * After this is ensured, the routine runs over all stacks and ensures that
+     * all temporary data is released. The last step is important, as we otherwise
+     * quickly run out of memory - we replicate all data structures whenever we fork
+     * and as C++ vectors don't release memory, this memory would be lost without
+     * a manual freeing.
+     */
     template <class Container>
     static void finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId );
 

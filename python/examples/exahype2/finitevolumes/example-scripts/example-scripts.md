@@ -13,15 +13,18 @@ finitevolumes-with-ExaHyPE2-parallel.py. These are the changes I do
 propose:
 
 
-time_step_size = 0.00001
-build_mode = peano4.output.CompileMode.Release
+patch_size     = 13
+time_step_size = 0.0001
 dimensions = 3
-
-  project.set_global_simulation_parameters(
+build_mode = peano4.output.CompileMode.Release
+project.set_global_simulation_parameters(
     dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-    0.1,                       # end time
+    0.002,                       # end time
     0.0, 0
-  )
+)
+\#success = peano4_project.run( [] )
+success = False
+
 
 
 I also edit Euler.cpp and set the refinement criterion as follows:
