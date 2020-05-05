@@ -85,6 +85,36 @@ namespace exahype2 {
       double                                       Qin[],
       double                                       Qout[]
     );
+
+
+    void applyRusanovToPatch_FaceLoops3d(
+      std::function< void(
+        double                                       Q[],
+        const tarch::la::Vector<Dimensions,double>&  faceCentre,
+        const tarch::la::Vector<Dimensions,double>&  volumeH,
+        double                                       t,
+        double                                       dt,
+        int                                          normal,
+        double                                       F[]
+      ) >   flux,
+      std::function< void(
+        double                                       Q[],
+        const tarch::la::Vector<Dimensions,double>&  faceCentre,
+        const tarch::la::Vector<Dimensions,double>&  volumeH,
+        double                                       t,
+        double                                       dt,
+        int                                          normal,
+        double                                       lambdas[]
+      ) >   eigenvalues,
+      const tarch::la::Vector<Dimensions,double>&  patchCentre,
+      const tarch::la::Vector<Dimensions,double>&  patchSize,
+      double                                       t,
+      double                                       dt,
+      int                                          numberOfVolumesPerAxisInPatch,
+      int                                          unknowns,
+      double                                       Qin[],
+      double                                       Qout[]
+    );
   }
 }
 

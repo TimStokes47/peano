@@ -200,7 +200,7 @@ void exahype2::fv::applyRusanovToPatch_FaceLoops2d(
   static tarch::logging::Log _log( "exahype2::fv" );
   logTraceInWith6Arguments( "applyRusanovToPatch_FaceLoops2d(...)", patchCentre, patchSize, t, dt, numberOfVolumesPerAxisInPatch, unknowns );
 
-  applySplit1DRiemannToPatch_Overlap1AoS(
+  applySplit1DRiemannToPatch_Overlap1AoS2d(
     [&](
       double                                       QL[],
       double                                       QR[],
@@ -227,4 +227,65 @@ void exahype2::fv::applyRusanovToPatch_FaceLoops2d(
   );
 
   logTraceOutWith6Arguments( "applyRusanovToPatch_FaceLoops2d(...)", patchCentre, patchSize, t, dt, numberOfVolumesPerAxisInPatch, unknowns );
+}
+
+
+void exahype2::fv::applyRusanovToPatch_FaceLoops3d(
+  std::function< void(
+        double                                       Q[],
+        const tarch::la::Vector<Dimensions,double>&  faceCentre,
+        const tarch::la::Vector<Dimensions,double>&  volumeH,
+        double                                       t,
+        double                                       dt,
+        int                                          normal,
+        double                                       F[]
+  ) >   flux,
+  std::function< void(
+        double                                       Q[],
+        const tarch::la::Vector<Dimensions,double>&  faceCentre,
+        const tarch::la::Vector<Dimensions,double>&  volumeH,
+        double                                       t,
+        double                                       dt,
+        int                                          normal,
+        double                                       lambdas[]
+  ) >   eigenvalues,
+  const tarch::la::Vector<Dimensions,double>&  patchCentre,
+  const tarch::la::Vector<Dimensions,double>&  patchSize,
+  double                                       t,
+  double                                       dt,
+  int                                          numberOfVolumesPerAxisInPatch,
+  int                                          unknowns,
+  double                                       Qin[],
+  double                                       Qout[]
+) {
+  static tarch::logging::Log _log( "exahype2::fv" );
+  logTraceInWith6Arguments( "applyRusanovToPatch_FaceLoops3d(...)", patchCentre, patchSize, t, dt, numberOfVolumesPerAxisInPatch, unknowns );
+
+  applySplit1DRiemannToPatch_Overlap1AoS3d(
+    [&](
+      double                                       QL[],
+      double                                       QR[],
+      const tarch::la::Vector<Dimensions,double>&  x,
+      double                                       dx,
+      double                                       t,
+      double                                       dt,
+      int                                          normal,
+      double                                       F[]
+    ) -> void {
+	  splitRusanov1d(
+        flux, eigenvalues,
+		QL, QR, x, dx, t, dt, normal, unknowns, F
+      );
+    },
+	patchCentre,
+	patchSize,
+	t,
+	dt,
+	numberOfVolumesPerAxisInPatch,
+	unknowns,
+	Qin,
+	Qout
+  );
+
+  logTraceOutWith6Arguments( "applyRusanovToPatch_FaceLoops3d(...)", patchCentre, patchSize, t, dt, numberOfVolumesPerAxisInPatch, unknowns );
 }
