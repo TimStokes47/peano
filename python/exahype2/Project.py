@@ -8,9 +8,6 @@ import os
 
 import exahype2.grid
 import exahype2.solvers
-from dsextras import pkgc_get_libraries
-#from .FiniteVolumeSolver import FiniteVolumeSolver
-#from .FiniteVolumeSolver import FiniteVolumeSolverType
 
 
 
