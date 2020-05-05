@@ -33,8 +33,23 @@ To pass these variables into Peano, map them onto \texttt{CXXFLAGS} or
 
 
 \noindent
+Here's the non-MPI variant:
+
+\begin{code}
+ module load tbb
+ export CXX=icpc
+ export CXXFLAGS="$TBB_INC"
+ export LDFLAGS="$TBB_SHLIB"
+ ./configure --with-multithreading=tbb
+ make clean
+ make -j
+\end{code}
+
+
+\noindent
 If you want to use the legacy DaStGen variant with Java, you have to load
 Java manually.
+\ExaHyPE\ for example does not need this legacy version anymore.
 Python3 in contrast is preloaded by default.
 
 

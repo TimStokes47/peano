@@ -8,6 +8,7 @@ import os
 
 import exahype2.grid
 import exahype2.solvers
+from dsextras import pkgc_get_libraries
 #from .FiniteVolumeSolver import FiniteVolumeSolver
 #from .FiniteVolumeSolver import FiniteVolumeSolverType
 
@@ -56,46 +57,57 @@ class Project(object):
     self._load_balancer_name      = load_balancer_name
     self._load_balancer_arguments = load_balancer_arguments
     
+    
+  LibraryDebug   = "_debug"
+  LibraryRelease = ""
+  LibraryTrace   = "_trace"
+  LibraryAsserts = "_asserts"
+    
+   
 
-  def get_library( self, mode ):
+  def get_library_postfix( self, mode, dimensions=-1 ):
     """
     
-    dimensions is either 2 or 3
+    Libraries in ExaHyPE 2 always end with 2d_debug or 3d_trace. This 
+    operation gives you back the respective postfix. There are two 
+    variants of this routine. One accepts a dimension, the other one
+    does not, i.e. accepts None. This is important as some libraries are dimension-generic
+    while others are not. Therefore, some have the 2d/3d postfix and 
+    others lack it.
+
+    mode is from peano4.output.CompileMode
+    dimensions either None or something smaller zero (takes project's
+      dimension) or a particular dimension
+    
+    """
+    result = ""
+    if dimensions!=None:
+      if dimensions<=0:
+        dimensions = self._dimensions
+      result += str(dimensions) + "d"
+
+    if mode==peano4.output.CompileMode.Debug:
+        result += self.LibraryDebug
+    if mode==peano4.output.CompileMode.Trace:
+        result += self.LibraryTrace
+    if mode==peano4.output.CompileMode.Asserts:
+        result += self.LibraryAsserts
+    if mode==peano4.output.CompileMode.Release:
+        result += self.LibraryRelease
+    return result
+
+
+  def get_core_library( self, mode ):
+    """
+
+    Returns the Core Peano library against which to link
+         
     mode is from peano4.output.CompileMode
     
     """
-    if mode==peano4.output.CompileMode.Debug and self._dimensions==2:
-        return self.Library2dDebug
-    if mode==peano4.output.CompileMode.Debug and self._dimensions==3:
-        return self.Library3dDebug
-    if mode==peano4.output.CompileMode.Trace and self._dimensions==2:
-        return self.Library2dTrace
-    if mode==peano4.output.CompileMode.Trace and self._dimensions==3:
-        return self.Library3dTrace
-    if mode==peano4.output.CompileMode.Asserts and self._dimensions==2:
-        return self.Library2dAsserts
-    if mode==peano4.output.CompileMode.Asserts and self._dimensions==3:
-        return self.Library3dAsserts
-    if mode==peano4.output.CompileMode.Release and self._dimensions==2:
-        return self.Library2dRelease
-    if mode==peano4.output.CompileMode.Release and self._dimensions==3:
-        return self.Library3dRelease
-    return "undef"
+    return "ExaHyPE2Core" + self.get_library_postfix(mode)
 
 
-  Library2dDebug = "ExaHyPE2Core2d_debug"
-  Library3dDebug = "ExaHyPE2Core3d_debug"
-    
-  Library2dRelease = "ExaHyPE2Core2d"
-  Library3dRelease = "ExaHyPE2Core3d"
-
-  Library2dTrace = "ExaHyPE2Core2d_trace"
-  Library3dTrace = "ExaHyPE2Core3d_trace"
-
-  Library2dAsserts = "ExaHyPE2Core2d_asserts"
-  Library3dAsserts = "ExaHyPE2Core3d_asserts"
-    
-    
   def add_solver(self,solver):
     self._solvers.append( solver )
 

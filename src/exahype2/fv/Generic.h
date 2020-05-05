@@ -38,7 +38,29 @@ namespace exahype2 {
      * background is given in its ExaHyPE chapter, but the really interesting
      * details are discussed within the Finite Volume chapter.
      */
-    void applySplit1DRiemannToPatch_Overlap1AoS(
+    void applySplit1DRiemannToPatch_Overlap1AoS2d(
+      std::function< void(
+        double                                       QL[],
+        double                                       QR[],
+        const tarch::la::Vector<Dimensions,double>&  faceCentre,
+        double                                       volumeH,
+        double                                       t,
+        double                                       dt,
+        int                                          normal,
+        double                                       F[]
+      ) >   splitRiemannSolve1d,
+      const tarch::la::Vector<Dimensions,double>&  patchCentre,
+      const tarch::la::Vector<Dimensions,double>&  patchSize,
+      double                                       t,
+      double                                       dt,
+      int                                          numberOfVolumesPerAxisInPatch,
+      int                                          unknowns,
+      double                                       Qin[],
+      double                                       Qout[]
+    );
+
+
+    void applySplit1DRiemannToPatch_Overlap1AoS3d(
       std::function< void(
         double                                       QL[],
         double                                       QR[],

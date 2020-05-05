@@ -73,6 +73,8 @@ class peano4::maps::STDStackMap {
      * omit the const qualifier.
      */
     std::set<StackKey>  getKeys();
+
+    void garbageCollection();
 };
 
 
@@ -154,6 +156,19 @@ peano4::maps::STDStackMap<T>::~STDStackMap() {
     delete p.second;
   }
 }
+
+
+template <typename T>
+void peano4::maps::STDStackMap<T>::garbageCollection() {
+  for (auto& p: _data) {
+	if (p.second->empty()) {
+      delete p;
+      p = new T();
+	}
+    delete p.second;
+  }
+}
+
 
 #endif
 

@@ -86,7 +86,11 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
 """
 
 
-  HandleCellTemplate = """::exahype2::fv::applyRusanovToPatch_FaceLoops2d(
+  HandleCellTemplate = """#if Dimensions==2
+::exahype2::fv::applyRusanovToPatch_FaceLoops2d(
+#elif Dimensions==3
+::exahype2::fv::applyRusanovToPatch_FaceLoops3d(
+#endif
     [&](
       double                                       Q[],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,

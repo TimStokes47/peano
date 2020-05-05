@@ -72,14 +72,12 @@ else:
 
 peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
-peano4_project.output.makefile.add_library( project.get_library(build_mode), "../../../../src/exahype2" )
+peano4_project.output.makefile.add_library( project.get_core_library(build_mode), "../../../../src/exahype2" )
 peano4_project.output.makefile.set_mode(build_mode)
 peano4_project.generate(peano4.output.Overwrite.Default)
 peano4_project.build()
 success = peano4_project.run( [] )
 
-
-success = True
 
 if success:
   convert = peano4.visualisation.Convert( "solutionEuler", True )
