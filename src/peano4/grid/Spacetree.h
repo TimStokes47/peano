@@ -174,6 +174,20 @@ class peano4::grid::Spacetree {
       int                                faceNumber
     );
 
+    /**
+     * Can a cell be split (deployed to another rank)
+     *
+     * Not all cells are a fit and can be deployed to another rank even
+     * though the spacetree set wants to split a tree. Cells that disqualify
+     * for splitting are
+     *
+     * - Cells which a adjacent to a periodic boundary conditions. Such cells
+     *   (including their adjacent vertices) all are kept on tree 0 so all
+     *   periodic boundary data exchange happens on tree 0 only.
+     * - Non-local cells (obviously)
+     * - Local cells whose master is not local. If we'd move such cells to
+     *   another rank, we'd destroy the logical topology between the trees.
+     */
     bool isCellSplitCandidate(
       GridVertex                         coarseGridVertices[TwoPowerD],
       GridVertex                         fineGridVertices[TwoPowerD]

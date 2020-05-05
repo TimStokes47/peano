@@ -21,6 +21,18 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
 }
 
 
+void toolbox::loadbalancing::RecursiveSubdivision::dumpStatistics() {
+  std::set<int> idsOfLocalSpacetrees = peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees();
+  for (auto p: idsOfLocalSpacetrees) {
+	logInfo(
+      "dumpStatistics()",
+	  "tree " << p << ": " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(p).getNumberOfLocalUnrefinedCells()
+	  << ( _blacklist.count(p)>0 ? " (on blacklist with weight=" + std::to_string(_blacklist[p]) + ")" : "" )
+    );
+  }
+}
+
+
 void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
   _localNumberOfInnerUnrefinedCell = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
 
@@ -98,37 +110,39 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
     and
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
-    static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < tarch::multicore::Core::getInstance().getNumberOfThreads() * _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell
+    static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads() * _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell
   ) {
+	  // @todo viel aggressiver splitten
     int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
-    if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
-      int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
-      int cellsPerCore      = std::max(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
+    int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
+    if (heaviestSpacetree!=NoHeaviestTreeAvailable and numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize()) {
+      int cellsPerCore      = std::min(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
 
-      logInfo( "finishStep()", "not all cores are occupied on this rank, so split " << cellsPerCore << " cells from tree " << heaviestSpacetree << " (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
+      logInfo( "finishStep()", "insufficient number of cores occupied on this rank, so split " << cellsPerCore << " cells from tree " << heaviestSpacetree << " on local rank (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
       triggerSplit(heaviestSpacetree, cellsPerCore, tarch::mpi::Rank::getInstance().getRank());
     }
   }
   else if (
     _hasSpreadOutOverAllRanks
     and
-    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() < tarch::multicore::Core::getInstance().getNumberOfThreads()*2
+    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
     doesBiggestLocalSpactreeViolateOptimalityCondition()
   ) {
     int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
     int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
-    if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
+    if (heaviestSpacetree!=NoHeaviestTreeAvailable and numberOfLocalUnrefinedCellsOfHeaviestSpacetree>2) {
       logInfo(
         "finishStep()",
 		"biggest local tree " << heaviestSpacetree << " is too heavy as it hosts " <<
-		numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " cells (max size equals " << getMaximumSpacetreeSize() << "). Split it up" );
+		numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " cells (max size should be " << getMaximumSpacetreeSize() << ")"
+      );
       #ifdef Parallel
       const int targetRank = xxx;
       #else
       const int targetRank = 0;
       #endif
-      int cellsPerCore      = std::max(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
+      int cellsPerCore      = std::min(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
       triggerSplit(heaviestSpacetree, cellsPerCore, targetRank);
     }
   }
