@@ -1,17 +1,19 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
+from fileinput import filename
 
 
 
 
 class PerformanceDataPoint(object):
   def __init__(self,file_name,verbose):
-    self._file_name = file_name
-    self._verbose   = verbose 
-    self._start_time_stepping = -1
-    self._end_time_stepping   = -1
-    self._threads             = 1
+    self._file_name            = file_name
+    self._verbose              = verbose 
+    self._start_time_stepping  = -1
+    self._end_time_stepping    = -1
+    self._threads              = 1
     self._number_of_time_steps = 0
+    self.valid                 = False
     self.parse()
     pass
 
@@ -26,32 +28,40 @@ class PerformanceDataPoint(object):
 
 
   def parse(self):
-    file                = open(self._file_name, "r")
-    for line in file:
-      if "build:" in line:
-        if "2d" in line:
-          self._d = 2
-        if "3d" in line:
-          self._d = 3
-        if "tbb" in line or "omp" in line:
-          self._threads = int( line.split( "threads" )[0].split( "(")[-1] )
+    file       = open(self._file_name, "r")
+    self.valid = True
+    try:
+      for line in file:
+        if "build:" in line:
+          if "2d" in line:
+            self._d = 2
+          if "3d" in line:
+            self._d = 3
+          if "tbb" in line or "omp" in line:
+            self._threads = int( line.split( "threads" )[0].split( "(")[-1] )
+            if self._verbose:
+              print( "- threads = " + str(self._threads))
+        if "run TimeStep" in line and self._start_time_stepping<0:
+          self._start_time_stepping = self.convert_to_seconds(line.strip().split( " " )[0])
           if self._verbose:
-            print( "- threads = " + str(self._threads))
-      #create spacetree with [0,0,0]x[1,1,1]
-      if "run TimeStep" in line and self._start_time_stepping<0:
-        self._start_time_stepping = self.convert_to_seconds(line.strip().split( " " )[0])
-        if self._verbose:
-          print( "- grid construction finished after " + str(self._start_time_stepping))
-      elif "run" in line:
-        self._end_time_stepping = self.convert_to_seconds(line.strip().split( " " )[0])
+            print( "- grid construction finished after " + str(self._start_time_stepping))
+        elif "run" in line:
+          self._end_time_stepping = self.convert_to_seconds(line.strip().split( " " )[0])
         
-      if "run TimeStep" in line:
-        self._number_of_time_steps += 1
-    self._end_time_stepping = self._end_time_stepping - self._start_time_stepping
-    if self._verbose:
-      print( "- time stepping finished after " + str(self._end_time_stepping))
-
-
+        if "run TimeStep" in line:
+          self._number_of_time_steps += 1
+      self._end_time_stepping = self._end_time_stepping - self._start_time_stepping
+      if self._verbose:
+        print( "- time stepping finished after " + str(self._end_time_stepping))
+    except:
+      print( "parsing failed")
+      self.valid = False
+    
+    if self._number_of_time_steps<=0:
+      print( "file " + self._file_name + " is invalid as number of time steps equals zero" )
+      self.valid = False
+      
+      
 def extract_grid_construction_times(performance_data_points):
   """
      
