@@ -131,7 +131,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   ) {
     int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
     int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
-    if (heaviestSpacetree!=NoHeaviestTreeAvailable and numberOfLocalUnrefinedCellsOfHeaviestSpacetree>2) {
+    if (heaviestSpacetree!=NoHeaviestTreeAvailable and numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize()) {
       logInfo(
         "finishStep()",
 		"biggest local tree " << heaviestSpacetree << " is too heavy as it hosts " <<
