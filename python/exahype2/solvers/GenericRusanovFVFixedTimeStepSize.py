@@ -81,7 +81,7 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
       );
       index += {NUMBER_OF_UNKNOWNS};
     }}
-    _refinementControl.addCommand( marker.x(), marker.h(), refinementCriterion, {IS_GRID_CREATION} );
+    _localRefinementControl.addCommand( marker.x(), marker.h(), refinementCriterion, {IS_GRID_CREATION} );
   }} 
 """
 
