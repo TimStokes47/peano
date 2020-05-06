@@ -23,8 +23,11 @@ class examples::grid::MyObserver: public
   #endif
 {
   private:
-	static int _iterationCounter;
+    static int _iterationCounter;
   public:
+    static constexpr int GridRefinementIterations = 16;
+    static constexpr int StationaryIterations     = 32;
+
     MyObserver(int spacetreeId = -1, int counter=0);
     virtual ~MyObserver();
 

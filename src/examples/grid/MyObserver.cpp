@@ -84,7 +84,7 @@ peano4::grid::TraversalObserver* examples::grid::MyObserver::clone(int spacetree
 std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGridControlEvents() {
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
 
-  if (_iterationCounter<8) {
+  if (_iterationCounter<GridRefinementIterations) {
     peano4::grid::GridControlEvent newEvent;
     newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
 #if Dimensions==2
@@ -99,7 +99,7 @@ std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGri
     controlEvents.push_back(newEvent);
   }
 
-  if (_iterationCounter>12) {
+  if (_iterationCounter>GridRefinementIterations + StationaryIterations) {
     peano4::grid::GridControlEvent newEvent;
 	newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Erase );
 #if Dimensions==2
