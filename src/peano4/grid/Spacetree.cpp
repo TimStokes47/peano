@@ -294,6 +294,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
     }
     _splitting.clear();
     for (auto& p: _splitTriggered) {
+      if (p.second>0) {
+    	logInfo( "traverse(...)", "have not been able to assign enough cells from " << _id << " to new tree " << p.first << " (should have deployed " << p.second << " more cells)" );
+      }
       _splitting.insert( p.first );
     }
     _splitTriggered.clear();
@@ -1959,8 +1962,8 @@ void peano4::grid::Spacetree::splitOrJoinCell(
 
         _splittedCells.push_back(targetSpacetreeId);
       }
-	    else {
-	      _splittedCells.push_back(-1);
+      else {
+	    _splittedCells.push_back(-1);
       }
     }
   }

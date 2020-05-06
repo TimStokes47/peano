@@ -46,12 +46,14 @@ class exahype2::RefinementControl {
 	   * @param x Centre of the cell for which this command is triggered
 	   * @param h Size of this cell
 	   */
-	  void addCommand(
+    void addCommand(
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h,
       exahype2::RefinementCommand                  command,
-	    bool                                         invokedByGridConstruction
-	  );
+      bool                                         invokedByGridConstruction
+    );
+
+    void merge( const RefinementControl& control );
   private:
 	  static tarch::logging::Log  _log;
 

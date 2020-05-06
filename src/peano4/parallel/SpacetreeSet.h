@@ -352,8 +352,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     peano4::grid::GridStatistics  getGridStatistics(int treeId) const;
 
     /**
-     * If the target tree shall be stored on the local node, then you pass
+     * Split a local tree.
      *
+     * If the target tree shall be stored on the local node, then you pass
      * <pre>
       peano4::parallel::Node::getInstance().getRank(treeId)
        </pre>
@@ -407,8 +408,13 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * invoke any event, we now do send out data. This is the sole purpose of the
      * new traversal.
      *
+     * It is not guaranteed that the splits are all successful. See the routine
+     * peano4::grid::Spacetree::isCellSplitCandidate() which identifies cells
+     * that can be split. Effectively, you might call split and not get any
+     * tree decomposition at all.
      *
-     * @todo Not clear. Koennten auch bei New alles machen?
+     * @see peano4::grid::Spacetree::split() This is the routine to tell a
+     *   particular spacetree to trigger a split in the next grid sweep.
      *
      *
      * @param treeId  Id of tree that should split, i.e. give away cells to a

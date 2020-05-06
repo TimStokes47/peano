@@ -63,7 +63,7 @@ vtkSmartPointer<vtkDoubleArray> visualisation::output::VTUWriter::getMetaDataFor
   variableArray->SetName("source-file");
 
   for(int i = 0; i < variable.getTotalNumberOfDofsPerPatch(); i++) {
-    double array[] = { data.originTree };
+    double array[] = { static_cast<double>(data.originTree) };
     variableArray->InsertNextTuple(array);
   }
   return variableArray;

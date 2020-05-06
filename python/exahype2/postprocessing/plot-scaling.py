@@ -30,16 +30,20 @@ if __name__ == "__main__":
   for data_file in data_files:
     print( "parse " + data_file )
     tar.extract( data_file )
-    data_points.append( exahype2.postprocessing.PerformanceDataPoint(data_file,args.verbose) ) 
+    new_data = exahype2.postprocessing.PerformanceDataPoint(data_file,args.verbose)
+    if new_data.valid:
+      data_points.append( new_data ) 
     os.remove( data_file )
 
   plt.clf()
 
   (x_data, y_data) = exahype2.postprocessing.extract_grid_construction_times( data_points )    
-  plt.plot( x_data, y_data, label="grid construction (incl. initial lb)" )
+  plt.plot( x_data, y_data, label="total grid construction (incl. initial lb)" )
 
   (x_data, y_data) = exahype2.postprocessing.extract_times_per_step( data_points )    
   plt.plot( x_data, y_data, label="time per time step" )
+
+  plt.plot( x_data, exahype2.postprocessing.linear_runtime_trend_line(x_data,y_data), "--", label="linear trend" )
   
   plt.xlabel( "Threads" )
   plt.ylabel( "Time [t]=s" )
@@ -54,7 +58,7 @@ if __name__ == "__main__":
     xlabels.append( str(xtics[-1]) )
   plt.xticks( xtics, xlabels )
   plt.legend()
-  filename = args.file.replace( "tar.gz", "").replace( "tar", "" )
+  filename = args.file.replace( ".tar.gz", "").replace( ".tar", "" )
   plt.savefig( filename + ".pdf" )
   plt.savefig( filename + ".png" )
   

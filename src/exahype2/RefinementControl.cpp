@@ -84,3 +84,8 @@ void exahype2::RefinementControl::addCommand(
   logTraceOutWith1Argument( "addCommand()", _events.size() );
 }
 
+
+
+void exahype2::RefinementControl::merge( const RefinementControl& control ) {
+  _events.insert( _events.end(), control._events.begin(), control._events.end() );
+}

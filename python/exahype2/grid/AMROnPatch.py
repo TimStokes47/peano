@@ -20,7 +20,11 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
     
   
   def get_body_of_getGridControlEvents(self):
-    return "  return _refinementControl.getGridControlEvents();\n" 
+    return """
+  auto result = _globalRefinementControl.getGridControlEvents();
+  _globalRefinementControl.clear();
+  return result;
+""" 
 
 
   def get_action_set_name(self):
@@ -30,24 +34,40 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
   def get_body_of_operation(self,operation_name):
     result = ""
     if operation_name==peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
-      result = "_refinementControl.clear();"
+      result = """
+  _localRefinementControl.clear();
+"""
+
+    if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+      result = """
+  {{
+    static tarch::multicore::BooleanSemaphore semaphore;
+    tarch::multicore::Lock                    lock(semaphore);
+    _globalRefinementControl.merge( _localRefinementControl );
+  }}
+"""
+    #OPERATION_END_TRAVERSAL
     
     result += super(AMROnPatch,self).get_body_of_operation(operation_name)
     return result
 
 
   def get_static_initialisations(self,full_qualified_classname):
-    return "::exahype2::RefinementControl " + full_qualified_classname + "::_refinementControl;"
+    return "::exahype2::RefinementControl " + full_qualified_classname + "::_globalRefinementControl;"
 
 
   def get_attributes(self):
     return """
-    static ::exahype2::RefinementControl  _refinementControl;
+    static ::exahype2::RefinementControl  _globalRefinementControl;
+    ::exahype2::RefinementControl         _localRefinementControl;
 """
 
 
   def get_includes(self):
     return """
 #include <functional>
+
+#include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/multicore/Lock.h"
 """ + self.additional_includes
   
