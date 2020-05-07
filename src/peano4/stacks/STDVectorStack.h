@@ -115,7 +115,7 @@ class peano4::stacks::STDVectorStack {
      * Clone data into the current object on which clone() is called.
      */
     void  clone( const STDVectorStack<T>&  data ) {
-      assertionEquals( _currentElement, 0 );
+      assertionEquals1( _currentElement, 0, toString() );
       _data.clear();
       _currentElement = data._currentElement;
       //_data           = data._data;
