@@ -183,7 +183,7 @@ class peano4::parallel::Node {
      * Hand in a spacetree id and get back the number that we should use to
      * send something to this tree.
      */
-    static int getOutputStackNumberOfHorizontalDataExchange(int id);
+    static int getOutputStackNumberForHorizontalDataExchange(int id);
 
     /**
      * Get the input stack where a tree writes all of its vertical
@@ -196,7 +196,7 @@ class peano4::parallel::Node {
     /**
      * Counterpart of getOutputStackNumberOfBoundaryExchange(int)
      */
-    static int getInputStackNumberOfHorizontalDataExchange(int id);
+    static int getInputStackNumberForHorizontalDataExchange(int id);
 
     /**
      * A periodic boundary stack is basically a stack (an integer), but I do
