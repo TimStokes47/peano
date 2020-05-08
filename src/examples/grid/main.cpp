@@ -239,7 +239,7 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", false
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", true
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", false
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
     tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", true
@@ -248,7 +248,7 @@ int main(int argc, char** argv) {
     tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", false
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", true
+    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", false
   ));
   tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
 
@@ -260,12 +260,12 @@ int main(int argc, char** argv) {
     periodicBC = std::atoi( argv[1] );
   }
   else {
-    logInfo( "main(...)", "use a random periodic boundary condition choice" );
     srand( time(NULL) );
     periodicBC = 0;
     for (int i=0; i<Dimensions; i++) {
       periodicBC[i] = rand() < RAND_MAX / 5;
     }
+    logInfo( "main(...)", "use a random periodic boundary condition choice: " << periodicBC );
   }
 
   #if defined(Parallel) or defined(SharedMemoryParallelisation)
