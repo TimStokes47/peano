@@ -255,7 +255,7 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::TraversalVTKPlotter:
 }
 
 
-void peano4::grid::TraversalVTKPlotter::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {
+void peano4::grid::TraversalVTKPlotter::exchangeAllVerticalDataExchangeStacks( int masterId ) {
 }
 
 

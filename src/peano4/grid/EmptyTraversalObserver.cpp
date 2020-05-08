@@ -49,7 +49,7 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::EmptyTraversalObserv
 }
 
 
-void peano4::grid::EmptyTraversalObserver::exchangeAllVerticalDataExchangeStacks(int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {
+void peano4::grid::EmptyTraversalObserver::exchangeAllVerticalDataExchangeStacks( int masterId ) {
 }
 
 

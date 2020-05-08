@@ -26,7 +26,7 @@ class examples::grid::MyObserver: public
     static int _iterationCounter;
   public:
     static constexpr int GridRefinementIterations = 16;
-    static constexpr int StationaryIterations     = 32;
+    static constexpr int StationaryIterations     = 4;
 
     MyObserver(int spacetreeId = -1, int counter=0);
     virtual ~MyObserver();
@@ -59,7 +59,7 @@ class examples::grid::MyObserver: public
 
     std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
 
-    void exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) override;
+    void exchangeAllVerticalDataExchangeStacks( int masterId ) override;
     void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) override;
     void exchangeAllPeriodicBoundaryDataStacks() override;
     void finishAllOutstandingSendsAndReceives() override;

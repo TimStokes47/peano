@@ -956,7 +956,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 
 
   TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Prologue = """
-void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {{
+void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int masterId ) {{
   logTraceInWith2Arguments( "exchangeAllVerticalDataExchangeStacks(...)", masterId, _spacetreeId  );
 """
 
@@ -964,8 +964,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int mast
   peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
     {DATASET},
     _spacetreeId,
-    masterId,
-    mode
+    masterId
   );
 """
 
