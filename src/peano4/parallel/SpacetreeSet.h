@@ -98,8 +98,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     template <class Container>
     static void exchangeAllVerticalDataExchangeStacks(
       Container& stackContainer,
-      int spacetreeId, int parentId,
-      const std::set<int>& joiningIds
+      int spacetreeId, int parentId
     );
 
     /**

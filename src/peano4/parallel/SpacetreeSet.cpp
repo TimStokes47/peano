@@ -273,8 +273,7 @@ void peano4::parallel::SpacetreeSet::exchangeVerticalDataBetweenTrees(peano4::gr
     exchangeAllVerticalDataExchangeStacks(
       peano4::grid::Spacetree::_vertexStack,
       p._id,
-      p._masterId,
-      p._joining
+      p._masterId
     );
 
     createObserverCloneIfRequired(observer,p._id);

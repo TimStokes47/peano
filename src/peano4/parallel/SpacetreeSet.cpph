@@ -67,8 +67,7 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
 template <class Container>
 void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
   Container& stackContainer,
-  int spacetreeId, int parentId,
-  const std::set<int>& joiningIds
+  int spacetreeId, int parentId
 ) {
   logTraceInWith2Arguments( "exchangeAllVerticalDataExchangeStacks(...)", spacetreeId, parentId );
 
