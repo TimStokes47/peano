@@ -76,6 +76,15 @@ results in the fact that the original tree becomes empty.
 Otherwise, we woudl again change the tree topology upon the ranks.
 
 
+\begin{remark}
+ As \Peano\ preserves the logical topology between trees, it is reasonable to
+ strive for as wide tree topologies as possible. Otherwise, your meshes
+ (coarsening) are very constrained. That is, it is better to split a tree $a$
+ into five parts $a,b,c,d,e$ with $b,c,d,e$ being children of $a$ rather than
+ splitting $a$ into $b,c$ and then $b$ and $c$ again.
+\end{remark}
+
+
 \section{Data flow on stationary domains}
 
 \subsection{Horizontal data flow}
@@ -119,21 +128,26 @@ This yet has to be written.
 Whenever you split a tree, Peano creates the new trees (either as threads on
 the local node or remotely via MPI). 
 Each new tree receives a whole copy of the original tree. 
-This is only tree data. 
-User data is handled separetely.
+This includes both the core tree data and the user data.
 Once the tree is replicated, the individual trees start to coarsen.
 If they are not responsible for tree parts, they successively remove this part. 
 After one or two iterations, each rank thus really works only on local tree.
 
 
 \begin{remark}
- Peano uses information from the actively used data to decide which data to
+ \Peano\ uses information from the actively used data to decide which data to
  replicate.
  If you have cell and vertex and face data but you use some of these data only
  in some substeps of you algorithm, please ensure that those steps that trigger
  the domain decomposition and those that run immediately after this do use all
  data types.
- Otherwise, Peano can't know what data is to be replicated when it splits trees.
+ Otherwise, \Peano\ can't know what data is to be replicated when it splits
+ trees.
+\end{remark}
+
+\begin{remark}
+ Splits require significant memory temporarily. It thus might be convenient not
+ to split a tree too often in one rush.
 \end{remark}
 
 
@@ -186,15 +200,49 @@ realised over two grid sweeps which internally decompose into substeps:
 
 \subsection{User data}
 
-This has yet to be written.
+There is no need for the user to implement something manually, as long as the
+user ensures that the grid observer replicates the master tree on all new
+workers.
+The \texttt{SpacetreeSet} offers a function to do this automatically.
 
 
+\subsection{Data ownership}
+
+Throughout the split traversals, the code continues to interact with the user
+and continues to compute, i.e.~all splitting is seamlessly interwoven with
+standard compute mesh traversals.
+Throughout the whole split, the logical ownership of all data resides with the
+master, i.e.~it is the master automaton who asks the user code what operations to invoke
+on the data. 
 
 
 \section{Joins}
 
 
-The join of partitions in \Peano\ follows a few mantraic principles:
+Joins are completely hidden from the user, i.e.~there's no way to actively join
+trees. 
+To understand why Peano issues joins from time to time, it is important to
+define vetoed coarsening.
+
+\begin{definition}
+ Peano vetos any coarsening, if removing some parts of the grid would affect a
+ child or alter the tree topology of the ranks.
+ If a coarsening is vetoed, Peano remembers this veto. 
+ As soon as a rank whose master is affected by a veto hosts a tree cell which is
+ unrefined, it joins/merges this cell into the master.
+\end{definition}
+
+\noindent
+Vetoed coarsening typically does delay any grid coarsening.
+You ask for a coarsened grid, and it first of all applies this coarsening to all
+ranks that have not decomposed further.
+Once these have finished their coarsening, it joins those ranks that stop
+further coarsening into their master.
+Once this is complete, it continues to coarsen.
+This process can continue recursively.
+
+
+For this reason, the join of partitions in \Peano\ follows a few mantraic principles:
 
 \begin{enumerate}
   \item We only join partitions if they do not hold refined cells. We call such
@@ -225,6 +273,50 @@ If I realise a deteriorated-trees-only policy, I don't need such zipping as
 (almost) all information is available on the master already.
 
 
+\subsection{Temporal ordering}
+
+Analogous to the splitting process, each join is broken up into two traversals.
+Throughout these traversals, the code continues to interact with the user and to
+compute.
+In the first traversal, the worker tells everybody else that it intends to join
+with its master. 
+However, nothing happens.
+Throughout this first traversal ({\bf join-triggered}), all the neighbours of a
+rank as well as its master continue to send boundary data to the tree that
+intends to join, as they are not yet aware of the join intention.
+
+In the second traversal ({\bf joining}), we distinguish two steps.
+First, the worker traverses its domain.
+The traversal of the master is postponed. 
+Throughout the traversal, the worker receives incoming data and merges it with
+the local information.
+Information on the grid topology is immediately streamed to the master.
+Immediately means after the vertex data is read for the first time and merged.
+See the discussion on the grid data below.
+After that, the worker continues, as it still own all data (see below).
+When it writes data to its output stream for the very last time, the data that
+is adjacent with the master is written to an output stream.
+
+
+In the second step of the second traversal, the master now runs through its
+grid.
+Before that, both grid and user data from the worker are streamed in.
+The master takes the streamed in mesh data right after it has read its
+information.
+Whenever it runs through a mesh entity for the very last time, it merges its
+local user data with the streamed-in records from the (former) worker.
+ 
+
+
+\subsection{Data ownership}
+
+Throughout the split traversals, the code continues to interact with the user
+and continues to compute, i.e.~all splitting is seamlessly interwoven with
+standard compute mesh traversals.
+Throughout the whole split, the logical ownership of all data resides with the
+master, i.e.~it is the master automaton who asks the user code what operations to invoke
+on the data. 
+
 
 \subsection{Grid data streaming}
 
@@ -245,46 +337,45 @@ This streaming requires us to break up the join process into two distinct
 traversal phases (see primary vs.~secondary remark above).
 
 
+We don't have dedicated streams in \Peano, and there's no communication channel
+for joins either.
+However, there's by default for any piece of data a vertical exchange stream.
+For the joins, we hijack the vertical stacks and write the data to them.
+When we hand the data over to the master, we revert the order on the stack and
+thus effectively convert it into a stream.
+
+
+\subsection{User data streaming}
+
+
+\begin{remark}
+ This section is incomplete and only partially implemented.
+\end{remark}
+
+
 Hijack vertical stacks on grid side!
 
 
-\marginpar{Rework}
-
-Joins are completely hidden from the user, i.e.~there's no way to actively join
-trees. 
-To understand why Peano issues joins from time to time, it is important to
-define vetoed coarsening.
-
-\begin{definition}
- Peano vetos any coarsening, if removing some parts of the grid would affect a
- child or alter the tree topology of the ranks.
- If a coarsening is vetoed, Peano remembers this veto. 
- As soon as a rank whose master is affected by a veto hosts a tree cell which is
- unrefined, it joins/merges this cell into the master.
-\end{definition}
-
-\noindent
-Vetoed coarsening typically does delay any grid coarsening.
-You ask for a coarsened grid, and it first of all applies this coarsening to all
-ranks that have not decomposed further.
-Once these have finished their coarsening, it joins those ranks that stop
-further coarsening into their master.
-Once this is complete, it continues to coarsen.
-This process can continue recursively.
-
-
-\section{Data flow}
-
-
-\section{Grid entity markers}
-
-As pointed out above, Peano works with replica of trees and then removes per
-rank those grid entites which are not adjacent to the local domain.
-This implies that some cells plus their data are held redundantly.
-
-Whenever Peano invokes an activitiy on a grid entity, it passes a marker besides
-the actual data.
-Markers typically hold spatial information.
-In a parallel run, a marker also tells you whether the cell or vertex currently
-handled is a local one, adjacent to the domain boundary, or overlaps into a
-neighbouring domain which actually holds it.
+\begin{remark}
+ The realisation of joins and splits in \Peano\ is totally asymmetric: For a
+ split, all data of the splitting tree is replicated and then both the original
+ tree and its new worker coarsen the partitions they are not responsible for. 
+ This process is realised through two additional traversals on the worker side.
+ 
+ Throughout the join, no data flows logically, as the master already has the
+ mesh. Furthermore, only data that is actually owned by the worker is handed
+ over to the master.
+\end{remark}
+% 
+% \section{Grid entity markers}
+% 
+% As pointed out above, Peano works with replica of trees and then removes per
+% rank those grid entites which are not adjacent to the local domain.
+% This implies that some cells plus their data are held redundantly.
+% 
+% Whenever Peano invokes an activitiy on a grid entity, it passes a marker besides
+% the actual data.
+% Markers typically hold spatial information.
+% In a parallel run, a marker also tells you whether the cell or vertex currently
+% handled is a local one, adjacent to the domain boundary, or overlaps into a
+% neighbouring domain which actually holds it.

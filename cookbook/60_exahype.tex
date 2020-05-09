@@ -359,7 +359,34 @@ This section is under construction.
 \end{remark} 
 
 
-\section{Introducing a numerical scheme}
+
+
+
+\section{Finite Volumes with ClawPack (ExaClaw)}
+
+ExaClaw is an extension of \ExaHyPE\ (Chapter \ref{chapter:exahype}) which
+offers the ClawPack Riemann solvers within \ExaHyPE.
+Its development has been made possible by EPSRC under the Excalibur
+Phase I call.
+The grant number is EP/V00154X/1.
+
+
+\begin{remark}
+ This solver family is work-in-progress.
+\end{remark}
+
+
+
+\section{Ghoddess DG solvers}
+
+
+\begin{remark}
+ This solver family is work-in-progress.
+\end{remark}
+
+
+
+\section{Introducing a new numerical scheme}
 
 This section discusses how to introduce a totally new numerical solver. 
 It does not discuss how to introduce a new PDE, as new PDEs are built on top of
@@ -378,7 +405,8 @@ This section gives you an idea how to extend \ExaHyPE\ instead.
 \end{remark}
 
 
-\paragraph{A new Finite Volume solver}
+
+\subsection{A new Finite Volume solver (native \ExaHyPE)}
 
 Introducing a new Finite Volume scheme is reasonably straightforward within
 \ExaHyPE.
@@ -528,6 +556,13 @@ For a bespoke Finite Volume scheme where the Riemann solver holds the actual
 numerical wisdom and each Riemann solvers requires a bespoke signature, it is
 maybe better to skip that additional level of abstraction.
 
+
+
+\subsection{Ghoddess implementation remarks}
+
+\begin{remark}
+ Yet to be written.
+\end{remark}
 
 
 \section*{Links and further reading}
