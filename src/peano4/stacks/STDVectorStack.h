@@ -115,7 +115,7 @@ class peano4::stacks::STDVectorStack {
      * Clone data into the current object on which clone() is called.
      */
     void  clone( const STDVectorStack<T>&  data ) {
-      assertionEquals( _currentElement, 0 );
+      assertionEquals1( _currentElement, 0, toString() );
       _data.clear();
       _currentElement = data._currentElement;
       //_data           = data._data;
@@ -429,6 +429,16 @@ class peano4::stacks::STDVectorStack {
       #endif
     }
 
+    /**
+     * Reversing a stream is something I need extremely rarely. The biggest application
+     * is the realisation of joins through peano4::parallel::SpacetreeSet::streamLocalVertexInformationToMasterThroughVerticalStacks().
+     * Here, I need a streamed version of the tree to get the up-to-date data of the mesh
+     * in. However, I don't have streams. I have only stacks. So I map the stream idea to
+     * a stack.
+     */
+    void reverse() {
+      std::reverse(std::begin(_data), std::end(_data));
+    }
 
     std::string toString() const {
       std::ostringstream msg;

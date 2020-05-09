@@ -22,12 +22,6 @@ java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Pean
    *
    */
   namespace parallel {
-    enum class VerticalDataExchangeMode {
-      Running,
-      PrepareDryRunForNewSpacetree,
-      SendOutDataForDryRunOfNewSpacetree,
-      ReceiveJoinDataForRunOfMaster
-    };
   }
 }
 

@@ -373,7 +373,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         for (int i=0; i<TwoPowerD-1; i++) {{
           int currentEntryInExchangeList = event.getExchangeVertexData( i+outVertexStackPosition*(TwoPowerD-1) );
           if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
-            const int stack = peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange( currentEntryInExchangeList );
+            const int stack = peano4::parallel::Node::getInputStackNumberForHorizontalDataExchange( currentEntryInExchangeList );
             logDebug("enterCell(...)", "merge local vertex on tree " << _spacetreeId << " with incoming neighbour from stack " << stack << " (neighbour " << currentEntryInExchangeList << ")" );
             assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
             {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
@@ -492,7 +492,7 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         and
         event.getExchangeFaceData( outFaceStackPosition )!=peano4::grid::TraversalObserver::NoData
       ) {{
-        const int stack = peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange( event.getExchangeFaceData( outFaceStackPosition ) );
+        const int stack = peano4::parallel::Node::getInputStackNumberForHorizontalDataExchange( event.getExchangeFaceData( outFaceStackPosition ) );
         logDebug("enterCell(...)", "merge local face on tree " << _spacetreeId << " with incoming face from stack " << stack << " (marker=" << marker.toString() << ")" );
         assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
         {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
@@ -810,7 +810,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
         and
         event.getExchangeFaceData( inFaceStackPosition )!=peano4::grid::TraversalObserver::NoData
       ) {{
-        const int stack = peano4::parallel::Node::getOutputStackNumberOfHorizontalDataExchange( event.getExchangeFaceData( inFaceStackPosition ) );
+        const int stack = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( event.getExchangeFaceData( inFaceStackPosition ) );
         logDebug("enterCell(...)", "send local face from tree " << _spacetreeId << " to stack " << stack << " (data=" << data.toString() << ")" );
         DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,stack))->push(data);
       }}
@@ -894,7 +894,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
         for (int i=0; i<TwoPowerD-1; i++) {{
           int currentEntryInExchangeList = event.getExchangeVertexData( i+inVertexStackPosition*(TwoPowerD-1) );
           if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
-            const int stack = peano4::parallel::Node::getOutputStackNumberOfHorizontalDataExchange( currentEntryInExchangeList );
+            const int stack = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( currentEntryInExchangeList );
             logDebug("leaveCell(...)", "send local vertex from tree " << _spacetreeId << " to neighbour through stack " << stack );
             DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,stack))->push(data);
           }}
@@ -956,7 +956,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 
 
   TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Prologue = """
-void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {{
+void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int masterId ) {{
   logTraceInWith2Arguments( "exchangeAllVerticalDataExchangeStacks(...)", masterId, _spacetreeId  );
 """
 
@@ -964,8 +964,7 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllVerticalDataExchangeStacks( int mast
   peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
     {DATASET},
     _spacetreeId,
-    masterId,
-    mode
+    masterId
   );
 """
 
@@ -1016,6 +1015,44 @@ void {FULL_QUALIFIED_CLASSNAME}::exchangeAllPeriodicBoundaryDataStacks() {{
 """
 
 
+
+
+  TemplateExchangeRoutines_streamDataFromSplittingTreeToNewTree_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::streamDataFromSplittingTreeToNewTree(int newWorker) {{
+  logTraceInWith2Arguments( "streamDataFromSplittingTreeToNewTree(int)", _spacetreeId, newWorker );
+"""
+
+  TemplateExchangeRoutines_streamDataFromSplittingTreeToNewTree_Exchange = """
+  peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
+    {DATASET},
+    _spacetreeId,
+    newWorker
+  );
+"""
+
+  TemplateExchangeRoutines_streamDataFromSplittingTreeToNewTree_Epilogue = """
+  logTraceOut( "streamDataFromSplittingTreeToNewTree(int)");
+}}
+"""
+
+
+  TemplateExchangeRoutines_streamDataFromJoiningTreeToMasterTree_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::streamDataFromJoiningTreeToMasterTree(int master) {{
+  logTraceInWith2Arguments( "streamDataFromJoiningTreeToMasterTree(int)", _spacetreeId, master );
+"""
+
+  TemplateExchangeRoutines_streamDataFromJoiningTreeToMasterTree_Exchange = """
+  peano4::parallel::SpacetreeSet::streamDataFromJoiningTreeToMasterTree(
+    {DATASET},
+    _spacetreeId,
+    master
+  );
+"""
+
+  TemplateExchangeRoutines_streamDataFromJoiningTreeToMasterTree_Epilogue = """
+  logTraceOut( "streamDataFromJoiningTreeToMasterTree(int)");
+}}
+"""
 
 
   TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Prologue = """
@@ -1072,6 +1109,30 @@ void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives() {{
       self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
       output_file.write( self.TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Exchange.format(**self.d) )
     output_file.write( self.TemplateExchangeRoutines_exchangeAllPeriodicBoundaryDataStacks_Epilogue.format(**self.d) )
+
+    output_file.write( self.TemplateExchangeRoutines_streamDataFromSplittingTreeToNewTree_Prologue.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "DATASET" ] = "DataRepository::_" + cell.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_streamDataFromSplittingTreeToNewTree_Exchange.format(**self.d) )
+    for face in self.faces:
+      self.d[ "DATASET" ] = "DataRepository::_" + face.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_streamDataFromSplittingTreeToNewTree_Exchange.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_streamDataFromSplittingTreeToNewTree_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_streamDataFromSplittingTreeToNewTree_Epilogue.format(**self.d) )
+
+    output_file.write( self.TemplateExchangeRoutines_streamDataFromJoiningTreeToMasterTree_Prologue.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "DATASET" ] = "DataRepository::_" + cell.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_streamDataFromJoiningTreeToMasterTree_Exchange.format(**self.d) )
+    for face in self.faces:
+      self.d[ "DATASET" ] = "DataRepository::_" + face.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_streamDataFromJoiningTreeToMasterTree_Exchange.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_streamDataFromJoiningTreeToMasterTree.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_streamDataFromJoiningTreeToMasterTree_Epilogue.format(**self.d) )
 
     output_file.write( self.TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Prologue.format(**self.d) )
     for cell in self.cells:
