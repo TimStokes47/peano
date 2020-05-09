@@ -210,6 +210,21 @@ library accept additional search paths), or you can again use the
 
 
 
+\section{Fortran}
+
+\begin{remark} 
+ If you don't use Fortran in your own code, ignore this section.
+\end{remark}
+
+\Peano's core does not use any Fortran at all. 
+However, many users use Fortran for their domain-specific programming.
+If you want to have a seemless integration of your particular Fortran choice
+through \Peano's Python API, invoke \texttt{./configure} ensuring that the
+Fortran variables---in particular the environment variable \texttt{F77}
+identifying the compiler---are properly set.
+
+
+
 \section{\Peano\ components and build variants}
 \label{chapter:installation:build-variants}
 
