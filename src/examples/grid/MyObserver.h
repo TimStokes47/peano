@@ -62,6 +62,10 @@ class examples::grid::MyObserver: public
     void exchangeAllVerticalDataExchangeStacks( int masterId ) override;
     void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) override;
     void exchangeAllPeriodicBoundaryDataStacks() override;
+
+    void streamDataFromSplittingTreeToNewTree( int newWorker ) override;
+    void streamDataFromJoiningTreeToMasterTree( int masterId ) override;
+
     void finishAllOutstandingSendsAndReceives() override;
 };
 

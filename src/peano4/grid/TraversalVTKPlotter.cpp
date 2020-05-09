@@ -267,5 +267,13 @@ void peano4::grid::TraversalVTKPlotter::exchangeAllPeriodicBoundaryDataStacks() 
 }
 
 
+void peano4::grid::TraversalVTKPlotter::streamDataFromSplittingTreeToNewTree( int newWorker ) {
+}
+
+
+void peano4::grid::TraversalVTKPlotter::streamDataFromJoiningTreeToMasterTree( int masterId ) {
+}
+
+
 void peano4::grid::TraversalVTKPlotter::finishAllOutstandingSendsAndReceives() {
 }

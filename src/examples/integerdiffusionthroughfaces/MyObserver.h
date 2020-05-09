@@ -87,6 +87,10 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
     void exchangeAllVerticalDataExchangeStacks( int masterId ) override;
     void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) override;
     void exchangeAllPeriodicBoundaryDataStacks() override;
+
+    void streamDataFromSplittingTreeToNewTree( int newWorker ) override;
+    void streamDataFromJoiningTreeToMasterTree( int masterId ) override;
+
     void finishAllOutstandingSendsAndReceives() override;
 };
 

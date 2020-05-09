@@ -114,6 +114,13 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     template <class Container>
     static void finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId );
 
+
+    template <class Container>
+    static void streamDataFromSplittingTreeToNewTree( Container& stackContainer, int master, int worker );
+
+    template <class Container>
+    static void streamDataFromJoiningTreeToMasterTree( Container& stackContainer, int master, int worker );
+
   private:
     /**
      * Logging device.
@@ -199,7 +206,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * epilogue automatically. Therefore, by the time we hit this routine, we have to
      * copy over the input stack.
      */
-    void copyDataFromSplittingTreesToNewTrees();
+    void streamDataFromSplittingTreesToNewTrees(peano4::grid::TraversalObserver&  observer);
 
     /**
      * This operation should be called pretty close towards the end of a traversal.

@@ -138,6 +138,10 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
   virtual void exchangeAllVerticalDataExchangeStacks( int masterId ) = 0;
   virtual void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) = 0;
   virtual void exchangeAllPeriodicBoundaryDataStacks() = 0;
+
+  virtual void streamDataFromSplittingTreeToNewTree( int newWorker ) = 0;
+  virtual void streamDataFromJoiningTreeToMasterTree( int masterId ) = 0;
+
   virtual void finishAllOutstandingSendsAndReceives() = 0;
 };
 

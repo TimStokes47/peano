@@ -70,6 +70,10 @@ class examples::regulargridupscaling::MyObserver: public peano4::grid::Traversal
     void exchangeAllVerticalDataExchangeStacks( int masterId ) override;
     void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) override;
     void exchangeAllPeriodicBoundaryDataStacks() override;
+
+    void streamDataFromSplittingTreeToNewTree( int newWorker ) override;
+    void streamDataFromJoiningTreeToMasterTree( int masterId ) override;
+
     void finishAllOutstandingSendsAndReceives() override;
 };
 

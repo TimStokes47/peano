@@ -52,6 +52,10 @@ class peano4::grid::EmptyTraversalObserver: public peano4::grid::TraversalObserv
     void exchangeAllVerticalDataExchangeStacks( int masterId ) override;
     void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) override;
     void exchangeAllPeriodicBoundaryDataStacks() override;
+
+    void streamDataFromSplittingTreeToNewTree( int newWorker ) override;
+    void streamDataFromJoiningTreeToMasterTree( int masterId ) override;
+
     void finishAllOutstandingSendsAndReceives() override;
 };
 

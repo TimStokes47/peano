@@ -293,58 +293,25 @@ void peano4::parallel::SpacetreeSet::exchangeVerticalDataBetweenTrees(peano4::gr
 }
 
 
-void peano4::parallel::SpacetreeSet::copyDataFromSplittingTreesToNewTrees() {
+void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreesToNewTrees(peano4::grid::TraversalObserver&  observer) {
   logTraceIn( "copyDataFromSplittingTreesToNewTrees()" );
+
   for (auto& parent: _spacetrees) {
     for (auto& worker: parent._hasSplit) {
-      const int sourceRank = Node::getInstance().getRank( parent._id );
-      assertion( Node::getInstance().getRank( worker ) == tarch::mpi::Rank::getInstance().getRank() );
+      streamDataFromSplittingTreeToNewTree( peano4::grid::Spacetree::_vertexStack, parent._id, worker);
 
-      int  destinationStack = peano4::grid::PeanoCurve::getOutputStackNumber( getInstance().getSpacetree(worker)._root );
+      createObserverCloneIfRequired(observer,parent._id);
 
-      if ( sourceRank==tarch::mpi::Rank::getInstance().getRank() ) {
-        const int sourceStack      = peano4::grid::PeanoCurve::getInputStackNumber( getInstance().getSpacetree(parent._id)._root );
-        logDebug(
-          "copyDataFromSplittingTreesToNewTrees()",
-          "copy stack " << sourceStack << " from tree " << parent._id << " into stack " << destinationStack << " from tree " << worker
-        );
-        peano4::grid::Spacetree::_vertexStack.getForPush(worker,destinationStack)->clone( *peano4::grid::Spacetree::_vertexStack.getForPush(parent._id,sourceStack) );
-
-        logDebug(
-          "copyDataFromSplittingTreesToNewTrees()",
-          "size of stack " << destinationStack << " on tree " << parent._id << ": " << peano4::grid::Spacetree::_vertexStack.getForPush(parent._id,destinationStack)->size()
-        );
-      }
-      else {
-        #ifdef Parallel
-            const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(
-              parentId,
-              spacetreeId,
-              peano4::parallel::Node::ExchangeMode::ForkJoinData
-            );
-            logInfo(
-              "copyDataFromSplittingTreesToNewTrees()",
-              "receive stack " << destinationStack << " from tree " << parentId << " on rank " << sourceRank << " through tag " << tag
-            );
-            tarch::mpi::IntegerMessage message;
-            tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages( message, sourceRank, tag );
-            logInfo(
-              "copyDataFromSplittingTreesToNewTrees()",
-              "receive " << message.getValue() << " entries"
-            );
-            if (message.getValue()>0) {
-              stackContainer.getForPush(spacetreeId,destinationStack)->startReceive(
-                sourceRank, tag, message.getValue()
-              );
-              stackContainer.getForPush(spacetreeId,destinationStack)->finishSendOrReceive();
-              stackContainer.getForPush(spacetreeId,destinationStack)->reverse();
-            }
-        #else
-        assertionMsg( false, "should never be entered" );
-        #endif
-      }
+      _clonedObserver[parent._id]->streamDataFromSplittingTreeToNewTree( worker );
     }
   }
+
+  for (auto& p: _spacetrees) {
+    createObserverCloneIfRequired(observer,p._id);
+    finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
+    _clonedObserver[p._id]->finishAllOutstandingSendsAndReceives();
+  }
+
   logTraceOut( "copyDataFromSplittingTreesToNewTrees()" );
 }
 
@@ -458,7 +425,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
       multitasking,true);
   }
 
-  copyDataFromSplittingTreesToNewTrees();
+  streamDataFromSplittingTreesToNewTrees(observer);
   exchangeVerticalDataBetweenTrees(observer);
 
   logDebug( "traverse(TraversalObserver&)", "kick off secondary tree sweeps: " << secondaryTasks.size() << " task(s)" );

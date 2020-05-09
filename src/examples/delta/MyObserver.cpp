@@ -373,4 +373,6 @@ void examples::delta::MyObserver::exchangeAllVerticalDataExchangeStacks( int mas
 void examples::delta::MyObserver::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {}
 void examples::delta::MyObserver::exchangeAllPeriodicBoundaryDataStacks() {}
 void examples::delta::MyObserver::finishAllOutstandingSendsAndReceives() {}
+void examples::delta::MyObserver::streamDataFromSplittingTreeToNewTree( int newWorker ) {}
+void examples::delta::MyObserver::streamDataFromJoiningTreeToMasterTree( int masterId ) {}
 

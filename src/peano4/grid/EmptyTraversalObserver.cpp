@@ -61,5 +61,13 @@ void peano4::grid::EmptyTraversalObserver::exchangeAllPeriodicBoundaryDataStacks
 }
 
 
+void peano4::grid::EmptyTraversalObserver::streamDataFromSplittingTreeToNewTree( int newWorker ) {
+}
+
+
+void peano4::grid::EmptyTraversalObserver::streamDataFromJoiningTreeToMasterTree( int masterId ) {
+}
+
+
 void peano4::grid::EmptyTraversalObserver::finishAllOutstandingSendsAndReceives() {
 }

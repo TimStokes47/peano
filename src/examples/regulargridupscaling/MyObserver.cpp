@@ -126,4 +126,6 @@ void examples::regulargridupscaling::MyObserver::exchangeAllVerticalDataExchange
 void examples::regulargridupscaling::MyObserver::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {}
 void examples::regulargridupscaling::MyObserver::exchangeAllPeriodicBoundaryDataStacks() {}
 void examples::regulargridupscaling::MyObserver::finishAllOutstandingSendsAndReceives() {}
+void examples::regulargridupscaling::MyObserver::streamDataFromSplittingTreeToNewTree( int newWorker ) {}
+void examples::regulargridupscaling::MyObserver::streamDataFromJoiningTreeToMasterTree( int masterId ) {}
 

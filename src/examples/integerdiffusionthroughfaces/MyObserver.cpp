@@ -337,3 +337,5 @@ void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllVerticalData
 void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {}
 void examples::integerdiffusionthroughfaces::MyObserver::exchangeAllPeriodicBoundaryDataStacks() {}
 void examples::integerdiffusionthroughfaces::MyObserver::finishAllOutstandingSendsAndReceives() {}
+void examples::integerdiffusionthroughfaces::MyObserver::streamDataFromSplittingTreeToNewTree( int newWorker ) {}
+void examples::integerdiffusionthroughfaces::MyObserver::streamDataFromJoiningTreeToMasterTree( int masterId ) {}
