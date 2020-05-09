@@ -179,12 +179,12 @@ bool peano4::parallel::Node::isStorageStackNumber(int number) {
 }
 
 
-int peano4::parallel::Node::getOutputStackNumberOfHorizontalDataExchange(int id) {
+int peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner;
 }
 
 
-int peano4::parallel::Node::getInputStackNumberOfHorizontalDataExchange(int id) {
+int peano4::parallel::Node::getInputStackNumberForHorizontalDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 1;
 }
 

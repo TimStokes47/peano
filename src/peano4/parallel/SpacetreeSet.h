@@ -45,8 +45,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
         peano4::grid::Spacetree&          _spacetree;
         SpacetreeSet&                     _spacetreeSet;
         peano4::grid::TraversalObserver&  _observer;
+        const bool                        _invertTreeTraversalDirectionBeforeWeStart;
       public:
-        TraverseTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
+        TraverseTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer, bool invertTreeTraversalDirectionBeforeWeStart );
 
   	    /**
          * I create the copy of the observer, run the traversal on my local
@@ -81,8 +82,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     template <class Container>
     static void exchangeAllPeriodicBoundaryDataStacks( Container& stackContainer, int spacetreeId );
 
-    static std::string toString(VerticalDataExchangeMode mode);
-
     /**
      * <h2> Prepare new children after fork </h2>
      *
@@ -99,8 +98,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     template <class Container>
     static void exchangeAllVerticalDataExchangeStacks(
       Container& stackContainer,
-      int spacetreeId, int parentId,
-      VerticalDataExchangeMode mode
+      int spacetreeId, int parentId
     );
 
     /**
@@ -114,6 +112,13 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     template <class Container>
     static void finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId );
+
+
+    template <class Container>
+    static void streamDataFromSplittingTreeToNewTree( Container& stackContainer, int master, int worker );
+
+    template <class Container>
+    static void streamDataFromJoiningTreeToMasterTree( Container& stackContainer, int master, int worker );
 
   private:
     /**
@@ -165,18 +170,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     int getAnswerTag( int targetSpacetreeId ) const;
 
     /**
-     *
-     * @see split()
-     * @see exchangeDataBetweenExistingAndNewTreesAndRerunClones()
-     */
-    void traverseNonMergingExistingTrees(peano4::grid::TraversalObserver& observer);
-
-    /**
-     * <h2> Forks </h2>
-     *
-     * If we are forking, we first have to establish the new (forked) trees
-     * before we issue any data transfer.
-     *
      * <h2> Multithreading </h2>
      *
      * I originally intended to make this routine use tasks. However, the data
@@ -190,7 +183,29 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * local data exchange. The second one waits for all MPI operations to
      * terminate.
      */
-    void exchangeDataBetweenTrees(peano4::grid::TraversalObserver&  observer);
+    void exchangeHorizontalDataBetweenTrees(peano4::grid::TraversalObserver&  observer);
+    void exchangeVerticalDataBetweenTrees(peano4::grid::TraversalObserver&  observer);
+
+    /**
+     * When we split a tree, we realise this split in two grid sweeps where the second
+     * sweep breaks up the traversal into three logical substeps. In the first sweep, the
+     * splitting master tells everybody around that it will split. No split is done though.
+     * In the second sweep, the master still takes all data that's meant to be for the new
+     * worker, and it sends out boundary data where it shares a boundary with the worker.
+     *
+     * After that, it copies its whole tree data over to the new worker. This is what
+     * this routine is for. Copying means that it is there in the right order, but it
+     * also means that the new worker hasn't had time to send out its boundary data in
+     * return for the stuff it will receive in the next iteration. Therefore, the new
+     * worker will do two additional grid traversal after this copying has terminated.
+     *
+     * The copying of the whole tree data is literally a copying of the output stack of
+     * the master. It happens after the master has finished its joining traversal.
+     * peano4::grid::Spacetree::traverse() does invert the traversal direction in an
+     * epilogue automatically. Therefore, by the time we hit this routine, we have to
+     * copy over the input stack.
+     */
+    void streamDataFromSplittingTreesToNewTrees(peano4::grid::TraversalObserver&  observer);
 
     /**
      * This operation should be called pretty close towards the end of a traversal.
@@ -201,7 +216,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * from our side.
      *
      * @see exchangeDataBetweenTrees() for details.
-     * @see split() For a description of the overall split process.
      */
     void createNewTrees();
 
@@ -209,25 +223,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * @see _clonedObserver
      */
     void deleteClonedObservers();
-
-    /**
-     * @see traverse()
-     */
-    void exchangeDataBetweenExistingAndNewTreesAndRerunNewTrees(peano4::grid::TraversalObserver& observer);
-
-    /**
-     * Counterpart to exchangeDataBetweenExistingAndNewTreesAndRerunClones(), i.e.
-     * counterpart to the dry run. We assume the merging worker has already
-     * traversed its grid. Therefore, all data which has to be streamed is
-     * already in the respective queues. We thus can copy them over and
-     * issue the traversal of the master tree.
-     *
-     * For there is a strong order (first the merging child, then the father), we
-     * explicitly traverse only non merging trees in the first step of a traversal.
-     *
-     * @see traverseNonMergingExistingTrees()
-     */
-    void exchangeDataBetweenMergingTreesAndTraverseMaster(const std::set<int>& trees, peano4::grid::TraversalObserver& observer);
 
     /**
      * Adds a new spacetree to the set. The responsibility goes over to the
@@ -254,17 +249,30 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     void addSpacetree( int masterId, int newTreeId );
 
-    bool canJoinWorkerWithMaster( int workerId );
-
     /**
-     * Join the tree into its master. You are not allowed to run this
-     * routine unless the tree with treeId holds mayJoinWithMaster().
+     * Whenever we join two partitions, we have to stream data from the worker
+     * to the master. In principle, I could omit this, as I realise a ``only
+     * degenerated trees may join'' policy. However, it can happen that a tree
+     * joins while other trees split or have split or join as well. While we
+     * run through the joining phase, these other ranks have sent their updated
+     * info to the worker that is about to join. The master that will hold the
+     * data in the future is not aware (yet) of any topology changes. Therefore,
+     * it is important that the worker still merges all incoming information
+     * into its local tree and then forwards it (streams it) to its master. The
+     * master in turn has to traverse later (in a secondary tree traversal) and
+     * take this updated topological information into account. This is a stream
+     * operation. Therefore, we not only have to exchange stacks, we also have
+     * to revert them to transform the stack into a stream.
      *
-     * @todo Hinschreiben, dass das im Gegenzug trivial ist, d.h. beim
-     * split duplizieren wir alles, aber hier joinen wir nur, wenn eh
-     * schon alles auf Grobgitter da ist. Also ist es trivial.
+     * All of this painful stuff is done for the vertex data only. For the user
+     * data, we can rely on our traditional vertical data exchange mechanisms.
+     *
+     * @see peano4::stacks::STDVectorStack::revert()
      */
-    void join(int treeId);
+    void streamLocalVertexInformationToMasterThroughVerticalStacks(
+      int spacetreeId, int parentId,
+      const std::set<int>& joiningIds
+    );
 
     /**
      * <h2> Merge process </h2>

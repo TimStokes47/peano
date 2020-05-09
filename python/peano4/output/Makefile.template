@@ -11,9 +11,10 @@ DIM = {DIM}
 
 SOURCES={SOURCES} 
 
+FORTRAN_SOURCES= Parameters.f90 C2P-MHD.f90 C2PRoutines.f90 PDE.f90 InitialData.f90
 
 OBJS=$(subst .cpp,.o,$(SOURCES))
-
+FORTRAN_OBJS=$(subst .f90,.o,$(FORTRAN_SOURCES))
 
 all: solver
 
@@ -22,8 +23,9 @@ all: solver
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
     
-solver: $(OBJS)
-	$(CXX) $(LDFLAGS) $(OBJS) $(LIBS) -o peano4 
+solver: $(OBJS) $(FORTRAN_OBJS)
+	gfortran -c -I. -fdefault-real-8 $(FORTRAN_SOURCES)
+	$(CXX) $(LDFLAGS) $(FORTRAN_OBJS) $(OBJS) $(LIBS) -lgfortran -o peano4 
 
     
 clean:

@@ -255,7 +255,7 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::TraversalVTKPlotter:
 }
 
 
-void peano4::grid::TraversalVTKPlotter::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {
+void peano4::grid::TraversalVTKPlotter::exchangeAllVerticalDataExchangeStacks( int masterId ) {
 }
 
 
@@ -264,6 +264,14 @@ void peano4::grid::TraversalVTKPlotter::exchangeAllHorizontalDataExchangeStacks(
 
 
 void peano4::grid::TraversalVTKPlotter::exchangeAllPeriodicBoundaryDataStacks() {
+}
+
+
+void peano4::grid::TraversalVTKPlotter::streamDataFromSplittingTreeToNewTree( int newWorker ) {
+}
+
+
+void peano4::grid::TraversalVTKPlotter::streamDataFromJoiningTreeToMasterTree( int masterId ) {
 }
 
 

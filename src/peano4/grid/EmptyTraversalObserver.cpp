@@ -49,7 +49,7 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::EmptyTraversalObserv
 }
 
 
-void peano4::grid::EmptyTraversalObserver::exchangeAllVerticalDataExchangeStacks(int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {
+void peano4::grid::EmptyTraversalObserver::exchangeAllVerticalDataExchangeStacks( int masterId ) {
 }
 
 
@@ -58,6 +58,14 @@ void peano4::grid::EmptyTraversalObserver::exchangeAllHorizontalDataExchangeStac
 
 
 void peano4::grid::EmptyTraversalObserver::exchangeAllPeriodicBoundaryDataStacks() {
+}
+
+
+void peano4::grid::EmptyTraversalObserver::streamDataFromSplittingTreeToNewTree( int newWorker ) {
+}
+
+
+void peano4::grid::EmptyTraversalObserver::streamDataFromJoiningTreeToMasterTree( int masterId ) {
 }
 
 

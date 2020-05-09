@@ -138,11 +138,14 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
      */
     std::vector< GridControlEvent > getGridControlEvents() override;
 
-    void exchangeAllVerticalDataExchangeStacks(int masterId, peano4::parallel::VerticalDataExchangeMode mode ) override;
+    void exchangeAllVerticalDataExchangeStacks(int masterId ) override;
     void exchangeAllHorizontalDataExchangeStacks(bool symmetricDataCardinality ) override;
     void exchangeAllPeriodicBoundaryDataStacks() override;
-    void finishAllOutstandingSendsAndReceives() override;
 
+    void streamDataFromSplittingTreeToNewTree( int newWorker ) override;
+    void streamDataFromJoiningTreeToMasterTree( int masterId ) override;
+
+    void finishAllOutstandingSendsAndReceives() override;
 };
 
 #endif

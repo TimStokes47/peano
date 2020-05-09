@@ -84,7 +84,7 @@ peano4::grid::TraversalObserver* examples::grid::MyObserver::clone(int spacetree
 std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGridControlEvents() {
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
 
-  if (_iterationCounter<8) {
+  if (_iterationCounter<GridRefinementIterations) {
     peano4::grid::GridControlEvent newEvent;
     newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
 #if Dimensions==2
@@ -99,7 +99,7 @@ std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGri
     controlEvents.push_back(newEvent);
   }
 
-  if (_iterationCounter>12) {
+  if (_iterationCounter>GridRefinementIterations + StationaryIterations) {
     peano4::grid::GridControlEvent newEvent;
 	newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Erase );
 #if Dimensions==2
@@ -118,7 +118,10 @@ std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGri
 }
 
 
-void examples::grid::MyObserver::exchangeAllVerticalDataExchangeStacks( int masterId, peano4::parallel::VerticalDataExchangeMode mode ) {}
+void examples::grid::MyObserver::exchangeAllVerticalDataExchangeStacks( int masterId ) {}
 void examples::grid::MyObserver::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {}
 void examples::grid::MyObserver::exchangeAllPeriodicBoundaryDataStacks() {}
 void examples::grid::MyObserver::finishAllOutstandingSendsAndReceives() {}
+void examples::grid::MyObserver::streamDataFromSplittingTreeToNewTree( int newWorker ) {}
+void examples::grid::MyObserver::streamDataFromJoiningTreeToMasterTree( int masterId ) {}
+
