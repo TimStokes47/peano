@@ -16,9 +16,12 @@ class Makefile(object):
   
   def __init__(self):
     self.cppfiles = []
+    self.fortranfiles = []
     self.d = {}
     self.d["CXX"]           = ""
     self.d["CXXFLAGS"]      = ""
+    self.d["F77"]           = ""
+    self.d["FCFLAGS"]       = ""
     self.d["LDFLAGS"]       = ""
     self.d["LIBS"]          = ""
     self.d["DIM"]           = "2"
@@ -105,12 +108,20 @@ class Makefile(object):
     for line in input:
       if re.match( "CXX *=", line) and line.startswith( "CXX" ):
         compiler = line.split("=")[-1].strip()
-        print( "used compiler is " + compiler )
+        print( "used C++ compiler is " + compiler )
         self.d["CXX"] = compiler
+      if re.match( "FC *=", line) and line.startswith( "FC" ):
+        compiler = line.split("=")[-1].strip()
+        print( "used Fortran compiler is " + compiler )
+        self.d["FC"] = compiler
       if re.search( "CXXFLAGS *=", line) and line.startswith( "CXXFLAGS" ):
         flags = line.split("=",1)[1].strip()
         self.d["CXXFLAGS"] += flags
         self.d["CXXFLAGS"] += " "
+      if re.search( "FCFLAGS *=", line) and line.startswith( "FCFLAGS" ):
+        flags = line.split("=",1)[1].strip()
+        self.d["FCFLAGS"] += flags
+        self.d["FCFLAGS"] += " "
       if re.search( "LDFLAGS *=", line) and line.startswith( "LDFLAGS" ):
         flags = line.split("=",1)[1].strip()
         self.d["LDFLAGS"] += flags
@@ -124,13 +135,36 @@ class Makefile(object):
  
   def add_cpp_file(self,filename):
     """
+    
      Add a new filename. This is basically a set implementation, i.e. you can
      add files multiple times, but they are not inserted multiple times. This 
      is important, as the steps add the cpp files. Multiple steps can hold the 
      same action, so this action would be created multiple times.
+     
+     All the standard Peano 4 routines rely on this function to add their 
+     generated files to the build environment. Nothing stops you however to 
+     add more files yourself.
+     
     """
     if self.cppfiles.count(filename)==0:
       self.cppfiles.append( filename )
+
+ 
+  def add_fortran_file(self,filename):
+    """
+    
+     Add a new filename. This is basically a set implementation, i.e. you can
+     add files multiple times, but they are not inserted multiple times. This 
+     is important, as the steps add the cpp files. Multiple steps can hold the 
+     same action, so this action would be created multiple times.
+     
+     All the standard Peano 4 routines rely on this function to add their 
+     generated files to the build environment. Nothing stops you however to 
+     add more files yourself.
+     
+    """
+    if self.fortranfiles.count(filename)==0:
+      self.fortranfiles.append( filename )
 
 
   def generate(self,overwrite,directory):
@@ -139,10 +173,15 @@ class Makefile(object):
       print( "write " + filename )
       
       # files
-      self.d[ 'SOURCES' ] = ""
+      self.d[ 'CXX_SOURCES' ] = ""
       for i in self.cppfiles:
-        self.d[ 'SOURCES' ] += " "
-        self.d[ 'SOURCES' ] += i
+        self.d[ 'CXX_SOURCES' ] += " "
+        self.d[ 'CXX_SOURCES' ] += i
+
+      self.d[ 'FORTRAN_SOURCES' ] = ""
+      for i in self.fortranfiles:
+        self.d[ 'FORTRAN_SOURCES' ] += " "
+        self.d[ 'FORTRAN_SOURCES' ] += i
      
       # We first eliminate the precompiled variant, and then we get rid of the
       # postfix in the case where it is a source file

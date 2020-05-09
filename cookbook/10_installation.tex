@@ -220,8 +220,14 @@ library accept additional search paths), or you can again use the
 However, many users use Fortran for their domain-specific programming.
 If you want to have a seemless integration of your particular Fortran choice
 through \Peano's Python API, invoke \texttt{./configure} ensuring that the
-Fortran variables---in particular the environment variable \texttt{F77}
+Fortran variables---in particular the environment variable \texttt{FC}
 identifying the compiler---are properly set.
+
+
+For many codes and the GNU Fortran compiler, please need the flag
+\texttt{-fdefault-real-8}.
+You can export \texttt{FCFLAGS} and make it contain this argument before you
+invoke \texttt{configure}.
 
 
 
