@@ -117,6 +117,19 @@ below:
  pass, I recommend that you first add IO (VTK) and then parallelisation.
 \end{remark}
 
+
+\noindent
+Compilers, linkers and both compiler and linker flags can be changed by
+resetting the corresponding environment variables \emph{prior} to the configure
+call.
+Alternatively, you can pass the variables to be used to \texttt{configure}
+through arguments. 
+Please consult the \texttt{--help} output for details.
+For some supercomputers that we use frequently, there are recommendations which
+setting to use (Chapter~\ref{chapter:selected-HPC-platforms}).
+
+
+
 \section{Build}
 
 Once the configuration has been successful, a simple 
