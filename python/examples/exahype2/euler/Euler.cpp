@@ -1,11 +1,11 @@
 #include "Euler.h"
 
 
-tarch::logging::Log   examples::exahype2::finitevolumes::Euler::_log( "examples::exahype2::finitevolumes::Euler" );
+tarch::logging::Log   examples::exahype2::Euler::Euler::_log( "examples::exahype2::Euler::Euler" );
 
 
 
-::exahype2::RefinementCommand examples::exahype2::finitevolumes::Euler::refinementCriterion(
+::exahype2::RefinementCommand examples::exahype2::Euler::Euler::refinementCriterion(
   double Q[5],
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
@@ -24,7 +24,7 @@ tarch::logging::Log   examples::exahype2::finitevolumes::Euler::_log( "examples:
 }
 
 
-void examples::exahype2::finitevolumes::Euler::adjustSolution(
+void examples::exahype2::Euler::Euler::adjustSolution(
   double Q[5],
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
@@ -48,7 +48,7 @@ void examples::exahype2::finitevolumes::Euler::adjustSolution(
 
 
 
-void examples::exahype2::finitevolumes::Euler::eigenvalues(
+void examples::exahype2::Euler::Euler::eigenvalues(
   double                                       Q[5],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
@@ -84,7 +84,7 @@ void examples::exahype2::finitevolumes::Euler::eigenvalues(
 }
 
 
-void examples::exahype2::finitevolumes::Euler::flux(
+void examples::exahype2::Euler::Euler::flux(
   double                                       Q[5],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
@@ -147,7 +147,7 @@ void examples::exahype2::finitevolumes::Euler::flux(
 }
 
 
-void examples::exahype2::finitevolumes::Euler::boundaryConditions(
+void examples::exahype2::Euler::Euler::boundaryConditions(
   double                                       Qinside[5],
   double                                       Qoutside[5],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
