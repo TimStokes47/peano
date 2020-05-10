@@ -37,7 +37,7 @@ for f in output_files:
 # Create a project and configure it to end up in a subnamespace (and thus
 # subdirectory). 
 #
-project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevolumes", "." )
+project = exahype2.Project( ["examples", "exahype2", "euler"], "finitevolumes", "." )
 
 
 #

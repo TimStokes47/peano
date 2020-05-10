@@ -50,7 +50,7 @@ project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("MHD", p
 
 
 dimensions = 2
-build_mode = peano4.output.CompileMode.Trace
+build_mode = peano4.output.CompileMode.Asserts
 
 #
 # Lets configure some global parameters
