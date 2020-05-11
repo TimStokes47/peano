@@ -8,6 +8,12 @@ class DoFAssociation(Enum):
   Vertex = 1
   Face   = 2
   Cell   = 3
+  #
+  # I use generic for standard MPI messages or DaStGen messages which are used
+  # within the grid mangement and traversal, i.e. have nothing to do with particular
+  # grid entities
+  #
+  Generic = 4
   
   
   

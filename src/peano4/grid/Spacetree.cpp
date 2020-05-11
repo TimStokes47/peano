@@ -1719,6 +1719,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
 }
 
 
+// @todo Das ist der interessante Fall
 void peano4::grid::Spacetree::createNeighbourExchangeLists(
   GridVertex           fineGridVertices[TwoPowerD],
   GridTraversalEvent&  event,
@@ -1726,6 +1727,7 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
 ) const {
   logTraceInWith3Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell, _id );
 
+/*
   // @todo Docu: Don't care about replica, as removeDuplicateEntriesFromAdjancyListInEvent() removed redundancies anyway
   // @todo Docu: Ich bin mir hier ueberhaupt net sicher. Faces stimmen jedoch. Event sollte die isLocal info schon haben
   //             an dieser Stelle
@@ -1822,16 +1824,19 @@ void peano4::grid::Spacetree::createNeighbourExchangeLists(
 
   // @todo ob das so stimmt bezweifel ich auch startk
   event.setExchangeCellData(getTreeOwningSpacetreeNode(fineGridVertices));
+*/
 
   logTraceOutWith2Arguments( "createNeighbourExchangeLists(...)", event.toString(), isEnterCell );
 }
 
 
+// @todo temporaer entfernt
 void peano4::grid::Spacetree::removeDuplicateEntriesFromAdjancyListInEvent(
   GridTraversalEvent&  event
 ) const {
   logTraceInWith1Argument( "removeDuplicateEntriesFromAdjancyListInEvent(GridTraversalEvent)", event.toString() );
 
+/*
   for (int i=0;   i<TwoPowerD; i++)
   for (int j=0;   j<TwoPowerD-1; j++)
   for (int k=j+1; k<TwoPowerD-1; k++) {
@@ -1839,6 +1844,7 @@ void peano4::grid::Spacetree::removeDuplicateEntriesFromAdjancyListInEvent(
       event.setExchangeVertexData( k + i*(TwoPowerD-1), peano4::grid::TraversalObserver::NoData );
     }
   }
+*/
 
   logTraceOutWith1Argument( "removeDuplicateEntriesFromAdjancyListInEvent(GridTraversalEvent)", event.toString() );
 }

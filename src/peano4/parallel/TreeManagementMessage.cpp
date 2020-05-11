@@ -118,7 +118,6 @@ void peano4::parallel::TreeManagementMessage::receiveAndPollDanglingMessages(pea
   );
 }
 #endif
-
     
 #ifdef Parallel
 

@@ -213,7 +213,6 @@ void peano4::grid::GridVertex::receiveAndPollDanglingMessages(peano4::grid::Grid
   );
 }
 #endif
-
     
 #ifdef Parallel
 

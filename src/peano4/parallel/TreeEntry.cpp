@@ -105,7 +105,6 @@ void peano4::parallel::TreeEntry::receiveAndPollDanglingMessages(peano4::paralle
   );
 }
 #endif
-
     
 #ifdef Parallel
 
