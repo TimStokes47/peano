@@ -28,7 +28,7 @@ all: solver
 
     
 solver: $(CXX_OBJS) $(FORTRAN_OBJS)
-	$(CXX) $(LDFLAGS) $(FORTRAN_OBJS) $(CXX_OBJS) $(LIBS) -lgfortran -o peano4 
+	$(CXX) $(LDFLAGS) $(FORTRAN_OBJS) $(CXX_OBJS) $(LIBS) -o peano4 
 
     
 clean:
