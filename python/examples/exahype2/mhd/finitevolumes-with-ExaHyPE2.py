@@ -45,7 +45,7 @@ project = exahype2.Project( ["examples", "exahype2", "finitevolumes"], "finitevo
 #
 patch_size     = 23
 unknowns       = 9
-time_step_size = 0.001
+time_step_size = 0.01
 project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("MHD", patch_size, unknowns, 0.001) )
 
 
@@ -58,7 +58,7 @@ build_mode = peano4.output.CompileMode.Asserts
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    1.0,          # end time
+    0.1,          # end time
     0.0, 0.1     # snapshots
   )
 else:

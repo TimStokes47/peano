@@ -2,14 +2,16 @@
 ! Should be merged with SRHD's.
 
 SUBROUTINE PDEPrim2Cons(Q,V)
-  USE Parameters, ONLY: gamma, nVar, nDim 
+
+  USE Parameters, ONLY: gamma, nVar, nDim
+  USE, INTRINSIC :: ISO_C_BINDING
   IMPLICIT NONE
   ! Argument list declaration
-  REAL :: Q(nVar), V(nVar)
+  REAL(kind=c_double) :: Q(nVar), V(nVar)
   INTENT(IN)  :: V
   INTENT(OUT) :: Q 
   ! Local variable declaration
-  REAL :: Prim(nVar), Buf(nVar)
+  REAL(kind=c_double) :: Prim(nVar), Buf(nVar)
   REAL :: rho,vx,vy,vz,p,bx,by,bz,ex,ey,ez,cs,c0
   REAL :: v2,b2,e2,lf,w,ww,uem,gamma1
   REAL :: lapse, gp, gm, dcs, dc0, eel 
@@ -63,6 +65,7 @@ END SUBROUTINE PDEPrim2Cons
 
 
 SUBROUTINE PDECons2Prim(V,Q,iErr)
+
   USE Parameters, ONLY: gamma, nVar, nDim
   IMPLICIT NONE
   !--------------------------------------------!

@@ -32,10 +32,13 @@ void examples::exahype2::finitevolumes::MHD::adjustSolution(
   logTraceInWith3Arguments( "adjustSolution(...)", x, h, t );
   if (tarch::la::equals(t,0.0) ) {
     // initial conditions
-    double xd[2] = {x[0], x[1]};
-    alfenwave_(xd, &Q[0], t);
+    double xd[Dimensions];
+    for (int d=0; d< Dimensions; d++) xd[d] = 0.0;//x[d];
+    alfenwave_(&xd[0], &Q[0], &t);
     for(int i=0; i<9; i++){
+        if(!std::isfinite(Q[i])) std::cout << "xd " << xd[0] << " " << xd[1] << std::endl;
         assert(std::isfinite(Q[i]));
+        assert(!std::isnan(Q[i]));
     }
   }
   logTraceOut( "adjustSolution(...)" );
