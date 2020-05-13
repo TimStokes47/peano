@@ -513,9 +513,9 @@ class peano4::grid::Spacetree {
      * This operation has multiple purposes
      *
      * - Merge with neighbour vertices. See
-     *   receiveAndMergeAtHorizontalBoundary().
+     *   receiveAndMergeGridVertexAtHorizontalBoundary().
      * - Roll over the flags. These guys now are merged already. See
-     *   receiveAndMergeAtHorizontalBoundary().
+     *   receiveAndMergeGridVertexAtHorizontalBoundary().
      * - Do the refinement flag (state) update.
      * - Erase non-local vertices if they do not carry a veto flag.
      *
@@ -573,11 +573,13 @@ class peano4::grid::Spacetree {
      * this sweep and then will be remote locally. Therefore, I add a second
      * level of isLocal analysis to the loops.
      */
-    void createNeighbourExchangeLists(
+/*
+    void triggerNeighbourExchange(
       GridVertex           fineGridVertices[TwoPowerD],
       GridTraversalEvent&  event,
       bool                 isEnterCell
     ) const;
+*/
 
     GridTraversalEvent createGenericCellTraversalEvent(
       GridVertex              coarseGridVertices[TwoPowerD],
@@ -588,9 +590,6 @@ class peano4::grid::Spacetree {
 
     /**
      * Create description of an enter cell traversal.
-     *
-     * We create new entries if we are in a split situation.
-     *
      */
     GridTraversalEvent createEnterCellTraversalEvent(
       GridVertex              coarseGridVertices[TwoPowerD],
@@ -608,6 +607,23 @@ class peano4::grid::Spacetree {
       const AutomatonState&   state,
       const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
     ) const;
+
+    /**
+     *
+     *
+     * <h2> Implementation </h2>
+     *
+     * Run through the vertices in the Peano vertex order (modified z depending on
+     * curve orientation). This information is already implicitly encoded in the order
+     * of the indices within the event. So no fancy arithmetics is required here
+     * anymore.
+     */
+    void receiveAndMergeUserDataAtHorizontalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
+    void receiveAndMergeUserDataAtVerticalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
+
+    void sendUserDataAtHorizontalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
+    void sendUserDataAtVerticalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
+
 
     /**
      * @see splitOrJoinCell() For both the usage and a description how we
@@ -820,9 +836,9 @@ class peano4::grid::Spacetree {
      */
     GridVertex createNewPersistentVertex(
       GridVertex                                   fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
-	  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
+      const tarch::la::Vector<Dimensions,double>&  x,
+      int                                          level,
+      const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
     ) const;
 
     /**
@@ -866,17 +882,27 @@ class peano4::grid::Spacetree {
     void split(int treeId, int fineGridCells);
 
     /**
-     * Get the ids of the surrounding cells.
+     * Get the ids of the surrounding cells of a vertex.
      *
-     * This operation studies the vertex only, i.e. it is your responsibility
-     * to take the tree state (new, running, joining, ...) into account: The
-     * operation is called on the receiver side if and only if the spacetree is
-     * not new. On the sender side, the routine is used to analyse outflowing data if and
-     * only if the state is not joining.
+     * This operation studies the vertex only. Please check manually whether
+     * your code is in the states SpacetreeState::NewFromSplit or
+     * SpacetreeState::EmptyRun. Joining is not taken into account
+     * either. So as a summary: I do analyse the vertex data and I do
+     * take into account whether subranks are currently joining or
+     * triggered to split. But I do ignore the current spacetree's
+     * state.
      *
      * The operation returns the empty set if a vertex is not local.
+     * It also returns the empty set if a vertex is hanging.
      */
-    std::set<int>  getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess, bool useAdjacencyListBackups ) const;
+    std::set<int>  getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess ) const;
+
+    /**
+     * Get the ids of the surround Ids of a face.
+     *
+     * @return -1 if there's no neighbour or face is not local.
+     */
+    int  getAdjacentDomainIds( GridVertex vertex[TwoPowerD], int faceNumber, bool calledByReceivingProcess ) const;
 
     /**
      * This one is to be invoked if and only if a vertex goes to the in/out
@@ -892,7 +918,7 @@ class peano4::grid::Spacetree {
      * As this routine is called from within updateVertexBeforeStore(), we
      * may assume that this is not an empty tree run.
      */
-    void sendAtHorizontalBoundary( const GridVertex& vertex );
+    void sendGridVertexAtHorizontalBoundary( const GridVertex& vertex );
 
     /**
      * Stream out the vertex to the master or the worker if the vertex is
@@ -911,24 +937,33 @@ class peano4::grid::Spacetree {
      * operation before you trigger the horizontal data exchange. Otherwise
      * neighbours might think that this tree will split.
      */
-    void sendAtVerticalBoundary( GridVertex& vertex );
+    void sendGridVertexAtVerticalBoundary( GridVertex& vertex );
 
 
     /**
      * Manage the data exchange after a vertex is loaded for the first time
      *
      * The operation has three jobs to do:
-     * - If this is the first sweep on a new tree, i.e. if we are in the
-     *   splitting phase, we have to receive data from the tree that is
-     *   splitting and merge them into the local data as it is forwarded.
+     * - We backup the adjacency ranks.
      * - Exchange vertices along domain boundary.
-     * - Send/stream data to another rank which is just splitting (see item
-     *   one).
+     * - Exchange vertices belonging to periodic boundaries.
      *
-     * The order of these three steps is important.
+     * The order of these three steps is important. The first one is a simple
+     * copy. The other ones loop over neighbours and call a series of operations.
+     * Logically, domain boundaries and periodic boundaries for me are both
+     * realised by domain cuts. Therefore, we use the same routines within.
      *
+     * <h2> Backup of adjacency data </h2>
      *
-     * <h2> Boundary data exchange </h2>
+     * It is convenient to merge the adjacency flags straightaway after a vertex
+     * has been loaded and its boundary counterparts have dropped in. However, once
+     * we merge we loose the information about the previous traversal's adjacency.
+     * This means, when we construct the neighbour information (who merges with
+     * what) for the user data (createEnterCellTraversalEvent()) we lack the
+     * information we actually need. Therefore, this routine backups the
+     * adjacency information from the vertex.
+     *
+     * <h2> Boundary data exchange (grid) </h2>
      *
      * For a local vertex, i.e. one adjacent to the current active tree, which
      * is neighbouring another tree, we do receive this tree's data copy and
@@ -961,24 +996,25 @@ class peano4::grid::Spacetree {
      *
      * Periodic boundary conditions fall back to standard boundary data
      * exchanges through specialised stacks. They are supported on tree 0 only.
-     *
-     * <h2> Backup for user codes </h2>
-     *
-     * It is convenient to merge the adjacency flags straightaway after a vertex
-     * has been loaded and its boundary counterparts have dropped in. However, once
-     * we merge we loose the information about the previous traversal's adjacency.
-     * This means, when we construct the neighbour information (who merges with
-     * what) for the user data (createEnterCellTraversalEvent()) we lack the
-     * information we actually need. Therefore, this routine backups the
-     * adjacency information from the vertex.
+     * Different to standard boundaries, we don't have to update any adjacency data
+     * here, as all periodic values are always handled on spacetree 0.
      *
      * <h2> Horizontal vs. vertical </h2>
      *
-     * Has to happen before receiveAndMergeAtVerticalBoundary(). See the
-     * receiveAndMergeAtVerticalBoundary()'s documentation for an explanation.
+     * Has to happen before receiveAndMergeGridVertexAtVerticalBoundary(). See the
+     * receiveAndMergeGridVertexAtVerticalBoundary()'s documentation for an explanation.
      * Some more reasons are given in the guidebook.
+     *
+     * <h2> Context </h2>
+     *
+     * The routine is called by updateVertexAfterLoad(). The counterpart of the
+     * routine is sendGridVertexAtHorizontalBoundary(). However, as my sends are literally
+     * just memcopies, sends are way simpler than this routine. The operation
+     * affects solely the grid's vertices. It does not interfere with any user
+     * data. In principle, this follows my pattern that the grid has to be there
+     * first and then events are triggered afterwards.
      */
-    void receiveAndMergeAtHorizontalBoundary( GridVertex& vertex );
+    void receiveAndMergeGridVertexAtHorizontalBoundary( GridVertex& vertex );
 
     /**
      * This is a merge routine for vertical data exchange. It is important
@@ -993,18 +1029,22 @@ class peano4::grid::Spacetree {
      * load.
      *
      * It therefore is important that you invoke this operation afer
-     * receiveAndMergeAtVerticalBoundary() and that this routine overwrites the
+     * receiveAndMergeGridVertexAtVerticalBoundary() and that this routine overwrites the
      * adjacentRanks yet not the backup of this field. This way, we are consistent
      * with any horizontal merges on the worker.
      *
-     * @see receiveAndMergeAtHorizontalBoundary()
+     * @see receiveAndMergeGridVertexAtHorizontalBoundary()
      */
-    void receiveAndMergeAtVerticalBoundary( GridVertex& vertex );
+    void receiveAndMergeGridVertexAtVerticalBoundary( GridVertex& vertex );
 
     /**
-     * Called by receiveAndMergeAtHorizontalBoundary().
+     * Called by receiveAndMergeGridVertexAtHorizontalBoundary(). Besides tons of assertions,
+     * the routine realises the mergers of the refinement flags and the
+     * setIsAntecessorOfRefinedVertexInCurrentTreeSweep. Please consult
+     * receiveAndMergeGridVertexAtHorizontalBoundary() for a higher level overview.
      */
-    void mergeAtDomainBoundary( GridVertex& vertex, const GridVertex& inVertex, int neighbour );
+    void mergeGridVertexRefinementStateAtHorizontalDomainBoundary( GridVertex& vertex, const GridVertex& inVertex, int neighbour );
+    void mergeGridVertexAdjacencyListsAtHorizontalDomainBoundary( GridVertex& vertex, const GridVertex& inVertex, int neighbour );
 
     /**
      * Only used by SpacetreeSet to create children of the original tree.
@@ -1045,10 +1085,7 @@ class peano4::grid::Spacetree {
 
     /**
      * We allow at most one join at a time and not while we split
-     *
-     * @todo remove
      */
-    // @todo Wird das genutzt?
     bool mayJoinWithWorker() const;
 
     bool maySplit() const;
