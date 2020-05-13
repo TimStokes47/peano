@@ -73,9 +73,17 @@ class {FULL_QUALIFIED_CLASSNAME}: public peano4::grid::TraversalObserver {{
     void exchangeAllVerticalDataExchangeStacks( int masterId ) override;
     void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) override;
     void exchangeAllPeriodicBoundaryDataStacks() override;
+    
     void streamDataFromSplittingTreeToNewTree( int newWorker ) override;
     void streamDataFromJoiningTreeToMasterTree( int masterId ) override;
+    
     void finishAllOutstandingSendsAndReceives() override;
+    
+    void sendVertexHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) override;
+    void sendFaceHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) override;
+
+    void receiveAndMergeVertexHorizontally(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) override;
+    void receiveAndMergeFaceHorizontally(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) override;
 }};
 
 #endif
