@@ -5,7 +5,7 @@
 ! Using this multiline comment you can choose which implementation
 ! you want to use:
 SUBROUTINE RTSAFE_C2P_RMHD1(v2,X1,X2,XACC,gam,d,e,s2,b2,sb2,w,FAILED)
-  USE parameters, ONLY : nVar ! DebugFile,,DebugPrint
+USE parameters, ONLY : nVar ! DebugFile,,DebugPrint
   IMPLICIT NONE
   INTEGER, PARAMETER    :: MAXIT=400
   INTEGER               :: J,i
@@ -102,7 +102,7 @@ PURE SUBROUTINE FUNC_C2P_RMHD1(x,f,df,gam,d,e,s2,b2,sb2,w)
   ! This is the CONS2PRIM strategy adopted by Del Zanna et al. (2007) A&A, 473, 11-30
   ! and it corresponds to their choice 3 in Section 3.2
   !
-  IMPLICIT NONE
+IMPLICIT NONE
   REAL, PARAMETER :: third=1./3.
   INTEGER    :: iter
   REAL       :: x,f,df,v2,rho,c0,c2,c3,dw,dc2,dc3,dlogw,wb,vb2

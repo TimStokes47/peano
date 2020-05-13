@@ -1,7 +1,8 @@
 ! MHD Parameters: Riemann problem, Rotor problem, Blast wave
   
   MODULE Parameters 
-    IMPLICIT NONE  
+      IMPLICIT NONE  
+
     PUBLIC  
 
     ! This typesDef.f90 is a relict still from the old Fortran interface in Exahype.

@@ -6,10 +6,11 @@ SUBROUTINE InitialAlfenWave(x, Q)
     Use Parameters, ONLY : nDim, nVar
     IMPLICIT NONE 
     ! Argument list 
-    REAL, INTENT(IN)               :: x(nDim)        ! 
-    REAL, INTENT(OUT)              :: Q(nVar)        ! 
+    REAL(kind=c_double), INTENT(IN)               :: x(nDim)        ! 
+    REAL(kind=c_double), INTENT(OUT)              :: Q(nVar)        ! 
+    REAL(kind=c_double) :: t = 0.0
 
-    CALL AlfenWave(x, Q, 0.0)
+    CALL AlfenWave(x, Q, t)
 END SUBROUTINE InitialAlfenWave
 
 SUBROUTINE AlfenWave(x, Q, t)
@@ -21,14 +22,13 @@ SUBROUTINE AlfenWave(x, Q, t)
     USE Parameters, ONLY : nVar, nDim, gamma
     IMPLICIT NONE 
     ! Argument list 
-    REAL, INTENT(IN)               :: t
-    REAL, INTENT(IN)               :: x(nDim)        ! 
+    REAL(kind=c_double), INTENT(IN)               :: t
+    REAL(kind=c_double), INTENT(IN)               :: x(nDim)        ! 
     REAL(kind=c_double), INTENT(OUT)              :: Q(nVar)        ! 
 
     REAL :: rho0, p0, eta, B0, hh, tempaa, tempab, tempac, va2, vax
     REAL :: Qh(nVar), V(nVar), BV(3), VV(3), Pi = ACOS(-1.0)
 
-    Qh = 0.0
     rho0 = 1.
     p0   = 1.
     eta  = 1.
@@ -46,15 +46,18 @@ SUBROUTINE AlfenWave(x, Q, t)
     BV(3) = eta * B0 * SIN(2*Pi*( x(1) - vax*t))
     !
     VV(1)   = 0.0
+    !print *, "vax ", vax
+    !print *, "BV 02", BV(2)
+    !print *, "BV 03", BV(3)
+
     VV(2:3) = - vax * BV(2:3) / B0
     !
     ! Now convert to conservative variables
     !
     V = (/ rho0, VV(1:3), p0, BV(1:3), 0.0 /)
-    CALL PDEPrim2Cons(Qh,V)
-    Q = Qh
-    !print *, "Q", Q
-    !print *, "Qh", Qh
+    !print *, "V ", V
+    CALL PDEPrim2Cons(Q,V)
+    !print *, "Q ", Q
 END SUBROUTINE AlfenWave
 
 SUBROUTINE InitialBlast(x, Q)
@@ -159,7 +162,7 @@ SUBROUTINE InitialRotor(x,Q)
     
     EPCenter = (/ 0.5, 0.5 /)
     EPRadius = 0.3
-    
+
     rho0 = 1.0
     p0   = 1.0
     rho1 = 10.0
