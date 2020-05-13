@@ -253,27 +253,3 @@ void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
 std::vector< peano4::grid::GridControlEvent > peano4::grid::TraversalVTKPlotter::getGridControlEvents() {
   return std::vector< peano4::grid::GridControlEvent >();
 }
-
-
-void peano4::grid::TraversalVTKPlotter::exchangeAllVerticalDataExchangeStacks( int masterId ) {
-}
-
-
-void peano4::grid::TraversalVTKPlotter::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {
-}
-
-
-void peano4::grid::TraversalVTKPlotter::exchangeAllPeriodicBoundaryDataStacks() {
-}
-
-
-void peano4::grid::TraversalVTKPlotter::streamDataFromSplittingTreeToNewTree( int newWorker ) {
-}
-
-
-void peano4::grid::TraversalVTKPlotter::streamDataFromJoiningTreeToMasterTree( int masterId ) {
-}
-
-
-void peano4::grid::TraversalVTKPlotter::finishAllOutstandingSendsAndReceives() {
-}
