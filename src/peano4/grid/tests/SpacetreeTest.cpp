@@ -118,6 +118,7 @@ void peano4::grid::tests::SpacetreeTest::testAreFacesLocal() {
 
 void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
   #if Dimensions==2
+/*
   Spacetree tree( {0.0,0.0}, {1.0,1.0} );
 
   GridTraversalEvent event;
@@ -207,6 +208,7 @@ void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
   validateEqualsWithParams1( event.getExchangeFaceData(1), 1,                         event.toString() );
   validateEqualsWithParams1( event.getExchangeFaceData(2), 1,                         event.toString() );
   validateEqualsWithParams1( event.getExchangeFaceData(3), TraversalObserver::NoData, event.toString() );
+*/
 
 #endif
 }

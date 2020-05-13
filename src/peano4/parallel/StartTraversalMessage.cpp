@@ -92,7 +92,6 @@ void peano4::parallel::StartTraversalMessage::receiveAndPollDanglingMessages(pea
   );
 }
 #endif
-
     
 #ifdef Parallel
 

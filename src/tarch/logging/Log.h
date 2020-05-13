@@ -105,8 +105,8 @@ namespace tarch {
     conv << "," << #argument3 << ":" << argument3; \
     conv << "," << #argument4 << ":" << argument4; \
     conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    _log.debug (methodName, conv.str()); \
-    _log.traceIn(true,_log.getTraceInformation(methodName),conv.str()); \
+    _log.traceIn (methodName, conv.str()); \
+    _log.indent(true,_log.getTraceInformation(methodName),conv.str()); \
   }
 
 #define logTraceInWith6Arguments(methodName,argument0,argument1,argument2,argument3,argument4,argument5) \

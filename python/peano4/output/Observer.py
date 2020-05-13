@@ -362,28 +362,6 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       #endif
 
-      if ( 
-        peano4::grid::PeanoCurve::isInOutStack(inVertexStack) 
-        and
-        inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
-        and
-        inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
-      ) {{
-        @todo: Merge with neighbour. Schon da, aber user-merge ops invocation fehlt noch
-        for (int i=0; i<TwoPowerD-1; i++) {{
-          int currentEntryInExchangeList = event.getExchangeVertexData( i+outVertexStackPosition*(TwoPowerD-1) );
-          if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
-            const int stack = peano4::parallel::Node::getInputStackNumberForHorizontalDataExchange( currentEntryInExchangeList );
-            logDebug("enterCell(...)", "merge local vertex on tree " << _spacetreeId << " with incoming neighbour from stack " << stack << " (neighbour " << currentEntryInExchangeList << ")" );
-            assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
-            {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
-            
-            assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), _spacetreeId );
-            assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), _spacetreeId );
-          }}
-        }}
-      }}
-
       view.set(outVertexStackPosition,data);
     }}
   }}
@@ -395,15 +373,17 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   {{
     peano4::datamanagement::VertexMarker  marker(event);
     
-    @todo Local/remote fehlt komplett: pick gehoert hier hin
-    
     for (int i=0; i<TwoPowerD; i++) {{
       int inVertexStack  = event.getVertexDataFrom(i);
       int pick          = event.getVertexDataTo(i);   // the vertex position
 
       marker.select(pick);
       
-      if (inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+      if (
+        inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        marker.isLocal()
+      ) {{
         // Take care about the coarse grid accesses: Faces and cells are not yet loaded.
         // Therefore we don't use the usual shift of @f$ 2 \cdot 2d @f$ or @f$ 2 \cdot 2^d @f$ 
         // but only half of it.
@@ -418,7 +398,11 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_FINE_GRID_CELL_ARGUMENTS}
         );
       }}
-      else if (inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {{
+      else if (
+        inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        marker.isLocal()
+      ) {{
         {ACTIVE_ACTION_SET}.createHangingVertex(
            marker.select(pick)
           ,{MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS_PICK_ENTRY}
@@ -432,6 +416,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       else if (
         peano4::grid::PeanoCurve::isInOutStack(inVertexStack
+        and
+        marker.isLocal()
       )) {{
         {ACTIVE_ACTION_SET}.touchVertexFirstTime(
            marker.select(pick)
@@ -483,26 +469,6 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       }}
       #endif
 
-      if ( 
-        inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
-        and
-        inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
-        and
-        peano4::grid::PeanoCurve::isInOutStack(inFaceStack)
-        and
-        event.getExchangeFaceData( outFaceStackPosition )!=peano4::grid::TraversalObserver::NoData
-      ) {{
-        const int stack = peano4::parallel::Node::getInputStackNumberForHorizontalDataExchange( event.getExchangeFaceData( outFaceStackPosition ) );
-        logDebug("enterCell(...)", "merge local face on tree " << _spacetreeId << " with incoming face from stack " << stack << " (marker=" << marker.toString() << ")" );
-        assertion( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->empty() );
-        {full_qualified_type} incomingData = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,stack))->pop();
-        
-        data.mergeHorizontally( incomingData, marker );
-            
-        assertionVectorNumericalEquals3( data.getDebugX(), incomingData.getDebugX(), _spacetreeId, outFaceStackPosition, event.toString() );
-        assertionVectorNumericalEquals3( data.getDebugH(), incomingData.getDebugH(), _spacetreeId, outFaceStackPosition, event.toString() );
-      }}
-            
       view.set(outFaceStackPosition,data);
     }}
   }}
@@ -720,7 +686,9 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     logDebug("leaveCell(...)", "cell stack " << inCellStack << "->pos-" << outCellStack );
 
     {full_qualified_type} data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inCellStack))->pop();
-    if (outCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+    if (
+      outCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+    ) {{
       DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,outCellStack))->push(data);
     }}
   }}
@@ -801,20 +769,6 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       
       {full_qualified_type} data = view.get(inFaceStackPosition);
       
-      if ( 
-        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
-        and
-        outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
-        and
-        peano4::grid::PeanoCurve::isInOutStack(outFaceStack)
-        and
-        event.getExchangeFaceData( inFaceStackPosition )!=peano4::grid::TraversalObserver::NoData
-      ) {{
-        const int stack = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( event.getExchangeFaceData( inFaceStackPosition ) );
-        logDebug("enterCell(...)", "send local face from tree " << _spacetreeId << " to stack " << stack << " (data=" << data.toString() << ")" );
-        DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,stack))->push(data);
-      }}
-
       if (
         outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
@@ -837,7 +791,11 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
 
       marker.select(inVertexPosition);
       
-      if (outVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+      if (
+        outVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+        and
+        marker.isLocal()
+      ) {{
         {ACTIVE_ACTION_SET}.touchVertexLastTime(
            marker
           ,{MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS_PICK_ENTRY}
@@ -849,7 +807,11 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
         );
       }}
-      else if (outVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {{
+      else if (
+        outVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        marker.isLocal()
+      ) {{
         {ACTIVE_ACTION_SET}.touchVertexLastTime(
            marker
           ,{MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS_PICK_ENTRY}
@@ -861,7 +823,11 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
           {,MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS}
         );
       }}
-      else if (peano4::grid::PeanoCurve::isInOutStack(outVertexStack)) {{
+      else if (
+        peano4::grid::PeanoCurve::isInOutStack(outVertexStack)
+        and
+        marker.isLocal()
+      ) {{
         {ACTIVE_ACTION_SET}.touchVertexLastTime(
            marker
           ,{MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS_PICK_ENTRY}
@@ -882,25 +848,7 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
       logDebug("leaveCell(...)", "pos-" << inVertexStackPosition << "->vertex stack " << outVertexStack );
       
       {full_qualified_type} data = view.get(inVertexStackPosition);
-      
-      if (
-        outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
-        and
-        outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
-        and
-        peano4::grid::PeanoCurve::isInOutStack(outVertexStack)
-      ) {{
-        // Send out to neighbour
-        for (int i=0; i<TwoPowerD-1; i++) {{
-          int currentEntryInExchangeList = event.getExchangeVertexData( i+inVertexStackPosition*(TwoPowerD-1) );
-          if (currentEntryInExchangeList!=peano4::grid::TraversalObserver::NoData) {{
-            const int stack = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( currentEntryInExchangeList );
-            logDebug("leaveCell(...)", "send local vertex from tree " << _spacetreeId << " to neighbour through stack " << stack );
-            DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,stack))->push(data);
-          }}
-        }}
-      }}      
-
+  
       if (
         outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
@@ -1073,6 +1021,92 @@ void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives() {{
 """
 
 
+  TemplateExchangeRoutines_sendVertexHorizontally_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::sendVertexHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) {{
+  logTraceInWith3Arguments( "sendVertexHorizontally(int,int,int)", inOutStack, relativePositionOnInOutStack, toTree );
+  const int toStack   = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( toTree );
+"""
+
+  TemplateExchangeRoutines_sendVertexHorizontally_Epilogue = """
+  logTraceOut( "sendVertexHorizontally(int,int,int)");
+}}
+"""
+
+  TemplateExchangeRoutines_sendFaceHorizontally_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::sendFaceHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) {{
+  logTraceInWith3Arguments( "sendFaceHorizontally(int,int,int)", inOutStack, relativePositionOnInOutStack, toTree );
+  const int toStack   = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( toTree );
+"""
+
+  TemplateExchangeRoutines_sendFaceHorizontally_Epilogue = """
+  logTraceOut( "sendVertexHorizontally(int,int,int)");
+}}
+"""
+
+
+  TemplateExchangeRoutines_sendHorizontally_Exchange = """
+  {{
+    auto& data = DataRepository::_{logical_type_name}Stack.getForPop(
+      _spacetreeId,inOutStack
+    )->top(relativePositionOnInOutStack);
+    logDebug( "sendXXXHorizontally(...)", "send out " << data.toString() << " to tree " << toTree << "'s stack " << toStack );
+    
+    DataRepository::_{logical_type_name}Stack.getForPush(
+      _spacetreeId, toStack
+    ) -> push(data);
+  }}
+"""
+
+
+  TemplateExchangeRoutines_receiveAndMergeVertexHorizontally_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeVertexHorizontally(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {{
+  const int fromStack   = peano4::parallel::Node::getInputStackNumberForHorizontalDataExchange( fromTree );
+
+  peano4::datamanagement::VertexMarker marker(event);
+  marker.select(positionWithinCell); 
+
+  logTraceInWith6Arguments( "receiveAndMergeVertexHorizontally(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromTree, marker.toString() );
+"""
+
+  TemplateExchangeRoutines_receiveAndMergeVertexHorizontally_Epilogue = """
+  logTraceOut( "receiveAndMergeVertexHorizontally(...)");
+}}
+"""
+
+  TemplateExchangeRoutines_receiveAndMergeFaceHorizontally_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFaceHorizontally(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {{
+  const int fromStack   = peano4::parallel::Node::getInputStackNumberForHorizontalDataExchange( fromTree );
+
+  peano4::datamanagement::FaceMarker marker(event);
+  marker.select(positionWithinCell); 
+
+  logTraceInWith6Arguments( "receiveAndMergeFaceHorizontally(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromTree, marker.toString() );
+"""
+
+  TemplateExchangeRoutines_receiveAndMergeFaceHorizontally_Epilogue = """
+  logTraceOut( "receiveAndMergeVertexHorizontally(...)");
+}}
+"""
+
+
+  TemplateExchangeRoutines_receiveAndMergeHorizontally_Exchange = """
+  {{
+    auto   incomingData = DataRepository::_{logical_type_name}Stack.getForPop(
+      _spacetreeId, fromStack
+    )->pop();
+  
+    auto&  data = DataRepository::_{logical_type_name}Stack.getForPush( _spacetreeId, inOutStack )->top(
+      relativePositionOnInOutStack
+    );
+    
+    assertionVectorNumericalEquals7( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, _spacetreeId );
+    assertionVectorNumericalEquals7( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, _spacetreeId );
+    
+    data.mergeHorizontally(incomingData, marker);
+  }}
+"""
+
+
   def __generate_exchange_routines(self,output_file):
     output_file.write( self.TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Prologue.format(**self.d) )
     for cell in self.cells:
@@ -1145,6 +1179,31 @@ void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives() {{
       self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
       output_file.write( self.TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Exchange.format(**self.d) )
     output_file.write( self.TemplateExchangeRoutines_finishAllOutstandingSendsAndReceives_Epilogue.format(**self.d) )
+
+    output_file.write( self.TemplateExchangeRoutines_sendVertexHorizontally_Prologue.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "logical_type_name" ] = vertex.get_logical_type_name()
+      output_file.write( self.TemplateExchangeRoutines_sendHorizontally_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_sendVertexHorizontally_Epilogue.format(**self.d) )
+      
+    output_file.write( self.TemplateExchangeRoutines_sendFaceHorizontally_Prologue.format(**self.d) )
+    for face in self.faces:
+      self.d[ "logical_type_name" ] = face.get_logical_type_name()
+      output_file.write( self.TemplateExchangeRoutines_sendHorizontally_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_sendFaceHorizontally_Epilogue.format(**self.d) )
+
+    output_file.write( self.TemplateExchangeRoutines_receiveAndMergeVertexHorizontally_Prologue.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "logical_type_name" ] = vertex.get_logical_type_name()
+      output_file.write( self.TemplateExchangeRoutines_receiveAndMergeHorizontally_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_receiveAndMergeVertexHorizontally_Epilogue.format(**self.d) )
+      
+    output_file.write( self.TemplateExchangeRoutines_receiveAndMergeFaceHorizontally_Prologue.format(**self.d) )
+    for face in self.faces:
+      self.d[ "logical_type_name" ] = face.get_logical_type_name()
+      output_file.write( self.TemplateExchangeRoutines_receiveAndMergeHorizontally_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_receiveAndMergeFaceHorizontally_Epilogue.format(**self.d) )
+      
       
 
 

@@ -157,7 +157,6 @@ void peano4::grid::GridStatistics::receiveAndPollDanglingMessages(peano4::grid::
   );
 }
 #endif
-
     
 #ifdef Parallel
 

@@ -24,14 +24,18 @@ class MPI(object):
     self._data_model = data_model
 
   def get_include(self):
-    return """
+    result = """
 #include "tarch/la/Vector.h"
 #include "tarch/mpi/Rank.h"
 #include "peano4/utils/Globals.h"
+"""
+    if self._dof_association!=DoFAssociation.Generic:
+      result += """
 #include "peano4/datamanagement/CellMarker.h"
 #include "peano4/datamanagement/FaceMarker.h"
 #include "peano4/datamanagement/VertexMarker.h"
 """
+    return result
   
   def get_attributes(self):
     return ""
@@ -53,6 +57,8 @@ void mergeHorizontally(const """ + full_qualified_name + """& neighbour, const p
 void mergeHorizontally(const """ + full_qualified_name + """& neighbour, const peano4::datamanagement::FaceMarker& marker);
 """ 
     elif self._dof_association==DoFAssociation.Cell:
+      pass
+    elif self._dof_association==DoFAssociation.Generic:
       pass
     else:
       assert False
@@ -132,6 +138,8 @@ void """ + full_qualified_name + "::mergeHorizontally(const """ + full_qualified
 }
 """ 
     elif self._dof_association==DoFAssociation.Cell:
+      pass
+    elif self._dof_association==DoFAssociation.Generic:
       pass
     else:
       assert False

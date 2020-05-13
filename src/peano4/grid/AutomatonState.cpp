@@ -202,7 +202,6 @@ void peano4::grid::AutomatonState::receiveAndPollDanglingMessages(peano4::grid::
   );
 }
 #endif
-
     
 #ifdef Parallel
 

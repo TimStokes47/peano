@@ -45,12 +45,12 @@ project = exahype2.Project( ["examples", "exahype2", "euler"], "finitevolumes", 
 #
 patch_size     = 23
 unknowns       = 5
-time_step_size = 0.001
-project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("Euler", patch_size, unknowns, 0.001) )
+time_step_size = 0.0001
+project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("Euler", patch_size, unknowns, 0.0001) )
 
 
 dimensions = 2
-build_mode = peano4.output.CompileMode.Trace
+build_mode = peano4.output.CompileMode.Asserts
 
 #
 # Lets configure some global parameters
@@ -58,14 +58,14 @@ build_mode = peano4.output.CompileMode.Trace
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    1.0,          # end time
-    0.0, 0.1     # snapshots
+    0.1,          # end time
+    0.0, 0.01     # snapshots
   )
 else:
   project.set_global_simulation_parameters(
     dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-    1.0,          # end time
-    0.0, 0.1
+    0.1,          # end time
+    0.0, 0.01
   )
 
 

@@ -14,7 +14,7 @@ import peano4.dastgen2
 integer_message = dastgen2.DataModel( "tarch::mpi::IntegerMessage" )
 integer_message.add_attribute( dastgen2.attributes.Integer( "value" ) )
 
-integer_message.add_aspect( peano4.dastgen2.MPI() )
+integer_message.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic ) )
 integer_message.add_aspect( dastgen2.aspects.MPI() )
 
 integer_message.write_header_file("../src/tarch/mpi/IntegerMessage.h")
@@ -27,7 +27,7 @@ integer_message.write_implementation_file("../src/tarch/mpi/IntegerMessage.cpp")
 string_message = dastgen2.DataModel( "tarch::mpi::StringMessage", False )
 string_message.add_attribute( dastgen2.attributes.String( "data" ) )
 
-string_message.add_aspect( peano4.dastgen2.MPI() )
+string_message.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic ) )
 string_message.add_aspect( dastgen2.aspects.MPI() )
 
 string_message.write_header_file("../src/tarch/mpi/StringMessage.h")
@@ -44,7 +44,7 @@ tree_management_message.add_attribute( dastgen2.attributes.Integer( "masterSpace
 tree_management_message.add_attribute( dastgen2.attributes.Integer( "workerSpacetreeId" ) )
 tree_management_message.add_attribute( dastgen2.attributes.Enumeration( "action", [ "RequestNewRemoteTree", "CreateNewRemoteTree", "RemoveChildTreeFromBooksAsChildBecameEmpty", "JoinWithWorker", "Acknowledgement" ]))
 
-tree_management_message.add_aspect( peano4.dastgen2.MPI() )
+tree_management_message.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic ) )
 tree_management_message.add_aspect( dastgen2.aspects.MPI() )
 
 tree_management_message.write_header_file("../src/peano4/parallel/TreeManagementMessage.h")
@@ -60,7 +60,7 @@ tree_management_message = dastgen2.DataModel( "peano4::parallel::TreeEntry" )
 tree_management_message.add_attribute( dastgen2.attributes.Integer( "id" ) )
 tree_management_message.add_attribute( dastgen2.attributes.Integer( "master" ) )
 
-tree_management_message.add_aspect( peano4.dastgen2.MPI() )
+tree_management_message.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic ) )
 tree_management_message.add_aspect( dastgen2.aspects.MPI() )
 
 tree_management_message.write_header_file("../src/peano4/parallel/TreeEntry.h")
@@ -75,7 +75,7 @@ tree_management_message.write_implementation_file("../src/peano4/parallel/TreeEn
 start_traversal_message = dastgen2.DataModel( "peano4::parallel::StartTraversalMessage" )
 start_traversal_message.add_attribute( dastgen2.attributes.Integer( "stepIdentifier" ) )
 
-start_traversal_message.add_aspect( peano4.dastgen2.MPI() )
+start_traversal_message.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic ) )
 start_traversal_message.add_aspect( dastgen2.aspects.MPI() )
 
 start_traversal_message.write_header_file("../src/peano4/parallel/StartTraversalMessage.h")
@@ -95,7 +95,7 @@ grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "offset", "
 grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "width", "Dimensions" ))
 grid_control_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "h", "Dimensions" ))
 
-grid_control_event.add_aspect( peano4.dastgen2.MPI() )
+grid_control_event.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic ) )
 grid_control_event.add_aspect( dastgen2.aspects.MPI() )
 
 grid_control_event.write_header_file("../src/peano4/grid/GridControlEvent.h")
@@ -119,7 +119,7 @@ grid_statistics.add_attribute( dastgen2.attributes.Integer( "stationarySweeps" )
 
 grid_statistics.add_attribute( dastgen2.attributes.Boolean( "coarseningHasBeenVetoed" ) )
   
-grid_statistics.add_aspect( peano4.dastgen2.MPI() )
+grid_statistics.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic ) )
 grid_statistics.add_aspect( dastgen2.aspects.MPI() )
 
 grid_statistics.write_header_file("../src/peano4/grid/GridStatistics.h")
@@ -143,7 +143,7 @@ automaton_state.add_attribute( dastgen2.attributes.BooleanArray( "evenFlags", "D
 # @todo Should be char array likely 
 automaton_state.add_attribute( peano4.dastgen2.Peano4IntegerArray( "accessNumber", "DimensionsTimesTwo" ) )
 
-automaton_state.add_aspect( peano4.dastgen2.MPI() )
+automaton_state.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic )  )
 automaton_state.add_aspect( dastgen2.aspects.MPI() )
 
 automaton_state.write_header_file("../src/peano4/grid/AutomatonState.h")
@@ -162,10 +162,6 @@ grid_traversal_event = dastgen2.DataModel( "peano4::grid::GridTraversalEvent" )
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "x", "Dimensions" ))
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4DoubleArray( "h", "Dimensions" ))
 grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isRefined", "TwoPowerD" ) )
-# I can derive all refinement information from the vertices (or-based refinement),
-# but I can't derive the locality information from there. So I have to store it
-# explicitly. For my new DaStGen 2, it would be cool if I could add comments to the
-# generated output. This helps quite a lot within C++'s/Eclipse's autocompletion.
 grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isVertexLocal", "TwoPowerD" ) )
 grid_traversal_event.add_attribute( dastgen2.attributes.BooleanArray( "isFaceLocal",   "TwoTimesD" ) )
 grid_traversal_event.add_attribute( dastgen2.attributes.Boolean(      "isCellLocal"                ) )
@@ -180,11 +176,7 @@ grid_traversal_event.add_attribute( dastgen2.attributes.Integer( "cellData" ) )
 
 grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "relativePositionToFather", "Dimensions" ) )
 
-grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "exchangeVertexData", "TwoPowerDTimesTwoPowerDMinusOne" ) )
-grid_traversal_event.add_attribute( peano4.dastgen2.Peano4IntegerArray( "exchangeFaceData", "TwoTimesD" ) )
-grid_traversal_event.add_attribute( dastgen2.attributes.Integer( "exchangeCellData" ) )
-
-grid_traversal_event.add_aspect( peano4.dastgen2.MPI() )
+grid_traversal_event.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic ) )
 grid_traversal_event.add_aspect( dastgen2.aspects.MPI() )
 
 grid_traversal_event.write_header_file("../src/peano4/grid/GridTraversalEvent.h")
@@ -211,7 +203,7 @@ grid_vertex.add_attribute( dastgen2.attributes.Integer( "numberOfAdjacentRefined
 grid_vertex.add_attribute( peano4.dastgen2.Peano4DoubleArray( "x", "Dimensions" ))
 grid_vertex.add_attribute( dastgen2.attributes.Integer( "level" ) )
 
-grid_vertex.add_aspect( peano4.dastgen2.MPI() )
+grid_vertex.add_aspect( peano4.dastgen2.MPI( peano4.datamodel.DoFAssociation.Generic ) )
 grid_vertex.add_aspect( dastgen2.aspects.MPI() )
 
 grid_vertex.write_header_file("../src/peano4/grid/GridVertex.h")

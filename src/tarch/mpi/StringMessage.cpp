@@ -96,7 +96,6 @@ void tarch::mpi::StringMessage::receiveAndPollDanglingMessages(tarch::mpi::Strin
   );
 }
 #endif
-
     
 #ifdef Parallel
 
