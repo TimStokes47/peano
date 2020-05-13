@@ -124,12 +124,12 @@ class peano4::grid::PeanoCurve {
      *
      * @return 0 or 1 if it is about in/out stacks
      */
-    static int getVertexReadStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex );
+    static int getVertexReadStackNumber(const AutomatonState& state, const std::bitset<Dimensions>& vertex );
 
     /**
      * @return 0 or 1 if it is about in/out stacks
      */
-    static int getVertexWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex );
+    static int getVertexWriteStackNumber(const AutomatonState& state, const std::bitset<Dimensions>& vertex );
 
     /**
      * Faces are enumerated following the same paradigm as the vertices. Face 0
