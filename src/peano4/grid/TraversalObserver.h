@@ -134,15 +134,66 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
     const tarch::la::Vector<Dimensions,double>&  h
   ) = 0;
 
+  /**
+   * Send local data from top level of local mesh to master and receive its
+   * top-down information in return.
+   *
+   * The SpacetreeSet class provides some generic routines for this that you
+   * can use. Simply invoke them for every data container that you use. If
+   * you trigger non-blocking MPI, you don't have to wait until they are
+   * finished. You can expect the calling routine that it calls
+   * finishAllOutstandingSendsAndReceives() later on.
+   */
+  virtual void exchangeAllVerticalDataExchangeStacks( int masterId ) {};
 
-  virtual void exchangeAllVerticalDataExchangeStacks( int masterId ) = 0;
-  virtual void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) = 0;
-  virtual void exchangeAllPeriodicBoundaryDataStacks() = 0;
+  /**
+   * Exchange all the data along the domain boundaries. If the bool is set,
+   * we do send out exactly as many elements per face or vertex as we
+   * expect to receive. Therefore, the boundary exchange can optimise the
+   * data exchange.
+   *
+   * The SpacetreeSet class provides some generic routines for this that you
+   * can use. Simply invoke them for every data container that you use. If
+   * you trigger non-blocking MPI, you don't have to wait until they are
+   * finished. You can expect the calling routine that it calls
+   * finishAllOutstandingSendsAndReceives() later on.
+   */
+  virtual void exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {};
 
-  virtual void streamDataFromSplittingTreeToNewTree( int newWorker ) = 0;
-  virtual void streamDataFromJoiningTreeToMasterTree( int masterId ) = 0;
+  /**
+   * Exchange all periodic boundary data. Periodic boundary values are always
+   * handled by tree 0, i.e. there's no need to distinguish ranks here. On
+   * all trees that are not rank 0, this operation should immediately return.
+   */
+  virtual void exchangeAllPeriodicBoundaryDataStacks() {};
 
-  virtual void finishAllOutstandingSendsAndReceives() = 0;
+  /**
+   * Stream data from current tree on which this routine is called to
+   * the new worker.
+   *
+   * @todo Not clear how this works on the worker side.
+   *
+   * The SpacetreeSet class provides some generic routines for this that you
+   * can use. Simply invoke them for every data container that you use. If
+   * you trigger non-blocking MPI, you don't have to wait until they are
+   * finished. You can expect the calling routine that it calls
+   * finishAllOutstandingSendsAndReceives() later on.
+   */
+  virtual void streamDataFromSplittingTreeToNewTree( int newWorker ) {};
+  virtual void streamDataFromJoiningTreeToMasterTree( int masterId ) {};
+
+  /**
+   * Wrap up all sends and receives, i.e. invoke wait() on the MPI requests.
+   * The SpacetreeSet provides a generic routine for this that you can call
+   * per data container in use.
+   */
+  virtual void finishAllOutstandingSendsAndReceives() {};
+
+  virtual void sendVertexHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) {};
+  virtual void sendFaceHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) {};
+
+  virtual void receiveAndMergeVertexHorizontally(const GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {};
+  virtual void receiveAndMergeFaceHorizontally(const GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {};
 };
 
 #endif
