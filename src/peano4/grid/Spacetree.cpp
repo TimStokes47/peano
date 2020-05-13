@@ -1204,16 +1204,13 @@ int  peano4::grid::Spacetree::getAdjacentDomainIds( GridVertex fineGridVertices[
     int rankEntry = calledByReceivingProcess ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
                                              : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
 
-    // @todo Doku schreiben, warum man mal das eine, mal das andere nehmen muss; kommt ins Spiel sobald der Nachbar sich von Zellen trennt
-    //int rankEntry = fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
-
     adjacentRanksOfFace(counter) = rankEntry;
     counter++;
 
     studiedEntry[normal] = 1;
     rankEntry = calledByReceivingProcess ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
                                          : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
-    //rankEntry = fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
+
     adjacentRanksOfFace(counter) = rankEntry;
     counter++;
   }
@@ -1844,7 +1841,7 @@ void peano4::grid::Spacetree::receiveAndMergeUserDataAtHorizontalBoundary(const 
       assertion( inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity );
       int neighbour = getAdjacentDomainIds(fineGridVertices,inFacePositionWithinCell, true);
       if (neighbour>=0) {
-        logInfo(
+        logDebug(
           "receiveAndMergeVertexHorizontally(...)",
           "receive and merge local face on stack " << inOutStack << " of tree " << _id << " (relative position=" <<
           outCallStackCounter << ") with neighbour " << neighbour << ". Local position in cell=" << inFacePositionWithinCell

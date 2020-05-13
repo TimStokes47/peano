@@ -621,6 +621,18 @@ class peano4::grid::Spacetree {
     void receiveAndMergeUserDataAtHorizontalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
     void receiveAndMergeUserDataAtVerticalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
 
+    /**
+     *
+     * <h2> Data order on output stacks </h2>
+     *
+     * When we send out data, we send that data from the output stack, i.e. we assume that
+     * the user code has already piped its stuff there. As the output data structure is a
+     * stack, we have to be careful: If a cell writes N pieces of data to the output stream
+     * and we want to copy the first piece of data into an output stream for MPI, then we
+     * have to pick the Nth entry from the output stream. With our modified top(), we can
+     * access these elements directly. We just have to be careful that top() equals actually
+     * a top(0), so picking the Nth element requires us to call top(N-1).
+     */
     void sendUserDataAtHorizontalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
     void sendUserDataAtVerticalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
 
@@ -898,9 +910,19 @@ class peano4::grid::Spacetree {
     std::set<int>  getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess ) const;
 
     /**
-     * Get the ids of the surround Ids of a face.
+     * Get the ids of the surround ids of a face.
      *
-     * @return -1 if there's no neighbour or face is not local.
+     * <h2> Implementation remarks </h2>
+     *
+     * The domain ids (adjacency lists) along the boundary tell us what the neighbour
+     * number is. If a neighbouring rank has triggered a split, we get an updated
+     * adjacency list for affected vertices. This list is immediately merged into the
+     * the local vertex. The new entries however are only to be taken into account
+     * when we send data. For receives, we should stick to the old entries. Therefore,
+     * we use the backup of the adjacency list when we receive data, but we use the
+     * updated/new list when we send out stuff.
+     *
+     * @return -1  (TraversalObserver::NoData) if there's no neighbour or face is not local.
      */
     int  getAdjacentDomainIds( GridVertex vertex[TwoPowerD], int faceNumber, bool calledByReceivingProcess ) const;
 
