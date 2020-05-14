@@ -1099,8 +1099,8 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFaceHorizontally(const peano4::g
       relativePositionOnInOutStack
     );
     
-    assertionVectorNumericalEquals7( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, _spacetreeId );
-    assertionVectorNumericalEquals7( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, _spacetreeId );
+    assertionVectorNumericalEquals8( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
+    assertionVectorNumericalEquals8( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
     
     data.mergeHorizontally(incomingData, marker);
   }}
