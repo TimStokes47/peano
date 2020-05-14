@@ -60,14 +60,14 @@ build_mode = peano4.output.CompileMode.Asserts
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    0.001,                       # end time
-    0.0, time_step_size*50     # snapshots
+    0.1,           # end time
+    0.0, 0.02      # snapshots
   )
 else:
   project.set_global_simulation_parameters(
     dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-    1.0,                       # end time
-    0.0, time_step_size*50
+    0.1,           # end time
+    0.0, 0.02      # snapshots
   )
 
 
@@ -85,11 +85,21 @@ peano4_project.output.makefile.add_library( project.get_core_library(build_mode)
 peano4_project.output.makefile.add_library( "ToolboxLoadBalancing" + project.get_library_postfix(build_mode), "../../../../src/toolbox/loadbalancing" )
 peano4_project.output.makefile.set_mode(build_mode)
 peano4_project.build()
-success = peano4_project.run( [] )
+#
+# Use this variant if you build without MPI
+#
+#success = peano4_project.run( [] )
+success = peano4_project.run( [], ["mpirun", "-n", "1"] )
 
 
 
 if success:
+  #
+  # Command line version of these steps:
+  #
+  # ../../../../src/visualisation/convert apply-filter solutionEuler.peano-patch-file EulerQ . extract-fine-grid finegrid
+  # ../../../../src/visualisation/convert convert-file solutionEuler.peano-patch-file finegrid . vtu
+  #
   convert = peano4.visualisation.Convert( "solutionEuler", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.plot_domain_decomposition()

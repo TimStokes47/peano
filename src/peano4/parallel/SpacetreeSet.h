@@ -113,7 +113,37 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     template <class Container>
     static void finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId );
 
-
+    /**
+     * Copies (streams) data from the master to the worker.
+     *
+     * These are complete copies of the data set as we know that both trees afterwards
+     * will coarsen their mesh and thus free resources.
+     *
+     * Invoked by user code from streamDataFromSplittingTreeToNewTree() and by
+     * spacetree set through SpacetreeSet::streamDataFromSplittingTreesToNewTrees().
+     * SpacetreeSet runs over the set of trees with the label EmptyRun, i.e. those
+     * that haven't done any iteration yet. It then invokes this routine (indirectly)
+     * on the master. That is, even if you are on a rank where the master does not exist,
+     * the code will temporarily create an observer for the master and then ask this
+     * observer to trigger the data exchange.
+     *
+     * <h2> On-rank realisation </h2>
+     *
+     * If source and destination rank are the same, a tree splits up into two trees
+     * both residing on the same MPI rank. We therefore simply copy the stream. As
+     * this routine is invoked on the master, it is the master that creates the
+     * stream on the worker and befills it.
+     *
+     * <h2> Data exchange between different ranks </h2>
+     *
+     * If the master rank is the local guy, then we have to trigger a send. Otherwise,
+     * we trigger a receive. The message exchange consists of two phases. An integer
+     * message first is exchanged. It carries the number of messages. After that, I
+     * send out the actual data.
+     *
+     * We don't have to finish any sends, i.e. wait for Isends or Irecvs. SpacetreeSet
+     * will call finishAllOutstandingSendsAndReceives() later on.
+     */
     template <class Container>
     static void streamDataFromSplittingTreeToNewTree( Container& stackContainer, int master, int worker );
 
@@ -136,7 +166,18 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
       TraverseTreesAndExchangeData
     };
 
+    /**
+     * I use this tag to identify messages send from one tree to another rank.
+     * All answers go through an answer tag. To identify the right one, please
+     * use getAnswerTag().
+     */
     const int     _requestMessageTag;
+
+    /**
+     * Never use this tag directly. It is the first tag of a series fo answer
+     * tags. To find the right one for a particular application context, use
+     * getAnswerTag().
+     */
     const int     _answerMessageTag;
 
     std::list< peano4::grid::Spacetree >  _spacetrees;

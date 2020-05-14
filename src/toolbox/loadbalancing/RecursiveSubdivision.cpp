@@ -15,7 +15,7 @@ tarch::logging::Log  toolbox::loadbalancing::RecursiveSubdivision::_log( "toolbo
 toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percentageOfCoresThatShouldInTheoryGetAtLeastOneCell):
   _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell( percentageOfCoresThatShouldInTheoryGetAtLeastOneCell ),
   _blacklist(),
-  _hasSpreadOutOverAllRanks( tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1 ),
+  _hasSpreadOutOverAllRanks(false),
   _localNumberOfInnerUnrefinedCell( 0 ),
   _globalNumberOfInnerUnrefinedCell( 0 ) {
 }
@@ -93,6 +93,13 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   ) {
     logInfo( "finishStep()", "problem size of " << _globalNumberOfInnerUnrefinedCell << " is too small to keep all cores busy - wait for larger mesh to be constructed" );
   }
+  else if (
+    not _hasSpreadOutOverAllRanks
+    and
+    tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1
+  ) {
+    _hasSpreadOutOverAllRanks = true;
+  }
   else if ( not _hasSpreadOutOverAllRanks ) {
     int cells             = getMaximumSpacetreeSize();
     assertion( cells>tarch::mpi::Rank::getInstance().getNumberOfRanks() );
@@ -138,7 +145,8 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
 		numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " cells (max size should be " << getMaximumSpacetreeSize() << ")"
       );
       #ifdef Parallel
-      const int targetRank = xxx;
+      // @todo Das ist falsch. Hier muss jetzt genau das intra-Rank-Balancing rein
+      const int targetRank = 0;
       #else
       const int targetRank = 0;
       #endif
