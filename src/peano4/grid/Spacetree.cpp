@@ -1909,7 +1909,7 @@ void peano4::grid::Spacetree::sendUserDataAtHorizontalBoundary(const AutomatonSt
   }
 
   totalOutStackWrites = 0;
-  for (int i=0; i<TwoPowerD; i++) {
+  for (int i=0; i<2*Dimensions; i++) {
     int outVertexStack              = enterCellTraversalEvent.getFaceDataTo(i);
     if ( peano4::grid::PeanoCurve::isInOutStack(outVertexStack) ) {
       totalOutStackWrites++;
