@@ -1873,7 +1873,6 @@ void peano4::grid::Spacetree::sendUserDataAtHorizontalBoundary(const AutomatonSt
   int outCallStackCounter;
   int totalOutStackWrites;
 
-  // @todo Ganz schoen viel Doku
   totalOutStackWrites = 0;
   for (int i=0; i<TwoPowerD; i++) {
     int outVertexStack              = enterCellTraversalEvent.getVertexDataTo(i);
