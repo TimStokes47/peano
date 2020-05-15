@@ -86,10 +86,13 @@ peano4_project.output.makefile.add_library( "ToolboxLoadBalancing" + project.get
 peano4_project.output.makefile.set_mode(build_mode)
 peano4_project.build()
 #
-# Use this variant if you build without MPI
+# Use this variant if you build without MPI. In principle, you can start
+# your MPI test from the Python script. My Python installation however
+# often crashes for bigger runs. It also struggles with the postprocessing
+# for large parallel runs (see below).
 #
 #success = peano4_project.run( [] )
-success = peano4_project.run( [], ["mpirun", "-n", "1"] )
+success = peano4_project.run( [], ["mpirun", "-n", "2"] )
 
 
 
@@ -99,6 +102,18 @@ if success:
   #
   # ../../../../src/visualisation/convert apply-filter solutionEuler.peano-patch-file EulerQ . extract-fine-grid finegrid
   # ../../../../src/visualisation/convert convert-file solutionEuler.peano-patch-file finegrid . vtu
+  #
+  # The above command line options give you the solution. They do not plot the 
+  # domain decomposition. If you are interested in the latter, you have to do 
+  # the steps below. You have to run the first extraction step prior to any other
+  # step. The convert script builds up a database and throws away meta data to get
+  # the file size down, i.e. after the first filter applications you don't have 
+  # the information anymore which tree wrote which part of the domain; unless you
+  # explicitly extract it beforehand. 
+  #
+  # ../../../../src/visualisation/convert apply-filter solutionEuler.peano-patch-file EulerQ . plot-domain-decomposition DD
+  # ../../../../src/visualisation/convert apply-filter solutionEuler.peano-patch-file DD     . extract-fine-grid finegridDD
+  # ../../../../src/visualisation/convert convert-file solutionEuler.peano-patch-file finegridDD . vtu
   #
   convert = peano4.visualisation.Convert( "solutionEuler", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )

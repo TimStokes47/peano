@@ -143,6 +143,12 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      *
      * We don't have to finish any sends, i.e. wait for Isends or Irecvs. SpacetreeSet
      * will call finishAllOutstandingSendsAndReceives() later on.
+     *
+     * The routine is idempotent on a single rank, i.e. you can call it multiple times.
+     * Only the first one will copy, all the others will become nop. It is not idempotent
+     * in a parallel sense. It has to be idempotent, as I indeed have to call it twice
+     * in a distributed memory environment: I have to call it on the receiver side and
+     * on the sender side.
      */
     template <class Container>
     static void streamDataFromSplittingTreeToNewTree( Container& stackContainer, int master, int worker );
@@ -245,6 +251,14 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * peano4::grid::Spacetree::traverse() does invert the traversal direction in an
      * epilogue automatically. Therefore, by the time we hit this routine, we have to
      * copy over the input stack.
+     *
+     * We always have to invoke the data exchange for both the master and the worker, i.e.
+     * we call it twice. This way, we invoke the data exchange on the destination rank
+     * (MPI receive) and on the source rank (MPI send). For a single-node split, the
+     * second invocation degenerates to nop automatically. See streamDataFromSplittingTreeToNewTree()
+     * which implements a simple emptyness check.
+     *
+     * @see streamDataFromSplittingTreeToNewTree()
      */
     void streamDataFromSplittingTreesToNewTrees(peano4::grid::TraversalObserver&  observer);
 

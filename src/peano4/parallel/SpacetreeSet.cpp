@@ -293,9 +293,8 @@ void peano4::parallel::SpacetreeSet::exchangeVerticalDataBetweenTrees(peano4::gr
 
 
 void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreesToNewTrees(peano4::grid::TraversalObserver&  observer) {
-  logTraceIn( "copyDataFromSplittingTreesToNewTrees()" );
+  logTraceInWith1Argument( "streamDataFromSplittingTreesToNewTrees()", _spacetrees.size() );
 
-/*
   for (auto& parent: _spacetrees) {
     for (auto& worker: parent._hasSplit) {
       streamDataFromSplittingTreeToNewTree( peano4::grid::Spacetree::_vertexStack, parent._id, worker);
@@ -305,7 +304,6 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreesToNewTrees(pean
       _clonedObserver[parent._id]->streamDataFromSplittingTreeToNewTree( worker );
     }
   }
-*/
 
   for (auto& p: _spacetrees) {
     if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::EmptyRun) {
@@ -323,7 +321,7 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreesToNewTrees(pean
     _clonedObserver[p._id]->finishAllOutstandingSendsAndReceives();
   }
 
-  logTraceOut( "copyDataFromSplittingTreesToNewTrees()" );
+  logTraceOut( "streamDataFromSplittingTreesToNewTrees()" );
 }
 
 
@@ -426,9 +424,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   }
 
   // I use this boolean flag from time to time to debug the code.
-  const bool runSequentially = false;
+  const bool runSequentially = true;
 
-  logDebug( "traverse(TraversalObserver&)", "kick off primary tree sweeps: " << primaryTasks.size() << " task(s)" );
+  logInfo( "traverse(TraversalObserver&)", "kick off primary tree sweeps: " << primaryTasks.size() << " task(s)" );
   if ( not primaryTasks.empty() ) {
     static int multitasking = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverse-1" );
     peano4::parallel::Tasks runs( primaryTasks,
@@ -436,6 +434,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
       multitasking,true);
   }
 
+  logInfo( "traverse(TraversalObserver&)", "primary tasks (traversals) complete, trigger split data exchange if required" );
   streamDataFromSplittingTreesToNewTrees(observer);
   exchangeVerticalDataBetweenTrees(observer);
 
@@ -550,7 +549,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
 
 
 peano4::grid::GridStatistics  peano4::parallel::SpacetreeSet::getGridStatistics(int treeId) const {
-  assertion( isLocalSpacetree(treeId) );
+  assertion2( isLocalSpacetree(treeId), treeId, tarch::mpi::Rank::getInstance().getRank() );
   return getSpacetree(treeId).getGridStatistics();
 }
 
