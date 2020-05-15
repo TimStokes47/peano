@@ -15,6 +15,7 @@ void tarch::mpi::tests::StringTest::run() {
 
 
 void tarch::mpi::tests::StringTest::testSendReceive() {
+  #ifdef Parallel
   const std::string testString = "unittest";
   if (
     tarch::mpi::Rank::getInstance().getNumberOfRanks()>1
@@ -35,4 +36,5 @@ void tarch::mpi::tests::StringTest::testSendReceive() {
     StringMessage::receive( message, 0, 0, tarch::mpi::Rank::getInstance().getCommunicator() );
     validateEquals( message.getData(), testString );
   }
+  #endif
 }
