@@ -58,16 +58,14 @@ namespace {
         static tarch::logging::Log _log( "peano4::parallel::tests::PingPongSendTask" );
         if (_blockingMPI) {
           MPI_Send(&out,1,MPI_INT,1,_id,MPI_COMM_WORLD);
-          // @todo Debug
-          logInfo( "PingPongSendTask()", "sent blocking message " << out << " to rank 1 with tag " << _id );
+          logDebug( "PingPongSendTask()", "sent blocking message " << out << " to rank 1 with tag " << _id );
         }
         else {
           MPI_Request request;
           MPI_Isend(&out,1,MPI_INT,1,_id,MPI_COMM_WORLD,&request);
-          logInfo( "PingPongSendTask()", "sent non-blocking message " << out << " to rank 1 with tag " << _id );
+          logDebug( "PingPongSendTask()", "sent non-blocking message " << out << " to rank 1 with tag " << _id );
           tarch::multicore::yield();
           MPI_Wait(&request,MPI_STATUS_IGNORE);
-          // @todo Debug
         }
         #endif
         return false;
@@ -87,8 +85,7 @@ namespace {
         #ifdef Parallel
         int in = -12;
         static tarch::logging::Log _log( "peano4::parallel::tests::PingPongSendTask" );
-        // @todo Debug
-        logInfo( "PingPongReceiveTask()", "receive message from rank 1 with tag " << _id );
+        logDebug( "PingPongReceiveTask()", "receive message from rank 1 with tag " << _id );
         if (_blockingMPI) {
           MPI_Recv(&in,1,MPI_INT,0,_id,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
         }
@@ -98,8 +95,7 @@ namespace {
           tarch::multicore::yield();
           MPI_Wait(&request,MPI_STATUS_IGNORE);
         }
-        // @todo Debug
-        logInfo( "PingPongReceiveTask()", "got content " << in );
+        logDebug( "PingPongReceiveTask()", "got content " << in );
         if ( in != 23+_id) {
           logError( "testMultithreadedPingPong()", "received " << in << " instead of " << (23+_id) << " (blocking mode=" << _blockingMPI << ", tag=" << _id << ")" );
           testErrors++;
