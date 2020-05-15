@@ -30,7 +30,6 @@ namespace peano4 {
     enum class IOMode {
       None,
       MPISend,
-      MPISendAndDelete,
       MPIReceive
     };
   }
@@ -320,10 +319,10 @@ class peano4::stacks::STDVectorStack {
      * mean all the data that is to be sent out is already in the container.
      */
 //    void startSend(int rank, int tag) requires HasMPIDatatype<T> {
-    void startSend(int rank, int tag, bool deleteDataAfterSendComplete) {
+    void startSend(int rank, int tag) {
       #ifdef Parallel
       assertion( _ioMode==IOMode::None );
-      _ioMode = deleteDataAfterSendComplete ? IOMode::MPISendAndDelete : IOMode::MPISend;
+      _ioMode = IOMode::MPISend;
       _ioTag  = tag;
       _ioRank = rank;
 
@@ -385,7 +384,7 @@ class peano4::stacks::STDVectorStack {
     void finishSendOrReceive() {
       #ifdef Parallel
       logTraceInWith4Arguments( "finishSendOrReceive()", ::toString(_ioMode), size(), _ioRank,_ioTag );
-      if ( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive or _ioMode==IOMode::MPISendAndDelete ) {
+      if ( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive ) {
         assertion( _ioMPIRequest!=nullptr );
 
         int          flag = 0;
@@ -429,7 +428,7 @@ class peano4::stacks::STDVectorStack {
         delete _ioMPIRequest;
         _ioMPIRequest = nullptr;
       }
-      if (_ioMode==IOMode::MPISendAndDelete ) {
+      if (_ioMode==IOMode::MPISend ) {
         clear();
       }
       _ioMode = IOMode::None;
@@ -470,7 +469,7 @@ tarch::logging::Log peano4::stacks::STDVectorStack<T>::_log( "peano4::stacks::ST
 
 
 template <>
-void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag, bool deleteDataAfterSendComplete);
+void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag);
 
 
 template <>

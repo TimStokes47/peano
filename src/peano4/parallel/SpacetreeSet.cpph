@@ -47,9 +47,11 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
   }
   else if ( sourceRank==tarch::mpi::Rank::getInstance().getRank() ) {
     #ifdef Parallel
-    const int tag         = peano4::parallel::Node::getInstance().getGridDataExchangeTag(master, worker, peano4::parallel::Node::ExchangeMode::VerticalData);
-    const int sourceStack = peano4::grid::PeanoCurve::getInputStackNumber( getInstance().getSpacetree(master)._root );
-    const int messageSize = stackContainer.getForPop(master,sourceStack)->size();
+    const int tag            = peano4::parallel::Node::getInstance().getGridDataExchangeTag(master, worker, peano4::parallel::Node::ExchangeMode::VerticalData);
+    const int sourceStack    = peano4::grid::PeanoCurve::getInputStackNumber( getInstance().getSpacetree(master)._root );
+    const int messageSize    = stackContainer.getForPop(master,sourceStack)->size();
+    const int temporaryStack = Node::getOutputStackNumberForVerticalDataExchange(worker);
+
     logInfo(
       "copyDataFromSplittingTreesToNewTrees()",
       "send stack " << sourceStack << " from tree " << master << " on rank " << sourceRank << " through tag " << tag <<
@@ -59,8 +61,9 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
     tarch::mpi::IntegerMessage::send(message, destinationRank, tag, tarch::mpi::Rank::getInstance().getCommunicator());
 
     if (messageSize>0) {
-      stackContainer.getForPush(master,sourceStack)->startSend(
-        destinationRank, tag, false
+      stackContainer.getForPush(master,temporaryStack)->clone( *stackContainer.getForPop(master,sourceStack) );
+      stackContainer.getForPush(master,temporaryStack)->startSend(
+        destinationRank, tag
       );
     }
     #else
@@ -118,14 +121,15 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
       and
       Node::getInstance().getRank( Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second) )!=tarch::mpi::Rank::getInstance().getRank()
     ) {
-      int targetId  = Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second);
-      int rank      = Node::getInstance().getRank( targetId );
-      int count     = stackContainer.getForPush(sourceStackKey)->size();
-      int inStack   = Node::getInstance().getInputStackNumberForHorizontalDataExchange(targetId);
+      int targetId       = Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second);
+      int rank           = Node::getInstance().getRank( targetId );
+      int count          = stackContainer.getForPush(sourceStackKey)->size();
+      int inStack        = Node::getInstance().getInputStackNumberForHorizontalDataExchange(targetId);
 
       int sendTag       = Node::getInstance().getGridDataExchangeTag( spacetreeId, targetId, Node::ExchangeMode::HorizontalData );
       logDebug( "exchangeAllHorizontalDataExchangeStacks(...)", "send stack " << sourceStackKey.second << " of tree " << sourceStackKey.first << " to rank " << rank << " with tag " << sendTag << ": " << count << " element(s)");
-      stackContainer.getForPush(sourceStackKey)->startSend(rank,sendTag,true);
+
+      stackContainer.getForPush(sourceStackKey)->startSend(rank,sendTag);
 
       int receiveTag    = Node::getInstance().getGridDataExchangeTag( targetId, spacetreeId, Node::ExchangeMode::HorizontalData );
 
