@@ -60,7 +60,7 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
 
     if (messageSize>0) {
       stackContainer.getForPush(master,sourceStack)->startSend(
-        destinationRank, tag
+        destinationRank, tag, false
       );
     }
     #else
@@ -125,7 +125,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
 
       int sendTag       = Node::getInstance().getGridDataExchangeTag( spacetreeId, targetId, Node::ExchangeMode::HorizontalData );
       logDebug( "exchangeAllHorizontalDataExchangeStacks(...)", "send stack " << sourceStackKey.second << " of tree " << sourceStackKey.first << " to rank " << rank << " with tag " << sendTag << ": " << count << " element(s)");
-      stackContainer.getForPush(sourceStackKey)->startSend(rank,sendTag);
+      stackContainer.getForPush(sourceStackKey)->startSend(rank,sendTag,true);
 
       int receiveTag    = Node::getInstance().getGridDataExchangeTag( targetId, spacetreeId, Node::ExchangeMode::HorizontalData );
 

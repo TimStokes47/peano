@@ -2,10 +2,10 @@
 
 
 template <>
-void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag) {
+void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag, bool deleteDataAfterSendComplete) {
   #ifdef Parallel
   assertion( _ioMode==IOMode::None );
-  _ioMode = IOMode::MPISend;
+  _ioMode = deleteDataAfterSendComplete ? IOMode::MPISendAndDelete : IOMode::MPISend;
   _ioTag  = tag;
   _ioRank = rank;
 
@@ -55,6 +55,8 @@ std::string toString( peano4::stacks::IOMode mode ) {
       return "receive";
     case peano4::stacks::IOMode::MPISend:
       return "send";
+    case peano4::stacks::IOMode::MPISendAndDelete:
+      return "send-and-delete";
     case peano4::stacks::IOMode::None:
       return "none";
   }

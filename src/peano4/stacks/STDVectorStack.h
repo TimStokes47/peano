@@ -30,6 +30,7 @@ namespace peano4 {
     enum class IOMode {
       None,
       MPISend,
+      MPISendAndDelete,
       MPIReceive
     };
   }
@@ -319,20 +320,20 @@ class peano4::stacks::STDVectorStack {
      * mean all the data that is to be sent out is already in the container.
      */
 //    void startSend(int rank, int tag) requires HasMPIDatatype<T> {
-    void startSend(int rank, int tag) {
+    void startSend(int rank, int tag, bool deleteDataAfterSendComplete) {
       #ifdef Parallel
       assertion( _ioMode==IOMode::None );
-      _ioMode = IOMode::MPISend;
+      _ioMode = deleteDataAfterSendComplete ? IOMode::MPISendAndDelete : IOMode::MPISend;
       _ioTag  = tag;
       _ioRank = rank;
 
-      logDebug( "startSend(int,int)", "start to send " << _currentElement << " element(s) to rank " << _ioRank << " on tag " << _ioTag );
+      logDebug( "startSend(int,int,bool)", "start to send " << _currentElement << " element(s) to rank " << _ioRank << " on tag " << _ioTag );
 
       assertion( _ioMPIRequest == nullptr );
       _ioMPIRequest = new MPI_Request;
       int result = MPI_Isend( _data.data(), _currentElement, T::Datatype, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
       if  (result!=MPI_SUCCESS) {
-        logError( "startSend(int,int)", "was not able to send to node " << rank << " on tag " << tag
+        logError( "startSend(int,int,bool)", "was not able to send to node " << rank << " on tag " << tag
           << ": " << tarch::mpi::MPIReturnValueToString(result)
         );
       }
@@ -384,7 +385,7 @@ class peano4::stacks::STDVectorStack {
     void finishSendOrReceive() {
       #ifdef Parallel
       logTraceInWith4Arguments( "finishSendOrReceive()", ::toString(_ioMode), size(), _ioRank,_ioTag );
-      if ( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive ) {
+      if ( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive or _ioMode==IOMode::MPISendAndDelete ) {
         assertion( _ioMPIRequest!=nullptr );
 
         int          flag = 0;
@@ -428,7 +429,7 @@ class peano4::stacks::STDVectorStack {
         delete _ioMPIRequest;
         _ioMPIRequest = nullptr;
       }
-      if (_ioMode==IOMode::MPISend ) {
+      if (_ioMode==IOMode::MPISendAndDelete ) {
         clear();
       }
       _ioMode = IOMode::None;
@@ -469,7 +470,7 @@ tarch::logging::Log peano4::stacks::STDVectorStack<T>::_log( "peano4::stacks::ST
 
 
 template <>
-void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag);
+void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag, bool deleteDataAfterSendComplete);
 
 
 template <>
