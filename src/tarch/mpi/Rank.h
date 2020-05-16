@@ -413,6 +413,12 @@ class tarch::mpi::Rank {
     void receiveDanglingMessages();
 
     void suspendTimeouts( bool timeoutsDisabled );
+
+    /**
+     * A proper abort in an MPI context has to use MPI_Abort. Otherwise, only the
+     * current rank goes down.
+     */
+    static void abort(int errorCode);
 };
 
 #endif

@@ -391,7 +391,6 @@ void tarch::mpi::Rank::shutdown() {
   assertion( _rank!=-1 );
 
   IntegerMessage::shutdownDatatype();
-  StringMessage::shutdownDatatype();
 
   int errorCode = MPI_Finalize();
   if (errorCode) {
@@ -487,7 +486,6 @@ bool tarch::mpi::Rank::init(int* argc, char*** argv) {
   }
     
   IntegerMessage::initDatatype();
-  StringMessage::initDatatype();
   #endif
 
   _initIsCalled = true;
@@ -553,5 +551,16 @@ void tarch::mpi::Rank::receiveDanglingMessages() {
   if (flag) {
     tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
   }
+  #endif
+}
+
+
+void tarch::mpi::Rank::abort(int errorCode) {
+  std::cout.flush();
+  std::cerr.flush();
+  #if Parallel
+  MPI_Abort(MPI_COMM_WORLD,errorCode);
+  #else
+  exit(errorCode);
   #endif
 }
