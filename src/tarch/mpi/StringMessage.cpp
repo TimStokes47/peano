@@ -1,6 +1,6 @@
 #include "StringMessage.h"
 
-
+#include "tarch/logging/Log.h"
 
 #include <sstream>
 #include <algorithm>
@@ -11,6 +11,7 @@ std::string tarch::mpi::StringMessage::toString() const {
   std::ostringstream out;
   out << "(";
   out << "data=" << getData();
+  out << ",rank=" << _senderDestinationRank;
   out << ")";
   return out.str();
 }
@@ -24,10 +25,6 @@ std::string   tarch::mpi::StringMessage::getData() const {
 void   tarch::mpi::StringMessage::setData(const std::string& value) {
   _data = value;
 }
-
-
-
-
 
 
 #ifdef Parallel
@@ -94,16 +91,8 @@ int tarch::mpi::StringMessage::getSenderRank() const {
 }
 
 
-void tarch::mpi::StringMessage::initDatatype() {
-}
-
-
-void tarch::mpi::StringMessage::shutdownDatatype() {
-}
-
-
 void tarch::mpi::StringMessage::send(const tarch::mpi::StringMessage& buffer, int destination, int tag, MPI_Comm communicator ) {
-  MPI_Send( &buffer._data[0], buffer._data.size()+1, MPI_CHAR, destination, tag, communicator);
+  MPI_Send( buffer._data.c_str(), buffer._data.size()+1, MPI_CHAR, destination, tag, communicator);
 }
 
 
@@ -122,7 +111,7 @@ void tarch::mpi::StringMessage::receive(tarch::mpi::StringMessage& buffer, int s
 void tarch::mpi::StringMessage::send(const tarch::mpi::StringMessage& buffer, int destination, int tag, std::function<void()> waitFunctor, MPI_Comm communicator ) {
   MPI_Request sendRequestHandle; 
   int         flag = 0; 
-  MPI_Isend( &buffer._data[0], buffer._data.size()+1, MPI_CHAR, destination, tag, communicator, &sendRequestHandle );
+  MPI_Isend( buffer._data.c_str(), buffer._data.size()+1, MPI_CHAR, destination, tag, communicator, &sendRequestHandle );
   MPI_Test( &sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
   while (!flag) { 
     waitFunctor();
@@ -132,8 +121,20 @@ void tarch::mpi::StringMessage::send(const tarch::mpi::StringMessage& buffer, in
 
 
 void tarch::mpi::StringMessage::receive(tarch::mpi::StringMessage& buffer, int source, int tag, std::function<void()> waitFunctor, MPI_Comm communicator ) {
-  // geht mit Iprobe
-  receive( buffer, source, tag, communicator );
+  MPI_Status  status;
+  MPI_Request receiveRequestHandle; 
+  int         flag = 0; 
+  MPI_Iprobe( source, tag, communicator, &flag, &status );
+  while (!flag) { 
+    waitFunctor();
+    MPI_Iprobe( source, tag, communicator, &flag, &status );
+  }
+  int count;
+  MPI_Get_count( &status, MPI_CHAR, &count );
+  char tmp[count];
+  MPI_Recv( &tmp, count, MPI_CHAR, source, tag, communicator, &status);
+  buffer._senderDestinationRank = status.MPI_SOURCE;
+  buffer._data = tmp;
 }
 
 
