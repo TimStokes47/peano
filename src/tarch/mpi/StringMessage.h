@@ -99,21 +99,9 @@ struct tarch::mpi::StringMessage {
     std::string toString() const;
   
   private:
-    char   _data[80];
-    int   _dataLength;
+    std::string _data;
 
-
-
-
-    #ifdef Parallel
-    public:
-      static MPI_Datatype  Datatype;
-    private:
-    int                  _senderDestinationRank;
-    #endif
-
-
-    
+    int _senderDestinationRank;
 };
 
 #endif
