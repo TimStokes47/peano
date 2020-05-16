@@ -38,7 +38,13 @@ void runTests() {
 
   if (unitTestsErrors != 0) {
     logError("main()", "unit tests failed. Quit.");
+    std::cout.flush();
+    std::cerr.flush();
+    #if Parallel
+    MPI_Abort(MPI_COMM_WORLD,-2);
+    #else
     exit(-2);
+    #endif
   }
 }
 
