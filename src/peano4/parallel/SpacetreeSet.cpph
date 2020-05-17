@@ -15,52 +15,81 @@ template <class Container>
 void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
   Container& stackContainer, int master, int worker
 ) {
-  const int sourceRank = Node::getInstance().getRank( master );
-  assertion( Node::getInstance().getRank( worker ) == tarch::mpi::Rank::getInstance().getRank() );
+  logTraceInWith2Arguments( "streamDataFromSplittingTreeToNewTree(...)", master, worker );
+  const int sourceRank      = Node::getInstance().getRank( master );
+  const int destinationRank = Node::getInstance().getRank( worker );
 
-  int  destinationStack = peano4::grid::PeanoCurve::getOutputStackNumber( getInstance().getSpacetree(worker)._root );
+  if (
+    sourceRank==tarch::mpi::Rank::getInstance().getRank()
+    and
+    destinationRank==tarch::mpi::Rank::getInstance().getRank()
+  ) {
+    int  destinationStack = peano4::grid::PeanoCurve::getOutputStackNumber( getInstance().getSpacetree(worker)._root );
+    if ( stackContainer.getForPush(worker,destinationStack)->empty() ) {
+      const int sourceStack      = peano4::grid::PeanoCurve::getInputStackNumber( getInstance().getSpacetree(master)._root );
+      logDebug(
+        "copyDataFromSplittingTreesToNewTrees()",
+        "copy stack " << sourceStack << " from tree " << master << " into stack " << destinationStack << " from tree " << worker
+      );
+      stackContainer.getForPush(worker,destinationStack)->clone( *stackContainer.getForPush(master,sourceStack) );
 
-  if ( sourceRank==tarch::mpi::Rank::getInstance().getRank() ) {
-    const int sourceStack      = peano4::grid::PeanoCurve::getInputStackNumber( getInstance().getSpacetree(master)._root );
-    logDebug(
-      "copyDataFromSplittingTreesToNewTrees()",
-      "copy stack " << sourceStack << " from tree " << master << " into stack " << destinationStack << " from tree " << worker
-    );
-    stackContainer.getForPush(worker,destinationStack)->clone( *stackContainer.getForPush(master,sourceStack) );
-
-    logDebug(
-      "copyDataFromSplittingTreesToNewTrees()",
-      "size of stack " << destinationStack << " on tree " << master << ": " << stackContainer.getForPush(master,destinationStack)->size()
-    );
+      logDebug(
+        "copyDataFromSplittingTreesToNewTrees()",
+        "size of stack " << destinationStack << " on tree " << master << ": " << stackContainer.getForPush(master,destinationStack)->size()
+      );
+    }
+    else {
+      logDebug(
+        "copyDataFromSplittingTreesToNewTrees()",
+        "target stack " << destinationStack << " of tree " << worker << " is already full, so skip copying"
+      );
+    }
   }
-  else {
-          #ifdef Parallel
-              const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(
-                parentId,
-                spacetreeId,
-                peano4::parallel::Node::ExchangeMode::ForkJoinData
-              );
-              logInfo(
-                "copyDataFromSplittingTreesToNewTrees()",
-                "receive stack " << destinationStack << " from tree " << parentId << " on rank " << sourceRank << " through tag " << tag
-              );
-              tarch::mpi::IntegerMessage message;
-              tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages( message, sourceRank, tag );
-              logInfo(
-                "copyDataFromSplittingTreesToNewTrees()",
-                "receive " << message.getValue() << " entries"
-              );
-              if (message.getValue()>0) {
-                stackContainer.getForPush(spacetreeId,destinationStack)->startReceive(
-                  sourceRank, tag, message.getValue()
-                );
-                stackContainer.getForPush(spacetreeId,destinationStack)->finishSendOrReceive();
-                stackContainer.getForPush(spacetreeId,destinationStack)->reverse();
-              }
-          #else
-          assertionMsg( false, "should never be entered" );
-          #endif
+  else if ( sourceRank==tarch::mpi::Rank::getInstance().getRank() ) {
+    #ifdef Parallel
+    const int tag            = peano4::parallel::Node::getInstance().getGridDataExchangeTag(master, worker, peano4::parallel::Node::ExchangeMode::VerticalData);
+    const int sourceStack    = peano4::grid::PeanoCurve::getInputStackNumber( getInstance().getSpacetree(master)._root );
+    const int messageSize    = stackContainer.getForPop(master,sourceStack)->size();
+    const int temporaryStack = Node::getOutputStackNumberForVerticalDataExchange(worker);
+
+    logInfo(
+      "copyDataFromSplittingTreesToNewTrees()",
+      "send stack " << sourceStack << " from tree " << master << " on rank " << sourceRank << " through tag " << tag <<
+      " to tree " << worker << " on rank " << destinationRank << ". size=" << messageSize
+    );
+    tarch::mpi::IntegerMessage message( messageSize );
+    tarch::mpi::IntegerMessage::send(message, destinationRank, tag, tarch::mpi::Rank::getInstance().getCommunicator());
+
+    if (messageSize>0) {
+      stackContainer.getForPush(master,temporaryStack)->clone( *stackContainer.getForPop(master,sourceStack) );
+      stackContainer.getForPush(master,temporaryStack)->startSend(
+        destinationRank, tag
+      );
+    }
+    #else
+    assertionMsg( false, "should never be entered" );
+    #endif
   }
+  else if ( destinationRank==tarch::mpi::Rank::getInstance().getRank() ) {
+    #ifdef Parallel
+    int  destinationStack = peano4::grid::PeanoCurve::getOutputStackNumber( getInstance().getSpacetree(worker)._root );
+    const int tag         = peano4::parallel::Node::getInstance().getGridDataExchangeTag(master, worker, peano4::parallel::Node::ExchangeMode::VerticalData);
+    tarch::mpi::IntegerMessage message;
+    tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages(message, sourceRank, tag);
+    logInfo(
+      "copyDataFromSplittingTreesToNewTrees()",
+      "receive " << message.getValue() << " entries from tree " << master << " on rank " << sourceRank
+    );
+    if (message.getValue()>0) {
+      stackContainer.getForPush(worker,destinationStack)->startReceive(
+        sourceRank, tag, message.getValue()
+      );
+    }
+    #else
+    assertionMsg( false, "should never be entered" );
+    #endif
+  }
+  logTraceOutWith2Arguments( "streamDataFromSplittingTreeToNewTree(...)", master, worker );
 }
 
 
@@ -70,29 +99,6 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
   int spacetreeId, int parentId
 ) {
   logTraceInWith2Arguments( "exchangeAllVerticalDataExchangeStacks(...)", spacetreeId, parentId );
-
-
-  // @todo receive von remote data fehlt
-  /*
-  else if (
-    destinationRank == tarch::mpi::Rank::getInstance().getRank()
-    and
-    sourceRank      != tarch::mpi::Rank::getInstance().getRank()
-  ) {
-    const int tag = Node::getInstance().getGridDataExchangeTag( sourceSpacetreeId, destinationSpacetreeId, Node::ExchangeMode::ReceiveVerticalData );
-    logInfo(
-      "exchangeStacksSynchronously(...)",
-      "receive stack " << destinationStack << " of tree " << destinationSpacetreeId << " from tree " << sourceSpacetreeId << " on rank " << sourceRank
-    );
-    assertion( stackContainer[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].empty() );
-
-    tarch::mpi::IntegerMessage message;
-    message.receive(sourceRank,tag,false,tarch::mpi::IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-
-    stackContainer[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].startReceive(sourceRank,tag,message.getValue());
-    stackContainer[ peano4::grid::Spacetree::StackKey(destinationSpacetreeId,destinationStack) ].finishSendOrReceive();
-  }
-*/
   logTraceOutWith2Arguments( "exchangeAllVerticalDataExchangeStacks(...)", spacetreeId, parentId );
 }
 
@@ -115,17 +121,20 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
       and
       Node::getInstance().getRank( Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second) )!=tarch::mpi::Rank::getInstance().getRank()
     ) {
-      int targetId  = Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second);
-      int rank      = Node::getInstance().getRank( targetId );
-      int count     = stackContainer.getForPush(sourceStackKey)->size();
-      int inStack   = Node::getInstance().getInputStackNumberForHorizontalDataExchange(targetId);
+      int targetId       = Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second);
+      int rank           = Node::getInstance().getRank( targetId );
+      int count          = stackContainer.getForPush(sourceStackKey)->size();
+      int inStack        = Node::getInstance().getInputStackNumberForHorizontalDataExchange(targetId);
 
       int sendTag       = Node::getInstance().getGridDataExchangeTag( spacetreeId, targetId, Node::ExchangeMode::HorizontalData );
       logDebug( "exchangeAllHorizontalDataExchangeStacks(...)", "send stack " << sourceStackKey.second << " of tree " << sourceStackKey.first << " to rank " << rank << " with tag " << sendTag << ": " << count << " element(s)");
+
       stackContainer.getForPush(sourceStackKey)->startSend(rank,sendTag);
 
       int receiveTag    = Node::getInstance().getGridDataExchangeTag( targetId, spacetreeId, Node::ExchangeMode::HorizontalData );
-      logDebug( "exchangeAllHorizontalDataExchangeStacks(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
+
+      // @todo Debug
+      logInfo( "exchangeAllHorizontalDataExchangeStacks(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
       assertion(not Node::getInstance().isHorizontalDataExchangeOutputStackNumber(inStack));
       stackContainer.getForPush(spacetreeId,inStack)->startReceive(rank,receiveTag,count);
     }
@@ -181,16 +190,23 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
 
 template <class Container>
 void peano4::parallel::SpacetreeSet::finishAllOutstandingSendsAndReceives( Container& stackContainer, int spacetreeId ) {
+  logTraceInWith1Argument( "finishAllOutstandingSendsAndReceives(...)", spacetreeId );
   // Finalise data exchange
   // ----------------------
   std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
   for (auto& sourceStackKey: keys) {
     if ( sourceStackKey.first==spacetreeId ) {
+      // @todo Debug
+      logInfo( "finishAllOutstandingSendsAndReceives(...)", "check stack no " << sourceStackKey.first << " x " << sourceStackKey.second );
       stackContainer.getForPush(sourceStackKey)->finishSendOrReceive();
     }
   }
 
+  // @todo Debug
+  logInfo( "finishAllOutstandingSendsAndReceives(...)", "all data transfer is done, trigger garbage collection" );
+
   stackContainer.garbageCollection();
+  logTraceOutWith1Argument( "finishAllOutstandingSendsAndReceives(...)", spacetreeId );
 }
 
 

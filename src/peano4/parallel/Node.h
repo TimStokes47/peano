@@ -278,6 +278,11 @@ class peano4::parallel::Node {
 
     enum class ExchangeMode {
       HorizontalData,
+      /**
+       * Vertical data is data running from the master to the worker and the other
+       * way round. Consequently, some tree management data are vertical data, too.
+       * See for example peano4::parallel::SpacetreeSet::addSpacetree().
+       */
       VerticalData
     };
 

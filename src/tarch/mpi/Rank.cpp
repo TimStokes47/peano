@@ -390,10 +390,6 @@ void tarch::mpi::Rank::shutdown() {
   #ifdef Parallel
   assertion( _rank!=-1 );
 
-  #if PeanoDebug>=1
-  plotMessageQueues();
-  #endif
-
   IntegerMessage::shutdownDatatype();
   StringMessage::shutdownDatatype();
 

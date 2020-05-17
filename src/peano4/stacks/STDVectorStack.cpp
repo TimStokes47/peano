@@ -25,6 +25,7 @@ void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag) {
 template <>
 void peano4::stacks::STDVectorStack<double>::startReceive(int rank, int tag, int numberOfElements) {
   #ifdef Parallel
+  logTraceInWith3Arguments( "startReceive(int,int,int)", rank, tag, numberOfElements );
   assertion3( _ioMode==IOMode::None, rank, tag, numberOfElements );
   assertion3( numberOfElements>0, rank, tag, numberOfElements );
   _ioMode = IOMode::MPIReceive;
@@ -43,6 +44,20 @@ void peano4::stacks::STDVectorStack<double>::startReceive(int rank, int tag, int
       << ": " << tarch::mpi::MPIReturnValueToString(result)
     );
   }
+  logTraceOut( "startReceive(int,int,int)" );
   #endif
+}
+
+
+std::string toString( peano4::stacks::IOMode mode ) {
+  switch (mode) {
+    case peano4::stacks::IOMode::MPIReceive:
+      return "receive";
+    case peano4::stacks::IOMode::MPISend:
+      return "send";
+    case peano4::stacks::IOMode::None:
+      return "none";
+  }
+  return "<undef>";
 }
 

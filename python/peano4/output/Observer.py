@@ -148,13 +148,6 @@ class Observer(object):
 {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId):
   _spacetreeId( spacetreeId ) {MAPPING_INITIALISATION_LIST}
 {{
-  assertion3(
-    spacetreeId==-1 or
-    peano4::parallel::Node::getInstance().getRank( spacetreeId ) == tarch::mpi::Rank::getInstance().getRank(),
-    peano4::parallel::Node::getInstance().getRank( spacetreeId ),
-    tarch::mpi::Rank::getInstance().getRank(),
-    spacetreeId 
-  );
 }}
   
 
