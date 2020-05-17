@@ -45,7 +45,7 @@ make install
 
 ### 3.2.  Build Peano plus VTK support
 
-> **NOTE:** Assumes a VTK installation to /usr/. How to configure the VTK discovery is desribed in the user guide and `configure` script help message.
+> **NOTE:** Assumes a VTK installation to /usr/. How to configure the VTK discovery is described in the user guide and `configure` script help message.
 
 ```shell
 libtoolize; aclocal; autoconf; autoheader;
@@ -56,7 +56,7 @@ make install
 
 ### 3.3.  Build Peano plus ExaHyPE2 and VTK support
 
-> **NOTE:** Assumes a VTK installation to /usr/. How to configure the VTK discovery is desribed in the user guide and `configure` script help message.
+> **NOTE:** Assumes a VTK installation to /usr/. How to configure the VTK discovery is described in the user guide and `configure` script help message.
 
 ```shell
 libtoolize; aclocal; autoconf; autoheader;
