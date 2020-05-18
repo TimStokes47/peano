@@ -52,7 +52,7 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
     const int messageSize    = stackContainer.getForPop(master,sourceStack)->size();
     const int temporaryStack = Node::getOutputStackNumberForVerticalDataExchange(worker);
 
-    logInfo(
+    logDebug(
       "copyDataFromSplittingTreesToNewTrees()",
       "send stack " << sourceStack << " from tree " << master << " on rank " << sourceRank << " through tag " << tag <<
       " to tree " << worker << " on rank " << destinationRank << ". size=" << messageSize
@@ -76,7 +76,7 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
     const int tag         = peano4::parallel::Node::getInstance().getGridDataExchangeTag(master, worker, peano4::parallel::Node::ExchangeMode::VerticalData);
     tarch::mpi::IntegerMessage message;
     tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages(message, sourceRank, tag);
-    logInfo(
+    logDebug(
       "copyDataFromSplittingTreesToNewTrees()",
       "receive " << message.getValue() << " entries from tree " << master << " on rank " << sourceRank
     );
@@ -133,8 +133,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
 
       int receiveTag    = Node::getInstance().getGridDataExchangeTag( targetId, spacetreeId, Node::ExchangeMode::HorizontalData );
 
-      // @todo Debug
-      logInfo( "exchangeAllHorizontalDataExchangeStacks(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
+      logDebug( "exchangeAllHorizontalDataExchangeStacks(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
       assertion(not Node::getInstance().isHorizontalDataExchangeOutputStackNumber(inStack));
       stackContainer.getForPush(spacetreeId,inStack)->startReceive(rank,receiveTag,count);
     }
@@ -196,14 +195,12 @@ void peano4::parallel::SpacetreeSet::finishAllOutstandingSendsAndReceives( Conta
   std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
   for (auto& sourceStackKey: keys) {
     if ( sourceStackKey.first==spacetreeId ) {
-      // @todo Debug
-      logInfo( "finishAllOutstandingSendsAndReceives(...)", "check stack no " << sourceStackKey.first << " x " << sourceStackKey.second );
+      logDebug( "finishAllOutstandingSendsAndReceives(...)", "check stack no " << sourceStackKey.first << " x " << sourceStackKey.second );
       stackContainer.getForPush(sourceStackKey)->finishSendOrReceive();
     }
   }
 
-  // @todo Debug
-  logInfo( "finishAllOutstandingSendsAndReceives(...)", "all data transfer is done, trigger garbage collection" );
+  logDebug( "finishAllOutstandingSendsAndReceives(...)", "all data transfer is done, trigger garbage collection" );
 
   stackContainer.garbageCollection();
   logTraceOutWith1Argument( "finishAllOutstandingSendsAndReceives(...)", spacetreeId );

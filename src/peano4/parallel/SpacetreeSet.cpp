@@ -424,9 +424,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   }
 
   // I use this boolean flag from time to time to debug the code.
-  const bool runSequentially = true;
+  const bool runSequentially = false;
 
-  logInfo( "traverse(TraversalObserver&)", "kick off primary tree sweeps: " << primaryTasks.size() << " task(s)" );
+  logDebug( "traverse(TraversalObserver&)", "kick off primary tree sweeps: " << primaryTasks.size() << " task(s)" );
   if ( not primaryTasks.empty() ) {
     static int multitasking = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverse-1" );
     peano4::parallel::Tasks runs( primaryTasks,
@@ -434,7 +434,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
       multitasking,true);
   }
 
-  logInfo( "traverse(TraversalObserver&)", "primary tasks (traversals) complete, trigger split data exchange if required" );
+  logDebug( "traverse(TraversalObserver&)", "primary tasks (traversals) complete, trigger split data exchange if required" );
   streamDataFromSplittingTreesToNewTrees(observer);
   exchangeVerticalDataBetweenTrees(observer);
 
