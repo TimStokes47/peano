@@ -137,7 +137,7 @@ void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId )
     message.setAction( TreeManagementMessage::Action::CreateNewRemoteTree );
     TreeManagementMessage::send( message,  targetRank, _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
 
-    const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(masterId,newTreeId,peano4::parallel::Node::ExchangeMode::ForkJoinData);
+    const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(masterId,newTreeId,peano4::parallel::Node::ExchangeMode::VerticalData);
     peano4::grid::AutomatonState state = _spacetrees.begin()->_root;
 
     logDebug( "addSpacetree(int,int)", "send state " << state.toString() << " to rank " << targetRank << " via tag " << tag );
@@ -293,7 +293,7 @@ void peano4::parallel::SpacetreeSet::exchangeVerticalDataBetweenTrees(peano4::gr
 
 
 void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreesToNewTrees(peano4::grid::TraversalObserver&  observer) {
-  logTraceIn( "copyDataFromSplittingTreesToNewTrees()" );
+  logTraceInWith1Argument( "streamDataFromSplittingTreesToNewTrees()", _spacetrees.size() );
 
   for (auto& parent: _spacetrees) {
     for (auto& worker: parent._hasSplit) {
@@ -306,12 +306,22 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreesToNewTrees(pean
   }
 
   for (auto& p: _spacetrees) {
+    if (p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::EmptyRun) {
+      streamDataFromSplittingTreeToNewTree( peano4::grid::Spacetree::_vertexStack, p._masterId, p._id);
+
+      createObserverCloneIfRequired(observer,p._masterId);
+
+      _clonedObserver[p._masterId]->streamDataFromSplittingTreeToNewTree( p._id );
+    }
+  }
+
+  for (auto& p: _spacetrees) {
     createObserverCloneIfRequired(observer,p._id);
     finishAllOutstandingSendsAndReceives( peano4::grid::Spacetree::_vertexStack, p._id );
     _clonedObserver[p._id]->finishAllOutstandingSendsAndReceives();
   }
 
-  logTraceOut( "copyDataFromSplittingTreesToNewTrees()" );
+  logTraceOut( "streamDataFromSplittingTreesToNewTrees()" );
 }
 
 
@@ -414,9 +424,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   }
 
   // I use this boolean flag from time to time to debug the code.
-  const bool runSequentially = false;
+  const bool runSequentially = true;
 
-  logDebug( "traverse(TraversalObserver&)", "kick off primary tree sweeps: " << primaryTasks.size() << " task(s)" );
+  logInfo( "traverse(TraversalObserver&)", "kick off primary tree sweeps: " << primaryTasks.size() << " task(s)" );
   if ( not primaryTasks.empty() ) {
     static int multitasking = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverse-1" );
     peano4::parallel::Tasks runs( primaryTasks,
@@ -424,6 +434,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
       multitasking,true);
   }
 
+  logInfo( "traverse(TraversalObserver&)", "primary tasks (traversals) complete, trigger split data exchange if required" );
   streamDataFromSplittingTreesToNewTrees(observer);
   exchangeVerticalDataBetweenTrees(observer);
 
@@ -495,7 +506,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
         logDebug( "traverse(Observer)", "parent tree " << p->_masterId << " is not local on this rank. Remove child reference" );
         #ifdef Parallel
         TreeManagementMessage message( p->_masterId, p->_id, TreeManagementMessage::Action::RemoveChildTreeFromBooksAsChildBecameEmpty );
-        message.send( Node::getInstance().getRank(p->_masterId), Node::getInstance().getAsynchronousTreeManagementTag(), false, TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+        TreeManagementMessage::send( message, Node::getInstance().getRank(p->_masterId), _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
         #else
         assertionMsg( false, "branch may not be entered" );
         #endif
@@ -538,7 +549,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
 
 
 peano4::grid::GridStatistics  peano4::parallel::SpacetreeSet::getGridStatistics(int treeId) const {
-  assertion( isLocalSpacetree(treeId) );
+  assertion2( isLocalSpacetree(treeId), treeId, tarch::mpi::Rank::getInstance().getRank() );
   return getSpacetree(treeId).getGridStatistics();
 }
 

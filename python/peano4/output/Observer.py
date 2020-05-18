@@ -148,13 +148,6 @@ class Observer(object):
 {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId):
   _spacetreeId( spacetreeId ) {MAPPING_INITIALISATION_LIST}
 {{
-  assertion3(
-    spacetreeId==-1 or
-    peano4::parallel::Node::getInstance().getRank( spacetreeId ) == tarch::mpi::Rank::getInstance().getRank(),
-    peano4::parallel::Node::getInstance().getRank( spacetreeId ),
-    tarch::mpi::Rank::getInstance().getRank(),
-    spacetreeId 
-  );
 }}
   
 
@@ -1099,8 +1092,8 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFaceHorizontally(const peano4::g
       relativePositionOnInOutStack
     );
     
-    assertionVectorNumericalEquals7( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, _spacetreeId );
-    assertionVectorNumericalEquals7( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, _spacetreeId );
+    assertionVectorNumericalEquals8( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
+    assertionVectorNumericalEquals8( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
     
     data.mergeHorizontally(incomingData, marker);
   }}
