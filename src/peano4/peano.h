@@ -7,7 +7,7 @@
  *
  * @mainpage Peano 4
  *
- * Welcome to the source code documentation of Peano4.
+ * Welcome to the source code documentation of Peano 4.
  *
  * @image html architecture-layers.png
  *
@@ -81,7 +81,7 @@ namespace peano4 {
    * you call any other operation that could result in an error. I suggest
    * to call it right after fillLookupTables().
    *
-   * Please note that Peano4 considers both shared memory and distributed
+   * Please note that Peano 4 considers both shared memory and distributed
    * memory to be a parallel environment.
    *
    * init might change the variables passed. If you want to parse the
@@ -118,7 +118,7 @@ namespace peano4 {
    * that all nodes call receiveDanglingMessages(). It is only after everyone
    * has done their dump, that we can shut down the shared memory system. This is the
    * reason the barrier has to come after the node's shutdown and then has to
-   * be a Peano4 barrier which still invokes receiveDanglingMessages() on all
+   * be a Peano 4 barrier which still invokes receiveDanglingMessages() on all
    * services.
    *
    * Once all shared memory tasks have terminated, we free the MPI datatypes.
