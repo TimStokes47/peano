@@ -1100,6 +1100,23 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFaceHorizontally(const peano4::g
 """
 
 
+  TemplateExchangeRoutines_deleteAllStacks_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::deleteAllStacks() {{
+  logTraceInWith1Argument( "deleteAllStacks()", _spacetreeId );
+"""
+
+  TemplateExchangeRoutines_deleteAllStacks_Exchange = """
+  peano4::parallel::SpacetreeSet::deleteAllStacks(
+    {DATASET},
+    _spacetreeId
+  );
+"""
+
+  TemplateExchangeRoutines_deleteAllStacks_Epilogue = """
+  logTraceOut( "deleteAllStacks()");
+}}
+"""
+
   def __generate_exchange_routines(self,output_file):
     output_file.write( self.TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Prologue.format(**self.d) )
     for cell in self.cells:
@@ -1196,6 +1213,19 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFaceHorizontally(const peano4::g
       self.d[ "logical_type_name" ] = face.get_logical_type_name()
       output_file.write( self.TemplateExchangeRoutines_receiveAndMergeHorizontally_Exchange.format(**self.d) )
     output_file.write( self.TemplateExchangeRoutines_receiveAndMergeFaceHorizontally_Epilogue.format(**self.d) )
+
+    output_file.write( self.TemplateExchangeRoutines_deleteAllStacks_Prologue.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "DATASET" ] = "DataRepository::_" + cell.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_deleteAllStacks_Exchange.format(**self.d) )
+    for face in self.faces:
+      self.d[ "DATASET" ] = "DataRepository::_" + face.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_deleteAllStacks_Exchange.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_deleteAllStacks.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_deleteAllStacks_Epilogue.format(**self.d) )
+      
       
       
 

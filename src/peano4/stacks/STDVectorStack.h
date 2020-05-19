@@ -423,8 +423,7 @@ class peano4::stacks::STDVectorStack {
           tarch::mpi::Rank::getInstance().receiveDanglingMessages();
           tarch::multicore::yield();
         }
-        // @todo Debug
-        logInfo( "finishSendOrReceive()", "send/receive complete, free MPI request" );
+        logDebug( "finishSendOrReceive()", "send/receive complete, free MPI request" );
         delete _ioMPIRequest;
         _ioMPIRequest = nullptr;
       }

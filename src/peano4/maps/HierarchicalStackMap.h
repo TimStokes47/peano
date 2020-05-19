@@ -96,6 +96,12 @@ class peano4::maps::HierarchicalStackMap {
     std::set<StackKey>  getKeys();
 
     void garbageCollection();
+
+    /**
+     * For debugging/assertions.
+     */
+    bool holdsStack(int treeId, int stackId) const;
+    bool holdsStack(const StackKey& key) const;
 };
 
 
@@ -127,6 +133,21 @@ bool peano4::maps::HierarchicalStackMap<T>::empty(int treeId, int stackId) const
 template <typename T>
 T* peano4::maps::HierarchicalStackMap<T>::getForPush(int treeId, int stackId) {
   return getForPush( StackKey(treeId,stackId) );
+}
+
+
+template <typename T>
+bool peano4::maps::HierarchicalStackMap<T>::holdsStack(int treeId, int stackId) const {
+  return holdsStack( StackKey(treeId,stackId) );
+}
+
+
+template <typename T>
+bool peano4::maps::HierarchicalStackMap<T>::holdsStack(const StackKey& key) const {
+  const int localTreeId = peano4::parallel::Node::getInstance().getLocalTreeId(key.first);
+  assertion3(localTreeId>=0,localTreeId,key.first,key.second);
+  assertion4(localTreeId<_data.size(),localTreeId,_data.size(),key.first,key.second);
+  return _data[localTreeId]._stackNumberToData.count(key.second)==1;
 }
 
 

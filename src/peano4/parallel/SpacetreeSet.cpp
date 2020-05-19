@@ -258,6 +258,15 @@ void peano4::parallel::SpacetreeSet::streamLocalVertexInformationToMasterThrough
 }
 
 
+void peano4::parallel::SpacetreeSet::deleteAllStacks( peano4::grid::TraversalObserver&  observer, int spacetreeId ) {
+  logTraceInWith1Argument( "deleteAllStacks(int)", spacetreeId );
+  deleteAllStacks( peano4::grid::Spacetree::_vertexStack, spacetreeId );
+  createObserverCloneIfRequired(observer,spacetreeId);
+  _clonedObserver[spacetreeId]->deleteAllStacks();
+  logTraceOut( "deleteAllStacks(int)" );
+}
+
+
 void peano4::parallel::SpacetreeSet::exchangeVerticalDataBetweenTrees(peano4::grid::TraversalObserver&  observer) {
   logTraceIn( "exchangeVerticalDataBetweenTrees(...)" );
 
@@ -424,9 +433,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   }
 
   // I use this boolean flag from time to time to debug the code.
-  const bool runSequentially = true;
+  const bool runSequentially = false;
 
-  logInfo( "traverse(TraversalObserver&)", "kick off primary tree sweeps: " << primaryTasks.size() << " task(s)" );
+  logDebug( "traverse(TraversalObserver&)", "kick off primary tree sweeps: " << primaryTasks.size() << " task(s)" );
   if ( not primaryTasks.empty() ) {
     static int multitasking = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverse-1" );
     peano4::parallel::Tasks runs( primaryTasks,
@@ -434,7 +443,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
       multitasking,true);
   }
 
-  logInfo( "traverse(TraversalObserver&)", "primary tasks (traversals) complete, trigger split data exchange if required" );
+  logDebug( "traverse(TraversalObserver&)", "primary tasks (traversals) complete, trigger split data exchange if required" );
   streamDataFromSplittingTreesToNewTrees(observer);
   exchangeVerticalDataBetweenTrees(observer);
 
@@ -460,7 +469,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
   _state = SpacetreeSetState::Waiting;
 
-  cleanUpTrees();
+  cleanUpTrees(observer);
   createNewTrees();
 
   deleteClonedObservers();
@@ -469,7 +478,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 }
 
 
-void peano4::parallel::SpacetreeSet::cleanUpTrees() {
+void peano4::parallel::SpacetreeSet::cleanUpTrees(peano4::grid::TraversalObserver&  observer) {
   logTraceIn( "cleanUpTrees(...)" );
   for (auto p = _spacetrees.begin(); p!=_spacetrees.end(); ) {
 /*
@@ -491,6 +500,8 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Joined
     ) {
       logInfo( "traverse(Observer)", "tree " << p->_id << " has successfully joined" );
+      deleteAllStacks( observer, p->_id );
+      Node::getInstance().deregisterId(p->_id);
       p = _spacetrees.erase(p);
       p--;
     }
@@ -500,6 +511,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       p->getGridStatistics().getNumberOfLocalUnrefinedCells()==0
     )  {
       logInfo( "traverse(Observer)", "remove empty tree " << p->_id );
+      deleteAllStacks( observer, p->_id );
       Node::getInstance().deregisterId(p->_id);
 
       if ( Node::getInstance().getRank(p->_masterId)!=tarch::mpi::Rank::getInstance().getRank() ) {

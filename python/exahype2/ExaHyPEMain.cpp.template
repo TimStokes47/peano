@@ -294,7 +294,7 @@ int main(int argc, char** argv) {{
   peanoCoreTests->run();
   if (peanoCoreTests->getNumberOfErrors() != 0) {{
     logError("main()", "Peano4 core unit tests failed. Quit.");
-    exit(ExitCodeUnitTestsFailed);
+    tarch::mpi::Rank::abort( ExitCodeUnitTestsFailed );
   }}
   delete peanoCoreTests;
 
@@ -302,7 +302,7 @@ int main(int argc, char** argv) {{
   peanoTarchTests->run();
   if (peanoTarchTests->getNumberOfErrors() != 0) {{
     logError("main()", "technical architecture (tarch) unit tests failed. Quit.");
-    exit(ExitCodeUnitTestsFailed);
+    tarch::mpi::Rank::abort( ExitCodeUnitTestsFailed );
   }}
   delete peanoTarchTests;
  

@@ -79,15 +79,6 @@ tarch::mpi::IntegerMessage::receive(
  Peano4 aspect and to inject it into DaStGen. So just invoke the sendAndPoll
  or receiveAndPoll operation and you basically get the above aspect.
 
- \section Init MPI
-
-
- \section Regenerate all data types
-
- \code
- java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator IntegerMessage.def .
- java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator StringMessage.def .
- \endcode
  */
 
 

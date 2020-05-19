@@ -33,12 +33,17 @@ namespace mpi{
 
 
 
+/**
+ * The string message looks like the other messages which I generate through
+ * DaStGen 2, but I actually wrote it myself manually to support dynamic
+ * string lengths.
+ *
+ * @author Tobias Weinzierl
+ */
 struct tarch::mpi::StringMessage {
   public:
-
-
     StringMessage() {}
-    StringMessage(char  __data[80], int  __dataLength);
+    StringMessage(const std::string & value);
 
     std::string   getData() const;
     void   setData(const std::string& value);
@@ -57,12 +62,6 @@ struct tarch::mpi::StringMessage {
      *         this routine after you've invoked receive with MPI_ANY_SOURCE.
      */
     int getSenderRank() const;
-    
-    /**
-     * To be called prior to any MPI usage of this class.
-     */
-    static void initDatatype();
-    static void shutdownDatatype();
             
     /**
      * In DaStGen (the first version), I had a non-static version of the send
@@ -99,21 +98,9 @@ struct tarch::mpi::StringMessage {
     std::string toString() const;
   
   private:
-    char   _data[80];
-    int   _dataLength;
+    std::string _data;
 
-
-
-
-    #ifdef Parallel
-    public:
-      static MPI_Datatype  Datatype;
-    private:
-    int                  _senderDestinationRank;
-    #endif
-
-
-    
+    int _senderDestinationRank;
 };
 
 #endif

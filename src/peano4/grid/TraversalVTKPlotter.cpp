@@ -9,7 +9,6 @@
 #include "tarch/mpi/StringMessage.h"
 #include "tarch/mpi/IntegerMessage.h"
 
-#include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
 #include "tarch/multicore/Core.h"
 
@@ -18,6 +17,7 @@
 
 
 tarch::logging::Log  peano4::grid::TraversalVTKPlotter::_log( "peano4::grid::TraversalVTKPlotter" );
+tarch::multicore::BooleanSemaphore  peano4::grid::TraversalVTKPlotter::_semaphore;
 
 
 int peano4::grid::TraversalVTKPlotter::_counter(0);
@@ -155,13 +155,12 @@ void peano4::grid::TraversalVTKPlotter::leaveCell(
 
 
 void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
-  static tarch::multicore::BooleanSemaphore semaphore;
-  tarch::multicore::Lock lock(semaphore);
+  tarch::multicore::Lock lock(_semaphore);
 
   std::string newFile = getFilename( spacetreeId );
 
   for (auto& p: _clonedSpacetreeIds) {
-	assertion3( p!=newFile, p, newFile, spacetreeId );
+    assertion3( p!=newFile, p, newFile, spacetreeId );
   }
 
   _clonedSpacetreeIds.push_back( newFile );
@@ -197,7 +196,12 @@ void peano4::grid::TraversalVTKPlotter::beginTraversalOnRank(bool isParallelRun)
 
 
 void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
+  // Should not be necessary, but you never know
+  tarch::multicore::Lock lock(_semaphore);
+
   _counter++;
+
+  assertion( _spacetreeId==-1 );
 
   if ( tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     #ifdef Parallel
@@ -208,15 +212,20 @@ void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
         int entries;
         tarch::mpi::IntegerMessage snapshotCounter;
         tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages( snapshotCounter, rank, _plotterMessageTag );
-        logInfo( "startNewSnapshot(...)", "will receive " << snapshotCounter.getValue() << " snapshots from rank " << rank);
+        // @todo Debug
+        logInfo( "endTraversalOnRank(...)", "will receive " << snapshotCounter.getValue() << " snapshots from rank " << rank);
 
         for (int i=0; i<snapshotCounter.getValue(); i++) {
           tarch::mpi::StringMessage message;
           tarch::mpi::StringMessage::receiveAndPollDanglingMessages( message, rank, _plotterMessageTag );
           _clonedSpacetreeIds.push_back( message.getData() );
+          // @todo Debug
+          logInfo( "endTraversalOnRank(...)", "- rank " << rank << " has written snapshot " << message.getData() );
         }
       }
     }
+    // @todo Debug
+    logInfo( "endTraversalOnRank(...)", "received snapshots from all other ranks, dump a meta file with " << _clonedSpacetreeIds.size() << " entries" );
     #endif
 
     if ( not _clonedSpacetreeIds.empty() ) {
@@ -233,14 +242,23 @@ void peano4::grid::TraversalVTKPlotter::endTraversalOnRank(bool isParallelRun) {
   else {
     #ifdef Parallel
     assertion(isParallelRun);
+
+    // @todo Debug
+    logInfo( "endTraversalOnRank(...)", "inform master that rank has written " << _clonedSpacetreeIds.size() << " snapshots" );
+
     tarch::mpi::IntegerMessage entriesMessage;
     entriesMessage.setValue( _clonedSpacetreeIds.size() );
     tarch::mpi::IntegerMessage::sendAndPollDanglingMessages(entriesMessage, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag);
-    for (auto& p: _clonedSpacetreeIds) {
+
+    for (auto p: _clonedSpacetreeIds) {
+      // @todo Debug
+      logInfo( "endTraversalOnRank(...)", "- hand over snapshot filename " << p );
       tarch::mpi::StringMessage message;
       message.setData( p );
       tarch::mpi::StringMessage::sendAndPollDanglingMessages(message, tarch::mpi::Rank::getGlobalMasterRank(), _plotterMessageTag);
     }
+    // @todo Debug
+    logInfo( "endTraversalOnRank(...)", "sent names of all snapshots to master" );
     #else
     assertionMsg( false, "should never enter" );
     #endif

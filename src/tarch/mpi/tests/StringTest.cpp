@@ -3,6 +3,8 @@
 #include "../Rank.h"
 
 
+tarch::logging::Log tarch::mpi::tests::StringTest::_log( "tarch::mpi::tests::StringTest" );
+
 
 tarch::mpi::tests::StringTest::StringTest():
   TestCase( "tarch::mpi::tests::StringTest" ) {
@@ -34,7 +36,7 @@ void tarch::mpi::tests::StringTest::testSendReceive() {
   ) {
     StringMessage message;
     StringMessage::receive( message, 0, 0, tarch::mpi::Rank::getInstance().getCommunicator() );
-    validateEquals( message.getData(), testString );
+    validateEqualsWithParams2( message.getData(), testString, message.toString(), testString );
   }
   #endif
 }
