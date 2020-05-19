@@ -17,7 +17,9 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
   _blacklist(),
   _hasSpreadOutOverAllRanks(false),
   _localNumberOfInnerUnrefinedCell( 0 ),
-  _globalNumberOfInnerUnrefinedCell( 0 ) {
+  _globalNumberOfInnerUnrefinedCell( 0 ),
+  _totalNumberOfSplits(0),
+  _isInCoolDownPhase(false) {
 }
 
 
@@ -84,6 +86,27 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 }
 
 
+bool toolbox::loadbalancing::RecursiveSubdivision::isInCoolDownPhase() {
+  if ( _isInCoolDownPhase and _totalNumberOfSplits>0 ) {
+    _totalNumberOfSplits--;
+    return true;
+  }
+  else if ( _isInCoolDownPhase and _totalNumberOfSplits<=0 ) {
+	_isInCoolDownPhase   = false;
+	_totalNumberOfSplits = 0;
+	return true;
+  }
+  else if ( not _isInCoolDownPhase and _totalNumberOfSplits<tarch::mpi::Rank::getInstance().getNumberOfRanks() * tarch::multicore::Core::getInstance().getNumberOfThreads() ) {
+    return false;
+  }
+  else {
+	logInfo( "isInCoolDownPhase()", "lots of splits triggered, enter cool-down phase, i.e. postpone further splits" );
+    _isInCoolDownPhase = true;
+    return true;
+  }
+}
+
+
 void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   updateGlobalView();
   updateBlacklist();
@@ -101,6 +124,9 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
     tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1
   ) {
     _hasSpreadOutOverAllRanks = true;
+  }
+  else if (_hasSpreadOutOverAllRanks and isInCoolDownPhase()) {
+    logDebug( "finishStep()", "currently in cool-down phase" );
   }
   else if ( not _hasSpreadOutOverAllRanks ) {
     int cells             = getMaximumSpacetreeSize();
@@ -183,4 +209,5 @@ void toolbox::loadbalancing::RecursiveSubdivision::triggerSplit( int sourceTree,
   else {
     logInfo( "triggerSplit()", "wanted to split local rank " << sourceTree << " but failed" );
   }
+  _totalNumberOfSplits++;
 }
