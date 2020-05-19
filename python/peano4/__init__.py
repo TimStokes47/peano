@@ -4,6 +4,5 @@ import peano4.output
 
 from .Project import Project
 
-print( "Peano4 (C) www.peano-framework.org" )
-print( "Written by Tobias Weinzierl" )
+print( "Peano 4 (C) www.peano-framework.org" )
 
