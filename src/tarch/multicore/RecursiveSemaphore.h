@@ -4,6 +4,8 @@
   #include "cpp/RecursiveSemaphore.h"
 #elif defined(SharedTBB)
   #include "tbb/RecursiveSemaphore.h"
+#elif defined(SharedOMP)
+  #include "omp/RecursiveSemaphore.h"
 #elif !defined(_TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_)
 #define _TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_
 
