@@ -1016,7 +1016,7 @@ void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives() {{
 
   TemplateExchangeRoutines_sendVertexHorizontally_Prologue = """
 void {FULL_QUALIFIED_CLASSNAME}::sendVertexHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) {{
-  logTraceInWith3Arguments( "sendVertexHorizontally(int,int,int)", inOutStack, relativePositionOnInOutStack, toTree );
+  logTraceInWith4Arguments( "sendVertexHorizontally(int,int,int)", inOutStack, relativePositionOnInOutStack, toTree, _spacetreeId );
   const int toStack   = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( toTree );
 """
 
@@ -1027,7 +1027,7 @@ void {FULL_QUALIFIED_CLASSNAME}::sendVertexHorizontally(int inOutStack, int rela
 
   TemplateExchangeRoutines_sendFaceHorizontally_Prologue = """
 void {FULL_QUALIFIED_CLASSNAME}::sendFaceHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) {{
-  logTraceInWith3Arguments( "sendFaceHorizontally(int,int,int)", inOutStack, relativePositionOnInOutStack, toTree );
+  logTraceInWith4Arguments( "sendFaceHorizontally(int,int,int)", inOutStack, relativePositionOnInOutStack, toTree, _spacetreeId );
   const int toStack   = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( toTree );
 """
 
@@ -1042,7 +1042,7 @@ void {FULL_QUALIFIED_CLASSNAME}::sendFaceHorizontally(int inOutStack, int relati
     auto& data = DataRepository::_{logical_type_name}Stack.getForPop(
       _spacetreeId,inOutStack
     )->top(relativePositionOnInOutStack);
-    logDebug( "sendXXXHorizontally(...)", "send out " << data.toString() << " to tree " << toTree << "'s stack " << toStack );
+    logDebug( "sendXXXHorizontally(...)", "send out " << data.toString() << " to tree " << toTree << "'s stack " << toStack << " (relativePositionOnInOutStack=" << relativePositionOnInOutStack << ")" );
     
     DataRepository::_{logical_type_name}Stack.getForPush(
       _spacetreeId, toStack
@@ -1058,7 +1058,7 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeVertexHorizontally(const peano4:
   peano4::datamanagement::VertexMarker marker(event);
   marker.select(positionWithinCell); 
 
-  logTraceInWith6Arguments( "receiveAndMergeVertexHorizontally(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromTree, marker.toString() );
+  logTraceInWith7Arguments( "receiveAndMergeVertexHorizontally(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromTree, marker.toString(), _spacetreeId );
 """
 
   TemplateExchangeRoutines_receiveAndMergeVertexHorizontally_Epilogue = """
@@ -1073,7 +1073,7 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFaceHorizontally(const peano4::g
   peano4::datamanagement::FaceMarker marker(event);
   marker.select(positionWithinCell); 
 
-  logTraceInWith6Arguments( "receiveAndMergeFaceHorizontally(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromTree, marker.toString() );
+  logTraceInWith7Arguments( "receiveAndMergeFaceHorizontally(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromTree, marker.toString(), _spacetreeId );
 """
 
   TemplateExchangeRoutines_receiveAndMergeFaceHorizontally_Epilogue = """
