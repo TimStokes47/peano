@@ -1563,6 +1563,22 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
 }
 
 
+peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createPrunedCellTraversalEvent( const GridTraversalEvent& event ) const {
+  GridTraversalEvent result = event;
+
+  if(
+    _spacetreeState!=SpacetreeState::EmptyRun or
+    _spacetreeState!=SpacetreeState::Joining
+  ) {
+	result.setIsCellLocal(false);
+	result.setIsFaceLocal(0);
+	result.setIsVertexLocal(0);
+  }
+
+  return result;
+}
+
+
 void peano4::grid::Spacetree::descend(
   const AutomatonState& state,
   GridVertex            vertices[TwoPowerD],
@@ -1637,12 +1653,7 @@ void peano4::grid::Spacetree::descend(
       receiveAndMergeUserDataAtVerticalBoundary(fineGridStates[peano4::utils::dLinearised(k,3)], observer, enterCellTraversalEvent,fineGridVertices);
     }
 
-    if(
-      _spacetreeState!=SpacetreeState::EmptyRun and
-      _spacetreeState!=SpacetreeState::Joined
-    ) {
-    }
-    observer.enterCell( enterCellTraversalEvent );
+    observer.enterCell( createPrunedCellTraversalEvent(enterCellTraversalEvent) );
 
     //
     // DFS
@@ -1676,7 +1687,7 @@ void peano4::grid::Spacetree::descend(
     GridTraversalEvent leaveCellTraversalEvent = createLeaveCellTraversalEvent(
       vertices, fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)],k
     );
-    observer.leaveCell( leaveCellTraversalEvent );
+    observer.leaveCell( createPrunedCellTraversalEvent(leaveCellTraversalEvent) );
 
     if(
       _spacetreeState!=SpacetreeState::EmptyRun and
@@ -1903,7 +1914,6 @@ void peano4::grid::Spacetree::receiveAndMergeUserDataAtVerticalBoundary(const Au
 void peano4::grid::Spacetree::sendUserDataAtHorizontalBoundary(const AutomatonState& state, TraversalObserver&    observer, const GridTraversalEvent&  leaveCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]) {
   assertion4(
     _spacetreeState!=SpacetreeState::EmptyRun and
-	_spacetreeState!=SpacetreeState::Joining and
 	_spacetreeState!=SpacetreeState::Joined,
 	toString(_spacetreeState),
 	state.toString(), leaveCellTraversalEvent.toString(), _id
@@ -1967,8 +1977,7 @@ void peano4::grid::Spacetree::sendUserDataAtHorizontalBoundary(const AutomatonSt
       if (leaveCellTraversalEvent.getIsFaceLocal(outFacePositionWithinCell)) {
         int neighbour = getAdjacentDomainIds(fineGridVertices,outFacePositionWithinCell, false);
         if (neighbour>=0) {
-        	// @todo Debug
-          logInfo(
+          logDebug(
             "sendUserDataAtHorizontalBoundary(...)",
             "send local face from stack " << outFaceStack << " of tree " << _id <<
             " to neighbour " << neighbour << ". Position within cell=" << outFacePositionWithinCell << ", total faces left on output stack=" << totalOutStackWrites
