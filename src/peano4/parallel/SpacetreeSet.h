@@ -101,6 +101,12 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
       int spacetreeId, int parentId
     );
 
+    template <class Container>
+    static void deleteAllStacks(
+      Container& stackContainer,
+      int spacetreeId
+    );
+
     /**
      * This routine finishes all the sends and receives that are still active,
      * i.e. it searched for pending MPI requests and waits for them to finish.
@@ -234,6 +240,13 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     void exchangeVerticalDataBetweenTrees(peano4::grid::TraversalObserver&  observer);
 
     /**
+     * I do this after a join/after I've removed an empty tree. Have to call it
+     * explicitly, as a join does not delete/throw away the data. It simply hands
+     * on data ownership.
+     */
+    void deleteAllStacks( peano4::grid::TraversalObserver&  observer, int spacetreeId );
+
+    /**
      * When we split a tree, we realise this split in two grid sweeps where the second
      * sweep breaks up the traversal into three logical substeps. In the first sweep, the
      * splitting master tells everybody around that it will split. No split is done though.
@@ -340,7 +353,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * workers at the same time. If we did so, we'd not be able to run all
      * the merging trees in parallel.
      */
-    void cleanUpTrees();
+    void cleanUpTrees(peano4::grid::TraversalObserver&  observer);
 
     /**
      * I need this routine for technical reasons: Prior to the sweep of trees,

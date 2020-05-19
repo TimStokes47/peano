@@ -12,6 +12,21 @@ void peano4::parallel::SpacetreeSet::streamDataFromJoiningTreeToMasterTree(
 
 
 template <class Container>
+void peano4::parallel::SpacetreeSet::deleteAllStacks(
+  Container& stackContainer,
+  int spacetreeId
+) {
+ assertion( Node::getInstance().getRank( spacetreeId ) == tarch::mpi::Rank::getInstance().getRank() );
+ std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
+ for (auto& sourceStackKey: keys) {
+   if ( sourceStackKey.first==spacetreeId ) {
+     stackContainer.getForPush(sourceStackKey)->clear();
+   }
+ }
+}
+
+
+template <class Container>
 void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
   Container& stackContainer, int master, int worker
 ) {
