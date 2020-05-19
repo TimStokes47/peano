@@ -75,6 +75,12 @@ class peano4::maps::STDStackMap {
     std::set<StackKey>  getKeys();
 
     void garbageCollection();
+
+    /**
+     * For debugging/assertions.
+     */
+    bool holdsStack(int treeId, int stackId) const;
+    bool holdsStack(const StackKey& key) const;
 };
 
 
@@ -147,6 +153,20 @@ std::set<peano4::maps::StackKey>  peano4::maps::STDStackMap<T>::getKeys() {
     result.insert(p.first);
   }
   return result;
+}
+
+
+
+
+template <typename T>
+bool peano4::maps::STDStackMap<T>::holdsStack(int treeId, int stackId) const {
+  return holdsStack( StackKey(treeId,stackId) );
+}
+
+
+template <typename T>
+bool peano4::maps::STDStackMap<T>::holdsStack(const StackKey& key) const {
+  return _data.count(key)==1;
 }
 
 

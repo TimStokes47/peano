@@ -83,11 +83,11 @@ int main(int argc, char** argv) {
   }
   #endif
 
-  int cores = 1;
+  int cores = tarch::multicore::Core::UseDefaultNumberOfThreads;
   if (argc!=2 and tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     logWarning( "main()", "usage: ./" + std::string(argv[0]) + " core-count (use default core count=1 now)" );
   }
-  else {
+  else if (argc==2) {
     cores = std::atoi( argv[1] );
   }
 

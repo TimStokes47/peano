@@ -148,13 +148,6 @@ class Observer(object):
 {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}(int spacetreeId):
   _spacetreeId( spacetreeId ) {MAPPING_INITIALISATION_LIST}
 {{
-  assertion3(
-    spacetreeId==-1 or
-    peano4::parallel::Node::getInstance().getRank( spacetreeId ) == tarch::mpi::Rank::getInstance().getRank(),
-    peano4::parallel::Node::getInstance().getRank( spacetreeId ),
-    tarch::mpi::Rank::getInstance().getRank(),
-    spacetreeId 
-  );
 }}
   
 
@@ -1099,13 +1092,30 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFaceHorizontally(const peano4::g
       relativePositionOnInOutStack
     );
     
-    assertionVectorNumericalEquals7( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, _spacetreeId );
-    assertionVectorNumericalEquals7( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, _spacetreeId );
+    assertionVectorNumericalEquals8( data.getDebugX(), incomingData.getDebugX(), data.getDebugX(), incomingData.getDebugX(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
+    assertionVectorNumericalEquals8( data.getDebugH(), incomingData.getDebugH(), data.getDebugX(), incomingData.getDebugH(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
     
     data.mergeHorizontally(incomingData, marker);
   }}
 """
 
+
+  TemplateExchangeRoutines_deleteAllStacks_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::deleteAllStacks() {{
+  logTraceInWith1Argument( "deleteAllStacks()", _spacetreeId );
+"""
+
+  TemplateExchangeRoutines_deleteAllStacks_Exchange = """
+  peano4::parallel::SpacetreeSet::deleteAllStacks(
+    {DATASET},
+    _spacetreeId
+  );
+"""
+
+  TemplateExchangeRoutines_deleteAllStacks_Epilogue = """
+  logTraceOut( "deleteAllStacks()");
+}}
+"""
 
   def __generate_exchange_routines(self,output_file):
     output_file.write( self.TemplateExchangeRoutines_exchangeAllVerticalDataExchangeStacks_Prologue.format(**self.d) )
@@ -1203,6 +1213,19 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFaceHorizontally(const peano4::g
       self.d[ "logical_type_name" ] = face.get_logical_type_name()
       output_file.write( self.TemplateExchangeRoutines_receiveAndMergeHorizontally_Exchange.format(**self.d) )
     output_file.write( self.TemplateExchangeRoutines_receiveAndMergeFaceHorizontally_Epilogue.format(**self.d) )
+
+    output_file.write( self.TemplateExchangeRoutines_deleteAllStacks_Prologue.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "DATASET" ] = "DataRepository::_" + cell.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_deleteAllStacks_Exchange.format(**self.d) )
+    for face in self.faces:
+      self.d[ "DATASET" ] = "DataRepository::_" + face.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_deleteAllStacks_Exchange.format(**self.d) )
+    for vertex in self.vertices:
+      self.d[ "DATASET" ] = "DataRepository::_" + vertex.get_logical_type_name() + "Stack";
+      output_file.write( self.TemplateExchangeRoutines_deleteAllStacks.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_deleteAllStacks_Epilogue.format(**self.d) )
+      
       
       
 

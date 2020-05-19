@@ -71,3 +71,16 @@ tarch::la::Vector<Dimensions,double> {FULL_QUALIFIED_CLASSNAME}::getDebugH() con
 
 {MERGE_METHOD_DEFINITIONS}
 
+  
+#ifdef Parallel
+void {FULL_QUALIFIED_CLASSNAME}::initDatatype() {{
+  Datatype = MPI_DOUBLE;
+}}
+
+
+void {FULL_QUALIFIED_CLASSNAME}::shutdownDatatype() {{
+}}
+  
+
+MPI_Datatype   {FULL_QUALIFIED_CLASSNAME}::Datatype;
+#endif

@@ -58,8 +58,8 @@ void exahype2::fv::applySplit1DRiemannToPatch_Overlap1AoS2d(
                                    + y * numberOfVolumesPerAxisInPatch;
 
     tarch::la::Vector<Dimensions,double> volumeX = patchCentre - 0.5 * patchSize;
-    volumeX(0) = (x+0.5) * volumeH(0);
-    volumeX(1) = (y+0.5) * volumeH(1);
+    volumeX(0) += (x+0.5) * volumeH(0);
+    volumeX(1) += (y+0.5) * volumeH(1);
 
     splitRiemannSolve1d(
       Qin + leftVoxelInPreimage*unknowns,
@@ -91,8 +91,8 @@ void exahype2::fv::applySplit1DRiemannToPatch_Overlap1AoS2d(
                                    + y * numberOfVolumesPerAxisInPatch;
 
     tarch::la::Vector<Dimensions,double> volumeX = patchCentre - 0.5 * patchSize;
-    volumeX(0) = (x+0.5) * volumeH(0);
-    volumeX(1) = (y+0.5) * volumeH(1);
+    volumeX(0) += (x+0.5) * volumeH(0);
+    volumeX(1) += (y+0.5) * volumeH(1);
 
     splitRiemannSolve1d(
       Qin + lowerVoxelInPreimage*unknowns,
@@ -164,9 +164,9 @@ void exahype2::fv::applySplit1DRiemannToPatch_Overlap1AoS3d(
                                    + z * numberOfVolumesPerAxisInPatch * numberOfVolumesPerAxisInPatch;
 
     tarch::la::Vector<Dimensions,double> volumeX = patchCentre - 0.5 * patchSize;
-    volumeX(0) = (x+0.5) * volumeH(0);
-    volumeX(1) = (y+0.5) * volumeH(1);
-    volumeX(2) = (z+0.5) * volumeH(2);
+    volumeX(0) += (x+0.5) * volumeH(0);
+    volumeX(1) += (y+0.5) * volumeH(1);
+    volumeX(2) += (z+0.5) * volumeH(2);
 
     splitRiemannSolve1d(
       Qin + leftVoxelInPreimage*unknowns,
@@ -204,9 +204,9 @@ void exahype2::fv::applySplit1DRiemannToPatch_Overlap1AoS3d(
 
 
     tarch::la::Vector<Dimensions,double> volumeX = patchCentre - 0.5 * patchSize;
-    volumeX(0) = (x+0.5) * volumeH(0);
-    volumeX(1) = (y+0.5) * volumeH(1);
-    volumeX(2) = (z+0.5) * volumeH(2);
+    volumeX(0) += (x+0.5) * volumeH(0);
+    volumeX(1) += (y+0.5) * volumeH(1);
+    volumeX(2) += (z+0.5) * volumeH(2);
 
     splitRiemannSolve1d(
       Qin + lowerVoxelInPreimage*unknowns,
@@ -244,9 +244,9 @@ void exahype2::fv::applySplit1DRiemannToPatch_Overlap1AoS3d(
                                    + z * numberOfVolumesPerAxisInPatch * numberOfVolumesPerAxisInPatch;
 
     tarch::la::Vector<Dimensions,double> volumeX = patchCentre - 0.5 * patchSize;
-    volumeX(0) = (x+0.5) * volumeH(0);
-    volumeX(1) = (y+0.5) * volumeH(1);
-    volumeX(2) = (z+0.5) * volumeH(2);
+    volumeX(0) += (x+0.5) * volumeH(0);
+    volumeX(1) += (y+0.5) * volumeH(1);
+    volumeX(2) += (z+0.5) * volumeH(2);
 
     splitRiemannSolve1d(
       Qin + lowerVoxelInPreimage*unknowns,

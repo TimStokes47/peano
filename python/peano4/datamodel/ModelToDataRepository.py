@@ -11,6 +11,21 @@ class ModelToDataRepository(object):
 
 
   def __build_up_dictionary_for_one_data_set(self,i):
+    """
+     
+    To create a data repository, I run over all the faces, vertices, cells of the 
+    project and befill the dictionary. There's multiple reasons for this:
+    
+    - I want to ensure that we include the headers in the repository such that 
+      all data types are well-defined.
+    - I create a stack map for each and every data entity.
+    - I ensure all datatypes are created if this record requires a user-defined MPI
+      datatype.
+      
+      
+    i is of type peano4.datamodel.DoF.
+    
+    """
     self.d[ "DATA_CONTAINER_INCLUDES" ]      += i.generator.get_header_file_include()
     self.d[ "DATA_CONTAINER_INCLUDES" ]      += "\n"
     

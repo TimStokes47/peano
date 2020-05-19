@@ -127,6 +127,10 @@ class tarch::logging::CommandLineLogger {
      * behavior: Changing _indent throughout the message execution makes the
      * method add the wrong number of whitespaces in front of the message. That
      * is a 'bug' we can accept.
+     *
+     * To satisfy Intel Inspector et al at least slightly, I copy over _indent
+     * before I actually construct the message string. So the indent can't change
+     * while we add the spaces/tabs to the output.
      */
     std::string constructMessageString(
       std::string          messageType,
