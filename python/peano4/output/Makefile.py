@@ -93,6 +93,26 @@ class Makefile(object):
       assert(False)      
 
 
+  def set_CXX_compiler(self,value):
+    self.d["CXX"]           = value
+    
+
+  def set_CXX_flags(self,value):    
+    self.d["CXXFLAGS"]      = value
+    
+    
+  def set_Fortran_compiler(self,value):
+    self.d["F77"]           = value
+    
+    
+  def set_Fortran_flags(self,value):
+    self.d["FCFLAGS"]       = value
+    
+    
+  def set_linker_flags(self,value):
+    self.d["LDFLAGS"]       = value
+
+
   def parse_configure_script_outcome(self,directory):
     """
     
