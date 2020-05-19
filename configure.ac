@@ -137,8 +137,8 @@ fi
 ## VTK Options
 ##
 
-AC_ARG_ENABLE([vtk-output],
-    [AC_HELP_STRING([--enable-vtk-output], 
+AC_ARG_ENABLE([vtk],
+    [AC_HELP_STRING([--enable-vtk], 
           [enable VTK output and build tools to convert Peano output format to VTK [default=no]. See the Optional Packages section for further VTK discovery options.])],
     [want_vtk="$enableval"],
     [want_vtk=no])

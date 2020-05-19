@@ -45,6 +45,9 @@ AC_DEFUN([CIT_OPTIONS_VTK],[
         fi
     fi
     vtk_suffix="-$vtk_version"
+    if test x$vtk_version == "x"; then # might not be a suffix present
+       vtk_suffix=""
+    fi
 ])
 
 ##############################################################################

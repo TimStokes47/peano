@@ -34,6 +34,7 @@ the components you actually need for your project.
 The build process for three often used configurations 
 is described below.
 
+
 ### 3.1. Build the Peano shared library
 
 ```shell
@@ -42,6 +43,7 @@ libtoolize; aclocal; autoconf; autoheader;
 make -j
 make install
 ```
+> **TIP:** After running ``libtoolize; aclocal; autoconf; autoheader;``, hit TAB to see all available configure options.
 
 ### 3.2.  Build Peano plus VTK support
 
@@ -49,10 +51,12 @@ make install
 
 ```shell
 libtoolize; aclocal; autoconf; autoheader;
-./configure --enable-vtk-output
+./configure --enable-vtk
 make -j
 make install
 ```
+
+> **TIP:** After running ``libtoolize; aclocal; autoconf; autoheader;``, hit TAB to see all available configure options.
 
 ### 3.3.  Build Peano plus ExaHyPE2 and VTK support
 
@@ -60,10 +64,12 @@ make install
 
 ```shell
 libtoolize; aclocal; autoconf; autoheader;
-./configure --enable-vtk-output --enable-exahype
+./configure --enable-vtk --enable-exahype
 make -j
 make install
 ```
+
+> **TIP:** After running ``libtoolize; aclocal; autoconf; autoheader;``, hit TAB to see all available configure options.
 
 ## 4. User guide
 
