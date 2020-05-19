@@ -1381,6 +1381,7 @@ void peano4::grid::Spacetree::receiveAndMergeGridVertexAtHorizontalBoundary( Gri
     assertion1( neighbour>=0, neighbour );
     const int  inStack = peano4::parallel::Node::getInstance().getInputStackNumberForHorizontalDataExchange(neighbour);
 
+    assertion4( _vertexStack.holdsStack(_id,inStack), _id, inStack, neighbour, vertex.toString() );
     assertion4( not _vertexStack.getForPop(_id,inStack)->empty(), _id, inStack, neighbour, vertex.toString() );
     GridVertex inVertex = _vertexStack.getForPop(_id,inStack)->pop();
 
@@ -1423,6 +1424,7 @@ void peano4::grid::Spacetree::sendGridVertexAtHorizontalBoundary( const GridVert
   assertion2( _spacetreeState!=SpacetreeState::EmptyRun, _id, toString(_spacetreeState) );
 
   std::set<int> outRanks = getAdjacentDomainIds(vertex,false);
+
   for (auto p: outRanks) {
     //
     // Boundary exchange
