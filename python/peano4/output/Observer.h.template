@@ -84,6 +84,8 @@ class {FULL_QUALIFIED_CLASSNAME}: public peano4::grid::TraversalObserver {{
 
     void receiveAndMergeVertexHorizontally(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) override;
     void receiveAndMergeFaceHorizontally(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) override;
+
+    void deleteAllStacks() override;
 }};
 
 #endif
