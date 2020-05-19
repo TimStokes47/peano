@@ -6,18 +6,23 @@ Installing VTK support can be challenging.
 Here's some things you might want to consider/check:
 
 \begin{itemize}
-  \item When you translate with \texttt{--with-vtk}, then \Peano\ assumes that
-  all vtk libraries are built without any version extension. Many VTK
-  installations however append the version number to the library, i.e.~they
+  \item When you translate with \texttt{--enable-vtk}, then \Peano\ assumes that
+  all VTK is installed to the \texttt{/usr} directory. Many VTK
+  installations append the version number to the library, i.e.~they
   create a library \texttt{libvtkCommonCore-8.90.so} instead of
-  \texttt{libvtkCommonCore.so} if you use VTK 8.9. If you are not sure, run
-  \texttt{find / -name libvtk*.so} and see what it finds. After that, tell the
-  configuration explicitly which VTK extension to use:
-  \begin{code}
---with-vtk=-8.90
-  \end{code}
+  \texttt{libvtkCommonCore.so} if you use VTK 8.9. 
+  \Peano tries to detect this version number automatically but in case it fails,
+  you can use the options \texttt{--with-vtk=<path>} and \texttt{--with-vtk-version=<MAJOR.MINORS>}
+  to specify exactly the Peano version you want to use.
+  If you are not sure, run \texttt{find / -name libvtk*.so} and see what it finds. 
+  %After that, tell the
+  %configuration explicitly which VTK extension to use:
+  %\begin{code}
+  %--with-vtk-version=8.90
+  %\end{code}
   BTW: Not all Linux distributions install VTK with these extensions, so you
   have to check manually on your system.
+
   \item If you configure with \texttt{--with-vtk} but the makefile cannot find
   the headers, you have to add the correct search path. You can either set the 
 \begin{code}
@@ -38,16 +43,17 @@ export CXXFLAGS=$CXXFLAGS:"-I/usr/local/include/vtk-8.90"
 \begin{code}
 export LDFLAGS="-L/opt/vtk/lib64"
 \end{code}
-  \item Unfortunately, the packaging of VTK seem to change with every major
-  revision. That is, the number of libraries shipped with VTK as well as their
-  names change. We currently support the generations 7, 8 and 9 of VTK. 8 is the
-  default. To change the version against which you build, please tell configure
-  via
+  %\item Unfortunately, the packaging of VTK seem to change with every major
+  %revision. That is, the number of libraries shipped with VTK as well as their
+  %names change. We currently support the generations 7, 8 and 9 of VTK. 
+  \item \Peano chooses the VTK version with largest major index by default.
+  To change the version against which you build, please tell configure
+  via, e.g.,
 \begin{code}
 --with-vtk-version=9
 \end{code}
-  Depending on the version chosen, \Peano\ will try to link against a different
-  set of library files.
+%  Depending on the version chosen, \Peano\ will try to link against a different
+%  set of library files.
 \end{itemize}
     
     

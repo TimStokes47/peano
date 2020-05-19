@@ -1,20 +1,20 @@
 #  Peano
 
-`Peano` is an open source framework for solvers on dynamically adaptive
+Peano is an open source framework for solvers on dynamically adaptive
 Cartesian meshes.
 
 Its core is built with C++, but many tools around it are written in Python.
-`Peano`  is based upon the fact that spacetrees, a generalisation of the classical octree concept, yield a cascade of adaptive Cartesian grids. Consequently, any spacetree traversal is equivalent to an element-wise traversal of the hierarchy of the adaptive Cartesian grids. The software `Peano`  realises such a grid traversal and storage algorithm, and it provides hook-in points for applications performing per-element, per-vertex, and so forth operations on the grid. It also provides interfaces for dynamic load balancing, sophisticated geometry representations, and other features.
+Peano  is based upon the fact that spacetrees, a generalisation of the classical octree concept, yield a cascade of adaptive Cartesian grids. Consequently, any spacetree traversal is equivalent to an element-wise traversal of the hierarchy of the adaptive Cartesian grids. The software Peano  realises such a grid traversal and storage algorithm, and it provides hook-in points for applications performing per-element, per-vertex, and so forth operations on the grid. It also provides interfaces for dynamic load balancing, sophisticated geometry representations, and other features.
 
 ## 1. Supported platforms
 
-We test and maintain `Peano`  for Linux only.
+We test and maintain Peano  for Linux only.
 If you prefer Windows or MacOS, it should work as long as you provide the
 mandatory tools (see below), but we won't be able to help.
 
 ## 2. Dependencies and prerequisites
 
-`Peano`'s core is plain C++17 code. 
+Peano's core is plain C++17 code. 
 We however use a whole set of tools around it:
 
 *  C++17-compatible C++ compiler (required).
@@ -28,11 +28,12 @@ We however use a whole set of tools around it:
 
 ## 3. How to build it
 
-`Peano's` build process allows you to build only
+Peano's build process allows you to build only
 the components you actually need for your project.
 
 The build process for three often used configurations 
 is described below.
+
 
 ### 3.1. Build the Peano shared library
 
@@ -42,33 +43,38 @@ libtoolize; aclocal; autoconf; autoheader;
 make -j
 make install
 ```
+> **TIP:** After running ``libtoolize; aclocal; autoconf; autoheader;``, hit TAB to see all available configure options.
 
 ### 3.2.  Build Peano plus VTK support
 
-> **NOTE:** Assumes a VTK-7.1 installation. How to configure for other VTK versions is explained in the uesr guide.
+> **NOTE:** Assumes a VTK installation to /usr/. How to configure the VTK discovery is described in the user guide and `configure` script help message.
 
 ```shell
 libtoolize; aclocal; autoconf; autoheader;
-./configure --with-vtk=-7.1 --with-vtk-version=7
+./configure --enable-vtk
 make -j
 make install
 ```
+
+> **TIP:** After running ``libtoolize; aclocal; autoconf; autoheader;``, hit TAB to see all available configure options.
 
 ### 3.3.  Build Peano plus ExaHyPE2 and VTK support
 
-> **NOTE:** Assumes a VTK-7.1 installation. How to configure for other VTK versions is explained in the uesr guide.
+> **NOTE:** Assumes a VTK installation to /usr/. How to configure the VTK discovery is described in the user guide and `configure` script help message.
 
 ```shell
 libtoolize; aclocal; autoconf; autoheader;
-./configure --with-exahype --with-vtk=-7.1 --with-vtk-version=7
+./configure --enable-vtk --enable-exahype
 make -j
 make install
 ```
+
+> **TIP:** After running ``libtoolize; aclocal; autoconf; autoheader;``, hit TAB to see all available configure options.
 
 ## 4. User guide
 
 For more details regarding build configuration and features of the
-software, take a look at the `Peano` cookbook. You can build a PDF version via:
+software, take a look at the Peano cookbook. You can build a PDF version via:
 
 ```shell
 cd cookbook

@@ -133,49 +133,22 @@ if test "$mpi" != false; then
   AC_DEFINE([Parallel], [1], [Parallel])
 fi
 
+##
+## VTK Options
+##
 
+AC_ARG_ENABLE([vtk],
+    [AC_HELP_STRING([--enable-vtk], 
+          [enable VTK output and build tools to convert Peano output format to VTK [default=no]. See the Optional Packages section for further VTK discovery options.])],
+    [want_vtk="$enableval"],
+    [want_vtk=no])
+AM_CONDITIONAL([UseVTK], [test x"$want_vtk" != xno]])
 
-#
-# VTK Options
-#
-AC_ARG_WITH(vtk,
-  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools, too [default=no, postfix]. postfix can be empty but if you have a particular VTK version where all libraries end with -9.0, e.g., then pass this one as a postfix]),
-  [ AC_MSG_CHECKING(for vtk)
-    case "${withval}" in
-      no)    AC_MSG_RESULT(no);     vtk=false ;;
-      yes)   AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=""  ;;
-      *)     AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=${withval}  ;;
-    esac ],
-  [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
-  
-
-AM_CONDITIONAL([UseVTK],[test "$vtk" != false])
-if test "$vtk" != false; then
-  AC_DEFINE([UseVTK], [1], [UseVTK])
-  VTK_LIBRARY_SUFFIX=$vtk
-fi
-AC_SUBST([VTK_LIBRARY_SUFFIX])
-
-
-AC_ARG_WITH(vtk_version,
-  AC_HELP_STRING([--with-vtk-version], [specify vtk version (major) [default=8]]),
-  [ AC_MSG_CHECKING(for vtk-version)
-    case "${withval}" in
-      no)    AC_MSG_RESULT(not set - use default (major release 8));     vtk_version="8" ;;
-      *)     AC_MSG_RESULT(build against VTK version ${withval});    vtk_version=${withval}  ;;
-    esac ],
-  [ AC_MSG_CHECKING(for vtk-version); AC_MSG_RESULT(not set - use default (major release 8)); vtk_version="8" ])
-  
-
-AM_CONDITIONAL([VTK_LIBRARY_VERSION_7],[test "$vtk_version" = "7"])
-AM_CONDITIONAL([VTK_LIBRARY_VERSION_8],[test "$vtk_version" = "8"])
-AM_CONDITIONAL([VTK_LIBRARY_VERSION_9],[test "$vtk_version" = "9"])
-#if test "$vtk-version" != false; then
-#VTK_LIBRARY_VERSION=$vtk_version
-#fi
-#AC_SUBST([VTK_LIBRARY_VERSION])
-
-
+AS_IF([test x"$want_vtk" != xno], [
+    AS_BOX([VTK])
+    CIT_OPTIONS_VTK
+    CIT_PATH_VTK
+])
 
 #
 # HDF5
@@ -206,8 +179,8 @@ fi
 #
 # ExaHypE2
 #
-AC_ARG_WITH(exahype,
-  AC_HELP_STRING([--with-exahype], [enable ExaHyPE2 [default=no]]),
+AC_ARG_ENABLE(exahype,
+  AC_HELP_STRING([--enable-exahype], [enable ExaHyPE2 [default=no]]),
   [ AC_MSG_CHECKING(for exahype)
     case "${withval}" in
       no)    AC_MSG_RESULT(no);    exahype=false ;;
