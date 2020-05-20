@@ -120,6 +120,13 @@ namespace {
     flux(QL,x,dx,t,dt,normal,fluxFL);
     flux(QR,x,dx,t,dt,normal,fluxFR);
 
+    double Qaverage[unknowns];
+    for (int unknown=0; unknown<unknowns; unknown++) {
+      Qaverage[unknown] = 0.5 * QL[unknown] + 0.5 * QR[unknown];
+    }
+    double fluxNonconservativeProduct[unknowns];
+    nonconservativeProduct(Qaverage,x,dx,t,dt,normal,fluxNonconservativeProduct);
+
     double lambdas[unknowns];
     double lambdaMax = 0.0;
 
@@ -135,8 +142,8 @@ namespace {
     }
 
     for (int unknown=0; unknown<unknowns; unknown++) {
-      FL[unknown] = 0.5 * fluxFL[unknown] + 0.5 * fluxFR[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]);
-      FR[unknown] = 0.5 * fluxFL[unknown] + 0.5 * fluxFR[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]);
+      FL[unknown] = 0.5 * fluxFL[unknown] + 0.5 * fluxFR[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]) - 0.5 * fluxNonconservativeProduct[unknown];
+      FR[unknown] = 0.5 * fluxFL[unknown] + 0.5 * fluxFR[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]) + 0.5 * fluxNonconservativeProduct[unknown];
     }
   };
 }
