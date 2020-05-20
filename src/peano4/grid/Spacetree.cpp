@@ -1567,8 +1567,8 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createPrunedCellTraver
   GridTraversalEvent result = event;
 
   if(
-    _spacetreeState!=SpacetreeState::EmptyRun or
-    _spacetreeState!=SpacetreeState::Joining
+    _spacetreeState==SpacetreeState::EmptyRun or
+    _spacetreeState==SpacetreeState::Joining
   ) {
 	result.setIsCellLocal(false);
 	result.setIsFaceLocal(0);
