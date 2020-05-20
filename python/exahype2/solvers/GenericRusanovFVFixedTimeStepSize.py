@@ -27,6 +27,31 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
       self.HandleCellTemplate = self.HandleCellTemplate_Flux_NCP
     else:
       print( "ERROR: Combination of PDE terms not supported" )
+      
+      
+    self._fv_callbacks = []
+    if flux:
+      self._fv_callbacks.append( """ flux(
+      double                                       Q[""" + str(unknowns) + """],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      int                                          normal,
+      double                                       F[""" + str(unknowns) + """]
+)      
+""")
+    if ncp:
+      self._fv_callbacks.append( """nonconservativeProduct(
+      double                                       Q[""" + str(unknowns) + """],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      int                                          normal,
+      double                                       F[""" + str(unknowns) + """]
+)      
+""")
+    
+    
     pass
 
 
@@ -180,4 +205,9 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
 
   def add_entries_to_text_replacement_dictionary(self,d):
     d[ "TIME_STEP_SIZE" ] = self._time_step_size
+    d[ "ABSTRACT_FLUX_FUNCTIONS" ]    = ""
+    d[ "FLUX_FUNCTIONS_DECLARATIONS" ] = ""
+    for op in self._fv_callbacks:
+      d[ "ABSTRACT_FLUX_FUNCTIONS" ]     += "virtual void " + op + " = 0;\n\n\n"
+      d[ "FLUX_FUNCTIONS_DECLARATIONS" ]  += "void " + op + " override;\n\n\n"
     pass  
