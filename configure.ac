@@ -119,8 +119,6 @@ if test "$multithreading" == omp; then
   AC_CHECK_HEADERS([omp.h],[],[AC_MSG_ERROR([header <omp.h> not found])])
   AC_DEFINE([SharedOMP], [1], [SharedOMP])
 
-  PEANO_CXXFLAGS+=" $OPENMP_CXXFLAGS "
-  PEANO_LDFLAGS+=" $OPENMP_CXXFLAGS "
   CXXFLAGS+=" $OPENMP_CXXFLAGS "
   LDFLAGS+=" $OPENMP_CXXFLAGS "
 fi
