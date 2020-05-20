@@ -11,13 +11,22 @@ from .FV import FV
 
 
 class GenericRusanovFVFixedTimeStepSize( FV ):
-  def __init__(self, name, patch_size, unknowns, time_step_size):
+  def __init__(self, name, patch_size, unknowns, time_step_size, flux=True, ncp=False):
     """
       Instantiate a generic FV scheme with an overlap of 1.
     """
     super(GenericRusanovFVFixedTimeStepSize,self).__init__(name, patch_size, 1, unknowns)
 
-    self._time_step_size = time_step_size
+    self._time_step_size              = time_step_size
+    
+    if flux and not ncp:
+      self.HandleCellTemplate = self.HandleCellTemplate_Flux
+    #elif not flux and ncp:
+    #  self.HandleCellTemplate = self.HandleCellTemplate_NCP
+    elif flux and ncp:
+      self.HandleCellTemplate = self.HandleCellTemplate_Flux_NCP
+    else:
+      print( "ERROR: Combination of PDE terms not supported" )
     pass
 
 
@@ -86,7 +95,7 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
 """
 
 
-  HandleCellTemplate = """::exahype2::fv::applyRusanovToPatch_FaceLoops(
+  HandleCellTemplate_Flux = """::exahype2::fv::applyRusanovToPatch_FaceLoops(
     [&](
       double                                       Q[],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
@@ -97,6 +106,54 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
       double                                       F[]
     ) -> void {{
       {SOLVER_INSTANCE}.flux( Q, faceCentre, volumeH, t, normal, F );
+    }},
+    [&](
+      double                                       Q[],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      double                                       dt,
+      int                                          normal,
+      double                                       lambdas[]
+    ) -> void {{
+      {SOLVER_INSTANCE}.eigenvalues( Q, faceCentre, volumeH, t, normal, lambdas );
+    }},
+    marker.x(),
+    marker.h(),
+    {SOLVER_INSTANCE}.getMinTimeStamp(),
+    {TIME_STEP_SIZE}, 
+    {NUMBER_OF_VOLUMES_PER_AXIS},
+    {NUMBER_OF_UNKNOWNS},
+    reconstructedPatch,
+    originalPatch
+  );
+"""
+
+
+  HandleCellTemplate_Flux_NCP = """::exahype2::fv::applyRusanovToPatch_FaceLoops(
+    [&](
+      double                                       Q[],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      double                                       dt,
+      int                                          normal,
+      double                                       F[]
+    ) -> void {{
+      {SOLVER_INSTANCE}.flux( Q, faceCentre, volumeH, t, normal, F );
+    }},
+    [&](
+      double                                       Q[],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      double                                       dt,
+      int                                          normal,
+      double                                       F[]
+    ) -> void {{
+//    @todo
+//      {SOLVER_INSTANCE}.nonconservativeProduct( Q, faceCentre, volumeH, t, normal, F );
+{SOLVER_INSTANCE}.flux( Q, faceCentre, volumeH, t, normal, F );
     }},
     [&](
       double                                       Q[],
