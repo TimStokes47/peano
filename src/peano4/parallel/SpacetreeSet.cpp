@@ -474,7 +474,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
   deleteClonedObservers();
 
-  logTraceOut( "traverse(...)" );
+  logTraceOut( "traverse(TraversalObserver&)" );
 }
 
 

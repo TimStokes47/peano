@@ -46,7 +46,18 @@ project = exahype2.Project( ["examples", "exahype2", "euler"], "finitevolumes", 
 patch_size     = 25
 unknowns       = 5
 time_step_size = 0.0001
-project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize("Euler", patch_size, unknowns, time_step_size) )
+#
+# Still the same solver, but this time we use named arguments. This is the way
+# you can add further PDE terms btw.
+#
+project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize(
+  "Euler", 
+  patch_size, 
+  unknowns, time_step_size,
+  flux = True,
+  ncp  = False
+))
+
 
 
 dimensions = 2
@@ -61,7 +72,7 @@ if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
     0.1,           # end time
-    0.0, 0.02      # snapshots
+    0.0, 0.01      # snapshots
   )
 else:
   project.set_global_simulation_parameters(
@@ -91,9 +102,11 @@ peano4_project.build()
 # often crashes for bigger runs. It also struggles with the postprocessing
 # for large parallel runs (see below).
 #
-#success = peano4_project.run( [] )
-success = peano4_project.run( [], ["mpirun", "-n", "2"] )
+success = peano4_project.run( [] )
+#success = peano4_project.run( [], ["mpirun", "-n", "2"] )
 
+
+success = False
 
 
 if success:
