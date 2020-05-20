@@ -213,7 +213,6 @@ void peano4::grid::GridVertex::receiveAndPollDanglingMessages(peano4::grid::Grid
   );
 }
 #endif
-
     
 #ifdef Parallel
 
@@ -258,7 +257,7 @@ void peano4::grid::GridVertex::initDatatype() {
 
   MPI_Aint offset = disp[0] - baseFirstInstance;
   MPI_Aint extent = baseSecondInstance - baseFirstInstance - offset;
-  for (int i=8-1; i>=0; i--) {
+  for (int i=NumberOfAttributes-1; i>=0; i--) {
     disp[i] = disp[i] - disp[0];
   }
 

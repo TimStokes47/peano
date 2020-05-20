@@ -92,7 +92,6 @@ void tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages(tarch::mpi::Inte
   );
 }
 #endif
-
     
 #ifdef Parallel
 
@@ -123,7 +122,7 @@ void tarch::mpi::IntegerMessage::initDatatype() {
 
   MPI_Aint offset = disp[0] - baseFirstInstance;
   MPI_Aint extent = baseSecondInstance - baseFirstInstance - offset;
-  for (int i=1-1; i>=0; i--) {
+  for (int i=NumberOfAttributes-1; i>=0; i--) {
     disp[i] = disp[i] - disp[0];
   }
 

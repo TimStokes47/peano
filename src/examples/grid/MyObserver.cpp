@@ -116,12 +116,3 @@ std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGri
 
   return controlEvents;
 }
-
-
-void examples::grid::MyObserver::exchangeAllVerticalDataExchangeStacks( int masterId ) {}
-void examples::grid::MyObserver::exchangeAllHorizontalDataExchangeStacks( bool symmetricDataCardinality ) {}
-void examples::grid::MyObserver::exchangeAllPeriodicBoundaryDataStacks() {}
-void examples::grid::MyObserver::finishAllOutstandingSendsAndReceives() {}
-void examples::grid::MyObserver::streamDataFromSplittingTreeToNewTree( int newWorker ) {}
-void examples::grid::MyObserver::streamDataFromJoiningTreeToMasterTree( int masterId ) {}
-

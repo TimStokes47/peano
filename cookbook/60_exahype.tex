@@ -50,7 +50,7 @@ document.
 It is relatively straightforward to use \ExaHyPE\ within \Peano:
 
 \begin{itemize}
-  \item Configure your code with the flag \texttt{--with-exahype}.
+  \item Configure your code with the flag \texttt{--enable-exahype}.
   \item Recompile your code. This should give you a couple of
   \texttt{ExaHyPE2Core} libraries in the respective subdirectories.
   \item Ensure that \texttt{python/exahype} is in your Python search path.
@@ -77,7 +77,7 @@ then assembles the application.
 
 
 \section{Minimalistic Finite Volumes for the Euler equations}
-
+\label{section:exahype:fv}
 
 We provide a complete Finite Volume implementation of a plain Euler solver
 realised with \ExaHyPE. 
@@ -308,7 +308,7 @@ The syntax of log filter files is discussed in Section
 
 
 
-\section{Running on a parallel computer}
+\subsection{Running on a parallel computer}
 
 To run \ExaHyPE\ in parallel, you have to build \Peano\ with support for
 multithreading and/or MPI.
@@ -379,11 +379,55 @@ The grant number is EP/V00154X/1.
 
 \section{Ghoddess DG solvers}
 
+We also do provide an interface to Ghoddess DG solvers.
+Ghoddess solvers use a classic DG formulation with explicit time stepping.
+Their big USP within \ExaHyPE\ is they rely on a quasi-symbolic formulation and
+thus facilitate even fast prototyping.
 
 \begin{remark}
- This solver family is work-in-progress.
+ Add copyright et al here.
 \end{remark}
 
+\subsection{Preparation}
+
+We first install Ghoddess:
+
+\begin{remark}
+ Add instructions here.
+\end{remark}
+
+
+\subsection{Using the Ghoddess solver}
+
+From hereon, our description follows the Finite Volume example from Section
+\ref{section:exahype:fv}, i.e.~we only highlight where we do things differently.
+Besides our \ExaHyPE\ modules, we first include the ghoddess subpackage which is
+not by default included:
+
+\begin{code}
+import os
+import peano4
+import exahype2
+import exahype2.ghoddess
+\end{code} 
+
+From hereon, we create the Ghoddess solver and add it to the project:
+
+\begin{code}
+project = exahype2.Project( ["examples", "exahype2", "advection"], "ghoddess", "." )
+order          = 23
+unknowns       = 5
+time_step_size = 0.0001
+project.add_solver(  exahype2.ghoddess.RusanovLegendreWithFixedTimeStepSize(
+  "Advection", order, unknowns, 0.0001) )
+\end{code}
+
+
+\subsection{Using the Ghoddess solver}
+
+\begin{remark}
+ This part has yet to be written. Have no clue how we do this.
+\end{remark}
 
 
 \section{Introducing a new numerical scheme}
@@ -560,9 +604,91 @@ maybe better to skip that additional level of abstraction.
 
 \subsection{Ghoddess implementation remarks}
 
-\begin{remark}
- Yet to be written.
-\end{remark}
+Ghoddess works on triangles which we embed into the squares or cubes,
+respectively, of \ExaHyPE.
+By default, the code employs Gauss-Legendre sample points.
+The data structure used thus read as follows
+(Fig.~\ref{figure:60_exahype:degree-of-freedom-layout:Ghoddess}):
+\begin{itemize}
+  \item The solver embeds a ``patch'' of $N$ polynomial weights into each cell.
+  For order $p=1, d=2$, we have for example $N=6$, for $p=2, d=2$ we have
+  $N=12$.
+  \item Each face carries $2(p+1)^{d-1}$ doubles.
+\end{itemize}
+
+
+\noindent
+The face data holds a left and a right representation of the polynomial along
+the face.
+So it does not really hold degrees of freedom.
+Its degree of freedom are mere projections of the cell solution onto the face.
+
+
+
+\begin{figure}
+ \begin{center}
+  \includegraphics[width=0.65\textwidth]{60_exahype/Ghoddess-dof-layout.pdf}
+ \end{center}
+ \caption{
+  Left: Degree of freedom layout in Ghoddess within a cell.
+  Right: Each face holds additional ``degree of freedoms'' which encode the
+  projection of the cell polynomial onto the face.
+  \label{figure:60_exahype:degree-of-freedom-layout:Ghoddess}
+ }
+\end{figure}
+
+The Ghoddess solver itself splits up into four computation kernels:
+
+\begin{enumerate}
+  \item The {\bf projectOntoFace} kernel accepts the $N$ degrees of freedom from
+  the cell and projects the polynomials of the two triangles within the cell
+  onto the faces. It consequently writes $2d \cdot (p+1)^{d-1}$ face DoFs. Once
+  we have traversed the whole mesh, each face ``knows'' its left and right
+  projection.
+  \item The {\bf solveRiemann} kernel takes the $2 \cdot (p+1)^{d-1}$ DoFs on
+  the face, i.e.~the left and right projection, and solves the Riemann problem
+  on the jump. The result is written back into the $2 \cdot (p+1)^{d-1}$ DoFs.
+  In principle, this allows us to have a different outgoing flux for the left
+  and right side of a face.
+  \item The {\bf solveCell} kernel evolves the solution within the triangle
+  pair, i.e.~it evaluates the volumetric integrals of the DG formulation. The
+  name is slightly wrong: Besides the volumetric terms, the kernel also
+  evaluates the face terms arising between the two triangles embedded into the
+  cell. So it is a combination of a cell kernel plus one Riemann solve (in 2d).
+  \item The {\bf projectOntoCell} kernel takes the Riemann solution on the cell
+  faces, i.e.~the output of projectOntoFace, and adds it to the cell solution,
+  i.e.~it adds it to the outcome of solveCell.
+\end{enumerate}
+
+
+\noindent
+Ghoddess' vanilla version indeed traverses the mesh four times per time step.
+This makes it easy/easier to debug the code and to analyse the substeps.
+The work of Charrier et al then automatically fuses the traversals and thus
+reduces the memory accesses and homogenises the computational character over the
+mesh sweeps.
+
+
+The realisation of the four sweeps relies on blockstructured extension of
+\Peano:
+Though the data is logically not Cartesian or block-structured, we model all
+properties as blocks embedded into the mesh.
+
+
+All solvers inherit from \texttt{exahype2.ghoddess.Solver} which is our abstract
+framework.
+Per solver, the Python API will generate one C++ solver class.
+This class has a couple of things to do:
+
+\begin{enumerate}
+  \item It holds all time stepping data. So it knows, for example, what the
+  minimal time stamp at the moment is.
+  \item It serves as a state machine which decides at any point which kernels
+  are to be executed on particular grid entities.
+  \item It holds the application domain-specific routines such as the actual
+  kernel implementations, refinement criteria or data initialisation.
+\end{enumerate}
+
 
 
 \section*{Links and further reading}

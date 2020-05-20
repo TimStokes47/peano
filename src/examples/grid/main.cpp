@@ -38,7 +38,7 @@ void runTests() {
 
   if (unitTestsErrors != 0) {
     logError("main()", "unit tests failed. Quit.");
-    exit(-2);
+    tarch::mpi::Rank::abort( -2 );
   }
 }
 

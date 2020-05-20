@@ -138,6 +138,7 @@ Tarch_SOURCES= tarch/tarch.cpp \
  tarch/mpi/mpi.cpp \
  tarch/mpi/IntegerMessage.cpp \
  tarch/mpi/StringMessage.cpp \
+ tarch/mpi/tests/StringTest.cpp \
  tarch/logging/CommandLineLogger.cpp \
  tarch/logging/ChromeTraceFileLogger.cpp \
  tarch/logging/Log.cpp \
