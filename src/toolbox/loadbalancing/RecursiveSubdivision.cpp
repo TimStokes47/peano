@@ -42,9 +42,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
     _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
   }
   else {
-    // @todo Implementieren
     _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
-    //assertionMsg( false, "not implemented yet. Need global reduction here" );
   }
 }
 

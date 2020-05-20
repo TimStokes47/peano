@@ -47,7 +47,8 @@ namespace exahype2 {
         double                                       t,
         double                                       dt,
         int                                          normal,
-        double                                       F[]
+        double                                       FL[],
+        double                                       FR[]
       ) >   splitRiemannSolve1d,
       const tarch::la::Vector<Dimensions,double>&  patchCentre,
       const tarch::la::Vector<Dimensions,double>&  patchSize,
@@ -69,7 +70,8 @@ namespace exahype2 {
         double                                       t,
         double                                       dt,
         int                                          normal,
-        double                                       F[]
+        double                                       FL[],
+        double                                       FR[]
       ) >   splitRiemannSolve1d,
       const tarch::la::Vector<Dimensions,double>&  patchCentre,
       const tarch::la::Vector<Dimensions,double>&  patchSize,

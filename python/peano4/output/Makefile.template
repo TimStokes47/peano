@@ -5,8 +5,8 @@
 .PHONY: all solver clean
 
 
-CXX ?= {CXX}
-FC  ?= {FC}
+CXX = {CXX}
+FC  = {FC}
 CXXFLAGS += -std=c++0x {CXX_MODE_FLAGS} {CXXFLAGS} -DDimensions={DIM} -I. -I{CONFIGUREPATH}/src
 LDFLAGS  += {LDFLAGS}
 LIBS = -L{CONFIGUREPATH}/src -lPeano4Core{DIM}d{LIBRARY_POSTFIX} -lTarch{LIBRARY_POSTFIX} {LIBS}
