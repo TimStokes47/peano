@@ -152,7 +152,7 @@ if test "$vtk_include" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
   AC_CHECK_FILE([$vtk_include/vtkVersion.h], [vtkFound="OK"])
   VTK_INCLUDE=-I$vtk_include
-  AC_MSG_RESULT(Use VTK include argument $VTK_INCLUDE)
+  AC_MSG_RESULT(use VTK include argument $VTK_INCLUDE)
 fi
 
 AC_SUBST([VTK_INCLUDE])
@@ -170,9 +170,9 @@ AC_ARG_WITH(vtk_version,
    [ AC_MSG_CHECKING(for vtk-version); AC_MSG_RESULT(not set - try to autodetect); vtk_version="autodetect" ])
 
 if test $vtk_version == "autodetect"; then
-  vtk_version_line=$(grep VTK_MAJOR_VERSION $vtk_include/*.h | sort -r  | head -n1 | tr -dc '0-9')
-  vtk_version=`echo $vtk_version_line | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-  AC_MSG_NOTICE([VTK version extracted from line $vtk_version_line : major version number is $vtk_version])
+  vtk_version_line=$(grep "define VTK_MAJOR_VERSION " $vtk_include/*.h)
+  vtk_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
+  AC_MSG_NOTICE([detected major VTK version number $vtk_version])
  
   if test x$vtk_version != "x"; then
     AC_MSG_NOTICE([Detected VTK version $vtk_version])
@@ -203,26 +203,17 @@ AC_ARG_WITH(vtk-suffix,
 # long term, there might be a need for ifs here checking the version  
 #
 if test $vtk_suffix == "autodetect"; then
-  vtk_version_line=$(grep VTK_MAJOR_VERSION $vtk_include/*.h | sort -r  | head -n1 | tail -c 2)
-  vtk_major_version=`echo $vtk_version_line | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-  vtk_version_line=$(grep VTK_MINOR_VERSION $vtk_include/*.h | sort -r  | head -n1 | tail -c 2)
-  vtk_minor_version=`echo $vtk_version_line | sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-  
-  vtk_suffix=$vtk_major_version.$vtk_minor_version
-  
-  AC_CHECK_LIB(vtkIO-$vtk_suffix, main, 
-    [],
-    [ vtk_suffix="" ]  
-  )
-
-  if test "$vtk_suffix" == "" ; then
-    AC_MSG_RESULT(try to use vtk library without postfix as fallback)
-    AC_CHECK_LIB(vtkIO$vtk_suffix,main)
-  fi
+  vtk_version_line=$(grep "define VTK_MAJOR_VERSION " $vtk_include/*.h)
+  vtk_major_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
+  vtk_version_line=$(grep "define VTK_MINOR_VERSION " $vtk_include/*.h)
+  vtk_minor_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
+  vtk_suffix=-$vtk_major_version.$vtk_minor_version
 fi
 
+AC_CHECK_LIB(vtkIOCore$vtk_suffix,main)
 VTK_LIBRARY_SUFFIX=$vtk_suffix
 AC_SUBST([VTK_LIBRARY_SUFFIX])
+
 
 #
 # HDF5
