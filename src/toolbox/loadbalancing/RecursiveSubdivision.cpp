@@ -86,7 +86,11 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 
 bool toolbox::loadbalancing::RecursiveSubdivision::isInCoolDownPhase() {
   if ( _isInCoolDownPhase and _totalNumberOfSplits>0 ) {
-    _totalNumberOfSplits--;
+    _totalNumberOfSplits /=2;
+    // @todo If we sleep more aggressively (mainly to bring the grid construction down), then
+    // we get errors, as it seems that dynamic LB is not yet working properly. I have checked
+    // it with the purge mechanism turned off, and it still does not work properly. Needs more
+    // debugging, but it is a difficult problem. We have to reduce it to a two tree setup
     return true;
   }
   else if ( _isInCoolDownPhase and _totalNumberOfSplits<=0 ) {
@@ -94,7 +98,7 @@ bool toolbox::loadbalancing::RecursiveSubdivision::isInCoolDownPhase() {
 	_totalNumberOfSplits = 0;
 	return true;
   }
-  else if ( not _isInCoolDownPhase and _totalNumberOfSplits<tarch::mpi::Rank::getInstance().getNumberOfRanks() * tarch::multicore::Core::getInstance().getNumberOfThreads() ) {
+  else if ( not _isInCoolDownPhase and _totalNumberOfSplits<tarch::multicore::Core::getInstance().getNumberOfThreads() ) {
     return false;
   }
   else {
