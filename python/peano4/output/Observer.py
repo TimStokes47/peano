@@ -1032,7 +1032,7 @@ void {FULL_QUALIFIED_CLASSNAME}::sendFaceHorizontally(int inOutStack, int relati
 """
 
   TemplateExchangeRoutines_sendFaceHorizontally_Epilogue = """
-  logTraceOut( "sendVertexHorizontally(int,int,int)");
+  logTraceOut( "sendFaceHorizontally(int,int,int)");
 }}
 """
 
@@ -1077,7 +1077,7 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFaceHorizontally(const peano4::g
 """
 
   TemplateExchangeRoutines_receiveAndMergeFaceHorizontally_Epilogue = """
-  logTraceOut( "receiveAndMergeVertexHorizontally(...)");
+  logTraceOut( "receiveAndMergeFaceHorizontally(...)");
 }}
 """
 

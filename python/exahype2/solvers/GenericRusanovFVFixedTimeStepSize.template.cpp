@@ -53,20 +53,6 @@ void {FULL_QUALIFIED_CLASSNAME}::eigenvalues(
 }}
 
 
-void {FULL_QUALIFIED_CLASSNAME}::flux(
-  double                                       Q[{NUMBER_OF_UNKNOWNS}],
-  const tarch::la::Vector<Dimensions,double>&  faceCentre,
-  const tarch::la::Vector<Dimensions,double>&  volumeH,
-  double                                       t,
-  int                                          normal,
-  double                                       F[{NUMBER_OF_UNKNOWNS}]
-) {{
-  logTraceInWith4Arguments( "flux(...)", faceCentre, volumeH, t, normal );
-	  // @todo implement
-  logTraceOut( "flux(...)" );
-}}
-
-
 void {FULL_QUALIFIED_CLASSNAME}::boundaryConditions(
   double                                       Qinside[{NUMBER_OF_UNKNOWNS}],
   double                                       Qoutside[{NUMBER_OF_UNKNOWNS}],

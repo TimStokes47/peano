@@ -75,19 +75,6 @@ class {FULL_QUALIFIED_CLASSNAME} {{
     ) = 0;
 
     /**
-     * Compute the flux for a given volume with states Q. All parameters
-     * are in except F. F is the output vector.
-     */
-    virtual void flux(
-      double                                       Q[{NUMBER_OF_UNKNOWNS}],
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      double                                       t,
-      int                                          normal,
-      double                                       F[{NUMBER_OF_UNKNOWNS}]
-    ) = 0;
-
-    /**
      * Apply boundary conditions. You can overwrite both the inside and
      * outside values though most BCs only modify the outside ones. Please
      * note that the boundary conditions you set here are after that subject
@@ -118,6 +105,8 @@ class {FULL_QUALIFIED_CLASSNAME} {{
      * operation is still invoked.
      */
     virtual void finishTimeStep();
+
+    {ABSTRACT_FLUX_FUNCTIONS}
 }};
 
 
