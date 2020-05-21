@@ -86,13 +86,14 @@ AC_OPENMP()
 #
 AC_ARG_WITH(
   multithreading, 
-  AC_HELP_STRING([--with-multithreading], [switch on multithreading [default=no,cpp,tbb,openmp]]),
+  AC_HELP_STRING([--with-multithreading], [switch on multithreading [default=no,cpp,tbb,omp]]),
   [
     AC_MSG_CHECKING(for multithreading)
     case "${withval}" in
       no)     AC_MSG_RESULT([no multithreading]);                    multithreading=false ;;
       cpp)    AC_MSG_RESULT([build with C++11 threading support]);                          multithreading=cpp ;;
       tbb)    AC_MSG_RESULT([build with TBB (Intel Threading Building Blocks) support - please ensure that CXXFLAGS and LDFLAGS are properly set]); multithreading=tbb ;;
+      omp)    AC_MSG_RESULT([build with OpenMP]); multithreading=omp ;;
       *)      AC_MSG_FAILURE([default=no (no multithreading). Use cpp or tbb to define target]);            multithreading=false ;;
     esac
   ], 
@@ -113,7 +114,14 @@ if test "$multithreading" == tbb; then
   AC_DEFINE([SharedTBB], [1], [SharedTBB])
 fi
 
+if test "$multithreading" == omp; then
+  AC_OPENMP()
+  AC_CHECK_HEADERS([omp.h],[],[AC_MSG_ERROR([header <omp.h> not found])])
+  AC_DEFINE([SharedOMP], [1], [SharedOMP])
 
+  CXXFLAGS+=" $OPENMP_CXXFLAGS "
+  LDFLAGS+=" $OPENMP_CXXFLAGS "
+fi
 
 #
 # MPI  Options
