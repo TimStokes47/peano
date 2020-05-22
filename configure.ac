@@ -148,71 +148,71 @@ AC_ARG_WITH(vtk,
   
 
 AM_CONDITIONAL([UseVTK],[test "$vtk_include" != false])
+
+
 if test "$vtk_include" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
   AC_CHECK_FILE([$vtk_include/vtkVersion.h], [vtkFound="OK"])
   VTK_INCLUDE=-I$vtk_include
   AC_MSG_RESULT(use VTK include argument $VTK_INCLUDE)
-fi
-
-AC_SUBST([VTK_INCLUDE])
-
-
-#
-# If you specify a version, then I use this one. Otherwise, I search $vtk_include
-#
-AC_ARG_WITH(vtk_version,
-   AC_HELP_STRING([--with-vtk-version], [specify vtk version (major) [default=autodetect]]),
-   [ AC_MSG_CHECKING(for vtk-version)
-     case "${withval}" in
-       *)     AC_MSG_RESULT(build against VTK version ${withval});    vtk_version=${withval}  ;;
-     esac ],
-   [ AC_MSG_CHECKING(for vtk-version); AC_MSG_RESULT(not set - try to autodetect); vtk_version="autodetect" ])
-
-if test $vtk_version == "autodetect"; then
-  vtk_version_line=$(grep "define VTK_MAJOR_VERSION " $vtk_include/*.h)
-  vtk_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
-  AC_MSG_NOTICE([detected major VTK version number $vtk_version])
  
-  if test x$vtk_version != "x"; then
-    AC_MSG_NOTICE([Detected VTK version $vtk_version])
-  else
-    AC_MSG_ERROR([No VTK manually specified and no VTK version could be detected at VTK prefix '$vtk_include'!])
-  fi
-fi
+  AC_SUBST([VTK_INCLUDE])
 
+
+  #
+  # If you specify a version, then I use this one. Otherwise, I search $vtk_include  
+  #
+  AC_ARG_WITH(vtk_version,
+    AC_HELP_STRING([--with-vtk-version], [specify vtk version (major) [default=autodetect]]),
+    [ AC_MSG_CHECKING(for vtk-version)
+      case "${withval}" in
+      *)     AC_MSG_RESULT(build against VTK version ${withval});    vtk_version=${withval}  ;;
+      esac ],
+    [ AC_MSG_CHECKING(for vtk-version); AC_MSG_RESULT(not set - try to autodetect); vtk_version="autodetect" ])
+
+  if test $vtk_version == "autodetect"; then
+    vtk_version_line=$(grep "define VTK_MAJOR_VERSION " $vtk_include/*.h)
+    vtk_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
+    AC_MSG_NOTICE([detected major VTK version number $vtk_version])
+ 
+    if test x$vtk_version != "x"; then
+      AC_MSG_NOTICE([Detected VTK version $vtk_version])
+    else
+      AC_MSG_ERROR([No VTK manually specified and no VTK version could be detected at VTK prefix '$vtk_include'!])
+    fi
+  fi
+
+
+  AC_ARG_WITH(vtk-suffix,
+    AC_HELP_STRING([--with-vtk-suffix], [specify which suffix the vtk libraries carry [default=autodetect]]),
+    [ AC_MSG_CHECKING(for vtk-suffix)
+      case "${withval}" in
+      *)     AC_MSG_RESULT(use suffix ${withval});    vtk_suffix=${withval}  ;;
+    esac ],  
+    [ AC_MSG_CHECKING(for vtk-suffix); AC_MSG_RESULT(not set - try to autodetect); vtk_suffix="autodetect" ])
+
+
+  #
+  # So far, every VTK version we had tested had vtkIOCore, so we test this one. On the 
+  # long term, there might be a need for ifs here checking the version  
+  #
+  if test $vtk_suffix == "autodetect"; then
+    vtk_version_line=$(grep "define VTK_MAJOR_VERSION " $vtk_include/*.h)
+    vtk_major_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
+    vtk_version_line=$(grep "define VTK_MINOR_VERSION " $vtk_include/*.h)
+    vtk_minor_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
+    vtk_suffix=-$vtk_major_version.$vtk_minor_version
+  fi
+
+  AC_CHECK_LIB(vtkIOCore$vtk_suffix,main)
+  VTK_LIBRARY_SUFFIX=$vtk_suffix
+  AC_SUBST([VTK_LIBRARY_SUFFIX])
+fi
 
 
 AM_CONDITIONAL([VTK_LIBRARY_VERSION_7],[test "$vtk_version" = "7"])
 AM_CONDITIONAL([VTK_LIBRARY_VERSION_8],[test "$vtk_version" = "8"])
 AM_CONDITIONAL([VTK_LIBRARY_VERSION_9],[test "$vtk_version" = "9"])
-  
-
-AC_ARG_WITH(vtk-suffix,
-  AC_HELP_STRING([--with-vtk-suffix], [specify which suffix the vtk libraries carry [default=autodetect]]),
-  [ AC_MSG_CHECKING(for vtk-suffix)
-    case "${withval}" in
-    *)     AC_MSG_RESULT(use suffix ${withval});    vtk_suffix=${withval}  ;;
-  esac ],  
-  [ AC_MSG_CHECKING(for vtk-suffix); AC_MSG_RESULT(not set - try to autodetect); vtk_suffix="autodetect" ])
-
-
-
-#
-# So far, every VTK version we had tested had vtkIOCore, so we test this one. On the 
-# long term, there might be a need for ifs here checking the version  
-#
-if test $vtk_suffix == "autodetect"; then
-  vtk_version_line=$(grep "define VTK_MAJOR_VERSION " $vtk_include/*.h)
-  vtk_major_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
-  vtk_version_line=$(grep "define VTK_MINOR_VERSION " $vtk_include/*.h)
-  vtk_minor_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
-  vtk_suffix=-$vtk_major_version.$vtk_minor_version
-fi
-
-AC_CHECK_LIB(vtkIOCore$vtk_suffix,main)
-VTK_LIBRARY_SUFFIX=$vtk_suffix
-AC_SUBST([VTK_LIBRARY_SUFFIX])
 
 
 #
