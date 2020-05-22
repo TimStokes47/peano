@@ -37,7 +37,9 @@ Here's some things you might want to consider/check:
   later on). If your library naming convention is different---we've seen
   systems dropping the version numbers or Paraview installations which append
   something alike \texttt{pv8.90}---then specify your suffix manually through
-  \texttt{--with-vtk-suffix}.
+  \texttt{--with-vtk-suffix}. If your installation does not have a version suffix,
+  as is the case in Fedora, you should pass an empty string to this:
+  \texttt{--with-vtk-suffix=''}
   \item If your compile passes through but fails in the linking state (object
   not found), then you have to check if the VTK libraries are in the search
   path. If they are not (very likely), then add them prior to the compile call:
