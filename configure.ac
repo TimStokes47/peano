@@ -145,7 +145,7 @@ fi
 ## VTK Options
 ##
 AC_ARG_WITH(vtk,
-  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools [default=no, prefix]. prefix is where VTK include files are to be found]),
+  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools [default=no, prefix]. prefix is where VTK include files are to be found, such as /usr/local/include/vtk-8.90]),
   [ AC_MSG_CHECKING(for vtk)
     case "${withval}" in
       no)    AC_MSG_RESULT(no);     vtk_include=false ;;
