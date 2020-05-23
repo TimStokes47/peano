@@ -60,15 +60,6 @@ class examples::exahype2::finitevolumes::LOH1: public AbstractLOH1 {
       double                                       lambda[9]
     ) override;
 
-    void flux(
-      double                                       Q[9],
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      double                                       t,
-      int                                          normal,
-      double                                       F[9]
-    ) override;
-
     void boundaryConditions(
       double                                       Qinside[9],
       double                                       Qoutside[9],
@@ -77,6 +68,22 @@ class examples::exahype2::finitevolumes::LOH1: public AbstractLOH1 {
       double                                       t,
       int                                          normal
     ) override;
+
+    void  flux(
+      double                                       Q[9],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      int                                          normal,
+      double                                       F[9]
+    ) override;
+
+    void nonconservativeProduct(
+      double                                       Q[9],
+      double                                       gradQ[9][Dimensions],
+      double                                       BgradQ[9]
+     ) override;
+
 };
 
 

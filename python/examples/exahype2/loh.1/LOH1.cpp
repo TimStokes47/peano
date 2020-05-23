@@ -1,7 +1,5 @@
 #include "LOH1.h"
 
-#include "PDE.h"
-#include "InitialData.h"
 
 tarch::logging::Log   examples::exahype2::finitevolumes::LOH1::_log( "examples::exahype2::finitevolumes::LOH1" );
 
@@ -32,19 +30,12 @@ void examples::exahype2::finitevolumes::LOH1::adjustSolution(
   logTraceInWith3Arguments( "adjustSolution(...)", x, h, t );
   if (tarch::la::equals(t,0.0) ) {
     // initial conditions
-    double xd[Dimensions];
-    for (int d=0; d< Dimensions; d++) xd[d] = 0.0;//x[d];
-    alfenwave_(&xd[0], &Q[0], &t);
-    for(int i=0; i<9; i++){
-        if(!std::isfinite(Q[i])) std::cout << "xd " << xd[0] << " " << xd[1] << std::endl;
-        assert(std::isfinite(Q[i]));
-        assert(!std::isnan(Q[i]));
-    }
+  }
+  else {
+    // other stuff
   }
   logTraceOut( "adjustSolution(...)" );
 }
-
-
 
 void examples::exahype2::finitevolumes::LOH1::eigenvalues(
   double                                       Q[9],
@@ -54,25 +45,20 @@ void examples::exahype2::finitevolumes::LOH1::eigenvalues(
   int                                          normal,
   double                                       lambda[9]
 ) {
-  logTraceInWith4Arguments( "eigenvalues(...)", faceCentre, volumeH, t, normal );
-  double nv[3] = {0.};
-  nv[normal] = 1;
-  //pdeeigenvalues_(lambda, Q, nv);
-  logTraceOut( "eigenvalues(...)" );
-}
-
-
-void examples::exahype2::finitevolumes::LOH1::flux(
-  double                                       Q[9],
-  const tarch::la::Vector<Dimensions,double>&  faceCentre,
-  const tarch::la::Vector<Dimensions,double>&  volumeH,
-  double                                       t,
-  int                                          normal,
-  double                                       F[9]
-) {
-  logTraceInWith4Arguments( "flux(...)", faceCentre, volumeH, t, normal );
-  //pdeflux_(F, Q, &normal);
-  logTraceOut( "flux(...)" );
+  //VariableShortcuts s;
+  //double cp     = Q[s.cp];
+  //double cs     = Q[s.cs];
+  //
+  //lambda[0] = -cp;
+  //lambda[1] =  cp;
+  //lambda[2] = -cs;
+  //lambda[3] =  cp;
+  //lambda[4] = 0.0;
+  //lambda[5] = 0.0;
+  //lambda[6] = 0.0;
+  //lambda[7] = 0.0;
+  //lambda[8] = 0.0;
+  //lambda[9] = 0.0;
 }
 
 
@@ -85,8 +71,28 @@ void examples::exahype2::finitevolumes::LOH1::boundaryConditions(
   int                                          normal
 ) {
   logTraceInWith4Arguments( "boundaryConditions(...)", faceCentre, volumeH, t, normal );
-  for(int i=0; i< 9; i++)
-      Qoutside[i]=Qinside[i];
+  // @todo implement
   logTraceOut( "boundaryConditions(...)" );
 }
 
+void examples::exahype2::finitevolumes::LOH1::flux(
+  double                                       Q[9],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  double                                       t,
+  int                                          normal,
+  double                                       F[9] ) {
+  logTraceInWith4Arguments( "flux(...)", faceCentre, volumeH, t, normal );
+  // @todo implement
+  logTraceOut( "flux(...)" );
+}
+
+void examples::exahype2::finitevolumes::LOH1::nonconservativeProduct(
+  double                                       Q[9],
+  double                                       gradQ[9][Dimensions],
+  double                                       BgradQ[9] ) {
+  logTraceIn( "nonconservativeProduct(...)" );
+  // @todo implement
+  BgradQ[1] = Q[0];
+  logTraceOut( "nonconservativeProduct(...)" );
+}

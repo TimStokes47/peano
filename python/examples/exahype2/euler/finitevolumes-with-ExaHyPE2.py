@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 
  A very simple example which demonstrates how to configure a patch-based
@@ -58,7 +59,7 @@ build_mode = peano4.output.CompileMode.Asserts
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    0.1,          # end time
+    0.001,          # end time
     0.0, 0.01     # snapshots
   )
 else:
@@ -84,6 +85,3 @@ if success:
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()
-
-
-

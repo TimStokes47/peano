@@ -68,12 +68,8 @@ namespace exahype2 {
       ) >   flux,
       std::function< void(
         double                                       Q[],
-        const tarch::la::Vector<Dimensions,double>&  faceCentre,
-        const tarch::la::Vector<Dimensions,double>&  volumeH,
-        double                                       t,
-        double                                       dt,
-        int                                          normal,
-        double                                       F[]
+        double                                       gradQ[][Dimensions],
+        double                                       BgradQ[]
       ) >   nonconservativeProduct,
       std::function< void(
         double                                       Q[],
