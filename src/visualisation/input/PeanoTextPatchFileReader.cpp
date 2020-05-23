@@ -86,9 +86,9 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
       }
     }
     else if ( tokens[0]=="end" and tokens[1]=="dataset" ) { //new snapshot
-      #if !defined(SharedTBB)
-      #pragma omp taskwait
-      #endif
+      //#if !defined(SharedTBB)
+      //#pragma omp taskwait
+      //#endif
 	  }
     else if ( tokens[0]=="include") {
 	    std::string directory = Parser::getDirectory(_file);
@@ -97,9 +97,9 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
 
       logInfo ( "parse()", "create a new reader (with new task) for file " << filename << " resulting from token " << tokens[1] );
 
-      #if !defined(SharedTBB)
-      #pragma omp task
-      #endif
+      //#if !defined(SharedTBB)
+      //#pragma omp task
+      //#endif
       {
         PeanoTextPatchFileReader subReader(filename);
         subReader.parse();
