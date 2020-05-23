@@ -6,6 +6,7 @@ lib_LIBRARIES = libToolboxLoadBalancing2d.a libToolboxLoadBalancing2d_debug.a li
 
 
 ToolboxLoadBalancing_SOURCES = \
+  Hardcoded.cpp \
   RecursiveSubdivision.cpp
   
 

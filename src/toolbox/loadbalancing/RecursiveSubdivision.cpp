@@ -94,9 +94,9 @@ bool toolbox::loadbalancing::RecursiveSubdivision::isInCoolDownPhase() {
     return true;
   }
   else if ( _isInCoolDownPhase and _totalNumberOfSplits<=0 ) {
-	_isInCoolDownPhase   = false;
-	_totalNumberOfSplits = 0;
-	return true;
+    _isInCoolDownPhase   = false;
+    _totalNumberOfSplits = 0;
+    return true;
   }
   else if ( not _isInCoolDownPhase and _totalNumberOfSplits<tarch::multicore::Core::getInstance().getNumberOfThreads() ) {
     return false;
@@ -205,11 +205,9 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateBlacklist() {
 
 
 void toolbox::loadbalancing::RecursiveSubdivision::triggerSplit( int sourceTree, int numberOfCells, int targetRank ) {
-  if (peano4::parallel::SpacetreeSet::getInstance().split(sourceTree,numberOfCells,targetRank)) {
-    _blacklist.insert( std::pair<int,int>(sourceTree,3) );
-  }
-  else {
+  if (not peano4::parallel::SpacetreeSet::getInstance().split(sourceTree,numberOfCells,targetRank)) {
     logInfo( "triggerSplit()", "wanted to split local rank " << sourceTree << " but failed" );
   }
+  _blacklist.insert( std::pair<int,int>(sourceTree,3) );
   _totalNumberOfSplits++;
 }
