@@ -103,6 +103,15 @@ namespace toolbox {
  * stored in a map. As long as a rank is on the blacklist map, it may not be selected
  * as potential split tree. After each iteration, we reduce the weight of the blacklisted
  * trees by one. If a weight becomes zero, we eventually remove it from the blacklist.
+ *
+ * <h2> Cool-down phases </h2>
+ *
+ * It is important that we have some kind of cool-down phases, i.e. certain blocks of
+ * sweeps where no rebalancing is done no matter how imbalanced we are. Splits are
+ * notoriously expensive as they serialise parts of the traversals. Furthermore, we
+ * will never reach a stationary grid throughout the grid construction phase if we
+ * split all the time (and perhaps then are unsuccessful as the grids have a layout
+ * that we can't split actually).
  */
 class toolbox::loadbalancing::RecursiveSubdivision {
   public:
@@ -140,6 +149,9 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      */
     int _globalNumberOfInnerUnrefinedCell;
 
+    int   _totalNumberOfSplits;
+    bool  _isInCoolDownPhase;
+
     void updateGlobalView();
 
     int getMaximumSpacetreeSize() const;
@@ -172,6 +184,8 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      * Wrapper around the spacetree set which also updates the blacklist.
      */
     void triggerSplit( int sourceTree, int numberOfCells, int targetRank );
+
+    bool isInCoolDownPhase();
 };
 
 

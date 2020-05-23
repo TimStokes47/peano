@@ -56,13 +56,14 @@ namespace {
         #ifdef Parallel
         const int out = 23+_id;
         static tarch::logging::Log _log( "peano4::parallel::tests::PingPongSendTask" );
-        logDebug( "PingPongSendTask()", "send message " << out << " to rank 1 with tag " << _id );
         if (_blockingMPI) {
           MPI_Send(&out,1,MPI_INT,1,_id,MPI_COMM_WORLD);
+          logDebug( "PingPongSendTask()", "sent blocking message " << out << " to rank 1 with tag " << _id );
         }
         else {
           MPI_Request request;
           MPI_Isend(&out,1,MPI_INT,1,_id,MPI_COMM_WORLD,&request);
+          logDebug( "PingPongSendTask()", "sent non-blocking message " << out << " to rank 1 with tag " << _id );
           tarch::multicore::yield();
           MPI_Wait(&request,MPI_STATUS_IGNORE);
         }
@@ -94,6 +95,7 @@ namespace {
           tarch::multicore::yield();
           MPI_Wait(&request,MPI_STATUS_IGNORE);
         }
+        logDebug( "PingPongReceiveTask()", "got content " << in );
         if ( in != 23+_id) {
           logError( "testMultithreadedPingPong()", "received " << in << " instead of " << (23+_id) << " (blocking mode=" << _blockingMPI << ", tag=" << _id << ")" );
           testErrors++;
@@ -107,10 +109,11 @@ namespace {
 
 void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockingReceives() {
   #ifdef Parallel
-  int out = 23;
+  int out;
   testErrors = 0;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
+      out = 23 + i;
       MPI_Send(&out,1,MPI_INT,1,i,MPI_COMM_WORLD);
     }
   }
@@ -129,10 +132,11 @@ void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithBlockin
 
 void peano4::parallel::tests::PingPongTest::testMultithreadedPingPongWithNonblockingReceives() {
   #ifdef Parallel
-  int out = 23;
+  int out;
   testErrors = 0;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
+      out = 23 + i;
       MPI_Send(&out,1,MPI_INT,1,i,MPI_COMM_WORLD);
     }
   }

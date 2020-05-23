@@ -36,6 +36,9 @@ namespace peano4 {
 }
 
 
+std::string toString( peano4::stacks::IOMode mode );
+
+
 /**
  * 
  */
@@ -323,13 +326,13 @@ class peano4::stacks::STDVectorStack {
       _ioTag  = tag;
       _ioRank = rank;
 
-      logDebug( "startSend(int,int)", "start to send " << _currentElement << " element(s) to rank " << _ioRank << " on tag " << _ioTag );
+      logDebug( "startSend(int,int,bool)", "start to send " << _currentElement << " element(s) to rank " << _ioRank << " on tag " << _ioTag );
 
       assertion( _ioMPIRequest == nullptr );
       _ioMPIRequest = new MPI_Request;
       int result = MPI_Isend( _data.data(), _currentElement, T::Datatype, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
       if  (result!=MPI_SUCCESS) {
-        logError( "startSend(int,int)", "was not able to send to node " << rank << " on tag " << tag
+        logError( "startSend(int,int,bool)", "was not able to send to node " << rank << " on tag " << tag
           << ": " << tarch::mpi::MPIReturnValueToString(result)
         );
       }
@@ -380,7 +383,8 @@ class peano4::stacks::STDVectorStack {
      */
     void finishSendOrReceive() {
       #ifdef Parallel
-      if (_ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive ) {
+      logTraceInWith4Arguments( "finishSendOrReceive()", ::toString(_ioMode), size(), _ioRank,_ioTag );
+      if ( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive ) {
         assertion( _ioMPIRequest!=nullptr );
 
         int          flag = 0;
@@ -419,13 +423,15 @@ class peano4::stacks::STDVectorStack {
           tarch::mpi::Rank::getInstance().receiveDanglingMessages();
           tarch::multicore::yield();
         }
+        logDebug( "finishSendOrReceive()", "send/receive complete, free MPI request" );
         delete _ioMPIRequest;
         _ioMPIRequest = nullptr;
       }
       if (_ioMode==IOMode::MPISend ) {
-    	clear();
+        clear();
       }
       _ioMode = IOMode::None;
+      logTraceOut( "finishSendOrReceive()" );
       #endif
     }
 

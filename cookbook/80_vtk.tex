@@ -6,50 +6,90 @@ Installing VTK support can be challenging.
 Here's some things you might want to consider/check:
 
 \begin{itemize}
-  \item When you translate with \texttt{--with-vtk}, then \Peano\ assumes that
-  all vtk libraries are built without any version extension. Many VTK
-  installations however append the version number to the library, i.e.~they
-  create a library \texttt{libvtkCommonCore-8.90.so} instead of
-  \texttt{libvtkCommonCore.so} if you use VTK 8.9. If you are not sure, run
-  \texttt{find / -name libvtk*.so} and see what it finds. After that, tell the
-  configuration explicitly which VTK extension to use:
-  \begin{code}
---with-vtk=-8.90
-  \end{code}
-  BTW: Not all Linux distributions install VTK with these extensions, so you
-  have to check manually on your system.
-  \item If you configure with \texttt{--with-vtk} but the makefile cannot find
-  the headers, you have to add the correct search path. You can either set the 
-\begin{code}
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/vtk
-\end{code}
-  or you set the corresponding environment variable prior to the configure
-  script. I always recommend that latter route, as our Python API inherits all of the configure
-  variables, i.e.~it will then know where to search for VTK:
-\begin{code}
-export CXXFLAGS=$CXXFLAGS:"-I/usr/local/include/vtk-8.90"
-\end{code}
-  The first setting btw stems from a Fedora system, the latter example from an
-  Ubuntu installation, while OpenSUSE in our test farm got the includes
-  automatically right.
+  \item To build the \Peano\ conversion/visualisation tools, you have to
+  translate the code with \texttt{--with-vtk}. If you don't
+  specify a path, then \Peano\ assumes that all VTK is installed 
+  within \texttt{/usr/include}\footnote{Recent Ubuntu
+  versions for example tend to place VTK in subdirectories of
+  \texttt{/usr/local/include}, while SUSE et al indeed place them directly
+  within \texttt{/usr/include}. In any case, you will have to select a
+  subdirectory from these folders, as VTK usually goes into separate subfolder (depending on their
+  version). If you have not installed VTK as stand-alone but as part of the
+  Paraview developer version, e.g., then you have to search for the VTK
+  directory within the Paraview folder. In any case, search for a
+  filte \texttt{vtkVersion.h}. It is the folder hosting this file that we are
+  searching for here.}.
+  \item We next have to know which VTK version you are using. VTK builds a
+  different set of libraries in each generation. \Peano\ has to know which
+  version you want to use to link against the right set of libraries. The
+  installation script will automatically try to detect your version, but the
+  detection is not very robust. If it is the wrong version, use the
+  \texttt{--with-vtk-version=x} switch to set the version manually. We currently
+  support \texttt{x} 7,8,9, i.e.~we are only interested in the major version of
+  your VTK installation. If you have version 8.90, it is the 8 we are interested
+  in.
+  \item Next, the script will search for the right libraries. By default, our
+  script assumes that the libraries are have a suffix with the major dot minor
+  number. So we assume that the VTK version 8.90 yields a library
+  \texttt{vtkIOCore-8.90}. This is the default. The script will try to find this
+  default library and give you some feedback (be careful: if it doesn't find
+  the library, it will still continue as you might want to change the pathes
+  later on). If your library naming convention is different---we've seen
+  systems dropping the version numbers or Paraview installations which append
+  something alike \texttt{pv8.90}---then specify your suffix manually through
+  \texttt{--with-vtk-suffix}. If your installation does not have a version suffix,
+  as is the case in Fedora, you should pass an empty string to this:
+  \texttt{--with-vtk-suffix=''}
   \item If your compile passes through but fails in the linking state (object
   not found), then you have to check if the VTK libraries are in the search
   path. If they are not (very likely), then add them prior to the compile call:
 \begin{code}
 export LDFLAGS="-L/opt/vtk/lib64"
 \end{code}
-  \item Unfortunately, the packaging of VTK seem to change with every major
-  revision. That is, the number of libraries shipped with VTK as well as their
-  names change. We currently support the generations 7, 8 and 9 of VTK. 8 is the
-  default. To change the version against which you build, please tell configure
-  via
-\begin{code}
---with-vtk-version=9
-\end{code}
-  Depending on the version chosen, \Peano\ will try to link against a different
-  set of library files.
 \end{itemize}
+
+
+%   \item If you configure with \texttt{--with-vtk}, but the makefile cannot find
+%   the headers, you have to add the correct search path\footnote.
+%   You can either set the
+% \begin{code}
+% export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/vtk
+% \end{code}
+%   or you set the corresponding environment variable prior to the configure
+%   script. I always recommend that latter route, as our Python API inherits all of the configure
+%   variables, i.e.~it will then know where to search for VTK:
+% \begin{code}
+% export CXXFLAGS=$CXXFLAGS:"-I/usr/local/include/vtk-8.90"
+% \end{code}
+%   The first setting btw stems from a Fedora system, the latter example from an
+%   Ubuntu installation, while OpenSUSE in our test farm got the includes
+%   automatically right.
+
+
+%  Depending on the version chosen, \Peano\ will try to link against a different
+%  set of library files.
     
+% -with-vtk-version=
+
+
+  
+  
+  
+  
+%   Many VTK installations append the version number to the library, i.e.~they create a library \texttt{libvtkCommonCore-8.90.so} instead of
+%   \texttt{libvtkCommonCore.so} if you use VTK 8.9. 
+%   \Peano tries to detect this version number automatically but in case it fails,
+%   you can use the options \texttt{--with-vtk=<path>} and \texttt{--with-vtk-version=<MAJOR.MINORS>}
+%   to specify exactly the Peano version you want to use.
+%   If you are not sure, run \texttt{find / -name libvtk*.so} and see what it finds. 
+%   %After that, tell the
+%   %configuration explicitly which VTK extension to use:
+%   %\begin{code}
+%   %--with-vtk-version=8.90
+%   %\end{code}
+%   BTW: Not all Linux distributions install VTK with these extensions, so you
+%   have to check manually on your system.
+
     
 \section{Tweaking your pictures}
 

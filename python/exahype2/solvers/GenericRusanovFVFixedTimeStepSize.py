@@ -11,13 +11,47 @@ from .FV import FV
 
 
 class GenericRusanovFVFixedTimeStepSize( FV ):
-  def __init__(self, name, patch_size, unknowns, time_step_size):
+  def __init__(self, name, patch_size, unknowns, time_step_size, flux=True, ncp=False):
     """
       Instantiate a generic FV scheme with an overlap of 1.
     """
     super(GenericRusanovFVFixedTimeStepSize,self).__init__(name, patch_size, 1, unknowns)
 
-    self._time_step_size = time_step_size
+    self._time_step_size              = time_step_size
+    
+    if flux and not ncp:
+      self.HandleCellTemplate = self.HandleCellTemplate_Flux
+    #elif not flux and ncp:
+    #  self.HandleCellTemplate = self.HandleCellTemplate_NCP
+    elif flux and ncp:
+      self.HandleCellTemplate = self.HandleCellTemplate_Flux_NCP
+    else:
+      print( "ERROR: Combination of PDE terms not supported" )
+      
+      
+    self._fv_callbacks = []
+    if flux:
+      self._fv_callbacks.append( """ flux(
+      double                                       Q[""" + str(unknowns) + """],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      int                                          normal,
+      double                                       F[""" + str(unknowns) + """]
+)      
+""")
+    if ncp:
+      self._fv_callbacks.append( """nonconservativeProduct(
+      double                                       Q[""" + str(unknowns) + """],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      int                                          normal,
+      double                                       F[""" + str(unknowns) + """]
+)      
+""")
+    
+    
     pass
 
 
@@ -86,11 +120,7 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
 """
 
 
-  HandleCellTemplate = """#if Dimensions==2
-::exahype2::fv::applyRusanovToPatch_FaceLoops2d(
-#elif Dimensions==3
-::exahype2::fv::applyRusanovToPatch_FaceLoops3d(
-#endif
+  HandleCellTemplate_Flux = """::exahype2::fv::applyRusanovToPatch_FaceLoops(
     [&](
       double                                       Q[],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
@@ -125,6 +155,59 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
 """
 
 
+  HandleCellTemplate_Flux_NCP = """::exahype2::fv::applyRusanovToPatch_FaceLoops(
+    [&](
+      double                                       Q[],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      double                                       dt,
+      int                                          normal,
+      double                                       F[]
+    ) -> void {{
+      {SOLVER_INSTANCE}.flux( Q, faceCentre, volumeH, t, normal, F );
+    }},
+    [&](
+      double                                       Q[],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      double                                       dt,
+      int                                          normal,
+      double                                       F[]
+    ) -> void {{
+//    @todo
+//      {SOLVER_INSTANCE}.nonconservativeProduct( Q, faceCentre, volumeH, t, normal, F );
+{SOLVER_INSTANCE}.flux( Q, faceCentre, volumeH, t, normal, F );
+    }},
+    [&](
+      double                                       Q[],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      double                                       dt,
+      int                                          normal,
+      double                                       lambdas[]
+    ) -> void {{
+      {SOLVER_INSTANCE}.eigenvalues( Q, faceCentre, volumeH, t, normal, lambdas );
+    }},
+    marker.x(),
+    marker.h(),
+    {SOLVER_INSTANCE}.getMinTimeStamp(),
+    {TIME_STEP_SIZE}, 
+    {NUMBER_OF_VOLUMES_PER_AXIS},
+    {NUMBER_OF_UNKNOWNS},
+    reconstructedPatch,
+    originalPatch
+  );
+"""
+
+
   def add_entries_to_text_replacement_dictionary(self,d):
     d[ "TIME_STEP_SIZE" ] = self._time_step_size
+    d[ "ABSTRACT_FLUX_FUNCTIONS" ]    = ""
+    d[ "FLUX_FUNCTIONS_DECLARATIONS" ] = ""
+    for op in self._fv_callbacks:
+      d[ "ABSTRACT_FLUX_FUNCTIONS" ]     += "virtual void " + op + " = 0;\n\n\n"
+      d[ "FLUX_FUNCTIONS_DECLARATIONS" ]  += "void " + op + " override;\n\n\n"
     pass  

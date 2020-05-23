@@ -63,10 +63,14 @@ class peano4::grid::Spacetree {
      */
     std::bitset<TwoPowerD> areVerticesRefined(GridVertex  vertices[TwoPowerD]) const;
 
+    /**
+     * Vertices are local. I consider splitting and joining vertices to be
+     * local, too. It is therefore consistent with areFacesLocal().
+     */
     std::bitset<TwoPowerD> areVerticesLocal(GridVertex  vertices[TwoPowerD]) const;
 
     /**
-     * Identifies for the 2d faces whether they are local or not.
+     * Identifies for the @f$ 2 \cdot d @f$ faces whether they are local or not.
      *
      * <h2> Implementation </h2>
      *
@@ -607,6 +611,22 @@ class peano4::grid::Spacetree {
       const AutomatonState&   state,
       const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
     ) const;
+
+
+    /**
+     * When we fork or join, the worker's locality analysis identifies local
+     * vertices and faces. It also identifies local cells. That's all correct.
+     * However, despite the fact that they are local, we should not invoke
+     * any user event on them. We should move data over the stacks, and we
+     * should (maybe) exchange data, but we should never call user code within
+     * the observers. So eventually, we need a pruned version of the event
+     * with all local flags unset. We still need the version of the event
+     * with set local flags, as they feed into the boundary data exchange.
+     * But for enterCell and leaveCell, we need copies without these flags.
+     * Pruned copies.
+     */
+    GridTraversalEvent createPrunedCellTraversalEvent( const GridTraversalEvent& event ) const;
+
 
     /**
      *

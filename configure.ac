@@ -86,13 +86,14 @@ AC_OPENMP()
 #
 AC_ARG_WITH(
   multithreading, 
-  AC_HELP_STRING([--with-multithreading], [switch on multithreading [default=no,cpp,tbb,openmp]]),
+  AC_HELP_STRING([--with-multithreading], [switch on multithreading [default=no,cpp,tbb,omp]]),
   [
     AC_MSG_CHECKING(for multithreading)
     case "${withval}" in
       no)     AC_MSG_RESULT([no multithreading]);                    multithreading=false ;;
       cpp)    AC_MSG_RESULT([build with C++11 threading support]);                          multithreading=cpp ;;
       tbb)    AC_MSG_RESULT([build with TBB (Intel Threading Building Blocks) support - please ensure that CXXFLAGS and LDFLAGS are properly set]); multithreading=tbb ;;
+      omp)    AC_MSG_RESULT([build with OpenMP]); multithreading=omp ;;
       *)      AC_MSG_FAILURE([default=no (no multithreading). Use cpp or tbb to define target]);            multithreading=false ;;
     esac
   ], 
@@ -113,7 +114,14 @@ if test "$multithreading" == tbb; then
   AC_DEFINE([SharedTBB], [1], [SharedTBB])
 fi
 
+if test "$multithreading" == omp; then
+  AC_OPENMP()
+  AC_CHECK_HEADERS([omp.h],[],[AC_MSG_ERROR([header <omp.h> not found])])
+  AC_DEFINE([SharedOMP], [1], [SharedOMP])
 
+  CXXFLAGS+=" $OPENMP_CXXFLAGS "
+  LDFLAGS+=" $OPENMP_CXXFLAGS "
+fi
 
 #
 # MPI  Options
@@ -133,48 +141,94 @@ if test "$mpi" != false; then
   AC_DEFINE([Parallel], [1], [Parallel])
 fi
 
-
-
-#
-# VTK Options
-#
+##
+## VTK Options
+##
 AC_ARG_WITH(vtk,
-  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools, too [default=no, postfix]. postfix can be empty but if you have a particular VTK version where all libraries end with -9.0, e.g., then pass this one as a postfix]),
+  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools [default=no, prefix]. prefix is where VTK include files are to be found, such as /usr/local/include/vtk-8.90]),
   [ AC_MSG_CHECKING(for vtk)
     case "${withval}" in
-      no)    AC_MSG_RESULT(no);     vtk=false ;;
-      yes)   AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=""  ;;
-      *)     AC_MSG_RESULT(build against VTK installation - please ensure that CXXFLAGS and LDFLAGS are properly set);    vtk=${withval}  ;;
+      no)    AC_MSG_RESULT(no);     vtk_include=false ;;
+      yes)   AC_MSG_RESULT(build against VTK installation in default location (/usr/include));    vtk_include="/usr/include"  ;;
+      *)     AC_MSG_RESULT(build against VTK installation);    vtk_include=${withval}  ;;
     esac ],
-  [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
+  [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk_include=false ])
   
 
-AM_CONDITIONAL([UseVTK],[test "$vtk" != false])
-if test "$vtk" != false; then
+AM_CONDITIONAL([UseVTK],[test "$vtk_include" != false])
+
+
+if test "$vtk_include" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
-  VTK_LIBRARY_SUFFIX=$vtk
-fi
-AC_SUBST([VTK_LIBRARY_SUFFIX])
+  AC_CHECK_FILE([$vtk_include/vtkVersion.h], [vtkFound="OK"])
+  VTK_INCLUDE=-I$vtk_include
+  AC_MSG_RESULT(use VTK include argument $VTK_INCLUDE)
+ 
+  AC_SUBST([VTK_INCLUDE])
 
-
-AC_ARG_WITH(vtk_version,
-  AC_HELP_STRING([--with-vtk-version], [specify vtk version (major) [default=8]]),
-  [ AC_MSG_CHECKING(for vtk-version)
-    case "${withval}" in
-      no)    AC_MSG_RESULT(not set - use default (major release 8));     vtk_version="8" ;;
+  #
+  # If you specify a version, then I use this one. Otherwise, I search $vtk_include  
+  #
+  AC_ARG_WITH(vtk_version,
+    AC_HELP_STRING([--with-vtk-version], [specify vtk version (major) [default=autodetect]]),
+    [ AC_MSG_CHECKING(for vtk-version)
+      case "${withval}" in
       *)     AC_MSG_RESULT(build against VTK version ${withval});    vtk_version=${withval}  ;;
-    esac ],
-  [ AC_MSG_CHECKING(for vtk-version); AC_MSG_RESULT(not set - use default (major release 8)); vtk_version="8" ])
-  
+      esac ],
+    [ AC_MSG_CHECKING(for vtk-version); AC_MSG_RESULT(not set - try to autodetect); vtk_version="autodetect" ])
+
+  if test x$vtk_version == x"autodetect"; then
+    vtk_version_line=$(grep "define VTK_MAJOR_VERSION " $vtk_include/*.h)
+    vtk_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
+ 
+    if test x$vtk_version != "x"; then
+      AC_MSG_NOTICE([detected VTK version $vtk_version])
+    else
+      AC_MSG_ERROR([no VTK manually specified and no VTK version could be detected at VTK prefix '$vtk_include'!])
+    fi
+  fi
+
+
+  AC_ARG_WITH(vtk-suffix,
+    AC_HELP_STRING([--with-vtk-suffix], [specify which suffix the vtk libraries carry [default=autodetect, use for no prefix]]),
+    [ AC_MSG_CHECKING(for vtk-suffix)
+      case "${withval}" in
+        yes)   AC_MSG_RESULT(assume VTK libraries have no suffix);    vtk_suffix=""  ;;
+	no)    AC_MSG_RESULT(not set - try to autodetect); vtk_suffix="autodetect";;
+        *)     AC_MSG_RESULT(use suffix ${withval});    vtk_suffix=${withval}  ;;
+      esac 
+    ],  
+    [ AC_MSG_CHECKING(for vtk-suffix); AC_MSG_RESULT(not set - try to autodetect); vtk_suffix="autodetect" ])
+
+
+  #
+  # So far, every VTK version we had tested had vtkIOCore, so we test this one. On the 
+  # long term, there might be a need for ifs here checking the version.  
+  # 
+  # You have to very careful with the spaces here. A missing space before/after the ==
+  # destroys the semantics. The x that I add before rhs and lhs of the comparison is
+  # a cheap trick. It ensures that the expression is valid even if vtk_suffix is 
+  # empty
+  # 
+
+  if test x$vtk_suffix == x"autodetect"; then
+    vtk_version_line=$(grep "define VTK_MAJOR_VERSION " $vtk_include/*.h)
+    vtk_major_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
+    vtk_version_line=$(grep "define VTK_MINOR_VERSION " $vtk_include/*.h)
+    vtk_minor_version=$(echo $vtk_version_line  | rev | cut -d' ' -f 1 | rev)
+    vtk_suffix=-$vtk_major_version.$vtk_minor_version
+    AC_MSG_RESULT(assume library suffix is $vtk_suffix)
+  fi
+
+  AC_CHECK_LIB(vtkIOCore$vtk_suffix,main)
+  VTK_LIBRARY_SUFFIX=$vtk_suffix
+  AC_SUBST([VTK_LIBRARY_SUFFIX])
+fi
+
 
 AM_CONDITIONAL([VTK_LIBRARY_VERSION_7],[test "$vtk_version" = "7"])
 AM_CONDITIONAL([VTK_LIBRARY_VERSION_8],[test "$vtk_version" = "8"])
 AM_CONDITIONAL([VTK_LIBRARY_VERSION_9],[test "$vtk_version" = "9"])
-#if test "$vtk-version" != false; then
-#VTK_LIBRARY_VERSION=$vtk_version
-#fi
-#AC_SUBST([VTK_LIBRARY_VERSION])
-
 
 
 #
@@ -206,8 +260,8 @@ fi
 #
 # ExaHypE2
 #
-AC_ARG_WITH(exahype,
-  AC_HELP_STRING([--with-exahype], [enable ExaHyPE2 [default=no]]),
+AC_ARG_ENABLE(exahype,
+  AC_HELP_STRING([--enable-exahype], [enable ExaHyPE2 [default=no]]),
   [ AC_MSG_CHECKING(for exahype)
     case "${withval}" in
       no)    AC_MSG_RESULT(no);    exahype=false ;;

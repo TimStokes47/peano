@@ -14,6 +14,7 @@
 
 #include "observers/DataRepository.h"
 #include "observers/StepRepository.h"
+#include "observers/SolverRepository.h"
 
 #include "observers/CreateGrid.h"
 #include "observers/PlotSolution.h"
@@ -293,7 +294,7 @@ int main(int argc, char** argv) {{
   peanoCoreTests->run();
   if (peanoCoreTests->getNumberOfErrors() != 0) {{
     logError("main()", "Peano4 core unit tests failed. Quit.");
-    exit(ExitCodeUnitTestsFailed);
+    tarch::mpi::Rank::abort( ExitCodeUnitTestsFailed );
   }}
   delete peanoCoreTests;
 
@@ -301,7 +302,7 @@ int main(int argc, char** argv) {{
   peanoTarchTests->run();
   if (peanoTarchTests->getNumberOfErrors() != 0) {{
     logError("main()", "technical architecture (tarch) unit tests failed. Quit.");
-    exit(ExitCodeUnitTestsFailed);
+    tarch::mpi::Rank::abort( ExitCodeUnitTestsFailed );
   }}
   delete peanoTarchTests;
  

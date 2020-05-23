@@ -92,15 +92,15 @@ void examples::exahype2::euler::Euler::flux(
   int                                          normal,
   double                                       F[5]
 ) {
-  assertion(normal>=0);
-  assertion(normal<Dimensions);
-  assertion5( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4] );
-  assertion5( Q[1]==Q[1], Q[0], Q[1], Q[2], Q[3], Q[4] );
-  assertion5( Q[2]==Q[2], Q[0], Q[1], Q[2], Q[3], Q[4] );
-  assertion5( Q[3]==Q[3], Q[0], Q[1], Q[2], Q[3], Q[4] );
-  assertion5( Q[4]==Q[4], Q[0], Q[1], Q[2], Q[3], Q[4] );
+  assertion4( normal>=0, faceCentre, volumeH, t, normal );
+  assertion4( normal<Dimensions, faceCentre, volumeH, t, normal);
+  assertion9( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  assertion9( Q[1]==Q[1], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  assertion9( Q[2]==Q[2], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  assertion9( Q[3]==Q[3], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  assertion9( Q[4]==Q[4], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
 
-  assertion5( Q[0]>1e-12, Q[0], Q[1], Q[2], Q[3], Q[4] );
+  assertion9( Q[0]>1e-12, Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
   constexpr double gamma = 1.4;
   const double irho = 1./Q[0];
   #if Dimensions==3

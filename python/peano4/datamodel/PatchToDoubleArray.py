@@ -40,8 +40,8 @@ class PatchToDoubleArray():
     
   def construct_output(self,output):
     d = { 
-        "CARDINALITY_2D": str(self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1]), 
-        "CARDINALITY_3D": str(self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1]*self.data.dim[2]),
+        "CARDINALITY_2D": str( int( self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1] )), 
+        "CARDINALITY_3D": str( int( self.data.no_of_unknowns*self.data.dim[0]*self.data.dim[1]*self.data.dim[2] )),
         "MERGE_METHOD_DECLARATIONS": "",
         "MERGE_METHOD_DEFINITIONS": ""
       }

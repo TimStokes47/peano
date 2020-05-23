@@ -93,6 +93,11 @@ Tarch_SOURCES= tarch/tarch.cpp \
  tarch/multicore/cpp/Tasks.cpp \
  tarch/multicore/cpp/BooleanSemaphore.cpp \
  tarch/multicore/cpp/RecursiveSemaphore.cpp \
+ tarch/multicore/omp/Core.cpp \
+ tarch/multicore/omp/Tasks.cpp \
+ tarch/multicore/omp/OMP.cpp \
+ tarch/multicore/omp/BooleanSemaphore.cpp \
+ tarch/multicore/omp/RecursiveSemaphore.cpp \
  tarch/multicore/tbb/Core.cpp \
  tarch/multicore/tbb/Tasks.cpp \
  tarch/multicore/tbb/TBB.cpp \
@@ -133,6 +138,7 @@ Tarch_SOURCES= tarch/tarch.cpp \
  tarch/mpi/mpi.cpp \
  tarch/mpi/IntegerMessage.cpp \
  tarch/mpi/StringMessage.cpp \
+ tarch/mpi/tests/StringTest.cpp \
  tarch/logging/CommandLineLogger.cpp \
  tarch/logging/ChromeTraceFileLogger.cpp \
  tarch/logging/Log.cpp \

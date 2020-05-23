@@ -7,48 +7,61 @@
  *
  * @mainpage Peano 4
  *
- * Welcome to the source code documentation of Peano4.
+ * Welcome to the source code documentation of Peano 4.
  *
- * @image html architecture-layers.png
+ * @image html peano4/architecture-layers.png
  *
- * \section Build and run unit, integration and performance tests
+ * @section Documentation
  *
- * You can quickly check whether your system is properly configured if you
- * you build the code with the following options, and run one of the standard
- * examples (it is just invoked, i.e. not actually run; so you see that the
- * code actually starts up, but you do not actually execute anything):
+ * The high-level documentation of Peano 4 is contained within a guidebook. The
+ * guidebook is written in TeX and can be downloaded from the Peano webpage at
+ * <a href="www.peano-framework.org">www.peano-framework.org</a>. It is automatically
+ * updated around once a week. If you want to access the latest version, you have
+ * to build the pdf yourself. Change into the cookbook directory of your checkout
+ * (parallel to src) and run pdflatex. Our guidebook also contains extensive
+ * build instructions.
  *
- * <pre>
-   ./configure
-   make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
-   make -j
-   src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
-   src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d_debug
-
-   ./configure --with-multithreading=cpp
-   make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
-   make -j
-   src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
-   src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d_debug
-
-   ./configure --with-mpi=mpicxx
-   make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
-   make -j
-   mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
-   mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d_debug
-
-   ./configure --with-multithreading=cpp --with-mpi=mpicxx
-   make clean; rm src/examples/regulargridupscaling/PeanoRegularGridUpscaling*
-   make -j
-   mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling2d_debug
-   mpirun -n 1 src/examples/regulargridupscaling/PeanoRegularGridUpscaling3d_debug
-   </pre>
  *
- * Each individual program invocation runs all unit tests, as I make my
- * examples always run the unit tests first before they try to start up the
- * real simulation. If you pipe the outcomes of the program runs into a file
- * (all in one file please) and then run the Python script on this file, you
- * get an image of all the builds that have been successful.
+ * Peano is shipped with a couple of low-level demonstrators. One of them is a mere
+ * run of all of the unit tests. To run them, switch into src/examples/unittests.
+ * Unit tests are held within subdirectories of the respective class/function that
+ * they test. The way they use a function is some good documentation complementing
+ * what we write into the documentation.
+ *
+ *
+ * @section Rationale
+ *
+ * We follow the convention that the header files only hold the declarations, while
+ * the cpp files hold the actual implementations. We kind of gave up on this convention
+ * in few particular places for speed, i.e. whenever a compiler should do inlining,
+ * i.e. remove function calls, but doesn't. If we found such places and suffered
+ * significantly in terms of performance, then we moved the implementation into the
+ * headers. We also use header-based implementations for template (the header
+ * implementation files then have the extension .cpph), but as soon as compilers do
+ * widely support templates that are not headers or we have moved functions over to
+ * the new C++ auto keyword, we'll move all into the implementation files.
+ *
+ * I decided a while ago that all documentation should be in the headers if possible.
+ * There's two reasons for that:
+ *
+ * - Most documentation focuses on what a function does not how it does it. Therefore,
+ *   the docu belongs to the declaration.
+ * - If an implementation is so complicated or long that you need documentation within
+ *  the source code to understand it, then the function needs to be simplified or split up.
+ *
+ * These are only rules of thumb.
+ *
+ *
+ * @section Syntax Conventions
+ *
+ * We mainly follow mainstream Java syntax conventions in Peano for historic reasons and
+ * as this is a real OO/C++ project. Some important principles are:
+ *
+ * - One file per class
+ * - Consistent naming conventions
+ * - Long, self-explaining names (no acronyms)
+ * - One subdirectory per namespace
+ *
  */
 
 
@@ -81,7 +94,7 @@ namespace peano4 {
    * you call any other operation that could result in an error. I suggest
    * to call it right after fillLookupTables().
    *
-   * Please note that Peano4 considers both shared memory and distributed
+   * Please note that Peano 4 considers both shared memory and distributed
    * memory to be a parallel environment.
    *
    * init might change the variables passed. If you want to parse the
@@ -118,7 +131,7 @@ namespace peano4 {
    * that all nodes call receiveDanglingMessages(). It is only after everyone
    * has done their dump, that we can shut down the shared memory system. This is the
    * reason the barrier has to come after the node's shutdown and then has to
-   * be a Peano4 barrier which still invokes receiveDanglingMessages() on all
+   * be a Peano 4 barrier which still invokes receiveDanglingMessages() on all
    * services.
    *
    * Once all shared memory tasks have terminated, we free the MPI datatypes.

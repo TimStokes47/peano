@@ -136,7 +136,8 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
   long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message
 ) {
   std::string prefix = "";
-  for (unsigned int i=0; i<_indent; i++ ) prefix += " ";
+  const unsigned int indent = _indent;
+  for (unsigned int i=0; i<indent; i++ ) prefix += " ";
 
   std::string result;
 
