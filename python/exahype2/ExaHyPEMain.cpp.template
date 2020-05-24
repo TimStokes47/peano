@@ -22,6 +22,7 @@
 
 #include "peano4/UnitTests.h"
 #include "tarch/UnitTests.h"
+#include "exahype2/NonCriticalAssertions.h"
 
 
 
@@ -42,7 +43,13 @@ bool selectNextAlgorithmicStep() {{
   static bool   haveWrittenVeryLastSnapshot = false;
   bool          continueToSolve   = true;
 
-  if (not gridConstructed) {{
+  if (exahype2::hasNonCriticalAssertionBeenViolated()) {{
+    peano4::parallel::Node::getInstance().setNextProgramStep(
+      observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
+    );
+    continueToSolve = false;
+  }}
+  else if (not gridConstructed) {{
     peano4::parallel::Node::getInstance().setNextProgramStep(
       observers::StepRepository::toProgramStep( observers::StepRepository::Steps::CreateGrid )
     );
@@ -284,6 +291,7 @@ int main(int argc, char** argv) {{
   }}
   
   peano4::initParallelEnvironment(&argc,&argv);
+  exahype2::initNonCritialAssertionEnvironment();
   peano4::fillLookupTables();
   
   {FULL_NAMESPACE}::observers::DataRepository::initDatatypes();
@@ -330,7 +338,7 @@ int main(int argc, char** argv) {{
   }}
 
   {FULL_NAMESPACE}::observers::DataRepository::shutdownDatatypes();
-
+  exahype2::shutdownNonCritialAssertionEnvironment();
   peano4::shutdownParallelEnvironment();
 
   return ExitCodeSuccess;

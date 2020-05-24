@@ -36,10 +36,14 @@ int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDat
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, double value ) {
-  assertion( !std::isnan(value) );
   for (int i=0; i<_numberOfUnknowns; i++) {
-    if ( std::abs(value) < std::numeric_limits<double>::min() ) value = 0.0;
-    _out << " " << value;
+    if (std::isnan(value)) {
+      _out << " nan";
+    }
+    else {
+      if ( std::abs(value) < std::numeric_limits<double>::min() ) value = 0.0;
+      _out << " " << value;
+    }
     _entryCounter++;
   }
   flushIfPatchIsComplete();
@@ -48,9 +52,13 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, double* values ) {
   for (int i=0; i<_numberOfUnknowns; i++) {
-    if ( std::abs(values[i]) < std::numeric_limits<double>::min() ) values[i] = 0.0;
-    _out << " " << values[i];
-    assertion1( !std::isnan(values[i]), i );
+    if (std::isnan(values[i])) {
+      _out << " nan";
+    }
+    else {
+      if ( std::abs(values[i]) < std::numeric_limits<double>::min() ) values[i] = 0.0;
+      _out << " " << values[i];
+    }
     _entryCounter++;
   }
   flushIfPatchIsComplete();

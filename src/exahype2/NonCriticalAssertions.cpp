@@ -30,20 +30,24 @@ void exahype2::initNonCritialAssertionEnvironment() {
 
 void exahype2::triggerNonCriticalAssertion( std::string file, int line, std::string expression, std::string parameterValuePairs ) {
   static tarch::logging::Log _log( "exahype2" );
-  logError( "triggerNonCriticalAssertion(...)", "noncritical assertion " << expression << " failed in (" << file << ":" << line << ")" );
-  logError( "triggerNonCriticalAssertion(...)", parameterValuePairs );
-  logError( "triggerNonCriticalAssertion(...)", "inform rank 0 to dump solution and to shutdown application" );
 
   tarch::multicore::Lock lock( _assertionSemaphore );
-  rankWhichHasSetNonCriticalAssertion = tarch::mpi::Rank::getInstance().getRank();
 
-  #ifdef Parallel
-  if (not tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    int rank = tarch::mpi::Rank::getInstance().getRank();
+  if (rankWhichHasSetNonCriticalAssertion<0) {
+    logError( "triggerNonCriticalAssertion(...)", "noncritical assertion " << expression << " failed in (" << file << ":" << line << ")" );
+    logError( "triggerNonCriticalAssertion(...)", parameterValuePairs );
+    logError( "triggerNonCriticalAssertion(...)", "inform rank 0 to dump solution and to shutdown application" );
 
-    MPI_Put( &rank, 1, MPI_INT, 0, 0, 1, MPI_INT, assertionWindow );
+    rankWhichHasSetNonCriticalAssertion = tarch::mpi::Rank::getInstance().getRank();
+
+    #ifdef Parallel
+    if (not tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+      int rank = tarch::mpi::Rank::getInstance().getRank();
+
+      MPI_Put( &rank, 1, MPI_INT, 0, 0, 1, MPI_INT, assertionWindow );
+    }
+    #endif
   }
-  #endif
 }
 
 

@@ -86,12 +86,18 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 
 bool toolbox::loadbalancing::RecursiveSubdivision::isInCoolDownPhase() {
   if ( _isInCoolDownPhase and _totalNumberOfSplits>0 ) {
-    _totalNumberOfSplits /=2;
+    _totalNumberOfSplits--;
     // @todo If we sleep more aggressively (mainly to bring the grid construction down), then
     // we get errors, as it seems that dynamic LB is not yet working properly. I have checked
     // it with the purge mechanism turned off, and it still does not work properly. Needs more
     // debugging, but it is a difficult problem. We have to reduce it to a two tree setup
+
+    // @TODO Wieder ne Division durch zwei reinbauen, sonst dauert der Gitteraufbau Ewigkeiten.
+    //       Aber jetzt lass ich erst erst mal drin, weil ich den Bug finden will!
     return true;
+
+    // @todo Ich brauch evtl dann doch wieder mehr als eine Split. Das geht so einfach net - es ist zu langsam
+    //    Aber vielleicht ist Problem auch weg mit dem aggressiverem Cool-down
   }
   else if ( _isInCoolDownPhase and _totalNumberOfSplits<=0 ) {
     _isInCoolDownPhase   = false;
@@ -149,7 +155,6 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
     and
     static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads() * _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell
   ) {
-	  // @todo viel aggressiver splitten
     int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
     if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
       int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();

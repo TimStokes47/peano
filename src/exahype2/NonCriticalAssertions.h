@@ -23,7 +23,10 @@
  *
  * As a noncritical assertion does not immediately terminate the code, you might
  * get a whole sequence of these guys in a row. Skip them all and read only the
- * first one in this case.
+ * first one in this case. I try to filter out the messages, i.e. to display only
+ * the first one, but as the ranks try not to synchronise where possible, I can
+ * only filter error messages from one rank. That is, you'll still get up to one
+ * error/assertion message per rank.
  *
  * As noncritical assertions rely internally on MPI RMA, you have to call init
  * and shutdown for the environment. Do so immediately after you've initialised

@@ -49,7 +49,10 @@ def get_face_overlap_merge_implementation(patch_overlap):
         value[volumeSerialised*{UNKNOWNS}+k] = neighbour.value[volumeSerialised*{UNKNOWNS}+k];
       }}
       
-      assertion(value[volumeSerialised]==value[volumeSerialised]);
+      // This should be non-critical assertion, but this assertion is only
+      // generically available in ExaHyPE 2, so I comment the assertion out
+      // here.
+      // assertion(value[volumeSerialised]==value[volumeSerialised]);
     }}
   }}
 """
