@@ -8,6 +8,7 @@ endif
 
 
 ExaHyPE2Sources = \
+  NonCriticalAssertions.cpp \
   PatchUtils.cpp \
   RefinementControl.cpp \
   fv/BoundaryConditions.cpp \

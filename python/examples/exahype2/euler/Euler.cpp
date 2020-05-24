@@ -1,4 +1,5 @@
 #include "Euler.h"
+#include "exahype2/NonCriticalAssertions.h"
 
 
 tarch::logging::Log   examples::exahype2::euler::Euler::_log( "examples::exahype2::euler::Euler" );
@@ -13,7 +14,7 @@ tarch::logging::Log   examples::exahype2::euler::Euler::_log( "examples::exahype
 ) {
   logTraceInWith3Arguments( "refinementCriterion(...)", x, h, t );
   ::exahype2::RefinementCommand result = ::exahype2::RefinementCommand::Keep;
-  const double MaxHOfVolume  = 1.0/3.0/25.0 * 0.9;
+  const double MaxHOfVolume  = 1.0/3.0/3.0/25.0 * 0.9;
   //const double MaxHOfVolume  = 1.0/3.0;
 
   if (tarch::la::equals(t,0.0) and tarch::la::max(h)>MaxHOfVolume) {
@@ -67,7 +68,7 @@ void examples::exahype2::euler::Euler::eigenvalues(
   #endif
 
   const double u_n = Q[normal + 1] * irho;
-  assertion10( gamma * p * irho>=0.0, gamma, p, irho, faceCentre, normal, Q[0], Q[1], Q[2], Q[3], Q[4] );
+  nonCriticalAssertion10( gamma * p * irho>=0.0, gamma, p, irho, faceCentre, normal, Q[0], Q[1], Q[2], Q[3], Q[4] );
   const double c   = std::sqrt(gamma * p * irho);
 
   lambda[0]  = u_n - c;
@@ -76,11 +77,11 @@ void examples::exahype2::euler::Euler::eigenvalues(
   lambda[3]  = u_n;
   lambda[4]  = u_n + c;
 
-  assertion4( lambda[0]==lambda[0], u_n, c, faceCentre, normal );
-  assertion4( lambda[1]==lambda[1], u_n, c, faceCentre, normal );
-  assertion4( lambda[2]==lambda[2], u_n, c, faceCentre, normal );
-  assertion4( lambda[3]==lambda[3], u_n, c, faceCentre, normal );
-  assertion4( lambda[4]==lambda[4], u_n, c, faceCentre, normal );
+  nonCriticalAssertion4( lambda[0]==lambda[0], u_n, c, faceCentre, normal );
+  nonCriticalAssertion4( lambda[1]==lambda[1], u_n, c, faceCentre, normal );
+  nonCriticalAssertion4( lambda[2]==lambda[2], u_n, c, faceCentre, normal );
+  nonCriticalAssertion4( lambda[3]==lambda[3], u_n, c, faceCentre, normal );
+  nonCriticalAssertion4( lambda[4]==lambda[4], u_n, c, faceCentre, normal );
 }
 
 
@@ -94,13 +95,13 @@ void examples::exahype2::euler::Euler::flux(
 ) {
   assertion4( normal>=0, faceCentre, volumeH, t, normal );
   assertion4( normal<Dimensions, faceCentre, volumeH, t, normal);
-  assertion9( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
-  assertion9( Q[1]==Q[1], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
-  assertion9( Q[2]==Q[2], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
-  assertion9( Q[3]==Q[3], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
-  assertion9( Q[4]==Q[4], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  nonCriticalAssertion9( Q[0]==Q[0], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  nonCriticalAssertion9( Q[1]==Q[1], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  nonCriticalAssertion9( Q[2]==Q[2], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  nonCriticalAssertion9( Q[3]==Q[3], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  nonCriticalAssertion9( Q[4]==Q[4], Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
 
-  assertion9( Q[0]>1e-12, Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
+  nonCriticalAssertion9( Q[0]>1e-12, Q[0], Q[1], Q[2], Q[3], Q[4], faceCentre, volumeH, t, normal );
   constexpr double gamma = 1.4;
   const double irho = 1./Q[0];
   #if Dimensions==3
@@ -139,11 +140,11 @@ void examples::exahype2::euler::Euler::flux(
         break;
   }
 
-  assertion( F[0]==F[0] );
-  assertion( F[1]==F[1] );
-  assertion( F[2]==F[2] );
-  assertion( F[3]==F[3] );
-  assertion( F[4]==F[4] );
+  nonCriticalAssertion( F[0]==F[0] );
+  nonCriticalAssertion( F[1]==F[1] );
+  nonCriticalAssertion( F[2]==F[2] );
+  nonCriticalAssertion( F[3]==F[3] );
+  nonCriticalAssertion( F[4]==F[4] );
 }
 
 

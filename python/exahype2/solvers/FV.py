@@ -137,13 +137,24 @@ class FV(object):
     self.add_entries_to_text_replacement_dictionary(d)
     d["IS_GRID_CREATION"] = "false"
 
-    step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(
+
+    reconstruct_patch_and_apply_FV_kernel = peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(
       self._patch,
       self._patch_overlap,
       self.HandleCellTemplate.format(**d),
       touchFaceFirstTimeTemplate.format(**d),
-      self.__get_default_includes() + self.get_user_includes()
-    ))
+      self.__get_default_includes() + self.get_user_includes() + """#include "exahype2/NonCriticalAssertions.h" 
+"""
+    )
+    reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_1_ARGUMENTS" ] = "nonCriticalAssertion1"
+    reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_2_ARGUMENTS" ] = "nonCriticalAssertion2"
+    reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_3_ARGUMENTS" ] = "nonCriticalAssertion3"
+    reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_4_ARGUMENTS" ] = "nonCriticalAssertion4"
+    reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_5_ARGUMENTS" ] = "nonCriticalAssertion5"
+    reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_6_ARGUMENTS" ] = "nonCriticalAssertion6"
+    step.add_action_set( reconstruct_patch_and_apply_FV_kernel ) 
+     
+     
     step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(self._patch,self._patch_overlap_new) )
     step.add_action_set( peano4.toolbox.blockstructured.ApplyFunctorOnPatch(self._patch,self.CreateCellTemplate.format(**d),self.__get_default_includes() + self.get_user_includes()) )
     step.add_action_set( exahype2.grid.AMROnPatch(self._patch,self.AMRTemplate.format(**d),  self.__get_default_includes() + self.get_user_includes()) )

@@ -47,6 +47,8 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
 
   bool isFirstDataSet = true;
 
+  std::vector< PeanoTextPatchFileReader > subReaders;
+
   // Push in default guy
   _data.push_back( visualisation::data::DataSet() );
 
@@ -64,10 +66,6 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
   int treeNumber = extractTreeNumberFromFileName();
   logDebug( "parse()", "file " << _file << " will yield data with tree number " << treeNumber );
 
-  #if !defined(SharedTBB)
-  #pragma omp parallel
-  #pragma omp single
-  #endif
   {
   for(uint i = 0; i < lines.size(); i++) {
     std::string line = lines[i];
@@ -86,9 +84,27 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
       }
     }
     else if ( tokens[0]=="end" and tokens[1]=="dataset" ) { //new snapshot
-      //#if !defined(SharedTBB)
-      //#pragma omp taskwait
-      //#endif
+      const int NumberOfSubreaders = subReaders.size();
+      #pragma omp parallel for
+      for (int i=0; i<NumberOfSubreaders; i++) {
+        subReaders[i].parse();
+        std::vector< visualisation::data::DataSet >  subData = subReaders[i].getData();
+        if (subData.size()>1) {
+          logWarning( "parse()", "included file seems to host multiple data sets. This is not supported and might indicate that there is a bug" );
+          #pragma omp critical
+          {
+            for (auto& p: subData) {
+              _data.back().merge(p);
+            }
+          }
+        }
+        else {
+          #pragma omp critical
+          {
+            _data.back().merge(subData[0]);
+          }
+        }
+      }
 	  }
     else if ( tokens[0]=="include") {
 	    std::string directory = Parser::getDirectory(_file);
@@ -97,23 +113,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
 
       logInfo ( "parse()", "create a new reader (with new task) for file " << filename << " resulting from token " << tokens[1] );
 
-      //#if !defined(SharedTBB)
-      //#pragma omp task
-      //#endif
-      {
-        PeanoTextPatchFileReader subReader(filename);
-        subReader.parse();
-        std::vector< visualisation::data::DataSet >  subData = subReader.getData();
-        if (subData.size()>1) {
-          logError( "parse()", "included file " << filename << " seems to host multiple data sets. This is not supported" );
-        }
-        else {
-          #if !defined(SharedTBB)
-          #pragma omp critical
-          #endif
-          _data.back().merge(subData[0]);
-        }
-      }
+      subReaders.push_back( PeanoTextPatchFileReader(filename) );
     }
 	  else if ( tokens[0]=="begin" and tokens[1]=="cell-values" ) { //define a cell variable
       std::string variableName = Parser::removeHyphens(tokens[2]);
