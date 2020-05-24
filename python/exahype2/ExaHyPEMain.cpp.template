@@ -48,6 +48,7 @@ bool selectNextAlgorithmicStep() {{
       observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
     );
     continueToSolve = false;
+    logError( "selectNextAlgorithmicStep()", "noncritical assertion has been triggered in code. Dump final state and terminate" );
   }}
   else if (not gridConstructed) {{
     peano4::parallel::Node::getInstance().setNextProgramStep(

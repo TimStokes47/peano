@@ -151,6 +151,7 @@ class FV(object):
     reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_3_ARGUMENTS" ] = "nonCriticalAssertion3"
     reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_4_ARGUMENTS" ] = "nonCriticalAssertion4"
     reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_5_ARGUMENTS" ] = "nonCriticalAssertion5"
+    reconstruct_patch_and_apply_FV_kernel.d[ "ASSERTION_WITH_6_ARGUMENTS" ] = "nonCriticalAssertion6"
     step.add_action_set( reconstruct_patch_and_apply_FV_kernel ) 
      
      
