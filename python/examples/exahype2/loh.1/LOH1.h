@@ -29,6 +29,21 @@ namespace finitevolumes{
 class examples::exahype2::finitevolumes::LOH1: public AbstractLOH1 {
   private:
     static tarch::logging::Log   _log;
+    
+    static constexpr int Unknowns = 13;
+    
+    struct VariablesShortcuts {
+      const int v = 0; 
+      const int sigma = 3;
+      const int rho = 9;
+      const int cp = 10;
+      const int cs = 11;
+      const int alpha = 12;
+    } s;
+
+    void prescribeGaussianWave(
+        const tarch::la::Vector<Dimensions,double>&  x,
+    		double Q[]);
 
   public:
     /**
@@ -38,31 +53,31 @@ class examples::exahype2::finitevolumes::LOH1: public AbstractLOH1 {
      * @param t Time
      */
     ::exahype2::RefinementCommand refinementCriterion(
-      double Q[9],
+      double Q[13],
       const tarch::la::Vector<Dimensions,double>&  x,
       const tarch::la::Vector<Dimensions,double>&  h,
       double                                       t
     ) override;
 
     void adjustSolution(
-      double Q[9],
+      double Q[13],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t
     ) override;
 
     void eigenvalues(
-      double                                       Q[9],
+      double                                       Q[13],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t,
       int                                          normal,
-      double                                       lambda[9]
+      double                                       lambda[13]
     ) override;
 
     void boundaryConditions(
-      double                                       Qinside[9],
-      double                                       Qoutside[9],
+      double                                       Qinside[13],
+      double                                       Qoutside[13],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t,
@@ -70,18 +85,18 @@ class examples::exahype2::finitevolumes::LOH1: public AbstractLOH1 {
     ) override;
 
     void  flux(
-      double                                       Q[9],
+      double                                       Q[13],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t,
       int                                          normal,
-      double                                       F[9]
+      double                                       F[13]
     ) override;
 
     void nonconservativeProduct(
-      double                                       Q[9],
-      double                                       gradQ[9][Dimensions],
-      double                                       BgradQ[9]
+      double                                       Q[13],
+      double                                       gradQ[13][Dimensions],
+      double                                       BgradQ[13]
      ) override;
 
 };

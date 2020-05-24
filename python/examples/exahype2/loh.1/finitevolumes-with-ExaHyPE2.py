@@ -64,12 +64,13 @@ project.add_solver(
   exahype2.solvers.GenericRusanovFVFixedTimeStepSize(
     name           = "LOH1", 
     patch_size     = 7, 
-    unknowns       = 9, 
+    unknowns       = 3+6+3+1, # 13, vel(3) + stress(6) + material parameters(3) + diffuse interface(1)  
     time_step_size = 0.01, 
     flux           = True, 
     ncp            = True) )
 
 build_mode = peano4.output.CompileMode.Asserts
+
 
 #
 # Lets configure some global parameters
@@ -78,23 +79,24 @@ dimensions=3
 project.set_global_simulation_parameters(
   dimensions            = dimensions,
   offset                = [0.0]*dimensions, 
-  size                  = [1.0]*dimensions,
+  size                  = [30.0]*dimensions,
   terminal_time         = 0.1,        
   first_plot_time_stamp = 0.0, 
-  time_in_between_plots = 0.1
+  time_in_between_plots = 0.001
 )
 
-peano4_project = project.generate_Peano4_project()
 
+peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
 peano4_project.output.makefile.add_library( project.get_core_library(build_mode), "../../../../src/exahype2" )
 peano4_project.output.makefile.set_mode(build_mode)
+if args.make_clean_first:
+    peano4_project.generate( peano4.output.Overwrite.Default )
 
-peano4_project.generate( peano4.output.Overwrite.Default )
 peano4_project.build( make_clean_first = args.make_clean_first )
 success = peano4_project.run( [] )
 
-if success:
+if True or success:
   convert = peano4.visualisation.Convert( "solutionLOH1", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.extract_fine_grid()
