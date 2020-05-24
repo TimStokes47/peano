@@ -1568,11 +1568,12 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createPrunedCellTraver
 
   if(
     _spacetreeState==SpacetreeState::EmptyRun or
+    _spacetreeState==SpacetreeState::NewFromSplit or
     _spacetreeState==SpacetreeState::Joining
   ) {
-	result.setIsCellLocal(false);
-	result.setIsFaceLocal(0);
-	result.setIsVertexLocal(0);
+    result.setIsCellLocal(false);
+    result.setIsFaceLocal(0);
+    result.setIsVertexLocal(0);
   }
 
   return result;

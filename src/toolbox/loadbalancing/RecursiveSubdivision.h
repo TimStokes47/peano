@@ -6,8 +6,9 @@
 
 
 #include "tarch/logging/Log.h"
-
+#include "tarch/mpi/mpi.h"
 #include <map>
+
 
 
 namespace toolbox {
@@ -116,6 +117,7 @@ namespace toolbox {
 class toolbox::loadbalancing::RecursiveSubdivision {
   public:
     RecursiveSubdivision(double percentageOfCoresThatShouldInTheoryGetAtLeastOneCell=0.8);
+    ~RecursiveSubdivision();
 
     void finishStep();
 
@@ -140,14 +142,18 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     bool _hasSpreadOutOverAllRanks;
 
     /**
-     * Status variable required to compute good load balancing
+     * Status variable required to compute good load balancing. I started off with an
+     * integer, but then - in theory - an integer could be too small. Furthermore, MPI
+     * seems not to support MINLOC with integers.
      */
-    int _localNumberOfInnerUnrefinedCell;
+    double _localNumberOfInnerUnrefinedCell;
 
     /**
      * Status variable required to compute good load balancing
      */
-    int _globalNumberOfInnerUnrefinedCell;
+    double _globalNumberOfInnerUnrefinedCell;
+
+    int _lightestRank;
 
     int   _totalNumberOfSplits;
     bool  _isInCoolDownPhase;
@@ -186,6 +192,19 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     void triggerSplit( int sourceTree, int numberOfCells, int targetRank );
 
     bool isInCoolDownPhase();
+
+    #ifdef Parallel
+    MPI_Request*    _globalSumRequest;
+    MPI_Request*    _globalLightestRankRequest;
+
+    struct ReductionBuffer {
+      double _localUnrefinedCells;
+      int    _rank;
+    };
+
+    double          _globalNumberOfInnerUnrefinedCellBuffer;
+    ReductionBuffer _lightestRankBuffer;
+    #endif
 };
 
 

@@ -90,7 +90,13 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
         subReaders[i].parse();
         std::vector< visualisation::data::DataSet >  subData = subReaders[i].getData();
         if (subData.size()>1) {
-          logError( "parse()", "included file seems to host multiple data sets. This is not supported" );
+          logWarning( "parse()", "included file seems to host multiple data sets. This is not supported and might indicate that there is a bug" );
+          #pragma omp critical
+          {
+            for (auto& p: subData) {
+              _data.back().merge(p);
+            }
+          }
         }
         else {
           #pragma omp critical

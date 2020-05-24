@@ -206,7 +206,6 @@ void applyFilter( std::string filename, std::string outputDirectory, std::string
     const int numberOfDataSets = data.size();
     #pragma omp parallel for
     for (int i=0; i<numberOfDataSets; i++) {
-
       if (data[i].hasVariable(targetSelector)) {
         logError( "applyFilter(...)", "file already contains data set with name " << targetSelector );
       }
