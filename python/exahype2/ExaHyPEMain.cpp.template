@@ -325,13 +325,8 @@ int main(int argc, char** argv) {{
   #endif
 
   peano4::parallel::SpacetreeSet::getInstance().init(
-    #if Dimensions==2
-    {{0.0, 0.0}},
-    {{1.0, 1.0}},
-    #else
-    {{0.0, 0.0, 0.0}},
-    {{1.0, 1.0, 1.0}},
-    #endif
+    DomainOffset,
+	DomainSize,
     0
   );
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {{
