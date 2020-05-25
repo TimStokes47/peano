@@ -1888,7 +1888,8 @@ void peano4::grid::Spacetree::receiveAndMergeUserDataAtHorizontalBoundary(const 
     	  logDebug(
             "receiveAndMergeUserDataAtHorizontalBoundary(...)",
             "receive and merge local face on stack " << inOutStack << " of tree " << _id << " (relative position=" <<
-            outCallStackCounter << ") with neighbour " << neighbour << ". Local position in cell=" << inFacePositionWithinCell
+            outCallStackCounter << ") with neighbour " << neighbour << ". Local position in cell=" << inFacePositionWithinCell <<
+			". state=" << state.toString()
           );
           observer.receiveAndMergeFaceHorizontally(
             enterCellTraversalEvent,
