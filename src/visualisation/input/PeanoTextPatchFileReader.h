@@ -30,10 +30,19 @@ namespace visualisation {
  * A reader is an object which basically takes one file and gives the content
  * of this file.
  *
- * If you just wanna in one file, open it with this file and pass the field
- * patches into the PeanoConverter.
+ * If you just want to read in one file, open it with this file and pass the field
+ * patches into the PeanoConverter. So this class has two purposes:
  *
- * @author Dan Tuthill-Jones, Tobias Weinzierl
+ * - It can read a single file. In this case, getData() gives you back only one
+ *   entry.
+ * - It can read a set of datasets (meta file). In this case, getData() gives you
+ *   back a sequence of datasets. Internally, the reader creates new readers.
+ *
+ * At the moment, a file either includes other files and thus holds a sequence of
+ * data sets, or it holds real data. Mixtures are not allowed. Therefore, there's
+ * no recursion of reads.
+ *
+ * @author Tobias Weinzierl
  */
 class visualisation::input::PeanoTextPatchFileReader: public visualisation::input::PatchFileReader {
   private:
@@ -63,6 +72,10 @@ class visualisation::input::PeanoTextPatchFileReader: public visualisation::inpu
 	virtual ~PeanoTextPatchFileReader();
 
 	void parse() override;
+
+	/**
+	 * A file can hold a series of datasets
+	 */
 	std::vector< visualisation::data::DataSet >  getData() const override;
 };
 
