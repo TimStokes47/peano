@@ -31,7 +31,7 @@ class visualisation::data::PatchData {
     bool overlaps( const PatchData& otherPatch );
 
     /**
-     * Free internal dynamic data types
+     * Free internal dynamic data types if there's still data left.
      */
     void free();
 

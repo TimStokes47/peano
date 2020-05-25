@@ -88,34 +88,33 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
       #pragma omp parallel for
       for (int i=0; i<NumberOfSubreaders; i++) {
         subReaders[i].parse();
-        std::vector< visualisation::data::DataSet >  subData = subReaders[i].getData();
-        if (subData.size()>1) {
-          logWarning( "parse()", "included file seems to host multiple data sets. This is not supported and might indicate that there is a bug" );
-          #pragma omp critical
-          {
-            for (auto& p: subData) {
-              _data.back().merge(p);
-            }
-          }
-        }
-        else {
-          #pragma omp critical
-          {
-            _data.back().merge(subData[0]);
-          }
-        }
       }
+
+      // insert in-order, i.e. without parallel for, as the order of the datasets
+      // has to be preserved.
+      for (int i=0; i<NumberOfSubreaders; i++) {
+        std::vector< visualisation::data::DataSet >  subData = subReaders[i].getData();
+        if ( subData.size()>1 ) {
+          logError( "parse()", "included dataset seems to hold more than one dataset, i.e. seems to be series of datasets again. This is not supported" );
+        }
+        if ( not subData.empty() ) {
+          _data.back().merge( subData[0] );
+        }
 	  }
+
+      // will be reused for next dataset if this is a series of datasets
+      subReaders.clear();
+    }
     else if ( tokens[0]=="include") {
-	    std::string directory = Parser::getDirectory(_file);
-	    if ( directory.empty() ) directory = ".";
+      std::string directory = Parser::getDirectory(_file);
+      if ( directory.empty() ) directory = ".";
       const std::string filename = directory + "/" + Parser::removeHyphens(tokens[1]);
 
       logInfo ( "parse()", "create a new reader (with new task) for file " << filename << " resulting from token " << tokens[1] );
 
       subReaders.push_back( PeanoTextPatchFileReader(filename) );
     }
-	  else if ( tokens[0]=="begin" and tokens[1]=="cell-values" ) { //define a cell variable
+    else if ( tokens[0]=="begin" and tokens[1]=="cell-values" ) { //define a cell variable
       std::string variableName = Parser::removeHyphens(tokens[2]);
       std::vector<std::string> variableDeclarationLines;
       while ( i<lines.size() and lines[i].find( "end cell-values" )==std::string::npos ) {
@@ -177,12 +176,12 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
   }} // OpenMP and for loop scope
 
   if (_data.size()>1) {
-    logInfo( "parse()", "file " << _file << " hosts " << _data.size() << " data sets (time steps or iterations, e.g.)");
+    logDebug( "parse()", "file " << _file << " hosts " << _data.size() << " data sets (time steps or iterations, e.g.)");
   }
   else {
-    logInfo( "parse()", "file " << _file << " hosts " << _data[0].data.size() << " variable(s)");
+    logDebug( "parse()", "file " << _file << " hosts " << _data[0].data.size() << " variable(s)");
     for (auto p: _data[0].data) {
-      logInfo( "parse()", "variable " << p.first.name << " is held by " << p.second.size() << " patch(es)");
+      logDebug( "parse()", "variable " << p.first.name << " is held by " << p.second.size() << " patch(es)");
     }
   }
 }

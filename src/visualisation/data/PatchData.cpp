@@ -59,6 +59,8 @@ void visualisation::data::PatchData::copyData( const PatchData& otherData, int d
 
 
 void visualisation::data::PatchData::free() {
-  delete[] data;
-  data = nullptr;
+  if ( data!=nullptr ) {
+    delete[] data;
+    data = nullptr;
+  }
 }
