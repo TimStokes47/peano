@@ -1,6 +1,7 @@
 #include "LOH1.h"
 
 #include <algorithm>
+#include <iomanip>
 
 tarch::logging::Log   examples::exahype2::finitevolumes::LOH1::_log( "examples::exahype2::finitevolumes::LOH1" );
 
@@ -84,8 +85,6 @@ void examples::exahype2::finitevolumes::LOH1::adjustSolution(
   logTraceInWith3Arguments( "adjustSolution(...)", x, h, t );
   if (tarch::la::equals(t,0.0) ) {
     prescribeGaussianWave(x,Q);
-    //if (Q[ s.v + 0 ] > 0.1 ) 
-       std::cout << "x[0]="<<x<<", Q["<< s.v+0 <<"]=" << Q[ s.v + 0 ] << std::endl;
   }
   else {
     // other stuff

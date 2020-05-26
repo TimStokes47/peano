@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 """
- A more sophisticated example, which uses an FV solver with
- nonconservative product and also shows how to adapt your
- code to take command line arguments into account.
+A more sophisticated example, which uses an FV solver with
+nonconservative product. This example simulates elastic wave 
+equations plus a diffuse interface 
+model that takes material interfaces into account.
 
- This example simulates the LOH.1 seismology benchmark based on the elastic
- wave equations plus a diffuse interface model that takes material interfaces
- into account.
- We solve the equations using (a very diffusive) first-order FV solver.
- The code relies on snippets from the first version 
- of ExaHyPE. However, it relies only on ExaHyPE's C/FORTRAN compute kernels, i.e. the 
- sophisticated build environment of this H2020 project is not used. 
+Currently, we impose a Gaussian velocity pulse as initial solution
+but we will eventually simulate the LOH.1 benchmark.
 
- For more details on the benchmark problem, see:
- http://sismowine.org/model/WP2_LOH1.pdf
+We solve the governing equations using (a very diffusive) first-order FV solver.
+The code relies on snippets from the first version 
+of ExaHyPE and from ExaSeis.
 
- Fore more details on the underlying mathematical modelling, see:
- https://www.sciencedirect.com/science/article/pii/S0021999119300786 
+* Fore more details on the underlying mathematical modelling, see:
+  https://www.sciencedirect.com/science/article/pii/S0021999119300786 
+
+* For more details on the benchmark problem, see:
+  http://sismowine.org/model/WP2_LOH1.pdf
+
+* For more details on ExaSeis, see e.g.:
+  https://mediatum.ub.tum.de/doc/1483700/1483700.pdf 
 """
 
 
@@ -32,14 +35,7 @@ import peano4.output
 import peano4.visualisation
 import peano4.toolbox.blockstructured
 
-
 import exahype2
-
-# CLI
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument("-c","--clean", dest="make_clean_first", action="store_true",help="Clean the project before making the project.")
-args = parser.parse_args()
 
 #
 # Lets first clean up all plot files, so we don't get a mismatch
@@ -63,7 +59,7 @@ project = exahype2.Project(
 project.add_solver(  
   exahype2.solvers.GenericRusanovFVFixedTimeStepSize(
     name           = "LOH1", 
-    patch_size     = 7, 
+    patch_size     = 14, 
     unknowns       = 3+6+3+1, # 13, vel(3) + stress(6) + material parameters(3) + diffuse interface(1)  
     time_step_size = 0.01, 
     flux           = True, 
@@ -80,9 +76,9 @@ project.set_global_simulation_parameters(
   dimensions            = dimensions,
   offset                = [0.0]*dimensions, 
   size                  = [30.0]*dimensions,
-  terminal_time         = 0.1,        
+  terminal_time         = 2.0,        
   first_plot_time_stamp = 0.0, 
-  time_in_between_plots = 0.001
+  time_in_between_plots = 0.1
 )
 
 
@@ -90,13 +86,14 @@ peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
 peano4_project.output.makefile.add_library( project.get_core_library(build_mode), "../../../../src/exahype2" )
 peano4_project.output.makefile.set_mode(build_mode)
-if args.make_clean_first:
-    peano4_project.generate( peano4.output.Overwrite.Default )
+peano4_project.generate( peano4.output.Overwrite.Default )
 
-peano4_project.build( make_clean_first = args.make_clean_first )
+peano4_project.build( 
+  make_clean_first = True 
+)
 success = peano4_project.run( [] )
 
-if True or success:
+if success:
   convert = peano4.visualisation.Convert( "solutionLOH1", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.extract_fine_grid()
