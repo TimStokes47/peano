@@ -29,8 +29,8 @@ namespace visualisation {
 
 
 /**
- * Wrapper around a set of patches. It basically describes a whole patch file.
- * If you have a meta file, each time step yields a set of data sets.
+ * A dataset is a wrapper around one big map. The map maps instances of Variable
+ * onto vectors of DataSet.
  */
 class visualisation::data::DataSet {
   public:
@@ -39,8 +39,8 @@ class visualisation::data::DataSet {
 	void free();
 
 	/**
-	 * If you add a patch, don't free the patch, i.e. this operation does not
-	 * do a deep copy.
+	 * This operation does not do a deep copy, i.e. the PatchData instances
+	 * within other are not copied. So don't free them.
 	 */
 	void merge(const DataSet& other);
 

@@ -145,13 +145,23 @@ peano4_project.build()
 
 
 \noindent
-We can directly run this code (though it does nothing so far and might even
-crash as we haven't set initial conditions properly) via
+To run this code---won't work as we lack the actual Physics in the
+implementations---type in
 \begin{code}
 success = peano4_project.run( [] )
 \end{code}
 within the Python workbench. 
-Alternatively, you can invoke the code directly from the command line. 
+Alternatively, you can build/run the code directly from the command line. 
+
+\begin{definition}
+ \Peano\ and, hence, \ExaHyPE\ provide the Python API to model the application. 
+ Under the hood, they rely on a plain makefile and generate a stand-alone C++
+ application without Python-dependencies.
+ So once you've created your application, nothing stops you from dropping the
+ Python front-end. 
+ Once you've built you application, you don't need Python anymore (within your
+ Slurm script, e.g.).
+\end{definition}
 
 
 
@@ -160,14 +170,26 @@ Alternatively, you can invoke the code directly from the command line.
 The run of \ExaHyPE\ so far has given us a lot of glue code (which we will
 never touch) and three files in the main directory:
 \texttt{AbstractEuler.h}, \texttt{Euler.h} and \texttt{Euler.cpp}.
+
+\begin{definition}
+  In \ExaHyPE's native mode, i.e.~without further packages such as Ghoddess or
+  ClawPack, I always create two classes per solver: an abstract superclass and
+  the actual implementation class.
+  The latter has to implement all routines from the abstract superclass which
+  are not yet defined.
+  For some of the routines, I provide empty glue code with a todo remark. 
+  For most of them, just open the (abstract) header file, browse through the
+  code and create implementations in the subclass manually.
+\end{definition}
+
+\noindent
 It is the last one that we have to alter to inject our domain knowledge,
 i.e.~the PDE\footnote{If you regenerate your \ExaHyPE\ code later on, it will
 overwrite the Abstract\ldots solver classes, but it will never modify your
-actual solver instances. So if signatures change, you will have to alter these
-guys manually.}.
-
-
-There are three routines that require our attention.
+actual solver instances. So if signatures change, your implementation won't
+get lost.}.
+In our introductory example, there are three routines that require our
+attention.
 The first one is \texttt{adjustSolution}.
 We can use this routine to overwrite the solution at any time and, hence, to
 inject boundary conditions or stimuli into the domain.

@@ -73,8 +73,8 @@ class Convert(object):
         #  print( line )
         #if "variable" in line and not "hosts" in line and not "held" in line:
         #  new_entry = line.split("variable")[-1].strip()
-        if "is held by" in line:
-          new_entry = line.split("variable")[-1].split("is")[0].strip()
+        if "variable" in line:
+          new_entry = line.split("variable")[-1].strip()
           result.append( new_entry ) 
       result = set(result)
       if not self.silent:

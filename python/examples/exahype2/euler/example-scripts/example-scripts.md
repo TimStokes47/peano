@@ -7,27 +7,10 @@
 ### Prepare setup ###
 
 See guidebook instructions how to configure the single node environment.
-Please remember to add the --with-exahype argument to configure. Once 
-Peano 4 is built, we adopt the setup slightly. For this, please edit 
-finitevolumes-with-ExaHyPE2-parallel.py. These are the changes I do 
-propose:
+Please remember to add the --with-exahype argument to configure. 
 
 
-patch_size     = 13
-time_step_size = 0.0001
-dimensions = 3
-build_mode = peano4.output.CompileMode.Release
-project.set_global_simulation_parameters(
-    dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-    0.002,                       # end time
-    0.0, 0
-)
-\#success = peano4_project.run( [] )
-success = False
-
-
-
-I also edit Euler.cpp and set the refinement criterion as follows:
+Before we start, please edit Euler.cpp and set the refinement criterion as follows:
 
 
   const double MaxHOfVolume  = 1.0/3.0/3.0/13.0 * 0.9;
@@ -36,12 +19,12 @@ I also edit Euler.cpp and set the refinement criterion as follows:
 After these two edits, I run the following steps to build the executable:
 
 export PYTHONPATH=../../..
-python3 finitevolumes-with-ExaHyPE2-parallel.py
+python3 example-scripts/finitevolumes-with-ExaHyPE2-shared-memory-benchmark.py
 
 or, on csh, I use
 
 setenv PYTHONPATH ../../..
-python3 finitevolumes-with-ExaHyPE2-parallel.py
+python3 example-scripts/finitevolumes-with-ExaHyPE2-shared-memory-benchmark.py
 
 instead.
 

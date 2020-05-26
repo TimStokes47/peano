@@ -28,7 +28,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
   functor_implementation Plain C++ code
   
   
-  <h2> functor_implementation </h2> 
+  <h2> Functor_implementation </h2> 
   
   The functor implementation is a plain C/C++ 
   
@@ -41,6 +41,12 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     
     Both are plain double pointers.
   
+  <h2> Data validation </h2>
+  
+  I use quite a lot of validitiy checks for the copied data via comparison to its self. This
+  way, I can at least spot nans. I use the dictionary entries ASSERTION_WITH_X_ARGUMENTS to 
+  realise this, and they are, by default, set to Peano's assertion macros. You can redefine 
+  them. 
    
     """
     self.d = {}
@@ -64,6 +70,13 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     self.d[ "FACES_ACCESSOR" ]     = "fineGridFaces"  + patch_overlap.name
     self.d[ "CELL_ACCESSOR" ]      = "fineGridCell" + patch.name
     
+    self.d[ "ASSERTION_WITH_1_ARGUMENTS" ] = "assertion1"
+    self.d[ "ASSERTION_WITH_2_ARGUMENTS" ] = "assertion2"
+    self.d[ "ASSERTION_WITH_3_ARGUMENTS" ] = "assertion3"
+    self.d[ "ASSERTION_WITH_4_ARGUMENTS" ] = "assertion4"
+    self.d[ "ASSERTION_WITH_5_ARGUMENTS" ] = "assertion5"
+    self.d[ "ASSERTION_WITH_6_ARGUMENTS" ] = "assertion6"
+    
     self.d[ "FUNCTOR_IMPLEMENTATION" ]               = functor_implementation
     self.touch_face_first_time_functor               = """
   logTraceInWith2Arguments( "touchFaceFirstTime(...)", marker.toString(), marker.isLocal() );
@@ -74,7 +87,8 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
 
 
   def get_constructor_body(self):
-    return ""
+    return """  _treeNumber = treeNumber;
+"""    
 
   
   def get_destructor_body(self):
@@ -126,7 +140,7 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
     int destinationCellSerialised  = peano4::utils::dLinearised(destinationCell,{DOFS_PER_AXIS} + 2*{OVERLAP});
     for (int j=0; j<{UNKNOWNS}; j++) {{
       reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j] = {CELL_ACCESSOR}.value[ sourceCellSerialised*{UNKNOWNS}+j ];
-      assertion2( reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j]==reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j], sourceCell, j );
+      {ASSERTION_WITH_3_ARGUMENTS}( reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j]==reconstructedPatch[destinationCellSerialised*{UNKNOWNS}+j], sourceCell, j, _treeNumber );
     }}
   }}
   logTraceOut( "touchCellFirstTime(...)::loopOverPatch" );
@@ -153,12 +167,11 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
 
         for (int j=0; j<{UNKNOWNS}; j++) {{
           reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = {FACES_ACCESSOR}(d).value[ sourceCellSerialised*{UNKNOWNS}+j ];
-          assertion5( 
+          {ASSERTION_WITH_6_ARGUMENTS}( 
             reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ]==reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ], 
-            sourceCell, destinationCell, j, d, marker.toString() 
+            sourceCell, destinationCell, j, d, marker.toString(), _treeNumber 
           );
         }}
-        //std::cout << "face " << (d) << ": " << sourceCell << " -> " << destinationCell << "  (" << sourceCellSerialised << " -> " << destinationCellSerialised << ")" << std::endl;
 
         destinationCell(d) = i+{DOFS_PER_AXIS}+{OVERLAP};
         sourceCell(d)      = i+{OVERLAP};
@@ -167,12 +180,11 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
         sourceCellSerialised        = serialisePatchIndex(sourceCell,d);
         for (int j=0; j<{UNKNOWNS}; j++) {{
           reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ] = {FACES_ACCESSOR}(d+Dimensions).value[ sourceCellSerialised*{UNKNOWNS}+j ];
-          assertion5( 
+          {ASSERTION_WITH_6_ARGUMENTS}( 
             reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ]==reconstructedPatch[ destinationCellSerialised*{UNKNOWNS}+j ], 
-            sourceCell, destinationCell, j, d, marker.toString() 
+            sourceCell, destinationCell, j, d, marker.toString(), _treeNumber
           );
         }}
-        //std::cout << "face " << (d+Dimensions) << ": " << sourceCell << " -> " << destinationCell << "  (" << sourceCellSerialised << " -> " << destinationCellSerialised << ")" << std::endl;
       }}
     }}
     logTraceOut( "touchCellFirstTime(...)::loopOverFace" );
@@ -204,7 +216,8 @@ class ReconstructPatchAndApplyFunctor(ActionSet):
 
 
   def get_attributes(self):
-    return ""
+    return """int  _treeNumber;
+"""    
 
 
   def get_includes(self):

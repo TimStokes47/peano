@@ -48,8 +48,9 @@ class Project (object):
     
     self.main         = peano4.runner.DefaultSequence(self) 
     
-    self.is_generated = False
-    self.is_built     = False
+    self.is_generated         = False
+    self.is_built             = False
+    self.build_was_successful = False
     
     self.constants  = peano4.output.Constants(self)
 
@@ -104,9 +105,11 @@ class Project (object):
         subprocess.check_call(["make", "-j"+str(number_of_parallel_builds)])
         print( "compile complete" )
         self.is_built = True
+        self.build_was_successful = True
       except Exception as e:
         print( "compile was not successful: " + str(e) )
-        self.is_built = False
+        self.is_built = True
+        self.build_was_successful = False
     else:
       print( "can not build as code generation has not been successful" )
   
@@ -122,9 +125,10 @@ class Project (object):
 
     """
     result = False
-    if not self.is_built:
+    if not self.is_built and not self.self.build_was_successful:
       self.build()
-    if self.is_built:
+      
+    if self.is_built and self.build_was_successful:
       print( "run application ..." )
 
       invocation  = []
