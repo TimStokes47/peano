@@ -18,6 +18,7 @@ visualisation::data::DataSet::DataSet() {
 
 void visualisation::data::DataSet::free() {
   for (auto& p: data) {
+	logDebug( "free()", "free data set " << p.first.name );
 	for (auto& pp: p.second) {
       pp.free();
 	}

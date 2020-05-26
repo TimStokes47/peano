@@ -6,6 +6,8 @@
 
 #include "peano4/utils/Loop.h"
 
+#include "exahype2/NonCriticalAssertions.h"
+
 
 namespace {
   /**
@@ -54,12 +56,12 @@ namespace {
 
     eigenvalues(QL,x,dx,t,dt,normal,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
-      assertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,exahype2::fv::plotVolume(QL,unknowns),exahype2::fv::plotVolume(QR,unknowns));
+      nonCriticalAssertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,exahype2::fv::plotVolume(QL,unknowns),exahype2::fv::plotVolume(QR,unknowns));
       lambdaMax = std::max(lambdaMax,std::abs(lambdas[unknown]));
     }
     eigenvalues(QR,x,dx,t,dt,normal,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
-      assertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,exahype2::fv::plotVolume(QL,unknowns),exahype2::fv::plotVolume(QR,unknowns));
+      nonCriticalAssertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,exahype2::fv::plotVolume(QL,unknowns),exahype2::fv::plotVolume(QR,unknowns));
       lambdaMax = std::max(lambdaMax,std::abs(lambdas[unknown]));
     }
 
@@ -130,12 +132,12 @@ namespace {
 
     eigenvalues(QL,x,dx,t,dt,normal,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
-      assertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,exahype2::fv::plotVolume(QL,unknowns),exahype2::fv::plotVolume(QR,unknowns));
+      nonCriticalAssertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,exahype2::fv::plotVolume(QL,unknowns),exahype2::fv::plotVolume(QR,unknowns));
       lambdaMax = std::max(lambdaMax,std::abs(lambdas[unknown]));
     }
     eigenvalues(QR,x,dx,t,dt,normal,lambdas);
     for (int unknown=0; unknown<unknowns; unknown++) {
-      assertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,exahype2::fv::plotVolume(QL,unknowns),exahype2::fv::plotVolume(QR,unknowns));
+      nonCriticalAssertion7(lambdas[unknown]==lambdas[unknown],x,dx,t,dt,normal,exahype2::fv::plotVolume(QL,unknowns),exahype2::fv::plotVolume(QR,unknowns));
       lambdaMax = std::max(lambdaMax,std::abs(lambdas[unknown]));
     }
 

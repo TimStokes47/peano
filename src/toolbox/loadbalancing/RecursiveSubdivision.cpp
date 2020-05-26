@@ -20,6 +20,12 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
   _globalNumberOfInnerUnrefinedCell( 0 ),
   _totalNumberOfSplits(0),
   _isInCoolDownPhase(false) {
+  #ifdef Parallel
+  _globalSumRequest          = nullptr;
+  _globalLightestRankRequest = nullptr;
+  _globalNumberOfInnerUnrefinedCellBuffer = 1;
+  _lightestRankBuffer._rank               = tarch::mpi::Rank::getInstance().getRank();
+  #endif
 }
 
 
@@ -35,24 +41,65 @@ void toolbox::loadbalancing::RecursiveSubdivision::dumpStatistics() {
 }
 
 
+toolbox::loadbalancing::RecursiveSubdivision::~RecursiveSubdivision() {
+  #ifdef Parallel
+  if (_globalSumRequest != nullptr ) {
+    MPI_Wait( _globalSumRequest, MPI_STATUS_IGNORE );
+    MPI_Wait( _globalLightestRankRequest, MPI_STATUS_IGNORE );
+  }
+  #endif
+}
+
+
 void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
   _localNumberOfInnerUnrefinedCell = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
 
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {
     _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
+    _lightestRank                     = 0;
   }
   else {
-    _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
+    #ifdef Parallel
+    if (_globalSumRequest != nullptr ) {
+      MPI_Wait( _globalSumRequest, MPI_STATUS_IGNORE );
+      MPI_Wait( _globalLightestRankRequest, MPI_STATUS_IGNORE );
+    }
+
+    _globalSumRequest = new MPI_Request();
+    _globalLightestRankRequest = new MPI_Request();
+
+    _globalNumberOfInnerUnrefinedCell = _globalNumberOfInnerUnrefinedCellBuffer;
+    _lightestRank                     = _lightestRankBuffer._rank;
+
+    MPI_Iallreduce(
+      &_localNumberOfInnerUnrefinedCell,   // send
+      &_globalNumberOfInnerUnrefinedCellBuffer,  // receive
+      1,             // count
+      MPI_DOUBLE,
+      MPI_SUM,
+      tarch::mpi::Rank::getInstance().getCommunicator(),
+      _globalSumRequest
+    );
+    MPI_Iallreduce(
+      &_localNumberOfInnerUnrefinedCell,   // send
+      &_lightestRankBuffer,                // receive
+      1,             // count
+      MPI_DOUBLE_INT,
+      MPI_MINLOC,
+      tarch::mpi::Rank::getInstance().getCommunicator(),
+      _globalLightestRankRequest
+    );
+    #endif
   }
 }
 
 
 int toolbox::loadbalancing::RecursiveSubdivision::getMaximumSpacetreeSize() const {
-  return std::max(
+  return std::round( std::max(
     _globalNumberOfInnerUnrefinedCell
      / tarch::mpi::Rank::getInstance().getNumberOfRanks()
      / tarch::multicore::Core::getInstance().getNumberOfThreads()
-     / 2, 1 );
+     / 2, 1.0 ));
 }
 
 
@@ -86,23 +133,20 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 
 bool toolbox::loadbalancing::RecursiveSubdivision::isInCoolDownPhase() {
   if ( _isInCoolDownPhase and _totalNumberOfSplits>0 ) {
-    _totalNumberOfSplits /=2;
-    // @todo If we sleep more aggressively (mainly to bring the grid construction down), then
-    // we get errors, as it seems that dynamic LB is not yet working properly. I have checked
-    // it with the purge mechanism turned off, and it still does not work properly. Needs more
-    // debugging, but it is a difficult problem. We have to reduce it to a two tree setup
+    _totalNumberOfSplits/=2;
     return true;
   }
   else if ( _isInCoolDownPhase and _totalNumberOfSplits<=0 ) {
-	_isInCoolDownPhase   = false;
-	_totalNumberOfSplits = 0;
-	return true;
+    logInfo( "isInCoolDownPhase()", "terminate cool-down phase and continue to load balance" );
+    _isInCoolDownPhase   = false;
+    _totalNumberOfSplits = 0;
+    return true;
   }
   else if ( not _isInCoolDownPhase and _totalNumberOfSplits<tarch::multicore::Core::getInstance().getNumberOfThreads() ) {
     return false;
   }
   else {
-	logInfo( "isInCoolDownPhase()", "lots of splits triggered, enter cool-down phase, i.e. postpone further splits" );
+    logInfo( "isInCoolDownPhase()", "lots of splits triggered, enter cool-down phase, i.e. postpone further splits" );
     _isInCoolDownPhase = true;
     return true;
   }
@@ -113,27 +157,29 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   updateGlobalView();
   updateBlacklist();
 
+  // @todo Should be an attribute, too, to make this one clean
+  static bool hasPostponedDecisionOnce = false;
   if (
+    not hasPostponedDecisionOnce
+    and
     static_cast<double>(_globalNumberOfInnerUnrefinedCell) < static_cast<double>(
       tarch::mpi::Rank::getInstance().getNumberOfRanks() * tarch::multicore::Core::getInstance().getNumberOfThreads() * _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell
     )
   ) {
-    logInfo( "finishStep()", "problem size of " << _globalNumberOfInnerUnrefinedCell << " is too small to keep all cores busy - wait for larger mesh to be constructed" );
+    logInfo( "finishStep()", "problem size of " << _globalNumberOfInnerUnrefinedCell << " is too small to keep all cores busy - wait for one more grid sweep to get better feeling of grid" );
+    hasPostponedDecisionOnce = true;
+  }
+  else if (isInCoolDownPhase()) {
+    logDebug( "finishStep()", "currently in cool-down phase" );
   }
   else if (
     not _hasSpreadOutOverAllRanks
     and
-    tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1
+    tarch::mpi::Rank::getInstance().getNumberOfRanks()>1
+    and
+    tarch::mpi::Rank::getInstance().isGlobalMaster()
   ) {
-    _hasSpreadOutOverAllRanks = true;
-  }
-  else if (_hasSpreadOutOverAllRanks and isInCoolDownPhase()) {
-    logDebug( "finishStep()", "currently in cool-down phase" );
-  }
-  else if ( not _hasSpreadOutOverAllRanks ) {
-    int cells             = getMaximumSpacetreeSize();
-    assertion( cells>tarch::mpi::Rank::getInstance().getNumberOfRanks() );
-    int cellsPerRank = cells / tarch::mpi::Rank::getInstance().getNumberOfRanks();
+    int cellsPerRank = std::round( std::max( _globalNumberOfInnerUnrefinedCell / tarch::mpi::Rank::getInstance().getNumberOfRanks(), 1.0) );
 
     _hasSpreadOutOverAllRanks = true;
 
@@ -143,20 +189,31 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
     }
   }
   else if (
+    not _hasSpreadOutOverAllRanks
+  ) {
+    _hasSpreadOutOverAllRanks = true;
+  }
+  else if (
     _hasSpreadOutOverAllRanks
     and
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
-    static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads() * _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell
+    static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads()
   ) {
-	  // @todo viel aggressiver splitten
     int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
     if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
       int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
-      if (numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize()) {
-        int cellsPerCore      = std::min(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
-        logInfo( "finishStep()", "insufficient number of cores occupied on this rank, so split " << cellsPerCore << " cells from tree " << heaviestSpacetree << " on local rank (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
+      int cellsPerCore      = std::min(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
+      logInfo( "finishStep()", "insufficient number of cores occupied on this rank, so split " << cellsPerCore << " cells iteratively from tree " << heaviestSpacetree << " on local rank (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
+      double maxSplits = 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads() - static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size());
+      while (
+        numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize()
+        and
+        maxSplits>0
+      ) {
         triggerSplit(heaviestSpacetree, cellsPerCore, tarch::mpi::Rank::getInstance().getRank());
+        numberOfLocalUnrefinedCellsOfHeaviestSpacetree -= cellsPerCore;
+        maxSplits -= 1.0;
       }
     }
   }
@@ -176,14 +233,12 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
           "biggest local tree " << heaviestSpacetree << " is too heavy as it hosts " <<
           numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " cells (max size should be " << getMaximumSpacetreeSize() << ")"
         );
-        #ifdef Parallel
-         // @todo Das ist falsch. Hier muss jetzt genau das intra-Rank-Balancing rein
-        const int targetRank = 0;
-        #else
-        const int targetRank = 0;
-        #endif
         int cellsPerCore      = std::min(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
-        triggerSplit(heaviestSpacetree, cellsPerCore, targetRank);
+        logInfo(
+          "finishStep()",
+          "lightest global rank is rank " << _lightestRank << ", so assign this rank " << cellsPerCore << " cell(s)"
+        );
+        triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
       }
     }
   }
@@ -205,11 +260,9 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateBlacklist() {
 
 
 void toolbox::loadbalancing::RecursiveSubdivision::triggerSplit( int sourceTree, int numberOfCells, int targetRank ) {
-  if (peano4::parallel::SpacetreeSet::getInstance().split(sourceTree,numberOfCells,targetRank)) {
-    _blacklist.insert( std::pair<int,int>(sourceTree,3) );
-  }
-  else {
+  if (not peano4::parallel::SpacetreeSet::getInstance().split(sourceTree,numberOfCells,targetRank)) {
     logInfo( "triggerSplit()", "wanted to split local rank " << sourceTree << " but failed" );
   }
+  _blacklist.insert( std::pair<int,int>(sourceTree,3) );
   _totalNumberOfSplits++;
 }

@@ -71,8 +71,8 @@ build_mode = peano4.output.CompileMode.Asserts
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    0.1,           # end time
-    0.0, 0.01      # snapshots
+    0.01,           # end time
+    0.0, 0.005     # snapshots
   )
 else:
   project.set_global_simulation_parameters(
@@ -89,6 +89,10 @@ else:
 project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
 
 
+## @todo Mal docu schreiben?
+#project.set_load_balancing( "toolbox::loadbalancing::Hardcoded", "({35}, {0}, {362}, {0})" )
+
+
 
 peano4_project = project.generate_Peano4_project()
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
@@ -102,11 +106,9 @@ peano4_project.build()
 # often crashes for bigger runs. It also struggles with the postprocessing
 # for large parallel runs (see below).
 #
-success = peano4_project.run( [] )
-#success = peano4_project.run( [], ["mpirun", "-n", "2"] )
+#success = peano4_project.run( [] )
+success = peano4_project.run( [], ["mpirun", "-n", "1"] )
 
-
-success = False
 
 
 if success:
@@ -128,7 +130,11 @@ if success:
   # ../../../../src/visualisation/convert apply-filter solutionEuler.peano-patch-file DD     . extract-fine-grid finegridDD
   # ../../../../src/visualisation/convert convert-file solutionEuler.peano-patch-file finegridDD . vtu
   #
-  convert = peano4.visualisation.Convert( "solutionEuler", True )
+  # Here's the variant postprocessing script variant that I prefer on the command
+  # line. It dumps all postprocessed data into a separate folder. This way, the 
+  # original dump is not enriched/overwritten:
+  #
+  convert = peano4.visualisation.Convert( "solutionEuler", Flase )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.plot_domain_decomposition()
   convert.extract_fine_grid()

@@ -1568,11 +1568,12 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createPrunedCellTraver
 
   if(
     _spacetreeState==SpacetreeState::EmptyRun or
+    _spacetreeState==SpacetreeState::NewFromSplit or
     _spacetreeState==SpacetreeState::Joining
   ) {
-	result.setIsCellLocal(false);
-	result.setIsFaceLocal(0);
-	result.setIsVertexLocal(0);
+    result.setIsCellLocal(false);
+    result.setIsFaceLocal(0);
+    result.setIsVertexLocal(0);
   }
 
   return result;
@@ -1887,7 +1888,8 @@ void peano4::grid::Spacetree::receiveAndMergeUserDataAtHorizontalBoundary(const 
     	  logDebug(
             "receiveAndMergeUserDataAtHorizontalBoundary(...)",
             "receive and merge local face on stack " << inOutStack << " of tree " << _id << " (relative position=" <<
-            outCallStackCounter << ") with neighbour " << neighbour << ". Local position in cell=" << inFacePositionWithinCell
+            outCallStackCounter << ") with neighbour " << neighbour << ". Local position in cell=" << inFacePositionWithinCell <<
+			". state=" << state.toString()
           );
           observer.receiveAndMergeFaceHorizontally(
             enterCellTraversalEvent,

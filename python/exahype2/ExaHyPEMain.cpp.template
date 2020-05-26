@@ -22,6 +22,7 @@
 
 #include "peano4/UnitTests.h"
 #include "tarch/UnitTests.h"
+#include "exahype2/NonCriticalAssertions.h"
 
 
 
@@ -39,10 +40,22 @@ tarch::logging::Log _log("::");
 bool selectNextAlgorithmicStep() {{
   static bool   gridConstructed   = false;
   static double nextPlotTimeStamp = FirstPlotTimeStamp;
-  static bool   haveWrittenVeryLastSnapshot = false;
+  static bool   haveJustWrittenSnapshot = false;
+  static bool   haveReceivedNoncriticialAssertion = false;
   bool          continueToSolve   = true;
 
-  if (not gridConstructed) {{
+  if (exahype2::hasNonCriticalAssertionBeenViolated() and not haveReceivedNoncriticialAssertion) {{
+    peano4::parallel::Node::getInstance().setNextProgramStep(
+      observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
+    );
+    continueToSolve = true;
+    haveReceivedNoncriticialAssertion = true;
+    logError( "selectNextAlgorithmicStep()", "noncritical assertion has been triggered in code. Dump final state and terminate" );
+  }}
+  else if (exahype2::hasNonCriticalAssertionBeenViolated()) {{
+    continueToSolve = false;
+  }}
+  else if (not gridConstructed) {{
     peano4::parallel::Node::getInstance().setNextProgramStep(
       observers::StepRepository::toProgramStep( observers::StepRepository::Steps::CreateGrid )
     );
@@ -63,6 +76,7 @@ bool selectNextAlgorithmicStep() {{
       peano4::parallel::Node::getInstance().setNextProgramStep(
         observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
       );
+      haveJustWrittenSnapshot = true;
       continueToSolve = true;
     }}
     else if ( observers::getMinTimeStamp()<TerminalTime ) {{
@@ -70,14 +84,15 @@ bool selectNextAlgorithmicStep() {{
         observers::StepRepository::toProgramStep( observers::StepRepository::Steps::TimeStep )
       );
       continueToSolve = true;
+      haveJustWrittenSnapshot = false;
     }}
     else {{
-      if (not haveWrittenVeryLastSnapshot and TimeInBetweenPlots>0.0) {{
-        haveWrittenVeryLastSnapshot = true;
+      if (not haveJustWrittenSnapshot and TimeInBetweenPlots>0.0) {{
         peano4::parallel::Node::getInstance().setNextProgramStep(
           observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
         );
-        continueToSolve = true;
+        continueToSolve = true; // don't want to terminate immediately
+        haveJustWrittenSnapshot = false;
       }}
       else {{
         continueToSolve = false;
@@ -284,6 +299,7 @@ int main(int argc, char** argv) {{
   }}
   
   peano4::initParallelEnvironment(&argc,&argv);
+  exahype2::initNonCritialAssertionEnvironment();
   peano4::fillLookupTables();
   
   {FULL_NAMESPACE}::observers::DataRepository::initDatatypes();
@@ -309,13 +325,8 @@ int main(int argc, char** argv) {{
   #endif
 
   peano4::parallel::SpacetreeSet::getInstance().init(
-    #if Dimensions==2
-    {{0.0, 0.0}},
-    {{1.0, 1.0}},
-    #else
-    {{0.0, 0.0, 0.0}},
-    {{1.0, 1.0, 1.0}},
-    #endif
+    DomainOffset,
+	DomainSize,
     0
   );
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {{
@@ -330,7 +341,7 @@ int main(int argc, char** argv) {{
   }}
 
   {FULL_NAMESPACE}::observers::DataRepository::shutdownDatatypes();
-
+  exahype2::shutdownNonCritialAssertionEnvironment();
   peano4::shutdownParallelEnvironment();
 
   return ExitCodeSuccess;
