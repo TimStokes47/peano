@@ -173,8 +173,46 @@ class peano4::grid::Spacetree {
       int                                dimension = Dimensions-1
     );
 
+    /**
+     * Identify type of vertex.
+     *
+     * Find out what type a face has, i.e. is it a new one, one that is to
+     * be deleted, or is it a persistent one. The outcome will decide where
+     * to take a vertex from and where to store it. It also will determine
+     * which cascade of events we will invoke.
+     *
+     * <h2> Implementation </h2>
+     *
+     * Different to getVertexType(), we can work with the the fine grid's
+     * vertices here already. The implementation might not be the most
+     * elegant one: We loop over all four or eight vertices, respectively,
+     * but we use the normal of the faceNumber to alter the vertex index
+     * such that we eventually study only half of the vertices; those adjacent
+     * to the face.
+     *
+     * @image html Spacetree_getFaceType.png
+     *
+     *
+     * There are four potential outcomes: new, hanging, persistent, delete.
+     * They derive as follows:
+     *
+     * - Hanging: A face is hanging if all adjacent vertices on the same
+     *   level are hanging (red in sketch above).
+     * - Delete: A face is delete if all adjacent vertices are either
+     *   hanging or delete and the face is not hanging.
+     * - New: A face is new if all adjacent vertices are either
+     *   hanging or new and the face is not hanging.
+     * - Persistent: If nothing else applies.
+     *
+     * So while I use the vertex states, I cannot directly use the vertices.
+     * They have already gone through the vertex lifecycle, i.e. new vertices
+     * might already have the new flag. Instead, I have to go through
+     * getVertexType(). This might be inefficient and leave room for improvements,
+     * but is does the job for the time being.
+     */
     static FaceType getFaceType(
       GridVertex                         coarseGridVertices[TwoPowerD],
+      tarch::la::Vector<Dimensions,int>  positionOfCell,
       int                                faceNumber
     );
 
@@ -204,7 +242,8 @@ class peano4::grid::Spacetree {
      * @see getFaceType()
      */
     static CellType getCellType(
-      GridVertex                         coarseGridVertices[TwoPowerD]
+      GridVertex                         coarseGridVertices[TwoPowerD],
+      tarch::la::Vector<Dimensions,int>  positionOfCell
     );
 
     int              _id;
@@ -558,35 +597,7 @@ class peano4::grid::Spacetree {
       GridTraversalEvent&  event
     ) const;
 
-    /**
-     * Is used by createEnterCellEvent() and createLeaveCellEvent(). At this
-     * point, the adjacency lists of the vertex are already overwritten. So
-     * we have to be careful in the enter cell event which adjacency list
-     * we do evaluate. I assume that the event is already partially befilled.
-     * I in particular assume that the locality analysis is already done, i.e.
-     * the event stores the information whether a face or vertex, respectively,
-     * is local or not. Obviously, I can skip any neighbourship analysis for
-     * non-local grid entities.
-     *
-     * In theory, one might say "well, if you rely on the event to be befilled
-     * with is-local info anyway, then you don't have to care about local ids
-     * anymore". This is however not true throughout the splits. If you have
-     * a vertex with [1,-1,1,-1] on rank 0 which is currently splitting into 0
-     * and 1, then this vertex logically is still local. However, we should not
-     * send out anything to this vertex anymore, as it will be moved to 1 after
-     * this sweep and then will be remote locally. Therefore, I add a second
-     * level of isLocal analysis to the loops.
-     */
-/*
-    void triggerNeighbourExchange(
-      GridVertex           fineGridVertices[TwoPowerD],
-      GridTraversalEvent&  event,
-      bool                 isEnterCell
-    ) const;
-*/
-
     GridTraversalEvent createGenericCellTraversalEvent(
-      GridVertex              coarseGridVertices[TwoPowerD],
       GridVertex              fineGridVertices[TwoPowerD],
       const AutomatonState&   state,
       const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
@@ -594,6 +605,8 @@ class peano4::grid::Spacetree {
 
     /**
      * Create description of an enter cell traversal.
+     *
+     * @param createEnterCellTraversalEvent Piped through to createGenericCellTraversalEvent().
      */
     GridTraversalEvent createEnterCellTraversalEvent(
       GridVertex              coarseGridVertices[TwoPowerD],

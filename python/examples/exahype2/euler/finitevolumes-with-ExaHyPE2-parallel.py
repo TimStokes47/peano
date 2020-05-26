@@ -72,7 +72,7 @@ if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
     0.01,           # end time
-    0.0, 0.005     # snapshots
+    0.0, 0.01       # snapshots
   )
 else:
   project.set_global_simulation_parameters(
@@ -106,9 +106,8 @@ peano4_project.build()
 # often crashes for bigger runs. It also struggles with the postprocessing
 # for large parallel runs (see below).
 #
-#success = peano4_project.run( [] )
-success = peano4_project.run( [], ["mpirun", "-n", "1"] )
-
+success = peano4_project.run( ["threads", "1"] )
+#success = peano4_project.run( [], ["mpirun", "-n", "1"] )
 
 
 if success:
@@ -134,7 +133,10 @@ if success:
   # line. It dumps all postprocessed data into a separate folder. This way, the 
   # original dump is not enriched/overwritten:
   #
-  convert = peano4.visualisation.Convert( "solutionEuler", Flase )
+  # mkdir output
+  # ../../../../src/visualisation/convert apply-filter solutionEuler.peano-patch-file EulerQ output plot-domain-decomposition DD
+  #
+  convert = peano4.visualisation.Convert( "solutionEuler", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.plot_domain_decomposition()
   convert.extract_fine_grid()

@@ -450,28 +450,25 @@ tarch::la::Vector<Dimensions,int> peano4::grid::Spacetree::convertToIntegerVecto
 
 
 peano4::grid::Spacetree::CellType peano4::grid::Spacetree::getCellType(
-  GridVertex  vertices[TwoPowerD]
+  GridVertex                         coarseGridVertices[TwoPowerD],
+  tarch::la::Vector<Dimensions,int>  positionOfCell
 ) {
   bool allVerticesAreDelete = true;
   bool allVerticesAreNew    = true;
 
   for (int i=0; i<TwoPowerD; i++) {
-    switch (vertices[ i ].getState()) {
-      case GridVertex::State::HangingVertex:
+	std::bitset<Dimensions> vectorPosition = i;
+    switch ( getVertexType( coarseGridVertices, positionOfCell + tarch::la::Vector<Dimensions,int>(vectorPosition) )) {
+      case VertexType::Hanging:
     	break;
-      case GridVertex::State::Erasing:
-      case GridVertex::State::EraseTriggered:
-      case GridVertex::State::RefinementTriggered:
-      case GridVertex::State::Refining:
-      case GridVertex::State::Refined:
-      case GridVertex::State::Unrefined:
+      case VertexType::Persistent:
         allVerticesAreDelete = false;
     	allVerticesAreNew    = false;
     	break;
-      case GridVertex::State::New:
+      case VertexType::New:
         allVerticesAreDelete = false;
       	break;
-      case GridVertex::State::Delete:
+      case VertexType::Delete:
        	allVerticesAreNew    = false;
        	break;
     }
@@ -489,66 +486,58 @@ peano4::grid::Spacetree::CellType peano4::grid::Spacetree::getCellType(
   }
   else {
     logDebug( "getCellType(...)", "keep cell" );
-    for (int i=0; i<TwoPowerD; i++) {
-      logDebug( "getCellType(...)", "vertex #" << i << ": " << vertices[i].toString() );
-	  }
-	  return CellType::Persistent;
+    return CellType::Persistent;
   }
 }
 
 
 peano4::grid::Spacetree::FaceType peano4::grid::Spacetree::getFaceType(
   GridVertex                         coarseGridVertices[TwoPowerD],
+  tarch::la::Vector<Dimensions,int>  positionOfCell,
   int                                faceNumber
 ) {
-  FaceType  result = FaceType::Persistent;
+  logTraceInWith1Argument( "getFaceType(...)", faceNumber );
 
-  bool allVerticesAreNew      = true;
-  bool allVerticesAreHanging  = true;
-  bool allVerticesAreDelete   = true;
+  bool allVerticesAreHanging         = true;
+  bool allVerticesAreDeleteOrHanging = true;
+  bool allVerticesAreNewOrHanging    = true;
 
   const int normal = faceNumber % Dimensions;
   for (int i=0; i<TwoPowerD; i++) {
 	std::bitset<Dimensions> studiedVertex = i;
     studiedVertex.set(normal,faceNumber>=Dimensions);
-    switch (coarseGridVertices[ studiedVertex.to_ulong() ].getState()) {
-      case GridVertex::State::HangingVertex:
+    switch ( getVertexType( coarseGridVertices, positionOfCell + tarch::la::Vector<Dimensions,int>(studiedVertex) ) ) {
+      case VertexType::Hanging:
         break;
-      case GridVertex::State::New:
-    	allVerticesAreDelete  = false;
-    	allVerticesAreHanging = false;
+      case VertexType::New:
+        allVerticesAreDeleteOrHanging = false;
+    	allVerticesAreHanging         = false;
         break;
-      case GridVertex::State::RefinementTriggered:
-      case GridVertex::State::Unrefined:
-      case GridVertex::State::Refined:
-      case GridVertex::State::EraseTriggered:
-      case GridVertex::State::Erasing:
-      case GridVertex::State::Refining:
-    	allVerticesAreNew     = false;
-    	allVerticesAreDelete  = false;
-    	allVerticesAreHanging = false;
+      case VertexType::Persistent:
+        allVerticesAreHanging         = false;
+        allVerticesAreDeleteOrHanging = false;
+        allVerticesAreNewOrHanging    = false;
     	break;
-      case GridVertex::State::Delete:
-    	allVerticesAreNew     = false;
-    	allVerticesAreHanging = false;
+      case VertexType::Delete:
+        allVerticesAreHanging         = false;
+        allVerticesAreNewOrHanging    = false;
     	break;
     }
   }
 
+  FaceType  result = FaceType::Persistent;
   if ( allVerticesAreHanging ) {
-    return FaceType::Hanging;
+    result = FaceType::Hanging;
   }
-  else if ( allVerticesAreNew ) {
-    assertion( not allVerticesAreHanging );
-    assertion( not allVerticesAreDelete );
-    return FaceType::New;
+  else if ( allVerticesAreNewOrHanging ) {
+    result = FaceType::New;
   }
-  else if ( allVerticesAreDelete ) {
-    assertion( not allVerticesAreHanging );
-    assertion( not allVerticesAreNew );
-    return FaceType::Delete;
+  else if ( allVerticesAreDeleteOrHanging ) {
+    result = FaceType::Delete;
   }
-  else return FaceType::Persistent;
+
+  logTraceOutWith4Arguments( "getFaceType(...)", toString(result), allVerticesAreDeleteOrHanging, allVerticesAreNewOrHanging, allVerticesAreHanging );
+  return result;
 }
 
 
@@ -1715,7 +1704,6 @@ void peano4::grid::Spacetree::descend(
 
 
 peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createGenericCellTraversalEvent(
-  GridVertex              coarseGridVertices[TwoPowerD],
   GridVertex              fineGridVertices[TwoPowerD],
   const AutomatonState&   state,
   const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
@@ -1744,7 +1732,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
   const tarch::la::Vector<Dimensions,int>&     relativePositionToFather
 ) const {
   logTraceInWith3Arguments( "createEnterCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather );
-  GridTraversalEvent  event = createGenericCellTraversalEvent(coarseGridVertices, fineGridVertices, state, relativePositionToFather);
+  GridTraversalEvent  event = createGenericCellTraversalEvent(fineGridVertices, state, relativePositionToFather);
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
@@ -1782,7 +1770,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
 
   for (int i=0; i<2*Dimensions; i++) {
     int        faceIndex   = PeanoCurve::getFaceNumberAlongCurve(state,i);
-    FaceType   type        = getFaceType(fineGridVertices,faceIndex);
+    FaceType   type        = getFaceType(coarseGridVertices,relativePositionToFather,faceIndex);
     const int  stackNumber = PeanoCurve::getFaceReadStackNumber(state,faceIndex);
 
     switch (type) {
@@ -1808,7 +1796,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
   }
 
   {
-    CellType type = getCellType(fineGridVertices);
+    CellType type = getCellType(coarseGridVertices,relativePositionToFather);
     const int  stackNumber = PeanoCurve::getCellReadStackNumber(state);
     switch (type) {
       case CellType::New:
@@ -1887,9 +1875,9 @@ void peano4::grid::Spacetree::receiveAndMergeUserDataAtHorizontalBoundary(const 
         if (neighbour>=0) {
     	  logDebug(
             "receiveAndMergeUserDataAtHorizontalBoundary(...)",
-            "receive and merge local face on stack " << inOutStack << " of tree " << _id << " (relative position=" <<
+            "receive and merge " << i << "th face on stack " << inOutStack << " of tree " << _id << " (relative position=" <<
             outCallStackCounter << ") with neighbour " << neighbour << ". Local position in cell=" << inFacePositionWithinCell <<
-			". state=" << state.toString()
+			", state=" << state.toString() << ", inFaceStack=" << inFaceStack
           );
           observer.receiveAndMergeFaceHorizontally(
             enterCellTraversalEvent,
@@ -2010,7 +1998,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
   const tarch::la::Vector<Dimensions,int>&  relativePositionToFather
 ) const {
   logTraceInWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather );
-  GridTraversalEvent  event = createGenericCellTraversalEvent(coarseGridVertices, fineGridVertices, state, relativePositionToFather);
+  GridTraversalEvent  event = createGenericCellTraversalEvent(fineGridVertices, state, relativePositionToFather);
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
@@ -2046,7 +2034,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
 
   for (int i=0; i<2*Dimensions; i++) {
     int        faceIndex   = PeanoCurve::getFaceNumberAlongCurve(state,i);
-    FaceType   type        = getFaceType(fineGridVertices,faceIndex);
+    FaceType   type        = getFaceType(coarseGridVertices,relativePositionToFather,faceIndex);
     const int  stackNumber = PeanoCurve::getFaceWriteStackNumber(state,faceIndex);
 
     event.setFaceDataFrom(i,faceIndex);
@@ -2071,7 +2059,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
   }
 
   {
-    CellType type = getCellType(fineGridVertices);
+    CellType type = getCellType(coarseGridVertices,relativePositionToFather);
     const int  stackNumber = PeanoCurve::getCellWriteStackNumber(state);
 
     switch (type) {
@@ -2147,7 +2135,9 @@ void peano4::grid::Spacetree::splitOrJoinCell(
 
         newlyCreatedCells++;
 
-        if ( getCellType( fineGridVertices )!=CellType::New or newlyCreatedCells%ThreePowerD==ThreePowerD-1) {
+        // This 0 here is a fake, but it does not make a difference, as fine
+        // grid cells within a 3x3 patch always have the same type
+        if ( getCellType( coarseGridVertices, 0 )!=CellType::New or newlyCreatedCells%ThreePowerD==ThreePowerD-1) {
           updateSplittingCounter( targetSpacetreeId );
           newlyCreatedCells = 0;
         }

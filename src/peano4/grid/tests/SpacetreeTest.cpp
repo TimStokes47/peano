@@ -214,11 +214,105 @@ void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
 }
 
 
+void peano4::grid::tests::SpacetreeTest::testCreateEnterCellTraversalEvent() {
+  #if Dimensions==2
+  Spacetree tree( {0.0,0.0}, {1.0,1.0} );
+  tree._id = 2;
+
+  GridVertex coarseGridVertices[TwoPowerD];
+  GridVertex fineGridVertices[TwoPowerD];
+
+  coarseGridVertices[0].setState( GridVertex::State::Refined );
+  coarseGridVertices[1].setState( GridVertex::State::Refined );
+  coarseGridVertices[2].setState( GridVertex::State::Refined );
+  coarseGridVertices[3].setState( GridVertex::State::Refined );
+
+  fineGridVertices[0].setState( GridVertex::State::Unrefined );
+  fineGridVertices[0].setAdjacentRanks( { 3, 3, 3, 3 } );
+  fineGridVertices[0].setBackupOfAdjacentRanks( { 3, 3, 3, 3 } );
+  fineGridVertices[0].setX( {0.62963,0.407407} );
+
+  fineGridVertices[1].setState( GridVertex::State::Unrefined );
+  fineGridVertices[1].setAdjacentRanks( { 3, 2, 3, 2 } );
+  fineGridVertices[1].setBackupOfAdjacentRanks( { 3, 2, 3, 2 } );
+  fineGridVertices[1].setX( {0.666667,0.407407} );
+
+  fineGridVertices[2].setState( GridVertex::State::New );
+  fineGridVertices[2].setAdjacentRanks( { 3, 3, 3, 3 } );
+  fineGridVertices[2].setBackupOfAdjacentRanks( { 0, 0, 0, 0 } );
+  fineGridVertices[2].setX( {0.62963,0.444444} );
+
+  fineGridVertices[3].setState( GridVertex::State::New );
+  fineGridVertices[3].setAdjacentRanks( { 3, 2, 3, 2 } );
+  fineGridVertices[3].setBackupOfAdjacentRanks( { 0, 0, 0, 0 } );
+  fineGridVertices[3].setX( {0.666667,0.444444} );
+
+  coarseGridVertices[0].setState( GridVertex::State::Refining );
+  coarseGridVertices[0].setAdjacentRanks( { 3, 3, 3, 3 } );
+
+  coarseGridVertices[1].setState( GridVertex::State::Refining );
+  coarseGridVertices[1].setAdjacentRanks( { 3, 2, 3, 2 } );
+
+  coarseGridVertices[2].setState( GridVertex::State::Refining );
+  coarseGridVertices[2].setAdjacentRanks( { 3, 3, 3, 3 } );
+
+  coarseGridVertices[3].setState( GridVertex::State::Refining );
+  coarseGridVertices[3].setAdjacentRanks( { 3, 2, 3, 2 } );
+
+  AutomatonState state(
+    3,                            // level,
+	{0.62963,0.407407},           // x
+	{0.037037,0.037037},          // h
+	true,                         // inverted
+	std::bitset<Dimensions>(3),   // even flags = 11
+	{-1,-2,2,1}
+  );
+  tarch::la::Vector<Dimensions,int> relativePositionToFather = {2,2};
+
+  GridTraversalEvent event = tree.createEnterCellTraversalEvent(coarseGridVertices,fineGridVertices,state,relativePositionToFather);
+
+  validateEqualsWithParams1( event.getFaceDataFrom(0),                                                      4, event.toString() );
+  validateEqualsWithParams1( event.getFaceDataFrom(1),                                                      3, event.toString() );
+  validateEqualsWithParams1( event.getFaceDataFrom(2), TraversalObserver::CreateOrDestroyPersistentGridEntity, event.toString() );
+  validateEqualsWithParams1( event.getFaceDataFrom(3), TraversalObserver::CreateOrDestroyPersistentGridEntity, event.toString() );
+  #endif
+}
+
+
+void peano4::grid::tests::SpacetreeTest::testGetFaceType() {
+  #if Dimensions==2
+  Spacetree tree( {0.0,0.0}, {1.0,1.0} );
+  tree._id = 2;
+
+  GridVertex coarseGridVertices[TwoPowerD];
+
+  coarseGridVertices[0].setState( GridVertex::State::Refining );
+  coarseGridVertices[1].setState( GridVertex::State::Refining );
+  coarseGridVertices[2].setState( GridVertex::State::Refining );
+  coarseGridVertices[3].setState( GridVertex::State::Refining );
+
+  auto result = tree.getFaceType( coarseGridVertices, {2,2}, 0 );
+  validateWithParams1( result==Spacetree::FaceType::New, Spacetree::toString(result) );
+
+  result = tree.getFaceType( coarseGridVertices, {2,2}, 1 );
+  validateWithParams1( result==Spacetree::FaceType::New, Spacetree::toString(result) );
+
+  result = tree.getFaceType( coarseGridVertices, {2,2}, 2 );
+  validateWithParams1( result==Spacetree::FaceType::New, Spacetree::toString(result) );
+
+  result = tree.getFaceType( coarseGridVertices, {2,2}, 3 );
+  validateWithParams1( result==Spacetree::FaceType::New, Spacetree::toString(result) );
+  #endif
+}
+
+
 void peano4::grid::tests::SpacetreeTest::run() {
   testMethod( testRestrictToCoarseGrid );
   testMethod( testCreateLeaveCellTraversalEvent );
   testMethod( testCreateNeighbourExchangeLists );
   testMethod( testAreFacesLocal );
+  testMethod( testGetFaceType );
+  testMethod( testCreateEnterCellTraversalEvent );
 }
 
 
