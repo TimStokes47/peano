@@ -90,7 +90,8 @@ below:
   \texttt{--with-multithreading} & Switch on multithreading. By default, we
   build without multithreading, but a \texttt{--with-multithreading=cpp}, e.g.,
   makes \Peano\  use the C++ threading model. Please consult \texttt{--help} for
-  details.
+  details. Note: To use OpenMP multithreading, you will need a compiler which
+  supports OpenMP 5.0 and above (e.g - GCC 9.x).
    \\
   \texttt{--with-mpi} & Enable the MPI version of \Peano. You have to tell the
   build environment however which compile command to use. Please note that
