@@ -88,17 +88,17 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
       #pragma omp parallel for
       for (int i=0; i<NumberOfSubreaders; i++) {
         subReaders[i].parse();
-      }
-
-      // insert in-order, i.e. without parallel for, as the order of the datasets
-      // has to be preserved.
-      for (int i=0; i<NumberOfSubreaders; i++) {
         std::vector< visualisation::data::DataSet >  subData = subReaders[i].getData();
+
         if ( subData.size()>1 ) {
           logError( "parse()", "included dataset seems to hold more than one dataset, i.e. seems to be series of datasets again. This is not supported" );
         }
+
         if ( not subData.empty() ) {
-          _data.back().merge( subData[0] );
+          #pragma omp critical
+          {
+            _data.back().merge( subData[0] );
+          }
         }
 	  }
 

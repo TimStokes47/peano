@@ -28,6 +28,12 @@ python3 example-scripts/finitevolumes-with-ExaHyPE2-shared-memory-benchmark.py
 
 instead.
 
+I got plenty of linker errors recently. It was all my fault. If you get linker errors,
+ensure you do the following two things:
+
+- Ensure you've re-created the configure environment, as something in the build
+  system might have changed (libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing).
+- Ensure you've built Peano with the --enable-exahype flag.
 
 ### SuperMUC-NG ###
 
