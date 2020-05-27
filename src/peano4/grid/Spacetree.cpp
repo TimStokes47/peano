@@ -232,7 +232,10 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
 
   clear( _statistics, _id==0 );
 
-  if ( _spacetreeState==SpacetreeState::NewFromSplit) {
+
+  if (
+    _spacetreeState!=SpacetreeState::EmptyRun or _spacetreeState!=SpacetreeState::NewFromSplit or _spacetreeState!=SpacetreeState::Joining
+  ) {
     _gridControlEvents.clear();
   }
   else {
@@ -685,7 +688,7 @@ std::string peano4::grid::Spacetree::toString( CellType type ) {
 
 
 void peano4::grid::Spacetree::receiveAndMergeGridVertexAtVerticalBoundary( GridVertex& vertex ) {
-  logTraceInWith1Argument( "receiveAndMergeGridVertexAtVerticalBoundary(GridVertex)", vertex.toString() );
+  logTraceInWith2Arguments( "receiveAndMergeGridVertexAtVerticalBoundary(GridVertex)", vertex.toString(), _id );
 
   for (auto p: _joining) {
     if ( tarch::la::contains( vertex.getAdjacentRanks(), p ) ) {
@@ -712,7 +715,7 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
   const tarch::la::Vector<Dimensions,int>&  position,
   TraversalObserver&                        observer
 ) {
-  logTraceInWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
+  logTraceInWith2Arguments( "updateVertexAfterLoad(GridVertex&)", vertex.toString(), _id );
 
   if (_spacetreeState!=SpacetreeState::NewFromSplit and _spacetreeState!=SpacetreeState::EmptyRun) {
     receiveAndMergeGridVertexAtHorizontalBoundary( vertex );
@@ -726,7 +729,7 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
       if ( isVertexAdjacentToLocalSpacetree(vertex,true,true) ) {
         vertex.setState( GridVertex::State::Refining );
         _statistics.setStationarySweeps( 0 );
-     }
+      }
       else {
         vertex.setState( GridVertex::State::Unrefined );
         // Could be set by number of adjacent cells, e.g.
@@ -743,8 +746,8 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
         vertex.setState( GridVertex::State::Refined );
   	    _statistics.setCoarseningHasBeenVetoed(true);
         _statistics.setStationarySweeps( 0 );
- 	    }
-	    else {
+      }
+      else {
         logDebug( "updateVertexAfterLoad(...)", "erase vertex " << vertex.toString() << " outside of domain on tree " << _id );
         vertex.setState( GridVertex::State::Erasing );
         _statistics.setStationarySweeps( 0 );
@@ -762,16 +765,16 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
       logDebug( "updateVertexAfterLoad(GridVertex&)", "would like to erase " << vertex.toString() << " in spacetree " << _id );
       vertex.setState( GridVertex::State::EraseTriggered );
     }
+  }
 
-    if (
-      _spacetreeState==SpacetreeState::Joining
-      and
-      isVertexAdjacentToLocalSpacetree(vertex, true, true)
-    ) {
-      const int stackNo = peano4::parallel::Node::getInstance().getOutputStackNumberForVerticalDataExchange(_masterId);
-      logDebug( "sendGridVertexAtVerticalBoundary(...)", "stream vertex " << vertex.toString() << " from tree " << _id << " to master " << _masterId << " through stack " << stackNo );
-      _vertexStack.getForPush(_id,stackNo)->push( vertex );
-    }
+  if (
+    _spacetreeState==SpacetreeState::Joining
+    and
+    isVertexAdjacentToLocalSpacetree(vertex, true, true)
+  ) {
+    const int stackNo = peano4::parallel::Node::getInstance().getOutputStackNumberForVerticalDataExchange(_masterId);
+    logDebug( "sendGridVertexAtVerticalBoundary(...)", "stream vertex " << vertex.toString() << " from tree " << _id << " to master " << _masterId << " through stack " << stackNo );
+    _vertexStack.getForPush(_id,stackNo)->push( vertex );
   }
 
   logTraceOutWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
@@ -1473,82 +1476,89 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
   GridVertex            coarseGridVertices[TwoPowerD],
   GridVertex            fineGridVertices[TwoPowerD]
 ) {
-  logTraceInWith1Argument( "evaluateGridControlEvents(...)", state.toString() );
+  if (not _gridControlEvents.empty()) {
+    logTraceInWith2Arguments( "evaluateGridControlEvents(...)", state.toString(), _gridControlEvents.size() );
 
-  bool mayChangeGrid = true;
-  for (int i=0; i<TwoPowerD; i++) {
-    // excluding refinement triggered and refining ensures that we have no immediate
-    // refine anymore. This is important for the adjacency lists. We have to allow
-    // erase triggered, as the grid control events are evaluated top-down, i.e. data
-    // might be set.
-    mayChangeGrid &= (
-      coarseGridVertices[i].getState()==GridVertex::State::HangingVertex
-      or
-      coarseGridVertices[i].getState()==GridVertex::State::Unrefined
-      or
-      coarseGridVertices[i].getState()==GridVertex::State::Refined
-      or
-      coarseGridVertices[i].getState()==GridVertex::State::EraseTriggered
+    assertion1(
+      _spacetreeState!=SpacetreeState::EmptyRun and _spacetreeState!=SpacetreeState::NewFromSplit and _spacetreeState!=SpacetreeState::Joining,
+	  toString()
     );
-  }
 
-  bool refine = false;
-  bool erase  = false;
-  if (mayChangeGrid) {
-    for (auto p: _gridControlEvents) {
-      if (
-        tarch::la::allGreater( state.getX() + state.getH(), p.getOffset() )
-        and
-        tarch::la::allSmaller( state.getX(), p.getOffset()+p.getWidth() )
-        and
-        p.getRefinementControl()==GridControlEvent::RefinementControl::Refine
-        and
- 	    tarch::la::allGreaterEquals( state.getH(), p.getH() )
-	  ) {
-        erase  = false;
-        refine = true;
-      }
-
-      if (
-        tarch::la::allGreaterEquals( state.getX(), p.getOffset() )
-        and
-        tarch::la::allSmallerEquals( state.getX() + state.getH(), p.getOffset()+p.getWidth() )
-        and
-        p.getRefinementControl()==GridControlEvent::RefinementControl::Erase
-        and
-   	    tarch::la::allSmaller( state.getH(), p.getH() )
-  	  ) {
-        erase  = true;
-        refine = false;
-      }
-    }
-  }
-
-  if (refine) {
+    bool mayChangeGrid = true;
     for (int i=0; i<TwoPowerD; i++) {
-      if (
-		isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
-        and
-	    fineGridVertices[i].getState()==GridVertex::State::Unrefined
-      ) {
-  	    fineGridVertices[i].setState( GridVertex::State::RefinementTriggered );
+      // excluding refinement triggered and refining ensures that we have no immediate
+      // refine anymore. This is important for the adjacency lists. We have to allow
+      // erase triggered, as the grid control events are evaluated top-down, i.e. data
+      // might be set.
+      mayChangeGrid &= (
+        coarseGridVertices[i].getState()==GridVertex::State::HangingVertex
+        or
+        coarseGridVertices[i].getState()==GridVertex::State::Unrefined
+        or
+        coarseGridVertices[i].getState()==GridVertex::State::Refined
+        or
+        coarseGridVertices[i].getState()==GridVertex::State::EraseTriggered
+      );
+    }
+
+    bool refine = false;
+    bool erase  = false;
+    if (mayChangeGrid) {
+      for (auto p: _gridControlEvents) {
+        if (
+          tarch::la::allGreater( state.getX() + state.getH(), p.getOffset() )
+          and
+          tarch::la::allSmaller( state.getX(), p.getOffset()+p.getWidth() )
+          and
+          p.getRefinementControl()==GridControlEvent::RefinementControl::Refine
+          and
+ 	      tarch::la::allGreaterEquals( state.getH(), p.getH() )
+	    ) {
+          erase  = false;
+          refine = true;
+        }
+
+        if (
+          tarch::la::allGreaterEquals( state.getX(), p.getOffset() )
+          and
+          tarch::la::allSmallerEquals( state.getX() + state.getH(), p.getOffset()+p.getWidth() )
+          and
+          p.getRefinementControl()==GridControlEvent::RefinementControl::Erase
+          and
+   	      tarch::la::allSmaller( state.getH(), p.getH() )
+  	    ) {
+          erase  = true;
+          refine = false;
+        }
       }
     }
-  }
 
-  if (erase) {
-    for (int i=0; i<TwoPowerD; i++) {
-      if (
-        isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
-        and
-        fineGridVertices[i].getState()==GridVertex::State::Refined
-      ) {
-  	    fineGridVertices[i].setState( GridVertex::State::EraseTriggered );
+    if (refine) {
+      for (int i=0; i<TwoPowerD; i++) {
+        if (
+          isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
+          and
+	      fineGridVertices[i].getState()==GridVertex::State::Unrefined
+        ) {
+          fineGridVertices[i].setState( GridVertex::State::RefinementTriggered );
+        }
       }
     }
-  }
 
-  logTraceOutWith3Arguments( "evaluateGridControlEvents(...)", state.toString(), refine, erase );
+    if (erase) {
+      for (int i=0; i<TwoPowerD; i++) {
+        if (
+          isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
+          and
+          fineGridVertices[i].getState()==GridVertex::State::Refined
+        ) {
+          fineGridVertices[i].setState( GridVertex::State::EraseTriggered );
+        }
+      }
+    }
+
+    logTraceOutWith3Arguments( "evaluateGridControlEvents(...)", state.toString(), refine, erase );
+  }
 }
 
 
@@ -1731,7 +1741,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
   const AutomatonState&                        state,
   const tarch::la::Vector<Dimensions,int>&     relativePositionToFather
 ) const {
-  logTraceInWith3Arguments( "createEnterCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather );
+  logTraceInWith7Arguments( "createEnterCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather, coarseGridVertices[0].toString(), coarseGridVertices[1].toString(), coarseGridVertices[2].toString(), coarseGridVertices[3].toString() );
   GridTraversalEvent  event = createGenericCellTraversalEvent(fineGridVertices, state, relativePositionToFather);
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
@@ -1816,7 +1826,12 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
 }
 
 
-void peano4::grid::Spacetree::receiveAndMergeUserDataAtHorizontalBoundary(const AutomatonState& state, TraversalObserver&    observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]) {
+void peano4::grid::Spacetree::receiveAndMergeUserDataAtHorizontalBoundary(
+  const AutomatonState&      state,
+  TraversalObserver&         observer,
+  const GridTraversalEvent&  enterCellTraversalEvent,
+  GridVertex                 fineGridVertices[TwoPowerD]
+) {
   logTraceInWith3Arguments( "receiveAndMergeUserDataAtHorizontalBoundary(...)", state.toString(), enterCellTraversalEvent.toString(), _id );
 
   assertion3(
