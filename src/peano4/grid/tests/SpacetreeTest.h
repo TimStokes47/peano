@@ -94,7 +94,13 @@ Aborted (core dumped)
      * be created (correct) as well as the right one (wrong in dump above).
      *
      */
-    void testCreateEnterCellTraversalEvent();
+    void testCreateEnterCellTraversalEvent1();
+
+    /**
+     * Have just prepared this one, but don't use it (yet).
+     */
+    void testCreateEnterCellTraversalEvent2();
+
   public:
     SpacetreeTest();
     void run() override;

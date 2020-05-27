@@ -214,7 +214,7 @@ void peano4::grid::tests::SpacetreeTest::testCreateNeighbourExchangeLists() {
 }
 
 
-void peano4::grid::tests::SpacetreeTest::testCreateEnterCellTraversalEvent() {
+void peano4::grid::tests::SpacetreeTest::testCreateEnterCellTraversalEvent1() {
   #if Dimensions==2
   Spacetree tree( {0.0,0.0}, {1.0,1.0} );
   tree._id = 2;
@@ -306,13 +306,24 @@ void peano4::grid::tests::SpacetreeTest::testGetFaceType() {
 }
 
 
+void peano4::grid::tests::SpacetreeTest::testCreateEnterCellTraversalEvent2() {
+  #if Dimensions==2
+  Spacetree tree( {0.0,0.0}, {1.0,1.0} );
+  tree._id = 2;
+
+  GridVertex coarseGridVertices[TwoPowerD];
+  #endif
+}
+
+
 void peano4::grid::tests::SpacetreeTest::run() {
   testMethod( testRestrictToCoarseGrid );
   testMethod( testCreateLeaveCellTraversalEvent );
   testMethod( testCreateNeighbourExchangeLists );
   testMethod( testAreFacesLocal );
   testMethod( testGetFaceType );
-  testMethod( testCreateEnterCellTraversalEvent );
+  testMethod( testCreateEnterCellTraversalEvent1 );
+  testMethod( testCreateEnterCellTraversalEvent2 );
 }
 
 
