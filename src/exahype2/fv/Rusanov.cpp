@@ -86,14 +86,10 @@ namespace {
             double                                       F[]
     ) >   flux,
     std::function< void(
-            double                                       Q[],
-            const tarch::la::Vector<Dimensions,double>&  faceCentre,
-            const tarch::la::Vector<Dimensions,double>&  volumeH,
-            double                                       t,
-            double                                       dt,
-            int                                          normal,
-            double                                       F[]
-    ) >   nonconservativeProduct,
+        double                                       Q[],
+        double                                       gradQ[][Dimensions],
+        double                                       BgradQ[]
+      ) >   nonconservativeProduct,
     std::function< void(
             double                                       Q[],
             const tarch::la::Vector<Dimensions,double>&  faceCentre,
@@ -123,11 +119,13 @@ namespace {
     flux(QR,x,dx,t,dt,normal,fluxFR);
 
     double Qaverage[unknowns];
+    double gradQ[unknowns][Dimensions] = {0.0};
     for (int unknown=0; unknown<unknowns; unknown++) {
       Qaverage[unknown] = 0.5 * QL[unknown] + 0.5 * QR[unknown];
+      gradQ[unknown][normal] = QR[unknown] - QL[unknown];
     }
-    double fluxNonconservativeProduct[unknowns];
-    nonconservativeProduct(Qaverage,x,dx,t,dt,normal,fluxNonconservativeProduct);
+    double fluxnonconservativeProduct[unknowns];
+    nonconservativeProduct(Qaverage,gradQ,fluxnonconservativeProduct);
 
     double lambdas[unknowns];
     double lambdaMax = 0.0;
@@ -144,8 +142,8 @@ namespace {
     }
 
     for (int unknown=0; unknown<unknowns; unknown++) {
-      FL[unknown] = 0.5 * fluxFL[unknown] + 0.5 * fluxFR[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]) - 0.5 * fluxNonconservativeProduct[unknown];
-      FR[unknown] = 0.5 * fluxFL[unknown] + 0.5 * fluxFR[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]) + 0.5 * fluxNonconservativeProduct[unknown];
+      FL[unknown] = 0.5 * fluxFL[unknown] + 0.5 * fluxFR[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]) - 0.5 * fluxnonconservativeProduct[unknown];
+      FR[unknown] = 0.5 * fluxFL[unknown] + 0.5 * fluxFR[unknown] - 0.5 * lambdaMax * (QR[unknown] - QL[unknown]) + 0.5 * fluxnonconservativeProduct[unknown];
     }
   };
 }
@@ -254,13 +252,9 @@ void exahype2::fv::applyRusanovToPatch_FaceLoops(
   ) >   flux,
   std::function< void(
         double                                       Q[],
-        const tarch::la::Vector<Dimensions,double>&  faceCentre,
-        const tarch::la::Vector<Dimensions,double>&  volumeH,
-        double                                       t,
-        double                                       dt,
-        int                                          normal,
-        double                                       F[]
-  ) >   nonConservativeProduct,
+        double                                       gradQ[][Dimensions],
+        double                                       BgradQ[]
+  ) >   nonconservativeProduct,
   std::function< void(
         double                                       Q[],
         const tarch::la::Vector<Dimensions,double>&  faceCentre,
@@ -296,7 +290,7 @@ void exahype2::fv::applyRusanovToPatch_FaceLoops(
       double                                       FR[]
     ) -> void {
 	  splitRusanov1d(
-        flux, nonConservativeProduct, eigenvalues,
+        flux, nonconservativeProduct, eigenvalues,
 		QL, QR, x, dx, t, dt, normal, unknowns, FL, FR
       );
     },
@@ -323,7 +317,7 @@ void exahype2::fv::applyRusanovToPatch_FaceLoops(
       double                                       FR[]
     ) -> void {
 	  splitRusanov1d(
-        flux, nonConservativeProduct, eigenvalues,
+        flux, nonconservativeProduct, eigenvalues,
 		QL, QR, x, dx, t, dt, normal, unknowns, FL, FR
       );
     },

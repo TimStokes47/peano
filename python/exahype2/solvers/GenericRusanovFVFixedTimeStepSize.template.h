@@ -63,7 +63,7 @@ class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
       int                                          normal
     ) override;
 
-    {FLUX_FUNCTIONS_DECLARATIONS}
+{FLUX_FUNCTIONS_DECLARATIONS}
 }};
 
 

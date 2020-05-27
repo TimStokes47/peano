@@ -106,7 +106,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
      */
     virtual void finishTimeStep();
 
-    {ABSTRACT_FLUX_FUNCTIONS}
+{ABSTRACT_FLUX_FUNCTIONS}
 }};
 
 

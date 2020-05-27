@@ -60,6 +60,8 @@ the directory.} includes a file such that the
   this parameter and then everything is fine. However, some configures then don't 
   like the configure script anymore. So I instead use \texttt{export PEANO\_LDFLAGS="-ltbb"}. 
   For some systems, it then still remains necessary to add pthreads, too.
+  \item \textbf{ My compiler terminates with errors when I enable OpenMP multithreading }.
+  Make sure that you are using a compiler with OpenMP 5.0 support, such as GCC 9.x.
   \item To be continued \dots
 \end{itemize}
 
