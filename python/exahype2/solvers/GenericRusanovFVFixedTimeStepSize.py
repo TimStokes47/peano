@@ -31,25 +31,20 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
       
     self._fv_callbacks = []
     if flux:
-      self._fv_callbacks.append( """ flux(
-      double                                       Q[""" + str(unknowns) + """],
+      self._fv_callbacks.append("""flux(
+      double                                       Q[{0}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t,
       int                                          normal,
-      double                                       F[""" + str(unknowns) + """]
-)      
-""")
+      double                                       F[{0}]
+    ) """.format(unknowns))
     if ncp:
       self._fv_callbacks.append( """nonconservativeProduct(
-      double                                       Q[""" + str(unknowns) + """],
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      double                                       t,
-      int                                          normal,
-      double                                       F[""" + str(unknowns) + """]
-)      
-""")
+      double Q[{0}],
+      double gradQ[{0}][Dimensions],
+      double BgradQ[{0}]
+    ) """.format(unknowns))
     
     
     pass
@@ -168,17 +163,11 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
       {SOLVER_INSTANCE}.flux( Q, faceCentre, volumeH, t, normal, F );
     }},
     [&](
-      double                                       Q[],
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      double                                       t,
-      double                                       dt,
-      int                                          normal,
-      double                                       F[]
+      double Q[],
+      double gradQ[][Dimensions],
+      double BgradQ[]
     ) -> void {{
-//    @todo
-//      {SOLVER_INSTANCE}.nonconservativeProduct( Q, faceCentre, volumeH, t, normal, F );
-{SOLVER_INSTANCE}.flux( Q, faceCentre, volumeH, t, normal, F );
+      {SOLVER_INSTANCE}.nonconservativeProduct( Q, gradQ, BgradQ );
     }},
     [&](
       double                                       Q[],
@@ -208,6 +197,6 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
     d[ "ABSTRACT_FLUX_FUNCTIONS" ]    = ""
     d[ "FLUX_FUNCTIONS_DECLARATIONS" ] = ""
     for op in self._fv_callbacks:
-      d[ "ABSTRACT_FLUX_FUNCTIONS" ]     += "virtual void " + op + " = 0;\n\n\n"
+      d[ "ABSTRACT_FLUX_FUNCTIONS" ]     += "    virtual void " + op + " = 0;\n\n\n"
       d[ "FLUX_FUNCTIONS_DECLARATIONS" ]  += "void " + op + " override;\n\n\n"
     pass  
