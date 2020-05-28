@@ -38,9 +38,10 @@ namespace peano4 {
      *   box. If the bounding box volume is around twice as big as the sum
      *   of the two volumes or smaller, then we merge the two boxes into
      *   one. Otherwise, we add it to the result.
-     * - The elimination of erase ocmmands in missing.
      * - We call the operation recursively if we have fused/eliminated any
      *   element from the input set.
+     *
+     * I do not fuse/consolidate any erase events. The reason is that
      *
      * @todo See above
      *

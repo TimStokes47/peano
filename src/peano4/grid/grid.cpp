@@ -8,53 +8,43 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::consolidate( std::ve
   static tarch::logging::Log _log( "peano4::grid" );
   logTraceInWith1Argument( "consolidate(...)", events.size() );
 
+  bool hasFusedOrErasedEvents = true;
+
   std::vector< peano4::grid::GridControlEvent > result;
-  bool hasFusedOrErasedEvents = false;
+  while (not events.empty() and hasFusedOrErasedEvents) {
+    hasFusedOrErasedEvents = false;
 
-  std::vector< GridControlEvent >::iterator i = events.begin();
-  while ( i != events.end() ) {
-    std::vector< GridControlEvent >::iterator j = i;
-    j++;
+    peano4::grid::GridControlEvent currentEvent = events.back();
+    events.pop_back();
 
-    bool hasFusedOrErasedCurrentEvent = false;
-
-    while ( j != events.end() ) {
-  	  if (
+    for ( std::vector< GridControlEvent >::iterator i = events.begin(); i!=events.end(); ) {
+      auto boundingEventOffset = tarch::la::min( i->getOffset(), currentEvent.getOffset() );
+      auto boundingEventSize   = tarch::la::max( i->getOffset()+i->getWidth(), currentEvent.getOffset()+currentEvent.getWidth() ) - boundingEventOffset;
+      if (
         i->getRefinementControl()==GridControlEvent::RefinementControl::Refine
         and
-        j->getRefinementControl()==GridControlEvent::RefinementControl::Refine
+        currentEvent.getRefinementControl()==GridControlEvent::RefinementControl::Refine
         and
-		tarch::la::equals( i->getH(), j->getH() )
+        tarch::la::equals( i->getH(), currentEvent.getH() )
+        and
+        tarch::la::volume(boundingEventSize) <= 1.1 * (tarch::la::volume(i->getWidth()) + tarch::la::volume(currentEvent.getWidth()))
       ) {
-  		auto boundingEventOffset = tarch::la::min( i->getOffset(), j->getOffset() );
-  		auto boundingEventSize   = tarch::la::max( i->getOffset()+i->getWidth(), j->getOffset()+j->getWidth() ) - boundingEventOffset;
-
-  		if ( tarch::la::volume(boundingEventSize) <= 1.1 * (tarch::la::volume(i->getWidth()) + tarch::la::volume(j->getWidth())) ) {
-  	  	  GridControlEvent boundingEvent(
-  	        GridControlEvent::RefinementControl::Refine,
-  	        boundingEventOffset, boundingEventSize, i->getH()
-          );
-          result.push_back( boundingEvent );
-          i = events.erase(i);
-          j = events.end();
-          hasFusedOrErasedCurrentEvent = true;
-          hasFusedOrErasedEvents       = true;
-  		}
+    	currentEvent = GridControlEvent(
+          GridControlEvent::RefinementControl::Refine,
+          boundingEventOffset, boundingEventSize, i->getH()
+        );
+        i = events.erase(i);
       }
-  	  else {
-  		j++;
-  	  }
+      else {
+        i++;
+      }
     }
 
-    if (not hasFusedOrErasedCurrentEvent) {
-      result.push_back( *i );
-  	  i++;
-    }
+    result.push_back( currentEvent );
   }
-  logWarning( "consolidate(...)", "size=" << result.size() );
 
   logTraceOutWith1Argument( "consolidate(...)", result.size() );
-  return result;
+  return events;
 }
 
 
