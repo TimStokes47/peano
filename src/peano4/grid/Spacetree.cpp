@@ -234,12 +234,12 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
 
 
   if (
-    _spacetreeState!=SpacetreeState::EmptyRun or _spacetreeState!=SpacetreeState::NewFromSplit or _spacetreeState!=SpacetreeState::Joining
+    _spacetreeState==SpacetreeState::EmptyRun or _spacetreeState==SpacetreeState::NewFromSplit or _spacetreeState==SpacetreeState::Joining
   ) {
     _gridControlEvents.clear();
   }
   else {
-    _gridControlEvents = observer.getGridControlEvents();
+    _gridControlEvents = consolidate( observer.getGridControlEvents() );
   }
 
   logDebug( "traverse(TraversalObserver)", "got " << _gridControlEvents.size() << " grid control event(s)" );
@@ -727,6 +727,7 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
 
     if ( vertex.getState()==GridVertex::State::RefinementTriggered ) {
       if ( isVertexAdjacentToLocalSpacetree(vertex,true,true) ) {
+    	logDebug( "updateVertexAfterLoad()", "switch vertex to refining: " << vertex.toString() );
         vertex.setState( GridVertex::State::Refining );
         _statistics.setStationarySweeps( 0 );
       }
@@ -1193,17 +1194,41 @@ int  peano4::grid::Spacetree::getAdjacentDomainIds( GridVertex fineGridVertices[
 
     std::bitset<Dimensions> studiedEntry = TwoPowerD - currentVertex - 1;
     studiedEntry[normal] = 0;
+    assertion3(studiedEntry.to_ullong()>=0,        studiedEntry,currentVertex,i);
+    assertion3(studiedEntry.to_ullong()<TwoPowerD, studiedEntry,currentVertex,i);
     int rankEntry = calledByReceivingProcess ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
                                              : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
 
-    adjacentRanksOfFace(counter) = rankEntry;
+    if (
+      ( fineGridVertices[currentVertex].getState()==GridVertex::State::HangingVertex )
+      or
+	  ( calledByReceivingProcess and fineGridVertices[currentVertex].getState()==GridVertex::State::New )
+      or
+      ( not calledByReceivingProcess and fineGridVertices[currentVertex].getState()==GridVertex::State::Delete )
+	) {
+      rankEntry = InvalidRank;
+    };
+
+    adjacentRanksOfFace(counter) =  rankEntry;
     counter++;
 
     studiedEntry[normal] = 1;
+    assertion3(studiedEntry.to_ullong()>=0,        studiedEntry,currentVertex,i);
+    assertion3(studiedEntry.to_ullong()<TwoPowerD, studiedEntry,currentVertex,i);
     rankEntry = calledByReceivingProcess ? fineGridVertices[currentVertex].getBackupOfAdjacentRanks(studiedEntry.to_ullong())
                                          : fineGridVertices[currentVertex].getAdjacentRanks(studiedEntry.to_ullong());
 
-    adjacentRanksOfFace(counter) = rankEntry;
+    if (
+      ( fineGridVertices[currentVertex].getState()==GridVertex::State::HangingVertex )
+      or
+	  ( calledByReceivingProcess and fineGridVertices[currentVertex].getState()==GridVertex::State::New )
+      or
+      ( not calledByReceivingProcess and fineGridVertices[currentVertex].getState()==GridVertex::State::Delete )
+	) {
+      rankEntry = InvalidRank;
+    };
+
+    adjacentRanksOfFace(counter) =  rankEntry;
     counter++;
   }
 
@@ -1544,8 +1569,7 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
         }
       }
     }
-
-    if (erase) {
+    else if (erase) {
       for (int i=0; i<TwoPowerD; i++) {
         if (
           isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
