@@ -955,6 +955,10 @@ class peano4::grid::Spacetree {
      * we use the backup of the adjacency list when we receive data, but we use the
      * updated/new list when we send out stuff.
      *
+     * If we bump into a new vertex, we should explicitly ignore it when we receive.
+     * After all, new vertices cannot yet have triggered incoming data. The counterpart
+     * is deleted vertices which should not contribute towards a send command.
+     *
      * @return -1  (TraversalObserver::NoData) if there's no neighbour or face is not local.
      */
     int  getAdjacentDomainIds( GridVertex vertex[TwoPowerD], int faceNumber, bool calledByReceivingProcess ) const;

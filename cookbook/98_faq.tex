@@ -34,7 +34,7 @@
 
 \begin{itemize}
   \item \textbf{Where is the information whether a point or face is at the
-  boundary or not?}.
+  boundary or not?}
   I do not provide any such feature. Many codes for example use the grid to
   represent complicated domains, and thus would need such a feature anyway. So
   what you have to do is to add a bool to each vertex/face and set this boolean
@@ -43,3 +43,21 @@
 \end{itemize}
 
 
+\section{Parallelisation}
+
+\begin{itemize}
+  \item \textbf{Why do I (temporarily) get an adaptive grid even though I
+  specify a regular one?}
+  This phenomenon arises if your adaptive refinements and (dynamic) load
+  balancing happen at the same time. Load balancing is realised by transfering a
+  whole tree part (subpartition incl.~coarser scales) to another rank after a
+  grid sweep. Refinement happens in multiple stages: After a grid traversal, the
+  rank takes all the refinement instructions and then realises them throughout
+  the subsequent grid sweep. So if a rank gets a refinement command and then
+  gives away parts of its mesh, then it might not be able to realise this 
+  refinement. For most codes, that's not a problem as the newly established rank
+  will just realise the refinement one grid sweep later, but the point is:
+  refine and erase commands in \Peano\ are always a wishlist to the kernel. The
+  kernel can decide to ignore it---at least for one grid sweep.
+  \item To be continued \dots
+\end{itemize}
