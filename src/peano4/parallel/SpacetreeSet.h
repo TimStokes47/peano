@@ -307,13 +307,18 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * <h2> Distributed memory <h2>
      *
      * In a distributed memory environment, we have to break up the creation
-     * into a set of sends forth and back through TreeManagementMessages.
+     * into a set of sends forth and back through TreeManagementMessages. This
+     * routine is the one that sends out the requests.
      *
-     * \section Multithreading
+     * <h2> Multithreading </h2>
      *
      * I may not globally lock this routine, as I otherwise would block the
      * createObserverCloneIfRequired(). So I literally "only" protect the
      * actual push back in the vector.
+     *
+     * <h2> Call sequence </h2>
+     *
+     * The operation is used by createNewTrees() .
      */
     void addSpacetree( int masterId, int newTreeId );
 
