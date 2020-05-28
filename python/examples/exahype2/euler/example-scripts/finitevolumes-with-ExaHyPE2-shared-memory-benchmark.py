@@ -45,7 +45,8 @@ project = exahype2.Project( ["examples", "exahype2", "euler"], "finitevolumes", 
 #
 patch_size     = 13
 unknowns       = 5
-time_step_size = 0.0001
+time_step_size = 0.000001
+
 #
 # Still the same solver, but this time we use named arguments. This is the way
 # you can add further PDE terms btw.
@@ -62,6 +63,8 @@ project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize(
 
 dimensions = 3
 build_mode = peano4.output.CompileMode.Release
+#build_mode = peano4.output.CompileMode.Asserts
+
 
 
 #
@@ -69,8 +72,8 @@ build_mode = peano4.output.CompileMode.Release
 #
 project.set_global_simulation_parameters(
   dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-  0.1,           # end time
-  0.0, 0         # snapshots
+  time_step_size * 20,           # end time
+  0.0, 0                         # snapshots
 )
 
 
