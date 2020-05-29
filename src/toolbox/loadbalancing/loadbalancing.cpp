@@ -5,10 +5,14 @@
 #include "peano4/parallel/SpacetreeSet.h"
 
 
+namespace {
+  // If I don't instantiate it here, i.e. outside of a function, then I run risk
+  // that it is initialised late and thus has the wrong time stamp.
+  tarch::logging::Log _log( "toolbox::loadbalancing" );
+}
+
 
 void toolbox::loadbalancing::dumpStatistics() {
-  tarch::logging::Log _log( "toolbox::loadbalancing" );
-
   std::ostringstream msg;
 
   std::set<int> idsOfLocalSpacetrees = peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees();
