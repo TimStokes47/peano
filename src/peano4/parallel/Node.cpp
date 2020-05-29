@@ -127,7 +127,7 @@ int peano4::parallel::Node::reserveId(int rank, int forTreeId)  {
   }
 
   if (localThread==MaxSpacetreesPerRank-1) {
-    logWarning( "reserveId(int,int)", "gave out" << (localThread+1) << " trees on rank " << tarch::mpi::Rank::getInstance().getRank() << ". Max trees per rank=" << MaxSpacetreesPerRank );
+    logWarning( "reserveId(int,int)", "gave out " << (localThread+1) << " trees on rank " << tarch::mpi::Rank::getInstance().getRank() << ". Max trees per rank=" << MaxSpacetreesPerRank );
   }
 
   if (localThread<MaxSpacetreesPerRank) {

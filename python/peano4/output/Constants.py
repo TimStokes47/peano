@@ -15,6 +15,13 @@ class Constants(object):
     constants (via constexpr). For the latter, I rely on the auto 
     type word unless you use a specialised routine for a particular 
     type. 
+    
+    Each project has one instance of Constants, so you can always 
+    add/export new constants with
+    
+    my_project.constants.export ...
+    
+    Constants also allows you to add defines (precompiler statements).
      
   """
   default_overwrite = True

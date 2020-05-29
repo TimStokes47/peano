@@ -10,5 +10,4 @@ from .ExaHyPEMain import ExaHyPEMain
 from .Project     import Project
 
 
-print( "ExaHyPE2 (C) www.peano-framework.org" )
-#print( "Written by Tobias Weinzierl" )
+print( "ExaHyPE 2 (C) www.peano-framework.org" )

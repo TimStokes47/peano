@@ -4,7 +4,15 @@
 
 ## Single node tests ##
 
-### Prepare setup ###
+### Prepare Peano 4 core ###
+
+./configure --enable-exahype --with-multithreading=tbb
+./configure --enable-exahype --with-multithreading=cpp
+./configure --enable-exahype --with-multithreading=omp
+
+
+
+### Prepare application ###
 
 See guidebook instructions how to configure the single node environment.
 Please remember to add the --with-exahype argument to configure. 
@@ -13,7 +21,7 @@ Please remember to add the --with-exahype argument to configure.
 Before we start, please edit Euler.cpp and set the refinement criterion as follows:
 
 
-  const double MaxHOfVolume  = 1.0/3.0/3.0/13.0 * 0.9;
+  const double MaxHOfVolume  = 1.0/3.0/3.0/_NumberOfFiniteVolumesPerAxisPerPatch*0.9;
 
 
 After these two edits, I run the following steps to build the executable:
@@ -48,4 +56,17 @@ sbatch --account=pr48ma example-scripts/SuperMUC-NG-single-node.slurm-script
 ### Hamilton ###
 
 sbatch example-scripts/Hamilton-single-node.slurm-script
+
+
+
+## Postprocessing ##
+
+export PYTHONPATH=../../../..
+python3 ../../../../exahype2/postprocessing/plot-scaling.py results-Hamilton-tbb.tar.gz
+
+Unpack the archive and run 
+
+python3 ../../../../../src/toolbox/loadbalancing/plot-load-distribution.py
+
+on the files of interest.
 

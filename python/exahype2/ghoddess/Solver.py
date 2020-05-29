@@ -18,7 +18,8 @@ from .PlotInPeanoBlockFormat import PlotInPeanoBlockFormat
 
 class Solver(object):
   """ 
-  An abstract Ghoddess solver
+  
+    An abstract Ghoddess solver
         
   """
   def __init__(self, name, order, unknowns, dimensions):
@@ -26,39 +27,42 @@ class Solver(object):
     self._order      = order
     self._unknowns   = unknowns
     self._dimensions = dimensions
-    
-    #
-    # The division by two is due to the triangles. Sure this formula
-    # is wrong for d=3 therefore. Might even be wrong for 2d with 
-    # higher orders.
-    #
+
     number_of_unknowns_within_cell = self._get_number_of_unknowns_within_cell()
-    
+        
     #
-    # Again, wrong for 3d. The factor two stems from the fact that 
-    # we project the solution from left and right.
-    #
-    number_of_unknowns_per_face    = 2 * (order+1)
-    
-    #
-    # We map the cell's interior to a degenerated patch of the dimensions
+    # Per cell, we map the cell's interior to a degenerated patch of the dimensions
     # number_of_unknowns_within_cell x 1 x 1. The blockstructured toolbox
     # is written for (logically) Cartesian meshes. We kind of hijack it 
     # here by embedding 1d `patches' into the cells where we are responsible
-    # for the cardinalty ourselves
+    # for the cardinality ourselves.
     #
     self._cell_data = peano4.datamodel.Patch( (number_of_unknowns_within_cell,1,1), unknowns, self._unknown_identifier() )
-    self._face_data = peano4.datamodel.Patch( (2,number_of_unknowns_per_face,1), unknowns, self._unknown_identifier() )
     
     #
-    # Clarify how we merge the face data along a domain decomposition boundary
+    # This is the part where we have to tune stuff immediately. At the moment,
+    # we have a total overlap. That means: Each face holds the 
+    # number_of_unknowns_within_cell/2 unknowns of its left and of its right
+    # neighbour.
     #
-    self._face_data.generator.set_merge_method_definition( peano4.toolbox.blockstructured.get_face_overlap_merge_implementation(self._face_data) )
+    # I make the face a degenerated patch as well: We can think of it as a n/2 x 2
+    # matrix where the first column holds the left neighbour's data and the 
+    # second column the right neighbour's data.
+    #
+    # Peano 4 and ExaHyPE 2 are all written for 3d simulations, so all patches
+    # have three dimensions. We set the last dimension to 1, i.e. make it degnerate.
+    #
+    self._face_data = peano4.datamodel.Patch( (2,number_of_unknowns_within_cell/2,1), unknowns, self._unknown_identifier() )
     pass
   
 
   def _get_number_of_unknowns_within_cell(self):
-    return (self._order+1)**self._dimensions/2
+    """
+        
+     Haha, your job to befill this ;-). I only do order 1
+    
+    """
+    return 6
   
   
   def _unknown_identifier(self):
@@ -117,11 +121,7 @@ class Solver(object):
 
   ProjectOntoFaceTemplate = ""
 
-  SolveRiemannTemplate = ""
-
   SolveCellTemplate = ""
-
-  ProjectOntoCellTemplate = ""
 
 
   def add_actions_to_create_grid(self, step):
@@ -168,31 +168,19 @@ class Solver(object):
     )
 
     step.add_action_set( GenericFaceKernel( self._cell_data, 
-      d["SOLVER_INSTANCE"] + ".solveRiemannProblem() and not fineGridFaceLabel.getBoundary()",
-      self.SolveRiemannTemplate.format(**d), 
-      self.__get_default_includes() + self.get_user_includes()) 
-    )
-
-    step.add_action_set( GenericFaceKernel( self._cell_data, 
-      d["SOLVER_INSTANCE"] + ".solveRiemannProblem() and fineGridFaceLabel.getBoundary()",
+      d["SOLVER_INSTANCE"] + ".solveCellProblemAndFinishTimeStepOnCell() and fineGridFaceLabel.getBoundary()",
       self.BoundaryTemplate.format(**d), 
       self.__get_default_includes() + self.get_user_includes()) 
     )
 
     step.add_action_set( GenericCellKernel( self._cell_data, 
-      d["SOLVER_INSTANCE"] + ".solveCellProblem()",
+      d["SOLVER_INSTANCE"] + ".solveCellProblemAndFinishTimeStepOnCell()",
       self.SolveCellTemplate.format(**d), 
       self.__get_default_includes() + self.get_user_includes()) 
     )
 
-    step.add_action_set( GenericCellKernel( self._cell_data, 
-      d["SOLVER_INSTANCE"] + ".projectRiemannSolutionOntoCellAndFinishTimeStepOnCell()",
-      self.ProjectOntoCellTemplate.format(**d), 
-      self.__get_default_includes() + self.get_user_includes()) 
-    )
-
     step.add_action_set( AMRKernel( self._cell_data, 
-      d["SOLVER_INSTANCE"] + ".projectRiemannSolutionOntoCellAndFinishTimeStepOnCell()",
+      d["SOLVER_INSTANCE"] + ".solveCellProblemAndFinishTimeStepOnCell()",
       self.AMRTemplate.format(**d), 
       self.__get_default_includes() + self.get_user_includes(), False))
     pass

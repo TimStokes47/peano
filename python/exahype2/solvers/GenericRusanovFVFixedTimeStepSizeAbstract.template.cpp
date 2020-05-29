@@ -2,6 +2,7 @@
 
 
 {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}():
+  _NumberOfFiniteVolumesPerAxisPerPatch( {NUMBER_OF_VOLUMES_PER_AXIS} ),
   _timeStamp(0.0) {{
 }}
 

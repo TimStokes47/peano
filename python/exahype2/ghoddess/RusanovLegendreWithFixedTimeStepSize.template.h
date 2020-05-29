@@ -33,9 +33,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
      * Determine whether a kernel shall be called
      */
     bool _projectOntoFace;
-    bool _solveRiemann;
     bool _solveCell;
-    bool _projectOntoCell;
   public:
     {CLASSNAME}();
 
@@ -45,9 +43,7 @@ class {FULL_QUALIFIED_CLASSNAME} {{
     double getMaxTimeStepSize() const;
 
     bool startNewTimeStepOnCellAndProjectOntoFace() const;
-    bool solveRiemannProblem() const;
-    bool solveCellProblem() const;
-    bool projectRiemannSolutionOntoCellAndFinishTimeStepOnCell() const;
+    bool solveCellProblemAndFinishTimeStepOnCell() const;
 
     /**
      * @param Q Vector of unknowns
@@ -75,35 +71,32 @@ class {FULL_QUALIFIED_CLASSNAME} {{
 	  const tarch::la::Vector<Dimensions,double>&  normal
     );
 
-    void projectOntoFace(
-      double* QCell,
-      double* QFace,
-      const tarch::la::Vector<Dimensions,double>&  cellCentre,
-      const tarch::la::Vector<Dimensions,double>&  cellH,
-      int                                          faceNumber
-    );
-
-    void solveRiemannProblem(
-      double* Q,
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  faceH,
-	  const tarch::la::Vector<Dimensions,double>&  normal,
-      double                                       t
-    );
-
+    /**
+     * Solve cell, i.e. two triangles
+     *
+     * @param QCell These are all unknowns of the complete cell.
+     */
     void solveCell(
-      double* Q,
+      double* QCell,
+      double* QLeftFace,
+      double* QBottomFace,
+      double* QRightFace,
+      double* QUpperFace,
       const tarch::la::Vector<Dimensions,double>&  cellCentre,
       const tarch::la::Vector<Dimensions,double>&  cellH,
       double                                       t
     );
 
-    void projectOntoCell(
+    /**
+     * @param QCell These are all unknowns of the complete cell.
+     */
+    void solveLowerTriangle(
       double* QCell,
-      double* QFace,
+      double* QLeftFace,
+      double* QUpperFace,
       const tarch::la::Vector<Dimensions,double>&  cellCentre,
       const tarch::la::Vector<Dimensions,double>&  cellH,
-      int                                          faceNumber
+      double                                       t
     );
 
     /**

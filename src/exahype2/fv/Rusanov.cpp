@@ -119,8 +119,11 @@ namespace {
     flux(QR,x,dx,t,dt,normal,fluxFR);
 
     double Qaverage[unknowns];
-    double gradQ[unknowns][Dimensions] = {0.0};
+    double gradQ[unknowns][Dimensions];
     for (int unknown=0; unknown<unknowns; unknown++) {
+      for (int d=0; d<Dimensions; d++) {
+        gradQ[unknown][d] = 0.0;
+      }
       Qaverage[unknown] = 0.5 * QL[unknown] + 0.5 * QR[unknown];
       gradQ[unknown][normal] = QR[unknown] - QL[unknown];
     }

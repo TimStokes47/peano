@@ -4,9 +4,7 @@
 {FULL_QUALIFIED_CLASSNAME}::{CLASSNAME}():
   _timeStamp(0.0),
   _projectOntoFace(true),
-  _solveRiemann(false),
-  _solveCell(false),
-  _projectOntoCell(false) {{
+  _solveCell(false) {{
 }}
 
 
@@ -43,20 +41,12 @@ void {FULL_QUALIFIED_CLASSNAME}::startTimeStep(
 void {FULL_QUALIFIED_CLASSNAME}::finishTimeStep() {{
   if ( _projectOntoFace ) {{
     _projectOntoFace = false;
-    _solveRiemann    = true;
-  }}
-  else if (_solveRiemann) {{
-    _solveRiemann    = false;
     _solveCell       = true;
   }}
   else if (_solveCell) {{
     _solveCell       = false;
-    _projectOntoCell = true;
-  }}
-  else if (_projectOntoCell) {{
-    _projectOntoCell = false;
     _projectOntoFace = true;
-	_timeStamp += {TIME_STEP_SIZE};
+    _timeStamp      += {TIME_STEP_SIZE};
   }}
 }}
 
@@ -66,18 +56,8 @@ bool {FULL_QUALIFIED_CLASSNAME}::startNewTimeStepOnCellAndProjectOntoFace() cons
 }}
 
 
-bool {FULL_QUALIFIED_CLASSNAME}::solveRiemannProblem() const {{
-  return _solveRiemann;
-}}
-
-
-bool {FULL_QUALIFIED_CLASSNAME}::solveCellProblem() const {{
+bool {FULL_QUALIFIED_CLASSNAME}::solveCellProblemAndFinishTimeStepOnCell() const {{
   return _solveCell;
-}}
-
-
-bool {FULL_QUALIFIED_CLASSNAME}::projectRiemannSolutionOntoCellAndFinishTimeStepOnCell() const {{
-  return _projectOntoCell;
 }}
 
 
@@ -112,46 +92,16 @@ void {FULL_QUALIFIED_CLASSNAME}::boundaryConditions(
 }}
 
 
-void {FULL_QUALIFIED_CLASSNAME}::projectOntoFace(
-  double* QCell,
-  double* QFace,
-  const tarch::la::Vector<Dimensions,double>&  cellCentre,
-  const tarch::la::Vector<Dimensions,double>&  cellH,
-  int                                          faceNumber
-) {{
-
-}}
-
-
-void {FULL_QUALIFIED_CLASSNAME}::solveRiemannProblem(
-  double* Q,
-  const tarch::la::Vector<Dimensions,double>&  faceCentre,
-  const tarch::la::Vector<Dimensions,double>&  faceH,
-  const tarch::la::Vector<Dimensions,double>&  normal,
-  double                                       t
-) {{
-
-}}
-
 
 void {FULL_QUALIFIED_CLASSNAME}::solveCell(
-  double* Q,
+  double* QCell,
+  double* QLeftFace,
+  double* QBottomFace,
+  double* QRightFace,
+  double* QUpperFace,
   const tarch::la::Vector<Dimensions,double>&  cellCentre,
   const tarch::la::Vector<Dimensions,double>&  cellH,
   double                                       t
 ) {{
 
 }}
-
-
-void {FULL_QUALIFIED_CLASSNAME}::projectOntoCell(
-  double* QCell,
-  double* QFace,
-  const tarch::la::Vector<Dimensions,double>&  cellCentre,
-  const tarch::la::Vector<Dimensions,double>&  cellH,
-  int                                          faceNumber
-) {{
-
-}}
-
-

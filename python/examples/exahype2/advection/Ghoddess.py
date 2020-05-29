@@ -40,7 +40,7 @@ project = exahype2.Project( ["examples", "exahype2", "advection"], "ghoddess", "
 #
 dimensions     = 2
 order          = 1
-unknowns       = dimensions
+unknowns       = 2 # set to 1 for scalar PDEs
 time_step_size = 0.0001
 project.add_solver(  exahype2.ghoddess.RusanovLegendreWithFixedTimeStepSize("Advection", order, unknowns, dimensions, 0.0001) )
 
@@ -50,18 +50,14 @@ build_mode = peano4.output.CompileMode.Asserts
 #
 # Lets configure some global parameters
 #
-if dimensions==2:
-  project.set_global_simulation_parameters(
-    dimensions,  [0.0,0.0],  [1.0,1.0],
-    0.1,          # end time
-    0.0, 0.01     # snapshots
-  )
-else:
-  project.set_global_simulation_parameters(
-    dimensions, [0.0,0.0,0.0], [1.0,1.0,1.0],
-    0.1,          # end time
-    0.0, 0.01
-  )
+project.set_global_simulation_parameters(
+  dimensions = 2,  
+  offset = [0.0,0.0],  
+  size = [1.0,1.0],
+  end_time=0.1,          
+  first_plot_time_stamp = 0.0, 
+  time_in_between_plots = 0.01     
+)
 
 
 

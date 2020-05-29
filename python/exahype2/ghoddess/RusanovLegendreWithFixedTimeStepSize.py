@@ -51,32 +51,25 @@ class RusanovLegendreWithFixedTimeStepSize(Solver):
 """
 
   ProjectOntoFaceTemplate = """
-  for (int i=0; i<2*Dimensions; i++) {{
-    {SOLVER_INSTANCE}.projectOntoFace(
-      cellData, faceData[i], marker.x(), marker.h(), i
-    );
-  }}
+  // face 0 is the left face (see guidebook)
+  // entries are enumerated in z-order
+  faceData[0][1] = cellData[3];  // let the 3 be the left bottom unknown in upper triangle
+  faceData[0][3] = cellData[4];  // let the 4 the left top unknown in upper triangle
+  // face 1 is the bottom face (they are enumerated along their normals)
+  faceData[1][2] = cellData[0];  // bottom left unknown within lower triange
+  faceData[1][3] = cellData[1];
+  // and then I leave it to you. If you wanna have the ownership of the enumeration you have
+  // to implement this yourself ;-p
 """
 
-  SolveRiemannTemplate = """
-  {SOLVER_INSTANCE}.solveRiemannProblem(
-    faceData, marker.x(), marker.h(), marker.normal(), {SOLVER_INSTANCE}.getMinTimeStamp()
-  );
-"""  
 
   SolveCellTemplate = """
   {SOLVER_INSTANCE}.solveCell(
-    cellData, marker.x(), marker.h(), {SOLVER_INSTANCE}.getMinTimeStamp()
+    cellData, 
+    faceData[0], faceData[1], faceData[2], faceData[3],
+    marker.x(), marker.h(), {SOLVER_INSTANCE}.getMinTimeStamp()
   );  
 """
-
-  ProjectOntoCellTemplate = """
-  for (int i=0; i<2*Dimensions; i++) {{
-    {SOLVER_INSTANCE}.projectOntoCell(
-      cellData, faceData[i], marker.x(), marker.h(), i
-    );
-  }}
-"""  
      
 
   def add_entries_to_text_replacement_dictionary(self,d):
