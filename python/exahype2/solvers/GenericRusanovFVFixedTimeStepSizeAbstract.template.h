@@ -27,6 +27,7 @@
 
 class {FULL_QUALIFIED_CLASSNAME} {{
   protected:
+	const int _NumberOfFiniteVolumesPerAxisPerPatch;
     double _timeStamp;
   public:
     {CLASSNAME}();

@@ -1,4 +1,5 @@
 #include "Hardcoded.h"
+#include "loadbalancing.h"
 
 #include "tarch/Assertions.h"
 
@@ -66,6 +67,8 @@ void toolbox::loadbalancing::Hardcoded::finishStep() {
       }
     }
   }
+
+  dumpStatistics();
 }
 
 

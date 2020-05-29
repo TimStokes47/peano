@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description='ExaHyPE2 scaling plotter')
+  parser = argparse.ArgumentParser(description='ExaHyPE 2 scaling plotter')
   parser.add_argument("file",   help="filename of the file to parse (should be a tar.gz file)")
   parser.add_argument("-v", "--verbose", help="increase output verbosity", default=False)
   args = parser.parse_args()

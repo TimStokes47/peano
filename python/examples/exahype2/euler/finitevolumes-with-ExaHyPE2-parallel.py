@@ -43,9 +43,9 @@ project = exahype2.Project( ["examples", "exahype2", "euler"], "finitevolumes", 
 #
 # Add the Finite Volumes solver
 #
-patch_size     = 25
+patch_size     = 13
 unknowns       = 5
-time_step_size = 0.0001
+time_step_size = 0.00001
 #
 # Still the same solver, but this time we use named arguments. This is the way
 # you can add further PDE terms btw.
@@ -71,8 +71,8 @@ build_mode = peano4.output.CompileMode.Asserts
 if dimensions==2:
   project.set_global_simulation_parameters(
     dimensions,  [0.0,0.0],  [1.0,1.0],
-    0.01,           # end time
-    0.0, 0.01       # snapshots
+    time_step_size * 100,          # end time
+    0.0, time_step_size * 10       # snapshots
   )
 else:
   project.set_global_simulation_parameters(
@@ -87,11 +87,6 @@ else:
 # prototype we did start off with.
 #
 project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
-
-
-## @todo Mal docu schreiben?
-#project.set_load_balancing( "toolbox::loadbalancing::Hardcoded", "({35}, {0}, {362}, {0})" )
-
 
 
 peano4_project = project.generate_Peano4_project()

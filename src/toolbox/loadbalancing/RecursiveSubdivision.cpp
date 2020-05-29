@@ -1,4 +1,6 @@
 #include "RecursiveSubdivision.h"
+#include "loadbalancing.h"
+
 #include "peano4/utils/Globals.h"
 #include "peano4/parallel/SpacetreeSet.h"
 
@@ -15,7 +17,7 @@ tarch::logging::Log  toolbox::loadbalancing::RecursiveSubdivision::_log( "toolbo
 toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percentageOfCoresThatShouldInTheoryGetAtLeastOneCell):
   _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell( percentageOfCoresThatShouldInTheoryGetAtLeastOneCell ),
   _blacklist(),
-  _hasSpreadOutOverAllRanks(false),
+  _hasSpreadOutOverAllRanks( false ),
   _localNumberOfInnerUnrefinedCell( 0 ),
   _globalNumberOfInnerUnrefinedCell( 0 ),
   _totalNumberOfSplits(0),
@@ -29,15 +31,19 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
 }
 
 
-void toolbox::loadbalancing::RecursiveSubdivision::dumpStatistics() {
+// @todo Ich muss die Core-Zahl in Relation setzen zur maximalen Anzahl an Cores pro Ranks
+
+
+std::string toolbox::loadbalancing::RecursiveSubdivision::toString() const {
+  std::ostringstream msg;
+
   std::set<int> idsOfLocalSpacetrees = peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees();
   for (auto p: idsOfLocalSpacetrees) {
-	logInfo(
-      "dumpStatistics()",
-	  "tree " << p << ": " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(p).getNumberOfLocalUnrefinedCells()
-	  << ( _blacklist.count(p)>0 ? " (on blacklist with weight=" + std::to_string(_blacklist[p]) + ")" : "" )
-    );
+    msg << "tree " << p << ": " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(p).getNumberOfLocalUnrefinedCells()
+	  << ( _blacklist.count(p)>0 ? " (on blacklist with weight=" + std::to_string(_blacklist.at(p)) + ")" : "" );
   }
+
+  return msg.str();
 }
 
 
@@ -131,117 +137,158 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 }
 
 
-bool toolbox::loadbalancing::RecursiveSubdivision::isInCoolDownPhase() {
+void toolbox::loadbalancing::RecursiveSubdivision::updateCoolDownState() {
   if ( _isInCoolDownPhase and _totalNumberOfSplits>0 ) {
     _totalNumberOfSplits/=2;
-    return true;
   }
   else if ( _isInCoolDownPhase and _totalNumberOfSplits<=0 ) {
     logInfo( "isInCoolDownPhase()", "terminate cool-down phase and continue to load balance" );
     _isInCoolDownPhase   = false;
     _totalNumberOfSplits = 0;
-    return true;
   }
   else if ( not _isInCoolDownPhase and _totalNumberOfSplits<tarch::multicore::Core::getInstance().getNumberOfThreads() ) {
-    return false;
   }
   else {
     logInfo( "isInCoolDownPhase()", "lots of splits triggered, enter cool-down phase, i.e. postpone further splits" );
     _isInCoolDownPhase = true;
-    return true;
   }
 }
 
 
-void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
-  updateGlobalView();
-  updateBlacklist();
+std::string toolbox::loadbalancing::RecursiveSubdivision::toString( StrategyStep step ) {
+  switch ( step ) {
+    case StrategyStep::Wait:
+      return "wait";
+    case StrategyStep::SpreadEquallyOverAllRanks:
+      return "spread-equally-over-all-ranks";
+    case StrategyStep::SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning:
+      return "split-heaviest-tree(multiple-times,use-local-rank,use-recursive-partitioning)";
+    case StrategyStep::SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning:
+      return "split-heaviest-tree(once,use-all-ranks,use-recursive-partitioning)";
+  }
+  return "<undef>";
+}
 
-  // @todo Should be an attribute, too, to make this one clean
-  static bool hasPostponedDecisionOnce = false;
+
+toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancing::RecursiveSubdivision::getStrategyStep() const {
   if (
-    not hasPostponedDecisionOnce
-    and
-    static_cast<double>(_globalNumberOfInnerUnrefinedCell) < static_cast<double>(
-      tarch::mpi::Rank::getInstance().getNumberOfRanks() * tarch::multicore::Core::getInstance().getNumberOfThreads() * _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell
+    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > peano4::parallel::Node::MaxSpacetreesPerRank/4*3
+  ) {
+	logDebug( "getStrategyStep()", "afraid to use too many trees and overbook system" );
+    return StrategyStep::Wait;
+  }
+
+  if (
+    static_cast<double>(_globalNumberOfInnerUnrefinedCell)
+	<
+	_PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell * std::min(
+      tarch::mpi::Rank::getInstance().getNumberOfRanks(),
+	  tarch::multicore::Core::getInstance().getNumberOfThreads()
     )
   ) {
-    logInfo( "finishStep()", "problem size of " << _globalNumberOfInnerUnrefinedCell << " is too small to keep all cores busy - wait for one more grid sweep to get better feeling of grid" );
-    hasPostponedDecisionOnce = true;
+    return StrategyStep::Wait;
   }
-  else if (isInCoolDownPhase()) {
-    logDebug( "finishStep()", "currently in cool-down phase" );
+
+  if ( _isInCoolDownPhase ) {
+    return StrategyStep::Wait;
   }
-  else if (
+
+  if (
     not _hasSpreadOutOverAllRanks
     and
     tarch::mpi::Rank::getInstance().getNumberOfRanks()>1
     and
     tarch::mpi::Rank::getInstance().isGlobalMaster()
   ) {
-    int cellsPerRank = std::round( std::max( _globalNumberOfInnerUnrefinedCell / tarch::mpi::Rank::getInstance().getNumberOfRanks(), 1.0) );
-
-    _hasSpreadOutOverAllRanks = true;
-
-    logInfo( "finishStep()", "spread over all ranks. Assign each rank " << cellsPerRank << " cells" );
-    for (int targetRank=1; targetRank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); targetRank++ ) {
-      triggerSplit(0, cellsPerRank, targetRank);
-    }
+    return StrategyStep::SpreadEquallyOverAllRanks;
   }
-  else if (
-    not _hasSpreadOutOverAllRanks
-  ) {
-    _hasSpreadOutOverAllRanks = true;
-  }
-  else if (
-    _hasSpreadOutOverAllRanks
-    and
+
+  if (
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
-    static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads()
+    static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell * tarch::multicore::Core::getInstance().getNumberOfThreads()
   ) {
-    int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
-    if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
-      int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
-      int cellsPerCore      = std::min(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
-      logInfo( "finishStep()", "insufficient number of cores occupied on this rank, so split " << cellsPerCore << " cells iteratively from tree " << heaviestSpacetree << " on local rank (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
-      double maxSplits = 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads() - static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size());
-      while (
-        numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize()
-        and
-        maxSplits>0
-      ) {
-        triggerSplit(heaviestSpacetree, cellsPerCore, tarch::mpi::Rank::getInstance().getRank());
-        numberOfLocalUnrefinedCellsOfHeaviestSpacetree -= cellsPerCore;
-        maxSplits -= 1.0;
-      }
-    }
+	return StrategyStep::SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning;
   }
-  else if (
-    _hasSpreadOutOverAllRanks
-    and
+
+  if (
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
     doesBiggestLocalSpactreeViolateOptimalityCondition()
   ) {
-    int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
-    if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
-      int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
-      if ( numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize() ) {
-        logInfo(
-          "finishStep()",
-          "biggest local tree " << heaviestSpacetree << " is too heavy as it hosts " <<
-          numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " cells (max size should be " << getMaximumSpacetreeSize() << ")"
-        );
-        int cellsPerCore      = std::min(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
-        logInfo(
-          "finishStep()",
-          "lightest global rank is rank " << _lightestRank << ", so assign this rank " << cellsPerCore << " cell(s)"
-        );
-        triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
-      }
-    }
+    return StrategyStep::SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning;
   }
+
+  return StrategyStep::Wait;
+}
+
+
+void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
+  updateGlobalView();
+  updateBlacklist();
+  updateCoolDownState();
+
+  // @todo Debug
+  logInfo( "finishStep()", toString( getStrategyStep() ) );
+
+  switch ( getStrategyStep() ) {
+    case StrategyStep::Wait:
+      break;
+    case StrategyStep::SpreadEquallyOverAllRanks:
+      {
+   	    int cellsPerRank = std::max( static_cast<int>(std::round(_globalNumberOfInnerUnrefinedCell / tarch::mpi::Rank::getInstance().getNumberOfRanks())), 1 );
+
+        _hasSpreadOutOverAllRanks = true;
+
+        for (int targetRank=1; targetRank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); targetRank++ ) {
+          triggerSplit(0, cellsPerRank, targetRank);
+        }
+      }
+      break;
+    case StrategyStep::SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning:
+      {
+   	    int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
+   	    if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
+   	      int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
+   	      int cellsPerCore      = std::min(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
+   	      logInfo( "finishStep()", "insufficient number of cores occupied on this rank, so split " << cellsPerCore << " cells iteratively from tree " << heaviestSpacetree << " on local rank (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
+   	      double maxSplits = 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads() - static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size());
+   	      while (
+   	        numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize()
+   	        and
+   	        maxSplits>0
+   	      ) {
+   	        triggerSplit(heaviestSpacetree, cellsPerCore, tarch::mpi::Rank::getInstance().getRank());
+   	        numberOfLocalUnrefinedCellsOfHeaviestSpacetree -= cellsPerCore;
+   	        maxSplits -= 1.0;
+   	      }
+   	    }
+      }
+      break;
+    case StrategyStep::SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning:
+      {
+        int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
+        if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
+          int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
+          if ( numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize() ) {
+            logInfo(
+              "finishStep()",
+              "biggest local tree " << heaviestSpacetree << " is too heavy as it hosts " <<
+              numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " cells (max size should be " << getMaximumSpacetreeSize() << ")"
+            );
+            int cellsPerCore      = getMaximumSpacetreeSize();
+            logInfo(
+              "finishStep()",
+              "lightest global rank is rank " << _lightestRank << ", so assign this rank " << cellsPerCore << " cell(s)"
+            );
+            triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
+          }
+        }
+      }
+      break;
+  }
+
+  dumpStatistics();
 }
 
 

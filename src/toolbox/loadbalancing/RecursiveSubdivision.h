@@ -119,13 +119,33 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     RecursiveSubdivision(double percentageOfCoresThatShouldInTheoryGetAtLeastOneCell=0.8);
     ~RecursiveSubdivision();
 
+    /**
+     * Triggers actual load balancing data exchange, triggers reblaancing, and
+     * dumps statistics.
+     */
     void finishStep();
 
     /**
-     * I need the stats here mainly for debugging purposes.
+     * I need the stats here mainly for debugging purposes. The load balancing
+     * alread dumps information per time step. This routine however is more
+     * elaborate/detailed and not used by default.
      */
-    void dumpStatistics();
+    std::string toString() const;
   private:
+    enum class StrategyStep {
+      Wait,
+	  SpreadEquallyOverAllRanks,
+	  SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning,
+	  SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning
+    };
+
+    static std::string toString( StrategyStep step );
+
+    /**
+     * Analyse current global situation and commit to a strategy
+     */
+    StrategyStep getStrategyStep() const;
+
     /**
      * Is used by tree identification and either indicates that there are no trees
      * at all or means that the heaviest tree is on the blacklist. See implementation
@@ -191,7 +211,7 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      */
     void triggerSplit( int sourceTree, int numberOfCells, int targetRank );
 
-    bool isInCoolDownPhase();
+    void updateCoolDownState();
 
     #ifdef Parallel
     MPI_Request*    _globalSumRequest;
