@@ -21,7 +21,7 @@ Please remember to add the --with-exahype argument to configure.
 Before we start, please edit Euler.cpp and set the refinement criterion as follows:
 
 
-  const double MaxHOfVolume  = 1.0/3.0/3.0/  3.0/    13.0 * 0.9;
+  const double MaxHOfVolume  = 1.0/3.0/3.0/_NumberOfFiniteVolumesPerAxisPerPatch*0.9;
 
 
 After these two edits, I run the following steps to build the executable:
@@ -63,4 +63,10 @@ sbatch example-scripts/Hamilton-single-node.slurm-script
 
 export PYTHONPATH=../../../..
 python3 ../../../../exahype2/postprocessing/plot-scaling.py results-Hamilton-tbb.tar.gz
+
+Unpack the archive and run 
+
+python3 ../../../../../src/toolbox/loadbalancing/plot-load-distribution.py
+
+on the files of interest.
 

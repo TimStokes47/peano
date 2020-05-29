@@ -130,18 +130,19 @@ class Project(object):
     self._project.output.makefile.set_dimension(self._dimensions)
     
 
-  def set_global_simulation_parameters(self,dimensions,offset,size,terminal_time,first_plot_time_stamp,time_in_between_plots):
+  def set_global_simulation_parameters(self,dimensions,offset,size,end_time,first_plot_time_stamp,time_in_between_plots):
     """
     
       offset and size should be lists with dimensions double entries.
       
+      first_plot_time_stamp Is irrelevant if time_in_between_plots equals zero
       time_in_between_plots Set to zero if you don't want to have any plots
       
     """
     self._domain_offset = offset
     self._domain_size   = size
     self._dimensions    = dimensions
-    self._terminal_time = terminal_time
+    self._terminal_time = end_time
     self._first_plot_time_stamp = first_plot_time_stamp
     self._time_in_between_plots = time_in_between_plots
     
