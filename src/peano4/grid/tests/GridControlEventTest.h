@@ -27,7 +27,25 @@ class peano4::grid::tests::GridControlEventTest: public tarch::tests::TestCase {
      */
     static tarch::logging::Log _log;
 
-    void testConsolidate();
+    /**
+     * From a debugging session:
+     *
+     <pre>
+
+ 69568402     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                (refinementControl=Refine,offset=[-0.0333333,-0.0333333],width=[0.4,0.4],h=[0.111111,0.111111])
+ 69600708     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                (refinementControl=Refine,offset=[0.3,-0.0333333],width=[0.4,0.4],h=[0.111111,0.111111])
+ 69630098     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                (refinementControl=Refine,offset=[0.633333,-0.0333333],width=[0.4,0.4],h=[0.111111,0.111111])
+ 69658414     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                (refinementControl=Refine,offset=[0.633333,0.3],width=[0.4,0.4],h=[0.111111,0.111111])
+ 69739708     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                (refinementControl=Refine,offset=[0.3,0.3],width=[0.4,0.4],h=[0.111111,0.111111])
+ 69769194     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                (refinementControl=Refine,offset=[-0.0333333,0.3],width=[0.4,0.4],h=[0.111111,0.111111])
+ 69797019     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                (refinementControl=Refine,offset=[-0.0333333,0.633333],width=[0.4,0.4],h=[0.111111,0.111111])
+ 69824642     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                (refinementControl=Refine,offset=[0.3,0.633333],width=[0.4,0.4],h=[0.111111,0.111111])
+ 69852630     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                (refinementControl=Refine,offset=[0.633333,0.633333],width=[0.4,0.4],h=[0.111111,0.111111])
+ 69894892     00:00:00     rank:0       core:0       info         peano4::grid::consolidate(...)                                1: (refinementControl=Refine,offset=[0.633333,0.3],width=[0.4,0.733333],h=[0.111111,0.111111])
+
+     </pre>
+     */
+    void testMerge();
 
   public:
     GridControlEventTest();

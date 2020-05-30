@@ -36,7 +36,7 @@ std::string toString( exahype2::RefinementCommand value );
  */
 class exahype2::RefinementControl {
   public:
-    RefinementControl(double tolerance = 0.2);
+    RefinementControl(double tolerance = 0.1);
 
     void clear();
 
