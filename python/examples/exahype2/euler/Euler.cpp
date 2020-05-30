@@ -15,8 +15,7 @@ tarch::logging::Log   examples::exahype2::euler::Euler::_log( "examples::exahype
 ) {
   logTraceInWith3Arguments( "refinementCriterion(...)", x, h, t );
   ::exahype2::RefinementCommand result = ::exahype2::RefinementCommand::Keep;
-  //const double MaxHOfVolume  = 1.0/3.0/3.0/13.0 * 0.9;
-  const double MaxHOfVolume  = 1.0/3.0/3.0/_NumberOfFiniteVolumesPerAxisPerPatch*0.9;
+  const double MaxHOfVolume  = 1.0/3.0/_NumberOfFiniteVolumesPerAxisPerPatch*0.9;
 
   if (tarch::la::equals(t,0.0) and tarch::la::max(h)>MaxHOfVolume) {
     result = ::exahype2::RefinementCommand::Refine;

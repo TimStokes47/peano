@@ -22,7 +22,7 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
   def get_body_of_getGridControlEvents(self):
     return """
   auto result = _globalRefinementControl.getGridControlEvents();
-  _globalRefinementControl.clear();
+  //_globalRefinementControl.clear();
   return result;
 """ 
 
