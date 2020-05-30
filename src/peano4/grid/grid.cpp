@@ -4,22 +4,20 @@
 
 
 
-std::vector< peano4::grid::GridControlEvent > peano4::grid::consolidate( std::vector< GridControlEvent>   events ) {
+std::vector< peano4::grid::GridControlEvent > peano4::grid::merge( std::vector< GridControlEvent>   events, const double Tolerance ) {
   static tarch::logging::Log _log( "peano4::grid" );
-  logTraceInWith1Argument( "consolidate(...)", events.size() );
+  logTraceInWith1Argument( "merge(...)", events.size() );
 
-  bool hasFusedOrErasedEvents = true;
+  const auto inputSetSize = events.size();
 
   std::vector< peano4::grid::GridControlEvent > result;
-  while (not events.empty() and hasFusedOrErasedEvents) {
-    hasFusedOrErasedEvents = false;
-
+  while (not events.empty()) {
     peano4::grid::GridControlEvent currentEvent = events.back();
     events.pop_back();
 
     for ( std::vector< GridControlEvent >::iterator i = events.begin(); i!=events.end(); ) {
-      auto boundingEventOffset = tarch::la::min( i->getOffset(), currentEvent.getOffset() );
-      auto boundingEventSize   = tarch::la::max( i->getOffset()+i->getWidth(), currentEvent.getOffset()+currentEvent.getWidth() ) - boundingEventOffset;
+      tarch::la::Vector<Dimensions,double> boundingEventOffset = tarch::la::min( i->getOffset(), currentEvent.getOffset() );
+      tarch::la::Vector<Dimensions,double> boundingEventSize   = tarch::la::max( i->getOffset()+i->getWidth(), currentEvent.getOffset()+currentEvent.getWidth() ) - boundingEventOffset;
       if (
         i->getRefinementControl()==GridControlEvent::RefinementControl::Refine
         and
@@ -27,7 +25,7 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::consolidate( std::ve
         and
         tarch::la::equals( i->getH(), currentEvent.getH() )
         and
-        tarch::la::volume(boundingEventSize) <= 1.1 * (tarch::la::volume(i->getWidth()) + tarch::la::volume(currentEvent.getWidth()))
+        tarch::la::volume(boundingEventSize) <= (1.0+Tolerance) * (tarch::la::volume(i->getWidth()) + tarch::la::volume(currentEvent.getWidth()))
       ) {
     	currentEvent = GridControlEvent(
           GridControlEvent::RefinementControl::Refine,
@@ -43,8 +41,9 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::consolidate( std::ve
     result.push_back( currentEvent );
   }
 
-  logTraceOutWith1Argument( "consolidate(...)", result.size() );
-  return events;
+  logTraceOutWith1Argument( "merge(...)", result.size() );
+  assertion( result.size()<=inputSetSize );
+  return result.size()<inputSetSize ? merge(result) : result;
 }
 
 

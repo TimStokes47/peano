@@ -129,7 +129,7 @@ if success:
   # original dump is not enriched/overwritten:
   #
   # mkdir output
-  # ../../../../src/visualisation/convert apply-filter solutionEuler.peano-patch-file EulerQ output plot-domain-decomposition DD
+  # rm output/*; ../../../../src/visualisation/convert apply-filter solutionEuler.peano-patch-file EulerQ output plot-domain-decomposition DD; ../../../../src/visualisation/convert apply-filter output/solutionEuler.peano-patch-file DD     output extract-fine-grid finegridDD; ../../../../src/visualisation/convert apply-filter output/solutionEuler.peano-patch-file EulerQ output extract-fine-grid finegridQ; ../../../../src/visualisation/convert convert-file output/solutionEuler.peano-patch-file all    output vtu
   #
   convert = peano4.visualisation.Convert( "solutionEuler", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )

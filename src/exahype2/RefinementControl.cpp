@@ -36,7 +36,8 @@ std::string toString( exahype2::RefinementCommand value ) {
 tarch::logging::Log  exahype2::RefinementControl::_log( "exahype2::RefinementControl" );
 
 
-exahype2::RefinementControl::RefinementControl() {
+exahype2::RefinementControl::RefinementControl(double tolerance):
+  _Tolerance( tolerance ) {
 }
 
 
@@ -59,15 +60,17 @@ void exahype2::RefinementControl::addCommand(
   bool                                         invokedByGridConstruction
 ) {
   logTraceInWith4Arguments( "addCommand()", x, h, toString(command), invokedByGridConstruction );
-  const double Tolerance = 0.10;
   switch (command) {
     case ::exahype2::RefinementCommand::Refine:
       {
+        tarch::la::Vector<Dimensions,double> expandedH = (1.0+_Tolerance) * h;
+        tarch::la::Vector<Dimensions,double> shift     = 0.5 * _Tolerance * h;
+
         peano4::grid::GridControlEvent newEvent(
           peano4::grid::GridControlEvent::RefinementControl::Refine,
-          x-h*(1.0+Tolerance/2.0),
-          h*(1.0+Tolerance),
-          h/3.0*(1.0+Tolerance)
+          x-0.5 * h - shift,
+		  expandedH,
+		  1.0/3.0 * h
         );
         _events.push_back( newEvent );
         logDebug( "addCommend()", "added refinement for x=" << x << ", h=" << h << ": " << newEvent.toString() << " (total of " << _events.size() << " instructions)" );

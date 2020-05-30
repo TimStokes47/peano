@@ -36,7 +36,7 @@ std::string toString( exahype2::RefinementCommand value );
  */
 class exahype2::RefinementControl {
   public:
-    RefinementControl();
+    RefinementControl(double tolerance = 0.1);
 
     void clear();
 
@@ -56,6 +56,11 @@ class exahype2::RefinementControl {
     void merge( const RefinementControl& control );
   private:
 	  static tarch::logging::Log  _log;
+
+	  /**
+	   * We blow up the region around refinement criterion slightly.
+	   */
+	  const double _Tolerance;
 
 	  std::vector< peano4::grid::GridControlEvent >  _events;
 };
