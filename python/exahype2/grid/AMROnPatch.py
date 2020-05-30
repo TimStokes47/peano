@@ -21,9 +21,7 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
   
   def get_body_of_getGridControlEvents(self):
     return """
-  auto result = _globalRefinementControl.getGridControlEvents();
-  //_globalRefinementControl.clear();
-  return result;
+  return _globalRefinementControl.getGridControlEvents();
 """ 
 
 
@@ -36,17 +34,13 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
     if operation_name==peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
       result = """
   _localRefinementControl.clear();
+  _globalRefinementControl.startToAccumulateLocally();
 """
 
     if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       result = """
-  {{
-    static tarch::multicore::BooleanSemaphore semaphore;
-    tarch::multicore::Lock                    lock(semaphore);
-    _globalRefinementControl.merge( _localRefinementControl );
-  }}
+  _globalRefinementControl.merge( _localRefinementControl );
 """
-    #OPERATION_END_TRAVERSAL
     
     result += super(AMROnPatch,self).get_body_of_operation(operation_name)
     return result
@@ -66,8 +60,5 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
   def get_includes(self):
     return """
 #include <functional>
-
-#include "tarch/multicore/BooleanSemaphore.h"
-#include "tarch/multicore/Lock.h"
 """ + self.additional_includes
   

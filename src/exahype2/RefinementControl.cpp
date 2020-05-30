@@ -1,4 +1,8 @@
 #include "RefinementControl.h"
+#include "tarch/multicore/Lock.h"
+
+
+tarch::multicore::BooleanSemaphore  exahype2::RefinementControl::_semaphore;
 
 
 exahype2::RefinementCommand exahype2::getDefaultRefinementCommand() {
@@ -37,19 +41,21 @@ tarch::logging::Log  exahype2::RefinementControl::_log( "exahype2::RefinementCon
 
 
 exahype2::RefinementControl::RefinementControl(double tolerance):
-  _Tolerance( tolerance ) {
+  _Tolerance( tolerance ),
+  _accumulatingCopiesOfGlobalObject(0) {
 }
 
 
 void exahype2::RefinementControl::clear() {
   logDebug( "clear()", "clear list of control events" );
   _events.clear();
+  _validEventsFromPreviousSweeps.clear();
 }
 
 
 std::vector< peano4::grid::GridControlEvent >  exahype2::RefinementControl::getGridControlEvents() const {
   logDebug( "getGridControlEvents()", "return " << _events.size() << " grid control events" );
-  return _events;
+  return _validEventsFromPreviousSweeps;
 }
 
 
@@ -90,5 +96,23 @@ void exahype2::RefinementControl::addCommand(
 
 
 void exahype2::RefinementControl::merge( const RefinementControl& control ) {
+  tarch::multicore::Lock lock(_semaphore);
   _events.insert( _events.end(), control._events.begin(), control._events.end() );
+
+  _accumulatingCopiesOfGlobalObject--;
+
+  assertion(_accumulatingCopiesOfGlobalObject>=0);
+
+  if (_accumulatingCopiesOfGlobalObject==0 and not _events.empty()) {
+	logDebug( "merge(...)", "have got back the data from all other controls and accumulated new control set is not empty, so roll over" );
+    _validEventsFromPreviousSweeps = _events;
+    _events.clear();
+  }
 }
+
+
+void exahype2::RefinementControl::startToAccumulateLocally() {
+  tarch::multicore::Lock lock(_semaphore);
+  _accumulatingCopiesOfGlobalObject++;
+}
+

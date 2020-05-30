@@ -56,9 +56,7 @@ class AMRKernel(ActionSet):
   
   def get_body_of_getGridControlEvents(self):
     return """
-  auto result = _globalRefinementControl.getGridControlEvents();
-  //_globalRefinementControl.clear();
-  return result;
+  return _globalRefinementControl.getGridControlEvents();
 """ 
 
 
@@ -96,17 +94,14 @@ class AMRKernel(ActionSet):
     if operation_name==ActionSet.OPERATION_BEGIN_TRAVERSAL:
       result = """
   _localRefinementControl.clear();
+  _globalRefinementControl.startToAccumulateLocally();
 """
     if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = self.__Template_TouchCellFirstTime.format(**self.d)
       pass 
     if operation_name==ActionSet.OPERATION_END_TRAVERSAL:
       result = """
-  {{
-    static tarch::multicore::BooleanSemaphore semaphore;
-    tarch::multicore::Lock                    lock(semaphore);
-    _globalRefinementControl.merge( _localRefinementControl );
-  }}
+  _globalRefinementControl.merge( _localRefinementControl );
 """
     return result
 
@@ -131,6 +126,4 @@ class AMRKernel(ActionSet):
     return """
 #include "exahype2/RefinementControl.h"
 #include "SolverRepository.h"
-#include "tarch/multicore/BooleanSemaphore.h"
-#include "tarch/multicore/Lock.h"
 """

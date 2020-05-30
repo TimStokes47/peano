@@ -433,7 +433,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   }
 
   // I use this boolean flag from time to time to debug the code.
-  const bool runSequentially = true;
+  const bool runSequentially = false;
 
   logDebug( "traverse(TraversalObserver&)", "kick off primary tree sweeps: " << primaryTasks.size() << " task(s)" );
   if ( not primaryTasks.empty() ) {
