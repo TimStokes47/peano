@@ -100,12 +100,20 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
 }
 
 
-int toolbox::loadbalancing::RecursiveSubdivision::getMaximumSpacetreeSize() const {
-  return std::round( std::max(
-    _globalNumberOfInnerUnrefinedCell
-     / tarch::mpi::Rank::getInstance().getNumberOfRanks()
-     / tarch::multicore::Core::getInstance().getNumberOfThreads()
-     / 2, 1.0 ));
+int toolbox::loadbalancing::RecursiveSubdivision::getMaximumSpacetreeSize(int localSize) const {
+  const double alphaP = _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell
+		              * tarch::mpi::Rank::getInstance().getNumberOfRanks()
+    	              * tarch::multicore::Core::getInstance().getNumberOfThreads();
+
+  double k      = 1.0;
+  double result = localSize - 1;
+
+  while ( localSize - result < result ) {
+	k      += 1.0;
+	result  = _globalNumberOfInnerUnrefinedCell / alphaP / k;
+  }
+
+  return std::max(  static_cast<int>(std::round(result)),  1 );
 }
 
 
@@ -149,7 +157,6 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateCoolDownState() {
   else if ( not _isInCoolDownPhase and _totalNumberOfSplits<tarch::multicore::Core::getInstance().getNumberOfThreads() ) {
   }
   else {
-    logInfo( "isInCoolDownPhase()", "lots of splits triggered, enter cool-down phase, i.e. postpone further splits" );
     _isInCoolDownPhase = true;
   }
 }
@@ -250,7 +257,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
    	    int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
    	    if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
    	      int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(heaviestSpacetree).getNumberOfLocalUnrefinedCells();
-   	      int cellsPerCore      = std::min(numberOfLocalUnrefinedCellsOfHeaviestSpacetree/2,getMaximumSpacetreeSize());
+   	      int cellsPerCore      = getMaximumSpacetreeSize(numberOfLocalUnrefinedCellsOfHeaviestSpacetree);
    	      logInfo( "finishStep()", "insufficient number of cores occupied on this rank, so split " << cellsPerCore << " cells iteratively from tree " << heaviestSpacetree << " on local rank (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
    	      double maxSplits = 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads() - static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size());
    	      while (
@@ -276,7 +283,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
               "biggest local tree " << heaviestSpacetree << " is too heavy as it hosts " <<
               numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " cells (max size should be " << getMaximumSpacetreeSize() << ")"
             );
-            int cellsPerCore      = getMaximumSpacetreeSize();
+            int cellsPerCore      = getMaximumSpacetreeSize(numberOfLocalUnrefinedCellsOfHeaviestSpacetree);
             logInfo(
               "finishStep()",
               "lightest global rank is rank " << _lightestRank << ", so assign this rank " << cellsPerCore << " cell(s)"

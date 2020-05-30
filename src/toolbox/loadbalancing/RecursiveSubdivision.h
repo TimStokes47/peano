@@ -180,7 +180,35 @@ class toolbox::loadbalancing::RecursiveSubdivision {
 
     void updateGlobalView();
 
-    int getMaximumSpacetreeSize() const;
+    /**
+     * Determine the maximum spacetree size
+     *
+     * The maximum size in principle is the total number of cells divided by
+     * all possible spacetrees. The latter is in principle the number of ranks
+     * times the number of cores (p), though we allow users to diminish this number
+     * slightly due to _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell. I
+     * call this one @f$ \alpha @f$ below. So we have in principle the situation
+     * that the maximum spacetree size
+     *
+     * @f$
+       n_{\text{max}} = \frac{N_{\text{global}}}{\alpha p} \cdot \frac{1}{k}
+       @f$
+     *
+     * with a natural number k>1. If we follow this approach, we can end up with
+     * situations where we have 400 cells in a local partition, the optimal
+     * number of cells might be 399. Such situations arise with AMR but also
+     * throughout the top-down grid construction. In this case, we'd end up with
+     * a remaining partition of 10 which is not what we want. Therefore I make the
+     * equation above subject to the constraint
+     *
+     * @f$
+       n_{\text{local}} - n_{\text{max}} \geq n_{\text{max}}
+       @f$
+     *
+     * with an as small k as possible. I determine this k iteratively. We see that
+     * the constraint is trivially preserved for the default parameter.
+     */
+    int getMaximumSpacetreeSize(int localSize = std::numeric_limits<int>::max()) const;
 
     /**
      * Determines the maximum spacetree size a tree should have in the
