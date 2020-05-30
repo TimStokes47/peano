@@ -87,12 +87,11 @@ class {FULL_QUALIFIED_CLASSNAME} {{
       double                                       t
     );
 
-    /**
-     * @param QCell These are all unknowns of the complete cell.
-     */
-    void solveLowerTriangle(
+    void projectOntoFaces(
       double* QCell,
       double* QLeftFace,
+      double* QBottomFace,
+      double* QRightFace,
       double* QUpperFace,
       const tarch::la::Vector<Dimensions,double>&  cellCentre,
       const tarch::la::Vector<Dimensions,double>&  cellH,
