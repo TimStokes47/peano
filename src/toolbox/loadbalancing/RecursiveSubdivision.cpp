@@ -288,7 +288,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
               "finishStep()",
               "lightest global rank is rank " << _lightestRank << ", so assign this rank " << cellsPerCore << " cell(s)"
             );
-            triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
+            //triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
           }
         }
       }
