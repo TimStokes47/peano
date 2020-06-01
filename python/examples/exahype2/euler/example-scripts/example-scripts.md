@@ -18,13 +18,7 @@ See guidebook instructions how to configure the single node environment.
 Please remember to add the --with-exahype argument to configure. 
 
 
-Before we start, please edit Euler.cpp and set the refinement criterion as follows:
-
-
-  const double MaxHOfVolume  = 1.0/3.0/3.0/_NumberOfFiniteVolumesPerAxisPerPatch*0.9;
-
-
-After these two edits, I run the following steps to build the executable:
+I run the following steps to build the executable:
 
 export PYTHONPATH=../../..
 python3 example-scripts/finitevolumes-with-ExaHyPE2-shared-memory-benchmark.py
