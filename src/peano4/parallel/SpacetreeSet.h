@@ -409,6 +409,24 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * might drop in and I might consider it to be another part one. That may not
      * happen. So as soon as the iprobe says "go", I switch to blocking data
      * exchange here.
+     *
+     * The same holds for certain phases of the algorithm: We may not insert or
+     * remove trees from the global data structure while we are still traversing
+     * some local trees or run some data exchange. I originally tried to protect
+     * the whole code by a _state==SpacetreeSetState::Waiting check, i.e. to make
+     * the set react if and only if we are not doing anything anyway. That did
+     * not work properly, as tree requests for example are to be handled
+     * immediatly. So what I do now is that I pipe all requests into a vector.
+     * Then, I run through the vector and, depending on the set state, do answer
+     * messages or leave them in the queue for the time being.
+     *
+     * This approach leads to errors whenever a message send-out is followed by
+     * a second message that provides further details. The first message might be
+     * buffered locally, and, as we can't answer the first one immediately, the
+     * second message (of another datatype) will be interpreted as yet another
+     * request. So that means that every single message exchange with the set
+     * always has to be follow a send-acknowledge pattern.
+     *
      */
     void receiveDanglingMessages() override;
 

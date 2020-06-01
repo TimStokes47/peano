@@ -81,8 +81,6 @@ std::string peano4::parallel::SpacetreeSet::toString( SpacetreeSetState state ) 
 
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
   #ifdef Parallel
-  // @todo Kann halt net immer alles beantworten, da ich lokalen Status net zerstoeren darf
-  // @todo Muss ich manuell mal anstossen
   static std::vector<peano4::parallel::TreeManagementMessage>   unansweredMessages;
 
   if ( peano4::parallel::TreeManagementMessage::isMessageInQueue(_requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator()) ) {
@@ -109,7 +107,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           peano4::parallel::TreeManagementMessage answerMessage;
           answerMessage.setWorkerSpacetreeId( newSpacetreeId );
           answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
-          peano4::parallel::TreeManagementMessage::sendAndPollDanglingMessages(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()) );
+          peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()) );
           logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << p->getMasterSpacetreeId() );
           p = unansweredMessages.erase(p);
         }
@@ -117,6 +115,10 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       case peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree:
         {
           if ( _state==SpacetreeSetState::Waiting ) {
+            peano4::parallel::TreeManagementMessage answerMessage;
+            answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
+            peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()) );
+
             peano4::grid::AutomatonState state;
             peano4::grid::AutomatonState::receive( state, p->getSenderRank(), _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
             peano4::grid::Spacetree newTree(
@@ -129,10 +131,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
             _spacetrees.push_back( std::move(newTree) );
             logDebug( "receiveDanglingMessages(...)", "created the new tree " << _spacetrees.back().toString() );
 
-            peano4::parallel::TreeManagementMessage answerMessage;
-            answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
-            //const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(message.getMasterSpacetreeId(),message.getWorkerSpacetreeId(),peano4::parallel::Node::ExchangeMode::ForkJoinData);
-            peano4::parallel::TreeManagementMessage::sendAndPollDanglingMessages(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()) );
+            peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()) );
             p = unansweredMessages.erase(p);
           }
           else {
@@ -176,13 +175,16 @@ void peano4::parallel::SpacetreeSet::addSpacetree( int masterId, int newTreeId )
     message.setAction( TreeManagementMessage::Action::CreateNewRemoteTree );
     TreeManagementMessage::send( message,  targetRank, _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
 
+    TreeManagementMessage::receive( message,  targetRank, getAnswerTag(masterId), tarch::mpi::Rank::getInstance().getCommunicator() );
+    assertion(message.getAction()==TreeManagementMessage::Action::Acknowledgement);
+
     const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(masterId,newTreeId,peano4::parallel::Node::ExchangeMode::VerticalData);
     peano4::grid::AutomatonState state = _spacetrees.begin()->_root;
 
     logDebug( "addSpacetree(int,int)", "send state " << state.toString() << " to rank " << targetRank << " via tag " << tag );
     peano4::grid::AutomatonState::send( state, targetRank, _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
-    TreeManagementMessage::receive( message,  targetRank, getAnswerTag(masterId), tarch::mpi::Rank::getInstance().getCommunicator() );
 
+    TreeManagementMessage::receive( message,  targetRank, getAnswerTag(masterId), tarch::mpi::Rank::getInstance().getCommunicator() );
     assertion(message.getAction()==TreeManagementMessage::Action::Acknowledgement);
     #else
     assertionMsg( false, "should never enter this branch without -DParallel" );
