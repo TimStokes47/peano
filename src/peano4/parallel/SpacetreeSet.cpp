@@ -68,6 +68,17 @@ int peano4::parallel::SpacetreeSet::getAnswerTag( int targetSpacetreeId ) const 
 }
 
 
+std::string peano4::parallel::SpacetreeSet::toString( SpacetreeSetState state ) {
+  switch (state) {
+    case SpacetreeSetState::TraverseTreesAndExchangeData:
+      return "traverse-trees-and-exchange-data";
+    case SpacetreeSetState::Waiting:
+      return "waiting";
+  }
+  return "undef";
+}
+
+
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
   #ifdef Parallel
   if ( peano4::parallel::TreeManagementMessage::isMessageInQueue(_requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator()) ) {
@@ -92,7 +103,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
         break;
       case peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree:
         {
-          assertion( _state==SpacetreeSetState::Waiting );
+          assertion1( _state==SpacetreeSetState::Waiting, toString(_state) );
           peano4::grid::AutomatonState state;
           peano4::grid::AutomatonState::receive( state, message.getSenderRank(), _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
           peano4::grid::Spacetree newTree(

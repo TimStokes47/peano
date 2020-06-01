@@ -178,6 +178,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
       TraverseTreesAndExchangeData
     };
 
+    static std::string toString( SpacetreeSetState state );
+
     /**
      * I use this tag to identify messages send from one tree to another rank.
      * All answers go through an answer tag. To identify the right one, please

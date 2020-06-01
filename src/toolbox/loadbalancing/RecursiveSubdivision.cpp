@@ -181,16 +181,16 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
   if (
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > peano4::parallel::Node::MaxSpacetreesPerRank/4*3
   ) {
-	logDebug( "getStrategyStep()", "afraid to use too many trees and overbook system" );
+    logDebug( "getStrategyStep()", "afraid to use too many trees and overbook system" );
     return StrategyStep::Wait;
   }
 
   if (
     static_cast<double>(_globalNumberOfInnerUnrefinedCell)
-	<
-	_PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell * std::min(
+    <
+    _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell * std::min(
       tarch::mpi::Rank::getInstance().getNumberOfRanks(),
-	  tarch::multicore::Core::getInstance().getNumberOfThreads()
+      tarch::multicore::Core::getInstance().getNumberOfThreads()
     )
   ) {
     return StrategyStep::Wait;
@@ -213,9 +213,20 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
   if (
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
     and
+    static_cast<double>(_localNumberOfInnerUnrefinedCell)
+    <
+    _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell *
+    tarch::multicore::Core::getInstance().getNumberOfThreads()
+  ) {
+    return StrategyStep::Wait;
+  }
+
+  if (
+    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
+    and
     static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell * tarch::multicore::Core::getInstance().getNumberOfThreads()
   ) {
-	return StrategyStep::SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning;
+    return StrategyStep::SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning;
   }
 
   if (
@@ -235,8 +246,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   updateBlacklist();
   updateCoolDownState();
 
-  // @todo Debug
-  logInfo( "finishStep()", toString( getStrategyStep() ) );
+  logDebug( "finishStep()", toString( getStrategyStep() ) );
 
   switch ( getStrategyStep() ) {
     case StrategyStep::Wait:
@@ -288,7 +298,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
               "finishStep()",
               "lightest global rank is rank " << _lightestRank << ", so assign this rank " << cellsPerCore << " cell(s)"
             );
-            //triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
+            triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
           }
         }
       }
