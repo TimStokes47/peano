@@ -400,6 +400,17 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * We poll the tree management messages.
      *
      * If a new spacetree request drops in, we book the tree and send it back.
+     * The following messages are received/handled:
+     *
+     * - Action::RequestNewRemoteTree (invoked by split())
+     * - Action::CreateNewRemoteTree (invoked by addSpacetree(int,int))
+     * - Action::RemoveChildTreeFromBooksAsChildBecameEmpty (invoked by cleanUpTrees())
+     *
+     * split() is something any rank can trigger at any time. Most default load
+     * balancers call it throuhout the end of the grid sweep. addSpacetree() is
+     * called by the set through createNewTrees() just before all observers are
+     * deleted and the traversal terminates. cleanUpTrees() just arises before
+     * that one.
      *
      * <h2> Message exchange modes </h2>
      *
