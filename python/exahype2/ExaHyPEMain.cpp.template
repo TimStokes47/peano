@@ -2,11 +2,8 @@
 #include "Constants.h"
 
 #include "tarch/logging/Log.h"
-#include "tarch/logging/LogFilter.h"
-#include "tarch/logging/LogFilterFileReader.h"
 
 #include "tarch/multicore/multicore.h"
-#include "tarch/multicore/Core.h"
 
 #include "peano4/peano.h"
 #include "peano4/grid/Spacetree.h"
@@ -22,7 +19,9 @@
 
 #include "peano4/UnitTests.h"
 #include "tarch/UnitTests.h"
+
 #include "exahype2/NonCriticalAssertions.h"
+#include "exahype2/UserInterface.h"
 
 
 
@@ -146,167 +145,25 @@ void step() {{
 }}
 
 
-void setDefaultLogStatements() {{
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "peano4", 
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "peano4", 
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetInfo, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "peano4", 
-      tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
-    ));
-  
-   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-       tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "tarch", 
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-     "tarch", 
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetInfo, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "tarch", 
-      tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
-    ));
-
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetDebug,
-      tarch::logging::LogFilter::FilterListEntry::AnyRank,
-      "{FULL_NAMESPACE}",
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetTrace,
-      tarch::logging::LogFilter::FilterListEntry::AnyRank,
-      "{FULL_NAMESPACE}",
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetInfo,
-      tarch::logging::LogFilter::FilterListEntry::AnyRank,
-      "{FULL_NAMESPACE}",
-      tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
-    ));
-
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "exahype2",
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "exahype2",
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetInfo, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "exahype2",
-      tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
-    ));
-
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetDebug, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "toolbox",
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetTrace, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "toolbox",
-      tarch::logging::LogFilter::FilterListEntry::BlackListEntry
-    ));
-    tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-      tarch::logging::LogFilter::FilterListEntry::TargetInfo, 
-      tarch::logging::LogFilter::FilterListEntry::AnyRank, 
-      "toolbox",
-      tarch::logging::LogFilter::FilterListEntry::WhiteListEntry
-    ));
-}}  
 
 
-void printUsage(char** argv) {{
-  std::cout << "Usage: ./" << argv[0] << " [options]" << std::endl <<
-"ExaHyPE 2 - an Exascale Hyperbolic PDE Engine (version 2) \n\
-www.peano-framework.org \n\
-\n \
-Options: \n\
-  -h, --help                 Display help on commandline options. \n\
-  --threads <no>             Specify how many threads to use (per rank). Option \n\
-                             has no meaning if code base has not been \n\
-                             translated with shared memory support. \n\
-  --log-filter-file <file>   Specify which log filter file to use. Default file \n\
-                             is exahype.log-filter \n\
-  --timeout <t>              Set timeout. t is given in seconds and can be 0 to \n\
-                             switch timeouts off. \n\
-";
-}}
   
   
 int main(int argc, char** argv) {{
-  const int ExitCodeSuccess         = 0;
-  const int ExitCodeUnitTestsFailed = 1;
-  
-  if (
-    (argc==2 and std::string(argv[1]).compare( "--help" )!=std::string::npos)
-    or
-    (argc==2 and std::string(argv[1]).compare( "-h" )!=std::string::npos)
-    or
-    (argc%2!=1)
-  ) {{
-    printUsage(argv);
-    return 1;
-  }}
-  
-  std::string logFilterFile = "exahype.log-filter";
-  int         cores         = tarch::multicore::Core::UseDefaultNumberOfThreads;
-
-  for (int argument=1; argument<argc; argument+=2) {{
-    std::string select = argv[argument];
-    if ( select.compare( "--threads" ) != std::string::npos ) {{
-      cores = std::atoi(argv[argument+1]);
-      tarch::multicore::Core::getInstance().configure( cores );
-    }}
-    else if ( select.compare( "--log-filter-file" ) != std::string::npos ) {{
-      logFilterFile = argv[argument+1];
-    }}
-    else {{
-      printUsage(argv);
-      return 1;
-    }}
-  }}
-  
-  if ( not tarch::logging::LogFilterFileReader::parsePlainTextFile( logFilterFile ) ) {{
-    logWarning( "main()", "no exahype.log-filter file found or file has been corrupted. Use default logging configuration" );
-    setDefaultLogStatements();
-  }}
+  const int ExitCodeSuccess          = 0;
+  const int ExitCodeUnitTestsFailed  = 1;
+  const int ExitCodeInvalidArguments = 2;
   
   peano4::initParallelEnvironment(&argc,&argv);
   exahype2::initNonCritialAssertionEnvironment();
   peano4::fillLookupTables();
+
+  if (not exahype2::parseCommandLineArguments(argc,argv) ) {{
+    return ExitCodeInvalidArguments;
+  }}
   
   {FULL_NAMESPACE}::observers::DataRepository::initDatatypes();
   
-
   #if PeanoDebug>=2
   tarch::tests::TestCase* peanoCoreTests = peano4::getUnitTests();
   peanoCoreTests->run();
