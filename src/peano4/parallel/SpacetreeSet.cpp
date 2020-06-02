@@ -107,7 +107,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           peano4::parallel::TreeManagementMessage answerMessage;
           answerMessage.setWorkerSpacetreeId( newSpacetreeId );
           answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
-          peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()) );
+          peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
           logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << p->getMasterSpacetreeId() );
           p = unansweredMessages.erase(p);
         }
@@ -117,7 +117,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           if ( _state==SpacetreeSetState::Waiting ) {
             peano4::parallel::TreeManagementMessage answerMessage;
             answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
-            peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()) );
+            peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
 
             peano4::grid::AutomatonState state;
             peano4::grid::AutomatonState::receive( state, p->getSenderRank(), _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
@@ -128,10 +128,12 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
               state.getH(),
               state.getInverted()
             );
+
+
             _spacetrees.push_back( std::move(newTree) );
             logDebug( "receiveDanglingMessages(...)", "created the new tree " << _spacetrees.back().toString() );
 
-            peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()) );
+            peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
             p = unansweredMessages.erase(p);
           }
           else {
@@ -514,6 +516,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   createNewTrees();
 
   deleteClonedObservers();
+
+// @todo Docu
+  tarch::mpi::Rank::getInstance().barrier();
 
   logTraceOut( "traverse(TraversalObserver&)" );
 }
