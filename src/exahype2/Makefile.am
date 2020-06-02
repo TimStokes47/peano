@@ -11,6 +11,7 @@ ExaHyPE2Sources = \
   NonCriticalAssertions.cpp \
   PatchUtils.cpp \
   RefinementControl.cpp \
+  UserInterface.cpp \
   fv/BoundaryConditions.cpp \
   fv/Generic.cpp \
   fv/Rusanov.cpp

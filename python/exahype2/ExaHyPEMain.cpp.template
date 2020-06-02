@@ -256,6 +256,8 @@ Options: \n\
                              translated with shared memory support. \n\
   --log-filter-file <file>   Specify which log filter file to use. Default file \n\
                              is exahype.log-filter \n\
+  --timeout <t>              Set timeout. t is given in seconds and can be 0 to \n\
+                             switch timeouts off. \n\
 ";
 }}
   
