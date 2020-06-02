@@ -127,15 +127,15 @@ bool exahype2::parseCommandLineArguments(int argc, char** argv) {
   for (int argument=1; argument<argc; argument+=2) {
     std::string select = argv[argument];
 
-    if ( select.compare( "--threads" ) != std::string::npos ) {
+    if ( select.compare( "--threads" ) ==0 ) {
       cores = std::atoi(argv[argument+1]);
       tarch::multicore::Core::getInstance().configure( cores );
       logInfo( "parseCommandLineArguments(...)", "manually reset number of used cores to " << cores );
     }
-    else if ( select.compare( "--log-filter-file" ) != std::string::npos ) {
+    else if ( select.compare( "--log-filter-file" ) == 0 ) {
       logFilterFile = argv[argument+1];
     }
-    else if ( select.compare( "--timeout" ) != std::string::npos ) {
+    else if ( select.compare( "--timeout" ) == 0 ) {
       int timeout = std::atoi(argv[argument+1]);
       tarch::mpi::Rank::getInstance().setDeadlockTimeOut( timeout );
       logInfo( "parseCommandLineArguments(...)", "manually set timeout to " << timeout );
