@@ -381,7 +381,7 @@ class peano4::stacks::STDVectorStack {
      * clears it. Once this operation has terminated, the stack's state will
      * be IOMode::None.
      */
-    void finishSendOrReceive() {
+    bool tryToFinishSendOrReceive() {
       #ifdef Parallel
       logTraceInWith4Arguments( "finishSendOrReceive()", ::toString(_ioMode), size(), _ioRank,_ioTag );
       if ( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive ) {
@@ -393,45 +393,20 @@ class peano4::stacks::STDVectorStack {
         clock_t      timeOutShutdown  = -1;
         bool         triggeredTimeoutWarning = false;
         result = MPI_Test( _ioMPIRequest, &flag, MPI_STATUS_IGNORE );
-        while (!flag) {
-          if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
-          if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
-          result = MPI_Test( _ioMPIRequest, &flag, MPI_STATUS_IGNORE );
-          if (result!=MPI_SUCCESS) {
-            logError("finishSendOrReceive()", "failed" );
+        bool result = flag;
+        if (result) {
+          logDebug( "finishSendOrReceive()", "send/receive complete, free MPI request" );
+          delete _ioMPIRequest;
+          _ioMPIRequest = nullptr;
+          if (_ioMode==IOMode::MPISend ) {
+            clear();
           }
-          if (
-            tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
-            (clock()>timeOutWarning) &&
-            (!triggeredTimeoutWarning)
-          ) {
-            tarch::mpi::Rank::getInstance().writeTimeOutWarning(
-              "peano4::stacks::STDVectorStack<T>",
-              "finishSendOrReceive()", _ioRank,_ioTag, _data.size()
-             );
-             triggeredTimeoutWarning = true;
-          }
-          if (
-            tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
-            (clock()>timeOutShutdown)
-          ) {
-            tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut(
-              "peano4::stacks::STDVectorStack<T>",
-              "finishSendOrReceive()", _ioRank,_ioTag, _data.size(), "Tag type: " + peano4::parallel::Node::getSemanticsForTag(_ioTag)
-            );
-          }
-          tarch::mpi::Rank::getInstance().receiveDanglingMessages();
-          tarch::multicore::yield();
+          _ioMode = IOMode::None;
         }
-        logDebug( "finishSendOrReceive()", "send/receive complete, free MPI request" );
-        delete _ioMPIRequest;
-        _ioMPIRequest = nullptr;
       }
-      if (_ioMode==IOMode::MPISend ) {
-        clear();
-      }
-      _ioMode = IOMode::None;
       logTraceOut( "finishSendOrReceive()" );
+      #else
+      return true;
       #endif
     }
 
