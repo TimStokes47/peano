@@ -384,16 +384,16 @@ class peano4::stacks::STDVectorStack {
     bool tryToFinishSendOrReceive() {
       #ifdef Parallel
       logTraceInWith4Arguments( "finishSendOrReceive()", ::toString(_ioMode), size(), _ioRank,_ioTag );
+      bool result = true;
       if ( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive ) {
         assertion( _ioMPIRequest!=nullptr );
 
         int          flag = 0;
-        int          result;
         clock_t      timeOutWarning   = -1;
         clock_t      timeOutShutdown  = -1;
         bool         triggeredTimeoutWarning = false;
-        result = MPI_Test( _ioMPIRequest, &flag, MPI_STATUS_IGNORE );
-        bool result = flag;
+        MPI_Test( _ioMPIRequest, &flag, MPI_STATUS_IGNORE );
+        result = flag;
         if (result) {
           logDebug( "finishSendOrReceive()", "send/receive complete, free MPI request" );
           delete _ioMPIRequest;
@@ -404,7 +404,8 @@ class peano4::stacks::STDVectorStack {
           _ioMode = IOMode::None;
         }
       }
-      logTraceOut( "finishSendOrReceive()" );
+      logTraceOutWith1Argument( "finishSendOrReceive()", result );
+      return result;
       #else
       return true;
       #endif
