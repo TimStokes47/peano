@@ -546,11 +546,7 @@ void tarch::mpi::Rank::setCommunicator( MPI_Comm communicator ) {
 
 void tarch::mpi::Rank::receiveDanglingMessages() {
   #ifdef Parallel
-  int          flag;
-  MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, _communicator, &flag, MPI_STATUS_IGNORE);
-  if (flag) {
-    tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
-  }
+  tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
   #endif
 }
 
