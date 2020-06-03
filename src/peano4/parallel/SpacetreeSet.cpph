@@ -67,7 +67,8 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
     const int messageSize    = stackContainer.getForPop(master,sourceStack)->size();
     const int temporaryStack = Node::getOutputStackNumberForVerticalDataExchange(worker);
 
-    logDebug(
+// @todo Debug
+    logInfo(
       "copyDataFromSplittingTreesToNewTrees()",
       "send stack " << sourceStack << " from tree " << master << " on rank " << sourceRank << " through tag " << tag <<
       " to tree " << worker << " on rank " << destinationRank << ". size=" << messageSize
@@ -81,6 +82,7 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
         destinationRank, tag
       );
     }
+logInfo( "copyDataFromSplittingTreesToNewTrees()", "this receive is triggered. Next one ..." );
     #else
     assertionMsg( false, "should never be entered" );
     #endif
@@ -89,11 +91,16 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
     #ifdef Parallel
     int  destinationStack = peano4::grid::PeanoCurve::getOutputStackNumber( getInstance().getSpacetree(worker)._root );
     const int tag         = peano4::parallel::Node::getInstance().getGridDataExchangeTag(master, worker, peano4::parallel::Node::ExchangeMode::VerticalData);
+
+logInfo( "copyDataFromSplittingTreesToNewTrees()", "bring next header message in" );
+
+
     tarch::mpi::IntegerMessage message;
-    tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages(message, sourceRank, tag);
-    logDebug(
+    tarch::mpi::IntegerMessage::receive(message, sourceRank, tag, tarch::mpi::Rank::getInstance().getCommunicator());
+    // @Debug
+    logInfo(
       "copyDataFromSplittingTreesToNewTrees()",
-      "receive " << message.getValue() << " entries from tree " << master << " on rank " << sourceRank
+      "receive " << message.getValue() << " entries from tree " << master << " on rank " << sourceRank << " (used tag " << tag << ")"
     );
     if (message.getValue()>0) {
       stackContainer.getForPush(worker,destinationStack)->startReceive(
@@ -208,11 +215,45 @@ void peano4::parallel::SpacetreeSet::finishAllOutstandingSendsAndReceives( Conta
   // Finalise data exchange
   // ----------------------
   std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
-  for (auto& sourceStackKey: keys) {
-    if ( sourceStackKey.first==spacetreeId ) {
-      logDebug( "finishAllOutstandingSendsAndReceives(...)", "check stack no " << sourceStackKey.first << " x " << sourceStackKey.second );
-      stackContainer.getForPush(sourceStackKey)->finishSendOrReceive();
+
+  clock_t      timeOutWarning   = -1;
+  clock_t      timeOutShutdown  = -1;
+  bool         triggeredTimeoutWarning = false;
+  bool         allSendReceivesFinished = false;
+
+  while (not allSendReceivesFinished) {
+    allSendReceivesFinished = true;
+    for (auto& sourceStackKey: keys) {
+      if ( sourceStackKey.first==spacetreeId ) {
+        logDebug( "finishAllOutstandingSendsAndReceives(...)", "check stack no " << sourceStackKey.first << " x " << sourceStackKey.second );
+        allSendReceivesFinished &= stackContainer.getForPush(sourceStackKey)->tryToFinishSendOrReceive();
+      }
     }
+
+    if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+    if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+    if (
+      tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
+      (clock()>timeOutWarning) &&
+      (!triggeredTimeoutWarning)
+    ) {
+      tarch::mpi::Rank::getInstance().writeTimeOutWarning(
+        "peano4::stacks::STDVectorStack<T>",
+        "finishSendOrReceive()", spacetreeId, -1, -1
+      );
+             triggeredTimeoutWarning = true;
+    }
+    if (
+      tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
+      (clock()>timeOutShutdown)
+    ) {
+      tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut(
+        "peano4::stacks::STDVectorStack<T>",
+        "finishSendOrReceive()", spacetreeId, -1, -1
+      );
+    }
+    tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+    tarch::multicore::yield();
   }
 
   logDebug( "finishAllOutstandingSendsAndReceives(...)", "all data transfer is done, trigger garbage collection" );
