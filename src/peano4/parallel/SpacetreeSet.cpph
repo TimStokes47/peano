@@ -3,6 +3,8 @@
 #include "peano4/grid/PeanoCurve.h"
 
 
+
+
 template <class Container>
 void peano4::parallel::SpacetreeSet::streamDataFromJoiningTreeToMasterTree(
   Container& stackContainer, int master, int worker
@@ -92,13 +94,9 @@ logInfo( "copyDataFromSplittingTreesToNewTrees()", "this receive is triggered. N
     int  destinationStack = peano4::grid::PeanoCurve::getOutputStackNumber( getInstance().getSpacetree(worker)._root );
     const int tag         = peano4::parallel::Node::getInstance().getGridDataExchangeTag(master, worker, peano4::parallel::Node::ExchangeMode::VerticalData);
 
-logInfo( "copyDataFromSplittingTreesToNewTrees()", "bring next header message in" );
-
-
     tarch::mpi::IntegerMessage message;
-    tarch::mpi::IntegerMessage::receive(message, sourceRank, tag, tarch::mpi::Rank::getInstance().getCommunicator());
-    // @Debug
-    logInfo(
+    tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages(message, sourceRank, tag);
+    logDebug(
       "copyDataFromSplittingTreesToNewTrees()",
       "receive " << message.getValue() << " entries from tree " << master << " on rank " << sourceRank << " (used tag " << tag << ")"
     );
