@@ -79,10 +79,15 @@ std::string peano4::parallel::SpacetreeSet::toString( SpacetreeSetState state ) 
 }
 
 
+// sonst fiegt es mit staendig um die Ohren
+namespace {
+    static std::vector<peano4::parallel::TreeManagementMessage>   unansweredMessages;
+}
+
+
+
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
   #ifdef Parallel
-  static std::vector<peano4::parallel::TreeManagementMessage>   unansweredMessages;
-
   if ( peano4::parallel::TreeManagementMessage::isMessageInQueue(_requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator()) ) {
     logTraceIn( "receiveDanglingMessages()" );
 
@@ -519,7 +524,8 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
 // @todo Docu
   tarch::mpi::Rank::getInstance().barrier();
-
+  logInfo( "traverse(TraversalObserver&)", "rank has passed barrier" );
+ 
   logTraceOut( "traverse(TraversalObserver&)" );
 }
 
@@ -597,7 +603,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees(peano4::grid::TraversalObserve
         }
       }
       else {
-        assertionMsg(false, "I should merge here to reduce synchronisation")
+        logError( "cleanUpTrees(...)", "I should merge here to reduce synchronisation")
       }
     }
     p++;
