@@ -265,7 +265,9 @@ class peano4::parallel::Node {
     int getCurrentProgramStep() const;
 
     /**
-     * The shutdown is invoked by peano4::shutdownParallelEnvironment().
+     * The shutdown is not invoked by peano4::shutdownParallelEnvironment()!
+     * You have to call this shutdown() before you do anyhing else.
+     *
      *
      * If we run it on the global master, we set the program state to terminate
      * and distribute this message. For this, we hijack the routine continueToRun().
@@ -273,6 +275,9 @@ class peano4::parallel::Node {
      * call the continue operation on the other ranks. They typically are stuck
      * in a continue while loop in their main routine and just wait for the
      * global master to send out this terminate command.
+     *
+     * Users don't have to call this routine manually, as
+     * peano4::shutdownParallelEnvironment() invokes it.
      */
     void shutdown();
 

@@ -120,12 +120,11 @@ namespace peano4 {
   /**
    * Shutdown all the parallel environment, i.e. free all MPI datatypes and
    * close down MPI. This also turns off the shared memory environment.
+   * Before this happens, you have to shutdown the node such that everybody
+   * knows that we are going down. So you have to call Node::shutdown()
+   * before you trigger this operation.
    *
-   * We first tell the node that it should shut down. This implies that the
-   * node sends out a termination message, i.e. all ranks that wait in
-   * continueToRun() are told that this is it. They go down.
-   *
-   * The routine next adds a barrier. This barrier is necessary. If the very last
+   * The routine first adds a barrier. This barrier is necessary. If the very last
    * activity of all ranks is for example to plot stuff, they typically use
    * global semaphores as well. To make these semaphores work, we still require
    * that all nodes call receiveDanglingMessages(). It is only after everyone

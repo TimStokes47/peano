@@ -55,6 +55,17 @@ class tarch::services::ServiceRepository: public tarch::services::Service {
      *
      * Tell all registered services to answer to MPI messages that are still
      * pending in the MPI queues.
+     *
+     * <h2> MPI tuning </h2>
+     *
+     * I once had an implementation that issues in Iprobe before it enters the
+     * receiveDanglingMessages() of all registered services. This is not a good
+     * idea. It does not allow services to buffer requests and then to answer
+     * them all in one rush. However, I want to do exactly this (wait until all
+     * trees have finished a traversal before I insert new ones, e.g.). So I
+     * removed this premature Iprobe optimisation; and debugged for ages before
+     * I found out that this is the reason for deadlocks.
+     *
      */
     virtual void receiveDanglingMessages();
 
