@@ -76,13 +76,13 @@ bool selectNextAlgorithmicStep() {{
         observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
       );
       haveJustWrittenSnapshot = true;
-      continueToSolve = true;
+      continueToSolve         = true;
     }}
     else if ( observers::getMinTimeStamp()<TerminalTime ) {{
       peano4::parallel::Node::getInstance().setNextProgramStep(
         observers::StepRepository::toProgramStep( observers::StepRepository::Steps::TimeStep )
       );
-      continueToSolve = true;
+      continueToSolve         = true;
       haveJustWrittenSnapshot = false;
     }}
     else {{
@@ -90,15 +90,16 @@ bool selectNextAlgorithmicStep() {{
         peano4::parallel::Node::getInstance().setNextProgramStep(
           observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
         );
-        continueToSolve = true; // don't want to terminate immediately
-        haveJustWrittenSnapshot = false;
+        continueToSolve         = true; // don't want to terminate immediately
+        haveJustWrittenSnapshot = true;
+        nextPlotTimeStamp       = std::numeric_limits<double>::max();
       }}
       else {{
         continueToSolve = false;
       }}
     }}
   }}
-
+  
   return continueToSolve;
 }}
 
@@ -131,10 +132,12 @@ void step() {{
         const double minTimeStepSize = observers::getMinTimeStepSize();
         const double maxTimeStepSize = observers::getMaxTimeStepSize();
 
-        logInfo( "step()", "t_{{min}}  = " << minTimeStamp );
-        logInfo( "step()", "t_{{max}}  = " << maxTimeStamp );
-        logInfo( "step()", "dt_{{min}} = " << minTimeStepSize );
-        logInfo( "step()", "dt_{{max}} = " << maxTimeStepSize );
+        if ( tarch::mpi::Rank::getInstance().isGlobalMaster() ) {{
+          logInfo( "step()", "t_{{min}}  = " << minTimeStamp );
+          logInfo( "step()", "t_{{max}}  = " << maxTimeStamp );
+          logInfo( "step()", "dt_{{min}} = " << minTimeStepSize );
+          logInfo( "step()", "dt_{{max}} = " << maxTimeStepSize );
+        }}
         observers::startTimeStep( minTimeStamp, maxTimeStamp, minTimeStepSize, maxTimeStepSize );
         observers::TimeStep  observer;
         peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
