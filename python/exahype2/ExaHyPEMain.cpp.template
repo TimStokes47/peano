@@ -202,6 +202,7 @@ int main(int argc, char** argv) {{
     }}
   }}
 
+  peano4::parallel::Node::getInstance().shutdown();
   {FULL_NAMESPACE}::observers::DataRepository::shutdownDatatypes();
   exahype2::shutdownNonCritialAssertionEnvironment();
   peano4::shutdownParallelEnvironment();
