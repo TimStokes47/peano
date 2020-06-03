@@ -181,11 +181,10 @@ peano4::maps::STDStackMap<T>::~STDStackMap() {
 template <typename T>
 void peano4::maps::STDStackMap<T>::garbageCollection() {
   for (auto& p: _data) {
-	if (p.second->empty()) {
+    if (p.second->empty()) {
       delete p;
       p = new T();
-	}
-    delete p.second;
+	  }
   }
 }
 

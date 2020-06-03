@@ -231,8 +231,8 @@ void peano4::maps::HierarchicalStackMap<T>::garbageCollection() {
   for (auto& p: _data) {
     for (auto& pp: p._stackNumberToData) {
       if (pp.second->empty()) {
-    	delete pp.second;
-    	pp.second = new T();
+        delete pp.second;
+        pp.second = new T();
       }
     }
   }
