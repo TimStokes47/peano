@@ -70,7 +70,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
       MPI_Wait( _globalSumRequest, MPI_STATUS_IGNORE );
       MPI_Wait( _globalLightestRankRequest, MPI_STATUS_IGNORE );
     }
-
+/*
     _globalSumRequest = new MPI_Request();
     _globalLightestRankRequest = new MPI_Request();
 
@@ -94,7 +94,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
       MPI_MINLOC,
       tarch::mpi::Rank::getInstance().getCommunicator(),
       _globalLightestRankRequest
-    );
+    );*/
     #endif
   }
 }
@@ -298,7 +298,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
               "finishStep()",
               "lightest global rank is rank " << _lightestRank << ", so assign this rank " << cellsPerCore << " cell(s)"
             );
-            triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
+            //triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
           }
         }
       }
