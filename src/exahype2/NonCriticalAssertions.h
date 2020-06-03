@@ -33,6 +33,15 @@
  * MPI or just before you shut it down, respectively.
  */
 namespace exahype2 {
+  /**
+   * The management of the critical assertions relies on a shared memory region
+   * (windows). To free the window, all ranks have to enter this routine at the
+   * same time. In Peano 4, you hence have to call this routine after the Node
+   * is shutdown(). Otherwise, the main rank would run into this routine, but the
+   * other ranks migth not know that they have to go down, too. But please call
+   * it before you shut down the total code, i.e. before you invoke
+   * peano4::shutdownParallelEnvironment().
+   */
   void shutdownNonCritialAssertionEnvironment();
   void initNonCritialAssertionEnvironment();
 
