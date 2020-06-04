@@ -182,8 +182,8 @@ template <typename T>
 void peano4::maps::STDStackMap<T>::garbageCollection() {
   for (auto& p: _data) {
     if (p.second->empty()) {
-      delete p;
-      p = new T();
+      delete p.second;
+      p.second = new T();
 	  }
   }
 }
