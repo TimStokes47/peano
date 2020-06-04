@@ -218,7 +218,7 @@ void tarch::multicore::tbb::shutdownConsumerTasks() {
   static tarch::logging::Log _log( "tarch::multicore::tbb" );
   logTraceInWith1Argument( "shutdownConsumerTasks()", numberOfConsumerTasks.fetch_and_add(0) );
   while (numberOfConsumerTasks.fetch_and_add(0)>0) {
-	yield();
+    yield();
   }
   logTraceOut( "shutdownConsumerTasks()" );
 }

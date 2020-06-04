@@ -73,30 +73,32 @@ class peano4::stacks::STDVectorStack {
      */
     STDVectorStack():
       _data(),
-	  _currentElement(0),
-	  _ioMode(IOMode::None)
+      _currentElement(0),
+      _ioMode(IOMode::None)
       #ifdef Parallel
       ,
-	  _ioMPIRequest(nullptr)
+      _ioMPIRequest(nullptr)
       #endif
     {}
 
+
     ~STDVectorStack() {
     }
+
 
     /**
      * One is allowed to clone/copy a stack, but it has to be empty.
      * Usually only when we cut the domain into pieces.
      */
     STDVectorStack<T>( const STDVectorStack<T>& stack ):
-	  _data(),
+      _data(),
       _currentElement(0),
-	  _ioMode(IOMode::None)
+      _ioMode(IOMode::None)
       #ifdef Parallel
-	  ,
-	  _ioMPIRequest(nullptr)
+	    ,
+      _ioMPIRequest(nullptr)
       #endif
-	{
+    {
       assertionMsg( stack._currentElement==0, "may not copy non-empty stack" );
       #ifdef Parallel
       assertionMsg( stack._ioMPIRequest==nullptr, "may not copy sending/receiving stack" );
@@ -294,8 +296,11 @@ class peano4::stacks::STDVectorStack {
 
       _currentElement+=numberOfElements;
 
-      if (static_cast<int>(_data.size())<_currentElement) {
-    	_data.resize(_currentElement);
+      //if (static_cast<int>(_data.size())<_currentElement) {
+      //  _data.resize(_currentElement);
+      //}
+      while (static_cast<int>(_data.size())<_currentElement) {
+        _data.push_back( T() );
       }
 
       return result;
