@@ -55,19 +55,12 @@ AC_CONFIG_MACRO_DIRS([m4])
 AC_PROG_CXX
 AC_PROG_FC
 
-#
-# Peano variables
-#
-#PEANO_CXXFLAGS="-std=c++14 -fconcepts"
 
 #
-# @todo I should remove the MPI2 flag once I've written a new DaStGen
+# Ensure 
 #
-PEANO_CXXFLAGS+=" -std=c++14 "
-PEANO_LDFLAGS+=" "
-
-# Think I do not need a C compiler
-#AC_PROG_CC
+#PEANO_CXXFLAGS+=" -std=c++14 "
+#PEANO_LDFLAGS+=" "
 
 
 #
