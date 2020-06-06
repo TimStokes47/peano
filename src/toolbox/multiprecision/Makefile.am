@@ -9,9 +9,9 @@ ToolboxMultiprecision_SOURCES = \
   tests/CompressedFloatingPointNumbersTest.cpp
   
 
-libToolboxMultiprecision_a_CXXFLAGS       = -DDimensions=2 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libToolboxMultiprecision_trace_a_CXXFLAGS = -DDimensions=2 -DPeanoDebug=1 -g3 -O0 $(PEANO_CXXFLAGS)
-libToolboxMultiprecision_debug_a_CXXFLAGS = -DDimensions=2 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
+libToolboxMultiprecision_a_CXXFLAGS       = -DDimensions=2 -DPeanoDebug=0 
+libToolboxMultiprecision_trace_a_CXXFLAGS = -DDimensions=2 -DPeanoDebug=1 -g3 -O0 
+libToolboxMultiprecision_debug_a_CXXFLAGS = -DDimensions=2 -DPeanoDebug=4 -g3 -O0 
 
 libToolboxMultiprecision_a_SOURCES       = $(ToolboxMultiprecision_SOURCES)
 libToolboxMultiprecision_trace_a_SOURCES = $(ToolboxMultiprecision_SOURCES)

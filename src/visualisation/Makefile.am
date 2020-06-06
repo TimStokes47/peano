@@ -441,14 +441,14 @@ convertSources = \
   output/VTUWriter.cpp
 
 
-convert_CXXFLAGS  = $(VTK_INCLUDE) $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS)
+convert_CXXFLAGS  = $(VTK_INCLUDE) $(OPENMP_CXXFLAGS)
 convert_LDADD     = -lTarch
-convert_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS) $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
+convert_LDFLAGS   = -L$(top_builddir)/src $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
 convert_SOURCES   = $(convertSources)
 
-convert_debug_CXXFLAGS  = $(VTK_INCLUDE) $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS) -O0 -g3 -DPeanoDebug=4 
+convert_debug_CXXFLAGS  = $(VTK_INCLUDE) $(OPENMP_CXXFLAGS) -O0 -g3 -DPeanoDebug=4 
 convert_debug_LDADD     = -lTarch_debug
-convert_debug_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS) $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
+convert_debug_LDFLAGS   = -L$(top_builddir)/src $(OPENMP_CXXFLAGS) $(LDFLAGS) -lstdc++fs $(VTK_REQUIRED_LIBS)
 convert_debug_SOURCES   = $(convertSources)
 
 

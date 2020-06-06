@@ -23,20 +23,20 @@ lib_LIBRARIES = libTarch.a        libTarch_debug.a        libTarch_asserts.a    
                 libPeano4Core3d.a libPeano4Core3d_debug.a libPeano4Core3d_asserts.a libPeano4Core3d_trace.a
 
 
-libTarch_a_CXXFLAGS         = -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libTarch_trace_a_CXXFLAGS   = -DPeanoDebug=1 -g3 $(PEANO_CXXFLAGS)
-libTarch_asserts_a_CXXFLAGS = -DPeanoDebug=2 -g3 -O0 $(PEANO_CXXFLAGS)
-libTarch_debug_a_CXXFLAGS   = -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
+libTarch_a_CXXFLAGS         = -DPeanoDebug=0 
+libTarch_trace_a_CXXFLAGS   = -DPeanoDebug=1 -g3
+libTarch_asserts_a_CXXFLAGS = -DPeanoDebug=2 -g3 -O0
+libTarch_debug_a_CXXFLAGS   = -DPeanoDebug=4 -g3 -O0
 
 
-libPeano4Core2d_a_CXXFLAGS          = -DDimensions=2 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libPeano4Core2d_trace_a_CXXFLAGS    = -DDimensions=2 -DPeanoDebug=1 -g3 $(PEANO_CXXFLAGS)
-libPeano4Core2d_asserts_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=2 -g3 -O0 $(PEANO_CXXFLAGS)
-libPeano4Core2d_debug_a_CXXFLAGS    = -DDimensions=2 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
-libPeano4Core3d_a_CXXFLAGS          = -DDimensions=3 -DPeanoDebug=0 $(PEANO_CXXFLAGS)
-libPeano4Core3d_trace_a_CXXFLAGS    = -DDimensions=3 -DPeanoDebug=1 -g3 $(PEANO_CXXFLAGS)
-libPeano4Core3d_asserts_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=2 -g3 -O0 $(PEANO_CXXFLAGS)
-libPeano4Core3d_debug_a_CXXFLAGS    = -DDimensions=3 -DPeanoDebug=4 -g3 -O0 $(PEANO_CXXFLAGS)
+libPeano4Core2d_a_CXXFLAGS          = -DDimensions=2 -DPeanoDebug=0
+libPeano4Core2d_trace_a_CXXFLAGS    = -DDimensions=2 -DPeanoDebug=1 -g3
+libPeano4Core2d_asserts_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=2 -g3 -O0
+libPeano4Core2d_debug_a_CXXFLAGS    = -DDimensions=2 -DPeanoDebug=4 -g3 -O0
+libPeano4Core3d_a_CXXFLAGS          = -DDimensions=3 -DPeanoDebug=0
+libPeano4Core3d_trace_a_CXXFLAGS    = -DDimensions=3 -DPeanoDebug=1 -g3
+libPeano4Core3d_asserts_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=2 -g3 -O0
+libPeano4Core3d_debug_a_CXXFLAGS    = -DDimensions=3 -DPeanoDebug=4 -g3 -O0
 
 #
 # All sources below
