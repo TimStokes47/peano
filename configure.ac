@@ -15,7 +15,8 @@
 # Cleanup
 # -------
 #   rm -rf aclocal.m4 compile src/config.* configure *sh Makefile Makefile.in missing stamp* ar-lib autom4te.cache *.log libtool depcomp *.scan  
-#  
+#   find . -name Makefile -delete
+#   find . -name Makefile.in -delete
 #
 #
 AC_INIT(Peano, 4.0)
@@ -59,8 +60,6 @@ AC_PROG_FC
 #
 # Ensure 
 #
-#PEANO_CXXFLAGS+=" -std=c++14 "
-#PEANO_LDFLAGS+=" "
 
 
 #
@@ -290,13 +289,6 @@ AM_CONDITIONAL([UseDelta],[test "$delta" != false])
 if test "$delta" != false; then
   AC_DEFINE([UseDelta], [1], [UseDelta])
 fi
-
-
-#
-# Export my Peano-specific flags
-#
-AC_SUBST([PEANO_CXXFLAGS])
-AC_SUBST([PEANO_LDFLAGS])
 
 
 
