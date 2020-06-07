@@ -122,7 +122,7 @@ namespace peano4 {
    * close down MPI. This also turns off the shared memory environment.
    * Before this happens, you have to shutdown the node such that everybody
    * knows that we are going down. So you have to call Node::shutdown()
-   * before you trigger this operation.
+   * before you trigger this operation. This is your responsibility.
    *
    * The routine first adds a barrier. This barrier is necessary. If the very last
    * activity of all ranks is for example to plot stuff, they typically use
