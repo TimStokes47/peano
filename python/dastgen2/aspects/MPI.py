@@ -68,16 +68,6 @@ class MPI(object):
      */
     static void send(const """ + full_qualified_name + """& buffer, int destination, int tag, std::function<void()> waitFunctor, MPI_Comm communicator );
     static void receive(""" + full_qualified_name + """& buffer, int source, int tag, std::function<void()> waitFunctor, MPI_Comm communicator );
-
-    /**
-     * In older DaStGen version, I tried to find out whether a particular 
-     * message type is in the MPI queue. That is, I looked whether a message
-     * on this tag does exist, and then I looked whether the memory footprint
-     * matches via count. I think this is invalid. MPI really looks only into
-     * the number of bytes, so you have to know which type drops in once there
-     * is a message on a tag.
-     */            
-    static bool isMessageInQueue(int tag, MPI_Comm communicator);
     #endif
 """
 
@@ -202,16 +192,6 @@ void """ + full_qualified_name + """::receive(""" + full_qualified_name + """& b
     MPI_Test( &receiveRequestHandle, &flag, &status ); 
   }
   buffer._senderDestinationRank = status.MPI_SOURCE;
-}
-
-
-bool """ + full_qualified_name + """::isMessageInQueue(int tag, MPI_Comm communicator) {
-  int  flag        = 0;
-  MPI_Iprobe(
-    MPI_ANY_SOURCE, tag,
-    communicator, &flag, MPI_STATUS_IGNORE
-  );
-  return flag;
 }
 
 #endif

@@ -316,7 +316,7 @@ void peano4::grid::GridTraversalEvent::sendAndPollDanglingMessages(const peano4:
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "peano4::grid::GridTraversalEvent", "sendAndPollDanglingMessages()", destination, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -344,7 +344,7 @@ void peano4::grid::GridTraversalEvent::receiveAndPollDanglingMessages(peano4::gr
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "peano4::grid::GridTraversalEvent", "receiveAndPollDanglingMessages()", source, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -456,16 +456,6 @@ void peano4::grid::GridTraversalEvent::receive(peano4::grid::GridTraversalEvent&
     MPI_Test( &receiveRequestHandle, &flag, &status ); 
   }
   buffer._senderDestinationRank = status.MPI_SOURCE;
-}
-
-
-bool peano4::grid::GridTraversalEvent::isMessageInQueue(int tag, MPI_Comm communicator) {
-  int  flag        = 0;
-  MPI_Iprobe(
-    MPI_ANY_SOURCE, tag,
-    communicator, &flag, MPI_STATUS_IGNORE
-  );
-  return flag;
 }
 
 #endif

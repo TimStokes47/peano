@@ -14,6 +14,7 @@
 
 #include "tarch/la/Vector.h"
 #include "tarch/mpi/Rank.h"
+#include "tarch/services/ServiceRepository.h"
 #include "peano4/utils/Globals.h"
 
 
@@ -128,16 +129,6 @@ struct peano4::grid::GridTraversalEvent {
      */
     static void send(const peano4::grid::GridTraversalEvent& buffer, int destination, int tag, std::function<void()> waitFunctor, MPI_Comm communicator );
     static void receive(peano4::grid::GridTraversalEvent& buffer, int source, int tag, std::function<void()> waitFunctor, MPI_Comm communicator );
-
-    /**
-     * In older DaStGen version, I tried to find out whether a particular 
-     * message type is in the MPI queue. That is, I looked whether a message
-     * on this tag does exist, and then I looked whether the memory footprint
-     * matches via count. I think this is invalid. MPI really looks only into
-     * the number of bytes, so you have to know which type drops in once there
-     * is a message on a tag.
-     */            
-    static bool isMessageInQueue(int tag, MPI_Comm communicator);
     #endif
 
 

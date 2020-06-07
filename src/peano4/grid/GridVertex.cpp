@@ -179,7 +179,7 @@ void peano4::grid::GridVertex::sendAndPollDanglingMessages(const peano4::grid::G
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "peano4::grid::GridVertex", "sendAndPollDanglingMessages()", destination, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -207,7 +207,7 @@ void peano4::grid::GridVertex::receiveAndPollDanglingMessages(peano4::grid::Grid
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "peano4::grid::GridVertex", "receiveAndPollDanglingMessages()", source, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -311,16 +311,6 @@ void peano4::grid::GridVertex::receive(peano4::grid::GridVertex& buffer, int sou
     MPI_Test( &receiveRequestHandle, &flag, &status ); 
   }
   buffer._senderDestinationRank = status.MPI_SOURCE;
-}
-
-
-bool peano4::grid::GridVertex::isMessageInQueue(int tag, MPI_Comm communicator) {
-  int  flag        = 0;
-  MPI_Iprobe(
-    MPI_ANY_SOURCE, tag,
-    communicator, &flag, MPI_STATUS_IGNORE
-  );
-  return flag;
 }
 
 #endif
