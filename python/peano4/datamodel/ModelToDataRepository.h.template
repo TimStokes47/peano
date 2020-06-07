@@ -15,6 +15,7 @@
 #include "peano4/datamanagement/FaceEnumerator.h"
 #include "peano4/datamanagement/VertexEnumerator.h"
 #include "peano4/maps/HierarchicalStackMap.h"
+#include "peano4/maps/STDStackMap.h"
 
 {OPEN_NAMESPACE}
   class {CLASSNAME};
