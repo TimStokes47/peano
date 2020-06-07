@@ -497,6 +497,25 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     /**
      * Invoke traverse on all spacetrees in parallel.
      *
+     * <h2> Sequence </h2>
+     *
+     * It is important that I don't answer to spacetree request messages while I am
+     * running through the spacetree set. Some of these request messages add further
+     * elements to the set. However, the set should remain invariant while I run
+     * through it. So I introduced the _state. See also _unansweredMessages.
+     *
+     * So when I'm done with the local traversal, I have to ensure that all other sets
+     * have got their tree modifications through. That is: If another rank wants to
+     * insert a tree, that has to happen in the right traversal. As teh other rank
+     * will wait for an acknowledgement of the addition, there is no risk that this
+     * rank has already proceeded wrongly into the next grid sweep. However, the target
+     * rank has to answer the request in the right one and may not proceed to early.
+     * So I introduce a barrier. The barrier has to do two things: On the one hand, it
+     * has to receive dangling messages. On the other hand, it should answer messages
+     * that it has not answered before. In principle, this is indirectly done through
+     * receiveDanglingMessages(). However, I played around with running the dangling
+     * thing if and only if iprobe tells me that there are new messages. So to be on
+     * the safe side, I rather invoke the answer routines manually here.
      */
     void traverse(peano4::grid::TraversalObserver& observer);
 
