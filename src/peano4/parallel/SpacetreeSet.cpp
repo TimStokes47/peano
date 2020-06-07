@@ -82,49 +82,70 @@ void peano4::parallel::SpacetreeSet::answerQuestions() {
   logTraceIn( "answerQuestions()" );
 
   #ifdef Parallel
+  std::vector<peano4::parallel::TreeManagementMessage> unansweredMessagesThatIanAnswerNow;
+
+  // @todo warum zwei Loops?
+
   std::vector<peano4::parallel::TreeManagementMessage>::iterator p = _unansweredMessages.begin();
   while (p!=_unansweredMessages.end()) {
     switch ( p->getAction() ) {
       case peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree:
+        unansweredMessagesThatIanAnswerNow.push_back( *p );
+        p = _unansweredMessages.erase(p);
+        break;
+      case peano4::parallel::TreeManagementMessage::Action::RemoveChildTreeFromBooksAsChildBecameEmpty:
+      case peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree:
+        {
+          if ( _state==SpacetreeSetState::Waiting ) {
+            unansweredMessagesThatIanAnswerNow.push_back( *p );
+            p = _unansweredMessages.erase(p);
+          }
+          else p++;
+        }
+        break;
+      case peano4::parallel::TreeManagementMessage::Action::Acknowledgement:
+        assertionMsg( false, "should only be passed synchronously and never run through this tag" );
+        break;
+
+    }
+  }
+
+  for (auto p: unansweredMessagesThatIanAnswerNow) {
+    switch ( p.getAction() ) {
+      case peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree:
         {
           int newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
             tarch::mpi::Rank::getInstance().getRank(),  // on current node
-            p->getMasterSpacetreeId()              // this is the tree who has requested the new tree
+            p.getMasterSpacetreeId()              // this is the tree who has requested the new tree
           );
 
           peano4::parallel::TreeManagementMessage answerMessage;
           answerMessage.setWorkerSpacetreeId( newSpacetreeId );
           answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
-          peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
-          logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << p->getMasterSpacetreeId() );
-          p = _unansweredMessages.erase(p);
+          peano4::parallel::TreeManagementMessage::send(answerMessage, p.getSenderRank(), getAnswerTag(p.getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
+          logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << p.getMasterSpacetreeId() );
         }
         break;
       case peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree:
         {
-          if ( _state==SpacetreeSetState::Waiting ) {
-            peano4::parallel::TreeManagementMessage answerMessage;
-            answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
-            peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
+          assertion( _state==SpacetreeSetState::Waiting );
+          peano4::parallel::TreeManagementMessage answerMessage;
+          answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
+          peano4::parallel::TreeManagementMessage::send(answerMessage, p.getSenderRank(), getAnswerTag(p.getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
 
-            peano4::grid::AutomatonState state;
-            peano4::grid::AutomatonState::receive( state, p->getSenderRank(), _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
-            peano4::grid::Spacetree newTree(
-              p->getWorkerSpacetreeId(),
-              p->getMasterSpacetreeId(),
-              state.getX(),
-              state.getH(),
-              state.getInverted()
-            );
+          peano4::grid::AutomatonState state;
+          peano4::grid::AutomatonState::receive( state, p.getSenderRank(), _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
+          peano4::grid::Spacetree newTree(
+            p.getWorkerSpacetreeId(),
+            p.getMasterSpacetreeId(),
+            state.getX(),
+            state.getH(),
+            state.getInverted()
+          );
 
-            _spacetrees.push_back( std::move(newTree) );
+          _spacetrees.push_back( std::move(newTree) );
 
-            peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
-            p = _unansweredMessages.erase(p);
-          }
-          else {
-            p++;
-          }
+          peano4::parallel::TreeManagementMessage::send(answerMessage, p.getSenderRank(), getAnswerTag(p.getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
         }
         break;
       case peano4::parallel::TreeManagementMessage::Action::Acknowledgement:
@@ -132,23 +153,15 @@ void peano4::parallel::SpacetreeSet::answerQuestions() {
         break;
       case peano4::parallel::TreeManagementMessage::Action::RemoveChildTreeFromBooksAsChildBecameEmpty:
         {
-          if ( _state==SpacetreeSetState::Waiting ) {
-            logInfo( "receiveDanglingMessages(...)", "learned that remote child tree " << p->getWorkerSpacetreeId() << " of local tree " << p->getMasterSpacetreeId() << " is degenerated thus had been removed" );
-            getSpacetree( p->getMasterSpacetreeId() )._childrenIds.erase(p->getWorkerSpacetreeId());
+          assertion( _state==SpacetreeSetState::Waiting );
+          logInfo( "receiveDanglingMessages(...)", "learned that remote child tree " << p.getWorkerSpacetreeId() << " of local tree " << p.getMasterSpacetreeId() << " is degenerated thus had been removed" );
+          getSpacetree( p.getMasterSpacetreeId() )._childrenIds.erase(p.getWorkerSpacetreeId());
 
-            peano4::parallel::TreeManagementMessage answerMessage;
-            answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
-            peano4::parallel::TreeManagementMessage::send(answerMessage, p->getSenderRank(), getAnswerTag(p->getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
-
-            p = _unansweredMessages.erase(p);
-          }
-          else {
-            p++;
-          }
+          peano4::parallel::TreeManagementMessage answerMessage;
+          answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
+          peano4::parallel::TreeManagementMessage::send(answerMessage, p.getSenderRank(), getAnswerTag(p.getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
         }
         break;
-      default:
-        assertionMsg( false, "should not be called" );
     }
   }
   #else
