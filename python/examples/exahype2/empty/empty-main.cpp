@@ -41,7 +41,8 @@ bool selectNextAlgorithmicStep() {
   static double nextPlotTimeStamp = FirstPlotTimeStamp;
   static bool   haveJustWrittenSnapshot = false;
   static bool   haveReceivedNoncriticialAssertion = false;
-  bool          continueToSolve   = true;
+  static int    iterationCounter                  = 0;
+  bool          continueToSolve                   = true;
 
   if (exahype2::hasNonCriticalAssertionBeenViolated() and not haveReceivedNoncriticialAssertion) {
     peano4::parallel::Node::getInstance().setNextProgramStep(
@@ -66,40 +67,16 @@ bool selectNextAlgorithmicStep() {
     }
     continueToSolve = true;
   }
+  else if ( iterationCounter<10 ) {
+    peano4::parallel::Node::getInstance().setNextProgramStep(
+      observers::StepRepository::toProgramStep( observers::StepRepository::Steps::TimeStep )
+    );
+    continueToSolve         = true;
+    haveJustWrittenSnapshot = false;
+    iterationCounter++;
+  }
   else {
-    if ( observers::getMinTimeStamp()>=nextPlotTimeStamp  and TimeInBetweenPlots>0.0 ) {
-      nextPlotTimeStamp += TimeInBetweenPlots;
-      if ( nextPlotTimeStamp < observers::getMinTimeStamp() ) {
-        logWarning( "selectNextAlgorithmicStep()", "code is asked to plot every dt=" << TimeInBetweenPlots << ", but this seems to be less than the minimal time step size of the solvers" );
-        nextPlotTimeStamp = observers::getMinTimeStamp() + TimeInBetweenPlots;
-        logWarning( "selectNextAlgorithmicStep()", "plot solution at t=" << observers::getMinTimeStamp() << ", but next plot will be due at t=" << nextPlotTimeStamp );
-      }
-      peano4::parallel::Node::getInstance().setNextProgramStep(
-        observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
-      );
-      haveJustWrittenSnapshot = true;
-      continueToSolve         = true;
-    }
-    else if ( observers::getMinTimeStamp()<TerminalTime ) {
-      peano4::parallel::Node::getInstance().setNextProgramStep(
-        observers::StepRepository::toProgramStep( observers::StepRepository::Steps::TimeStep )
-      );
-      continueToSolve         = true;
-      haveJustWrittenSnapshot = false;
-    }
-    else {
-      if (not haveJustWrittenSnapshot and TimeInBetweenPlots>0.0) {
-        peano4::parallel::Node::getInstance().setNextProgramStep(
-          observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
-        );
-        continueToSolve         = true; // don't want to terminate immediately
-        haveJustWrittenSnapshot = true;
-        nextPlotTimeStamp       = 0.0;
-      }
-      else {
-        continueToSolve = false;
-      }
-    }
+    continueToSolve = false;
   }
   
   return continueToSolve;
@@ -180,6 +157,7 @@ int main(int argc, char** argv) {
     while ( selectNextAlgorithmicStep() ) {
       step();
     }
+    logInfo( "step()", "finished" );
   }
   else {
     while (peano4::parallel::Node::getInstance().continueToRun()) {
