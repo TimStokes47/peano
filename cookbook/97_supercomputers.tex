@@ -215,6 +215,13 @@ datatypes are not defined.
 
 
 
+\begin{remark}
+ I have not yet succeeded in running Intel's \texttt{-check\_mpi} with \ExaHyPE.
+ The checker claims that the code deadlocked, even though it does not. There
+ seems to be a problem with the tool (2019 version) and the nonblocking barrier
+ used in \ExaHyPE\ to synchronise all ranks.
+\end{remark}
+
 
 \section{Using MUST}
 \label{section:supercomputers:MUST}

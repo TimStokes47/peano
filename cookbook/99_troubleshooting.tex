@@ -158,8 +158,11 @@ tarch::logging::LogFilter::getInstance().printFilterListToCout();
     the libraries. Again, those guys are stored in a \texttt{.libs}
     subdirectory, so the library path should point to that subdirectory. 
 %   Most of these tweaks
-%   should not be necessary if you install Peano properly through \texttt{make
-%   install}.
+  \item \textbf{The interesting details are hidden in the debugger. It says
+    something about inlined and doesn't give proper line numbers}.
+    I recommend that you set \texttt{CXXFLAGS} to \texttt{-fno-inline} (Intel),
+    rerun the \texttt{configure} script and recompile. This should stop the
+    compiler from inlining too aggressive.
   \item To be continued \dots
 \end{itemize}
  
