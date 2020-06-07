@@ -271,7 +271,7 @@ void peano4::parallel::SpacetreeSet::finishAllOutstandingSendsAndReceives( Conta
 
   logDebug( "finishAllOutstandingSendsAndReceives(...)", "all data transfer is done, trigger garbage collection" );
 
-  stackContainer.garbageCollection();
+  stackContainer.garbageCollection(spacetreeId);
   logTraceOutWith1Argument( "finishAllOutstandingSendsAndReceives(...)", spacetreeId );
 }
 

@@ -21,7 +21,9 @@ namespace peano4 {
 template <typename T>
 class peano4::maps::STDStackMap {
   private:
-	std::map< StackKey, T* >  _data;
+    static tarch::logging::Log  _log;
+
+    std::map< StackKey, T* >  _data;
 
     /**
      * Semaphore to protect _data.
@@ -74,7 +76,22 @@ class peano4::maps::STDStackMap {
      */
     std::set<StackKey>  getKeys();
 
-    void garbageCollection();
+    /**
+     * Invoke garbage collection
+     *
+     * The standard stack in C++ has a clear operation. However, it does not
+     * actively free memory. Indeed, the C++ standard leaves it up to the STL
+     * implementation to decide whether to free or not. Most don't. As a
+     * consequence, the memory hunger of Peano applications could rise
+     * dramatically - in particular throughout forks when whole spacetrees are
+     * (temporarily) replicated.
+     *
+     * The only way around the lack of a proper free is the total elimination
+     * of a vector (via a delete) and the recreation. We do thus rely on this
+     * mechanism though we only apply it to communication stacks. All the
+     * temporary stacks and in/out stacks are never erased.
+     */
+    void garbageCollection(int spacetree);
 
     /**
      * For debugging/assertions.
@@ -86,13 +103,17 @@ class peano4::maps::STDStackMap {
 
 
 template <typename T>
+tarch::logging::Log  peano4::maps::STDStackMap<T>::_log( "peano4::maps::STDStackMap<T>" );
+
+
+template <typename T>
 void peano4::maps::STDStackMap<T>::createStack(const StackKey& key) {
   if ( _data.count( key )==0 ) {
     _data.insert(
       std::pair< StackKey, T* >(
         key,
-		new T()
-	  )
+        new T()
+      )
     );
   }
 }
@@ -135,13 +156,14 @@ T* peano4::maps::STDStackMap<T>::getForPop(const StackKey& key) {
 
 template <typename T>
 std::string peano4::maps::STDStackMap<T>::toString() const {
-  std::string result = "(" + std::to_string( _data.size() );
+  std::ostringstream msg;
+  msg << "(" << _data.size();
   for (auto& p: _data) {
-	result += ",";
-	result += std::to_string(p.first.first) + "x" + std::to_string(p.first.second) + ":" + std::to_string(p.second->size());
+    msg << ","
+        << p.first.first << "x" << p.first.second << ":" << p.second->size();
   }
-  result += ")";
-  return result;
+  msg << ")";
+  return msg.str();
 }
 
 
@@ -154,8 +176,6 @@ std::set<peano4::maps::StackKey>  peano4::maps::STDStackMap<T>::getKeys() {
   }
   return result;
 }
-
-
 
 
 template <typename T>
@@ -179,9 +199,16 @@ peano4::maps::STDStackMap<T>::~STDStackMap() {
 
 
 template <typename T>
-void peano4::maps::STDStackMap<T>::garbageCollection() {
+void peano4::maps::STDStackMap<T>::garbageCollection(int spacetree) {
   for (auto& p: _data) {
-    if (p.second->empty()) {
+    if (
+      p.first.first==spacetree
+      and
+      p.second->empty()
+      and
+      not peano4::parallel::Node::isStorageStackNumber(p.first.second)
+    ) {
+      logDebug( "garbageCollection(...)", "remove stack " << p.first.first << "x" << p.first.second << ": " << p.second->toString() );
       delete p.second;
       p.second = new T();
 	  }
