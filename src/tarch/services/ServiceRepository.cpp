@@ -61,18 +61,18 @@ bool tarch::services::ServiceRepository::hasService( Service* service ) const {
 
 void tarch::services::ServiceRepository::receiveDanglingMessages() {
   if (Service::receiveDanglingMessagesSemaphore==nullptr) {
-	Service::receiveDanglingMessagesSemaphore = new tarch::multicore::RecursiveSemaphore();
+    Service::receiveDanglingMessagesSemaphore = new tarch::multicore::RecursiveSemaphore();
   }
   tarch::multicore::RecursiveLock lock(*Service::receiveDanglingMessagesSemaphore);
 
   for (
-      ServiceContainer::iterator p = _services.begin();
-      p != _services.end();
-      p++
+    ServiceContainer::iterator p = _services.begin();
+    p != _services.end();
+    p++
   ) {
     p->_service->receiveDanglingMessages();
   }
-}
+} 
 
 
 std::string tarch::services::ServiceRepository::getListOfRegisteredServices() const {

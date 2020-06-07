@@ -58,14 +58,17 @@ class tarch::services::ServiceRepository: public tarch::services::Service {
      *
      * <h2> MPI tuning </h2>
      *
-     * I once had an implementation that issues in Iprobe before it enters the
-     * receiveDanglingMessages() of all registered services. This is not a good
-     * idea. It does not allow services to buffer requests and then to answer
-     * them all in one rush. However, I want to do exactly this (wait until all
-     * trees have finished a traversal before I insert new ones, e.g.). So I
-     * removed this premature Iprobe optimisation; and debugged for ages before
-     * I found out that this is the reason for deadlocks.
-     *
+     * I once had an implementation that checks via Iprobe whether to call the
+     * receiveDanglingMessages() of all registered services. Without that probe,
+     * my ExaHyPE 2 code did crash. Today, I think this has been a bug in the
+     * way how parts of the code handled the requests, so I could remove the
+     * snippet again. Nevertheless, it makes sense to allow codes to do something
+     * else while receiveDanglingMessages() is called. If this routine is called,
+     * the system basically flags that there's a lack of MPI progression or poor
+     * load balancing, so the routine indeed should give a user code to do
+     * something meaningful meanwhile. This can be to check for further messages
+     * (unexpected message arrival). But it can also be something else such as
+     * the handling of left-ofter tasks.
      */
     virtual void receiveDanglingMessages();
 
