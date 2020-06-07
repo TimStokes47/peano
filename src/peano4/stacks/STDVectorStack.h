@@ -69,12 +69,17 @@ class peano4::stacks::STDVectorStack {
     /**
      * Constructor.
      *
+     * There's not really a need to initialise _ioMode and _ioTag, but I do so
+     * to ensure that memory checkers don't yield wrong alarms.
+     *
      * @see EventStack::EventStack()
      */
     STDVectorStack():
       _data(),
       _currentElement(0),
-      _ioMode(IOMode::None)
+      _ioMode(IOMode::None),
+      _ioRank(-1),
+      _ioTag(-1)
       #ifdef Parallel
       ,
       _ioMPIRequest(nullptr)
@@ -323,17 +328,16 @@ class peano4::stacks::STDVectorStack {
      * code still might insert additional elements, i.e. starting does not
      * mean all the data that is to be sent out is already in the container.
      */
-//    void startSend(int rank, int tag) requires HasMPIDatatype<T> {
     void startSend(int rank, int tag) {
       #ifdef Parallel
       assertion( _ioMode==IOMode::None );
+      assertion( _ioMPIRequest==nullptr );
       _ioMode = IOMode::MPISend;
       _ioTag  = tag;
       _ioRank = rank;
 
-      logDebug( "startSend(int,int,bool)", "start to send " << _currentElement << " element(s) to rank " << _ioRank << " on tag " << _ioTag );
+      logDebug( "startSend(int,int,bool)", toString());
 
-      assertion( _ioMPIRequest == nullptr );
       _ioMPIRequest = new MPI_Request;
       int result = MPI_Isend( _data.data(), _currentElement, T::Datatype, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
       if  (result!=MPI_SUCCESS) {
@@ -347,7 +351,6 @@ class peano4::stacks::STDVectorStack {
     /**
      * @see startSend()
      */
-//    void startReceive(int rank, int tag, int numberOfElements) requires HasMPIDatatype<T> {
     void startReceive(int rank, int tag, int numberOfElements) {
       #ifdef Parallel
       assertion3( _ioMode==IOMode::None, rank, tag, numberOfElements );
@@ -364,14 +367,14 @@ class peano4::stacks::STDVectorStack {
       assertion( _ioMPIRequest == nullptr );
       _ioMPIRequest = new MPI_Request;
 
-      logDebug( "startReceive(int,int,int)", "start to receive " << _data.size() << " element(s) from rank " << _ioRank << " on tag " << _ioTag );
-
       int result = MPI_Irecv( _data.data(), _data.size(), T::Datatype, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
       if  (result!=MPI_SUCCESS) {
         logError( "startReceive(int,int,int)", "was not able to receive " << numberOfElements << " values from node " << rank << " on tag " << tag
            << ": " << tarch::mpi::MPIReturnValueToString(result)
         );
       }
+
+      logDebug( "startReceive()", toString() );
       #endif
     }
 
@@ -388,19 +391,16 @@ class peano4::stacks::STDVectorStack {
      */
     bool tryToFinishSendOrReceive() {
       #ifdef Parallel
-      logTraceInWith4Arguments( "finishSendOrReceive()", ::toString(_ioMode), size(), _ioRank,_ioTag );
+      logTraceInWith4Arguments( "tryToFinishSendOrReceive()", ::toString(_ioMode), size(), _ioRank,_ioTag );
       bool result = true;
       if ( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive ) {
         assertion( _ioMPIRequest!=nullptr );
 
         int          flag = 0;
-        clock_t      timeOutWarning   = -1;
-        clock_t      timeOutShutdown  = -1;
-        bool         triggeredTimeoutWarning = false;
         MPI_Test( _ioMPIRequest, &flag, MPI_STATUS_IGNORE );
-        result = flag;
-        if (result) {
-          logDebug( "finishSendOrReceive()", "send/receive complete, free MPI request" );
+        if (flag) {
+          result = true;
+          logDebug( "tryToFinishSendOrReceive()", "send/receive complete, free MPI request: " << toString() );
           delete _ioMPIRequest;
           _ioMPIRequest = nullptr;
           if (_ioMode==IOMode::MPISend ) {
@@ -408,8 +408,11 @@ class peano4::stacks::STDVectorStack {
           }
           _ioMode = IOMode::None;
         }
+        else {
+          result = false;
+        }
       }
-      logTraceOutWith1Argument( "finishSendOrReceive()", result );
+      logTraceOutWith1Argument( "tryToFinishSendOrReceive()", result );
       return result;
       #else
       return true;
@@ -429,16 +432,12 @@ class peano4::stacks::STDVectorStack {
 
     std::string toString() const {
       std::ostringstream msg;
-      msg << "(size:" << size()
-          << ",current-element:" << _currentElement;
-      #if PeanoDebug>0
-      int entry = 0;
-      for (auto& p: _data) {
-        msg << ",#" << entry << ":" << p.toString();
-        entry++;
-      }
-      #endif
-      msg << ")";
+      msg << "(size=" << size()
+          << ",current-element=" << _currentElement
+          << ",io-mode=" << ::toString( _ioMode )
+          << ",rank=" << _ioRank
+          << ",tag=" << _ioTag
+          << ")";
       return msg.str();
     }
 };
