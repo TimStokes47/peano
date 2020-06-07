@@ -84,8 +84,6 @@ void peano4::parallel::SpacetreeSet::answerQuestions() {
   #ifdef Parallel
   std::vector<peano4::parallel::TreeManagementMessage> unansweredMessagesThatIanAnswerNow;
 
-  // @todo warum zwei Loops?
-
   std::vector<peano4::parallel::TreeManagementMessage>::iterator p = _unansweredMessages.begin();
   while (p!=_unansweredMessages.end()) {
     switch ( p->getAction() ) {
