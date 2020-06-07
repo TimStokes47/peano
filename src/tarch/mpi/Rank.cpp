@@ -263,7 +263,7 @@ tarch::mpi::Rank::~Rank() {
 }
 
 
-void tarch::mpi::Rank::barrier() {
+void tarch::mpi::Rank::barrier(std::function<void()> waitor) {
   #ifdef Parallel
   logTraceIn( "barrier()" );
 
@@ -289,12 +289,28 @@ void tarch::mpi::Rank::barrier() {
     ) {
       tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "tarch::mpi::Rank", "barrier()", -1, -1 );
     }
-    tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+    waitor();
     MPI_Test( &request, &flag, MPI_STATUS_IGNORE );
   }
+
   logTraceOut( "barrier()" );
   #endif
 }
+
+
+bool tarch::mpi::Rank::isMessageInQueue(int tag) const {
+  #if Parallel
+  int  flag        = 0;
+  MPI_Iprobe(
+    MPI_ANY_SOURCE, tag,
+    getCommunicator(), &flag, MPI_STATUS_IGNORE
+  );
+  return flag;
+  #else
+  return false;
+  #endif
+}
+
 
 
 void tarch::mpi::Rank::shutdown() {
@@ -454,13 +470,6 @@ void tarch::mpi::Rank::setCommunicator( MPI_Comm communicator ) {
   _communicator = communicator;
 }
 #endif
-
-
-void tarch::mpi::Rank::receiveDanglingMessages() {
-  #ifdef Parallel
-  tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
-  #endif
-}
 
 
 void tarch::mpi::Rank::abort(int errorCode) {
