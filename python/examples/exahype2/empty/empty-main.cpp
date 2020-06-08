@@ -166,6 +166,8 @@ int main(int argc, char** argv) {
   }
 
   peano4::parallel::Node::getInstance().shutdown();
+
+  peano4::parallel::SpacetreeSet::getInstance().shutdown();
   examples::exahype2::empty::observers::DataRepository::shutdownDatatypes();
   exahype2::shutdownNonCritialAssertionEnvironment();
   peano4::shutdownParallelEnvironment();

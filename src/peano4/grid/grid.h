@@ -6,6 +6,8 @@
 
 #include <vector>
 
+#include "GridVertex.h"
+
 
 namespace peano4 {
   /**
@@ -57,6 +59,26 @@ namespace peano4 {
      * code still might not recognise two elements if they massively overlap.
      */
     std::vector< GridControlEvent > merge( std::vector< GridControlEvent>  events, const double Tolerance = 0.1 );
+
+    /**
+     * Factory mechanism
+     *
+     * There are a few attributes which should have dummy values. There are
+     * also a few attributes which are set later on throughout the traversal,
+     * but I should initialise them here properly to ensure that valgrind's
+     * memchecker doesn't complain.
+     *
+     * @image html grid_createVertex.png
+     *
+     * @param adjacentRanks  Typically the result from Spacetree::getAdjacentRanksForNewVertex(coarseGridVertices,vertexPositionWithin3x3Patch).
+     */
+    GridVertex createVertex(
+      GridVertex::State                            state,
+      const tarch::la::Vector<Dimensions,double>&  x,
+      int                                          level,
+      const tarch::la::Vector<TwoPowerD,int>&      adjacentRanks,
+      bool                                         isNewFineGridVertex
+    );
   }
 }
 

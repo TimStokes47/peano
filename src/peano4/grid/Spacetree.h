@@ -306,8 +306,8 @@ class peano4::grid::Spacetree {
      */
     std::set< int >      _joining;
 
-    //typedef peano4::maps::STDStackMap< peano4::stacks::GridVertexStack >   GridVertexStackMap;
-    typedef peano4::maps::HierarchicalStackMap< peano4::stacks::GridVertexStack >   GridVertexStackMap;
+    typedef peano4::maps::STDStackMap< peano4::stacks::GridVertexStack >   GridVertexStackMap;
+    //typedef peano4::maps::HierarchicalStackMap< peano4::stacks::GridVertexStack >   GridVertexStackMap;
 
     static GridVertexStackMap  _vertexStack;
 
@@ -597,6 +597,14 @@ class peano4::grid::Spacetree {
       GridTraversalEvent&  event
     ) const;
 
+    /**
+     * <h2> Implementation details </h2>
+     *
+     * Don't use the result's toString() operation in the traceOut statement.
+     * The event is not yet totally populated (we don't know the data-specific
+     * properties and only befill the generic stuff). As a consequence any
+     * toString() will cause valgrind's memchecker to raise (falsely) an alarm.
+     */
     GridTraversalEvent createGenericCellTraversalEvent(
       GridVertex              fineGridVertices[TwoPowerD],
       const AutomatonState&   state,
@@ -873,26 +881,6 @@ class peano4::grid::Spacetree {
 
     tarch::la::Vector<TwoPowerD,int> getAdjacentRanksForNewVertex(
       GridVertex                                   coarseGridVertices[TwoPowerD],
-      const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
-    ) const;
-
-    /**
-     * @image html Spacetree_createNewPersistentVertex.png
-     */
-    GridVertex createNewPersistentVertex(
-      GridVertex                                   fineGridVertices[TwoPowerD],
-      const tarch::la::Vector<Dimensions,double>&  x,
-      int                                          level,
-      const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
-    ) const;
-
-    /**
-     * @image html Spacetree_createNewPersistentVertex.png
-     */
-    GridVertex createHangingVertex(
-      GridVertex                                   fineGridVertices[TwoPowerD],
-      const tarch::la::Vector<Dimensions,double>&  x,
-      int                                          level,
       const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
     ) const;
 

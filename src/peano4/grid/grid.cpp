@@ -1,6 +1,32 @@
 #include "grid.h"
 #include "GridStatistics.h"
 #include "GridControlEvent.h"
+#include "Spacetree.h"
+
+
+
+peano4::grid::GridVertex peano4::grid::createVertex(
+  GridVertex::State                            state,
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  const tarch::la::Vector<TwoPowerD,int>&      adjacentRanks,
+  bool                                         isNewFineGridVertex
+) {
+  GridVertex result;
+
+  result.setState( state );
+  result.setAdjacentRanks( adjacentRanks );
+  result.setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(not isNewFineGridVertex);
+  result.setIsAntecessorOfRefinedVertexInCurrentTreeSweep(not isNewFineGridVertex);
+  result.setX(x);
+  result.setLevel(level);
+
+  // not required logically, but makes valgrind's memchecker happy
+  result.setBackupOfAdjacentRanks( tarch::la::Vector<TwoPowerD,int>(Spacetree::InvalidRank) );
+  result.setNumberOfAdjacentRefinedLocalCells(0);
+
+  return result;
+}
 
 
 

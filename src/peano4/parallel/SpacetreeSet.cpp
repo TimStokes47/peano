@@ -57,6 +57,11 @@ void peano4::parallel::SpacetreeSet::init(
 }
 
 
+void peano4::parallel::SpacetreeSet::shutdown() {
+  peano4::grid::Spacetree::_vertexStack.clear();
+}
+
+
 peano4::parallel::SpacetreeSet::~SpacetreeSet() {
   tarch::services::ServiceRepository::getInstance().removeService( this );
 }
