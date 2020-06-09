@@ -38,7 +38,6 @@ class tarch::mpi::BooleanSemaphore {
       private:
         static BooleanSemaphoreService  _singleton;
 
-        int                  _semaphoreCounter;
         int                  _semaphoreTag;
 
         /**
@@ -86,6 +85,13 @@ class tarch::mpi::BooleanSemaphore {
          */
         void serveLockRequests();
 
+        /**
+         * @number Every boolean semaphore has a globally unique positive
+         *    number. The MPI messages we send around carry this number if we
+         *    want to acquire a lock. They carry the negative number if we
+         *    want to release a lock. To allow for these sign flips, number
+         *    may not equal zero.
+         */
         void addMapEntryLazily(int number);
       public:
         void init();
@@ -110,8 +116,6 @@ class tarch::mpi::BooleanSemaphore {
          */
         static BooleanSemaphoreService& getInstance();
 
-        int getSemaphoreNumber();
-
         void acquireLock( int number );
         void releaseLock( int number );
 
@@ -124,6 +128,8 @@ class tarch::mpi::BooleanSemaphore {
     friend class tarch::mpi::Lock;
 
     static tarch::logging::Log  _log;
+
+    static int                  _semaphoreCounter;
 
     const int  _semaphoreNumber;
 
