@@ -4,6 +4,8 @@
 
 #include "peano4/parallel/SpacetreeSet.h"
 
+#include "peano4/grid/GridStatistics.h"
+
 
 namespace {
   // If I don't instantiate it here, i.e. outside of a function, then I run risk
