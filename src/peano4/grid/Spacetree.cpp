@@ -226,7 +226,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
     logDebug(
       "traverse(TraversalObserver)",
       _splitTriggered.size() << " tree split triggered and " <<
-	  _splitting.size() << " splitting trees on tree " << _id
+      _splitting.size() << " splitting trees on tree " << _id
     );
   }
 
@@ -241,8 +241,6 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
   else {
     _gridControlEvents = merge( observer.getGridControlEvents() );
   }
-
-  logDebug( "traverse(TraversalObserver)", "got " << _gridControlEvents.size() << " grid control event(s)" );
 
   _splittedCells.clear();
 
