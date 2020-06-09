@@ -146,8 +146,8 @@ int peano4::parallel::Node::reserveId(int rank, int forTreeId)  {
 
 void peano4::parallel::Node::registerId(int id, int masterId) {
   tarch::multicore::Lock lock(_semaphore);
-  assertion( _treeEntries.count(id)==0 );
-  assertion( id!=masterId );
+  assertion2( _treeEntries.count(id)==0, id, masterId );
+  assertion2( id!=masterId, id, masterId );
   #ifndef Parallel
   assertion( isGlobalMaster(id) or _treeEntries.count(masterId)==1 );
   #endif

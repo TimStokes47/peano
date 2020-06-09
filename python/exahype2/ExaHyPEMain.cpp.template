@@ -171,8 +171,6 @@ int main(int argc, char** argv) {{
   }}
   
   {FULL_NAMESPACE}::observers::DataRepository::initDatatypes();
-
-  peano4::parallel::Node::getInstance().init();
   
   #if PeanoDebug>=2
   tarch::tests::TestCase* peanoCoreTests = peano4::getUnitTests();
