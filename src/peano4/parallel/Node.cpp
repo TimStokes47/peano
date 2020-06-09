@@ -17,7 +17,8 @@
 #include "tarch/multicore/Lock.h"
 
 
-tarch::logging::Log  peano4::parallel::Node::_log("peano4::parallel::Node");
+tarch::logging::Log      peano4::parallel::Node::_log("peano4::parallel::Node");
+peano4::parallel::Node   peano4::parallel::Node::_singleton;
 
 
 void peano4::parallel::Node::initMPIDatatypes() {
@@ -46,13 +47,7 @@ void peano4::parallel::Node::shutdownMPIDatatypes() {
 }
 
 
-peano4::parallel::Node::Node():
-  _currentProgramStep(UndefProgramStep),
-  _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - rank orchestration") ),
-  _dataExchangeBaseTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - data management", ReservedMPITagsForDataExchange) ) {
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    registerId( 0, -1);
-  }
+peano4::parallel::Node::Node() {
 }
 
 
@@ -63,6 +58,16 @@ peano4::parallel::Node::~Node() {
     _currentProgramStep==Terminate,
     "forgot to terminate node properly through peano4::parallel::Node::getInstance().shutdown()"
   );
+}
+
+
+void peano4::parallel::Node::init() {
+  _currentProgramStep   = UndefProgramStep;
+  _rankOrchestrationTag = tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - rank orchestration");
+  _dataExchangeBaseTag  = tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - data management", ReservedMPITagsForDataExchange);
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    registerId( 0, -1);
+  }
 }
 
 
@@ -83,8 +88,7 @@ bool peano4::parallel::Node::isGlobalMaster(int treeId) {
 
 
 peano4::parallel::Node& peano4::parallel::Node::getInstance() {
-  static Node singleton;
-  return singleton;
+  return _singleton;
 }
 
 

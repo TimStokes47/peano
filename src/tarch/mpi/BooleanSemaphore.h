@@ -33,10 +33,11 @@ namespace tarch {
  * @author Tobias Weinzierl
  */
 class tarch::mpi::BooleanSemaphore {
-  private:
-    friend class Rank;
+  public:
     class BooleanSemaphoreService: public tarch::services::Service {
       private:
+        static BooleanSemaphoreService  _singleton;
+
         int                  _semaphoreCounter;
         int                  _semaphoreTag;
 
@@ -87,6 +88,9 @@ class tarch::mpi::BooleanSemaphore {
 
         void addMapEntryLazily(int number);
       public:
+        void init();
+        void shutdown() override;
+
         /**
          * Destructor of the service. As the service is a singleton and a service
          * (hence the name), it has to deregister itself. Otherwise, the overall
@@ -115,7 +119,8 @@ class tarch::mpi::BooleanSemaphore {
 
         std::string toString() const;
     };
-
+  private:
+    friend class Rank;
     friend class tarch::mpi::Lock;
 
     static tarch::logging::Log  _log;

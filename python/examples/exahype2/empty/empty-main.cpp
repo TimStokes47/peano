@@ -139,6 +139,11 @@ int main(int argc, char** argv) {
   peano4::initParallelEnvironment(&argc,&argv);
   exahype2::initNonCritialAssertionEnvironment();
   peano4::fillLookupTables();
+  peano4::initSingletons(
+    DomainOffset,
+    DomainSize,
+    0
+  );
 
   if (not exahype2::parseCommandLineArguments(argc,argv) ) {
     return ExitCodeInvalidArguments;
@@ -147,12 +152,7 @@ int main(int argc, char** argv) {
   // I mamually removed the unit tests
 
   examples::exahype2::empty::observers::DataRepository::initDatatypes();
-  
-  peano4::parallel::SpacetreeSet::getInstance().init(
-    DomainOffset,
-    DomainSize,
-    0
-  );
+
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     while ( selectNextAlgorithmicStep() ) {
       step();
@@ -165,9 +165,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  peano4::parallel::Node::getInstance().shutdown();
-
-  peano4::parallel::SpacetreeSet::getInstance().shutdown();
+  peano4::shutdownSingletons();
   examples::exahype2::empty::observers::DataRepository::shutdownDatatypes();
   exahype2::shutdownNonCritialAssertionEnvironment();
   peano4::shutdownParallelEnvironment();

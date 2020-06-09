@@ -28,6 +28,9 @@ const std::string::size_type tarch::logging::CommandLineLogger::NumberOfStandard
 const int                    tarch::logging::CommandLineLogger::DigitsInFilenamesIterationNumer  = 5;
 
 
+tarch::logging::CommandLineLogger  tarch::logging::CommandLineLogger::_singleton;
+
+
 tarch::logging::CommandLineLogger::CommandLineLogger():
   _outputStream(nullptr),
   _hasWrittenToOuputStream(false),
@@ -45,8 +48,7 @@ tarch::logging::CommandLineLogger::CommandLineLogger():
 
 
 tarch::logging::CommandLineLogger& tarch::logging::CommandLineLogger::getInstance() {
-  static CommandLineLogger singleton;
-  return singleton;
+  return _singleton;
 }
 
 

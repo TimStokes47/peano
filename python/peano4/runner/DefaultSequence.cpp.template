@@ -85,6 +85,7 @@ int main(int argc, char** argv) {{
   
   {FULL_NAMESPACE}::observers::DataRepository::initDatatypes();
 
+Da fehlt der Node init und shutdown. Fixen -> gibt es jetzt auch zentral in Peano.h
 
   #if PeanoDebug>=2
   tarch::tests::TestCase* peanoCoreTests = peano4::getUnitTests();

@@ -160,12 +160,19 @@ int main(int argc, char** argv) {{
   peano4::initParallelEnvironment(&argc,&argv);
   exahype2::initNonCritialAssertionEnvironment();
   peano4::fillLookupTables();
+  peano4::initSingletons(
+    DomainOffset,
+    DomainSize,
+    0
+  );
 
   if (not exahype2::parseCommandLineArguments(argc,argv) ) {{
     return ExitCodeInvalidArguments;
   }}
   
   {FULL_NAMESPACE}::observers::DataRepository::initDatatypes();
+
+  peano4::parallel::Node::getInstance().init();
   
   #if PeanoDebug>=2
   tarch::tests::TestCase* peanoCoreTests = peano4::getUnitTests();
@@ -183,14 +190,8 @@ int main(int argc, char** argv) {{
     tarch::mpi::Rank::abort( ExitCodeUnitTestsFailed );
   }}
   delete peanoTarchTests;
- 
   #endif
 
-  peano4::parallel::SpacetreeSet::getInstance().init(
-    DomainOffset,
-	DomainSize,
-    0
-  );
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {{
     while ( selectNextAlgorithmicStep() ) {{
       step();
@@ -202,9 +203,7 @@ int main(int argc, char** argv) {{
     }}
   }}
 
-  peano4::parallel::Node::getInstance().shutdown();
-  
-  peano4::parallel::SpacetreeSet::getInstance().shutdown();
+  peano4::shutdownSingletons();
   {FULL_NAMESPACE}::observers::DataRepository::shutdownDatatypes();
   exahype2::shutdownNonCritialAssertionEnvironment();
   peano4::shutdownParallelEnvironment();

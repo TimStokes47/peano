@@ -51,6 +51,8 @@ class peano4::parallel::Node {
      */
     static tarch::logging::Log _log;
 
+    static Node                _singleton;
+
     tarch::multicore::BooleanSemaphore  _semaphore;
 
     /**
@@ -263,6 +265,8 @@ class peano4::parallel::Node {
     void setNextProgramStep( int number );
 
     int getCurrentProgramStep() const;
+
+    void init();
 
     /**
      * The shutdown is not invoked by peano4::shutdownParallelEnvironment()!

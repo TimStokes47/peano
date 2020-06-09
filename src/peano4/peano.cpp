@@ -6,7 +6,11 @@
 #include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Core.h"
 #include "tarch/mpi/Rank.h"
+#include "tarch/mpi/BooleanSemaphore.h"
 #include "tarch/tarch.h"
+
+#include "peano4/parallel/Node.h"
+#include "peano4/parallel/SpacetreeSet.h"
 
 
 void peano4::writeCopyrightMessage() {
@@ -110,5 +114,31 @@ void peano4::shutdownParallelEnvironment() {
 }
 
 
+void peano4::initSingletons(
+  const tarch::la::Vector<Dimensions,double>&  offset,
+  const tarch::la::Vector<Dimensions,double>&  width,
+  const std::bitset<Dimensions>&               periodicBC
+) {
+  tarch::services::ServiceRepository::getInstance().init();
+
+  tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getInstance().init();
+
+  peano4::parallel::Node::getInstance().init();
+
+  peano4::parallel::SpacetreeSet::getInstance().init(
+    offset,
+    width,
+    periodicBC
+  );
+}
 
 
+void peano4::shutdownSingletons() {
+  peano4::parallel::SpacetreeSet::getInstance().shutdown();
+
+  peano4::parallel::Node::getInstance().shutdown();
+
+  tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getInstance().shutdown();
+
+  tarch::services::ServiceRepository::getInstance().shutdown();
+}

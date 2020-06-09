@@ -40,6 +40,8 @@ class tarch::logging::ChromeTraceFileLogger {
   private:
     static Log _log;
 
+    static ChromeTraceFileLogger   _singleton;
+
     tarch::multicore::BooleanSemaphore _semaphore;
 
     /**

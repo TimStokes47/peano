@@ -20,6 +20,9 @@
 tarch::logging::Log tarch::logging::ChromeTraceFileLogger::_log( "tarch::logging::ChromeTraceFileLogger" );
 
 
+tarch::logging::ChromeTraceFileLogger   tarch::logging::ChromeTraceFileLogger::_singleton;
+
+
 tarch::logging::ChromeTraceFileLogger::ChromeTraceFileLogger():
   _outputStream(nullptr),
   _quitOnError(false),
@@ -29,8 +32,7 @@ tarch::logging::ChromeTraceFileLogger::ChromeTraceFileLogger():
 
 
 tarch::logging::ChromeTraceFileLogger& tarch::logging::ChromeTraceFileLogger::getInstance() {
-  static ChromeTraceFileLogger singleton;
-  return singleton;
+  return _singleton;
 }
 
 

@@ -3,6 +3,9 @@
 #ifndef _PEANO4_H_
 #define _PEANO4_H_
 
+#include "tarch/la/Vector.h"
+#include "peano4/utils/Globals.h"
+
 /**
  *
  * @mainpage Peano 4
@@ -142,6 +145,22 @@ namespace peano4 {
    * @see peano4::parallel::Node::shutdown()
    */
   void shutdownParallelEnvironment();
+
+  /**
+   * Fire up all the singletons.
+   *
+   *
+   * Singletons that I don't touch are:
+   *
+   * - tarch::mpi::Rank, as the rank is not a service and is handled
+   *   separately by the initParallelEnvironment().
+   */
+  void initSingletons(
+    const tarch::la::Vector<Dimensions,double>&  offset,
+    const tarch::la::Vector<Dimensions,double>&  width,
+    const std::bitset<Dimensions>&               periodicBC = 0
+  );
+  void shutdownSingletons();
 }
 
 

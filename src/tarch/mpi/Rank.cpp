@@ -33,7 +33,7 @@ namespace {
 tarch::logging::Log tarch::mpi::Rank::_log("tarch::mpi::Rank");
 
 
-bool tarch::mpi::Rank::_initIsCalled = false;
+tarch::mpi::Rank  tarch::mpi::Rank::_singleton;
 
 
 
@@ -241,6 +241,7 @@ std::string tarch::mpi::MPIStatusToString( const MPI_Status& status ) {
 
 #ifdef Parallel
 tarch::mpi::Rank::Rank():
+  _initIsCalled(false),
   _rank(-1),
   _numberOfProcessors(-1),
   _communicator( MPI_COMM_WORLD),
@@ -250,6 +251,7 @@ tarch::mpi::Rank::Rank():
 }
 #else
 tarch::mpi::Rank::Rank():
+  _initIsCalled(false),
   _rank(0),
   _numberOfProcessors(1),
   _timeOutWarning(0),
@@ -432,8 +434,7 @@ int tarch::mpi::Rank::getRank() const {
 
 
 tarch::mpi::Rank& tarch::mpi::Rank::getInstance() {
-  static Rank singleton;
-  return singleton;
+  return _singleton;
 }
 
 
