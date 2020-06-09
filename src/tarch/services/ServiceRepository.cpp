@@ -42,9 +42,6 @@ void tarch::services::ServiceRepository::addService( Service* const service, con
   entry._name    = name;
   entry._service = service;
   _services.push_back( entry );
-
-  std::cout << std::endl << "added " << name << std::endl << std::endl;
-
 }
 
 
