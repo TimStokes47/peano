@@ -1,9 +1,10 @@
 #include "SpacetreeSet.h"
 #include "Node.h"
 
-
+#include "peano4/grid/Spacetree.h"
 #include "peano4/grid/grid.h"
 #include "peano4/grid/PeanoCurve.h"
+#include "peano4/grid/TraversalObserver.h"
 
 
 #include "tarch/tarch.h"
@@ -19,20 +20,18 @@
 
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
 
+peano4::parallel::SpacetreeSet peano4::parallel::SpacetreeSet::_singleton;
+
 
 tarch::multicore::BooleanSemaphore  peano4::parallel::SpacetreeSet::_semaphore;
 
 
 peano4::parallel::SpacetreeSet::SpacetreeSet():
-  _requestMessageTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::SpacetreeSet - request message") ),
-  _answerMessageTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::SpacetreeSet - answer message", Node::MaxSpacetreesPerRank) ),
   _state( SpacetreeSetState::Waiting) {
-  tarch::services::ServiceRepository::getInstance().addService( this, "peano4::parallel::SpacetreeSet" );
 }
 
 
 peano4::parallel::SpacetreeSet&  peano4::parallel::SpacetreeSet::getInstance() {
-  static SpacetreeSet _singleton;
   return _singleton;
 }
 
@@ -42,6 +41,10 @@ void peano4::parallel::SpacetreeSet::init(
   const tarch::la::Vector<Dimensions,double>&  width,
   const std::bitset<Dimensions>&               periodicBC
 ) {
+  _requestMessageTag = tarch::mpi::Rank::reserveFreeTag("peano4::parallel::SpacetreeSet - request message");
+  _answerMessageTag = tarch::mpi::Rank::reserveFreeTag("peano4::parallel::SpacetreeSet - answer message", Node::MaxSpacetreesPerRank);
+  tarch::services::ServiceRepository::getInstance().addService( this, "peano4::parallel::SpacetreeSet" );
+
   assertion4(
     (peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees()==1 and tarch::mpi::Rank::getInstance().getRank()==0)
     or
@@ -59,11 +62,11 @@ void peano4::parallel::SpacetreeSet::init(
 
 void peano4::parallel::SpacetreeSet::shutdown() {
   peano4::grid::Spacetree::_vertexStack.clear();
+  tarch::services::ServiceRepository::getInstance().removeService( this );
 }
 
 
 peano4::parallel::SpacetreeSet::~SpacetreeSet() {
-  tarch::services::ServiceRepository::getInstance().removeService( this );
 }
 
 
@@ -84,8 +87,6 @@ std::string peano4::parallel::SpacetreeSet::toString( SpacetreeSetState state ) 
 
 
 void peano4::parallel::SpacetreeSet::answerQuestions() {
-  logTraceIn( "answerQuestions()" );
-
   #ifdef Parallel
   std::vector<peano4::parallel::TreeManagementMessage> unansweredMessagesThatIanAnswerNow;
 
@@ -103,7 +104,10 @@ void peano4::parallel::SpacetreeSet::answerQuestions() {
             unansweredMessagesThatIanAnswerNow.push_back( *p );
             p = _unansweredMessages.erase(p);
           }
-          else p++;
+          else {
+            logInfo( "answerMessages()", "can't answer as I'm in the wrong state" );
+            p++;
+          }
         }
         break;
       case peano4::parallel::TreeManagementMessage::Action::Acknowledgement:
@@ -112,6 +116,7 @@ void peano4::parallel::SpacetreeSet::answerQuestions() {
 
     }
   }
+
 
   for (auto p: unansweredMessagesThatIanAnswerNow) {
     switch ( p.getAction() ) {
@@ -170,13 +175,12 @@ void peano4::parallel::SpacetreeSet::answerQuestions() {
   #else
   assertion(_unansweredMessages.empty());
   #endif
-
-  logTraceOut( "answerQuestions()" );
 }
 
 
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
   #ifdef Parallel
+
   if ( tarch::mpi::Rank::getInstance().isMessageInQueue(_requestMessageTag) ) {
     logTraceIn( "receiveDanglingMessages()" );
 
@@ -184,6 +188,9 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
     peano4::parallel::TreeManagementMessage::receive( message, MPI_ANY_SOURCE, _requestMessageTag, tarch::mpi::Rank::getInstance().getCommunicator() );
 
     _unansweredMessages.push_back( message );
+
+    logDebug( "receiveDanglingMessages()", "received new message " << message.toString() );
+
     logTraceOut( "receiveDanglingMessages()" );
   }
 
@@ -460,10 +467,19 @@ void peano4::parallel::SpacetreeSet::deleteClonedObservers() {
 
 void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
   logTraceIn( "traverse(TraversalObserver&)" );
+
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     peano4::parallel::Node::getInstance().continueToRun();
   }
   logDebug( "traverse(TraversalObserver)", "start new grid sweep" );
+
+  tarch::mpi::Rank::getInstance().barrier(
+    [&]() -> void {
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+      answerQuestions();
+    }
+  );
+  logDebug( "traverse(TraversalObserver&)", "rank has passed barrier" );
 
   _state = SpacetreeSetState::TraverseTreesAndExchangeData;
 
@@ -543,14 +559,6 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   createNewTrees();
 
   deleteClonedObservers();
-
-  tarch::mpi::Rank::getInstance().barrier(
-    [&]() -> void {
-      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
-      answerQuestions();
-    }
-  );
-  logInfo( "traverse(TraversalObserver&)", "rank has passed barrier" );
  
   logTraceOut( "traverse(TraversalObserver&)" );
 }
@@ -707,12 +715,15 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
 
     if (tarch::mpi::Rank::getInstance().getRank()!=targetRank) {
       #ifdef Parallel
-      logDebug( "split(int,int,int)", "request new tree on rank " << targetRank );
+      // debug
+      logInfo( "split(int,int,int)", "request new tree on rank " << targetRank );
       peano4::parallel::TreeManagementMessage requestMessage;
       requestMessage.setMasterSpacetreeId(treeId);
       requestMessage.setWorkerSpacetreeId(-1);
       requestMessage.setAction( peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree );
       TreeManagementMessage::sendAndPollDanglingMessages(requestMessage, targetRank, _requestMessageTag);
+
+      logInfo( "split(int,int,int)", "message " << requestMessage.toString() << " sent - wait for answer" );
 
       peano4::parallel::TreeManagementMessage answerMessage;
       TreeManagementMessage::receiveAndPollDanglingMessages(answerMessage, targetRank, getAnswerTag(treeId));
