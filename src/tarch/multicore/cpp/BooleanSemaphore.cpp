@@ -24,4 +24,9 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 }
 
 
+bool tarch::multicore::BooleanSemaphore::tryEnterCriticalSection() {
+  return _mutex.try_lock();
+}
+
+
 #endif

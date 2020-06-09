@@ -16,6 +16,7 @@ tarch::multicore::RecursiveSemaphore::~RecursiveSemaphore() {
 
 bool tarch::multicore::RecursiveSemaphore::tryEnterCriticalSection() {
   return _recursiveMutex.try_lock();
+  //return _recursiveMutex.try_lock_for(std::chrono::milliseconds(100));
 }
 
 

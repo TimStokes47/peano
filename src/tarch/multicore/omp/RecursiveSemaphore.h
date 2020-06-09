@@ -29,15 +29,11 @@ class tarch::multicore::RecursiveSemaphore {
   private:
     friend class tarch::multicore::RecursiveLock;
 
-    /**
-     * Waits until I can enter the critical section.
-     */
-    void enterCriticalSection();
+    omp_nested_lock_t lock;
 
-    /**
-     * Tells the semaphore that it is about to leave.
-     */
+    void enterCriticalSection();
     void leaveCriticalSection();
+    bool tryEnterCriticalSection();
 
     /**
      * You may not copy a semaphore

@@ -42,18 +42,11 @@ class tarch::multicore::RecursiveSemaphore {
 
     //tbb::recursive_mutex          _recursiveMutex;
     std::recursive_mutex          _recursiveMutex;
+    //std::recursive_timed_mutex    _recursiveMutex;
 
-
-    bool tryEnterCriticalSection();
-    /**
-     * Waits until I can enter the critical section.
-     */
     void enterCriticalSection();
-
-    /**
-     * Tells the semaphore that it is about to leave.
-     */
     void leaveCriticalSection();
+    bool tryEnterCriticalSection();
 
     /**
      * You may not copy a semaphore

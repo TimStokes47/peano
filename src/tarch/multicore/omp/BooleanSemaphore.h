@@ -21,17 +21,10 @@ class tarch::multicore::BooleanSemaphore {
     friend class tarch::multicore::Lock;
     omp_lock_t lock;
 
-    /**
-     * Waits until I can enter the critical section.
-     */
     void enterCriticalSection();
-
-    /**
-     * Tells the semaphore that it is about to leave.
-     */
     void leaveCriticalSection();
-
     bool tryEnterCriticalSection();
+
     /**
      * You may not copy a semaphore
      */
