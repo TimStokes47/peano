@@ -165,6 +165,8 @@ int main(int argc, char** argv) {
     }
   }
 
+  observers::finishSimulation();
+
   peano4::shutdownSingletons();
   examples::exahype2::empty::observers::DataRepository::shutdownDatatypes();
   exahype2::shutdownNonCritialAssertionEnvironment();

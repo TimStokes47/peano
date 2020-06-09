@@ -203,6 +203,8 @@ int main(int argc, char** argv) {{
     }}
   }}
 
+  observers::finishSimulation();
+
   peano4::shutdownSingletons();
   {FULL_NAMESPACE}::observers::DataRepository::shutdownDatatypes();
   exahype2::shutdownNonCritialAssertionEnvironment();
