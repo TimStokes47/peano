@@ -167,7 +167,7 @@ void peano4::parallel::SpacetreeSet::answerQuestions() {
 
           peano4::parallel::TreeManagementMessage answerMessage;
           answerMessage.setAction(TreeManagementMessage::Action::Acknowledgement);
-          peano4::parallel::TreeManagementMessage::send(answerMessage, p.getSenderRank(), getAnswerTag(p.getMasterSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
+          peano4::parallel::TreeManagementMessage::send(answerMessage, p.getSenderRank(), getAnswerTag(p.getWorkerSpacetreeId()), tarch::mpi::Rank::getInstance().getCommunicator() );
         }
         break;
     }
