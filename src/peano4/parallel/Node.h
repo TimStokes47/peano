@@ -269,9 +269,7 @@ class peano4::parallel::Node {
     void init();
 
     /**
-     * The shutdown is not invoked by peano4::shutdownParallelEnvironment()!
-     * You have to call this shutdown() before you do anyhing else.
-     *
+     * The shutdown is invoked by peano4::shutdownSingletons()
      *
      * If we run it on the global master, we set the program state to terminate
      * and distribute this message. For this, we hijack the routine continueToRun().
@@ -280,8 +278,17 @@ class peano4::parallel::Node {
      * in a continue while loop in their main routine and just wait for the
      * global master to send out this terminate command.
      *
-     * Users don't have to call this routine manually, as
-     * peano4::shutdownParallelEnvironment() invokes it.
+     * It is important that this is the very first call when you want your
+     * application to go down. Invoked on the global master, it triggers the
+     * shutdown on all the other ranks. You will get deadlocks if you try to free
+     * any common memory (RDMA) or free datatypes if you don't call the node's
+     * shutdown first.
+     *
+     * Other ranks might struggle to receive the shutdown command as they might
+     * still ask for further subtrees, e.g., or issue load balancing. Therefore,
+     * I insert a Peano 4 barrier right after we've issued the shutdown. It makes
+     * the rank that goes down handle all incoming data until we can be sure that
+     * everybody is in shutdown mode.
      */
     void shutdown();
 

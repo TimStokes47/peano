@@ -370,11 +370,15 @@ void peano4::parallel::Node::shutdown() {
   logTraceIn( "shutdown()" );
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     setNextProgramStep(peano4::parallel::Node::Terminate);
-  }
-
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     continueToRun();
   }
+
+  tarch::mpi::Rank::getInstance().barrier(
+    [&]() -> void {
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+    }
+  );
+
   logTraceOut( "shutdown()" );
 }
 

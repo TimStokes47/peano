@@ -160,6 +160,11 @@ namespace peano4 {
     const tarch::la::Vector<Dimensions,double>&  width,
     const std::bitset<Dimensions>&               periodicBC = 0
   );
+
+  /**
+   * The very first thing I have to do is to shut down Node. This
+   * shutdown will tell all the other ranks to go down as well.
+   */
   void shutdownSingletons();
 }
 

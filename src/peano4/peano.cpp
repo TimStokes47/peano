@@ -102,12 +102,6 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
 
 
 void peano4::shutdownParallelEnvironment() {
-  tarch::mpi::Rank::getInstance().barrier(
-    [&]() -> void {
-      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
-    }
-  );
-
   tarch::multicore::Core::getInstance().shutdown();
   peano4::parallel::Node::shutdownMPIDatatypes();
   tarch::mpi::Rank::getInstance().shutdown();
@@ -134,9 +128,9 @@ void peano4::initSingletons(
 
 
 void peano4::shutdownSingletons() {
-  peano4::parallel::SpacetreeSet::getInstance().shutdown();
-
   peano4::parallel::Node::getInstance().shutdown();
+
+  peano4::parallel::SpacetreeSet::getInstance().shutdown();
 
   tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getInstance().shutdown();
 
