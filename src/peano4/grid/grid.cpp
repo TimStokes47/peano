@@ -78,6 +78,11 @@ std::vector< peano4::grid::GridControlEvent > peano4::grid::merge( std::vector< 
   }
   else if (not continueWithTailRecursion) {
     logInfo( "merge(...)", "have to handle " << result.size() << " refine/coarsen commands" );
+    #if PeanoDebug>1
+    for (auto p: result) {
+      logInfo( "merge(...)", " - " << p.toString() );
+    }
+    #endif
   }
 
   logTraceOutWith1Argument( "merge(...)", result.size() );

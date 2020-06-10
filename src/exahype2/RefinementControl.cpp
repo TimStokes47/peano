@@ -40,6 +40,10 @@ std::string toString( exahype2::RefinementCommand value ) {
 tarch::logging::Log  exahype2::RefinementControl::_log( "exahype2::RefinementControl" );
 
 
+Da stimmt im Multithreaded-Mode irgendwas net. Zumindest sehe ich abwechselnd 2 und 3 Events auf einem Rank, wo es doch nur
+1 grosses sein sollte, was einfach alles abspannt.
+
+
 exahype2::RefinementControl::RefinementControl(double tolerance):
   _Tolerance( tolerance ),
   _accumulatingCopiesOfGlobalObject(0) {
@@ -55,6 +59,10 @@ void exahype2::RefinementControl::clear() {
 
 std::vector< peano4::grid::GridControlEvent >  exahype2::RefinementControl::getGridControlEvents() const {
   logDebug( "getGridControlEvents()", "return " << _events.size() << " grid control events" );
+  // @todo Has to be removed as soon as we have non-cubic cells
+  for ( auto p: _validEventsFromPreviousSweeps ) {
+    assertionNumericalEquals2( p.getWidth(0), p.getWidth(1), p.toString(), _validEventsFromPreviousSweeps.size() );
+  }
   return _validEventsFromPreviousSweeps;
 }
 
@@ -75,9 +83,11 @@ void exahype2::RefinementControl::addCommand(
         peano4::grid::GridControlEvent newEvent(
           peano4::grid::GridControlEvent::RefinementControl::Refine,
           x-0.5 * h - shift,
-		  expandedH,
-		  1.0/3.0 * h
+          expandedH,
+          1.0/3.0 * h
         );
+        assertionNumericalEquals1( newEvent.getWidth(0), newEvent.getWidth(1), newEvent.toString() );
+        assertionNumericalEquals1( newEvent.getH(0), newEvent.getH(1), newEvent.toString() );
         _events.push_back( newEvent );
         logDebug( "addCommend()", "added refinement for x=" << x << ", h=" << h << ": " << newEvent.toString() << " (total of " << _events.size() << " instructions)" );
       }
