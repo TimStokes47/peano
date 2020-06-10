@@ -17,6 +17,11 @@
 See guidebook instructions how to configure the single node environment.
 Please remember to add the --with-exahype argument to configure. 
 
+Before I code anything, I usually open Euler.cpp and ensure that the 
+mesh size is set properly:
+
+  const double MaxHOfVolume  = 0.01;
+
 
 I run the following steps to build the executable:
 
