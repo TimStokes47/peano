@@ -748,7 +748,7 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
           "split(int,int)",
           "Peano 4 uses " << tarch::getMemoryUsage(tarch::MemoryUsageFormat::MByte) << " MB on rank " <<
           tarch::mpi::Rank::getInstance().getRank() << " and is asked to split. Total memory is " <<
-          tarch::getTotalMemory(tarch::MemoryUsageFormat::MByte) << "MB, i.e. we might run out of memory"
+          tarch::getTotalMemory(tarch::MemoryUsageFormat::MByte) << " MB, i.e. we might run out of memory"
         );
       }
 
