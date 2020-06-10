@@ -174,7 +174,7 @@ class tarch::mpi::Rank {
      *   default, it is empty, i.e. barrier degenerates to a blocking barrier
      *   in the MPI 1.3 sense.
      */
-    void barrier(std::function<void()> waitor = [&]() -> void {} );
+    void barrier(std::function<void()> waitor = []() -> void {} );
 
     /**
      * In older DaStGen version, I tried to find out whether a particular
