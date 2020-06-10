@@ -14,7 +14,7 @@ namespace tarch {
 
 #include <string>
 #include <omp.h>
-
+#include "omp.h"
 
 class tarch::multicore::BooleanSemaphore {
   private:
