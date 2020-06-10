@@ -102,7 +102,7 @@ peano4_project.build()
 # for large parallel runs (see below).
 #
 #success = peano4_project.run( ["--threads", "1"] )
-success = peano4_project.run( ["--threads", "1"], ["mpirun", "-n", "1"] )
+success = peano4_project.run( ["--threads", "6"], ["mpirun", "-n", "1"] )
 
 
 if success:

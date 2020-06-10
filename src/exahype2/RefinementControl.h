@@ -71,8 +71,6 @@ class exahype2::RefinementControl {
   public:
     RefinementControl(double tolerance = 0.1);
 
-    void startToAccumulateLocally();
-
     void clear();
 
     std::vector< peano4::grid::GridControlEvent >  getGridControlEvents() const;
@@ -89,6 +87,11 @@ class exahype2::RefinementControl {
     );
 
     void merge( const RefinementControl& control );
+
+    /**
+     * Should be called after each traversal per rank.
+     */
+    void finishStep();
   private:
 	  static tarch::logging::Log  _log;
 
@@ -98,8 +101,6 @@ class exahype2::RefinementControl {
 	   * We blow up the region around refinement criterion slightly.
 	   */
 	  const double _Tolerance;
-
-	  int _accumulatingCopiesOfGlobalObject;
 
 	  std::vector< peano4::grid::GridControlEvent >  _events;
 	  std::vector< peano4::grid::GridControlEvent >  _validEventsFromPreviousSweeps;

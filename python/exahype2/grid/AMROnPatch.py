@@ -21,7 +21,7 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
   
   def get_body_of_getGridControlEvents(self):
     return """
-  return _globalRefinementControl.getGridControlEvents();
+  return refinementControl.getGridControlEvents();
 """ 
 
 
@@ -34,12 +34,11 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
     if operation_name==peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
       result = """
   _localRefinementControl.clear();
-  _globalRefinementControl.startToAccumulateLocally();
 """
 
     if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       result = """
-  _globalRefinementControl.merge( _localRefinementControl );
+  refinementControl.merge( _localRefinementControl );
 """
     
     result += super(AMROnPatch,self).get_body_of_operation(operation_name)
@@ -47,12 +46,11 @@ class AMROnPatch(peano4.toolbox.blockstructured.ApplyFunctorOnPatch):
 
 
   def get_static_initialisations(self,full_qualified_classname):
-    return "::exahype2::RefinementControl " + full_qualified_classname + "::_globalRefinementControl;"
+    return ""
 
 
   def get_attributes(self):
     return """
-    static ::exahype2::RefinementControl  _globalRefinementControl;
     ::exahype2::RefinementControl         _localRefinementControl;
 """
 
