@@ -40,8 +40,10 @@ std::string toString( exahype2::RefinementCommand value ) {
 tarch::logging::Log  exahype2::RefinementControl::_log( "exahype2::RefinementControl" );
 
 
+/*
 Da stimmt im Multithreaded-Mode irgendwas net. Zumindest sehe ich abwechselnd 2 und 3 Events auf einem Rank, wo es doch nur
 1 grosses sein sollte, was einfach alles abspannt.
+*/
 
 
 exahype2::RefinementControl::RefinementControl(double tolerance):

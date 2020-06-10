@@ -101,8 +101,8 @@ peano4_project.build()
 # often crashes for bigger runs. It also struggles with the postprocessing
 # for large parallel runs (see below).
 #
-#success = peano4_project.run( ["threads", "1"] )
-success = peano4_project.run( [], ["mpirun", "-n", "2"] )
+#success = peano4_project.run( ["--threads", "1"] )
+success = peano4_project.run( ["--threads", "1"], ["mpirun", "-n", "1"] )
 
 
 if success:
