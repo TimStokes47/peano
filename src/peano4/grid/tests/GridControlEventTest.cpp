@@ -17,7 +17,7 @@ peano4::grid::tests::GridControlEventTest::GridControlEventTest():
 
 
 
-void peano4::grid::tests::GridControlEventTest::testMerge() {
+void peano4::grid::tests::GridControlEventTest::testMerge1() {
   #if Dimensions==2
   std::vector< GridControlEvent > events;
 
@@ -42,8 +42,38 @@ void peano4::grid::tests::GridControlEventTest::testMerge() {
 }
 
 
+
+void peano4::grid::tests::GridControlEventTest::testMerge2() {
+  #if Dimensions==2
+  std::vector< GridControlEvent > events;
+
+  events.push_back( GridControlEvent( GridControlEvent::RefinementControl::Refine, {0.316667,0.316667},     {0.366667,0.366667}, {0.111111,0.111111} ));
+  events.push_back( GridControlEvent( GridControlEvent::RefinementControl::Refine, {0.65,0.316667},         {0.366667,0.366667}, {0.111111,0.111111} ));
+
+  events.push_back( GridControlEvent( GridControlEvent::RefinementControl::Refine, {0.65,-0.0166667},       {0.366667,0.366667}, {0.111111,0.111111} ));
+  events.push_back( GridControlEvent( GridControlEvent::RefinementControl::Refine, {0.316667,-0.0166667},   {0.366667,0.366667}, {0.111111,0.111111} ));
+  events.push_back( GridControlEvent( GridControlEvent::RefinementControl::Refine, {-0.0166667,-0.0166667}, {0.366667,0.366667}, {0.111111,0.111111} ));
+
+  events = peano4::grid::merge( events, 0.4 );
+
+  validateEquals( events.size(), 3 );
+
+/*
+  validateWithParams2( tarch::la::equals( events[0].getOffset(), -0.0333333, 0.001 ), events[0].toString(), events[1].toString() );
+  validateWithParams2( tarch::la::equals( events[0].getWidth(),   1.06667,   0.001 ), events[0].toString(), events[1].toString() );
+  validateWithParams2( tarch::la::equals( events[0].getH(),       0.366667,  0.001 ), events[0].toString(), events[1].toString() );
+
+  validateWithParams2( tarch::la::equals( events[1].getOffset(), -0.0333333, 0.001 ), events[0].toString(), events[1].toString() );
+  validateWithParams2( tarch::la::equals( events[1].getWidth(),   1.06667,   0.001 ), events[0].toString(), events[1].toString() );
+  validateWithParams2( tarch::la::equals( events[1].getH(),       0.366667,  0.001 ), events[0].toString(), events[1].toString() );
+*/
+  #endif
+}
+
+
 void peano4::grid::tests::GridControlEventTest::run() {
-  testMethod( testMerge );
+  testMethod( testMerge1 );
+  testMethod( testMerge2 );
 }
 
 

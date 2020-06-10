@@ -353,8 +353,6 @@ void peano4::parallel::tests::PingPongTest::testDaStGenArrayTreeManagementMessag
     peano4::parallel::TreeManagementMessage::send( message, 1, Tag, MPI_COMM_WORLD );
   }
   else if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==1) {
-    while ( not peano4::parallel::TreeManagementMessage::isMessageInQueue(Tag, MPI_COMM_WORLD) ) {
-    }
     peano4::parallel::TreeManagementMessage::receive( message, 0, Tag, MPI_COMM_WORLD );
     validateWithParams1( message.getAction()==TreeManagementMessage::Action::Acknowledgement, message.toString() );
   }

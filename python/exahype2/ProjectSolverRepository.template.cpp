@@ -7,6 +7,10 @@
 {SOLVER_DEFINITIONS}
 
 
+::exahype2::RefinementControl  refinementControl;
+
+
+
 double getMinTimeStamp() {{
   return std::min( {{ {SEQUENCE_OF_GET_MIN_TIME_STAMP_CALLS} }} );
 }}
@@ -39,11 +43,19 @@ void startTimeStep(
 
 void finishTimeStep() {{
   {SEQUENCE_OF_FINISH_TIME_STEP_CALLS}
+  refinementControl.finishStep();
 }}
 
 
 void finishGridConstructionStep() {{
   {SEQUENCE_OF_FINISH_GRID_CONSTRUCTION_STEP_CALLS}
+  refinementControl.finishStep();
+}}
+
+
+void finishSimulation() {{
+  {SEQUENCE_OF_FINISH_FINISH_SIMULATION_CALLS}
+  refinementControl.finishStep();
 }}
 
 

@@ -1,6 +1,9 @@
 #include "Node.h"
 #include "tarch/mpi/IntegerMessage.h"
 #include "peano4/grid/PeanoCurve.h"
+#include "peano4/grid/Spacetree.h"
+
+
 
 
 template <class Container>
@@ -69,7 +72,7 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
 
     logDebug(
       "copyDataFromSplittingTreesToNewTrees()",
-      "send stack " << sourceStack << " from tree " << master << " on rank " << sourceRank << " through tag " << tag <<
+      "send stack " << sourceStack << " (copied temporarily into " << temporaryStack << ") from tree " << master << " on rank " << sourceRank << " through tag " << tag <<
       " to tree " << worker << " on rank " << destinationRank << ". size=" << messageSize
     );
     tarch::mpi::IntegerMessage message( messageSize );
@@ -89,11 +92,12 @@ void peano4::parallel::SpacetreeSet::streamDataFromSplittingTreeToNewTree(
     #ifdef Parallel
     int  destinationStack = peano4::grid::PeanoCurve::getOutputStackNumber( getInstance().getSpacetree(worker)._root );
     const int tag         = peano4::parallel::Node::getInstance().getGridDataExchangeTag(master, worker, peano4::parallel::Node::ExchangeMode::VerticalData);
+
     tarch::mpi::IntegerMessage message;
     tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages(message, sourceRank, tag);
     logDebug(
       "copyDataFromSplittingTreesToNewTrees()",
-      "receive " << message.getValue() << " entries from tree " << master << " on rank " << sourceRank
+      "receive " << message.getValue() << " entries from tree " << master << " on rank " << sourceRank << " (used tag " << tag << ")"
     );
     if (message.getValue()>0) {
       stackContainer.getForPush(worker,destinationStack)->startReceive(
@@ -121,7 +125,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllVerticalDataExchangeStacks(
 template <class Container>
 void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Container& stackContainer, int spacetreeId, bool symmetricDataCardinality ) {
   logTraceInWith2Arguments( "exchangeAllHorizontalDataExchangeStacks(...)", spacetreeId, symmetricDataCardinality );
-  assertionMsg( symmetricDataCardinality, "haven't implemented the asymetric case yet, but would be simple: Just need the integer messages as I do for the vertical data flow" );
+  assertionMsg( symmetricDataCardinality, "haven't implemented the asymmetric case yet, but would be simple: Just need the integer messages as I do for the vertical data flow" );
   // Trigger all send and receives required
   // --------------------------------------
   // We exploit all the symmetries
@@ -132,7 +136,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
       and
       Node::getInstance().isHorizontalDataExchangeOutputStackNumber(sourceStackKey.second)
       and
-      not stackContainer.getForPush(sourceStackKey)->empty()
+      not stackContainer.getForPop(sourceStackKey)->empty()
       and
       Node::getInstance().getRank( Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second) )!=tarch::mpi::Rank::getInstance().getRank()
     ) {
@@ -150,6 +154,9 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
 
       logDebug( "exchangeAllHorizontalDataExchangeStacks(...)", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << receiveTag << " into stack " << inStack );
       assertion(not Node::getInstance().isHorizontalDataExchangeOutputStackNumber(inStack));
+      // This one likely creates new entries in the stackContainer. At this
+      // point, we have already copied the set of keys, i.e. we are fine as
+      // we have a valid overview.
       stackContainer.getForPush(spacetreeId,inStack)->startReceive(rank,receiveTag,count);
     }
   }
@@ -162,7 +169,7 @@ void peano4::parallel::SpacetreeSet::exchangeAllHorizontalDataExchangeStacks( Co
       and
       Node::getInstance().isHorizontalDataExchangeOutputStackNumber(sourceStackKey.second)
       and
-      not stackContainer.getForPush(sourceStackKey)->empty()
+      not stackContainer.getForPop(sourceStackKey)->empty()
       and
       Node::getInstance().getRank( Node::getInstance().getTreeNumberTiedToExchangeStackNumber(sourceStackKey.second) )==tarch::mpi::Rank::getInstance().getRank()
     ) {
@@ -208,16 +215,64 @@ void peano4::parallel::SpacetreeSet::finishAllOutstandingSendsAndReceives( Conta
   // Finalise data exchange
   // ----------------------
   std::set< peano4::maps::StackKey > keys = stackContainer.getKeys();
-  for (auto& sourceStackKey: keys) {
-    if ( sourceStackKey.first==spacetreeId ) {
-      logDebug( "finishAllOutstandingSendsAndReceives(...)", "check stack no " << sourceStackKey.first << " x " << sourceStackKey.second );
-      stackContainer.getForPush(sourceStackKey)->finishSendOrReceive();
+
+  clock_t      timeOutWarning   = -1;
+  clock_t      timeOutShutdown  = -1;
+  bool         triggeredTimeoutWarning = false;
+  bool         allSendReceivesFinished = false;
+
+  while (not allSendReceivesFinished) {
+    allSendReceivesFinished = true;
+    for (auto& sourceStackKey: keys) {
+      if ( sourceStackKey.first==spacetreeId ) {
+        logDebug( "finishAllOutstandingSendsAndReceives(...)", "check stack no " << sourceStackKey.first << " x " << sourceStackKey.second );
+        allSendReceivesFinished &= stackContainer.getForPush(sourceStackKey)->tryToFinishSendOrReceive();
+      }
     }
+
+    if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+    if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp() + (tarch::mpi::Rank::getInstance().isGlobalMaster() ? 30 : 0);
+    if (
+      tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
+      (clock()>timeOutWarning) &&
+      (!triggeredTimeoutWarning)
+    ) {
+      for (auto& sourceStackKey: keys) {
+        if (
+          sourceStackKey.first==spacetreeId
+          and
+          not stackContainer.getForPush(sourceStackKey)->tryToFinishSendOrReceive()
+        ) {
+          logError(
+            "finishAllOutstandingSendsAndReceives(...)",
+            "failed to send/receive content of stack no " << sourceStackKey.first << " x " << sourceStackKey.second << ": " <<
+            stackContainer.getForPush(sourceStackKey)->toString()
+          );
+        }
+      }
+
+      tarch::mpi::Rank::getInstance().writeTimeOutWarning(
+        "peano4::parallel::SpacetreeSet",
+        "finishAllOutstandingSendsAndReceives(...)", spacetreeId, -1, -1
+      );
+      triggeredTimeoutWarning = true;
+    }
+    if (
+      tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
+      (clock()>timeOutShutdown)
+    ) {
+      tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut(
+        "peano4::parallel::SpacetreeSet",
+        "finishAllOutstandingSendsAndReceives(...)", spacetreeId, -1, -1
+      );
+    }
+    tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+    tarch::multicore::yield();
   }
 
   logDebug( "finishAllOutstandingSendsAndReceives(...)", "all data transfer is done, trigger garbage collection" );
 
-  stackContainer.garbageCollection();
+  stackContainer.garbageCollection(spacetreeId);
   logTraceOutWith1Argument( "finishAllOutstandingSendsAndReceives(...)", spacetreeId );
 }
 

@@ -84,7 +84,7 @@ void peano4::parallel::TreeManagementMessage::sendAndPollDanglingMessages(const 
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "peano4::parallel::TreeManagementMessage", "sendAndPollDanglingMessages()", destination, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -112,7 +112,7 @@ void peano4::parallel::TreeManagementMessage::receiveAndPollDanglingMessages(pea
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "peano4::parallel::TreeManagementMessage", "receiveAndPollDanglingMessages()", source, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -206,16 +206,6 @@ void peano4::parallel::TreeManagementMessage::receive(peano4::parallel::TreeMana
     MPI_Test( &receiveRequestHandle, &flag, &status ); 
   }
   buffer._senderDestinationRank = status.MPI_SOURCE;
-}
-
-
-bool peano4::parallel::TreeManagementMessage::isMessageInQueue(int tag, MPI_Comm communicator) {
-  int  flag        = 0;
-  MPI_Iprobe(
-    MPI_ANY_SOURCE, tag,
-    communicator, &flag, MPI_STATUS_IGNORE
-  );
-  return flag;
 }
 
 #endif

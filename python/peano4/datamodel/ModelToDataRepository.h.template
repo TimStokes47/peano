@@ -15,6 +15,7 @@
 #include "peano4/datamanagement/FaceEnumerator.h"
 #include "peano4/datamanagement/VertexEnumerator.h"
 #include "peano4/maps/HierarchicalStackMap.h"
+#include "peano4/maps/STDStackMap.h"
 
 {OPEN_NAMESPACE}
   class {CLASSNAME};
@@ -33,7 +34,14 @@ class {FULL_QUALIFIED_CLASSNAME} {{
 
     {DATA_CONTAINER_DECLARATION}
     
+    /**
+     * Init all the MPI datatypes
+     */
     static void initDatatypes();
+    
+    /**
+     * Shutdown the MPI datatypes and free the local data containers.
+     */
     static void shutdownDatatypes();
 }};
 

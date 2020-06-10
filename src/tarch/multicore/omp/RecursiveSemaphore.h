@@ -12,6 +12,8 @@ namespace tarch {
 
 #include <string>
 #include <thread>
+#include "omp.h"
+
 
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/logging/Log.h"
@@ -29,15 +31,11 @@ class tarch::multicore::RecursiveSemaphore {
   private:
     friend class tarch::multicore::RecursiveLock;
 
-    /**
-     * Waits until I can enter the critical section.
-     */
-    void enterCriticalSection();
+    omp_nest_lock_t lock;
 
-    /**
-     * Tells the semaphore that it is about to leave.
-     */
+    void enterCriticalSection();
     void leaveCriticalSection();
+    bool tryEnterCriticalSection();
 
     /**
      * You may not copy a semaphore

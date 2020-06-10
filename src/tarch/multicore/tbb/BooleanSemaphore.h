@@ -23,17 +23,10 @@ class tarch::multicore::BooleanSemaphore {
 
     tbb::spin_mutex          _mutex;
 
-    /**
-     * Waits until I can enter the critical section.
-     */
     void enterCriticalSection();
-
-    /**
-     * Tells the semaphore that it is about to leave.
-     */
     void leaveCriticalSection();
-
     bool tryEnterCriticalSection();
+
     /**
      * You may not copy a semaphore
      */

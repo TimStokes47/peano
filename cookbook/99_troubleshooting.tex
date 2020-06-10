@@ -96,6 +96,16 @@ export LDFLAGS=-lifcore
 %     the actual application. It seems that some linkers consider the unit tests to be dead code,
 %     as the actual test routines indeed are never called (by the library). See the documentation in 
 %     \texttt{tarch/tests/TestCase.h} for some details. 
+  \item \textbf{The complains about some routines/classes from the technical
+  architectures, but they are definitely there}.
+  GCC/C++ is extremely sensitive when it comes to the order of the libraries
+  used. You might have to edit your makefile manually to get a ``valid''
+  ordering that works. My recommendation is that you always links from the most
+  abstract library to the lowest level lib. In one \ExaHyPE\ project, e.g., the
+  following order worked whereas all others resulted in linker errors:
+  \texttt{-lExaHyPE2Core2d\_asserts},
+  \texttt{-lToolboxLoadBalancing2d\_asserts}, \texttt{-lPeano4Core2d\_asserts},
+  \texttt{-lTarch\_asserts}.
   \item To be continued \dots
 \end{itemize}
 
@@ -148,8 +158,11 @@ tarch::logging::LogFilter::getInstance().printFilterListToCout();
     the libraries. Again, those guys are stored in a \texttt{.libs}
     subdirectory, so the library path should point to that subdirectory. 
 %   Most of these tweaks
-%   should not be necessary if you install Peano properly through \texttt{make
-%   install}.
+  \item \textbf{The interesting details are hidden in the debugger. It says
+    something about inlined and doesn't give proper line numbers}.
+    I recommend that you set \texttt{CXXFLAGS} to \texttt{-fno-inline} (Intel),
+    rerun the \texttt{configure} script and recompile. This should stop the
+    compiler from inlining too aggressive.
   \item To be continued \dots
 \end{itemize}
  

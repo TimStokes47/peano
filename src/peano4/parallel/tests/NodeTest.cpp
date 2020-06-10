@@ -24,19 +24,12 @@ void peano4::parallel::tests::NodeTest::testTagCalculation() {
   logTraceIn( "testTagCalculation()" );
   int tagA = peano4::parallel::Node::getInstance().getGridDataExchangeTag(0,5,peano4::parallel::Node::ExchangeMode::HorizontalData);
   int tagB = peano4::parallel::Node::getInstance().getGridDataExchangeTag(5,0,peano4::parallel::Node::ExchangeMode::HorizontalData);
-  validateWithParams2(tagA!=tagB, tagA, tagB);
-/*
-
-  tagA = peano4::parallel::Node::getInstance().getGridDataExchangeTag(0,1,peano4::parallel::Node::ExchangeMode::HorizontalData);
-  tagB = peano4::parallel::Node::getInstance().getGridDataExchangeTag(1,0,peano4::parallel::Node::ExchangeMode::HorizontalData);
-  validateWithParams5(
-   tagA!=tagB,
-   tagA, tagB,
-   peano4::parallel::Node::getInstance().getLocalTreeId(0),
-   peano4::parallel::Node::MaxSpacetreesPerRank,
-   peano4::parallel::Node::getInstance().getLocalTreeId(1)
+  validateWithParams7(tagA!=tagB,
+    tagA, tagB,
+    Node::StacksPerCommunicationPartner, peano4::parallel::Node::getInstance().getLocalTreeId(0),
+    peano4::parallel::Node::getInstance().getLocalTreeId(5), Node::MaxSpacetreesPerRank,
+    peano4::parallel::Node::getInstance()._dataExchangeBaseTag
   );
-*/
   logTraceOut( "testTagCalculation()" );
 }
 

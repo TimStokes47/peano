@@ -30,24 +30,6 @@ class PlotGridInPeanoBlockFormat(ActionSet):
   // An MPI lock (critical section) would be important!
     
   logDebug( "PlotGrid2PlotGridInPeanoBlockFormat1()", "created tree instance for " << treeNumber );
-  
-  static bool calledBefore = false;
-  tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode mode;
-  if ( _treeNumber==0 and not calledBefore ) {{
-    calledBefore = true;
-    mode = tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::CreateNew;
-  }}
-  else if ( _treeNumber==0 ) {{
-    mode = tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::AppendNewDataSet;
-  }}
-  else {{
-    mode = tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::DontChange;
-  }}
-
-  _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
-    Dimensions,"{FILENAME}",mode
-  );
-  _dataWriter = _writer->createCellDataWriter( "cell-marker", 1, 1 );
 """
 
 
@@ -112,10 +94,43 @@ class PlotGridInPeanoBlockFormat(ActionSet):
 """
 
 
+  __Template_BeginTraversal = """
+  static bool calledBefore = false;
+  if ( _treeNumber==0 and not calledBefore ) {{
+    calledBefore = true;
+    _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
+      Dimensions,"{FILENAME}",
+      tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::CreateNew
+    );
+    tarch::mpi::Rank::getInstance().barrier();
+  }}
+  else if ( _treeNumber==0 ) {{
+    _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
+      Dimensions,"{FILENAME}",
+      tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::AppendNewDataSet
+    );
+    tarch::mpi::Rank::getInstance().barrier();
+  }}
+  else {{
+    tarch::mpi::Rank::getInstance().barrier();
+    static tarch::mpi::BooleanSemaphore globalSempahore( "{FILENAME}" );
+    tarch::mpi::Lock lock(globalSempahore);
+    _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
+      Dimensions,"{FILENAME}",
+      tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::DontChange
+    );
+  }}
+
+  _dataWriter = _writer->createCellDataWriter( "cell-marker", 1, 1 );
+"""
+
+
   def get_body_of_operation(self,operation_name):
     result = "\n"
     if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = self.__Template_TouchCellFirstTime.format(**self.d) 
+    if operation_name==ActionSet.OPERATION_BEGIN_TRAVERSAL:
+      result = self.__Template_BeginTraversal.format(**self.d)             
     return result
 
 
@@ -133,4 +148,5 @@ class PlotGridInPeanoBlockFormat(ActionSet):
 #include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
 #include "tarch/multicore/Lock.h"
 #include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/mpi/Lock.h"
 """

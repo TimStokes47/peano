@@ -3,6 +3,9 @@
 #ifndef _PEANO4_H_
 #define _PEANO4_H_
 
+#include "tarch/la/Vector.h"
+#include "peano4/utils/Globals.h"
+
 /**
  *
  * @mainpage Peano 4
@@ -120,12 +123,11 @@ namespace peano4 {
   /**
    * Shutdown all the parallel environment, i.e. free all MPI datatypes and
    * close down MPI. This also turns off the shared memory environment.
+   * Before this happens, you have to shutdown the node such that everybody
+   * knows that we are going down. So you have to call Node::shutdown()
+   * before you trigger this operation. This is your responsibility.
    *
-   * We first tell the node that it should shut down. This implies that the
-   * node sends out a termination message, i.e. all ranks that wait in
-   * continueToRun() are told that this is it. They go down.
-   *
-   * The routine next adds a barrier. This barrier is necessary. If the very last
+   * The routine first adds a barrier. This barrier is necessary. If the very last
    * activity of all ranks is for example to plot stuff, they typically use
    * global semaphores as well. To make these semaphores work, we still require
    * that all nodes call receiveDanglingMessages(). It is only after everyone
@@ -143,6 +145,27 @@ namespace peano4 {
    * @see peano4::parallel::Node::shutdown()
    */
   void shutdownParallelEnvironment();
+
+  /**
+   * Fire up all the singletons.
+   *
+   *
+   * Singletons that I don't touch are:
+   *
+   * - tarch::mpi::Rank, as the rank is not a service and is handled
+   *   separately by the initParallelEnvironment().
+   */
+  void initSingletons(
+    const tarch::la::Vector<Dimensions,double>&  offset,
+    const tarch::la::Vector<Dimensions,double>&  width,
+    const std::bitset<Dimensions>&               periodicBC = 0
+  );
+
+  /**
+   * The very first thing I have to do is to shut down Node. This
+   * shutdown will tell all the other ranks to go down as well.
+   */
+  void shutdownSingletons();
 }
 
 

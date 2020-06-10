@@ -65,10 +65,13 @@ tarch::la::Vector<Dimensions,double> peano4::datamanagement::FaceMarker::outerNo
 
 
 std::string peano4::datamanagement::FaceMarker::toString() const {
-  return "(x=" + _cellCentre.toString() + ",h=" + _h.toString()
-       + ",select=" + std::to_string(_select)
-       + ",is-cell-local=" + std::to_string(_cellIsLocal)
-       + ")";
+  std::ostringstream msg;
+  msg << "(x=" << _cellCentre
+      << ",h=" << _h
+      << ",select=" << _select
+      << ",is-cell-local=" << _cellIsLocal
+      << ")";
+  return msg.str();
 }
 
 

@@ -125,6 +125,24 @@
     return;\
   }
 
+
+#define validateWithParams7(booleanExpr,param0,param1,param2,param3,param4,param5,param6) if (!(booleanExpr)) { \
+    _errors++; \
+    _error = true; \
+    std::cerr << "  boolean test failed " << std::endl \
+              << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
+              << "  statement: " << #booleanExpr << std::endl \
+              << "  parameter " << #param0 << "=" << param0 << std::endl \
+              << "  parameter " << #param1 << "=" << param1 << std::endl \
+              << "  parameter " << #param2 << "=" << param2 << std::endl \
+              << "  parameter " << #param3 << "=" << param3 << std::endl \
+              << "  parameter " << #param4 << "=" << param4 << std::endl \
+              << "  parameter " << #param5 << "=" << param5 << std::endl \
+              << "  parameter " << #param6 << "=" << param6 << std::endl; \
+    return;\
+  }
+
+
 #define validateEquals(actualValue, validValue) if (!(actualValue == validValue)) { \
     _errors++; \
     _error = true; \

@@ -1,6 +1,7 @@
 #include "StringMessage.h"
 
 #include "tarch/logging/Log.h"
+#include "tarch/services/ServiceRepository.h"
 
 #include <sstream>
 #include <algorithm>
@@ -49,7 +50,7 @@ void tarch::mpi::StringMessage::sendAndPollDanglingMessages(const tarch::mpi::St
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "tarch::mpi::StringMessage", "sendAndPollDanglingMessages()", destination, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -77,7 +78,7 @@ void tarch::mpi::StringMessage::receiveAndPollDanglingMessages(tarch::mpi::Strin
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "tarch::mpi::StringMessage", "receiveAndPollDanglingMessages()", source, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );

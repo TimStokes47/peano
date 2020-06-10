@@ -12,6 +12,9 @@ void {FULL_QUALIFIED_CLASSNAME}::initDatatypes() {{
 
 
 void {FULL_QUALIFIED_CLASSNAME}::shutdownDatatypes() {{
+
+  {DATA_CONTAINER_CLEARS}
+
   #ifdef Parallel
   {MPI_DATAYPE_SHUTDOWN}
   #endif

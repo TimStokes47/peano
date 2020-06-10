@@ -6,7 +6,11 @@
 #include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Core.h"
 #include "tarch/mpi/Rank.h"
+#include "tarch/mpi/BooleanSemaphore.h"
 #include "tarch/tarch.h"
+
+#include "peano4/parallel/Node.h"
+#include "peano4/parallel/SpacetreeSet.h"
 
 
 void peano4::writeCopyrightMessage() {
@@ -72,12 +76,11 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
   int result = 0;
   #ifdef Parallel
   if ( tarch::mpi::Rank::getInstance().init(argc,argv) ) {
-	peano4::parallel::Node::initMPIDatatypes();
+    peano4::parallel::Node::initMPIDatatypes();
 
-	// @todo Dummy values
-	clock_t timeout = 60;
-	tarch::mpi::Rank::getInstance().setTimeOutWarning(timeout/4);
-	tarch::mpi::Rank::getInstance().setDeadlockTimeOut(timeout);
+  	clock_t timeout = 60;
+    tarch::mpi::Rank::getInstance().setTimeOutWarning(timeout/4);
+    tarch::mpi::Rank::getInstance().setDeadlockTimeOut(timeout);
   }
   else {
     result = -2;
@@ -99,11 +102,37 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
 
 
 void peano4::shutdownParallelEnvironment() {
-  peano4::parallel::Node::getInstance().shutdown();
-
-  tarch::mpi::Rank::getInstance().barrier();
-
   tarch::multicore::Core::getInstance().shutdown();
   peano4::parallel::Node::shutdownMPIDatatypes();
   tarch::mpi::Rank::getInstance().shutdown();
+}
+
+
+void peano4::initSingletons(
+  const tarch::la::Vector<Dimensions,double>&  offset,
+  const tarch::la::Vector<Dimensions,double>&  width,
+  const std::bitset<Dimensions>&               periodicBC
+) {
+  tarch::services::ServiceRepository::getInstance().init();
+
+  tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getInstance().init();
+
+  peano4::parallel::Node::getInstance().init();
+
+  peano4::parallel::SpacetreeSet::getInstance().init(
+    offset,
+    width,
+    periodicBC
+  );
+}
+
+
+void peano4::shutdownSingletons() {
+  peano4::parallel::Node::getInstance().shutdown();
+
+  peano4::parallel::SpacetreeSet::getInstance().shutdown();
+
+  tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getInstance().shutdown();
+
+  tarch::services::ServiceRepository::getInstance().shutdown();
 }

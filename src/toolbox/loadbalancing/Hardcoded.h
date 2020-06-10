@@ -51,6 +51,8 @@ class toolbox::loadbalancing::Hardcoded {
 
     void finishStep();
 
+    void finishSimulation();
+
     /**
      * I need the stats here mainly for debugging purposes.
      */

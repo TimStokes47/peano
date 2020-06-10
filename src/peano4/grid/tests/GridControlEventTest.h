@@ -45,8 +45,37 @@ class peano4::grid::tests::GridControlEventTest: public tarch::tests::TestCase {
 
      </pre>
      */
-    void testMerge();
+    void testMerge1();
 
+
+    /**
+     *
+     * From another debugging session:
+     *
+     * <pre>
+
+ enter with 5
+ - in: (refinementControl=Refine,offset=[0.316667,0.316667],width=[0.366667,0.366667],h=[0.111111,0.111111])
+ - in: (refinementControl=Refine,offset=[0.65,0.316667],width=[0.366667,0.366667],h=[0.111111,0.111111])
+ - in: (refinementControl=Refine,offset=[0.65,-0.0166667],width=[0.366667,0.366667],h=[0.111111,0.111111])
+ - in: (refinementControl=Refine,offset=[0.316667,-0.0166667],width=[0.366667,0.366667],h=[0.111111,0.111111])
+ - in: (refinementControl=Refine,offset=[-0.0166667,-0.0166667],width=[0.366667,0.366667],h=[0.111111,0.111111])
+
+
+ 8800440139   00:00:08     rank:0       core:0       info         peano4::grid::merge(...)                                       enter with 3
+ 8800449454   00:00:08     rank:0       core:0       info         peano4::grid::merge(...)                                       - in: (refinementControl=Refine,offset=[-0.0166667,-0.0166667],width=[0.7,0.366667],h=[0.111111,0.111111])
+ 8800457618   00:00:08     rank:0       core:0       info         peano4::grid::merge(...)                                       - in: (refinementControl=Refine,offset=[0.65,-0.0166667],width=[0.366667,0.7],h=[0.111111,0.111111])
+ 8800465519   00:00:08     rank:0       core:0       info         peano4::grid::merge(...)                                       - in: (refinementControl=Refine,offset=[0.316667,0.316667],width=[0.366667,0.366667],h=[0.111111,0.111111])
+
+ 8800471873   00:00:08     rank:0       core:0       info         peano4::grid::merge(...)                                      have to handle 3 refine/coarsen commands
+ - (refinementControl=Refine,offset=[0.316667,0.316667],width=[0.366667,0.366667],h=[0.111111,0.111111])
+ - (refinementControl=Refine,offset=[0.65,-0.0166667],width=[0.366667,0.7],h=[0.111111,0.111111])
+ - (refinementControl=Refine,offset=[-0.0166667,-0.0166667],width=[0.7,0.366667],h=[0.111111,0.111111])
+
+       </pre>
+     *
+     */
+    void testMerge2();
   public:
     GridControlEventTest();
     void run() override;

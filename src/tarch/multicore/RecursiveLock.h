@@ -20,12 +20,14 @@ namespace tarch {
  */
 class tarch::multicore::RecursiveLock {
   private:
-	RecursiveSemaphore&  _semaphore;
+    RecursiveSemaphore&  _semaphore;
     bool                 _lockIsAquired;
   public:
     RecursiveLock( tarch::multicore::RecursiveSemaphore& semaphore, bool aquireLockImmediately = true );
     ~RecursiveLock();
 
+    bool tryLock();
+    bool isLocked() const;
     void lock();
     void free();
 };

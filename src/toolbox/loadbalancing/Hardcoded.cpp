@@ -73,6 +73,9 @@ void toolbox::loadbalancing::Hardcoded::finishStep() {
 
 
 void toolbox::loadbalancing::Hardcoded::dumpStatistics() {
+}
 
+
+void toolbox::loadbalancing::Hardcoded::finishSimulation() {
 }
 

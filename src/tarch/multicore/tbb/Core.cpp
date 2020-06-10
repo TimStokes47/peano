@@ -84,7 +84,7 @@ void tarch::multicore::Core::shutdown() {
 
   if (__globalThreadCountControl!=nullptr) {
     delete __globalThreadCountControl;
-    __globalThreadCountControl = nullptr;
+  __globalThreadCountControl = nullptr;
   }
 
   __numberOfThreads = -1;

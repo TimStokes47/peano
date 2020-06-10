@@ -7,18 +7,11 @@
 #include "tarch/logging/Log.h"
 
 #include <ctime>
+#include <functional>
+
 
 #include "mpi.h"
 
-/*
-
-#ifdef Parallel
-// I rely on the usleep() method within all messages. Newer versions of
-// Linux/GCC seem not to include the corresponding header automatically
-// through ctime. I thus added this new include.
-#include <unistd.h>
-#endif
-*/
 
 
 namespace tarch {
@@ -73,10 +66,12 @@ class tarch::mpi::Rank {
      */
     static tarch::logging::Log _log;
 
+    static Rank  _singleton;
+
     /**
      * Is set true if init() is called.
      */
-    static bool _initIsCalled;
+    bool _initIsCalled;
 
     /**
      * Rank (id) of this process.
@@ -160,36 +155,38 @@ class tarch::mpi::Rank {
      * Global MPI barrier
      *
      * I provide a custom barrier. It semantically differs from a native
-     * MPI_Barrier as MPI barriers would not invoke receiveDanglingMessages(),
-     * i.e. all service features of a rank are effectively blocked by a plain
-     * barrier. This one does still keep them up and running.
+     * MPI_Barrier as MPI barriers would not be able to do anything while
+     * they wait. I therefore make this barrier rely on MPI's non-blocking
+     * barrier and give the user the opportunity to tell me what do while
+     * I wait to be allowed to pass the barrier.
      *
-     * Originally, I wanted to realise this barrier through a non-blocking
-     * barrier which calls receiveDanglingMessages():
+     *
+     * The most common pattern how to use the barrier in Peano 4 is to pass
+     * the following functor to the barrier as argument:
+     *
      * <pre>
 
-  MPI_Request request;
-  MPI_Ibarrier( _communicator, &request );
-
-  int success = 0;
-  while (not success) {
-    receiveDanglingMessages();
-    MPI_Test(&request, &success, MPI_STATUS_IGNORE);
-  }
+[&]() -> void {
+  tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+}
 
       </pre>
-     * This realisation did not work. It led to deadlocks. I think the reason is
-     * that MPI_Test might act only locally:
      *
-     * https://scicomp.stackexchange.com/questions/29671/can-i-mpi-test-for-an-ibarrier
-     *
-     * So it is actually ill-suited here. I now realise the barrier as a ping
-     * pong between each rank and the global master. An integer is sent by
-     * everyone to the global master which in turn sends back and integer to
-     * each rank.
-     *
+     * @param waitor is my functor that should be called while we wait. By
+     *   default, it is empty, i.e. barrier degenerates to a blocking barrier
+     *   in the MPI 1.3 sense.
      */
-    void barrier();
+    void barrier(std::function<void()> waitor = []() -> void {} );
+
+    /**
+     * In older DaStGen version, I tried to find out whether a particular
+     * message type is in the MPI queue. That is, I looked whether a message
+     * on this tag does exist, and then I looked whether the memory footprint
+     * matches via count. I think this is invalid. MPI really looks only into
+     * the number of bytes, so you have to know which type drops in once there
+     * is a message on a tag.
+     */
+    bool isMessageInQueue(int tag) const;
 
     /**
      * Logs the status of the process onto the log device.
@@ -399,18 +396,6 @@ class tarch::mpi::Rank {
      */
     void setCommunicator( MPI_Comm communicator );
     #endif
-
-    /**
-     * Receive Dangling MPI Messages
-     *
-     * This operation tells all the services that they shall poll the MPI queues
-     * for additional messages. Thus, it is questionable why such an operation
-     * is assigned to this class. It only wraps the services. However, all these
-     * 'hey poll the MPI queues' is always triggered by blocking sends and
-     * receives, i.e. it is tied to the parallelisation. And, thus, it is part
-     * of the node singleton.
-     */
-    void receiveDanglingMessages();
 
     void suspendTimeouts( bool timeoutsDisabled );
 

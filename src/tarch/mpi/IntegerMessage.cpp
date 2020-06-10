@@ -58,7 +58,7 @@ void tarch::mpi::IntegerMessage::sendAndPollDanglingMessages(const tarch::mpi::I
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "tarch::mpi::IntegerMessage", "sendAndPollDanglingMessages()", destination, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -86,7 +86,7 @@ void tarch::mpi::IntegerMessage::receiveAndPollDanglingMessages(tarch::mpi::Inte
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "tarch::mpi::IntegerMessage", "receiveAndPollDanglingMessages()", source, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -176,16 +176,6 @@ void tarch::mpi::IntegerMessage::receive(tarch::mpi::IntegerMessage& buffer, int
     MPI_Test( &receiveRequestHandle, &flag, &status ); 
   }
   buffer._senderDestinationRank = status.MPI_SOURCE;
-}
-
-
-bool tarch::mpi::IntegerMessage::isMessageInQueue(int tag, MPI_Comm communicator) {
-  int  flag        = 0;
-  MPI_Iprobe(
-    MPI_ANY_SOURCE, tag,
-    communicator, &flag, MPI_STATUS_IGNORE
-  );
-  return flag;
 }
 
 #endif

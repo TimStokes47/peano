@@ -6,18 +6,25 @@
 
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
-#include "peano4/grid/Spacetree.h"
-#include "peano4/grid/TraversalObserver.h"
+#include "peano4/maps/maps.h"
 #include "tarch/multicore/Tasks.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "Tasks.h"
+#include "TreeManagementMessage.h"
 
 
 #include <list>
 #include <map>
+#include <set>
 
 
 namespace peano4 {
+  namespace grid {
+    class Spacetree;
+    struct GridStatistics;
+    class TraversalObserver;
+  }
+
   namespace parallel {
     class SpacetreeSet;
   }
@@ -33,6 +40,10 @@ namespace peano4 {
 class peano4::parallel::SpacetreeSet: public tarch::services::Service {
   private:
     friend class peano4::grid::Spacetree;
+
+    static SpacetreeSet  _singleton;
+
+    std::vector<peano4::parallel::TreeManagementMessage>   _unansweredMessages;
 
     /**
      * Each task triggers the traversal of one specific spacetree. After
@@ -178,19 +189,23 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
       TraverseTreesAndExchangeData
     };
 
+    static std::string toString( SpacetreeSetState state );
+
     /**
      * I use this tag to identify messages send from one tree to another rank.
      * All answers go through an answer tag. To identify the right one, please
-     * use getAnswerTag().
+     * use getAnswerTag(). The tag should be const, but I set it in init() and
+     * therefore I had to remove the const - even though its logically
+     * not possible to change it.
      */
-    const int     _requestMessageTag;
+    int     _requestMessageTag;
 
     /**
      * Never use this tag directly. It is the first tag of a series fo answer
      * tags. To find the right one for a particular application context, use
      * getAnswerTag().
      */
-    const int     _answerMessageTag;
+    int     _answerMessageTag;
 
     std::list< peano4::grid::Spacetree >  _spacetrees;
 
@@ -394,24 +409,96 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     static SpacetreeSet& getInstance();
 
+
+    /**
+     * Run through the set of unanswered questions and, well, answer them.
+     *
+     * The following messages are received/handled:
+     *
+     * - Action::RequestNewRemoteTree (invoked by split())
+     * - Action::CreateNewRemoteTree (invoked by addSpacetree(int,int))
+     * - Action::RemoveChildTreeFromBooksAsChildBecameEmpty (invoked by cleanUpTrees())
+     *
+     * split() is something any rank can trigger at any time. Most default load
+     * balancers call it throughout the end of the grid sweep. addSpacetree() is
+     * called by the set through createNewTrees() just before all observers are
+     * deleted and the traversal terminates. cleanUpTrees() just arises before
+     * that one.
+     *
+     * No all of these messages can be answered at any point of the local grid
+     * sweeps. That is, we may never add a tree to the local tree collection while
+     * we are right in the middle of traversals on this rank, e.g.
+     * We may not insert or
+     * remove trees from the global data structure while we are still traversing
+     * some local trees or run some data exchange. I originally tried to protect
+     * the whole code by a _state==SpacetreeSetState::Waiting check, i.e. to make
+     * the set react if and only if we are not doing anything anyway. That did
+     * not work properly, as tree requests for example are to be handled
+     * immediately. So what I do now is that I pipe all requests into a vector.
+     * Then, I run through the vector and, depending on the set state, do answer
+     * messages or leave them in the queue for the time being.
+     *
+     * This approach leads to errors whenever a message send-out is followed by
+     * a second message that provides further details. The first message might be
+     * buffered locally, and, as we can't answer the first one immediately, the
+     * second message (of another datatype) will be interpreted as yet another
+     * request. So that means that every single message exchange with the set
+     * always has to be follow a send-acknowledge pattern.
+     *
+     * <h2> Action::RequestNewRemoteTree </h2>
+     *
+     * Can be answered any time, as it literally just books a new number but
+     * nothing more happens at this point. The acknowledgement message carries
+     * the new tree's number.
+     *
+     * <h2> Action::CreateNewRemoteTree </h2>
+     *
+     * This message triggers the insertation of a new tree into the local set of
+     * spacetrees. We thus may handle it if and only if we are the end of a
+     * traversal. The message logically consists of two parts: The master of a
+     * new tree (which has previously used Action::RequestNewRemoteTree to get a
+     * new tree's number) sends out the create message, waits for the
+     * acknowledgement and then sends out the tree state, to the rank hosting the
+     * new tree can actually create the data structure. This last step is followed
+     * by an acknowledge message which carries no particular information. That
+     * is, this message exchange belongs to the one-way information flow, but we
+     * have one acknowledgement message to say "go ahead", and one message to
+     * say "ok, we got it".
+     *
+     * <h2> Action::RemoveChildTreeFromBooksAsChildBecameEmpty </h2>
+     *
+     * This is a simple one though we have again to ensure that it is handled if
+     * and only if we have finishes the local traversals and thus can safely
+     * manipulate the local spacetree.
+     *
+     * <h2> Data consistency </h2>
+     *
+     * In this routine, we have to be very careful with the data consistency. While
+     * we are running through the set of unanswered messages, new ones might drop
+     * in. However, C++ is not very happy if a vector is added further elements
+     * while we are traversing it (in theory, it might happen that it is expanded
+     * and thus copied). So what I do is something different: I first run through
+     * the vector and take those out that I know that I can handle. Then I handle
+     * these guys and return - well-aware that meanwhile further messages might
+     * have dropped in. Which is something I don't care, as I rely on the calling
+     * code just to invoke answer again if it is important for the code's progress.
+     *
+     *
+     * @todo replyToUnansweredMessages() sollte der Name sein
+     */
+    void answerQuestions();
+
     /**
      * We poll the tree management messages.
      *
-     * If a new spacetree request drops in, we book the tree and send it back.
-     *
-     * <h2> Message exchange modes </h2>
-     *
-     * I have to be careful with nonblocking data exchange here. Some messages
-     * belong logically together. So if I receive the first of two messages in
-     * a row and then go to receiveDanglingMessages again, part two of the message
-     * might drop in and I might consider it to be another part one. That may not
-     * happen. So as soon as the iprobe says "go", I switch to blocking data
-     * exchange here.
+     * Messages are not answered directly. Instead, we buffer them in
+     * _unansweredMessages and hand over to replyToUnansweredMessages().
      */
     void receiveDanglingMessages() override;
 
     /**
      * @see Spacetree::Spacetree()
+     * @see shutdown()
      */
     void init(
       const tarch::la::Vector<Dimensions,double>&  offset,
@@ -419,9 +506,38 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
       const std::bitset<Dimensions>&               periodicBC = 0
     );
 
+    void shutdown();
+
     /**
      * Invoke traverse on all spacetrees in parallel.
      *
+     * <h2> Sequence </h2>
+     *
+     * It is important that I don't answer to spacetree request messages while I am
+     * running through the spacetree set. Some of these request messages add further
+     * elements to the set. However, the set should remain invariant while I run
+     * through it. So I introduced the _state. See also _unansweredMessages.
+     *
+     * So when I'm done with the local traversal, I have to ensure that all other sets
+     * have got their tree modifications through. That is: If another rank wants to
+     * insert a tree, that has to happen in the right traversal. As the other rank
+     * will wait for an acknowledgement of the addition, there is no risk that this
+     * rank has already proceeded wrongly into the next grid sweep. However, the target
+     * rank has to answer the request in the right one and may not proceed to early.
+     *
+     * So I introduce a barrier. The barrier has to do two things: On the one hand, it
+     * has to receive dangling messages. On the other hand, it should answer messages
+     * that it has not answered before. In principle, this is indirectly done through
+     * receiveDanglingMessages(). However, I played around with running the dangling
+     * thing if and only if iprobe tells me that there are new messages. So to be on
+     * the safe side, I rather invoke the answer routines manually here.
+     *
+     * There are two options where to place the barrier: We could add it to the end of
+     * traverse() or right after we've received the startup message. There are two different
+     * kinds of messages: messages that can be answered straightaway (give me  a new
+     * rank) or others which can be answered only in-between iterations. If we add
+     * a barrier right at the begin of a traversal, then we are fine, as the typical
+     * split (asking for further ranks) arises in-between traversals.
      */
     void traverse(peano4::grid::TraversalObserver& observer);
 

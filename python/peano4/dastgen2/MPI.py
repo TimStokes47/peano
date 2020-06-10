@@ -27,6 +27,7 @@ class MPI(object):
     result = """
 #include "tarch/la/Vector.h"
 #include "tarch/mpi/Rank.h"
+#include "tarch/services/ServiceRepository.h"
 #include "peano4/utils/Globals.h"
 """
     if self._dof_association!=DoFAssociation.Generic:
@@ -90,7 +91,7 @@ void """ + full_qualified_name + """::sendAndPollDanglingMessages(const """ + fu
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( """ + "\"" + full_qualified_name + "\"" + """, "sendAndPollDanglingMessages()", destination, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );
@@ -118,7 +119,7 @@ void """ + full_qualified_name + """::receiveAndPollDanglingMessages(""" + full_
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( """ + "\"" + full_qualified_name + "\"" + """, "receiveAndPollDanglingMessages()", source, tag );
       }
-      tarch::mpi::Rank::getInstance().receiveDanglingMessages();
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     },
     tarch::mpi::Rank::getInstance().getCommunicator()
   );

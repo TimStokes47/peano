@@ -24,22 +24,17 @@
 #endif
 
 
+namespace {
+  int tagCounter = 0;
+}
+
+
+
 tarch::logging::Log tarch::mpi::Rank::_log("tarch::mpi::Rank");
 
 
-bool tarch::mpi::Rank::_initIsCalled = false;
+tarch::mpi::Rank  tarch::mpi::Rank::_singleton;
 
-namespace {
-  /**
-   * Used to realise the barrier. Please note that this flag's initialisation
-   * is tricky. Normally, we initialise such tags within a singleton in the
-   * singleton's constructor. We use rank's reserveFreeTag() to do so. This
-   * can't work here, as reserveFreeTag() is a member routine of Rank. We can't
-   * use it in the constructor. So we hardcode it.
-   */ 
-  constexpr int BarrierTag = 0;
-  int tagCounter = BarrierTag+1;
-}
 
 
 void tarch::mpi::Rank::releaseTag(int tag) {
@@ -246,6 +241,7 @@ std::string tarch::mpi::MPIStatusToString( const MPI_Status& status ) {
 
 #ifdef Parallel
 tarch::mpi::Rank::Rank():
+  _initIsCalled(false),
   _rank(-1),
   _numberOfProcessors(-1),
   _communicator( MPI_COMM_WORLD),
@@ -255,6 +251,7 @@ tarch::mpi::Rank::Rank():
 }
 #else
 tarch::mpi::Rank::Rank():
+  _initIsCalled(false),
   _rank(0),
   _numberOfProcessors(1),
   _timeOutWarning(0),
@@ -268,121 +265,54 @@ tarch::mpi::Rank::~Rank() {
 }
 
 
-void tarch::mpi::Rank::barrier() {
+void tarch::mpi::Rank::barrier(std::function<void()> waitor) {
   #ifdef Parallel
   logTraceIn( "barrier()" );
 
-  if ( isGlobalMaster() ) {
-    assertion( getGlobalMasterRank()==0 );
-    IntegerMessage message;
-    for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
-      IntegerMessage::receive(
-        message, rank, BarrierTag,
-        [&]() {
-          int  timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
-          int  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
-          bool triggeredTimeoutWarning = false;
-          if (
-            tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
-            (clock()>timeOutWarning) &&
-            (!triggeredTimeoutWarning)
-          ) {
-            tarch::mpi::Rank::getInstance().writeTimeOutWarning( "__FILE__", "__LINE__",rank, BarrierTag );
-            triggeredTimeoutWarning = true;
-          }
-          if (
-            tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
-            (clock()>timeOutShutdown)
-          ) {
-            tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "__FILE__", "__LINE__",rank, BarrierTag );
-          }
-          tarch::mpi::Rank::getInstance().receiveDanglingMessages();
-        },
-        tarch::mpi::Rank::getInstance().getCommunicator()
-      );
+  MPI_Request request;
+  MPI_Ibarrier( getCommunicator(), &request );
+
+  int  timeOutWarning          = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+  int  timeOutShutdown         = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+  bool triggeredTimeoutWarning = false;
+  int flag                     = 0;
+  while (not flag) {
+    if (
+      tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
+      (clock()>timeOutWarning) &&
+      (!triggeredTimeoutWarning)
+    ) {
+      tarch::mpi::Rank::getInstance().writeTimeOutWarning( "tarch::mpi::Rank", "barrier()", -1, -1 );
+      triggeredTimeoutWarning = true;
     }
-    for (int rank=getGlobalMasterRank()+1; rank<getNumberOfRanks(); rank++) {
-      IntegerMessage::send(
-        message, rank, BarrierTag,
-        [&]() {
-          int  timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
-          int  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
-          bool triggeredTimeoutWarning = false;
-          if (
-            tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
-            (clock()>timeOutWarning) &&
-            (!triggeredTimeoutWarning)
-          ) {
-            tarch::mpi::Rank::getInstance().writeTimeOutWarning( "__FILE__", "__LINE__",rank, BarrierTag );
-            triggeredTimeoutWarning = true;
-          }
-          if (
-            tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
-            (clock()>timeOutShutdown)
-          ) {
-            tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "__FILE__", "__LINE__",rank, BarrierTag );
-          }
-          tarch::mpi::Rank::getInstance().receiveDanglingMessages();
-        },
-        tarch::mpi::Rank::getInstance().getCommunicator()
-      );
+    if (
+      tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
+      (clock()>timeOutShutdown)
+    ) {
+      tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "tarch::mpi::Rank", "barrier()", -1, -1 );
     }
+    waitor();
+    MPI_Test( &request, &flag, MPI_STATUS_IGNORE );
   }
-  else {
-    IntegerMessage message;
-    message.setValue(0);
-    IntegerMessage::send(
-      message, getGlobalMasterRank(), BarrierTag,
-      [&]() {
-        int  timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
-        int  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
-        bool triggeredTimeoutWarning = false;
-        if (
-          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
-          (clock()>timeOutWarning) &&
-          (!triggeredTimeoutWarning)
-        ) {
-          tarch::mpi::Rank::getInstance().writeTimeOutWarning( "__FILE__", "__LINE__",getGlobalMasterRank(), BarrierTag );
-          triggeredTimeoutWarning = true;
-        }
-        if (
-          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
-          (clock()>timeOutShutdown)
-        ) {
-          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "__FILE__", "__LINE__",getGlobalMasterRank(), BarrierTag );
-        }
-        tarch::mpi::Rank::getInstance().receiveDanglingMessages();
-      },
-      tarch::mpi::Rank::getInstance().getCommunicator()
-    );
-    IntegerMessage::receive(
-      message, getGlobalMasterRank(), BarrierTag,
-      [&]() {
-        int  timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
-        int  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
-        bool triggeredTimeoutWarning = false;
-        if (
-          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
-          (clock()>timeOutWarning) &&
-          (!triggeredTimeoutWarning)
-        ) {
-          tarch::mpi::Rank::getInstance().writeTimeOutWarning( "__FILE__", "__LINE__",getGlobalMasterRank(), BarrierTag );
-          triggeredTimeoutWarning = true;
-        }
-        if (
-          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
-          (clock()>timeOutShutdown)
-        ) {
-          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "__FILE__", "__LINE__",getGlobalMasterRank(), BarrierTag );
-        }
-        tarch::mpi::Rank::getInstance().receiveDanglingMessages();
-      },
-      tarch::mpi::Rank::getInstance().getCommunicator()
-    );
-  }
+
   logTraceOut( "barrier()" );
   #endif
 }
+
+
+bool tarch::mpi::Rank::isMessageInQueue(int tag) const {
+  #if Parallel
+  int  flag        = 0;
+  MPI_Iprobe(
+    MPI_ANY_SOURCE, tag,
+    getCommunicator(), &flag, MPI_STATUS_IGNORE
+  );
+  return flag;
+  #else
+  return false;
+  #endif
+}
+
 
 
 void tarch::mpi::Rank::shutdown() {
@@ -504,8 +434,7 @@ int tarch::mpi::Rank::getRank() const {
 
 
 tarch::mpi::Rank& tarch::mpi::Rank::getInstance() {
-  static Rank singleton;
-  return singleton;
+  return _singleton;
 }
 
 
@@ -542,17 +471,6 @@ void tarch::mpi::Rank::setCommunicator( MPI_Comm communicator ) {
   _communicator = communicator;
 }
 #endif
-
-
-void tarch::mpi::Rank::receiveDanglingMessages() {
-  #ifdef Parallel
-  int          flag;
-  MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, _communicator, &flag, MPI_STATUS_IGNORE);
-  if (flag) {
-    tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
-  }
-  #endif
-}
 
 
 void tarch::mpi::Rank::abort(int errorCode) {

@@ -9,6 +9,11 @@
 
 tarch::logging::Log  tarch::mpi::BooleanSemaphore::_log( "tarch::mpi::BooleanSemaphore" );
 
+int tarch::mpi::BooleanSemaphore::_semaphoreCounter(1);
+
+
+tarch::mpi::BooleanSemaphore::BooleanSemaphoreService  tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::_singleton;
+
 
 void tarch::mpi::BooleanSemaphore::enterCriticalSection() {
   BooleanSemaphoreService::getInstance().acquireLock(_semaphoreNumber);
@@ -21,7 +26,8 @@ void tarch::mpi::BooleanSemaphore::leaveCriticalSection() {
 
 
 tarch::mpi::BooleanSemaphore::BooleanSemaphore( const std::string& identifier ):
-  _semaphoreNumber( BooleanSemaphoreService::getInstance().getSemaphoreNumber()) {
+  _semaphoreNumber( _semaphoreCounter ) {
+  _semaphoreCounter++;
 }
 
 
@@ -29,15 +35,21 @@ tarch::mpi::BooleanSemaphore::~BooleanSemaphore() {
 }
 
 
-tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::BooleanSemaphoreService():
-  // Don't give out 0 as 0 can't be inverted into -0 to distinguish locks and frees
-  _semaphoreCounter(1),
-  _semaphoreTag(tarch::mpi::Rank::reserveFreeTag("global semaphores")) {
-  tarch::services::ServiceRepository::getInstance().addService( this, "tarch::mpi::BooleanSemaphore::BooleanSemaphoreService" );
+tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::BooleanSemaphoreService() {
 }
 
 
 tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::~BooleanSemaphoreService() {
+}
+
+
+void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::init() {
+  _semaphoreTag = tarch::mpi::Rank::reserveFreeTag("global semaphores");
+  tarch::services::ServiceRepository::getInstance().addService( this, "tarch::mpi::BooleanSemaphore::BooleanSemaphoreService" );
+}
+
+
+void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::shutdown() {
   tarch::services::ServiceRepository::getInstance().removeService( this );
 }
 
@@ -130,14 +142,7 @@ int tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getNumberOfLockedSema
 
 
 tarch::mpi::BooleanSemaphore::BooleanSemaphoreService& tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getInstance() {
-  static BooleanSemaphoreService singleton;
-  return singleton;
-}
-
-
-int tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::getSemaphoreNumber() {
-  _semaphoreCounter++;
-  return _semaphoreCounter-1;
+  return _singleton;
 }
 
 

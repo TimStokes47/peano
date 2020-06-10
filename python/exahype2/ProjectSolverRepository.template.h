@@ -12,25 +12,28 @@
 
 {SOLVER_INCLUDES}
 
+#include "toolbox/loadbalancing/RecursiveSubdivision.h"
+
 
 {OPEN_NAMESPACE}
 {SOLVER_DECLARATIONS}
+  extern ::exahype2::RefinementControl  refinementControl;
 
-double getMinTimeStamp();
-double getMaxTimeStamp();
-double getMinTimeStepSize();
-double getMaxTimeStepSize();
+  double getMinTimeStamp();
+  double getMaxTimeStamp();
+  double getMinTimeStepSize();
+  double getMaxTimeStepSize();
 
-void startTimeStep(
-  double globalMinTimeStamp,
-  double globalMaxTimeStamp,
-  double globalMinTimeStepSize,
-  double globalMaxTimeStepSize
-);
+  void startTimeStep(
+    double globalMinTimeStamp,
+    double globalMaxTimeStamp,
+    double globalMinTimeStepSize,
+    double globalMaxTimeStepSize
+  );
 
-void finishTimeStep();
-
-void finishGridConstructionStep();
+  void finishGridConstructionStep();
+  void finishTimeStep();
+  void finishSimulation();
 
 {CLOSE_NAMESPACE}
 

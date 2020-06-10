@@ -11,22 +11,23 @@ ExaHyPE2Sources = \
   NonCriticalAssertions.cpp \
   PatchUtils.cpp \
   RefinementControl.cpp \
+  UserInterface.cpp \
   fv/BoundaryConditions.cpp \
   fv/Generic.cpp \
   fv/Rusanov.cpp
 
 
  
-libExaHyPE2Core2d_a_CXXFLAGS          = -DDimensions=2 -DPeanoDebug=0 $(PEANO_CXXFLAGS) 
-libExaHyPE2Core2d_trace_a_CXXFLAGS    = -DDimensions=2 -DPeanoDebug=1 $(PEANO_CXXFLAGS) 
-libExaHyPE2Core2d_asserts_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=2 $(PEANO_CXXFLAGS) 
-libExaHyPE2Core2d_debug_a_CXXFLAGS    = -DDimensions=2 -DPeanoDebug=4 $(PEANO_CXXFLAGS) 
+libExaHyPE2Core2d_a_CXXFLAGS          = -DDimensions=2 -DPeanoDebug=0  
+libExaHyPE2Core2d_trace_a_CXXFLAGS    = -DDimensions=2 -DPeanoDebug=1  
+libExaHyPE2Core2d_asserts_a_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=2  
+libExaHyPE2Core2d_debug_a_CXXFLAGS    = -DDimensions=2 -DPeanoDebug=4  
 
  
-libExaHyPE2Core3d_a_CXXFLAGS          = -DDimensions=3 -DPeanoDebug=0 $(PEANO_CXXFLAGS) 
-libExaHyPE2Core3d_trace_a_CXXFLAGS    = -DDimensions=3 -DPeanoDebug=1 $(PEANO_CXXFLAGS) 
-libExaHyPE2Core3d_asserts_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=2 $(PEANO_CXXFLAGS) 
-libExaHyPE2Core3d_debug_a_CXXFLAGS    = -DDimensions=3 -DPeanoDebug=4 $(PEANO_CXXFLAGS) 
+libExaHyPE2Core3d_a_CXXFLAGS          = -DDimensions=3 -DPeanoDebug=0  
+libExaHyPE2Core3d_trace_a_CXXFLAGS    = -DDimensions=3 -DPeanoDebug=1  
+libExaHyPE2Core3d_asserts_a_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=2  
+libExaHyPE2Core3d_debug_a_CXXFLAGS    = -DDimensions=3 -DPeanoDebug=4  
 
 
 
