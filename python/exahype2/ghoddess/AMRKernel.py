@@ -94,7 +94,6 @@ class AMRKernel(ActionSet):
     if operation_name==ActionSet.OPERATION_BEGIN_TRAVERSAL:
       result = """
   _localRefinementControl.clear();
-  _globalRefinementControl.startToAccumulateLocally();
 """
     if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = self.__Template_TouchCellFirstTime.format(**self.d)

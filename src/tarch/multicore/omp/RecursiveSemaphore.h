@@ -12,6 +12,8 @@ namespace tarch {
 
 #include <string>
 #include <thread>
+#include "omp.h"
+
 
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/logging/Log.h"
@@ -29,7 +31,7 @@ class tarch::multicore::RecursiveSemaphore {
   private:
     friend class tarch::multicore::RecursiveLock;
 
-    omp_nested_lock_t lock;
+    omp_nest_lock_t lock;
 
     void enterCriticalSection();
     void leaveCriticalSection();

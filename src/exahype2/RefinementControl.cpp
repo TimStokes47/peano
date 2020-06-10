@@ -2,9 +2,6 @@
 #include "tarch/multicore/Lock.h"
 
 
-tarch::multicore::BooleanSemaphore  exahype2::RefinementControl::_semaphore;
-
-
 exahype2::RefinementCommand exahype2::getDefaultRefinementCommand() {
   return RefinementCommand::Coarsen;
 }
@@ -40,31 +37,22 @@ std::string toString( exahype2::RefinementCommand value ) {
 tarch::logging::Log  exahype2::RefinementControl::_log( "exahype2::RefinementControl" );
 
 
-/*
-Da stimmt im Multithreaded-Mode irgendwas net. Zumindest sehe ich abwechselnd 2 und 3 Events auf einem Rank, wo es doch nur
-1 grosses sein sollte, was einfach alles abspannt.
-*/
+tarch::multicore::BooleanSemaphore  exahype2::RefinementControl::_semaphore;
 
 
 exahype2::RefinementControl::RefinementControl(double tolerance):
-  _Tolerance( tolerance ),
-  _accumulatingCopiesOfGlobalObject(0) {
+  _Tolerance( tolerance ) {
 }
 
 
 void exahype2::RefinementControl::clear() {
   logDebug( "clear()", "clear list of control events" );
   _events.clear();
-  _validEventsFromPreviousSweeps.clear();
 }
 
 
 std::vector< peano4::grid::GridControlEvent >  exahype2::RefinementControl::getGridControlEvents() const {
-  logDebug( "getGridControlEvents()", "return " << _events.size() << " grid control events" );
-  // @todo Has to be removed as soon as we have non-cubic cells
-  for ( auto p: _validEventsFromPreviousSweeps ) {
-    assertionNumericalEquals2( p.getWidth(0), p.getWidth(1), p.toString(), _validEventsFromPreviousSweeps.size() );
-  }
+  logDebug( "getGridControlEvents()", "return " << _validEventsFromPreviousSweeps.size() << " grid control events" );
   return _validEventsFromPreviousSweeps;
 }
 
@@ -106,25 +94,14 @@ void exahype2::RefinementControl::addCommand(
 }
 
 
+void exahype2::RefinementControl::finishStep() {
+  _validEventsFromPreviousSweeps = _events;
+  // _validEventsFromPreviousSweeps.insert( _validEventsFromPreviousSweeps.end(), _events.begin(), _events.end() );
+  _events.clear();
+}
+
 
 void exahype2::RefinementControl::merge( const RefinementControl& control ) {
   tarch::multicore::Lock lock(_semaphore);
   _events.insert( _events.end(), control._events.begin(), control._events.end() );
-
-  _accumulatingCopiesOfGlobalObject--;
-
-  assertion(_accumulatingCopiesOfGlobalObject>=0);
-
-  if (_accumulatingCopiesOfGlobalObject==0 and not _events.empty()) {
-	logDebug( "merge(...)", "have got back the data from all other controls and accumulated new control set is not empty, so roll over" );
-    _validEventsFromPreviousSweeps = _events;
-    _events.clear();
-  }
 }
-
-
-void exahype2::RefinementControl::startToAccumulateLocally() {
-  tarch::multicore::Lock lock(_semaphore);
-  _accumulatingCopiesOfGlobalObject++;
-}
-
