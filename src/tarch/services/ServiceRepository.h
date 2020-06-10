@@ -34,7 +34,14 @@ class tarch::services::ServiceRepository: public tarch::services::Service {
 
     typedef  std::vector<ServiceEntry>      ServiceContainer;
 
-    ServiceContainer         _services;
+    ServiceContainer                        _services;
+
+    tarch::multicore::RecursiveSemaphore    _receiveDanglingMessagesSemaphore;
+
+    /**
+     * @see tarch::services::Serivce for a description how to realise singletons.
+     */
+    static tarch::services::ServiceRepository _singleton;
 
     ServiceRepository();
   public:
@@ -76,6 +83,12 @@ class tarch::services::ServiceRepository: public tarch::services::Service {
      * @return List of registered services separated by whitespaces
      */
     std::string getListOfRegisteredServices() const;
+
+    /**
+     * Maybe the only service that you don't have to init and shutdown.
+     */
+    void init();
+    void shutdown() override;
 };
 
 

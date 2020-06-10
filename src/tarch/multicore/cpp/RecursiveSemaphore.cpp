@@ -20,4 +20,9 @@ void tarch::multicore::RecursiveSemaphore::leaveCriticalSection() {
   _mutex.unlock();
 }
 
+
+bool tarch::multicore::RecursiveSemaphore::tryEnterCriticalSection() {
+  return _mutex.try_lock();
+}
+
 #endif

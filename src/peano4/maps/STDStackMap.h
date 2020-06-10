@@ -68,6 +68,17 @@ class peano4::maps::STDStackMap {
     T* getForPop(int treeId, int stackId);
     T* getForPop(const StackKey& key);
 
+    /**
+     * Clear the whole stack map. A normal C++ code might deploy this into the
+     * destructor, but I had weird seg faults when I did so.
+     *
+     * My explanation is that this map is also used in some library functions
+     * and that they are typically global variables. The order in which stuff
+     * is destroyed is thus non-deterministic (in the way that it is left to
+     * the linker). So I rather shutdown stuff explicitly.
+     */
+    void clear();
+
     std::string toString() const;
 
     /**
@@ -191,10 +202,18 @@ bool peano4::maps::STDStackMap<T>::holdsStack(const StackKey& key) const {
 
 
 template <typename T>
-peano4::maps::STDStackMap<T>::~STDStackMap() {
+void peano4::maps::STDStackMap<T>::clear() {
   for (auto& p: _data) {
     delete p.second;
   }
+
+  _data.clear();
+}
+
+
+template <typename T>
+peano4::maps::STDStackMap<T>::~STDStackMap() {
+  assertionMsg( _data.empty(), "forgot to call clear()" );
 }
 
 

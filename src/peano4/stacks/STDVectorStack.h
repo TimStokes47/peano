@@ -255,8 +255,11 @@ class peano4::stacks::STDVectorStack {
 
     /**
      * Pushes element to a stack.
+     *
+     * _currentElement always points to the next free element on the stack.
      */
     void push( const T& element ) {
+      assertion( _currentElement <= static_cast<int>(_data.size()) );
       if (_currentElement >= static_cast<int>(_data.size()) ) {
         assertion(_currentElement - static_cast<int>(_data.size()) <= 1 );
         _data.push_back(element);
@@ -301,11 +304,8 @@ class peano4::stacks::STDVectorStack {
 
       _currentElement+=numberOfElements;
 
-      //if (static_cast<int>(_data.size())<_currentElement) {
-      //  _data.resize(_currentElement);
-      //}
-      while (static_cast<int>(_data.size())<_currentElement) {
-        _data.push_back( T() );
+      if (static_cast<int>(_data.size())<_currentElement) {
+        _data.resize(_currentElement);
       }
 
       return result;

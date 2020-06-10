@@ -19,4 +19,8 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 }
 
 
+bool tarch::multicore::BooleanSemaphore::tryEnterCriticalSection() {
+  return true;
+}
+
 #endif

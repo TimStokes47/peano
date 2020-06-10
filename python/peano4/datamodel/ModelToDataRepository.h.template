@@ -34,7 +34,14 @@ class {FULL_QUALIFIED_CLASSNAME} {{
 
     {DATA_CONTAINER_DECLARATION}
     
+    /**
+     * Init all the MPI datatypes
+     */
     static void initDatatypes();
+    
+    /**
+     * Shutdown the MPI datatypes and free the local data containers.
+     */
     static void shutdownDatatypes();
 }};
 

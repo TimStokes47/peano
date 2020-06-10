@@ -226,7 +226,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
     logDebug(
       "traverse(TraversalObserver)",
       _splitTriggered.size() << " tree split triggered and " <<
-	  _splitting.size() << " splitting trees on tree " << _id
+      _splitting.size() << " splitting trees on tree " << _id
     );
   }
 
@@ -242,21 +242,20 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
     _gridControlEvents = merge( observer.getGridControlEvents() );
   }
 
-  logDebug( "traverse(TraversalObserver)", "got " << _gridControlEvents.size() << " grid control event(s)" );
-
   _splittedCells.clear();
 
   const bool isFirstTraversal = _spacetreeState==SpacetreeState::NewRoot;
   GridVertex vertices[TwoPowerD];
   dfor2(k)
-    tarch::la::Vector<Dimensions,double> x = _root.getX() + k.convertScalar<double>();
-    vertices[kScalar].setState(isFirstTraversal ? GridVertex::State::Refining : GridVertex::State::Refined );
-    vertices[kScalar].setAdjacentRanks( tarch::la::Vector<TwoPowerD,int>(InvalidRank) );
-    vertices[kScalar].setAdjacentRanks( TwoPowerD-1-kScalar,0 );
-    vertices[kScalar].setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(true);
-    vertices[kScalar].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
-    vertices[kScalar].setX(x);
-    vertices[kScalar].setLevel(0);
+    tarch::la::Vector<TwoPowerD,int> adjacentRanks( InvalidRank );
+    adjacentRanks( TwoPowerD-1-kScalar ) = 0;
+    vertices[kScalar] = createVertex(
+      isFirstTraversal ? GridVertex::State::Refining : GridVertex::State::Refined,
+      _root.getX() + k.convertScalar<double>(),
+      0,
+      adjacentRanks,
+      false
+    );
     logDebug( "traverse(TraversalObserver)", "create " << vertices[kScalar].toString() );
   enddforx
 
@@ -919,27 +918,6 @@ bool peano4::grid::Spacetree::shouldEraseAdjacencyInformation(
 }
 
 
-peano4::grid::GridVertex peano4::grid::Spacetree::createHangingVertex(
-  GridVertex                                   coarseGridVertices[TwoPowerD],
-  const tarch::la::Vector<Dimensions,double>&  x,
-  int                                          level,
-  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
-) const {
-  logTraceInWith3Arguments( "createHangingVertex(...)", x, level, vertexPositionWithin3x3Patch );
-
-  GridVertex result;
-  result.setState( GridVertex::State::HangingVertex );
-  result.setAdjacentRanks( getAdjacentRanksForNewVertex(coarseGridVertices,vertexPositionWithin3x3Patch) );
-  result.setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(false);
-  result.setIsAntecessorOfRefinedVertexInCurrentTreeSweep(false);
-  result.setX(x);
-  result.setLevel(level);
-
-  logTraceOutWith1Argument( "createHangingVertex(...)", result.toString() );
-  return result;
-}
-
-
 tarch::la::Vector<TwoPowerD,int> peano4::grid::Spacetree::getAdjacentRanksForNewVertex(
   GridVertex                                   coarseGridVertices[TwoPowerD],
   const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
@@ -966,26 +944,6 @@ tarch::la::Vector<TwoPowerD,int> peano4::grid::Spacetree::getAdjacentRanksForNew
   return adjacentRanks;
 }
 
-
-peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
-  GridVertex                                   coarseGridVertices[TwoPowerD],
-  const tarch::la::Vector<Dimensions,double>&  x,
-  int                                          level,
-  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
-) const {
-  logTraceInWith3Arguments( "createNewPersistentVertex(...)", x, level, vertexPositionWithin3x3Patch );
-
-  GridVertex result;
-  result.setState( GridVertex::State::New );
-  result.setAdjacentRanks( getAdjacentRanksForNewVertex(coarseGridVertices,vertexPositionWithin3x3Patch) );
-  result.setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(false);
-  result.setIsAntecessorOfRefinedVertexInCurrentTreeSweep(false);
-  result.setX(x);
-  result.setLevel(level);
-
-  logTraceOutWith1Argument( "createNewPersistentVertex(...)", result.toString() );
-  return result;
-}
 
 
 void peano4::grid::Spacetree::loadVertices(
@@ -1023,10 +981,20 @@ void peano4::grid::Spacetree::loadVertices(
     switch (type) {
         case VertexType::New:
           assertion( PeanoCurve::isInOutStack(stackNumber) );
-          fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createNewPersistentVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
+          fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createVertex(
+            GridVertex::State::New,
+            x,fineGridStatesState.getLevel(),
+            getAdjacentRanksForNewVertex(coarseGridVertices,vertexPositionWithinPatch),
+            true
+          );
           break;
         case VertexType::Hanging:
-      	  fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createHangingVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
+      	  fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createVertex(
+            GridVertex::State::HangingVertex,
+            x,fineGridStatesState.getLevel(),
+            getAdjacentRanksForNewVertex(coarseGridVertices,vertexPositionWithinPatch),
+            true
+          );
       	  break;
         case VertexType::Persistent:
           {
@@ -1754,7 +1722,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createGenericCellTrave
   event.setIsFaceLocal(   areFacesLocal(fineGridVertices) );
   event.setIsVertexLocal( areVerticesLocal(fineGridVertices) );
 
-  logTraceOutWith1Argument( "createGenericCellTraversalEvent(...)", event.toString() );
+  logTraceOut( "createGenericCellTraversalEvent(...)" );
   return event;
 }
 
@@ -2448,72 +2416,3 @@ bool peano4::grid::Spacetree::isInvolvedInJoinOrFork() const {
 	    or not _splitting.empty();
 }
 
-/*
-
-peano4::grid::Spacetree::CellEvent peano4::grid::Spacetree::getCellEvent(
-  GridVertex                         coarseGridVertices[TwoPowerD],
-  GridVertex                         fineGridVertices[TwoPowerD]
-) const {
-  CellEvent result;
-
-  // kann ich mir selber herholen
-  CellType type = getCellType(fineGridVertices);
-
-  bool parentCellIsLocal   = isSpacetreeNodeLocal(coarseGridVertices);
-  bool cellIsLocal         = isSpacetreeNodeLocal(fineGridVertices);
-
-  logTraceInWith6Arguments("getCellEvent(...)",toString(type), parentCellIsLocal, cellIsLocal, getTreeOwningSpacetreeNode(fineGridVertices),_splitting.size(),_id);
-
-  if ( cellIsLocal and _spacetreeState==SpacetreeState::NewFromSplit ) {
-    result = CellEvent::NewFromSplit;
-  }
-  else if ( not cellIsLocal and _splitting.count( getTreeOwningSpacetreeNode(fineGridVertices) )>0 ) {
-    switch (type) {
-      case CellType::New:
-        result = CellEvent::MovingNewCellToWorker;
-        break;
-      case CellType::Persistent:
-        result = CellEvent::MovingPersistentCellToWorker;
-        break;
-      case CellType::Delete:
-        result = CellEvent::MovingDeletingCellToWorker;
-        break;
-    }
-  }
-  else if ( not cellIsLocal and _spacetreeState==SpacetreeState::Joining and getTreeOwningSpacetreeNode(fineGridVertices)==_masterId ) {
-    result = CellEvent::JoiningWithMaster;
-  }
-  else if (
-    parentCellIsLocal and cellIsLocal
-  ) {
-    switch (type) {
-      case CellType::New:
-        result = CellEvent::NewLocal;
-        break;
-      case CellType::Persistent:
-        result = CellEvent::PersistentLocal;
-        break;
-      case CellType::Delete:
-        result = CellEvent::DeleteLocal;
-        break;
-    }
-  }
-  else if (
-    not parentCellIsLocal and cellIsLocal
-  ) {
-    result = CellEvent::TopCellOfLocalForest;
-  }
-  else if (
-    parentCellIsLocal and not cellIsLocal
-  ) {
-    result = CellEvent::TopCellOfRemoteWorker;
-  }
-//  not parentCellIsLocal and not cellIsLocal
-  else {
-    result = CellEvent::Remote;
-  }
-
-  logTraceOutWith1Argument("getCellEvent(...)",toString(result));
-  return result;
-}
-*/

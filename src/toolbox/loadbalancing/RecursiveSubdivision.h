@@ -124,6 +124,7 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      * dumps statistics.
      */
     void finishStep();
+    void finishSimulation();
 
     /**
      * I need the stats here mainly for debugging purposes. The load balancing
@@ -132,17 +133,21 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      */
     std::string toString() const;
   private:
+    /**
+     * @see getStrategyStep()
+     */
     enum class StrategyStep {
       Wait,
-	  SpreadEquallyOverAllRanks,
-	  SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning,
-	  SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning
+      SpreadEquallyOverAllRanks,
+      SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning,
+      SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning
     };
 
     static std::string toString( StrategyStep step );
 
     /**
-     * Analyse current global situation and commit to a strategy
+     * Analyse current global situation and commit to a strategy. This routine
+     * analyses the rank state and returns an action.
      */
     StrategyStep getStrategyStep() const;
 
@@ -176,7 +181,16 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     int _lightestRank;
 
     int   _totalNumberOfSplits;
-    bool  _isInCoolDownPhase;
+
+    enum class StrategyState {
+      Standard,
+      CoolDown,
+      PostponedDecisionDueToLackOfCells
+    };
+
+    static std::string toString( StrategyState state );
+
+    StrategyState  _state;
 
     void updateGlobalView();
 
@@ -239,7 +253,10 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      */
     void triggerSplit( int sourceTree, int numberOfCells, int targetRank );
 
-    void updateCoolDownState();
+    /**
+     * Postpone never lasts longer than one step
+     */
+    void updateState();
 
     #ifdef Parallel
     MPI_Request*    _globalSumRequest;

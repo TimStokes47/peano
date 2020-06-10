@@ -53,6 +53,8 @@ class tarch::logging::CommandLineLogger {
   private:
     static Log _log;
 
+    static CommandLineLogger  _singleton;
+
     tarch::multicore::BooleanSemaphore _semaphore;
 
     /**

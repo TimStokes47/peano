@@ -5,7 +5,10 @@
 
 
 #include "maps.h"
+
 #include "peano4/parallel/Node.h"
+
+#include "tarch/multicore/Lock.h"
 
 #include <map>
 
@@ -19,7 +22,9 @@ namespace peano4 {
 }
 
 // @todo Dokumentieren, warum ich denke, dass man das nicht braucht
-//#ifdef UseSemaphoreInHierarchicalStackMap
+// Also ich glaube jetzt doch, dass man das braucht
+// -> noe, das war's wohl net
+#define UseSemaphoreInHierarchicalStackMap
 
 
 /**

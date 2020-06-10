@@ -28,9 +28,9 @@ void startTimeStep(
   double globalMaxTimeStepSize
 );
 
-void finishTimeStep();
-
 void finishGridConstructionStep();
+void finishTimeStep();
+void finishSimulation();
 
 {CLOSE_NAMESPACE}
 

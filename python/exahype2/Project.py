@@ -158,7 +158,8 @@ class Project(object):
       "SEQUENCE_OF_GET_MIN_TIME_STAMP_CALLS": "std::numeric_limits<double>::max()",
       "SEQUENCE_OF_START_TIME_STEP_CALLS": "",
       "SEQUENCE_OF_FINISH_TIME_STEP_CALLS": "",
-      "SEQUENCE_OF_FINISH_GRID_CONSTRUCTION_STEP_CALLS": ""
+      "SEQUENCE_OF_FINISH_GRID_CONSTRUCTION_STEP_CALLS": "",
+      "SEQUENCE_OF_FINISH_FINISH_SIMULATION_CALLS": ""
     }
 
     for solver in self._solvers:
@@ -172,13 +173,14 @@ class Project(object):
       solverRepositoryDictionary[ "SEQUENCE_OF_START_TIME_STEP_CALLS" ]         += solver.get_name_of_global_instance() + ".startTimeStep(minTimeStamp, maxTimeStamp, minTimeStepSize, maxTimeStepSize); \n"
       solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_TIME_STEP_CALLS" ]        += solver.get_name_of_global_instance() + ".finishTimeStep(); \n"
 
+
     if self._load_balancer_name != "":
       solverRepositoryDictionary[ "SOLVER_INCLUDES" ]                                 += "#include \"" + self._load_balancer_name.replace( "::", "/") + ".h\" \n"
       solverRepositoryDictionary[ "SOLVER_DECLARATIONS" ]                             += "  extern " + self._load_balancer_name + "  loadBalancer;\n"
       solverRepositoryDictionary[ "SOLVER_DEFINITIONS" ]                              += self._load_balancer_name + "  loadBalancer" + self._load_balancer_arguments + ";\n"
       solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_TIME_STEP_CALLS" ]              += "loadBalancer.finishStep(); "
       solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_GRID_CONSTRUCTION_STEP_CALLS" ] += "loadBalancer.finishStep(); "
-
+      solverRepositoryDictionary[ "SEQUENCE_OF_FINISH_FINISH_SIMULATION_CALLS" ]      += "loadBalancer.finishSimulation(); "
 
 
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )

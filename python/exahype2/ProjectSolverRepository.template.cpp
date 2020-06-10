@@ -47,5 +47,10 @@ void finishGridConstructionStep() {{
 }}
 
 
+void finishSimulation() {{
+  {SEQUENCE_OF_FINISH_FINISH_SIMULATION_CALLS}
+}}
+
+
 {CLOSE_NAMESPACE}
 

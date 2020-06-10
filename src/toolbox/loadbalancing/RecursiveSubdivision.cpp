@@ -8,6 +8,8 @@
 #include "tarch/mpi/Rank.h"
 #include "tarch/multicore/Core.h"
 
+#include "peano4/grid/GridStatistics.h"
+
 
 
 
@@ -21,7 +23,7 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
   _localNumberOfInnerUnrefinedCell( 0 ),
   _globalNumberOfInnerUnrefinedCell( 0 ),
   _totalNumberOfSplits(0),
-  _isInCoolDownPhase(false) {
+  _state( StrategyState::Standard ) {
   #ifdef Parallel
   _globalSumRequest          = nullptr;
   _globalLightestRankRequest = nullptr;
@@ -29,9 +31,6 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
   _lightestRankBuffer._rank               = tarch::mpi::Rank::getInstance().getRank();
   #endif
 }
-
-
-// @todo Ich muss die Core-Zahl in Relation setzen zur maximalen Anzahl an Cores pro Ranks
 
 
 std::string toolbox::loadbalancing::RecursiveSubdivision::toString() const {
@@ -49,9 +48,19 @@ std::string toolbox::loadbalancing::RecursiveSubdivision::toString() const {
 
 toolbox::loadbalancing::RecursiveSubdivision::~RecursiveSubdivision() {
   #ifdef Parallel
+  assertion(_globalSumRequest == nullptr );
+  assertion(_globalLightestRankRequest == nullptr );
+  #endif
+}
+
+
+void toolbox::loadbalancing::RecursiveSubdivision::finishSimulation() {
+  #ifdef Parallel
   if (_globalSumRequest != nullptr ) {
     MPI_Wait( _globalSumRequest, MPI_STATUS_IGNORE );
     MPI_Wait( _globalLightestRankRequest, MPI_STATUS_IGNORE );
+    _globalSumRequest = nullptr;
+    _globalLightestRankRequest = nullptr;
   }
   #endif
 }
@@ -70,7 +79,16 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
       MPI_Wait( _globalSumRequest, MPI_STATUS_IGNORE );
       MPI_Wait( _globalLightestRankRequest, MPI_STATUS_IGNORE );
     }
-/*
+
+    if (_globalNumberOfInnerUnrefinedCell<_localNumberOfInnerUnrefinedCell) {
+      logInfo(
+        "updateGlobalView()",
+        "global number of cells lags behind local one significantly. Use local number of cells (" << _localNumberOfInnerUnrefinedCell <<
+        " instead of global count of " << _globalNumberOfInnerUnrefinedCell << ") to guide partitioning"
+      );
+      _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
+    }
+
     _globalSumRequest = new MPI_Request();
     _globalLightestRankRequest = new MPI_Request();
 
@@ -94,7 +112,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
       MPI_MINLOC,
       tarch::mpi::Rank::getInstance().getCommunicator(),
       _globalLightestRankRequest
-    );*/
+    );
     #endif
   }
 }
@@ -145,19 +163,35 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 }
 
 
-void toolbox::loadbalancing::RecursiveSubdivision::updateCoolDownState() {
-  if ( _isInCoolDownPhase and _totalNumberOfSplits>0 ) {
+void toolbox::loadbalancing::RecursiveSubdivision::updateState() {
+  if (
+    static_cast<double>(_localNumberOfInnerUnrefinedCell)
+    <
+    _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell *
+    tarch::multicore::Core::getInstance().getNumberOfThreads()
+    and
+    _state!=StrategyState::PostponedDecisionDueToLackOfCells
+  ) {
+    _state = StrategyState::PostponedDecisionDueToLackOfCells;
+  }
+  else if (
+    _state==StrategyState::PostponedDecisionDueToLackOfCells
+  ) {
+    _state = StrategyState::Standard;
+  }
+  else if ( _state==StrategyState::CoolDown and _totalNumberOfSplits>0 ) {
     _totalNumberOfSplits/=2;
   }
-  else if ( _isInCoolDownPhase and _totalNumberOfSplits<=0 ) {
+  else if ( _state==StrategyState::CoolDown and _totalNumberOfSplits<=0 ) {
     logInfo( "isInCoolDownPhase()", "terminate cool-down phase and continue to load balance" );
-    _isInCoolDownPhase   = false;
+    _state = StrategyState::Standard;
     _totalNumberOfSplits = 0;
   }
-  else if ( not _isInCoolDownPhase and _totalNumberOfSplits<tarch::multicore::Core::getInstance().getNumberOfThreads() ) {
+  else if ( _state==StrategyState::Standard and _totalNumberOfSplits<tarch::multicore::Core::getInstance().getNumberOfThreads() ) {
+    _state = StrategyState::Standard;
   }
-  else {
-    _isInCoolDownPhase = true;
+  else if ( _state==StrategyState::Standard) {
+    _state = StrategyState::CoolDown;
   }
 }
 
@@ -181,22 +215,15 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
   if (
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > peano4::parallel::Node::MaxSpacetreesPerRank/4*3
   ) {
-    logDebug( "getStrategyStep()", "afraid to use too many trees and overbook system" );
+    logDebug( "getStrategyStep()", "afraid to use too many trees and hence to overbook system" );
     return StrategyStep::Wait;
   }
 
   if (
-    static_cast<double>(_globalNumberOfInnerUnrefinedCell)
-    <
-    _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell * std::min(
-      tarch::mpi::Rank::getInstance().getNumberOfRanks(),
-      tarch::multicore::Core::getInstance().getNumberOfThreads()
-    )
+    _state==StrategyState::PostponedDecisionDueToLackOfCells
+    or
+    _state == StrategyState::CoolDown
   ) {
-    return StrategyStep::Wait;
-  }
-
-  if ( _isInCoolDownPhase ) {
     return StrategyStep::Wait;
   }
 
@@ -208,17 +235,6 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
     tarch::mpi::Rank::getInstance().isGlobalMaster()
   ) {
     return StrategyStep::SpreadEquallyOverAllRanks;
-  }
-
-  if (
-    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
-    and
-    static_cast<double>(_localNumberOfInnerUnrefinedCell)
-    <
-    _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell *
-    tarch::multicore::Core::getInstance().getNumberOfThreads()
-  ) {
-    return StrategyStep::Wait;
   }
 
   if (
@@ -241,14 +257,29 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
 }
 
 
+std::string toolbox::loadbalancing::RecursiveSubdivision::toString( StrategyState state ) {
+  switch (state) {
+    case StrategyState::Standard:
+      return "standard";
+    case StrategyState::CoolDown:
+      return "cool-down";
+    case StrategyState::PostponedDecisionDueToLackOfCells:
+      return "postponed-due-to-lack-of-cells";
+  }
+  return "<undef>";
+}
+
+
 void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   updateGlobalView();
   updateBlacklist();
-  updateCoolDownState();
+  updateState();
 
-  logDebug( "finishStep()", toString( getStrategyStep() ) );
+  auto step = getStrategyStep();
 
-  switch ( getStrategyStep() ) {
+  logInfo( "finishStep()", toString( step ) << " in state " << toString( _state ) << " with global cell count of " << _globalNumberOfInnerUnrefinedCell );
+
+  switch ( step ) {
     case StrategyStep::Wait:
       break;
     case StrategyStep::SpreadEquallyOverAllRanks:
@@ -298,7 +329,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
               "finishStep()",
               "lightest global rank is rank " << _lightestRank << ", so assign this rank " << cellsPerCore << " cell(s)"
             );
-            //triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
+            triggerSplit(heaviestSpacetree, cellsPerCore, _lightestRank);
           }
         }
       }

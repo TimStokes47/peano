@@ -66,10 +66,12 @@ class tarch::mpi::Rank {
      */
     static tarch::logging::Log _log;
 
+    static Rank  _singleton;
+
     /**
      * Is set true if init() is called.
      */
-    static bool _initIsCalled;
+    bool _initIsCalled;
 
     /**
      * Rank (id) of this process.

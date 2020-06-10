@@ -33,11 +33,11 @@ namespace tarch {
  * @author Tobias Weinzierl
  */
 class tarch::mpi::BooleanSemaphore {
-  private:
-    friend class Rank;
+  public:
     class BooleanSemaphoreService: public tarch::services::Service {
       private:
-        int                  _semaphoreCounter;
+        static BooleanSemaphoreService  _singleton;
+
         int                  _semaphoreTag;
 
         /**
@@ -85,8 +85,18 @@ class tarch::mpi::BooleanSemaphore {
          */
         void serveLockRequests();
 
+        /**
+         * @number Every boolean semaphore has a globally unique positive
+         *    number. The MPI messages we send around carry this number if we
+         *    want to acquire a lock. They carry the negative number if we
+         *    want to release a lock. To allow for these sign flips, number
+         *    may not equal zero.
+         */
         void addMapEntryLazily(int number);
       public:
+        void init();
+        void shutdown() override;
+
         /**
          * Destructor of the service. As the service is a singleton and a service
          * (hence the name), it has to deregister itself. Otherwise, the overall
@@ -106,8 +116,6 @@ class tarch::mpi::BooleanSemaphore {
          */
         static BooleanSemaphoreService& getInstance();
 
-        int getSemaphoreNumber();
-
         void acquireLock( int number );
         void releaseLock( int number );
 
@@ -115,10 +123,13 @@ class tarch::mpi::BooleanSemaphore {
 
         std::string toString() const;
     };
-
+  private:
+    friend class Rank;
     friend class tarch::mpi::Lock;
 
     static tarch::logging::Log  _log;
+
+    static int                  _semaphoreCounter;
 
     const int  _semaphoreNumber;
 

@@ -11,6 +11,7 @@ namespace tarch {
   namespace services {
     class Service;
     class ServiceFactory;
+    class ServiceRepository;
   }
 }
 
@@ -36,14 +37,63 @@ namespace tarch {
  * I usually make services singletons. I can then do the registration in the
  * constructor.
  *
+ * <h2> How to implement a singleton </h2>
+ *
+ * Historically, I preferred the make singletons classes with private
+ * constructor that offer a getInstance() routine. The latter is implemented as
+ * follows:
+ *
+ * <pre>
+MyClass MyClass::getInstance() {
+  static MyClass singleton;
+  return singleton;
+}
+   </pre>
+ *
+ * But this pattern breaks down with Peano's static libraries. At least one
+ * some systems, I've observed that singletons still are created multiple
+ * times, i.e. not only when we first call getInstance(). The canonical
+ * solution to this dilemma is to make the singleton a static (class)
+ * attribute which is private and to make getInstance() hand out this static
+ * attribute.
+ *
+ * While this solves the problem of multiple instantiation, it does not solve
+ * another problem: If the constructor of a singleton registers the singleton,
+ * it could happen that the linker creates the singletons in the wrong order.
+ * There's no way to ensure that the tarch's service is created first. So what
+ * can happen is that the memory for the ServiceRepository (where all the
+ * services register) is allocated. Then, an arbitrary service is created and
+ * registers, i.e. it adds is pointer to the repository. Later, the
+ * repository's constructor is invoked and effectively overwrites the registered
+ * service. It is hence important that we create the repository first. The only
+ * way to ensure this, is to init all services manually.
+ *
+ * So here's the takeaway:
+ *
+ * (1) Singletons are always realised via a private constructor.
+ * (2) Singletons are always realised via a class attribute.
+ * (3) Singletons don't do anything in their constructor. They are not allowed
+ *     to.
+ * (4) Any singleton has an init() operation, as well as a shutdown
+ *     (if required).
+ *
+ * To enforce this behaviour with init() and shutdown(), I make shutdown an
+ * abstract functions. You therefore have to implement it. I refrained from
+ * doing the same with init(), as services might want init() to have
+ * service-specific arguments.
+ *
+ *
  * @author Tobias Weinzierl
  */
 class tarch::services::Service {
   public:
+    friend class ServiceRepository;
+
     virtual ~Service() {};
 
     virtual void receiveDanglingMessages() = 0;
 
+  protected:
     /**
      * Recursive semaphores
      *
@@ -62,7 +112,9 @@ class tarch::services::Service {
      * from time to time. Therefore, I decided to make this semaphore a pointer.
      * It is initialised lazily tarch::services::ServiceRepository::receiveDanglingMessages().
      */
-	static tarch::multicore::RecursiveSemaphore*  receiveDanglingMessagesSemaphore;
+	  tarch::multicore::RecursiveSemaphore  _receiveDanglingMessagesSemaphore;
+
+	  virtual void shutdown() = 0;
 };
 
 #endif

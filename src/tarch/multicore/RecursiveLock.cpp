@@ -19,6 +19,21 @@ tarch::multicore::RecursiveLock::~RecursiveLock() {
 }
 
 
+bool tarch::multicore::RecursiveLock::tryLock() {
+  assertion( !_lockIsAquired );
+  bool result = _semaphore.tryEnterCriticalSection();
+  if (result) {
+    _lockIsAquired = true;
+  }
+  return result;
+}
+
+
+bool tarch::multicore::RecursiveLock::isLocked() const {
+  return _lockIsAquired;
+}
+
+
 void tarch::multicore::RecursiveLock::lock() {
   assertion( !_lockIsAquired );
   _semaphore.enterCriticalSection();

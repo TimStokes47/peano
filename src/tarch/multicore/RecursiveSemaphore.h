@@ -46,6 +46,13 @@ class tarch::multicore::RecursiveSemaphore {
     void leaveCriticalSection();
 
     /**
+     * Run into critical section and try to lock. If we are successful,
+     * the routine returns true and the stuff is locked (so please call
+     * leave later on). Otherwise, I return false.
+     */
+    bool tryEnterCriticalSection();
+
+    /**
      * You may not copy a semaphore
      */
     RecursiveSemaphore( const RecursiveSemaphore& semaphore ) {}

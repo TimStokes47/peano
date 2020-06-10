@@ -7,6 +7,9 @@
 #include <sstream>
 
 
+tarch::services::ServiceRepository  tarch::services::ServiceRepository::_singleton;
+
+
 tarch::services::ServiceRepository::ServiceRepository():
   _services() {
 }
@@ -17,9 +20,16 @@ tarch::services::ServiceRepository::~ServiceRepository() {
 }
 
 
+void tarch::services::ServiceRepository::init() {
+}
+
+
+void tarch::services::ServiceRepository::shutdown() {
+}
+
+
 tarch::services::ServiceRepository& tarch::services::ServiceRepository::getInstance() {
-  static tarch::services::ServiceRepository singleton;
-  return singleton;
+  return _singleton;
 }
 
 
@@ -60,17 +70,15 @@ bool tarch::services::ServiceRepository::hasService( Service* service ) const {
 
 
 void tarch::services::ServiceRepository::receiveDanglingMessages() {
-  if (Service::receiveDanglingMessagesSemaphore==nullptr) {
-    Service::receiveDanglingMessagesSemaphore = new tarch::multicore::RecursiveSemaphore();
-  }
-  tarch::multicore::RecursiveLock lock(*Service::receiveDanglingMessagesSemaphore);
-
-  for (
-    ServiceContainer::iterator p = _services.begin();
-    p != _services.end();
-    p++
-  ) {
-    p->_service->receiveDanglingMessages();
+  tarch::multicore::RecursiveLock  lock(_receiveDanglingMessagesSemaphore,false);
+  if ( lock.tryLock() ) {
+    for (
+      ServiceContainer::iterator p = _services.begin();
+      p != _services.end();
+      p++
+    ) {
+        p->_service->receiveDanglingMessages();
+    }
   }
 } 
 

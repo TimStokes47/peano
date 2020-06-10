@@ -17,7 +17,8 @@
 #include "tarch/multicore/Lock.h"
 
 
-tarch::logging::Log  peano4::parallel::Node::_log("peano4::parallel::Node");
+tarch::logging::Log      peano4::parallel::Node::_log("peano4::parallel::Node");
+peano4::parallel::Node   peano4::parallel::Node::_singleton;
 
 
 void peano4::parallel::Node::initMPIDatatypes() {
@@ -46,13 +47,7 @@ void peano4::parallel::Node::shutdownMPIDatatypes() {
 }
 
 
-peano4::parallel::Node::Node():
-  _currentProgramStep(UndefProgramStep),
-  _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - rank orchestration") ),
-  _dataExchangeBaseTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - data management", ReservedMPITagsForDataExchange) ) {
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    registerId( 0, -1);
-  }
+peano4::parallel::Node::Node() {
 }
 
 
@@ -63,6 +58,16 @@ peano4::parallel::Node::~Node() {
     _currentProgramStep==Terminate,
     "forgot to terminate node properly through peano4::parallel::Node::getInstance().shutdown()"
   );
+}
+
+
+void peano4::parallel::Node::init() {
+  _currentProgramStep   = UndefProgramStep;
+  _rankOrchestrationTag = tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - rank orchestration");
+  _dataExchangeBaseTag  = tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node - data management", ReservedMPITagsForDataExchange);
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    registerId( 0, -1);
+  }
 }
 
 
@@ -83,8 +88,7 @@ bool peano4::parallel::Node::isGlobalMaster(int treeId) {
 
 
 peano4::parallel::Node& peano4::parallel::Node::getInstance() {
-  static Node singleton;
-  return singleton;
+  return _singleton;
 }
 
 
@@ -142,8 +146,8 @@ int peano4::parallel::Node::reserveId(int rank, int forTreeId)  {
 
 void peano4::parallel::Node::registerId(int id, int masterId) {
   tarch::multicore::Lock lock(_semaphore);
-  assertion( _treeEntries.count(id)==0 );
-  assertion( id!=masterId );
+  assertion2( _treeEntries.count(id)==0, id, masterId );
+  assertion2( id!=masterId, id, masterId );
   #ifndef Parallel
   assertion( isGlobalMaster(id) or _treeEntries.count(masterId)==1 );
   #endif
@@ -366,11 +370,15 @@ void peano4::parallel::Node::shutdown() {
   logTraceIn( "shutdown()" );
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     setNextProgramStep(peano4::parallel::Node::Terminate);
-  }
-
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     continueToRun();
   }
+
+  tarch::mpi::Rank::getInstance().barrier(
+    [&]() -> void {
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+    }
+  );
+
   logTraceOut( "shutdown()" );
 }
 
