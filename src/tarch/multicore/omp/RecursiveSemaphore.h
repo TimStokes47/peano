@@ -12,6 +12,8 @@ namespace tarch {
 
 #include <string>
 #include <thread>
+#include "omp.h"
+
 
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/logging/Log.h"
