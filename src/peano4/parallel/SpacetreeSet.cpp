@@ -11,6 +11,8 @@
 
 #include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Lock.h"
+#include "tarch/multicore/IntegerSemaphore.h"
+#include "tarch/multicore/IntegerLock.h"
 
 #include "tarch/mpi/Rank.h"
 #include "tarch/mpi/IntegerMessage.h"
@@ -105,7 +107,7 @@ void peano4::parallel::SpacetreeSet::answerQuestions() {
             p = _unansweredMessages.erase(p);
           }
           else {
-            logInfo( "answerMessages()", "can't answer as I'm in the wrong state" );
+            logDebug( "answerMessages()", "can't answer as I'm in the wrong state" );
             p++;
           }
         }
@@ -468,6 +470,8 @@ void peano4::parallel::SpacetreeSet::deleteClonedObservers() {
 void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
   logTraceIn( "traverse(TraversalObserver&)" );
 
+  _hasPassedOrderedBarrier.clear();
+
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     peano4::parallel::Node::getInstance().continueToRun();
   }
@@ -781,5 +785,33 @@ const peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int
   }
   assertion3( false, "no spacetree found", id, tarch::mpi::Rank::getInstance().getRank() );
   return *_spacetrees.begin(); // just here to avoid warning
+}
+
+
+void peano4::parallel::SpacetreeSet::orderedBarrier(const std::string& identifier) {
+  logTraceIn( "orderedBarrier()" );
+
+  static tarch::multicore::BooleanSemaphore  semaphore;
+
+  {
+    tarch::multicore::Lock lock(semaphore);
+    if ( _hasPassedOrderedBarrier.count( identifier) == 0 ) {
+      _hasPassedOrderedBarrier.insert( std::pair<std::string,bool>(identifier,false) );
+    }
+  }
+
+  {
+    tarch::multicore::Lock lock(semaphore);
+    if ( not _hasPassedOrderedBarrier.at( identifier) ) {
+      tarch::mpi::Rank::getInstance().barrier(
+        [&]() -> void {
+          tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+        }
+      );
+      _hasPassedOrderedBarrier[ identifier ] = true;
+    }
+  }
+
+  logTraceOut( "orderedBarrier()" );
 }
 

@@ -267,8 +267,9 @@ class toolbox::loadbalancing::RecursiveSubdivision {
       int    _rank;
     };
 
-    double          _globalNumberOfInnerUnrefinedCellBuffer;
-    ReductionBuffer _lightestRankBuffer;
+    double          _globalNumberOfInnerUnrefinedCellBufferIn;
+    ReductionBuffer _lightestRankBufferIn;
+    ReductionBuffer _lightestRankBufferOut;
     #endif
 };
 

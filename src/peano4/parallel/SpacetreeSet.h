@@ -46,6 +46,11 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     std::vector<peano4::parallel::TreeManagementMessage>   _unansweredMessages;
 
     /**
+     * @see orderedBarrier()
+     */
+    std::map< std::string, bool >                          _hasPassedOrderedBarrier;
+
+    /**
      * Each task triggers the traversal of one specific spacetree. After
      * that, we might directly trigger the data exchanges. Yet, this is not a
      * good idea as other tasks might linger in the background not have sent
@@ -207,6 +212,9 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     int     _answerMessageTag;
 
+    /**
+     * These are the local spacetrees.
+     */
     std::list< peano4::grid::Spacetree >  _spacetrees;
 
     /**
@@ -634,6 +642,18 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * @return Set of ids of local spacetrees
      */
     std::set<int> getLocalSpacetrees() const;
+
+    /**
+     * Try to order the thread execution to some degree.
+     *
+     * This routine is used by some plotters and other routines. It basically works
+     * as follows:
+     *
+     * - The first thread that hits the barrier in a set traversal synchronises with
+     *   all other ranks. All other local threads have to wait meanwhile.
+     * - After that, the other ranks are allowed to pass one by one.
+     */
+    void orderedBarrier( const std::string& identifier );
 };
 
 

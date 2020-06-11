@@ -27,8 +27,8 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
   #ifdef Parallel
   _globalSumRequest          = nullptr;
   _globalLightestRankRequest = nullptr;
-  _globalNumberOfInnerUnrefinedCellBuffer = 1;
-  _lightestRankBuffer._rank               = tarch::mpi::Rank::getInstance().getRank();
+  _globalNumberOfInnerUnrefinedCellBufferIn = 1;
+  _lightestRankBufferIn._rank               = tarch::mpi::Rank::getInstance().getRank();
   #endif
 }
 
@@ -89,15 +89,18 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
       _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
     }
 
-    _globalSumRequest = new MPI_Request();
+    _globalSumRequest          = new MPI_Request();
     _globalLightestRankRequest = new MPI_Request();
 
-    _globalNumberOfInnerUnrefinedCell = _globalNumberOfInnerUnrefinedCellBuffer;
-    _lightestRank                     = _lightestRankBuffer._rank;
+    _globalNumberOfInnerUnrefinedCell = _globalNumberOfInnerUnrefinedCellBufferIn;
+    _lightestRank                     = _lightestRankBufferIn._rank;
+
+    _lightestRankBufferOut._localUnrefinedCells = _localNumberOfInnerUnrefinedCell;
+    _lightestRankBufferOut._rank                = tarch::mpi::Rank::getInstance().getRank();
 
     MPI_Iallreduce(
-      &_localNumberOfInnerUnrefinedCell,   // send
-      &_globalNumberOfInnerUnrefinedCellBuffer,  // receive
+      &_localNumberOfInnerUnrefinedCell,            // send
+      &_globalNumberOfInnerUnrefinedCellBufferIn,   // receive
       1,             // count
       MPI_DOUBLE,
       MPI_SUM,
@@ -105,9 +108,9 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
       _globalSumRequest
     );
     MPI_Iallreduce(
-      &_localNumberOfInnerUnrefinedCell,   // send
-      &_lightestRankBuffer,                // receive
-      1,             // count
+      &_lightestRankBufferOut,   // send
+      &_lightestRankBufferIn,    // receive
+      1,                         // count
       MPI_DOUBLE_INT,
       MPI_MINLOC,
       tarch::mpi::Rank::getInstance().getCommunicator(),
@@ -277,7 +280,11 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
 
   auto step = getStrategyStep();
 
-  logInfo( "finishStep()", toString( step ) << " in state " << toString( _state ) << " with global cell count of " << _globalNumberOfInnerUnrefinedCell );
+  logInfo(
+    "finishStep()",
+    "yield command " << toString( step ) << " in state " << toString( _state ) << " (global cell count=" << _globalNumberOfInnerUnrefinedCell <<
+    ", heaviest local tree=" << getIdOfHeaviestLocalSpacetree() << ", lightest-rank=" << _lightestRank << ")"
+  );
 
   switch ( step ) {
     case StrategyStep::Wait:
