@@ -144,6 +144,10 @@ and
 
  */
   namespace multicore {
+     /**
+      * @see file Tasks.h
+      */
+     void yield();
   }
 }
 

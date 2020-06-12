@@ -269,6 +269,8 @@ void tarch::mpi::Rank::barrier(std::function<void()> waitor) {
   #ifdef Parallel
   logTraceIn( "barrier()" );
 
+  if (getNumberOfRanks()>1) {
+
   MPI_Request request;
   MPI_Ibarrier( getCommunicator(), &request );
 
@@ -292,7 +294,10 @@ void tarch::mpi::Rank::barrier(std::function<void()> waitor) {
       tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "tarch::mpi::Rank", "barrier()", -1, -1 );
     }
     waitor();
+    tarch::multicore::yield();
     MPI_Test( &request, &flag, MPI_STATUS_IGNORE );
+  }
+
   }
 
   logTraceOut( "barrier()" );

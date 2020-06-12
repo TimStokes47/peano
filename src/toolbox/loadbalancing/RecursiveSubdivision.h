@@ -140,7 +140,8 @@ class toolbox::loadbalancing::RecursiveSubdivision {
       Wait,
       SpreadEquallyOverAllRanks,
       SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning,
-      SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning
+      SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning,
+      SplitHeaviestLocalTreeOnce_DontUseLocalRank_UseRecursivePartitioning
     };
 
     static std::string toString( StrategyStep step );
