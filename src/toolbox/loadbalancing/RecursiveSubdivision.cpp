@@ -283,7 +283,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   logInfo(
     "finishStep()",
     "yield command " << toString( step ) << " in state " << toString( _state ) << " (global cell count=" << _globalNumberOfInnerUnrefinedCell <<
-    ", heaviest local tree=" << getIdOfHeaviestLocalSpacetree() << ", lightest-rank=" << _lightestRank << ")"
+    ", heaviest local tree=" << getIdOfHeaviestLocalSpacetree() << ", lightest-rank=" << _lightestRank << ",max-tree-size=" << getMaximumSpacetreeSize() << ")"
   );
 
   switch ( step ) {

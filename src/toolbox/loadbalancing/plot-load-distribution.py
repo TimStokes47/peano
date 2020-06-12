@@ -105,31 +105,40 @@ if __name__ == "__main__":
     Ranks = [-1]
   
   symbol_counter = 0
+  colour_counter = 0
   for rank in Ranks:
     ( x_data, y_data_local, y_data_remote ) = parse_file( args.file, rank )
     for i in range(0,len(x_data)):
       one_snapshot_x_data = [ x_data[i] for j in y_data_local[i]]
       if i==0 and rank>=0:
-        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[symbol_counter],  alpha=0.2, label="Rank " + str(rank) )  
+        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[colour_counter],  alpha=0.2, label="Rank " + str(rank) )  
       elif i==0:
-        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[symbol_counter],  alpha=0.2, label="Load per tree" )  
+        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[colour_counter],  alpha=0.2, label="Load per tree" )  
       else:
-        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[symbol_counter],  alpha=0.2)  
-      plt.scatter(one_snapshot_x_data, y_data_remote[i], marker=Symbols[symbol_counter], color=Colours[symbol_counter], alpha=0.2, facecolors='none')
+        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[colour_counter],  alpha=0.2)
+          
+      if rank==0 and i==0:
+        plt.scatter(one_snapshot_x_data, y_data_remote[i], marker=Symbols[symbol_counter], color=Colours[colour_counter], alpha=0.2, facecolors='none', label="remote cells")
+      else:
+        plt.scatter(one_snapshot_x_data, y_data_remote[i], marker=Symbols[symbol_counter], color=Colours[colour_counter], alpha=0.2, facecolors='none')
       
     if len(Ranks)==1:
       optimal_x_data = local_optimal_average(x_data,y_data_local,threads)[0]
       optimal_y_data = local_optimal_average(x_data,y_data_local,threads)[1]
-      plt.plot(optimal_x_data, optimal_y_data, "-", color=Colours[symbol_counter] )
+      plt.plot(optimal_x_data, optimal_y_data, "-", color=Colours[colour_counter] )
       optimal_y_data = [i/2 for i in optimal_y_data]
-      plt.plot(optimal_x_data, optimal_y_data, "--", color=Colours[symbol_counter] )
+      plt.plot(optimal_x_data, optimal_y_data, "--", color=Colours[colour_counter] )
       optimal_y_data = [i/2 for i in optimal_y_data]
-      plt.plot(optimal_x_data, optimal_y_data, ":", color=Colours[symbol_counter] )
+      plt.plot(optimal_x_data, optimal_y_data, ":", color=Colours[colour_counter] )
       
     symbol_counter += 1
-    if symbol_counter>len(Colours):
+    colour_counter += 1
+    if symbol_counter>=len(Symbols):
       symbol_counter = 0
+      colour_counter += 1
 
+    if colour_counter>=len(Colours):
+      colour_counter = 0
 
   plt.xlabel( "time" )
   plt.ylabel( "cells per tree" )
