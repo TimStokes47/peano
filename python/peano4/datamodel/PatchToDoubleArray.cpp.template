@@ -95,7 +95,7 @@ void {FULL_QUALIFIED_CLASSNAME}::initDatatype() {{
     int blocklen[] = {{ {CARDINALITY_3D} }};
     #endif
   
-    const int NumberOfAttributes = 2;  
+    const int NumberOfAttributes = 1;  
   #endif
 
   MPI_Aint  baseFirstInstance;
