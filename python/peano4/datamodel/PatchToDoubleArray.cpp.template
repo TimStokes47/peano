@@ -77,7 +77,7 @@ void {FULL_QUALIFIED_CLASSNAME}::initDatatype() {{
   {FULL_QUALIFIED_CLASSNAME}  instances[2];
  
   #if PeanoDebug>=1
-    MPI_Datatype subtypes[] = {{ MPI_DOUBLE }};
+    MPI_Datatype subtypes[] = {{ MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE }};
 
     #if Dimensions==2
     int blocklen[] = {{ Dimensions, Dimensions, {CARDINALITY_2D} }};
