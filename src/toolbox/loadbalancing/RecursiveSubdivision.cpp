@@ -70,8 +70,6 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishSimulation() {
 void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
   _localNumberOfInnerUnrefinedCell = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
 
-  // @todo docu
-  // By the time we create it, we might not yet know whether we are global master or not
   if (not tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     _hasSpreadOutOverAllRanks = true;
   }
@@ -352,13 +350,6 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
       break;
     case StrategyStep::SpreadEquallyOverAllRanks:
       {
-// @todo Docu:
-// This routine is usually called
-// early throughout the grid construction. At this point, we want to bring in ranks as soon as possible. However, it is
-// very unlikely that the grid at that point will allow us to balance properly. We will likely have something like 27
-// cells for 8 ranks. With integer arithmetics, we would now get 3 cells per rank with the remainder of cells remaining
-// on rank 0. This is not a big issue for small meshes, but for large meshes even a tiny overloading of rank 0 can result
-// in an out-of-memory situation. I therefore have this module increement within the for loop.
         int cellsPerRank = std::max( static_cast<int>(std::round(_globalNumberOfInnerUnrefinedCell / tarch::mpi::Rank::getInstance().getNumberOfRanks())), 1);
 
         _hasSpreadOutOverAllRanks = true;

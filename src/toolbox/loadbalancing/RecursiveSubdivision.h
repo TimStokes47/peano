@@ -122,6 +122,18 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     /**
      * Triggers actual load balancing data exchange, triggers reblaancing, and
      * dumps statistics.
+     *
+     * <h2> Spread equally </h2>
+     * This step is usually called early throughout the grid construction. At
+     * this point, we want to bring in ranks as soon as possible. However, it
+     * is very unlikely that the grid at that point will allow us to balance
+     * properly. We will likely have something like 27 cells for 8 ranks. With
+     * integer arithmetics, we would now get 3 cells per rank with the
+     * remainder of cells remaining on rank 0. This is not a big issue for
+     * small meshes, but for large meshes even a tiny overloading of rank 0 can
+     * result in an out-of-memory situation. I therefore have this module
+     * increment within the for loop such that module imbalances are at least
+     * spread out.
      */
     void finishStep();
     void finishSimulation();
@@ -258,7 +270,26 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     void triggerSplit( int sourceTree, int numberOfCells, int targetRank );
 
     /**
-     * Postpone never lasts longer than one step
+     *
+     * <h2> Init has-spread-over-all-ranks flag </h2>
+     *
+     * By the time we construct the load balancing, we often haven't
+     * initialised the MPI environment properly yet. At least, I don't want
+     * to rely on this. Therefore, I set _hasSpreadOutOverAllRanks to false
+     * by default, and then make updateGlobalView() set it to true for the
+     * non-0 rank. The 0-rank case is covered anyway.
+     *
+     * <h2> Round-robin balancing </h2>
+     *
+     * I test my load balancing typically first with a rather regular grid.
+     * What happens here is that the grid is decomposed and one or two ranks
+     * are slightly ``too light''. All the others identify a rank to which
+     * they could outsource cells and then all outsource to the same ranks
+     * at the same time. To avoid this, I introduce a round-robin token such
+     * that only one rank at a time does balance in-between ranks (the other
+     * types of lb are not affected). This way, it cannot happen that a high
+     * number of ranks all outsource cells to the same ''victim'' in one
+     * rush.
      */
     void updateState();
 
@@ -280,6 +311,9 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     ReductionBuffer _lightestRankBufferOut;
     #endif
 
+    /**
+     * @see updateState()
+     */
     int _roundRobinToken;
 };
 
