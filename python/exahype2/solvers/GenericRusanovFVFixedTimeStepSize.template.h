@@ -31,56 +31,51 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}: public
     static tarch::logging::Log   _log;
 
   public:
-    /**
-     * @param Q Vector of unknowns
-     * @param x Position of unknowns (finite volume centre)
-     * @param h Mesh size of finite volume
-     * @param t Time
-     */
     ::exahype2::RefinementCommand refinementCriterion(
       double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t
-    ) override;
+    ) {% if REFINEMENT_CRITERION_IMPLEMENTATION=="<user-defined>" %} override{% endif %};
 
     void adjustSolution(
       double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t
-    ) override;
+    ) {% if INITIAL_CONDITIONS_IMPLEMENTATION=="<user-defined>" %} override{% endif %};
 
-    void eigenvalues(
+    virtual void eigenvalues(
       double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t,
       int                                          normal,
       double                                       lambda[{{NUMBER_OF_UNKNOWNS}}]
-    ) override;
+    ) {% if EIGENVALUES_IMPLEMENTATION=="<user-defined>" %} override{% endif %};
 
-    void boundaryConditions(
+    virtual void boundaryConditions(
       double                                       Qinside[{{NUMBER_OF_UNKNOWNS}}],
       double                                       Qoutside[{{NUMBER_OF_UNKNOWNS}}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t,
       int                                          normal
-    ) override;
+    ) {% if BOUNDARY_CONDITIONS_IMPLEMENTATION=="<user-defined>" %} override{% endif %};
 
-    {% for item in CALLBACKS -%}
-      {% if item=="flux" %}
-   void flux(
-     double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
-     const tarch::la::Vector<Dimensions,double>&  faceCentre,
-     const tarch::la::Vector<Dimensions,double>&  volumeH,
-     double                                       t,
-     int                                          normal,
-     double                                       F[{{NUMBER_OF_UNKNOWNS}}]
+
+    {% if FLUX_IMPLEMENTATION=="<user-defined>" %}
+    void flux(
+      double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      int                                          normal,
+      double                                       F[{{NUMBER_OF_UNKNOWNS}}]
     ) override;
-      {% endif %}
-      {% if item=="ncp" %}
+    {% endif %}
+
+    {% if NCP_IMPLEMENTATION=="<user-defined>" %}
     void nonconservativeProduct(
       double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
       double                                       gradQ[{{NUMBER_OF_UNKNOWNS}}][Dimensions],
@@ -90,8 +85,7 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}: public
       int                                          normal,
       double                                       F[{{NUMBER_OF_UNKNOWNS}}]
     ) override;
-      {% endif %}
-    {%- endfor %}
+    {% endif %}
 };
 
 

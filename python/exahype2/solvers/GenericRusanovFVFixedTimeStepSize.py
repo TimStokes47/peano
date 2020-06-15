@@ -8,9 +8,15 @@ import peano4.output.TemplatedHeaderFile
 import peano4.output.TemplatedHeaderImplementationFilePair
 
 from .FV import FV
+from PyQt5.Qt import flush
+from sympy.physics.units.definitions.dimension_definitions import magnetic_flux
 
 
 class GenericRusanovFVFixedTimeStepSize( FV ):
+  __User_Defined = "<user-defined>"
+  __None         = "<none>"
+  
+  
   def __init__(self, name, patch_size, unknowns, time_step_size, flux=True, ncp=False):
     """
       Instantiate a generic FV scheme with an overlap of 1.
@@ -28,12 +34,30 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
     else:
       print( "ERROR: Combination of PDE terms not supported" )
       
-      
-    self._fv_callbacks = []
     if flux:
-      self._fv_callbacks.append( "flux" )
+      self._flux_implementation        = self.__User_Defined
+    else:
+      self._flux_implementation        = self.__None
+
     if ncp:
-      self._fv_callbacks.append( "ncp" )
+      self._ncp_implementation         = self.__User_Defined
+    else:
+      self._ncp_implementation         = self.__None
+      
+    self._eigenvalues_implementation                = self.__User_Defined
+    self._boundary_conditions_implementation        = self.__User_Defined
+    self._refinement_criterion_implementation       = self.__User_Defined
+    self._initial_conditions_implementation         = self.__User_Defined
+      
+      
+  def set_implementation(self,flux="",ncp="",eigenvalues="",boundary_conditions="",refinement_criterion="",initial_conditions=""):
+    self._flux_implementation        = flux
+    self._ncp_implementation         = ncp
+    self._eigenvalues_implementation = eigenvalues
+    self._boundary_conditions_implementation        = boundary_conditions
+    self._refinement_criterion_implementation       = refinement_criterion
+    self._initial_conditions_implementation         = initial_conditions
+    pass
     
 
   def get_user_includes(self):
@@ -180,4 +204,9 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
 
   def add_entries_to_text_replacement_dictionary(self,d):
     d[ "TIME_STEP_SIZE" ]  = self._time_step_size
-    d[ "CALLBACKS" ]       = self._fv_callbacks
+    d[ "FLUX_IMPLEMENTATION"] = self._flux_implementation
+    d[ "NCP_IMPLEMENTATION"] = self._ncp_implementation
+    d[ "EIGENVALUES_IMPLEMENTATION"] = self._eigenvalues_implementation
+    d[ "BOUNDARY_CONDITIONS_IMPLEMENTATION"] = self._boundary_conditions_implementation
+    d[ "REFINEMENT_CRITERION_IMPLEMENTATION"] = self._refinement_criterion_implementation
+    d[ "INITIAL_CONDITIONS_IMPLEMENTATION"] = self._initial_conditions_implementation

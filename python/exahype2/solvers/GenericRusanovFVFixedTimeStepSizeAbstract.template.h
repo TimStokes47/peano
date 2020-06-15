@@ -52,7 +52,7 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}} {
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t
-    ) = 0;
+    ) {% if REFINEMENT_CRITERION_IMPLEMENTATION=="<user-defined>" %}= 0{% endif %};
 
     /**
      * Feel free to change the solution in the particular finite volume.
@@ -65,7 +65,7 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}} {
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t
-    ) = 0;
+    ) {% if INITIAL_CONDITIONS_IMPLEMENTATION=="<user-defined>" %}= 0{% endif %};
 
     /**
      * Determine eigenvalues over Jacobian in a given point with solution values
@@ -79,7 +79,7 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}} {
       double                                       t,
       int                                          normal,
       double                                       lambda[{{NUMBER_OF_UNKNOWNS}}]
-    ) = 0;
+    ) {% if EIGENVALUES_IMPLEMENTATION=="<user-defined>" %}= 0{% endif %};
 
     /**
      * Apply boundary conditions. You can overwrite both the inside and
@@ -94,7 +94,7 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}} {
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t,
       int                                          normal
-    ) = 0;
+    ) {% if BOUNDARY_CONDITIONS_IMPLEMENTATION=="<user-defined>" %}= 0{% endif %};
 
     /**
      * If you hook into this routine, ensure the abstract base class
@@ -113,8 +113,7 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}} {
      */
     virtual void finishTimeStep();
 
-    {% for item in CALLBACKS -%}
-      {% if item=="flux" %}
+    {% if FLUX_IMPLEMENTATION!="<none>" %}
    virtual void flux(
      double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
      const tarch::la::Vector<Dimensions,double>&  faceCentre,
@@ -122,9 +121,9 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}} {
      double                                       t,
      int                                          normal,
      double                                       F[{{NUMBER_OF_UNKNOWNS}}]
-    ) = 0;
-      {% endif %}
-      {% if item=="ncp" %}
+    ) {% if FLUX_IMPLEMENTATION=="<user-defined>" %}=0{% endif %};
+     {% endif %}
+     {% if NCP_IMPLEMENTATION!="<none>" %}
     virtual void nonconservativeProduct(
       double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
       double                                       gradQ[{{NUMBER_OF_UNKNOWNS}}][Dimensions],
@@ -133,9 +132,8 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}} {
       double                                       t,
       int                                          normal,
       double                                       F[{{NUMBER_OF_UNKNOWNS}}]
-    ) = 0;
-      {% endif %}
-    {%- endfor %}
+    ) {% if NCP_IMPLEMENTATION=="<user-defined>" %}=0{% endif %};
+     {% endif %}
 };
 
 
