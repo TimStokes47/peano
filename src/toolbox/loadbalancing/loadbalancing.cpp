@@ -17,6 +17,7 @@ namespace {
 void toolbox::loadbalancing::dumpStatistics() {
   std::ostringstream msg;
 
+  int sum = 0;
   std::set<int> idsOfLocalSpacetrees = peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees();
   for (auto p: idsOfLocalSpacetrees) {
     msg << "(#" << p << ":"
@@ -24,9 +25,13 @@ void toolbox::loadbalancing::dumpStatistics() {
 		<< "/"
 		<< peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(p).getNumberOfRemoteUnrefinedCells()
 		<< ")";
+    sum += peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(p).getNumberOfLocalUnrefinedCells();
   }
   if (idsOfLocalSpacetrees.empty()) {
     msg << "no trees hosted on this node";
+  }
+  else {
+    msg << " total=" << sum;
   }
 
   logInfo( "dumpStatistics()", msg.str() );

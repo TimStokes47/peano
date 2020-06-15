@@ -279,6 +279,8 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     ReductionBuffer _lightestRankBufferIn;
     ReductionBuffer _lightestRankBufferOut;
     #endif
+
+    int _roundRobinToken;
 };
 
 

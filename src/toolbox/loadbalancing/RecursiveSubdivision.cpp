@@ -30,6 +30,7 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
   _globalNumberOfInnerUnrefinedCellBufferIn = 1;
   _lightestRankBufferIn._rank               = tarch::mpi::Rank::getInstance().getRank();
   #endif
+  _roundRobinToken = tarch::mpi::Rank::getInstance().getRank();
 }
 
 
@@ -150,6 +151,7 @@ int toolbox::loadbalancing::RecursiveSubdivision::getMaximumSpacetreeSize(int lo
     	              * tarch::multicore::Core::getInstance().getNumberOfThreads();
 
   logTraceInWith3Arguments( "getMaximumSpacetreeSize(int)", localSize, _globalNumberOfInnerUnrefinedCell, alphaP );
+/*
   double k      = 1.0;
   double result = localSize - 1;
 
@@ -162,6 +164,18 @@ int toolbox::loadbalancing::RecursiveSubdivision::getMaximumSpacetreeSize(int lo
   int roundedResult = std::max(  static_cast<int>(std::round(result+0.5)),  1 );
   logTraceOutWith1Argument( "getMaximumSpacetreeSize(int)", result );
   return roundedResult;
+*/
+  int result = 0;
+  int optimalPartitionSize = static_cast<int>( std::round(_globalNumberOfInnerUnrefinedCell / alphaP ));
+  while (
+    localSize<optimalPartitionSize*2 
+    and 
+    optimalPartitionSize>2
+  ) {
+    optimalPartitionSize /= 2;
+  }
+  logTraceOutWith1Argument( "getMaximumSpacetreeSize(int)", optimalPartitionSize );
+  return optimalPartitionSize;
 }
 
 
@@ -194,6 +208,9 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 
 
 void toolbox::loadbalancing::RecursiveSubdivision::updateState() {
+  _roundRobinToken++;
+  _roundRobinToken = _roundRobinToken % tarch::mpi::Rank::getInstance().getNumberOfRanks();
+
   if (
     _localNumberOfInnerUnrefinedCell
     <
@@ -282,7 +299,11 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
     and
     doesBiggestLocalSpactreeViolateOptimalityCondition()
   ) {
-    if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() >= tarch::multicore::Core::getInstance().getNumberOfThreads()*2)
+    if (_roundRobinToken!=0) {
+      logInfo( "getStrategyStep()", "should fork further but decided to wait to ensure that not all ranks outsource at the same time to the rank" );
+      return StrategyStep::Wait;
+    }
+    else if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() >= tarch::multicore::Core::getInstance().getNumberOfThreads()*2)
       return StrategyStep::SplitHeaviestLocalTreeOnce_DontUseLocalRank_UseRecursivePartitioning;
     else
       return StrategyStep::SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning;
