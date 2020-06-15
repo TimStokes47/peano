@@ -168,16 +168,14 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     bool _hasSpreadOutOverAllRanks;
 
     /**
-     * Status variable required to compute good load balancing. I started off with an
-     * integer, but then - in theory - an integer could be too small. Furthermore, MPI
-     * seems not to support MINLOC with integers.
+     * Status variable required to compute good load balancing. 
      */
-    double _localNumberOfInnerUnrefinedCell;
+    int _localNumberOfInnerUnrefinedCell;
 
     /**
      * Status variable required to compute good load balancing
      */
-    double _globalNumberOfInnerUnrefinedCell;
+    int _globalNumberOfInnerUnrefinedCell;
 
     int _lightestRank;
 
@@ -245,6 +243,11 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      */
     int getIdOfHeaviestLocalSpacetree() const;
 
+    /**
+     * @return -1 if there is no local tree yet
+     */
+    int getWeightOfHeaviestLocalSpacetree() const;
+
     bool doesBiggestLocalSpactreeViolateOptimalityCondition() const;
 
     void updateBlacklist();
@@ -263,12 +266,16 @@ class toolbox::loadbalancing::RecursiveSubdivision {
     MPI_Request*    _globalSumRequest;
     MPI_Request*    _globalLightestRankRequest;
 
+    /**
+     * It is totally annoying, but it seems that MPI's maxloc and reduction are broken
+     * in some MPI implementations if we use them for integers.
+     */
     struct ReductionBuffer {
-      double _localUnrefinedCells;
-      int    _rank;
+      double   _localUnrefinedCells;
+      int      _rank;
     };
 
-    double          _globalNumberOfInnerUnrefinedCellBufferIn;
+    int             _globalNumberOfInnerUnrefinedCellBufferIn;
     ReductionBuffer _lightestRankBufferIn;
     ReductionBuffer _lightestRankBufferOut;
     #endif
