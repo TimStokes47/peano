@@ -25,6 +25,9 @@ void toolbox::loadbalancing::dumpStatistics() {
 		<< peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(p).getNumberOfRemoteUnrefinedCells()
 		<< ")";
   }
+  if (idsOfLocalSpacetrees.empty()) {
+    msg << "no trees hosted on this node";
+  }
 
   logInfo( "dumpStatistics()", msg.str() );
 }

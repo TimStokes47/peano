@@ -69,6 +69,12 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishSimulation() {
 void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
   _localNumberOfInnerUnrefinedCell = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
 
+  // @todo docu
+  // By the time we create it, we might not yet know whether we are global master or not
+  if (not tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
+    _hasSpreadOutOverAllRanks = true;
+  }
+ 
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {
     _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
     _lightestRank                     = 0;
@@ -85,15 +91,29 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
     _lightestRank                     = _lightestRankBufferIn._rank;
 
 
-    if (_globalNumberOfInnerUnrefinedCell <=_localNumberOfInnerUnrefinedCell) {
+    if (
+      _globalNumberOfInnerUnrefinedCell <= _localNumberOfInnerUnrefinedCell
+      and
+      not _hasSpreadOutOverAllRanks
+    ) {
       logInfo(
         "updateGlobalView()",
-        "global number of cells lags behind local one significantly. Use local number of cells (" << _localNumberOfInnerUnrefinedCell <<
-        ") instead of global count of " << _globalNumberOfInnerUnrefinedCell << ") to guide partitioning"
+        "global number of cells lags behind local one. Use local number of cells (" << _localNumberOfInnerUnrefinedCell <<
+        ") instead of global count of " << _globalNumberOfInnerUnrefinedCell << " to guide partitioning"
       );
       _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
       _lightestRank                     = tarch::mpi::Rank::getInstance().getRank();
     }
+    else if (_globalNumberOfInnerUnrefinedCell <= _localNumberOfInnerUnrefinedCell ) {
+      _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell * tarch::mpi::Rank::getInstance().getNumberOfRanks();
+      logInfo(
+        "updateGlobalView()",
+        "global number of cells lags behind local one. Code has spread over ranks already. Therefore, assume that we use global data from previous time step. Extrapolate " << _localNumberOfInnerUnrefinedCell 
+        << " to guide partitioning. Assume it equals " << _globalNumberOfInnerUnrefinedCell
+      );
+      _lightestRank                     = tarch::mpi::Rank::getInstance().getRank();
+    }
+
 
     _globalSumRequest          = new MPI_Request();
     _globalLightestRankRequest = new MPI_Request();
@@ -129,15 +149,19 @@ int toolbox::loadbalancing::RecursiveSubdivision::getMaximumSpacetreeSize(int lo
 		      * tarch::mpi::Rank::getInstance().getNumberOfRanks()
     	              * tarch::multicore::Core::getInstance().getNumberOfThreads();
 
+  logTraceInWith3Arguments( "getMaximumSpacetreeSize(int)", localSize, _globalNumberOfInnerUnrefinedCell, alphaP );
   double k      = 1.0;
   double result = localSize - 1;
 
   while ( localSize - result < result ) {
+    //logInfo( "getMax(...)", "result " << result << " is too big" );
     k      += 1.0;
     result  = _globalNumberOfInnerUnrefinedCell / alphaP / k;
   }
 
-  return std::max(  static_cast<int>(std::round(result)),  1 );
+  int roundedResult = std::max(  static_cast<int>(std::round(result+0.5)),  1 );
+  logTraceOutWith1Argument( "getMaximumSpacetreeSize(int)", result );
+  return roundedResult;
 }
 
 
@@ -243,18 +267,6 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
     return StrategyStep::SpreadEquallyOverAllRanks;
   }
 
-/*
-
-  if (
-    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
-    and
-    static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) < _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell * tarch::multicore::Core::getInstance().getNumberOfThreads()
-    and
-    peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() >= tarch::multicore::Core::getInstance().getNumberOfThreads()*2
-  ) {
-    return StrategyStep::SplitHeaviestLocalTreeOnce_DontUseLocalRank_UseRecursivePartitioning;
-  }
-
 
   if (
     peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() > 0
@@ -270,9 +282,12 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
     and
     doesBiggestLocalSpactreeViolateOptimalityCondition()
   ) {
-    return StrategyStep::SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning;
+    if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() >= tarch::multicore::Core::getInstance().getNumberOfThreads()*2)
+      return StrategyStep::SplitHeaviestLocalTreeOnce_DontUseLocalRank_UseRecursivePartitioning;
+    else
+      return StrategyStep::SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning;
   }
-*/
+
 
   return StrategyStep::Wait;
 }
@@ -307,7 +322,8 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
   logInfo(
     "finishStep()",
     toString( step ) << " in state " << toString( _state ) << " (global cell count=" << _globalNumberOfInnerUnrefinedCell <<
-    ", heaviest local tree=" << getIdOfHeaviestLocalSpacetree() << ", heaviest local weight=" << getWeightOfHeaviestLocalSpacetree() << ",lightest-rank=" << _lightestRank << ",max-tree-size=" << getMaximumSpacetreeSize() << ")"
+    ", heaviest local tree=" << getIdOfHeaviestLocalSpacetree() << ", heaviest local weight=" << getWeightOfHeaviestLocalSpacetree() << 
+    ",lightest-rank=" << _lightestRank << ",max-tree-size=" << getMaximumSpacetreeSize() << ",has-spread=" << _hasSpreadOutOverAllRanks << ")"
   );
 
   switch ( step ) {
@@ -337,22 +353,17 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
       break;
     case StrategyStep::SplitHeaviestLocalTreeMultipleTimes_UseLocalRank_UseRecursivePartitioning:
       {
-   	    int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
-   	    if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
-   	      int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = getWeightOfHeaviestLocalSpacetree();
-   	      int cellsPerCore      = getMaximumSpacetreeSize(numberOfLocalUnrefinedCellsOfHeaviestSpacetree);
-   	      logInfo( "finishStep()", "insufficient number of cores occupied on this rank, so split " << cellsPerCore << " cells iteratively from tree " << heaviestSpacetree << " on local rank (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
-   	      double maxSplits = 2.0 * tarch::multicore::Core::getInstance().getNumberOfThreads() - static_cast<double>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size());
-   	      while (
-   	        numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize()
-   	        and
-   	        maxSplits>0
-   	      ) {
-   	        triggerSplit(heaviestSpacetree, cellsPerCore, tarch::mpi::Rank::getInstance().getRank());
-   	        numberOfLocalUnrefinedCellsOfHeaviestSpacetree -= cellsPerCore;
-   	        maxSplits -= 1.0;
-   	      }
-   	    }
+        int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
+        if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
+          int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = getWeightOfHeaviestLocalSpacetree();
+          int cellsPerCore      = getMaximumSpacetreeSize(numberOfLocalUnrefinedCellsOfHeaviestSpacetree);
+          int numberOfSplits    = numberOfLocalUnrefinedCellsOfHeaviestSpacetree/cellsPerCore;
+          logInfo( "finishStep()", "insufficient number of cores occupied on this rank, so split " << cellsPerCore << " cells iteratively (" << numberOfSplits << " splits) from tree " << heaviestSpacetree << " on local rank (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
+
+          for (int i=0; i<numberOfSplits; i++) {
+            triggerSplit(heaviestSpacetree, cellsPerCore, tarch::mpi::Rank::getInstance().getRank());
+          }
+        }
       }
       break;
     case StrategyStep::SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning:
