@@ -31,24 +31,10 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
       
     self._fv_callbacks = []
     if flux:
-      self._fv_callbacks.append("""flux(
-      double                                       Q[{0}],
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      double                                       t,
-      int                                          normal,
-      double                                       F[{0}]
-    ) """.format(unknowns))
+      self._fv_callbacks.append( "flux" )
     if ncp:
-      self._fv_callbacks.append( """nonconservativeProduct(
-      double Q[{0}],
-      double gradQ[{0}][Dimensions],
-      double BgradQ[{0}]
-    ) """.format(unknowns))
+      self._fv_callbacks.append( "ncp" )
     
-    
-    pass
-
 
   def get_user_includes(self):
     return """
@@ -193,10 +179,5 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
 
 
   def add_entries_to_text_replacement_dictionary(self,d):
-    d[ "TIME_STEP_SIZE" ] = self._time_step_size
-    d[ "ABSTRACT_FLUX_FUNCTIONS" ]    = ""
-    d[ "FLUX_FUNCTIONS_DECLARATIONS" ] = ""
-    for op in self._fv_callbacks:
-      d[ "ABSTRACT_FLUX_FUNCTIONS" ]     += "    virtual void " + op + " = 0;\n\n\n"
-      d[ "FLUX_FUNCTIONS_DECLARATIONS" ]  += "void " + op + " override;\n\n\n"
-    pass  
+    d[ "TIME_STEP_SIZE" ]  = self._time_step_size
+    d[ "CALLBACKS" ]       = self._fv_callbacks

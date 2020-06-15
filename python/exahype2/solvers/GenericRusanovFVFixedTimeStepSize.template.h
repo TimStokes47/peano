@@ -6,21 +6,27 @@
 // This is generated. If you change fundamental properties, you will have to 
 // generate this file. Backup your manual changes before you do so.
 //
-#ifndef _{INCLUDE_GUARD}_
-#define _{INCLUDE_GUARD}_
+#ifndef {% for item in NAMESPACE -%}_{{ item }}{%- endfor %}_{{CLASSNAME}}_H_
+#define {% for item in NAMESPACE -%}_{{ item }}{%- endfor %}_{{CLASSNAME}}_H_
 
 
-#include "Abstract{CLASSNAME}.h"
+#include "Abstract{{CLASSNAME}}.h"
 
 #include "tarch/logging/Log.h"
 
+{% for item in NAMESPACE -%}
+  namespace {{ item }} {
 
-{OPEN_NAMESPACE}
-  class {CLASSNAME};
-{CLOSE_NAMESPACE}
+{%- endfor %}
+  class {{CLASSNAME}};
+
+{% for item in NAMESPACE -%}
+  }
+{%- endfor %}
 
 
-class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
+
+class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}: public Abstract{{CLASSNAME}} {
   private:
     static tarch::logging::Log   _log;
 
@@ -32,39 +38,61 @@ class {FULL_QUALIFIED_CLASSNAME}: public Abstract{CLASSNAME} {{
      * @param t Time
      */
     ::exahype2::RefinementCommand refinementCriterion(
-      double Q[{NUMBER_OF_UNKNOWNS}],
-      const tarch::la::Vector<Dimensions,double>&  x,
-      const tarch::la::Vector<Dimensions,double>&  h,
+      double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
+      const tarch::la::Vector<Dimensions,double>&  volumeCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t
     ) override;
 
     void adjustSolution(
-      double Q[{NUMBER_OF_UNKNOWNS}],
+      double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t
     ) override;
 
     void eigenvalues(
-      double                                       Q[{NUMBER_OF_UNKNOWNS}],
+      double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t,
       int                                          normal,
-      double                                       lambda[{NUMBER_OF_UNKNOWNS}]
+      double                                       lambda[{{NUMBER_OF_UNKNOWNS}}]
     ) override;
 
     void boundaryConditions(
-      double                                       Qinside[{NUMBER_OF_UNKNOWNS}],
-      double                                       Qoutside[{NUMBER_OF_UNKNOWNS}],
+      double                                       Qinside[{{NUMBER_OF_UNKNOWNS}}],
+      double                                       Qoutside[{{NUMBER_OF_UNKNOWNS}}],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
       const tarch::la::Vector<Dimensions,double>&  volumeH,
       double                                       t,
       int                                          normal
     ) override;
 
-{FLUX_FUNCTIONS_DECLARATIONS}
-}};
+    {% for item in CALLBACKS -%}
+      {% if item=="flux" %}
+   void flux(
+     double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
+     const tarch::la::Vector<Dimensions,double>&  faceCentre,
+     const tarch::la::Vector<Dimensions,double>&  volumeH,
+     double                                       t,
+     int                                          normal,
+     double                                       F[{{NUMBER_OF_UNKNOWNS}}]
+    ) override;
+      {% endif %}
+      {% if item=="ncp" %}
+    void nonconservativeProduct(
+      double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
+      double                                       gradQ[{{NUMBER_OF_UNKNOWNS}}][Dimensions],
+      const tarch::la::Vector<Dimensions,double>&  faceCentre,
+      const tarch::la::Vector<Dimensions,double>&  volumeH,
+      double                                       t,
+      int                                          normal,
+      double                                       F[{{NUMBER_OF_UNKNOWNS}}]
+    ) override;
+      {% endif %}
+    {%- endfor %}
+};
 
 
 #endif
