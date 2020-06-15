@@ -13,6 +13,7 @@
 {SOLVER_INCLUDES}
 
 #include "toolbox/loadbalancing/RecursiveSubdivision.h"
+#include "exahype2/RefinementControl.h"
 
 
 {OPEN_NAMESPACE}

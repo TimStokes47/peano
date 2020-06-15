@@ -47,6 +47,7 @@ void peano4::parallel::SpacetreeSet::init(
   _answerMessageTag = tarch::mpi::Rank::reserveFreeTag("peano4::parallel::SpacetreeSet - answer message", Node::MaxSpacetreesPerRank);
   tarch::services::ServiceRepository::getInstance().addService( this, "peano4::parallel::SpacetreeSet" );
 
+  #ifdef Parallel
   assertion4(
     (peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees()==1 and tarch::mpi::Rank::getInstance().getRank()==0)
     or
@@ -54,6 +55,7 @@ void peano4::parallel::SpacetreeSet::init(
     peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees(),
     offset, width, tarch::mpi::Rank::getInstance().getRank()
   );
+  #endif
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     peano4::grid::Spacetree spacetree( offset, width, periodicBC );

@@ -42,7 +42,6 @@ class Jinja2TemplatedHeaderImplementationFilePair(object):
       templateEnv = jinja2.Environment(loader=template_loader)
       template = templateEnv.get_template( template_file )
 
-      print( "use dictionary " + str(self.d) )   
       with open( full_qualified_filename, "w" ) as output:
         output.write( template.render(self.d) )
 
