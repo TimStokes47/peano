@@ -8,8 +8,6 @@ import peano4.output.TemplatedHeaderFile
 import peano4.output.TemplatedHeaderImplementationFilePair
 
 from .FV import FV
-from PyQt5.Qt import flush
-from sympy.physics.units.definitions.dimension_definitions import magnetic_flux
 
 
 class GenericRusanovFVFixedTimeStepSize( FV ):
