@@ -36,8 +36,92 @@ void {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}::startTi
 }
 
 
-
 void {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}::finishTimeStep() {
   _timeStamp += {{TIME_STEP_SIZE}};
 }
 
+
+{% if REFINEMENT_CRITERION_IMPLEMENTATION!="<user-defined>" %}
+::exahype2::RefinementCommand {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}::refinementCriterion(
+  double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
+  const tarch::la::Vector<Dimensions,double>&  volumeCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  double                                       t
+) {
+  {{REFINEMENT_CRITERION_IMPLEMENTATION}}
+}
+{% endif %}
+
+
+{% if INITIAL_CONDITIONS_IMPLEMENTATION!="<user-defined>" %}
+void {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}::adjustSolution(
+  double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
+  const tarch::la::Vector<Dimensions,double>&  volumeCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  double                                       t
+) {
+  {{INITIAL_CONDITIONS_IMPLEMENTATION}}
+}
+}
+{% endif %}
+
+
+{% if EIGENVALUES_IMPLEMENTATION!="<user-defined>" %}
+void {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}::eigenvalues(
+  double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  double                                       t,
+  int                                          normal,
+  double                                       lambda[{{NUMBER_OF_UNKNOWNS}}]
+) {
+  {{EIGENVALUES_IMPLEMENTATION}}
+}
+{% endif %}
+
+
+{% if BOUNDARY_CONDITIONS_IMPLEMENTATION!="<user-defined>" %}
+void {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}::boundaryConditions(
+  double                                       Qinside[{{NUMBER_OF_UNKNOWNS}}],
+  double                                       Qoutside[{{NUMBER_OF_UNKNOWNS}}],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  double                                       t,
+  int                                          normal
+) {
+  {{BOUNDARY_CONDITIONS_IMPLEMENTATION}}
+}
+{% endif %}
+
+
+{% if FLUX_IMPLEMENTATION!="<none>" %}
+{% if FLUX_IMPLEMENTATION!="<user-defined>" %}
+void {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}::flux(
+ double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
+ const tarch::la::Vector<Dimensions,double>&  faceCentre,
+ const tarch::la::Vector<Dimensions,double>&  volumeH,
+ double                                       t,
+ int                                          normal,
+ double                                       F[{{NUMBER_OF_UNKNOWNS}}]
+) {
+  {{FLUX_IMPLEMENTATION}}
+}
+{% endif %}
+{% endif %}
+
+
+{% if NCP_IMPLEMENTATION!="<none>" %}
+{% if NCP_IMPLEMENTATION!="<user-defined>" %}
+void {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}::nonconservativeProduct(
+  double                                       Q[{{NUMBER_OF_UNKNOWNS}}],
+  double                                       gradQ[{{NUMBER_OF_UNKNOWNS}}][Dimensions],
+  const tarch::la::Vector<Dimensions,double>&  faceCentre,
+  const tarch::la::Vector<Dimensions,double>&  volumeH,
+  double                                       t,
+  int                                          normal,
+  double                                       F[{{NUMBER_OF_UNKNOWNS}}]
+) {
+  {{NCP_IMPLEMENTATION}}
+}
+{% endif %}
+{% endif %}

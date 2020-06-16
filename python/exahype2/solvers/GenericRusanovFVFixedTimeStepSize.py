@@ -50,7 +50,7 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
     self._initial_conditions_implementation         = self.__User_Defined
       
       
-  def set_implementation(self,flux="",ncp="",eigenvalues="",boundary_conditions="",refinement_criterion="",initial_conditions=""):
+  def set_implementation(self,flux=__None,ncp=__None,eigenvalues=__User_Defined,boundary_conditions=__User_Defined,refinement_criterion=__User_Defined,initial_conditions=__User_Defined):
     self._flux_implementation        = flux
     self._ncp_implementation         = ncp
     self._eigenvalues_implementation = eigenvalues
