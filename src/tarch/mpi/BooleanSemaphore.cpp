@@ -186,9 +186,28 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::acquireLock( int num
 
     logDebug( "acquireLock()", "wait for confirmation from global master rank" );
     MPI_Request request;
+    int  timeOutWarning          = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+    int  timeOutShutdown         = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+    bool triggeredTimeoutWarning = false;
+
     MPI_Irecv( &number, 1, MPI_INT, tarch::mpi::Rank::getGlobalMasterRank(), _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator(), &request );
     int flag = 0;
     while ( not flag ) {
+      if (
+        tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
+        (clock()>timeOutWarning) &&
+        (!triggeredTimeoutWarning)
+      ) {
+        tarch::mpi::Rank::getInstance().writeTimeOutWarning( "tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::", "acquireLock(int)", tarch::mpi::Rank::getGlobalMasterRank(), _semaphoreTag );
+        triggeredTimeoutWarning = true;
+      }
+      if (
+        tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
+        (clock()>timeOutShutdown)
+      ) {
+        tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::", "acquireLock(int)", tarch::mpi::Rank::getGlobalMasterRank(), _semaphoreTag );
+      }
+
       receiveDanglingMessages();
       MPI_Test(&request, &flag, MPI_STATUS_IGNORE);
     }

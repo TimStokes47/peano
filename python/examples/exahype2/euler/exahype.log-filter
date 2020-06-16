@@ -20,3 +20,6 @@ trace  peano4                              -1     black
 trace  examples                            -1     black
 trace  exahype2                            -1     black
 
+
+info  peano4::grid                  -1     black
+

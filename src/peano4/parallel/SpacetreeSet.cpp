@@ -11,6 +11,8 @@
 
 #include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Lock.h"
+#include "tarch/multicore/IntegerSemaphore.h"
+#include "tarch/multicore/IntegerLock.h"
 
 #include "tarch/mpi/Rank.h"
 #include "tarch/mpi/IntegerMessage.h"
@@ -45,6 +47,7 @@ void peano4::parallel::SpacetreeSet::init(
   _answerMessageTag = tarch::mpi::Rank::reserveFreeTag("peano4::parallel::SpacetreeSet - answer message", Node::MaxSpacetreesPerRank);
   tarch::services::ServiceRepository::getInstance().addService( this, "peano4::parallel::SpacetreeSet" );
 
+  #ifdef Parallel
   assertion4(
     (peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees()==1 and tarch::mpi::Rank::getInstance().getRank()==0)
     or
@@ -52,6 +55,7 @@ void peano4::parallel::SpacetreeSet::init(
     peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees(),
     offset, width, tarch::mpi::Rank::getInstance().getRank()
   );
+  #endif
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     peano4::grid::Spacetree spacetree( offset, width, periodicBC );
@@ -105,7 +109,7 @@ void peano4::parallel::SpacetreeSet::answerQuestions() {
             p = _unansweredMessages.erase(p);
           }
           else {
-            logInfo( "answerMessages()", "can't answer as I'm in the wrong state" );
+            logDebug( "answerMessages()", "can't answer as I'm in the wrong state" );
             p++;
           }
         }
@@ -468,6 +472,8 @@ void peano4::parallel::SpacetreeSet::deleteClonedObservers() {
 void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
   logTraceIn( "traverse(TraversalObserver&)" );
 
+  _hasPassedOrderedBarrier.clear();
+
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     peano4::parallel::Node::getInstance().continueToRun();
   }
@@ -631,9 +637,11 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees(peano4::grid::TraversalObserve
           and
           getSpacetree(p->_masterId).mayJoinWithWorker()
         ) {
-          logInfo( "traverse(Observer)", "join tree " << p->_id << " as it is deteriorated (encodes no hierarchical data) while master " << p->_masterId << " resides on same rank and can't coarsen" );
-          p->joinWithMaster();
-          getSpacetree(p->_masterId).joinWithWorker(p->_id);
+          // @todo erste Meldung info
+          logError( "traverse(Observer)", "join tree " << p->_id << " as it is deteriorated (encodes no hierarchical data) while master " << p->_masterId << " resides on same rank and can't coarsen" );
+          logError( "traverse(Observer)", "not implemented yet");
+          //p->joinWithMaster();
+          //getSpacetree(p->_masterId).joinWithWorker(p->_id);
         }
         else {
           logDebug( "traverse(Observer)", "tree " << p->_id << " is deteriorated (encodes no hierarchical data) yet seems not to constrain its master" );
@@ -641,7 +649,9 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees(peano4::grid::TraversalObserve
       }
       else {
         // @todo: Aber nur, wenn es noch andere Baeume auf diesem Rank gibt
+        // @todo erste Meldung info
         logError( "cleanUpTrees(...)", "I should merge tree " << p->_id << " to reduce synchronisation: " << p->toString() );
+        logError( "traverse(Observer)", "not implemented yet");
       }
     }
     p++;
@@ -748,7 +758,7 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
           "split(int,int)",
           "Peano 4 uses " << tarch::getMemoryUsage(tarch::MemoryUsageFormat::MByte) << " MB on rank " <<
           tarch::mpi::Rank::getInstance().getRank() << " and is asked to split. Total memory is " <<
-          tarch::getTotalMemory(tarch::MemoryUsageFormat::MByte) << "MB, i.e. we might run out of memory"
+          tarch::getTotalMemory(tarch::MemoryUsageFormat::MByte) << " MB, i.e. we might run out of memory"
         );
       }
 
@@ -781,5 +791,33 @@ const peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int
   }
   assertion3( false, "no spacetree found", id, tarch::mpi::Rank::getInstance().getRank() );
   return *_spacetrees.begin(); // just here to avoid warning
+}
+
+
+void peano4::parallel::SpacetreeSet::orderedBarrier(const std::string& identifier) {
+  logTraceIn( "orderedBarrier()" );
+
+  static tarch::multicore::BooleanSemaphore  semaphore;
+
+  {
+    tarch::multicore::Lock lock(semaphore);
+    if ( _hasPassedOrderedBarrier.count( identifier) == 0 ) {
+      _hasPassedOrderedBarrier.insert( std::pair<std::string,bool>(identifier,false) );
+    }
+  }
+
+  {
+    tarch::multicore::Lock lock(semaphore);
+    if ( not _hasPassedOrderedBarrier.at( identifier) ) {
+      tarch::mpi::Rank::getInstance().barrier(
+        [&]() -> void {
+          tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+        }
+      );
+      _hasPassedOrderedBarrier[ identifier ] = true;
+    }
+  }
+
+  logTraceOut( "orderedBarrier()" );
 }
 

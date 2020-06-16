@@ -8,9 +8,15 @@ import peano4.output.TemplatedHeaderFile
 import peano4.output.TemplatedHeaderImplementationFilePair
 
 from .FV import FV
+from PyQt5.Qt import flush
+from sympy.physics.units.definitions.dimension_definitions import magnetic_flux
 
 
 class GenericRusanovFVFixedTimeStepSize( FV ):
+  __User_Defined = "<user-defined>"
+  __None         = "<none>"
+  
+  
   def __init__(self, name, patch_size, unknowns, time_step_size, flux=True, ncp=False):
     """
       Instantiate a generic FV scheme with an overlap of 1.
@@ -28,27 +34,31 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
     else:
       print( "ERROR: Combination of PDE terms not supported" )
       
-      
-    self._fv_callbacks = []
     if flux:
-      self._fv_callbacks.append("""flux(
-      double                                       Q[{0}],
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      double                                       t,
-      int                                          normal,
-      double                                       F[{0}]
-    ) """.format(unknowns))
-    if ncp:
-      self._fv_callbacks.append( """nonconservativeProduct(
-      double Q[{0}],
-      double gradQ[{0}][Dimensions],
-      double BgradQ[{0}]
-    ) """.format(unknowns))
-    
-    
-    pass
+      self._flux_implementation        = self.__User_Defined
+    else:
+      self._flux_implementation        = self.__None
 
+    if ncp:
+      self._ncp_implementation         = self.__User_Defined
+    else:
+      self._ncp_implementation         = self.__None
+      
+    self._eigenvalues_implementation                = self.__User_Defined
+    self._boundary_conditions_implementation        = self.__User_Defined
+    self._refinement_criterion_implementation       = self.__User_Defined
+    self._initial_conditions_implementation         = self.__User_Defined
+      
+      
+  def set_implementation(self,flux=__None,ncp=__None,eigenvalues=__User_Defined,boundary_conditions=__User_Defined,refinement_criterion=__User_Defined,initial_conditions=__User_Defined):
+    self._flux_implementation        = flux
+    self._ncp_implementation         = ncp
+    self._eigenvalues_implementation = eigenvalues
+    self._boundary_conditions_implementation        = boundary_conditions
+    self._refinement_criterion_implementation       = refinement_criterion
+    self._initial_conditions_implementation         = initial_conditions
+    pass
+    
 
   def get_user_includes(self):
     return """
@@ -193,10 +203,10 @@ class GenericRusanovFVFixedTimeStepSize( FV ):
 
 
   def add_entries_to_text_replacement_dictionary(self,d):
-    d[ "TIME_STEP_SIZE" ] = self._time_step_size
-    d[ "ABSTRACT_FLUX_FUNCTIONS" ]    = ""
-    d[ "FLUX_FUNCTIONS_DECLARATIONS" ] = ""
-    for op in self._fv_callbacks:
-      d[ "ABSTRACT_FLUX_FUNCTIONS" ]     += "    virtual void " + op + " = 0;\n\n\n"
-      d[ "FLUX_FUNCTIONS_DECLARATIONS" ]  += "void " + op + " override;\n\n\n"
-    pass  
+    d[ "TIME_STEP_SIZE" ]  = self._time_step_size
+    d[ "FLUX_IMPLEMENTATION"] = self._flux_implementation
+    d[ "NCP_IMPLEMENTATION"] = self._ncp_implementation
+    d[ "EIGENVALUES_IMPLEMENTATION"] = self._eigenvalues_implementation
+    d[ "BOUNDARY_CONDITIONS_IMPLEMENTATION"] = self._boundary_conditions_implementation
+    d[ "REFINEMENT_CRITERION_IMPLEMENTATION"] = self._refinement_criterion_implementation
+    d[ "INITIAL_CONDITIONS_IMPLEMENTATION"] = self._initial_conditions_implementation

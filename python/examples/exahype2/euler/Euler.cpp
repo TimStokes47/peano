@@ -15,7 +15,6 @@ tarch::logging::Log   examples::exahype2::euler::Euler::_log( "examples::exahype
 ) {
   logTraceInWith3Arguments( "refinementCriterion(...)", x, h, t );
   ::exahype2::RefinementCommand result = ::exahype2::RefinementCommand::Keep;
-  const double MaxHOfVolume  = 0.01;
 
   if (tarch::la::equals(t,0.0) and tarch::la::max(h)>MaxHOfVolume) {
     result = ::exahype2::RefinementCommand::Refine;
@@ -82,6 +81,18 @@ void examples::exahype2::euler::Euler::eigenvalues(
   nonCriticalAssertion4( lambda[2]==lambda[2], u_n, c, faceCentre, normal );
   nonCriticalAssertion4( lambda[3]==lambda[3], u_n, c, faceCentre, normal );
   nonCriticalAssertion4( lambda[4]==lambda[4], u_n, c, faceCentre, normal );
+
+  #ifdef WeUsedSymPy
+  // Please ignore this part. This is just to demonstrate/validate that the
+  // SymPy generator yields the right result.
+  double validateLambda[5];
+  AbstractEuler::eigenvalues( Q, faceCentre, volumeH, t, normal, validateLambda );
+  assertionNumericalEquals10( lambda[0], validateLambda[0], lambda[0], validateLambda[0], lambda[1], validateLambda[1], lambda[2], validateLambda[2], lambda[3], validateLambda[3], lambda[4], validateLambda[4] );
+  assertionNumericalEquals10( lambda[1], validateLambda[1], lambda[0], validateLambda[0], lambda[1], validateLambda[1], lambda[2], validateLambda[2], lambda[3], validateLambda[3], lambda[4], validateLambda[4] );
+  assertionNumericalEquals10( lambda[2], validateLambda[2], lambda[0], validateLambda[0], lambda[1], validateLambda[1], lambda[2], validateLambda[2], lambda[3], validateLambda[3], lambda[4], validateLambda[4] );
+  assertionNumericalEquals10( lambda[3], validateLambda[3], lambda[0], validateLambda[0], lambda[1], validateLambda[1], lambda[2], validateLambda[2], lambda[3], validateLambda[3], lambda[4], validateLambda[4] );
+  assertionNumericalEquals10( lambda[4], validateLambda[4], lambda[0], validateLambda[0], lambda[1], validateLambda[1], lambda[2], validateLambda[2], lambda[3], validateLambda[3], lambda[4], validateLambda[4] );
+  #endif
 }
 
 
@@ -145,6 +156,18 @@ void examples::exahype2::euler::Euler::flux(
   nonCriticalAssertion( F[2]==F[2] );
   nonCriticalAssertion( F[3]==F[3] );
   nonCriticalAssertion( F[4]==F[4] );
+
+  #ifdef WeUsedSymPy
+  // Please ignore this part. This is just to demonstrate/validate that the
+  // SymPy generator yields the right result.
+  double validateFlux[5];
+  AbstractEuler::flux( Q, faceCentre, volumeH, t, normal, validateFlux );
+  assertionNumericalEquals11( F[0], validateFlux[0], F[0], validateFlux[0], F[1], validateFlux[1], F[2], validateFlux[2], F[3], validateFlux[3], F[4], validateFlux[4], normal  );
+  assertionNumericalEquals11( F[1], validateFlux[1], F[0], validateFlux[0], F[1], validateFlux[1], F[2], validateFlux[2], F[3], validateFlux[3], F[4], validateFlux[4], normal  );
+  assertionNumericalEquals11( F[2], validateFlux[2], F[0], validateFlux[0], F[1], validateFlux[1], F[2], validateFlux[2], F[3], validateFlux[3], F[4], validateFlux[4], normal  );
+  assertionNumericalEquals11( F[3], validateFlux[3], F[0], validateFlux[0], F[1], validateFlux[1], F[2], validateFlux[2], F[3], validateFlux[3], F[4], validateFlux[4], normal  );
+  assertionNumericalEquals11( F[4], validateFlux[4], F[0], validateFlux[0], F[1], validateFlux[1], F[2], validateFlux[2], F[3], validateFlux[3], F[4], validateFlux[4], normal );
+  #endif
 }
 
 

@@ -75,27 +75,41 @@ tarch::la::Vector<Dimensions,double> {FULL_QUALIFIED_CLASSNAME}::getDebugH() con
 #ifdef Parallel
 void {FULL_QUALIFIED_CLASSNAME}::initDatatype() {{
   {FULL_QUALIFIED_CLASSNAME}  instances[2];
+ 
+  #if PeanoDebug>=1
+    MPI_Datatype subtypes[] = {{ MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE }};
+
+    #if Dimensions==2
+    int blocklen[] = {{ Dimensions, Dimensions, {CARDINALITY_2D} }};
+    #else
+    int blocklen[] = {{ Dimensions, Dimensions, {CARDINALITY_3D} }};
+    #endif
+
+    const int NumberOfAttributes = 3;
+  #else   
+    MPI_Datatype subtypes[] = {{ MPI_DOUBLE }};
     
-  MPI_Datatype subtypes[] = {{ MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE }};
-    
-  #if Dimensions==2
-  int blocklen[] = {{ Dimensions, Dimensions, {CARDINALITY_2D} }};
-  #else
-  int blocklen[] = {{ Dimensions, Dimensions, {CARDINALITY_3D} }};
-  #endif
+    #if Dimensions==2
+    int blocklen[] = {{ {CARDINALITY_2D} }};
+    #else
+    int blocklen[] = {{ {CARDINALITY_3D} }};
+    #endif
   
-  const int NumberOfAttributes = 3;
-    
+    const int NumberOfAttributes = 1;  
+  #endif
+
   MPI_Aint  baseFirstInstance;
   MPI_Aint  baseSecondInstance;
   MPI_Get_address( &instances[0], &baseFirstInstance );
   MPI_Get_address( &instances[1], &baseSecondInstance );
   MPI_Aint  disp[ NumberOfAttributes ];
   int       currentAddress = 0;
+  #if PeanoDebug>=1
   MPI_Get_address( &(instances[0]._debugX.data()[0]), &disp[currentAddress] );
   currentAddress++;
   MPI_Get_address( &(instances[0]._debugH.data()[0]), &disp[currentAddress] );
   currentAddress++;
+  #endif
   MPI_Get_address( &(instances[0].value), &disp[currentAddress] );
   currentAddress++;
 

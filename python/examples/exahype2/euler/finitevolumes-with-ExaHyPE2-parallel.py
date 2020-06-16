@@ -90,6 +90,7 @@ project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
 
 
 peano4_project = project.generate_Peano4_project()
+peano4_project.constants.export( "MaxHOfVolume", 0.1 )
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
 peano4_project.output.makefile.add_library( project.get_core_library(build_mode), "../../../../src/exahype2" )
 peano4_project.output.makefile.add_library( "ToolboxLoadBalancing" + project.get_library_postfix(build_mode), "../../../../src/toolbox/loadbalancing" )
@@ -101,8 +102,8 @@ peano4_project.build()
 # often crashes for bigger runs. It also struggles with the postprocessing
 # for large parallel runs (see below).
 #
-#success = peano4_project.run( ["--threads", "1"] )
-success = peano4_project.run( ["--threads", "6"], ["mpirun", "-n", "1"] )
+success = peano4_project.run( ["--threads", "1"] )
+#success = peano4_project.run( ["--threads", "6"], ["mpirun", "-n", "1"] )
 
 
 if success:

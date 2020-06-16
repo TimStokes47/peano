@@ -32,6 +32,10 @@ class PerformanceDataPoint(object):
     self.valid = True
     try:
       for line in file:
+        if "tarch::multicore::Core::configure(...)" in line:
+          self._threads = int( line.split( "threads used to" )[1] )
+          if self._verbose:
+            print( "- threads = " + str(self._threads))
         if "build:" in line:
           if "2d" in line:
             self._d = 2

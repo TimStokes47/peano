@@ -17,6 +17,11 @@
 See guidebook instructions how to configure the single node environment.
 Please remember to add the --with-exahype argument to configure. 
 
+Before I code anything, I usually open Euler.cpp and ensure that the 
+mesh size is set properly:
+
+  const double MaxHOfVolume  = 0.02;
+
 
 I run the following steps to build the executable:
 
@@ -51,6 +56,22 @@ sbatch --account=pr48ma example-scripts/SuperMUC-NG-single-node.slurm-script
 
 sbatch example-scripts/Hamilton-single-node.slurm-script
 
+sbatch example-scripts/Hamilton-1-node.slurm-script
+sbatch example-scripts/Hamilton-2-nodes.slurm-script
+sbatch example-scripts/Hamilton-3-nodes.slurm-script
+sbatch example-scripts/Hamilton-4-nodes.slurm-script
+sbatch example-scripts/Hamilton-5-nodes.slurm-script
+sbatch example-scripts/Hamilton-6-nodes.slurm-script
+sbatch example-scripts/Hamilton-7-nodes.slurm-script
+sbatch example-scripts/Hamilton-8-nodes.slurm-script
+sbatch example-scripts/Hamilton-10-nodes.slurm-script
+sbatch example-scripts/Hamilton-12-nodes.slurm-script
+sbatch example-scripts/Hamilton-14-nodes.slurm-script
+sbatch example-scripts/Hamilton-16-nodes.slurm-script
+sbatch example-scripts/Hamilton-18-nodes.slurm-script
+sbatch example-scripts/Hamilton-20-nodes.slurm-script
+sbatch example-scripts/Hamilton-22-nodes.slurm-script
+sbatch example-scripts/Hamilton-24-nodes.slurm-script
 
 
 ## Postprocessing ##

@@ -43,7 +43,7 @@ project = exahype2.Project( ["examples", "exahype2", "euler"], "finitevolumes", 
 #
 # Add the Finite Volumes solver
 #
-patch_size     = 13
+patch_size     = 11
 unknowns       = 5
 time_step_size = 0.000001
 
@@ -83,8 +83,15 @@ project.set_global_simulation_parameters(
 #
 project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
 
+import sys
 
 peano4_project = project.generate_Peano4_project()
+if len(sys.argv)>1:
+  volume_max = float( sys.argv[1] )
+  print( "use max FV size of " + str(volume_max) )
+  peano4_project.constants.export( "MaxHOfVolume", volume_max )
+else:
+  peano4_project.constants.export( "MaxHOfVolume", 0.1 )
 peano4_project.output.makefile.parse_configure_script_outcome( "../../../.." )
 peano4_project.output.makefile.add_library( project.get_core_library(build_mode), "../../../../src/exahype2" )
 peano4_project.output.makefile.add_library( "ToolboxLoadBalancing" + project.get_library_postfix(build_mode), "../../../../src/toolbox/loadbalancing" )

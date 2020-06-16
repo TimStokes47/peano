@@ -6,6 +6,8 @@ import peano4
 import peano4.datamodel
 import peano4.output.TemplatedHeaderFile
 import peano4.output.TemplatedHeaderImplementationFilePair
+import peano4.output.Jinja2TemplatedHeaderFile
+import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
 
 import exahype2.grid.AMROnPatch
 
@@ -187,7 +189,7 @@ class FV(object):
     self.add_entries_to_text_replacement_dictionary(abstractHeaderDictionary)
     self.add_entries_to_text_replacement_dictionary(implementationDictionary)
         
-    generated_abstract_header_file = peano4.output.TemplatedHeaderImplementationFilePair(
+    generated_abstract_header_file = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + "Abstract.template.h",
       templatefile_prefix + "Abstract.template.cpp",
       "Abstract" + self._name, 
@@ -195,7 +197,7 @@ class FV(object):
       ".", 
       abstractHeaderDictionary,
       True)
-    generated_solver_files = peano4.output.TemplatedHeaderImplementationFilePair(
+    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".template.h",
       templatefile_prefix + ".template.cpp",
       self._name, 
@@ -211,6 +213,9 @@ class FV(object):
 
 
   def __init_dictionary_with_default_parameters(self,d):
+    """
+    
+    """
     d["NUMBER_OF_VOLUMES_PER_AXIS"] = self._patch.dim[0]
     d["HALO_SIZE"]                  = self._patch_overlap.dim[0]/2
     d["SOLVER_INSTANCE"]            = self.get_name_of_global_instance()

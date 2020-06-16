@@ -160,7 +160,6 @@ class tarch::mpi::Rank {
      * barrier and give the user the opportunity to tell me what do while
      * I wait to be allowed to pass the barrier.
      *
-     *
      * The most common pattern how to use the barrier in Peano 4 is to pass
      * the following functor to the barrier as argument:
      *
@@ -171,6 +170,14 @@ class tarch::mpi::Rank {
 }
 
       </pre>
+     *
+     * Please note that this barrier remains an MPI barrier. It does not act
+     * as barrier between multiple threads. In particular: if you use this
+     * barrer in a multithreaded code, then each thread will launch a barrier
+     * on its own. If the number of threads/tasks per rank differs, deadlocks
+     * might arise. Anyway, it is not a good idea to use this within a
+     * multithreaded part of your code.
+     *
      *
      * @param waitor is my functor that should be called while we wait. By
      *   default, it is empty, i.e. barrier degenerates to a blocking barrier

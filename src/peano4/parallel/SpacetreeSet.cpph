@@ -237,20 +237,6 @@ void peano4::parallel::SpacetreeSet::finishAllOutstandingSendsAndReceives( Conta
       (clock()>timeOutWarning) &&
       (!triggeredTimeoutWarning)
     ) {
-      for (auto& sourceStackKey: keys) {
-        if (
-          sourceStackKey.first==spacetreeId
-          and
-          not stackContainer.getForPush(sourceStackKey)->tryToFinishSendOrReceive()
-        ) {
-          logError(
-            "finishAllOutstandingSendsAndReceives(...)",
-            "failed to send/receive content of stack no " << sourceStackKey.first << " x " << sourceStackKey.second << ": " <<
-            stackContainer.getForPush(sourceStackKey)->toString()
-          );
-        }
-      }
-
       tarch::mpi::Rank::getInstance().writeTimeOutWarning(
         "peano4::parallel::SpacetreeSet",
         "finishAllOutstandingSendsAndReceives(...)", spacetreeId, -1, -1
