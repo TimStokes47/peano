@@ -2,23 +2,24 @@
 #include "Constants.h"
 
 #include "tarch/logging/Log.h"
-
+#include "tarch/UnitTests.h"
 #include "tarch/multicore/multicore.h"
+#include "tarch/timing/Watch.h"
+#include "tarch/timing/Measurement.h"
 
 #include "peano4/peano.h"
 #include "peano4/grid/Spacetree.h"
 #include "peano4/parallel/SpacetreeSet.h"
+#include "peano4/UnitTests.h"
 
 #include "observers/DataRepository.h"
 #include "observers/StepRepository.h"
 #include "observers/SolverRepository.h"
-
 #include "observers/CreateGrid.h"
 #include "observers/PlotSolution.h"
 #include "observers/TimeStep.h"
 
-#include "peano4/UnitTests.h"
-#include "tarch/UnitTests.h"
+
 
 #include "exahype2/NonCriticalAssertions.h"
 #include "exahype2/UserInterface.h"
@@ -33,6 +34,11 @@ tarch::logging::Log _log("::");
 
 
 
+tarch::timing::Measurement   gridConstructionMeasurement;
+tarch::timing::Measurement   timeStepMeasurement;
+tarch::timing::Measurement   plotMeasurement;
+
+
 /**
  * @return continues to run
  */
@@ -41,8 +47,9 @@ bool selectNextAlgorithmicStep() {{
   static double nextPlotTimeStamp = FirstPlotTimeStamp;
   static bool   haveJustWrittenSnapshot = false;
   static bool   haveReceivedNoncriticialAssertion = false;
-  bool          continueToSolve   = true;
 
+  bool          continueToSolve   = true;
+  
   if (exahype2::hasNonCriticalAssertionBeenViolated() and not haveReceivedNoncriticialAssertion) {{
     peano4::parallel::Node::getInstance().setNextProgramStep(
       observers::StepRepository::toProgramStep( observers::StepRepository::Steps::PlotSolution )
@@ -99,7 +106,7 @@ bool selectNextAlgorithmicStep() {{
       }}
     }}
   }}
-  
+
   return continueToSolve;
 }}
 
@@ -111,18 +118,24 @@ void step() {{
   static tarch::logging::Log _log("");
   logInfo( "step()", "run " << observers::StepRepository::toString(stepName) );
 
+  tarch::timing::Watch  watch( "::", "step()", false );
+
   switch ( stepName ) {{
     case observers::StepRepository::Steps::CreateGrid:
       {{
         observers::CreateGrid  observer;
         peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
         observers::finishGridConstructionStep();
+        watch.stop();
+        gridConstructionMeasurement.setValue( watch.getCalendarTime() );
       }}
       break;
     case observers::StepRepository::Steps::PlotSolution:
       {{
         observers::PlotSolution  observer;
         peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+        watch.stop();
+        plotMeasurement.setValue( watch.getCalendarTime() );
       }}
       break;
     case observers::StepRepository::Steps::TimeStep:
@@ -142,6 +155,8 @@ void step() {{
         observers::TimeStep  observer;
         peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
         observers::finishTimeStep();
+        watch.stop();
+        timeStepMeasurement.setValue( watch.getCalendarTime() );
       }}
       break;
   }}
@@ -194,14 +209,17 @@ int main(int argc, char** argv) {{
     while ( selectNextAlgorithmicStep() ) {{
       step();
     }}
+
+    logInfo("main()", "terminated successfully");
+    logInfo("main()", "initial grid construction:  " << gridConstructionMeasurement.getAccumulatedValue() << "s\t" << gridConstructionMeasurement.toString() );
+    logInfo("main()", "plotting:                   " << plotMeasurement.getAccumulatedValue() << "s\t" << plotMeasurement.toString() );
+    logInfo("main()", "time stepping:              " << timeStepMeasurement.getAccumulatedValue() << "s\t" << timeStepMeasurement.toString() );
   }}
   else {{
     while (peano4::parallel::Node::getInstance().continueToRun()) {{
       step();
     }}
   }}
-
-  logInfo("main()", "terminated successfully");
 
   observers::finishSimulation();
 
