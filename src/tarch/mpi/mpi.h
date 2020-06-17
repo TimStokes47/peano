@@ -57,7 +57,7 @@ tarch::mpi::IntegerMessage::receive(
           bool triggeredTimeoutWarning = false;
           if (
             tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
-            (clock()>timeOutWarning) &&
+            (std::chrono::system_clock::now()>timeOutWarning) &&
             (!triggeredTimeoutWarning)
           ) {
             tarch::mpi::Rank::getInstance().writeTimeOutWarning( "__FILE__", "__LINE__",rank, BarrierTag );
@@ -65,7 +65,7 @@ tarch::mpi::IntegerMessage::receive(
           }
           if (
             tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
-            (clock()>timeOutShutdown)
+            (std::chrono::system_clock::now()>timeOutShutdown)
           ) {
             tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "__FILE__", "__LINE__",rank, BarrierTag );
           }
