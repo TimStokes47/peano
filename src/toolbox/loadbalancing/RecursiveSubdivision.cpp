@@ -250,8 +250,6 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
 
   if (
     _state==StrategyState::PostponedDecisionDueToLackOfCells
-    or
-    _state == StrategyState::WaitForRoundRobinToken
   ) {
     return StrategyStep::Wait;
   }
@@ -282,7 +280,10 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
     and
     doesBiggestLocalSpactreeViolateOptimalityCondition()
   ) {
-    if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() >= tarch::multicore::Core::getInstance().getNumberOfThreads()*2) {
+    if (_state == StrategyState::WaitForRoundRobinToken) {
+      return StrategyStep::Wait;
+    }
+    else if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() >= tarch::multicore::Core::getInstance().getNumberOfThreads()*2) {
       return StrategyStep::SplitHeaviestLocalTreeOnce_DontUseLocalRank_UseRecursivePartitioning;
     }
     else {
@@ -320,6 +321,10 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
 
   auto step = getStrategyStep();
 
+  #if PeanoDebug>0
+  #else
+  if ( step!=StrategyStep::Wait ) 
+  #endif
   logInfo(
     "finishStep()",
     toString( step ) << " in state " << toString( _state ) << " (global cell count=" << _globalNumberOfInnerUnrefinedCell <<
@@ -352,7 +357,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
         if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
           int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = getWeightOfHeaviestLocalSpacetree();
           int cellsPerCore      = getMaximumSpacetreeSize(numberOfLocalUnrefinedCellsOfHeaviestSpacetree);
-          int numberOfSplits    = numberOfLocalUnrefinedCellsOfHeaviestSpacetree/cellsPerCore;
+          int numberOfSplits    = std::min( numberOfLocalUnrefinedCellsOfHeaviestSpacetree/cellsPerCore, tarch::multicore::Core::getInstance().getNumberOfThreads()-1);
           logInfo( "finishStep()", "insufficient number of cores occupied on this rank, so split " << cellsPerCore << " cells iteratively (" << numberOfSplits << " splits) from tree " << heaviestSpacetree << " on local rank (hosts " << numberOfLocalUnrefinedCellsOfHeaviestSpacetree << " unrefined cells)" );
 
           for (int i=0; i<numberOfSplits; i++) {
