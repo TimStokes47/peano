@@ -46,7 +46,7 @@ void peano4::parallel::StartTraversalMessage::sendAndPollDanglingMessages(const 
       bool triggeredTimeoutWarning = false;
       if (
         tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
-        (clock()>timeOutWarning) &&
+        (std::chrono::system_clock::now()>timeOutWarning) &&
         (!triggeredTimeoutWarning)
       ) {
         tarch::mpi::Rank::getInstance().writeTimeOutWarning( "peano4::parallel::StartTraversalMessage", "sendAndPollDanglingMessages()",destination, tag );
@@ -54,7 +54,7 @@ void peano4::parallel::StartTraversalMessage::sendAndPollDanglingMessages(const 
       }
       if (
         tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
-        (clock()>timeOutShutdown)
+        (std::chrono::system_clock::now()>timeOutShutdown)
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "peano4::parallel::StartTraversalMessage", "sendAndPollDanglingMessages()", destination, tag );
       }
@@ -74,7 +74,7 @@ void peano4::parallel::StartTraversalMessage::receiveAndPollDanglingMessages(pea
       bool triggeredTimeoutWarning = false;
       if (
         tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() &&
-        (clock()>timeOutWarning) &&
+        (std::chrono::system_clock::now()>timeOutWarning) &&
         (!triggeredTimeoutWarning)
       ) {
         tarch::mpi::Rank::getInstance().writeTimeOutWarning( "peano4::parallel::StartTraversalMessage", "receiveAndPollDanglingMessages()", source, tag );
@@ -82,7 +82,7 @@ void peano4::parallel::StartTraversalMessage::receiveAndPollDanglingMessages(pea
       }
       if (
         tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() &&
-        (clock()>timeOutShutdown)
+        (std::chrono::system_clock::now()>timeOutShutdown)
       ) {
         tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( "peano4::parallel::StartTraversalMessage", "receiveAndPollDanglingMessages()", source, tag );
       }

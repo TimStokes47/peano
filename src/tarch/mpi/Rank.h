@@ -93,9 +93,9 @@ class tarch::mpi::Rank {
     /**
      * How long shall the application wait until it writes a time-out warning
      */
-    clock_t _timeOutWarning;
+    std::chrono::seconds _timeOutWarning;
 
-    clock_t _deadlockTimeOut;
+    std::chrono::seconds _deadlockTimeOut;
 
     bool    _areTimeoutsEnabled;
 
@@ -352,11 +352,11 @@ class tarch::mpi::Rank {
      *   MPI_Iprobe( source, CommunicationTag, Rank::getInstance().getCommunicator(), &flag, &status );
      *
      *   while (!flag) {
-     *     if ( Rank::getInstance().isTimeOutWarningEnabled() && (clock()>timeOutWarning) && (!triggeredTimeoutWarning)) {
+     *     if ( Rank::getInstance().isTimeOutWarningEnabled() && (std::chrono::system_clock::now()>timeOutWarning) && (!triggeredTimeoutWarning)) {
      *       Rank::getInstance().writeTimeOutWarning( "parallel::SendReceiveBuffer", "receiveAllMessages()", source );
      *       triggeredTimeoutWarning = true;
      *     }
-     *     if ( Rank::getInstance().isTimeOutDeadlockEnabled() && (clock()>timeOutShutdown)) {
+     *     if ( Rank::getInstance().isTimeOutDeadlockEnabled() && (std::chrono::system_clock::now()>timeOutShutdown)) {
      *       Rank::getInstance().triggerDeadlockTimeOut( "parallel::SendReceiveBuffer", "receiveAllMessages()", source );
      *     }
      *     MPI_Iprobe( source, CommunicationTag, Rank::getInstance().getCommunicator(), &flag, &status );
@@ -366,13 +366,13 @@ class tarch::mpi::Rank {
      * @return Time stamp when next warning should be written if no message has
      *         been received meanwhile.
      */
-    std::clock_t getDeadlockWarningTimeStamp() const;
+    std::chrono::system_clock::time_point getDeadlockWarningTimeStamp() const;
 
     /**
      * @return Time stamp when next application should terminate because of a
      *         time out if no message has been received meanwhile.
      */
-    std::clock_t getDeadlockTimeOutTimeStamp() const;
+    std::chrono::system_clock::time_point getDeadlockTimeOutTimeStamp() const;
 
     bool isTimeOutDeadlockEnabled() const;
     bool isTimeOutWarningEnabled() const;
@@ -386,7 +386,7 @@ class tarch::mpi::Rank {
      * warning that it is likely that it ran into a deadlock. If you pass 0,
      * that switches off this feature.
      */
-    void setTimeOutWarning( const std::clock_t & value );
+    void setTimeOutWarning( int valueInSeconds );
 
     /**
      * Set deadlock time out
@@ -395,7 +395,7 @@ class tarch::mpi::Rank {
      * and shutdown the whole application with an error report. If you pass 0,
      * that switches off this feature.
      */
-    void setDeadlockTimeOut( const std::clock_t & value );
+    void setDeadlockTimeOut( int valueInSeconds );
 
     #ifdef Parallel
     /**
