@@ -269,8 +269,8 @@ void tarch::mpi::Rank::barrier(std::function<void()> waitor) {
   MPI_Request request;
   MPI_Ibarrier( getCommunicator(), &request );
 
-  int  timeOutWarning          = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
-  int  timeOutShutdown         = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+  auto timeOutWarning          = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+  auto timeOutShutdown         = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
   bool triggeredTimeoutWarning = false;
   int flag                     = 0;
   while (not flag) {
