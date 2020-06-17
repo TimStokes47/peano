@@ -21,6 +21,7 @@ class PerformanceDataPoint(object):
     self._start_last_time_step = -1
     self._threads              = 1
     self._ranks                = 1
+    self._cores_per_node       = 1
     self._number_of_time_steps = 0
     self.valid                 = False
     self._total_cell_count     = 1
@@ -53,6 +54,7 @@ class PerformanceDataPoint(object):
             self._d = 3
           if "tbb" in line or "omp" in line:
             self._threads = int( line.split( "threads" )[0].split( "(")[-1] )
+            self._cores_per_node = self._threads
             if self._verbose:
               print( "- threads = " + str(self._threads))
           if "build:" in line or "mpi" in line:
@@ -95,7 +97,7 @@ def extract_grid_construction_times(performance_data_points):
   y_data = []
     
   for point in performance_data_points:
-    x_value = point._threads * point._ranks
+    x_value = point._threads + (point._ranks-1) * point._cores_per_node
     insert_at_position = 0
     while insert_at_position<len(x_data) and x_data[insert_at_position]<x_value:
       insert_at_position += 1
@@ -115,7 +117,7 @@ def extract_times_per_step(performance_data_points,show_data_for_last_time_step)
   y_data = []
     
   for point in performance_data_points:
-    x_value = point._threads * point._ranks
+    x_value = point._threads + (point._ranks-1) * point._cores_per_node
     insert_at_position = 0
     while insert_at_position<len(x_data) and x_data[insert_at_position]<x_value:
       insert_at_position += 1

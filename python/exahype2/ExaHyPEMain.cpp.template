@@ -201,6 +201,8 @@ int main(int argc, char** argv) {{
     }}
   }}
 
+  logInfo("main()", "terminated successfully");
+
   observers::finishSimulation();
 
   peano4::shutdownSingletons();
