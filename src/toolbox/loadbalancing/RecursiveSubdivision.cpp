@@ -25,7 +25,7 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
   _totalNumberOfSplits(0),
   _state( StrategyState::Standard ),
   _roundRobinToken(0),
-  _roundRobinMaximum(0) {
+  _roundRobinMaximum(1) {
   #ifdef Parallel
   _globalSumRequest          = nullptr;
   _globalLightestRankRequest = nullptr;
@@ -73,12 +73,12 @@ void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
 
   if (
     not tarch::mpi::Rank::getInstance().isGlobalMaster()
-	and
-	not _hasSpreadOutOverAllRanks
+    and
+    not _hasSpreadOutOverAllRanks
   ) {
     _hasSpreadOutOverAllRanks = true;
     _roundRobinToken   = tarch::mpi::Rank::getInstance().getRank();
-    _roundRobinMaximum = std::max(2,tarch::mpi::Rank::getInstance().getRank() / 2);
+    _roundRobinMaximum = std::max(1,tarch::mpi::Rank::getInstance().getRank() / 2);
   }
 
 
@@ -171,6 +171,7 @@ int toolbox::loadbalancing::RecursiveSubdivision::getMaximumSpacetreeSize(int lo
   logTraceOutWith1Argument( "getMaximumSpacetreeSize(int)", result );
   return roundedResult;
 */
+/*
   int result = 0;
   int optimalPartitionSize = static_cast<int>( std::round(_globalNumberOfInnerUnrefinedCell / alphaP ));
   while (
@@ -182,6 +183,19 @@ int toolbox::loadbalancing::RecursiveSubdivision::getMaximumSpacetreeSize(int lo
   }
   logTraceOutWith1Argument( "getMaximumSpacetreeSize(int)", optimalPartitionSize );
   return optimalPartitionSize;
+*/
+
+// @tood Ist nicht percentage sondern ratio. Falscher Name!
+// global sollte Mehrzahl sein. Auch falsch
+//
+  double partitionSize = _globalNumberOfInnerUnrefinedCell / alphaP;
+  double result = std::min( partitionSize, localSize - partitionSize);
+  int roundedResult = std::max(  static_cast<int>(std::round(result)),  1 );
+  logTraceOutWith1Argument( "getMaximumSpacetreeSize(int)", result );
+  return roundedResult;
+
+
+// @tood Dann mal komplett das cool-down entfernen - ich denke nicht mehr, dass man das noch braucht, jetzt wo ich das Round Robin habe
 }
 
 
@@ -215,9 +229,7 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 
 void toolbox::loadbalancing::RecursiveSubdivision::updateState() {
   _roundRobinToken++;
-  if (_roundRobinToken>_roundRobinMaximum) {
-    _roundRobinToken -= _roundRobinMaximum;
-  }
+  _roundRobinToken = _roundRobinToken % tarch::mpi::Rank::getInstance().getNumberOfRanks();
 
   if (
     _localNumberOfInnerUnrefinedCell
@@ -396,7 +408,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
         int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
         if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
           int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = getWeightOfHeaviestLocalSpacetree();
-          _roundRobinMaximum*=2;
+          _roundRobinMaximum = std::max( 1,_roundRobinMaximum-1);
           if ( numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize() ) {
             logInfo(
               "finishStep()",
@@ -417,7 +429,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
       {
         int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
         if (heaviestSpacetree!=NoHeaviestTreeAvailable and _lightestRank!=tarch::mpi::Rank::getInstance().getRank()) {
-          _roundRobinMaximum*=2;
+          _roundRobinMaximum = std::max( 1,_roundRobinMaximum-1);
           int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = getWeightOfHeaviestLocalSpacetree();
           if ( numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize() ) {
             logInfo(
