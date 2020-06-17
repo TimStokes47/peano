@@ -50,7 +50,7 @@ void tarch::timing::Watch::start() {
 
 
 void tarch::timing::Watch::stop() {
-  _elapsedClockTicks   = clock() - _startClockTicks;
+  _elapsedClockTicks   = std::clock() - _startClockTicks;
   _elapsedTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - _startTime).count();
   _elapsedTime = _elapsedTime / 1000000000.0; // Convert to seconds
   _isRunning           = false;
