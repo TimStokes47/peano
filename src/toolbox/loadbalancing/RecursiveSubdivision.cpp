@@ -23,14 +23,15 @@ toolbox::loadbalancing::RecursiveSubdivision::RecursiveSubdivision(double percen
   _localNumberOfInnerUnrefinedCell( 0 ),
   _globalNumberOfInnerUnrefinedCell( 0 ),
   _totalNumberOfSplits(0),
-  _state( StrategyState::Standard ) {
+  _state( StrategyState::Standard ),
+  _roundRobinToken(0),
+  _roundRobinMaximum(0) {
   #ifdef Parallel
   _globalSumRequest          = nullptr;
   _globalLightestRankRequest = nullptr;
   _globalNumberOfInnerUnrefinedCellBufferIn = 1;
   _lightestRankBufferIn._rank               = tarch::mpi::Rank::getInstance().getRank();
   #endif
-  _roundRobinToken = tarch::mpi::Rank::getInstance().getRank();
 }
 
 
@@ -70,10 +71,17 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishSimulation() {
 void toolbox::loadbalancing::RecursiveSubdivision::updateGlobalView() {
   _localNumberOfInnerUnrefinedCell = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
 
-  if (not tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
+  if (
+    not tarch::mpi::Rank::getInstance().isGlobalMaster()
+	and
+	not _hasSpreadOutOverAllRanks
+  ) {
     _hasSpreadOutOverAllRanks = true;
+    _roundRobinToken   = tarch::mpi::Rank::getInstance().getRank();
+    _roundRobinMaximum = std::max(2,tarch::mpi::Rank::getInstance().getRank() / 2);
   }
- 
+
+
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {
     _globalNumberOfInnerUnrefinedCell = _localNumberOfInnerUnrefinedCell;
     _lightestRank                     = 0;
@@ -207,7 +215,9 @@ bool toolbox::loadbalancing::RecursiveSubdivision::doesBiggestLocalSpactreeViola
 
 void toolbox::loadbalancing::RecursiveSubdivision::updateState() {
   _roundRobinToken++;
-  _roundRobinToken = _roundRobinToken % tarch::mpi::Rank::getInstance().getNumberOfRanks();
+  if (_roundRobinToken>_roundRobinMaximum) {
+    _roundRobinToken -= _roundRobinMaximum;
+  }
 
   if (
     _localNumberOfInnerUnrefinedCell
@@ -297,16 +307,18 @@ toolbox::loadbalancing::RecursiveSubdivision::StrategyStep toolbox::loadbalancin
     and
     doesBiggestLocalSpactreeViolateOptimalityCondition()
   ) {
-    if (_roundRobinToken!=0) {
+    if (_roundRobinToken>_roundRobinMaximum) {
+    	// @todo Debug
       logInfo( "getStrategyStep()", "should fork further but decided to wait to ensure that not all ranks outsource at the same time to the rank" );
       return StrategyStep::Wait;
     }
-    else if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() >= tarch::multicore::Core::getInstance().getNumberOfThreads()*2)
+    else if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() >= tarch::multicore::Core::getInstance().getNumberOfThreads()*2) {
       return StrategyStep::SplitHeaviestLocalTreeOnce_DontUseLocalRank_UseRecursivePartitioning;
-    else
+    }
+    else {
       return StrategyStep::SplitHeaviestLocalTreeOnce_UseAllRanks_UseRecursivePartitioning;
+    }
   }
-
 
   return StrategyStep::Wait;
 }
@@ -342,7 +354,8 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
     "finishStep()",
     toString( step ) << " in state " << toString( _state ) << " (global cell count=" << _globalNumberOfInnerUnrefinedCell <<
     ", heaviest local tree=" << getIdOfHeaviestLocalSpacetree() << ", heaviest local weight=" << getWeightOfHeaviestLocalSpacetree() << 
-    ",lightest-rank=" << _lightestRank << ",max-tree-size=" << getMaximumSpacetreeSize() << ",has-spread=" << _hasSpreadOutOverAllRanks << ")"
+    ",lightest-rank=" << _lightestRank << ",max-tree-size=" << getMaximumSpacetreeSize() << ",has-spread=" <<
+	_hasSpreadOutOverAllRanks << ",round-robin-max=" << _roundRobinMaximum << ",round-robin-token=" << _roundRobinToken << ")"
   );
 
   switch ( step ) {
@@ -383,6 +396,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
         int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
         if (heaviestSpacetree!=NoHeaviestTreeAvailable) {
           int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = getWeightOfHeaviestLocalSpacetree();
+          _roundRobinMaximum*=2;
           if ( numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize() ) {
             logInfo(
               "finishStep()",
@@ -403,6 +417,7 @@ void toolbox::loadbalancing::RecursiveSubdivision::finishStep() {
       {
         int heaviestSpacetree                              = getIdOfHeaviestLocalSpacetree();
         if (heaviestSpacetree!=NoHeaviestTreeAvailable and _lightestRank!=tarch::mpi::Rank::getInstance().getRank()) {
+          _roundRobinMaximum*=2;
           int numberOfLocalUnrefinedCellsOfHeaviestSpacetree = getWeightOfHeaviestLocalSpacetree();
           if ( numberOfLocalUnrefinedCellsOfHeaviestSpacetree>getMaximumSpacetreeSize() ) {
             logInfo(

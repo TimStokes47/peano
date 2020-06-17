@@ -87,6 +87,8 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Peano 4 load balancing plotter')
   parser.add_argument("file",   help="filename of the file to parse (should be a text file)")
   parser.add_argument("-v", "--verbose", help="increase output verbosity", default=False)
+  parser.add_argument("-rc", "--remote-cells", dest="plot_remote_cells", help="plot remote cells, too", default=False)
+  parser.add_argument("-sum", "--sum-per-rank", dest="sum_per_rank", help="sum up cells per rank", default=False)
   args = parser.parse_args()
 
   plt.clf()
@@ -106,30 +108,40 @@ if __name__ == "__main__":
   
   symbol_counter = 0
   colour_counter = 0
+  my_alpha       = 0.1
   for rank in Ranks:
+    x_data_sum = []
+    y_data_sum = []  
+    if args.verbose:
+      print( "parse data of rank " + str(rank) )
     ( x_data, y_data_local, y_data_remote ) = parse_file( args.file, rank )
     for i in range(0,len(x_data)):
+      x_data_sum.append( x_data[i] )
+      y_data_sum.append( 0.0 )
       one_snapshot_x_data = [ x_data[i] for j in y_data_local[i]]
+      if len(y_data_local[i])>0:
+        my_alpha       = 0.1+1.0/len(y_data_local[i])
+      for j in y_data_local[i]:
+        y_data_sum[-1] += j/len(x_data)
       if i==0 and rank>=0:
-        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[colour_counter],  alpha=0.2, label="Rank " + str(rank) )  
+        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[colour_counter],  alpha=my_alpha, label="Rank " + str(rank) )  
       elif i==0:
-        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[colour_counter],  alpha=0.2, label="Load per tree" )  
+        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[colour_counter],  alpha=my_alpha, label="Load per tree" )  
       else:
-        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[colour_counter],  alpha=0.2)
+        plt.scatter(one_snapshot_x_data, y_data_local[i], marker=Symbols[symbol_counter], color=Colours[colour_counter],  alpha=my_alpha)
           
-      if rank==0 and i==0:
-        plt.scatter(one_snapshot_x_data, y_data_remote[i], marker=Symbols[symbol_counter], color=Colours[colour_counter], alpha=0.2, facecolors='none', label="remote cells")
-      else:
-        plt.scatter(one_snapshot_x_data, y_data_remote[i], marker=Symbols[symbol_counter], color=Colours[colour_counter], alpha=0.2, facecolors='none')
-      
-    if len(Ranks)==1:
-      optimal_x_data = local_optimal_average(x_data,y_data_local,threads)[0]
-      optimal_y_data = local_optimal_average(x_data,y_data_local,threads)[1]
-      plt.plot(optimal_x_data, optimal_y_data, "-", color=Colours[colour_counter] )
-      optimal_y_data = [i/2 for i in optimal_y_data]
-      plt.plot(optimal_x_data, optimal_y_data, "--", color=Colours[colour_counter] )
-      optimal_y_data = [i/2 for i in optimal_y_data]
-      plt.plot(optimal_x_data, optimal_y_data, ":", color=Colours[colour_counter] )
+      if rank==0 and i==0 and args.plot_remote_cells:
+        plt.scatter(one_snapshot_x_data, y_data_remote[i], marker=Symbols[symbol_counter], color=Colours[colour_counter], alpha=my_alpha, facecolors='none', label="remote cells")
+      elif args.plot_remote_cells:
+        plt.scatter(one_snapshot_x_data, y_data_remote[i], marker=Symbols[symbol_counter], color=Colours[colour_counter], alpha=my_alpha, facecolors='none')
+    
+    sum_symbol = "-"
+    if rank<2*len(Colours):
+      sum_symbol = "--"
+    if rank<len(Colours):
+      sum_symbol = ":"
+    if args.sum_per_rank: 
+      plt.plot(x_data_sum, y_data_sum, sum_symbol, color=Colours[colour_counter] )
       
     symbol_counter += 1
     colour_counter += 1
@@ -143,6 +155,8 @@ if __name__ == "__main__":
   plt.xlabel( "time" )
   plt.ylabel( "cells per tree" )
   plt.yscale( "log", basey=2 )
+  #bottom, top = plt.ylim()
+  plt.ylim( bottom=9 )
   #plt.yscale( "log" )
   plt.legend()
   plt.savefig( args.file + ".pdf" )

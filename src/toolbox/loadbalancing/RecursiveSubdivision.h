@@ -315,6 +315,7 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      * @see updateState()
      */
     int _roundRobinToken;
+    int _roundRobinMaximum;
 };
 
 
