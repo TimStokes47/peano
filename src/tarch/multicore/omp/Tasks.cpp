@@ -38,9 +38,9 @@ void tarch::multicore::spawnAndWait(
   const std::vector< Task* >&  tasks
 ) {
 #pragma omp parallel for shared(tasks) schedule(dynamic, 1)
-  for (auto& p: tasks) {
-    while (p->run()) {}
-    delete p;
+  for (int i=0; i<tasks.size(); i++) {
+    while (tasks[i]->run()) {}
+    delete tasks[i];
   }
 }
 
