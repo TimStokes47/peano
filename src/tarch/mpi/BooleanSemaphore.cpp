@@ -186,8 +186,8 @@ void tarch::mpi::BooleanSemaphore::BooleanSemaphoreService::acquireLock( int num
 
     logDebug( "acquireLock()", "wait for confirmation from global master rank" );
     MPI_Request request;
-    int  timeOutWarning          = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
-    int  timeOutShutdown         = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
+    auto  timeOutWarning          = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
+    auto  timeOutShutdown         = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp();
     bool triggeredTimeoutWarning = false;
 
     MPI_Irecv( &number, 1, MPI_INT, tarch::mpi::Rank::getGlobalMasterRank(), _semaphoreTag, tarch::mpi::Rank::getInstance().getCommunicator(), &request );
