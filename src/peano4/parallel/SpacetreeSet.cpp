@@ -11,8 +11,6 @@
 
 #include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Lock.h"
-#include "tarch/multicore/IntegerSemaphore.h"
-#include "tarch/multicore/IntegerLock.h"
 
 #include "tarch/mpi/Rank.h"
 #include "tarch/mpi/IntegerMessage.h"

@@ -173,7 +173,7 @@ class toolbox::loadbalancing::RecursiveSubdivision {
 
     static tarch::logging::Log  _log;
 
-    const double _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell;
+    const double _RatioOfCoresThatShouldInTheoryGetAtLeastOneCell;
 
     std::map< int, int>    _blacklist;
 
@@ -191,11 +191,9 @@ class toolbox::loadbalancing::RecursiveSubdivision {
 
     int _lightestRank;
 
-    int   _totalNumberOfSplits;
-
     enum class StrategyState {
       Standard,
-      CoolDown,
+      WaitForRoundRobinToken,
       PostponedDecisionDueToLackOfCells
     };
 
@@ -211,7 +209,7 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      * The maximum size in principle is the total number of cells divided by
      * all possible spacetrees. The latter is in principle the number of ranks
      * times the number of cores (p), though we allow users to diminish this number
-     * slightly due to _PercentageOfCoresThatShouldInTheoryGetAtLeastOneCell. I
+     * slightly due to _RatioOfCoresThatShouldInTheoryGetAtLeastOneCell. I
      * call this one @f$ \alpha @f$ below. So we have in principle the situation
      * that the maximum spacetree size
      *
@@ -315,6 +313,12 @@ class toolbox::loadbalancing::RecursiveSubdivision {
      * @see updateState()
      */
     int _roundRobinToken;
+
+    /**
+     * If _roundRobinToken is smaller than or equal to this threshold, then the
+     * rank is allowed to load balance.
+     */
+    int _roundRobinThreshold;
 };
 
 

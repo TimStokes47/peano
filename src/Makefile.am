@@ -86,8 +86,6 @@ Tarch_SOURCES= tarch/tarch.cpp \
  tarch/la/Scalar.cpp \
  tarch/multicore/BooleanSemaphore.cpp \
  tarch/multicore/Core.cpp \
- tarch/multicore/IntegerLock.cpp \
- tarch/multicore/IntegerSemaphore.cpp \
  tarch/multicore/Lock.cpp \
  tarch/multicore/RecursiveLock.cpp \
  tarch/multicore/RecursiveSemaphore.cpp \
@@ -105,7 +103,6 @@ Tarch_SOURCES= tarch/tarch.cpp \
  tarch/multicore/tbb/Tasks.cpp \
  tarch/multicore/tbb/TBB.cpp \
  tarch/multicore/tbb/BooleanSemaphore.cpp \
- tarch/multicore/tbb/IntegerSemaphore.cpp \
  tarch/multicore/tbb/RecursiveSemaphore.cpp \
  tarch/tests/TestCaseCollection.cpp \
  tarch/tests/TreeTestCaseCollection.cpp \

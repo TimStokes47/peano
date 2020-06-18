@@ -65,6 +65,10 @@ sbatch example-scripts/Hamilton-6-nodes.slurm-script
 sbatch example-scripts/Hamilton-7-nodes.slurm-script
 sbatch example-scripts/Hamilton-8-nodes.slurm-script
 sbatch example-scripts/Hamilton-10-nodes.slurm-script
+
+
+
+
 sbatch example-scripts/Hamilton-12-nodes.slurm-script
 sbatch example-scripts/Hamilton-14-nodes.slurm-script
 sbatch example-scripts/Hamilton-16-nodes.slurm-script
