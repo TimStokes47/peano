@@ -3,6 +3,8 @@
 from .Helper import Overwrite
 from .Helper import writeFile
 
+from .Jinja2TemplatedHeaderFile import Jinja2TemplatedHeaderFile
+
 
 import os
 import re
@@ -132,15 +134,11 @@ class Observer(object):
       self.d[key] = new_dictionary_entries[key]
 
 
-  def __generate_header(self,overwrite,full_qualified_filename):
-    if writeFile(overwrite,self.default_overwrite,full_qualified_filename):
-      print( "write " + full_qualified_filename )
-      template_file = os.path.realpath(__file__).replace( ".pyc", ".h.template" ).replace( ".py", ".h.template" )
-      with open( os.path.realpath(template_file), "r" ) as input:
-        template = input.read()
-      with open( full_qualified_filename, "w" ) as output:
-        output.write( template.format(**self.d) )
-
+  def __generate_header(self,overwrite,directory):
+    headerfile_template = os.path.realpath(__file__).replace( ".pyc", ".h.template" ).replace( ".py", ".h.template" )
+    header = Jinja2TemplatedHeaderFile(headerfile_template,self.classname,self.namespace,self.subdirectory,self.d,self.default_overwrite)
+    header.generate(overwrite,directory)
+    
 
 
   TemplateConstructor = """
@@ -545,6 +543,20 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
       assertion3( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inCellStack))->empty(), event.toString(), _spacetreeId, inCellStack);
       data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inCellStack))->pop();
     }}
+    
+    peano4::datamanagement::CellMarker  marker(event);
+    
+    #if PeanoDebug>0  
+    if (inCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+      data.setDebugX( marker.x() );
+      data.setDebugH( marker.h() );
+    }}
+    else {{
+      assertionVectorNumericalEquals4( data.getDebugX(), marker.x(), data.getDebugX(), marker.toString(), outVertexStackPosition, _spacetreeId );
+      assertionVectorNumericalEquals3( data.getDebugH(), marker.h(), data.getDebugX(), marker.toString(), _spacetreeId );
+    }}
+    #endif
+    
     DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,outCellStack))->push(data);
   }}
 """
@@ -1271,10 +1283,9 @@ tarch::logging::Log {FULL_QUALIFIED_CLASSNAME}::_log( "{FULL_QUALIFIED_CLASSNAME
       self.__generate_exchange_routines(output_file)
 
 
-  def get_header_file_name(self):
-    return self.subdirectory + "/" + self.classname + ".h"
-
-
+  #
+  # @todo Sollte man mit Jinja 2 nicht mehr brauchen
+  #
   def get_cpp_file_name(self):
     return self.subdirectory + "/" + self.classname + ".cpp"
 
@@ -1283,9 +1294,8 @@ tarch::logging::Log {FULL_QUALIFIED_CLASSNAME}::_log( "{FULL_QUALIFIED_CLASSNAME
     if not os.path.exists( directory + "/" + self.subdirectory ):
       os.mkdir(directory + "/" + self.subdirectory)
     
-    header_filename = directory + "/" + self.get_header_file_name()
     cpp_filename    = directory + "/" + self.get_cpp_file_name()
     
-    self.__generate_header(overwrite,header_filename)
+    self.__generate_header(overwrite,directory)
     self.__generate_implementation(overwrite,cpp_filename)
 
