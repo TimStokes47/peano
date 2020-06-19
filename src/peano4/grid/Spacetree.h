@@ -645,6 +645,14 @@ class peano4::grid::Spacetree {
      * with set local flags, as they feed into the boundary data exchange.
      * But for enterCell and leaveCell, we need copies without these flags.
      * Pruned copies.
+     *
+     * <h2> Rationale </h2>
+     *
+     * I originally thought about having the pruning mechanism as a part of
+     * createEnterCellTraversalEvent() or createLeaveCellTraversalEvent(). This
+     * does not work however, as the data exchange et al need the real inside/
+     * outside flag whereas a pruned version of the event might disable all of
+     * these flags to effectively switch off the invocation of user events.
      */
     GridTraversalEvent createPrunedCellTraversalEvent( const GridTraversalEvent& event ) const;
 
