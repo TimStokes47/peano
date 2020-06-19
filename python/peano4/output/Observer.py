@@ -534,10 +534,12 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
   TemplateEnterCell_CellLoad_Prologue = """  
   // Load cell {name}
   {{
+    auto view = DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack))->pushBlock( 1 );
+    
     const int inCellStack  = event.getCellData();
     const int outCellStack = peano4::grid::PeanoCurve::CallStack;
     logDebug("enterCell(...)", "cell stack " << inCellStack << "->pos-" << outCellStack );
-
+    
     {full_qualified_type} data;
     if (inCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
       assertion3( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inCellStack))->empty(), event.toString(), _spacetreeId, inCellStack);
@@ -547,17 +549,17 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     peano4::datamanagement::CellMarker  marker(event);
     
     #if PeanoDebug>0  
-    if (inCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+    if (inCellStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
       data.setDebugX( marker.x() );
       data.setDebugH( marker.h() );
     }}
     else {{
-      assertionVectorNumericalEquals4( data.getDebugX(), marker.x(), data.getDebugX(), marker.toString(), outVertexStackPosition, _spacetreeId );
+      assertionVectorNumericalEquals3( data.getDebugX(), marker.x(), data.getDebugX(), marker.toString(), _spacetreeId );
       assertionVectorNumericalEquals3( data.getDebugH(), marker.h(), data.getDebugX(), marker.toString(), _spacetreeId );
     }}
     #endif
     
-    DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,outCellStack))->push(data);
+    view.set(0, data);
   }}
 """
 
