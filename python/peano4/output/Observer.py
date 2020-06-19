@@ -690,11 +690,14 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
     const int outCellStack  = event.getCellData();
     logDebug("leaveCell(...)", "cell stack " << inCellStack << "->pos-" << outCellStack );
 
-    {full_qualified_type} data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inCellStack))->pop();
+    auto view = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack))->popBlock( 1 );
+ 
     if (
       outCellStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
     ) {{
-      DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,outCellStack))->push(data);
+      DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,outCellStack))->push(
+        view.get(0)
+      );
     }}
   }}
 """

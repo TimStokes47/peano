@@ -36,9 +36,13 @@ class peano4::grid::TraversalObserver {
   public:
     virtual ~TraversalObserver() {}
 
-    static constexpr int NoData                              = -1;
-
     static constexpr int NoRebalancing                       = -1;
+
+    /**
+     * I use this one to indicate that no data is associated with a grid entity,
+     * as the grid entity is outside of the domain.
+     */
+    static constexpr int NoData                              = -1;
 
 	  /**
 	   * Implies that the data will then be local or had been local.
