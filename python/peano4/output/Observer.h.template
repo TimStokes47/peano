@@ -84,11 +84,11 @@ class {% for item in NAMESPACE -%}{{ item }}::{%- endfor %}{{CLASSNAME}}: public
     
     void finishAllOutstandingSendsAndReceives() override;
     
-    void sendVertexHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) override;
-    void sendFaceHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) override;
+    void sendVertex(int inOutStack, int relativePositionOnInOutStack, int toTree) override;
+    void sendFace(int inOutStack, int relativePositionOnInOutStack, int toTree) override;
 
-    void receiveAndMergeVertexHorizontally(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) override;
-    void receiveAndMergeFaceHorizontally(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) override;
+    void receiveAndMergeVertex(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) override;
+    void receiveAndMergeFace(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) override;
 
     void deleteAllStacks() override;
 };

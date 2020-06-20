@@ -47,11 +47,11 @@ class PatchToDoubleArray():
       }
 
     if self.data.association==DoFAssociation.Vertex:
-      d["MERGE_METHOD_DECLARATIONS"] = "void mergeHorizontally(const " + self.data.name + "& neighbour, const peano4::datamanagement::VertexMarker& marker);"
-      d["MERGE_METHOD_DEFINITIONS"]  = "void " + self.data.get_full_qualified_type() + "::mergeHorizontally(const " + self.data.name + "& neighbour, const peano4::datamanagement::VertexMarker& marker) {\n" + self._merge_method_definitions + "\n}"
+      d["MERGE_METHOD_DECLARATIONS"] = "void merge(const " + self.data.name + "& neighbour, const peano4::datamanagement::VertexMarker& marker);"
+      d["MERGE_METHOD_DEFINITIONS"]  = "void " + self.data.get_full_qualified_type() + "::merge(const " + self.data.name + "& neighbour, const peano4::datamanagement::VertexMarker& marker) {\n" + self._merge_method_definitions + "\n}"
     elif self.data.association==DoFAssociation.Face:
-      d["MERGE_METHOD_DECLARATIONS"] = "void mergeHorizontally(const " + self.data.name + "& neighbour, const peano4::datamanagement::FaceMarker& marker);"
-      d["MERGE_METHOD_DEFINITIONS"]  = "void " + self.data.get_full_qualified_type() + "::mergeHorizontally(const " + self.data.name + "& neighbour, const peano4::datamanagement::FaceMarker& marker) {\n" + self._merge_method_definitions + "\n}"
+      d["MERGE_METHOD_DECLARATIONS"] = "void merge(const " + self.data.name + "& neighbour, const peano4::datamanagement::FaceMarker& marker);"
+      d["MERGE_METHOD_DEFINITIONS"]  = "void " + self.data.get_full_qualified_type() + "::merge(const " + self.data.name + "& neighbour, const peano4::datamanagement::FaceMarker& marker) {\n" + self._merge_method_definitions + "\n}"
     elif self.data.association==DoFAssociation.Cell:
       d["MERGE_METHOD_DECLARATIONS"] = ""
 

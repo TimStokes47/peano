@@ -61,8 +61,8 @@ project.add_solver(  exahype2.solvers.GenericRusanovFVFixedTimeStepSize(
 
 
 dimensions = 2
-build_mode = peano4.output.CompileMode.Release
-#build_mode = peano4.output.CompileMode.Asserts
+#build_mode = peano4.output.CompileMode.Release
+build_mode = peano4.output.CompileMode.Asserts
 
 
 #
@@ -86,6 +86,7 @@ else:
 # So here's the parallel stuff. This is new compared to the serial
 # prototype we did start off with.
 #
+#project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision", "(0.6)" )
 project.set_load_balancing( "toolbox::loadbalancing::RecursiveSubdivision" )
 
 
@@ -105,8 +106,28 @@ peano4_project.build()
 # often crashes for bigger runs. It also struggles with the postprocessing
 # for large parallel runs (see below).
 #
-#success = peano4_project.run( ["--threads", "8"] )
-success = peano4_project.run( ["--threads", "2"], ["mpirun", "-n", "4"] )
+if build_mode == peano4.output.CompileMode.Asserts:
+  success = True
+  if success:
+    success = peano4_project.run( ["--threads", "1"] )
+  if success:
+    success = peano4_project.run( ["--threads", "2"] )
+  if success:
+    success = peano4_project.run( ["--threads", "3"] )
+  if success:
+    success = peano4_project.run( ["--threads", "4"] )
+  if success:
+    success = peano4_project.run( ["--threads", "1"], ["mpirun", "-n", "2"] )
+  if success:
+    success = peano4_project.run( ["--threads", "1"], ["mpirun", "-n", "4"] )
+  if success:
+    success = peano4_project.run( ["--threads", "2"], ["mpirun", "-n", "4"] )
+  if success:
+    success = peano4_project.run( ["--threads", "4"], ["mpirun", "-n", "4"] )
+else:
+  success = peano4_project.run( ["--threads", "8"] )
+  
+#success = peano4_project.run( ["--threads", "2"], ["mpirun", "-n", "4"] )
 #success = peano4_project.run( ["--threads", "28"], ["mpirun", "-n", "4"] )
 
 

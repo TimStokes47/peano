@@ -193,11 +193,11 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
    */
   virtual void finishAllOutstandingSendsAndReceives() {};
 
-  virtual void sendVertexHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) {};
-  virtual void sendFaceHorizontally(int inOutStack, int relativePositionOnInOutStack, int toTree) {};
+  virtual void sendVertex(int inOutStack, int relativePositionOnInOutStack, int toTree) {};
+  virtual void sendFace(int inOutStack, int relativePositionOnInOutStack, int toTree) {};
 
-  virtual void receiveAndMergeVertexHorizontally(const GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {};
-  virtual void receiveAndMergeFaceHorizontally(const GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {};
+  virtual void receiveAndMergeVertex(const GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {};
+  virtual void receiveAndMergeFace(const GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {};
 
   virtual void deleteAllStacks() {};
 };

@@ -412,48 +412,6 @@ class peano4::grid::Spacetree {
     ) const;
 
     /**
-     * Return pair for fine grid and coarse grid face, i.e. you are told whether the
-     * fine grid face is local and if the coarser grid entities have been local, too.
-     * Hanging faces are never local.
-     *
-     * Don't call this routine for a hanging vertex.
-     */
-//    std::pair<bool,bool> isSpacetreeFaceLocal(
-//      GridVertex                                   coarseGridVertices[TwoPowerD],
-//      GridVertex                                   fineGridVertices[TwoPowerD],
-//      const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
-//      int                                          faceNumber
-//    ) const;
-
-    /**
-     * Return pair for fine grid and coarse grid vertex, i.e. you are told whether the
-     * fine grid vertex is local and if the coarser grid entities have been local, too.
-     *
-     * Don't call this routine for a hanging vertex.
-     *
-     * @image html Spacetree_isSpacetreeVertexLocalInVerticalCommunicationContext.png
-     *
-     * If the fine grid vertex coincides spatially with a coarse vertex, then the father
-     * flag is set if the tree is a member of the father flag. We look at all adjacency
-     * entries.
-     */
-//    std::pair<bool,bool> isSpacetreeVertexLocalInVerticalCommunicationContext(
-//      GridVertex                                   coarseGridVertices[TwoPowerD],
-//      GridVertex                                   fineGridVertices[TwoPowerD],
-//      const tarch::la::Vector<Dimensions,int>&     relativePositionOfCellToFather,
-//	  const std::bitset<Dimensions>&               vertexNumber
-//    ) const;
-
-    /**
-     * Helper routine for other operation
-     */
-//    bool isSpacetreeCoarseVertexLocalInVerticalCommunicationContext(
-//      GridVertex                                   coarseGridVertices[TwoPowerD],
-//      const tarch::la::Vector<Dimensions,int>&     relativePositionOfVertexToFather,
-//      std::bitset<TwoPowerD>                       fatherMask
-//    ) const;
-
-    /**
      * We run over the @f$ 2^d @f$ adjacent vertices of the cell and look at
      * each vertex's adjacency list. Usually they should all agree on the who's
      * gonna own a cell. It is only hanging vertices which we should exclude
@@ -667,8 +625,7 @@ class peano4::grid::Spacetree {
      * of the indices within the event. So no fancy arithmetics is required here
      * anymore.
      */
-    void receiveAndMergeUserDataAtHorizontalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
-    void receiveAndMergeUserDataAtVerticalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
+    void receiveAndMergeUserData(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
 
     /**
      *
@@ -682,8 +639,7 @@ class peano4::grid::Spacetree {
      * access these elements directly. We just have to be careful that top() equals actually
      * a top(0), so picking the Nth element requires us to call top(N-1).
      */
-    void sendUserDataAtHorizontalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
-    void sendUserDataAtVerticalBoundary(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
+    void sendUserData(const AutomatonState& state, TraversalObserver&  observer, const GridTraversalEvent&  enterCellTraversalEvent, GridVertex  fineGridVertices[TwoPowerD]);
 
 
     /**
