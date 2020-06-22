@@ -22,5 +22,5 @@ trace  exahype2                            -1     black
 trace  toolbox                             -1     black
 
 
-info  peano4::grid                  -1     black
+# info  peano4::grid                  -1     black
 

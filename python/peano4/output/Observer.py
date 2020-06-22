@@ -329,6 +329,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
         inVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        inVertexStack!=peano4::grid::TraversalObserver::NoData
       ) {{
         assertion4( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inVertexStack))->empty(), event.toString(), peano4::datamanagement::VertexMarker(event).toString(), _spacetreeId, inVertexStack);
         data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inVertexStack))->pop();
@@ -341,6 +343,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         or
         inVertexStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        or
+        inVertexStack==peano4::grid::TraversalObserver::NoData
       ) {{
         data.setDebugX( marker.x(outVertexStackPosition) );
         data.setDebugH( marker.h() );
@@ -435,6 +439,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
         inFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        inFaceStack!=peano4::grid::TraversalObserver::NoData
       ) {{
         assertion4( not DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inFaceStack))->empty(), event.toString(), peano4::datamanagement::FaceMarker(event).toString(), _spacetreeId,inFaceStack );
         data = DataRepository::_{logical_type_name}Stack.getForPop( DataRepository::DataKey(_spacetreeId,inFaceStack))->pop();
@@ -448,6 +454,8 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
         inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         or
         inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        or
+        inFaceStack==peano4::grid::TraversalObserver::NoData
       ) {{
         data.setDebugX( marker.x(outFaceStackPosition) );
         data.setDebugH( marker.h() );
@@ -553,11 +561,15 @@ void {FULL_QUALIFIED_CLASSNAME}::enterCell( const peano4::grid::GridTraversalEve
     peano4::datamanagement::CellMarker  marker(event);
     
     #if PeanoDebug>0  
-    if (inCellStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {{
+    if (
+      inCellStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+      or
+      inCellStack==peano4::grid::TraversalObserver::NoData
+    ) {{
       data.setDebugX( marker.x() );
       data.setDebugH( marker.h() );
     }}
-    else if ( inCellStack!=peano4::grid::TraversalObserver::NoData ) {{
+    else {{
       assertionVectorNumericalEquals3( data.getDebugX(), marker.x(), data.getDebugX(), marker.toString(), _spacetreeId );
       assertionVectorNumericalEquals3( data.getDebugH(), marker.h(), data.getDebugX(), marker.toString(), _spacetreeId );
     }}
@@ -785,6 +797,8 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
         outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
         outFaceStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        outFaceStack!=peano4::grid::TraversalObserver::NoData
       ) {{
         DataRepository::_{logical_type_name}Stack.getForPush( DataRepository::DataKey(_spacetreeId,outFaceStack))->push(data);
       }}
@@ -865,6 +879,8 @@ void {FULL_QUALIFIED_CLASSNAME}::leaveCell( const peano4::grid::GridTraversalEve
         outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
         and
         outVertexStack!=peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity
+        and
+        outVertexStack!=peano4::grid::TraversalObserver::NoData
       ) {{
         DataRepository::_{logical_type_name}Stack.getForPush(DataRepository::DataKey(_spacetreeId,outVertexStack))->push(data);
       }}
@@ -1034,9 +1050,8 @@ void {FULL_QUALIFIED_CLASSNAME}::finishAllOutstandingSendsAndReceives() {{
 
 
   TemplateExchangeRoutines_sendVertex_Prologue = """
-void {FULL_QUALIFIED_CLASSNAME}::sendVertex(int inOutStack, int relativePositionOnInOutStack, int toTree) {{
-  logTraceInWith4Arguments( "sendVertex(int,int,int)", inOutStack, relativePositionOnInOutStack, toTree, _spacetreeId );
-  const int toStack   = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( toTree );
+void {FULL_QUALIFIED_CLASSNAME}::sendVertex(int inOutStack, int relativePositionOnInOutStack, int toStack) {{
+  logTraceInWith4Arguments( "sendVertex(int,int,int)", inOutStack, relativePositionOnInOutStack, toStack, _spacetreeId );
 """
 
   TemplateExchangeRoutines_sendVertex_Epilogue = """
@@ -1045,13 +1060,24 @@ void {FULL_QUALIFIED_CLASSNAME}::sendVertex(int inOutStack, int relativePosition
 """
 
   TemplateExchangeRoutines_sendFace_Prologue = """
-void {FULL_QUALIFIED_CLASSNAME}::sendFace(int inOutStack, int relativePositionOnInOutStack, int toTree) {{
-  logTraceInWith4Arguments( "sendFace(int,int,int)", inOutStack, relativePositionOnInOutStack, toTree, _spacetreeId );
-  const int toStack   = peano4::parallel::Node::getOutputStackNumberForHorizontalDataExchange( toTree );
+void {FULL_QUALIFIED_CLASSNAME}::sendFace(int inOutStack, int relativePositionOnInOutStack, int toStack) {{
+  logTraceInWith4Arguments( "sendFace(int,int,int)", inOutStack, relativePositionOnInOutStack, toStack, _spacetreeId );
 """
 
   TemplateExchangeRoutines_sendFace_Epilogue = """
   logTraceOut( "sendFace(int,int,int)");
+}}
+"""
+
+
+  TemplateExchangeRoutines_sendCell_Prologue = """
+void {FULL_QUALIFIED_CLASSNAME}::sendCell(int inOutStack, int toStack) {{
+  logTraceInWith3Arguments( "sendCell(int,int)", inOutStack, toStack, _spacetreeId );
+  const int relativePositionOnInOutStack = 0;
+"""
+
+  TemplateExchangeRoutines_sendCell_Epilogue = """
+  logTraceOut( "sendCell(int,int)");
 }}
 """
 
@@ -1071,13 +1097,11 @@ void {FULL_QUALIFIED_CLASSNAME}::sendFace(int inOutStack, int relativePositionOn
 
 
   TemplateExchangeRoutines_receiveAndMergeVertex_Prologue = """
-void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeVertex(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {{
-  const int fromStack   = peano4::parallel::Node::getInputStackNumberForHorizontalDataExchange( fromTree );
-
+void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeVertex(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromStack) {{
   peano4::datamanagement::VertexMarker marker(event);
   marker.select(positionWithinCell); 
 
-  logTraceInWith7Arguments( "receiveAndMergeVertex(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromTree, marker.toString(), _spacetreeId );
+  logTraceInWith7Arguments( "receiveAndMergeVertex(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromStack, marker.toString(), _spacetreeId );
 """
 
   TemplateExchangeRoutines_receiveAndMergeVertex_Epilogue = """
@@ -1086,13 +1110,11 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeVertex(const peano4::grid::GridT
 """
 
   TemplateExchangeRoutines_receiveAndMergeFace_Prologue = """
-void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFace(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromTree) {{
-  const int fromStack   = peano4::parallel::Node::getInputStackNumberForHorizontalDataExchange( fromTree );
-
+void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFace(const peano4::grid::GridTraversalEvent&  event, int positionWithinCell, int inOutStack, int relativePositionOnInOutStack, int fromStack) {{
   peano4::datamanagement::FaceMarker marker(event);
   marker.select(positionWithinCell); 
 
-  logTraceInWith7Arguments( "receiveAndMergeFace(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromTree, marker.toString(), _spacetreeId );
+  logTraceInWith7Arguments( "receiveAndMergeFace(...)", event.toString(), positionWithinCell, inOutStack, relativePositionOnInOutStack, fromStack, marker.toString(), _spacetreeId );
 """
 
   TemplateExchangeRoutines_receiveAndMergeFace_Epilogue = """
@@ -1111,12 +1133,12 @@ void {FULL_QUALIFIED_CLASSNAME}::receiveAndMergeFace(const peano4::grid::GridTra
       relativePositionOnInOutStack
     );
     
-    assertionVectorNumericalEquals8( 
+    assertionVectorNumericalEquals7( 
       data.getDebugX(), incomingData.getDebugX(), 
-      data.getDebugH(), incomingData.getDebugH(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
-    assertionVectorNumericalEquals8( 
+      data.getDebugH(), incomingData.getDebugH(), fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
+    assertionVectorNumericalEquals7( 
       data.getDebugH(), incomingData.getDebugH(), 
-      data.getDebugX(), incomingData.getDebugX(), fromTree, fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
+      data.getDebugX(), incomingData.getDebugX(), fromStack, inOutStack, relativePositionOnInOutStack, marker.toString(), _spacetreeId );
     
     data.merge(incomingData, marker);
   }}
@@ -1224,6 +1246,12 @@ void {FULL_QUALIFIED_CLASSNAME}::deleteAllStacks() {{
       self.d[ "logical_type_name" ] = face.get_logical_type_name()
       output_file.write( self.TemplateExchangeRoutines_send_Exchange.format(**self.d) )
     output_file.write( self.TemplateExchangeRoutines_sendFace_Epilogue.format(**self.d) )
+
+    output_file.write( self.TemplateExchangeRoutines_sendCell_Prologue.format(**self.d) )
+    for cell in self.cells:
+      self.d[ "logical_type_name" ] = cell.get_logical_type_name()
+      output_file.write( self.TemplateExchangeRoutines_send_Exchange.format(**self.d) )
+    output_file.write( self.TemplateExchangeRoutines_sendCell_Epilogue.format(**self.d) )
 
     output_file.write( self.TemplateExchangeRoutines_receiveAndMergeVertex_Prologue.format(**self.d) )
     for vertex in self.vertices:
