@@ -20,11 +20,8 @@ module load gcc/9.3.0
 export OMP_NUM_THREADS=$SLURM_ARRAY_TASK_ID 
 export PYTHONPATH=../../..
 
-for myH in 0.02 0.01 
+for myH in 0.02 0.01 0.005
 do
-  rm peano4
-  python3 example-scripts/finitevolumes-with-ExaHyPE2-benchmark.py $myH
-  mv peano4 peano4-$myH
   mpirun ./peano4-$myH --threads $SLURM_ARRAY_TASK_ID > Hamilton-$SLURM_NTASKS-nodes-$SLURM_ARRAY_TASK_ID-cores-h-$myH.out
 done
 

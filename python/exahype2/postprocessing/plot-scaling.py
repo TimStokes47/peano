@@ -12,11 +12,11 @@ import matplotlib.pyplot as plt
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='ExaHyPE 2 scaling plotter')
   parser.add_argument("file",   help="filename of the file to parse (should be a tar.gz file)")
-  parser.add_argument("-v", "--verbose", help="increase output verbosity", default=False)
-  parser.add_argument("-gc", "--grid-construction", dest="grid_construction", help="plot grid construction time, too", type=bool, default=False)
-  parser.add_argument("-li", "--last-iteration", dest="last_iteration", help="measure only the last iteration", type=bool, default=False)
-  parser.add_argument("-p", "--pattern", dest="file_pattern", help="define pattern that has to be in the filename", default="")
-  parser.add_argument("-log", dest="log", help="plot with logarithmic axes", default=False)
+  parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true" )
+  parser.add_argument("--grid-construction", dest="grid_construction", help="plot grid construction time, too", action="store_true" )
+  parser.add_argument("--last-iteration", dest="last_iteration", help="measure only the last iteration", action="store_true" )
+  parser.add_argument("--pattern", dest="file_pattern", help="define pattern that has to be in the filename", default="")
+  parser.add_argument("--log", dest="log", help="plot with logarithmic axes", action="store_true" )
   args = parser.parse_args()
 
   open_mode = ""  

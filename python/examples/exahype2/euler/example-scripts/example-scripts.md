@@ -56,6 +56,9 @@ sbatch --account=pr48ma example-scripts/SuperMUC-NG-single-node.slurm-script
 
 sbatch example-scripts/Hamilton-single-node.slurm-script
 
+
+
+sbatch example-scripts/Hamilton-prepare-executables.slurm-script
 sbatch example-scripts/Hamilton-1-node.slurm-script
 sbatch example-scripts/Hamilton-2-nodes.slurm-script
 sbatch example-scripts/Hamilton-3-nodes.slurm-script
@@ -65,6 +68,7 @@ sbatch example-scripts/Hamilton-6-nodes.slurm-script
 sbatch example-scripts/Hamilton-7-nodes.slurm-script
 sbatch example-scripts/Hamilton-8-nodes.slurm-script
 sbatch example-scripts/Hamilton-10-nodes.slurm-script
+
 
 
 
