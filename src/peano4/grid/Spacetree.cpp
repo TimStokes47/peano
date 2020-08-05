@@ -587,32 +587,32 @@ peano4::grid::Spacetree::VertexType peano4::grid::Spacetree::getVertexType(
 
   VertexType result = lhs;
   if (
-    lhs==VertexType::New and rhs==VertexType::Hanging or lhs==VertexType::Hanging and rhs==VertexType::New
+    (lhs==(VertexType::New and rhs==VertexType::Hanging) or (lhs==VertexType::Hanging and rhs==VertexType::New)
   ) {
 	result = VertexType::New;
   }
   if (
-    lhs==VertexType::New and rhs==VertexType::Persistent or lhs==VertexType::Persistent and rhs==VertexType::New
+    (lhs==VertexType::New and rhs==VertexType::Persistent) or (lhs==VertexType::Persistent and rhs==VertexType::New)
   ) {
 	result = VertexType::Persistent;
   }
   if (
-    lhs==VertexType::New and rhs==VertexType::Delete or lhs==VertexType::Delete and rhs==VertexType::New
+    (lhs==VertexType::New and rhs==VertexType::Delete) or (lhs==VertexType::Delete and rhs==VertexType::New)
   ) {
 	result = VertexType::Persistent;
   }
   if (
-    lhs==VertexType::Hanging and rhs==VertexType::Persistent or lhs==VertexType::Persistent and rhs==VertexType::Hanging
+    (lhs==VertexType::Hanging and rhs==VertexType::Persistent) or (lhs==VertexType::Persistent and rhs==VertexType::Hanging)
   ) {
 	result = VertexType::Persistent;
   }
   if (
-    lhs==VertexType::Hanging and rhs==VertexType::Delete or lhs==VertexType::Delete and rhs==VertexType::Hanging
+    (lhs==VertexType::Hanging and rhs==VertexType::Delete) or (lhs==VertexType::Delete and rhs==VertexType::Hanging)
   ) {
 	result = VertexType::Delete;
   }
   if (
-    lhs==VertexType::Persistent and rhs==VertexType::Delete or lhs==VertexType::Delete and rhs==VertexType::Persistent
+    (lhs==VertexType::Persistent and rhs==VertexType::Delete) or (lhs==VertexType::Delete and rhs==VertexType::Persistent)
   ) {
 	result = VertexType::Persistent;
   }
