@@ -1,0 +1,55 @@
+/**
+
+@page page_exahype_architecture Code Architecture
+
+# Solver Architecture
+The aim of our architecture is to decouple implementation details from mathematical decisions that
+inform the solver's numerical behaviour. For example, whether to use a GPU and whether to use task fusion
+fall under implementation details and should be handled in one place. How many variables to use, which
+PDE terms to enable and the patch size should then be handled elsewhere.
+
+@tobias I am unsure of where exactly this boundary should lie (e.g is the patch size an implementation detail
+or a mathematical/physical detail)
+
+We show this separation in the solver architecture by creation a generator for each solver that contains 
+information about the implementation details. We then use this generator to create solvers based on the 
+mathematical detail. Implementation details that are relevant across all solvers are kept in a base generator
+class.
+
+~~~~~~~~~~~~~~~~~~~~
+class HardwareUsage(Enum):
+    CPU_ONLY = 1
+    CPU_AND_GPU = 2
+
+class SolverGenerator:
+    def __init__(self, hardwareUsage: HardwareUsage, enable_enclave_tasking, enable_task_fusion):
+        ...
+
+    def createSolver(patch_size, unknowns, auxiliary_variables, ...):
+        pass
+
+class RKFDGenerator(SolverGenerator):
+    def __init__(self, ..., store_device_data_between_substeps):
+        ...
+    
+    def createSolver(patch_size, unknowns, auxiliary_variables, ...):
+        return RKFDSolver(...)
+~~~~~~~~~~~~~~~~~~~~
+
+The RKFDGenerator is included here as an example with non general implementation considerations.
+However, this still needs further consideration as to how the Runge-Kutta component should be included.
+
+# Architecture Status
+Implementing this new architecture should be done in small pieces. Starting with the abstract SolverGenerator,
+different generators can be implemented individually to create the existing ExaHyPE solvers. This will effectively
+separate our logic from our generators.
+
+This still leaves the issues that exist within a solver, such as the coupling of C++ code with a Python class. 
+Dealing with this requires the specific purpose of a snippet to be identified then moved to a separate file that gets
+included by the generator. For example, in the RKFD enclave solver the UpdateCell contains code for CPU only and for
+device resident data. These can be separated into separate action sets that are selected by the generator.
+
+@tobias I think that action sets are the main place that we should have C++ code within a Python file. Let me know if
+you think it should be elsewhere.
+
+*/
