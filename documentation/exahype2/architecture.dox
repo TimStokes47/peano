@@ -2,6 +2,21 @@
 
 @page page_exahype_architecture Code Architecture
 
+
+ExaHyPE 2 is built as a layer on top of Peano 4 and the Peano 4 Technical Architecture. 
+The ExaHyPE 2 layer is built as a set of Peano 4 C++ utility files compiled into one shared library plus a Python API. 
+The Python API consists of three big types of classes:
+
+- Utility classes;
+- solver classes;
+- generator classes.
+
+The generator classes take the solver classes and either generate C++ code for the solver or lower the ExaHyPE 2 Python description into Peano 4 
+datatypes.
+
+
+
+
 # Solver Architecture
 The aim of our architecture is to decouple implementation details from mathematical decisions that
 inform the solver's numerical behaviour. For example, whether to use a GPU and whether to use task fusion
