@@ -4,67 +4,60 @@
 
 
 ExaHyPE 2 is built as a layer on top of Peano 4 and the Peano 4 Technical Architecture. 
-The ExaHyPE 2 layer is built as a set of Peano 4 C++ utility files compiled into one shared library plus a Python API. 
-The Python API consists of three big types of classes:
+It is accompanied by a Python wrapper written in C++.
+The C++ ExaHyPE 2 layer is built as a set of Peano 4 C++ utility files compiled into one shared library plus a Python API. 
+It is relatively straightforward to understand by browsing through the C++ files. 
+
+The Python API is more complex as it implicitly contains quite some abstractions and logic.
+It consists of three different types of classes:
 
 - Utility classes;
 - solver classes;
 - generator classes.
 
-The generator classes take the solver classes and either generate C++ code for the solver or lower the ExaHyPE 2 Python description into Peano 4 
-datatypes.
+Each Python class falls into one of these categories.
 
 
+# Python design principles
+
+@image html documentation/exahype2/architecture.png
+
+At the heart of ExaHyPE2 are the solver classes and its aggregate.
+Each solver class and each aggregate are tied to a generator class. 
+The generator classes take the solver description and either lower them into a Peano 4 class or a plain C++ file tied to the present project.
+Here, the same pattern repeats, i.e. Peano Python classes again hold generators which then ultimately lower the code in to plain C++.
+
+1. The solver classes and their aggregates are purely ***descriptive***.
+   That is, users build up these classes (instantiate them), set some attributes, attach them to each other, and so forth.
+   They build up a representation what their solver features and can do.
+   However, this is a description of the code bare of any information how these properties translate into code.
+2. Each descriptive class holds a generator. 
+   The generator knows how to translate what the class describes into functionality.
+   This is where the ***how*** is encoded.
+   By exchanging generators or writing their own ones, users can tailor a solver's behaviour.
+3. A generator is allowed to do two things: yield a Peano 4 object, i.e. add something to the generated Peano 4 repository
+   or generate plain C++ code. In the latter case, the Peano 4 project is informed about the source code, but nothing else.
+   Where possible, the generator should ***not*** generate partial strings that are handed down into the Peano Python layer, 
+   even though this sometimes cannot be avoided.
 
 
-# Solver Architecture
-The aim of our architecture is to decouple implementation details from mathematical decisions that
+The aim of our architecture is to decouple implementation details (how) from mathematical modelling (what) that
 inform the solver's numerical behaviour. For example, whether to use a GPU and whether to use task fusion
-fall under implementation details and should be handled in one place. How many variables to use, which
-PDE terms to enable and the patch size should then be handled elsewhere.
+fall under implementation details and should be handled by a generator not the description. How many variables to use, which
+PDE terms to enable and the patch size should be used however is a property of the model itself.
 
-@tobias I am unsure of where exactly this boundary should lie (e.g is the patch size an implementation detail
-or a mathematical/physical detail)
 
-We show this separation in the solver architecture by creation a generator for each solver that contains 
-information about the implementation details. We then use this generator to create solvers based on the 
-mathematical detail. Implementation details that are relevant across all solvers are kept in a base generator
-class.
 
-~~~~~~~~~~~~~~~~~~~~
-class HardwareUsage(Enum):
-    CPU_ONLY = 1
-    CPU_AND_GPU = 2
 
-class SolverGenerator:
-    def __init__(self, hardwareUsage: HardwareUsage, enable_enclave_tasking, enable_task_fusion):
-        ...
+## Usage
 
-    def createSolver(patch_size, unknowns, auxiliary_variables, ...):
-        pass
+The separation of concerns in the solver architecture means that all ExaHyPE applications in Python follow a similar pattern:
 
-class RKFDGenerator(SolverGenerator):
-    def __init__(self, ..., store_device_data_between_substeps):
-        ...
-    
-    def createSolver(patch_size, unknowns, auxiliary_variables, ...):
-        return RKFDSolver(...)
-~~~~~~~~~~~~~~~~~~~~
+1. Build up a data model specifying what solvers are to be used, which PDE terms are enabled, how many variables are to be used, and so forth.
+2. Attach a generator to each element of the data model. In most cases, the model classes come along with a default generator. You might want to tweak those.
+   In other cases, picking the right generator is an intrinsic part of the mathematical modelling of a  problem. An example is picking the right numerical scheme. 
+3. Ask the ExaHyPE2 repository to lower into a Peano 4 data model. This process also yields some C++ glue code such as solver classes.
+4. Lower the Peano 4 data model once more into a plain C++ code plus makefile.
 
-The RKFDGenerator is included here as an example with non general implementation considerations.
-However, this still needs further consideration as to how the Runge-Kutta component should be included.
-
-# Architecture Status
-Implementing this new architecture should be done in small pieces. Starting with the abstract SolverGenerator,
-different generators can be implemented individually to create the existing ExaHyPE solvers. This will effectively
-separate our logic from our generators.
-
-This still leaves the issues that exist within a solver, such as the coupling of C++ code with a Python class. 
-Dealing with this requires the specific purpose of a snippet to be identified then moved to a separate file that gets
-included by the generator. For example, in the RKFD enclave solver the UpdateCell contains code for CPU only and for
-device resident data. These can be separated into separate action sets that are selected by the generator.
-
-@tobias I think that action sets are the main place that we should have C++ code within a Python file. Let me know if
-you think it should be elsewhere.
 
 */
