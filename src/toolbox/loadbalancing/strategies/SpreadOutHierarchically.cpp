@@ -137,7 +137,7 @@ int toolbox::loadbalancing::strategies::SpreadOutHierarchically::getNumberOfSpli
   int maxLocalTrees      = std::min( {_configuration->getMaxLocalTreesPerRank(_state)-1, maxSizeOfLocalRank-1, tarch::multicore::Core::getInstance().getNumberOfThreads()-1} );
   int numberOfSplits     = std::max(1,maxLocalTrees);
 
-  int worstCaseEstimateForSizeOfSpacetree = tarch::getMemoryUsage( tarch::MemoryUsageFormat::MByte );
+  int worstCaseEstimateForSizeOfSpacetree = std::max( 1, tarch::getMemoryUsage( tarch::MemoryUsageFormat::MByte ) );
   int maxAdditionalSplitsDueToMemory      = tarch::getFreeMemory( tarch::MemoryUsageFormat::MByte ) / worstCaseEstimateForSizeOfSpacetree;
   int estimatedCellsPerTree               = maxSizeOfLocalRank / (numberOfSplits+1);
 
