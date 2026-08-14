@@ -30,30 +30,25 @@ once as long as your working environments and Peano kernel code are unchanged. A
 re-compiling it after you pull a new code version or change working environments (e.g., changing 
 between different login nodes of a cluster)
 
-The next step is to enter the ExaGRyPE subdirectory and add the Python path as
+The next step is to set up the Python environment. ExaGRyPE's code generation relies on
+several Python packages; the recommended way to install them is an editable install from
+the Peano root directory (where the \c pyproject.toml file resides). This installs the full
+set of required dependencies and sets the Python path to the Peano modules automatically,
+so there is no need to export \c PYTHONPATH by hand. For the complete dependency list and
+alternative setups (e.g. setting \c PYTHONPATH manually), see \ref page_installation_home.
+
+~~~~~~~~~~~~~~~~~~~~~~~
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -e .
+~~~~~~~~~~~~~~~~~~~~~~~
+
+With the environment in place, enter the ExaGRyPE subdirectory:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 cd ./applications/exahype2/ccz4/
-export PYTHONPATH=../../../python
-export PYTHONPATH=$PYTHONPATH:../../../applications/exahype2/ccz4
 ~~~~~~~~~~~~~~~~~~~~~~~
-
-ExaGRyPE requires three Python libraries that are usually not included in a standard
-Python installation. You may install them separately using the Python pipeline.
-
-~~~~~~~~~~~~~~~~~~~~~~~
-pip3 install jinja2 --user
-pip3 install ast_comments --user
-pip3 install vtk --user
-~~~~~~~~~~~~~~~~~~~~~~~
-
-also try
-
-~~~~~~~~~~~~~~~~~~~~~~~
-python3 -m pip install --user vtk --no-cache-dir
-~~~~~~~~~~~~~~~~~~~~~~~
-
-if \c pip3 does not work properly.
 
 To clean the repository completely, use the following lines
 
