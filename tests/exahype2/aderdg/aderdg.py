@@ -2,17 +2,17 @@
 # use, please see the copyright notice at www.peano-framework.org
 import argparse
 
-import peano4
+import peano4.api
 import exahype2
 
 import scenarios
 
 modes = {
-    "release": peano4.output.CompileMode.Release,
-    "trace": peano4.output.CompileMode.Trace,
-    "assert": peano4.output.CompileMode.Asserts,
-    "stats": peano4.output.CompileMode.Stats,
-    "debug": peano4.output.CompileMode.Debug,
+    "release": peano4.api.output.CompileMode.Release,
+    "trace": peano4.api.output.CompileMode.Trace,
+    "assert": peano4.api.output.CompileMode.Asserts,
+    "stats": peano4.api.output.CompileMode.Stats,
+    "debug": peano4.api.output.CompileMode.Debug,
 }
 
 available_scenarios = {

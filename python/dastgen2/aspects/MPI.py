@@ -16,7 +16,7 @@ class MPI(Aspect):
     data model if the underlying data_model has a smart pointer. If so, we 
     have to exchange the MPI aspect later on for the one supporting smart
     pointers. The exchange is typically done by 
-    peano4.datamodel.DaStGen2GeneratorForObjectsWithSmartPointers.
+    peano4.api.datamodel.DaStGen2GeneratorForObjectsWithSmartPointers.
     
     @todo I think we should introduce an Aspects interface, which makes it clear which routines are to be implemented
     

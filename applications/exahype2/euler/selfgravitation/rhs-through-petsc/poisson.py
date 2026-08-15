@@ -3,18 +3,18 @@ import sys
 import argparse
 
 sys.path.insert(0, os.path.abspath('../../../../python'))
-import peano4
+import peano4.api
 import exahype2
 
 import numpy as np
 import mghype
 
 modes = {
-  "release": peano4.output.CompileMode.Release,
-  "trace":   peano4.output.CompileMode.Trace,
-  "assert":  peano4.output.CompileMode.Asserts,
-  "stats":   peano4.output.CompileMode.Stats,
-  "debug":   peano4.output.CompileMode.Debug,
+  "release": peano4.api.output.CompileMode.Release,
+  "trace":   peano4.api.output.CompileMode.Trace,
+  "assert":  peano4.api.output.CompileMode.Asserts,
+  "stats":   peano4.api.output.CompileMode.Stats,
+  "debug":   peano4.api.output.CompileMode.Debug,
 }
 
 # parser = argparse.ArgumentParser(description='ExaHyPE 2 - Euler benchmarking script')
@@ -341,7 +341,7 @@ poisson_project.set_Peano4_installation(args.peanodir, modes[args.mode])
 # peano4_project = euler_project.generate_Peano4_project(args.verbose)
 # peano4_project = poisson_project.generate_Peano4_project(args.verbose)
 
-peano4_project = peano4.Project(
+peano4_project = peano4.api.Project(
   namespace     = [], # "applications", "exahype2", "euler", "selfgravitation"
   project_name  = "EulerPoisson", #"EulerPoisson",
   directory     = ".",

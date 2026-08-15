@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from copy import deepcopy
 
-import peano4.output
+import peano4.api.output
 
 from .Gemms import Gemms
 from .Gemms import generate_gemms
@@ -49,7 +49,7 @@ class FusedSpaceTimePredictorVolumeIntegral(object):
                 d["NAME_SUFFIX"] = "WithoutPointSources"
 
                 generated_kernels = (
-                    peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+                    peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                         headfile_template=template_prefix
                         + "FusedSpaceTimePredictorVolumeIntegral.template.h",
                         cppfile_template=template_prefix
@@ -80,7 +80,7 @@ class FusedSpaceTimePredictorVolumeIntegral(object):
                     generated=True,
                 )
 
-        generated_kernels = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+        generated_kernels = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
             headfile_template=template_prefix
             + "FusedSpaceTimePredictorVolumeIntegral.template.h",
             cppfile_template=template_prefix

@@ -9,7 +9,7 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 import numpy as np
 import h5py
-from peano4.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
+from peano4.api.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
 import swift2
 import swift2.sphtools as sphtools
 

@@ -1,6 +1,6 @@
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
-import peano4
+import peano4.api
 import jinja2
 import mghype
 
@@ -264,13 +264,13 @@ class InitDofsDGTest1(ActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
       result = jinja2.Template(self.templateTouchVertexFirstTime).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
       pass
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
       result = jinja2.Template(self.templateTouchFaceFirstTime).render(**self.d)
       pass
     return result
@@ -427,11 +427,11 @@ class InitDofsIntermediatePhaseTest1(ActionSet):
     """
   
   def get_body_of_operation(self, operation_name):
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       return jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
       return jinja2.Template(self.templateTouchFaceFirstTime).render(**self.d)
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       return jinja2.Template(self.templateEndTraversal).render(**self.d)
     return ""
   
@@ -940,7 +940,7 @@ class InitDofsDGTest7(InitDofsDGTest1):
     self.d["PROLONGATION_MATRIX"]   = self.get_prolongation_matrix()
 
   def get_body_of_operation(self,operation_name):
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
       return jinja2.Template(self.templateTouchFaceLastTime).render(**self.d)
     else:
       return super().get_body_of_operation(operation_name)

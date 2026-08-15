@@ -1,7 +1,7 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 
 import dastgen2
 
@@ -68,7 +68,7 @@ mark these steps as private via a leading underscore.
                solver_type         = "GMRES",
                subdirectory="",
                ):
-    self._project = peano4.Project(namespace, project_name, directory, subdirectory)
+    self._project = peano4.api.Project(namespace, project_name, directory, subdirectory)
     self._project.output.makefile.add_cmake_core_library("petsc")
     self._subdirectory = subdirectory
     
@@ -78,19 +78,19 @@ mark these steps as private via a leading underscore.
     self._load_balancer_name      = ""
     self._load_balancer_arguments = ""
     self._Peano_src_directory = "."
-    self._build_mode          = peano4.output.CompileMode.Asserts
+    self._build_mode          = peano4.api.output.CompileMode.Asserts
     self._executable_name = executable
     self._output_path   = "./"
     
     self._solvers = []
 
-    self.algorithm_step_create_grid                  = peano4.solversteps.Step( "CreateGrid",                False )
-    self.algorithm_step_enumerate_and_init_solution  = peano4.solversteps.Step( "EnumerateAndInitSolution",  False )
-    self._algorithm_step_init_petsc                  = peano4.solversteps.Step( "InitPETSc",                 False )
-    self.algorithm_step_assemble                     = peano4.solversteps.Step( "Assemble",                  False )
-    self._algorithm_step_solve                       = peano4.solversteps.Step( "Solve",                     False )
-    self.algorithm_step_map_solution_onto_mesh       = peano4.solversteps.Step( "MapSolutionOntoMesh",       False )
-    self.algorithm_step_plot                         = peano4.solversteps.Step( "Plot",                      False )
+    self.algorithm_step_create_grid                  = peano4.api.solversteps.Step( "CreateGrid",                False )
+    self.algorithm_step_enumerate_and_init_solution  = peano4.api.solversteps.Step( "EnumerateAndInitSolution",  False )
+    self._algorithm_step_init_petsc                  = peano4.api.solversteps.Step( "InitPETSc",                 False )
+    self.algorithm_step_assemble                     = peano4.api.solversteps.Step( "Assemble",                  False )
+    self._algorithm_step_solve                       = peano4.api.solversteps.Step( "Solve",                     False )
+    self.algorithm_step_map_solution_onto_mesh       = peano4.api.solversteps.Step( "MapSolutionOntoMesh",       False )
+    self.algorithm_step_plot                         = peano4.api.solversteps.Step( "Plot",                      False )
 
     self.preconditioner_type = preconditioner_type
     self.solver_type         = solver_type
@@ -124,7 +124,7 @@ mark these steps as private via a leading underscore.
   LibraryStats   = "_stats"
     
     
-  def set_Peano4_installation(self, src_path, mode=peano4.output.CompileMode.Release ):
+  def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.Release ):
     """!
 
 src_path: string
@@ -132,7 +132,7 @@ src_path: string
   should hold both the headers (in subdirectories) and all the static
   libraries.
         
-mode: peano4.output.CompileMode
+mode: peano4.api.output.CompileMode
 
     """
     self._Peano_src_directory = src_path
@@ -258,7 +258,7 @@ This yet has to be written.
     
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
     template_name       = templatefile_prefix + ".SolverRepository.template"
-    generated_repository_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_repository_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       template_name + ".h",
       template_name + ".cpp",
       "SolverRepository", 

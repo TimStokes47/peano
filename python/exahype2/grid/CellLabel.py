@@ -1,9 +1,9 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import dastgen2
-import peano4.datamodel.DaStGen2
+import peano4.api.datamodel.DaStGen2
 
 
 class UpdateCellLabel(ActionSet):
@@ -115,7 +115,7 @@ def create_cell_label(solver_name):
      Name of the solver
      
   """
-  result = peano4.datamodel.DaStGen2( UpdateCellLabel.get_attribute_name( solver_name ) )
+  result = peano4.api.datamodel.DaStGen2( UpdateCellLabel.get_attribute_name( solver_name ) )
   
   result.data.add_attribute( dastgen2.attributes.Integer("SemaphoreNumber") )
   result.data.add_attribute( dastgen2.attributes.Double("TimeStamp") )

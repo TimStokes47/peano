@@ -3,9 +3,9 @@
 from swift2.particle.Particle import Particle
 from swift2.particle.AlgorithmStep import AlgorithmStep
 
-import peano4
+import peano4.api
 import dastgen2
-import peano4.dastgen2
+import peano4.api.dastgen2
 
 import abc
 import copy
@@ -149,8 +149,8 @@ class SPHParticle(Particle):
 
         # Baseline particle properties -------------------------------------------------
         self.mass = dastgen2.attributes.Double("mass")
-        self.velocity = peano4.dastgen2.Peano4DoubleArray("v", "Dimensions")
-        self.acceleration = peano4.dastgen2.Peano4DoubleArray("a", "Dimensions")
+        self.velocity = peano4.api.dastgen2.Peano4DoubleArray("v", "Dimensions")
+        self.acceleration = peano4.api.dastgen2.Peano4DoubleArray("a", "Dimensions")
         self.data.add_attribute(self.mass)
         self.data.add_attribute(self.velocity)
         self.data.add_attribute(self.acceleration)
@@ -170,7 +170,7 @@ class SPHParticle(Particle):
         self.data.add_attribute(self.uDot)
 
         # Extended arrays for time integration consistency
-        self.v_full = peano4.dastgen2.Peano4DoubleArray("v_full", "Dimensions")
+        self.v_full = peano4.api.dastgen2.Peano4DoubleArray("v_full", "Dimensions")
         self.u_full = dastgen2.attributes.Double("u_full")
         self.data.add_attribute(self.v_full)
         self.data.add_attribute(self.u_full)

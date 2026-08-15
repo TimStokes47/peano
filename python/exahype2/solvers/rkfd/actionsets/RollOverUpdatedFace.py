@@ -3,7 +3,7 @@
 
 from .AbstractRKFDActionSet import AbstractRKFDActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 class RollOverUpdatedFace(AbstractRKFDActionSet):
@@ -120,7 +120,7 @@ class RollOverUpdatedFace(AbstractRKFDActionSet):
     self.d[ "OLD_ACCESSOR" ]    = "fineGridFace" + self._solver._patch_overlap_old.name
     self.d[ "NEW_ACCESSOR" ]    = "fineGridFace" + self._solver._patch_overlap_new.name
     self.d[ "FACE_METADATA_ACCESSOR" ] = "fineGridFace"  + self._solver._face_label.name
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
       self._solver._init_dictionary_with_default_parameters(self.d)
       self._solver.add_entries_to_text_replacement_dictionary(self.d)
       result = self.TemplateHandleFace.render(**self.d)

@@ -2,8 +2,8 @@
  This file is part of the MGHyPE project within Peano 4. For conditions of distribution and 
  use, please see the copyright notice at www.peano-framework.org
 """
-import peano4
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 import os
 import jinja2
@@ -15,7 +15,7 @@ from .actionsets.DGSolver.UpdateResidualWithTasks                        import 
 from .actionsets.DGSolver.ProjectIntoCellAndUpdateCellSolutionWithTasks  import ProjectIntoCellAndUpdateCellSolutionWithTasks
 
 
-import peano4
+import peano4.api
 
 
 class DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver_Tasks(DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver):
@@ -101,7 +101,7 @@ class DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver_Tasks(Discontinu
     )
 
     self._task_name = self._name + "DGTaskMarker"
-    self._cell_marker_for_tasks = peano4.toolbox.api.EnumerateCellsAndVertices.create_cell_marker(self._task_name)
+    self._cell_marker_for_tasks = peano4.api.toolbox.api.EnumerateCellsAndVertices.create_cell_marker(self._task_name)
 
     # Stays the same
     #    self._action_set_update_face_solution                        =  UpdateFaceSolution(self, descend_order+1, False) 
@@ -123,12 +123,12 @@ class DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver_Tasks(Discontinu
     
     """
     super( DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver_Tasks, self ).add_to_init_solution( observer )
-    observer.add_action_set( peano4.toolbox.api.AssignNumbersToCells(self._task_name) )
+    observer.add_action_set( peano4.api.toolbox.api.AssignNumbersToCells(self._task_name) )
 
     
   def add_to_solve(self, observer):
     super( DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver_Tasks, self ).add_to_solve( observer )
-    observer.add_action_set( peano4.toolbox.api.AssignNumbersToCells(self._task_name) )
+    observer.add_action_set( peano4.api.toolbox.api.AssignNumbersToCells(self._task_name) )
 
   
   def add_to_Peano4_datamodel( self, datamodel, verbose ):

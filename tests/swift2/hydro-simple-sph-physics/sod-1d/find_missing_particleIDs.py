@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from peano4.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
+from peano4.api.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
 
 import numpy as np
 import sys

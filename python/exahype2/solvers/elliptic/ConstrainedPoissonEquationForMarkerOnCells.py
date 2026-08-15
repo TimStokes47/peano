@@ -2,14 +2,14 @@
 # use, please see the copyright notice at www.peano-framework.org
 import os
 
-import peano4
-import peano4.datamodel
-import peano4.output.TemplatedHeaderFile
-import peano4.output.TemplatedHeaderImplementationFilePair
-import peano4.output.Jinja2TemplatedHeaderFile
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.datamodel
+import peano4.api.output.TemplatedHeaderFile
+import peano4.api.output.TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderFile
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 
-import peano4.toolbox.multigrid.cellbased.ScalarJacobiWithRediscretisation
+import peano4.api.toolbox.multigrid.cellbased.ScalarJacobiWithRediscretisation
 
 import jinja2
 
@@ -18,7 +18,7 @@ from abc import abstractmethod
 import exahype2
 
 import dastgen2
-import peano4.datamodel.DaStGen2
+import peano4.api.datamodel.DaStGen2
 
 
 class ConstrainedPoissonEquationForMarkerOnCells(object):
@@ -160,12 +160,12 @@ Relaxation coefficient: {}
     """
     Variants = ["AnotB","AdeterminesB","BdeterminesA","BnotA"]
     
-    self._cell_data_model = peano4.datamodel.DaStGen2( self._unknown_identifier() )
+    self._cell_data_model = peano4.api.datamodel.DaStGen2( self._unknown_identifier() )
     self._cell_data_model.data.add_attribute(dastgen2.attributes.Boolean("Invariant") )
     self._cell_data_model.data.add_attribute(dastgen2.attributes.Double("Value") )
     self._cell_data_model.data.add_attribute(dastgen2.attributes.Enumeration( name="Marker",      variants=Variants ) )
         
-    self._face_data_model = peano4.toolbox.multigrid.cellbased.ScalarJacobiWithRediscretisation.construct_face_helper_data(self._cell_data_model)
+    self._face_data_model = peano4.api.toolbox.multigrid.cellbased.ScalarJacobiWithRediscretisation.construct_face_helper_data(self._cell_data_model)
     
     
   @abstractmethod
@@ -197,7 +197,7 @@ Relaxation coefficient: {}
        
      
     """
-    self._action_set_smoother = peano4.toolbox.multigrid.cellbased.ScalarJacobiWithRediscretisation( 
+    self._action_set_smoother = peano4.api.toolbox.multigrid.cellbased.ScalarJacobiWithRediscretisation( 
       cell_data               = self._cell_data_model, 
       face_data               = self._face_data_model,
       relaxation_coefficient  = self._relaxation_coefficient,
@@ -300,7 +300,7 @@ Relaxation coefficient: {}
     """
     step.add_action_set( self._action_set_smoother )
     if self._plot:
-      plotter_action_set = peano4.toolbox.PlotCellDataInPeanoBlockFormat( 
+      plotter_action_set = peano4.api.toolbox.PlotCellDataInPeanoBlockFormat( 
         filename     = output_path + "marker-" + self._name, 
         cell_unknown = self._cell_data_model,
         getter       = "defined below",
@@ -355,7 +355,7 @@ Relaxation coefficient: {}
      
      This routine is typically not invoked by a user.
 
-     output: peano4.output.Output
+     output: peano4.api.output.Output
      
     """
     templatefile_prefix = os.path.dirname( os.path.realpath(__file__) ) + "/ConstrainedPoissonEquationForMarkerOnCells"
@@ -375,7 +375,7 @@ Relaxation coefficient: {}
 
     implementationDictionary[ "MARKER" ]                 = self._cell_data_model.name
     
-    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_solver_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".template.h",
       templatefile_prefix + ".template.cpp",
       self._name, 

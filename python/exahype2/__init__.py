@@ -54,4 +54,5 @@ if havematplotlib:
 from .Project import Project
 from .ExaHyPEMain import ExaHyPEMain
 
-print("ExaHyPE 2 (C) www.peano-framework.org")
+print("ExaHyPE 2 (C) www.peano-framework.org - legacy API")
+

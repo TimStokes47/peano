@@ -1,8 +1,8 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -32,13 +32,13 @@ self._degrees_of_freedom_per_cell            = unknowns_per_node * ( polynomial_
 self._degrees_of_freedom_per_face            = unknowns_per_node * ( polynomial_degree + 1) ** (dimensions-1)
 self._inner_degrees_of_freedom_per_cell      = unknowns_per_node * ( polynomial_degree - 1) ** dimensions
 
-self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "solution", str(self._degrees_of_freedom_per_cell) ))
-self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "residual", str(self._degrees_of_freedom_per_cell) ))
-self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "rhs",      str(self._degrees_of_freedom_per_cell) ))
+self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "solution", str(self._degrees_of_freedom_per_cell) ))
+self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "residual", str(self._degrees_of_freedom_per_cell) ))
+self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "rhs",      str(self._degrees_of_freedom_per_cell) ))
 
-self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "residual",      str(self._degrees_of_freedom_per_face) ))
-self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "diagonal",      str(self._degrees_of_freedom_per_face) ))
-self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "deltaU",        str(self._degrees_of_freedom_per_face) ))
+self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "residual",      str(self._degrees_of_freedom_per_face) ))
+self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "diagonal",      str(self._degrees_of_freedom_per_face) ))
+self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "deltaU",        str(self._degrees_of_freedom_per_face) ))
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   
   Which map onto the 
@@ -140,10 +140,10 @@ self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "deltaU", 
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
       pass
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
       result = jinja2.Template(self.templateTouchFaceFirstTime).render(**self.d)
       pass
     return result

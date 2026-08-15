@@ -1,7 +1,7 @@
 # This file is part of the SWIFT2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
-import peano4.toolbox.particles
+import peano4.api
+import peano4.api.toolbox.particles
 
 
 from .TaskGraphKernelWrappers import (
@@ -11,11 +11,11 @@ from .TaskGraphKernelWrappers import (
 )
 
 class UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(
-    peano4.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles
+    peano4.api.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles
 ):
     """!
     
-    Plain wrapper around peano4.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles that introduces tasks
+    Plain wrapper around peano4.api.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles that introduces tasks
     
     The interesting stuff is actually happing in 
     TaskGarphKernelWrappers.py however.
@@ -86,7 +86,7 @@ class UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(
         )
 
     def get_body_of_operation(self, operation_name):
-        if operation_name == peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
+        if operation_name == peano4.api.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
             return "_pendingDependencies.clear();"
         else:
             return super(

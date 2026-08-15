@@ -1,11 +1,11 @@
 import os
 import argparse
 
-import peano4
+import peano4.api
 import exahype2
 import dastgen2
 
-import peano4.toolbox.particles
+import peano4.api.toolbox.particles
 import numpy as np
 
 # See comments in README.dox
@@ -109,7 +109,7 @@ parser.add_argument(
     default=0.3,
     help="Cell size (default 0.3)",
 )
-parser.add_argument("-m",   "--mode",               dest="mode",           choices=peano4.output.CompileModes, default=peano4.output.CompileModes[0], help="|".join(peano4.output.CompileModes) )
+parser.add_argument("-m",   "--mode",               dest="mode",           choices=peano4.api.output.CompileModes, default=peano4.api.output.CompileModes[0], help="|".join(peano4.api.output.CompileModes) )
 parser.add_argument(
     "-tracer",
     "--tracer",
@@ -252,7 +252,7 @@ project.add_solver(my_solver)
 # Tracer setting
 ########################################################################################
 if args.tracer:
-    if peano4.output.string_to_mode(args.mode)==peano4.output.CompileMode.Asserts:
+    if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.Asserts:
         time_delta_between_two_snapsots = 1e-4
     else:
         time_delta_between_two_snapsots = 0.1
@@ -273,7 +273,7 @@ if args.tracer:
 ########################################################################################
 
 
-if peano4.output.string_to_mode(args.mode)==peano4.output.CompileMode.Asserts:
+if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.Asserts:
     delta_plot = 1.0 / 100
 else:
     delta_plot = 1.0 / 20
@@ -298,7 +298,7 @@ project.set_global_simulation_parameters(
 probe_point = [-12,-12,0.0]
 project.add_plot_filter( probe_point,[24.0,24.0,0.01],1 )
 
-project.set_Peano4_installation(args.peanodir, peano4.output.string_to_mode(args.mode))
+project.set_Peano4_installation(args.peanodir, peano4.api.output.string_to_mode(args.mode))
 
 project.set_load_balancing(
     "toolbox::loadbalancing::strategies::SpreadOutHierarchically",
@@ -308,7 +308,7 @@ project.set_load_balancing(
 peano4_project = project.generate_Peano4_project(verbose=args.verbose)
 
 if "sofd4" in args.solver:
-    additional_mesh_traversal = peano4.solversteps.Step( name = "AdditionalMeshTraversal",
+    additional_mesh_traversal = peano4.api.solversteps.Step( name = "AdditionalMeshTraversal",
                                                            add_user_defined_actions=False,
                                                            )
     

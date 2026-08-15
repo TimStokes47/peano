@@ -1,7 +1,7 @@
 import dastgen2.attributes
-import peano4
+import peano4.api
 import jinja2
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 import os
 
@@ -14,7 +14,7 @@ from .actionsets.CollocatedMGSolver.Prolongation           import Prolongation
 from .actionsets.PlotVertexDataInPeanoBlockFormat          import PlotVertexDataInPeanoBlockFormat
 
 from abc import abstractmethod
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 class CollocatedMG(Solver):
   """!
@@ -156,12 +156,12 @@ class CollocatedMG(Solver):
 
     self._unknowns_per_vertex_node = unknowns_per_vertex
 
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "u",          str(unknowns_per_vertex) ) )
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "oldU",       str(unknowns_per_vertex) ) )
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "delta",      str(unknowns_per_vertex) ) )
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "rhs",        str(unknowns_per_vertex) ) )
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "diag",       str(unknowns_per_vertex) ) )
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "residual",   str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "u",          str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "oldU",       str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "delta",      str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "rhs",        str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "diag",       str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "residual",   str(unknowns_per_vertex) ) )
 
     self._vertex_data.peano4_mpi_and_storage_aspect.merge_implementation = self.get_vertex_merge_method()
     self._vertex_data.peano4_mpi_and_storage_aspect.implementation_file_includes += """\n#include "repositories/SolverRepository.h"\n"""
@@ -187,7 +187,7 @@ class CollocatedMG(Solver):
     super( CollocatedMG, self ).add_use_statements(observer)
 
   def add_to_create_grid(self, observer):
-    observer.add_action_set(peano4.toolbox.CreateRegularGrid(self.max_h))
+    observer.add_action_set(peano4.api.toolbox.CreateRegularGrid(self.max_h))
 
   def add_to_init_solution(self, observer):
     """!
@@ -248,7 +248,7 @@ class CollocatedMG(Solver):
         "COARSEST_LEVEL"           :     self._coarsest_level
     }
 
-    generated_abstract_header_file = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_abstract_header_file = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".Abstract.template.h",
       templatefile_prefix + ".Abstract.template.cpp",
       "Abstract" + self.typename(), 
@@ -257,7 +257,7 @@ class CollocatedMG(Solver):
       dictionary,
       True,
       True)
-    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_solver_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".template.h",
       templatefile_prefix + ".template.cpp",
       self.typename(), 

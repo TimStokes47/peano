@@ -3,7 +3,7 @@
 from swift2.particle.AlgorithmStep import AlgorithmStep
 from swift2.actionsets.UpdateParticleMarker import UpdateParticleMarker
 
-import peano4
+import peano4.api
 import swift2
 
 

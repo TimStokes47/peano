@@ -4,7 +4,7 @@
 from .AbstractRKFDActionSet import AbstractRKFDActionSet
 from exahype2.solvers.ButcherTableau                import ButcherTableau
 
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -88,7 +88,7 @@ class LinearCombinationOfEstimates(AbstractRKFDActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       d = {}
       self._solver._init_dictionary_with_default_parameters(d)
       self._solver.add_entries_to_text_replacement_dictionary(d)

@@ -1,5 +1,5 @@
-import peano4
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 
 import dastgen2
 
@@ -52,7 +52,7 @@ class Project:
     Create a matrix project
     
     """
-    self._project = peano4.Project(namespace, project_name, directory, subdirectory)
+    self._project = peano4.api.Project(namespace, project_name, directory, subdirectory)
     
     # what to do about this line?
     # self._project.output.makefile.add_cmake_core_library("petsc")
@@ -69,7 +69,7 @@ class Project:
     self._Peano_src_directory = "."
 
     # does this get overwritten later?
-    self._build_mode          = peano4.output.CompileMode.Asserts
+    self._build_mode          = peano4.api.output.CompileMode.Asserts
     self._executable_name = executable
     self._output_path   = "./" 
 
@@ -77,11 +77,11 @@ class Project:
 # @todo remove
     self._aux_solvers = []
 
-    self.algorithm_step_create_grid    = peano4.solversteps.Step( "CreateGrid", False )
-    self.algorithm_step_init_solution  = peano4.solversteps.Step( "InitSolution", False )
-    self.algorithm_step_solve          = peano4.solversteps.Step( "Solve", False )
+    self.algorithm_step_create_grid    = peano4.api.solversteps.Step( "CreateGrid", False )
+    self.algorithm_step_init_solution  = peano4.api.solversteps.Step( "InitSolution", False )
+    self.algorithm_step_solve          = peano4.api.solversteps.Step( "Solve", False )
 
-    self.algorithm_step_plot            = peano4.solversteps.Step( "Plot", False )
+    self.algorithm_step_plot            = peano4.api.solversteps.Step( "Plot", False )
     
     self.set_global_simulation_parameters( dimensions  = 2,
                                            offset      = [0.0, 0.0],
@@ -111,7 +111,7 @@ class Project:
     self._load_balancer_name      = load_balancer_name
     self._load_balancer_arguments = load_balancer_arguments
 
-  def set_Peano4_installation(self, src_path, mode=peano4.output.CompileMode.Release ):
+  def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.Release ):
     """!
     
     Tell the project where to find Peano
@@ -125,7 +125,7 @@ class Project:
       should hold both the headers (in subdirectories) and all the static
       libraries.
         
-    @param mode: peano4.output.CompileMode
+    @param mode: peano4.api.output.CompileMode
 
     """
     self._Peano_src_directory = src_path
@@ -229,7 +229,7 @@ class Project:
 
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
     template_name       = templatefile_prefix + ".SolverRepository.template"
-    generated_repository_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_repository_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       template_name + ".h",
       template_name + ".cpp",
       "SolverRepository", 

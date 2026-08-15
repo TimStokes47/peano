@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from copy import deepcopy
 
-import peano4.output
+import peano4.api.output
 
 from .Gemms import Gemms
 from .Gemms import generate_gemms
@@ -17,7 +17,7 @@ class AMRRoutines(object):
     ):
         self._build_gemms(namespace, output, subdirectory, template_prefix, output_path)
 
-        generated_kernels = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+        generated_kernels = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
             headfile_template=template_prefix + "AMRRoutines.template.h",
             cppfile_template=template_prefix + "AMRRoutines.template.cpp",
             classname=output_path + "/AMRRoutines",

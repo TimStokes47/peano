@@ -3,7 +3,7 @@
 from swift2.particle.Particle import Particle
 from swift2.particle.AlgorithmStep import AlgorithmStep
 
-import peano4
+import peano4.api
 
 from abc import ABC
 
@@ -45,8 +45,8 @@ class ExplicitEulerDynamicSearchRadius(Particle):
             max_h,
         )
 
-        self.velocity = peano4.dastgen2.Peano4DoubleArray("v", "Dimensions")
-        self.accelerator = peano4.dastgen2.Peano4DoubleArray("a", "Dimensions")
+        self.velocity = peano4.api.dastgen2.Peano4DoubleArray("v", "Dimensions")
+        self.accelerator = peano4.api.dastgen2.Peano4DoubleArray("a", "Dimensions")
         self.data.add_attribute(self.velocity)
         self.data.add_attribute(self.accelerator)
 
