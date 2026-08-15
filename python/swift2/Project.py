@@ -1,7 +1,7 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 
 import dastgen2
 
@@ -44,7 +44,7 @@ class Project(object):
     """
 
     def __init__(self, namespace, project_name, directory=".", executable="swift2"):
-        self._project = peano4.Project(namespace, project_name, directory)
+        self._project = peano4.api.Project(namespace, project_name, directory)
 
         self._domain_offset = [0.0, 0.0, 0.0]
         self._domain_size = [1.0, 1.0, 1.0]
@@ -57,7 +57,7 @@ class Project(object):
         self._load_balancer_name = ""
         self._load_balancer_arguments = ""
         self._Peano_src_directory = "."
-        self._build_mode = peano4.output.CompileMode.Asserts
+        self._build_mode = peano4.api.output.CompileMode.Asserts
         self._executable_name = executable
         self._periodic_BC = [False, False, False]
         self._output_path = "./"
@@ -65,12 +65,12 @@ class Project(object):
         self._particle_species = []
         self._particle_species_set = []
 
-        self.algorithm_step_create_grid = peano4.solversteps.Step("CreateGrid", False)
-        self.algorithm_step_initial_conditions = peano4.solversteps.Step(
+        self.algorithm_step_create_grid = peano4.api.solversteps.Step("CreateGrid", False)
+        self.algorithm_step_initial_conditions = peano4.api.solversteps.Step(
             "InitialConditions", False
         )
-        self.algorithm_step_plot = peano4.solversteps.Step("Plot", False)
-        self.algorithm_step_cleanup = peano4.solversteps.Step("Cleanup", False)
+        self.algorithm_step_plot = peano4.api.solversteps.Step("Plot", False)
+        self.algorithm_step_cleanup = peano4.api.solversteps.Step("Cleanup", False)
 
         self.additional_action_sets_per_solver_step = []
 
@@ -107,14 +107,14 @@ class Project(object):
     LibraryAsserts = "_asserts"
     LibraryStats = "_stats"
 
-    def set_Peano4_installation(self, src_path, mode=peano4.output.CompileMode.Release):
+    def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.Release):
         """
         src_path: string
           Path (relative or absolute) to the src directory of Peano. This path
           should hold both the headers (in subdirectories) and all the static
           libraries.
 
-        mode: peano4.output.CompileMode
+        mode: peano4.api.output.CompileMode
         """
 
         swift2dir = os.path.join(src_path, "src", "swift2")
@@ -446,7 +446,7 @@ levels.
 
         templatefile_prefix = os.path.dirname(__file__)
         generated_solver_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 templatefile_prefix + "/output/GlobalState.template.h",
                 templatefile_prefix + "/output/GlobalState.template.cpp",
                 "GlobalState",
@@ -472,7 +472,7 @@ levels.
         """
         self._particle_species.append(particle)
         self._particle_species_set.append(
-            peano4.toolbox.particles.ParticleSet(particle)
+            peano4.api.toolbox.particles.ParticleSet(particle)
         )
         return self._particle_species_set[-1]
 
@@ -497,10 +497,10 @@ levels.
          The initial grid will be a regular one, spanned through
 
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         action_set_create_regular_grid = peano4.toolbox.CreateRegularGrid(...)
+         action_set_create_regular_grid = peano4.api.toolbox.CreateRegularGrid(...)
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-         According to the documentation of peano4.toolbox.CreateRegularGrid,
+         According to the documentation of peano4.api.toolbox.CreateRegularGrid,
          the action set will produce a mesh that is just finer than the mesh
          width passed, so we meet the max mesh width, but do not create a
          mesh that is significantly finer.
@@ -566,13 +566,13 @@ levels.
         #
         for current_species_set in self._particle_species_set:
             self.algorithm_step_plot.add_action_set(
-                peano4.toolbox.particles.api.UpdateParticleGridAssociation_LiftDrop(
+                peano4.api.toolbox.particles.api.UpdateParticleGridAssociation_LiftDrop(
                     current_species_set
                 )
             )
 
             self.algorithm_step_plot.add_action_set(
-                peano4.toolbox.particles.api.UpdateParallelState(current_species_set)
+                peano4.api.toolbox.particles.api.UpdateParallelState(current_species_set)
             )
 
         #
@@ -616,12 +616,12 @@ levels.
                 )
             )
             cell_marker_for_tasks = (
-                peano4.toolbox.api.EnumerateCellsAndVertices.create_cell_marker(
+                peano4.api.toolbox.api.EnumerateCellsAndVertices.create_cell_marker(
                     current_species_set.name
                 )
             )
             vertex_marker_for_tasks = (
-                peano4.toolbox.api.EnumerateCellsAndVertices.create_vertex_marker(
+                peano4.api.toolbox.api.EnumerateCellsAndVertices.create_vertex_marker(
                     task_name=current_species_set.name,
                     full_qualified_enumerator_type="::swift2::TaskEnumerator",
                     enumerator_include=""" #include "swift2/TaskEnumerator.h" """,
@@ -661,7 +661,7 @@ levels.
                 solverstep.use_cell(cell_marker_for_statistics)
                 solverstep.use_cell(cell_marker_for_tasks)
 
-        action_set_plot_grid = peano4.toolbox.PlotGridInPeanoBlockFormat(
+        action_set_plot_grid = peano4.api.toolbox.PlotGridInPeanoBlockFormat(
             filename="grid",
             time_stamp_evaluation="repositories::getMinTimeStamp()",
             additional_includes="""
@@ -677,7 +677,7 @@ levels.
         init_gridsize = self._global_min_h
         if self._make_initial_grid_coarse:
             init_gridsize = self._global_max_h
-        action_set_create_regular_grid = peano4.toolbox.CreateRegularGrid(init_gridsize)
+        action_set_create_regular_grid = peano4.api.toolbox.CreateRegularGrid(init_gridsize)
         action_set_create_regular_grid.descend_invocation_order = (
             self.algorithm_step_create_grid.lowest_descend_invocation_order() - 1
         )
@@ -948,18 +948,18 @@ levels.
 
             if storage == Storage_ContinuousPerVertex:
                 newps.generator = (
-                    peano4.toolbox.particles.ParticleSetGenerator_ContinuousPerVertex(
+                    peano4.api.toolbox.particles.ParticleSetGenerator_ContinuousPerVertex(
                         newps
                     )
                 )
             elif storage == Storage_GlobalContinuous:
                 newps.generator = (
-                    peano4.toolbox.particles.ParticleSetGenerator_GlobalContinuous(
+                    peano4.api.toolbox.particles.ParticleSetGenerator_GlobalContinuous(
                         newps
                     )
                 )
             elif storage == Storage_Scattered:
-                newps.generator = peano4.toolbox.particles.ParticleSetGenerator_ScatteredOnHeap_IndexByList(
+                newps.generator = peano4.api.toolbox.particles.ParticleSetGenerator_ScatteredOnHeap_IndexByList(
                     newps
                 )
             else:

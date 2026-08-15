@@ -3,9 +3,9 @@
 from swift2.particle.Particle import Particle
 from swift2.particle.AlgorithmStep import AlgorithmStep
 
-import peano4
+import peano4.api
 import dastgen2
-import peano4.dastgen2
+import peano4.api.dastgen2
 
 
 class testLeapfrogFixedTimeStepSize(Particle):
@@ -23,7 +23,7 @@ class testLeapfrogFixedTimeStepSize(Particle):
 
     You can add further properties via
 
-           myparticle.data.add_attribute( peano4.dastgen2.Peano4DoubleArray("myFancyArray","Dimensions") )
+           myparticle.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray("myFancyArray","Dimensions") )
 
     in your code. Or you can create a subclass which adds additional fields
     after it has called the baseline constructor.
@@ -88,15 +88,15 @@ class testLeapfrogFixedTimeStepSize(Particle):
         self._adjustTimeStepSize = adjustTimeStepSize
 
         # Particle attributes
-        self._velocity = peano4.dastgen2.Peano4DoubleArray("v", "Dimensions")
-        self._accelerator = peano4.dastgen2.Peano4DoubleArray("a", "Dimensions")
+        self._velocity = peano4.api.dastgen2.Peano4DoubleArray("v", "Dimensions")
+        self._accelerator = peano4.api.dastgen2.Peano4DoubleArray("a", "Dimensions")
         self.data.add_attribute(self._velocity)
         self.data.add_attribute(self._accelerator)
 
         # Dummy SPH arrays for compilation. Not relevant for non-SPH
         # Required by the Kick2 SPH compute kernel
         # Altrnatively, we might want to introduce a separate version of this compute kernel
-        self._v_full = peano4.dastgen2.Peano4DoubleArray("v_full", "Dimensions")
+        self._v_full = peano4.api.dastgen2.Peano4DoubleArray("v_full", "Dimensions")
         self._u_full = dastgen2.attributes.Double("u_full")
         self._u = dastgen2.attributes.Double("u")
         self._density = dastgen2.attributes.Double("density")

@@ -11,7 +11,7 @@ We always need the 'peano4' module as this is our core project.
 Since we are creating an ExaHyPE 2 application, we additionally
 need to import the 'exahype2' module.
 """
-import peano4
+import peano4.api
 import exahype2
 
 """
@@ -55,7 +55,7 @@ time_in_between_two_snapshots = end_time / 100
 """
 Switch between 'Release', 'Debug', 'Asserts', 'Trace', 'Stats'.
 """
-compile_mode = peano4.output.CompileMode.Release
+compile_mode = peano4.api.output.CompileMode.Release
 
 """
 We first create a new ExaHyPE 2 project.

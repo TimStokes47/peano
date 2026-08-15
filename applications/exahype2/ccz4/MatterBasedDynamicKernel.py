@@ -3,7 +3,7 @@ from sympy import Matrix, symbols
 from sympy.tensor.array import Array, tensorcontraction, tensorproduct
 import numpy as np
 
-import peano4
+import peano4.api
 import exahype2
 
 

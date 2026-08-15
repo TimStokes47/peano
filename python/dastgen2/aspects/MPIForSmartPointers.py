@@ -19,7 +19,7 @@ class MPIForSmartPointers(Aspect):
     of the flattened object to which we delegate all function calls.
     
     The routine replacing the generic MPI aspect with this one is typically
-    peano4.datamodel.DaStGen2GeneratorForObjectsWithSmartPointers.
+    peano4.api.datamodel.DaStGen2GeneratorForObjectsWithSmartPointers.
     
     """
 
@@ -30,7 +30,7 @@ class MPIForSmartPointers(Aspect):
         to tell it to which object you attach the aspect to.
         
         If we replace an existing MPI aspect with an instance of this object,
-        we can pass in aspect._data_model as argument. For peano4.datamodel.DaStGen2,
+        we can pass in aspect._data_model as argument. For peano4.api.datamodel.DaStGen2,
         this reads as 
         
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

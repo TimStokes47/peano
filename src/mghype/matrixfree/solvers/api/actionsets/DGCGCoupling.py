@@ -1,7 +1,7 @@
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import dastgen2
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -27,10 +27,10 @@ def prepare_CG_correction_solvers( dg_solver,
     
     """
     assert cg_solver._unknowns_per_vertex_node==dg_solver._unknowns_per_cell_node
-    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.dastgen2.Peano4DoubleArray( "sumOfInjectedValues", str(cg_solver._unknowns_per_vertex_node) ) )
-    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.dastgen2.Peano4DoubleArray( "oldU", str(cg_solver._unknowns_per_vertex_node) ) )
-    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.dastgen2.Peano4DoubleArray( "newRestrictedRhs", str(cg_solver._unknowns_per_vertex_node) ) )
-    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.dastgen2.Peano4DoubleArray( "delta", str(cg_solver._unknowns_per_vertex_node) ) )
+    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.api.dastgen2.Peano4DoubleArray( "sumOfInjectedValues", str(cg_solver._unknowns_per_vertex_node) ) )
+    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.api.dastgen2.Peano4DoubleArray( "oldU", str(cg_solver._unknowns_per_vertex_node) ) )
+    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.api.dastgen2.Peano4DoubleArray( "newRestrictedRhs", str(cg_solver._unknowns_per_vertex_node) ) )
+    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.api.dastgen2.Peano4DoubleArray( "delta", str(cg_solver._unknowns_per_vertex_node) ) )
     cg_solver._vertex_data.data.add_or_replace_attribute( dastgen2.attributes.Integer( "numberOfRestrictions" ) )
 
     ## add cross-boundary data sharing in
@@ -473,16 +473,16 @@ class AbstractDGCGCoupling(ActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
       result = jinja2.Template(self.__TemplateTouchVertexFirstTime).render(**self.d)
       pass
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
       pass
-    if self._use_fas and operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
+    if self._use_fas and operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
       result = jinja2.Template(self.__TemplateTouchCellLastTime_FAS).render(**self.d)
       pass
-    if not self._use_fas and operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
+    if not self._use_fas and operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
       result = jinja2.Template(self.__TemplateTouchCellLastTime_CorrectionScheme).render(**self.d)
       pass
     return result

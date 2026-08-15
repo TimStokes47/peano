@@ -9,8 +9,8 @@ from scipy.spatial import KDTree
 import numpy as np
 import argparse
 import sys
-import peano4
-from peano4.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
+import peano4.api
+from peano4.api.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
 import swift2.sphtools
 import multiprocessing
 

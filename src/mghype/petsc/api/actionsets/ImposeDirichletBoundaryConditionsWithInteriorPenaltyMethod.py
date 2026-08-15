@@ -1,8 +1,8 @@
 # This file is part of the Peano multigrid project. For conditions of 
 # distribution and use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -168,8 +168,8 @@ class ImposeDirichletBoundaryConditionsWithInteriorPenaltyMethod(ActionSet):
   def get_body_of_operation(self,operation_name):
     """!
 
-Provide C++ code snippet for peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME  
-Provide C++ code snippet for peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME  
+Provide C++ code snippet for peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME  
+Provide C++ code snippet for peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME  
   
 Only touchVertexFirstTime is an event where this action set actually
 does something: It inserts the template TemplateTouchVertexFirstTime and 
@@ -181,7 +181,7 @@ appropriate template into each.
     
     """
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
       result = jinja2.Template(self.TemplateTouchFaceFirstTime).render(**self.d)
       pass 
     return result

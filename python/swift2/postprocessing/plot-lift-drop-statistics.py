@@ -8,7 +8,7 @@
 
 import os, sys
 import argparse
-import peano4.toolbox.particles.postprocessing
+import peano4.api.toolbox.particles.postprocessing
 
 import matplotlib.pyplot as plt
 

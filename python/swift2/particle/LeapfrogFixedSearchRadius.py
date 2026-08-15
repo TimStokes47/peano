@@ -3,9 +3,9 @@
 from swift2.particle.Particle import Particle
 from swift2.particle.AlgorithmStep import AlgorithmStep
 
-import peano4
+import peano4.api
 import dastgen2
-import peano4.dastgen2
+import peano4.api.dastgen2
 
 from abc import ABC
 import copy
@@ -28,7 +28,7 @@ class LeapfrogFixedSearchRadius(Particle):
 
     You can add further properties via
 
-           myparticle.data.add_attribute( peano4.dastgen2.Peano4DoubleArray("myFancyArray","Dimensions") )
+           myparticle.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray("myFancyArray","Dimensions") )
 
     in your code. Or you can create a subclass which adds additional fields
     after it has called the baseline constructor.
@@ -69,8 +69,8 @@ class LeapfrogFixedSearchRadius(Particle):
         self.initial_time_step_size = initial_time_step_size
 
         # Particle attributes
-        self.velocity = peano4.dastgen2.Peano4DoubleArray("v", "Dimensions")
-        self.accelerator = peano4.dastgen2.Peano4DoubleArray("a", "Dimensions")
+        self.velocity = peano4.api.dastgen2.Peano4DoubleArray("v", "Dimensions")
+        self.accelerator = peano4.api.dastgen2.Peano4DoubleArray("a", "Dimensions")
         self.data.add_attribute(self.velocity)
         self.data.add_attribute(self.accelerator)
 

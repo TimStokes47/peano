@@ -1,6 +1,6 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import exahype2
 
 end_time=10.0
@@ -121,7 +121,7 @@ if load_balancing_strategy != "None":
     )
     project.set_load_balancing(strategy, configuration)
 
-project.set_Peano4_installation("../../../../", mode=peano4.output.string_to_mode(build_mode))
+project.set_Peano4_installation("../../../../", mode=peano4.api.output.string_to_mode(build_mode))
 project = project.generate_Peano4_project(verbose=True)
 project.set_fenv_handler("FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW")
 

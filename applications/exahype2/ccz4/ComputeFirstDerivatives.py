@@ -1,7 +1,7 @@
 #
 # New action set for second order CCZ4 formualtion
 #
-import peano4
+import peano4.api
 import jinja2
 
 from exahype2.solvers.ButcherTableau import ButcherTableau
@@ -13,7 +13,7 @@ from exahype2.solvers.rkfd.OneSweepPerRungeKuttaStep import ReconstructLinearCom
 # this file is explicitly excluded from documentation in the Doxyfile.
 #
 
-class ComputeFirstDerivativesFV(peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor):
+class ComputeFirstDerivativesFV(peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor):
     """!
     
     Explicit reconstruction of derivatives for Finite Volumes
@@ -57,7 +57,7 @@ class ComputeFirstDerivativesFV(peano4.toolbox.blockstructured.ReconstructPatchA
 
         
 
-class ComputeFirstDerivativesFD4RK(peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor):
+class ComputeFirstDerivativesFD4RK(peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor):
     r"""!
     
     Explicit reconstruction of first derivatives for FD4 discretisation

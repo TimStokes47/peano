@@ -1,8 +1,11 @@
 import os, sys
-import peano4
+import peano4.api
 import exahype2
 
-project = exahype2.Project(namespace=["benchmarks", "exahype2", "euler", "smooth_setup"], project_name="smooth-convergence-test", directory=".", executable="smooth-convergence-test")
+#import exahype2.fv.api.Solver as MySolver
+
+project = exahype2.api.Project(namespace=["benchmarks", "exahype2", "euler", "smooth_convergence_test"], project_name="smooth-convergence-test", directory=".", executable="smooth-convergence-test")
+#new_project = exahype2.api.Project(namespace=["benchmarks", "exahype2", "euler", "smooth_setup"], project_name="smooth-convergence-test", directory=".", executable="smooth-convergence-test")
 
 solver_name = "EulerFVSmooth"
 unknowns    = 4
@@ -24,7 +27,7 @@ thesolver = exahype2.solvers.fv.musclhancock.GlobalFixedTimeStep(
 
 project.add_solver(thesolver)
 
-build_mode = peano4.output.CompileMode.Release
+build_mode = peano4.api.output.CompileMode.Release
 project.set_global_simulation_parameters(
   dimensions = dimensions,
   offset = [-0.1,-0.1],

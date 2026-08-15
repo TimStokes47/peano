@@ -14,12 +14,12 @@
 # variable PYTHONPATH points to Peano4's python directory.
 #
 import os
-import peano4
-import peano4.datamodel
-import peano4.solversteps
-import peano4.output
-import peano4.visualisation
-import peano4.toolbox.blockstructured
+import peano4.api
+import peano4.api.datamodel
+import peano4.api.solversteps
+import peano4.api.output
+import peano4.api.visualisation
+import peano4.api.toolbox.blockstructured
 
 
 import exahype2
@@ -59,7 +59,7 @@ project.add_solver( exahype2.solvers.fv.GenericRusanovFixedTimeStepSize(
 
 
 dimensions = 2
-build_mode = peano4.output.CompileMode.Asserts
+build_mode = peano4.api.output.CompileMode.Asserts
 
 #
 # Lets configure some global parameters
@@ -90,13 +90,13 @@ peano4_project.output.makefile.add_Fortran_file( "C2PRoutines.f90" )
 peano4_project.output.makefile.add_Fortran_file( "PDE.f90" )
 peano4_project.output.makefile.add_Fortran_file( "InitialData.f90" )
 
-peano4_project.generate(peano4.output.Overwrite.Default)
+peano4_project.generate(peano4.api.output.Overwrite.Default)
 peano4_project.build()
 success = peano4_project.run( [] )
 
 
 if success:
-  convert = peano4.visualisation.Convert( "solutionMHD", True )
+  convert = peano4.api.visualisation.Convert( "solutionMHD", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()

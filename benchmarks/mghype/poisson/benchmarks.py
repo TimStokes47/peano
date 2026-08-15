@@ -1,6 +1,6 @@
 import os, sys
 import argparse
-import peano4
+import peano4.api
 import mghype
 import numpy as np
 
@@ -105,11 +105,11 @@ project.add_solver(solver)
 # Configure build
 #
 if args.asserts:
-    build_mode = peano4.output.CompileMode.Asserts
+    build_mode = peano4.api.output.CompileMode.Asserts
 else:
-    build_mode = peano4.output.CompileMode.Release
-#build_mode = peano4.output.CompileMode.Stats
-#build_mode = peano4.output.CompileMode.Asserts
+    build_mode = peano4.api.output.CompileMode.Release
+#build_mode = peano4.api.output.CompileMode.Stats
+#build_mode = peano4.api.output.CompileMode.Asserts
 
 
 cube_size = 1.0

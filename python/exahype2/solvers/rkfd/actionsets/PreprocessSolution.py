@@ -3,11 +3,11 @@
 
 from .AbstractRKFDActionSet import AbstractRKFDActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 
-from peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
+from peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
 
 
 class EmptyPreprocessSolution(AbstractRKFDActionSet):
@@ -92,7 +92,7 @@ class PreprocessReconstructedSolutionWithHalo(ReconstructPatchAndApplyFunctor):
     """  
     if enclave_task_cell_label==None:
         functor_implementation = compute_kernel_implementation
-        reconstructed_array_memory_location = peano4.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarch
+        reconstructed_array_memory_location = peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarch
     else:
         functor_implementation = """
             auto taskBody = [=,this]() -> bool { """ + compute_kernel_implementation  + """
@@ -127,7 +127,7 @@ class PreprocessReconstructedSolutionWithHalo(ReconstructPatchAndApplyFunctor):
               """ + enclave_task_cell_label + """.setSemaphoreNumber( newTaskNumber );
             }
             """
-        reconstructed_array_memory_location = peano4.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
+        reconstructed_array_memory_location = peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
         
     super(PreprocessReconstructedSolutionWithHalo,self).__init__(patch = solver._patch,
                                              patch_overlap                       = solver._patch_overlap_new,
@@ -218,7 +218,7 @@ class CellWisePreprocessSolution(AbstractRKFDActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
       d = {}
       self._solver._init_dictionary_with_default_parameters(d)
       self._solver.add_entries_to_text_replacement_dictionary(d)

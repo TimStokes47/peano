@@ -1,4 +1,4 @@
-import peano4
+import peano4.api
 import exahype2
 import dastgen2
 

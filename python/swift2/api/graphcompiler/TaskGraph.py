@@ -3,7 +3,7 @@
 from swift2.particle.AlgorithmStep import AlgorithmStep
 from swift2.actionsets.UpdateParticleMarker import UpdateParticleMarker
 
-import peano4
+import peano4.api
 import swift2
 
 
@@ -75,7 +75,7 @@ def translate_one_step_of_species_into_mesh_traversal(
       You get a specific algorithmic step as input. The current_species_set
       highlights to which this step originally belonged to.
 
-    @param mesh_traversals: [peano4.solversteps.Step]
+    @param mesh_traversals: [peano4.api.solversteps.Step]
       Inout parameter. We append a new step to this sequence.
 
     @param alter_particle_position: [Bool]
@@ -95,7 +95,7 @@ def translate_one_step_of_species_into_mesh_traversal(
     where I simply redefine the default.
 
     """
-    new_step = peano4.solversteps.Step(
+    new_step = peano4.api.solversteps.Step(
         "{}{}{}_sweep{}".format(
             get_observer_prefix(step_type),
             current_species_set.particle_model.name,
@@ -159,7 +159,7 @@ def translate_one_step_of_species_into_mesh_traversal(
         if use_continuous_particles_sequences:
             if verbose:
                 print(
-                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} can use the peano4.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles action set and hence optimise aggressively".format(
+                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} can use the peano4.api.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles action set and hence optimise aggressively".format(
                         len(mesh_traversals),
                         step.name,
                         current_species_set.particle_model.name,
@@ -180,7 +180,7 @@ def translate_one_step_of_species_into_mesh_traversal(
         else:
             if verbose:
                 print(
-                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses the peano4.toolbox.particles.UpdateParticle_MultiLevelInteraction_Sets".format(
+                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses the peano4.api.toolbox.particles.UpdateParticle_MultiLevelInteraction_Sets".format(
                         len(mesh_traversals),
                         step.name,
                         current_species_set.particle_model.name,
@@ -207,7 +207,7 @@ def translate_one_step_of_species_into_mesh_traversal(
         if use_continuous_particles_sequences:
             if verbose:
                 print(
-                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses peano4.toolbox.particles.UpdateParticle_SingleLevelInteraction_ContiguousParticles action set".format(
+                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses peano4.api.toolbox.particles.UpdateParticle_SingleLevelInteraction_ContiguousParticles action set".format(
                         len(mesh_traversals),
                         step.name,
                         current_species_set.particle_model.name,
@@ -234,7 +234,7 @@ def translate_one_step_of_species_into_mesh_traversal(
         else:
             if verbose:
                 print(
-                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses peano4.toolbox.particles.UpdateParticle_SingleLevelInteraction action set".format(
+                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses peano4.api.toolbox.particles.UpdateParticle_SingleLevelInteraction action set".format(
                         len(mesh_traversals),
                         step.name,
                         current_species_set.particle_model.name,
@@ -274,7 +274,7 @@ def translate_one_step_of_species_into_mesh_traversal(
     # might be the first time stepping step overall. Other than that, all steps
     # plug into creational and destroy events.
     #
-    action_set_assign_task_markers = peano4.toolbox.api.AssignNumbersToMesh(
+    action_set_assign_task_markers = peano4.api.toolbox.api.AssignNumbersToMesh(
         # current_species_set.particle_model.name,
         current_species_set.name,
     )
@@ -285,7 +285,7 @@ def translate_one_step_of_species_into_mesh_traversal(
     new_step.add_action_set(action_set_assign_task_markers)
     if verbose:
         print(
-            "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} is added peano4.toolbox.api.AssignNumbersToMesh".format(
+            "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} is added peano4.api.toolbox.api.AssignNumbersToMesh".format(
                 len(mesh_traversals),
                 step.name,
                 current_species_set.particle_model.name,
@@ -364,7 +364,7 @@ def add_clear_task_number_to_very_first_initialisation_step(
     """
 
     for current_species_set in species_sets:
-        action_set_erase_task_markers = peano4.toolbox.api.ClearNumbersOnMesh(
+        action_set_erase_task_markers = peano4.api.toolbox.api.ClearNumbersOnMesh(
             current_species_set.name,
         )
         action_set_erase_task_markers.descend_invocation_order = (
@@ -374,7 +374,7 @@ def add_clear_task_number_to_very_first_initialisation_step(
         algorithm_steps[0].add_action_set(action_set_erase_task_markers)
         if verbose:
             print(
-                "GRAPH COMPILER DEBUG [add_clear_task_number_to_very_first_initialisation_step]: step no {} on particle {} clears task numbers/markers and hence uses the peano4.toolbox.api.ClearNumbersOnMesh action set clearing all task numbers and assigning new ones".format(
+                "GRAPH COMPILER DEBUG [add_clear_task_number_to_very_first_initialisation_step]: step no {} on particle {} clears task numbers/markers and hence uses the peano4.api.toolbox.api.ClearNumbersOnMesh action set clearing all task numbers and assigning new ones".format(
                     algorithm_steps[0].name,
                     current_species_set.particle_model.name,
                 )

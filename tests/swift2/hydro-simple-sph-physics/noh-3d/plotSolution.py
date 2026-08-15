@@ -46,7 +46,7 @@ from scipy import stats
 import numpy as np
 import sys
 
-from peano4.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
+from peano4.api.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
 
 if len(sys.argv) < 2:
     time = 0.6

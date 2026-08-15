@@ -1,6 +1,6 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import exahype2
 import jinja2
 
@@ -114,7 +114,7 @@ class DynamicAMR( AbstractRungeKuttaDGActionSet ):
     d[ "NUMBER_OF_PROJECTED_QUANTITIES" ] = compute_number_of_face_projection_quantities( self.face_projections )
     
     result = "\n"
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_CREATE_HANGING_FACE:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_CREATE_HANGING_FACE:
       result =  jinja2.Template(self.__Template_CreateHangingFace).render(**d)
       pass 
 #    if operation_name==ActionSet.OPERATION_CREATE_PERSISTENT_FACE:
@@ -122,7 +122,7 @@ class DynamicAMR( AbstractRungeKuttaDGActionSet ):
 #      result += jinja2.Template(self.__Template_CreatePersistentFace_Core).render(**self.d)
 #      result += jinja2.Template(self.__Template_CreatePersistentFace_Epilogue).render(**self.d)
 #      pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_DESTROY_HANGING_FACE:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_DESTROY_HANGING_FACE:
       result = jinja2.Template(self.__Template_DestroyHangingFace).render(**d)
       pass 
 #    if operation_name==ActionSet.OPERATION_DESTROY_PERSISTENT_FACE:
@@ -138,7 +138,7 @@ class DynamicAMR( AbstractRungeKuttaDGActionSet ):
 #      result += jinja2.Template(self.__Template_DestroyCell_Core).render(**self.d)
 #      result += jinja2.Template(self.__Template_DestroyCell_Epilogue).render(**self.d)
 #      pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
       result = jinja2.Template(self.__Template_TouchFaceFirstTime).render(**d)
       pass 
 #    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:

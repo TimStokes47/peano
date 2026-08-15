@@ -1,16 +1,16 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import jinja2
 
 
-import peano4.toolbox.blockstructured.ProjectPatchOntoFaces
+import peano4.api.toolbox.blockstructured.ProjectPatchOntoFaces
 
 
-class ProjectPatchOntoFaces( peano4.toolbox.blockstructured.ProjectPatchOntoFaces ):
+class ProjectPatchOntoFaces( peano4.api.toolbox.blockstructured.ProjectPatchOntoFaces ):
   """! Project patch data onto faces so we can reconstruct the halo layers later on 
   
-   This class is very similar to peano4.toolbox.blockstructured.ProjectPatchOntoFaces, 
+   This class is very similar to peano4.api.toolbox.blockstructured.ProjectPatchOntoFaces, 
    but there are some delicate differences.
    
    The big difference is that the projection also sets the isUpdated() flag and 
@@ -28,7 +28,7 @@ class ProjectPatchOntoFaces( peano4.toolbox.blockstructured.ProjectPatchOntoFace
       
   """
   def __init__(self,solver, guard):
-    peano4.toolbox.blockstructured.ProjectPatchOntoFaces.__init__(
+    peano4.api.toolbox.blockstructured.ProjectPatchOntoFaces.__init__(
       self,
       solver._patch,
       solver._patch_overlap_update,

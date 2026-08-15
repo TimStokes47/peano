@@ -31,7 +31,7 @@ from scipy.special import gamma as Gamma
 import numpy as np
 import sys
 
-from peano4.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
+from peano4.api.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
 
 
 """

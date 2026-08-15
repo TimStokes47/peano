@@ -1,14 +1,14 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.runner.DefaultSequence
+import peano4.api.runner.DefaultSequence
 import os
 
 
-class SWIFTMain(peano4.runner.DefaultSequence):
+class SWIFTMain(peano4.api.runner.DefaultSequence):
   def __init__(self,project,initialisation_steps,solver_steps,overwrite=False):
     """
     
-     solversteps: [peano4.solversteps.Steps]
+     solversteps: [peano4.api.solversteps.Steps]
      
      overwrite: Boolean
        Shall I keep an existing main, or shall I overwrite it. You can reset this

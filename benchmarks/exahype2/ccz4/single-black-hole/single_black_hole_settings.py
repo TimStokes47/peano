@@ -1,6 +1,6 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import exahype2
 import dastgen2
 
@@ -164,7 +164,7 @@ def create_exahype2_project(
 
     project.set_output_path("./")
  
-    project.set_Peano4_installation(peano_dir, peano4.output.string_to_mode(mode))
+    project.set_Peano4_installation(peano_dir, peano4.api.output.string_to_mode(mode))
       
     return project
 

@@ -9,7 +9,7 @@
 
 import os, sys
 import argparse
-import peano4
+import peano4.api
 import exahype2
 
 
@@ -155,8 +155,8 @@ class MyDGSolver(exahype2.solvers.rkdg.rusanov.GlobalAdaptiveTimeStepWithEnclave
     
     # Bei compute bin ich mir echt unsicher
     
-#    self._rhs_estimates                     = peano4.datamodel.Patch( (self.number_of_Runge_Kutta_steps()*(self._basis.dofs_per_axis),
-#    self._linear_combination_of_estimates   = peano4.datamodel.Patch( (self._basis.dofs_per_axis,
+#    self._rhs_estimates                     = peano4.api.datamodel.Patch( (self.number_of_Runge_Kutta_steps()*(self._basis.dofs_per_axis),
+#    self._linear_combination_of_estimates   = peano4.api.datamodel.Patch( (self._basis.dofs_per_axis,
 
 
 
@@ -248,11 +248,11 @@ project.add_solver( fv_solver )
 # Configure build
 #
 if args.mode=="release":
-  build_mode = peano4.output.CompileMode.Release
+  build_mode = peano4.api.output.CompileMode.Release
 if args.mode=="stats":
-  build_mode = peano4.output.CompileMode.Stats
+  build_mode = peano4.api.output.CompileMode.Stats
 if args.mode=="asserts":
-  build_mode = peano4.output.CompileMode.Asserts
+  build_mode = peano4.api.output.CompileMode.Asserts
 
 if "plot" in args.type:
   plot_interval = end_time / 20.0

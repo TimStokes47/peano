@@ -3,11 +3,11 @@
 import os
 import argparse
 
-import peano4
+import peano4.api
 import exahype2
 import dastgen2
 
-import peano4.toolbox.particles
+import peano4.api.toolbox.particles
 import numpy as np
 
 import jinja2

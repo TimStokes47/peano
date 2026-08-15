@@ -2,7 +2,7 @@ import os
 import argparse
 import numpy as np
 
-import peano4
+import peano4.api
 import swift2
 import dastgen2
 from swift2.particle.tests import DastgenTestDummyParticle
@@ -65,7 +65,7 @@ particle = DastgenTestDummyParticle(
 particle_set = project.add_particle_species(particle)
 
 # Always build with asserts on.
-build_mode = peano4.output.CompileMode.Asserts
+build_mode = peano4.api.output.CompileMode.Asserts
 
 # Set Peano4 simulation parameters ---------------------------------------------
 offset = [0, 0, 0]
@@ -156,7 +156,7 @@ for dir in dirs:
 # It is safe (and recommended) to overwrite any existing main file, since this
 # is generated automatically by the Swift2 graph compiler.
 peano4_project.generate(
-    overwrite=peano4.output.Overwrite.Always, throw_away_data_after_generation=True
+    overwrite=peano4.api.output.Overwrite.Always, throw_away_data_after_generation=True
 )
 peano4_project.build(make_clean_first=True, number_of_parallel_builds=args.j)
 

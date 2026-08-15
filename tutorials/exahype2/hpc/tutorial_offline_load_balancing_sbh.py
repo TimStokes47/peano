@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import os
 import argparse
-import peano4
+import peano4.api
 import exahype2
 import dastgen2
 import math
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     project.set_output_path("./")
  
-    project.set_Peano4_installation(args.peanodir, peano4.output.string_to_mode(peano4.output.CompileModes[0]))
+    project.set_Peano4_installation(args.peanodir, peano4.api.output.string_to_mode(peano4.api.output.CompileModes[0]))
 
     if args.amr:
         max_cell_size = Domain_size[0] / 3.0

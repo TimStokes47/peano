@@ -1,9 +1,9 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import jinja2
-import peano4
+import peano4.api
 
 
 class SynchroniseVerticesWithPreviousMeshSweep(ActionSet):
@@ -36,7 +36,7 @@ class SynchroniseVerticesWithPreviousMeshSweep(ActionSet):
         self.d["PARTICLES_CONTAINER"] = particle_set.name
         self.d[
             "MARKER_NAME"
-        ] = peano4.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(
+        ] = peano4.api.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(
             particle_set.name
         )
 

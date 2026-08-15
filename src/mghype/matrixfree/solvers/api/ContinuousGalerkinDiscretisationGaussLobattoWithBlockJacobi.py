@@ -1,8 +1,8 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import jinja2
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 import os
 
@@ -89,13 +89,13 @@ class ContinuousGalerkinDiscretisationGaussLobattoWithBlockJacobi(Solver):
     self._degrees_of_freedom_per_face            = unknowns_per_node * ( polynomial_degree + 1) ** (dimensions-1)
     self._inner_degrees_of_freedom_per_cell      = unknowns_per_node * ( polynomial_degree - 1) ** dimensions
 
-    self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "solution", str(self._degrees_of_freedom_per_cell) ))
-    self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "residual", str(self._degrees_of_freedom_per_cell) ))
-    self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "rhs",      str(self._degrees_of_freedom_per_cell) ))
+    self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "solution", str(self._degrees_of_freedom_per_cell) ))
+    self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "residual", str(self._degrees_of_freedom_per_cell) ))
+    self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "rhs",      str(self._degrees_of_freedom_per_cell) ))
 
-    self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "residual",      str(self._degrees_of_freedom_per_face) ))
-    self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "diagonal",      str(self._degrees_of_freedom_per_face) ))
-    self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "deltaU",        str(self._degrees_of_freedom_per_face) ))
+    self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "residual",      str(self._degrees_of_freedom_per_face) ))
+    self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "diagonal",      str(self._degrees_of_freedom_per_face) ))
+    self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "deltaU",        str(self._degrees_of_freedom_per_face) ))
 
     self.preprocessing_action_set  = None
     self.postprocessing_action_set = None
@@ -123,7 +123,7 @@ class ContinuousGalerkinDiscretisationGaussLobattoWithBlockJacobi(Solver):
     pass
 
   def add_to_create_grid(self, observer):
-    observer.add_action_set(peano4.toolbox.CreateRegularGrid(self.max_h))
+    observer.add_action_set(peano4.api.toolbox.CreateRegularGrid(self.max_h))
     pass
 
   def add_to_init_solution(self, observer):
@@ -240,7 +240,7 @@ class ContinuousGalerkinDiscretisationGaussLobattoWithBlockJacobi(Solver):
         "NARROW_TO_INTERIOR_MATRIX"   : self._construct_narrow_to_interior_matrix(),
     }
 
-    generated_abstract_header_file = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_abstract_header_file = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".Abstract.template.h",
       templatefile_prefix + ".Abstract.template.cpp",
       "Abstract" + self.typename(), 
@@ -249,7 +249,7 @@ class ContinuousGalerkinDiscretisationGaussLobattoWithBlockJacobi(Solver):
       dictionary,
       abstract_overwrite,
       True)
-    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_solver_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".template.h",
       templatefile_prefix + ".template.cpp",
       self.typename(), 
