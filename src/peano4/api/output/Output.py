@@ -27,6 +27,10 @@ class Output(object):
 
 
   def add(self,artefact,append=True):
+    """!
+    Add a new artefact. Once the project is generated, it will call 
+    generation() on the artefact. The artefact is either appended to the end of the list or prepended to the front of the list depending on the value of append.
+    """
     if append:
       self.artefacts.append(artefact)
     else:
@@ -34,7 +38,7 @@ class Output(object):
 
 
   def generate(self,overwrite,directory,subdirectories=[]):
-    """
+    """!
     Iterates over all stored artefacts and, hence, finally generates all the
     C files, makefiles, and so forth.
     """

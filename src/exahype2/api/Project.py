@@ -5,6 +5,7 @@ import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 
 import dastgen2
 
+import abc
 import os
 import sys
 
@@ -32,8 +33,34 @@ class Project(object):
     @see generate_Peano4_project()
     """
 
+    class Generator(abc.ABC):
+        """!
+
+        Base class for the code generation steps that turn an ExaHyPE 2
+        Project's configuration into actual generated files.
+
+        generate_Peano4_project() below currently does this work inline (see
+        the "@todo Has to go into a generator" note in there); the various
+        steps it performs (writing the solver implementation files, the
+        solver repository, the main file, ...) are meant to become Generator
+        subclasses instead, of which SolverToCPPFiles is the first.
+
+        """
+
+        def __init__(self, project: "Project"):
+            self.project = project
+
+        @abc.abstractmethod
+        def construct_output(self):
+            """!
+            Construct and return the generated output for this project (a
+            peano4.api.output.Output-compatible object, or anything else
+            that add()'s cleanly into project.output). This is the one thing
+            every SolverGenerator has to implement.
+            """
+
     def __init__(self, namespace, project_name, executable, directory=".", subdirectory="", abstract_overwrite=True):
-        self._project = peano4.api.Project(namespace, project_name, directory, subdirectory)
+        self._peano_project = peano4.api.Project(namespace, project_name, directory, subdirectory)
         self._subdirectory = subdirectory
         self._abstract_overwrite = abstract_overwrite
 
@@ -255,7 +282,7 @@ class Project(object):
 
     def remove_all_solvers(self):
         self._solvers = []
-        self._project.cleanup()
+        self._peano_project.cleanup()
 
     def __export_constants(self):
         """
@@ -264,7 +291,7 @@ class Project(object):
         file. Therefore, it is important that you parse the configure output
         before we export the constants.
         """
-        self._project.constants.clear()
+        self._peano_project.constants.clear()
         offset_string = "{" + str(self._domain_offset[0])
         size_string = "{" + str(self._domain_size[0])
         for i in range(1, self._dimensions):
@@ -274,45 +301,45 @@ class Project(object):
             size_string += str(self._domain_size[i])
         offset_string += "}"
         size_string += "}"
-        self._project.constants.add_include("""#include <bitset>""")
-        self._project.constants.add_include("""#include "tarch/la/Vector.h" """)
-        self._project.constants.add_include("""#include "peano4/utils/Globals.h" """)
-        self._project.constants.export_const_with_type(
+        self._peano_project.constants.add_include("""#include <bitset>""")
+        self._peano_project.constants.add_include("""#include "tarch/la/Vector.h" """)
+        self._peano_project.constants.add_include("""#include "peano4/utils/Globals.h" """)
+        self._peano_project.constants.export_const_with_type(
             "DomainOffset", offset_string, "tarch::la::Vector<Dimensions,double>"
         )
-        self._project.constants.export_const_with_type(
+        self._peano_project.constants.export_const_with_type(
             "DomainSize", size_string, "tarch::la::Vector<Dimensions,double>"
         )
-        self._project.constants.export("MinTerminalTime", str(self._min_terminal_time))
+        self._peano_project.constants.export("MinTerminalTime", str(self._min_terminal_time))
         if self._max_terminal_time >= self._min_terminal_time:
-            self._project.constants.export(
+            self._peano_project.constants.export(
                 "MaxTerminalTime", str(self._max_terminal_time)
             )
         else:
-            self._project.constants.export(
+            self._peano_project.constants.export(
                 "MaxTerminalTime", "std::numeric_limits<double>::max()"
             )
 
         if self._restart_from_checkpoint:
-            self._project.constants.export(
+            self._peano_project.constants.export(
                 "FirstPlotTimeStamp", f"{self._restart_timestamp:.{5}g}"
             )
-            self._project.constants.export(
+            self._peano_project.constants.export(
                 "FirstCheckpointTimeStamp", f"{self._restart_timestamp:.{5}g}"
             )
         else:
-            self._project.constants.export(
+            self._peano_project.constants.export(
                 "FirstPlotTimeStamp", str(self._first_plot_time_stamp)
             )
-            self._project.constants.export(
+            self._peano_project.constants.export(
                 "FirstCheckpointTimeStamp", str(self._first_checkpoint_time_stamp)
             )
 
-        self._project.constants.export(
+        self._peano_project.constants.export(
             "TimeInBetweenPlots", str(self._time_in_between_plots)
         )
 
-        self._project.constants.export(
+        self._peano_project.constants.export(
             "TimeInBetweenCheckpoints", str(self._time_in_between_checkpoints)
         )
 
@@ -328,26 +355,26 @@ class Project(object):
                         file_string += ","
                         file_string += self._solvers_file_collection[i][j]
                     file_string += "}"
-                    self._project.constants.export_const_with_type(
+                    self._peano_project.constants.export_const_with_type(
                         "CheckpointFilesOf"+self._solvers[i]._name, file_string, "std::vector<std::string>"
                     )
-        self._project.constants.export(
+        self._peano_project.constants.export(
             "CheckpointTimeStamp", str(self._restart_timestamp)
         )    
 
-        self._project.constants.export("PlotterPrecision", str(self._plotter_precision))
-        self._project.constants.export_boolean_sequence("PeriodicBC", self._periodic_BC)
+        self._peano_project.constants.export("PlotterPrecision", str(self._plotter_precision))
+        self._peano_project.constants.export_boolean_sequence("PeriodicBC", self._periodic_BC)
 
         build_string = "python3 "
         for i in sys.argv:
             build_string += " "
             build_string += i
-        self._project.constants.export_string("BuildInformation", build_string)
-        self._project.constants.export_string(
-            "ConfigureInformation", self._project.output.makefile.configure_call
+        self._peano_project.constants.export_string("BuildInformation", build_string)
+        self._peano_project.constants.export_string(
+            "ConfigureInformation", self._peano_project.output.makefile.configure_call
         )
 
-        self._project.output.readme.add_package_description(
+        self._peano_project.output.readme.add_package_description(
             """
 
 ### ExaHyPE 2
@@ -379,15 +406,15 @@ thus appreciate any citation of the original release paper
         )
 
         for i in self._solvers:
-            self._project.output.readme.add_entry(
+            self._peano_project.output.readme.add_entry(
                 i.create_readme_descriptor(self._domain_offset[0], self._domain_size[0])
             )
         # self._min_volume_h         = min_volume_h
         # self._max_volume_h         = max_volume_h
 
     def __configure_makefile(self):
-        self._project.output.makefile.set_dimension(self._dimensions)
-        self._project.output.makefile.set_executable_name(self._executable_name)
+        self._peano_project.output.makefile.set_dimension(self._dimensions)
+        self._peano_project.output.makefile.set_executable_name(self._executable_name)
 
     def set_global_simulation_parameters(
         self,
@@ -447,10 +474,10 @@ thus appreciate any citation of the original release paper
         self._time_in_between_plots = time_in_between_plots
         self._first_checkpoint_time_stamp = first_checkpoint_time_stamp
         self._time_in_between_checkpoints = time_in_between_checkpoints
-        self._project.constants.export(
+        self._peano_project.constants.export(
             "TimeInBetweenPlots", str(self._time_in_between_plots)
         )
-        self._project.constants.export(
+        self._peano_project.constants.export(
             "TimeInBetweenCheckpoints", str(self._time_in_between_checkpoints)
         )
 
@@ -566,16 +593,16 @@ thus appreciate any citation of the original release paper
                 templatefile_prefix + "SolverRepository.template.h",
                 templatefile_prefix + "SolverRepository.template.cpp",
                 "SolverRepository",
-                self._project.namespace + ["repositories"],
-                self._project.subdirectory + "repositories",
+                self._peano_project.namespace + ["repositories"],
+                self._peano_project.subdirectory + "repositories",
                 self.solverRepositoryDictionary,
                 True,
             )
         )
 
-        self._project.output.add(generated_solver_files)
-        self._project.output.makefile.add_cpp_file(
-            self._project.subdirectory + "repositories/SolverRepository.cpp", generated=True
+        self._peano_project.output.add(generated_solver_files)
+        self._peano_project.output.makefile.add_cpp_file(
+            self._peano_project.subdirectory + "repositories/SolverRepository.cpp", generated=True
         )
 
     def add_tracer(
@@ -710,8 +737,8 @@ thus appreciate any citation of the original release paper
 
         particles = peano4.api.toolbox.particles.ParticleSet(particle)
 
-        self._project.datamodel.add_global_object(particle)
-        self._project.datamodel.add_vertex(particles)
+        self._peano_project.datamodel.add_global_object(particle)
+        self._peano_project.datamodel.add_vertex(particles)
 
         self.plot_solution.use_vertex(particles)
         self.checkpoint_solution.use_vertex(particles)
@@ -833,13 +860,14 @@ thus appreciate any citation of the original release paper
         self.create_grid_but_postpone_refinement.add_action_set(action_set)
         self.create_grid_and_converge_lb.add_action_set(action_set)
 
-    def generate_Peano4_project(self, verbose=False):
+    def generate_Peano4_project(self, 
+                                verbose=False):
         """!
 
         Construct a Peano 4 project and return it
 
         Build the Peano 4 project, i.e., all the action sets et al that you require
-        to run this ExaHyPE 2 application. The project is built within self._project
+        to run this ExaHyPE 2 application. The project is built within self._peano_project
         and eventually returned.
 
         This routine generates a Peano project, i.e. the domain-specific ExaHyPE
@@ -849,80 +877,78 @@ thus appreciate any citation of the original release paper
         generate_Peano4_project() again to get a new snapshot/version of the
         Peano setup.
         """
-        # self._project.cleanup()
-
-        self._project.solversteps.add_step(self.create_grid)
-        self._project.solversteps.add_step(self.init_grid)
-        self._project.solversteps.add_step(self.create_grid_but_postpone_refinement)
-        self._project.solversteps.add_step(self.create_grid_and_converge_lb)
-        self._project.solversteps.add_step(self.plot_solution)
-        self._project.solversteps.add_step(self.checkpoint_solution)
-        self._project.solversteps.add_step(self.perform_time_step)
+        # @todo Has to go into a generator
+        self._peano_project.solversteps.add_step(self.create_grid)
+        self._peano_project.solversteps.add_step(self.init_grid)
+        self._peano_project.solversteps.add_step(self.create_grid_but_postpone_refinement)
+        self._peano_project.solversteps.add_step(self.create_grid_and_converge_lb)
+        self._peano_project.solversteps.add_step(self.plot_solution)
+        self._peano_project.solversteps.add_step(self.checkpoint_solution)
+        self._peano_project.solversteps.add_step(self.perform_time_step)
 
         for solver in self._solvers:
-            print("---------------------------------------")
-            print("Create data for solver " + solver._name)
-            print("---------------------------------------")
-            print(str(solver))
+            solver.generate_Peano4_project(self,
+                                           verbose,
+                                           )
+                        
+#            solver.add_to_Peano4_datamodel(self._peano_project.datamodel, verbose)
 
-            solver.add_to_Peano4_datamodel(self._project.datamodel, verbose)
+#            solver.add_use_data_statements_to_Peano4_solver_step(self.create_grid)
+#            solver.add_use_data_statements_to_Peano4_solver_step(self.plot_solution)
+#            solver.add_use_data_statements_to_Peano4_solver_step(self.checkpoint_solution)
+#            solver.add_use_data_statements_to_Peano4_solver_step(self.perform_time_step)
+#            solver.add_use_data_statements_to_Peano4_solver_step(self.init_grid)
+#            solver.add_use_data_statements_to_Peano4_solver_step(
+#                self.create_grid_but_postpone_refinement
+#            )
+#            solver.add_use_data_statements_to_Peano4_solver_step(
+#                self.create_grid_and_converge_lb
+#            )
 
-            solver.add_use_data_statements_to_Peano4_solver_step(self.create_grid)
-            solver.add_use_data_statements_to_Peano4_solver_step(self.plot_solution)
-            solver.add_use_data_statements_to_Peano4_solver_step(self.checkpoint_solution)
-            solver.add_use_data_statements_to_Peano4_solver_step(self.perform_time_step)
-            solver.add_use_data_statements_to_Peano4_solver_step(self.init_grid)
-            solver.add_use_data_statements_to_Peano4_solver_step(
-                self.create_grid_but_postpone_refinement
-            )
-            solver.add_use_data_statements_to_Peano4_solver_step(
-                self.create_grid_and_converge_lb
-            )
+#            solver.add_actions_to_create_grid(
+#                self.create_grid, evaluate_refinement_criterion=True
+#            )
 
-            solver.add_actions_to_create_grid(
-                self.create_grid, evaluate_refinement_criterion=True
-            )
+#            if self._restart_from_checkpoint: #avoid error when use solver without checkpoint feature
+#                solver.add_actions_to_init_grid(self.init_grid, self._restart_from_checkpoint)
+#                solver.add_actions_to_plot_solution(self.plot_solution, self._output_path, self._restart_from_checkpoint)
+#                solver.add_actions_to_checkpoint_solution(self.checkpoint_solution, self._output_path, self._restart_from_checkpoint)
+#            else:
+#                solver.add_actions_to_init_grid(self.init_grid)
+#                solver.add_actions_to_plot_solution(self.plot_solution, self._output_path)
+#                if ( (self._time_in_between_checkpoints != 0) or (self._first_checkpoint_time_stamp != 0) ):
+#                    solver.add_actions_to_checkpoint_solution(self.checkpoint_solution, self._output_path)
 
-            if self._restart_from_checkpoint: #avoid error when use solver without checkpoint feature
-                solver.add_actions_to_init_grid(self.init_grid, self._restart_from_checkpoint)
-                solver.add_actions_to_plot_solution(self.plot_solution, self._output_path, self._restart_from_checkpoint)
-                solver.add_actions_to_checkpoint_solution(self.checkpoint_solution, self._output_path, self._restart_from_checkpoint)
-            else:
-                solver.add_actions_to_init_grid(self.init_grid)
-                solver.add_actions_to_plot_solution(self.plot_solution, self._output_path)
-                if ( (self._time_in_between_checkpoints != 0) or (self._first_checkpoint_time_stamp != 0) ):
-                    solver.add_actions_to_checkpoint_solution(self.checkpoint_solution, self._output_path)
-
-            solver.add_actions_to_create_grid(
-                self.create_grid_but_postpone_refinement,
-                evaluate_refinement_criterion=False,
-            )
-            solver.add_actions_to_create_grid(
-                self.create_grid_and_converge_lb, evaluate_refinement_criterion=False
-            )
+#            solver.add_actions_to_create_grid(
+#                self.create_grid_but_postpone_refinement,
+#                evaluate_refinement_criterion=False,
+#            )
+#            solver.add_actions_to_create_grid(
+#                self.create_grid_and_converge_lb, evaluate_refinement_criterion=False
+#            )
             
-            solver.add_actions_to_perform_time_step(self.perform_time_step)
+#            solver.add_actions_to_perform_time_step(self.perform_time_step)
 
-            if self._abstract_overwrite==False:
-                solver.add_implementation_files_to_project(
-                    self._project.namespace, self._project.output, self._dimensions, self._subdirectory, self._abstract_overwrite
-                )
-            else:
-                solver.add_implementation_files_to_project( self._project.namespace, self._project.output, self._dimensions, self._subdirectory )
+#            if self._abstract_overwrite==False:
+#                solver.add_implementation_files_to_project(
+#                    self._peano_project.namespace, self._peano_project.output, self._dimensions, self._subdirectory, self._abstract_overwrite
+#                )
+#            else:
+#                solver.add_implementation_files_to_project( self._peano_project.namespace, self._peano_project.output, self._dimensions, self._subdirectory )
 
-        self.__generate_solver_repository()
+#        self.__generate_solver_repository()
 
-        self._project.main = exahype2.ExaHyPEMain(self._project)
+#        self._peano_project.main = exahype2.api.ExaHyPEMain(self._peano_project)
 
-        self.__configure_makefile()
-        self._project.output.makefile.parse_configure_script_outcome(
-            self._Peano_src_directory
-        )
-        self.__export_constants()
+#        self.__configure_makefile()
+#        self._peano_project.output.makefile.parse_configure_script_outcome(
+#            self._Peano_src_directory
+#        )
+#        self.__export_constants()
 
-        self._project.output.makefile.set_mode(self._build_mode)
+#        self._peano_project.output.makefile.set_mode(self._build_mode)
 
-        return self._project
+        return self._peano_project
 
 
     def init_new_user_defined_algorithmic_step(self,
@@ -961,3 +987,11 @@ thus appreciate any citation of the original release paper
     @property
     def additional_includes(self):
         return self._additional_includes
+
+    @property
+    def namespace(self):
+        return self._peano_project.namespace
+
+    @property
+    def peano4_project(self):
+        return self._peano_project
