@@ -93,36 +93,62 @@ def _format_initialisation_lists(sweep_numbers,
            )
 
 
-def _infer_hardcoded_mode(subtrees):
+def _infer_hardcoded_mode(subtrees, bottom_up_flags=None):
     """!
     Infer split mode(s) from extracted split operations.
 
-    The mode decision is made per subtree independently:
-    - If a subtree appears in split instructions on exactly one level,
-      `AggressiveTopDown` is sufficient.
-    - If it appears on multiple levels, all instructions for that subtree use
-      `BottomUp`.
+    When *bottom_up_flags* is provided — a per-operation boolean list returned by
+    the updated `extract_split_instructions` — the mode is read directly from
+    those flags: `True` → `BottomUp`, `False` → `AggressiveTopDown`.
+    This path is exact because the extraction already determined whether each
+    subtree was introduced on a single level (AggressiveTopDown) or on multiple
+    levels (BottomUp).
 
-    The result is either a single mode token (all splits same mode) or a C++
-    initializer-list expression with one mode per split operation.
+    When *bottom_up_flags* is `None` (legacy callers), the mode is inferred
+    from occurrence counts: a subtree that appears more than once in the
+    *subtrees* list was emitted at multiple levels and is therefore BottomUp.
+
+    The result is either a single mode token (when all operations share the same
+    mode) or a C++ initializer-list expression `{mode0, mode1, ...}` with one
+    entry per split operation.
+
+    Args:
+        subtrees: Per-operation list of target subtree ids.
+        bottom_up_flags: Optional per-operation boolean list (same length as
+            *subtrees*).  `True` means the corresponding operation is BottomUp.
+            Passed through from `extract_split_instructions`; `None` activates
+            the legacy heuristic.
     """
     if not subtrees:
         return "peano4::SplitInstruction::Mode::AggressiveTopDown"
 
-    occurrences_per_subtree = {}
-    for subtree_id in subtrees:
-        occurrences_per_subtree[subtree_id] = occurrences_per_subtree.get(subtree_id, 0) + 1
+    if bottom_up_flags is not None:
+        # Direct path: trust the flags supplied by the extraction step.
+        per_split_modes = [
+            "peano4::SplitInstruction::Mode::BottomUp"
+            if bu
+            else "peano4::SplitInstruction::Mode::AggressiveTopDown"
+            for bu in bottom_up_flags
+        ]
+    else:
+        # Legacy fallback: infer from how many times each subtree appears.
+        # A subtree appearing more than once was emitted at multiple levels
+        # (old extraction behaviour) and therefore requires BottomUp mode.
+        occurrences_per_subtree: dict[int, int] = {}
+        for subtree_id in subtrees:
+            occurrences_per_subtree[subtree_id] = occurrences_per_subtree.get(subtree_id, 0) + 1
 
-    mode_per_subtree = {}
-    for subtree_id, occurrences in occurrences_per_subtree.items():
-        if occurrences > 1:
-            mode_per_subtree[subtree_id] = "peano4::SplitInstruction::Mode::BottomUp"
-        else:
-            mode_per_subtree[subtree_id] = "peano4::SplitInstruction::Mode::AggressiveTopDown"
+        mode_per_subtree = {
+            sid: (
+                "peano4::SplitInstruction::Mode::BottomUp"
+                if cnt > 1
+                else "peano4::SplitInstruction::Mode::AggressiveTopDown"
+            )
+            for sid, cnt in occurrences_per_subtree.items()
+        }
+        per_split_modes = [mode_per_subtree[subtree_id] for subtree_id in subtrees]
 
-    per_split_modes = [mode_per_subtree[subtree_id] for subtree_id in subtrees]
     unique_modes = set(per_split_modes)
-
     if len(unique_modes) == 1:
         return per_split_modes[0]
 
@@ -249,8 +275,8 @@ Extracted hardcoded parameters:
 
     from toolbox.loadbalancing.api.strategies.SplitTrees import extract_split_instructions
 
-    sweep_numbers, parent_trees, subpartition_sizes, subtrees = extract_split_instructions(peano_tree)
-    hardcoded_mode = _infer_hardcoded_mode(subtrees)
+    sweep_numbers, parent_trees, subpartition_sizes, subtrees, bottom_up_flags = extract_split_instructions(peano_tree)
+    hardcoded_mode = _infer_hardcoded_mode(subtrees, bottom_up_flags)
 
     destination_ranks = _normalise_destination_ranks(destination_ranks, subtrees)
 
