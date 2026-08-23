@@ -60,4 +60,12 @@ The separation of concerns in the solver architecture means that all ExaHyPE app
 4. Lower the Peano 4 data model once more into a plain C++ code plus makefile.
 
 
+## Patterns and idioms
+
+- In the original ExaHyPE 2 rewrite, we did rely a lot on Jinja 2 templates to 
+  generate all kind of files. As the code evolved, we decided that we want to 
+  move away from Jinja 2 templates as they are hard to maintain and to debug.
+  Notably, they imply that knowledge is scattered between the template and the Python code,
+  while we saw more and more logic migrate from the Python files into the templates.
+
 */

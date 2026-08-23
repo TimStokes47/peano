@@ -197,11 +197,12 @@ libraries.  This glue code is generated through the Python API.
   large-scale Peano applications.
 - **src** Holds the C++ Peano sources of the Peano core and all the
   toolboxes.
-- **src/api** Holds the Python API scripts. Within the ```api```
-  subdirectory, you find scripts for both the Peano core API, toolboxes and
-  large-scale Peano applications.
+- **src/.../api** Holds the Python API scripts of the underlying C++ code part.
 - **tests** Collection of small test cases that can be automised.
 - **benchmarks** Collection of benchmark scripts.
-- **applications** Proper, real-world applications.
+- **tutorials** Holds all the tutorials.
+- **applications** Proper, real-world applications, i.e. bigger pieces of 
+  code built on top of Peano or one of its extensions. Often, these features
+  are used in return by benchmarks and tutorials.
 
 */
