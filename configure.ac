@@ -269,11 +269,88 @@ AC_ARG_WITH(
     AC_MSG_RESULT(no); gpu=false
   ]
 )
+AC_ARG_WITH(
+  gpu_vendor,
+  AS_HELP_STRING([--with-gpu-vendor],[select which GPU vendor is being used [default=unset,amd,intel,nvidia]]),
+  [
+    AC_MSG_CHECKING(for gpu_vendor)
+    case "${withval}" in
+      unset)    AC_MSG_RESULT(Do not set GPU vendor);                                             gpu_vendor=unset ;;
+      amd)    AC_MSG_RESULT(build with AMD GPU support);                                             gpu_vendor=amd ;;
+      intel)   AC_MSG_RESULT(build with Intel GPU support);           gpu_vendor=intel ;;
+      nvidia)  AC_MSG_RESULT(build with NVIDIA GPU support);                    gpu_vendor=nvidia ;;
+      *)     AC_MSG_FAILURE([use amd, intel or nvidia to define target]);  gpu_vendor=unset ;;
+    esac
+  ],
+  [
+    AC_MSG_CHECKING(for gpu_vendor);
+    AC_MSG_RESULT(unset); gpu_vendor=unset
+  ]
+)
 
-AM_CONDITIONAL([GPUOffloadingOMP],    [test "$gpu" == omp])
-AM_CONDITIONAL([GPUOffloadingSYCL],   [test "$gpu" == sycl])
-AM_CONDITIONAL([GPUOffloadingCPP],    [test "$gpu" == cpp])
-AM_CONDITIONAL([GPUOffloadingHIP],    [test "$gpu" == hip])
+GPU_VENDOR=""
+if test "$gpu_vendor" == amd; then
+  GPU_VENDOR="AMD"
+  
+  if test "$gpu" == omp; then
+    CXXFLAGS="$CXXFLAGS -fopenmp-targets=amdgcn-amd-amdhsa"
+    LDFLAGS="$LDFLAGS -fopenmp-targets=amdgcn-amd-amdhsa"
+  fi
+  if test "$gpu" == sycl; then
+    CXXFLAGS="$CXXFLAGS -fsycl-targets=amdgcn-amd-amdhsa"
+    LDFLAGS="$LDFLAGS -fsycl-targets=amdgcn-amd-amdhsa"
+  fi
+fi
+
+if test "$gpu_vendor" == intel; then
+  GPU_VENDOR="INTEL"
+  if test "$gpu" == omp; then
+    CXXFLAGS="$CXXFLAGS -fopenmp-targets=spir64"
+    LDFLAGS="$LDFLAGS -fopenmp-targets=spir64"
+  fi
+  if test "$gpu" == sycl; then
+    CXXFLAGS="$CXXFLAGS -fsycl-targets=spir64"
+    LDFLAGS="$LDFLAGS -fsycl-targets=spir64"
+  fi
+fi
+
+if test "$gpu_vendor" == nvidia; then
+  GPU_VENDOR="NVIDIA"
+  if test "$gpu" == omp; then
+    CXXFLAGS="$CXXFLAGS -fopenmp-targets=nvptx64-nvidia-cuda"
+    LDFLAGS="$LDFLAGS -fopenmp-targets=nvptx64-nvidia-cuda"
+  fi
+  if test "$gpu" == sycl; then
+    CXXFLAGS="$CXXFLAGS -fsycl-targets=nvptx64-nvidia-cuda"
+    LDFLAGS="$LDFLAGS -fsycl-targets=nvptx64-nvidia-cuda"
+  fi
+fi
+
+AC_ARG_WITH(
+  gpu_arch,
+  AS_HELP_STRING([--with-gpu-arch],[select which GPU architecture is being used, default=unset]),
+  [
+    AC_MSG_CHECKING(for gpu_arch)
+    case "${withval}" in
+      unset)    AC_MSG_RESULT(Do not set GPU architecture);                                             gpu_arch=unset ;;
+      *)     AC_MSG_RESULT(GPU architecture set to ${withval});  gpu_arch=${withval} ;;
+    esac
+  ],
+  [
+    AC_MSG_CHECKING(for gpu_arch);
+    AC_MSG_RESULT(unset); gpu_arch=unset
+  ]
+)
+
+GPU_ARCH=""
+if test "$gpu_arch" != unset; then
+  CXXFLAGS="$CXXFLAGS --offload-arch=${gpu_arch}"
+  LDFLAGS="$LDFLAGS --offload-arch=${gpu_arch}"
+  GPU_ARCH=${gpu_arch}
+fi
+
+AC_SUBST(GPU_VENDOR)
+AC_SUBST(GPU_ARCH)
 
 if test "$gpu" == omp; then
   AC_CHECK_HEADERS([omp.h],[],[AC_MSG_WARN([header <omp.h> not found])])

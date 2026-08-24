@@ -312,9 +312,10 @@ class Parser:
     
     def _parse_function(self, function: ast.FunctionDef, template, functor_arguments, namespaces, stateless, use_accelerator, top_level = False):
         id = function.name
+        SyntaxTree.FunctionDefinition._stateless = stateless
         return_type = SyntaxTree.TCustom(function.returns.value) if function.returns is not None else SyntaxTree.TCustom(function.returns)
-        parsed_function = SyntaxTree.FunctionDefinition(id, return_type, template, namespaces, stateless, top_level)
-
+        parsed_function = SyntaxTree.FunctionDefinition(id, return_type, template, namespaces, use_accelerator, top_level)
+        
         if use_accelerator:
             parsed_function.add_argument(SyntaxTree.Argument("targetDevice", SyntaxTree.TInteger()))
             SyntaxTree.Node.use_accelerator = True

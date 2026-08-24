@@ -121,29 +121,23 @@ kernels/{{MLIR_LL_FILE_OMP}}: kernels/{{MLIR_SOURCES_OMP}}
 # MLIR to GPU binary translation using dslhype-opt and mlir-opt 
 # *** NOTE: Requires the linearization passes provided by dslhype-opt and Hardcoded for Grace-Hopper, at present
 kernels/{{MLIR_LL_FILE_GPU}}: kernels/{{MLIR_SOURCES_GPU}}
-	dslhype-opt -pass-pipeline="builtin.module(dslhype-linearize-nested-memrefs,canonicalize,cse,loop-invariant-code-motion,dslhype-host-to-device-memspace{mem-space=global},dslhype-include-physics{physics-file={{MLIR_PHYSICS_FILE}} mem-space=global},dslhype-host-to-device-memspace{mem-space=global},inline,expand-strided-metadata,fold-memref-alias-ops,symbol-dce,canonicalize,func.func(gpu-map-parallel-loops),convert-parallel-loops-to-gpu,fold-memref-alias-ops,lower-affine,gpu-kernel-outlining,func.func(gpu-async-region),canonicalize,convert-arith-to-llvm{index-bitwidth=64},convert-scf-to-cf,convert-cf-to-llvm{index-bitwidth=64},nvvm-attach-target{chip=sm_90},gpu.module(inline,convert-gpu-to-nvvm,canonicalize,cse),gpu-to-llvm,gpu-module-to-binary,finalize-memref-to-llvm{index-bitwidth=64},reconcile-unrealized-casts)" $< | mlir-translate --mlir-to-llvmir > $@
+	{% if GPU_VENDOR=="AMD" %}
+		dslhype-opt -pass-pipeline="builtin.module(dslhype-linearize-nested-memrefs,canonicalize,cse,loop-invariant-code-motion,dslhype-host-to-device-memspace{mem-space=global},dslhype-include-physics{physics-file={{MLIR_PHYSICS_FILE}} mem-space=global},dslhype-host-to-device-memspace{mem-space=global},inline,expand-strided-metadata,fold-memref-alias-ops,symbol-dce,canonicalize,func.func(gpu-map-parallel-loops),convert-parallel-loops-to-gpu,fold-memref-alias-ops,lower-affine,gpu-kernel-outlining,func.func(gpu-async-region),canonicalize,convert-arith-to-llvm{index-bitwidth=64},convert-scf-to-cf,convert-cf-to-llvm{index-bitwidth=64},rocdl-attach-target{chip={{GPU_ARCH}}},gpu.module(inline,convert-gpu-to-rocdl,canonicalize,cse),gpu-to-llvm,gpu-module-to-binary,finalize-memref-to-llvm{index-bitwidth=64},reconcile-unrealized-casts)" $< | mlir-translate --mlir-to-llvmir > $@
+	{% elif GPU_VENDOR=="NVIDIA" %}
+		dslhype-opt -pass-pipeline="builtin.module(dslhype-linearize-nested-memrefs,canonicalize,cse,loop-invariant-code-motion,dslhype-host-to-device-memspace{mem-space=global},dslhype-include-physics{physics-file={{MLIR_PHYSICS_FILE}} mem-space=global},dslhype-host-to-device-memspace{mem-space=global},inline,expand-strided-metadata,fold-memref-alias-ops,symbol-dce,canonicalize,func.func(gpu-map-parallel-loops),convert-parallel-loops-to-gpu,fold-memref-alias-ops,lower-affine,gpu-kernel-outlining,func.func(gpu-async-region),canonicalize,convert-arith-to-llvm{index-bitwidth=64},convert-scf-to-cf,convert-cf-to-llvm{index-bitwidth=64},nvvm-attach-target{chip={{GPU_ARCH}}},gpu.module(inline,convert-gpu-to-nvvm,canonicalize,cse),gpu-to-llvm,gpu-module-to-binary,finalize-memref-to-llvm{index-bitwidth=64},reconcile-unrealized-casts)" $< | mlir-translate --mlir-to-llvmir > $@
+	{% endif %}
 {% endif %}
 
-# LLVM IR to object file compilation  
-kernels/rusanov3d_mlir.o: kernels/rusanov3d.ll
+kernels/{{MLIR_OBJECT}}: kernels/{{MLIR_LL_FILE}}
 	llc -relocation-model=pic -filetype=obj $< -o $@
 
-# OMP LLVM IR to object file compilation  
-kernels/rusanov3d_mlir_omp.o: kernels/rusanov3d_omp.ll
-	llc -relocation-model=pic -filetype=obj $< -o $@
-
-# LLVM IR to object file compilation  
-kernels/fd4_3d_mlir.o: kernels/fd4_3d.ll
-	llc -relocation-model=pic -filetype=obj $< -o $@
-
-# OMP LLVM IR to object file compilation  
-kernels/fd4_3d_mlir_omp.o: kernels/fd4_3d_omp.ll
+kernels/{{MLIR_OBJECT_OMP}}: kernels/{{MLIR_LL_FILE_OMP}}
 	llc -relocation-model=pic -filetype=obj $< -o $@
 
 {% if MLIR_GPU %}
 # GPU LLVM IR to object file compilation
 kernels/{{MLIR_OBJECT_GPU}}: kernels/{{MLIR_LL_FILE_GPU}}
-	llc -march=aarch64 -filetype=obj $< -o $@
+	llc -relocation-model=pic -filetype=obj $< -o $@
 {% endif %}
 
 {% endif %}

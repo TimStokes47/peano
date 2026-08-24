@@ -550,7 +550,7 @@ class FunctionDefinition(Node):
     _stateless = False
     _syclDataToCopy = []
 
-    def __init__(self, id, return_type: Type, template = None, namespaces = [], stateless = False, top_level = False):
+    def __init__(self, id, return_type: Type, template = None, namespaces = [], use_accelerator = False, top_level = False):
         super().__init__()
         self.id = id
         self._return_type = return_type
@@ -558,8 +558,8 @@ class FunctionDefinition(Node):
         self._template = template
         self._arguments = []
         self._body = []
+        self.use_accelerator = use_accelerator
         self._namespaces = namespaces
-        FunctionDefinition._stateless = stateless
         self._top_level = top_level
 
     def top_level(self, top = None):
@@ -579,9 +579,29 @@ class FunctionDefinition(Node):
             Node.type_map.update({argument.id: argument._namespace})
             if Node.type_map.get(argument._type.print_cpp()) is None:
                 Node.type_map.update({argument._type.print_cpp(): argument._namespace})
-            
-    def print_declaration(self, indent_level = 0):
-        namespace_header = f"""namespace {"::".join(self._namespaces)} {{"""
+
+    def print_declaration_cpp(self, indent_level = 0):
+        Node.use_accelerator = self.use_accelerator
+        return self.print_declaration([])
+
+    def print_declaration_omp(self, indent_level = 0):
+        Node.use_accelerator = self.use_accelerator
+        return self.print_declaration(["omp"])
+
+    def print_declaration_sycl(self, indent_level = 0):
+        Node.use_accelerator = self.use_accelerator
+        return self.print_declaration(["sycl"])
+
+    def print_declaration_mlir(self, use_omp = False, indent_level = 0):
+        Node.use_accelerator = self.use_accelerator
+        if use_omp:
+            return self.print_declaration(["omp", "mlir"])
+        else:
+            return self.print_declaration(["mlir"])           
+
+    def print_declaration(self, extra_namespaces, indent_level = 0):
+        Node.use_accelerator = self.use_accelerator
+        namespace_header = f"""namespace {"::".join(self._namespaces + extra_namespaces)} {{"""
         namespace_footer = "}"
         template_string = ""
         if self._template is not None:
@@ -597,6 +617,7 @@ class FunctionDefinition(Node):
 """
 
     def print_cpp(self, indent_level=0):
+        Node.use_accelerator = self.use_accelerator
         namespace_header = f"""namespace {"::".join(self._namespaces)} {{"""
         namespace_footer = "}"
         template_string = ""
@@ -616,7 +637,8 @@ class FunctionDefinition(Node):
 """
     
     def print_omp(self, indent_level=0):
-        namespace_header = f"""namespace {"::".join(self._namespaces)} {{"""
+        Node.use_accelerator = self.use_accelerator
+        namespace_header = f"""namespace {"::".join(self._namespaces)}::omp {{"""
         namespace_footer = "}"
         template_string = ""
         if self._template is not None:
@@ -635,7 +657,8 @@ class FunctionDefinition(Node):
 """
     
     def print_sycl(self, indent_level=0):
-        namespace_header = f"""namespace {"::".join(self._namespaces)} {{"""
+        Node.use_accelerator = self.use_accelerator
+        namespace_header = f"""namespace {"::".join(self._namespaces)}::sycl {{"""
         namespace_footer = "}"
         template_string = ""
         if self._template is not None:
@@ -664,7 +687,14 @@ class FunctionDefinition(Node):
 {namespace_footer}
 """
     
-    def print_mlir(self, indent_level = 0):
+    def print_mlir(self, use_omp = False, indent_level = 0):
+        if self._top_level:
+            for argument in self._arguments:
+                Node.type_map.update({argument.id: argument._namespace})
+                if Node.type_map.get(argument._type.print_cpp()) is None:
+                    Node.type_map.update({argument._type.print_cpp(): argument._namespace})
+        Node.use_accelerator = self.use_accelerator
+        Node.use_mlir_omp = use_omp
         indent_level += 1  # Increase indentation for MLIR
         
         if self._top_level:
@@ -753,6 +783,7 @@ func.return
 """
 
     def print_tree(self, indent_level = 0):
+        Node.use_accelerator = self.use_accelerator
         statement_prints = [statement.print_tree(indent_level + 1) for statement in self._body]
         argument_prints = [argument.print_tree(indent_level + 1) for argument in self._arguments]
         return f"""
@@ -760,8 +791,24 @@ FunctionDefinition: {self.id}:
 {os.linesep.join(argument_prints)}
 {os.linesep.join(statement_prints)}"""
     
-    def print_definition_with_timer(self, indent_level = 0):
-        namespace_header = f"""namespace {"::".join(self._namespaces)} {{"""
+    def print_definition_with_timer_cpp(self, indent_level = 0):
+        return self.print_definition_with_timer([])
+
+    def print_definition_with_timer_omp(self, indent_level = 0):
+        return self.print_definition_with_timer(["omp"])
+
+    def print_definition_with_timer_sycl(self, indent_level = 0):
+        return self.print_definition_with_timer(["sycl"])
+
+    def print_definition_with_timer_mlir(self, use_omp = False, indent_level = 0):
+        if use_omp:
+            return self.print_definition_with_timer(["omp", "mlir"])
+        else:
+            return self.print_definition_with_timer(["mlir"])  
+
+    def print_definition_with_timer(self, extra_namespaces, indent_level = 0):
+        Node.use_accelerator = self.use_accelerator
+        namespace_header = f"""namespace {"::".join(self._namespaces + extra_namespaces)} {{"""
         namespace_footer = "}"
         template_string = ""
         function_call_string = self.id
@@ -785,9 +832,25 @@ measurement.setValue(watch.getCalendarTime());
 {' ' * current_indent * Node.spaces_per_tab}}}
 {namespace_footer}
 """
-    
-    def print_declaration_with_timer(self, indent_level = 0):
-        namespace_header = f"""namespace {"::".join(self._namespaces)} {{"""
+
+    def print_declaration_with_timer_cpp(self, indent_level = 0):
+        return self.print_declaration_with_timer([])
+
+    def print_declaration_with_timer_omp(self, indent_level = 0):
+        return self.print_declaration_with_timer(["omp"])
+
+    def print_declaration_with_timer_sycl(self, indent_level = 0):
+        return self.print_declaration_with_timer(["sycl"])
+
+    def print_declaration_with_timer_mlir(self, use_omp = False, indent_level = 0):
+        if use_omp:
+            return self.print_declaration_with_timer(["omp", "mlir"])
+        else:
+            return self.print_declaration_with_timer(["mlir"])  
+
+    def print_declaration_with_timer(self, extra_namespaces, indent_level = 0):
+        Node.use_accelerator = self.use_accelerator
+        namespace_header = f"""namespace {"::".join(self._namespaces + extra_namespaces)} {{"""
         namespace_footer = "}"
         template_string = ""
         if self._template is not None:

@@ -430,31 +430,138 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
   deviceString = std::to_string(device);
 #endif
 
-  if constexpr (AssessHostKernels) {
-    #if defined (USE_CPP_KERNELS)
-    if constexpr (AssessSerialKernels) {
-      assessKernel(wrapHostKernel<
-        exahype2::fv::rusanov::timeStepWithRusanovStateless<
-          FVRusanov,
-          FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
-          HaloSize,
-          FVRusanov::NumberOfUnknowns,
-          FVRusanov::NumberOfAuxiliaryVariables,
-          EvaluateFlux,
-          EvaluateNonconservativeProduct,
-          EvaluateSource,
-          EvaluateMaximumEigenvalueAfterTimeStep>
-        >,
-        "host, AoS, serial",
-        launchingThreads,
-        ::tarch::accelerator::Device::HostDevice,
-        localPatches
-      );
-    }
-    if constexpr (AssessParallelKernels) {
+  #if defined (ASSESS_HOST_KERNELS)
+    #if defined (ASSESS_SERIAL_KERNELS)
+      #if defined (ASSESS_CPP_KERNELS)
+        assessKernel(wrapHostKernel<
+          exahype2::fv::rusanov::timeStepWithRusanovStateless<
+            FVRusanov,
+            FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
+            HaloSize,
+            FVRusanov::NumberOfUnknowns,
+            FVRusanov::NumberOfAuxiliaryVariables,
+            EvaluateFlux,
+            EvaluateNonconservativeProduct,
+            EvaluateSource,
+            EvaluateMaximumEigenvalueAfterTimeStep>
+          >,
+          "host, AoS, serial, cpp",
+          launchingThreads,
+          ::tarch::accelerator::Device::HostDevice,
+          localPatches
+        );
+      #endif //ASSESS_CPP_KERNELS
+      #if defined (ASSESS_MLIR_KERNELS)
+        assessKernel(wrapMLIRHostKernel<
+          exahype2::fv::rusanov::mlir::timeStepWithRusanovStateless<
+            FVRusanov,
+            FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
+            HaloSize,
+            FVRusanov::NumberOfUnknowns,
+            FVRusanov::NumberOfAuxiliaryVariables,
+            EvaluateFlux,
+            EvaluateNonconservativeProduct,
+            EvaluateSource,
+            EvaluateMaximumEigenvalueAfterTimeStep>
+          >,
+          "host, AoS, serial, mlir",
+          launchingThreads,
+          ::tarch::accelerator::Device::HostDevice,
+          localPatches
+        );
+      #endif //ASSESS_MLIR_KERNELS
+    #endif //ASSESS_SERIAL_KERNELS
+
+    #if defined (ASSESS_PARALLEL_KERNELS)
       #if defined (SharedOMP)
-      assessKernel(wrapHostKernel<
-        exahype2::fv::rusanov::omp::timeStepWithRusanovStateless<
+        #if defined (ASSESS_CPP_KERNELS)
+          assessKernel(wrapHostKernel<
+            exahype2::fv::rusanov::omp::timeStepWithRusanovStateless<
+              FVRusanov,
+              FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
+              HaloSize,
+              FVRusanov::NumberOfUnknowns,
+              FVRusanov::NumberOfAuxiliaryVariables,
+              EvaluateFlux,
+              EvaluateNonconservativeProduct,
+              EvaluateSource,
+              EvaluateMaximumEigenvalueAfterTimeStep>
+            >,
+            "host, AoS, omp, cpp",
+            launchingThreads,
+            ::tarch::accelerator::Device::HostDevice,
+            localPatches
+          );
+        #endif //ASSESS_CPP_KERNELS
+        #if defined (ASSESS_MLIR_KERNELS)
+          assessKernel(wrapMLIRHostKernel<
+            exahype2::fv::rusanov::omp::mlir::timeStepWithRusanovStateless<
+              FVRusanov,
+              FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
+              HaloSize,
+              FVRusanov::NumberOfUnknowns,
+              FVRusanov::NumberOfAuxiliaryVariables,
+              EvaluateFlux,
+              EvaluateNonconservativeProduct,
+              EvaluateSource,
+              EvaluateMaximumEigenvalueAfterTimeStep>
+            >,
+            "host, AoS, omp, mlir",
+            launchingThreads,
+            ::tarch::accelerator::Device::HostDevice,
+            localPatches
+          );
+        #endif //ASSESS_MLIR_KERNELS
+      #endif //SharedOMP
+    #endif //ASSESS_PARALLEL_KERNELS
+  #endif //ASSESS_HOST_KERNELS
+
+  #if defined (ASSESS_DEVICE_KERNELS)
+    #if defined (ASSESS_CPP_KERNELS)
+      #if defined (GPUOffloadingOMP)
+        assessKernel(wrapDeviceKernel<
+          exahype2::fv::rusanov::omp::timeStepWithRusanovStateless<
+            FVRusanov,
+            FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
+            HaloSize,
+            FVRusanov::NumberOfUnknowns,
+            FVRusanov::NumberOfAuxiliaryVariables,
+            EvaluateFlux,
+            EvaluateNonconservativeProduct,
+            EvaluateSource,
+            EvaluateMaximumEigenvalueAfterTimeStep>
+          >,
+          "device, AoS, omp",
+          launchingThreads,
+          0,
+          localPatches
+        );
+      #endif //GPUOffloadingOMP
+
+      #if defined (GPUOffloadingSYCL)
+        assessKernel(wrapDeviceKernel<
+          exahype2::fv::rusanov::sycl::timeStepWithRusanovStateless<
+            FVRusanov,
+            FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
+            HaloSize,
+            FVRusanov::NumberOfUnknowns,
+            FVRusanov::NumberOfAuxiliaryVariables,
+            EvaluateFlux,
+            EvaluateNonconservativeProduct,
+            EvaluateSource,
+            EvaluateMaximumEigenvalueAfterTimeStep>
+          >,
+          "device, AoS, sycl",
+          launchingThreads,
+          0,
+          localPatches
+        );
+      #endif //GPUOffloadingSYCL
+    #endif //ASSESS_CPP_KERNELS
+
+    #if defined (ASSESS_MLIR_KERNELS)
+      assessKernel(wrapMLIRDeviceKernel<
+        exahype2::fv::rusanov::mlir::gpu::timeStepWithRusanovStateless<
           FVRusanov,
           FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
           HaloSize,
@@ -465,124 +572,13 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
           EvaluateSource,
           EvaluateMaximumEigenvalueAfterTimeStep>
         >,
-        "host, AoS, omp",
+        "device, AoS, mlir",
         launchingThreads,
-        ::tarch::accelerator::Device::HostDevice,
+        0,
         localPatches
       );
-      #endif
-    }
-    #endif
-    // MLIR kernel assessment
-    #if defined (USE_MLIR)
-    if constexpr (AssessSerialKernels) {
-      assessKernel(wrapMLIRHostKernel<
-        exahype2::fv::rusanov::mlir::timeStepWithRusanovStateless<
-          FVRusanov,
-          FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
-          HaloSize,
-          FVRusanov::NumberOfUnknowns,
-          FVRusanov::NumberOfAuxiliaryVariables,
-          EvaluateFlux,
-          EvaluateNonconservativeProduct,
-          EvaluateSource,
-          EvaluateMaximumEigenvalueAfterTimeStep>
-        >,
-        "host, AoS, mlir, serial",
-        launchingThreads,
-        ::tarch::accelerator::Device::HostDevice,
-        localPatches
-      );
-    }
-    if constexpr (AssessParallelKernels) {
-      #if defined (SharedOMP)
-      assessKernel(wrapMLIRHostKernel<
-        exahype2::fv::rusanov::mlir::omp::timeStepWithRusanovStateless<
-          FVRusanov,
-          FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
-          HaloSize,
-          FVRusanov::NumberOfUnknowns,
-          FVRusanov::NumberOfAuxiliaryVariables,
-          EvaluateFlux,
-          EvaluateNonconservativeProduct,
-          EvaluateSource,
-          EvaluateMaximumEigenvalueAfterTimeStep>
-        >,
-        "host, AoS, mlir, omp",
-        launchingThreads,
-        ::tarch::accelerator::Device::HostDevice,
-        localPatches
-      );
-      #endif
-    }
-    #endif
-  }
-
-  if constexpr (AssessDeviceKernels) {
-    #if defined (GPUOffloadingOMP)
-    assessKernel(wrapDeviceKernel<
-      exahype2::fv::rusanov::omp::timeStepWithRusanovStateless<
-        FVRusanov,
-        FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
-        HaloSize,
-        FVRusanov::NumberOfUnknowns,
-        FVRusanov::NumberOfAuxiliaryVariables,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        EvaluateMaximumEigenvalueAfterTimeStep>
-      >,
-      "device, AoS, omp",
-      launchingThreads,
-      0,
-      localPatches
-    );
-    #endif
-
-    #if defined (GPUOffloadingSYCL)
-    assessKernel(wrapDeviceKernel<
-      exahype2::fv::rusanov::sycl::timeStepWithRusanovStateless<
-        FVRusanov,
-        FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
-        HaloSize,
-        FVRusanov::NumberOfUnknowns,
-        FVRusanov::NumberOfAuxiliaryVariables,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        EvaluateMaximumEigenvalueAfterTimeStep>
-      >,
-      "device, AoS, sycl",
-      launchingThreads,
-      0,
-      localPatches
-    );
-    #endif
-  }
-
-  if constexpr (AssessMLIRDeviceKernels) {
-    #if defined(USE_MLIR)
-    #if defined(MLIR_GPU)
-    assessKernel(wrapMLIRDeviceKernel<
-      exahype2::fv::rusanov::mlir::gpu::timeStepWithRusanovStateless<
-        FVRusanov,
-        FVRusanov::NumberOfFiniteVolumesPerAxisPerPatch,
-        HaloSize,
-        FVRusanov::NumberOfUnknowns,
-        FVRusanov::NumberOfAuxiliaryVariables,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        EvaluateMaximumEigenvalueAfterTimeStep>
-      >,
-      "device, AoS, mlir, gpu",
-      launchingThreads,
-      0,
-      localPatches
-    );
-    #endif
-    #endif
-  }
+    #endif //ASSESS_MLIR_KERNELS
+  #endif //ASSESS_DEVICE_KERNELS
 }
 
 

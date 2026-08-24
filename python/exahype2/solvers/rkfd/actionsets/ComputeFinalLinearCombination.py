@@ -56,7 +56,7 @@ class ComputeFinalLinearCombination(AbstractRKFDActionSet):
 
         double* fineGridCellDevice = tarch::accelerator::GPUMemoryManager::getInstance().allocate<double>(enumeratorWithAuxiliaryVariables.size(), fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceNumber());
         omp_target_memcpy(fineGridCellDevice, fineGridCell{{UNKNOWN_IDENTIFIER}}.value, enumeratorWithAuxiliaryVariables.size() * sizeof(double), 0, 0, fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceNumber(), omp_get_initial_device());
-        ::exahype2::fd::fd4::omp::computeFinalLinearCombinationStateless<{{SOLVER_NAME}}, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}}, {{NUMBER_OF_UNKNOWNS}}, {{NUMBER_OF_AUXILIARY_VARIABLES}}, {{RK_ORDER}}>(fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceNumber(), fineGridCell{{UNKNOWN_IDENTIFIER}}RhsEstimates.value, fineGridCellDevice, timeStepSize);
+        //::exahype2::fd::fd4::omp::computeFinalLinearCombinationStateless<{{SOLVER_NAME}}, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}}, {{NUMBER_OF_UNKNOWNS}}, {{NUMBER_OF_AUXILIARY_VARIABLES}}, {{RK_ORDER}}>(fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceNumber(), fineGridCell{{UNKNOWN_IDENTIFIER}}RhsEstimates.value, fineGridCellDevice, timeStepSize);
         omp_target_memcpy(fineGridCell{{UNKNOWN_IDENTIFIER}}.value, fineGridCellDevice, enumeratorWithAuxiliaryVariables.size() * sizeof(double), 0, 0, omp_get_initial_device(), fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceNumber());
         tarch::accelerator::GPUMemoryManager::getInstance().free(fineGridCellDevice, fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceNumber());
 

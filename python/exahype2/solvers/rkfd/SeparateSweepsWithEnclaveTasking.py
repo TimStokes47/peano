@@ -55,7 +55,7 @@ class UpdateCell(ReconstructPatchAndApplyFunctor):
           omp_target_memcpy(fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceMemoryAddress(), oldQWithHalo, enumeratorWithAuxiliaryVariablesOnReconstructedPatch.size() * sizeof(double), 0, 0, device, omp_get_initial_device());
         }
       }
-      #endif
+      
       
       {% for PREDICATE_NO in range(0,PREDICATES|length) %}
       if ({{PREDICATES[PREDICATE_NO]}}) {
@@ -63,7 +63,7 @@ class UpdateCell(ReconstructPatchAndApplyFunctor):
         ::exahype2::enumerator::AoSLexicographicEnumerator enumeratorWithoutAuxiliaryVariables( {{RK_STEPS}}, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}}, 0, {{NUMBER_OF_UNKNOWNS}}, 0 );
     
         if (marker.willBeEnclaveCell() and {{DEVICE_RESIDENT_RK}}) {
-            ::exahype2::fd::fd4::omp::computeLinearCombinationStateless<{{SOLVER_NAME}}, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}}, {{HALO_SIZE}}, {{NUMBER_OF_UNKNOWNS}}, {{NUMBER_OF_AUXILIARY_VARIABLES}}, {{RK_ORDER}}, {{PREDICATE_NO}}>(fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceNumber(), fineGridCell{{UNKNOWN_IDENTIFIER}}RhsEstimates.value, fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceMemoryAddress(), timeStepSize);
+            //::exahype2::fd::fd4::omp::computeLinearCombinationStateless<{{SOLVER_NAME}}, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}}, {{HALO_SIZE}}, {{NUMBER_OF_UNKNOWNS}}, {{NUMBER_OF_AUXILIARY_VARIABLES}}, {{RK_ORDER}}, {{PREDICATE_NO}}>(fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceNumber(), fineGridCell{{UNKNOWN_IDENTIFIER}}RhsEstimates.value, fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceMemoryAddress(), timeStepSize);
         } else{
             dfor( dof, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}} ) {
             for (int unknown=0; unknown<{{NUMBER_OF_UNKNOWNS}}; unknown++) {

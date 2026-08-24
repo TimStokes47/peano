@@ -279,6 +279,7 @@ def create_DeriCalInExaGRyPE_kernel_definitions_3d():
   file.close()
 
 def create_FD4_kernel_definitions_3d(patch_size, unknowns, auxiliary_variables, ko_sigma, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step):
+  function = exahype2.solvers.rkfd.fd4.timeStepWithFD4
   template_parameters = [DSL.SyntaxTree.Argument("NC", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
                          DSL.SyntaxTree.Argument("H", DSL.SyntaxTree.TInteger(), "applications::exahype2"),
                          DSL.SyntaxTree.Argument("NumberOfUnknowns", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
@@ -293,17 +294,17 @@ def create_FD4_kernel_definitions_3d(patch_size, unknowns, auxiliary_variables, 
                        DSL.SyntaxTree.Argument("nonconservativeProduct", DSL.SyntaxTree.TCustom("const NonconservativeProduct&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()", is_function=True),
                        DSL.SyntaxTree.Argument("sourceTerm", DSL.SyntaxTree.TCustom("const Source&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()", is_function=True)]
 
-  FD4_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"])
-  FD4_kernel = FD4_tree.print_cpp()
-  FD4_call_with_measurement = FD4_tree.print_definition_with_timer()
-  FD4_kernel_declaration = FD4_tree.print_declaration()
-  FD4_call_with_measurement_declaration = FD4_tree.print_declaration_with_timer()
+  #FD4_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"])
+  #FD4_kernel = FD4_tree.print_cpp()
+  #FD4_call_with_measurement = FD4_tree.print_definition_with_timer()
+  #FD4_kernel_declaration = FD4_tree.print_declaration()
+  #FD4_call_with_measurement_declaration = FD4_tree.print_declaration_with_timer()
 
-  FD4_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"], stateless=True)
-  FD4_stateless_kernel = FD4_stateless_tree.print_cpp()
-  FD4_stateless_call_with_measurement = FD4_stateless_tree.print_definition_with_timer()
-  FD4_stateless_kernel_declaration = FD4_stateless_tree.print_declaration()
-  FD4_stateless_call_with_measurement_declaration = FD4_stateless_tree.print_declaration_with_timer()
+  #FD4_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"], stateless=True)
+  #FD4_stateless_kernel = FD4_stateless_tree.print_cpp()
+  #FD4_stateless_call_with_measurement = FD4_stateless_tree.print_definition_with_timer()
+  #FD4_stateless_kernel_declaration = FD4_stateless_tree.print_declaration()
+  #FD4_stateless_call_with_measurement_declaration = FD4_stateless_tree.print_declaration_with_timer()
 
   #FD4_accelerator_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"], True, True).print_cpp()
   #FD4_accelerator_kernel = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"], True, True).print_cpp()
@@ -311,47 +312,47 @@ def create_FD4_kernel_definitions_3d(patch_size, unknowns, auxiliary_variables, 
   #FD4_accelerator_kernel_declaration = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"], True, True).print_declaration()
   #FD4_accelerator_call_with_measurement_declaration = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"], True, True).print_declaration_with_timer()
 
-  FD4_omp_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "omp"])
-  FD4_omp_kernel = FD4_omp_tree.print_omp()
-  FD4_omp_call_with_measurement = FD4_omp_tree.print_definition_with_timer()
-  FD4_omp_kernel_declaration = FD4_omp_tree.print_declaration()
-  FD4_omp_call_with_measurement_declaration = FD4_omp_tree.print_declaration_with_timer()
-
-  FD4_omp_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "omp"], stateless=True)
-  FD4_omp_stateless_kernel = FD4_omp_stateless_tree.print_omp()
-  FD4_omp_stateless_call_with_measurement = FD4_omp_stateless_tree.print_definition_with_timer()
-  FD4_omp_stateless_kernel_declaration = FD4_omp_stateless_tree.print_declaration()
-  FD4_omp_stateless_call_with_measurement_declaration = FD4_omp_stateless_tree.print_declaration_with_timer()
-
-  FD4_omp_accelerator_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "omp"], stateless=True, use_accelerator=True)
-  FD4_omp_accelerator_kernel = FD4_omp_accelerator_tree.print_omp()
-  FD4_omp_accelerator_call_with_measurement = FD4_omp_accelerator_tree.print_definition_with_timer()
-  FD4_omp_accelerator_kernel_declaration = FD4_omp_accelerator_tree.print_declaration()
-  FD4_omp_accelerator_call_with_measurement_declaration = FD4_omp_accelerator_tree.print_declaration_with_timer()
-
-  FD4_sycl_accelerator_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "sycl"], stateless=True, use_accelerator=True)
-  FD4_sycl_accelerator_kernel = FD4_sycl_accelerator_tree.print_sycl()
-  FD4_sycl_accelerator_call_with_measurement = FD4_sycl_accelerator_tree.print_definition_with_timer()
-  FD4_sycl_accelerator_kernel_declaration = FD4_sycl_accelerator_tree.print_declaration()
-  FD4_sycl_accelerator_call_with_measurement_declaration = FD4_sycl_accelerator_tree.print_declaration_with_timer()
-
-  # These function definitions are used to generate declarations in the MLIR bridge files
-  FD4_mlir_function_definition = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "mlir"])
-  FD4_mlir_stateless_function_definition = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "mlir"], stateless=True)
-  FD4_mlir_stateless_omp_function_definition = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "mlir", "omp"], stateless=True)
-  FD4_mlir_gpu_function_definition = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "mlir", "gpu"], stateless=True, use_accelerator=True)
-  
-  FD4_mlir_kernel = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"]).print_mlir()
-  FD4_mlir_omp_kernel = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"], mlir_omp=True).print_mlir()
-
-  mlir_cpu_function_definitions = [
-    FD4_mlir_function_definition,
-    FD4_mlir_stateless_function_definition,
-    FD4_mlir_stateless_omp_function_definition
-  ]
-  
-  if not os.path.exists("kernels"):
-      os.makedirs("kernels")
+#  FD4_omp_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "omp"])
+#  FD4_omp_kernel = FD4_omp_tree.print_omp()
+#  FD4_omp_call_with_measurement = FD4_omp_tree.print_definition_with_timer()
+#  FD4_omp_kernel_declaration = FD4_omp_tree.print_declaration()
+#  FD4_omp_call_with_measurement_declaration = FD4_omp_tree.print_declaration_with_timer()
+#
+#  FD4_omp_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "omp"], stateless=True)
+#  FD4_omp_stateless_kernel = FD4_omp_stateless_tree.print_omp()
+#  FD4_omp_stateless_call_with_measurement = FD4_omp_stateless_tree.print_definition_with_timer()
+#  FD4_omp_stateless_kernel_declaration = FD4_omp_stateless_tree.print_declaration()
+#  FD4_omp_stateless_call_with_measurement_declaration = FD4_omp_stateless_tree.print_declaration_with_timer()
+#
+#  FD4_omp_accelerator_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "omp"], stateless=True, use_accelerator=True)
+#  FD4_omp_accelerator_kernel = FD4_omp_accelerator_tree.print_omp()
+#  FD4_omp_accelerator_call_with_measurement = FD4_omp_accelerator_tree.print_definition_with_timer()
+#  FD4_omp_accelerator_kernel_declaration = FD4_omp_accelerator_tree.print_declaration()
+#  FD4_omp_accelerator_call_with_measurement_declaration = FD4_omp_accelerator_tree.print_declaration_with_timer()
+#
+#  FD4_sycl_accelerator_tree = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "sycl"], stateless=True, use_accelerator=True)
+#  FD4_sycl_accelerator_kernel = FD4_sycl_accelerator_tree.print_sycl()
+#  FD4_sycl_accelerator_call_with_measurement = FD4_sycl_accelerator_tree.print_definition_with_timer()
+#  FD4_sycl_accelerator_kernel_declaration = FD4_sycl_accelerator_tree.print_declaration()
+#  FD4_sycl_accelerator_call_with_measurement_declaration = FD4_sycl_accelerator_tree.print_declaration_with_timer()
+#
+#  # These function definitions are used to generate declarations in the MLIR bridge files
+#  FD4_mlir_function_definition = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "mlir"])
+#  FD4_mlir_stateless_function_definition = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "mlir"], stateless=True)
+#  FD4_mlir_stateless_omp_function_definition = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "mlir", "omp"], stateless=True)
+#  FD4_mlir_gpu_function_definition = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4", "mlir", "gpu"], stateless=True, use_accelerator=True)
+#  
+#  FD4_mlir_kernel = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"]).print_mlir()
+#  FD4_mlir_omp_kernel = DSL.Parser().parse(exahype2.solvers.rkfd.fd4.timeStepWithFD4, template_parameters, functor_arguments, ["exahype2", "fd", "fd4"], mlir_omp=True).print_mlir()
+#
+#  mlir_cpu_function_definitions = [
+#    FD4_mlir_function_definition,
+#    FD4_mlir_stateless_function_definition,
+#    FD4_mlir_stateless_omp_function_definition
+#  ]
+#  
+#  if not os.path.exists("kernels"):
+#      os.makedirs("kernels")
   
   solver_includes = """
 #include "exahype2/CellData.h"
@@ -363,116 +364,116 @@ def create_FD4_kernel_definitions_3d(patch_size, unknowns, auxiliary_variables, 
 #include "tarch/timing/Watch.h"
 """
 
-  file = open("kernels/FD4.h", "w")
-  file.write(f"""#pragma once
-{solver_includes}
-             
-{FD4_kernel_declaration}
-{FD4_call_with_measurement_declaration}
-{FD4_stateless_kernel_declaration}
-{FD4_stateless_call_with_measurement_declaration}
-
-#if defined(SharedOMP)
-{FD4_omp_kernel_declaration}
-{FD4_omp_call_with_measurement_declaration}
-{FD4_omp_stateless_kernel_declaration}
-{FD4_omp_stateless_call_with_measurement_declaration}
-#endif
-
-#if defined(GPUOffloadingOMP)
-{FD4_omp_accelerator_kernel_declaration}
-{FD4_omp_accelerator_call_with_measurement_declaration}
-{ComputeLinearCombination_omp_accelerator_kernel_declaration}
-{ComputeLinearCombination_omp_accelerator_call_with_measurement_declaration}
-{ComputeFinalLinearCombination_omp_accelerator_kernel_declaration}
-{ComputeFinalLinearCombination_omp_accelerator_call_with_measurement_declaration}
-#endif
-
-#if defined(GPUOffloadingSYCL)
-{FD4_sycl_accelerator_kernel_declaration}
-{FD4_sycl_accelerator_call_with_measurement_declaration}
-#endif
-
-#ifdef USE_MLIR
-#include "MLIRbridge.cpph"
-#endif
-#include "FD4.cpph"
-""")
-  file.close()
-
-  file = open("kernels/FD4.cpph", "w")
-  file.write(FD4_kernel)
-  file.write(FD4_call_with_measurement)
-  file.write(FD4_stateless_kernel)
-  file.write(FD4_stateless_call_with_measurement)
-
-  file.write("#if defined(SharedOMP)\n")
-  file.write(FD4_omp_kernel)
-  file.write(FD4_omp_call_with_measurement)
-  file.write(FD4_omp_stateless_kernel)
-  file.write(FD4_omp_stateless_call_with_measurement)
-  file.write("#endif\n")
-
-  file.write("#if defined(GPUOffloadingOMP)\n")
-  file.write(FD4_omp_accelerator_kernel)
-  file.write(FD4_omp_accelerator_call_with_measurement)
-  file.write(ComputeLinearCombination_omp_accelerator_kernel)
-  file.write(ComputeLinearCombination_omp_accelerator_call_with_measurement)
-  file.write(ComputeFinalLinearCombination_omp_accelerator_kernel)
-  file.write(ComputeFinalLinearCombination_omp_accelerator_call_with_measurement)
-  file.write("#endif\n")
-
-  file.write("#if defined(GPUOffloadingSYCL)\n")
-  file.write(FD4_sycl_accelerator_kernel)
-  file.write(FD4_sycl_accelerator_call_with_measurement)
-  file.write("#endif\n")
-  file.close()
-
-  file = open("kernels/fd4_3d.mlir", "w")
-  file.write(FD4_mlir_kernel)
-  file.close()
-
-  file = open("kernels/fd4_3d_omp.mlir", "w")
-  file.write(FD4_mlir_omp_kernel)
-  file.close()  
-
-  # Generate MLIR bridge files
-  with open("MLIRbridge.cpph", 'w') as file:
-    file.write("""
-#include "MemRefDescriptor.cpph"
-// MLIR-compatible structure using memref descriptors
-struct MLIRCellData {
-    MemRefDescriptor2D QIn;             // Field 0
-    MemRefDescriptor2D QOut;            // Field 1  
-    MemRefDescriptorNested cellCentre;  // Field 2
-    MemRefDescriptorNested cellSize;    // Field 3
-    MemRefDescriptor1D t;               // Field 4
-    MemRefDescriptor1D dt;              // Field 5
-    MemRefDescriptor1D id;              // Field 6
-    int64_t numberOfCells;              // Field 7
-    int64_t memoryLocation;             // Field 8
-    int64_t targetDevice;               // Field 9
-    double** QOut_legacy;               // Field 10
-    double* maxEigenvalue;              // Field 11
-};
-void convertToMLIRStruct(exahype2::CellData<double, double>* patchData, MLIRCellData* mlir_data);
-void convertToMLIRStructGPU(exahype2::CellData<double, double>* copyCellData, MLIRCellData* mlir_data);
-void cleanupMLIRStruct(MLIRCellData* mlir_data);
-void cleanupMLIRStructGPU(MLIRCellData* mlir_data);
-void copybackMLIRresults(exahype2::CellData<double, double>* patchData, MLIRCellData* mlir_data);
-""")
-    file.write("""extern "C" void timeStepWithFD4_MLIR_wrapper(exahype2::CellData<double, double>* patchData, bool use_omp);\n""")
-    for definition in mlir_cpu_function_definitions:
-      file.write(definition.print_declaration())
-      file.write(definition.print_declaration_with_timer())
-      definition._arguments[0]._type = DSL.SyntaxTree.TCustom("MLIRCellData*")
-      file.write(definition.print_declaration())
-      file.write(definition.print_declaration_with_timer())
-    file.write("#ifdef MLIR_GPU\n")
-    FD4_mlir_gpu_function_definition._arguments[1]._type = DSL.SyntaxTree.TCustom("MLIRCellData*")
-    file.write(FD4_mlir_gpu_function_definition.print_declaration())
-    file.write(FD4_mlir_gpu_function_definition.print_declaration_with_timer())
-    file.write("#endif")
+#  file = open("kernels/FD4.h", "w")
+#  file.write(f"""#pragma once
+#{solver_includes}
+#             
+#{FD4_kernel_declaration}
+#{FD4_call_with_measurement_declaration}
+#{FD4_stateless_kernel_declaration}
+#{FD4_stateless_call_with_measurement_declaration}
+#
+##if defined(SharedOMP)
+#{FD4_omp_kernel_declaration}
+#{FD4_omp_call_with_measurement_declaration}
+#{FD4_omp_stateless_kernel_declaration}
+#{FD4_omp_stateless_call_with_measurement_declaration}
+##endif
+#
+##if defined(GPUOffloadingOMP)
+#{FD4_omp_accelerator_kernel_declaration}
+#{FD4_omp_accelerator_call_with_measurement_declaration}
+#{ComputeLinearCombination_omp_accelerator_kernel_declaration}
+#{ComputeLinearCombination_omp_accelerator_call_with_measurement_declaration}
+#{ComputeFinalLinearCombination_omp_accelerator_kernel_declaration}
+#{ComputeFinalLinearCombination_omp_accelerator_call_with_measurement_declaration}
+##endif
+#
+##if defined(GPUOffloadingSYCL)
+#{FD4_sycl_accelerator_kernel_declaration}
+#{FD4_sycl_accelerator_call_with_measurement_declaration}
+##endif
+#
+##ifdef USE_MLIR
+##include "MLIRbridge.cpph"
+##endif
+##include "FD4.cpph"
+#""")
+#  file.close()
+#
+#  file = open("kernels/FD4.cpph", "w")
+#  file.write(FD4_kernel)
+#  file.write(FD4_call_with_measurement)
+#  file.write(FD4_stateless_kernel)
+#  file.write(FD4_stateless_call_with_measurement)
+#
+#  file.write("#if defined(SharedOMP)\n")
+#  file.write(FD4_omp_kernel)
+#  file.write(FD4_omp_call_with_measurement)
+#  file.write(FD4_omp_stateless_kernel)
+#  file.write(FD4_omp_stateless_call_with_measurement)
+#  file.write("#endif\n")
+#
+#  file.write("#if defined(GPUOffloadingOMP)\n")
+#  file.write(FD4_omp_accelerator_kernel)
+#  file.write(FD4_omp_accelerator_call_with_measurement)
+#  file.write(ComputeLinearCombination_omp_accelerator_kernel)
+#  file.write(ComputeLinearCombination_omp_accelerator_call_with_measurement)
+#  file.write(ComputeFinalLinearCombination_omp_accelerator_kernel)
+#  file.write(ComputeFinalLinearCombination_omp_accelerator_call_with_measurement)
+#  file.write("#endif\n")
+#
+#  file.write("#if defined(GPUOffloadingSYCL)\n")
+#  file.write(FD4_sycl_accelerator_kernel)
+#  file.write(FD4_sycl_accelerator_call_with_measurement)
+#  file.write("#endif\n")
+#  file.close()
+#
+#  file = open("kernels/fd4_3d.mlir", "w")
+#  file.write(FD4_mlir_kernel)
+#  file.close()
+#
+#  file = open("kernels/fd4_3d_omp.mlir", "w")
+#  file.write(FD4_mlir_omp_kernel)
+#  file.close()  
+#
+#  # Generate MLIR bridge files
+#  with open("MLIRbridge.cpph", 'w') as file:
+#    file.write("""
+##include "MemRefDescriptor.cpph"
+#// MLIR-compatible structure using memref descriptors
+#struct MLIRCellData {
+#    MemRefDescriptor2D QIn;             // Field 0
+#    MemRefDescriptor2D QOut;            // Field 1  
+#    MemRefDescriptorNested cellCentre;  // Field 2
+#    MemRefDescriptorNested cellSize;    // Field 3
+#    MemRefDescriptor1D t;               // Field 4
+#    MemRefDescriptor1D dt;              // Field 5
+#    MemRefDescriptor1D id;              // Field 6
+#    int64_t numberOfCells;              // Field 7
+#    int64_t memoryLocation;             // Field 8
+#    int64_t targetDevice;               // Field 9
+#    double** QOut_legacy;               // Field 10
+#    double* maxEigenvalue;              // Field 11
+#};
+#void convertToMLIRStruct(exahype2::CellData<double, double>* patchData, MLIRCellData* mlir_data);
+#void convertToMLIRStructGPU(exahype2::CellData<double, double>* copyCellData, MLIRCellData* mlir_data);
+#void cleanupMLIRStruct(MLIRCellData* mlir_data);
+#void cleanupMLIRStructGPU(MLIRCellData* mlir_data);
+#void copybackMLIRresults(exahype2::CellData<double, double>* patchData, MLIRCellData* mlir_data);
+#""")
+#    file.write("""extern "C" void timeStepWithFD4_MLIR_wrapper(exahype2::CellData<double, double>* patchData, bool use_omp);\n""")
+#    for definition in mlir_cpu_function_definitions:
+#      file.write(definition.print_declaration())
+#      file.write(definition.print_declaration_with_timer())
+#      definition._arguments[0]._type = DSL.SyntaxTree.TCustom("MLIRCellData*")
+#      file.write(definition.print_declaration())
+#      file.write(definition.print_declaration_with_timer())
+#    file.write("#ifdef MLIR_GPU\n")
+#    FD4_mlir_gpu_function_definition._arguments[1]._type = DSL.SyntaxTree.TCustom("MLIRCellData*")
+#    file.write(FD4_mlir_gpu_function_definition.print_declaration())
+#    file.write(FD4_mlir_gpu_function_definition.print_declaration_with_timer())
+#    file.write("#endif")
   
   d = {}
   d["KERNEL_NAMESPACE"] = "exahype2::fd::fd4"
@@ -492,8 +493,8 @@ void copybackMLIRresults(exahype2::CellData<double, double>* patchData, MLIRCell
   d["COMPUTE_MAX_EIGENVALUE"] = compute_max_eigenvalue_of_next_time_step
   d["HALO_SIZE"] = 3
 
-  template_strings = [argument.print_cpp() for argument in FD4_mlir_function_definition._template]
-  d["TEMPLATE_DEFINITION"] = "template <" + ",".join(template_strings) + ">\n"
+  #template_strings = [argument.print_cpp() for argument in FD4_mlir_function_definition._template]
+  #d["TEMPLATE_DEFINITION"] = "template <" + ",".join(template_strings) + ">\n"
 
   template_call_jinja = """
       {{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}},
@@ -522,13 +523,23 @@ void copybackMLIRresults(exahype2::CellData<double, double>* patchData, MLIRCell
   """
   d["TEMPLATE_VALUE_DEFINITIONS"] = jinja2.Template(template_value_definitions_jinja).render(**d)
 
-  filepath = os.path.realpath(__file__)
-  filepath_root = filepath[0:filepath.find("solvers/")]
-  with open(filepath_root + "dslhype/MLIRbridge.template.cpp", 'r') as template_file:
-    mlir_bridge_template = template_file.read()
-  mlir_bridge_cpp = jinja2.Template(mlir_bridge_template).render(**d)
-  with open("MLIRbridge.cpp", 'w') as file:
-    file.write(mlir_bridge_cpp)
+  #filepath = os.path.realpath(__file__)
+  #filepath_root = filepath[0:filepath.find("solvers/")]
+  #with open(filepath_root + "dslhype/MLIRbridge.template.cpp", 'r') as template_file:
+  #  mlir_bridge_template = template_file.read()
+  #mlir_bridge_cpp = jinja2.Template(mlir_bridge_template).render(**d)
+  #with open("MLIRbridge.cpp", 'w') as file:
+  #  file.write(mlir_bridge_cpp)
+
+  DSL.create_kernel_definitions(
+    function,
+    template_parameters,
+    functor_arguments,
+    "fd4_3d",
+    solver_includes,
+    ["exahype2", "fd", "fd4"],
+    d
+  )
 
 def create_compute_kernel_for_FD4InExaGRyPE_DSL(flux_implementation, 
                                                 ncp_implementation, 
