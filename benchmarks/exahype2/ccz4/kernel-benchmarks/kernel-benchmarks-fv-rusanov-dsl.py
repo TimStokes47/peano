@@ -75,13 +75,6 @@ parser.add_argument(
     help="Assess device kernels",
 )
 parser.add_argument(
-    "-mlirgpu",
-    "--mlir-gpu",
-    action="store_true",
-    dest="mlir_gpu",
-    help="Assess MLIR GPU kernels",
-)
-parser.add_argument(
     "-serial",
     "--serial",
     action="store_true",
@@ -103,9 +96,9 @@ parser.add_argument(
     "-d",
     "--dimensions",
     default=3,
-    choices = [2, 3],
+    choices = [3],
     type=int,
-    help="Number of dimensions to use: 2 or 3",
+    help="Number of dimensions to use: only 3 makes sense for this application",
 )
 parser.add_argument(
     "--enable-mlir",
@@ -176,21 +169,19 @@ if args.fpe:
 else:
     project.constants.export_boolean("EnableFPE", False)
 
-if args.cpu == False and args.gpu == False and args.mlir_gpu == False:
-    project.constants.export_boolean("AssessHostKernels", True)
-    project.constants.export_boolean("AssessDeviceKernels", True)
-    project.constants.export_boolean("AssessMLIRDeviceKernels", False)
+# CPU is enabled by default if neither CPU nor GPU are specified
+if args.cpu == False and args.gpu == False:
+    project.output.makefile.add_CXX_flag("-DASSESS_HOST_KERNELS")
 else:
-    project.constants.export_boolean("AssessHostKernels", True if args.cpu else False)
-    project.constants.export_boolean("AssessDeviceKernels", True if args.gpu else False)
-    project.constants.export_boolean("AssessMLIRDeviceKernels", True if args.mlir_gpu else False)
+    if args.cpu: project.output.makefile.add_CXX_flag("-DASSESS_HOST_KERNELS")
+    if args.gpu: project.output.makefile.add_CXX_flag("-DASSESS_DEVICE_KERNELS")
 
 if args.serial == False and args.parallel == False:
-    project.constants.export_boolean("AssessSerialKernels", True)
-    project.constants.export_boolean("AssessParallelKernels", True)
+    project.output.makefile.add_CXX_flag("-DASSESS_SERIAL_KERNELS")
+    project.output.makefile.add_CXX_flag("-DASSESS_PARALLEL_KERNELS")
 else:
-    project.constants.export_boolean("AssessSerialKernels", True if args.serial else False)
-    project.constants.export_boolean("AssessParallelKernels", True if args.parallel else False)
+    if args.serial: project.output.makefile.add_CXX_flag("-DASSESS_SERIAL_KERNELS")
+    if args.parallel: project.output.makefile.add_CXX_flag("-DASSESS_PARALLEL_KERNELS")
 
 project.constants.export_boolean("EvaluateFlux", False)
 project.constants.export_boolean("EvaluateNonconservativeProduct", True)
@@ -210,33 +201,55 @@ if args.enable_mlir:
     # Add MLIR-specific files and flags
     project.output.makefile.add_cpp_file("MLIRbridge.cpp")
     project.output.makefile.add_CXX_flag("-DUSE_MLIR")
-    #project.output.makefile.add_CXX_flag("-DMLIR_KERNEL_ENABLED")
-    project.output.makefile.add_CXX_flag("-DSharedOMP")
     
     # NOTE: As we are using LLVM toolings for MLIR, we link against LLVM's OpenMP library  
     project.output.makefile.add_linker_flag("-lomp")   
     project.output.makefile.add_linker_flag("-lomptarget") 
-    if args.mlir_gpu:
+    if args.gpu:
       print("Enabling MLIR GPU kernel compilation support")
-      project.output.makefile.add_cpp_file("MLIRbridgeCUDAfunctions.cpp")
       project.output.makefile.d["MLIR_GPU"] = True
-      project.output.makefile.add_linker_flag("-lcuda")
-      project.output.makefile.add_linker_flag("-lcudart")
+      project.output.makefile.add_CXX_flag("-DMLIR_GPU")
       project.output.makefile.add_linker_flag("-ldl")
       project.output.makefile.add_linker_flag("-pthread")
-      project.output.makefile.add_linker_flag("-lmlir_cuda_runtime")
-      CUDA_HOME = os.path.dirname(subprocess.check_output("which nvcc", shell=True).decode().strip()) 
-      project.output.makefile.add_linker_flag(f"-L{CUDA_HOME}/../targets/sbsa-linux/lib")
-      project.output.makefile.add_CXX_flag("-DMLIR_GPU")
+
       # NOTE: The current MLIR GPU linearization and lowering pipeline uses the base MLIR
       #       but may use the OMP version in future. Update here, as appropriate
       project.output.makefile.d["MLIR_SOURCES_GPU"] = f"rusanov{args.dimensions}d.mlir"
       project.output.makefile.d["MLIR_LL_FILE_GPU"] = f"rusanov{args.dimensions}d_gpu.ll" 
-      project.output.makefile.d["MLIR_OBJECT_GPU"] = f"rusanov{args.dimensions}d_mlir_gpu.o"    
+      project.output.makefile.d["MLIR_OBJECT_GPU"] = f"rusanov{args.dimensions}d_mlir_gpu.o"
+      
+      if project.output.makefile.d["GPU_VENDOR"] == "NVIDIA":
+        project.output.makefile.d["MLIR_GPU_NVIDIA"] = True
+        project.output.makefile.add_CXX_flag("-DMLIR_GPU_NVIDIA")
+        CUDA_HOME = os.path.dirname(subprocess.check_output("which nvcc", shell=True).decode().strip())
+        project.output.makefile.add_cpp_file("MLIRbridgeCUDAfunctions.cpp")
+        project.output.makefile.add_linker_flag("-lcuda")
+        project.output.makefile.add_linker_flag("-lcudart")
+        project.output.makefile.add_linker_flag("-lmlir_cuda_runtime")
+        project.output.makefile.add_linker_flag(f"-L{CUDA_HOME}/../targets/sbsa-linux/lib")
+        cuda_bridge_header_file = "../../../../python/exahype2/dslhype/MLIRbridgeCUDAfunctions.h"
+        cuda_bridge_file = "../../../../python/exahype2/dslhype/MLIRbridgeCUDAfunctions.cpp"
+        os.system("cp {} MLIRbridgeCUDAfunctions.h".format(cuda_bridge_header_file))
+        os.system("cp {} MLIRbridgeCUDAfunctions.cpp".format(cuda_bridge_file))
+      elif project.output.makefile.d["GPU_VENDOR"] == "AMD":
+        project.output.makefile.d["MLIR_GPU_AMD"] = True
+        project.output.makefile.add_CXX_flag("-DMLIR_GPU_AMD")
+        ROCM_HOME = os.path.dirname(subprocess.check_output("which hipcc", shell=True).decode().strip()) + "/.."
+        os.environ["ROCM_HOME"] = ROCM_HOME
+        project.output.makefile.add_cpp_file("MLIRbridgeHIPfunctions.cpp")
+        project.output.makefile.add_CXX_flag("-D__HIP_PLATFORM_AMD__")
+        project.output.makefile.add_linker_flag("-lamdhip64")
+        project.output.makefile.add_CXX_flag(f"-I{ROCM_HOME}/include")
+        project.output.makefile.add_linker_flag("-lmlir_rocm_runtime")
+        hip_bridge_header_file = "../../../../python/exahype2/dslhype/MLIRbridgeHIPfunctions.h"
+        hip_bridge_file = "../../../../python/exahype2/dslhype/MLIRbridgeHIPfunctions.cpp"
+        os.system("cp {} MLIRbridgeHIPfunctions.h".format(hip_bridge_header_file))
+        os.system("cp {} MLIRbridgeHIPfunctions.cpp".format(hip_bridge_file))
+      else:
+        raise RuntimeError("Unknown GPU vendor, please set it when configuring Peano with --with-gpu-vendor")
         
     project.output.makefile.d["MLIR_ENABLED"] = True
-    project.output.makefile.d["SOLVER_NAME"] = "rusanov"
-    project.output.makefile.d["MLIR_PHYSICS_FILE"] = "ccz4_physics.mlir"
+    project.output.makefile.d["MLIR_PHYSICS_FILE"] = f"ccz4_physics.mlir"
     project.output.makefile.d["MLIR_SOURCES"] = f"rusanov{args.dimensions}d.mlir"
     project.output.makefile.d["MLIR_LL_FILE"] = f"rusanov{args.dimensions}d.ll" 
     project.output.makefile.d["MLIR_OBJECT"] = f"rusanov{args.dimensions}d_mlir.o"
@@ -244,13 +257,11 @@ if args.enable_mlir:
     project.output.makefile.d["MLIR_LL_FILE_OMP"] = f"rusanov{args.dimensions}d_omp.ll" 
     project.output.makefile.d["MLIR_OBJECT_OMP"] = f"rusanov{args.dimensions}d_mlir_omp.o"
 
-    # Export MLIR enabled constant for C++ code
-    #project.constants.export_boolean("MLIRKernelEnabled", True)
-#else:
-    #project.constants.export_boolean("MLIRKernelEnabled", False)
+    project.output.makefile.add_CXX_flag("-DASSESS_MLIR_KERNELS")
 
-if args.enable_cpp:
-    project.output.makefile.add_CXX_flag("-DUSE_CPP_KERNELS")
+# CPP is enabled by default if MLIR is not enabled
+if args.enable_cpp or not args.enable_mlir:
+    project.output.makefile.add_CXX_flag("-DASSESS_CPP_KERNELS")
 
 
 benchmark_main_file = "../../kernel-benchmarks/KernelBenchmarksFVRusanovDSL-main.cpp"

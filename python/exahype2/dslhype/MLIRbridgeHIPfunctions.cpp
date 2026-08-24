@@ -5,8 +5,8 @@
 #include <cstdio>
 #include <iomanip>
 #include <cstdlib>
-#include <cuda_runtime.h>
-#include <cuda.h>
+#include <hip/hip_runtime.h>
+#include "MLIRbridgeHIPfunctions.h"
 
 // *** NOTE: These are the CUDA-based functions that the generated MLIR code call
 //           to setup the streams, load and launch the kernels etc.
@@ -23,23 +23,23 @@ extern "C" {
       return nullptr;
     }
     
-    CUresult res = cuInit(0);
-    if (res != CUDA_SUCCESS && res != 15) {
+    hipError_t res = hipInit(0);
+    if (res != hipSuccess && res != 15) {
       std::cerr << "[CUDA ERROR] Failed to initialize CUDA driver: " << (int)res << std::endl;
     }
     
-    CUdevice device = 0;
+    hipDevice_t device = 0;
 
-    res = cuDeviceGet(&device, 0);
-    if (res != CUDA_SUCCESS) {
+    res = hipDeviceGet(&device, 0);
+    if (res != hipSuccess) {
       std::cerr << "[CUDA ERROR] Failed to get device: " << (int)res << std::endl;
       return nullptr;
     }
  
     // Load PTX as CUDA module
-    CUmodule cu_module = nullptr;
-    res = cuModuleLoadData(&cu_module, binary);
-    if (res != CUDA_SUCCESS) {
+    hipModule_t cu_module = nullptr;
+    res = hipModuleLoadData(&cu_module, binary);
+    if (res != hipSuccess) {
       std::cerr << "[CUDA ERROR] Failed to load module: " << (int)res << std::endl;
       return nullptr;
     }
@@ -48,7 +48,7 @@ extern "C" {
 
   void mgpuModuleUnload(GPUModule module) {
     if (module) {
-      cuModuleUnload((CUmodule)module);
+      hipModuleUnload((hipModule_t)module);
     }
   }
 
@@ -58,9 +58,9 @@ extern "C" {
       return nullptr;
     }
     
-    CUfunction cu_kernel = nullptr;
-    CUresult res = cuModuleGetFunction(&cu_kernel, (CUmodule)module, name);
-    if (res != CUDA_SUCCESS) {
+    hipFunction_t cu_kernel = nullptr;
+    hipError_t res = hipModuleGetFunction(&cu_kernel, (hipModule_t)module, name);
+    if (res != hipSuccess) {
       std::cerr << "[CUDA ERROR] Failed to get kernel: " << (int)res << std::endl;
       return nullptr;
     }
@@ -69,10 +69,10 @@ extern "C" {
 
   // Stream management
   GPUStream mgpuStreamCreate() {
-    cudaStream_t stream = nullptr;
+    hipStream_t stream = nullptr;
 
-    CUresult res = cuStreamCreate(&stream, CU_STREAM_DEFAULT);
-    if (res != CUDA_SUCCESS) {
+    hipError_t res = hipStreamCreateWithFlags(&stream, hipStreamDefault);
+    if (res != hipSuccess) {
       std::cerr << "[CUDA ERROR] Failed to create stream: " << (int)res << std::endl;
       return nullptr;
     }
@@ -81,8 +81,8 @@ extern "C" {
 
   void mgpuStreamDestroy(GPUStream stream) {
     if (stream) {
-      CUresult res = cuStreamDestroy((cudaStream_t)stream);
-      if (res != CUDA_SUCCESS) {
+      hipError_t res = hipStreamDestroy((hipStream_t)stream);
+      if (res != hipSuccess) {
         std::cerr << "[CUDA ERROR] Failed to destroy stream: " << (int)res << std::endl;
       }
     }
@@ -90,8 +90,8 @@ extern "C" {
 
   void mgpuStreamSynchronize(GPUStream stream) {
     if (stream) {
-      CUresult res = cuStreamSynchronize((cudaStream_t)stream);
-      if (res != CUDA_SUCCESS) {
+      hipError_t res = hipStreamSynchronize((hipStream_t)stream);
+      if (res != hipSuccess) {
         std::cerr << "[CUDA ERROR] Failed to synchronize stream: " << (int)res << std::endl;
       }
     }
@@ -111,20 +111,20 @@ extern "C" {
 
     void** gpu_params = (void**)kernelParams;
     
-    CUresult res = cuLaunchKernel(
-        (CUfunction)func,
+    hipError_t res = hipModuleLaunchKernel(
+        (hipFunction_t)func,
         gridDimX, gridDimY, gridDimZ,
         blockDimX, blockDimY, blockDimZ,
         smemSize,
-        (cudaStream_t)stream,  
+        (hipStream_t)stream,  
         gpu_params,
         nullptr
     );
     
-    if (res != CUDA_SUCCESS) {
+    if (res != hipSuccess) {
       const char* errStr = nullptr;
-      cuGetErrorName(res, &errStr);
-      std::cerr << "[ERROR] cuLaunchKernel failed: " << errStr << std::endl;
+      hipDrvGetErrorName(res, &errStr);
+      std::cerr << "[ERROR] hipModuleLaunchKernel failed: " << errStr << std::endl;
       return;
     }
   }
@@ -134,9 +134,9 @@ extern "C" {
   void* mgpuMemAlloc(int64_t size, void* stream, int8_t flags) { 
     void* ptr = nullptr;
 
-    cudaError_t res = cudaMallocManaged(&ptr, size);
-    if (res != cudaSuccess) {
-        std::cerr << "[CUDA ERROR] Failed to allocate GPU memory: " << cudaGetErrorString(res) << std::endl;
+    hipError_t res = hipMallocManaged(&ptr, size);
+    if (res != hipSuccess) {
+        std::cerr << "[CUDA ERROR] Failed to allocate GPU memory: " << hipGetErrorString(res) << std::endl;
         return nullptr;
     }
     return ptr;
@@ -146,16 +146,16 @@ extern "C" {
   int32_t mgpuMemFree(void* ptr, void* stream) {
       if (!ptr) return 0;
 
-      cudaPointerAttributes attrs;
-      cudaError_t attrRes = cudaPointerGetAttributes(&attrs, ptr);
-      cudaGetLastError(); // clear error state regardless
+      hipPointerAttribute_t attrs;
+      hipError_t attrRes = hipPointerGetAttributes(&attrs, ptr);
+      hipGetLastError(); // clear error state regardless
 
-      if (attrRes == cudaSuccess && attrs.type == cudaMemoryTypeManaged) {
+      if (attrRes == hipSuccess && attrs.type == hipMemoryTypeManaged) {
           // Only free memory we actually allocated with cudaMallocManaged
-          cudaError_t res = cudaFree(ptr);
-          if (res != cudaSuccess) {
+          hipError_t res = hipFree(ptr);
+          if (res != hipSuccess) {
               std::cerr << "[CUDA ERROR] Failed to free GPU memory: "
-                        << cudaGetErrorString(res) << std::endl;
+                        << hipGetErrorString(res) << std::endl;
               return -1;
           }
       } 
@@ -165,16 +165,16 @@ extern "C" {
 }
 
 
-void setupMLIRContextGPU(CUdevice targetDevice) {
-    cuInit(0);
-    cuDeviceGet(&targetDevice, 0);
+void setupMLIRContextGPU(hipDevice_t targetDevice) {
+    hipInit(0);
+    hipDeviceGet(&targetDevice, 0);
 
-    CUcontext context;
-    cuDevicePrimaryCtxRetain(&context, targetDevice);
-    cuCtxSetCurrent(context);
+    hipCtx_t context;
+    hipDevicePrimaryCtxRetain(&context, targetDevice);
+    hipCtxSetCurrent(context);
 }
 
-void releaseMLIRContextGPU(CUdevice targetDevice) {
-    cuDevicePrimaryCtxRelease(targetDevice);
+void releaseMLIRContextGPU(hipDevice_t targetDevice) {
+    hipDevicePrimaryCtxRelease(targetDevice);
 }
 

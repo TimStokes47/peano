@@ -3,9 +3,14 @@
 #include <cstddef>
 #include <omp.h>
 
-#ifdef MLIR_GPU
+#ifdef MLIR_GPU_AMD
+#include <hip/hip_runtime.h>
+#include "MLIRbridgeHIPfunctions.h"
+#endif
+#ifdef MLIR_GPU_NVIDIA
 #include <cuda_runtime.h>
 #include <cuda.h>
+#include "MLIRbridgeCUDAfunctions.h"
 #endif
 
 {{SOLVER_INCLUDES}}
@@ -25,7 +30,11 @@ extern "C" {
     {{TEMPLATE_VALUE_DEFINITIONS}}
 }
 
-#ifdef MLIR_GPU
+#ifdef MLIR_GPU_AMD
+extern void setupMLIRContextGPU(hipDevice_t);
+extern void releaseMLIRContextGPU(hipDevice_t);
+#endif
+#ifdef MLIR_GPU_NVIDIA
 extern void setupMLIRContextGPU(CUdevice);
 extern void releaseMLIRContextGPU(CUdevice);
 #endif
@@ -107,8 +116,16 @@ void convertToMLIRStruct(exahype2::CellData<double, double>* patchData, MLIRCell
     int64_t volumes = static_cast<int64_t>({{PATCH_SIZE}});
     int64_t haloSize = static_cast<int64_t>({{HALO_SIZE}});
     
-    int64_t inputSizePerCell = (volumes + 2*haloSize) * (volumes + 2*haloSize) * (volumes + 2*haloSize) * numUnknowns;  // 18*18*18*5
-    int64_t outputSizePerCell = volumes * volumes * volumes * numUnknowns;  // 16*16*16*5
+    int64_t inputSizePerCell = (volumes + 2*haloSize) * (volumes + 2*haloSize) 
+    #if Dimensions==3
+    * (volumes + 2*haloSize) 
+    #endif
+    * numUnknowns;  // 18*18*18*5
+    int64_t outputSizePerCell = volumes * volumes 
+    #if Dimensions==3
+    * volumes 
+    #endif
+    * numUnknowns;  // 16*16*16*5
     
     // Allocate contiguous memory each time (caller will clean up)
     qin_storage = new double[totalCells * inputSizePerCell];
@@ -189,8 +206,7 @@ void convertToMLIRStruct(exahype2::CellData<double, double>* patchData, MLIRCell
 }
 
 
-
-// void convertToMLIRStructGPU(exahype2::CopyCellDataGPU<double, double>* copyCellData, MLIRCellData* mlir_data) {
+#ifdef MLIR_GPU
 void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
                              MLIRCellData* mlir_data) {
     int64_t totalCells        = cellData->numberOfCells;
@@ -198,13 +214,21 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     int64_t haloSize          = static_cast<int64_t>({{HALO_SIZE}});
     int64_t numUnknowns       = static_cast<int64_t>(NumberOfUnknowns + NumberOfAuxiliaryVariables);
     int64_t inputSizePerCell  = (volumes + 2*haloSize) * (volumes + 2*haloSize) 
-                                * (volumes + 2*haloSize) * numUnknowns;
-    int64_t outputSizePerCell = volumes * volumes * volumes * numUnknowns;
+    #if Dimensions==3
+                                * (volumes + 2*haloSize) 
+    #endif
+                                * numUnknowns;
+    int64_t outputSizePerCell = volumes * volumes 
+    #if Dimensions==3
+    * volumes 
+    #endif
+    * numUnknowns;
 
     // Allocate contiguous host memory 
-    double* qin_storage  = new double[totalCells * inputSizePerCell];
-    double* qout_storage = new double[totalCells * outputSizePerCell]();
-
+    //int64_t inputSize = totalCells * inputSizePerCell * sizeof(double);
+    //int64_t outputSize = totalCells * outputSizePerCell * sizeof(double);
+    double* qin_storage  = (double*)mgpuMemAlloc(sizeof(double) * totalCells * inputSizePerCell, nullptr, 0);
+    double* qout_storage = (double*)mgpuMemAlloc(sizeof(double) * totalCells * outputSizePerCell, nullptr, 0);
     // Copy scattered QIn patches into contiguous buffer
     for (int i = 0; i < totalCells; i++) {
         for (int j = 0; j < inputSizePerCell; j++) {
@@ -228,9 +252,18 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     mlir_data->QOut.strides[0] = outputSizePerCell;
     mlir_data->QOut.strides[1] = 1;
 
-    double** cellCentrePtr = new double*[totalCells];
+    double** cellCentrePtr = (double**)mgpuMemAlloc(sizeof(double*) * totalCells, nullptr, 0);
     for (int i = 0; i < totalCells; i++) {
-        cellCentrePtr[i] = (double*)&(cellData->cellCentre[i]);
+        #if Dimensions==2
+        cellCentrePtr[i] = (double*)mgpuMemAlloc(sizeof(double) * 2, nullptr, 0);
+        cellCentrePtr[i][0] = cellData->cellCentre[i](0);
+        cellCentrePtr[i][1] = cellData->cellCentre[i](1);
+        #else
+        cellCentrePtr[i] = (double*)mgpuMemAlloc(sizeof(double) * 3, nullptr, 0);
+        cellCentrePtr[i][0] = cellData->cellCentre[i](0);
+        cellCentrePtr[i][1] = cellData->cellCentre[i](1);
+        cellCentrePtr[i][2] = cellData->cellCentre[i](2);
+        #endif
     }
     mlir_data->cellCentre.allocated  = cellCentrePtr;
     mlir_data->cellCentre.aligned    = cellCentrePtr;
@@ -238,9 +271,18 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     mlir_data->cellCentre.sizes[0]   = totalCells;
     mlir_data->cellCentre.strides[0] = 1;
 
-    double** cellSizePtr = new double*[totalCells];
+    double** cellSizePtr = (double**)mgpuMemAlloc(sizeof(double*) * totalCells, nullptr, 0);
     for (int i = 0; i < totalCells; i++) {
-        cellSizePtr[i] = (double*)&(cellData->cellSize[i]);
+        #if Dimensions==2
+        cellSizePtr[i] = (double*)mgpuMemAlloc(sizeof(double) * 2, nullptr, 0);
+        cellSizePtr[i][0] = cellData->cellSize[i](0);
+        cellSizePtr[i][1] = cellData->cellSize[i](1);
+        #else
+        cellSizePtr[i] = (double*)mgpuMemAlloc(sizeof(double) * 3, nullptr, 0);
+        cellSizePtr[i][0] = cellData->cellSize[i](0);
+        cellSizePtr[i][1] = cellData->cellSize[i](1);
+        cellSizePtr[i][2] = cellData->cellSize[i](2);
+        #endif
     }
     mlir_data->cellSize.allocated  = cellSizePtr;
     mlir_data->cellSize.aligned    = cellSizePtr;
@@ -253,9 +295,13 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     mlir_data->t.offset     = 0;
     mlir_data->t.sizes[0]   = totalCells;
     mlir_data->t.strides[0] = 1;
-
-    mlir_data->dt.allocated  = cellData->dt;
-    mlir_data->dt.aligned    = cellData->dt;
+    
+    double* dtPtr = (double*)mgpuMemAlloc(sizeof(double) * totalCells, nullptr, 0);
+    for (int i = 0; i < totalCells; i++) {
+        dtPtr[i] = cellData->dt[i];
+    }
+    mlir_data->dt.allocated  = dtPtr;
+    mlir_data->dt.aligned    = dtPtr;
     mlir_data->dt.offset     = 0;
     mlir_data->dt.sizes[0]   = totalCells;
     mlir_data->dt.strides[0] = 1;
@@ -272,6 +318,7 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     mlir_data->maxEigenvalue  = cellData->maxEigenvalue;
     mlir_data->QOut_legacy    = nullptr;
 }
+#endif
 
 void cleanupMLIRStruct(MLIRCellData* mlir_data) {
     if (mlir_data->cellCentre.allocated != nullptr) {
@@ -282,28 +329,42 @@ void cleanupMLIRStruct(MLIRCellData* mlir_data) {
     }
 }
 
+#ifdef MLIR_GPU
 void cleanupMLIRStructGPU(MLIRCellData* mlir_data) {
     if (mlir_data->QIn.allocated != nullptr) {
-        delete[] mlir_data->QIn.allocated;
+        mgpuMemFree((void*)mlir_data->QIn.allocated, nullptr);
+        //delete[] mlir_data->QIn.allocated;
     }
-
+    
     if (mlir_data->QOut.allocated != nullptr) {
-        delete[] mlir_data->QOut.allocated;
+        mgpuMemFree((void*)mlir_data->QOut.allocated, nullptr);
+        //delete[] mlir_data->QOut.allocated;
     }
 
     if (mlir_data->cellCentre.allocated != nullptr) {
-        delete[] static_cast<double**>(mlir_data->cellCentre.allocated);
+        //delete[] static_cast<double**>(mlir_data->cellCentre.allocated);
+        mgpuMemFree((void*)mlir_data->cellCentre.allocated, nullptr);
+    }
+    
+    if (mlir_data->cellSize.allocated != nullptr) {
+        //delete[] static_cast<double**>(mlir_data->cellSize.allocated);
+        mgpuMemFree((void*)mlir_data->cellSize.allocated, nullptr);
     }
 
-    if (mlir_data->cellSize.allocated != nullptr) {
-        delete[] static_cast<double**>(mlir_data->cellSize.allocated);
+    if (mlir_data->dt.allocated != nullptr) {
+        mgpuMemFree((void*)mlir_data->dt.allocated, nullptr);
     }
 }
+#endif
 
 void copybackMLIRresults(exahype2::CellData<double, double>* patchData, MLIRCellData* mlir_data) {
     int64_t totalCells = patchData->numberOfCells;
     int64_t volumes = static_cast<int64_t>({{PATCH_SIZE}});
-    int64_t outputSizePerCell = volumes * volumes * volumes * ({{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}}::NumberOfUnknowns);
+    int64_t outputSizePerCell = volumes * volumes * ({{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}}::NumberOfUnknowns)
+    #if Dimensions==3
+    * volumes
+    #endif
+    ;
     for (int i = 0; i < totalCells; i++) {
         for (int j = 0; j < outputSizePerCell; j++) {
             patchData->QOut[i][j] = mlir_data->QOut.allocated[i * outputSizePerCell + j];
@@ -352,7 +413,11 @@ void {{KERNEL_NAME}}_MLIR_wrapper(exahype2::CellData<double, double>* patchData,
 
         // Copy results back from contiguous QOut to original double** array
         int64_t volumes = static_cast<int64_t>({{PATCH_SIZE}});
-        int64_t outputSizePerCell = volumes * volumes * volumes * numUnknowns;
+        int64_t outputSizePerCell = volumes * volumes 
+        #if Dimensions==3
+        * volumes 
+        #endif
+        * numUnknowns;
         for (int i = 0; i < totalCells; i++) {
             for (int j = 0; j < outputSizePerCell; j++) {
                 patchData->QOut[i][j] = mlir_data.QOut.allocated[i * outputSizePerCell + j];
@@ -420,14 +485,14 @@ void {{KERNEL_NAME}}Stateless<{{TEMPLATE_CALL}}>(
 }
 } // namespace {{KERNEL_NAMESPACE}}::mlir
 
-// Template specialization in mlir::omp namespace
-namespace {{KERNEL_NAMESPACE}}::mlir::omp {
+// Template specialization in omp::mlir namespace
+namespace {{KERNEL_NAMESPACE}}::omp::mlir {
 template<>
 void {{KERNEL_NAME}}Stateless<{{TEMPLATE_CALL}}>(
     exahype2::CellData<double, double>& patchData,
     tarch::timing::Measurement& measurement
 ) {
-    tarch::timing::Watch watch("{{KERNEL_NAMESPACE}}::mlir::omp", "{{KERNEL_NAME}}Stateless", false, true);
+    tarch::timing::Watch watch("{{KERNEL_NAMESPACE}}::omp::mlir", "{{KERNEL_NAME}}Stateless", false, true);
     {{KERNEL_NAME}}_MLIR_wrapper(&patchData, true);
     watch.stop();
     measurement.setValue(watch.getCalendarTime());
@@ -449,7 +514,7 @@ void {{KERNEL_NAME}}Stateless<{{TEMPLATE_CALL}}>(
     watch.stop();
     measurement.setValue(watch.getCalendarTime());
 }
-} // namespace {{KERNEL_NAMESPACE}}::mlir::omp
+} // namespace {{KERNEL_NAMESPACE}}::omp::mlir
 
 #ifdef MLIR_GPU
 namespace {{KERNEL_NAMESPACE}}::mlir::gpu {
