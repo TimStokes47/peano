@@ -438,13 +438,13 @@ def propagate_bottom_up(peano_tree: Tree) -> None:
     ## Implementation
 
     We work from finest to the coarsest level. On each level, we trigger an 
-    iterative process (while loop) for each colour (tree number) k that we 
+    iterative process (while loop) for each colour (tree number) `k` that we 
     find:
     
     ### Check if all kids of one cell belong to the same tree
     
-    For a cell on level level, we run over all 3^d children (counter child_a
-    and child_b). There is a set, and we add all the child tree numbers to this
+    For a cell on level `level`, we run over all 3^d children (counter `child_a`
+    and `child_b`). There is a set, and we add all the child tree numbers to this
     set. Once we have visited all children, we can check the set cardinality:
     If the set cardinality equals 1, all children are assigned to the same 
     tree. We therefore can assign the parent to this tree number, too.
@@ -452,34 +452,34 @@ def propagate_bottom_up(peano_tree: Tree) -> None:
     ### Make decision if to assign the parent
     
     If all kids belong to the same tree, we can propagate this ownership one
-    level up. However, we do this for a tree k if and only if the following 
+    level up. However, we do this for a tree `k` if and only if the following 
     tests pass:
     
-    There could be multiple nodes k within the tree that span all together a
-    forest of small trees. Let max_k be the maximum level of these root nodes
-    within the forest, and let min_k be the minimum level.
+    There could be multiple nodes `k` within the tree that span all together a
+    forest of small trees. Let `max_k` be the maximum level of these root nodes
+    within the forest, and let `min_k` be the minimum level.
     
     We assign an arbitrary node from another tree colour
-    the colour k if and only if
+    the colour `k` if and only if
 
-    - max_k - min_k becomes smaller through the assignment, or;
-    - max_k - min_k = 0 and we could group all root nodes of k into 
-      k / 3**d coarser nodes.
+    - `max_k - min_k` becomes smaller through the assignment, or;
+    - `max_k - min_k = 0` and we could group all root nodes of `k` into 
+      k/3^d coarser nodes.
     
     ###  Rationale
     
     The reason is that we don't want to propagate too aggressively bottom-up.
     Eventually, our goal is to introduce a hierarchy over the trees. For this,
-    it helps us if all the roo nodes of tree k are on the same level. In this
-    case, we can determine (likely) one parent k' and then tell k' to fork x 
-    times where x is the number of roots within the forest of k.
+    it helps us if all the root nodes of tree `k` are on the same level. In this
+    case, we can determine (likely) one parent `k' and then tell `k' to fork x 
+    times where x is the number of roots within the forest of `k`.
     
-    Therefore, we try to ensure that max_k - min_k becomes smaller and smaller.
+    Therefore, we try to ensure that `max_k - min_k` becomes smaller and smaller.
     This implies that, in an adaptive mesh, we try to group all the fine mesh
     parts together first.
     
-    Eventually, all root nodes of the forest k will end up on the one and same
-    level. It cdould now be that we could move all of them one level up. This
+    Eventually, all root nodes of the forest `k` will end up on the one and same
+    level. It could now be that we could move all of them one level up. This
     is covered by the second case distinction.
 
     @todo Dmitry the check above is not implemented yet an causes the algorithm
@@ -883,7 +883,7 @@ def reset_tree_to_single_subtree(peano_tree: Tree) -> Tree:
 
 def extract_split_instructions(
     peano_tree: Tree, base_sweep: int = 2
-) -> tuple[list[int], list[int], list[int], list[int]]:
+) -> tuple[list[int], list[int], list[int], list[int], list[bool]]:
     """
     Stage IV of the staged load-balancing workflow.
 
@@ -898,20 +898,39 @@ def extract_split_instructions(
     across a parent–child edge). Level 0 has no parent; any cells with `subtree_id > 0`
     on level 0 are treated as introduced from subtree 0.
 
+    **BottomUp vs AggressiveTopDown extraction**
+
+    The level at which an operation is emitted depends on how many distinct introduction
+    levels the subtree has:
+
+    - *AggressiveTopDown* (single introduction level): an operation is emitted at that one
+      level, preserving the current behaviour.
+    - *BottomUp* (multiple introduction levels): the subtree's forest of root cells does
+      not all reside on the same level. In BottomUp mode, Peano propagates the split
+      upward from the finest level automatically, so there must be no split instruction
+      higher up the tree. A **single** operation is therefore emitted at the **finest**
+      introduction level (the deepest level at which any root cell of the subtree
+      borders a parent of a different subtree). Coarser introduction levels are
+      suppressed.
+
     Mapping:
-    - `gridSweeps[level] = base_sweep * (level + 1)` (levels are 0-based in the API arrays)
-    - `splittingTrees` is the unique parent subtree id for all introduced cells on that level,
-      or 0 if ambiguous
-    - `numberOfCells` is the count of introduced cells on that level
-    - `subTrees` are subtree ids (not MPI ranks); map them to destination ranks separately
+    - `gridSweeps[i] = base_sweep * (emit_level + 1)` (levels are 0-based in the API arrays).
+    - `splittingTrees` is the unique parent subtree id for all introduced cells on the
+      emitted level, or 0 if ambiguous.
+    - `numberOfCells` is the count of introduced cells on the emitted level.
+    - `subTrees` are subtree ids (not MPI ranks); map them to destination ranks
+      separately.
+    - `bottomUpFlags` is a per-operation boolean that is `True` when the corresponding
+      subtree has multiple introduction levels (BottomUp) and `False` otherwise
+      (AggressiveTopDown).
 
     Args:
         peano_tree: Input tree with subtree assignments.
         base_sweep: Base sweep index used to generate `gridSweeps` (default: 2).
 
     Returns:
-        Tuple `(gridSweeps, splittingTrees, numberOfCells, subTrees)` suitable for
-        building a `Hardcoded` configuration.
+        Tuple `(gridSweeps, splittingTrees, numberOfCells, subTrees, bottomUpFlags)`
+        suitable for building a `Hardcoded` configuration.
 
     Note:
         This helper is intended for *offline replay* of an already-computed split pattern.
@@ -919,7 +938,7 @@ def extract_split_instructions(
     """
     if peano_tree._subtree_count <= 1:
         print("No splits to extract - tree has only one subtree")
-        return ([], [], [], [])
+        return ([], [], [], [], [])
 
     dim = peano_tree._dimension
     max_level = peano_tree._max_level
@@ -983,45 +1002,62 @@ def extract_split_instructions(
 
     split_operations = []
 
-    # For each subtree, check all levels for new "introductions" across parent-child edges.
     for target_subtree in range(1, peano_tree._subtree_count):
-        # Level 0: no parent edge exists, but a subtree can already be present there.
+        # ------------------------------------------------------------------
+        # Collect *all* levels at which this subtree is "introduced", i.e.
+        # levels where at least one cell of the subtree borders a parent cell
+        # that belongs to a different subtree (or level 0, which has no parent).
+        # ------------------------------------------------------------------
+        introductions: dict[int, tuple[int, set[int]]] = {}
+
+        # Level 0: no parent edge – any existing cells are introduced from subtree 0.
         moved_level0 = count_cells_on_level(target_subtree, level=0)
         if moved_level0 > 0:
-            split_operations.append(
-                {
-                    "grid_sweep": base_sweep * (0 + 1),  # == base_sweep
-                    "source_subtree": 0,
-                    "target_subtree": target_subtree,
-                    "num_cells": moved_level0,
-                    "level": 0,
-                }
-            )
+            introductions[0] = (moved_level0, {0})
 
-        # Levels >= 1: introduced across parent-child edges
+        # Levels >= 1: introduced across parent–child edges.
         for level in range(1, max_level):
             moved_cells, parent_ids = parent_subtrees_for_introduced_cells(target_subtree, level)
-            if moved_cells == 0:
-                continue
+            if moved_cells > 0:
+                introductions[level] = (moved_cells, parent_ids)
 
-            source_subtree = next(iter(parent_ids)) if len(parent_ids) == 1 else 0
-            grid_sweep = base_sweep * (level + 1)
+        if not introductions:
+            continue
 
-            split_operations.append(
-                {
-                    "grid_sweep": grid_sweep,
-                    "source_subtree": source_subtree,
-                    "target_subtree": target_subtree,
-                    "num_cells": moved_cells,
-                    "level": level,
-                }
-            )
+        # ------------------------------------------------------------------
+        # Decide the emission level.
+        #
+        # AggressiveTopDown – subtree roots all live on one level: emit there.
+        #
+        # BottomUp – roots span multiple levels (bottom-up propagation left
+        # some coarser cells partially assigned).  In BottomUp mode Peano
+        # propagates the split upward by itself, so the forest of the new
+        # subtree must appear only once – at the finest introduction level.
+        # Coarser introduction levels are therefore suppressed.
+        # ------------------------------------------------------------------
+        is_bottom_up = len(introductions) > 1
+        emit_level = max(introductions.keys()) if is_bottom_up else next(iter(introductions.keys()))
+
+        num_cells, parent_ids = introductions[emit_level]
+        source_subtree = next(iter(parent_ids)) if len(parent_ids) == 1 else 0
+
+        split_operations.append(
+            {
+                "grid_sweep": base_sweep * (emit_level + 1),
+                "source_subtree": source_subtree,
+                "target_subtree": target_subtree,
+                "num_cells": num_cells,
+                "level": emit_level,
+                "is_bottom_up": is_bottom_up,
+            }
+        )
 
     split_operations.sort(key=lambda op: (op["grid_sweep"], op["target_subtree"], op["level"]))
 
-    gridSweeps = [op["grid_sweep"] for op in split_operations]
+    gridSweeps    = [op["grid_sweep"]    for op in split_operations]
     splittingTrees = [op["source_subtree"] for op in split_operations]
-    numberOfCells = [op["num_cells"] for op in split_operations]
-    subTrees = [op["target_subtree"] for op in split_operations]
+    numberOfCells  = [op["num_cells"]      for op in split_operations]
+    subTrees       = [op["target_subtree"] for op in split_operations]
+    bottomUpFlags  = [op["is_bottom_up"]   for op in split_operations]
 
-    return (gridSweeps, splittingTrees, numberOfCells, subTrees)
+    return (gridSweeps, splittingTrees, numberOfCells, subTrees, bottomUpFlags)
