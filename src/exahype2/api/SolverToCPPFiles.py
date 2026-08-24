@@ -12,6 +12,172 @@ from .Solver import Solver
 
 
 class SolverToCPPFiles(Solver.SolverGenerator):
+    TEMPLATE_HEADER_FILE = """
+// This file is part of the ExaHyPE2 project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#pragma once
+
+#include "exahype2/RefinementControl.h"
+#include "exahype2/Solver.h"
+#include "tarch/la/Vector.h"
+#include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/accelerator/accelerator.h"
+#include "tarch/NonCriticalAssertions.h"
+
+#include "peano4/utils/Globals.h"
+
+#include "Constants.h"
+    
+
+{% for item in NAMESPACE -%}
+  namespace {{ item }} {
+  {# Empty line here #}
+{%- endfor %}
+  class {{CLASSNAME}};
+
+{% for item in NAMESPACE -%}
+  }
+{%- endfor %}
+
+
+class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
+  public:
+    {{CLASSNAME}}();
+
+    double getMinTimeStamp() const final;
+    double getMaxTimeStamp() const final;
+    double getMinTimeStepSize() const final;
+    double getMaxTimeStepSize() const final;
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void startGridConstructionStep() override;
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void finishGridConstructionStep() override;
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void startGridInitialisationStep() override;
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void finishGridInitialisationStep() override;
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void startTimeStep(
+      double globalMinTimeStamp,
+      double globalMaxTimeStamp,
+      double globalMinTimeStepSize,
+      double globalMaxTimeStepSize
+    ) override;
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void finishTimeStep() override;
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void startPlottingStep(
+      double globalMinTimeStamp,
+      double globalMaxTimeStamp,
+      double globalMinTimeStepSize,
+      double globalMaxTimeStepSize
+    ) override;
+
+    /**
+     * If you hook into this routine, ensure the abstract base class
+     * operation is still invoked.
+     */
+    virtual void finishPlottingStep() override;
+
+    /**
+     * mesh is an aAlias for patch
+     */
+    virtual double getMaxMeshSize() const override final;
+    virtual double getMinMeshSize() const override final;
+    
+    static constexpr int    NumberOfUnknowns           = {{NUMBER_OF_UNKNOWNS}};
+    static constexpr int    NumberOfAuxiliaryVariables = {{NUMBER_OF_AUXILIARY_VARIABLES}};
+
+    /**
+     * It is important that we only plot after the secondary sweep.
+     * All the switching happens in startTimeStep(), so it is fine if
+     * we test against secondary. If an outer routine (the main) calls
+     * this function, this means that the secondary traversal just has
+     * terminated.
+     */
+     // @todo For all transitions?
+    virtual bool mayPlot() const override;
+    virtual bool patchCanUseStatelessPDETerms(
+      const tarch::la::Vector<Dimensions, double>& patchCentre,
+      const tarch::la::Vector<Dimensions, double>& patchH,
+      double                                       t,
+      double                                       dt
+    ) const;
+
+    /**
+     * Feel free to overwrite in user code, but ensure the superclass
+     * implementation is still invoked, too.
+     */
+    virtual void startSimulation() override;
+
+    /**
+     * Feel free to overwrite in user code, but ensure the superclass
+     * implementation is still invoked, too.
+     */
+    virtual void finishSimulation() override;
+
+  protected:
+    static tarch::logging::Log  _log;
+
+    SolverState  _solverState;
+
+    double     _minTimeStamp;
+    double     _maxTimeStamp;
+
+    double     _minTimeStampThisTimeStep;
+    double     _maxTimeStampThisTimeStep;
+
+    double     _minVolumeH;
+    double     _maxVolumeH;
+
+    double     _minVolumeHThisTimeStep;
+    double     _maxVolumeHThisTimeStep;
+
+    double     _minTimeStepSize;
+    double     _maxTimeStepSize;
+
+    double     _minTimeStepSizeThisTimeStep;
+    double     _maxTimeStepSizeThisTimeStep;
+
+    int        _cellUpdates;
+
+    tarch::multicore::BooleanSemaphore  _semaphore;
+
+    {{ABSTRACT_SOLVER_USER_DECLARATIONS}}
+};
+
+{# Empty line here #}
+"""
+
+    
     """!
 
     Default implementation that takes a solver and maps it onto two C++ classes:
@@ -36,14 +202,16 @@ class SolverToCPPFiles(Solver.SolverGenerator):
             print( "Map class {} onto C++ files using {}".format(self._solver.name, templatefile_prefix) )
 #      output.makefile.add_cpp_file( subdirectory + "repositories" + "/" + class_name + ".cpp", generated=True )
         #local_d = self.d.copy()
-        
-        generated_files = peano4.api.output.TemplatedHeaderImplementationFilePair(
-            templatefile_prefix+".Abstract.template.h",
-            templatefile_prefix+".Abstract.template.cpp",
-            class_name, 
-            exahype2_project.namespace,
-            exahype2_project.subdirectory,
-            {}, #local_d,
-            default_overwrite=True)
+
+        generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(
+            headerfile_template = self.TEMPLATE_HEADER_FILE,
+            cppfile_template = "YET ANOTHER TEST",
+            classname           = class_name,
+            namespace           = exahype2_project.namespace,
+            subdirectory        = exahype2_project.subdirectory,
+            dictionary          = {},
+            default_overwrite=True,
+            apply_iteratively=False,
+        )
         exahype2_project.peano4_project.output.add(generated_files)
 

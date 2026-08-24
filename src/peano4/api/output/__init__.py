@@ -15,4 +15,5 @@ from .TemplatedHeaderFile                           import TemplatedHeaderFile
 from .TemplatedHeaderImplementationFilePair         import TemplatedHeaderImplementationFilePair
 from .Jinja2TemplatedHeaderFile                     import Jinja2TemplatedHeaderFile
 from .Jinja2TemplatedHeaderImplementationFilePair   import Jinja2TemplatedHeaderImplementationFilePair
+from .Jinja2TemplateStringHeaderImplementationFilePair import Jinja2TemplateStringHeaderImplementationFilePair
 from .Readme                                        import Readme

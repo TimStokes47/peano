@@ -20,7 +20,7 @@ Peano should be built with the following options:
 You will need to ensure that the Python environment variables are properly set:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-export PYTHONPATH=<path-to-peano4-repository>/src:<path-to-peano4-repository>/python
+export PYTHONPATH=<path-to-peano4-repository>/src
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 <br /><br />
