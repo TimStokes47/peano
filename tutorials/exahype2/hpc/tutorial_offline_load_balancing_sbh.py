@@ -228,6 +228,7 @@ if __name__ == "__main__":
                                                                 verbose=True)
         )
         SplitTrees.propagate_bottom_up(tree)
+        print(tree)
 
         # @todo This should be removed, as soon as we are happy with the outcomes.
         TreeVisualizer(tree, 3, "updated-bottomup")
@@ -237,7 +238,6 @@ if __name__ == "__main__":
                                                                         )        
 
         hardcoded_config, hardcoded_mode = Hardcoded.create_constructor_initialisation_string(tree,destination_ranks,verbose=True)        
-        print(tree)
         
         # @ŧodo Dmitry Why do we have hardcoded_mode if it is not used?
         

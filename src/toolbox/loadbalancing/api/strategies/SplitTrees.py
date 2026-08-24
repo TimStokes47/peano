@@ -105,9 +105,10 @@ def split_tree(
     peano_tree._subtree_count = len(decomposition)
     peano_tree.update_split_pattern()
 
-    print(f"Splitting complete. Subtree count: {peano_tree._subtree_count}")
-    print(f"Leaf decomposition: {moved_nodes}")
-    print(f"Split pattern: {peano_tree._split_pattern}")
+    if  verbose:
+        print(f"Splitting complete. Subtree count: {peano_tree._subtree_count}")
+        print(f"Leaf decomposition: {moved_nodes}")
+        print(f"Split pattern: {peano_tree._split_pattern}")
 
     #if enable_extract_split_instructions:
     #    from toolbox.loadbalancing.api.output.Hardcoded import create_constructor_initialisation_string##
