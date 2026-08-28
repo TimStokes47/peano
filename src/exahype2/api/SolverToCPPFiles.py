@@ -12,7 +12,7 @@ from .Solver import Solver
 
 
 class SolverToCPPFiles(Solver.SolverGenerator):
-    TEMPLATE_HEADER_FILE = """
+    TEMPLATE_ABSTRACT_HEADER_FILE = """
 // This file is part of the ExaHyPE2 project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
@@ -177,6 +177,13 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
 {# Empty line here #}
 """
 
+
+    TEMPLATE_ABSTRACT_CPP_FILE = """
+#include "{{CLASSNAME}}.h"
+#include "exahype2/RefinementControl.h"
+
+tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPACE | join("::")}}::{{CLASSNAME}}" );
+"""
     
     """!
 
@@ -200,16 +207,19 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
         templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
         if verbose:
             print( "Map class {} onto C++ files using {}".format(self._solver.name, templatefile_prefix) )
-#      output.makefile.add_cpp_file( subdirectory + "repositories" + "/" + class_name + ".cpp", generated=True )
-        #local_d = self.d.copy()
+        local_d = {
+          "NUMBER_OF_UNKNOWNS": self._solver._unknowns,
+          "NUMBER_OF_AUXILIARY_VARIABLES": self._solver._auxiliary_variables,
+        }
+
 
         generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(
-            headerfile_template = self.TEMPLATE_HEADER_FILE,
-            cppfile_template = "YET ANOTHER TEST",
+            headerfile_template = self.TEMPLATE_ABSTRACT_HEADER_FILE,
+            cppfile_template    = self.TEMPLATE_ABSTRACT_CPP_FILE,
             classname           = class_name,
             namespace           = exahype2_project.namespace,
             subdirectory        = exahype2_project.subdirectory,
-            dictionary          = {},
+            dictionary          = local_d,
             default_overwrite=True,
             apply_iteratively=False,
         )

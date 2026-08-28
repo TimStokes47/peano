@@ -5,3 +5,4 @@ from .PDETerm import PDETerm
 from .Flux import Flux
 from .Solver import Solver
 from .SolverToCPPFiles import SolverToCPPFiles
+from . import realisation

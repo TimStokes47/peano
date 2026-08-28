@@ -2,6 +2,8 @@
  use, please see the copyright notice at www.peano-framework.org
 """
 import exahype2.api
+import exahype2.plotter
+import exahype2.initialisation
 #import exahype2.tracer
 #import exahype2.grid
 #import exahype2.dslhype

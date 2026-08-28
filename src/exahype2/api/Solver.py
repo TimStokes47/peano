@@ -55,9 +55,52 @@ class Solver(abc.ABC):
             """!
             Has to be implemented by subclass
             """
-            
 
-    
+
+    class NumericalScheme(abc.ABC):
+        """!
+
+        The concrete discretisation (Finite Volumes, ADER-DG, ...) realised
+        by a Solver. Abstract - concrete solvers have to provide a subclass
+        that implements construct_output().
+
+        """
+
+        def __init__(self,
+                     solver: "Solver"):
+            self._solver = solver
+
+        @abc.abstractmethod
+        def construct_output(self,
+                             output,
+                             verbose):
+            """!
+            Has to be implemented by subclass
+            """
+
+
+    class GridConstruction(abc.ABC):
+        """!
+
+        How a Solver drives the construction of the mesh it runs on.
+        Abstract - concrete solvers have to provide a subclass that
+        implements construct_output().
+
+        """
+
+        def __init__(self,
+                     solver: "Solver"):
+            self._solver = solver
+
+        @abc.abstractmethod
+        def construct_output(self,
+                             output,
+                             verbose):
+            """!
+            Has to be implemented by subclass
+            """
+
+
     def __init__(
         self,
         name: str,
@@ -92,6 +135,7 @@ class Solver(abc.ABC):
         """
         self._name = name
 
+# @todo Maybe can go away?
         self._use_var_shortcut = False
         self._variable_names: List[str] = []
         self._variable_pos: List[int] = [0]
@@ -105,13 +149,28 @@ class Solver(abc.ABC):
 
         self._pde_terms: Dict[str, PDETerm] = {}
 
-        # Deferred/local import: SolverToCPPFiles subclasses Solver.SolverGenerator,
-        # so SolverToCPPFiles.py imports Solver at its own module top-level. Importing
-        # it here too (at Solver.py's top level) would be a genuine circular import,
-        # since this module's own import of SolverToCPPFiles would then run before
-        # class Solver is even defined.
+        # Deferred/local imports: these classes all subclass either one of
+        # the Solver.* nested classes above or a class from a sibling
+        # exahype2 subpackage, and some of those in turn import Solver at
+        # their own module top-level. Importing them here too (at Solver.py's
+        # top level) would be a genuine circular import, since this module's
+        # own import of them would then run before class Solver is even
+        # defined.
         from .SolverToCPPFiles import SolverToCPPFiles
         self.solver_generator = SolverToCPPFiles(self)
+
+        # NumericalScheme has no default realisation - concrete solver
+        # subclasses have to assign their own subclass instance to it.
+        self.numerical_scheme: "Solver.NumericalScheme" = None
+
+        from .VTKPlotter import VTKPlotter
+        self.plotter: "exahype2.plotter.api.Plotter" = VTKPlotter(self)
+
+        from .DefaultInitialisation import DefaultInitialisation
+        self.initialisation: "exahype2.initialisation.api.HardcodedInitialisation" = DefaultInitialisation(self)
+
+        from .HardcodedGridConstruction import HardcodedGridConstruction
+        self.grid_construction: "Solver.GridConstruction" = HardcodedGridConstruction(self)
 
 
     def _register_variables(self, variables: VariableSpecification) -> int:
@@ -176,21 +235,6 @@ class Solver(abc.ABC):
         self.create_action_sets()
 
     @property
-    def user_action_set_includes(self) -> str:
-        """!
-        Add further includes to this property, if your action sets require
-        some additional routines from other header files.
-        """
-        return self._user_action_set_includes
-
-    def add_user_action_set_includes(self, value: str):
-        """!
-        Add further includes to this property, if your action sets require
-        some additional routines from other header files.
-        """
-        self._user_action_set_includes += value
-
-    @property
     def user_solver_includes(self) -> str:
         """!
         Add further includes to this property, if your solver requires some
@@ -249,111 +293,13 @@ class Solver(abc.ABC):
         """! Look up a previously registered PDE term by name. """
         return self._pde_terms[name]
 
-    # --------------------------------------------------------------------
-    # Contract every concrete discretisation has to implement. Nothing here
-    # has a sensible discretisation-agnostic default, so we deliberately
-    # leave it abstract instead of guessing a default that would silently
-    # do the wrong thing for some solver.
-    # --------------------------------------------------------------------
-
-#    @abc.abstractmethod
-    def create_data_structures(self):
-        """!
-        Add the vertex/cell/face data required by this solver to the Peano 4
-        data model. Called from the constructor (once unknowns and
-        auxiliary_variables are known) and again whenever they change.
-        """
-        pass
-
-#    @abc.abstractmethod
-    def create_action_sets(self):
-        """!
-        Create the action sets which realise this solver's algorithmic steps
-        and hook them into the mesh traversal.
-        """
-        pass
-
-#    @abc.abstractmethod
-    def add_to_Peano4_datamodel(self, datamodel, verbose: bool):
-        """!
-        Add this solver's data structures to a peano4.api.datamodel.Model.
-        """
-        pass
-
-#    @abc.abstractmethod
-    def add_use_data_statements_to_Peano4_solver_step(self, step):
-        """!
-        Tell a peano4 solver step which of this solver's data it touches.
-        """
-        pass
-
-#    @abc.abstractmethod
+# @todo This one is important
     def create_readme_descriptor(self, domain_offset, domain_size) -> str:
         """!
         Return a human-readable description of this solver instance, to be
         embedded into the generated project's README.
         """
         pass
-
-#    @abc.abstractmethod
-    def add_actions_to_init_grid(self, step, restart_from_checkpoint: bool = False):
-        """!
-        Add the action sets required to initialise the solver's data on a
-        freshly created grid to the given peano4 solver step.
-        """
-        pass
-
-#    @abc.abstractmethod
-    def add_actions_to_create_grid(self, step, evaluate_refinement_criterion: bool):
-        """!
-        Add the action sets required to (re-)construct the adaptive mesh to
-        the given peano4 solver step.
-        """
-        pass
-
-#    @abc.abstractmethod
-    def add_actions_to_plot_solution(self, step, output_path: str, restart_from_checkpoint: bool = False):
-        """!
-        Add the action sets required to dump the current solution to the
-        given peano4 solver step.
-        """
-        pass
-
-#    @abc.abstractmethod
-    def add_actions_to_perform_time_step(self, step):
-        """!
-        Add the action sets which realise one time step (or one Runge-Kutta
-        stage thereof) to the given peano4 solver step.
-        """
-        pass
-
-#    @abc.abstractmethod
-    def add_entries_to_text_replacement_dictionary(self, d: dict):
-        """!
-        Add this solver's template variables (unknowns, auxiliary_variables,
-        solver constants, ...) to the dictionary used to fill in the Jinja2
-        templates behind the generated C++ classes.
-        """
-        pass
-
-#    @abc.abstractmethod
-    def add_implementation_files_to_project(
-        self, namespace, output, dimensions: int, subdirectory: str = "", abstract_overwrite: bool = True
-    ):
-        """!
-        Add this solver's generated (and user-implemented) C++ files to the
-        peano4.api.output.Output that eventually becomes the Makefile.
-        """
-        pass
-
-#    @abc.abstractmethod
-    def switch_storage_scheme(self, *args, **kwargs):
-        """!
-        Reconfigure how this solver stores its cell/face data (e.g. plain
-        heap arrays vs. smart pointers). Signature is discretisation-specific.
-        """
-        pass
-
 
     def generate_Peano4_project(self,
                                 exahype2_project,
