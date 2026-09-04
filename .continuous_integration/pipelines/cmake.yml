@@ -5,7 +5,7 @@ include:
   - .continuous_integration/templates/run-only-on.yml
   - .continuous_integration/templates/mghype.yml
   - .continuous_integration/templates/exahype2.yml
-  - .continuous_integration/templates/swift2.yml
+  - .continuous_integration/templates/exaparty.yml
 
 stages:
   - Build
@@ -138,7 +138,7 @@ MGHyPE_MatrixFree_Tests:
     - Build
   retry: 0
 
-# SWIFT2_Dastgen:
+# ExaParty_Dastgen:
 #   stage: Test
 #   allow_failure: false
 #   extends:
@@ -146,14 +146,14 @@ MGHyPE_MatrixFree_Tests:
 #     - .Variables
 #     - .RunOnlyOn
 #     - .BeforeScriptWithCMakeSanitiser
-#     - .SWIFT2_Dastgen
+#     - .ExaParty_Dastgen
 #   needs:
 #     - job: Build
 #   dependencies:
 #     - Build
 #   retry: 0
 
-SWIFT2_Sod1D:
+ExaParty_Sod1D:
   stage: Test
   allow_failure: false
   extends:
@@ -161,14 +161,14 @@ SWIFT2_Sod1D:
     - .Variables
     - .RunOnlyOn
     - .BeforeScriptWithCMakeSanitiser
-    - .SWIFT2_Sod1D
+    - .ExaParty_Sod1D
   needs:
     - job: Build
   dependencies:
     - Build
   retry: 0
 
-SWIFT2_Noh2D:
+ExaParty_Noh2D:
   stage: Test
   allow_failure: false
   extends:
@@ -176,7 +176,7 @@ SWIFT2_Noh2D:
     - .Variables
     - .RunOnlyOn
     - .BeforeScriptWithCMakeSanitiser
-    - .SWIFT2_Noh2D
+    - .ExaParty_Noh2D
   needs:
     - job: Build
   dependencies:

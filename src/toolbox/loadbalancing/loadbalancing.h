@@ -48,7 +48,7 @@
  * tailors this strategy to your experimental setup and machine.
  *
  * - See more on how to @ref page_exahype_domain-decomposition "configure load balancing within ExaHyPE 2".
- * - There's a dedicated page on @ref swift_parallelisation "the parallelisation aspects within Swift 2".
+ * - There's a dedicated page on @ref exaparty_parallelisation "the parallelisation aspects within ExaParty".
  *
  *
  * ## Overview over some pre-manufactured load balancing strategies
@@ -267,7 +267,7 @@
  * decisions:
  *
  * - Peano's @ref page_exahype_runtime_analysis "runtime analysis discussion" and its @ref page_exahype_performance_optimisation "performance optimisation recipes".
- * - Swift's @ref page_swift_performance_optimisation "performance optimisation discussion".
+ * - ExaParty's @ref page_exaparty_performance_optimisation "performance optimisation discussion".
  *
  *
  * # Tuning and Tailoring the domain decomposition

@@ -41,8 +41,8 @@ if(ENABLE_MGHYPE)
   add_subdirectory(mghype)
 endif()
 
-if(ENABLE_SWIFT)
-  add_subdirectory(swift2)
+if(ENABLE_EXAPARTY)
+  add_subdirectory(exaparty)
 endif()
 
 add_subdirectory(unittests)

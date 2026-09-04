@@ -38,7 +38,7 @@ C++ functions into the generated code.
 Finally, Peano defines its own falvours (specialisations) of dastgen2.DataModel
 for special extensions. The blockstructured meshes for example have a
 specialisation which represents a patch and also injects the right merges for
-boundary data exchange right from the start. The swift2 extension also defines
+boundary data exchange right from the start. The exaparty extension also defines
 its own data model for particles. Again, a particle is just a
 dastgen2.DataModel, i.e. will be mapped onto a plain C++ class, but each
 particle always has some pre-defined routines and attributes such as a position

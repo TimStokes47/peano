@@ -311,19 +311,19 @@ Yet, the realisation can make certain assumptions about their memory layout.
 These assumptions are discussed on a subpage of the @ref page_toolbox_particles_realisation.
 
 
-# For Swift 2 users:
+# For ExaParty users:
 
-- See swift2.particle.Particle for the introduction of the marker
+- See exaparty.api.particle.Particle for the introduction of the marker
   CellHasUpdatedParticle which we use to ensure that each particle is
   only updated once.
-- Consult swift2.actionsets.UpdateParticleMarker for documentation of the
+- Consult exaparty.api.actionsets.UpdateParticleMarker for documentation of the
   action set which actually sets the marker.
-- Read through swift2.graphcompiler.Sequential for an example how and when the
+- Read through exaparty.api.graphcompiler.Sequential for an example how and when the
   different active set construction schemes are used.
-- Read through swift2.graphcompiler.Sequential for an example how and when to
+- Read through exaparty.api.graphcompiler.Sequential for an example how and when to
   invoke UpdateParticleMarker to ensure that the update markers are always set
   to the correct value.
-- Read through the recommendations on @ref page_swift_performance_optimisation.
+- Read through the recommendations on @ref page_exaparty_performance_optimisation.
 
 
 

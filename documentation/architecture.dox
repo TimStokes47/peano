@@ -113,7 +113,7 @@ to add to each observer a sequence of action sets.
 Eventually, users have to invoke generate() and the Python API will generate all required C++ classes,
 leaving the body of the action sets and the main routine to the user to implement.
 
-Most extensions of Peano 4 (such as ExaHyPE 2 or Swift 2 or our MGHyPE
+Most extensions of Peano 4 (such as ExaHyPE 2 or ExaParty or our MGHyPE
 extensions) add an additional layer: They provide a domain-specific API.
 In this API, users describe what they want to do. The API manages a
 domain-specific project. Every time the user adds a new feature, the

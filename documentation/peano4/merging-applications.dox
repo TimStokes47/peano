@@ -41,7 +41,7 @@
   
   Skip this part if you work with only one extension and want to add additional
   helper grid sweeps, e.g. If you have two extensions - such as ExaHyPE and
-  MGHyPE or Swift - which both create Peano projects, you end up with a high-level code
+  MGHyPE or ExaParty - which both create Peano projects, you end up with a high-level code
   which resembles:
   
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -18,7 +18,7 @@ SUBDIRS = . \
 	exahype2 \
 	mghype \
 	petsc \
-	swift2 \
+	exaparty \
 	tbb \
 	unittests
 

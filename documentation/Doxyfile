@@ -1019,7 +1019,7 @@ RECURSIVE              = YES
 EXCLUDE                = python/peano4/toolbox/PlotCellDataInPeanoBlockFormat.py \
                          python/peano4/toolbox/PlotGridInPeanoBlockFormat.py \
                          python/peano4/toolbox/PlotVertexDataInPeanoBlockFormat.py \
-                         python/swift2/input/InsertParticlesFromHDF5File.py \
+                         src/exaparty/api/input/InsertParticlesFromHDF5File.py \
                          documentation/convert-jupyter-notebooks.py \
                          benchmarks/other \
                          src/mghype/matrixfree/solvers/api/templates \

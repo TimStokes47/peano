@@ -374,7 +374,7 @@ can still tune this behaviour:
 ## Multithreading optimisation
 
 Peano supports both task-based and data parallelism. The former is specific to 
-extensions such as Swift or ExaHyPE, i.e. each has their own tasking approach.
+extensions such as ExaParty or ExaHyPE, i.e. each has their own tasking approach.
 There are some generic recommendations though, and we discuss them below. All
 Peano codes can support data parallelism by a textbook non-overlapping domain
 decomposition. Actually, we use the same tree-based multiscale domain 

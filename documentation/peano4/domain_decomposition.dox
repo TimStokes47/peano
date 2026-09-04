@@ -131,7 +131,7 @@ each other. That is, the user has to ensure that whenever you run a
 certain type of grid sweep on one rank, then the other ranks run this
 sweep as well. I provide remarks on this at the end of the page. Most users will never
 ever see this part - notably not if they use high-level toolkits built
-on top of Peano such as ExaHyPE or Swift 2. The main codes produced by
+on top of Peano such as ExaHyPE or ExaParty. The main codes produced by
 these high-level extensions automatically guarantee that all ranks do
 exactly the same. 
 

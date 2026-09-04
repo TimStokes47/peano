@@ -90,7 +90,7 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public peano4::grid::TraversalO
      * observers::TimeStep::unprepareTraversal();
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      *
-     * The code snippet above is just an example. Codes like SWIFT or ExaHyPE
+     * The code snippet above is just an example. Codes like ExaParty or ExaHyPE
      * typically add the prepare/unprepare calls automatically to their main.
      */
     static void prepareTraversal();

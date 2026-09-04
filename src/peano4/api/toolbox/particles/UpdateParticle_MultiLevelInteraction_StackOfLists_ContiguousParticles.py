@@ -273,8 +273,8 @@ class UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(Acti
     Compute kernels can be optimised quite aggressively, but fiddling out how they
     can be optimised is tedious. I recommend to use MAQAO and Intel's compiler
     optimisation feedback. The page @ref toolbox_particles_memorypool holds
-    additional information. It is also worth studying @ref page_swift_performance_optimisation "Swift's performance optimisation"
-    remarks with respect to vecorisation as well as Swift's discussion of @ref swift_particle_lifecycle Particle Lifecycle "vectorised kernels".
+    additional information. It is also worth studying @ref page_exaparty_performance_optimisation "ExaParty's performance optimisation"
+    remarks with respect to vecorisation as well as ExaParty's discussion of @ref exaparty_particle_lifecycle Particle Lifecycle "vectorised kernels".
 
     Compute kernels can be optimised quite aggressively, but fiddling out how they
     can be optimised is tedious. I recommend to use MAQAO and Intel's compiler
@@ -308,7 +308,7 @@ class UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(Acti
 
     The @ref page_peano_performance_optimisation "generic Peano optimisation" page
     provides some useful hints how to guide these optimisation through the
-    compiler. It also makes sense to study swift2::kernels::computeHydroForce()
+    compiler. It also makes sense to study exaparty::kernels::computeHydroForce()
     which was one of the first routines that we optimised along these ideas.
 
     """

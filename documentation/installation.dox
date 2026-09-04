@@ -98,7 +98,7 @@ applications, as it builds merely Peano's core libraries.
 This might be the right time to look ahead and study the tutorials of the codes you wanna use.
 All of them need different toolboxes and extensions. ExaHyPE, for example, requires
 you to activate --enable-blockstructured and --enable-exahype at least (--enable-loadbalancing is recommended),
-while the SPH code Swift needs at least --enable-particles and --enable-swift.
+while the SPH code ExaParty needs at least --enable-particles and --enable-exaparty.
 </div>
 
 Besides Peano's toolboxes and extensions,
@@ -157,7 +157,7 @@ Handing in .. does the job for most of the setups.
 This might be the right time to look ahead and study the tutorials of the codes you wanna use.
 All of them need different toolboxes and extensions. ExaHyPE, for example, requires
 you to activate BLOCKSTRUCTURED and EXAHYPE at least (LOADBALANCING is recommended),
-while the SPH code Swift needs at least PARTICLES and SWIFT.
+while the SPH code ExaParty needs at least PARTICLES and EXAPARTY.
 </div>
 
 Configure by pressing c and then q to finish the configuration. Next, continue
