@@ -50,7 +50,8 @@ class Solver(abc.ABC):
 
         @abc.abstractmethod
         def construct_output(self,
-                             output,
+                             exahype2_project,
+                             solver_realisation,
                              verbose):
             """!
             Has to be implemented by subclass
@@ -72,7 +73,8 @@ class Solver(abc.ABC):
 
         @abc.abstractmethod
         def construct_output(self,
-                             output,
+                             exahype2_project,
+                             solver_realisation,
                              verbose):
             """!
             Has to be implemented by subclass
@@ -94,7 +96,8 @@ class Solver(abc.ABC):
 
         @abc.abstractmethod
         def construct_output(self,
-                             output,
+                             exahype2_project,
+                             solver_realisation,
                              verbose):
             """!
             Has to be implemented by subclass
@@ -301,12 +304,29 @@ class Solver(abc.ABC):
         """
         pass
 
-    def generate_Peano4_project(self,
+    def generate_solver_realisation(self,
                                 exahype2_project,
                                 verbose):
+        """!
+        Turn this solver specification into a realisation.Solver
+
+        Constructs a fresh realisation.Solver tied to this solver, lets the
+        solver_generator populate it (and the surrounding exahype2_project),
+        and returns it. The caller - typically the exahype2_project's
+        generator - collects the realisations of all registered solvers and
+        mangles them into one Peano 4 project.
+
+        @return exahype2.api.realisation.Solver
+        """
         if verbose:
             print("---------------------------------------")
             print("Create data for solver " + self._name)
             print("---------------------------------------")
-        self.solver_generator.construct_output(exahype2_project,verbose)
+
+        from .realisation import Solver as SolverRealisation
+        solver_realisation = SolverRealisation(self)
+
+        self.solver_generator.construct_output(exahype2_project,solver_realisation,verbose)
+
+        return solver_realisation
 

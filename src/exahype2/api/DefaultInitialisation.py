@@ -13,7 +13,7 @@ class DefaultInitialisation(HardcodedInitialisation):
     def __init__(self, solver):
         super().__init__(solver)
 
-    def construct_output(self, output, verbose):
+    def construct_output(self, exahype2_project, solver_realisation, verbose):
         """!
         @todo Not implemented yet
         """

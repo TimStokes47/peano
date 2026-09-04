@@ -17,7 +17,8 @@ class HardcodedInitialisation(abc.ABC):
 
     @abc.abstractmethod
     def construct_output(self,
-                         output,
+                         exahype2_project,
+                         solver_realisation,
                          verbose):
         """!
         Has to be implemented by subclass

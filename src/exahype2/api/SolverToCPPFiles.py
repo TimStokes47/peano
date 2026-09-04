@@ -197,6 +197,7 @@ tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPAC
 
     def construct_output(self,
                          exahype2_project,
+                         solver_realisation,
                          verbose):
         """!
 
@@ -206,7 +207,7 @@ tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPAC
         class_name = "Abstract" + self._solver.name
         templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
         if verbose:
-            print( "Map class {} onto C++ files using {}".format(self._solver.name, templatefile_prefix) )
+            print( "Map class {} onto C++ files using {} and lower into solver realisation object".format(self._solver.name, templatefile_prefix) )
         local_d = {
           "NUMBER_OF_UNKNOWNS": self._solver._unknowns,
           "NUMBER_OF_AUXILIARY_VARIABLES": self._solver._auxiliary_variables,
@@ -223,5 +224,5 @@ tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPAC
             default_overwrite=True,
             apply_iteratively=False,
         )
-        exahype2_project.peano4_project.output.add(generated_files)
+        solver_realisation.output.add(generated_files)
 

@@ -64,6 +64,9 @@ class Project(object):
         self._subdirectory = subdirectory
         self._abstract_overwrite = abstract_overwrite
 
+        from .DefaultProjectGenerator import DefaultProjectGenerator
+        self.generator = DefaultProjectGenerator()
+
         self._solvers = []
         self._domain_offset = [0.0, 0.0, 0.0]
         self._domain_size = [1.0, 1.0, 1.0]
@@ -877,20 +880,10 @@ thus appreciate any citation of the original release paper
         generate_Peano4_project() again to get a new snapshot/version of the
         Peano setup.
         """
-        # @todo Has to go into a generator
-        self._peano_project.solversteps.add_step(self.create_grid)
-        self._peano_project.solversteps.add_step(self.init_grid)
-        self._peano_project.solversteps.add_step(self.create_grid_but_postpone_refinement)
-        self._peano_project.solversteps.add_step(self.create_grid_and_converge_lb)
-        self._peano_project.solversteps.add_step(self.plot_solution)
-        self._peano_project.solversteps.add_step(self.checkpoint_solution)
-        self._peano_project.solversteps.add_step(self.perform_time_step)
+        solver_realisations = [
+            solver.generate_solver_realisation(self, verbose) for solver in self._solvers
+        ]
 
-        for solver in self._solvers:
-            solver.generate_Peano4_project(self,
-                                           verbose,
-                                           )
-                        
 #            solver.add_to_Peano4_datamodel(self._peano_project.datamodel, verbose)
 
 #            solver.add_use_data_statements_to_Peano4_solver_step(self.create_grid)
@@ -948,7 +941,7 @@ thus appreciate any citation of the original release paper
 
 #        self._peano_project.output.makefile.set_mode(self._build_mode)
 
-        return self._peano_project
+        return self.generator.generate_Peano4_project(self, solver_realisations, verbose)
 
 
     def init_new_user_defined_algorithmic_step(self,
