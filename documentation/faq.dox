@@ -306,8 +306,8 @@ in the CMake configuration.
                       
     Simply unset it to fix the issue.
 
-- The JIT compiler crashes due to the FPGA emulation device on our cluster (NCC). If this happens on
-  your machine, try putting SYCL_DEVICE_FILTER=gpu before the command to run the benchmark.
+  - The JIT compiler crashes due to the FPGA emulation device on our cluster (NCC). If this happens on
+    your machine, try putting SYCL_DEVICE_FILTER=gpu before the command to run the benchmark.
 
 
 # Python
