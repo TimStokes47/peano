@@ -1,7 +1,7 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from swift2.particle.Particle import Particle
-from swift2.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.particle.Particle import Particle
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
 
 import peano4.api
 
@@ -21,7 +21,7 @@ class ExplicitEulerDynamicSearchRadius(Particle):
       use any special symbols besides an underscore.
 
 
-    @see swift2::kernels::adoptSearchRadiusAndTriggerRerun()
+    @see exaparty::kernels::adoptSearchRadiusAndTriggerRerun()
 
     """
 
@@ -89,7 +89,7 @@ class ExplicitEulerDynamicSearchRadius(Particle):
                 effect=AlgorithmStep.Effect.CHANGE_POSITION_OR_INTERACTION_RADIUS,
                 touch_vertex_first_time_kernel="",
                 cell_kernel=f"""
-                                         ::swift2::kernels::adoptSearchRadiusAndTriggerRerun<globaldata::{PARTICLE}>(
+                                         ::exaparty::kernels::adoptSearchRadiusAndTriggerRerun<globaldata::{PARTICLE}>(
                                            localParticles,
                                            activeParticles,
                                            {NR_INTERACTION_PARTNERS}
@@ -99,7 +99,7 @@ class ExplicitEulerDynamicSearchRadius(Particle):
                 prepare_traversal_kernel=f"globaldata::{PARTICLE}::getSpecies().clearRerunPreviousGridSweepFlag();",
                 unprepare_traversal_kernel=f"globaldata::{PARTICLE}::getSpecies().allReduce();",
                 includes="""
-                                         #include "swift2/kernels/ParticleSearchRadiusCalculation.h"
+                                         #include "exaparty/kernels/ParticleSearchRadiusCalculation.h"
                 """,
             ),
             AlgorithmStep(
@@ -108,7 +108,7 @@ class ExplicitEulerDynamicSearchRadius(Particle):
                 effect=AlgorithmStep.Effect.ALTER_LOCAL_STATE,
                 touch_vertex_first_time_kernel=self.touch_particles_of_set_first_time_kernel,
                 cell_kernel=f"""
-                                         ::swift2::kernels::genericInteraction<globaldata::{PARTICLE}>(
+                                         ::exaparty::kernels::genericInteraction<globaldata::{PARTICLE}>(
                                            localParticles,
                                            activeParticles,
                                            [&] (globaldata::{PARTICLE}* localParticle, const globaldata::{PARTICLE} * const globalParticle) -> void {{
@@ -118,27 +118,27 @@ class ExplicitEulerDynamicSearchRadius(Particle):
                 """,
                 touch_vertex_last_time_kernel=self.touch_particles_of_set_last_time_kernel,
                 includes="""
-                                         #include "swift2/kernels/ParticleParticleInteraction.h"
+                                         #include "exaparty/kernels/ParticleParticleInteraction.h"
                 """,
             ),
             AlgorithmStep(
                 name="UpdatePositionAndVelocity",
                 dependencies=AlgorithmStep.Dependencies.SELF,
                 effect=AlgorithmStep.Effect.CHANGE_POSITION_OR_INTERACTION_RADIUS,
-                touch_vertex_first_time_kernel="""::swift2::timestepping::resetMovedParticleMarker(assignedParticles);""",
-                touch_vertex_last_time_kernel="""::swift2::timestepping::computeExplicitEulerWithGlobalTimeStepSize( assignedParticles );""",
-                prepare_traversal_kernel=f"""::swift2::timestepping::computeAdmissibleTimeStepSizeFromGlobalMeshSizeAndMaximumVelocity<globaldata::{PARTICLE}>({CFL_FACTOR},{TIME_STEP_SIZE});""",
+                touch_vertex_first_time_kernel="""::exaparty::timestepping::resetMovedParticleMarker(assignedParticles);""",
+                touch_vertex_last_time_kernel="""::exaparty::timestepping::computeExplicitEulerWithGlobalTimeStepSize( assignedParticles );""",
+                prepare_traversal_kernel=f"""::exaparty::timestepping::computeAdmissibleTimeStepSizeFromGlobalMeshSizeAndMaximumVelocity<globaldata::{PARTICLE}>({CFL_FACTOR},{TIME_STEP_SIZE});""",
                 includes="""
-                                         #include "swift2/timestepping/Euler.h"
-                                         #include "swift2/timestepping/GlobalTimeStepping.h"
-                                         #include "swift2/timestepping/TimeStepping.h"
+                                         #include "exaparty/timestepping/Euler.h"
+                                         #include "exaparty/timestepping/GlobalTimeStepping.h"
+                                         #include "exaparty/timestepping/TimeStepping.h"
                 """,
             ),
             AlgorithmStep(
                 name="ReduceGlobalQuantities",
                 dependencies=AlgorithmStep.Dependencies.SELF,
                 effect=AlgorithmStep.Effect.ALTER_GLOBAL_STATE,
-                cell_kernel="""::swift2::statistics::reduceVelocityAndSearchRadius( localParticles );""",
+                cell_kernel="""::exaparty::statistics::reduceVelocityAndSearchRadius( localParticles );""",
                 prepare_traversal_kernel="""
                                          globaldata::{PARTICLE}::getSpecies().clearSearchRadius();
                                          globaldata::{PARTICLE}::getSpecies().clearVelocity();
@@ -146,11 +146,11 @@ class ExplicitEulerDynamicSearchRadius(Particle):
                 unprepare_traversal_kernel=f"""
                                          globaldata::{PARTICLE}::getSpecies().allReduce();
                                          globaldata::{PARTICLE}::getSpecies().setTimeStamp( globaldata::{PARTICLE}::getSpecies().getMinTimeStamp() + globaldata::{PARTICLE}::getSpecies().getMinTimeStepSize(), false );
-                                         ::swift2::statistics::reportSearchRadiusVTDt<globaldata::{PARTICLE}>( "{PARTICLE}" );
+                                         ::exaparty::statistics::reportSearchRadiusVTDt<globaldata::{PARTICLE}>( "{PARTICLE}" );
                 """,
                 includes="""
-                                         #include "swift2/statistics/Reports.h"
-                                         #include "swift2/statistics/Statistics.h"
+                                         #include "exaparty/statistics/Reports.h"
+                                         #include "exaparty/statistics/Statistics.h"
                 """,
             ),
         ]

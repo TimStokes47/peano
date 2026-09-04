@@ -92,11 +92,11 @@ class GreshoChanVortexIC:
       particle->setPressure( pressure );
 
       /* Set U from the EoS */
-      double u_ini = ::swift2::legacy::eos::gas_internal_energy_from_pressure( particle->getDensity(), particle->getPressure() );
+      double u_ini = ::exaparty::legacy::eos::gas_internal_energy_from_pressure( particle->getDensity(), particle->getPressure() );
       particle->setU( u_ini );
 
       /* Set sound speed */
-      const double soundspeed = ::swift2::legacy::eos::gas_soundspeed_from_internal_energy( particle->getU() );
+      const double soundspeed = ::exaparty::legacy::eos::gas_soundspeed_from_internal_energy( particle->getU() );
       particle->setSoundSpeed(soundspeed);
 
       /*

@@ -1,22 +1,22 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 #include "peano4/datamanagement/CellMarker.h"
 #include "peano4/datamanagement/VertexMarker.h"
-#include "swift2/kernels/ParticleUpdatePredicates.h"
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
 
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
     /**
-     * @namespace swift2::kernels::legacy Legacy SPH implementation
+     * @namespace exaparty::kernels::legacy Legacy SPH implementation
      *
      * This implementation is very very close to the original Swift kernels.
      * This can immediately be seen from the signature of the routines: The
      * core routines all work solely with pointers.
      *
-     * For Swift 2 however, we need signatures which work with references and
+     * For ExaParty however, we need signatures which work with references and
      * also evaluate predicates. So each routine actually comes along as pair:
      * The core science with a pointer and then a wrapper around it.
      *
@@ -91,7 +91,7 @@ namespace swift2 {
 
     } // namespace legacy
   }   // namespace kernels
-} // namespace swift2
+} // namespace exaparty
 
 
 #include "Swift.cpph"

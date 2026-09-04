@@ -3,15 +3,15 @@
 #include "kernel_hydro.h"
 
 template <typename Particle>
-void swift2::kernels::legacy::
+void exaparty::kernels::legacy::
   hydro_update_smoothing_length_and_rerun_if_required(Particle* localParticle) {
   if (localParticle->getSmoothingLengthConverged())
     return;
 
-  // macro expansions from swift2/legacy/kernels are cumbersome otherwise.
-  using namespace swift2::kernels::legacy::kernelHydro;
+  // macro expansions from exaparty/legacy/kernels are cumbersome otherwise.
+  using namespace exaparty::kernels::legacy::kernelHydro;
 
-  static tarch::logging::Log _log("swift2::kernels");
+  static tarch::logging::Log _log("exaparty::kernels");
 
   /* Grab static parameters */
   const int hydro_dimensions = localParticle->getHydroDimensions();
@@ -24,7 +24,7 @@ void swift2::kernels::legacy::
   const double hydro_h_min           = localParticle->getSmlMin();
   const double sml_tolerance_epsilon = localParticle->getSmlTolerance();
   const double eta                   = localParticle->getEtaFactor();
-  const double eta_dim = ::swift2::kernels::legacy::hydroDimensions::
+  const double eta_dim = ::exaparty::kernels::legacy::hydroDimensions::
     pow_dimension(eta);
   const int max_iterations = localParticle->getSmlMaxIterations();
 

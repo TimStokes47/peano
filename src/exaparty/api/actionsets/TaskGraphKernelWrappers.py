@@ -1,4 +1,4 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import jinja2
 import peano4.api
@@ -18,7 +18,7 @@ def construct_touch_vertex_first_time_call(
     these degenerate to empty ones as no particles are associated to a vertex. 
     Otherwise, it just became a nightmare. 
     Notably note that the kernel is not empty in most cases, as it is enriched
-    with Swift dependency tracking anyway.
+    with ExaParty dependency tracking anyway.
     
     
     ## Multiscale task order
@@ -60,7 +60,7 @@ def construct_touch_vertex_first_time_call(
     
     ## Capture rules of lambda
     
-    The task bodies as injected by Swift work with the object's attributes and
+    The task bodies as injected by ExaParty work with the object's attributes and
     also with references. Both things are not really copied by a capture
     = clause: The references are copied, but still point to the same, temporary
     object. The accesses to object attributes are internally mapped onto 
@@ -88,27 +88,27 @@ def construct_touch_vertex_first_time_call(
       fineGridVertex{{MARKER_NAME}}.getNumber()>=0,
       fineGridVertex{{MARKER_NAME}}.toString()
   );
-  const ::swift2::TaskNumber taskNumberToBeUsed{
+  const ::exaparty::TaskNumber taskNumberToBeUsed{
       fineGridVertex{{MARKER_NAME}}.getNumber(),
-      ::swift2::TaskNumber::TaskAssociation::TouchVertexFirstTime
+      ::exaparty::TaskNumber::TaskAssociation::TouchVertexFirstTime
     };
               
   {% if USE_MULTILEVEL_DEPENDENCIES %}
-  std::set<::swift2::TaskNumber> inDependencies = ::swift2::getVertexNumbersOfParentVertices(
+  std::set<::exaparty::TaskNumber> inDependencies = ::exaparty::getVertexNumbersOfParentVertices(
     marker,
     coarseGridVertices{{MARKER_NAME}},
-    ::swift2::TaskNumber::TaskAssociation::TouchVertexFirstTime
+    ::exaparty::TaskNumber::TaskAssociation::TouchVertexFirstTime
   );
   {% else %}
-  std::set<::swift2::TaskNumber> inDependencies;  
+  std::set<::exaparty::TaskNumber> inDependencies;  
   {% endif %}
   
   logDebug( 
     "touchVertexFirstTime(...)", 
     "create task " << taskNumberToBeUsed.toString() << 
-    " (" << ::swift2::flatten(taskNumberToBeUsed) << ") " <<
+    " (" << ::exaparty::flatten(taskNumberToBeUsed) << ") " <<
     " for " << marker.toString() <<
-    " depends on " << ::swift2::toString(inDependencies) <<
+    " depends on " << ::exaparty::toString(inDependencies) <<
     " with " << assignedParticles.size() << " particles on marker " << marker.toString() 
   );
 
@@ -126,7 +126,7 @@ def construct_touch_vertex_first_time_call(
     #endif
   );
   
-  tarch::multicore::spawnTask( newTask, ::swift2::flatten(inDependencies), ::swift2::flatten(taskNumberToBeUsed) );
+  tarch::multicore::spawnTask( newTask, ::exaparty::flatten(inDependencies), ::exaparty::flatten(taskNumberToBeUsed) );
 """
     ).render(**d)
 
@@ -168,28 +168,28 @@ def construct_touch_cell_first_time_call(
         fineGridCell{{MARKER_NAME}}.getNumber()>=0,
         fineGridCell{{MARKER_NAME}}.toString()
       );  
-      const ::swift2::TaskNumber taskNumberToBeUsed{
+      const ::exaparty::TaskNumber taskNumberToBeUsed{
         fineGridCell{{MARKER_NAME}}.getNumber(),
-        ::swift2::TaskNumber::TaskAssociation::TouchCellFirstTime
+        ::exaparty::TaskNumber::TaskAssociation::TouchCellFirstTime
       };
       
       // I originally used [TwoPowerD], but this then is a pointer. Albeit on 
       // the stack, it will not be copied by the lambda capture below.
       tarch::la::Vector<TwoPowerD,int> adjacentResourcesIndices;
-      std::set<::swift2::TaskNumber> adjacentVertexAndParentTasks;
+      std::set<::exaparty::TaskNumber> adjacentVertexAndParentTasks;
       for (int i=0; i<TwoPowerD; i++) {
         adjacentResourcesIndices[i] = fineGridVertices{{MARKER_NAME}}(i).getNumber();
         assertion3(adjacentResourcesIndices[i]==tarch::Enumerator::NoNumber or adjacentResourcesIndices[i]>=0, adjacentResourcesIndices[i], i, marker.toString() );
-        adjacentVertexAndParentTasks.insert( ::swift2::TaskNumber{
+        adjacentVertexAndParentTasks.insert( ::exaparty::TaskNumber{
           fineGridVertices{{MARKER_NAME}}(i).getNumber(),
-          ::swift2::TaskNumber::TaskAssociation::TouchVertexFirstTime
+          ::exaparty::TaskNumber::TaskAssociation::TouchVertexFirstTime
         } );
       }
       
       {% if USE_MULTILEVEL_DEPENDENCIES %}
-      const ::swift2::TaskNumber  parentTaskNumber = ::swift2::TaskNumber(
+      const ::exaparty::TaskNumber  parentTaskNumber = ::exaparty::TaskNumber(
         coarseGridCell{{MARKER_NAME}}.getNumber(),
-        ::swift2::TaskNumber::TaskAssociation::TouchCellFirstTime
+        ::exaparty::TaskNumber::TaskAssociation::TouchCellFirstTime
       );
       adjacentVertexAndParentTasks.insert( parentTaskNumber );
       {% endif %}
@@ -198,7 +198,7 @@ def construct_touch_cell_first_time_call(
         "touchCellFirstTime(...)", 
         "create task " << taskNumberToBeUsed.toString() << 
         " for " << marker.toString() <<
-        " depends on " << ::swift2::toString(adjacentVertexAndParentTasks) <<
+        " depends on " << ::exaparty::toString(adjacentVertexAndParentTasks) <<
         " with " << localParticles.size() << " local particles on marker " << marker.toString() <<
         " on tree " << _spacetreeId
       );
@@ -207,15 +207,15 @@ def construct_touch_cell_first_time_call(
         tarch::multicore::Task::DontFuse,
         tarch::multicore::Task::DefaultPriority,
         [=,marker=marker,_spacetreeId=_spacetreeId,localParticles=localParticles,numberOfCoalescedLocalParticlesPerVertex=numberOfCoalescedLocalParticlesPerVertex,activeParticles = _activeParticles,numberOfCoalescedActiveParticlesPerVertex = _numberOfActiveParticlesPerVertex,adjacentResourcesIndices=adjacentResourcesIndices]()->bool {
-          ::swift2::TaskEnumerator::lockResources(adjacentResourcesIndices);
+          ::exaparty::TaskEnumerator::lockResources(adjacentResourcesIndices);
         
           {% if TOUCH_CELL_FIRST_TIME_KERNEL!=None %}
           {{TOUCH_CELL_FIRST_TIME_KERNEL}}
           {% endif %}
           
-          ::swift2::markAllParticlesAsUpdatedWithinCell( localParticles, marker );
+          ::exaparty::markAllParticlesAsUpdatedWithinCell( localParticles, marker );
           
-          ::swift2::TaskEnumerator::unlockResources(adjacentResourcesIndices);
+          ::exaparty::TaskEnumerator::unlockResources(adjacentResourcesIndices);
           
           return false;
         }
@@ -223,7 +223,7 @@ def construct_touch_cell_first_time_call(
         , "cell:" + marker.toString()
         #endif
       );  
-      tarch::multicore::spawnTask( newTask, ::swift2::flatten(adjacentVertexAndParentTasks), ::swift2::flatten(taskNumberToBeUsed) );
+      tarch::multicore::spawnTask( newTask, ::exaparty::flatten(adjacentVertexAndParentTasks), ::exaparty::flatten(taskNumberToBeUsed) );
     """
     ).render(**d)
 
@@ -257,7 +257,7 @@ def construct_touch_vertex_last_time_call(
     dependencies that will be established from fine to coarse on the 
     finer level. We use
     
-      std::set<::swift2::TaskNumber> parentTasks = getVertexNumbersOfParentVertices(
+      std::set<::exaparty::TaskNumber> parentTasks = getVertexNumbersOfParentVertices(
     
     to find out the tasks of the up to @f$ 2^d @f$ parent tasks. Those 
     are not yet spawned, as their touchVertexLastTime() will come later 
@@ -283,21 +283,21 @@ def construct_touch_vertex_last_time_call(
     }
     return jinja2.Template(
         """
-      std::set<::swift2::TaskNumber> inDependencies;
+      std::set<::exaparty::TaskNumber> inDependencies;
       
       assertion1(
         fineGridVertex{{MARKER_NAME}}.getNumber()>=0,
         fineGridVertex{{MARKER_NAME}}.toString()
       );
       
-      const ::swift2::TaskNumber taskNumberToBeUsed{
+      const ::exaparty::TaskNumber taskNumberToBeUsed{
         fineGridVertex{{MARKER_NAME}}.getNumber(),
-        ::swift2::TaskNumber::TaskAssociation::TouchVertexLastTime
+        ::exaparty::TaskNumber::TaskAssociation::TouchVertexLastTime
       };
 
       // handle finer levels      
       {% if USE_MULTILEVEL_DEPENDENCIES %}
-      inDependencies = ::swift2::getDependenciesForTask( 
+      inDependencies = ::exaparty::getDependenciesForTask( 
         taskNumberToBeUsed, 
         _pendingDependencies 
       );
@@ -305,22 +305,22 @@ def construct_touch_vertex_last_time_call(
 
       // add tasks from neighbour cells
       for (int i=0; i<TwoPowerD; i++) {
-        inDependencies.insert( ::swift2::TaskNumber{
+        inDependencies.insert( ::exaparty::TaskNumber{
           fineGridVertex{{MARKER_NAME}}.getAdjacentCellNumber(i),
-          ::swift2::TaskNumber::TaskAssociation::TouchCellFirstTime
+          ::exaparty::TaskNumber::TaskAssociation::TouchCellFirstTime
         } );
       }
 
       // - for multiscale algorithms, there's the finer indices, which might add to the counter and hence weaken the assertion
       // - there is at least one proper adjacent cell, i.e. a local one with a valid counter
       // - the other ones might all be undef, so they enter the set once; or they might be proper indices and increase the count
-      assertion2( inDependencies.size()>=2, marker.toString(), ::swift2::toString(inDependencies) );
+      assertion2( inDependencies.size()>=2, marker.toString(), ::exaparty::toString(inDependencies) );
       
       logDebug( 
         "touchVertexLastTime(...)", 
         "create task " << taskNumberToBeUsed.toString() << 
         " for " << marker.toString() <<
-        " depends on " << ::swift2::toString(inDependencies) <<
+        " depends on " << ::exaparty::toString(inDependencies) <<
         " with " << assignedParticles.size() << " particles on marker " << marker.toString() 
       );
 
@@ -338,16 +338,16 @@ def construct_touch_vertex_last_time_call(
         #endif
       );
 
-      tarch::multicore::spawnTask( newTask, ::swift2::flatten(inDependencies), ::swift2::flatten(taskNumberToBeUsed) );
+      tarch::multicore::spawnTask( newTask, ::exaparty::flatten(inDependencies), ::exaparty::flatten(taskNumberToBeUsed) );
 
       {% if USE_MULTILEVEL_DEPENDENCIES %}
-      std::set<::swift2::TaskNumber> parentTasks = getVertexNumbersOfParentVertices(
+      std::set<::exaparty::TaskNumber> parentTasks = getVertexNumbersOfParentVertices(
         marker,
         coarseGridVertices{{SPECIES_SET_TASK_MARKER_NAME}},
-        ::swift2::TaskNumber::TaskAssociation::TouchVertexLastTime
+        ::exaparty::TaskNumber::TaskAssociation::TouchVertexLastTime
       );
       for (auto p: parentTasks) {
-        _pendingDependencies.insert( std::pair<::swift2::TaskNumber, ::swift2::TaskNumber>(
+        _pendingDependencies.insert( std::pair<::exaparty::TaskNumber, ::exaparty::TaskNumber>(
             taskNumberToBeUsed, p
         ));
       }

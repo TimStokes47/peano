@@ -1,11 +1,11 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 #include "tarch/la/Vector.h"
 #include "peano4/datamanagement/VertexMarker.h"
 
-namespace swift2 {
+namespace exaparty {
   namespace boundaryconditions {
     bool isVertexOnGlobalBoundary(
       const peano4::datamanagement::VertexMarker&   marker,

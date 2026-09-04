@@ -1,10 +1,10 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from swift2.particle.AlgorithmStep import AlgorithmStep
-from swift2.actionsets.UpdateParticleMarker import UpdateParticleMarker
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.actionsets.UpdateParticleMarker import UpdateParticleMarker
 
 import peano4.api
-import swift2
+import exaparty
 
 
 from .AMRLogic import add_dynamic_mesh_refinement_and_particle_resorting
@@ -287,7 +287,7 @@ def map_onto_separate_mesh_traversals_with_generic_mapper(
                 ),
                 add_user_defined_actions=False,
             )
-            new_step.add_action_set(swift2.actionsets.DummyStep())
+            new_step.add_action_set(exaparty.api.actionsets.DummyStep())
             mesh_traversals.append(new_step)
             alter_particle_position.append(False)
 
@@ -318,7 +318,7 @@ def map_onto_separate_mesh_traversals_with_generic_mapper(
                 ),
                 add_user_defined_actions=False,
             )
-            new_step.add_action_set(swift2.actionsets.DummyStep())
+            new_step.add_action_set(exaparty.api.actionsets.DummyStep())
             mesh_traversals.append(new_step)
             alter_particle_position.append(False)
 

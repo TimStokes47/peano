@@ -2,7 +2,7 @@
 import peano4.api.toolbox.particles
 
 import dastgen2
-from swift2.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
 from abc import abstractmethod
 import copy
 
@@ -45,7 +45,7 @@ class Particle(peano4.api.toolbox.particles.Particle):
 
         def get_include(self):
             return """
-#include "swift2/ParticleSpecies.h"
+#include "exaparty/ParticleSpecies.h"
 """
 
         def set_model(self, data_model):
@@ -56,16 +56,16 @@ class Particle(peano4.api.toolbox.particles.Particle):
 
         def get_method_declarations(self, full_qualified_name):
             return """
-  static ::swift2::ParticleSpecies& getSpecies();
+  static ::exaparty::ParticleSpecies& getSpecies();
 """
 
         def get_implementation(self, full_qualified_name):
             return (
                 """
-::swift2::ParticleSpecies& """
+::exaparty::ParticleSpecies& """
                 + full_qualified_name
                 + """::getSpecies() {
-  static ::swift2::ParticleSpecies species;
+  static ::exaparty::ParticleSpecies species;
   return species;
 }
 """
@@ -105,7 +105,7 @@ class Particle(peano4.api.toolbox.particles.Particle):
           belong to one cell but can belong to many cells. We nevertheless want to
           update them only once.
 
-        @see swift2.actionsets.UpdateParticleMarker
+        @see exaparty.api.actionsets.UpdateParticleMarker
 
         """
         super(Particle, self).__init__(name)
@@ -197,7 +197,7 @@ Particle properties:
 
         This function actually modifies the AlgorithmSteps to contain the
         debug dependency checks. Is called by self._add_dependency_checks()
-        and uses the validation routines from swift2::dependencychecks.
+        and uses the validation routines from exaparty::dependencychecks.
 
         The routine is used to either add checks for the init phase or the
         actual time stepping. Which one is meant is identified through
@@ -212,7 +212,7 @@ Particle properties:
         ## Default settings
 
         If the user does not define bespoke default settings, this routine adds
-        default ones. These are set through instances of swift::dependencychecks::Invariant.
+        default ones. These are set through instances of exaparty::dependencychecks::Invariant.
 
         - For vertices, this is touch-at-most-once-mask-out-otherwise-all-previous-steps-update-at-least-once.
         - For cells, this is also touch-at-most-once-mask-out-otherwise-all-previous-steps-update-at-least-once.
@@ -270,8 +270,8 @@ Particle properties:
 
         # String template for dependency check call
         check_template_cell_operation = """
-  ::swift2::dependencychecks::check{STEP_TYPE}(
-                  ::swift2::dependencychecks::Invariant::{INVARIANT},
+  ::exaparty::dependencychecks::check{STEP_TYPE}(
+                  ::exaparty::dependencychecks::Invariant::{INVARIANT},
                   localParticles,
                   activeParticles,
                   marker,
@@ -283,8 +283,8 @@ Particle properties:
 """
 
         check_template_vertex_operation = """
-  ::swift2::dependencychecks::check{STEP_TYPE}(
-                  ::swift2::dependencychecks::Invariant::{INVARIANT},
+  ::exaparty::dependencychecks::check{STEP_TYPE}(
+                  ::exaparty::dependencychecks::Invariant::{INVARIANT},
                   assignedParticles,
                   marker,
                   globaldata::{NAME}::DependencyChecks{STEP_TYPE}LastUpdated::{STEP_NAME},
@@ -295,33 +295,33 @@ Particle properties:
 """
 
         mark_template_cell_operation = """
-  ::swift2::dependencychecks::mark{STEP_TYPE}(
+  ::exaparty::dependencychecks::mark{STEP_TYPE}(
                   localParticles,
                   activeParticles,
                   marker,
                   globaldata::{NAME}::DependencyChecks{STEP_TYPE}LastUpdated::{STEP_NAME},
                   globaldata::{NAME}::{PEANO4_EVENT_TYPE}::{EVENT},
-                  ::swift2::dependencychecks::Invariant::{INVARIANT},
+                  ::exaparty::dependencychecks::Invariant::{INVARIANT},
                   {CHECK_FUNCTION},
                   _spacetreeId
   );
 """
 
         mark_template_vertex_operation = """
-  ::swift2::dependencychecks::mark{STEP_TYPE}(
+  ::exaparty::dependencychecks::mark{STEP_TYPE}(
                   assignedParticles,
                   marker,
                   globaldata::{NAME}::DependencyChecks{STEP_TYPE}LastUpdated::{STEP_NAME},
                   globaldata::{NAME}::{PEANO4_EVENT_TYPE}::{EVENT},
-                  ::swift2::dependencychecks::Invariant::{INVARIANT},
+                  ::exaparty::dependencychecks::Invariant::{INVARIANT},
                   {CHECK_FUNCTION},
                   _spacetreeId
   );
 """
 
         check_template_vertex_operation_local_particles_after_sweep = """
-  ::swift2::dependencychecks::checkParticlesAssignedToVertexInTouchLastTime{STEP_TYPE}(
-    ::swift2::dependencychecks::Invariant::{INVARIANT},
+  ::exaparty::dependencychecks::checkParticlesAssignedToVertexInTouchLastTime{STEP_TYPE}(
+    ::exaparty::dependencychecks::Invariant::{INVARIANT},
     assignedParticles,
     globaldata::{NAME}::DependencyChecks{STEP_TYPE}LastUpdated::{STEP_NAME},
                   _spacetreeId
@@ -369,7 +369,7 @@ Particle properties:
             )
             d[
                 "CHECK_FUNCTION"
-            ] = "::swift2::kernels::localParticleCanBeUpdatedInVertexKernel<globaldata::{}>".format(
+            ] = "::exaparty::kernels::localParticleCanBeUpdatedInVertexKernel<globaldata::{}>".format(
                 self.name
             )
 
@@ -380,7 +380,7 @@ Particle properties:
                 # Only exception is first AlgorithmStep: There, first re-set
                 # all counters
                 step.touch_vertex_first_time_kernel = (
-                    "\n  ::swift2::dependencychecks::clearDependencyChecks"
+                    "\n  ::exaparty::dependencychecks::clearDependencyChecks"
                     + step_type_name
                     + "(assignedParticles);\n"
                     + mark_template_vertex_operation.format(**d)
@@ -404,7 +404,7 @@ Particle properties:
             )
             d[
                 "CHECK_FUNCTION"
-            ] = "::swift2::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle<globaldata::{}>".format(
+            ] = "::exaparty::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle<globaldata::{}>".format(
                 self.name
             )
 
@@ -439,7 +439,7 @@ Particle properties:
             )
             d[
                 "CHECK_FUNCTION"
-            ] = "::swift2::kernels::localParticleCanBeUpdatedInVertexKernel<globaldata::{}>".format(
+            ] = "::exaparty::kernels::localParticleCanBeUpdatedInVertexKernel<globaldata::{}>".format(
                 self.name
             )
 

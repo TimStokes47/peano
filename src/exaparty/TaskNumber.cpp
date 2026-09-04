@@ -6,10 +6,10 @@
 #include "tarch/Enumerator.h"
 
 
-const swift2::TaskNumber swift2::TaskNumber::NoOutDependencies{tarch::multicore::NoOutDependencies, TaskAssociation::TouchVertexFirstTime};
+const exaparty::TaskNumber exaparty::TaskNumber::NoOutDependencies{tarch::multicore::NoOutDependencies, TaskAssociation::TouchVertexFirstTime};
 
 
-swift2::TaskNumber::TaskNumber(int number0, TaskAssociation number1):
+exaparty::TaskNumber::TaskNumber(int number0, TaskAssociation number1):
   _taskCounter(number0),
   _taskAssociation(number1) {
   if (_taskCounter == ::tarch::multicore::NoOutDependencies) {
@@ -18,12 +18,12 @@ swift2::TaskNumber::TaskNumber(int number0, TaskAssociation number1):
   else {
     assertion1(number0 >= 0, toString());
     assertion1(number1 != TaskAssociation::NumberOfEntries, toString());
-    assertion1(number0 <= std::numeric_limits<int>::max()/ static_cast<int>(swift2::TaskNumber::TaskAssociation::NumberOfEntries), toString());
+    assertion1(number0 <= std::numeric_limits<int>::max()/ static_cast<int>(exaparty::TaskNumber::TaskAssociation::NumberOfEntries), toString());
   }
 }
 
 
-bool swift2::TaskNumber::operator<(const TaskNumber& rhs) const {
+bool exaparty::TaskNumber::operator<(const TaskNumber& rhs) const {
   return _taskCounter < rhs._taskCounter
          or _taskCounter == rhs._taskCounter and _taskAssociation == TaskAssociation::TouchVertexFirstTime
               and rhs._taskAssociation != TaskAssociation::TouchVertexFirstTime
@@ -32,22 +32,22 @@ bool swift2::TaskNumber::operator<(const TaskNumber& rhs) const {
 }
 
 
-bool swift2::TaskNumber::equals(const TaskNumber& rhs) const {
+bool exaparty::TaskNumber::equals(const TaskNumber& rhs) const {
   return _taskCounter == rhs._taskCounter and _taskAssociation == rhs._taskAssociation;
 }
 
 
-bool operator==(const swift2::TaskNumber& lhs, const swift2::TaskNumber& rhs) {
+bool operator==(const exaparty::TaskNumber& lhs, const exaparty::TaskNumber& rhs) {
   return lhs.equals(rhs);
 }
 
 
-bool operator!=(const swift2::TaskNumber& lhs, const swift2::TaskNumber& rhs) {
+bool operator!=(const exaparty::TaskNumber& lhs, const exaparty::TaskNumber& rhs) {
   return not lhs.equals(rhs);
 }
 
 
-std::string swift2::TaskNumber::toString() const {
+std::string exaparty::TaskNumber::toString() const {
   if (_taskCounter == tarch::multicore::NoOutDependencies) {
     return "no-dep";
   } else {
@@ -72,18 +72,18 @@ std::string swift2::TaskNumber::toString() const {
 }
 
 
-tarch::multicore::TaskNumber swift2::TaskNumber::flatten() const {
+tarch::multicore::TaskNumber exaparty::TaskNumber::flatten() const {
   assertionEquals(tarch::multicore::NoOutDependencies,tarch::Enumerator::NoNumber);
   if (_taskCounter == tarch::multicore::NoOutDependencies) {
     return tarch::multicore::NoOutDependencies;
   } else {
-    return _taskCounter * static_cast<int>(swift2::TaskNumber::TaskAssociation::NumberOfEntries)
+    return _taskCounter * static_cast<int>(exaparty::TaskNumber::TaskAssociation::NumberOfEntries)
            + static_cast<int>(_taskAssociation);
   }
 }
 
 
-std::string swift2::toString(const TaskNumber numbers[TwoPowerD]) {
+std::string exaparty::toString(const TaskNumber numbers[TwoPowerD]) {
   std::set<TaskNumber> converted;
   for (int i=0; i<TwoPowerD; i++) {
     converted.insert( numbers[i] );
@@ -92,7 +92,7 @@ std::string swift2::toString(const TaskNumber numbers[TwoPowerD]) {
 }
 
 
-std::string swift2::toString(const std::set<swift2::TaskNumber>& numbers) {
+std::string exaparty::toString(const std::set<exaparty::TaskNumber>& numbers) {
   std::ostringstream msg;
   msg << "{";
   bool first = true;
@@ -109,13 +109,13 @@ std::string swift2::toString(const std::set<swift2::TaskNumber>& numbers) {
 }
 
 
-int swift2::flatten(const TaskNumber& number) { return number.flatten(); }
+int exaparty::flatten(const TaskNumber& number) { return number.flatten(); }
 
 
-std::set<int> swift2::flatten(const std::set<TaskNumber>& numbers) {
+std::set<int> exaparty::flatten(const std::set<TaskNumber>& numbers) {
   std::set<int> result;
   for (auto& p : numbers) {
-    if (p != swift2::TaskNumber::NoOutDependencies) {
+    if (p != exaparty::TaskNumber::NoOutDependencies) {
       result.insert(p.flatten());
     }
   }
@@ -123,10 +123,10 @@ std::set<int> swift2::flatten(const std::set<TaskNumber>& numbers) {
 }
 
 
-std::set<::swift2::TaskNumber> swift2::getDependenciesForTask(
-  const ::swift2::TaskNumber& task, PendingDependencies& pendingDependencies
+std::set<::exaparty::TaskNumber> exaparty::getDependenciesForTask(
+  const ::exaparty::TaskNumber& task, PendingDependencies& pendingDependencies
 ) {
-  std::set<::swift2::TaskNumber> result;
+  std::set<::exaparty::TaskNumber> result;
   PendingDependencies::iterator  p = pendingDependencies.begin();
   while (p != pendingDependencies.end()) {
     if (p->second == task) {

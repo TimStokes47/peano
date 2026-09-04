@@ -1,6 +1,6 @@
 #include "Utils.h"
 
-bool swift2::boundaryconditions::isVertexOnGlobalBoundary(
+bool exaparty::boundaryconditions::isVertexOnGlobalBoundary(
   const peano4::datamanagement::VertexMarker&   marker,
   const tarch::la::Vector<Dimensions, double>&  domainOffset,
   const tarch::la::Vector<Dimensions, double>&  domainSize

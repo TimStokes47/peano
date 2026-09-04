@@ -7,5 +7,5 @@
 #include "tarch/multicore/Lock.h"
 #include "tarch/services/ServiceRepository.h"
 
-tarch::multicore::BooleanSemaphore swift2::ParticleSpecies::_semaphore;
-tarch::logging::Log                swift2::ParticleSpecies::_log("swift2::ParticleSpecies");
+tarch::multicore::BooleanSemaphore exaparty::ParticleSpecies::_semaphore;
+tarch::logging::Log                exaparty::ParticleSpecies::_log("exaparty::ParticleSpecies");

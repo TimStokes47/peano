@@ -1,10 +1,10 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 #include <list>
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
     /**
      * This routine runs over all the local particles and tries to
@@ -21,7 +21,7 @@ namespace swift2 {
      *   and study the effect:
      *   - If we meet the target neighbour count now, we are happy.
      *   - If we have increased the number of neighbours but are not there
-     *     yet, we keep this increase, but ask Peano/Swift to run this
+     *     yet, we keep this increase, but ask Peano/ExaParty to run this
      *     analysis again.
      *   - If the increase has not paid off, we keep the old search radius.
      *     It means that likely the interaction radii overall all are too
@@ -58,6 +58,6 @@ namespace swift2 {
       double                      shrinkingFactor   = 0.8
     );
   } // namespace kernels
-} // namespace swift2
+} // namespace exaparty
 
 #include "ParticleSearchRadiusCalculation.cpph"

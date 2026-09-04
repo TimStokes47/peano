@@ -5,7 +5,7 @@
 
 
 template <typename ParticleContainer>
-void swift2::dastgenTest::checkDastgen(ParticleContainer& assignedParticles) {
+void exaparty::dastgenTest::checkDastgen(ParticleContainer& assignedParticles) {
 
   for (auto& particle : assignedParticles) {
     checkBooleans(*particle);
@@ -27,7 +27,7 @@ void swift2::dastgenTest::checkDastgen(ParticleContainer& assignedParticles) {
 
 
 template <typename Particle>
-void swift2::dastgenTest::dummyMoveForwardInTime() {
+void exaparty::dastgenTest::dummyMoveForwardInTime() {
 
   // Deliberately hardcoded for sim to run 2 steps.
   Particle::getSpecies().setTimeStepSize(0.5);
@@ -35,7 +35,7 @@ void swift2::dastgenTest::dummyMoveForwardInTime() {
 
 
 template <typename Particle>
-void swift2::dastgenTest::reportStep(const std::string& particleName) {
+void exaparty::dastgenTest::reportStep(const std::string& particleName) {
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     static tarch::logging::Log _log("dastgenTest");
 

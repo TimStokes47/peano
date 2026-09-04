@@ -1,4 +1,4 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
@@ -11,13 +11,13 @@
 
 #include <map>
 
-namespace swift2 {
+namespace exaparty {
   class TaskEnumerator;
 }
 
 
 /**
- * Task enumerator for Swift 2
+ * Task enumerator for ExaParty
  *
  * Every particle type (species) has a marker associate to the vertices and
  * cells. So they are all unique numbers. Therefore, each of these markers
@@ -50,7 +50,7 @@ namespace swift2 {
  *
  *
  */
-class swift2::TaskEnumerator: public tarch::multicore::TaskEnumerator {
+class exaparty::TaskEnumerator: public tarch::multicore::TaskEnumerator {
   public:
     TaskEnumerator() = default;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
     namespace legacy {
 
@@ -30,6 +30,6 @@ namespace swift2 {
 
     } // namespace legacy
   }   // namespace kernels
-} // namespace swift2
+} // namespace exaparty
 
 #include "Timestep.cpph"

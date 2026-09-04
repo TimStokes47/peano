@@ -1,6 +1,6 @@
 /**
 
- @page tests_swift2_hydro_simple_sph_sod_1d Sod Shockwave 1d (Simple SPH)
+ @page tests_exaparty_hydro_simple_sph_sod_1d Sod Shockwave 1d (Simple SPH)
 
 The setup runs the 1d sod shockwave with a simple SPH scheme, i.e. fixed
 interaction radius. By default, we embed the 1d setup into a 2d mesh, but
@@ -15,7 +15,7 @@ First of all, we have to create the initial conditions.
 
 This one should give you a file ```sodShock.hdf5```. If you encounter
 issues around HDF5, it makes sense to consult our general discussion of
-@ref swift_initial_conditions "Swift's initial conditions".
+@ref exaparty_initial_conditions "ExaParty's initial conditions".
 
 
 ## Create the setup

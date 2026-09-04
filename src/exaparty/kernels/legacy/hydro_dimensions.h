@@ -9,7 +9,7 @@
  * possible.
  */
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
     namespace legacy {
       namespace hydroDimensions {
@@ -81,4 +81,4 @@ namespace swift2 {
       } // namespace hydroDimensions
     }   // namespace legacy
   }     // namespace kernels
-} // namespace swift2
+} // namespace exaparty

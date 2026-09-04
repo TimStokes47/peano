@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 
 import peano4.api
-import swift2
+import exaparty
 import dastgen2
 
 import shutil
@@ -90,21 +90,21 @@ args = parser.parse_args()
 
 
 ########################################################################################
-# Generate SWIFT project
+# Generate ExaParty project
 ########################################################################################
 
 dimensions = 3
 hydro_dimensions = 3
 
 
-project = swift2.Project(
-    namespace=["tests", "swift2", "periodicBoundaryConditions3D"],
+project = exaparty.api.Project(
+    namespace=["tests", "exaparty", "periodicBoundaryConditions3D"],
     project_name="periodicBoundaryConditions3D",
     executable="periodicBCTest3D",
 )
 
 
-particle = swift2.particle.LeapfrogFixedSearchRadius(
+particle = exaparty.api.particle.LeapfrogFixedSearchRadius(
     name="GenericParticle",
     cfl_factor=0.9,
     initial_time_step_size=args.timestep_size,
@@ -602,7 +602,7 @@ coords = np.concatenate(
 
 
 project.algorithm_step_initial_conditions.add_action_set(
-    swift2.input.InsertParticlesByCoordinates(
+    exaparty.api.input.InsertParticlesByCoordinates(
         particle_set=particle_set,
         initialisation_call=initialisation_snippet,
         coordinates=coords,

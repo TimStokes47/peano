@@ -1,4 +1,4 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 file(GLOB_RECURSE SOURCES ${SOURCE_EXTENSIONS_TO_GLOB})
 file(GLOB_RECURSE HEADERS ${HEADER_EXTENSIONS_TO_GLOB})
@@ -12,13 +12,13 @@ foreach(mode IN LISTS PEANO_BUILD_TYPES)
   string(TOUPPER ${mode} mode_upper)
 
   foreach(dimension IN LISTS PEANO_DIMENSIONS)
-    add_library(SWIFT2Core${dimension}d_${mode_lower} STATIC)
-    target_sources(SWIFT2Core${dimension}d_${mode_lower} PRIVATE ${SOURCES} ${HEADERS})
-    target_link_libraries(SWIFT2Core${dimension}d_${mode_lower} PRIVATE PeanoOptions)
-    target_compile_definitions(SWIFT2Core${dimension}d_${mode_lower} PUBLIC ${PEANO_${mode_upper}_DEFINITIONS} Dimensions=${dimension})
-    target_compile_options(SWIFT2Core${dimension}d_${mode_lower} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${PEANO_CXX_FLAGS_${mode_upper}}>)
+    add_library(ExaPartyCore${dimension}d_${mode_lower} STATIC)
+    target_sources(ExaPartyCore${dimension}d_${mode_lower} PRIVATE ${SOURCES} ${HEADERS})
+    target_link_libraries(ExaPartyCore${dimension}d_${mode_lower} PRIVATE PeanoOptions)
+    target_compile_definitions(ExaPartyCore${dimension}d_${mode_lower} PUBLIC ${PEANO_${mode_upper}_DEFINITIONS} Dimensions=${dimension})
+    target_compile_options(ExaPartyCore${dimension}d_${mode_lower} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${PEANO_CXX_FLAGS_${mode_upper}}>)
 
-    install(TARGETS SWIFT2Core${dimension}d_${mode_lower}
+    install(TARGETS ExaPartyCore${dimension}d_${mode_lower}
       EXPORT                      ${PROJECT_NAME}Targets
       RUNTIME DESTINATION         ${CMAKE_INSTALL_BINDIR}
               COMPONENT           ${PROJECT_NAME}_Runtime

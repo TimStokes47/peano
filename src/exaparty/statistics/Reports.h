@@ -1,8 +1,8 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
-namespace swift2 {
+namespace exaparty {
   namespace statistics {
     /**
      * Report the search radius
@@ -12,6 +12,6 @@ namespace swift2 {
     template <typename Particle>
     void reportSearchRadiusVTDt(const std::string& particleName);
   } // namespace statistics
-} // namespace swift2
+} // namespace exaparty
 
 #include "Reports.cpph"

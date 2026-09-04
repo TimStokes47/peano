@@ -1,7 +1,7 @@
 #include "DependencyChecks.h"
 
 
-std::string swift2::dependencychecks::toString(Invariant policy) {
+std::string exaparty::dependencychecks::toString(Invariant policy) {
   switch (policy) {
   case Invariant::
     TouchFirstUsage_MaskOutAfterwards_AllPreviousStepsUpdateAtLeastOnce:
@@ -31,7 +31,7 @@ std::string swift2::dependencychecks::toString(Invariant policy) {
 }
 
 
-bool swift2::dependencychecks::internal::isValid(
+bool exaparty::dependencychecks::internal::isValid(
   Invariant policy,
   bool      workOnParticle,
   bool      particleIsLocal,
@@ -71,7 +71,7 @@ bool swift2::dependencychecks::internal::isValid(
 }
 
 
-bool swift2::dependencychecks::internal::
+bool exaparty::dependencychecks::internal::
   previousStepsAllHaveToAccessAtLeastOnce(Invariant policy) {
   switch (policy) {
   case Invariant::
@@ -95,7 +95,7 @@ bool swift2::dependencychecks::internal::
 }
 
 
-int swift2::dependencychecks::internal::firstFutureStepThatHasToBeCleared(
+int exaparty::dependencychecks::internal::firstFutureStepThatHasToBeCleared(
   Invariant policy,
   int       numberOfSteps
 ) {
@@ -129,7 +129,7 @@ int swift2::dependencychecks::internal::firstFutureStepThatHasToBeCleared(
 }
 
 
-int swift2::dependencychecks::internal::checkFutureStages(
+int exaparty::dependencychecks::internal::checkFutureStages(
   Invariant  policy,
   const int  currentStep,
   const int  currentStage,
@@ -187,7 +187,7 @@ int swift2::dependencychecks::internal::checkFutureStages(
 }
 
 
-int swift2::dependencychecks::internal::checkPastStages(
+int exaparty::dependencychecks::internal::checkPastStages(
   Invariant  policy,
   bool       isLocal,
   const int  currentStep,

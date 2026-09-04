@@ -1,17 +1,17 @@
-#include "swift2/kernels/ParticleUpdatePredicates.h"
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
 
 
 template <typename Particle>
-bool swift2::timestepping::leapfrogDriftWithGlobalTimeStepSizeUpdateParticlePredicate(
+bool exaparty::timestepping::leapfrogDriftWithGlobalTimeStepSizeUpdateParticlePredicate(
   const peano4::datamanagement::VertexMarker&  marker,
   const Particle&                              particle
 ) {
-  return ::swift2::kernels::localParticleCanBeUpdatedAndMovedInVertexKernel(marker, particle);
+  return ::exaparty::kernels::localParticleCanBeUpdatedAndMovedInVertexKernel(marker, particle);
 }
 
 
 template <typename Particle>
-void swift2::timestepping::leapfrogDriftWithGlobalTimeStepSize(
+void exaparty::timestepping::leapfrogDriftWithGlobalTimeStepSize(
   const peano4::datamanagement::VertexMarker&  marker,
   Particle&                                    particle
 ) {
@@ -26,16 +26,16 @@ void swift2::timestepping::leapfrogDriftWithGlobalTimeStepSize(
 
 
 template <typename Particle>
-bool swift2::timestepping::leapfrogKickWithGlobalTimeStepSizeUpdateParticlePredicate(
+bool exaparty::timestepping::leapfrogKickWithGlobalTimeStepSizeUpdateParticlePredicate(
   const peano4::datamanagement::VertexMarker&  marker,
   const Particle&                              particle
 ) {
-  return ::swift2::kernels::localParticleCanBeUpdatedInVertexKernel(marker, particle);
+  return ::exaparty::kernels::localParticleCanBeUpdatedInVertexKernel(marker, particle);
 }
 
 
 template <typename Particle>
-void swift2::timestepping::leapfrogKickWithGlobalTimeStepSize(
+void exaparty::timestepping::leapfrogKickWithGlobalTimeStepSize(
   const peano4::datamanagement::VertexMarker&  marker,
   Particle&                                    particle
 ) {

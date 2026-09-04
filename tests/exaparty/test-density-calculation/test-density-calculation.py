@@ -3,13 +3,13 @@ import argparse
 import numpy as np
 
 import peano4.api
-import swift2
-import swift2.sphtools as sphtools
+import exaparty
+import exaparty.api.sphtools as sphtools
 import dastgen2
 
 import shutil
 
-import swift2.particle.tests
+import exaparty.api.particle.tests
 
 ########################################################################################
 # Parse user input
@@ -102,14 +102,14 @@ args = parser.parse_args()
 
 
 ########################################################################################
-# Generate SWIFT project
+# Generate ExaParty project
 ########################################################################################
 
-project_namespace = ["benchmarks", "swift2", "densityTest"]
+project_namespace = ["benchmarks", "exaparty", "densityTest"]
 
 dimensions = args.dimensions
 
-project = swift2.Project(
+project = exaparty.api.Project(
     namespace=project_namespace, project_name="test_density", executable="test_density"
 )
 
@@ -120,7 +120,7 @@ HYDRO_DIMENSIONS = 1
 HYDRO_PART_NUMBER = str(args.particle_number)
 
 # Declare the particle type
-particle = swift2.particle.tests.testDensityCalculation(
+particle = exaparty.api.particle.tests.testDensityCalculation(
     name="testDensityCalculation",
     dimensions_hydro=HYDRO_DIMENSIONS,
     cfl_factor=0.1,
@@ -130,11 +130,11 @@ particle = swift2.particle.tests.testDensityCalculation(
     max_h=args.cell_size,
 )
 
-# Add particle to the SWIFT project
+# Add particle to the ExaParty project
 
 ########################################################################################
 # Set parameters for the SPH simulation
-# If no parameters are passed to the swift2 project, it initializes with
+# If no parameters are passed to the exaparty project, it initializes with
 # default values. The values of the parameters can be modified or retrieved
 # using the set/get methods.
 ########################################################################################
@@ -184,7 +184,7 @@ particle.h_hydro_max = hydro_h_max
 particle.set_parameters()
 
 
-# Add particle to the SWIFT project --------------------------------------------
+# Add particle to the ExaParty project --------------------------------------------
 # Notice that you any change to the particle will not take effect after adding
 # the particle_set to the project
 particle_set = project.add_particle_species(particle)
@@ -230,7 +230,7 @@ project.set_load_balancing(
 ###############################################################################
 
 # Snippet from library
-ICs = swift2.scenario.TestDensityCalculation()
+ICs = exaparty.api.scenario.TestDensityCalculation()
 initialisation_snippet = ICs.initialisation_snippet
 
 #
@@ -261,7 +261,7 @@ elif HYDRO_DIMENSIONS == 3:
 print("inserting particles at:", coords)
 
 project.algorithm_step_initial_conditions.add_action_set(
-    swift2.input.InsertParticlesByCoordinates(
+    exaparty.api.input.InsertParticlesByCoordinates(
         particle_set=particle_set,
         initialisation_call=initialisation_snippet,
         coordinates=coords,
@@ -374,7 +374,7 @@ if args.clean_temporary_directories:
         shutil.rmtree(dir)
 
 # It is safe (and recommended) to overwrite any existing main file, since this
-# is generated automatically by the Swift2 graph compiler.
+# is generated automatically by the ExaParty graph compiler.
 peano4_project.generate(
     overwrite=peano4.api.output.Overwrite.Always, throw_away_data_after_generation=True
 )

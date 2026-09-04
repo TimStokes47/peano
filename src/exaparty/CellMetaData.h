@@ -1,4 +1,4 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
@@ -9,13 +9,13 @@
 #include "peano4/datamanagement/CellMarker.h"
 
 
-namespace swift2 {
+namespace exaparty {
   struct CellMetaData;
 }
 
 
 /**
- * Provide meta data around Swift 2 cell
+ * Provide meta data around ExaParty cell
  *
  * Lightweight wrapper around a couple of attributes which have to be passed
  * into particle (pair) update kernels. I started to add more and more
@@ -24,7 +24,7 @@ namespace swift2 {
  * we can extend the attributes passed in at any point without having to touch
  * each individual piece of source code.
  */
-struct swift2::CellMetaData {
+struct exaparty::CellMetaData {
 
   private:
     static std::vector<int> _dummyNumberOfCoalescedActiveParticlesPerVertex;

@@ -1,6 +1,6 @@
 /**
 
- @page tests_swift2_test_boundary_conditions Test boundary conditions
+ @page tests_exaparty_test_boundary_conditions Test boundary conditions
 
 
 Very rudimentary tests to verify that the boundary conditions are working

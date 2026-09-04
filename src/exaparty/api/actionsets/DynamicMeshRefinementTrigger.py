@@ -30,7 +30,7 @@ class DynamicMeshRefinementTrigger(ActionSet):
 
     def get_body_of_getGridControlEvents(self):
         return """
-  return ::swift2::committedGridControlEvents;
+  return ::exaparty::committedGridControlEvents;
 """
 
     def get_action_set_name(self):
@@ -38,5 +38,5 @@ class DynamicMeshRefinementTrigger(ActionSet):
 
     def get_includes(self):
         return """
-#include "swift2/GridControlEvents.h"
+#include "exaparty/GridControlEvents.h"
 """

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "swift2/kernels/ParticleUpdatePredicates.h"
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
 
 #include <string>
 #include <type_traits>
 
 
-namespace swift2 {
+namespace exaparty {
   /**
    * @namespace Dependency checks
    *
@@ -17,12 +17,12 @@ namespace swift2 {
    * the queue.
    *
    * The macros are automatically inserted into the code whenever you compile
-   * with assertions. This happens in swift2.particle.Particle.
+   * with assertions. This happens in exaparty.api.particle.Particle.
    *
    * Different algorithmic steps might have different access policies. There
-   * are three different flags in swift2.particle.AlgorithmStep. By default,
+   * are three different flags in exaparty.api.particle.AlgorithmStep. By default,
    * they are set to None.
-   * swift2.particle.Particle._dependency_checks_modify_steps() will then insert
+   * exaparty.api.particle.Particle._dependency_checks_modify_steps() will then insert
    * default policies/invariants. But you might want to alter these.
    */
   namespace dependencychecks {
@@ -265,7 +265,7 @@ namespace swift2 {
      * arguments, it takes the particle itself and the marker. This should be
      * the same function used in the actual stage of the algorithm step as your
      * code, and should be one of the functions defined in
-     * src/swift2/kernels/ParticleState.h
+     * src/exaparty/kernels/ParticleState.h
      */
     template <typename ParticleContainer>
     static void markAlgorithmStep(
@@ -274,7 +274,7 @@ namespace swift2 {
       PCAlgorithmStepEnum<ParticleContainer>      algorithmStepMarkerEnum,
       PCSweepStageEnum<ParticleContainer>         sweepStageMarkerEnum,
       Invariant                                   policy,
-      ::swift2::kernels::UpdateParticleAssignedToVertexPredicate<
+      ::exaparty::kernels::UpdateParticleAssignedToVertexPredicate<
         PCParticle<ParticleContainer>> workOnParticle,
       int                              spacetreeId
     );
@@ -294,7 +294,7 @@ namespace swift2 {
       PCAlgorithmStepEnum<ParticleContainer>    algorithmStepMarkerEnum,
       PCSweepStageEnum<ParticleContainer>       sweepStageMarkerEnum,
       Invariant                                 policy,
-      ::swift2::kernels::UpdateParticlePairWithinCellPredicate<
+      ::exaparty::kernels::UpdateParticlePairWithinCellPredicate<
         typename std::remove_pointer<
           typename ParticleContainer::value_type>::type> workOnParticle,
       int                                                spacetreeId
@@ -321,7 +321,7 @@ namespace swift2 {
      * arguments, it takes the particle itself and the marker. This should be
      * the same function used in the actual stage of the algorithm step as your
      * code, and should be one of the functions defined in
-     * src/swift2/kernels/ParticleState.h
+     * src/exaparty/kernels/ParticleState.h
      */
     template <typename ParticleContainer>
     static void markInitStep(
@@ -330,7 +330,7 @@ namespace swift2 {
       PCInitStepEnum<ParticleContainer>           initStepMarkerEnum,
       PCSweepStageEnum<ParticleContainer>         sweepStageMarkerEnum,
       Invariant                                   policy,
-      ::swift2::kernels::UpdateParticleAssignedToVertexPredicate<
+      ::exaparty::kernels::UpdateParticleAssignedToVertexPredicate<
         PCParticle<ParticleContainer>> workOnParticle,
       int                              spacetreeId
     );
@@ -350,7 +350,7 @@ namespace swift2 {
       PCInitStepEnum<ParticleContainer>         initStepMarkerEnum,
       PCSweepStageEnum<ParticleContainer>       sweepStageMarkerEnum,
       Invariant                                 policy,
-      ::swift2::kernels::UpdateParticlePairWithinCellPredicate<
+      ::exaparty::kernels::UpdateParticlePairWithinCellPredicate<
         PCParticle<ParticleContainer>> workOnParticle,
       int                              spacetreeId
     );
@@ -380,7 +380,7 @@ namespace swift2 {
      * arguments, it takes the particle itself and the marker. This should be
      * the same function used in the actual stage of the algorithm step as your
      * code, and should be one of the functions defined in
-     * src/swift2/kernels/ParticleState.h
+     * src/exaparty/kernels/ParticleState.h
      */
     template <typename ParticleContainer>
     static void checkAlgorithmStep(
@@ -390,7 +390,7 @@ namespace swift2 {
       const peano4::datamanagement::CellMarker& marker,
       PCAlgorithmStepEnum<ParticleContainer>    algorithmStepMarkerEnum,
       PCSweepStageEnum<ParticleContainer>       sweepStageMarkerEnum,
-      ::swift2::kernels::UpdateParticlePairWithinCellPredicate<
+      ::exaparty::kernels::UpdateParticlePairWithinCellPredicate<
         PCParticle<ParticleContainer>> workOnParticle,
       int                              spacetreeId
     );
@@ -403,7 +403,7 @@ namespace swift2 {
       const peano4::datamanagement::VertexMarker& marker,
       PCAlgorithmStepEnum<ParticleContainer>      algorithmStepMarkerEnum,
       PCSweepStageEnum<ParticleContainer>         sweepStageMarkerEnum,
-      ::swift2::kernels::UpdateParticleAssignedToVertexPredicate<
+      ::exaparty::kernels::UpdateParticleAssignedToVertexPredicate<
         PCParticle<ParticleContainer>> workOnParticle,
       int                              spacetreeId
     );
@@ -467,7 +467,7 @@ namespace swift2 {
      * arguments, it takes the particle itself and the marker. This should be
      * the same function used in the actual stage of the algorithm step as your
      * code, and should be one of the functions defined in
-     * src/swift2/kernels/ParticleState.h
+     * src/exaparty/kernels/ParticleState.h
      */
     template <typename ParticleContainer>
     static void checkInitStep(
@@ -476,7 +476,7 @@ namespace swift2 {
       const peano4::datamanagement::VertexMarker& marker,
       PCInitStepEnum<ParticleContainer>           initStepMarkerEnum,
       PCSweepStageEnum<ParticleContainer>         sweepStageMarkerEnum,
-      ::swift2::kernels::UpdateParticleAssignedToVertexPredicate<
+      ::exaparty::kernels::UpdateParticleAssignedToVertexPredicate<
         PCParticle<ParticleContainer>> workOnParticle,
       int                              spacetreeId
     );
@@ -490,7 +490,7 @@ namespace swift2 {
       const peano4::datamanagement::CellMarker& marker,
       PCInitStepEnum<ParticleContainer>         initStepMarkerEnum,
       PCSweepStageEnum<ParticleContainer>       sweepStageMarkerEnum,
-      ::swift2::kernels::UpdateParticlePairWithinCellPredicate<
+      ::exaparty::kernels::UpdateParticlePairWithinCellPredicate<
         PCParticle<ParticleContainer>> workOnParticle,
       int                              spacetreeId
     );
@@ -540,7 +540,7 @@ namespace swift2 {
 
 
   } // namespace dependencychecks
-} // namespace swift2
+} // namespace exaparty
 
 
 #include "../dependencychecks/DependencyChecks.cpph"

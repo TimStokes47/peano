@@ -3,8 +3,8 @@ import argparse
 import numpy as np
 
 import peano4.api
-import swift2
-import swift2.sphtools as sphtools
+import exaparty
+import exaparty.api.sphtools as sphtools
 import dastgen2
 
 import shutil
@@ -139,12 +139,12 @@ args = parser.parse_args()
 
 
 ########################################################################################
-# Generate SWIFT project
+# Generate ExaParty project
 ########################################################################################
 
-project_namespace = ["tests", "swift2", "sod"]
+project_namespace = ["tests", "exaparty", "sod"]
 
-project = swift2.Project(
+project = exaparty.api.Project(
     namespace=project_namespace, project_name="Sod1D", executable="sod1D"
 )
 
@@ -157,13 +157,13 @@ name = "HydroPart"
 dimensions = 2  # peano needs this for whatever reason...
 hydro_dimensions = 1  # dimensions for the hydro
 
-particle = swift2.particle.SPHLeapfrogFixedSearchRadius(
+particle = exaparty.api.particle.SPHLeapfrogFixedSearchRadius(
     name,
     dimensions_hydro=hydro_dimensions,
     cfl_factor=args.cfl_factor,
     initial_time_step_size=args.timestep_size,
     constant_time_step_size=True,
-    swift_project_namespace=project_namespace,
+    exaparty_project_namespace=project_namespace,
     min_h=args.cell_size_min,
     max_h=args.cell_size_max,
 )
@@ -171,7 +171,7 @@ particle = swift2.particle.SPHLeapfrogFixedSearchRadius(
 
 ########################################################################################
 # Set parameters for the SPH simulation
-# If no parameters are passed to the swift2 project, it initializes with
+# If no parameters are passed to the exaparty project, it initializes with
 # default values. The values of the parameters can be modified or retrieved
 # using the set/get methods.
 ########################################################################################
@@ -221,7 +221,7 @@ dx = domain_size[0] / args.particle_number
 hydro_H_max = 0.499 * cellsize
 if hydro_H_max < 5.0 * dx:
     raise ValueError("Too small hydro_H_max", 5.0 * dx, hydro_H_max)
-hydro_h_max = swift2.sphtools.sph_kernel_get_smoothing_length_from_interaction_radius(
+hydro_h_max = exaparty.api.sphtools.sph_kernel_get_smoothing_length_from_interaction_radius(
     hydro_H_max, kernel, hydro_dimensions
 )
 
@@ -244,7 +244,7 @@ particle.h_hydro_max = hydro_h_max
 particle.set_parameters()
 
 
-# Add particle to the SWIFT project --------------------------------------------
+# Add particle to the ExaParty project --------------------------------------------
 # Notice that you any change to the particle will not take effect after adding
 # the particle_set to the project
 particle_set = project.add_particle_species(particle)
@@ -299,7 +299,7 @@ project.set_load_balancing(
 ###############################################################################
 
 project.algorithm_step_initial_conditions.add_action_set(
-    swift2.input.InsertParticlesFromHDF5File(
+    exaparty.api.input.InsertParticlesFromHDF5File(
         particle_set=particle_set, filename="sodShock.hdf5"
     )
 )
@@ -406,7 +406,7 @@ if args.clean_temporary_directories:
         shutil.rmtree(dir)
 
 # It is safe (and recommended) to overwrite any existing main file, since this
-# is generated automatically by the Swift2 graph compiler.
+# is generated automatically by the ExaParty graph compiler.
 peano4_project.generate(
     overwrite=peano4.api.output.Overwrite.Always, throw_away_data_after_generation=True
 )

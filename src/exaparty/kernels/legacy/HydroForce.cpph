@@ -4,12 +4,12 @@
 
 
 template <typename Particle>
-bool swift2::kernels::legacy::forceKernelUpdateParticlePredicate(
+bool exaparty::kernels::legacy::forceKernelUpdateParticlePredicate(
   const peano4::datamanagement::CellMarker& marker,
   const bool&                               localParticleIsContainedInCell,
   const Particle&                           localParticle
 ) {
-  return ::swift2::kernels::localParticleCanBeUpdatedInCellKernel(
+  return ::exaparty::kernels::localParticleCanBeUpdatedInCellKernel(
     marker,
     localParticleIsContainedInCell,
     localParticle
@@ -18,7 +18,7 @@ bool swift2::kernels::legacy::forceKernelUpdateParticlePredicate(
 
 
 template <typename ParticleA, typename ParticleB>
-bool swift2::kernels::legacy::forceKernelEvaluatePairInteractionPredicate(
+bool exaparty::kernels::legacy::forceKernelEvaluatePairInteractionPredicate(
   const peano4::datamanagement::CellMarker& marker,
   const ParticleA&                           localParticle,
   const ParticleB&                           activeParticle
@@ -35,18 +35,18 @@ bool swift2::kernels::legacy::forceKernelEvaluatePairInteractionPredicate(
     activeParticle.toString()
   );
 
-  return ::swift2::kernels::forceKernelDistanceCheck(localParticle, activeParticle);
+  return ::exaparty::kernels::forceKernelDistanceCheck(localParticle, activeParticle);
 }
 
 
 template <typename ParticleA, typename ParticleB>
-inline void __attribute__((always_inline)) swift2::kernels::legacy::forceKernel(
+inline void __attribute__((always_inline)) exaparty::kernels::legacy::forceKernel(
   const peano4::datamanagement::CellMarker& marker,
   ParticleA&                                localParticle,
   const ParticleB&                          activeParticle
 ) {
   assertion2(
-    ::swift2::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle(
+    ::exaparty::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle(
       marker,
       localParticle,
       activeParticle
@@ -59,9 +59,9 @@ inline void __attribute__((always_inline)) swift2::kernels::legacy::forceKernel(
 
 
 template <typename Particle>
-void swift2::kernels::legacy::hydro_prepare_force(Particle& localParticle) {
+void exaparty::kernels::legacy::hydro_prepare_force(Particle& localParticle) {
 
-  static tarch::logging::Log _log("swift2::kernels::legacy");
+  static tarch::logging::Log _log("exaparty::kernels::legacy");
 
   // Grab static parameters
   const int    hydroDimensions = localParticle.getHydroDimensions();
@@ -182,7 +182,7 @@ void swift2::kernels::legacy::hydro_prepare_force(Particle& localParticle) {
 
 
 template <typename Particle>
-void swift2::kernels::legacy::hydro_reset_acceleration(Particle& localParticle
+void exaparty::kernels::legacy::hydro_reset_acceleration(Particle& localParticle
 ) {
 
   /* Reset the acceleration*/
@@ -196,9 +196,9 @@ void swift2::kernels::legacy::hydro_reset_acceleration(Particle& localParticle
 
 
 template <typename Particle>
-void swift2::kernels::legacy::hydro_end_force(Particle& localParticle) {
+void exaparty::kernels::legacy::hydro_end_force(Particle& localParticle) {
 
-  static tarch::logging::Log _log("swift2::kernels::legacy");
+  static tarch::logging::Log _log("exaparty::kernels::legacy");
 
   const int    hydroDimensions    = localParticle.getHydroDimensions();
   const double hydroDimensionsInv = 1. / (double)hydroDimensions;
@@ -248,12 +248,12 @@ void swift2::kernels::legacy::hydro_end_force(Particle& localParticle) {
 
 
 template <typename ParticleA, typename ParticleB>
-inline void __attribute__((always_inline)) swift2::kernels::legacy::force_kernel(
+inline void __attribute__((always_inline)) exaparty::kernels::legacy::force_kernel(
   ParticleA&       localParticle,
   const ParticleB& activeParticle
 ) {
 
-  // macro expansions from swift2/legacy/kernels are cumbersome otherwise.
+  // macro expansions from exaparty/legacy/kernels are cumbersome otherwise.
   using namespace kernelHydro;
 
   // Grab static parameters
@@ -297,7 +297,7 @@ inline void __attribute__((always_inline)) swift2::kernels::legacy::force_kernel
 
     // Get kernel for hi
     const double h_i_inv     = 1. / h_i;
-    const double h_i_inv_dp1 = swift2::kernels::legacy::hydroDimensions::
+    const double h_i_inv_dp1 = exaparty::kernels::legacy::hydroDimensions::
       pow_dimension_plus_one(h_i_inv); // 1/h^{dim + 1}
     const double qi = r * h_i_inv;
     double       wi, dwi_dqi;
@@ -307,7 +307,7 @@ inline void __attribute__((always_inline)) swift2::kernels::legacy::force_kernel
 
     // Get kernel for hj
     const double h_j_inv     = 1. / h_j;
-    const double h_j_inv_dp1 = swift2::kernels::legacy::hydroDimensions::
+    const double h_j_inv_dp1 = exaparty::kernels::legacy::hydroDimensions::
       pow_dimension_plus_one(h_j_inv); // 1/h^{dim + 1}
     const double qj = r * h_j_inv;
     double       wj, dwj_dqj;

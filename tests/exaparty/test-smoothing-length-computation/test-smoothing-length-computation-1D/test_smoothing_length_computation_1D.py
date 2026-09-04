@@ -4,8 +4,8 @@ import numpy as np
 import h5py
 
 import peano4.api
-import swift2
-import swift2.sphtools
+import exaparty
+import exaparty.api.sphtools
 import dastgen2
 
 import shutil
@@ -95,7 +95,7 @@ parser.add_argument(
     type=str,
     default="quartic_spline",
     help="SPH kernel function to use.",
-    choices=swift2.sphtools.sph_kernel_list,
+    choices=exaparty.api.sphtools.sph_kernel_list,
 )
 
 args = parser.parse_args()
@@ -104,12 +104,12 @@ kernel = args.kernel
 h_tol = args.h_tol
 
 ########################################################################################
-# Generate SWIFT project
+# Generate ExaParty project
 ########################################################################################
 
-project_namespace = ["tests", "swift2", "testSML1D"]
+project_namespace = ["tests", "exaparty", "testSML1D"]
 
-project = swift2.Project(
+project = exaparty.api.Project(
     namespace=project_namespace, project_name="TestSML1D", executable="testSML"
 )
 
@@ -130,13 +130,13 @@ name = "HydroPart"
 dimensions = 2  # peano needs this for whatever reason...
 hydro_dimensions = 1  # dimensions for the hydro
 
-particle = swift2.particle.SPHLeapfrogFixedSearchRadius(
+particle = exaparty.api.particle.SPHLeapfrogFixedSearchRadius(
     name,
     dimensions_hydro=hydro_dimensions,
     cfl_factor=cfl_factor,
     initial_time_step_size=init_dt,
     constant_time_step_size=True,
-    swift_project_namespace=project_namespace,
+    exaparty_project_namespace=project_namespace,
     particles_per_cell=20,
     min_h=args.cell_size,
     max_h=args.cell_size,
@@ -145,7 +145,7 @@ particle = swift2.particle.SPHLeapfrogFixedSearchRadius(
 
 ########################################################################################
 # Set parameters for the SPH simulation
-# If no parameters are passed to the swift2 project, it initializes with
+# If no parameters are passed to the exaparty project, it initializes with
 # default values. The values of the parameters can be modified or retrieved
 # using the set/get methods.
 ########################################################################################
@@ -178,12 +178,12 @@ GAMMA = gamma_hydro_list[0]
 GAMMA_HYDRO_SYMBOL = gamma_hydro_list_symbols[0]
 
 # SPH kernel -------------------------------------------------------
-KERNEL_SYMBOL = swift2.sphtools.sph_kernel_macro_name[kernel]
+KERNEL_SYMBOL = exaparty.api.sphtools.sph_kernel_macro_name[kernel]
 
 # Additional Particle Parameters -----------------------------------------------
 dx = domain_size[0] / npart_base
 hydro_H_max = 20 * dx
-hydro_h_max = swift2.sphtools.sph_kernel_get_smoothing_length_from_search_radius(
+hydro_h_max = exaparty.api.sphtools.sph_kernel_get_smoothing_length_from_search_radius(
     hydro_H_max, kernel, hydro_dimensions
 )
 particle.h_hydro_max = hydro_h_max
@@ -191,7 +191,7 @@ particle.h_hydro_max = hydro_h_max
 # Modify the eta factor to look for a precise number of neighbours.
 # Then round it up a little to avoid round-down errors.
 # In 1D, N_neigh = 2 * kernel_gamma * eta; see Price 2012
-particle.eta_factor = swift2.sphtools.eta_from_number_of_neighbours(
+particle.eta_factor = exaparty.api.sphtools.eta_from_number_of_neighbours(
     nneigh, kernel=kernel, ndim=hydro_dimensions
 )
 
@@ -209,7 +209,7 @@ particle.h_tolerance = h_tol
 particle.set_parameters()
 
 
-# Add particle to the SWIFT project --------------------------------------------
+# Add particle to the ExaParty project --------------------------------------------
 # Notice that you any change to the particle will not take effect after adding
 # the particle_set to the project
 particle_set = project.add_particle_species(particle)
@@ -247,7 +247,7 @@ project.set_Peano4_installation(args.peanodir, build_mode)
 ###############################################################################
 
 project.algorithm_step_initial_conditions.add_action_set(
-    swift2.input.InsertParticlesFromHDF5File(
+    exaparty.api.input.InsertParticlesFromHDF5File(
         particle_set=particle_set, filename=args.ic_filename
     )
 )
@@ -353,7 +353,7 @@ if args.clean_temporary_directories:
         shutil.rmtree(dir)
 
 # It is safe (and recommended) to overwrite any existing main file, since this
-# is generated automatically by the Swift2 graph compiler.
+# is generated automatically by the ExaParty graph compiler.
 peano4_project.generate(
     overwrite=peano4.api.output.Overwrite.Always, throw_away_data_after_generation=True
 )

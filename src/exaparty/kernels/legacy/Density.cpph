@@ -4,13 +4,13 @@
 
 
 template <typename ParticleA, typename ParticleB>
-void swift2::kernels::legacy::densityKernel(
+void exaparty::kernels::legacy::densityKernel(
   const peano4::datamanagement::CellMarker& marker,
   ParticleA&                                localParticle,
   const ParticleB&                          activeParticle
 ) {
   assertion2(
-    ::swift2::kernels::legacy::densityKernelEvaluatePairInteractionPredicate(
+    ::exaparty::kernels::legacy::densityKernelEvaluatePairInteractionPredicate(
       marker,
       localParticle,
       activeParticle
@@ -23,12 +23,12 @@ void swift2::kernels::legacy::densityKernel(
 
 
 template <typename Particle>
-bool swift2::kernels::legacy::densityKernelUpdateParticlePredicate(
+bool exaparty::kernels::legacy::densityKernelUpdateParticlePredicate(
   const peano4::datamanagement::CellMarker& marker,
   const bool&                               localParticleIsContainedInCell,
   const Particle&                           localParticle
 ) {
-  return ::swift2::kernels::localParticleCanBeUpdatedInCellKernel(
+  return ::exaparty::kernels::localParticleCanBeUpdatedInCellKernel(
            marker,
            localParticleIsContainedInCell,
            localParticle
@@ -37,7 +37,7 @@ bool swift2::kernels::legacy::densityKernelUpdateParticlePredicate(
 }
 
 template <typename ParticleA, typename ParticleB>
-bool swift2::kernels::legacy::densityKernelEvaluatePairInteractionPredicate(
+bool exaparty::kernels::legacy::densityKernelEvaluatePairInteractionPredicate(
   const peano4::datamanagement::CellMarker& marker,
   const ParticleA&                          localParticle,
   const ParticleB&                          activeParticle
@@ -69,13 +69,13 @@ bool swift2::kernels::legacy::densityKernelEvaluatePairInteractionPredicate(
 
 
 template <typename Particle>
-void swift2::kernels::legacy::hydro_end_density(Particle* localParticle) {
+void exaparty::kernels::legacy::hydro_end_density(Particle* localParticle) {
 
   if (localParticle->getSmoothingLengthConverged())
     return;
 
-  // macro expansions from swift2/legacy/kernels are cumbersome otherwise.
-  using namespace swift2::kernels::legacy::kernelHydro;
+  // macro expansions from exaparty/legacy/kernels are cumbersome otherwise.
+  using namespace exaparty::kernels::legacy::kernelHydro;
 
   /* Grab static parameters */
   const int    hydroDimensions = localParticle->getHydroDimensions();
@@ -88,7 +88,7 @@ void swift2::kernels::legacy::hydro_end_density(Particle* localParticle) {
 
   /* Some smoothing length multiples */
   const double h_inv     = 1.0 / h_i;
-  const double h_inv_dim = swift2::kernels::legacy::hydroDimensions::
+  const double h_inv_dim = exaparty::kernels::legacy::hydroDimensions::
     pow_dimension(h_inv);
   const double h_inv_dim_plus_one = h_inv_dim * h_inv;
 
@@ -146,12 +146,12 @@ void swift2::kernels::legacy::hydro_end_density(Particle* localParticle) {
 
 
 template <typename ParticleA, typename ParticleB>
-void swift2::kernels::legacy::density_kernel(
+void exaparty::kernels::legacy::density_kernel(
   ParticleA&       localParticle,
   const ParticleB& activeParticle
 ) {
-  // macro expansions from swift2/legacy/kernels are cumbersome otherwise.
-  using namespace swift2::kernels::legacy::kernelHydro;
+  // macro expansions from exaparty/legacy/kernels are cumbersome otherwise.
+  using namespace exaparty::kernels::legacy::kernelHydro;
 
   const double hydroDimensions = localParticle.getHydroDimensions();
 

@@ -1,4 +1,4 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 
 from enum import Enum, IntEnum
@@ -14,7 +14,7 @@ class AlgorithmStep(object):
     Defines the meta data around one algorithmic step per particle
 
     A sequence of these steps describes the particle lifecycle per time step. It
-    is Peano's/SWIFT's responsibility to arrange these steps in grid sweeps and
+    is Peano's/ExaParty's responsibility to arrange these steps in grid sweeps and
     to identify concurrency.
 
     """
@@ -87,7 +87,7 @@ class AlgorithmStep(object):
         """!
 
         Enumeration of different @ref peano_action_sets "Peano events" during a
-        grid traversal into which Swift 2 plugs in. We don't use all events.
+        grid traversal into which ExaParty plugs in. We don't use all events.
         Therefore, this is a subset of the operations in
         peano4.api.solversteps.ActionSet. The enumeration is based upon integers,
         as we need to know the order of the enumerations.
@@ -184,17 +184,17 @@ class AlgorithmStep(object):
 
         @param cell_kernel_dependency_policy: String or None
           If it is a string, it should identify one of the variants of
-          swift2::dependencychecks::Invariant. If you pick None, Swift 2
+          exaparty::dependencychecks::Invariant. If you pick None, ExaParty
           will add default dependencies. They might be too strict.
 
         @param touch_vertex_first_time_dependency_policy: String or None
           If it is a string, it should identify one of the variants of
-          swift2::dependencychecks::Invariant. If you pick None, Swift 2
+          exaparty::dependencychecks::Invariant. If you pick None, ExaParty
           will add default dependencies. They might be too strict.
 
         @param touch_vertex_last_time_dependency_policy: String or None
           If it is a string, it should identify one of the variants of
-          swift2::dependencychecks::Invariant. If you pick None, Swift 2
+          exaparty::dependencychecks::Invariant. If you pick None, ExaParty
           will add default dependencies. They might be too strict.
 
         """
@@ -212,14 +212,14 @@ class AlgorithmStep(object):
         self.includes = (
             """
 #include "Constants.h"
-#include "swift2/kernels/ParticleUpdatePredicates.h"
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
 
-#include "swift2/dependencychecks/DependencyChecks.h"
+#include "exaparty/dependencychecks/DependencyChecks.h"
 #include "toolbox/particles/assignmentchecks/TracingAPI.h"
         """
             + includes +
 """
-#include "swift2/kernels/ParticleSetIterators.h"
+#include "exaparty/kernels/ParticleSetIterators.h"
 """
             # Since the extended LLVM compiler inlines particle iterator callbacks,
             # callback definitions must appear before the iterators.

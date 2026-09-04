@@ -11,7 +11,7 @@ import argparse
 import sys
 import peano4.api
 from peano4.api.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
-import swift2.sphtools
+import exaparty.api.sphtools
 import multiprocessing
 
 
@@ -24,12 +24,12 @@ parser = argparse.ArgumentParser(
     provided initial conditions file via the `--ic-file` argument.
 
     If the IC file is a hdf5 file, the script assumes that we're running a
-    unit test where swift2 is computing smoothing lengths from randompy sampled
+    unit test where exaparty is computing smoothing lengths from randompy sampled
     particles. It will then look for a `particles-0.vtu` file in this directory
     to compare results to.
 
     If the IC file is a .vtu file, the script assumes that you want to verify a
-    swift2 snapshot. It will then compute smoothing lengths for the particle positions
+    exaparty snapshot. It will then compute smoothing lengths for the particle positions
     given in the .vtu file, and compare them to the smoothing lengths from the same
     .vtu file.
     """
@@ -80,7 +80,7 @@ parser.add_argument(
     type=str,
     default="quartic_spline",
     help="SPH kernel function to use.",
-    choices=swift2.sphtools.sph_kernel_list,
+    choices=exaparty.api.sphtools.sph_kernel_list,
 )
 
 args = parser.parse_args()
@@ -99,11 +99,11 @@ if eta is None and nneigh is None:
 if eta is not None and nneigh is not None:
     raise ValueError("You need to specify either --eta or --neighbours, not both")
 if nneigh is not None:
-    eta = swift2.sphtools.eta_from_number_of_neighbours(
+    eta = exaparty.api.sphtools.eta_from_number_of_neighbours(
         nneigh, kernel=kernel, ndim=ndim
     )
 else:
-    nneigh = swift2.sphtools.number_of_neighbours_from_eta(
+    nneigh = exaparty.api.sphtools.number_of_neighbours_from_eta(
         eta, kernel=kernel, ndim=ndim
     )
 
@@ -174,7 +174,7 @@ def sml_search(i):
     xn = neighbours[i, 1:, :]
 
     verb = False
-    h = swift2.sphtools.find_smoothing_length(
+    h = exaparty.api.sphtools.find_smoothing_length(
         xp, xn, kernel=kernel, eta=eta, h_tolerance=h_tolerance, ndim=ndim, verbose=verb
     )
     return h

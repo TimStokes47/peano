@@ -8,12 +8,12 @@
 #include "tarch/multicore/MultiReadSingleWriteLock.h"
 
 
-std::map< int, tarch::multicore::BooleanSemaphore* >  swift2::TaskEnumerator::_resources;
-swift2::TaskEnumerator::ResourcesSemaphore            swift2::TaskEnumerator::_resourcesSemaphore;
+std::map< int, tarch::multicore::BooleanSemaphore* >  exaparty::TaskEnumerator::_resources;
+exaparty::TaskEnumerator::ResourcesSemaphore            exaparty::TaskEnumerator::_resourcesSemaphore;
 
 
 
-void swift2::TaskEnumerator::insertNumber(int number) {
+void exaparty::TaskEnumerator::insertNumber(int number) {
   ResourcesSemaphore::Lock _lock( _resourcesSemaphore, ResourcesSemaphore::Lock::Write );
   if (number!=tarch::Enumerator::NoNumber and _resources.count(number)==0 ) {
     _resources.insert( {number, new tarch::multicore::BooleanSemaphore()} );
@@ -22,7 +22,7 @@ void swift2::TaskEnumerator::insertNumber(int number) {
 }
 
 
-void swift2::TaskEnumerator::insertNumbers(const tarch::la::Vector<TwoPowerD,int>& numbers) {
+void exaparty::TaskEnumerator::insertNumbers(const tarch::la::Vector<TwoPowerD,int>& numbers) {
   std::bitset<TwoPowerD> entryMissing = 0;
 
   {
@@ -40,7 +40,7 @@ void swift2::TaskEnumerator::insertNumbers(const tarch::la::Vector<TwoPowerD,int
 }
 
 
-void swift2::TaskEnumerator::lockResources( const tarch::la::Vector<TwoPowerD,int>& numbers ) {
+void exaparty::TaskEnumerator::lockResources( const tarch::la::Vector<TwoPowerD,int>& numbers ) {
   std::bitset<TwoPowerD> gotAllLocks = 0;
 
   for (int i=0; i<TwoPowerD; i++) {
@@ -92,7 +92,7 @@ void swift2::TaskEnumerator::lockResources( const tarch::la::Vector<TwoPowerD,in
 }
 
 
-void swift2::TaskEnumerator::unlockResources( const tarch::la::Vector<TwoPowerD,int>& numbers ) {
+void exaparty::TaskEnumerator::unlockResources( const tarch::la::Vector<TwoPowerD,int>& numbers ) {
   for (int i=0; i<TwoPowerD; i++) {
     if (numbers[i] != tarch::Enumerator::NoNumber) {
       ResourcesSemaphore::Lock _lock( _resourcesSemaphore, ResourcesSemaphore::Lock::Read );

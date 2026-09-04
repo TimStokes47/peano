@@ -2,7 +2,7 @@
 #include "tarch/logging/Log.h"
 
 template <typename Particle>
-void swift2::kernels::adoptInteractionRadiusAndTriggerRerun(
+void exaparty::kernels::adoptInteractionRadiusAndTriggerRerun(
   const std::list<Particle*>& localParticles,
   const std::list<Particle*>& activeParticles,
   int                         targetNumberOfNeighbourParticles,
@@ -12,7 +12,7 @@ void swift2::kernels::adoptInteractionRadiusAndTriggerRerun(
   assertion(shrinkingFactor < 1.0);
   assertion(maxGrowthPerSweep > 1.0);
 
-  static tarch::logging::Log _log("swift2::kernels");
+  static tarch::logging::Log _log("exaparty::kernels");
 
   auto countParticlesWithinSearchRadius = [&](Particle* localParticle) -> int {
     const double R2 = localParticle->getSearchRadius()

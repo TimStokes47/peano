@@ -2,7 +2,7 @@
 
 
 template <typename Particle>
-void swift2::boundaryconditions::applyFixedBoundaryCondition(
+void exaparty::boundaryconditions::applyFixedBoundaryCondition(
   Particle&                                     particle,
   const peano4::datamanagement::VertexMarker&   marker,
   const tarch::la::Vector<Dimensions, double>&  domainOffset,
@@ -31,7 +31,7 @@ void swift2::boundaryconditions::applyFixedBoundaryCondition(
       particle.getX(),
       newX,
       treeId,
-      "swift2::boundaryconditions::applyFixedBoundaryCondition()"
+      "exaparty::boundaryconditions::applyFixedBoundaryCondition()"
     );
   }
 

@@ -1,4 +1,4 @@
-# This file is part of the Swift2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 from peano4.api.solversteps.ActionSet import ActionSet
 
@@ -12,22 +12,22 @@ class Fixed(ActionSet):
 
     Impose fixed boundary conditions within an action set. Such an action set 
     can be injected into each and every grid sweep. 
-    @ref swift_boundary_conditions "Swift's generic boundary condition"
+    @ref exaparty_boundary_conditions "ExaParty's generic boundary condition"
     remarks discuss this realisation variant. It is quite heavy-weight and can 
     yield invalid states prior to the very first time step. 
 
-    The action set is used by adding it after you have lowered the Swift 2
+    The action set is used by adding it after you have lowered the ExaParty
     formalism into a Peano 4 project:
     
     ~~~~~~~~~~~~~~~~~~~~~~~~~
 project.additional_action_sets_per_solver_step.append(
-    swift2.api.boundaryconditions.Fixed(particle_set=particle_set, 
+    exaparty.api.boundaryconditions.Fixed(particle_set=particle_set, 
                                         damp_particles_as_they_approach_boundary=True
                                         )
 )
     ~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    @param particle_set: swift2.particle.Particle
+    @param particle_set: exaparty.api.particle.Particle
       The particle set for which we implement the boundary conditions.
             
     @param relative_domain_halo: Positive float smaller than 0.5
@@ -67,9 +67,9 @@ project.additional_action_sets_per_solver_step.append(
     __Template_TouchVertexLastTime = jinja2.Template(
         """
     // check only boundary vertices
-    if (::swift2::boundaryconditions::isVertexOnGlobalBoundary(marker,DomainOffset,DomainSize)) {
+    if (::exaparty::boundaryconditions::isVertexOnGlobalBoundary(marker,DomainOffset,DomainSize)) {
       for (auto& particle: fineGridVertex{{PARTICLES_CONTAINER}}) {
-        ::swift2::boundaryconditions::applyFixedBoundaryCondition(
+        ::exaparty::boundaryconditions::applyFixedBoundaryCondition(
           *particle,
           marker,
           DomainOffset,
@@ -97,9 +97,9 @@ project.additional_action_sets_per_solver_step.append(
 #include "Constants.h"
 #include "vertexdata/{{PARTICLES_CONTAINER}}.h"
 #include "globaldata/{{PARTICLE}}.h"
-#include "swift2/kernels/ParticleSetIterators.h"
-#include "swift2/boundaryconditions/Utils.h"
-#include "swift2/boundaryconditions/FixedBoundary.h"
+#include "exaparty/kernels/ParticleSetIterators.h"
+#include "exaparty/boundaryconditions/Utils.h"
+#include "exaparty/boundaryconditions/FixedBoundary.h"
 """
         )
         return result.render(**self.d)

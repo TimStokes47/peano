@@ -12,7 +12,7 @@
  * This is a legacy file - kept as closely to the SWIFT original files as possible.
  */
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
   namespace legacy {
     namespace eos {
@@ -156,4 +156,4 @@ namespace swift2 {
     } // namespace eos
   }   // namespace legacy
   }
-} // namespace swift2
+} // namespace exaparty

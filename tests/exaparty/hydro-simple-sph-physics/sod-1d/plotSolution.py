@@ -10,8 +10,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 import h5py
 from peano4.api.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
-import swift2
-import swift2.sphtools as sphtools
+import exaparty
+import exaparty.api.sphtools as sphtools
 
 
 # Generates the analytical  solution for the Sod shock test case

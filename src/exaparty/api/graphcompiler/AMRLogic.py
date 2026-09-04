@@ -5,11 +5,11 @@ import peano4.api
 
 
 from peano4.api.solversteps import Steps
-from swift2.actionsets.DynamicMeshRefinementAnalysis import (
+from exaparty.api.actionsets.DynamicMeshRefinementAnalysis import (
     DynamicMeshRefinementAnalysis,
 )
-from swift2.actionsets.ScatterGlobalMemory import ScatterGlobalMemory
-from swift2.actionsets.DynamicMeshRefinementTrigger import DynamicMeshRefinementTrigger
+from exaparty.api.actionsets.ScatterGlobalMemory import ScatterGlobalMemory
+from exaparty.api.actionsets.DynamicMeshRefinementTrigger import DynamicMeshRefinementTrigger
 
 
 def add_dynamic_mesh_refinement_and_particle_resorting(
@@ -324,7 +324,7 @@ def add_dynamic_mesh_refinement_and_particle_resorting(
                 steps[i].add_action_set(action_set_dynamic_AMR)
                 if verbose:
                     print(
-                        "GRAPH COMPILER DEBUG [add_dynamic_mesh_refinement_and_particle_resorting_aggressive_mesh_adoption]: add swift2.actionsets.DynamicMeshRefinementTrigger for species {} to step {}".format(
+                        "GRAPH COMPILER DEBUG [add_dynamic_mesh_refinement_and_particle_resorting_aggressive_mesh_adoption]: add exaparty.api.actionsets.DynamicMeshRefinementTrigger for species {} to step {}".format(
                             current_species_set.name, i
                         )
                     )

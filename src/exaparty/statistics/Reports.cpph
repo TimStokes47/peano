@@ -2,9 +2,9 @@
 #include "tarch/mpi/Rank.h"
 
 template <typename Particle>
-void swift2::statistics::reportSearchRadiusVTDt(const std::string& particleName) {
+void exaparty::statistics::reportSearchRadiusVTDt(const std::string& particleName) {
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    static tarch::logging::Log _log("swift2::statistics");
+    static tarch::logging::Log _log("exaparty::statistics");
 
     logInfo("reportSearchRadiusVTDt()", "===============");
     logInfo("reportSearchRadiusVTDt()", particleName);

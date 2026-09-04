@@ -3,8 +3,8 @@ import argparse
 import numpy as np
 
 import peano4.api
-import swift2
-import swift2.sphtools as sphtools
+import exaparty
+import exaparty.api.sphtools as sphtools
 import dastgen2
 
 import shutil
@@ -123,7 +123,7 @@ def parse_args():
         "--realisation",
         dest="realisation",
         default="domain-decomposition.scattered.multiscale-sorting.no-optimisation",
-        help="Realisation to use. See Peano/python/swift2/ProjectRealisation.py for options",
+        help="Realisation to use. See Peano/src/exaparty/api/ProjectRealisation.py for options",
     )
     parser.add_argument(
         "-ms",
@@ -150,12 +150,12 @@ if __name__ == "__main__":
     args = parse_args()
 
 ########################################################################################
-# Generate SWIFT project
+# Generate ExaParty project
 ########################################################################################
 
-project_namespace = ["benchmarks", "swift2", "noh3D"]
+project_namespace = ["benchmarks", "exaparty", "noh3D"]
 
-project = swift2.Project(
+project = exaparty.api.Project(
     namespace=project_namespace, project_name="Noh3D", executable=args.output_file
 )
 
@@ -183,13 +183,13 @@ print(
     )
 )
 
-particle = swift2.particle.SPHLeapfrogFixedSearchRadius(
+particle = exaparty.api.particle.SPHLeapfrogFixedSearchRadius(
     name=name,
     dimensions_hydro=hydro_dimensions,
     cfl_factor=args.cfl_factor,
     initial_time_step_size=args.timestep_size,
     constant_time_step_size=True,
-    swift_project_namespace=project_namespace,
+    exaparty_project_namespace=project_namespace,
     particles_per_cell=particles_per_cell,
     min_h=max_cell_size,
     max_h=max_cell_size,
@@ -197,7 +197,7 @@ particle = swift2.particle.SPHLeapfrogFixedSearchRadius(
 
 ########################################################################################
 # Set parameters for the SPH simulation
-# If no parameters are passed to the swift2 project, it initializes with
+# If no parameters are passed to the exaparty project, it initializes with
 # default values. The values of the parameters can be modified or retrieved
 # using the set/get methods.
 ########################################################################################
@@ -238,7 +238,7 @@ hydro_H_max = max_cell_size / 2
 dx = domain_size[0] / args.particle_number
 if hydro_H_max < 3.0 * dx:
     raise ValueError("Too small hydro_H_max", 3.0 * dx, hydro_H_max)
-hydro_h_max = swift2.sphtools.sph_kernel_get_smoothing_length_from_interaction_radius(
+hydro_h_max = exaparty.api.sphtools.sph_kernel_get_smoothing_length_from_interaction_radius(
     hydro_H_max, kernel, hydro_dimensions
 )
 particle.h_hydro_max = hydro_h_max
@@ -285,7 +285,7 @@ particle.data.expose_all_attributes_in_header_file()
 # Otherwise, the changes won't propagate into dastgen.
 particle.set_parameters()
 
-# Add particle to the SWIFT project --------------------------------------------
+# Add particle to the ExaParty project --------------------------------------------
 # Notice that you any change to the particle will not take effect after adding
 # the particle_set to the project
 particle_set = project.add_particle_species(particle)
@@ -346,19 +346,19 @@ project.set_load_balancing(
 #  that converges towards the center of the domain and that generates the
 #  collapse.
 
-ICs = swift2.scenario.NohProblemIC(dimensions=HYDRO_DIMENSIONS)
+ICs = exaparty.api.scenario.NohProblemIC(dimensions=HYDRO_DIMENSIONS)
 initialisation_snippet = ICs.initialisation_snippet
 
 project.algorithm_step_initial_conditions.add_action_set(
-    swift2.input.InsertParticlesAlongCartesianGrid(
+    exaparty.api.input.InsertParticlesAlongCartesianGrid(
         particle_set=particle_set,
         initialisation_call=initialisation_snippet,
         distance_between_particles_along_one_axis=(
             domain_size[0] / (args.particle_number)
         ),
         additional_includes="""
-#include "swift2/kernels/legacy/equation_of_state.h"
-#include "swift2/kernels/legacy/kernel_hydro.h"
+#include "exaparty/kernels/legacy/equation_of_state.h"
+#include "exaparty/kernels/legacy/kernel_hydro.h"
 """,
     )
 )
@@ -463,7 +463,7 @@ if args.clean_temporary_files:
         shutil.rmtree(dir)
 
 # It is safe (and recommended) to overwrite any existing main file, since this
-# is generated automatically by the Swift2 graph compiler.
+# is generated automatically by the ExaParty graph compiler.
 peano4_project.generate(
     overwrite=peano4.api.output.Overwrite.Always, throw_away_data_after_generation=True
 )

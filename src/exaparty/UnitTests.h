@@ -5,7 +5,7 @@
 #include "tarch/tests/TestCase.h"
 
 
-namespace swift2 {
+namespace exaparty {
   /**
    * Please destroy after usage
    */

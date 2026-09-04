@@ -1,10 +1,10 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from swift2.particle.AlgorithmStep import AlgorithmStep
-from swift2.actionsets.UpdateParticleMarker import UpdateParticleMarker
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.actionsets.UpdateParticleMarker import UpdateParticleMarker
 
 import peano4.api
-import swift2
+import exaparty
 
 
 from .AMRLogic import add_dynamic_mesh_refinement_and_particle_resorting
@@ -39,7 +39,7 @@ def translate_one_step_of_species_into_mesh_traversal(
 
     Actual translation of one step per particle species onto a task graph construction
 
-    We basically forward to swift2.api.graphcompiler.TaskGraph.translate_one_step_of_species_into_mesh_traversal()
+    We basically forward to exaparty.api.graphcompiler.TaskGraph.translate_one_step_of_species_into_mesh_traversal()
     but we set the flag synchronise_task_graph_after_each_mesh_sweep() to
     false. This does not mean that the arising task graph is bare of all
     synchronisation. It just means that we don't immediately synchronise
@@ -71,7 +71,7 @@ def translate_one_step_of_species_into_mesh_traversal(
     - nix in touch cell last
 
     """
-    swift2.api.graphcompiler.TaskGraph.translate_one_step_of_species_into_mesh_traversal(
+    exaparty.api.graphcompiler.TaskGraph.translate_one_step_of_species_into_mesh_traversal(
         step,
         current_species_set,
         mesh_traversals,
@@ -87,7 +87,7 @@ def translate_one_step_of_species_into_mesh_traversal(
     ), "at least one step has to be added after translate_one_step_of_species_into_mesh_traversal() has terminated"
 
     glue_two_mesh_sweeps_together = (
-        swift2.api.actionsets.SynchroniseVerticesWithPreviousMeshSweep(
+        exaparty.api.actionsets.SynchroniseVerticesWithPreviousMeshSweep(
             current_species_set
         )
     )
@@ -99,7 +99,7 @@ def translate_one_step_of_species_into_mesh_traversal(
 
     if verbose:
         print(
-            "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses swift.api.actionsets.SynchroniseVerticesWithPreviousMeshSweep".format(
+            "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses exaparty.api.actionsets.SynchroniseVerticesWithPreviousMeshSweep".format(
                 len(mesh_traversals),
                 step.name,
                 current_species_set.particle_model.name,

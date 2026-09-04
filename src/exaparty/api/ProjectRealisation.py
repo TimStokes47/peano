@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This file contains all possible realisation variants for a swift2 project.
+This file contains all possible realisation variants for a exaparty project.
 """
 
 Parallelisation_DomainDecomposition = "domain-decomposition"

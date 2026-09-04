@@ -1,6 +1,6 @@
 /**
 
- @page tests_swift2_planet_orbit Planet orbit
+ @page tests_exaparty_planet_orbit Planet orbit
 
 
 
@@ -8,7 +8,7 @@ This standard test case is used to assess the adaptive mesh refinement and to
 illustrate the importance of a symplectic time integrator. The setup simulates
 the Earth rotating around the Sun. So we actually have only one (free)
 particle with a hard-coded force function. The realisation is subject of a
-@ref tutorials_swift2_planet_orbit "tutorial session" which demonstrates how
+@ref tutorials_exaparty_planet_orbit "tutorial session" which demonstrates how
 to inject user-defined force functions into the default Euler and leapfrog
 ODE integrators.
 
@@ -47,7 +47,7 @@ Cell size | Levels | Remarks
 0.01      | 3      | More radical version with three levels of adaptive mesh refinement.
 
 
-Swift's AMR analysis works on a per-cell basis. For each cell, it studies
+ExaParty's AMR analysis works on a per-cell basis. For each cell, it studies
 all four adjacent vertices, and sums up the number of particles stored
 there. As we set the maximum number of particles to 0, every cell that is
 adjacent to a vertex holding the single particle will issue a refine command
@@ -160,7 +160,7 @@ echo 'Done. Bye!'
 
 
 
-\subpage tests_swift2_planet-orbit_plots-time-integration-test
+\subpage tests_exaparty_planet-orbit_plots-time-integration-test
 
  */
 

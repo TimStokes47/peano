@@ -1,4 +1,4 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api.toolbox.particles
 
@@ -63,8 +63,8 @@ class UpdateParticle_SingleLevelInteraction(
             additional_includes=additional_includes
             + """
 #include "tarch/multicore/Task.h"
-#include "swift2/swift2.h"                
-#include "swift2/TaskNumber.h"                
+#include "exaparty/exaparty.h"                
+#include "exaparty/TaskNumber.h"                
                  """,
             active_particle_set=active_particle_set,
         )

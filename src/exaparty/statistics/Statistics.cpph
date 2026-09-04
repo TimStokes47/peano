@@ -1,7 +1,7 @@
 #include "peano4/parallel/SpacetreeSet.h"
 
 template <typename Particle>
-void swift2::statistics::reduceVelocityAndSearchRadius(
+void exaparty::statistics::reduceVelocityAndSearchRadius(
   const peano4::datamanagement::VertexMarker&  marker,
   Particle&                                    particle
 ) {

@@ -17,7 +17,7 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
     namespace legacy {
       namespace kernelHydro {
@@ -282,4 +282,4 @@ namespace swift2 {
       } // namespace kernelHydro
     }   // namespace legacy
   }     // namespace kernels
-} // namespace swift2
+} // namespace exaparty

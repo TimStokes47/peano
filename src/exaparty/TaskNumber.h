@@ -1,4 +1,4 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
@@ -13,11 +13,11 @@
 #include "peano4/datamanagement/VertexMarker.h"
 
 
-namespace swift2 {
+namespace exaparty {
   /**
    * Task Number
    *
-   * A task number in SWIFT is an integer tuple:
+   * A task number in ExaParty is an integer tuple:
    *
    * - The first index is the vertex or cell index that we use.
    * - The second index identifies the event used.
@@ -93,17 +93,17 @@ namespace swift2 {
    * returned (unknowns are not stored redundantly).
    */
   template <typename Vertex>
-  std::set<::swift2::TaskNumber> getVertexNumbersOfParentVertices(
+  std::set<::exaparty::TaskNumber> getVertexNumbersOfParentVertices(
     const peano4::datamanagement::VertexMarker&      marker,
     peano4::datamanagement::VertexEnumerator<Vertex> coarseGridVertices,
-    ::swift2::TaskNumber::TaskAssociation            taskAssociation
+    ::exaparty::TaskNumber::TaskAssociation            taskAssociation
   );
 
   template <typename Vertex>
-  std::set<::swift2::TaskNumber> getVertexNumbersOfParentVertices(
+  std::set<::exaparty::TaskNumber> getVertexNumbersOfParentVertices(
     tarch::la::Vector<Dimensions, int>               position,
     peano4::datamanagement::VertexEnumerator<Vertex> coarseGridVertices,
-    ::swift2::TaskNumber::TaskAssociation            taskAssociation,
+    ::exaparty::TaskNumber::TaskAssociation            taskAssociation,
     int                                              dimension
   );
 
@@ -120,7 +120,7 @@ namespace swift2 {
    *
    * Dependencies are stored as from->to.
    */
-  using PendingDependencies = std::set<std::pair<::swift2::TaskNumber, ::swift2::TaskNumber>>;
+  using PendingDependencies = std::set<std::pair<::exaparty::TaskNumber, ::exaparty::TaskNumber>>;
 
   /**
    * Extract set of dependencies for given task
@@ -129,15 +129,15 @@ namespace swift2 {
    * into task and return those. Before we do so, we remove them from
    * pendingDependencies.
    */
-  std::set<::swift2::TaskNumber> getDependenciesForTask(
-    const ::swift2::TaskNumber& task, PendingDependencies& pendingDependencies
+  std::set<::exaparty::TaskNumber> getDependenciesForTask(
+    const ::exaparty::TaskNumber& task, PendingDependencies& pendingDependencies
   );
-} // namespace swift2
+} // namespace exaparty
 
 
 
-bool operator==(const swift2::TaskNumber& lhs, const swift2::TaskNumber& rhs);
-bool operator!=(const swift2::TaskNumber& lhs, const swift2::TaskNumber& rhs);
+bool operator==(const exaparty::TaskNumber& lhs, const exaparty::TaskNumber& rhs);
+bool operator!=(const exaparty::TaskNumber& lhs, const exaparty::TaskNumber& rhs);
 
 
 #include "TaskNumber.cpph"

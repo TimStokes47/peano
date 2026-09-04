@@ -1,8 +1,8 @@
 /**
 
- @page swift_parallelisation Parallelisation
+ @page exaparty_parallelisation Parallelisation
 
- In line with the work by Schaller et al, Swift 2 uses a combination of domain
+ In line with the work by Schaller et al, ExaParty uses a combination of domain
  decomposition and task-based parallelism. As we base our update upon Peano, we
  augment it with additional levels of parallelism.
 
@@ -20,7 +20,7 @@
    decomposition).
  - Within each chunk (per thread), we then apply task-based parallelism.
  - The structure of the task graph is determined via a graph compiler (see
-   remarks on @ref swift_architecture "the code architecture") and not baked
+   remarks on @ref exaparty_architecture "the code architecture") and not baked
    into the mesh traversal core.
  - We provide tasking backends for OpenMP, SYCL, TBB and C++. However, there is
    at the moment no custom QuickSched backend anymore.
@@ -70,7 +70,7 @@
 # Q&As
 
  Obviously, most all of @ref page_faq_home "Peano's (generic) frequently asked questions"
- and \ref page_faq_home "developer troubleshooting remarks" hold for Swift 2, too.
+ and \ref page_faq_home "developer troubleshooting remarks" hold for ExaParty, too.
 
  - The load balancing is active if and only if you pick a load balancer within
    your Python script. So if you remove the load balancing call or if you pick

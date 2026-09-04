@@ -7,7 +7,7 @@
 #include "peano4/parallel/SpacetreeSet.h"
 
 
-#include "swift2/UserInterface.h"
+#include "exaparty/UserInterface.h"
 
 
 #include "globaldata/HydroPart.h"
@@ -18,10 +18,10 @@
 #include "toolbox/particles/assignmentchecks/TracingAPI.h"
 
 
-namespace benchmarks {namespace swift2 {namespace noh {namespace repositories {
+namespace benchmarks {namespace exaparty {namespace noh {namespace repositories {
 
 
-tarch::logging::Log _log( "benchmarks::swift2::noh::repositories::GlobalState" );
+tarch::logging::Log _log( "benchmarks::exaparty::noh::repositories::GlobalState" );
 
 toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates              loadBalancer(new toolbox::loadbalancing::DefaultConfiguration(2));
 
@@ -90,7 +90,7 @@ void startIntermediateStep() {
 
 
 void startInitialConditionStep() {
-  if (not ::swift2::commandlinesettings::enableDynamicLoadBalancing() ) {
+  if (not ::exaparty::commandlinesettings::enableDynamicLoadBalancing() ) {
     loadBalancer.enable(false);
   }
   logTraceIn( "InitialConditionStep()" );
@@ -98,7 +98,7 @@ void startInitialConditionStep() {
 
 
 void startInitialisationStep() {
-  if (not ::swift2::commandlinesettings::enableDynamicLoadBalancing() ) {
+  if (not ::exaparty::commandlinesettings::enableDynamicLoadBalancing() ) {
     loadBalancer.enable(false);
   }
   logTraceIn( "InitialisationStep()" );

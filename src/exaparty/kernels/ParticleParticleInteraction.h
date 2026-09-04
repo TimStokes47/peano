@@ -1,7 +1,7 @@
 #include "legacy/hydro_dimensions.h"
 #include "legacy/kernel_hydro.h"
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
     template <typename ParticleA, typename ParticleB = ParticleA>
     bool forceKernelDistanceCheck(

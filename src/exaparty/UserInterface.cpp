@@ -11,18 +11,18 @@
 #include "peano4/peano.h"
 
 namespace {
-  tarch::logging::Log _log( "swift2" );
+  tarch::logging::Log _log( "exaparty" );
 
   bool enableDynamicLoadBalancing = true;
 }
 
 
-bool swift2::commandlinesettings::enableDynamicLoadBalancing() {
+bool exaparty::commandlinesettings::enableDynamicLoadBalancing() {
   return ::enableDynamicLoadBalancing;
 }
 
 
-void swift2::setDefaultLogStatements() {
+void exaparty::setDefaultLogStatements() {
   tarch::logging::LogFilter::getInstance().clearFilterList();
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
       tarch::logging::LogFilter::FilterListEntry::TargetInfo,
@@ -93,21 +93,21 @@ void swift2::setDefaultLogStatements() {
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
       tarch::logging::LogFilter::FilterListEntry::TargetDebug,
       tarch::logging::LogFilter::FilterListEntry::AnyRank,
-      "swift2",
+      "exaparty",
       tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
       tarch::logging::LogFilter::FilterListEntry::AlwaysOn
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
       tarch::logging::LogFilter::FilterListEntry::TargetTrace,
       tarch::logging::LogFilter::FilterListEntry::AnyRank,
-      "swift2",
+      "exaparty",
       tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
       tarch::logging::LogFilter::FilterListEntry::AlwaysOn
   ));
   tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
       tarch::logging::LogFilter::FilterListEntry::TargetInfo,
       tarch::logging::LogFilter::FilterListEntry::AnyRank,
-      "swift2",
+      "exaparty",
       tarch::logging::LogFilter::FilterListEntry::WhiteListEntry,
       tarch::logging::LogFilter::FilterListEntry::AlwaysOn
   ));
@@ -136,9 +136,9 @@ void swift2::setDefaultLogStatements() {
 }
 
 
-void swift2::printUsage(char** argv) {
+void exaparty::printUsage(char** argv) {
   std::cout << "Usage: ./" << argv[0] << " [options]" << std::endl <<
-"SWIFT 2 - an experimental rewrite of SPH With Inter-dependent Fine-grained Tasking \n\
+"ExaParty - an experimental rewrite of SPH With Inter-dependent Fine-grained Tasking \n\
 Original code: https://swift.dur.ac.uk/ \n\
 \n \
 Options: \n\
@@ -166,7 +166,7 @@ Options: \n\
 }
 
 
-bool swift2::parseCommandLineArguments(int argc, char** argv) {
+bool exaparty::parseCommandLineArguments(int argc, char** argv) {
   if (
     (argc==2 and std::string(argv[1]).compare( "--help" )!=std::string::npos)
     or
@@ -178,7 +178,7 @@ bool swift2::parseCommandLineArguments(int argc, char** argv) {
     return false;
   }}
 
-  std::string   logFilterFile = "swift2.log-filter";
+  std::string   logFilterFile = "exaparty.log-filter";
   int           cores         = tarch::multicore::Core::UseDefaultNumberOfThreads;
   std::set<int> gpuDevices;
 

@@ -20,7 +20,7 @@ class DynamicMeshRefinementAnalysis(ActionSet):
     count the particles and the translation fo this info into mesh refinement
     and coarsening commands.
 
-    Different to the default toolbox variant, Swift's marker doesn't need to
+    Different to the default toolbox variant, ExaParty's marker doesn't need to
     distinguish a new and an old marker and we use the marker information
     straightaway throughout the steps up.
 
@@ -295,7 +295,7 @@ class DynamicMeshRefinementAnalysis(ActionSet):
 
     #  def get_body_of_getGridControlEvents(self):
     #    return """
-    #  return ::swift2::committedGridControlEvents;
+    #  return ::exaparty::committedGridControlEvents;
     # """
 
     def get_attributes(self):
@@ -323,7 +323,7 @@ std::list< peano4::grid::GridControlEvent >  """
 #include "vertexdata/{{PARTICLE_SET}}.h"
 #include "globaldata/{{PARTICLE}}.h"
 #include "peano4/grid/grid.h"
-#include "swift2/GridControlEvents.h"
+#include "exaparty/GridControlEvents.h"
 
 #include <list>
 """
@@ -332,6 +332,6 @@ std::list< peano4::grid::GridControlEvent >  """
 
     def get_body_of_unprepareTraversal(self):
         return """
-::swift2::commitGridControlEvents( _newGridControlEvents );
+::exaparty::commitGridControlEvents( _newGridControlEvents );
 _newGridControlEvents.clear();
 """

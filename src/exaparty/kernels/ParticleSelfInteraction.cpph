@@ -1,13 +1,13 @@
 #include <type_traits>
 
 #include "legacy/hydro_dimensions.h"
-#include "swift2/kernels/ParticleUpdatePredicates.h"
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
 #include "tarch/logging/Log.h"
 
 
 
 template <typename ParticleContainer>
-void swift2::kernels::flagBoundaryParticles(
+void exaparty::kernels::flagBoundaryParticles(
   const ParticleContainer&                     localParticles,
   const double                                 nparts,
   const tarch::la::Vector<Dimensions, double>& domainSize,

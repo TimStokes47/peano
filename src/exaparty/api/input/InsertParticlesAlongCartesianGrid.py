@@ -1,4 +1,4 @@
-# This file is part of the Swift2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api.toolbox.particles.InsertParticlesAlongCartesianLayoutIntoUnrefinedCells
 
@@ -15,12 +15,12 @@ class InsertParticlesAlongCartesianGrid(
     ):
         """!
 
-        Wrapper around toolbox tying it to Swift's global properties
+        Wrapper around toolbox tying it to ExaParty's global properties
 
         Very simplistic wrapper around generic factory mechanism from
         the toolbox. The script adds references to DomainOffset[2] and
         DomainSize[2] for example which are defined in Constants.h. This
-        constants file is something that's specific to Swift and not to
+        constants file is something that's specific to ExaParty and not to
         the particles toolbox.
 
         We do not care at this point, if entries like DomainOffset[2]

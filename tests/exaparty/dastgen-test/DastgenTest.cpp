@@ -1,8 +1,8 @@
 #include "DastgenTest.h"
 
 
-void swift2::dastgenTest::checkBooleans(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkBooleans(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   // First set some values, where applicable.
@@ -87,8 +87,8 @@ void swift2::dastgenTest::checkBooleans(
 }
 
 
-void swift2::dastgenTest::checkDoubles(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkDoubles(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   // First set some values, where applicable.
@@ -247,14 +247,14 @@ void swift2::dastgenTest::checkDoubles(
 }
 
 
-void swift2::dastgenTest::checkEnums(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkEnums(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   // Default enums
   // ----------------
 
-  using MyEnum = tests::swift2::dastgenTest::globaldata::dummyPart::MyEnum;
+  using MyEnum = tests::exaparty::dastgenTest::globaldata::dummyPart::MyEnum;
 
   MyEnum e1 = MyEnum::Baz;
   particle.setMyEnum(e1);
@@ -265,7 +265,7 @@ void swift2::dastgenTest::checkEnums(
   std::string teststring;
   for (int i = 0; i != static_cast<int>(MyEnum::Last); i++) {
     MyEnum e   = static_cast<MyEnum>(i);
-    teststring = tests::swift2::dastgenTest::globaldata::dummyPart::toString(e);
+    teststring = tests::exaparty::dastgenTest::globaldata::dummyPart::toString(e);
   }
 
 
@@ -273,7 +273,7 @@ void swift2::dastgenTest::checkEnums(
   // ----------------
 
 #if PeanoDebug > 0
-  using MyEnumD = tests::swift2::dastgenTest::globaldata::dummyPart::
+  using MyEnumD = tests::exaparty::dastgenTest::globaldata::dummyPart::
     MyDebugEnum;
 
   MyEnumD eD1 = MyEnumD::Baz;
@@ -284,14 +284,14 @@ void swift2::dastgenTest::checkEnums(
   // check casting to string for all MyEnumm variants
   for (int i = 0; i != static_cast<int>(MyEnumD::Last); i++) {
     MyEnumD e  = static_cast<MyEnumD>(i);
-    teststring = tests::swift2::dastgenTest::globaldata::dummyPart::toString(e);
+    teststring = tests::exaparty::dastgenTest::globaldata::dummyPart::toString(e);
   }
 #endif
 }
 
 
-void swift2::dastgenTest::checkIntegers(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkIntegers(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   // First set some values, where applicable.
@@ -450,8 +450,8 @@ void swift2::dastgenTest::checkIntegers(
 }
 
 
-void swift2::dastgenTest::checkStrings(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkStrings(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   std::string var_str;
@@ -522,7 +522,7 @@ void swift2::dastgenTest::checkStrings(
 
 
 void checkUserDefinedType(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   auto a = particle.getMyStaticUserDefinedAttribute();
@@ -533,8 +533,8 @@ void checkUserDefinedType(
 }
 
 
-void swift2::dastgenTest::checkBooleanArrays(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkBooleanArrays(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   std::bitset<8> init_bool = static_cast<std::bitset<8>>(511);
@@ -612,8 +612,8 @@ void swift2::dastgenTest::checkBooleanArrays(
 }
 
 
-void swift2::dastgenTest::checkDoubleArrays(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkDoubleArrays(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   double init_double[8] = {1., 2., 3., 4., 5., 6., 7., 8.};
@@ -690,8 +690,8 @@ void swift2::dastgenTest::checkDoubleArrays(
 }
 
 
-void swift2::dastgenTest::checkIntegerArrays(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkIntegerArrays(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   int init_integer[8] = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -768,8 +768,8 @@ void swift2::dastgenTest::checkIntegerArrays(
 }
 
 
-void swift2::dastgenTest::checkPeanoDoubleArrays(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkPeanoDoubleArrays(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   double init_double[8] = {1., 2., 3., 4., 5., 6., 7., 8.};
@@ -850,8 +850,8 @@ void swift2::dastgenTest::checkPeanoDoubleArrays(
 }
 
 
-void swift2::dastgenTest::checkPeanoIntegerArrays(
-  tests::swift2::dastgenTest::globaldata::dummyPart& particle
+void exaparty::dastgenTest::checkPeanoIntegerArrays(
+  tests::exaparty::dastgenTest::globaldata::dummyPart& particle
 ) {
 
   int init_integer[8] = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -934,9 +934,9 @@ void swift2::dastgenTest::checkPeanoIntegerArrays(
 }
 
 
-void swift2::dastgenTest::checkConstructors(void) {
+void exaparty::dastgenTest::checkConstructors(void) {
 
-  using Part = tests::swift2::dastgenTest::globaldata::dummyPart;
+  using Part = tests::exaparty::dastgenTest::globaldata::dummyPart;
 
   // Prepare some dummy arguments
   tarch::la::Vector<Dimensions, double> dummyDimDoubleVector = {0.1, 0.2, 0.3};

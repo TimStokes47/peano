@@ -1,10 +1,10 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from swift2.particle.AlgorithmStep import AlgorithmStep
-from swift2.actionsets.UpdateParticleMarker import UpdateParticleMarker
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.actionsets.UpdateParticleMarker import UpdateParticleMarker
 
 import peano4.api
-import swift2
+import exaparty
 
 
 from .AMRLogic import add_dynamic_mesh_refinement_and_particle_resorting
@@ -61,7 +61,7 @@ def translate_one_step_of_species_into_mesh_traversal(
        compiler. If we change a position, we erase all the task indices from
        the tree.
 
-    In general, we never assign any index to touchCellLastTime(), as Swift does
+    In general, we never assign any index to touchCellLastTime(), as ExaParty does
     not only one type of plug-in points. This is actually touchCellFirstTime()
     in the realisation, so one might be tempted to mask out touchCellLastTime()
     and only use task indices for touchCellFirstTime(). However, we have to
@@ -165,7 +165,7 @@ def translate_one_step_of_species_into_mesh_traversal(
                         current_species_set.particle_model.name,
                     )
                 )
-            action_set_particle_particle_interaction = swift2.api.actionsets.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(
+            action_set_particle_particle_interaction = exaparty.api.actionsets.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(
                 particle_set=current_species_set,
                 particle_particle_interaction_kernel=step.cell_kernel,
                 touch_vertex_first_time_compute_particle_update_kernel=step.touch_vertex_first_time_kernel,
@@ -186,7 +186,7 @@ def translate_one_step_of_species_into_mesh_traversal(
                         current_species_set.particle_model.name,
                     )
                 )
-            action_set_particle_particle_interaction = swift2.api.actionsets.UpdateParticle_MultiLevelInteraction_Sets(
+            action_set_particle_particle_interaction = exaparty.api.actionsets.UpdateParticle_MultiLevelInteraction_Sets(
                 particle_set=current_species_set,
                 particle_particle_interaction_kernel=step.cell_kernel,
                 touch_vertex_first_time_compute_particle_update_kernel=step.touch_vertex_first_time_kernel,
@@ -214,7 +214,7 @@ def translate_one_step_of_species_into_mesh_traversal(
                     )
                 )
 
-            action_set_particle_update = swift2.api.actionsets.UpdateParticle_SingleLevelInteraction_ContiguousParticles(
+            action_set_particle_update = exaparty.api.actionsets.UpdateParticle_SingleLevelInteraction_ContiguousParticles(
                 particle_set=current_species_set,
                 particle_cell_update_kernel=step.cell_kernel,
                 touch_vertex_first_time_compute_particle_update_kernel=step.touch_vertex_first_time_kernel,
@@ -241,7 +241,7 @@ def translate_one_step_of_species_into_mesh_traversal(
                     )
                 )
 
-            action_set_particle_update = swift2.api.actionsets.UpdateParticle_SingleLevelInteraction(
+            action_set_particle_update = exaparty.api.actionsets.UpdateParticle_SingleLevelInteraction(
                 particle_set=current_species_set,
                 particle_cell_update_kernel=step.cell_kernel,
                 touch_vertex_first_time_compute_particle_update_kernel=step.touch_vertex_first_time_kernel,
@@ -312,7 +312,7 @@ def map_onto_separate_mesh_traversals_constructing_task_graph(
     belonging to a Cartesian mesh with a vertex-cell-vertex update
     sequence.
 
-    @image html documentation/Doxygen/Swift/task-graph-tree.png
+    @image html documentation/exaparty/task-graph-tree.png
 
     Whenever we spawn a task, we first generate a new task id. This is the
     number of this task which we store within the task and which the task

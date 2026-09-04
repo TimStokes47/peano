@@ -1,17 +1,17 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 #include "tarch/la/Vector.h"
 #include "peano4/datamanagement/VertexMarker.h"
 
-namespace swift2 {
+namespace exaparty {
   namespace boundaryconditions {
     /**
      * Apply fixed boundary conditions to particle
      *
      * This routine is usually inserted into your code by the action set
-     * swift2.api.boundaryconditions.Fixed. It serves as a proxy to the
+     * exaparty.api.boundaryconditions.Fixed. It serves as a proxy to the
      * other applyFixedBoundaryCondition(), i.e. forwards the actual
      * position update computation to this routine, and then takes the
      * updated position, writes it into the particle, and logs the position
@@ -33,9 +33,9 @@ namespace swift2 {
     /**
      * Determine updated position and velocity due to boundary conditions
      *
-     * See applyFixedBoundaryCondition() and notably swift2.api.boundaryconditions.Fixed
+     * See applyFixedBoundaryCondition() and notably exaparty.api.boundaryconditions.Fixed
      * for some context where this routine is used. Please study notably the
-     * @ref swift_boundary_conditions "generic boundary condition" discussion
+     * @ref exaparty_boundary_conditions "generic boundary condition" discussion
      * of the project. It provides code snippets how to use this routine.
      *
      * ## Algorithm

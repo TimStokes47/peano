@@ -2,15 +2,15 @@
 
 
 template <typename Vertex>
-std::set<::swift2::TaskNumber> swift2::getVertexNumbersOfParentVertices(
+std::set<::exaparty::TaskNumber> exaparty::getVertexNumbersOfParentVertices(
   tarch::la::Vector<Dimensions, int>               position,
   peano4::datamanagement::VertexEnumerator<Vertex> coarseGridVertices,
-  ::swift2::TaskNumber::TaskAssociation            taskAssociation,
+  ::exaparty::TaskNumber::TaskAssociation            taskAssociation,
   int                                              dimension
 ) {
   if (dimension == -1) {
-    std::set<::swift2::TaskNumber> result;
-    result.insert(::swift2::TaskNumber{
+    std::set<::exaparty::TaskNumber> result;
+    result.insert(::exaparty::TaskNumber{
       coarseGridVertices(peano4::utils::dLinearised(position, 2)).getNumber(), taskAssociation});
     return result;
   } else if (position(dimension) == 0) {
@@ -19,13 +19,13 @@ std::set<::swift2::TaskNumber> swift2::getVertexNumbersOfParentVertices(
     position(dimension) = 1;
     return getVertexNumbersOfParentVertices(position, coarseGridVertices, taskAssociation, dimension - 1);
   } else {
-    std::set<::swift2::TaskNumber> result;
+    std::set<::exaparty::TaskNumber> result;
     position(dimension)                 = 0;
-    std::set<::swift2::TaskNumber> left = getVertexNumbersOfParentVertices(
+    std::set<::exaparty::TaskNumber> left = getVertexNumbersOfParentVertices(
       position, coarseGridVertices, taskAssociation, dimension - 1
     );
     position(dimension)                  = 1;
-    std::set<::swift2::TaskNumber> right = getVertexNumbersOfParentVertices(
+    std::set<::exaparty::TaskNumber> right = getVertexNumbersOfParentVertices(
       position, coarseGridVertices, taskAssociation, dimension - 1
     );
     result.insert(left.begin(), left.end());
@@ -36,10 +36,10 @@ std::set<::swift2::TaskNumber> swift2::getVertexNumbersOfParentVertices(
 
 
 template <typename Vertex>
-std::set<::swift2::TaskNumber> swift2::getVertexNumbersOfParentVertices(
+std::set<::exaparty::TaskNumber> exaparty::getVertexNumbersOfParentVertices(
   const peano4::datamanagement::VertexMarker&      marker,
   peano4::datamanagement::VertexEnumerator<Vertex> coarseGridVertices,
-  ::swift2::TaskNumber::TaskAssociation            taskAssociation
+  ::exaparty::TaskNumber::TaskAssociation            taskAssociation
 ) {
   return getVertexNumbersOfParentVertices(
     marker.getRelativePositionWithinFatherCell(), coarseGridVertices, taskAssociation, Dimensions - 1

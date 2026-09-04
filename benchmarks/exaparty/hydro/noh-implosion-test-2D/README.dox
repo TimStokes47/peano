@@ -1,6 +1,6 @@
 /**
 
- @page benchmarks_swift2_hydro_noh_implosion_test_2D 2D Noh implosion test
+ @page benchmarks_exaparty_hydro_noh_implosion_test_2D 2D Noh implosion test
 
  Simple Noh implosion test benchmark in 2D with @f$ N ^d @f$ particles. The setup
  yields snapshots similar to the ones below.
@@ -10,10 +10,10 @@
   @image html noh_300.png
 
 
- As with all Swift 2 experiments, you have to ensure that you translate with
+ As with all ExaParty experiments, you have to ensure that you translate with
  
  
-        --enable-particles --enable-swift
+        --enable-particles --enable-exaparty
          
  
  before you start working with the
@@ -241,7 +241,7 @@ python3 noh.py -np 320 -plot 0 -et 0.001
 ## Vectorisation studies
 
 The Noh benchmark is one of our classic test cases to study vectorisation of
-the kernels. Our first subject of study is the function swift2::kernels::forceKernelVectorised()
+the kernels. Our first subject of study is the function exaparty::kernels::forceKernelVectorised()
 which is a nice function to see what has to be done to get good SIMD
 efficiency, but it makes sense to study more than this simple single kernel.
 Before we tweak this function, I recommend to re-translate with
@@ -251,7 +251,7 @@ After that, I typically add one more flag to the setup: "-qopt-report=3".
 
 
 
-These instructions follow @ref swift_particle_new_solver "Swift's generic recommendations"
+These instructions follow @ref exaparty_particle_new_solver "ExaParty's generic recommendations"
 when it comes to the development of vectorised solvers.
 You might want to add the optimisation report to all of Peano, but then you'll
 get a mass of optimisation reports which are difficult to digest. Therefore, I
@@ -272,19 +272,19 @@ The steps are rather simple:
 1. If the optimisation is enabled, we first need another graph compiler. We use
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if args.optimisation != "none":
-  project.algorithm_steps_task_graph_compiler      = swift2.graphcompiler.map_particle_steps_onto_separate_mesh_traversals_insert_dummy_sweeps_and_vectorise
+  project.algorithm_steps_task_graph_compiler      = exaparty.api.graphcompiler.map_particle_steps_onto_separate_mesh_traversals_insert_dummy_sweeps_and_vectorise
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    here, which might not be the best compiler but does the job.
 2. Next, we have to switch to a coalesced memory access. This is not required
    if we only study the impact of the memory re-arrangement:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- particle = swift2.particle.SPHLeapfrogFixedSearchRadius(
+ particle = exaparty.api.particle.SPHLeapfrogFixedSearchRadius(
     name=name,
     dimensions_hydro=hydro_dimensions,
     cfl_factor=args.cfl_factor,
     initial_time_step_size=args.timestep_size,
     constant_time_step_size=True,
-    swift_project_namespace=project_namespace,
+    exaparty_project_namespace=project_namespace,
     particles_per_cell=particles_per_cell,
     min_h=max_cell_size,
     max_h=max_cell_size,
@@ -304,16 +304,16 @@ else:
 
 ### Insights
 
-- The kernel ***swift2::kernels::forceKernelVectorised()*** is used by the
+- The kernel ***exaparty::kernels::forceKernelVectorised()*** is used by the
   routine computeHydroForce(). It makes sense to grep the cpp files within
   observers for a call to this routine, and then to open the corresponding
   .optrpt file of the cpp file. Vectorisation should be successful for the
   routine calling forceKernelVectorised() and look similar to
   
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        LOOP BEGIN at ../../../../src/swift2/kernels/ParticleParticleInteraction.cpph (580, 7)
+        LOOP BEGIN at ../../../../src/exaparty/kernels/ParticleParticleInteraction.cpph (580, 7)
 
-            LOOP BEGIN at ../../../../src/swift2/kernels/ParticleParticleInteraction.cpph (589, 11)
+            LOOP BEGIN at ../../../../src/exaparty/kernels/ParticleParticleInteraction.cpph (589, 11)
                 remark #15300: LOOP WAS VECTORIZED
                 remark #15305: vectorization support: vector length 4
                 remark #15475: --- begin vector loop cost summary ---
@@ -344,11 +344,11 @@ else:
                 remark #15474: --- end vector loop memory reference summary ---
                 remark #25587: Loop has reduction
 
-                LOOP BEGIN at ../../../../src/swift2/kernels/kernel_hydro.h (206, 3)
+                LOOP BEGIN at ../../../../src/exaparty/kernels/kernel_hydro.h (206, 3)
                     remark #25436: Loop completely unrolled by 3
                 LOOP END
 
-                LOOP BEGIN at ../../../../src/swift2/kernels/kernel_hydro.h (206, 3)
+                LOOP BEGIN at ../../../../src/exaparty/kernels/kernel_hydro.h (206, 3)
                     remark #25436: Loop completely unrolled by 3
                 LOOP END
             LOOP END

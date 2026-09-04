@@ -1,8 +1,8 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from swift2.particle.SPHParticle import SPHParticle
-from swift2.particle.AlgorithmStep import AlgorithmStep
-from swift2.particle.AlgorithmStepLibrary import get_algorithm_step_dict
+from exaparty.api.particle.SPHParticle import SPHParticle
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.particle.AlgorithmStepLibrary import get_algorithm_step_dict
 
 import peano4.api
 import dastgen2
@@ -107,17 +107,17 @@ class SPHLeapfrogFixedSearchRadius(SPHParticle):
 
         ## Boundary conditions
 
-        Boundary conditions for Swift are @ref swift_boundary_conditions "discussed on a separate page".
+        Boundary conditions for ExaParty are @ref exaparty_boundary_conditions "discussed on a separate page".
         If you decide that you want to plug into the drift mechanism of
         this SPH flavour, you typically add something similar to the
         code snippet below to your code:
 
         ~~~~~~~~~~~~~~~~~~~~~~
     particle.algorithm_steps_dict["Drift"].touch_vertex_last_time_kernel += " " "
-    if (::swift2::boundaryconditions::isVertexOnGlobalBoundary(marker,DomainOffset,DomainSize)) {
-      ::swift2::kernels::forAllParticles<
+    if (::exaparty::boundaryconditions::isVertexOnGlobalBoundary(marker,DomainOffset,DomainSize)) {
+      ::exaparty::kernels::forAllParticles<
         [&](const peano4::datamanagement::VertexMarker& marker, globaldata::" " " + name + " " "&  assignedParticle)->void {
-          ::swift2::boundaryconditions::applyFixedBoundaryCondition(
+          ::exaparty::boundaryconditions::applyFixedBoundaryCondition(
             assignedParticle,
             marker,
             DomainOffset,
@@ -135,8 +135,8 @@ class SPHLeapfrogFixedSearchRadius(SPHParticle):
     }
     " " "
     particle.algorithm_steps_dict["Drift"].includes += " " "
-    #include "swift2/boundaryconditions/FixedBoundary.h"
-    #include "swift2/boundaryconditions/Utils.h"
+    #include "exaparty/boundaryconditions/FixedBoundary.h"
+    #include "exaparty/boundaryconditions/Utils.h"
     " " "
     particle._setup_algorithm_steps()
     particle._setup_initialisation_steps()
@@ -156,7 +156,7 @@ class SPHLeapfrogFixedSearchRadius(SPHParticle):
         ## Vectorisation
 
         This type can be used with aggressively optimised kernels if you follow
-        @ref page_swift_performance_optimisation Performance optimisation and use
+        @ref page_exaparty_performance_optimisation Performance optimisation and use
         the map_particle_steps_onto_separate_mesh_traversals_insert_dummy_sweeps_for_coalesced_memory_access
         graph compiler from the Sequential suite; or literally any other
         flavour which yields coalesced memory.
@@ -173,7 +173,7 @@ class SPHLeapfrogFixedSearchRadius(SPHParticle):
         cfl_factor=0.1,
         initial_time_step_size=1e-4,
         constant_time_step_size=True,
-        swift_project_namespace="SPH",
+        exaparty_project_namespace="SPH",
         particles_per_cell=0,  # makes no sense, and should likely be forbidden
         min_h=0.3,
         max_h=0.3,
@@ -184,7 +184,7 @@ class SPHLeapfrogFixedSearchRadius(SPHParticle):
             cfl_factor=cfl_factor,
             initial_time_step_size=initial_time_step_size,
             constant_time_step_size=constant_time_step_size,
-            swift_project_namespace=swift_project_namespace,
+            exaparty_project_namespace=exaparty_project_namespace,
             particles_per_cell=particles_per_cell,
             min_h=min_h,
             max_h=max_h,
@@ -384,7 +384,7 @@ class SPHLeapfrogFixedSearchRadius(SPHParticle):
         constants in kernels (not used currently).
 
         """
-        namespace = "::".join(self._swift_project_namespace) + "::"
+        namespace = "::".join(self._exaparty_project_namespace) + "::"
 
         print(namespace)
 

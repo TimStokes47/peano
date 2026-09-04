@@ -1,7 +1,7 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from swift2.particle.Particle import Particle
-from swift2.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.particle.Particle import Particle
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
 
 import peano4.api
 import dastgen2
@@ -186,7 +186,7 @@ class testLeapfrogFixedTimeStepSize(Particle):
                 effect=AlgorithmStep.Effect.ALTER_LOCAL_STATE,
                 touch_vertex_first_time_kernel=self.touch_particles_of_set_first_time_kernel,
                 cell_kernel="""
-                                         ::swift2::kernels::genericInteraction<globaldata::{}>(
+                                         ::exaparty::kernels::genericInteraction<globaldata::{}>(
                                            marker,
                                            localParticles,
                                            activeParticles,
@@ -203,40 +203,40 @@ class testLeapfrogFixedTimeStepSize(Particle):
                 touch_vertex_last_time_kernel=self.touch_particles_of_set_last_time_kernel,
                 includes="""
                                          #include "Constants.h"
-                                         #include "swift2/kernels/ParticleParticleInteraction.h"
+                                         #include "exaparty/kernels/ParticleParticleInteraction.h"
                                          """,
             ),
             AlgorithmStep(
                 name="Kick1",
                 dependencies=AlgorithmStep.Dependencies.SELF,
                 effect=AlgorithmStep.Effect.ALTER_LOCAL_STATE,
-                touch_vertex_first_time_kernel="""::swift2::timestepping::resetMovedParticleMarker(assignedParticles);""",
-                touch_vertex_last_time_kernel="""::swift2::timestepping::computeLeapfrogKickWithGlobalTimeStepSize(
+                touch_vertex_first_time_kernel="""::exaparty::timestepping::resetMovedParticleMarker(assignedParticles);""",
+                touch_vertex_last_time_kernel="""::exaparty::timestepping::computeLeapfrogKickWithGlobalTimeStepSize(
                         assignedParticles);""",
-                prepare_traversal_kernel="""::swift2::timestepping::computeCFLTimeStepSizeSPH<globaldata::{}>();""".format(
+                prepare_traversal_kernel="""::exaparty::timestepping::computeCFLTimeStepSizeSPH<globaldata::{}>();""".format(
                     self.name,
                 ),
                 includes="""
                                          #include "Constants.h"
-                                         #include "swift2/timestepping/Leapfrog.h"
-                                         #include "swift2/timestepping/GlobalTimeStepping.h"
-                                         #include "swift2/timestepping/TimeStepping.h"
+                                         #include "exaparty/timestepping/Leapfrog.h"
+                                         #include "exaparty/timestepping/GlobalTimeStepping.h"
+                                         #include "exaparty/timestepping/TimeStepping.h"
 
-                                         #include "swift2/kernels/kernel_hydro.h"
-                                         #include "swift2/kernels/equation_of_state.h"
+                                         #include "exaparty/kernels/kernel_hydro.h"
+                                         #include "exaparty/kernels/equation_of_state.h"
                                          """,
             ),
             AlgorithmStep(
                 name="Drift",
                 dependencies=AlgorithmStep.Dependencies.SELF,
                 effect=AlgorithmStep.Effect.CHANGE_POSITION_OR_INTERACTION_RADIUS_BUT_NEVER_RERUN,
-                touch_vertex_first_time_kernel="""::swift2::timestepping::resetMovedParticleMarker(assignedParticles);""",
-                touch_vertex_last_time_kernel="""::swift2::timestepping::computeLeapfrogDriftWithGlobalTimeStepSize( assignedParticles );""",
+                touch_vertex_first_time_kernel="""::exaparty::timestepping::resetMovedParticleMarker(assignedParticles);""",
+                touch_vertex_last_time_kernel="""::exaparty::timestepping::computeLeapfrogDriftWithGlobalTimeStepSize( assignedParticles );""",
                 includes="""
                                          #include "Constants.h"
-                                         #include "swift2/timestepping/Leapfrog.h"
-                                         #include "swift2/timestepping/GlobalTimeStepping.h"
-                                         #include "swift2/timestepping/TimeStepping.h"
+                                         #include "exaparty/timestepping/Leapfrog.h"
+                                         #include "exaparty/timestepping/GlobalTimeStepping.h"
+                                         #include "exaparty/timestepping/TimeStepping.h"
                                          """,
             ),
             AlgorithmStep(
@@ -245,7 +245,7 @@ class testLeapfrogFixedTimeStepSize(Particle):
                 effect=AlgorithmStep.Effect.ALTER_LOCAL_STATE,
                 touch_vertex_first_time_kernel=self.touch_particles_of_set_first_time_kernel,
                 cell_kernel="""
-                                         ::swift2::kernels::genericInteraction<globaldata::{}>(
+                                         ::exaparty::kernels::genericInteraction<globaldata::{}>(
                                            marker,
                                            localParticles,
                                            activeParticles,
@@ -262,31 +262,31 @@ class testLeapfrogFixedTimeStepSize(Particle):
                 touch_vertex_last_time_kernel=self.touch_particles_of_set_last_time_kernel,
                 includes="""
                                          #include "Constants.h"
-                                         #include "swift2/kernels/ParticleParticleInteraction.h"
+                                         #include "exaparty/kernels/ParticleParticleInteraction.h"
                                          """,
             ),
             AlgorithmStep(
                 name="Kick2",
                 dependencies=AlgorithmStep.Dependencies.SELF,
                 effect=AlgorithmStep.Effect.ALTER_LOCAL_STATE,
-                touch_vertex_first_time_kernel="""::swift2::timestepping::resetMovedParticleMarker(assignedParticles);""",
-                touch_vertex_last_time_kernel="""::swift2::timestepping::computeLeapfrogKickWithGlobalTimeStepSize(
+                touch_vertex_first_time_kernel="""::exaparty::timestepping::resetMovedParticleMarker(assignedParticles);""",
+                touch_vertex_last_time_kernel="""::exaparty::timestepping::computeLeapfrogKickWithGlobalTimeStepSize(
                         assignedParticles);""",
                 includes="""
                                          #include "Constants.h"
-                                         #include "swift2/timestepping/Leapfrog.h"
-                                         #include "swift2/timestepping/GlobalTimeStepping.h"
-                                         #include "swift2/timestepping/TimeStepping.h"
+                                         #include "exaparty/timestepping/Leapfrog.h"
+                                         #include "exaparty/timestepping/GlobalTimeStepping.h"
+                                         #include "exaparty/timestepping/TimeStepping.h"
 
-                                         #include "swift2/kernels/kernel_hydro.h"
-                                         #include "swift2/kernels/equation_of_state.h"
+                                         #include "exaparty/kernels/kernel_hydro.h"
+                                         #include "exaparty/kernels/equation_of_state.h"
                                          """,
             ),
             AlgorithmStep(
                 name="ReduceGlobalQuantities",
                 dependencies=AlgorithmStep.Dependencies.SELF,
                 effect=AlgorithmStep.Effect.ALTER_GLOBAL_STATE,
-                cell_kernel="""::swift2::statistics::reduceVelocityAndSearchRadius( localParticles );""",
+                cell_kernel="""::exaparty::statistics::reduceVelocityAndSearchRadius( localParticles );""",
                 prepare_traversal_kernel="""
                                          globaldata::{PARTICLE}::getSpecies().clearSearchRadius();
                                          globaldata::{PARTICLE}::getSpecies().clearVelocity();
@@ -295,14 +295,14 @@ class testLeapfrogFixedTimeStepSize(Particle):
                 ),
                 unprepare_traversal_kernel="""
                                          globaldata::{PARTICLE}::getSpecies().setTimeStamp( globaldata::{PARTICLE}::getSpecies().getMinTimeStamp() + globaldata::{PARTICLE}::getSpecies().getMinTimeStepSize(), false );
-                                         ::swift2::statistics::reportSearchRadiusVTDt<globaldata::{PARTICLE}>( "{PARTICLE}" );
+                                         ::exaparty::statistics::reportSearchRadiusVTDt<globaldata::{PARTICLE}>( "{PARTICLE}" );
                                          """.replace(
                     "{PARTICLE}", self.name
                 ),
                 includes="""
                                          #include "Constants.h"
-                                         #include "swift2/statistics/Reports.h"
-                                         #include "swift2/statistics/Statistics.h"
+                                         #include "exaparty/statistics/Reports.h"
+                                         #include "exaparty/statistics/Statistics.h"
                                          """,
             ),
         ]

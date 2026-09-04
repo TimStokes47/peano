@@ -1,7 +1,7 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from swift2.particle.Particle import Particle
-from swift2.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.particle.Particle import Particle
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
 
 import peano4.api
 import dastgen2
@@ -40,7 +40,7 @@ class SPHParticle(Particle):
 
     Implementation specifics:
         - particle interaction kernel realisation
-        - swift project namespace
+        - exaparty project namespace
 
     Particle Data:
         - mass
@@ -73,7 +73,7 @@ class SPHParticle(Particle):
     ## Vectorisation
 
     This type can be used with aggressively optimised kernels if you follow
-    @ref page_swift_performance_optimisation Performance optimisation and use
+    @ref page_exaparty_performance_optimisation Performance optimisation and use
     the map_particle_steps_onto_separate_mesh_traversals_insert_dummy_sweeps_for_coalesced_memory_access
     graph compiler from the Sequential suite; or literally any other
     flavour which yields coalesced memory.
@@ -91,7 +91,7 @@ class SPHParticle(Particle):
         cfl_factor=0.1,
         initial_time_step_size=1e-4,
         constant_time_step_size=True,
-        swift_project_namespace="SPH",
+        exaparty_project_namespace="SPH",
         particles_per_cell=0,  # makes no sense, and should likely be forbidden
         min_h=0.3,
         max_h=0.3,
@@ -133,7 +133,7 @@ class SPHParticle(Particle):
 
         # Project namespace to have consistent use of exported Constants in kernels
         # Not used right now.
-        self._swift_project_namespace = swift_project_namespace
+        self._exaparty_project_namespace = exaparty_project_namespace
 
         # now set these parameters as dastgen attributes
         #  self.set_parameters()
@@ -452,7 +452,7 @@ class SPHParticle(Particle):
         constants in kernels (not used currently).
 
         """
-        namespace = "::".join(self._swift_project_namespace) + "::"
+        namespace = "::".join(self._exaparty_project_namespace) + "::"
 
         print(namespace)
 
@@ -464,7 +464,7 @@ class SPHParticle(Particle):
 
     def switch_namespace_of_all_particle_iterators( self,
                                                     new_namespace,
-                                                    old_namespace = "::swift2::kernels::"
+                                                    old_namespace = "::exaparty::kernels::"
                                                   ):
         """!
 

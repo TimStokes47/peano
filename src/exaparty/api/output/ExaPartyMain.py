@@ -4,7 +4,7 @@ import peano4.api.runner.DefaultSequence
 import os
 
 
-class SWIFTMain(peano4.api.runner.DefaultSequence):
+class ExaPartyMain(peano4.api.runner.DefaultSequence):
   def __init__(self,project,initialisation_steps,solver_steps,overwrite=False):
     """
     
@@ -15,16 +15,16 @@ class SWIFTMain(peano4.api.runner.DefaultSequence):
        behaviour after you've created the main object.
      
     """
-    super(SWIFTMain,self).__init__(project)
+    super(ExaPartyMain,self).__init__(project)
     self.overwrite               = overwrite
     self.d[ "SOLVERSTEP_NAMES" ]         = [x.name for x in solver_steps]
     self.d[ "INITIALISATIONSTEP_NAMES" ] = [x.name for x in initialisation_steps]
 
 
   def _get_header_file_template(self):
-    return os.path.dirname(__file__) + "/SWIFTMain.template.h"
+    return os.path.dirname(__file__) + "/ExaPartyMain.template.h"
     
     
   def _get_implementation_file_template(self):
-    return os.path.dirname(__file__) + "/SWIFTMain.template.cpp"
+    return os.path.dirname(__file__) + "/ExaPartyMain.template.cpp"
 

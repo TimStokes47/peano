@@ -47,21 +47,21 @@ class SynchroniseVerticesWithPreviousMeshSweep(ActionSet):
 
     __Template_TouchVertexFirstTime = jinja2.Template(
         """
-      const std::set<::swift2::TaskNumber> inTaskNumber{ ::swift2::TaskNumber(
+      const std::set<::exaparty::TaskNumber> inTaskNumber{ ::exaparty::TaskNumber(
         fineGridVertex{{MARKER_NAME}}.getNumber(),
-        ::swift2::TaskNumber::TaskAssociation::TouchVertexLastTime
+        ::exaparty::TaskNumber::TaskAssociation::TouchVertexLastTime
       )};
 
-      const ::swift2::TaskNumber outTaskNumber{
+      const ::exaparty::TaskNumber outTaskNumber{
         fineGridVertex{{MARKER_NAME}}.getNumber(),
-        ::swift2::TaskNumber::TaskAssociation::TouchVertexFirstTime
+        ::exaparty::TaskNumber::TaskAssociation::TouchVertexFirstTime
       };
         
       tarch::multicore::Task* newTask = new tarch::multicore::EmptyTask(
         tarch::multicore::Task::DefaultPriority
       );
 
-      tarch::multicore::spawnTask( newTask, ::swift2::flatten(inTaskNumber), ::swift2::flatten(outTaskNumber) );        
+      tarch::multicore::spawnTask( newTask, ::exaparty::flatten(inTaskNumber), ::exaparty::flatten(outTaskNumber) );        
         """
     )
 
@@ -78,8 +78,8 @@ class SynchroniseVerticesWithPreviousMeshSweep(ActionSet):
         result = jinja2.Template(
             """
 #include "tarch/multicore/Task.h"
-#include "swift2/swift2.h"                
-#include "swift2/TaskNumber.h"                
+#include "exaparty/exaparty.h"                
+#include "exaparty/TaskNumber.h"                
 
 #include "vertexdata/{{PARTICLES_CONTAINER}}.h"
 #include "globaldata/{{PARTICLE}}.h"

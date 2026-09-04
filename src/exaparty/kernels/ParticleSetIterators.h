@@ -1,15 +1,15 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 
 #include "ParticleUpdatePredicates.h"
-#include "swift2/CellMetaData.h"
+#include "exaparty/CellMetaData.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
 
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
 
     // template for convenience and code legibility.
@@ -20,7 +20,7 @@ namespace swift2 {
      * Definition of particle update (unary operation)
      *
      * The interface uses the marker, as it is the @ref
-     * swift_particle_new_solver "responsibility of any update to check if the
+     * exaparty_particle_new_solver "responsibility of any update to check if the
      * update is actually valid". That is, an operator should always use a
      * UpdateParticleAssignedToVertexPredicate internally to check if it
      * actually should update. How this knowledge is taken into account is
@@ -34,7 +34,7 @@ namespace swift2 {
      *   const peano4::datamanagement::VertexMarker& marker,
      *   globaldata::MyParticle&                     particle
      * ) -> void {
-     *   if ( ::swift2::kernels::localParticleCanBeMoved(marker, particle) ) {
+     *   if ( ::exaparty::kernels::localParticleCanBeMoved(marker, particle) ) {
      *     [...]
      *     particle.setMoveState(Particle::MoveState::Moved);
      *   }
@@ -45,18 +45,18 @@ namespace swift2 {
      * If you alter the particle position, you have to reset the MoveState.
      * Other kernels do not have any additional bookkeeping.
      *
-     * Swift offers a set of pre-defined timestepping and reduction kernels.
+     * ExaParty offers a set of pre-defined timestepping and reduction kernels.
      * These are templates and hence have to be specialised:
      *
      * ~~~~~~~~~~~~~~~~~~~~~~~~
      * AlgorithmStep(
      *   [...]
-     *   touch_vertex_first_time_kernel = """::swift2::kernels::forAllParticles(
+     *   touch_vertex_first_time_kernel = """::exaparty::kernels::forAllParticles(
      * marker, assignedParticles,
-     * ::swift2::timestepping::resetMovedParticleMarker<globaldata::{}>
+     * ::exaparty::timestepping::resetMovedParticleMarker<globaldata::{}>
      * );""".format( my_particle_type ), touch_vertex_last_time_kernel  =
-     * """::swift2::kernels::forAllParticles( marker, assignedParticles,
-     * ::swift2::timestepping::computeExplicitEulerWithGlobalTimeStepSize<globaldata::{}>
+     * """::exaparty::kernels::forAllParticles( marker, assignedParticles,
+     * ::exaparty::timestepping::computeExplicitEulerWithGlobalTimeStepSize<globaldata::{}>
      * );""".format( my_particle_type ),
      *   [...]
      * )
@@ -90,7 +90,7 @@ namespace swift2 {
      * However, I usually use it without any pointer semantics.
      *
      * The interface uses the marker, as it is the @ref
-     * swift_particle_new_solver "responsibility of any update to check if the
+     * exaparty_particle_new_solver "responsibility of any update to check if the
      * update is actually valid". That is, a binary operator should always use a
      * UpdateParticlePairWithinCellPredicate internally to check if it actually
      * should update. How this knowledge is taken into account is however up to
@@ -108,7 +108,7 @@ namespace swift2 {
      *   globaldata::MyParticle&                   activeParticle
      * ) {
      *   if (
-     * ::swift2::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle(
+     * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle(
      *     marker,
      *     localParticle,
      *     activeParticle
@@ -140,7 +140,7 @@ namespace swift2 {
      *   globaldata::MyParticle&                   activeParticle
      * ) -> void {
      *   if (
-     * ::swift2::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle(
+     * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle(
      *     marker,
      *     localParticle,
      *     activeParticle
@@ -247,14 +247,14 @@ namespace swift2 {
      * The most popular predicates therefore are:
      *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * ::swift2::kernels::localParticleCanBeUpdatedInVertexKernel<typename
+     * ::exaparty::kernels::localParticleCanBeUpdatedInVertexKernel<typename
      * ParticleContainer::DoFType>
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      *
      * and
      *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * ::swift2::kernels::alwaysUpdateInVertexKernel<typename
+     * ::exaparty::kernels::alwaysUpdateInVertexKernel<typename
      * ParticleContainer::DoFType>
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      *
@@ -283,7 +283,7 @@ namespace swift2 {
       const peano4::datamanagement::VertexMarker& marker,
       auto&                                       assignedParticles,
       int  numberOfCoalescedAssignedParticles,
-      ::swift2::kernels::kernelrealisation::GenericRealisation realisation
+      ::exaparty::kernels::kernelrealisation::GenericRealisation realisation
     );
 
 
@@ -296,7 +296,7 @@ namespace swift2 {
       const peano4::datamanagement::VertexMarker& marker,
       auto&                                       assignedParticles,
       int numberOfCoalescedAssignedParticles,
-      ::swift2::kernels::kernelrealisation::GenericOffloadRealisation
+      ::exaparty::kernels::kernelrealisation::GenericOffloadRealisation
     );
 
     /**
@@ -314,7 +314,7 @@ namespace swift2 {
      * should check if there's a self-interaction and mask it out if
      * appropriate.
      *
-     * In Swift's terminology, we rely on a non-symmetric XXX calculation where
+     * In ExaParty's terminology, we rely on a non-symmetric XXX calculation where
      * XXX is the compute kernel (such as density): Our implementations loops
      * over all local particles (outer loop) and, per local particle then over
      * all active particles (inner loop). Inside this second loop, we compute a
@@ -375,10 +375,10 @@ namespace swift2 {
      * ~~~~~~~~~~~~~~~~~~~~~~~
      *       UpdateParticleAssignedToCellPredicate<PCParticle<LocalParticleContainer>>
      *                 localParticlePredicate =
-     * ::swift2::kernels::alwaysUpdateInCellKernel<PCParticle<LocalParticleContainer>>,
+     * ::exaparty::kernels::alwaysUpdateInCellKernel<PCParticle<LocalParticleContainer>>,
      *       UpdateParticlePairWithinCellPredicate<PCParticle<LocalParticleContainer>>
      *                 particlePairPredicate =
-     * ::swift2::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle<PCParticle<LocalParticleContainer>>
+     * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle<PCParticle<LocalParticleContainer>>
      * ~~~~~~~~~~~~~~~~~~~~~~~
      *
      * However, you can use a more bespoke version as follows:
@@ -386,10 +386,10 @@ namespace swift2 {
      * ~~~~~~~~~~~~~~~~~~~~~~~
      *       UpdateParticleAssignedToCellPredicate<PCParticle<LocalParticleContainer>>
      *                 localParticlePredicate =
-     * ::swift2::kernels::localParticleCanBeUpdatedInCellKernel<PCParticle<LocalParticleContainer>>,
+     * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernel<PCParticle<LocalParticleContainer>>,
      *       UpdateParticlePairWithinCellPredicate<PCParticle<LocalParticleContainer>>
      *                 particlePairPredicate =
-     * ::swift2::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle<PCParticle<LocalParticleContainer>>
+     * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle<PCParticle<LocalParticleContainer>>
      * ~~~~~~~~~~~~~~~~~~~~~~~
      *
      *
@@ -400,15 +400,15 @@ namespace swift2 {
      *   have no guarantee of the pointers in the list, i.e. that they are in
      *   any way consecutive.
      * @see Variant accepting
-     * ::swift2::kernels::kernelrealisation::CoalescedMemoryRealisation for a
+     * ::exaparty::kernels::kernelrealisation::CoalescedMemoryRealisation for a
      * discussion of memory ordering optimisation.
      */
     template <auto PairOperator, auto LocalPredicate, auto PairPredicate>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::GenericRealisation                        realisation
+      ::exaparty::kernels::kernelrealisation::GenericRealisation                        realisation
     );
 
     /**
@@ -417,10 +417,10 @@ namespace swift2 {
      */
     template <auto PairOperator, auto LocalPredicate, auto PairPredicate>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::GenericOffloadRealisation
+      ::exaparty::kernels::kernelrealisation::GenericOffloadRealisation
     );
 
     template <auto ParticleOp, auto PredicateOp>
@@ -428,7 +428,7 @@ namespace swift2 {
       const peano4::datamanagement::VertexMarker& marker,
       auto&                                       assignedParticles,
       int                                         numberOfAssignedParticles,
-      ::swift2::kernels::kernelrealisation::CoalescedMemoryRealisation
+      ::exaparty::kernels::kernelrealisation::CoalescedMemoryRealisation
         realisation
     );
 
@@ -437,7 +437,7 @@ namespace swift2 {
       const peano4::datamanagement::CellMarker& marker,
       auto&                                     localParticles,
       const std::vector<int>&                   numberOfLocalParticles,
-      ::swift2::kernels::kernelrealisation::CoalescedMemoryRealisation
+      ::exaparty::kernels::kernelrealisation::CoalescedMemoryRealisation
         realisation
     );
 
@@ -446,7 +446,7 @@ namespace swift2 {
       const peano4::datamanagement::VertexMarker& marker,
       auto&                                       assignedParticles,
       int                                         numberOfAssignedParticles,
-      ::swift2::kernels::kernelrealisation::CoalescedMemoryOffloadRealisation
+      ::exaparty::kernels::kernelrealisation::CoalescedMemoryOffloadRealisation
         realisation
     );
 
@@ -455,43 +455,43 @@ namespace swift2 {
       const peano4::datamanagement::CellMarker& marker,
       auto&                                     localParticles,
       const std::vector<int>&                   numberOfLocalParticles,
-      ::swift2::kernels::kernelrealisation::CoalescedMemoryOffloadRealisation
+      ::exaparty::kernels::kernelrealisation::CoalescedMemoryOffloadRealisation
         realisation
     );
 
     template <auto PairOperator, auto LocalPredicate, auto PairPredicate>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         CoalescedMemoryActiveLocalRealisation realisation
     );
 
     template <auto PairOperator, auto LocalPredicate, auto PairPredicate>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         CoalescedMemoryActiveLocalOffloadRealisation realisation
     );
 
     template <auto PairOperator, auto LocalPredicate, auto PairPredicate>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         EvaluatePredicateInPrologueActiveLocalRealisation realisation
     );
 
     template <auto PairOperator, auto LocalPredicate, auto PairPredicate>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         EvaluatePredicateInPrologueLocalActiveRealisation realisation
     );
 
@@ -505,7 +505,7 @@ namespace swift2 {
      *
      * Before you continue to read, please read also the documentation
      * of forAllParticles() that accepts
- ::swift2::kernels::kernelrealisation::CoalescedMemoryRealisation
+ ::exaparty::kernels::kernelrealisation::CoalescedMemoryRealisation
      * as argument. This routine mirrors all ideas described there. The
      * only "difference" is that both the local and active particle sets
      * are clustered, i.e. we get sequences of pointers, but we know that
@@ -599,10 +599,10 @@ namespace swift2 {
       auto LocalPredicateOp,
       auto ParticlePairPredicateOp>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         CoalescedMemoryActiveLocalRealisation realisation
     );
 
@@ -611,10 +611,10 @@ namespace swift2 {
       auto LocalPredicateOp,
       auto ParticlePairPredicateOp>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         CoalescedMemoryLocalActiveRealisation realisation
     );
 
@@ -623,10 +623,10 @@ namespace swift2 {
       auto LocalPredicateOp,
       auto ParticlePairPredicateOp>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         CoalescedMemoryLocalActiveOffloadRealisation realisation
     );
 
@@ -642,7 +642,7 @@ namespace swift2 {
       const peano4::datamanagement::VertexMarker& marker,
       auto&                                       assignedParticles,
       int numberOfCoalescedAssignedParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         EvaluatePredicateInPrologueRealisation
     );
 
@@ -651,7 +651,7 @@ namespace swift2 {
       const peano4::datamanagement::CellMarker& marker,
       auto&                                     localParticles,
       const std::vector<int>&                   numberOfCoalescedLocalParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         EvaluatePredicateInPrologueRealisation
     );
 
@@ -659,24 +659,24 @@ namespace swift2 {
      * Move all the predicate evaluations into dedicated prologue
      *
      * Alternative implementation to the one with
-     * ::swift2::kernels::kernelrealisation::CoalescedMemoryRealisation. We
+     * ::exaparty::kernels::kernelrealisation::CoalescedMemoryRealisation. We
      * run over the particles and first
      */
     template <typename LocalParticleContainer, typename ActiveParticleContainer>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         EvaluatePredicateInPrologueActiveLocalRealisation realisation
     );
 
     template <typename LocalParticleContainer, typename ActiveParticleContainer>
     void forAllParticlePairs(
-      const swift2::CellMetaData& cellMetaData,
+      const exaparty::CellMetaData& cellMetaData,
       auto&                       localParticles,
       auto&                       activeParticles,
-      ::swift2::kernels::kernelrealisation::
+      ::exaparty::kernels::kernelrealisation::
         EvaluatePredicateInPrologueLocalActiveRealisation realisation
     );
 
@@ -731,7 +731,7 @@ namespace swift2 {
         );
     } // namespace internal
   }   // namespace kernels
-} // namespace swift2
+} // namespace exaparty
 
 
 #include "ParticleSetIterators.cpph"

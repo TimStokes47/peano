@@ -9,14 +9,14 @@ import os
 import sys
 import copy
 
-from swift2.particle.Particle import Particle
-from swift2.actionsets.DynamicMeshRefinementAnalysis import (
+from exaparty.api.particle.Particle import Particle
+from exaparty.api.actionsets.DynamicMeshRefinementAnalysis import (
     DynamicMeshRefinementAnalysis,
 )
-from swift2.output.SWIFTMain import SWIFTMain
-from swift2.actionsets.Cleanup import Cleanup
+from exaparty.api.output.ExaPartyMain import ExaPartyMain
+from exaparty.api.actionsets.Cleanup import Cleanup
 
-import swift2.api.graphcompiler
+import exaparty.api.graphcompiler
 
 from .ProjectRealisation import *
 
@@ -27,12 +27,12 @@ from abc import abstractmethod
 class Project(object):
     """!
 
-    Swift2 project
+    ExaParty project
 
-    Represents an abstract SWIFT 2 project. An SWIFT 2 project is a Peano 4
+    Represents an abstract ExaParty project. An ExaParty project is a Peano 4
     project with a particular set of actions (algorithmic phases)
     that you can choose from and with particular solver types. It
-    realises a builder mechanism, i.e. you build up your SWIFT 2
+    realises a builder mechanism, i.e. you build up your ExaParty
     project and then you finally tell the project "give me the Peano 4
     project". From hereon, you can use this Peano 4 project to actually
     set up the Peano 4 application.
@@ -43,7 +43,7 @@ class Project(object):
 
     """
 
-    def __init__(self, namespace, project_name, directory=".", executable="swift2"):
+    def __init__(self, namespace, project_name, directory=".", executable="exaparty"):
         self._project = peano4.api.Project(namespace, project_name, directory)
 
         self._domain_offset = [0.0, 0.0, 0.0]
@@ -78,8 +78,8 @@ class Project(object):
         self.algorithm_steps_task_graph_compiler = None
         self.initialisation_steps_task_graph_compiler = None
         # Default values used to be:
-        # swift2.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_multiscale_sort_scattered_memory
-        # swift2.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_multiscale_sort_scattered_memory
+        # exaparty.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_multiscale_sort_scattered_memory
+        # exaparty.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_multiscale_sort_scattered_memory
 
     def set_load_balancing(self, load_balancer_name, load_balancer_arguments):
         """
@@ -117,11 +117,11 @@ class Project(object):
         mode: peano4.api.output.CompileMode
         """
 
-        swift2dir = os.path.join(src_path, "src", "swift2")
+        exapartydir = os.path.join(src_path, "src", "exaparty")
         peano4dir = os.path.join(src_path, "src", "peano4")
         tarchdir = os.path.join(src_path, "src", "tarch")
 
-        for d in (swift2dir, peano4dir, tarchdir):
+        for d in (exapartydir, peano4dir, tarchdir):
             if not os.path.exists(d):
                 dir_stripped = d[len(src_path) :]
                 raise FileNotFoundError(
@@ -168,8 +168,8 @@ class Project(object):
     def __export_constants(self):
         """
 
-        We export SWIFT's constants. Besides the constants from SWIFT,
-        I also export some parameters from Peano onto the SWIFT constants
+        We export ExaParty's constants. Besides the constants from ExaParty,
+        I also export some parameters from Peano onto the ExaParty constants
         file. Therefore, it is important that you parse the configure output
         before we export the constants.
 
@@ -224,7 +224,7 @@ class Project(object):
 
         readme_text = """
 
-### SWIFT 2
+### ExaParty
 
 This code uses the second generation of the SWIFT code controlled through
 its Python API. Under the hood it uses Peano 4. We do not yet have a release
@@ -623,8 +623,8 @@ levels.
             vertex_marker_for_tasks = (
                 peano4.api.toolbox.api.EnumerateCellsAndVertices.create_vertex_marker(
                     task_name=current_species_set.name,
-                    full_qualified_enumerator_type="::swift2::TaskEnumerator",
-                    enumerator_include=""" #include "swift2/TaskEnumerator.h" """,
+                    full_qualified_enumerator_type="::exaparty::TaskEnumerator",
+                    enumerator_include=""" #include "exaparty/TaskEnumerator.h" """,
                 )
             )
 
@@ -697,7 +697,7 @@ levels.
         for initialisation_step in initialisation_steps:
             self._project.solversteps.add_step(initialisation_step)
 
-        self._project.main = SWIFTMain(
+        self._project.main = ExaPartyMain(
             self._project, initialisation_steps, solver_steps
         )
 
@@ -784,17 +784,17 @@ levels.
             if storage == Storage_Scattered:
                 if sorting == Sorting_MultiscaleSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_multiscale_sort_scattered_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_multiscale_sort_scattered_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_multiscale_sort_scattered_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_multiscale_sort_scattered_memory
                     )
                 elif sorting == Sorting_BucketSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_bucket_sort_scattered_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_bucket_sort_scattered_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_bucket_sort_scattered_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_bucket_sort_scattered_memory
                     )
                 else:
                     raise NotImplementedError()
@@ -805,17 +805,17 @@ levels.
             ):
                 if sorting == Sorting_MultiscaleSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_multiscale_sort_coalesced_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_multiscale_sort_coalesced_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_multiscale_sort_coalesced_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_multiscale_sort_coalesced_memory
                     )
                 elif sorting == Sorting_BucketSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_bucket_sort_coalesced_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_separate_mesh_traversals_bucket_sort_coalesced_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_bucket_sort_coalesced_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_separate_mesh_traversals_bucket_sort_coalesced_memory
                     )
                 else:
                     raise NotImplementedError()
@@ -827,17 +827,17 @@ levels.
             if storage == Storage_Scattered:
                 if sorting == Sorting_MultiscaleSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_multisweep_task_graph_multiscale_sort_scattered_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_multisweep_task_graph_multiscale_sort_scattered_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_multisweep_task_graph_multiscale_sort_scattered_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_multisweep_task_graph_multiscale_sort_scattered_memory
                     )
                 elif sorting == Sorting_BucketSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_multisweep_task_graph_bucket_sort_scattered_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_multisweep_task_graph_bucket_sort_scattered_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_multisweep_task_graph_bucket_sort_scattered_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_multisweep_task_graph_bucket_sort_scattered_memory
                     )
                 else:
                     raise NotImplementedError()
@@ -848,17 +848,17 @@ levels.
             ):
                 if sorting == Sorting_MultiscaleSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_multisweep_task_graph_multiscale_sort_coalesced_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_multisweep_task_graph_multiscale_sort_coalesced_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_multisweep_task_graph_multiscale_sort_coalesced_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_multisweep_task_graph_multiscale_sort_coalesced_memory
                     )
                 elif sorting == Sorting_BucketSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_multisweep_task_graph_bucket_sort_coalesced_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_multisweep_task_graph_bucket_sort_coalesced_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_multisweep_task_graph_bucket_sort_coalesced_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_multisweep_task_graph_bucket_sort_coalesced_memory
                     )
                 else:
                     raise NotImplementedError()
@@ -869,17 +869,17 @@ levels.
             if storage == Storage_Scattered:
                 if sorting == Sorting_MultiscaleSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_task_graph_multiscale_sort_scattered_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_task_graph_multiscale_sort_scattered_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_task_graph_multiscale_sort_scattered_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_task_graph_multiscale_sort_scattered_memory
                     )
                 elif sorting == Sorting_BucketSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_task_graph_bucket_sort_scattered_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_task_graph_bucket_sort_scattered_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_task_graph_bucket_sort_scattered_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_task_graph_bucket_sort_scattered_memory
                     )
                 else:
                     raise NotImplementedError()
@@ -890,17 +890,17 @@ levels.
             ):
                 if sorting == Sorting_MultiscaleSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_task_graph_multiscale_sort_coalesced_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_task_graph_multiscale_sort_coalesced_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_task_graph_multiscale_sort_coalesced_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_task_graph_multiscale_sort_coalesced_memory
                     )
                 elif sorting == Sorting_BucketSort:
                     self.algorithm_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.particle_steps_onto_task_graph_bucket_sort_coalesced_memory
+                        exaparty.api.graphcompiler.particle_steps_onto_task_graph_bucket_sort_coalesced_memory
                     )
                     self.initialisation_steps_task_graph_compiler = (
-                        swift2.api.graphcompiler.initialisation_steps_onto_task_graph_bucket_sort_coalesced_memory
+                        exaparty.api.graphcompiler.initialisation_steps_onto_task_graph_bucket_sort_coalesced_memory
                     )
                 else:
                     raise NotImplementedError()
@@ -927,11 +927,11 @@ levels.
                 pass
             elif kernel_optimisation == KernelOptimisation_VectoriseAll:
                 newp.switch_namespace_of_all_particle_iterators(
-                    "::swift2::kernels::coalesced::"
+                    "::exaparty::kernels::coalesced::"
                 )
             elif kernel_optimisation == KernelOptimisation_VectoriseDistanceChecks:
                 newp.switch_namespace_of_all_particle_iterators(
-                    "::swift2::kernels::coalesced::prefixcheck::"
+                    "::exaparty::kernels::coalesced::prefixcheck::"
                 )
             else:
                 raise NotImplementedError()

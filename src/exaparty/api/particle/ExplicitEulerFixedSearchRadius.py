@@ -1,7 +1,7 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from swift2.particle.Particle import Particle
-from swift2.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.particle.Particle import Particle
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
 
 import peano4.api
 
@@ -46,19 +46,19 @@ class ExplicitEulerFixedSearchRadius(Particle):
     - touch_particles_of_set_last_time_kernel
 
     Each of these is unset (None) by default, but you can make it hold any
-    reasonable C++ string. The Swift2ish way to use them is ot use the
+    reasonable C++ string. The ExaPartyish way to use them is ot use the
     iterators from ParticleSetIterators.h to run over the relevant particles.
 
     For the two vertex kernels, this would look similar to
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    touch_vertex_first_time_kernel = "::swift2::kernels::forAllParticles( marker, assignedParticles, numberOfCoalescedAssignedParticles, myFunctor );"
+    touch_vertex_first_time_kernel = "::exaparty::kernels::forAllParticles( marker, assignedParticles, numberOfCoalescedAssignedParticles, myFunctor );"
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     For the cell, it resembles
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ::swift2::kernels::forAllParticlePairs( marker, localParticles, activeParticles, myFunction);
+    ::exaparty::kernels::forAllParticlePairs( marker, localParticles, activeParticles, myFunction);
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     The documentation of the actual operators ParticleBinaryOperator and
@@ -184,35 +184,35 @@ class ExplicitEulerFixedSearchRadius(Particle):
                 name="UpdatePositionAndVelocity",
                 dependencies=AlgorithmStep.Dependencies.SELF,
                 effect=AlgorithmStep.Effect.CHANGE_POSITION_OR_INTERACTION_RADIUS,
-                touch_vertex_first_time_kernel=f"""::swift2::kernels::forAllParticles( marker, assignedParticles, numberOfCoalescedAssignedParticles, ::swift2::timestepping::resetMovedParticleMarker<globaldata::{PARTICLE}> );""",
+                touch_vertex_first_time_kernel=f"""::exaparty::kernels::forAllParticles( marker, assignedParticles, numberOfCoalescedAssignedParticles, ::exaparty::timestepping::resetMovedParticleMarker<globaldata::{PARTICLE}> );""",
                 touch_vertex_last_time_kernel=f"""
                 auto oldParticlePositions = ::toolbox::particles::assignmentchecks::recordParticlePositions(assignedParticles);
-                ::swift2::kernels::forAllParticles(marker, assignedParticles, numberOfCoalescedAssignedParticles, ::swift2::timestepping::computeExplicitEulerWithGlobalTimeStepSize<globaldata::{PARTICLE}> );
+                ::exaparty::kernels::forAllParticles(marker, assignedParticles, numberOfCoalescedAssignedParticles, ::exaparty::timestepping::computeExplicitEulerWithGlobalTimeStepSize<globaldata::{PARTICLE}> );
                 ::toolbox::particles::assignmentchecks::traceParticleMovements(assignedParticles, oldParticlePositions, marker.x(), marker.h(), _spacetreeId);
                 """,
-                prepare_traversal_kernel=f"""::swift2::timestepping::computeAdmissibleTimeStepSizeFromGlobalMeshSizeAndMaximumVelocity<globaldata::{PARTICLE}>({CFL_FACTOR},{TIME_STEP_SIZE});""",
+                prepare_traversal_kernel=f"""::exaparty::timestepping::computeAdmissibleTimeStepSizeFromGlobalMeshSizeAndMaximumVelocity<globaldata::{PARTICLE}>({CFL_FACTOR},{TIME_STEP_SIZE});""",
                 includes="""
-                                         #include "swift2/timestepping/Euler.h"
-                                         #include "swift2/timestepping/GlobalTimeStepping.h"
-                                         #include "swift2/timestepping/TimeStepping.h"
+                                         #include "exaparty/timestepping/Euler.h"
+                                         #include "exaparty/timestepping/GlobalTimeStepping.h"
+                                         #include "exaparty/timestepping/TimeStepping.h"
                 """,
             ),
             "ReduceVelocityAndDetermineTimeStepSize": AlgorithmStep(
                 name="ReduceVelocityAndDetermineTimeStepSize",
                 dependencies=AlgorithmStep.Dependencies.SELF,
                 effect=AlgorithmStep.Effect.CHANGE_POSITION_OR_INTERACTION_RADIUS,
-                prepare_traversal_kernel=f"""::swift2::timestepping::computeAdmissibleTimeStepSizeFromGlobalMeshSizeAndMaximumVelocity<globaldata::{PARTICLE}>({CFL_FACTOR},{TIME_STEP_SIZE});""",
+                prepare_traversal_kernel=f"""::exaparty::timestepping::computeAdmissibleTimeStepSizeFromGlobalMeshSizeAndMaximumVelocity<globaldata::{PARTICLE}>({CFL_FACTOR},{TIME_STEP_SIZE});""",
                 includes="""
-                                         #include "swift2/timestepping/Euler.h"
-                                         #include "swift2/timestepping/GlobalTimeStepping.h"
-                                         #include "swift2/timestepping/TimeStepping.h"
+                                         #include "exaparty/timestepping/Euler.h"
+                                         #include "exaparty/timestepping/GlobalTimeStepping.h"
+                                         #include "exaparty/timestepping/TimeStepping.h"
                 """,
             ),
             "ReduceGlobalQuantities": AlgorithmStep(
                 name="ReduceGlobalQuantities",
                 dependencies=AlgorithmStep.Dependencies.SELF,
                 effect=AlgorithmStep.Effect.ALTER_GLOBAL_STATE,
-                touch_vertex_first_time_kernel=f"""::swift2::kernels::forAllParticles( marker, assignedParticles, numberOfCoalescedAssignedParticles, numberOfCoalescedAssignedParticles, ::swift2::statistics::reduceVelocityAndSearchRadius<globaldata::{PARTICLE}> );""",
+                touch_vertex_first_time_kernel=f"""::exaparty::kernels::forAllParticles( marker, assignedParticles, numberOfCoalescedAssignedParticles, numberOfCoalescedAssignedParticles, ::exaparty::statistics::reduceVelocityAndSearchRadius<globaldata::{PARTICLE}> );""",
                 prepare_traversal_kernel=f"""
                     globaldata::{PARTICLE}::getSpecies().clearSearchRadius();
                     globaldata::{PARTICLE}::getSpecies().clearVelocity();
@@ -220,11 +220,11 @@ class ExplicitEulerFixedSearchRadius(Particle):
                 unprepare_traversal_kernel=f"""
                                          globaldata::{PARTICLE}::getSpecies().allReduce();
                                          globaldata::{PARTICLE}::getSpecies().setTimeStamp( globaldata::{PARTICLE}::getSpecies().getMinTimeStamp() + globaldata::{PARTICLE}::getSpecies().getMinTimeStepSize(), false );
-                                         ::swift2::statistics::reportSearchRadiusVTDt<globaldata::{PARTICLE}>( "{PARTICLE}" );
+                                         ::exaparty::statistics::reportSearchRadiusVTDt<globaldata::{PARTICLE}>( "{PARTICLE}" );
                 """,
                 includes="""
-                                         #include "swift2/statistics/Reports.h"
-                                         #include "swift2/statistics/Statistics.h"
+                                         #include "exaparty/statistics/Reports.h"
+                                         #include "exaparty/statistics/Statistics.h"
                 """,
             ),
         }

@@ -29,7 +29,7 @@ class UpdateParticleMarker(ActionSet):
     first"-policy.
 
     The realisation of this marker is straightforward: The 
-    swift2.particle.Particle base class defines the marker, which is a simple
+    exaparty.api.particle.Particle base class defines the marker, which is a simple
     bool. When we touch a vertex for the first time, we implicitly also touch
     all particles associated with this vertex for the first time. So we set 
     the marker to false.
@@ -77,9 +77,9 @@ class UpdateParticleMarker(ActionSet):
   __Template_TouchVertexFirstTimeAsTask = jinja2.Template("""
   auto& particles  = fineGridVertex{{PARTICLES_CONTAINER}};
 
-  const ::swift2::TaskNumber taskNumberToBeUsed{
+  const ::exaparty::TaskNumber taskNumberToBeUsed{
       fineGridVertex{{MARKER_NAME}}.getNumber(),
-      ::swift2::TaskNumber::TaskAssociation::TouchVertexFirstTime
+      ::exaparty::TaskNumber::TaskAssociation::TouchVertexFirstTime
     };
 
   tarch::multicore::Task* newTask = new tarch::multicore::TaskWithCopyOfFunctor (
@@ -96,13 +96,13 @@ class UpdateParticleMarker(ActionSet):
     #endif
   );
   
-  tarch::multicore::spawnTask( newTask, std::set<int>{::swift2::flatten(taskNumberToBeUsed)}, ::swift2::flatten(taskNumberToBeUsed) );
+  tarch::multicore::spawnTask( newTask, std::set<int>{::exaparty::flatten(taskNumberToBeUsed)}, ::exaparty::flatten(taskNumberToBeUsed) );
 """)
 
 
   __Template_TouchCellLastTime = jinja2.Template("""
   for (int i=0; i<TwoPowerD; i++) {
-    ::swift2::markAllParticlesAsUpdatedWithinCell( fineGridVertices{{PARTICLES_CONTAINER}}(i), marker );
+    ::exaparty::markAllParticlesAsUpdatedWithinCell( fineGridVertices{{PARTICLES_CONTAINER}}(i), marker );
   }
 """)
 
@@ -142,7 +142,7 @@ class UpdateParticleMarker(ActionSet):
     return jinja2.Template( """
 #include "vertexdata/{{PARTICLES_CONTAINER}}.h"
 #include "globaldata/{{PARTICLE}}.h"
-#include "swift2/swift2.h"
-#include "swift2/TaskNumber.h"
+#include "exaparty/exaparty.h"
+#include "exaparty/TaskNumber.h"
 """ ).render( **self.d )
 

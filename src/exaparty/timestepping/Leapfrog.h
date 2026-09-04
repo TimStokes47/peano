@@ -1,4 +1,4 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
@@ -6,7 +6,7 @@
 #include "peano4/datamanagement/VertexMarker.h"
 
 
-namespace swift2 {
+namespace exaparty {
   namespace timestepping {
     /**
      * Drift step.
@@ -62,7 +62,7 @@ namespace swift2 {
       const Particle&                             localParticle
     );
   } // namespace timestepping
-} // namespace swift2
+} // namespace exaparty
 
 
 #include "Leapfrog.cpph"

@@ -1,7 +1,7 @@
-# This file is part of the SWIFT2 project. For conditions of distribution and
+# This file is part of the ExaParty project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from swift2.particle.Particle import Particle
-from swift2.particle.AlgorithmStep import AlgorithmStep
+from exaparty.api.particle.Particle import Particle
+from exaparty.api.particle.AlgorithmStep import AlgorithmStep
 
 import peano4.api
 import dastgen2
@@ -719,9 +719,9 @@ class DastgenTestDummyParticle(Particle):
             name="dummyDastgenTest",
             dependencies=AlgorithmStep.Dependencies.SELF,
             effect=AlgorithmStep.Effect.ALTER_LOCAL_STATE,
-            touch_vertex_first_time_kernel="""::swift2::dastgenTest::checkDastgen(assignedParticles);""",
+            touch_vertex_first_time_kernel="""::exaparty::dastgenTest::checkDastgen(assignedParticles);""",
             prepare_traversal_kernel="""
-                ::swift2::dastgenTest::dummyMoveForwardInTime<globaldata::{}>();""".format(
+                ::exaparty::dastgenTest::dummyMoveForwardInTime<globaldata::{}>();""".format(
                 self.name
             ),
             includes="""
@@ -737,10 +737,10 @@ class DastgenTestDummyParticle(Particle):
             name="dummyDastgenTest2",
             dependencies=AlgorithmStep.Dependencies.SELF,
             effect=AlgorithmStep.Effect.ALTER_LOCAL_STATE,
-            touch_vertex_last_time_kernel="""::swift2::dastgenTest::checkDastgen(assignedParticles);""",
+            touch_vertex_last_time_kernel="""::exaparty::dastgenTest::checkDastgen(assignedParticles);""",
             unprepare_traversal_kernel="""
                                        globaldata::{PARTICLE}::getSpecies().setTimeStamp( globaldata::{PARTICLE}::getSpecies().getMinTimeStamp() + globaldata::{PARTICLE}::getSpecies().getMinTimeStepSize(), false );
-                                       ::swift2::dastgenTest::reportStep<globaldata::{PARTICLE}>( "{PARTICLE}" );
+                                       ::exaparty::dastgenTest::reportStep<globaldata::{PARTICLE}>( "{PARTICLE}" );
                                        """.replace(
                 "{PARTICLE}", self.name
             ),
@@ -775,7 +775,7 @@ class DastgenTestDummyParticle(Particle):
         constants in kernels (not used currently).
 
         """
-        namespace = "::".join(self._swift_project_namespace) + "::"
+        namespace = "::".join(self._exaparty_project_namespace) + "::"
 
         print(namespace)
 

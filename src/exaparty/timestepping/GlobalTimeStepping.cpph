@@ -2,7 +2,7 @@
 
 
 template <typename Particle>
-void swift2::timestepping::
+void exaparty::timestepping::
   computeAdmissibleTimeStepSizeFromGlobalMeshSizeAndMaximumVelocity(
     const double cflFactor,
     const double initialTimeStepSize,
@@ -27,7 +27,7 @@ void swift2::timestepping::
 
 
 template <typename Particle>
-void swift2::timestepping::computeCFLTimeStepSizeSPH() {
+void exaparty::timestepping::computeCFLTimeStepSizeSPH() {
 
   assert(false);
   // Don't use this.

@@ -1,7 +1,12 @@
-""" This file is part of the SWIFT 2 project. For conditions of distribution and 
+""" This file is part of the ExaParty project. For conditions of distribution and
  use, please see the copyright notice at www.peano-framework.org
 """
 
-import swift2.api.actionsets
-import swift2.api.graphcompiler
-import swift2.api.boundaryconditions
+import exaparty.api.input
+import exaparty.api.scenario
+import exaparty.api.particle
+import exaparty.api.actionsets
+import exaparty.api.graphcompiler
+import exaparty.api.boundaryconditions
+
+from .Project import Project

@@ -1,9 +1,9 @@
 #include "NohProblem.h"
 
-#include "swift2/kernels/legacy/equation_of_state.h"
+#include "exaparty/kernels/legacy/equation_of_state.h"
 
 
-void benchmarks::swift2::hydro::kernel_throughput::initNohProblemIC(
+void benchmarks::exaparty::hydro::kernel_throughput::initNohProblemIC(
   globaldata::HydroPart&  particle,
   const tarch::la::Vector<Dimensions,double>& h,
   double HYDRO_PART_NUMBER,
@@ -26,11 +26,11 @@ void benchmarks::swift2::hydro::kernel_throughput::initNohProblemIC(
   particle.setU( 1e-6 );
 
   /* Compute the pressure from the EoS */
-  const double pressure = ::swift2::kernels::legacy::eos::gas_pressure_from_internal_energy( particle.getDensity(), particle.getU() );
+  const double pressure = ::exaparty::kernels::legacy::eos::gas_pressure_from_internal_energy( particle.getDensity(), particle.getU() );
   particle.setPressure( pressure );
 
   /* Compute the sound speed */
-  const double soundspeed = ::swift2::kernels::legacy::eos::gas_soundspeed_from_internal_energy( particle.getU() );
+  const double soundspeed = ::exaparty::kernels::legacy::eos::gas_soundspeed_from_internal_energy( particle.getU() );
   particle.setSoundSpeed(soundspeed);
 
   /*
@@ -86,7 +86,7 @@ void benchmarks::swift2::hydro::kernel_throughput::initNohProblemIC(
   particle.setCellHasUpdatedParticle(false);
 
   /* Verbose */
-  static tarch::logging::Log _log( "swift2::scenario" );
+  static tarch::logging::Log _log( "exaparty::scenario" );
   logDebug( "initNohProblemIC()", "dist = " << dist );
   logDebug( "initNohProblemIC()", "v_ini = " << v_ini );
   logDebug( "initNohProblemIC()", "Particle: " << particle.toString() );

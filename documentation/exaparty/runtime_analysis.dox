@@ -1,11 +1,11 @@
 /**
 
- @page swift_runtime_analysis Runtime analysis
+ @page exaparty_runtime_analysis Runtime analysis
 
- Swift 2 comes along with a set of Python scripts to analyse the code's runtime
+ ExaParty comes along with a set of Python scripts to analyse the code's runtime
  behaviour.
- These tools can be found in the namespace swift2.postprocessing.
- The core ingredient in there is a parser which analyses the standard outputs of Swift.
+ These tools can be found in the namespace exaparty.api.postprocessing.
+ The core ingredient in there is a parser which analyses the standard outputs of ExaParty.
  Once you pipe the standard outputs into a file, you can apply these parser, i.e.
  use them within your own postprocessing scripts.
  There are however also a couple of command line tools which help you to explore the data.
@@ -24,7 +24,7 @@ Find the desired loop in the output. For templates, the reported file/line is of
 Sample expected output:
 
  ~~~~~~~~~~~~~~~~~~~~~~~~~
-../../../../src/swift2/kernels/ParticleParticleInteraction.cpph:481:11: remark: loop not vectorized [-Rpass-missed=loop-vectorize]
+../../../../src/exaparty/kernels/ParticleParticleInteraction.cpph:481:11: remark: loop not vectorized [-Rpass-missed=loop-vectorize]
          for (int activeParticleNumberInThisChunk = 0; activeParticleNumberInThisChunk < activeParticlesChunkSize;
  ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -67,7 +67,7 @@ the kernels. Just re-invoke make.
 
  # Peano data
 
- As Swift 2 is built on top of Peano 4, all the generic Peano scripts work for Swift, too.
+ As ExaParty is built on top of Peano 4, all the generic Peano scripts work for ExaParty, too.
 
  @see \ref page_peano_domain_decomposition
  @see `python/exahype2/postprocessing/plot-scaling.py`

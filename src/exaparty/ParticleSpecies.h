@@ -1,4 +1,4 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
@@ -12,9 +12,9 @@
 #include "tarch/services/ServiceRepository.h"
 #endif
 
-namespace swift2 {
+namespace exaparty {
   class ParticleSpecies;
-} // namespace swift2
+} // namespace exaparty
 
 /**
  * Represent one type (species) of particles
@@ -30,7 +30,7 @@ namespace swift2 {
  *
  *
  */
-class swift2::ParticleSpecies {
+class exaparty::ParticleSpecies {
 private:
   static tarch::logging::Log                _log;
   static tarch::multicore::BooleanSemaphore _semaphore;
@@ -121,7 +121,7 @@ public:
   /**
    * Tell Peano to run through mesh with same action sets again
    *
-   * This flag tells Swift's main function that the step has not been
+   * This flag tells ExaParty's main function that the step has not been
    * complete, i.e. it has to rerun the same step again once this mesh
    * traversal has completed. Therefore, the name is
    * setRerunPreviousGridSweep() - by the time this information is

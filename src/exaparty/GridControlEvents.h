@@ -1,4 +1,4 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
@@ -7,7 +7,7 @@
 
 #include "peano4/grid/GridControlEvent.h"
 
-namespace swift2 {
+namespace exaparty {
   /**
    * @todo write some docu
    */
@@ -28,4 +28,4 @@ namespace swift2 {
    * You still have to clear the passed data if you wanna reuse the argument container.
    */
   void commitGridControlEvents(const std::list<peano4::grid::GridControlEvent>& events);
-} // namespace swift2
+} // namespace exaparty

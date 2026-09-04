@@ -1,13 +1,13 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 #include <list>
 #include <vector>
 
-#include "swift2/kernels/ParticleUpdatePredicates.h"
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
 
-namespace swift2 {
+namespace exaparty {
   namespace statistics {
     /**
      * Reduce velocity and search radius stats into species information
@@ -20,12 +20,12 @@ namespace swift2 {
       const peano4::datamanagement::VertexMarker& marker,
       const Particle& localParticle
     ) {
-      return ::swift2::kernels::localParticleCanBeUpdatedInVertexKernel(marker,localParticle);
+      return ::exaparty::kernels::localParticleCanBeUpdatedInVertexKernel(marker,localParticle);
     }
 
     template <typename Particle>
     void reduceVelocityAndSearchRadius(const peano4::datamanagement::VertexMarker& marker, Particle& localParticle);
   } // namespace statistics
-} // namespace swift2
+} // namespace exaparty
 
 #include "Statistics.cpph"

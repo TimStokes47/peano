@@ -4,7 +4,7 @@
 #include "peano4/datamanagement/VertexMarker.h"
 #include "toolbox/particles/MultiscaleTransitions.h"
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
     template <typename Particle>
     using UpdateParticlePairWithinCellPredicate = std::function<bool(
@@ -169,7 +169,7 @@ namespace swift2 {
      * check a local particle whether it is really contained within a cell per
      * particle-particle interaction. I rather prefer to use
      *
-     *        ::swift2::kernels::localParticleCanBeUpdatedInCellKernel<globaldata::HydroPart>,
+     *        ::exaparty::kernels::localParticleCanBeUpdatedInCellKernel<globaldata::HydroPart>,
      *
      * once in an outer loop and then to apply
      *
@@ -274,4 +274,4 @@ namespace swift2 {
       return particleIsLocal(marker, localParticle);
     }
   } // namespace kernels
-} // namespace swift2
+} // namespace exaparty

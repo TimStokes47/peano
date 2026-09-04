@@ -3,8 +3,8 @@ import argparse
 import numpy as np
 
 import peano4.api
-import swift2
-import swift2.sphtools as sphtools
+import exaparty
+import exaparty.api.sphtools as sphtools
 import dastgen2
 
 import shutil
@@ -144,12 +144,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     ########################################################################################
-    # Create SWIFT project and particle species
+    # Create ExaParty project and particle species
     ########################################################################################
 
-    project_namespace = ["benchmarks", "swift2", "hydro", "kernel_throughput"]
+    project_namespace = ["benchmarks", "exaparty", "hydro", "kernel_throughput"]
 
-    project = swift2.Project(
+    project = exaparty.api.Project(
         namespace=project_namespace, project_name="Benchmarks", executable=args.output_file
     )
 
@@ -162,13 +162,13 @@ if __name__ == "__main__":
     dimensions = args.dimensions
     hydro_dimensions = 2  # dimensions for the hydro
 
-    particle = swift2.particle.SPHLeapfrogFixedSearchRadius(
+    particle = exaparty.api.particle.SPHLeapfrogFixedSearchRadius(
         name=name,
         dimensions_hydro=hydro_dimensions,
         cfl_factor=0.01,
         initial_time_step_size=0.01,
         constant_time_step_size=True,
-        swift_project_namespace=project_namespace,
+        exaparty_project_namespace=project_namespace,
         particles_per_cell=100,
         min_h=1.0,
         max_h=1.0,

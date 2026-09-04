@@ -1,4 +1,4 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
@@ -6,7 +6,7 @@
 #include "peano4/datamanagement/CellMarker.h"
 #include "toolbox/particles/MultiscaleTransitions.h"
 
-namespace swift2 {
+namespace exaparty {
   /**
    * Set the particle markers of all particles within a cell
    *
@@ -24,10 +24,10 @@ namespace swift2 {
    * routine:
    *
    * In the sequential/domain-decomposition code, we use touchCellLastTime() to
-   * set all the markers. This happens in swift2.actionsets.UpdateParticleMarker.
+   * set all the markers. This happens in exaparty.api.actionsets.UpdateParticleMarker.
    * In the task-based variant, we have to embed the routine into the actual
    * task  which updates a particle. This is done by
-   * swift2.api.actionsets.TaskGraphKernelWrappers.construct_touch_cell_first_time_call().
+   * exaparty.api.actionsets.TaskGraphKernelWrappers.construct_touch_cell_first_time_call().
    */
   void markAllParticlesAsUpdatedWithinCell(
     auto&                                      particleContainer,

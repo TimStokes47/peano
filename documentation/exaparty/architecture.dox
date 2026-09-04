@@ -1,12 +1,12 @@
 /**
 
-@page swift_architecture Architecture
+@page exaparty_architecture Architecture
 
 
-The Swift 2 extension consist of two ingredients: a Python-API and a set of
+The ExaParty extension consist of two ingredients: a Python-API and a set of
 C++ tools.
 The C++ tools use Peano's tarch and the particles toolbox.
-Overall, the Swift extension follows the @ref page_architecture_home "blueprint of Peano's application architecture".
+Overall, the ExaParty extension follows the @ref page_architecture_home "blueprint of Peano's application architecture".
 
 
 
@@ -17,7 +17,7 @@ At the highest point of the code, i.e. the thing that users see, there is
 a project which hosts particles. Each particle is an instantiation of a
 particular numerical schemes. Each
 numerical scheme defines a sequence of steps for the particle. Maybe the
-simples example for such a sequence of steps can be found in swift2.particle.ExplicitEulerFixedInteraction Radius.
+simples example for such a sequence of steps can be found in exaparty.api.particle.ExplicitEulerFixedInteraction Radius.
 As summarise: the user models the simulation as a project (which hosts
 information such as "which timespan do I want to simulate") which hosts
 one or multiple particles, where each particle defines a strict sequence
@@ -28,7 +28,7 @@ injecting source code into the particle. Injecting means typically that
 users say "use this code snippet to compute the force between two particles".
 
 
-Once this first step is complete, users invoke swift2.Project. This is where
+Once this first step is complete, users invoke exaparty.api.Project. This is where
 a lot of magic happens: A so-called graph compiler runs through the project
 with its particles and puzzles out
 

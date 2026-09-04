@@ -1,6 +1,6 @@
 
 template <typename ParticleA, typename ParticleB>
-bool swift2::kernels::forceKernelDistanceCheck(
+bool exaparty::kernels::forceKernelDistanceCheck(
   ParticleA& __restrict__ localParticle, const ParticleB& __restrict__ activeParticle
 ) {
   /*

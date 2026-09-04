@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 
 import peano4.api
-import swift2
+import exaparty
 import dastgen2
 
 import shutil
@@ -90,7 +90,7 @@ args = parser.parse_args()
 
 
 ########################################################################################
-# Generate SWIFT project
+# Generate ExaParty project
 ########################################################################################
 
 # peano doesn't like 1D grids
@@ -98,14 +98,14 @@ dimensions = 2
 hydro_dimensions = 1
 
 
-project = swift2.Project(
-    namespace=["tests", "swift2", "periodicBoundaryConditions1D"],
+project = exaparty.api.Project(
+    namespace=["tests", "exaparty", "periodicBoundaryConditions1D"],
     project_name="periodicBoundaryConditions1D",
     executable="periodicBCTest1D",
 )
 
 
-particle = swift2.particle.LeapfrogFixedSearchRadius(
+particle = exaparty.api.particle.LeapfrogFixedSearchRadius(
     name="GenericParticle",
     cfl_factor=0.999,
     initial_time_step_size=args.timestep_size,
@@ -209,7 +209,7 @@ initialisation_snippet = (
 coords = np.array([[0.21, 0.5, 0.0], [0.81, 0.5, 0.0]])
 
 project.algorithm_step_initial_conditions.add_action_set(
-    swift2.input.InsertParticlesByCoordinates(
+    exaparty.api.input.InsertParticlesByCoordinates(
         particle_set=particle_set,
         initialisation_call=initialisation_snippet,
         coordinates=coords,

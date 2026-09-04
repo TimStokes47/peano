@@ -1,14 +1,14 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 
 #include "peano4/datamanagement/CellMarker.h"
 #include "peano4/datamanagement/VertexMarker.h"
-#include "swift2/kernels/ParticleUpdatePredicates.h"
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
 
 
-namespace swift2 {
+namespace exaparty {
   namespace timestepping {
     /**
      * Reset the marker of a particle from whatever it has been before to
@@ -25,7 +25,7 @@ namespace swift2 {
       const peano4::datamanagement::VertexMarker& marker,
       const Particle&                             particle
     ) {
-      return ::swift2::kernels::localParticleCanBeUpdatedInVertexKernel(
+      return ::exaparty::kernels::localParticleCanBeUpdatedInVertexKernel(
         marker,
         particle
       );
@@ -37,7 +37,7 @@ namespace swift2 {
       Particle&                                   particle
     ) {
       assertion2(
-        ::swift2::kernels::
+        ::exaparty::kernels::
           localParticleCanBeUpdatedInVertexKernel(marker, particle),
         marker.toString(),
         particle.toString()
@@ -45,7 +45,7 @@ namespace swift2 {
       reset_moved_particle_marker(particle);
     }
   } // namespace timestepping
-} // namespace swift2
+} // namespace exaparty
 
 
 #include "TimeStepping.cpph"

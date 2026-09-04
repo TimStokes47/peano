@@ -1,7 +1,7 @@
 #include "FixedBoundary.h"
 
 
-std::pair< tarch::la::Vector<Dimensions, double>, tarch::la::Vector<Dimensions, double> >  swift2::boundaryconditions::getUpdateDueToFixedBoundaryCondition(
+std::pair< tarch::la::Vector<Dimensions, double>, tarch::la::Vector<Dimensions, double> >  exaparty::boundaryconditions::getUpdateDueToFixedBoundaryCondition(
   const tarch::la::Vector<Dimensions, double>&  particleX,
   const tarch::la::Vector<Dimensions, double>&  particleV,
   double                                        maxV,
@@ -11,7 +11,7 @@ std::pair< tarch::la::Vector<Dimensions, double>, tarch::la::Vector<Dimensions, 
   const tarch::la::Vector<Dimensions, double>&  domainSize,
   double                                        relativeDomainHalo
 ) {
-  static tarch::logging::Log _log( "swift2::boundaryconditions" );
+  static tarch::logging::Log _log( "exaparty::boundaryconditions" );
   tarch::la::Vector<Dimensions, double> newX = particleX;
   tarch::la::Vector<Dimensions, double> newV = particleV;
 

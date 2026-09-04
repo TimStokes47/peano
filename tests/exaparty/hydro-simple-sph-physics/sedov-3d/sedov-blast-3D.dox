@@ -1,6 +1,6 @@
 /**
 
- @page tests_swift2_hydro_simple_sph_sedov_blast_3D  Sedov Blast 3D (Simple SPH)
+ @page tests_exaparty_hydro_simple_sph_sedov_blast_3D  Sedov Blast 3D (Simple SPH)
 
 
 Injects (relatively) high energy into the center of a uniform gas field, leading

@@ -3,9 +3,9 @@ import argparse
 import numpy as np
 
 import peano4.api
-import swift2
+import exaparty
 import dastgen2
-from swift2.particle.tests import DastgenTestDummyParticle
+from exaparty.api.particle.tests import DastgenTestDummyParticle
 
 import shutil
 
@@ -37,12 +37,12 @@ args = parser.parse_args()
 
 
 ########################################################################################
-# Generate SWIFT project
+# Generate ExaParty project
 ########################################################################################
 
-project_namespace = ["tests", "swift2", "dastgenTest"]
+project_namespace = ["tests", "exaparty", "dastgenTest"]
 
-project = swift2.Project(
+project = exaparty.api.Project(
     namespace=project_namespace, project_name="dastgen_test", executable="dastgen_test"
 )
 
@@ -127,7 +127,7 @@ initialisation_snippet = """
 
 #  Finally, pass this configuration to the initialisation script
 project.algorithm_step_initial_conditions.add_action_set(
-    swift2.input.InsertParticlesByCoordinates(
+    exaparty.api.input.InsertParticlesByCoordinates(
         particle_set=particle_set,
         initialisation_call=initialisation_snippet,
         coordinates=coords,
@@ -154,7 +154,7 @@ for dir in dirs:
         shutil.rmtree(dir)
 
 # It is safe (and recommended) to overwrite any existing main file, since this
-# is generated automatically by the Swift2 graph compiler.
+# is generated automatically by the ExaParty graph compiler.
 peano4_project.generate(
     overwrite=peano4.api.output.Overwrite.Always, throw_away_data_after_generation=True
 )

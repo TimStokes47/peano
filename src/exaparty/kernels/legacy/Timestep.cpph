@@ -6,9 +6,9 @@
 
 
 template <typename Particle>
-double swift2::kernels::legacy::hydro_compute_timestep(Particle* particle) {
+double exaparty::kernels::legacy::hydro_compute_timestep(Particle* particle) {
 
-  // macro expansions from swift2/legacy/kernels are cumbersome otherwise.
+  // macro expansions from exaparty/legacy/kernels are cumbersome otherwise.
   using namespace kernelHydro;
 
   const double cflFactor = Particle::getCfl();
@@ -45,7 +45,7 @@ double swift2::kernels::legacy::hydro_compute_timestep(Particle* particle) {
 
 
 template <typename ParticleContainer>
-void swift2::kernels::legacy::computeNextTimestep(
+void exaparty::kernels::legacy::computeNextTimestep(
   const peano4::datamanagement::VertexMarker& marker,
   ParticleContainer&                          assignedParticles
 ) {

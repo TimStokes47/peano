@@ -16,11 +16,11 @@ inline auto __rdtscp() {
 // Generic variants
 // ===============================
 template <auto ParticleOp, auto PredicateOp>
-void swift2::kernels::forAllParticles(
+void exaparty::kernels::forAllParticles(
   const peano4::datamanagement::VertexMarker& marker,
   auto&                                       assignedParticles,
   int  numberOfCoalescedAssignedParticles,
-  ::swift2::kernels::kernelrealisation::GenericRealisation realisation
+  ::exaparty::kernels::kernelrealisation::GenericRealisation realisation
 ) {
   [[clang::soa_conversion]]
 //#ifdef SOA_TIME
@@ -35,11 +35,11 @@ void swift2::kernels::forAllParticles(
 
 
 template <auto PairOperator, auto LocalPredicate, auto PairPredicate>
-void swift2::kernels::forAllParticlePairs(
-  const swift2::CellMetaData& cellMetaData,
+void exaparty::kernels::forAllParticlePairs(
+  const exaparty::CellMetaData& cellMetaData,
   auto&                       localParticles,
   auto&                       activeParticles,
-  ::swift2::kernels::kernelrealisation::GenericRealisation                        realisation
+  ::exaparty::kernels::kernelrealisation::GenericRealisation                        realisation
 ) {
   int currentParticle = -1;
   [[clang::soa_conversion]]
@@ -91,11 +91,11 @@ void swift2::kernels::forAllParticlePairs(
 // Generic offloading variants
 // ===============================
 template <auto ParticleOp, auto PredicateOp>
-void swift2::kernels::forAllParticles(
+void exaparty::kernels::forAllParticles(
   const peano4::datamanagement::VertexMarker& marker,
   auto&                                       assignedParticles,
   int numberOfCoalescedAssignedParticles,
-  ::swift2::kernels::kernelrealisation::GenericOffloadRealisation
+  ::exaparty::kernels::kernelrealisation::GenericOffloadRealisation
 ) {
   [[clang:: soa_conversion]]
   [[clang:: soa_conversion_offload_compute]]
@@ -112,11 +112,11 @@ void swift2::kernels::forAllParticles(
 
 
 template <auto PairOperator, auto LocalPredicate, auto PairPredicate>
-void swift2::kernels::forAllParticlePairs(
-  const swift2::CellMetaData& cellMetaData,
+void exaparty::kernels::forAllParticlePairs(
+  const exaparty::CellMetaData& cellMetaData,
   auto&                       localParticles,
   auto&                       activeParticles,
-  ::swift2::kernels::kernelrealisation::GenericOffloadRealisation
+  ::exaparty::kernels::kernelrealisation::GenericOffloadRealisation
 ) {
     int currentParticle = -1;
 //    bool evaluateMultiscaleRelations = false;
@@ -164,11 +164,11 @@ void swift2::kernels::forAllParticlePairs(
 // Generic variants exploiting coalesced memory
 // ============================================
 template <auto ParticleOp, auto PredicateOp>
-void swift2::kernels::forAllParticles(
+void exaparty::kernels::forAllParticles(
   const peano4::datamanagement::VertexMarker& marker,
   auto&                                       assignedParticles,
   int                                         numberOfAssignedParticles,
-  ::swift2::kernels::kernelrealisation::CoalescedMemoryRealisation realisation
+  ::exaparty::kernels::kernelrealisation::CoalescedMemoryRealisation realisation
 ) {
   auto* particles = assignedParticles.begin()[0];
 
@@ -185,11 +185,11 @@ void swift2::kernels::forAllParticles(
 
 
 template <auto ParticleOp, auto PredicateOp>
-void swift2::kernels::forAllParticles(
+void exaparty::kernels::forAllParticles(
   const peano4::datamanagement::CellMarker& marker,
   auto&                                     localParticles,
   const std::vector<int>&                   numberOfLocalParticles,
-  ::swift2::kernels::kernelrealisation::CoalescedMemoryRealisation realisation
+  ::exaparty::kernels::kernelrealisation::CoalescedMemoryRealisation realisation
 ) {
   auto chunkStartIdx = 0;
   for (auto chunkSize: numberOfLocalParticles) {
@@ -212,7 +212,7 @@ template <
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
 void forAllParticlePairsCoalescedLocalActiveChunk(
-  const swift2::CellMetaData& cellMetaData,
+  const exaparty::CellMetaData& cellMetaData,
   auto * localParticles,
   auto localParticlesSize,
   auto * activeParticles,
@@ -229,7 +229,7 @@ template <
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
 void forAllParticlePairsCoalescedLocalActiveChunk_Offload(
-  const swift2::CellMetaData& cellMetaData,
+  const exaparty::CellMetaData& cellMetaData,
   auto * localParticles,
   auto localParticlesSize,
   auto * activeParticles,
@@ -267,7 +267,7 @@ template <
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
 void forAllParticlePairsCoalescedLocalActiveChunk_EvaluatePredicatesInPrologue(
-  const swift2::CellMetaData& cellMetaData,
+  const exaparty::CellMetaData& cellMetaData,
   auto * localParticles,
   auto localParticlesSize,
   auto * activeParticles,
@@ -309,7 +309,7 @@ template <
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
 void forAllParticlePairsCoalescedActiveLocalChunk(
-  const swift2::CellMetaData& cellMetaData,
+  const exaparty::CellMetaData& cellMetaData,
   auto *localParticles,
   auto localParticlesSize,
   auto *activeParticles,
@@ -348,7 +348,7 @@ template <
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
 void forAllParticlePairsCoalescedActiveLocalChunk_Offload(
-  const swift2::CellMetaData& cellMetaData,
+  const exaparty::CellMetaData& cellMetaData,
   auto *localParticles,
   auto localParticlesSize,
   auto *activeParticles,
@@ -385,7 +385,7 @@ template <
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
 void forAllParticlePairsCoalescedActiveLocalChunk_EvaluatePredicatesInPrologue(
-  const swift2::CellMetaData& cellMetaData,
+  const exaparty::CellMetaData& cellMetaData,
   auto *localParticles,
   auto localParticlesSize,
   auto *activeParticles,
@@ -434,11 +434,11 @@ template <
   auto ParticlePairOp,
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
-void swift2::kernels::forAllParticlePairs(
-  const swift2::CellMetaData& cellMetaData,
+void exaparty::kernels::forAllParticlePairs(
+  const exaparty::CellMetaData& cellMetaData,
   auto&                       localParticles,
   auto&                       activeParticles,
-  ::swift2::kernels::kernelrealisation::CoalescedMemoryActiveLocalRealisation
+  ::exaparty::kernels::kernelrealisation::CoalescedMemoryActiveLocalRealisation
     realisation
 ) {
 
@@ -468,11 +468,11 @@ template <
   auto ParticlePairOp,
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
-void swift2::kernels::forAllParticlePairs(
-  const swift2::CellMetaData& cellMetaData,
+void exaparty::kernels::forAllParticlePairs(
+  const exaparty::CellMetaData& cellMetaData,
   auto&                       localParticleZ,
   auto&                       activeParticleZ,
-  ::swift2::kernels::kernelrealisation::CoalescedMemoryLocalActiveRealisation
+  ::exaparty::kernels::kernelrealisation::CoalescedMemoryLocalActiveRealisation
     realisation
 ) {
   int localChunkIdx = 0;
@@ -522,11 +522,11 @@ void swift2::kernels::forAllParticlePairs(
 // Generic offload variants exploiting coalesced memory
 // ============================================
 template <auto ParticleOp, auto PredicateOp>
-void swift2::kernels::forAllParticles(
+void exaparty::kernels::forAllParticles(
   const peano4::datamanagement::VertexMarker& marker,
   auto&                                       assignedParticles,
   int                                         numberOfAssignedParticles,
-  ::swift2::kernels::kernelrealisation::CoalescedMemoryOffloadRealisation realisation
+  ::exaparty::kernels::kernelrealisation::CoalescedMemoryOffloadRealisation realisation
 ) {
   auto* particles = assignedParticles.begin()[0];
 
@@ -545,11 +545,11 @@ void swift2::kernels::forAllParticles(
 
 
 template <auto ParticleOp, auto PredicateOp>
-void swift2::kernels::forAllParticles(
+void exaparty::kernels::forAllParticles(
   const peano4::datamanagement::CellMarker& marker,
   auto&                                     localParticles,
   const std::vector<int>&                   numberOfLocalParticles,
-  ::swift2::kernels::kernelrealisation::CoalescedMemoryOffloadRealisation realisation
+  ::exaparty::kernels::kernelrealisation::CoalescedMemoryOffloadRealisation realisation
 ) {
   auto chunkStartIdx = 0;
   for (auto chunkSize: numberOfLocalParticles) {
@@ -574,11 +574,11 @@ template <
   auto ParticlePairOp,
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
-void swift2::kernels::forAllParticlePairs(
-  const swift2::CellMetaData& cellMetaData,
+void exaparty::kernels::forAllParticlePairs(
+  const exaparty::CellMetaData& cellMetaData,
   auto&                       localParticles,
   auto&                       activeParticles,
-  ::swift2::kernels::kernelrealisation::CoalescedMemoryActiveLocalOffloadRealisation
+  ::exaparty::kernels::kernelrealisation::CoalescedMemoryActiveLocalOffloadRealisation
     realisation
 ) {
 
@@ -608,11 +608,11 @@ template <
   auto ParticlePairOp,
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
-void swift2::kernels::forAllParticlePairs(
-  const swift2::CellMetaData& cellMetaData,
+void exaparty::kernels::forAllParticlePairs(
+  const exaparty::CellMetaData& cellMetaData,
   auto&                       localParticles,
   auto&                       activeParticles,
-  ::swift2::kernels::kernelrealisation::CoalescedMemoryLocalActiveOffloadRealisation
+  ::exaparty::kernels::kernelrealisation::CoalescedMemoryLocalActiveOffloadRealisation
     realisation
 ) {
   int localChunkIdx = 0;
@@ -641,11 +641,11 @@ void swift2::kernels::forAllParticlePairs(
 // an explicit preamble.
 // ============================================
 template <auto ParticleOp, auto PredicateOp>
-void swift2::kernels::forAllParticles(
+void exaparty::kernels::forAllParticles(
   const peano4::datamanagement::VertexMarker& marker,
   auto&                                       assignedParticles,
   int numberOfCoalescedAssignedParticles,
-  ::swift2::kernels::kernelrealisation::EvaluatePredicateInPrologueRealisation
+  ::exaparty::kernels::kernelrealisation::EvaluatePredicateInPrologueRealisation
 ) {
   auto* particles  = *assignedParticles.begin();
   bool predicates[numberOfCoalescedAssignedParticles];
@@ -665,11 +665,11 @@ void swift2::kernels::forAllParticles(
 
 
 template <auto ParticleOp, auto PredicateOp>
-void swift2::kernels::forAllParticles(
+void exaparty::kernels::forAllParticles(
   const peano4::datamanagement::CellMarker& marker,
   auto&                                     assignedParticles,
   const std::vector<int>&                   numberOfCoalescedLocalParticles,
-  ::swift2::kernels::kernelrealisation::EvaluatePredicateInPrologueRealisation
+  ::exaparty::kernels::kernelrealisation::EvaluatePredicateInPrologueRealisation
 ) {
   bool predicates[assignedParticles.size()];
 
@@ -698,11 +698,11 @@ template <
   auto ParticlePairOp,
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
-void swift2::kernels::forAllParticlePairs(
-  const swift2::CellMetaData& cellMetaData,
+void exaparty::kernels::forAllParticlePairs(
+  const exaparty::CellMetaData& cellMetaData,
   auto&                       localParticles,
   auto&                       activeParticles,
-  ::swift2::kernels::kernelrealisation::EvaluatePredicateInPrologueActiveLocalRealisation
+  ::exaparty::kernels::kernelrealisation::EvaluatePredicateInPrologueActiveLocalRealisation
     realisation
 ) {
 
@@ -732,11 +732,11 @@ template <
   auto ParticlePairOp,
   auto LocalPredicateOp,
   auto ParticlePairPredicateOp>
-void swift2::kernels::forAllParticlePairs(
-  const swift2::CellMetaData& cellMetaData,
+void exaparty::kernels::forAllParticlePairs(
+  const exaparty::CellMetaData& cellMetaData,
   auto&                       localParticles,
   auto&                       activeParticles,
-  ::swift2::kernels::kernelrealisation::EvaluatePredicateInPrologueLocalActiveRealisation
+  ::exaparty::kernels::kernelrealisation::EvaluatePredicateInPrologueLocalActiveRealisation
     realisation
 ) {
   int localChunkIdx = 0;
@@ -766,7 +766,7 @@ void swift2::kernels::forAllParticlePairs(
 // Helper functions
 // ====================================
 template <int SubChunkSize, typename LocalParticle, typename ActiveParticle>
-std::pair<std::bitset<SubChunkSize>, std::bitset<SubChunkSize>> swift2::
+std::pair<std::bitset<SubChunkSize>, std::bitset<SubChunkSize>> exaparty::
   kernels::internal::identifyInteractingParticlesFixedLocalParticle(
     const peano4::datamanagement::CellMarker& marker,
     LocalParticle*                            localParticle,
@@ -798,7 +798,7 @@ std::pair<std::bitset<SubChunkSize>, std::bitset<SubChunkSize>> swift2::
 
 
 template <int SubChunkSize, typename LocalParticle, typename ActiveParticle>
-std::pair<std::bitset<SubChunkSize>, std::bitset<SubChunkSize>> swift2::
+std::pair<std::bitset<SubChunkSize>, std::bitset<SubChunkSize>> exaparty::
   kernels::internal::identifyInteractingParticlesFixedActiveParticle(
     const peano4::datamanagement::CellMarker& marker,
     LocalParticle*                            firstLocalParticleInSubchunk,

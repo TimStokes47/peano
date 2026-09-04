@@ -7,7 +7,7 @@
 #   output_N$N_PART-$CELL_MAX-$CELL_MIN.log
 #
 # as written by `run_celldepth_test.sh`.
-# The content of that output shall be the peano swift2 stdout, with the
+# The content of that output shall be the peano exaparty stdout, with the
 # addition of an external timer run as such (using bash):
 #
 #  timing() {

@@ -1,14 +1,14 @@
-// This file is part of the SWIFT2 project. For conditions of distribution and
+// This file is part of the ExaParty project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 #include "peano4/datamanagement/CellMarker.h"
 #include "peano4/datamanagement/VertexMarker.h"
-#include "swift2/kernels/legacy/Swift.h"
-#include "swift2/kernels/ParticleUpdatePredicates.h"
+#include "exaparty/kernels/legacy/Swift.h"
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
 
 
-namespace swift2 {
+namespace exaparty {
   namespace kernels {
     namespace legacy {
 
@@ -20,7 +20,7 @@ namespace swift2 {
         const peano4::datamanagement::VertexMarker& marker,
         const Particle&                             localParticle
       ) {
-        return ::swift2::kernels::localParticleCanBeUpdatedInVertexKernel(
+        return ::exaparty::kernels::localParticleCanBeUpdatedInVertexKernel(
           marker,
           localParticle
         );
@@ -54,7 +54,7 @@ namespace swift2 {
         const peano4::datamanagement::VertexMarker& marker,
         const Particle&                             localParticle
       ) {
-        return ::swift2::kernels::localParticleCanBeUpdatedInVertexKernel(
+        return ::exaparty::kernels::localParticleCanBeUpdatedInVertexKernel(
           marker,
           localParticle
         );
@@ -88,7 +88,7 @@ namespace swift2 {
        *      = \sum_j m_j  \frac{\partial W(r_{ij}, h_i)}{\partial h}
        *      @f$
        *
-       * (see the @f$f_i@f$ in swift2::kernels::legacy::force_kernel to see
+       * (see the @f$f_i@f$ in exaparty::kernels::legacy::force_kernel to see
        * where and how it is used)
        * where @f$ m_j @f$ is the particle mass, @f$ r_{ij} @f$ is the distance
        * between particle @f$i @f$ and @f$ j @f$, @f$h_i @f$ is the smoothing
@@ -145,7 +145,7 @@ namespace swift2 {
        * should be used in combination with the latter.
        *
        * The function delegates to
-       * ::swift2::kernels::localParticleCanBeUpdatedInCellKernel() and combines
+       * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernel() and combines
        * it with localParticle.getSmoothingLengthConverged(): We only consider
        * updating a particles if its smoothing length computation has not yet
        * converged.
@@ -161,7 +161,7 @@ namespace swift2 {
        * Predicate if two particles contribute towards the density checks
        *
        * This predicate assumes that
-       * ::swift2::kernels::localParticleCanBeUpdatedInCellKernel() holds. It
+       * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernel() holds. It
        * then evaluates if activeParticle contributes towards localParticle. Is
        * used by the densityKernel() to find out if the actual density
        * calculation is to be invoked, but can also be used as explicit check in
@@ -172,7 +172,7 @@ namespace swift2 {
        * - The comparison of radii has to be done by comaring the squares, as
        *   we otherwise would need a square root.
        *
-       * ::swift2::kernels::localParticleCanBeUpdatedInCellKernel<globaldata::HydroPart>
+       * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernel<globaldata::HydroPart>
        */
       template <typename ParticleA, typename ParticleB = ParticleA>
       bool densityKernelEvaluatePairInteractionPredicate(
@@ -189,7 +189,7 @@ namespace swift2 {
        *
        * The kernel assumes that the predicates all
        * hold, i.e. we do not check them anymore. As
-       * ::swift2::kernels::localParticleCanBeUpdatedInCellKernel(),
+       * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernel(),
        * we don't have to check anything and directly forward
        * the call to the Swift 1 "legacy" kernel. It makes no sense to use this
        * version in the generic pair-wise interactions, but it makes sense to
@@ -199,23 +199,23 @@ namespace swift2 {
        * That is, a vanilla density calculation equals
        *
        * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-       * ::swift2::kernels::forAllParticlePairs( cellMarker,
+       * ::exaparty::kernels::forAllParticlePairs( cellMarker,
        * workItemParticleSet[workItem], workItemParticleSet[workItem],
        * createCoalescedMemoryIndices(), createCoalescedMemoryIndices(),
-       * ::swift2::kernels::legacy::densityKernel<globaldata::HydroPart>,
-       * ::swift2::kernels::alwaysUpdateInCellKernel<globaldata::HydroPart>,
-       * ::swift2::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle<globaldata::HydroPart>);
+       * ::exaparty::kernels::legacy::densityKernel<globaldata::HydroPart>,
+       * ::exaparty::kernels::alwaysUpdateInCellKernel<globaldata::HydroPart>,
+       * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernelFromAnyOtherParticle<globaldata::HydroPart>);
        * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
        *
        * whereas we can use an optimised version such as
        *
        * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-       * ::swift2::kernels::forAllParticlePairs( cellMarker,
+       * ::exaparty::kernels::forAllParticlePairs( cellMarker,
        * workItemParticleSet[workItem], workItemParticleSet[workItem],
        * createCoalescedMemoryIndices(), createCoalescedMemoryIndices(),
-       * ::swift2::kernels::legacy::densityKernelWithoutChecks<globaldata::HydroPart>,
-       * ::swift2::kernels::localParticleCanBeUpdatedInCellKernel<globaldata::HydroPart>,
-       * ::swift2::kernels::legacy::densityKernelPairEvaluationPredicate<globaldata::HydroPart>);
+       * ::exaparty::kernels::legacy::densityKernelWithoutChecks<globaldata::HydroPart>,
+       * ::exaparty::kernels::localParticleCanBeUpdatedInCellKernel<globaldata::HydroPart>,
+       * ::exaparty::kernels::legacy::densityKernelPairEvaluationPredicate<globaldata::HydroPart>);
        * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
        */
       template <typename ParticleA, typename ParticleB = ParticleA>
@@ -226,7 +226,7 @@ namespace swift2 {
       );
     } // namespace legacy
   }   // namespace kernels
-} // namespace swift2
+} // namespace exaparty
 
 
 #include "Density.cpph"

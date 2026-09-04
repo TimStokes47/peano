@@ -1,4 +1,4 @@
-""" This file is part of the SWIFT 2 project. For conditions of distribution and 
+""" This file is part of the ExaParty project. For conditions of distribution and 
  use, please see the copyright notice at www.peano-framework.org
 """
 
@@ -13,3 +13,7 @@ from .UpdateParticle_SingleLevelInteraction_ContiguousParticles import (
 )
 from .UpdateParticle_SingleLevelInteraction import UpdateParticle_SingleLevelInteraction
 from .SynchroniseVerticesWithPreviousMeshSweep import SynchroniseVerticesWithPreviousMeshSweep
+
+from .DummyStep import DummyStep
+from .ScatterGlobalMemory import ScatterGlobalMemory
+from .Cleanup import Cleanup
