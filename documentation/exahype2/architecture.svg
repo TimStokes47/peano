@@ -29,7 +29,7 @@
      showgrid="false"
      inkscape:zoom="1.1893044"
      inkscape:cx="355.67009"
-     inkscape:cy="421.25464"
+     inkscape:cy="488.52085"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="66"
@@ -38,6 +38,25 @@
      inkscape:current-layer="layer1" />
   <defs
      id="defs2">
+    <marker
+       style="overflow:visible"
+       id="TriangleStart"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="TriangleStart"
+       markerWidth="5.3244081"
+       markerHeight="6.155385"
+       viewBox="0 0 5.3244081 6.1553851"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path135" />
+    </marker>
     <marker
        style="overflow:visible"
        id="EmptyTriangleIn"
@@ -75,6 +94,63 @@
          style="fill:context-fill;fill-rule:evenodd;stroke:context-stroke;stroke-width:2"
          d="M 5.77,0 -2.88,5 V -5 Z"
          id="path153-5" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="EmptyTriangleIn-3"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="EmptyTriangleIn"
+       markerWidth="5.8241119"
+       markerHeight="6.7330775"
+       viewBox="0 0 5.8241121 6.7330776"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-fill;fill-rule:evenodd;stroke:context-stroke;stroke-width:2"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path153-6" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="EmptyTriangleIn-3-1"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="EmptyTriangleIn"
+       markerWidth="5.8241119"
+       markerHeight="6.7330775"
+       viewBox="0 0 5.8241121 6.7330776"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-fill;fill-rule:evenodd;stroke:context-stroke;stroke-width:2"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path153-6-2" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="EmptyTriangleIn-3-3"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="EmptyTriangleIn"
+       markerWidth="5.8241119"
+       markerHeight="6.7330775"
+       viewBox="0 0 5.8241121 6.7330776"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-fill;fill-rule:evenodd;stroke:context-stroke;stroke-width:2"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path153-6-1" />
     </marker>
   </defs>
   <g
@@ -152,14 +228,14 @@
       <text
          xml:space="preserve"
          style="font-size:5.64444px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
-         x="33.999531"
+         x="26.898037"
          y="134.38527"
          id="text561-6"><tspan
            sodipodi:role="line"
            id="tspan559-2"
            style="stroke-width:0.264583"
-           x="33.999531"
-           y="134.38527">ActionSet</tspan></text>
+           x="26.898037"
+           y="134.38527">ComputeSteps</tspan></text>
     </g>
     <g
        id="g789"
@@ -199,7 +275,7 @@
            id="tspan559-9"
            style="stroke-width:0.264583"
            x="97.830757"
-           y="124.59663">Observer</tspan></text>
+           y="124.59663">Solver</tspan></text>
     </g>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.644553;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
@@ -255,7 +331,7 @@
        transform="matrix(0.74514804,0,0,0.74514804,9.4959668,-53.193385)">
       <g
          id="g505-7-9-2"
-         transform="matrix(0.78479848,0,0,1.005127,87.179313,56.127007)">
+         transform="matrix(0.78479848,0,0,1.005127,87.179313,63.938657)">
         <rect
            style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
            id="rect234-5-2-2"
@@ -280,15 +356,73 @@
       </g>
       <text
          xml:space="preserve"
+         style="font-size:4.17832px;line-height:1.25;font-family:sans-serif;stroke-width:0.195859"
+         x="103.01708"
+         y="130.98558"
+         id="text697"><tspan
+           sodipodi:role="line"
+           id="tspan695"
+           style="stroke-width:0.195859"
+           x="103.01708"
+           y="130.98558">&lt;&lt;numerics, algorithms&gt;</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-size:3.11347px;line-height:1.25;font-family:sans-serif;stroke-width:0.145944"
+         x="58.592392"
+         y="170.71956"
+         id="text697-7"><tspan
+           sodipodi:role="line"
+           id="tspan695-5"
+           style="stroke-width:0.145944"
+           x="58.592392"
+           y="170.71956">&lt;&lt;lower abstraction&gt;</tspan></text>
+      <text
+         xml:space="preserve"
          style="font-size:5.64444px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
          x="116.01472"
-         y="130.20036"
+         y="138.01195"
          id="text561-6-3-7"><tspan
            sodipodi:role="line"
            id="tspan559-2-7-3"
            style="stroke-width:0.264583"
            x="116.01472"
-           y="130.20036">Generator</tspan></text>
+           y="138.01195">Generator</tspan></text>
+      <g
+         id="g505-7-9-2-9"
+         transform="matrix(0.78479848,0,0,1.005127,109.07117,146.04173)">
+        <rect
+           style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
+           id="rect234-5-2-2-2"
+           width="53.443718"
+           height="8.7257929"
+           x="25.506264"
+           y="67.675583" />
+        <rect
+           style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
+           id="rect234-3-3-0-8-2"
+           width="53.443718"
+           height="8.7257929"
+           x="25.506262"
+           y="76.401375" />
+        <rect
+           style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
+           id="rect234-3-6-5-2-9-8"
+           width="53.443718"
+           height="8.7257929"
+           x="25.506258"
+           y="85.127167" />
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-size:5.64444px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+         x="137.90652"
+         y="220.11502"
+         id="text561-6-3-7-3"><tspan
+           sodipodi:role="line"
+           id="tspan559-2-7-3-6"
+           style="stroke-width:0.264583"
+           x="137.90652"
+           y="220.11502">Generator</tspan></text>
     </g>
     <g
        id="g2535"
@@ -315,7 +449,7 @@
          transform="rotate(24.408697,-203.69884,7.2705454)">
         <path
            style="fill:none;stroke:#000000;stroke-width:0.865;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
-           d="m 55.656396,150.41013 51.551914,-12.6848"
+           d="M 55.656396,150.41013 124.68258,124.05157"
            id="path854-5-6-9"
            sodipodi:nodetypes="cc" />
         <rect
@@ -417,17 +551,6 @@
          style="stroke-width:0.264583"
          x="9.4192133"
          y="58.442574">ExaHyPE</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-size:5.64444px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
-       x="9.3414221"
-       y="77.081604"
-       id="text2753"><tspan
-         sodipodi:role="line"
-         id="tspan2751"
-         style="stroke-width:0.264583"
-         x="9.3414221"
-         y="77.081604">Peano</tspan></text>
     <rect
        style="fill:#ffffff;stroke:#000000;stroke-width:0.865;stroke-miterlimit:4.9;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect2807"
@@ -453,11 +576,175 @@
          y="78.32972">C++</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.981276;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#EmptyTriangleIn)"
-       d="M 105,58.922446 V 70.119745"
-       id="path2884" />
+       d="M 37.151806,47.356906 36.818103,82.613267"
+       id="path2884"
+       sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.981276;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#EmptyTriangleIn-5)"
        d="M 174.85229,46.253502 V 57.450801"
        id="path2884-4" />
+    <g
+       id="g781-7"
+       transform="matrix(0.74514804,0,0,0.74514804,70.60942,61.483341)">
+      <g
+         id="g505-7-5"
+         transform="matrix(0.78479848,0,0,1.005127,5.164128,60.31192)">
+        <rect
+           style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
+           id="rect234-5-3"
+           width="53.443718"
+           height="8.7257929"
+           x="25.506264"
+           y="67.675583" />
+        <rect
+           style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
+           id="rect234-3-3-5"
+           width="53.443718"
+           height="8.7257929"
+           x="25.506262"
+           y="76.401375" />
+        <rect
+           style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
+           id="rect234-3-6-5-6"
+           width="53.443718"
+           height="8.7257929"
+           x="25.506258"
+           y="85.127167" />
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-size:5.64444px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+         x="33.999531"
+         y="134.38527"
+         id="text561-6-2"><tspan
+           sodipodi:role="line"
+           id="tspan559-2-9"
+           style="stroke-width:0.264583"
+           x="33.999531"
+           y="134.38527">ActionSet</tspan></text>
+    </g>
+    <g
+       id="g789-1"
+       transform="matrix(0.74514804,0,0,0.74514804,-46.218467,78.542322)">
+      <g
+         id="g505-9-2"
+         transform="matrix(0.78479848,0,0,1.005127,68.466188,50.523285)">
+        <rect
+           style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
+           id="rect234-1-7"
+           width="53.443718"
+           height="8.7257929"
+           x="25.506264"
+           y="67.675583" />
+        <rect
+           style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
+           id="rect234-3-2-0"
+           width="53.443718"
+           height="8.7257929"
+           x="25.506262"
+           y="76.401375" />
+        <rect
+           style="fill:#e6e6e6;stroke:#000000;stroke-width:1.2;stroke-miterlimit:4.9"
+           id="rect234-3-6-7-9"
+           width="53.443718"
+           height="8.7257929"
+           x="25.506258"
+           y="85.127167" />
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-size:5.64444px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+         x="97.830757"
+         y="124.59663"
+         id="text561-0-3"><tspan
+           sodipodi:role="line"
+           id="tspan559-9-6"
+           style="stroke-width:0.264583"
+           x="97.830757"
+           y="124.59663">Observer</tspan></text>
+    </g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.644553;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 50.96822,176.67949 38.41381,-9.45205"
+       id="path854-0"
+       sodipodi:nodetypes="cc" />
+    <rect
+       style="fill:#000000;stroke:#000000;stroke-width:0.644553;stroke-miterlimit:4.9;stroke-dasharray:none"
+       id="rect1410-6"
+       width="4.0511622"
+       height="4.0511622"
+       x="134.00386"
+       y="121.86103"
+       transform="rotate(30.549905)" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:0.793749, 0.793749;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 9.341424,145.57985 H 199.77631"
+       id="path2745-2" />
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="9.4192152"
+       y="115.26895"
+       id="text2749-6"><tspan
+         sodipodi:role="line"
+         id="tspan2747-1"
+         style="stroke-width:0.264583"
+         x="9.4192152"
+         y="115.26895">ExaHyPE - implementation layer</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="9.3414259"
+       y="156.66216"
+       id="text2753-8"><tspan
+         sodipodi:role="line"
+         id="tspan2751-7"
+         style="stroke-width:0.264583"
+         x="9.3414259"
+         y="156.66216">Peano</tspan></text>
+    <g
+       id="g2266"
+       transform="translate(-18.893595,12.582495)">
+      <rect
+         style="fill:#ffffff;stroke:#000000;stroke-width:0.865;stroke-miterlimit:4.9;stroke-dasharray:none;stroke-dashoffset:0"
+         id="rect2807-9"
+         width="21.547094"
+         height="26.418968"
+         x="164.74805"
+         y="141.12256" />
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.647;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 171.22529,141.07938 v 5.68942 0 h -6.10754 l 6.10754,-5.68942"
+         id="path2809-2"
+         sodipodi:nodetypes="ccccc" />
+      <text
+         xml:space="preserve"
+         style="font-size:5.64444px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+         x="171.5488"
+         y="157.91026"
+         id="text2813-0"><tspan
+           sodipodi:role="line"
+           id="tspan2811-2"
+           style="stroke-width:0.264583"
+           x="171.5488"
+           y="157.91026">C++</tspan></text>
+    </g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.981276;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#EmptyTriangleIn-3)"
+       d="m 105,138.50294 v 11.19729"
+       id="path2884-3" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.981276;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#EmptyTriangleIn-3-1)"
+       d="m 38.625373,139.54766 v 11.19729"
+       id="path2884-3-9" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.981276;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#EmptyTriangleIn-3-3)"
+       d="m 156.61816,138.21284 v 11.19729"
+       id="path2884-3-94" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.665;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-dasharray:2.66000009, 2.66000009;stroke-dashoffset:0;marker-end:url(#TriangleStart)"
+       d="m 50.968216,46.186044 c 68.751494,18.66627 0.245332,41.029853 3e-6,41.10994"
+       id="path1501"
+       sodipodi:nodetypes="cc" />
   </g>
 </svg>
