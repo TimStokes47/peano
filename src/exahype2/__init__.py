@@ -1,6 +1,8 @@
 """ This file is part of the ExaHyPE 2 project within Peano 4. For conditions of distribution and 
  use, please see the copyright notice at www.peano-framework.org
 """
+import peano4.api
+
 import exahype2.api
 import exahype2.plotter
 import exahype2.initialisation
@@ -11,6 +13,9 @@ import exahype2.initialisation
 #import exahype2.solvers.fv
 #import exahype2.solvers.rkfd
 #import exahype2.solvers.elliptic
+
+
+peano4.api.Logger().log("ExaHyPE 2x extension", peano4.api.LoggerPrintOption.ALWAYS_PRINT)
 
 
 havenumpy = False
@@ -61,4 +66,3 @@ if havematplotlib:
 #from .Project import Project
 #from .ExaHyPEMain import ExaHyPEMain
 
-print( "Peano 4 - ExaHyPE 2 extension (revised API)" )

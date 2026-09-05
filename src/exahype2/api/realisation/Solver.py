@@ -2,9 +2,12 @@
 # use, please see the copyright notice at www.peano-framework.org
 from __future__ import annotations
 
+from typing import List
+
 import peano4.api.output
 
 from ..Solver import Solver as SolverSpecification
+from .Step import Step
 
 
 class Solver:
@@ -26,6 +29,12 @@ class Solver:
     exahype2 Project's generator that later folds this output into the
     generated Peano 4 project's own output.
 
+    Beyond that, it holds the realisation.Step instances that this solver
+    contributes to each of the algorithmic steps a Project runs through:
+    initialising, grid_construction, time_stepping, plotting and
+    checkpointing. A solver may contribute several steps to the same phase
+    (e.g. several grid construction sweeps), so each of these is a list.
+
     """
 
     def __init__(self, solver: SolverSpecification):
@@ -37,6 +46,12 @@ class Solver:
             )
         self._solver = solver
         self._output = peano4.api.output.Output()
+
+        self.initialising: List[Step] = []
+        self.grid_construction: List[Step] = []
+        self.time_stepping: List[Step] = []
+        self.plotting: List[Step] = []
+        self.checkpointing: List[Step] = []
 
     @property
     def solver(self) -> SolverSpecification:
