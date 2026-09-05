@@ -9,9 +9,6 @@ import abc
 import os
 import sys
 
-#import exahype2.grid
-#import exahype2.solvers
-
 
 class Project(object):
     """!
@@ -60,7 +57,14 @@ class Project(object):
             """
 
     def __init__(self, namespace, project_name, executable, directory=".", subdirectory="", abstract_overwrite=True):
-        self._peano_project = peano4.api.Project(namespace, project_name, directory, subdirectory)
+        # Kept around only to construct the peano4.api.Project afresh each
+        # time generate_Peano4_project() runs - see there. That project is a
+        # local variable, not an attribute: repeated calls to
+        # generate_Peano4_project() must yield an independent snapshot
+        # rather than accumulate onto a stale, shared instance.
+        self._namespace = namespace
+        self._project_name = project_name
+        self._directory = directory
         self._subdirectory = subdirectory
         self._abstract_overwrite = abstract_overwrite
 
@@ -477,12 +481,6 @@ thus appreciate any citation of the original release paper
         self._time_in_between_plots = time_in_between_plots
         self._first_checkpoint_time_stamp = first_checkpoint_time_stamp
         self._time_in_between_checkpoints = time_in_between_checkpoints
-        self._peano_project.constants.export(
-            "TimeInBetweenPlots", str(self._time_in_between_plots)
-        )
-        self._peano_project.constants.export(
-            "TimeInBetweenCheckpoints", str(self._time_in_between_checkpoints)
-        )
 
         self._periodic_BC = []
         self._plotter_precision = plotter_precision
@@ -863,26 +861,38 @@ thus appreciate any citation of the original release paper
         self.create_grid_but_postpone_refinement.add_action_set(action_set)
         self.create_grid_and_converge_lb.add_action_set(action_set)
 
-    def generate_Peano4_project(self, 
-                                verbose=False):
+    def generate_Peano4_project(self, verbosity=peano4.api.LoggerVerbosity.OFF):
         """!
 
         Construct a Peano 4 project and return it
 
         Build the Peano 4 project, i.e., all the action sets et al that you require
-        to run this ExaHyPE 2 application. The project is built within self._peano_project
-        and eventually returned.
+        to run this ExaHyPE 2 application. The Peano 4 project is a local variable
+        here - a fresh peano4.api.Project - that is populated over the course of
+        this call and eventually returned.
 
         This routine generates a Peano project, i.e. the domain-specific ExaHyPE
-        view is translated into a Peano model. Once you have called this routine,
-        any changes to the ExaHyPE 2 configuration do not propagate into the Peano
-        setup anymore. If you alter the ExaHyPE setup, you have to call
-        generate_Peano4_project() again to get a new snapshot/version of the
-        Peano setup.
+        view is translated into a Peano model. As the Peano project is not kept
+        around as an attribute, calling generate_Peano4_project() again after you
+        have altered the ExaHyPE setup gives you an independent, fresh snapshot of
+        the Peano setup rather than an accumulation on top of a stale one.
         """
-        solver_realisations = [
-            solver.generate_solver_realisation(self, verbose) for solver in self._solvers
-        ]
+        peano4.api.Logger().verbosity = verbosity
+
+        peano_project = peano4.api.Project(
+            self._namespace, self._project_name, self._directory, self._subdirectory
+        )
+
+        # The task graphs for the four algorithmic phases every ExaHyPE 2
+        # project goes through. They only live for the duration of this call
+        # - each solver contributes its tasks into them as it is realised.
+        setup_simulation = peano4.api.taskgraph.Graph()
+        time_step = peano4.api.taskgraph.Graph()
+        plot = peano4.api.taskgraph.Graph()
+        checkpoint = peano4.api.taskgraph.Graph()
+
+        for solver in self._solvers:
+            solver.generate_solver_realisation(self, peano_project, setup_simulation, time_step, plot, checkpoint)
 
 #            solver.add_to_Peano4_datamodel(self._peano_project.datamodel, verbose)
 
@@ -941,7 +951,7 @@ thus appreciate any citation of the original release paper
 
 #        self._peano_project.output.makefile.set_mode(self._build_mode)
 
-        return self.generator.generate_Peano4_project(self, solver_realisations, verbose)
+        return self.generator.generate_Peano4_project(self, peano_project, verbosity)
 
 
     def init_new_user_defined_algorithmic_step(self,
@@ -980,11 +990,3 @@ thus appreciate any citation of the original release paper
     @property
     def additional_includes(self):
         return self._additional_includes
-
-    @property
-    def namespace(self):
-        return self._peano_project.namespace
-
-    @property
-    def peano4_project(self):
-        return self._peano_project

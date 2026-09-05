@@ -5,6 +5,8 @@ from __future__ import annotations
 import abc
 from typing import Dict, List, Union
 
+import peano4.api
+
 from .PDETerm import PDETerm
 
 VariableSpecification = Union[int, Dict[str, int]]
@@ -51,8 +53,7 @@ class Solver(abc.ABC):
         @abc.abstractmethod
         def construct_output(self,
                              exahype2_project,
-                             solver_realisation,
-                             verbose):
+                             peano_project):
             """!
             Has to be implemented by subclass
             """
@@ -74,10 +75,15 @@ class Solver(abc.ABC):
         @abc.abstractmethod
         def construct_output(self,
                              exahype2_project,
-                             solver_realisation,
-                             verbose):
+                             peano_project,
+                             time_step):
             """!
             Has to be implemented by subclass
+
+            time_step: peano4.api.taskgraph.Graph
+              The task graph of the surrounding exahype2_project's time
+              stepping phase, so the numerical scheme can add its own tasks
+              into it.
             """
 
 
@@ -97,8 +103,7 @@ class Solver(abc.ABC):
         @abc.abstractmethod
         def construct_output(self,
                              exahype2_project,
-                             solver_realisation,
-                             verbose):
+                             peano_project):
             """!
             Has to be implemented by subclass
             """
@@ -163,14 +168,9 @@ class Solver(abc.ABC):
         self.solver_generator = SolverToCPPFiles(self)
 
         # NumericalScheme has no default realisation - concrete solver
-        # subclasses have to assign their own subclass instance to it.
-        self.numerical_scheme: "Solver.NumericalScheme" = None
-
-        from .VTKPlotter import VTKPlotter
-        self.plotter: "exahype2.plotter.api.Plotter" = VTKPlotter(self)
-
-        from .DefaultInitialisation import DefaultInitialisation
-        self.initialisation: "exahype2.initialisation.api.HardcodedInitialisation" = DefaultInitialisation(self)
+        # subclasses have to assign their own subclass instance to it,
+        # through the numerical_scheme property below.
+        self._numerical_scheme: "Solver.NumericalScheme" = None
 
         from .HardcodedGridConstruction import HardcodedGridConstruction
         self.grid_construction: "Solver.GridConstruction" = HardcodedGridConstruction(self)
@@ -216,6 +216,19 @@ class Solver(abc.ABC):
         Unique solver name. Feeds into all generated class and instance names.
         """
         return self._name
+
+    @property
+    def numerical_scheme(self) -> "Solver.NumericalScheme":
+        return self._numerical_scheme
+
+    @numerical_scheme.setter
+    def numerical_scheme(self, value: "Solver.NumericalScheme"):
+        if not isinstance(value, Solver.NumericalScheme):
+            raise TypeError(
+                "numerical_scheme has to be a Solver.NumericalScheme, but got "
+                f"{type(value)}"
+            )
+        self._numerical_scheme = value
 
     @property
     def unknowns(self) -> int:
@@ -306,27 +319,36 @@ class Solver(abc.ABC):
 
     def generate_solver_realisation(self,
                                 exahype2_project,
-                                verbose):
+                                peano_project,
+                                setup_simulation,
+                                time_step,
+                                plot,
+                                checkpoint,
+                                ):
         """!
-        Turn this solver specification into a realisation.Solver
+        Turn this solver specification into a task graph and create the required C++ kernels/stubs
 
-        Constructs a fresh realisation.Solver tied to this solver, lets the
-        solver_generator populate it (and the surrounding exahype2_project),
-        and returns it. The caller - typically the exahype2_project's
-        generator - collects the realisations of all registered solvers and
-        mangles them into one Peano 4 project.
+        peano_project: peano4.api.Project
+          The Peano 4 project that exahype2_project.generate_Peano4_project() is
+          currently assembling. It is a local variable there, not an attribute -
+          merely passed through here, so this solver can add its own artefacts to it.
 
-        @return exahype2.api.realisation.Solver
+        setup_simulation, time_step, plot, checkpoint: peano4.api.taskgraph.Graph
+          The task graphs of the four algorithmic phases of the surrounding
+          exahype2_project. They are owned by exahype2_project.generate_Peano4_project()
+          and merely passed through here, so this solver can add its own
+          tasks into them.
+
+        @return peano4.api.taskgraph.Graph
         """
-        if verbose:
-            print("---------------------------------------")
-            print("Create data for solver " + self._name)
-            print("---------------------------------------")
+        peano4.api.Logger().new_section("Solver " + self._name)
 
-        from .realisation import Solver as SolverRealisation
-        solver_realisation = SolverRealisation(self)
+        assert self.numerical_scheme is not None, (
+            f"Solver {self._name} has no numerical_scheme set. Assign a "
+            "Solver.NumericalScheme subclass instance to numerical_scheme "
+            "before calling generate_solver_realisation()."
+        )
 
-        self.solver_generator.construct_output(exahype2_project,solver_realisation,verbose)
-
-        return solver_realisation
+        self.solver_generator.construct_output(exahype2_project, peano_project)
+        self.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
 

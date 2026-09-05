@@ -197,8 +197,8 @@ tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPAC
 
     def construct_output(self,
                          exahype2_project,
-                         solver_realisation,
-                         verbose):
+                         peano_project,
+                         ):
         """!
 
         Dump the solver into actual C++ classes.
@@ -206,8 +206,11 @@ tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPAC
         """
         class_name = "Abstract" + self._solver.name
         templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
-        if verbose:
-            print( "Map class {} onto C++ files using {} and lower into solver realisation object".format(self._solver.name, templatefile_prefix) )
+        
+        peano4.api.Logger().log(
+            "Map class {} onto C++ class {} using {}".format(self._solver.name, class_name, templatefile_prefix)
+        )
+
         local_d = {
           "NUMBER_OF_UNKNOWNS": self._solver._unknowns,
           "NUMBER_OF_AUXILIARY_VARIABLES": self._solver._auxiliary_variables,
@@ -218,11 +221,11 @@ tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPAC
             headerfile_template = self.TEMPLATE_ABSTRACT_HEADER_FILE,
             cppfile_template    = self.TEMPLATE_ABSTRACT_CPP_FILE,
             classname           = class_name,
-            namespace           = exahype2_project.namespace,
-            subdirectory        = exahype2_project.subdirectory,
+            namespace           = peano_project.namespace,
+            subdirectory        = peano_project.subdirectory,
             dictionary          = local_d,
             default_overwrite=True,
             apply_iteratively=False,
         )
-        solver_realisation.output.add(generated_files)
+        peano_project.output.add(generated_files)
 

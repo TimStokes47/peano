@@ -4,8 +4,6 @@
 import peano4.api
 
 import exahype2.api
-import exahype2.plotter
-import exahype2.initialisation
 #import exahype2.tracer
 #import exahype2.grid
 #import exahype2.dslhype
@@ -14,8 +12,17 @@ import exahype2.initialisation
 #import exahype2.solvers.rkfd
 #import exahype2.solvers.elliptic
 
+ASCII_ART_HEADER = r"""
+ ___          _  _      ___ ___
+| __|_ ____ _| || |_  _| _ \ __|
+| _|\ \ / _` | __ | || |  _/ _|
+|___/_\_\__,_|_||_|\_, |_| |___|
+                   |__/
+"""
+COPYRIGHT_HEADER = "ExaHyPE 2x extension"
 
-peano4.api.Logger().log("ExaHyPE 2x extension", peano4.api.LoggerPrintOption.ALWAYS_PRINT)
+peano4.api.Logger().log(ASCII_ART_HEADER, peano4.api.LoggerPrintOption.ALWAYS_PRINT)
+peano4.api.Logger().log(COPYRIGHT_HEADER, peano4.api.LoggerPrintOption.ALWAYS_PRINT)
 
 
 havenumpy = False

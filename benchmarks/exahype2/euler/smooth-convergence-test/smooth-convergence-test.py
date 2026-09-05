@@ -13,6 +13,7 @@ auxiliary_variables = 0
 mesh_size   = 0.2 / 9.0
 patch_size  = 9
 dimensions  = 2
+verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
 
 thesolver = exahype2.api.Solver(
   solver_name,
@@ -24,7 +25,7 @@ thesolver.add_pde_term(
       exahype2.api.Flux(
           )
     )
-
+thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver)
 
 #  patch_size,
 #  mesh_size,
@@ -60,9 +61,9 @@ project.set_global_simulation_parameters(
   periodic_BC           = [False, False, False]
 )
 
-project.set_load_balancing("toolbox::loadbalancing::strategies::RecursiveBipartition", "new ::exahype2::LoadBalancingConfiguration()")
+#project.set_load_balancing("toolbox::loadbalancing::strategies::RecursiveBipartition", "new ::exahype2::LoadBalancingConfiguration()")
 project.set_Peano4_installation("../../../../", build_mode)
-peano4_project = project.generate_Peano4_project(verbose=True)
+peano4_project = project.generate_Peano4_project(verbosity=verbosity)
 #peano4_project.output.makefile.add_h_file("EulerFVSmooth.h")
 #peano4_project.output.makefile.add_cpp_file("EulerFVSmooth.cpp")
 peano4_project.generate()

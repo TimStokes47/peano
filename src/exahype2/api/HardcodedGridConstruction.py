@@ -13,7 +13,7 @@ class HardcodedGridConstruction(Solver.GridConstruction):
     def __init__(self, solver: Solver):
         super().__init__(solver)
 
-    def construct_output(self, exahype2_project, solver_realisation, verbose):
+    def construct_output(self, exahype2_project, peano_project):
         """!
         @todo Not implemented yet
         """

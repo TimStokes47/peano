@@ -12,5 +12,6 @@ try:
     from .Project import Project
     from .Logger import Logger
     from .Logger import LoggerPrintOption
+    from .Logger import LoggerVerbosity
 except ImportError as error:
     print("Peano core project files cannot be loaded: {}".format(error))
