@@ -1,8 +1,8 @@
 # This file is part of the Peano multigrid project. For conditions of 
 # distribution and use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import jinja2
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 
 import os
@@ -17,7 +17,7 @@ from multigrid.petsc.api.actionsets.ImposeDirichletBoundaryConditionsWithInterio
 
 from abc import abstractmethod
 
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 
 
@@ -202,8 +202,8 @@ class AssemblePetscMatrix(ActionSet):
   def get_body_of_operation(self,operation_name):
     """!
 
-Provide C++ code snippet for peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME  
-Provide C++ code snippet for peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME  
+Provide C++ code snippet for peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME  
+Provide C++ code snippet for peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME  
   
 Only touchVertexFirstTime is an event where this action set actually
 does something: It inserts the template TemplateTouchVertexFirstTime and 
@@ -215,10 +215,10 @@ appropriate template into each.
     
     """
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.TemplateTouchCellFirstTime).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
       result = jinja2.Template(self.TemplateTouchFaceFirstTime).render(**self.d)
       pass 
     return result
@@ -676,10 +676,10 @@ the matrix is applied to
     assert len( quadrature_points_in_unit_interval ) == len( gaussian_integration_points,  "Something has gone wrong. These should all be same length for fixed polynomial degree" )
     assert len( quadrature_points_in_unit_interval ) == len( gaussian_integration_weights, "Something has gone wrong. These should all be same length for fixed polynomial degree" )
     
-    self._cell_pde_data   = peano4.datamodel.DaStGen2( name )
-    self._cell_pde_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "value",    str(self.number_of_matrix_entries_per_cell) ) )
-    self._cell_pde_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "rhs",      str(self.number_of_matrix_entries_per_cell) ) )
-    self._cell_pde_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "exactSol", str(self.number_of_matrix_entries_per_cell) ) )
+    self._cell_pde_data   = peano4.api.datamodel.DaStGen2( name )
+    self._cell_pde_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "value",    str(self.number_of_matrix_entries_per_cell) ) )
+    self._cell_pde_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "rhs",      str(self.number_of_matrix_entries_per_cell) ) )
+    self._cell_pde_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "exactSol", str(self.number_of_matrix_entries_per_cell) ) )
     
     pass
 
@@ -728,7 +728,7 @@ the matrix is applied to
 
 
   def add_to_create_grid(self, observer):
-    observer.add_action_set(peano4.toolbox.CreateRegularGrid(self.max_h))
+    observer.add_action_set(peano4.api.toolbox.CreateRegularGrid(self.max_h))
     pass
 
   
@@ -809,7 +809,7 @@ the matrix is applied to
         "SOLVER_NAME":                           self.typename(),
         }
 
-    generated_abstract_header_file = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_abstract_header_file = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".Abstract.template.h",
       templatefile_prefix + ".Abstract.template.cpp",
       "Abstract" + self.typename(), 
@@ -818,7 +818,7 @@ the matrix is applied to
       dictionary,
       True,
       True)
-    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_solver_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".template.h",
       templatefile_prefix + ".template.cpp",
       self.typename(), 

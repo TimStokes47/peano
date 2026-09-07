@@ -1,10 +1,10 @@
 # This file is part of the Swift2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.toolbox.particles.InsertParticlesAlongCartesianLayoutIntoUnrefinedCells
+import peano4.api.toolbox.particles.InsertParticlesAlongCartesianLayoutIntoUnrefinedCells
 
 
 class InsertNoisyParticlesAlongCartesianGrid(
-    peano4.toolbox.particles.InsertParticlesAlongCartesianLayoutIntoUnrefinedCells
+    peano4.api.toolbox.particles.InsertParticlesAlongCartesianLayoutIntoUnrefinedCells
 ):
     def __init__(
         self,

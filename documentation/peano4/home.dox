@@ -20,6 +20,7 @@ either use Peano's Python API or they use an extension built on top of Peano
 (such as ExaHyPE) which hides away most technical details.
 
 
+- \subpage page_architecture_home
 - Peano's C++ core
   - \subpage peano_main
   - \subpage peano_action_sets

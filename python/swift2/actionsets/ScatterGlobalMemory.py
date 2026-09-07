@@ -1,11 +1,11 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 
 import jinja2
 import dastgen2
-import peano4
+import peano4.api
 
 
 class ScatterGlobalMemory(ActionSet):
@@ -16,7 +16,7 @@ class ScatterGlobalMemory(ActionSet):
     Memory pools can ask the system to scatter all data to start from a clean
     plate again. This is notably important for the global memory pool. 
 
-    The action set is kind of the antidote to peano4.toolbox.particles.GatherParticlesInMemoryPool.
+    The action set is kind of the antidote to peano4.api.toolbox.particles.GatherParticlesInMemoryPool.
     It should be used within dummy sweeps typically.
 
     """
@@ -30,7 +30,7 @@ class ScatterGlobalMemory(ActionSet):
 
         ## Arguments
 
-        particle_set: peano4.toolbox.particles.ParticleSet
+        particle_set: peano4.api.toolbox.particles.ParticleSet
            Instance of the particle set that is to be scattered.
 
 

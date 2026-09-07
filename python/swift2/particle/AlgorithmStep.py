@@ -5,7 +5,7 @@ from enum import Enum, IntEnum
 
 from abc import abstractmethod
 
-import peano4
+import peano4.api
 
 
 class AlgorithmStep(object):
@@ -89,7 +89,7 @@ class AlgorithmStep(object):
         Enumeration of different @ref peano_action_sets "Peano events" during a
         grid traversal into which Swift 2 plugs in. We don't use all events.
         Therefore, this is a subset of the operations in
-        peano4.solversteps.ActionSet. The enumeration is based upon integers,
+        peano4.api.solversteps.ActionSet. The enumeration is based upon integers,
         as we need to know the order of the enumerations.
 
         Should we ever pick up more events, make sure to also update the dict
@@ -109,9 +109,9 @@ class AlgorithmStep(object):
 
         """
         Results = {
-            AlgorithmStep.PeanoEventUsedBySwift.TOUCH_VERTEX_FIRST_TIME: peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME,
+            AlgorithmStep.PeanoEventUsedBySwift.TOUCH_VERTEX_FIRST_TIME: peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME,
             AlgorithmStep.PeanoEventUsedBySwift.CELL_KERNEL: "cellKernel",
-            AlgorithmStep.PeanoEventUsedBySwift.TOUCH_VERTEX_LAST_TIME: peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME,
+            AlgorithmStep.PeanoEventUsedBySwift.TOUCH_VERTEX_LAST_TIME: peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME,
             AlgorithmStep.PeanoEventUsedBySwift.EVENT_COUNT: "count",
         }
         return Results[stage]

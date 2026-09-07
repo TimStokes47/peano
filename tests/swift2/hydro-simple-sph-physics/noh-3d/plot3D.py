@@ -17,7 +17,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import sys
 
-from peano4.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
+from peano4.api.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
 
 params = {
     "xtick.labelsize": 12,

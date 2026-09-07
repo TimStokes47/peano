@@ -1,10 +1,10 @@
 # This file is part of the Swift2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.toolbox.particles.InsertParticlesByCoordinates
+import peano4.api.toolbox.particles.InsertParticlesByCoordinates
 
 
 
-class InsertParticlesByCoordinates(peano4.toolbox.particles.InsertParticlesByCoordinates):
+class InsertParticlesByCoordinates(peano4.api.toolbox.particles.InsertParticlesByCoordinates):
   def __init__(self,
                particle_set,
                coordinates,

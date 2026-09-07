@@ -1,6 +1,6 @@
 # This file is part of the SWIFT2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.toolbox.particles
+import peano4.api.toolbox.particles
 
 
 from .TaskGraphKernelWrappers import (
@@ -11,7 +11,7 @@ from .TaskGraphKernelWrappers import (
 
 
 class UpdateParticle_SingleLevelInteraction_ContiguousParticles(
-    peano4.toolbox.particles.UpdateParticle_SingleLevelInteraction_ContiguousParticles
+    peano4.api.toolbox.particles.UpdateParticle_SingleLevelInteraction_ContiguousParticles
 ):
     """!
     

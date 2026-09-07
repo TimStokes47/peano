@@ -1,6 +1,6 @@
 import os
 import sys
-import peano4
+import peano4.api
 import exahype2
 
 dimensions                = 2
@@ -9,7 +9,7 @@ amr_levels                = 0 # Set to 0 to disable adaptive mesh refinement (AM
 patch_size                = 3
 end_time                  = 3.0
 plot_interval             = 0.05 # Set to 0 to disable I/O
-mode                      = peano4.output.CompileMode.Release # Switch here between 'Release', 'Debug', 'Asserts', 'Trace', 'Stats'
+mode                      = peano4.api.output.CompileMode.Release # Switch here between 'Release', 'Debug', 'Asserts', 'Trace', 'Stats'
 use_gpu                   = False # Requires a GPU enabled build
 
 if dimensions == 2:

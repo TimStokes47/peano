@@ -3,7 +3,7 @@
 import os
 import argparse
 
-import peano4
+import peano4.api
 import exahype2
 
 from CCZ4Solver import CCZ4Solver_RKDG_GlobalAdaptiveTimeStepWithEnclaveTasking
@@ -14,9 +14,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "-m",
     "--build-mode",
-    choices=peano4.output.CompileModes,
-    default=peano4.output.CompileModes[0], # Release
-    help="|".join(peano4.output.CompileModes),
+    choices=peano4.api.output.CompileModes,
+    default=peano4.api.output.CompileModes[0], # Release
+    help="|".join(peano4.api.output.CompileModes),
 )
 parser.add_argument(
     "-t",
@@ -118,7 +118,7 @@ project.set_global_simulation_parameters(
     periodic_BC=[False, False, False]
 )
 
-project.set_Peano4_installation("../../../../", mode=peano4.output.string_to_mode(args.build_mode))
+project.set_Peano4_installation("../../../../", mode=peano4.api.output.string_to_mode(args.build_mode))
 project = project.generate_Peano4_project(verbose=True)
 
 accuracy = args.accuracy

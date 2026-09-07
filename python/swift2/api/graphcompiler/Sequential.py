@@ -3,7 +3,7 @@
 from swift2.particle.AlgorithmStep import AlgorithmStep
 from swift2.actionsets.UpdateParticleMarker import UpdateParticleMarker
 
-import peano4
+import peano4.api
 import swift2
 
 
@@ -55,14 +55,14 @@ def translate_one_step_of_species_into_mesh_traversal(
       You get a specific algorithmic step as input. The current_species_set
       highlights to which this step originally belonged to.
 
-    @param mesh_traversals: [peano4.solversteps.Step]
+    @param mesh_traversals: [peano4.api.solversteps.Step]
       Inout parameter. We append a new step to this sequence.
 
     @param alter_particle_position: [Bool]
       Inout parameter. We append a new marker to this sequence.
 
     """
-    new_step = peano4.solversteps.Step(
+    new_step = peano4.api.solversteps.Step(
         "{}{}{}_sweep{}".format(
             get_observer_prefix(step_type),
             current_species_set.particle_model.name,
@@ -95,13 +95,13 @@ def translate_one_step_of_species_into_mesh_traversal(
         if use_continuous_particles_sequences:
             if verbose:
                 print(
-                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} can use the peano4.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles action set and hence optimise aggressively".format(
+                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} can use the peano4.api.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles action set and hence optimise aggressively".format(
                         len(mesh_traversals),
                         step.name,
                         current_species_set.particle_model.name,
                     )
                 )
-            action_set_particle_particle_interaction = peano4.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(
+            action_set_particle_particle_interaction = peano4.api.toolbox.particles.UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(
                 particle_set=current_species_set,
                 particle_particle_interaction_kernel=step.cell_kernel,
                 touch_vertex_first_time_compute_particle_update_kernel=step.touch_vertex_first_time_kernel,
@@ -114,13 +114,13 @@ def translate_one_step_of_species_into_mesh_traversal(
         else:
             if verbose:
                 print(
-                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses the peano4.toolbox.particles.UpdateParticle_MultiLevelInteraction_Sets".format(
+                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses the peano4.api.toolbox.particles.UpdateParticle_MultiLevelInteraction_Sets".format(
                         len(mesh_traversals),
                         step.name,
                         current_species_set.particle_model.name,
                     )
                 )
-            action_set_particle_particle_interaction = peano4.toolbox.particles.UpdateParticle_MultiLevelInteraction_Sets(
+            action_set_particle_particle_interaction = peano4.api.toolbox.particles.UpdateParticle_MultiLevelInteraction_Sets(
                 particle_set=current_species_set,
                 particle_particle_interaction_kernel=step.cell_kernel,
                 touch_vertex_first_time_compute_particle_update_kernel=step.touch_vertex_first_time_kernel,
@@ -139,14 +139,14 @@ def translate_one_step_of_species_into_mesh_traversal(
         if use_continuous_particles_sequences:
             if verbose:
                 print(
-                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses peano4.toolbox.particles.UpdateParticle_SingleLevelInteraction_ContiguousParticles action set".format(
+                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses peano4.api.toolbox.particles.UpdateParticle_SingleLevelInteraction_ContiguousParticles action set".format(
                         len(mesh_traversals),
                         step.name,
                         current_species_set.particle_model.name,
                     )
                 )
 
-            action_set_particle_update = peano4.toolbox.particles.UpdateParticle_SingleLevelInteraction_ContiguousParticles(
+            action_set_particle_update = peano4.api.toolbox.particles.UpdateParticle_SingleLevelInteraction_ContiguousParticles(
                 particle_set=current_species_set,
                 particle_cell_update_kernel=step.cell_kernel,
                 touch_vertex_first_time_compute_particle_update_kernel=step.touch_vertex_first_time_kernel,
@@ -164,14 +164,14 @@ def translate_one_step_of_species_into_mesh_traversal(
         else:
             if verbose:
                 print(
-                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses peano4.toolbox.particles.UpdateParticle_SingleLevelInteraction action set".format(
+                    "GRAPH COMPILER DEBUG [translate_one_step_of_species_into_mesh_traversal]: step no {} ({}) on particle {} uses peano4.api.toolbox.particles.UpdateParticle_SingleLevelInteraction action set".format(
                         len(mesh_traversals),
                         step.name,
                         current_species_set.particle_model.name,
                     )
                 )
 
-            action_set_particle_update = peano4.toolbox.particles.UpdateParticle_SingleLevelInteraction(
+            action_set_particle_update = peano4.api.toolbox.particles.UpdateParticle_SingleLevelInteraction(
                 particle_set=current_species_set,
                 particle_cell_update_kernel=step.cell_kernel,
                 touch_vertex_first_time_compute_particle_update_kernel=step.touch_vertex_first_time_kernel,
@@ -279,7 +279,7 @@ def map_onto_separate_mesh_traversals_with_generic_mapper(
                         current_species_set.particle_model.name,
                     )
                 )
-            new_step = peano4.solversteps.Step(
+            new_step = peano4.api.solversteps.Step(
                 "DummyStep{}{}_sweep{}".format(
                     current_species_set.particle_model.name,
                     current_step_of_species.name,
@@ -310,7 +310,7 @@ def map_onto_separate_mesh_traversals_with_generic_mapper(
                         current_species_set.particle_model.name,
                     )
                 )
-            new_step = peano4.solversteps.Step(
+            new_step = peano4.api.solversteps.Step(
                 "DummyStep{}{}_sweep{}".format(
                     current_species_set.particle_model.name,
                     current_step_of_species.name,

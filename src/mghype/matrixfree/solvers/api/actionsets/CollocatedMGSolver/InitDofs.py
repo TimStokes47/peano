@@ -23,9 +23,9 @@ level of the vertices to be one more than the coarse cells.
 """
 
 
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 class InitDofsCollocatedMG(ActionSet):
@@ -144,13 +144,13 @@ class InitDofsCollocatedMG(ActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
       result = jinja2.Template(self.templateTouchVertexFirstTime).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
       pass
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       result = jinja2.Template(self.templateEndTraversal).render(**self.d)
     return result
 

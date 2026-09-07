@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../../../python'))
 
-import peano4
+import peano4.api
 import exahype2
 
 # @todo Dmitry: This file does not belong in here! This is either part of the
@@ -88,7 +88,7 @@ def demo(file_path: str, dimensions: int):
     )
 
     # Configure build (adjust path/mode to your setup)
-    project.set_Peano4_installation("../../../../", peano4.output.CompileMode.Release)
+    project.set_Peano4_installation("../../../../", peano4.api.output.CompileMode.Release)
 
     # Generate only (no compile) for demonstration
     peano4_project = project.generate_Peano4_project(verbose=True)

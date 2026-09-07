@@ -1,6 +1,6 @@
-import peano4
+import peano4.api
 import jinja2
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 import os
 
@@ -11,7 +11,7 @@ from .actionsets.CollocatedSolver.ResetAndUpdateResidual  import ResetAndUpdateR
 from .actionsets.PlotVertexDataInPeanoBlockFormat         import PlotVertexDataInPeanoBlockFormat
 
 from abc import abstractmethod
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 
 class CollocatedDLinearDiscretisationWithPointJacobi(Solver):
@@ -142,10 +142,10 @@ class CollocatedDLinearDiscretisationWithPointJacobi(Solver):
     matrix_dims = (2**dimensions) * unknowns_per_vertex
   
     # already initialised this in superclass!
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "u",      str(unknowns_per_vertex) ) )
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "rhs",        str(unknowns_per_vertex) ) )
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "diag",       str(unknowns_per_vertex) ) )
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "residual",   str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "u",      str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "rhs",        str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "diag",       str(unknowns_per_vertex) ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "residual",   str(unknowns_per_vertex) ) )
     self._vertex_data.peano4_mpi_and_storage_aspect.merge_implementation = self.get_vertex_merge_method()
 
     self._unknowns_per_vertex_node      = unknowns_per_vertex
@@ -195,7 +195,7 @@ class CollocatedDLinearDiscretisationWithPointJacobi(Solver):
     pass
 
   def add_to_create_grid(self, observer):
-    observer.add_action_set(peano4.toolbox.CreateRegularGrid(self.max_h))
+    observer.add_action_set(peano4.api.toolbox.CreateRegularGrid(self.max_h))
     pass
 
   def add_to_init_solution(self, observer):
@@ -252,7 +252,7 @@ class CollocatedDLinearDiscretisationWithPointJacobi(Solver):
         "CUSTOM_BOUNDARY_CONDITIONS"           : self._custom_boundary_conditions,
     }
 
-    generated_abstract_header_file = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_abstract_header_file = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".Abstract.template.h",
       templatefile_prefix + ".Abstract.template.cpp",
       "Abstract" + self.typename(), 
@@ -261,7 +261,7 @@ class CollocatedDLinearDiscretisationWithPointJacobi(Solver):
       dictionary,
       abstract_overwrite,
       True)
-    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_solver_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".template.h",
       templatefile_prefix + ".template.cpp",
       self.typename(), 

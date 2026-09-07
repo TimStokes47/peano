@@ -124,7 +124,7 @@ have to deal with scattered memory access. Coalescent memory access is basically
 never possible.
 
 
-@image html python/peano4/toolbox/particles/ParticleSetGenerator_ScatteredOnHeap.png
+@image html src/peano4/api/toolbox/particles/ParticleSetGenerator_ScatteredOnHeap.png
 
 
 In return, we don't move
@@ -135,7 +135,7 @@ memory block (array), or we can use a list which adds another level of overhead
 but is more flexible if particle-associations change frequently.
 
 
-@image html python/peano4/toolbox/particles/ParticleSetGenerator_ContinuousPerVertex.png
+@image html src/peano4/api/toolbox/particles/ParticleSetGenerator_ContinuousPerVertex.png
 
 We also offer a variant which @ref toolbox_particles_memorypool "stores the particles continuously within one memory chunks per vertex".
 You can study toolbox::particles::memorypool::VertexWiseContinuousMemoryPool
@@ -145,7 +145,7 @@ big blob, i.e. as one large array. This global sorting is realised through
 toolbox::particles::memorypool::GlobalContinuousMemoryPool.
 
 
-@image html python/peano4/toolbox/particles/ParticleSetGenerator_GlobalContinuous.png
+@image html src/peano4/api/toolbox/particles/ParticleSetGenerator_GlobalContinuous.png
 
 
 The code to switch the storage scheme is relatively easy. Capture the particle

@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import argparse
 
-import peano4
+import peano4.api
 import exahype2
 
 parser = argparse.ArgumentParser(
@@ -30,9 +30,9 @@ parser.add_argument(
 parser.add_argument(
     "-m",
     "--build-mode",
-    choices=peano4.output.CompileModes,
-    default=peano4.output.CompileModes[0], # Release
-    help="|".join(peano4.output.CompileModes),
+    choices=peano4.api.output.CompileModes,
+    default=peano4.api.output.CompileModes[0], # Release
+    help="|".join(peano4.api.output.CompileModes),
 )
 parser.add_argument(
     "-et",
@@ -272,7 +272,7 @@ if args.load_balancing_strategy != "None":
 
 project.set_number_of_threads(args.threads)
 project.set_timeout(args.timeout)
-project.set_Peano4_installation("../../../", mode=peano4.output.string_to_mode(args.build_mode))
+project.set_Peano4_installation("../../../", mode=peano4.api.output.string_to_mode(args.build_mode))
 project = project.generate_Peano4_project(verbose=True)
 if args.fpe:
     project.set_fenv_handler("FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW")

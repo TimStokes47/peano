@@ -2,7 +2,7 @@ import os
 import argparse
 import numpy as np
 
-import peano4
+import peano4.api
 import swift2
 import swift2.sphtools as sphtools
 import dastgen2
@@ -223,15 +223,15 @@ if __name__ == "__main__":
     # example are used however.
     ########################################################################################
     if args.mode == "release":
-        build_mode = peano4.output.CompileMode.Release
+        build_mode = peano4.api.output.CompileMode.Release
     if args.mode == "stats":
-        build_mode = peano4.output.CompileMode.Stats
+        build_mode = peano4.api.output.CompileMode.Stats
     if args.mode == "asserts":
-        build_mode = peano4.output.CompileMode.Asserts
+        build_mode = peano4.api.output.CompileMode.Asserts
     if args.mode == "trace":
-        build_mode = peano4.output.CompileMode.Trace
+        build_mode = peano4.api.output.CompileMode.Trace
     if args.mode == "debug":
-        build_mode = peano4.output.CompileMode.Debug
+        build_mode = peano4.api.output.CompileMode.Debug
 
     # Set Peano4 simulation parameters ---------------------------------------------
     offset = [0, 0, 0]
@@ -333,6 +333,6 @@ if __name__ == "__main__":
         shutil.rmtree(dir, ignore_errors=True)
 
     peano4_project.generate(
-        overwrite=peano4.output.Overwrite.Default, throw_away_data_after_generation=True
+        overwrite=peano4.api.output.Overwrite.Default, throw_away_data_after_generation=True
     )
     peano4_project.build(make_clean_first=True, number_of_parallel_builds=args.j)

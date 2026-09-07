@@ -7,7 +7,7 @@
 
 import os, sys
 import argparse
-import peano4
+import peano4.api
 import petsc
 
 print( """
@@ -53,11 +53,11 @@ project.add_solver( solver )
 # Configure build
 #
 if args.mode=="release":
-  build_mode = peano4.output.CompileMode.Release
+  build_mode = peano4.api.output.CompileMode.Release
 if args.mode=="stats":
-  build_mode = peano4.output.CompileMode.Stats
+  build_mode = peano4.api.output.CompileMode.Stats
 if args.mode=="asserts":
-  build_mode = peano4.output.CompileMode.Asserts
+  build_mode = peano4.api.output.CompileMode.Asserts
 
 cube_size = 1.0
 project.set_global_simulation_parameters(

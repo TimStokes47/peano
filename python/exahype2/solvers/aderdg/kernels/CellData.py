@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from copy import deepcopy
 
-import peano4.output
+import peano4.api.output
 
 
 class CellData(object):
@@ -66,7 +66,7 @@ class CellData(object):
         self.d["BndFluxSize"] = nUnknownsPad * (nDof * nDof3D)
         self.d["BndFluxTotalSize"] = 2 * nDim * self.d["BndFluxSize"]
 
-        generated_kernels = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+        generated_kernels = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
             headfile_template=template_prefix + "CellData.template.h",
             cppfile_template=template_prefix + "CellData.template.cpp",
             classname=output_path + "/CellData",

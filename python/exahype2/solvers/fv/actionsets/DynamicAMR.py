@@ -1,14 +1,14 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import exahype2
 import jinja2
 
 
-import peano4.toolbox.blockstructured.DynamicAMR                 
+import peano4.api.toolbox.blockstructured.DynamicAMR                 
 
 
-class DynamicAMR( peano4.toolbox.blockstructured.DynamicAMR ):
+class DynamicAMR( peano4.api.toolbox.blockstructured.DynamicAMR ):
   """
   
    The ExaHyPE 2 Finite Volume handling of (dynamically) adaptive meshes

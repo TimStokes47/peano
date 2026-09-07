@@ -2,7 +2,7 @@ import os
 import argparse
 import numpy as np
 
-import peano4
+import peano4.api
 import swift2
 import swift2.sphtools as sphtools
 import dastgen2
@@ -190,9 +190,9 @@ particle.set_parameters()
 particle_set = project.add_particle_species(particle)
 
 if args.asserts:
-    build_mode = peano4.output.CompileMode.Asserts
+    build_mode = peano4.api.output.CompileMode.Asserts
 else:
-    build_mode = peano4.output.CompileMode.Release
+    build_mode = peano4.api.output.CompileMode.Release
 
 offset = [0, 0, 0]
 domain_size = [1, 1, 1]
@@ -271,7 +271,7 @@ project.algorithm_step_initial_conditions.add_action_set(
 #
 #  Insert particles from file
 #
-# project.algorithm_step_initial_conditions.add_action_set( peano4.toolbox.particles.sph.fileReader.InsertParticlesFromHDF5File(
+# project.algorithm_step_initial_conditions.add_action_set( peano4.api.toolbox.particles.sph.fileReader.InsertParticlesFromHDF5File(
 #  particle_set         = particle_set,
 #  filename='sodShock.hdf5'
 #  ))
@@ -289,7 +289,7 @@ project.algorithm_step_initial_conditions.add_action_set(
 #
 # When we create the plotter, we have to inform it how to enumerate the
 # individual snapshots. Obviously, we can just count through the snapshots.
-# In this case, you have to pass the constant peano4.toolbox.particles.PlotParticlesInVTKFormat.CountTimeSteps
+# In this case, you have to pass the constant peano4.api.toolbox.particles.PlotParticlesInVTKFormat.CountTimeSteps
 # into the field time_stamp_evaluation. You can also define your own time
 # stamp. For this, it is useful to know that each particle definition in the
 # Python script will yield a particle class with the same name in the
@@ -300,8 +300,8 @@ project.algorithm_step_initial_conditions.add_action_set(
 # which returns an object that holds global information about this particle
 # type.
 ###############################################################################
-# particle_plotter = peano4.toolbox.particles.PlotParticlesInVTKFormat( "particles", particle_set, time_stamp_evaluation=peano4.toolbox.particles.PlotParticlesInVTKFormat.CountTimeSteps )
-particle_plotter = peano4.toolbox.particles.PlotParticlesInVTKFormat(
+# particle_plotter = peano4.api.toolbox.particles.PlotParticlesInVTKFormat( "particles", particle_set, time_stamp_evaluation=peano4.api.toolbox.particles.PlotParticlesInVTKFormat.CountTimeSteps )
+particle_plotter = peano4.api.toolbox.particles.PlotParticlesInVTKFormat(
     "particles",
     particle_set,
     "globaldata::{}::getSpecies().getMinTimeStamp()".format(particle.name),
@@ -376,7 +376,7 @@ if args.clean_temporary_directories:
 # It is safe (and recommended) to overwrite any existing main file, since this
 # is generated automatically by the Swift2 graph compiler.
 peano4_project.generate(
-    overwrite=peano4.output.Overwrite.Always, throw_away_data_after_generation=True
+    overwrite=peano4.api.output.Overwrite.Always, throw_away_data_after_generation=True
 )
 peano4_project.build(make_clean_first=True, number_of_parallel_builds=args.j)
 

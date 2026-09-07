@@ -9,15 +9,36 @@ It uses the Euler equations to advance a 2D setup where the density follows a si
 and the initial velocity is constant in the x direction. The domain is centred around the
 origin.
 
+## Prepare benchmark
+
+Peano should be built with the following options: 
+
+~~~~~~~~~~~~~~~~~~~~~~~
+--enable-exahype --enable-loadbalancing --enable-blockstructured
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You will need to ensure that the Python environment variables are properly set:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+export PYTHONPATH=<path-to-peano4-repository>/src
+~~~~~~~~~~~~~~~~~~~~~~~
+
+<br /><br />
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
+We are in the process of migrating all files into the src directory such that the Python directory should go.
+For the time being, the order in which we include remains important.
+</div>
+
+
 ## Compilation
-Peano should be built with the following options: --enable-exahype, --enable-loadbalancing,
- --enable-blockstructured
+
 The relevant mesh size and timestep size should be set in the python script directly. For 
 the mesh size, @f$p@f$ should be modified in the expression @f$\frac{0.2}{p}@f$ where @f$p@f$ is the
 number of cells that are desired in each coordinate direction.
 
 
 ## Postproccessing
+
 The output after a run will be 2 snapshots of teh solution, one at the start and one at the
 end (this can be modified), as Peano patch files. These can be converted to vtk files for 
 visualisation in Paraview.

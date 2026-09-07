@@ -1,5 +1,5 @@
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.toolbox.particles
+import peano4.api.toolbox.particles
 
 import dastgen2
 from swift2.particle.AlgorithmStep import AlgorithmStep
@@ -7,7 +7,7 @@ from abc import abstractmethod
 import copy
 
 
-class Particle(peano4.toolbox.particles.Particle):
+class Particle(peano4.api.toolbox.particles.Particle):
     """!
 
     Base class for any particle in the project
@@ -23,7 +23,7 @@ class Particle(peano4.toolbox.particles.Particle):
     further attributes via
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        my_particle.data.add_attribute( peano4.dastgen2.Peano4DoubleArray("v","Dimensions") )
+        my_particle.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray("v","Dimensions") )
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

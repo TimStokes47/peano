@@ -6,14 +6,14 @@ from exahype2.solvers.rkfd.actionsets.AbstractRKFDActionSet import AbstractRKFDA
 from exahype2.solvers.LagrangeBasis import render_tensor_1
 from exahype2.solvers.LagrangeBasis import render_tensor_2
 
-import peano4
+import peano4.api
 import exahype2
 import jinja2
 
 
 import os
 
-from peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import (
+from peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import (
     ReconstructPatchAndApplyFunctor,
 )
 
@@ -184,7 +184,7 @@ class UpdateCell(ReconstructPatchAndApplyFunctor):
             functor_implementation="""
 #error please switch to your Riemann solver of choice
 """,
-            reconstructed_array_memory_location=peano4.toolbox.blockstructured.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete,
+            reconstructed_array_memory_location=peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete,
             guard=one_huge_boolean_guard_expression,
             add_assertions_to_halo_exchange=False,
         )
@@ -289,7 +289,7 @@ class MergeEnclaveTaskOutcome(AbstractRKFDActionSet):
         result = ""
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
         ):
             d = {}
             self._solver._init_dictionary_with_default_parameters(d)
@@ -734,7 +734,7 @@ class SeparateSweepsWithEnclaveTasking(SeparateSweeps):
 
         task_name = self._enclave_task_name()
         generated_solver_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 "{}.h".format(templatefile_prefix),
                 "{}.cpp".format(templatefile_prefix),
                 task_name,

@@ -6,9 +6,9 @@ from abc import abstractmethod
 
 import jinja2
 
-import peano4.output
-import peano4.datamodel
-import peano4.toolbox.blockstructured
+import peano4.api.output
+import peano4.api.datamodel
+import peano4.api.toolbox.blockstructured
 
 import exahype2.grid
 import exahype2.solvers.aderdg.kernels
@@ -352,25 +352,25 @@ Material parameters:    """
 
         # Current time step contains the solution, projections are respectively the projection
         # of the solution and of the fluxes on the faces as predicted by the space-time predictor.
-        self._current_time_step = peano4.datamodel.Patch(
+        self._current_time_step = peano4.api.datamodel.Patch(
             (self._order + 1, self._order + 1, self._order + 1),
             self._unknowns + self._auxiliary_variables,
             self._unknown_identifier(),
             self._solution_persistent_storage_precision,
         )
-        self._previous_time_step = peano4.datamodel.Patch(
+        self._previous_time_step = peano4.api.datamodel.Patch(
             (self._order + 1, self._order + 1, self._order + 1),
             self._unknowns + self._auxiliary_variables,
             self._unknown_identifier() + "_old",
             self._solution_persistent_storage_precision,
         )
-        self._rhs_estimates_projection = peano4.datamodel.Patch(
+        self._rhs_estimates_projection = peano4.api.datamodel.Patch(
             (2, self._order+1, self._order+1),
             self._unknowns + self._auxiliary_variables,
             self._unknown_identifier() + "Estimates",
             self._corrector_computation_precision,
         )
-        self._flux_estimates_projection = peano4.datamodel.Patch(
+        self._flux_estimates_projection = peano4.api.datamodel.Patch(
             (2, self._order+1, self._order+1),
             self._unknowns,
             self._unknown_identifier() + "FluxEstimates",
@@ -378,29 +378,29 @@ Material parameters:    """
         )
 
         if self._cell_data_storage == Storage.CallStack:
-          self._current_time_step.generator = peano4.datamodel.PatchToDoubleArray(
+          self._current_time_step.generator = peano4.api.datamodel.PatchToDoubleArray(
               self._current_time_step,
               self._solution_persistent_storage_precision
           )
-          self._previous_time_step.generator = peano4.datamodel.PatchToDoubleArray(
+          self._previous_time_step.generator = peano4.api.datamodel.PatchToDoubleArray(
               self._previous_time_step,
               self._solution_persistent_storage_precision
           )
         elif self._cell_data_storage == Storage.Heap:
-          self._current_time_step.generator = peano4.datamodel.PatchToDoubleArrayOnHeap(
+          self._current_time_step.generator = peano4.api.datamodel.PatchToDoubleArrayOnHeap(
               self._current_time_step,
               self._solution_persistent_storage_precision
           )
-          self._previous_time_step.generator = peano4.datamodel.PatchToDoubleArrayOnHeap(
+          self._previous_time_step.generator = peano4.api.datamodel.PatchToDoubleArrayOnHeap(
               self._previous_time_step,
               self._solution_persistent_storage_precision
           )
         elif self._cell_data_storage == Storage.SmartPointers:
-          self._current_time_step.generator = peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+          self._current_time_step.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
               self._current_time_step,
               self._solution_persistent_storage_precision
           )
-          self._previous_time_step.generator = peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+          self._previous_time_step.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
               self._previous_time_step,
               self._solution_persistent_storage_precision
           )
@@ -410,29 +410,29 @@ Material parameters:    """
             )
 
         if self._face_data_storage == Storage.CallStack:
-          self._rhs_estimates_projection.generator = peano4.datamodel.PatchToDoubleArray(
+          self._rhs_estimates_projection.generator = peano4.api.datamodel.PatchToDoubleArray(
               self._rhs_estimates_projection,
               self._corrector_computation_precision
           )
-          self._flux_estimates_projection.generator = peano4.datamodel.PatchToDoubleArray(
+          self._flux_estimates_projection.generator = peano4.api.datamodel.PatchToDoubleArray(
               self._flux_estimates_projection,
               self._corrector_computation_precision
           )
         elif self._face_data_storage == Storage.Heap:
-          self._rhs_estimates_projection.generator = peano4.datamodel.PatchToDoubleArrayOnHeap(
+          self._rhs_estimates_projection.generator = peano4.api.datamodel.PatchToDoubleArrayOnHeap(
               self._rhs_estimates_projection,
               self._corrector_computation_precision
           )
-          self._flux_estimates_projection.generator = peano4.datamodel.PatchToDoubleArrayOnHeap(
+          self._flux_estimates_projection.generator = peano4.api.datamodel.PatchToDoubleArrayOnHeap(
               self._flux_estimates_projection,
               self._corrector_computation_precision
           )
         elif self._face_data_storage == Storage.SmartPointers:
-          self._rhs_estimates_projection.generator = peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+          self._rhs_estimates_projection.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
               self._rhs_estimates_projection,
               self._corrector_computation_precision
           )
-          self._flux_estimates_projection.generator = peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+          self._flux_estimates_projection.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
               self._flux_estimates_projection,
               self._corrector_computation_precision
           )
@@ -807,7 +807,7 @@ Material parameters:    """
 
         # Calls a generator which generates a standard plotter that uses the tarch library.
         step.add_action_set(
-            peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat(
+            peano4.api.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat(
                 filename=output_path + "solution-" + self._name,
                 patch=self._previous_time_step,
                 dataset_name=self._unknown_identifier()+"_old",
@@ -831,7 +831,7 @@ Material parameters:    """
 
         if self._plot_grid_properties:
             step.add_action_set(
-                peano4.toolbox.PlotGridInPeanoBlockFormat(
+                peano4.api.toolbox.PlotGridInPeanoBlockFormat(
                     filename=output_path + "grid-" + self._name,
                     cell_unknown=None,
                     guard_guard="repositories::plotFilter.plotPatch(marker) and "
@@ -886,7 +886,7 @@ Material parameters:    """
            os.makedirs(kernels_output_path)
 
         generated_kernels = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 headfile_template=kernels_templates_prefix + "CellErrorIntegral.template.h",
                 cppfile_template=kernels_templates_prefix + "CellErrorIntegral.template.cpp",
                 classname=kernels_output_path + "/CellErrorIntegral",
@@ -902,7 +902,7 @@ Material parameters:    """
         output.makefile.add_cpp_file(kernels_output_path + "/CellErrorIntegral.cpp", generated=True)
 
         generated_kernels = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 headfile_template=kernels_templates_prefix + "MaxScaledEigenvalue.template.h",
                 cppfile_template=kernels_templates_prefix + "MaxScaledEigenvalue.template.cpp",
                 classname=kernels_output_path + "/MaxScaledEigenvalue",
@@ -918,7 +918,7 @@ Material parameters:    """
         output.makefile.add_cpp_file(kernels_output_path + "/MaxScaledEigenvalue.cpp", generated=True)
 
         generated_kernels = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 headfile_template=kernels_templates_prefix + "FaceIntegral.template.h",
                 cppfile_template=kernels_templates_prefix + "FaceIntegral.template.cpp",
                 classname=kernels_output_path + "/FaceIntegral",
@@ -934,7 +934,7 @@ Material parameters:    """
         output.makefile.add_cpp_file(kernels_output_path + "/FaceIntegral.cpp", generated=True)
 
         generated_kernels = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 headfile_template=kernels_templates_prefix + "RiemannSolver.template.h",
                 cppfile_template=kernels_templates_prefix + "RiemannSolverLinear.template.cpp" if self._is_linear
                 else kernels_templates_prefix + "RiemannSolverNonlinear.template.cpp",
@@ -968,7 +968,7 @@ Material parameters:    """
 
         if self._point_sources_implementation != PDETerms.None_Implementation:
           generated_kernels = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 headfile_template=kernels_templates_prefix + "PointSources.template.h",
                 cppfile_template=kernels_templates_prefix + "PointSources.template.cpp",
                 classname=kernels_output_path + "/PointSources",
@@ -985,7 +985,7 @@ Material parameters:    """
 
         if self._use_libxsmm:
           generated_kernels = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 headfile_template=kernels_templates_prefix + "Gemms.template.h",
                 cppfile_template=kernels_templates_prefix + "Gemms.template.cpp",
                 classname=kernels_output_path + "/Gemms",
@@ -1041,7 +1041,7 @@ Material parameters:    """
 
         This routine is typically not invoked by a user.
 
-        output: peano4.output.Output
+        output: peano4.api.output.Output
         """
         templatefile_prefix = os.path.dirname(os.path.realpath(__file__)) + "/"
 
@@ -1061,7 +1061,7 @@ Material parameters:    """
         self.add_entries_to_text_replacement_dictionary(implementationDictionary)
 
         generated_abstract_header_file = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 templatefile_prefix + "Abstract.template.h",
                 templatefile_prefix + "Abstract.template.cpp",
                 "Abstract" + self._name,
@@ -1073,7 +1073,7 @@ Material parameters:    """
             )
         )
         generated_solver_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 templatefile_prefix + ".template.h",
                 templatefile_prefix + ".template.cpp",
                 self._name,
@@ -1093,7 +1093,7 @@ Material parameters:    """
         output.makefile.add_cpp_file(subdirectory + self._name + ".cpp", generated=True)
 
         if self._use_var_shortcut:
-            generated_shortcut_file = peano4.output.Jinja2TemplatedHeaderFile(
+            generated_shortcut_file = peano4.api.output.Jinja2TemplatedHeaderFile(
                 os.path.dirname(os.path.realpath(__file__))
                 + "/"
                 + "../VariableShortcuts.template.h",

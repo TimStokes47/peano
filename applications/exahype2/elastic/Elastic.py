@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import argparse
 
-import peano4
+import peano4.api
 import exahype2
 
 
@@ -106,9 +106,9 @@ class Elastic:
         parser.add_argument(
             "-m",
             "--build-mode",
-            choices=peano4.output.CompileModes,
-            default=peano4.output.CompileModes[0], # Release
-            help="|".join(peano4.output.CompileModes),
+            choices=peano4.api.output.CompileModes,
+            default=peano4.api.output.CompileModes[0], # Release
+            help="|".join(peano4.api.output.CompileModes),
         )
 
         parser.add_argument(
@@ -375,7 +375,7 @@ class Elastic:
 
         project.set_timeout(args.timeout)
 
-        project.set_Peano4_installation(args.peano_dir, mode=peano4.output.string_to_mode(args.build_mode))
+        project.set_Peano4_installation(args.peano_dir, mode=peano4.api.output.string_to_mode(args.build_mode))
         project = project.generate_Peano4_project(verbose=True)
 
         if args.fpe:

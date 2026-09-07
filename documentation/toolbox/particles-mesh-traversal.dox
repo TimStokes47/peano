@@ -37,7 +37,7 @@ The illustration below shows two levels of a spacetree with bipartitioning
 this example. The tree automaton is currently in the finer, dark blue cell
 and triggers touchCellFirstTime().
 
-@image html python/peano4/toolbox/particles/dependency_sets.png
+@image html src/peano4/api/toolbox/particles/dependency_sets.png
 
 1. The set of local particles of this cell consists of four particles. It
    is the red particle - which is kind of trivial. However, also contains

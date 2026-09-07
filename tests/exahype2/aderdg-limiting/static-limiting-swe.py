@@ -1,6 +1,6 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import exahype2
 
 project = exahype2.Project(
@@ -130,7 +130,7 @@ project.add_solver(limiter)
 
 project.set_output_path("solutions")
 
-build_mode = peano4.output.CompileMode.Release
+build_mode = peano4.api.output.CompileMode.Release
 
 project.set_global_simulation_parameters(
     dimensions=dimensions,

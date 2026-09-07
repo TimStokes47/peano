@@ -14,12 +14,12 @@
 # variable PYTHONPATH points to Peano4's python directory.
 #
 import os
-import peano4
-import peano4.datamodel
-import peano4.solversteps
-import peano4.output
-import peano4.visualisation
-import peano4.toolbox.blockstructured
+import peano4.api
+import peano4.api.datamodel
+import peano4.api.solversteps
+import peano4.api.output
+import peano4.api.visualisation
+import peano4.api.toolbox.blockstructured
 
 
 #
@@ -34,7 +34,7 @@ for f in output_files:
 # Create a project and configure it to end up in a subnamespace (and thus
 # subdirectory). 
 #
-project = peano4.Project( ["examples", "finitevolumes"], "finitevolumes", "." )
+project = peano4.api.Project( ["examples", "finitevolumes"], "finitevolumes", "." )
 
 
 #
@@ -42,7 +42,7 @@ project = peano4.Project( ["examples", "finitevolumes"], "finitevolumes", "." )
 #
 patch_size = 13
 unknowns   = 5
-patch = peano4.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, "Q" )
+patch = peano4.api.datamodel.Patch( (patch_size,patch_size,patch_size), unknowns, "Q" )
 project.datamodel.add_cell(patch)
 
 
@@ -50,7 +50,7 @@ project.datamodel.add_cell(patch)
 # Along the faces, we have the patch overlaps. As we use only a Rusanov flux, 
 # one cell of overlap between adjacent patches is sufficient.
 #
-patch_overlap = peano4.datamodel.Patch( (2,patch_size,patch_size), unknowns, "Q" )
+patch_overlap = peano4.api.datamodel.Patch( (2,patch_size,patch_size), unknowns, "Q" )
 project.datamodel.add_face(patch_overlap)
 
 
@@ -59,11 +59,11 @@ project.datamodel.add_face(patch_overlap)
 # we use, we add one grid level to the mesh per step. We also initialise the blocks
 # with the initial values.
 #
-create_grid = peano4.solversteps.Step( "CreateGrid" )
+create_grid = peano4.api.solversteps.Step( "CreateGrid" )
 create_grid.use_face(patch_overlap)
 create_grid.use_cell(patch)
-#create_grid.add_action_set( peano4.toolbox.PlotGridInPeanoBlockFormat("grid-dump", patch) )
-create_grid.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
+#create_grid.add_action_set( peano4.api.toolbox.PlotGridInPeanoBlockFormat("grid-dump", patch) )
+create_grid.add_action_set( peano4.api.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 project.solversteps.add_step(create_grid)
 
 
@@ -74,11 +74,11 @@ project.solversteps.add_step(create_grid)
 # step manually (the grid setup). This time, we don't want to add any 
 # further code manually.
 #that I can 
-print_solution = peano4.solversteps.Step( "PlotSolution" )
+print_solution = peano4.api.solversteps.Step( "PlotSolution" )
 print_solution.use_cell(patch)
 print_solution.use_face(patch_overlap)
 print_solution.remove_all_actions()
-plotter = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
+plotter = peano4.api.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
 print_solution.add_action_set( plotter )
 project.solversteps.add_step(print_solution)
 
@@ -88,7 +88,7 @@ project.solversteps.add_step(print_solution)
 #
 # @todo Dsa ist schon gefused, weil wir ja die Reihenfolge umgedreht haben. Eigentlich muss das action set andersrum laufen
 #
-perform_time_step      = peano4.solversteps.Step( "TimeStep" )
+perform_time_step      = peano4.api.solversteps.Step( "TimeStep" )
 perform_time_step.use_cell(patch)
 perform_time_step.use_face(patch_overlap)
 # @todo Darf ich den Face gleich wieder ueberschreiben? Nachbar bekommt ja dann GS-meassig den neuen mit u.U.
@@ -264,8 +264,8 @@ functor = """
 """
 
 
-perform_time_step.add_action_set( peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap,functor,"","") )
-perform_time_step.add_action_set( peano4.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
+perform_time_step.add_action_set( peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap,functor,"","") )
+perform_time_step.add_action_set( peano4.api.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
 # @todo raus
 perform_time_step.add_action_set( plotter )
 project.solversteps.add_step(perform_time_step)
@@ -290,7 +290,7 @@ project.constants.export( "NumberOfUnknownsPerCell", unknowns )
 # round, it is always admissible to only generate stuff, e.g., but to build and
 # run the project through a command line
 #
-project.generate(peano4.output.Overwrite.Default)
+project.generate(peano4.api.output.Overwrite.Default)
 project.build()
 success = project.run( ["myarguments"] )
 
@@ -298,14 +298,14 @@ success = project.run( ["myarguments"] )
 #
 # Dump grid into VTK
 #
-#convert = peano4.visualisation.Convert( "grid-dump" )
+#convert = peano4.api.visualisation.Convert( "grid-dump" )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
 #convert.extract_fine_grid()
 #convert.convert_to_vtk()
 
 
 if success:
-  convert = peano4.visualisation.Convert( "solution" )
+  convert = peano4.api.visualisation.Convert( "solution" )
   convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()

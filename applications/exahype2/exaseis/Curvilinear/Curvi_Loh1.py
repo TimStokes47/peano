@@ -1,4 +1,4 @@
-import peano4, exahype2
+import peano4.api, exahype2
 
 import exahype2.solvers.aderdg
 from exahype2.solvers.aderdg.GlobalAdaptiveTimeStep import (
@@ -63,7 +63,7 @@ project.add_action_set_to_initialisation(
 )
 
 project.add_action_set_to_timestepping(
-    peano4.toolbox.particles.api.UpdateParallelState(particle_set=tracer_particles)
+    peano4.api.toolbox.particles.api.UpdateParallelState(particle_set=tracer_particles)
 )
 
 project.add_action_set_to_timestepping(
@@ -99,7 +99,7 @@ project.set_global_simulation_parameters(
 # prototype we did start off with.
 #
 project.set_load_balancing( "toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates", "new ::exahype2::LoadBalancingConfiguration()" )
-project.set_Peano4_installation( "../../../../", peano4.output.CompileMode.Release )
+project.set_Peano4_installation( "../../../../", peano4.api.output.CompileMode.Release )
 peano4_project = project.generate_Peano4_project("False")
 
 peano4_project.output.makefile.set_CXX_compiler("mpicxx")

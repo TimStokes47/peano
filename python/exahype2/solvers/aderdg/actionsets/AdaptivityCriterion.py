@@ -3,7 +3,7 @@
 from .AbstractADERDGActionSet import AbstractADERDGActionSet
 
 import jinja2
-import peano4.solversteps
+import peano4.api.solversteps
 
 
 class AdaptivityCriterion(AbstractADERDGActionSet):
@@ -161,7 +161,7 @@ class AdaptivityCriterion(AbstractADERDGActionSet):
         result = ""
         if (
             self._build_up_new_refinement_instructions
-            and operation_name == peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL
+            and operation_name == peano4.api.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL
         ):
             result = """
   _localRefinementControl.clear();
@@ -169,7 +169,7 @@ class AdaptivityCriterion(AbstractADERDGActionSet):
 
         if (
             self._build_up_new_refinement_instructions
-            and operation_name == peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL
+            and operation_name == peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL
         ):
             result = """
   ::exahype2::RefinementControlService::getInstance().merge(_localRefinementControl);
@@ -178,7 +178,7 @@ class AdaptivityCriterion(AbstractADERDGActionSet):
         if (
             self._build_up_new_refinement_instructions
             and operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME
         ):
             d = {}
 

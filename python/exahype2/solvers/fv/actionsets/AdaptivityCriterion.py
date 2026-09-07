@@ -3,7 +3,7 @@
 
 from .AbstractFVActionSet import AbstractFVActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 class AdaptivityCriterion(AbstractFVActionSet):
@@ -169,17 +169,17 @@ class AdaptivityCriterion(AbstractFVActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if self._build_up_new_refinement_instructions and operation_name==peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
+    if self._build_up_new_refinement_instructions and operation_name==peano4.api.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
       result = """
   _localRefinementControl.clear();
 """
 
-    if self._build_up_new_refinement_instructions and operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+    if self._build_up_new_refinement_instructions and operation_name==peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       result = """
   ::exahype2::RefinementControlService::getInstance().merge( _localRefinementControl );
 """
     
-    if self._build_up_new_refinement_instructions and operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
+    if self._build_up_new_refinement_instructions and operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
       d = {}
       if self._solver._patch.dim[0] != self._solver._patch.dim[1]:
         raise Exception( "Error: Can only handle square patches." )

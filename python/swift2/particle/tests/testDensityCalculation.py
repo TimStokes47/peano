@@ -3,9 +3,9 @@
 from swift2.particle.SPHLeapfrogFixedSearchRadius import SPHLeapfrogFixedSearchRadius
 from swift2.particle.AlgorithmStep import AlgorithmStep
 
-import peano4
+import peano4.api
 import dastgen2
-import peano4.dastgen2
+import peano4.api.dastgen2
 
 from abc import ABC
 import copy

@@ -1,7 +1,7 @@
 import argparse
 import dastgen2
 
-import peano4
+import peano4.api
 import exahype2
 
 
@@ -150,7 +150,7 @@ if __name__ == "__main__":
       8  # plotter precision
     )
 
-    project.set_Peano4_installation("../../../..", peano4.output.CompileMode.Release)
+    project.set_Peano4_installation("../../../..", peano4.api.output.CompileMode.Release)
 
     project.set_output_path("./")   
     project.set_load_balancing("toolbox::loadbalancing::strategies::SpreadOutHierarchically","(new ::exahype2::LoadBalancingConfiguration(0.95,1000,16))" )

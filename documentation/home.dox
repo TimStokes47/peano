@@ -75,7 +75,6 @@ All components are integrated into one repository, one code base, and documented
 - Getting started
   - @subpage page_installation_home
   - @subpage page_compiler_specific_settings_home
-  - @subpage page_architecture_home
   - @subpage page_faq_home
 - Contributing
   - @subpage page_conventions_home

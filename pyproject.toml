@@ -60,6 +60,7 @@ dependencies = {file = ["requirements.txt"]}
 [tool.setuptools.packages.find]
 where = [
     "python",
+    "src",
 ]
 [tool.setuptools.package-data]
 "*" = ["*.*"]

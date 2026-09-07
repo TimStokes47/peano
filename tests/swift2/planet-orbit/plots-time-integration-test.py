@@ -9,7 +9,7 @@ from matplotlib import mathtext
 import math
 from scipy import stats
 from tkinter import Tcl
-from peano4.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
+from peano4.api.toolbox.particles.postprocessing.ParticleVTUReader import ParticleVTUReader
 
 #Plot Setup
 font = {'size':12}

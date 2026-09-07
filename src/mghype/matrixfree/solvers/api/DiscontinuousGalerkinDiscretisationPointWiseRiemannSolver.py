@@ -2,8 +2,8 @@
  This file is part of the MGHyPE project within Peano 4. For conditions of distribution and 
  use, please see the copyright notice at www.peano-framework.org
 """
-import peano4
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 import os
 import jinja2
@@ -425,27 +425,27 @@ class DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver(Solver):
     
     self._use_smart_pointer = use_smart_pointer
     if use_smart_pointer:
-        self._cell_data.data.add_attribute(peano4.dastgen2.Peano4SmartPointerDoubleArray( "solution", str(self._unknowns_per_cell) ))
-        self._cell_data.data.add_attribute(peano4.dastgen2.Peano4SmartPointerDoubleArray( "residual", str(self._unknowns_per_cell) ))
-        self._cell_data.data.add_attribute(peano4.dastgen2.Peano4SmartPointerDoubleArray( "rhs",      str(self._unknowns_per_cell) ))
+        self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4SmartPointerDoubleArray( "solution", str(self._unknowns_per_cell) ))
+        self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4SmartPointerDoubleArray( "residual", str(self._unknowns_per_cell) ))
+        self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4SmartPointerDoubleArray( "rhs",      str(self._unknowns_per_cell) ))
         
         if (track_solution_between_cycles):
-            self._cell_data.data.add_attribute(peano4.dastgen2.Peano4SmartPointerDoubleArray( "prevCycleSolution", str(self._unknowns_per_cell) ))
+            self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4SmartPointerDoubleArray( "prevCycleSolution", str(self._unknowns_per_cell) ))
 
-        self._face_data.data.add_attribute(peano4.dastgen2.Peano4SmartPointerDoubleArray( "solution",      str(self._unknowns_per_face_solution ) ))
-        self._face_data.data.add_attribute(peano4.dastgen2.Peano4SmartPointerDoubleArray( "lProjection",   str(self._unknowns_per_face_solution ) ))
-        self._face_data.data.add_attribute(peano4.dastgen2.Peano4SmartPointerDoubleArray( "rProjection",   str(self._unknowns_per_face_solution ) ))
+        self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4SmartPointerDoubleArray( "solution",      str(self._unknowns_per_face_solution ) ))
+        self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4SmartPointerDoubleArray( "lProjection",   str(self._unknowns_per_face_solution ) ))
+        self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4SmartPointerDoubleArray( "rProjection",   str(self._unknowns_per_face_solution ) ))
     else:
-        self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "solution", str(self._unknowns_per_cell) ))
-        self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "residual", str(self._unknowns_per_cell) ))
-        self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "rhs",      str(self._unknowns_per_cell) ))
+        self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "solution", str(self._unknowns_per_cell) ))
+        self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "residual", str(self._unknowns_per_cell) ))
+        self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "rhs",      str(self._unknowns_per_cell) ))
 
         if (track_solution_between_cycles):
-            self._cell_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "prevCycleSolution", str(self._unknowns_per_cell) ))
+            self._cell_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "prevCycleSolution", str(self._unknowns_per_cell) ))
             
-        self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "solution",      str(self._unknowns_per_face_solution ) ))
-        self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "lProjection",   str(self._unknowns_per_face_solution ) ))
-        self._face_data.data.add_attribute(peano4.dastgen2.Peano4DoubleArray( "rProjection",   str(self._unknowns_per_face_solution ) ))
+        self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "solution",      str(self._unknowns_per_face_solution ) ))
+        self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "lProjection",   str(self._unknowns_per_face_solution ) ))
+        self._face_data.data.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "rProjection",   str(self._unknowns_per_face_solution ) ))
 
 # @todo These lines have to be commented in. They are correct. But 
 #       then we realise that the face data structure is not unified.
@@ -564,7 +564,7 @@ class DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver(Solver):
 
         
   def add_to_create_grid(self, observer):
-    observer.add_action_set(peano4.toolbox.CreateRegularGrid(self.max_h))
+    observer.add_action_set(peano4.api.toolbox.CreateRegularGrid(self.max_h))
     pass
 
     
@@ -624,7 +624,7 @@ class DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver(Solver):
 
     dictionary = self.create_dictionary()
 
-    generated_abstract_header_file = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_abstract_header_file = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".Abstract.template.h",
       templatefile_prefix + ".Abstract.template.cpp",
       "Abstract" + self.typename(), 
@@ -633,7 +633,7 @@ class DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver(Solver):
       dictionary,
       abstract_overwrite,
       True)
-    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_solver_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".template.h",
       templatefile_prefix + ".template.cpp",
       self.typename(), 

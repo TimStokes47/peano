@@ -3,9 +3,9 @@
 from swift2.particle.Particle import Particle
 from swift2.particle.AlgorithmStep import AlgorithmStep
 
-import peano4
+import peano4.api
 import dastgen2
-import peano4.dastgen2
+import peano4.api.dastgen2
 
 from abc import ABC
 
@@ -654,7 +654,7 @@ class DastgenTestDummyParticle(Particle):
             max_value = 2097152
 
         self.data.add_attribute(
-            peano4.dastgen2.Peano4IntegerArray(
+            peano4.api.dastgen2.Peano4IntegerArray(
                 "my" + var_basename,
                 cardinality=8,
                 min_value=None,
@@ -697,7 +697,7 @@ class DastgenTestDummyParticle(Particle):
             valid_mantissa_bits = 23
 
         self.data.add_attribute(
-            peano4.dastgen2.Peano4DoubleArray(
+            peano4.api.dastgen2.Peano4DoubleArray(
                 "my" + var_basename,
                 cardinality=8,
                 valid_mantissa_bits=valid_mantissa_bits,

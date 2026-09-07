@@ -1,11 +1,11 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 
 import jinja2
 import dastgen2
-import peano4
+import peano4.api
 
 
 class DynamicMeshRefinementAnalysis(ActionSet):
@@ -43,7 +43,7 @@ class DynamicMeshRefinementAnalysis(ActionSet):
         t.b.d.
 
         """
-        cell_marker = peano4.datamodel.DaStGen2(
+        cell_marker = peano4.api.datamodel.DaStGen2(
             DynamicMeshRefinementAnalysis.marker_name(name)
         )
 
@@ -71,7 +71,7 @@ class DynamicMeshRefinementAnalysis(ActionSet):
 
         ## Arguments
 
-        particle_set: peano4.toolbox.particles.ParticleSet
+        particle_set: peano4.api.toolbox.particles.ParticleSet
            Instance of the particle set that is to be used as trigger. Each particle in the
            set has a search radius and this one is used to guide the AMR.
 

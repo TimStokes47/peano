@@ -4,9 +4,9 @@ from swift2.particle.SPHParticle import SPHParticle
 from swift2.particle.AlgorithmStep import AlgorithmStep
 from swift2.particle.AlgorithmStepLibrary import get_algorithm_step_dict
 
-import peano4
+import peano4.api
 import dastgen2
-import peano4.dastgen2
+import peano4.api.dastgen2
 
 from abc import ABC
 import copy
@@ -35,7 +35,7 @@ class SPHLeapfrogFixedSearchRadius(SPHParticle):
 
         You can add further properties via
 
-             myparticle.data.add_attribute( peano4.dastgen2.Peano4DoubleArray("myFancyArray","Dimensions") )
+             myparticle.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray("myFancyArray","Dimensions") )
 
         in your code. Or you can create a subclass which adds additional fields
         after it has called the baseline constructor.
@@ -213,7 +213,7 @@ class SPHLeapfrogFixedSearchRadius(SPHParticle):
         # Artificial viscosity scheme --------------------------------------------------
         self.balsara = dastgen2.attributes.Double("balsara")
         if self._hydro_dimensions == 3:
-            self.rot_v = peano4.dastgen2.Peano4DoubleArray("rot_v", "Dimensions")
+            self.rot_v = peano4.api.dastgen2.Peano4DoubleArray("rot_v", "Dimensions")
         else:  # Curl is a scalar in lower dimensions
             self.rot_v = dastgen2.attributes.Double(
                 "rot_v"

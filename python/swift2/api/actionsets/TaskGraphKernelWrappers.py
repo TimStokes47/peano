@@ -1,8 +1,8 @@
 # This file is part of the SWIFT2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import jinja2
-import peano4
-import peano4.toolbox.particles
+import peano4.api
+import peano4.api.toolbox.particles
 
 
 def construct_touch_vertex_first_time_call(
@@ -75,12 +75,12 @@ def construct_touch_vertex_first_time_call(
     
     """
     d = {
-        "MARKER_NAME": peano4.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(
+        "MARKER_NAME": peano4.api.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(
             current_species_set.name
         ),
         "USE_MULTILEVEL_DEPENDENCIES": use_multilevel_dependencies,
         "TOUCH_VERTEX_FIRST_TIME_KERNEL": touch_vertex_first_time_kernel,
-        "SPECIES_SET_TASK_MARKER_NAME":   peano4.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(current_species_set.name)
+        "SPECIES_SET_TASK_MARKER_NAME":   peano4.api.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(current_species_set.name)
     }
     return jinja2.Template(
         """
@@ -155,12 +155,12 @@ def construct_touch_cell_first_time_call(
     
     """
     d = {
-        "MARKER_NAME": peano4.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(
+        "MARKER_NAME": peano4.api.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(
             current_species_set.name
         ),
         "USE_MULTILEVEL_DEPENDENCIES":   use_multilevel_dependencies,
         "TOUCH_CELL_FIRST_TIME_KERNEL":  touch_cell_first_time_kernel,
-        "SPECIES_SET_TASK_MARKER_NAME":  peano4.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(current_species_set.name)
+        "SPECIES_SET_TASK_MARKER_NAME":  peano4.api.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(current_species_set.name)
     }
     return jinja2.Template(
         """
@@ -272,14 +272,14 @@ def construct_touch_vertex_last_time_call(
     
     """
     d = {
-        "MARKER_NAME": peano4.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(
+        "MARKER_NAME": peano4.api.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(
             current_species_set.name
         ),
         "USE_MULTILEVEL_DEPENDENCIES":             use_multilevel_dependencies,
         "ALTER_PARTICLE_POSITION_OR_INTERACTION_RADIUS": alter_particle_position_or_interaction_radius,
         "TOUCH_VERTEX_LAST_TIME_KERNEL":           touch_vertex_last_time_kernel,
         "SPECIES_SET_NAME":                        current_species_set.name,
-        "SPECIES_SET_TASK_MARKER_NAME":            peano4.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(current_species_set.name)
+        "SPECIES_SET_TASK_MARKER_NAME":            peano4.api.toolbox.api.EnumerateCellsAndVertices.construct_marker_name(current_species_set.name)
     }
     return jinja2.Template(
         """

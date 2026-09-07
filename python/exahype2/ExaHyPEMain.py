@@ -1,14 +1,14 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import os
-import peano4.runner.DefaultSequence
+import peano4.api.runner.DefaultSequence
 
-class ExaHyPEMain(peano4.runner.DefaultSequence):
+class ExaHyPEMain(peano4.api.runner.DefaultSequence):
   def __init__(self,
                peano_project
                ):
     """
-     project: peano4.Project
+     project: peano4.api.Project
     """
     super(ExaHyPEMain,self).__init__(peano_project)
     self.overwrite     = False
