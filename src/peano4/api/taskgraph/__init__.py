@@ -3,3 +3,4 @@
 
 from .Task import Task
 from .Graph import Graph
+from . import compiler

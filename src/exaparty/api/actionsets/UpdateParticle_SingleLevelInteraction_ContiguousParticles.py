@@ -42,6 +42,11 @@ class UpdateParticle_SingleLevelInteraction_ContiguousParticles(
 
         @param wait_for_all_tasks_to_finish_after_traversal: Boolean
 
+        @param alter_particle_position_or_interaction_radius: Boolean
+          Set if the underlying AlgorithmStep's effect might change a
+          particle's position or interaction radius.
+          @see exaparty.api.particle.AlgorithmStep.AlgorithmStep.may_trigger_rerun()
+
         """
         if wait_for_all_tasks_to_finish_after_traversal:
             unprepare_traversal_kernel = (

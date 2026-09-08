@@ -26,11 +26,14 @@ class Graph:
         out left to right by dependency depth (a task without dependencies
         sits on the left; everything that - directly or transitively -
         depends on it sits to its right), so following the arrows always
-        moves rightwards. Opens a blocking matplotlib window; close it to
-        continue.
+        moves rightwards. A task with may_repeat set is additionally drawn
+        with a small self-loop to indicate it can run again on itself.
+        Opens a blocking matplotlib window; close it to continue.
         """
+        import numpy as np
         import matplotlib.pyplot as plt
         from matplotlib.patches import FancyArrowPatch
+        from matplotlib.path import Path
 
         if not self.tasks:
             print(f"Task graph '{title}' is empty - nothing to visualise.")
@@ -66,6 +69,12 @@ class Graph:
 
         figure, axes = plt.subplots()
 
+        # Node markers are drawn with this area (in points^2, matplotlib's
+        # scatter unit); shrink every arrow by the marker's radius so the
+        # arrowhead lands next to the node instead of underneath it.
+        node_marker_size = 2000
+        node_radius_in_points = (node_marker_size / 3.14159265) ** 0.5
+
         for task in self.tasks:
             for dependency in task.dependencies:
                 axes.add_patch(
@@ -76,12 +85,36 @@ class Graph:
                         mutation_scale=15,
                         connectionstyle="arc3,rad=0.08",
                         color="black",
+                        shrinkA=node_radius_in_points,
+                        shrinkB=node_radius_in_points,
                         zorder=1,
                     )
                 )
 
+            if task.may_repeat:
+                x, y = position_of_task[task]
+                a, b = 0.07, 0.07  # semi-major, semi-minor axes
+                loop_centre_x, loop_centre_y = x, y
+
+                theta = np.linspace(0, np.pi * 1.85, 100)
+                arrow_x, arrow_y = a * np.cos(theta) + loop_centre_x, b * np.sin(theta) + loop_centre_y
+
+                verts = list(zip(arrow_x, arrow_y))
+                codes = [Path.MOVETO] + [Path.LINETO] * (len(verts) - 1)
+                path = Path(verts, codes)
+
+                axes.add_patch(
+                    FancyArrowPatch(
+                        path=path,
+                        arrowstyle="-|>",
+                        mutation_scale=15,
+                        color="crimson",
+                        zorder=2.5,
+                    )
+                )
+
         for task, (x, y) in position_of_task.items():
-            axes.scatter([x], [y], s=2000, color=entity_colour.get(task.entity, "tab:gray"), zorder=2)
+            axes.scatter([x], [y], s=node_marker_size, color=entity_colour.get(task.entity, "tab:gray"), zorder=2)
             axes.annotate(
                 f"{task.name}\n({task.entity.name})",
                 (x, y),

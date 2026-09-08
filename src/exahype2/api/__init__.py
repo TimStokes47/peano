@@ -5,5 +5,4 @@ from .PDETerm import PDETerm
 from .Flux import Flux
 from .Solver import Solver
 from .SolverToCPPFiles import SolverToCPPFiles
-from .DefaultProjectGenerator import DefaultProjectGenerator
 from . import fv

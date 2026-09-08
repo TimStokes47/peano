@@ -41,9 +41,14 @@ class UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(
 
 
         @param wait_for_all_tasks_to_finish_after_traversal: Boolean
-          If this one is set, we insert a wait into the unprepare traversal 
+          If this one is set, we insert a wait into the unprepare traversal
           event. Each rank then waits for all tasks to be completed before
-          it continues. We have a strong synchronisation point.      
+          it continues. We have a strong synchronisation point.
+
+        @param alter_particle_position_or_interaction_radius: Boolean
+          Set if the underlying AlgorithmStep's effect might change a
+          particle's position or interaction radius.
+          @see exaparty.api.particle.AlgorithmStep.AlgorithmStep.may_trigger_rerun()
 
         """
         if wait_for_all_tasks_to_finish_after_traversal:

@@ -250,7 +250,13 @@ def construct_touch_vertex_last_time_call(
     - We then add dependencies for finer levels (see discussion below).
 
     Once these two types of dependencies are in, we can spawn the task.
-    
+
+    @param alter_particle_position_or_interaction_radius: Boolean
+      If set, we force the generated code to wait for this vertex's task to
+      terminate right away, as the position/topology change has to be
+      visible before the mesh can safely continue.
+      @see exaparty.api.particle.AlgorithmStep.AlgorithmStep.may_trigger_rerun()
+
     The tricky part in this routine is the identification of fine grid
     dependencies. We don't have access to the fine grid data at this 
     point anymore. So what we have to do instead is memorising the 

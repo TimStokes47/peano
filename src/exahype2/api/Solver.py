@@ -114,6 +114,32 @@ class Solver(abc.ABC):
             """
 
 
+    class Plotter(abc.ABC):
+        """!
+
+        How a Solver writes out its solution. Abstract - concrete solvers
+        have to provide a subclass that implements construct_output().
+
+        """
+
+        def __init__(self,
+                     solver: "Solver"):
+            self._solver = solver
+
+        @abc.abstractmethod
+        def construct_output(self,
+                             exahype2_project,
+                             peano_project,
+                             plot):
+            """!
+            Has to be implemented by subclass
+
+            plot: peano4.api.taskgraph.Graph
+              The task graph of the surrounding exahype2_project's plotting
+              phase, so the plotter can add its own tasks into it.
+            """
+
+
     def __init__(
         self,
         name: str,
@@ -179,6 +205,12 @@ class Solver(abc.ABC):
 
         from .HardcodedGridConstruction import HardcodedGridConstruction
         self.grid_construction: "Solver.GridConstruction" = HardcodedGridConstruction(self)
+
+        # Plotter has no default realisation - concrete solver subclasses
+        # (or their users) have to assign their own Solver.Plotter subclass
+        # instance to it, e.g. exahype2.api.fv.PlotAsVTKFile, through the
+        # plotter attribute below.
+        self.plotter: "Solver.Plotter" = None
 
 
     def _register_variables(self, variables: VariableSpecification) -> int:
@@ -328,7 +360,6 @@ class Solver(abc.ABC):
                                 setup_simulation,
                                 time_step,
                                 plot,
-                                checkpoint,
                                 ):
         """!
         Turn this solver specification into a task graph and create the required C++ kernels/stubs
@@ -338,8 +369,8 @@ class Solver(abc.ABC):
           currently assembling. It is a local variable there, not an attribute -
           merely passed through here, so this solver can add its own artefacts to it.
 
-        setup_simulation, time_step, plot, checkpoint: peano4.api.taskgraph.Graph
-          The task graphs of the four algorithmic phases of the surrounding
+        setup_simulation, time_step, plot: peano4.api.taskgraph.Graph
+          The task graphs of the three algorithmic phases of the surrounding
           exahype2_project. They are owned by exahype2_project.generate_Peano4_project()
           and merely passed through here, so this solver can add its own
           tasks into them.
@@ -357,6 +388,8 @@ class Solver(abc.ABC):
         self.solver_generator.construct_output(exahype2_project, peano_project)
         self.grid_construction.construct_output(exahype2_project, peano_project, setup_simulation)
         self.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
+        if self.plotter is not None:
+            self.plotter.construct_output(exahype2_project, peano_project, plot)
                     
             
 

@@ -27,20 +27,16 @@ class SetupSimulation(Solver.GridConstruction):
         """
         peano4.api.Logger().log("Create setup task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
+        refine_cell_task            = peano4.api.taskgraph.Task(name="Refine cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL, task_may_repeat=True)
         initial_condition_task      = peano4.api.taskgraph.Task(name="Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name="Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        refine_cell_task            = peano4.api.taskgraph.Task(name="Refine cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        load_balancing_task         = peano4.api.taskgraph.Task(name="Load balancing", entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL)
-        empty_traversal_to_let_grid_construction_catch_up_task = peano4.api.taskgraph.Task(name="Empty grid traversal", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
-        compute_cfl_condition_task.add_dependency(initial_condition_task)
+        initial_condition_task.add_dependency(refine_cell_task)
         project_on_faces_task.add_dependency(initial_condition_task)
-        compute_time_step_size_task.add_dependency(compute_cfl_condition_task)
 
+        setup_simulation.add_task(refine_cell_task)
         setup_simulation.add_task(initial_condition_task)
-        setup_simulation.add_task(compute_cfl_condition_task)
         setup_simulation.add_task(project_on_faces_task)
-        setup_simulation.add_task(compute_time_step_size_task)
 
         if peano4.api.Logger().is_visualisation:
             setup_simulation.visualise(title="Setup task graph for {}".format(self._solver.name))
