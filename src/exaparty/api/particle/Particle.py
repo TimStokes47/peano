@@ -217,6 +217,11 @@ Particle properties:
         - For vertices, this is touch-at-most-once-mask-out-otherwise-all-previous-steps-update-at-least-once.
         - For cells, this is also touch-at-most-once-mask-out-otherwise-all-previous-steps-update-at-least-once.
 
+        For any step whose effect may trigger a rerun, we switch to the
+        _SweepMayRerun variant of the invariant instead, as such a step may
+        legitimately touch a particle more than once within a sweep.
+        @see AlgorithmStep.may_trigger_rerun()
+
         ## Additional attributes
 
         First, the particle is added two counters which count up how often a

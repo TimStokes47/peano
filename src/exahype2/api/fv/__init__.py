@@ -1,6 +1,7 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 from .RusanovWithExplicitEuler import RusanovWithExplicitEuler
+from .SetupSimulation import SetupSimulation
 from .AbstractFVActionSet import AbstractFVActionSet
 from .ReconstructPatchWithHalo import ReconstructPatchWithHalo
 from .RollOverUpdatedFace import RollOverUpdatedFace

@@ -56,6 +56,9 @@ def translate_one_step_of_species_into_mesh_traversal(
        within the octant (cell).
     4. If an action set alters the position or cut-off of a particle, then we
        append True to alter_particle_position. Otherwise, we append False.
+       This is decided from step.effect, i.e. whether it is one of the
+       CHANGE_POSITION_OR_INTERACTION_RADIUS(_AND_MIGHT_RERUN) variants.
+       @see AlgorithmStep.may_trigger_rerun()
 
        Here's where the action set differs completely from the Sequential graph
        compiler. If we change a position, we erase all the task indices from

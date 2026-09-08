@@ -38,7 +38,9 @@ def translate_one_step_of_species_into_mesh_traversal(
     you get one more entry within mesh_traversals. Further to that, the
     routine also appends a boolean arker to alter_particle_position. It
     shows if the mesh will change the particle position (or search radius)
-    or not.
+    or not. This is decided from step.effect, i.e. whether it is one of the
+    CHANGE_POSITION_OR_INTERACTION_RADIUS(_AND_MIGHT_RERUN) variants.
+    @see AlgorithmStep.may_trigger_rerun()
 
     This routine is a helper routine of map_initialisation_steps_onto_separate_mesh_traversals()
     for example. Note that the returned steps are not fully functionally.

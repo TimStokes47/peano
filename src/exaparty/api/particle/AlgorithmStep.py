@@ -68,10 +68,34 @@ class AlgorithmStep(object):
         CHANGE_POSITION_OR_INTERACTION_RADIUS = 4
         CHANGE_POSITION_OR_INTERACTION_RADIUS_AND_MIGHT_RERUN = 5
 
+    @staticmethod
     def may_trigger_rerun(effect: Effect):
         """!
 
         Return True if the effect object may trigger a rerun
+
+        If an algorithm step can trigger a rerun, this implies that
+        any graph compiler, i.e. any translation into a sequence of Peano
+        observers, has to be aware that the step might be executed multiple times.
+        Hence,it cannot fuse it with other steps arbitrarily.
+
+        Technically, the possibility of a rerun has to be captured in the
+        runner of an ExaParty project. After each step, it queries
+        repositories::rerunPreviousGridSweep() to find out if we should
+        stick with the current observer.
+        @see ExaPartyMain.template.cpp
+
+        The decision of a rerun is tied to the species, so each species has
+        a flag and this flag is reduced by repositories::rerunPreviousGridSweep().
+
+        @todo Might change with new Peano task graph API
+
+
+        @param effect: Effect
+          The effect of an AlgorithmStep to check.
+
+        @return may_trigger_rerun: Bool
+          True if effect is one of the *_AND_MIGHT_RERUN variants of Effect.
 
         """
         if effect in [

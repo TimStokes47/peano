@@ -26,6 +26,7 @@ thesolver.add_pde_term(
           )
     )
 thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver)
+thesolver.grid_construction = exahype2.api.fv.SetupSimulation(thesolver)
 
 #  patch_size,
 #  mesh_size,

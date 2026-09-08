@@ -103,9 +103,14 @@ class Solver(abc.ABC):
         @abc.abstractmethod
         def construct_output(self,
                              exahype2_project,
-                             peano_project):
+                             peano_project,
+                             setup_simulation):
             """!
             Has to be implemented by subclass
+
+            setup_simulation: peano4.api.taskgraph.Graph
+              The task graph of the surrounding exahype2_project's setup
+              phase, so the grid construction can add its own tasks into it.
             """
 
 
@@ -350,6 +355,7 @@ class Solver(abc.ABC):
         )
 
         self.solver_generator.construct_output(exahype2_project, peano_project)
+        self.grid_construction.construct_output(exahype2_project, peano_project, setup_simulation)
         self.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
                     
             
