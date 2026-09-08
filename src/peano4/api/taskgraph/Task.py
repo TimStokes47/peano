@@ -28,11 +28,11 @@ class Task:
         CELL = 3
         GLOBAL = 4
 
-    def __init__(self, name: str, entity: "Task.GridEntity", task_may_repeat: bool = False, task_may_repeat: bool = False):
+    def __init__(self, name: str, entity: "Task.GridEntity", task_may_repeat: bool = False):
         self.name = name
         self.entity = entity
         self.dependencies: List["Task"] = []
-        self.may_repeat = may_repeat
+        self.may_repeat = task_may_repeat
 
     def add_dependency(self, task: "Task"):
         self.dependencies.append(task)
