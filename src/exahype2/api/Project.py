@@ -292,14 +292,19 @@ class Project(object):
         self._solvers = []
         self._peano_project.cleanup()
 
-    def __export_constants(self):
+    def __export_constants(self, peano_project):
         """
         We export ExaHyPE's constants. Besides the constants from ExaHyPE,
         we also export some parameters from Peano onto the ExaHyPE constants
         file. Therefore, it is important that you parse the configure output
         before we export the constants.
+
+        peano_project: peano4.api.Project
+          The Peano 4 project that generate_Peano4_project() is currently
+          assembling. It is a local variable there, not an attribute -
+          merely passed through here, so this routine can export onto it.
         """
-        self._peano_project.constants.clear()
+        peano_project.constants.clear()
         offset_string = "{" + str(self._domain_offset[0])
         size_string = "{" + str(self._domain_size[0])
         for i in range(1, self._dimensions):
@@ -309,86 +314,49 @@ class Project(object):
             size_string += str(self._domain_size[i])
         offset_string += "}"
         size_string += "}"
-        self._peano_project.constants.add_include("""#include <bitset>""")
-        self._peano_project.constants.add_include("""#include "tarch/la/Vector.h" """)
-        self._peano_project.constants.add_include("""#include "peano4/utils/Globals.h" """)
-        self._peano_project.constants.export_const_with_type(
+        peano_project.constants.add_include("""#include <bitset>""")
+        peano_project.constants.add_include("""#include "tarch/la/Vector.h" """)
+        peano_project.constants.add_include("""#include "peano4/utils/Globals.h" """)
+        peano_project.constants.export_const_with_type(
             "DomainOffset", offset_string, "tarch::la::Vector<Dimensions,double>"
         )
-        self._peano_project.constants.export_const_with_type(
+        peano_project.constants.export_const_with_type(
             "DomainSize", size_string, "tarch::la::Vector<Dimensions,double>"
         )
-        self._peano_project.constants.export("MinTerminalTime", str(self._min_terminal_time))
+        peano_project.constants.export("MinTerminalTime", str(self._min_terminal_time))
         if self._max_terminal_time >= self._min_terminal_time:
-            self._peano_project.constants.export(
+            peano_project.constants.export(
                 "MaxTerminalTime", str(self._max_terminal_time)
             )
         else:
-            self._peano_project.constants.export(
+            peano_project.constants.export(
                 "MaxTerminalTime", "std::numeric_limits<double>::max()"
             )
 
-        self._peano_project.constants.export(
+        peano_project.constants.export(
             "FirstPlotTimeStamp", str(self._first_plot_time_stamp)
         )
 
-        self._peano_project.constants.export(
+        peano_project.constants.export(
             "TimeInBetweenPlots", str(self._time_in_between_plots)
         )
 
-        self._peano_project.constants.export("PlotterPrecision", str(self._plotter_precision))
-        self._peano_project.constants.export_boolean_sequence("PeriodicBC", self._periodic_BC)
+        peano_project.constants.export("PlotterPrecision", str(self._plotter_precision))
+        peano_project.constants.export_boolean_sequence("PeriodicBC", self._periodic_BC)
 
         build_string = "python3 "
         for i in sys.argv:
             build_string += " "
             build_string += i
-        self._peano_project.constants.export_string("BuildInformation", build_string)
-        self._peano_project.constants.export_string(
-            "ConfigureInformation", self._peano_project.output.makefile.configure_call
-        )
-
-        self._peano_project.output.readme.add_package_description(
-            """
-
-### ExaHyPE 2
-
-This code uses ExaHyPE in its second generation. The first generation of the
-code was developed through an EU FET HPC project called ExaHyPE. This first
-generation was built on top of Peano in its third generation. The present
-code uses ExaHyPE 2 which is a complete rewrite built on top of Peano 4. We
-do not yet have a release paper for this second generation of ExaHyPE, and
-thus appreciate any citation of the original release paper
-
-       @article{Reinarz:2020:ExaHyPE,
-         title = {ExaHyPE: An engine for parallel dynamically adaptive simulations of wave problems},
-         journal = {Computer Physics Communications},
-         volume = {254},
-         pages = {107251},
-         year = {2020},
-         issn = {0010-4655},
-         doi = {https://doi.org/10.1016/j.cpc.2020.107251},
-         url = {https://www.sciencedirect.com/science/article/pii/S001046552030076X},
-         author = {Anne Reinarz and Dominic E. Charrier and Michael Bader and Luke Bovard and Michael Dumbser and Kenneth Duru and Francesco Fambri and Alice-Agnes Gabriel and Jean-Matthieu Gallard and Sven K\"oppel and Lukas Krenz and Leonhard Rannabauer and Luciano Rezzolla and Philipp Samfass and Maurizio Tavelli and Tobias Weinzierl},
-         keywords = {Hyperbolic, PDE, ADER-DG, Finite volumes, AMR, MPI, TBB, MPI+X},
-         abstract = {ExaHyPE (An Exascale Hyperbolic PDE Engine) is a software engine for solving systems of first-order hyperbolic partial differential equations (PDEs). Hyperbolic PDEs are typically derived from the conservation laws of physics and are useful in a wide range of application areas. Applications powered by ExaHyPE can be run on a student's laptop, but are also able to exploit thousands of processor cores on state-of-the-art supercomputers. The engine is able to dynamically increase the accuracy of the simulation using adaptive mesh refinement where required. Due to the robustness and shock capturing abilities of ExaHyPE's numerical methods, users of the engine can simulate linear and non-linear hyperbolic PDEs with very high accuracy. Users can tailor the engine to their particular PDE by specifying evolved quantities, fluxes, and source terms. A complete simulation code for a new hyperbolic PDE can often be realised within a few hours - a task that, traditionally, can take weeks, months, often years for researchers starting from scratch. In this paper, we showcase ExaHyPE's workflow and capabilities through real-world scenarios from our two main application areas: seismology and astrophysics.
-           Program summary
-           Program title: ExaHyPE-Engine Program Files doi: http://dx.doi.org/10.17632/6sz8h6hnpz.1 Licensing provisions: BSD 3-clause Programming languages: C++, Python, Fortran Nature of Problem: The ExaHyPE PDE engine offers robust algorithms to solve linear and non-linear hyperbolic systems of PDEs written in first order form. The systems may contain both conservative and non-conservative terms. Solution method: ExaHyPE employs the discontinuous Galerkin (DG) method combined with explicit one-step ADER (arbitrary high-order derivative) time-stepping. An a-posteriori limiting approach is applied to the ADER-DG solution, whereby spurious solutions are discarded and recomputed with a robust, patch-based finite volume scheme. ExaHyPE uses dynamical adaptive mesh refinement to enhance the accuracy of the solution around shock waves, complex geometries, and interesting features.
-         }
-       }
-"""
+        peano_project.constants.export_string("BuildInformation", build_string)
+        peano_project.constants.export_string(
+            "ConfigureInformation", peano_project.output.makefile.configure_call
         )
 
         for i in self._solvers:
-            self._peano_project.output.readme.add_entry(
-                i.create_readme_descriptor(self._domain_offset[0], self._domain_size[0])
-            )
-        # self._min_volume_h         = min_volume_h
-        # self._max_volume_h         = max_volume_h
-
-    def __configure_makefile(self):
-        self._peano_project.output.makefile.set_dimension(self._dimensions)
-        self._peano_project.output.makefile.set_executable_name(self._executable_name)
+            readme_descriptor = i.create_readme_descriptor(self._domain_offset[0], self._domain_size[0])
+            if readme_descriptor is not None:
+                peano_project.output.readme.add_entry(readme_descriptor)
 
     def set_global_simulation_parameters(
         self,
@@ -563,6 +531,35 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}} {
             peano_project.subdirectory + "kernels/" + identifier + ".cpp", generated=True
         )
 
+    _EXAHYPE_PACKAGE_DESCRIPTION = """
+
+### ExaHyPE 2
+
+This code uses ExaHyPE in its second generation. The first generation of the
+code was developed through an EU FET HPC project called ExaHyPE. This first
+generation was built on top of Peano in its third generation. The present
+code uses ExaHyPE 2 which is a complete rewrite built on top of Peano 4. We
+do not yet have a release paper for this second generation of ExaHyPE, and
+thus appreciate any citation of the original release paper
+
+       @article{Reinarz:2020:ExaHyPE,
+         title = {ExaHyPE: An engine for parallel dynamically adaptive simulations of wave problems},
+         journal = {Computer Physics Communications},
+         volume = {254},
+         pages = {107251},
+         year = {2020},
+         issn = {0010-4655},
+         doi = {https://doi.org/10.1016/j.cpc.2020.107251},
+         url = {https://www.sciencedirect.com/science/article/pii/S001046552030076X},
+         author = {Anne Reinarz and Dominic E. Charrier and Michael Bader and Luke Bovard and Michael Dumbser and Kenneth Duru and Francesco Fambri and Alice-Agnes Gabriel and Jean-Matthieu Gallard and Sven K\"oppel and Lukas Krenz and Leonhard Rannabauer and Luciano Rezzolla and Philipp Samfass and Maurizio Tavelli and Tobias Weinzierl},
+         keywords = {Hyperbolic, PDE, ADER-DG, Finite volumes, AMR, MPI, TBB, MPI+X},
+         abstract = {ExaHyPE (An Exascale Hyperbolic PDE Engine) is a software engine for solving systems of first-order hyperbolic partial differential equations (PDEs). Hyperbolic PDEs are typically derived from the conservation laws of physics and are useful in a wide range of application areas. Applications powered by ExaHyPE can be run on a student's laptop, but are also able to exploit thousands of processor cores on state-of-the-art supercomputers. The engine is able to dynamically increase the accuracy of the simulation using adaptive mesh refinement where required. Due to the robustness and shock capturing abilities of ExaHyPE's numerical methods, users of the engine can simulate linear and non-linear hyperbolic PDEs with very high accuracy. Users can tailor the engine to their particular PDE by specifying evolved quantities, fluxes, and source terms. A complete simulation code for a new hyperbolic PDE can often be realised within a few hours - a task that, traditionally, can take weeks, months, often years for researchers starting from scratch. In this paper, we showcase ExaHyPE's workflow and capabilities through real-world scenarios from our two main application areas: seismology and astrophysics.
+           Program summary
+           Program title: ExaHyPE-Engine Program Files doi: http://dx.doi.org/10.17632/6sz8h6hnpz.1 Licensing provisions: BSD 3-clause Programming languages: C++, Python, Fortran Nature of Problem: The ExaHyPE PDE engine offers robust algorithms to solve linear and non-linear hyperbolic systems of PDEs written in first order form. The systems may contain both conservative and non-conservative terms. Solution method: ExaHyPE employs the discontinuous Galerkin (DG) method combined with explicit one-step ADER (arbitrary high-order derivative) time-stepping. An a-posteriori limiting approach is applied to the ADER-DG solution, whereby spurious solutions are discarded and recomputed with a robust, patch-based finite volume scheme. ExaHyPE uses dynamical adaptive mesh refinement to enhance the accuracy of the solution around shock waves, complex geometries, and interesting features.
+         }
+       }
+"""
+
     def generate_Peano4_project(self, verbosity=peano4.api.LoggerVerbosity.OFF):
         """!
 
@@ -584,6 +581,14 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}} {
         peano_project = peano4.api.Project(
             self._namespace, self._project_name, self._directory, self._subdirectory
         )
+        peano_project.output.readme.add_package_description(self._EXAHYPE_PACKAGE_DESCRIPTION)
+
+        peano_project.output.makefile.set_dimension(self._dimensions)
+        peano_project.output.makefile.set_executable_name(self._executable_name)
+        peano_project.output.makefile.set_mode(self._build_mode)
+        peano_project.output.makefile.parse_configure_script_outcome(self._Peano_src_directory)
+
+        self.__export_constants(peano_project)
 
         # The task graphs for the three algorithmic phases every ExaHyPE 2
         # project goes through. They only live for the duration of this call

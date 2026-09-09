@@ -149,14 +149,17 @@ class Project (object):
     self.solversteps.construct_output(self.output)
 
     self.main.construct_output(self.output,self.project_name + "-main")
-    self.output.generate(overwrite, self.directory, self.subdirectories)
     if self.subconstants:
       for i in range(len(self.subconstants)):
         self.subconstants[i].generate(overwrite, self.directory, self.subdirectories[i])
     else:
       self.constants.generate(overwrite, self.directory)
 
-    print("generation complete")
+    # Generate the README last, so it is genuinely the final artefact: its
+    # "is ready" message (see peano4.api.output.Readme) is meant to be the
+    # last thing this routine reports before Logger's own atexit-triggered
+    # close() takes over.
+    self.output.generate(overwrite, self.directory, self.subdirectories)
 
     if throw_away_data_after_generation:
       self.datamodel = None
