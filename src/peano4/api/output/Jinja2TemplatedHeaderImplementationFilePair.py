@@ -72,11 +72,12 @@ dictionary entries besides the ones manually handed over by the user.
         output.write( template.render(self.d) )
 
   def generate(self,overwrite,directory):
-    if not os.path.exists( directory + "/" + self.subdirectory ):
-      os.mkdir(directory + "/" + self.subdirectory)
+    subdirectory_path = os.path.normpath( directory + "/" + self.subdirectory )
+    if not os.path.exists( subdirectory_path ):
+      os.mkdir(subdirectory_path)
 
-    header_filename = directory + "/" + self.subdirectory + "/" + self.classname + ".h"
-    cpp_filename    = directory + "/" + self.subdirectory + "/" + self.classname + ".cpp"
+    header_filename = os.path.normpath( subdirectory_path + "/" + self.classname + ".h" )
+    cpp_filename    = os.path.normpath( subdirectory_path + "/" + self.classname + ".cpp" )
 
     self.__generate_file(overwrite,header_filename,self.headerfile_template)
     self.__generate_file(overwrite,cpp_filename   ,self.cppfile_template)
