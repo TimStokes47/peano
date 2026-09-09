@@ -27,9 +27,9 @@ class SetupSimulation(Solver.GridConstruction):
         """
         peano4.api.Logger().log("Create setup task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
-        refine_cell_task            = peano4.api.taskgraph.Task(name="Refine cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL, task_may_repeat=True)
-        initial_condition_task      = peano4.api.taskgraph.Task(name="Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        project_on_faces_task       = peano4.api.taskgraph.Task(name="Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        refine_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL, task_may_repeat=True)
+        initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
         initial_condition_task.add_dependency(refine_cell_task)
         project_on_faces_task.add_dependency(initial_condition_task)

@@ -4,10 +4,11 @@ from typing import List
 
 import peano4.api.solversteps
 
+from ..Graph import Graph
 from ..Task import Task
 
 
-def translate(graph) -> List["peano4.api.solversteps.Step"]:
+def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Step"]:
     """!
 
     Simplest possible task graph compiler
@@ -23,10 +24,22 @@ def translate(graph) -> List["peano4.api.solversteps.Step"]:
     mesh traversal, the traversal automaton is handed an observer that
     distributes the grid events among the action sets tied to it.
     @see peano4.api.solversteps.Step
+    
+    The implementation of the serialisation is rather straightforward using a 
+    recursive implementation: We start from an arbitrary node in the graph.
+    If it has no predecessor, we can add it. If not, we call the graph 
+    traversal for the predecessor first. 
 
     graph: peano4.api.taskgraph.Graph
       The task graph to linearise. Assumed to be acyclic - translate() does
       not check for cycles and will recurse indefinitely on one.
+
+    identifier: str
+      Identifies which of the surrounding project's algorithmic phases this
+      graph belongs to (e.g. "SetupSimulation", "TimeStep", "Plot"). Every
+      generated Observer's name is prefixed with this identifier, joined by
+      an underscore, so Observers coming from different phases never clash
+      even if their tasks happen to share a name.
 
     @return [peano4.api.solversteps.Step]
       One Observer per task, ordered so that every task's Observer comes
@@ -40,8 +53,14 @@ def translate(graph) -> List["peano4.api.solversteps.Step"]:
         if task not in observer_of_task:
             for dependency in task.dependencies:
                 visit(dependency)
+            # Turn every whitespace-separated word into its own name
+            # segment, capitalising only its first letter - a blind
+            # .title() would also lower-case the rest of the word, which
+            # mangles existing camel case and acronyms (e.g. "EulerFVSmooth"
+            # would become "Eulerfvsmooth", "CFL" would become "Cfl").
+            task_name = "_".join(word[:1].upper() + word[1:] for word in task.name.split())
             observer_of_task[task] = peano4.api.solversteps.Step(
-                name=task.name.title().replace(" ", ""),
+                name=f"{identifier}_{task_name}",
                 add_user_defined_actions=False,
             )
             order.append(task)

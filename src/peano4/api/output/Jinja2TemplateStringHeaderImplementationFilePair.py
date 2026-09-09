@@ -10,6 +10,8 @@ from .Helper import write_file
 
 from .Overwrite import Overwrite
 
+from ..Logger import Logger
+
 class Jinja2TemplateStringHeaderImplementationFilePair(object):
   """!
 Represents a pair of C++ header and implementation files
@@ -56,8 +58,7 @@ dynamically in Python rather than read from a file on disk.
 
   def __generate_file(self,overwrite,full_qualified_filename,template_string):
     if template_string!=None and write_file(overwrite,self.default_overwrite,full_qualified_filename):
-      import inspect
-      print( "{} written by {} (from inline template)".format(full_qualified_filename, os.path.basename(inspect.getfile(self.__class__))))
+      Logger().log( "write " + full_qualified_filename )
 
       templateEnv = jinja2.Environment(undefined=jinja2.DebugUndefined)
       template = templateEnv.from_string( template_string )

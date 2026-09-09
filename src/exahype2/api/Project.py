@@ -530,9 +530,12 @@ thus appreciate any citation of the original release paper
         for solver in self._solvers:
             solver.generate_solver_realisation(self, peano_project, setup_simulation, time_step, plot)
 
-        setup_simulation_steps = self.compiler(setup_simulation)
-        time_step_steps        = self.compiler(time_step)
-        plot_steps             = self.compiler(plot)
+        setup_simulation_steps = self.compiler(setup_simulation, "SetupSimulation")
+        time_step_steps        = self.compiler(time_step, "TimeStep")
+        plot_steps             = self.compiler(plot, "Plot")
+
+        for step in setup_simulation_steps + time_step_steps + plot_steps:
+            peano_project.solversteps.add_step(step)
 
         return peano_project
 

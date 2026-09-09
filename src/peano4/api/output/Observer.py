@@ -2528,15 +2528,6 @@ tarch::logging::Log {{FULL_QUALIFIED_CLASSNAME}}::_log( "{{FULL_QUALIFIED_CLASSN
 
     def __generate_implementation(self, overwrite, full_qualified_filename):
         if write_file(overwrite, self.default_overwrite, full_qualified_filename):
-            import inspect, os
-
-            print(
-                "{} written by {}".format(
-                    full_qualified_filename,
-                    os.path.basename(inspect.getfile(self.__class__)),
-                )
-            )
-
             output_file = open(full_qualified_filename, "w")
             output_file.write(
                 jinja2.Template(self.TemplateImplementationFilePrologue).render(

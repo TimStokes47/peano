@@ -18,6 +18,7 @@ import peano4.api.runner
 # peano4.api itself is still being imported - the peano4.api attribute chain
 # is not yet fully wired up at that point.
 from .output import Overwrite
+from .Logger import Logger
 
 class Project (object):
   """!
@@ -138,7 +139,7 @@ class Project (object):
       ExaHyPE). It really strips everything down to the stuff you
       absolutely need to translate and run the code.
     """
-    print( "generate all code ..." )
+    Logger().new_section("Generate code")
     self.is_generated = True
     self.is_built = False
 
