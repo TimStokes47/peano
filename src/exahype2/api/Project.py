@@ -48,12 +48,18 @@ class Project(object):
             self.project = project
 
         @abc.abstractmethod
-        def construct_output(self):
+        def construct_output(self, peano_project):
             """!
-            Construct and return the generated output for this project (a
-            peano4.api.output.Output-compatible object, or anything else
-            that add()'s cleanly into project.output). This is the one thing
-            every SolverGenerator has to implement.
+            Add this generator's output to peano_project (a
+            peano4.api.Project-compatible object, or anything else that
+            add()'s cleanly into peano_project.output). This is the one
+            thing every Generator has to implement.
+
+            peano_project: peano4.api.Project
+              The Peano 4 project that self.project.generate_Peano4_project()
+              is currently assembling. It is a local variable there, not an
+              attribute - merely passed through here, so this generator can
+              add its own artefacts to it.
             """
 
     def __init__(self, namespace, project_name, executable, directory=".", subdirectory="", abstract_overwrite=True):
@@ -95,6 +101,12 @@ class Project(object):
         self._plotter_precision = 5
         self._tracer_particles = []
 
+        # Turns this project's configuration into the header/implementation
+        # file pair holding main(). Defaults to an ExaHyPE-flavoured main
+        # similar to python/exahype2/ExaHyPEMain.template.h/.cpp; assign a
+        # different Project.Generator subclass instance to use your own.
+        from .DefaultSimulationMain import DefaultSimulationMain
+        self.mainfile_generator = DefaultSimulationMain(self)
 
         # Translates each of the four algorithmic phases' task graphs into a
         # sequence of Observers (peano4.api.solversteps.Step). Defaults to
@@ -498,6 +510,59 @@ thus appreciate any citation of the original release paper
             self._peano_project.subdirectory + "repositories/SolverRepository.cpp", generated=True
         )
 
+    TEMPLATE_PHASE_KERNEL_HEADER_FILE = """
+// This file is part of the ExaHyPE2 project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#pragma once
+
+{% for item in NAMESPACE -%}
+namespace {{ item }} {
+{%- endfor %}
+  class {{CLASSNAME}};
+{% for item in NAMESPACE -%}
+}
+{%- endfor %}
+
+
+class {{NAMESPACE | join("::")}}::{{CLASSNAME}} {
+  public:
+    {{CLASSNAME}}() = default;
+};
+"""
+
+    TEMPLATE_PHASE_KERNEL_CPP_FILE = """
+#include "{{CLASSNAME}}.h"
+"""
+
+    def __generate_phase_kernel(self, peano_project, identifier):
+        """!
+
+        Create the header/implementation file pair that represents one of
+        the project's algorithmic phases (setup, time stepping, plotting,
+        ...) in the generated kernels/ subdirectory. Currently just an
+        empty stub class - a placeholder for the phase's kernel
+        implementation to grow into.
+
+        identifier: str
+          Same identifier used for the phase's Observers, e.g.
+          "SetupSimulation", "TimeStep", "Plot".
+
+        """
+        generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(
+            headerfile_template = self.TEMPLATE_PHASE_KERNEL_HEADER_FILE,
+            cppfile_template    = self.TEMPLATE_PHASE_KERNEL_CPP_FILE,
+            classname           = identifier,
+            namespace           = peano_project.namespace + ["kernels"],
+            subdirectory        = peano_project.subdirectory + "kernels",
+            dictionary          = {},
+            default_overwrite   = True,
+            apply_iteratively   = False,
+        )
+        peano_project.output.add(generated_files)
+        peano_project.output.makefile.add_cpp_file(
+            peano_project.subdirectory + "kernels/" + identifier + ".cpp", generated=True
+        )
+
     def generate_Peano4_project(self, verbosity=peano4.api.LoggerVerbosity.OFF):
         """!
 
@@ -536,6 +601,12 @@ thus appreciate any citation of the original release paper
 
         for step in setup_simulation_steps + time_step_steps + plot_steps:
             peano_project.solversteps.add_step(step)
+
+        self.__generate_phase_kernel(peano_project, "SetupSimulation")
+        self.__generate_phase_kernel(peano_project, "TimeStep")
+        self.__generate_phase_kernel(peano_project, "Plot")
+
+        self.mainfile_generator.construct_output(peano_project)
 
         return peano_project
 
