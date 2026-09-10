@@ -4,61 +4,89 @@
 
 \tableofcontents
 
-Every Peano 4 application needs exactly one file pair that hosts `main()`
-(@see @ref page_architecture_home "the Peano 4 architecture page" for the
-general Hollywood-principle control flow this main function drives). For a
-plain peano4.api.Project, this pair is produced by
-peano4.api.runner.DefaultSequence. exahype2.api.Project instead installs its
-own generator for this step, exahype2.api.DefaultSimulationMain, via the
-project's `mainfile_generator` attribute.
+
+As with any C++ code, every Peano 4 application needs exactly one file pair that hosts a `main()` function.
+For a plain peano4.api.Project, this pair is produced by peano4.api.runner.DefaultSequence, but this default runner doesn't serve ExaHyPE as it is meant only to be a prototype.
+So an ExaHyPE project defines its own runner. 
+This is again an ExaHyPE-specific runner, but you can overwrite it with your own bespoke runner.
+Bespoke runners come in handy, for example, if you want to have dedicated benchmark runs, or complex coupled solvers.
 
 
-# Project.mainfile_generator
+## Realisation
 
-exahype2.api.Project.__init__() sets
+exahype2.api.Project realises its runner through aggregation: it holds a
+`mainfile_generator` attribute, an instance of the nested abstract class
+Project.Generator, whose `construct_output(peano_project)` is what actually
+produces the main file pair. generate_Peano4_project() creates a fresh
+peano4.api.Project, has every solver contribute its part, and only right
+before it returns calls `self.mainfile_generator.construct_output(peano_project)` -
+so the runner is the very last thing wired into the generated project.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-self.mainfile_generator = DefaultSimulationMain(self)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+peano4.api.Project itself has no notion of "runner": it just expects its
+`main` attribute to be *some* object offering `construct_output(output,
+main_name)`, and calls exactly that from generate(). This is a duck-typed
+protocol, not a common base class. exahype2.api.DefaultSimulationMain
+(a Project.Generator) realises this protocol via a small adapter,
+`_ExaHyPEMainFileSequence`, and its own construct_output() does nothing more
+than replace `peano_project.main` (which peano4.api.Project had already
+defaulted to peano4.api.runner.DefaultSequence, itself a realisation of the
+very same protocol) with that adapter. This is how the "aggregate that
+produces a main" propagates across the two layers: an ExaHyPE-level
+Generator swaps out a Peano4-level protocol implementation.
 
-and generate_Peano4_project() later calls
-`self.mainfile_generator.construct_output(peano_project)`.
-exahype2.api.DefaultSimulationMain is a
-exahype2.api.Project.Generator (the same base class used for
-exahype2.api.SolverToCPPFiles on the solver side, @see
-@ref page_exahype_design_philosophy "design philosophy"): its
-construct_output() replaces `peano_project.main` with
-`_ExaHyPEMainFileSequence`, an adapter that speaks the
-`construct_output(output, main_name)` protocol
-peano4.api.Project.generate() expects from a project's `main` attribute, but
-fills the generated header/implementation pair with ExaHyPE-flavoured
-content instead of the mesh-agnostic Peano 4 default.
+\dot
+digraph ExaHyPEMainGeneration {
+  rankdir=TB
+  fontname="Helvetica"
+  node [shape=record, fontname="Helvetica", fontsize=10]
+  edge [fontname="Helvetica", fontsize=9]
 
-Since `mainfile_generator` is a plain attribute, an application can swap in
-its own Generator to produce a different main() - e.g. to drive several
-solvers through a custom control flow - without having to touch anything
-else in exahype2.api.Project.
+  ExaProject     [label="{exahype2.api.Project|+ mainfile_generator : Project.Generator\l|+ generate_Peano4_project() : peano4.api.Project\l}"]
+  Generator      [label="{«abstract»\nProject.Generator|+ project : Project\l|+ construct_output(peano_project) : void\l}"]
+  DefaultSimMain [label="{exahype2.api.DefaultSimulationMain|+ construct_output(peano_project) : void\l}"]
+  MainProtocol   [label="{«protocol»\nconstruct_output(output, main_name)}"]
+  ExaMainSeq     [label="{exahype2.api._ExaHyPEMainFileSequence|+ HEADER_TEMPLATE : str\l+ CPP_TEMPLATE : str\l|+ construct_output(output, main_name) : void\l}"]
+  DefaultSeq     [label="{peano4.api.runner.DefaultSequence|+ overwrite : bool\l|+ construct_output(output, main_name) : void\l}"]
+  PeanoProject   [label="{peano4.api.Project|+ main : «protocol»\l|+ generate() : void\l}"]
+
+  edge [arrowhead=empty, style=solid]
+  DefaultSimMain -> Generator
+
+  edge [arrowhead=empty, style=dashed]
+  ExaMainSeq -> MainProtocol
+  DefaultSeq -> MainProtocol
+
+  edge [dir=both, arrowtail=diamond, arrowhead=none, style=solid]
+  ExaProject -> Generator [taillabel="1", headlabel="1", label="mainfile_generator"]
+  PeanoProject -> MainProtocol [taillabel="1", headlabel="1", label="main"]
+
+  edge [dir=forward, arrowhead=vee, arrowtail=none, style=dashed]
+  DefaultSimMain -> ExaMainSeq [label="«creates»,\nreplaces peano_project.main"]
+  ExaProject -> PeanoProject [label="«creates»\ngenerate_Peano4_project()"]
+}
+\enddot
+
+Solid hollow-triangle arrows are inheritance (DefaultSimulationMain extends
+Project.Generator); dashed hollow-triangle arrows are realisation of the
+duck-typed main-file protocol (by `_ExaHyPEMainFileSequence` and, by
+default, `DefaultSequence`); diamond-ended lines are aggregation
+(a Project holds exactly one such object); dashed open arrows are
+"creates"/"replaces" dependencies at runtime. Reading the diagram
+bottom-up: an ExaHyPE application never talks to `DefaultSequence` at all -
+by the time peano4.api.Project.generate() runs, its `main` slot has already
+been swapped out for the ExaHyPE-flavoured sequence.
 
 
-# What the generated main() currently does
+## The default runner
 
-`_ExaHyPEMainFileSequence` emits a header that just declares `int main(int
-argc, char** argv);`, plus an implementation that
 
-- calls `peano4::initParallelEnvironment()`, `peano4::fillLookupTables()`
-  and the generated `repositories::DataRepository::initDatatypes()`,
-- calls `peano4::initSingletons()` with the project's domain offset, domain
-  size and periodic boundary condition flags,
-- and, symmetrically, shuts all three back down again before returning.
+## Hand-written runners
 
-Between the init and the shutdown block, the generated main() does not yet
-drive any mesh traversals: the task graph compiler
-(@ref page_exahype_compute_graph "lowering into a compute graph") only
-decides which Observers exist per algorithmic phase and in which order they
-may run - it does not yet say how a whole phase's Observers together realise
-the actual `peano4::parallel::SpacetreeSet::traverse()` sweeps that make up
-the simulation loop (setup, then repeated time steps interleaved with
-plotting, until the terminal time is reached). This orchestration is the
-next piece to land.
+
+
+
+## Tailored runners 
+
+
 
 */
