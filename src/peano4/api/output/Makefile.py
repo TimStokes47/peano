@@ -25,6 +25,7 @@ class Makefile(object):
             """
 ## Makefile settings
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 CXX             = {{CXX}}
 CXXFLAGS        = {{CXXFLAGS}}
 FC              = {{FC}}
@@ -36,10 +37,13 @@ CONFIGUREPATH   = {{CONFIGUREPATH}}
 EXECUTABLENAME  = {{EXECUTABLENAME}}
 FORTRAN_MODULES = {{FORTRAN_MODULES}}
 MODE            = {{MODE}}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Compiler version
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {{VERSION}}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
         )

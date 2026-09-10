@@ -173,7 +173,8 @@ class Constants(object):
 
 ## Exported C++ constants in project
 
-""" + self.d[ "ADD_CONSTANTS" ] + """
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""" + self.d[ "ADD_CONSTANTS" ] + """~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These constants are available to the application within its namespace.
 """
