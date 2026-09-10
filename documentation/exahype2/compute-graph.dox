@@ -1,0 +1,60 @@
+/**
+
+@page page_exahype_compute_graph Lowering into a compute graph
+
+\tableofcontents
+
+@ref page_exahype_numerical_scheme "adding a numerical scheme" describes how a
+scheme populates a peano4.api.taskgraph.Graph with Task instances and
+dependencies. That graph is still a purely descriptive, implementation-level
+model: it says which algorithmic steps exist, which mesh entity each works on
+(Task.GridEntity.VERTEX/FACE/CELL/GLOBAL) and which steps have to happen
+before which others - it does not yet say anything about Peano action sets,
+observers or mesh traversals. Turning the graph into those is the job of a
+*task graph compiler*, peano4.api.taskgraph.compiler.
+
+
+# The task graph compiler contract
+
+A task graph compiler is a function
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def translate(graph: peano4.api.taskgraph.Graph, identifier: str) -> List[peano4.api.solversteps.Step]:
+  ...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+that takes a Graph plus an identifier for the surrounding algorithmic phase
+(e.g. "SetupSimulation", "TimeStep", "Plot") and returns a list of
+peano4.api.solversteps.Step objects. In Peano terminology, a Step corresponds
+to an Observer: for every mesh traversal, the traversal automaton is handed an
+observer that distributes the grid events among the action sets tied to it.
+This is exactly the second generator layer the
+@ref page_exahype_design_philosophy "design philosophy" page describes:
+individual solver steps get mapped onto action sets and traversals here.
+
+peano4.api.taskgraph.compiler.Sequential.translate() is the baseline
+compiler shipped today. It linearises the task graph into one Observer per
+task, in an order that respects every dependency, and prefixes every
+generated Observer's name with `identifier` so that observers coming from
+different phases never clash even if their tasks happen to share a name.
+Being sequential, it throws away any parallelism the graph might encode -
+it is deliberately the "no fusion, no reordering" baseline that smarter
+compilers (which might, for instance, fuse independent tasks into one
+traversal) can be measured against.
+
+
+# Where this fits in code generation
+
+A numerical scheme's construct_output() only ever builds a Graph; nothing
+about Peano's C++ classes is visible to it. Only once
+generate_Peano4_project() (@see exahype2.api.Project) runs the graph through
+a compiler does the description turn into actual Step/Observer objects that
+the rest of the Peano 4 Python API can lower into generated C++, exactly
+mirroring how exahype2.api.SolverToCPPFiles turns a Solver's descriptive PDE
+terms into generated methods.
+
+While developing or debugging a numerical scheme, peano4.api.taskgraph.Graph.visualise()
+is often the fastest way to check that a task graph has the intended shape
+before it ever reaches a compiler.
+
+*/

@@ -1,0 +1,64 @@
+/**
+
+@page page_exahype_main_function ExaHyPE's main function
+
+\tableofcontents
+
+Every Peano 4 application needs exactly one file pair that hosts `main()`
+(@see @ref page_architecture_home "the Peano 4 architecture page" for the
+general Hollywood-principle control flow this main function drives). For a
+plain peano4.api.Project, this pair is produced by
+peano4.api.runner.DefaultSequence. exahype2.api.Project instead installs its
+own generator for this step, exahype2.api.DefaultSimulationMain, via the
+project's `mainfile_generator` attribute.
+
+
+# Project.mainfile_generator
+
+exahype2.api.Project.__init__() sets
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+self.mainfile_generator = DefaultSimulationMain(self)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+and generate_Peano4_project() later calls
+`self.mainfile_generator.construct_output(peano_project)`.
+exahype2.api.DefaultSimulationMain is a
+exahype2.api.Project.Generator (the same base class used for
+exahype2.api.SolverToCPPFiles on the solver side, @see
+@ref page_exahype_design_philosophy "design philosophy"): its
+construct_output() replaces `peano_project.main` with
+`_ExaHyPEMainFileSequence`, an adapter that speaks the
+`construct_output(output, main_name)` protocol
+peano4.api.Project.generate() expects from a project's `main` attribute, but
+fills the generated header/implementation pair with ExaHyPE-flavoured
+content instead of the mesh-agnostic Peano 4 default.
+
+Since `mainfile_generator` is a plain attribute, an application can swap in
+its own Generator to produce a different main() - e.g. to drive several
+solvers through a custom control flow - without having to touch anything
+else in exahype2.api.Project.
+
+
+# What the generated main() currently does
+
+`_ExaHyPEMainFileSequence` emits a header that just declares `int main(int
+argc, char** argv);`, plus an implementation that
+
+- calls `peano4::initParallelEnvironment()`, `peano4::fillLookupTables()`
+  and the generated `repositories::DataRepository::initDatatypes()`,
+- calls `peano4::initSingletons()` with the project's domain offset, domain
+  size and periodic boundary condition flags,
+- and, symmetrically, shuts all three back down again before returning.
+
+Between the init and the shutdown block, the generated main() does not yet
+drive any mesh traversals: the task graph compiler
+(@ref page_exahype_compute_graph "lowering into a compute graph") only
+decides which Observers exist per algorithmic phase and in which order they
+may run - it does not yet say how a whole phase's Observers together realise
+the actual `peano4::parallel::SpacetreeSet::traverse()` sweeps that make up
+the simulation loop (setup, then repeated time steps interleaved with
+plotting, until the terminal time is reached). This orchestration is the
+next piece to land.
+
+*/

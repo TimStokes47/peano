@@ -1,0 +1,75 @@
+/**
+
+@page page_exahype_numerical_scheme Adding a numerical scheme
+
+\tableofcontents
+
+Where @ref page_exahype_modelling_pde_solver "modelling the PDE solver" describes
+*what* equation a solver evolves, a numerical scheme describes *how* it is
+actually evolved: which algorithmic steps make up one time step (or one setup
+or plotting phase), in which order, and with which dependencies between them.
+This is the second, implementation-facing generator layer that the
+@ref page_exahype_design_philosophy "design philosophy" page refers to.
+
+
+# Solver.NumericalScheme
+
+A concrete discretisation - Finite Volumes with a Rusanov Riemann solver and
+explicit Euler time stepping, ADER-DG, Runge-Kutta Discontinuous Galerkin, ...
+- is realised as a subclass of the abstract nested class
+exahype2.api.Solver.NumericalScheme. It is one of three such contracts a
+Solver plugs in (the other two being Solver.GridConstruction, for how the
+mesh the solver runs on is built up, and Solver.Plotter, for how a solution is
+written out); all three follow the same shape: a constructor that just stores
+the owning solver, plus one abstract construct_output() method that the
+concrete scheme has to implement.
+
+For a numerical scheme, that method is
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def construct_output(self, exahype2_project, peano_project, time_step):
+  ...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+where `time_step` is a peano4.api.taskgraph.Graph: the task graph of the
+surrounding project's time stepping phase. Implementing a numerical scheme
+therefore means populating this graph with peano4.api.taskgraph.Task
+instances and the dependencies between them - it does not yet mean writing
+any Peano action sets or C++ by hand (@see
+@ref page_exahype_compute_graph "lowering into a compute graph" for what
+happens to the graph afterwards).
+
+
+# A worked example
+
+exahype2.api.fv.RusanovWithExplicitEuler builds the task graph for a Finite
+Volume time step over a block-structured mesh:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruction",         entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell",            entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+compute_cfl_condition_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute CFL condition",  entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces",       entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+compute_time_step_size_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute time step size", entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL)
+
+update_cell_task.add_dependency(reconstruction_task)
+compute_cfl_condition_task.add_dependency(update_cell_task)
+project_on_faces_task.add_dependency(update_cell_task)
+compute_time_step_size_task.add_dependency(compute_cfl_condition_task)
+
+time_step.add_task(reconstruction_task)
+time_step.add_task(update_cell_task)
+time_step.add_task(compute_cfl_condition_task)
+time_step.add_task(project_on_faces_task)
+time_step.add_task(compute_time_step_size_task)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Every Task is tagged with the kind of mesh entity it works on
+(Task.GridEntity.VERTEX/FACE/CELL/GLOBAL) and the tasks it depends on. A new
+numerical scheme typically follows the same pattern: create one Task per
+algorithmic sub-step, wire up add_dependency() calls to express the required
+order, and add every task to the phase's Graph via add_task(). While
+developing a scheme, Graph.visualise() renders the resulting graph with
+matplotlib to sanity-check the dependency structure.
+
+*/
