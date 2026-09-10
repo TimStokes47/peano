@@ -1,0 +1,23 @@
+/**
+
+@page page_design_philosophy_home Design philosophy and architecture
+
+\tableofcontents
+
+This page collects design philosophy notes, patterns and idioms that recur throughout
+Peano and its extensions. Where the @ref page_architecture_home "architecture page"
+explains how the code is organised into layers, this page captures *why* certain
+recurring implementation choices were made, so they can be reused (or deliberately
+deviated from) consistently across the code base.
+
+
+# Patterns and idioms
+
+- In the original ExaHyPE 2 rewrite, we did rely a lot on Jinja 2 templates to
+  generate all kind of files. As the code evolved, we decided that we want to
+  move away from Jinja 2 templates as they are hard to maintain and to debug.
+  Notably, they imply that knowledge is scattered between the template and the Python code,
+  while we saw more and more logic migrate from the Python files into the templates.
+- A Python layer only writes into the Python layer below it. Notably, no ExaHyPE 2 api generator writes directly into the Peano 4 layer. This is a design choice to avoid that knowledge is scattered across layers.
+
+*/

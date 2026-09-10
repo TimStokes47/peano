@@ -67,17 +67,7 @@ inform the solver's numerical behaviour. For example, whether to use a GPU and w
 fall under implementation details and should be handled by a generator not the description. How many variables to use, which
 PDE terms to enable and the patch size should be used however is a property of the model itself.
 
-
-
-# Patterns and idioms
-
-- In the original ExaHyPE 2 rewrite, we did rely a lot on Jinja 2 templates to 
-  generate all kind of files. As the code evolved, we decided that we want to 
-  move away from Jinja 2 templates as they are hard to maintain and to debug.
-  Notably, they imply that knowledge is scattered between the template and the Python code,
-  while we saw more and more logic migrate from the Python files into the templates.
-- A Python layer only writes into the Python layer below it. Notably, no ExaHyPE 2 api generator writes directly into the Peano 4 layer. This is a design choice to avoid that knowledge is scattered across layers.
-
-
+For general design patterns and idioms that recur across Peano and its extensions, see the
+@ref page_design_philosophy_home "design philosophy and architecture" page.
 
 */
