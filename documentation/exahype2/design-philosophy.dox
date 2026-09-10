@@ -1,6 +1,6 @@
 /**
 
-@page page_exahype_architecture Code architecture, usage and extension
+@page page_exahype_design_philosophy Design philosophy and principles
 
 
 ExaHyPE 2 is built as a layer on top of Peano 4 and the Peano 4 Technical Architecture. 
