@@ -3,7 +3,7 @@
 import os
 import re
 
-from .Helper import write_file
+from .Helper import write_file, WARNING_BANNER
 
 from .Overwrite  import Overwrite
 
@@ -196,5 +196,8 @@ These constants are available to the application within its namespace.
       # postfix in the case where it is a source file
       with open( os.path.realpath(__file__).replace( ".pyc", ".h.template" ).replace( ".py", ".h.template" ), "r" ) as input:
         template = input.read()
+      rendered_text = template.format(**self.d)
+      if self.default_overwrite:
+        rendered_text = WARNING_BANNER + rendered_text
       with open( filename, "w" ) as output:
-        output.write( template.format(**self.d) )
+        output.write( rendered_text )

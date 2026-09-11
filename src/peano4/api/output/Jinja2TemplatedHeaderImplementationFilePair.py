@@ -6,7 +6,7 @@ import jinja2
 
 from copy import deepcopy
 
-from .Helper import write_file
+from .Helper import write_file, WARNING_BANNER
 
 from .Overwrite import Overwrite
 
@@ -68,8 +68,12 @@ dictionary entries besides the ones manually handed over by the user.
           template      = jinja2.Template(rendered_text, undefined=jinja2.DebugUndefined)
           rendered_text = template.render( self.d )
 
+      rendered_text = template.render(self.d)
+      if self.default_overwrite:
+        rendered_text = WARNING_BANNER + rendered_text
+
       with open( full_qualified_filename, "w" ) as output:
-        output.write( template.render(self.d) )
+        output.write( rendered_text )
 
   def generate(self,overwrite,directory):
     subdirectory_path = os.path.normpath( directory + "/" + self.subdirectory )

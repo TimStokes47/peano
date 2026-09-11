@@ -3,7 +3,7 @@
 import os
 import re
 
-from .Helper import write_file
+from .Helper import write_file, WARNING_BANNER
 
 from .Overwrite import Overwrite
 
@@ -46,8 +46,11 @@ class TemplatedHeaderImplementationFilePair(object):
       Logger().log( "write " + full_qualified_filename )
       with open( os.path.realpath(template_file), "r" ) as input:
         template = input.read()
+        rendered_text = template.format(**self.d)
+        if self.default_overwrite:
+          rendered_text = WARNING_BANNER + rendered_text
         with open( full_qualified_filename, "w" ) as output:
-          output.write( template.format(**self.d) )
+          output.write( rendered_text )
 
   def generate(self,overwrite,directory):
     subdirectory_path = os.path.normpath( directory + "/" + self.subdirectory )
