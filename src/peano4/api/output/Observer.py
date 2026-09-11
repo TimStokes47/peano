@@ -259,6 +259,7 @@ class Observer(object):
             self.subdirectory,
             md,
             self.default_overwrite,
+            announce=False,
         )
         header.generate(overwrite, directory)
         del header
@@ -2558,7 +2559,18 @@ tarch::logging::Log {{FULL_QUALIFIED_CLASSNAME}}::_log( "{{FULL_QUALIFIED_CLASSN
         if not os.path.exists(directory + "/" + self.subdirectory):
             os.mkdir(directory + "/" + self.subdirectory)
 
+        header_filename = directory + "/" + self.subdirectory + "/" + self.classname + ".h"
         cpp_filename = directory + "/" + self.get_cpp_file_name()
+
+        header_written = write_file(overwrite, self.default_overwrite, header_filename)
+        cpp_written = write_file(overwrite, self.default_overwrite, cpp_filename)
+
+        if header_written and cpp_written:
+            print("write " + header_filename + " and " + cpp_filename)
+        elif header_written:
+            print("write " + header_filename)
+        elif cpp_written:
+            print("write " + cpp_filename)
 
         self.__generate_header(overwrite, directory)
         self.__generate_implementation(overwrite, cpp_filename)

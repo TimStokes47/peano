@@ -29,7 +29,7 @@ class DefaultSimulationMain(Project.Generator):
         peano4.api.Logger().log(
             "Create main file for {}".format(self.project._project_name)
         )
-        peano_project.main = _ExaHyPEMainFileSequence(peano_project)
+        peano_project.main = _ExaHyPEMainFileSequence(peano_project, self.project)
 
 
 class _ExaHyPEMainFileSequence:
@@ -40,6 +40,15 @@ class _ExaHyPEMainFileSequence:
     peano4.api.runner.DefaultSequence, whose job this class takes over for
     an ExaHyPE 2 project), but fills the header/implementation pair with
     ExaHyPE-flavoured content instead of the mesh-agnostic default.
+
+    project is the peano4-level project (peano4.api.Project) this sequence
+    is attached to as .main - it is where SUBDIRECTORIES/SUBNAMESPACE/
+    rootnamespace come from, mirroring peano4.api.runner.DefaultSequence.
+
+    exahype_project is the exahype2.api.Project this main file is generated
+    for - it is where the runtime settings (TIMEOUT, NUMBER_OF_THREADS,
+    GPUS, MULTICORE_ORCHESTRATION) come from, as those live on the ExaHyPE
+    2 project rather than on the plain peano4 one.
 
     """
 
@@ -57,6 +66,12 @@ int main(int argc, char** argv);
 #include "{{CLASSNAME}}.h"
 
 #include "tarch/logging/Log.h"
+#include "tarch/logging/Statistics.h"
+#include "tarch/mpi/Rank.h"
+#include "tarch/multicore/Core.h"
+#include "tarch/multicore/multicore.h"
+#include "tarch/accelerator/Device.h"
+#include "tarch/NonCriticalAssertions.h"
 #include "peano4/peano.h"
 #include "peano4/parallel/SpacetreeSet.h"
 
@@ -64,47 +79,185 @@ int main(int argc, char** argv);
 {% for subdirectory in SUBDIRECTORIES %}
 #include "{{subdirectory}}Constants.h"
 #include "{{subdirectory}}repositories/DataRepository.h"
+#include "{{subdirectory}}repositories/StepRepository.h"
+#include "{{subdirectory}}repositories/SolverRepository.h"
+#include "{{subdirectory}}kernels/SetupSimulation.h"
+#include "{{subdirectory}}kernels/TimeStep.h"
+#include "{{subdirectory}}kernels/Plot.h"
 {% endfor -%}
 {% else %}
 #include "Constants.h"
 #include "repositories/DataRepository.h"
+#include "repositories/StepRepository.h"
+#include "repositories/SolverRepository.h"
+#include "kernels/SetupSimulation.h"
+#include "kernels/TimeStep.h"
+#include "kernels/Plot.h"
 {%- endif %}
 
 tarch::logging::Log _log( "{{NAMESPACE | join("::")}}" );
 
+
+{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}kernels::SetupSimulation SetupSimulation;
+{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}kernels::Plot Plot;
+{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}kernels::TimeStep TimeStep;
+
+
+void step() {
+  int  stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
+  auto stepName       = {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::StepRepository::toStepEnum(stepIdentifier);
+
+  static tarch::logging::Log _log("");
+  
+  int  step = peano4::parallel::Node::getInstance().getCurrentProgramStep();
+  
+  switch (step) {
+    case Plot.getFirstSubstep(): 
+      Plot.run();
+      break;
+    case TimeStep.getFirstSubstep(): 
+      TimeStep.run();
+      break;
+    case SetupSimulation.getFirstSubstep(): 
+      SetupSimulation.run();
+      break;
+    default:
+      assertionMsg( false, "Unknown step " << step << " in main()." );
+  }
+}
+
+
 int main(int argc, char** argv) {
-  constexpr int ExitCodeSuccess = 0;
+  constexpr int ExitCodeSuccess          = 0;
+  constexpr int ExitCodeUnitTestsFailed  = 1;
+  constexpr int ExitCodeInvalidArguments = 2;
+  constexpr int ExitCodeInvalidBuild     = 3;
 
   peano4::initParallelEnvironment(&argc, &argv);
   peano4::fillLookupTables();
-  {{NAMESPACE | join("::")}}::repositories::DataRepository::initDatatypes();
+  {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::DataRepository::initDatatypes();
   peano4::initSingletons(
     {{NAMESPACE | join("::")}}::DomainOffset,
     {{NAMESPACE | join("::")}}::DomainSize,
     {{NAMESPACE | join("::")}}::PeriodicBC
   );
 
-  // @todo The task graph compiler (peano4.api.taskgraph.compiler) only
-  // decides which Observers exist per algorithmic phase and in which
-  // order they may run - it does not yet say how a whole phase's
-  // Observers together realise the actual
-  // peano4::parallel::SpacetreeSet::traverse() sweeps. Fill this in
-  // once that orchestration exists.
+  {% if TIMEOUT>=0 %}
+  tarch::mpi::Rank::getInstance().setDeadlockTimeOut( {{TIMEOUT}} );
+  {% endif %}
+  tarch::multicore::Core::getInstance().configure( {{NUMBER_OF_THREADS}} );
+  tarch::accelerator::Device::getInstance().configure( { {{GPUS|join(",")}} } );
+  tarch::multicore::setOrchestration( {{MULTICORE_ORCHESTRATION}} );
 
+  if (tarch::mpi::Rank::getInstance().getNumberOfRanks() > 1 and tarch::multicore::Core::getInstance().getNumberOfThreads() <= 1) {
+    logError("main()", "MPI runs without multithreading are not supported currently.");
+    return ExitCodeInvalidBuild;
+  }
+
+  {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::DataRepository::initDatatypes();
+
+  {% if FENV_ARGS is defined and FENV_ARGS != "" -%}
+  feenableexcept({{FENV_ARGS}} );
+  {% endif -%}
+  
+  #if defined(SharedOMP)
+    #pragma omp parallel
+    {
+      #pragma omp master
+      {
+  #endif
+
+  #if defined(UseSmartMPI)
+  const bool isGlobalMaster =     tarch::mpi::Rank::getInstance().isGlobalMaster();
+  const bool isPeanoWorker  = not tarch::mpi::Rank::getInstance().isGlobalMaster() and smartmpi::isComputeRank();
+  #else
+  const bool isGlobalMaster = tarch::mpi::Rank::getInstance().isGlobalMaster();
+  const bool isPeanoWorker  = not isGlobalMaster;
+  #endif
+
+  if (isGlobalMaster) {
+    bool     haveJustWrittenSnapshot = false;
+    double   nextPlotTimeStamp       = {{NAMESPACE | join("::")}}::FirstPlotTimeStamp;
+      
+    peano4::parallel::Node::getInstance().setNextProgramStep(
+      SetupSimulation.getFirstSubstep()
+    );
+    step();
+      
+    while ( 
+        {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMinTimeStamp() < {{NAMESPACE | join("::")}}::MinTerminalTime 
+        and 
+        {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStamp() < {{NAMESPACE | join("::")}}::MaxTerminalTime
+    ) {
+        if (
+          {{NAMESPACE | join("::")}}::TimeInBetweenPlots > 0.0 
+          and 
+          {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMinTimeStamp() >= nextPlotTimeStamp
+          and 
+          not haveJustWrittenSnapshot
+        ) {
+          nextPlotTimeStamp += {{NAMESPACE | join("::")}}::TimeInBetweenPlots;
+
+          peano4::parallel::Node::getInstance().setNextProgramStep(
+            Plot.getFirstSubstep()
+          );
+          haveJustWrittenSnapshot = true;
+        }
+        else {
+          haveJustWrittenSnapshot = false;
+          
+          peano4::parallel::Node::getInstance().setNextProgramStep(
+            TimeStep.getFirstSubstep()
+          );
+        }   
+        step();
+    }
+      
+    if ( {{NAMESPACE | join("::")}}::TimeInBetweenPlots > 0.0 ) {
+        peano4::parallel::Node::getInstance().setNextProgramStep(
+          Plot.getFirstSubstep()
+        );
+        step();
+    }
+  }
+  else if (isPeanoWorker) {
+    while (peano4::parallel::Node::getInstance().continueToRun()) {
+      step();
+    }
+  }
+  else {
+    assertionMsg( false, "This rank is neither global master nor Peano worker. This should not happen yet, as SmartMPI is not active." );
+  }
+  
+  #if defined(SharedOMP)
+      }
+    }
+  #endif
+
+  tarch::logging::Statistics::getInstance().writeToCSV();
+  
   peano4::shutdownSingletons();
-  {{NAMESPACE | join("::")}}::repositories::DataRepository::shutdownDatatypes();
+  {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::DataRepository::shutdownDatatypes();
+  tarch::multicore::shutdownSmartMPI();
+  tarch::shutdownNonCriticalAssertionEnvironment();
   peano4::shutdownParallelEnvironment();
 
   return ExitCodeSuccess;
 }
 """
 
-    def __init__(self, project):
+    def __init__(self, project, exahype_project):
         self.project = project
+        self.exahype_project = exahype_project
 
     def construct_output(self, output, main_name):
         d = {
             "SUBDIRECTORIES": list(self.project.subdirectories),
+            "SUBNAMESPACE": self.project._subdirectory + "::" if self.project._subdirectory else "",
+            "TIMEOUT": self.exahype_project._timeout,
+            "NUMBER_OF_THREADS": self.exahype_project._number_of_threads,
+            "MULTICORE_ORCHESTRATION": self.exahype_project._multicore_orchestration,
+            "GPUS": self.exahype_project._gpus,
         }
 
         generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(

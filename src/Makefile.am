@@ -173,6 +173,7 @@ Peano4Core_SOURCES = \
 	peano4/datamanagement/FaceMarker.cpp \
 	peano4/datamanagement/VertexMarker.cpp \
 	peano4/peano.cpp \
+	peano4/RunMultipleSteps.cpp \
 	peano4/UnitTests.cpp \
 	peano4/grid/AutomatonState.cpp \
 	peano4/grid/EmptyTraversalObserver.cpp \

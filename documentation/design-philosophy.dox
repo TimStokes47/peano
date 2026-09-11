@@ -11,6 +11,19 @@ recurring implementation choices were made, so they can be reused (or deliberate
 deviated from) consistently across the code base.
 
 
+# Python motivation
+
+Previous generations of Peano and the first generation of ExaHyPE 2 relied on 
+C++ template meta programming to generate code and lacked any Python support. 
+In principle, this would have been a valid way forward, but we wanted to write a 
+piece of software which is accessible to colleagues without extensive C++ 
+knowledge.
+
+In the age of LLMs, we notably wanted to create a piece of software which is 
+easy to use with a language model. For this purpose, Python is hard to beat.
+
+
+
 # Patterns and idioms
 
 - In the original ExaHyPE 2 rewrite, we did rely a lot on Jinja 2 templates to

@@ -228,4 +228,7 @@ tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPAC
             apply_iteratively=False,
         )
         peano_project.output.add(generated_files)
+        peano_project.output.makefile.add_cpp_file(
+            peano_project.subdirectory + class_name + ".cpp", generated=True
+        )
 

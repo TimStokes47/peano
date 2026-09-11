@@ -11,8 +11,16 @@ So an ExaHyPE project defines its own runner.
 This is again an ExaHyPE-specific runner, but you can overwrite it with your own bespoke runner.
 Bespoke runners come in handy, for example, if you want to have dedicated benchmark runs, or complex coupled solvers.
 
+Here's the workflows:
+
+- Every project holds a Project.Generator object. This is an interface, but we ship a default implementation.
+- The generator object is called when we ask the project to lower its data into a Peano project through generate_Peano4_project().
+- Most generators create a new instance of a header/C++ file pair and add it to the Peano project returned. 
+
 
 ## Realisation
+
+### The runner itself
 
 exahype2.api.Project realises its runner through aggregation: it holds a
 `mainfile_generator` attribute, an instance of the nested abstract class
@@ -22,17 +30,6 @@ peano4.api.Project, has every solver contribute its part, and only right
 before it returns calls `self.mainfile_generator.construct_output(peano_project)` -
 so the runner is the very last thing wired into the generated project.
 
-peano4.api.Project itself has no notion of "runner": it just expects its
-`main` attribute to be *some* object offering `construct_output(output,
-main_name)`, and calls exactly that from generate(). This is a duck-typed
-protocol, not a common base class. exahype2.api.DefaultSimulationMain
-(a Project.Generator) realises this protocol via a small adapter,
-`_ExaHyPEMainFileSequence`, and its own construct_output() does nothing more
-than replace `peano_project.main` (which peano4.api.Project had already
-defaulted to peano4.api.runner.DefaultSequence, itself a realisation of the
-very same protocol) with that adapter. This is how the "aggregate that
-produces a main" propagates across the two layers: an ExaHyPE-level
-Generator swaps out a Peano4-level protocol implementation.
 
 \dot
 digraph ExaHyPEMainGeneration {
@@ -66,6 +63,9 @@ digraph ExaHyPEMainGeneration {
 }
 \enddot
 
+
+<br /><br />
+<div style="background-color: #cdc ; padding: 10px; border: 1px solid green;"> 
 Solid hollow-triangle arrows are inheritance (DefaultSimulationMain extends
 Project.Generator); dashed hollow-triangle arrows are realisation of the
 duck-typed main-file protocol (by `_ExaHyPEMainFileSequence` and, by
@@ -75,18 +75,32 @@ default, `DefaultSequence`); diamond-ended lines are aggregation
 bottom-up: an ExaHyPE application never talks to `DefaultSequence` at all -
 by the time peano4.api.Project.generate() runs, its `main` slot has already
 been swapped out for the ExaHyPE-flavoured sequence.
+</div>
+
+### The program phases
+
+There are three distinct program phases:
+
+1. Setting up the simulation
+2. Time stepping
+3. Plotting
+
+The default runner simply toggles between those three phases. For each one,
+it 
 
 
 ## The default runner
 
 
+
 ## Hand-written runners
 
-
+@todo This is not yet implemented, but the idea is that there is another generic generator which just does nothing but assumes that there is a C++ file there already which is then added to the Makefile, so it is properly compiled.
 
 
 ## Tailored runners 
 
+@todo To be written, but I wonder if there's space for a kernel benchmark runner?
 
 
 */

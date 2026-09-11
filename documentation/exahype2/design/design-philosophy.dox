@@ -3,6 +3,19 @@
 @page page_exahype_design_philosophy Design philosophy and principles
 
 
+## Simple conventions
+
+- All steps report against the Peano logger. It enlists information through which 
+  steps the generation runs through (but not what exactly has been produced). 
+- The individual ingredients dump their specific information (which papers to cite, or 
+  what actual solver/ingredient combination has been used) into the readme tied to the 
+  Peano project. So the readme hosts information what has been done (cmp remarks on logger above).
+- The individual code parts tend not to write any terminal output or at least keep it 
+  very minimalist. This way, the user can write their own terminal output tailored towards their need.  
+  
+  
+  
+
 ExaHyPE 2 is built as a layer on top of Peano 4 and the Peano 4 Technical Architecture. 
 This C++ ExaHyPE 2 layer is built as a set of Peano 4 C++ utility files compiled into one shared library plus a Python API. 
 It is relatively straightforward to understand by browsing through the C++ files, but it provides limited structure:

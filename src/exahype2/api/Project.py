@@ -96,10 +96,7 @@ class Project(object):
         self._build_mode = peano4.api.output.CompileMode.Asserts
         self._executable_name = executable
         self._periodic_BC = [False, False, False]
-        self._plot_filters = []
         self._output_path = "./"
-        self._plotter_precision = 5
-        self._tracer_particles = []
 
         # Turns this project's configuration into the header/implementation
         # file pair holding main(). Defaults to an ExaHyPE-flavoured main
@@ -259,35 +256,6 @@ class Project(object):
     def add_solver(self, solver):
         self._solvers.append(solver)
 
-    def add_plot_filter(self, offset, size, frequency=1):
-        """
-        Add a new filter to Peano/ExaHyPE
-
-        offset: (float,float,float)
-
-        size: (float,float,float)
-
-        frequency: int
-          A positive value. Peano makes snapshots every dt simulation
-          units. This is something you specify once per simulation. But
-          you might decide only to splot every k of these snapshots.
-        """
-        new_entry = "{{"
-        new_entry += str(offset[0])
-        for i in offset[1:]:
-            new_entry += ","
-            new_entry += str(i)
-        new_entry += "},{"
-        new_entry += str(size[0])
-        for i in size[1:]:
-            new_entry += ","
-            new_entry += str(i)
-        new_entry += "},"
-        new_entry += str(frequency)
-        new_entry += "}"
-
-        self._plot_filters.append(new_entry)
-
     def remove_all_solvers(self):
         self._solvers = []
         self._peano_project.cleanup()
@@ -341,7 +309,6 @@ class Project(object):
             "TimeInBetweenPlots", str(self._time_in_between_plots)
         )
 
-        peano_project.constants.export("PlotterPrecision", str(self._plotter_precision))
         peano_project.constants.export_boolean_sequence("PeriodicBC", self._periodic_BC)
 
         build_string = "python3 "
@@ -367,7 +334,6 @@ class Project(object):
         first_plot_time_stamp,
         time_in_between_plots,
         periodic_BC=[False, False, False],
-        plotter_precision=5,
         max_end_time=0.0,
     ):
         """
@@ -414,11 +380,8 @@ class Project(object):
         self._time_in_between_plots = time_in_between_plots
 
         self._periodic_BC = []
-        self._plotter_precision = plotter_precision
         for d in range(0, dimensions):
             self._periodic_BC.append(periodic_BC[d])
-        if plotter_precision <= 0:
-            raise Exception("Plotter precision has to be bigger than 0")
 
     def set_output_path(self, path):
         self._output_path = path
@@ -435,8 +398,6 @@ class Project(object):
             "SOLVERS":                  [],
             "LOAD_BALANCER":            self._load_balancer_name,
             "LOAD_BALANCER_ARGUMENTS":  self._load_balancer_arguments,
-            "PLOT_FILTER":              self._plot_filters,
-            "TRACERS":                  [x.name for x in self._tracer_particles],
             "LOG_FILTER_FILE":          self._log_filter_file,
             "NUMBER_OF_THREADS":        self._number_of_threads,
             "MULTICORE_ORCHESTRATION":  self._multicore_orchestration,
@@ -445,12 +406,7 @@ class Project(object):
             "ADDITIONAL_INCLUDES":      self._additional_includes,
         }
 
-    def __generate_solver_repository(self):
-        """
-        I have to call finishedTraversal() for each tracer set. As tracers
-        are a subclass of DoF, they have a name property.
-        """
-
+    def __generate_solver_repository(self, peano_project):
         self.__set_solver_repository_dict()
 
         for solver in self._solvers:
@@ -466,69 +422,16 @@ class Project(object):
                 templatefile_prefix + "SolverRepository.template.h",
                 templatefile_prefix + "SolverRepository.template.cpp",
                 "SolverRepository",
-                self._peano_project.namespace + ["repositories"],
-                self._peano_project.subdirectory + "repositories",
+                peano_project.namespace + ["repositories"],
+                peano_project.subdirectory + "repositories",
                 self.solverRepositoryDictionary,
                 True,
             )
         )
 
-        self._peano_project.output.add(generated_solver_files)
-        self._peano_project.output.makefile.add_cpp_file(
-            self._peano_project.subdirectory + "repositories/SolverRepository.cpp", generated=True
-        )
-
-    TEMPLATE_PHASE_KERNEL_HEADER_FILE = """
-// This file is part of the ExaHyPE2 project. For conditions of distribution and
-// use, please see the copyright notice at www.peano-framework.org
-#pragma once
-
-{% for item in NAMESPACE -%}
-namespace {{ item }} {
-{%- endfor %}
-  class {{CLASSNAME}};
-{% for item in NAMESPACE -%}
-}
-{%- endfor %}
-
-
-class {{NAMESPACE | join("::")}}::{{CLASSNAME}} {
-  public:
-    {{CLASSNAME}}() = default;
-};
-"""
-
-    TEMPLATE_PHASE_KERNEL_CPP_FILE = """
-#include "{{CLASSNAME}}.h"
-"""
-
-    def __generate_phase_kernel(self, peano_project, identifier):
-        """!
-
-        Create the header/implementation file pair that represents one of
-        the project's algorithmic phases (setup, time stepping, plotting,
-        ...) in the generated kernels/ subdirectory. Currently just an
-        empty stub class - a placeholder for the phase's kernel
-        implementation to grow into.
-
-        identifier: str
-          Same identifier used for the phase's Observers, e.g.
-          "SetupSimulation", "TimeStep", "Plot".
-
-        """
-        generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(
-            headerfile_template = self.TEMPLATE_PHASE_KERNEL_HEADER_FILE,
-            cppfile_template    = self.TEMPLATE_PHASE_KERNEL_CPP_FILE,
-            classname           = identifier,
-            namespace           = peano_project.namespace + ["kernels"],
-            subdirectory        = peano_project.subdirectory + "kernels",
-            dictionary          = {},
-            default_overwrite   = True,
-            apply_iteratively   = False,
-        )
-        peano_project.output.add(generated_files)
+        peano_project.output.add(generated_solver_files)
         peano_project.output.makefile.add_cpp_file(
-            peano_project.subdirectory + "kernels/" + identifier + ".cpp", generated=True
+            peano_project.subdirectory + "repositories/SolverRepository.cpp", generated=True
         )
 
     _EXAHYPE_PACKAGE_DESCRIPTION = """
@@ -600,16 +503,32 @@ thus appreciate any citation of the original release paper
         for solver in self._solvers:
             solver.generate_solver_realisation(self, peano_project, setup_simulation, time_step, plot)
 
+        #
+        # The steps tied to one phase. This is really a sequence of
+        # observers (aka Peano grid traversals) which the code should
+        # run through for a given phase.
+        #
         setup_simulation_steps = self.compiler(setup_simulation, "SetupSimulation")
         time_step_steps        = self.compiler(time_step, "TimeStep")
         plot_steps             = self.compiler(plot, "Plot")
 
+        #
+        # Add these observers to the Peano project, so a main file can 
+        # trigger them.
+        #
         for step in setup_simulation_steps + time_step_steps + plot_steps:
             peano_project.solversteps.add_step(step)
 
-        self.__generate_phase_kernel(peano_project, "SetupSimulation")
-        self.__generate_phase_kernel(peano_project, "TimeStep")
-        self.__generate_phase_kernel(peano_project, "Plot")
+        #
+        # Create one runner object per phase. A runner object has only one 
+        # big routine (run()) and this routine triggers all the observers 
+        # (aka Peano grid traversals) that logically make up a simulation phase.
+        #
+        peano4.api.taskgraph.create_runner(peano_project, "SetupSimulation", setup_simulation_steps)
+        peano4.api.taskgraph.create_runner(peano_project, "TimeStep", time_step_steps)
+        peano4.api.taskgraph.create_runner(peano_project, "Plot", plot_steps)
+
+        self.__generate_solver_repository(peano_project)
 
         self.mainfile_generator.construct_output(peano_project)
 
