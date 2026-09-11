@@ -102,8 +102,14 @@ class Project(object):
         # file pair holding main(). Defaults to an ExaHyPE-flavoured main
         # similar to python/exahype2/ExaHyPEMain.template.h/.cpp; assign a
         # different Project.Generator subclass instance to use your own.
-        from .DefaultSimulationMain import DefaultSimulationMain
+        from .generators.DefaultSimulationMain import DefaultSimulationMain
         self.mainfile_generator = DefaultSimulationMain(self)
+
+        # Generates repositories/SolverRepository.h/.cpp (one extern
+        # instance per registered solver, plus the getMinTimeStamp()/
+        # getMaxTimeStamp() aggregators).
+        from .generators.SolverRepositoryGenerator import SolverRepositoryGenerator
+        self.solver_repository_generator = SolverRepositoryGenerator(self)
 
         # Translates each of the four algorithmic phases' task graphs into a
         # sequence of Observers (peano4.api.solversteps.Step). Defaults to
@@ -393,120 +399,6 @@ class Project(object):
         if not self._output_path.endswith("/"):
             self._output_path += "/"
 
-    def __set_solver_repository_dict(self):
-        self.solverRepositoryDictionary = {
-            "SOLVERS":                  [],
-            "LOAD_BALANCER":            self._load_balancer_name,
-            "LOAD_BALANCER_ARGUMENTS":  self._load_balancer_arguments,
-            "LOG_FILTER_FILE":          self._log_filter_file,
-            "NUMBER_OF_THREADS":        self._number_of_threads,
-            "MULTICORE_ORCHESTRATION":  self._multicore_orchestration,
-            "TIMEOUT":                  self._timeout,
-            "GPUS":                     self._gpus,
-            "ADDITIONAL_INCLUDES":      self._additional_includes,
-        }
-
-    TEMPLATE_SOLVER_REPOSITORY_HEADER_FILE = """
-// This file is part of the ExaHyPE2 project. For conditions of distribution and
-// use, please see the copyright notice at www.peano-framework.org
-#pragma once
-
-{% for item in SOLVERS -%}
-#include "{{ item[0] }}.h"
-{# Comment to ensure that jinja2 adds a new line#}
-{% endfor %}
-
-
-{% for item in NAMESPACE -%}
-namespace {{ item }} {
-{%- endfor %}
-
-  {% for item in SOLVERS -%}
-  extern {{ item[0] }}  {{ item[1] }};
-  {# Comment to ensure that jinja2 adds a new line#}
-  {%- endfor %}
-
-  /**
-   * Return the global min time stamp over all solvers.
-   */
-  double getMinTimeStamp();
-
-  /**
-   * Return the global max time stamp over all solvers.
-   */
-  double getMaxTimeStamp();
-
-{% for item in NAMESPACE -%}
-}
-{%- endfor %}
-"""
-
-    TEMPLATE_SOLVER_REPOSITORY_CPP_FILE = """
-// This file is part of the ExaHyPE2 project. For conditions of distribution and
-// use, please see the copyright notice at www.peano-framework.org
-#include "SolverRepository.h"
-
-#include <algorithm>
-#include <limits>
-
-{% for item in NAMESPACE -%}
-namespace {{ item }} {
-{%- endfor %}
-
-  {% for item in SOLVERS -%}
-  {{ item[0] }}  {{ item[1] }};
-  {# Comment to ensure that jinja2 adds a new line#}
-  {%- endfor %}
-
-
-  double getMinTimeStamp() {
-    double result = std::numeric_limits<double>::max();
-    {% for item in SOLVERS -%}
-    result = std::min( result, {{ item[1] }}.getMinTimeStamp() );
-    {# Comment to ensure that jinja2 adds a new line#}
-    {%- endfor %}
-    return result;
-  }
-
-
-  double getMaxTimeStamp() {
-    double result = 0.0;
-    {% for item in SOLVERS -%}
-    result = std::max( result, {{ item[1] }}.getMaxTimeStamp() );
-    {# Comment to ensure that jinja2 adds a new line#}
-    {%- endfor %}
-    return result;
-  }
-
-{% for item in NAMESPACE -%}
-}
-{%- endfor %}
-"""
-
-    def __generate_solver_repository(self, peano_project):
-        self.__set_solver_repository_dict()
-
-        for solver in self._solvers:
-            self.solverRepositoryDictionary["SOLVERS"].append(
-                (solver._name, solver.get_name_of_global_instance())
-            )
-
-        generated_solver_files = (
-            peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(
-                self.TEMPLATE_SOLVER_REPOSITORY_HEADER_FILE,
-                self.TEMPLATE_SOLVER_REPOSITORY_CPP_FILE,
-                "SolverRepository",
-                peano_project.namespace + ["repositories"],
-                peano_project.subdirectory + "repositories",
-                self.solverRepositoryDictionary,
-                True,
-            )
-        )
-
-        peano_project.output.add(generated_solver_files)
-        peano_project.output.makefile.add_cpp_file(
-            peano_project.subdirectory + "repositories/SolverRepository.cpp", generated=True
-        )
 
     _EXAHYPE_PACKAGE_DESCRIPTION = """
 
@@ -602,7 +494,7 @@ thus appreciate any citation of the original release paper
         peano4.api.taskgraph.create_runner(peano_project, "TimeStep", time_step_steps)
         peano4.api.taskgraph.create_runner(peano_project, "Plot", plot_steps)
 
-        self.__generate_solver_repository(peano_project)
+        self.solver_repository_generator.construct_output(peano_project)
 
         self.mainfile_generator.construct_output(peano_project)
 

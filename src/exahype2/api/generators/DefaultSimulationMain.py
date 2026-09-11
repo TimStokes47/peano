@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
 
-from .Project import Project
+from ..Project import Project
 
 
 class DefaultSimulationMain(Project.Generator):
