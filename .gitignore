@@ -330,4 +330,10 @@ compile_commands.json
 # Profiling
 scorep*/
 
-/documentation/
+# Do NOT add /documentation/ (or documentation/) here: it holds the
+# hand-written .dox sources and images for the manual, not build output.
+# The generated doxygen HTML output is already covered above by
+# doxygen-html/. If your IDE (e.g. Eclipse/EGit) offers to ignore the
+# documentation/ folder because it looks untracked or "extra", decline it -
+# that almost certainly means new documentation source files or images
+# haven't been git-added yet, not that the folder should be ignored.
