@@ -4,6 +4,7 @@
 
 tarch::logging::Log benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::_log( "examples::exahype2::test::euler_sod::benchmark::euler_sod" );
 
+/*
 void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::initialCondition(
   double * __restrict__ Q,
   const tarch::la::Vector<Dimensions,double>&  volumeCentre,
@@ -99,3 +100,6 @@ void ::benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::flux
   }
   logTraceOut( "flux(...)" );
 }
+*/
+
+

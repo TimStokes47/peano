@@ -44,7 +44,7 @@ time_in_between_two_snapshots = end_time / 100
 """
 Switch between 'Release', 'Debug', 'Asserts', 'Trace', 'Stats'.
 """
-compile_mode = peano4.api.output.CompileMode.Release
+compile_mode = peano4.api.output.CompileMode.RELEASE
 
 """
 We first create a new ExaHyPE 2 project.

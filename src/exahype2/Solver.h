@@ -38,14 +38,6 @@ class exahype2::Solver {
     virtual double getMinTimeStepSize() const = 0;
     virtual double getMaxTimeStepSize() const = 0;
 
-    virtual void startGridConstructionStep() = 0;
-    virtual void finishGridConstructionStep() = 0;
-
-    virtual void suspendSolversForOneGridSweep() = 0;
-
-    virtual void startGridInitialisationStep() = 0;
-    virtual void finishGridInitialisationStep() = 0;
-
     virtual void startTimeStep(
       double globalMinTimeStamp,
       double globalMaxTimeStamp,
@@ -64,16 +56,6 @@ class exahype2::Solver {
 
     virtual double getMaxMeshSize() const = 0;
     virtual double getMinMeshSize() const = 0;
-
-    /**
-     * Not all solvers allow you to plot after each grid sweep. If a
-     * solver needs multiple steps, it might want to veto that you
-     * plot intermediate data.
-     */
-    virtual bool mayPlot() const = 0;
-
-    virtual void startSimulation() = 0;
-    virtual void finishSimulation() = 0;
 };
 
 

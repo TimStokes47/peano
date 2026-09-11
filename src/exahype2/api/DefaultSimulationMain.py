@@ -66,6 +66,7 @@ int main(int argc, char** argv);
 #include "{{CLASSNAME}}.h"
 
 #include "tarch/logging/Log.h"
+#include "tarch/logging/LogFilterFileReader.h"
 #include "tarch/logging/Statistics.h"
 #include "tarch/mpi/Rank.h"
 #include "tarch/multicore/Core.h"
@@ -110,19 +111,18 @@ void step() {
   static tarch::logging::Log _log("");
   
   int  step = peano4::parallel::Node::getInstance().getCurrentProgramStep();
-  
-  switch (step) {
-    case Plot.getFirstSubstep(): 
-      Plot.run();
-      break;
-    case TimeStep.getFirstSubstep(): 
-      TimeStep.run();
-      break;
-    case SetupSimulation.getFirstSubstep(): 
-      SetupSimulation.run();
-      break;
-    default:
-      assertionMsg( false, "Unknown step " << step << " in main()." );
+
+  if (step == Plot.getFirstSubstep()) {
+    Plot.run();
+  }
+  else if (step == TimeStep.getFirstSubstep()) {
+    TimeStep.run();
+  }
+  else if (step == SetupSimulation.getFirstSubstep()) {
+    SetupSimulation.run();
+  }
+  else {
+    assertionMsg( false, "Unknown step " << step << " in main()." );
   }
 }
 
@@ -134,6 +134,17 @@ int main(int argc, char** argv) {
   constexpr int ExitCodeInvalidBuild     = 3;
 
   peano4::initParallelEnvironment(&argc, &argv);
+
+  // Do this early, so people can use logInfo/logWarning/... properly from
+  // here on.
+  {% if LOG_FILTER_FILE!="" %}
+  if ( not tarch::logging::LogFilterFileReader::parsePlainTextFile( "{{LOG_FILTER_FILE}}" ) ) {
+    if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+      logWarning( "main()", "filter file {{LOG_FILTER_FILE}} not found or file has been corrupted. Use default logging configuration" );
+    }
+  }
+  {% endif %}
+
   peano4::fillLookupTables();
   {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::DataRepository::initDatatypes();
   peano4::initSingletons(
@@ -184,10 +195,13 @@ int main(int argc, char** argv) {
     );
     step();
       
+    double maxTimeStepSize = 1.0;
     while ( 
         {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMinTimeStamp() < {{NAMESPACE | join("::")}}::MinTerminalTime 
         and 
         {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStamp() < {{NAMESPACE | join("::")}}::MaxTerminalTime
+        and
+        tarch::la::greater(maxTimeStepSize,0.0)
     ) {
         if (
           {{NAMESPACE | join("::")}}::TimeInBetweenPlots > 0.0 
@@ -211,6 +225,8 @@ int main(int argc, char** argv) {
           );
         }   
         step();
+        
+        maxTimeStepSize = {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStepSize();
     }
       
     if ( {{NAMESPACE | join("::")}}::TimeInBetweenPlots > 0.0 ) {
@@ -258,6 +274,7 @@ int main(int argc, char** argv) {
             "NUMBER_OF_THREADS": self.exahype_project._number_of_threads,
             "MULTICORE_ORCHESTRATION": self.exahype_project._multicore_orchestration,
             "GPUS": self.exahype_project._gpus,
+            "LOG_FILTER_FILE": self.exahype_project._log_filter_file,
         }
 
         generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(

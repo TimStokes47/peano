@@ -57,7 +57,7 @@ class Project(object):
         self._load_balancer_name = ""
         self._load_balancer_arguments = ""
         self._Peano_src_directory = "."
-        self._build_mode = peano4.api.output.CompileMode.Asserts
+        self._build_mode = peano4.api.output.CompileMode.ASSERTS
         self._executable_name = executable
         self._periodic_BC = [False, False, False]
         self._output_path = "./"
@@ -107,7 +107,7 @@ class Project(object):
     LibraryAsserts = "_asserts"
     LibraryStats = "_stats"
 
-    def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.Release):
+    def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.RELEASE):
         """
         src_path: string
           Path (relative or absolute) to the src directory of Peano. This path

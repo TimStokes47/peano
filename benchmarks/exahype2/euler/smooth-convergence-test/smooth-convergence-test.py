@@ -51,7 +51,8 @@ thesolver.plotter = exahype2.api.fv.PlotAsVTKFile(thesolver)
 
 project.add_solver(thesolver)
 
-build_mode = peano4.api.output.CompileMode.Release
+#build_mode = peano4.api.output.CompileMode.RELEASE
+build_mode = peano4.api.output.CompileMode.DEBUG
 project.set_global_simulation_parameters(
   dimensions = dimensions,
   offset = [-0.1,-0.1],

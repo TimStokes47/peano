@@ -53,30 +53,6 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
      * If you hook into this routine, ensure the abstract base class
      * operation is still invoked.
      */
-    virtual void startGridConstructionStep() override;
-
-    /**
-     * If you hook into this routine, ensure the abstract base class
-     * operation is still invoked.
-     */
-    virtual void finishGridConstructionStep() override;
-
-    /**
-     * If you hook into this routine, ensure the abstract base class
-     * operation is still invoked.
-     */
-    virtual void startGridInitialisationStep() override;
-
-    /**
-     * If you hook into this routine, ensure the abstract base class
-     * operation is still invoked.
-     */
-    virtual void finishGridInitialisationStep() override;
-
-    /**
-     * If you hook into this routine, ensure the abstract base class
-     * operation is still invoked.
-     */
     virtual void startTimeStep(
       double globalMinTimeStamp,
       double globalMaxTimeStamp,
@@ -112,19 +88,10 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
      */
     virtual double getMaxMeshSize() const override final;
     virtual double getMinMeshSize() const override final;
-    
+
     static constexpr int    NumberOfUnknowns           = {{NUMBER_OF_UNKNOWNS}};
     static constexpr int    NumberOfAuxiliaryVariables = {{NUMBER_OF_AUXILIARY_VARIABLES}};
 
-    /**
-     * It is important that we only plot after the secondary sweep.
-     * All the switching happens in startTimeStep(), so it is fine if
-     * we test against secondary. If an outer routine (the main) calls
-     * this function, this means that the secondary traversal just has
-     * terminated.
-     */
-     // @todo For all transitions?
-    virtual bool mayPlot() const override;
     virtual bool patchCanUseStatelessPDETerms(
       const tarch::la::Vector<Dimensions, double>& patchCentre,
       const tarch::la::Vector<Dimensions, double>& patchH,
@@ -132,22 +99,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
       double                                       dt
     ) const;
 
-    /**
-     * Feel free to overwrite in user code, but ensure the superclass
-     * implementation is still invoked, too.
-     */
-    virtual void startSimulation() override;
-
-    /**
-     * Feel free to overwrite in user code, but ensure the superclass
-     * implementation is still invoked, too.
-     */
-    virtual void finishSimulation() override;
-
   protected:
     static tarch::logging::Log  _log;
-
-    SolverState  _solverState;
 
     double     _minTimeStamp;
     double     _maxTimeStamp;
@@ -171,7 +124,6 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
 
     tarch::multicore::BooleanSemaphore  _semaphore;
 
-    {{ABSTRACT_SOLVER_USER_DECLARATIONS}}
 };
 
 {# Empty line here #}
@@ -183,6 +135,89 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
 #include "exahype2/RefinementControl.h"
 
 tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPACE | join("::")}}::{{CLASSNAME}}" );
+
+
+{{NAMESPACE | join("::")}}::{{CLASSNAME}}::{{CLASSNAME}}():
+  _minTimeStamp(0.0),
+  _maxTimeStamp(0.0),
+  _minTimeStampThisTimeStep(0.0),
+  _maxTimeStampThisTimeStep(0.0),
+  _minVolumeH(0.0),
+  _maxVolumeH(0.0),
+  _minVolumeHThisTimeStep(0.0),
+  _maxVolumeHThisTimeStep(0.0),
+  _minTimeStepSize(0.0),
+  _maxTimeStepSize(0.0),
+  _minTimeStepSizeThisTimeStep(0.0),
+  _maxTimeStepSizeThisTimeStep(0.0),
+  _cellUpdates(0) {
+}
+
+
+double {{NAMESPACE | join("::")}}::{{CLASSNAME}}::getMinTimeStamp() const {
+  return _minTimeStamp;
+}
+
+
+double {{NAMESPACE | join("::")}}::{{CLASSNAME}}::getMaxTimeStamp() const {
+  return _maxTimeStamp;
+}
+
+
+double {{NAMESPACE | join("::")}}::{{CLASSNAME}}::getMinTimeStepSize() const {
+  return _minTimeStepSize;
+}
+
+
+double {{NAMESPACE | join("::")}}::{{CLASSNAME}}::getMaxTimeStepSize() const {
+  return _maxTimeStepSize;
+}
+
+
+void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::startTimeStep(
+  double globalMinTimeStamp,
+  double globalMaxTimeStamp,
+  double globalMinTimeStepSize,
+  double globalMaxTimeStepSize
+) {
+}
+
+
+void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::finishTimeStep() {
+}
+
+
+void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::startPlottingStep(
+  double globalMinTimeStamp,
+  double globalMaxTimeStamp,
+  double globalMinTimeStepSize,
+  double globalMaxTimeStepSize
+) {
+}
+
+
+void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::finishPlottingStep() {
+}
+
+
+double {{NAMESPACE | join("::")}}::{{CLASSNAME}}::getMaxMeshSize() const {
+  return _maxVolumeH;
+}
+
+
+double {{NAMESPACE | join("::")}}::{{CLASSNAME}}::getMinMeshSize() const {
+  return _minVolumeH;
+}
+
+
+bool {{NAMESPACE | join("::")}}::{{CLASSNAME}}::patchCanUseStatelessPDETerms(
+  const tarch::la::Vector<Dimensions, double>& patchCentre,
+  const tarch::la::Vector<Dimensions, double>& patchH,
+  double                                       t,
+  double                                       dt
+) const {
+  return false;
+}
 """
     
     """!

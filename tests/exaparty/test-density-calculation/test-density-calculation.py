@@ -190,9 +190,9 @@ particle.set_parameters()
 particle_set = project.add_particle_species(particle)
 
 if args.asserts:
-    build_mode = peano4.api.output.CompileMode.Asserts
+    build_mode = peano4.api.output.CompileMode.ASSERTS
 else:
-    build_mode = peano4.api.output.CompileMode.Release
+    build_mode = peano4.api.output.CompileMode.RELEASE
 
 offset = [0, 0, 0]
 domain_size = [1, 1, 1]

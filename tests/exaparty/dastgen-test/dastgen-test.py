@@ -65,7 +65,7 @@ particle = DastgenTestDummyParticle(
 particle_set = project.add_particle_species(particle)
 
 # Always build with asserts on.
-build_mode = peano4.api.output.CompileMode.Asserts
+build_mode = peano4.api.output.CompileMode.ASSERTS
 
 # Set Peano4 simulation parameters ---------------------------------------------
 offset = [0, 0, 0]

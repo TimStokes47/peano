@@ -84,7 +84,7 @@ class Project(object):
         self._time_in_between_plots = 0.1
         self._load_balancer_name      = ""
         self._load_balancer_arguments = ""
-        self._log_filter_file         = "exahype.log-filter"
+        self._log_filter_file         = "exahype2.log-filter"
         self._number_of_threads       = "tarch::multicore::Core::UseDefaultNumberOfThreads"
         self._multicore_orchestration = "tarch::multicore::orchestration::createDefaultStrategy()"
         self._timeout                 = 3600
@@ -93,7 +93,7 @@ class Project(object):
                                           "tarch/accelerator/Device.h"
                                         ]
         self._Peano_src_directory     = "."
-        self._build_mode = peano4.api.output.CompileMode.Asserts
+        self._build_mode = peano4.api.output.CompileMode.ASSERTS
         self._executable_name = executable
         self._periodic_BC = [False, False, False]
         self._output_path = "./"
@@ -154,7 +154,7 @@ class Project(object):
         
         Pass in the empty string, if you don't want the code to use the 
         hard-coded defaults. That is, by default an ExaHyPE2 application
-        searches for a file exahype.log-filter. Through this call, you can 
+        searches for a file exahype2.log-filter. Through this call, you can 
         instruct the project to use another filter file.
         
         @param file_name String
@@ -241,7 +241,7 @@ class Project(object):
     LibraryAsserts = "_asserts"
     LibraryStats = "_stats"
 
-    def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.Release):
+    def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.RELEASE):
         """
         src_path: string
           Path (relative or absolute) to the src directory of Peano. This path

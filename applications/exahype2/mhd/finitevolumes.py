@@ -59,7 +59,7 @@ project.add_solver( exahype2.solvers.fv.GenericRusanovFixedTimeStepSize(
 
 
 dimensions = 2
-build_mode = peano4.api.output.CompileMode.Asserts
+build_mode = peano4.api.output.CompileMode.ASSERTS
 
 #
 # Lets configure some global parameters

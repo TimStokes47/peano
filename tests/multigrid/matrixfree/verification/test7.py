@@ -142,13 +142,13 @@ project.add_solver(solver)
 # Configure build
 #
 if args.mode=="release":
-  build_mode = peano4.api.output.CompileMode.Release
+  build_mode = peano4.api.output.CompileMode.RELEASE
 if args.mode=="stats":
-  build_mode = peano4.api.output.CompileMode.Stats
+  build_mode = peano4.api.output.CompileMode.STATS
 if args.mode=="asserts":
-  build_mode = peano4.api.output.CompileMode.Asserts
+  build_mode = peano4.api.output.CompileMode.ASSERTS
 if args.mode=="trace":
-  build_mode = peano4.api.output.CompileMode.Trace
+  build_mode = peano4.api.output.CompileMode.TRACE
 
 
 cube_size = 1.0

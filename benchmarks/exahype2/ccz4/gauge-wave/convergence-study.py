@@ -252,7 +252,7 @@ project.add_solver(my_solver)
 # Tracer setting
 ########################################################################################
 if args.tracer:
-    if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.Asserts:
+    if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.ASSERTS:
         time_delta_between_two_snapsots = 1e-4
     else:
         time_delta_between_two_snapsots = 0.1
@@ -273,7 +273,7 @@ if args.tracer:
 ########################################################################################
 
 
-if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.Asserts:
+if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.ASSERTS:
     delta_plot = 1.0 / 100
 else:
     delta_plot = 1.0 / 20

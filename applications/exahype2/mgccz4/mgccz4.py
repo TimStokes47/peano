@@ -6,10 +6,10 @@ import exahype2
 
 
 modes = { 
-  "release": peano4.api.output.CompileMode.Release,
-  "trace":   peano4.api.output.CompileMode.Trace,
-  "assert":  peano4.api.output.CompileMode.Asserts, "stats":  peano4.api.output.CompileMode.Stats,
-  "debug":   peano4.api.output.CompileMode.Debug,
+  "release": peano4.api.output.CompileMode.RELEASE,
+  "trace":   peano4.api.output.CompileMode.TRACE,
+  "assert":  peano4.api.output.CompileMode.ASSERTS, "stats":  peano4.api.output.CompileMode.STATS,
+  "debug":   peano4.api.output.CompileMode.DEBUG,
 }
 
 floatparams = {

@@ -12,6 +12,7 @@ class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: publi
     static tarch::logging::Log   _log;
 
   public: 
+/*
     void initialCondition(
       double * __restrict__ Q,
       const tarch::la::Vector<Dimensions,double>&  volumeCentre,
@@ -27,8 +28,9 @@ class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: publi
       double                                       t,
       int                                          normal
     )  override;
+*/
   
-  public:
+/*
     virtual void maxEigenvalue(
       const double * __restrict__ Q, // Q[4+0],
       const tarch::la::Vector<Dimensions,double>&  faceCentre,
@@ -48,4 +50,5 @@ class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: publi
       int                                          normal,
       double * __restrict__ F // F[4]
     ) override;
+*/
 };

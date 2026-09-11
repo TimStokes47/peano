@@ -179,7 +179,7 @@ project.add_solver(limiter)
 
 project.set_output_path("solutions")
 
-build_mode = peano4.api.output.CompileMode.Release
+build_mode = peano4.api.output.CompileMode.RELEASE
 
 project.set_global_simulation_parameters(
     dimensions=dimensions,
