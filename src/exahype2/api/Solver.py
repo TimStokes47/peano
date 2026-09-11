@@ -206,8 +206,8 @@ class Solver(abc.ABC):
         # GridConstruction has no default realisation - concrete solver
         # subclasses (or their users) have to assign their own
         # Solver.GridConstruction subclass instance to it, e.g.
-        # exahype2.api.fv.SetupSimulation, through the grid_construction
-        # attribute below.
+        # exahype2.api.fv.SetupSimulationOverRegularGrid, through the
+        # grid_construction attribute below.
         self.grid_construction: "Solver.GridConstruction" = None
 
         # Plotter has no default realisation - concrete solver subclasses

@@ -5,13 +5,18 @@ import peano4.api
 from ..Solver import Solver
 
 
-class SetupSimulation(Solver.GridConstruction):
+class SetupSimulationWithUserCodedRefinementCriterion(Solver.GridConstruction):
     """!
 
     Setup phase counterpart to RusanovWithExplicitEuler: sets the initial
     condition for a Finite Volume scheme with a Rusanov Riemann solver,
     realised over a block-structured mesh, and prepares the data required
     for the first time step.
+
+    Unlike SetupSimulationOverRegularGrid, this variant repeats its "Refine
+    cell" task (task_may_repeat=True): the mesh is refined adaptively,
+    driven by a user-coded refinement criterion checked afresh every grid
+    sweep, rather than built once and left alone.
 
     """
 
@@ -37,6 +42,8 @@ class SetupSimulation(Solver.GridConstruction):
         setup_simulation.add_task(refine_cell_task)
         setup_simulation.add_task(initial_condition_task)
         setup_simulation.add_task(project_on_faces_task)
+        
+#        refine_cell_task.add_action_set()
 
         if peano4.api.Logger().is_visualisation:
             setup_simulation.visualise(title="Setup task graph for {}".format(self._solver.name))
