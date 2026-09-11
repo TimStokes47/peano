@@ -4,27 +4,16 @@
 
 \tableofcontents
 
-Where @ref page_exahype_modelling_pde_solver "modelling the PDE solver" describes
-*what* equation a solver evolves, a numerical scheme describes *how* it is
-actually evolved: which algorithmic steps make up one time step (or one setup
-or plotting phase), in which order, and with which dependencies between them.
-This is the second, implementation-facing generator layer that the
-@ref page_exahype_design_philosophy "design philosophy" page refers to.
+<br /><br />
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
+Needs some kind of nice introduction.
+</div>
 
 
-# Solver.NumericalScheme
 
-A concrete discretisation - Finite Volumes with a Rusanov Riemann solver and
-explicit Euler time stepping, ADER-DG, Runge-Kutta Discontinuous Galerkin, ...
-- is realised as a subclass of the abstract nested class
-exahype2.api.Solver.NumericalScheme. It is one of three such contracts a
-Solver plugs in (the other two being Solver.GridConstruction, for how the
-mesh the solver runs on is built up, and Solver.Plotter, for how a solution is
-written out); all three follow the same shape: a constructor that just stores
-the owning solver, plus one abstract construct_output() method that the
-concrete scheme has to implement.
+# Technical steps to add a new numerical scheme
 
-For a numerical scheme, that method is
+The actual numerical scheme is implemented through the method
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def construct_output(self, exahype2_project, peano_project, time_step):
@@ -34,16 +23,18 @@ def construct_output(self, exahype2_project, peano_project, time_step):
 where `time_step` is a peano4.api.taskgraph.Graph: the task graph of the
 surrounding project's time stepping phase. Implementing a numerical scheme
 therefore means populating this graph with peano4.api.taskgraph.Task
-instances and the dependencies between them - it does not yet mean writing
-any Peano action sets or C++ by hand (@see
-@ref page_exahype_compute_graph "lowering into a compute graph" for what
-happens to the graph afterwards).
+instances and the dependencies between them.
 
+## Task graph structure
 
-# A worked example
+Below is a simple example for such a task graph - the time step task graph exahype2.api.fv.RusanovWithExplicitEuler
+builds for a Finite Volume solver, as rendered by Graph.visualise():
 
-exahype2.api.fv.RusanovWithExplicitEuler builds the task graph for a Finite
-Volume time step over a block-structured mesh:
+@image html documentation/exahype2/design/time-step-task-graph.png
+
+The task graph describes what happens during a time step, and in which order. 
+It represents the logical activities that have to be completed per time step.
+The code below sets this graph up:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruction",         entity=peano4.api.taskgraph.Task.GridEntity.CELL)
@@ -71,5 +62,33 @@ algorithmic sub-step, wire up add_dependency() calls to express the required
 order, and add every task to the phase's Graph via add_task(). While
 developing a scheme, Graph.visualise() renders the resulting graph with
 matplotlib to sanity-check the dependency structure.
+
+
+## Adding the actual computations
+
+The actual computations are now attached to these tasks: The tasks represent
+a logical order, but each then has an action set which does the actual calculations.
+While the tasks define the order, the action sets define what is to be computed.
+
+
+## From hereon
+
+The task graph created by this solver will be taken by the project and will be 
+mangled with all the other task graphs of solvers that are tied to the project.
+After all, ExaHyPE supports the composition of many solvers.
+This concatenated super graph is then handed over to a task graph compiler in
+Peano.
+
+Depending on what compiler is chosen, the task graph might be linearised into many
+single grid sweeps, where each sweep runs only one task from the graph.
+However, there are also compiler variants which quite aggressively parallelise over
+a task graph, fuse individual steps, or even map some of the action sets into real
+tasks in a TBB or OpenMP sense of their own.
+
+How this all works is technically speaking not a properly of ExaHyPE, but of Peano. 
+Therefore, all the documentation of these aspects is tied to @ref peano4.api.taskgraph,
+while the bigger picture is provided by @ref page_peano4_home.
+
+
 
 */
