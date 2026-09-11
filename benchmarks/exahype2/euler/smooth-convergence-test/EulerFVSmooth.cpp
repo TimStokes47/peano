@@ -2,9 +2,9 @@
 #include "exahype2/RefinementControl.h"
 #include <cmath>
 
-tarch::logging::Log benchmarks::exahype2::euler::smooth_setup::EulerFVSmooth::_log( "examples::exahype2::test::euler_sod::benchmark::euler_sod" );
+tarch::logging::Log benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::_log( "examples::exahype2::test::euler_sod::benchmark::euler_sod" );
 
-void benchmarks::exahype2::euler::smooth_setup::EulerFVSmooth::initialCondition(
+void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::initialCondition(
   double * __restrict__ Q,
   const tarch::la::Vector<Dimensions,double>&  volumeCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
@@ -21,7 +21,7 @@ void benchmarks::exahype2::euler::smooth_setup::EulerFVSmooth::initialCondition(
   logTraceOut( "initialCondition(...)" );
 }
 
-void benchmarks::exahype2::euler::smooth_setup::EulerFVSmooth::boundaryConditions(
+void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::boundaryConditions(
   const double * __restrict__                  Qinside, // Qinside[4+0]
   double * __restrict__                        Qoutside, // Qoutside[4+0]
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
@@ -37,7 +37,7 @@ void benchmarks::exahype2::euler::smooth_setup::EulerFVSmooth::boundaryCondition
   logTraceOut( "boundaryConditions(...)" );
 }
 
-void ::benchmarks::exahype2::euler::smooth_setup::EulerFVSmooth::maxEigenvalue(
+void ::benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::maxEigenvalue(
   const double * __restrict__ Q, // Q[4+0],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,
@@ -66,7 +66,7 @@ void ::benchmarks::exahype2::euler::smooth_setup::EulerFVSmooth::maxEigenvalue(
   maxEigenvalue[0] = result;
 }
 
-void ::benchmarks::exahype2::euler::smooth_setup::EulerFVSmooth::flux(
+void ::benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::flux(
   const double * __restrict__ Q, // Q[4+0],
   const tarch::la::Vector<Dimensions,double>&  faceCentre,
   const tarch::la::Vector<Dimensions,double>&  volumeH,

@@ -3,11 +3,11 @@
 #include "AbstractEulerFVSmooth.h"
 #include "tarch/logging/Log.h"
 
-namespace benchmarks {namespace exahype2 {namespace euler {namespace smooth_setup {
+namespace benchmarks {namespace exahype2 {namespace euler {namespace smooth_convergence_test {
   class EulerFVSmooth;
 }}}}
 
-class benchmarks::exahype2::euler::smooth_setup::EulerFVSmooth: public benchmarks::exahype2::euler::smooth_setup::AbstractEulerFVSmooth {
+class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: public benchmarks::exahype2::euler::smooth_convergence_test::AbstractEulerFVSmooth {
   private:
     static tarch::logging::Log   _log;
 
