@@ -26,6 +26,8 @@ either use Peano's Python API or they use an extension built on top of Peano
   - \subpage peano_action_sets
 - Tutorials
   - \subpage tutorials_peano4_tutorials
+- Peano's Python API
+  - @ref peano4.api.taskgraph "The task graph interface"
 - HPC aspects
   - \subpage page_peano_domain_decomposition
 \li \subpage page_peano_localisation
