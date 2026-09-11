@@ -203,8 +203,12 @@ class Solver(abc.ABC):
         # through the numerical_scheme property below.
         self._numerical_scheme: "Solver.NumericalScheme" = None
 
-        from .HardcodedGridConstruction import HardcodedGridConstruction
-        self.grid_construction: "Solver.GridConstruction" = HardcodedGridConstruction(self)
+        # GridConstruction has no default realisation - concrete solver
+        # subclasses (or their users) have to assign their own
+        # Solver.GridConstruction subclass instance to it, e.g.
+        # exahype2.api.fv.SetupSimulation, through the grid_construction
+        # attribute below.
+        self.grid_construction: "Solver.GridConstruction" = None
 
         # Plotter has no default realisation - concrete solver subclasses
         # (or their users) have to assign their own Solver.Plotter subclass
@@ -379,6 +383,11 @@ class Solver(abc.ABC):
         """
         peano4.api.Logger().new_section("Solver " + self._name)
 
+        assert self.grid_construction is not None, (
+            f"Solver {self._name} has no grid_construction set. Assign a "
+            "Solver.GridConstruction subclass instance to grid_construction "
+            "before calling generate_solver_realisation()."
+        )
         assert self.numerical_scheme is not None, (
             f"Solver {self._name} has no numerical_scheme set. Assign a "
             "Solver.NumericalScheme subclass instance to numerical_scheme "
