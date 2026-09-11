@@ -406,6 +406,83 @@ class Project(object):
             "ADDITIONAL_INCLUDES":      self._additional_includes,
         }
 
+    TEMPLATE_SOLVER_REPOSITORY_HEADER_FILE = """
+// This file is part of the ExaHyPE2 project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#pragma once
+
+{% for item in SOLVERS -%}
+#include "{{ item[0] }}.h"
+{# Comment to ensure that jinja2 adds a new line#}
+{% endfor %}
+
+
+{% for item in NAMESPACE -%}
+namespace {{ item }} {
+{%- endfor %}
+
+  {% for item in SOLVERS -%}
+  extern {{ item[0] }}  {{ item[1] }};
+  {# Comment to ensure that jinja2 adds a new line#}
+  {%- endfor %}
+
+  /**
+   * Return the global min time stamp over all solvers.
+   */
+  double getMinTimeStamp();
+
+  /**
+   * Return the global max time stamp over all solvers.
+   */
+  double getMaxTimeStamp();
+
+{% for item in NAMESPACE -%}
+}
+{%- endfor %}
+"""
+
+    TEMPLATE_SOLVER_REPOSITORY_CPP_FILE = """
+// This file is part of the ExaHyPE2 project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#include "SolverRepository.h"
+
+#include <algorithm>
+#include <limits>
+
+{% for item in NAMESPACE -%}
+namespace {{ item }} {
+{%- endfor %}
+
+  {% for item in SOLVERS -%}
+  {{ item[0] }}  {{ item[1] }};
+  {# Comment to ensure that jinja2 adds a new line#}
+  {%- endfor %}
+
+
+  double getMinTimeStamp() {
+    double result = std::numeric_limits<double>::max();
+    {% for item in SOLVERS -%}
+    result = std::min( result, {{ item[1] }}.getMinTimeStamp() );
+    {# Comment to ensure that jinja2 adds a new line#}
+    {%- endfor %}
+    return result;
+  }
+
+
+  double getMaxTimeStamp() {
+    double result = 0.0;
+    {% for item in SOLVERS -%}
+    result = std::max( result, {{ item[1] }}.getMaxTimeStamp() );
+    {# Comment to ensure that jinja2 adds a new line#}
+    {%- endfor %}
+    return result;
+  }
+
+{% for item in NAMESPACE -%}
+}
+{%- endfor %}
+"""
+
     def __generate_solver_repository(self, peano_project):
         self.__set_solver_repository_dict()
 
@@ -414,13 +491,10 @@ class Project(object):
                 (solver._name, solver.get_name_of_global_instance())
             )
 
-        templatefile_prefix = (
-            os.path.realpath(__file__).replace(".pyc", "").replace(".py", "")
-        )
         generated_solver_files = (
-            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
-                templatefile_prefix + "SolverRepository.template.h",
-                templatefile_prefix + "SolverRepository.template.cpp",
+            peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(
+                self.TEMPLATE_SOLVER_REPOSITORY_HEADER_FILE,
+                self.TEMPLATE_SOLVER_REPOSITORY_CPP_FILE,
                 "SolverRepository",
                 peano_project.namespace + ["repositories"],
                 peano_project.subdirectory + "repositories",
