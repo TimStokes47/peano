@@ -8,7 +8,7 @@ import jinja2
 from .AbstractRKFDActionSet import AbstractRKFDActionSet
 
 
-class DynamicAMR( peano4.api.toolbox.blockstructured.DynamicAMR):
+class DynamicAMR( peano4.toolbox.blockstructured.api.DynamicAMR):
   """
   
    The handling of (dynamically) adaptive meshes for finite differences

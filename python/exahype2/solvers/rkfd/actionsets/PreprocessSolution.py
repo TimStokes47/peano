@@ -7,7 +7,7 @@ import peano4.api
 import jinja2
 
 
-from peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
+from peano4.toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
 
 
 class EmptyPreprocessSolution(AbstractRKFDActionSet):
@@ -92,7 +92,7 @@ class PreprocessReconstructedSolutionWithHalo(ReconstructPatchAndApplyFunctor):
     """  
     if enclave_task_cell_label==None:
         functor_implementation = compute_kernel_implementation
-        reconstructed_array_memory_location = peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarch
+        reconstructed_array_memory_location = peano4.toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapThroughTarch
     else:
         functor_implementation = """
             auto taskBody = [=,this]() -> bool { """ + compute_kernel_implementation  + """
@@ -127,7 +127,7 @@ class PreprocessReconstructedSolutionWithHalo(ReconstructPatchAndApplyFunctor):
               """ + enclave_task_cell_label + """.setSemaphoreNumber( newTaskNumber );
             }
             """
-        reconstructed_array_memory_location = peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
+        reconstructed_array_memory_location = peano4.toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
         
     super(PreprocessReconstructedSolutionWithHalo,self).__init__(patch = solver._patch,
                                              patch_overlap                       = solver._patch_overlap_new,

@@ -9,7 +9,7 @@ import exahype2
 import jinja2
 import os
 
-from peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import (
+from peano4.toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import (
     ReconstructPatchAndApplyFunctor,
 )
 from exahype2.solvers.fv.actionsets.AbstractFVActionSet import AbstractFVActionSet
@@ -136,7 +136,7 @@ class UpdateCell(ReconstructPatchAndApplyFunctor):
             # todo hier muessen beide rein, denn ich muss ja interpolieren -> machen die anderen Codes dann
             patch_overlap=solver._patch_overlap_new,
             functor_implementation="<not yet set - will do this later>",
-            reconstructed_array_memory_location=peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete,
+            reconstructed_array_memory_location=peano4.toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete,
             # todo Dokumentieren, dass net willBeRefined(), weil wir ja das brauchen wenn wir runtergehen
             guard="not marker.hasBeenRefined() and ("
             + "repositories::"
@@ -703,7 +703,7 @@ class EnclaveTasking(FV):
 
         if (
             memory_location
-            != peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
+            != peano4.toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
             and memory_location != None
         ):
             raise Exception(

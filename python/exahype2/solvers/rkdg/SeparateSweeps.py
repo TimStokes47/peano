@@ -8,7 +8,7 @@ import exahype2
 
 import jinja2
 
-from peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
+from peano4.toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
 
 
 class SeparateSweeps(RungeKuttaDG):
