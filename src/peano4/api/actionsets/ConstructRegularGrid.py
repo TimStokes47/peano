@@ -1,9 +1,9 @@
-# This file is part of the ExaHyPE2 project. For conditions of distribution and
+# This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.api.solversteps
+from peano4.api.solversteps import ActionSet
 
 
-class ConstructRegularGrid(peano4.api.solversteps.ActionSet):
+class ConstructRegularGrid(ActionSet):
     """!
 
     Refine the mesh - solver-agnostic - down to a regular grid of a given
@@ -14,8 +14,8 @@ class ConstructRegularGrid(peano4.api.solversteps.ActionSet):
     still being built): it only ever looks at a cell's size and decides to
     refine or keep based on volume_size alone. That is what makes it
     "generic" - solver-independent - and hence a candidate to sit in
-    exahype2.api.generic_actionsets rather than one of the discretisation-
-    specific actionsets packages (e.g. exahype2.api.fv.actionsets).
+    peano4.api.actionsets rather than one of the discretisation- or
+    extension-specific actionsets packages (e.g. exahype2.api.fv.actionsets).
 
     Currently just an empty stub - a placeholder for the actual refinement
     criterion to grow into. @see get_body_of_operation().
@@ -52,7 +52,9 @@ class ConstructRegularGrid(peano4.api.solversteps.ActionSet):
         return "ConstructRegularGrid"
 
     def get_attributes(self):
-        return ""
+        return """
+return std::vector< peano4::grid::GridControlEvent >();\n
+"""
 
     def get_includes(self):
         return ""

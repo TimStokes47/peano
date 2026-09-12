@@ -1,8 +1,7 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
-
-import exahype2.api.generic_actionsets
+import peano4.api.actionsets
 
 from ..Solver import Solver
 
@@ -49,7 +48,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
 
 # Eigentlich sollte immer erst mal refinement drin sein, also bei jedem einzelnen Task.
         refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh", entity=peano4.api.taskgraph.Task.GridEntity.VERTEX)
-        refine_task.add_action_set(exahype2.api.generic_actionsets.ConstructRegularGrid(self.volume_size))
+        refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size))
 
         initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
