@@ -14,8 +14,8 @@ class ActionSet(object):
 
   Code generator for one action set
 
-  Do not confuse this with @ref peano4.api.solversteps.ActionSet, which is
-  the interface you actually implement (you subclass it and override
+  Do not confuse this with @ref peano4.api.solversteps.ActionSet.ActionSet,
+  which is the interface you actually implement (you subclass it and override
   get_body_of_operation(), get_attributes(), get_includes(), ... to say
   *what* the action set does). Users typically never interact with this 
   class. They work against the ActionSet in solversteps.
@@ -27,15 +27,15 @@ class ActionSet(object):
   _log, the constructor/destructor, getGridControlEvents(),
   prepareTraversal()/unprepareTraversal(), and one method per grid event
   (touchCellFirstTime, createPersistentVertex, ...) - calling back into
-  your get_body_of_*() overrides to fill in each method body. 
-  @ref peano4.api.solversteps.ActionSet is the data model, this class is the writer.
+  your get_body_of_*() overrides to fill in each method body.
+  @ref peano4.api.solversteps.ActionSet.ActionSet is the data model, this class is the writer.
 
   # Where is is used
-  
+
   The class is instantiated in exactly one place: construct_output() of @ref
-  peano4.api.solversteps.StepToActionSet, which is called once per action
-  set attached to a @ref peano4.api.solversteps.Step, from
-  Step.construct_output(), as it loops over self.action_sets. That
+  peano4.api.solversteps.StepToActionSet.StepToActionSet, which is called
+  once per action set attached to a @ref peano4.api.solversteps.Step.Step,
+  from Step.construct_output(), as it loops over self.action_sets. That
   call site decides two things this class here itself does not know about:
 
   - Which operations to generate.
@@ -49,7 +49,7 @@ class ActionSet(object):
 
   # In short
   
-  - This is the generator which takes one @ref peano4.api.solversteps.StepToActionSet and maps it onto a header/implementation file pair.
+  - This is the generator which takes one @ref peano4.api.solversteps.StepToActionSet.StepToActionSet and maps it onto a header/implementation file pair.
   - The outcome either ends up in actions/ (if user_should_modify_template() is True) or in observers/ (if False).
   - The outcome typically is named Observer2ActionSetName.
   
