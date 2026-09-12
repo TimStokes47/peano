@@ -19,7 +19,7 @@ import peano4.api.datamodel
 import peano4.api.solversteps
 import peano4.api.output
 import peano4.api.visualisation
-import peano4.api.toolbox.blockstructured
+import peano4.toolbox.blockstructured.api
 
 
 import exahype2
