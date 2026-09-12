@@ -75,6 +75,7 @@ int main(int argc, char** argv);
 #include "tarch/NonCriticalAssertions.h"
 #include "peano4/peano.h"
 #include "peano4/parallel/SpacetreeSet.h"
+#include "peano4/DefaultStepReport.h"
 
 {% if SUBDIRECTORIES -%}
 {% for subdirectory in SUBDIRECTORIES %}
@@ -103,23 +104,28 @@ tarch::logging::Log _log( "{{NAMESPACE | join("::")}}" );
 {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}kernels::Plot Plot;
 {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}kernels::TimeStep TimeStep;
 
+{{STEP_REPORT_CLASS}} stepReport;
+
 
 void step() {
   int  stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
   auto stepName       = {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::StepRepository::toStepEnum(stepIdentifier);
 
   static tarch::logging::Log _log("");
-  
+
   int  step = peano4::parallel::Node::getInstance().getCurrentProgramStep();
 
   if (step == Plot.getFirstSubstep()) {
     Plot.run();
+    stepReport.reportStep(Plot);
   }
   else if (step == TimeStep.getFirstSubstep()) {
     TimeStep.run();
+    stepReport.reportStep(TimeStep);
   }
   else if (step == SetupSimulation.getFirstSubstep()) {
     SetupSimulation.run();
+    stepReport.reportStep(SetupSimulation);
   }
   else {
     assertionMsg( false, "Unknown step " << step << " in main()." );
@@ -250,6 +256,8 @@ int main(int argc, char** argv) {
     }
   #endif
 
+  stepReport.reportFinalResults( { SetupSimulation, TimeStep, Plot } );
+
   tarch::logging::Statistics::getInstance().writeToCSV();
   
   peano4::shutdownSingletons();
@@ -275,6 +283,7 @@ int main(int argc, char** argv) {
             "MULTICORE_ORCHESTRATION": self.exahype_project._multicore_orchestration,
             "GPUS": self.exahype_project._gpus,
             "LOG_FILTER_FILE": self.exahype_project._log_filter_file,
+            "STEP_REPORT_CLASS": self.exahype_project._step_report_class,
         }
 
         generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(

@@ -40,6 +40,7 @@ TEMPLATE_RUNNER_CPP_FILE = """
 
 {{NAMESPACE | join("::")}}::{{CLASSNAME}}::{{CLASSNAME}}():
   peano4::RunMultipleSteps(
+    "{{CLASSNAME}}",
     {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::StepRepository::toProgramStep(
       {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::StepRepository::Steps::{{FIRST_STEP}}
     )

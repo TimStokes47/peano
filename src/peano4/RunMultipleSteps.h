@@ -2,6 +2,10 @@
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
+#include <functional>
+#include <string>
+#include <vector>
+
 #include "tarch/timing/Watch.h"
 #include "tarch/timing/Measurement.h"
 
@@ -27,7 +31,30 @@ namespace peano4 {
  */
 class peano4::RunMultipleSteps {
   public:
-    RunMultipleSteps(int firstSubstep);
+    /**
+     * Interface for anything that wants to report on a RunMultipleSteps
+     * instance (or a whole collection thereof) once it has run.
+     *
+     * Purely abstract - it holds no state and has no implementation of its
+     * own. @see peano4::DefaultStepReport for a concrete (stub) realisation.
+     */
+    class Report {
+      public:
+        virtual ~Report() = default;
+
+        /**
+         * Report on one particular step sequence right after it has run.
+         */
+        virtual void reportStep(RunMultipleSteps& step) = 0;
+
+        /**
+         * Report on an arbitrary, unspecified number of step sequences,
+         * e.g. once a whole simulation has terminated.
+         */
+        virtual void reportFinalResults(const std::vector<std::reference_wrapper<RunMultipleSteps>>& steps) = 0;
+    };
+
+    RunMultipleSteps(const std::string& name, int firstSubstep);
     virtual ~RunMultipleSteps() = default;
 
     /**
@@ -42,7 +69,16 @@ class peano4::RunMultipleSteps {
      */
     int getFirstSubstep() const;
 
+    /**
+     * Name of this step sequence, i.e. the program phase it represents.
+     * Set once by the subclass through the constructor and never changed
+     * afterwards. In ExaHyPE, this is e.g. "Plot" or "TimeStep".
+     */
+    std::string getName() const;
+
   protected:
+
+    const std::string          _name;
 
     const int                  _firstSubstep;
 

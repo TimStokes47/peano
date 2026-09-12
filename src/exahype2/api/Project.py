@@ -89,6 +89,7 @@ class Project(object):
         self._multicore_orchestration = "tarch::multicore::orchestration::createDefaultStrategy()"
         self._timeout                 = 3600
         self._gpus                    = []
+        self._step_report_class       = "peano4::DefaultStepReport"
         self._additional_includes     = [ "tarch/logging/LogFilterFileReader.h",
                                           "tarch/accelerator/Device.h"
                                         ]
@@ -228,6 +229,20 @@ class Project(object):
         if value < 0:
             raise Exception("Timeout has to be greater or equal to 0")
         self._timeout = value
+
+
+    def set_step_report_class(self, class_name):
+        """! Set the C++ class the generated main instantiates to report on steps
+
+        class_name: str
+          Fully qualified C++ class name (e.g. "peano4::DefaultStepReport",
+          the default) of a peano4::RunMultipleSteps::Report subclass. The
+          generated main creates exactly one instance of it, so the class
+          has to be default-constructible. If you pass in anything other
+          than the default, its header is not included automatically - you
+          have to make it visible to the generated main yourself.
+        """
+        self._step_report_class = class_name
 
 
     def set_gpus(self, value):
