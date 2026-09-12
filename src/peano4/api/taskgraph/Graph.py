@@ -28,6 +28,15 @@ class Graph:
         depends on it sits to its right), so following the arrows always
         moves rightwards. A task with may_repeat set is additionally drawn
         with a small self-loop to indicate it can run again on itself.
+
+        Every action set attached to a task (@see Task.add_action_set) is
+        drawn as a small leaf dangling below-right of that task's own node,
+        connected to it by a plain (arrowless) line - the same "task owns
+        these action sets" containment relationship an old file system
+        browser would draw as files nested under a folder, as opposed to
+        the dependency arrows between tasks, which describe order, not
+        ownership.
+
         Opens a blocking matplotlib window; close it to continue.
         """
         import numpy as np
@@ -113,6 +122,14 @@ class Graph:
                     )
                 )
 
+        # Action sets dangle below-right of the task that owns them, one
+        # step further down (and slightly further right) per action set -
+        # the same staircase an old file system browser draws for files
+        # nested under a folder.
+        action_set_marker_size = node_marker_size / 6
+        action_set_radius_in_points = (action_set_marker_size / 3.14159265) ** 0.5
+        action_set_row_height = 0.28
+
         for task, (x, y) in position_of_task.items():
             axes.scatter([x], [y], s=node_marker_size, color=entity_colour.get(task.entity, "tab:gray"), zorder=2)
             axes.annotate(
@@ -120,6 +137,36 @@ class Graph:
                 (x, y),
                 ha="center", va="center", zorder=3, fontsize=7,
             )
+
+            for index, action_set in enumerate(task.action_sets):
+                leaf_x = x + 0.22
+                leaf_y = y - action_set_row_height * (index + 1)
+
+                axes.add_patch(
+                    FancyArrowPatch(
+                        (x, y),
+                        (leaf_x, leaf_y),
+                        arrowstyle="-",
+                        linestyle=(0, (2, 2)),
+                        linewidth=1,
+                        color="gray",
+                        shrinkA=node_radius_in_points,
+                        shrinkB=action_set_radius_in_points,
+                        zorder=1,
+                    )
+                )
+                axes.scatter(
+                    [leaf_x], [leaf_y],
+                    s=action_set_marker_size,
+                    color="whitesmoke", edgecolors="gray",
+                    zorder=2,
+                )
+                axes.annotate(
+                    action_set.get_action_set_name(),
+                    (leaf_x, leaf_y),
+                    xytext=(8, 0), textcoords="offset points",
+                    ha="left", va="center", zorder=3, fontsize=6, color="dimgray",
+                )
 
         axes.set_title(title)
         axes.set_xlabel("Dependency depth")

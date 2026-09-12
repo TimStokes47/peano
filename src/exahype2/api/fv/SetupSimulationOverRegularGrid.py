@@ -2,6 +2,8 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
 
+import exahype2.api.generic_actionsets
+
 from ..Solver import Solver
 
 
@@ -36,15 +38,26 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
                          peano_project,
                          setup_simulation):
         """!
+        
+        Create the actual sequence of tasks following the description
+        from @ref "Adding a numerical scheme", as grid construction, 
+        numerical scheme, but also plotting all follow the same pattern 
+        of tasks and dependencies.
 
         """
         peano4.api.Logger().log("Create setup task graph for Finite Volume scheme over a regular, block-structured mesh with Rusanov flux")
 
+# Eigentlich sollte immer erst mal refinement drin sein, also bei jedem einzelnen Task.
+        refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh", entity=peano4.api.taskgraph.Task.GridEntity.VERTEX)
+        refine_task.add_action_set(exahype2.api.generic_actionsets.ConstructRegularGrid(self.volume_size))
+
         initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
+        initial_condition_task.add_dependency(refine_task)
         project_on_faces_task.add_dependency(initial_condition_task)
 
+        setup_simulation.add_task(refine_task)
         setup_simulation.add_task(initial_condition_task)
         setup_simulation.add_task(project_on_faces_task)
 

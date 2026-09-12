@@ -43,7 +43,8 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
 
     @return [peano4.api.solversteps.Step]
       One Observer per task, ordered so that every task's Observer comes
-      after the Observers of all tasks it depends on.
+      after the Observers of all tasks it depends on, and carrying that
+      task's action_sets (in the order they were added to the Task).
 
     """
     observer_of_task = {}
@@ -59,10 +60,13 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
             # mangles existing camel case and acronyms (e.g. "EulerFVSmooth"
             # would become "Eulerfvsmooth", "CFL" would become "Cfl").
             task_name = "_".join(word[:1].upper() + word[1:] for word in task.name.split())
-            observer_of_task[task] = peano4.api.solversteps.Step(
+            step = peano4.api.solversteps.Step(
                 name=f"{identifier}_{task_name}",
                 add_user_defined_actions=False,
             )
+            for action_set in task.action_sets:
+                step.add_action_set(action_set)
+            observer_of_task[task] = step
             order.append(task)
 
     for task in graph.tasks:

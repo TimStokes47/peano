@@ -10,17 +10,58 @@ from .Overwrite import Overwrite
 import peano4.api.solversteps.ActionSet
 
 class ActionSet(object):
+  """!
+
+  Code generator for one action set
+
+  Do not confuse this with @ref peano4.api.solversteps.ActionSet, which is
+  the interface you actually implement (you subclass it and override
+  get_body_of_operation(), get_attributes(), get_includes(), ... to say
+  *what* the action set does). Users typically never interact with this 
+  class. They work against the ActionSet in solversteps.
+  
+  This class here is the corresponding writer: given one
+  such solversteps.ActionSet instance (held as self.implementation), it
+  emits the actual C++ .h/.cpp pair - the include guard, the class
+  declaration inside the right namespace, a static tarch::logging::Log
+  _log, the constructor/destructor, getGridControlEvents(),
+  prepareTraversal()/unprepareTraversal(), and one method per grid event
+  (touchCellFirstTime, createPersistentVertex, ...) - calling back into
+  your get_body_of_*() overrides to fill in each method body. 
+  @ref peano4.api.solversteps.ActionSet is the data model, this class is the writer.
+
+  # Where is is used
+  
+  The class is instantiated in exactly one place: construct_output() of @ref
+  peano4.api.solversteps.StepToActionSet, which is called once per action
+  set attached to a @ref peano4.api.solversteps.Step, from
+  Step.construct_output(), as it loops over self.action_sets. That
+  call site decides two things this class here itself does not know about:
+
+  - Which operations to generate.
+  - What the total number of vertices, cells, ... is and what they are called.
+  - Where the file goes and what it is called - if
+    action_set.user_should_modify_template() is True, it is named after the
+    action set itself and placed under actions/ (meant for you to hand-edit,
+    regenerated only if missing); if False, it is placed under observers/
+    and named "{step.name}2{action_set.get_action_set_name()}{index}" -
+    regenerated unconditionally every run.
+
+  # In short
+  
+  - This is the generator which takes one @ref peano4.api.solversteps.StepToActionSet and maps it onto a header/implementation file pair.
+  - The outcome either ends up in actions/ (if user_should_modify_template() is True) or in observers/ (if False).
+  - The outcome typically is named Observer2ActionSetName.
+  
+  """
+
   def __init__(self,classname,namespace,subdirectory,implementation = None):
     """!
-     
-     Implementation of an Action Set
-    
-     Please consult peano4.api.solversteps.ActionSet for a description.
-     
-     implementation Should be of type peano4.api.solversteps.Mapping or None. If
-                    it is None, then the generated stuff will be a sole
-                    interface.
-                    
+
+     implementation Should be of type peano4.api.solversteps.ActionSet or
+                    None. If it is None, then the generated stuff will be a
+                    sole interface.
+
     """
     self.classname    = classname
     self.namespace    = namespace
