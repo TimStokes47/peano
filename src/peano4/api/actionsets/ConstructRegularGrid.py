@@ -12,26 +12,27 @@ class ConstructRegularGrid(ActionSet):
     Unlike exahype2.api.fv.actionsets.AdaptivityCriterion, this action set
     does not evaluate any solver data (there is none yet while the grid is
     still being built): it only ever looks at a cell's size and decides to
-    refine or keep based on volume_size alone. That is what makes it
+    refine or keep based on cell_size alone. That is what makes it
     "generic" - solver-independent - and hence a candidate to sit in
     peano4.api.actionsets rather than one of the discretisation- or
     extension-specific actionsets packages (e.g. exahype2.api.fv.actionsets).
 
-    Currently just an empty stub - a placeholder for the actual refinement
-    criterion to grow into. @see get_body_of_operation().
+    The resulting C++ file will be really simplistic, basically consisting of
+    only a few lines of code in the touchVertexFirstTime operation, the beginTraversal()
+    event and the routine that returns the grid control events.
 
     """
 
-    def __init__(self, volume_size: float, descend_invocation_order=0, parallel=True):
+    def __init__(self, cell_size: float, descend_invocation_order=0, parallel=True):
         """!
 
-        volume_size: float
-          Target edge length of one Finite Volume on the regular grid this
-          action set is supposed to build.
+        cell_size: float
+          Target edge length of one cell on the regular grid this action
+          set is supposed to build.
 
         """
         super().__init__(descend_invocation_order, parallel)
-        self.volume_size = volume_size
+        self.cell_size = cell_size
 
     def user_should_modify_template(self):
         return False
@@ -43,17 +44,32 @@ class ConstructRegularGrid(ActionSet):
         return "// @todo Not implemented yet\n"
 
     def get_body_of_getGridControlEvents(self):
-        return "return std::vector< peano4::grid::GridControlEvent >();\n"
+        return "return _gridControlEvents;"
 
     def get_body_of_operation(self, operation_name):
-        return "// @todo Not implemented yet\n"
+        if operation_name==ActionSet.OPERATION_BEGIN_TRAVERSAL:
+            return """
+  _gridControlEvents.clear();
+"""
+        if operation_name==ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+            return """
+            /**
+    refinementCriterion = ::exahype2::RefinementCommand::Keep;
+  }
+  {% endif %}
+    
+  _localRefinementControl.addCommand( marker.x(), marker.h(), refinementCriterion, {{EVENT_LIFETIME}} );
+  logTraceOutWith1Argument( "touchCellFirstTime(...)", toString(refinementCriterion) );
+**/
+"""
+        return ""
 
     def get_action_set_name(self):
-        return "ConstructRegularGrid"
+        return __name__.replace(".py", "").replace(".", "_")
 
     def get_attributes(self):
         return """
-return std::vector< peano4::grid::GridControlEvent >();\n
+std::vector< peano4::grid::GridControlEvent > _gridControlEvents;
 """
 
     def get_includes(self):
