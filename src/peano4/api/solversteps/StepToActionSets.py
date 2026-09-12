@@ -2,7 +2,15 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api.output.ActionSet
 
-class StepToActionSet(object):
+class StepToActionSets(object):
+  """!
+  
+  Maps a step to an action set
+  
+  This is a generator, i.e. it is 
+  """
+  
+  
   def __init__(self,step):
     self.step = step
 

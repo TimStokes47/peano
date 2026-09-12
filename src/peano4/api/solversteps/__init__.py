@@ -19,7 +19,7 @@ StepsToStepRepository, additionally generates the C++ `StepRepository`
 that lets the runtime look steps up by name/index at runtime.
 
 Steps and Step do not write C++ themselves. Each delegates to a private
-generator held by aggregation: Step to StepToActionSet/StepToObserver,
+generator held by aggregation: Step to StepToActionSets/StepToObserver,
 Steps to StepsToStepRepository. Those generators are the bridge into
 @ref peano4.api.output "peano4.api.output" - the actual C++ code writers -
 turning one Python-side ActionSet/Step/Steps object into a
@@ -37,7 +37,7 @@ digraph SolverStepsClasses {
   UserActionSet         [label="{UserActionSet|+ name : str\l}"]
   Step                  [label="{Step|+ name : str\l+ action_sets : [ActionSet]\l+ vertex_data, face_data, cell_data : [...]\l|+ add_action_set(action_set) : void\l+ construct_output(output) : void\l}"]
   Steps                 [label="{Steps|+ _steps : [Step]\l|+ add_step(step) : void\l+ construct_output(output) : void\l}"]
-  StepToActionSet       [label="{StepToActionSet|+ step : Step\l|+ construct_output(output, action_set) : str\l}"]
+  StepToActionSets      [label="{StepToActionSets|+ step : Step\l|+ construct_output(output, action_set) : str\l}"]
   StepToObserver        [label="{StepToObserver|+ step : Step\l|+ construct_output(output, included_action_sets) : void\l}"]
   StepsToStepRepository [label="{StepsToStepRepository|+ steps : Steps\l|+ construct_output(output) : void\l}"]
 
@@ -50,18 +50,18 @@ digraph SolverStepsClasses {
 
   edge [dir=both, arrowtail=diamond, arrowhead=none, style=solid]
   Step  -> ActionSet             [taillabel="1", headlabel="0..*", label="action_sets"]
-  Step  -> StepToActionSet       [taillabel="1", headlabel="1",    label="action_set_generator"]
+  Step  -> StepToActionSets      [taillabel="1", headlabel="1",    label="action_set_generator"]
   Step  -> StepToObserver        [taillabel="1", headlabel="1",    label="observer_generator"]
   Steps -> Step                  [taillabel="1", headlabel="0..*", label="_steps"]
   Steps -> StepsToStepRepository [taillabel="1", headlabel="1",    label="generator"]
 
   edge [dir=forward, arrowhead=open, arrowtail=none, style=solid]
-  StepToActionSet       -> Step  [label="step"]
+  StepToActionSets      -> Step  [label="step"]
   StepToObserver        -> Step  [label="step"]
   StepsToStepRepository -> Steps [label="steps"]
 
   edge [dir=forward, arrowhead=vee, arrowtail=none, style=dashed]
-  StepToActionSet       -> OutputActionSet    [label="«creates»"]
+  StepToActionSets      -> OutputActionSet    [label="«creates»"]
   StepToObserver        -> OutputObserver     [label="«creates»"]
   StepsToStepRepository -> OutputTemplatePair [label="«creates»"]
 }

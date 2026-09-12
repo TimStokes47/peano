@@ -33,7 +33,7 @@ class ActionSet(object):
   # Where is is used
 
   The class is instantiated in exactly one place: construct_output() of @ref
-  peano4.api.solversteps.StepToActionSet.StepToActionSet, which is called
+  peano4.api.solversteps.StepToActionSets.StepToActionSets, which is called
   once per action set attached to a @ref peano4.api.solversteps.Step.Step,
   from Step.construct_output(), as it loops over self.action_sets. That
   call site decides two things this class here itself does not know about:
@@ -49,10 +49,15 @@ class ActionSet(object):
 
   # In short
   
-  - This is the generator which takes one @ref peano4.api.solversteps.StepToActionSet.StepToActionSet and maps it onto a header/implementation file pair.
+  - This is the generator which takes one @ref peano4.api.solversteps.StepToActionSets.StepToActionSets and maps it onto a header/implementation file pair.
   - The outcome either ends up in actions/ (if user_should_modify_template() is True) or in observers/ (if False).
   - The outcome typically is named Observer2ActionSetName.
   
+  ## Important links
+
+  - @ref peano_action_sets    
+  - @ref peano4.api.taskgraphs
+
   """
 
   def __init__(self,classname,namespace,subdirectory,implementation = None):

@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api.solversteps.UserActionSet
 
-from peano4.api.solversteps.StepToActionSet import StepToActionSet
+from peano4.api.solversteps.StepToActionSets import StepToActionSets
 from peano4.api.solversteps.StepToObserver import StepToObserver
 
 
@@ -58,7 +58,7 @@ class Step:
             self.action_sets = [peano4.api.solversteps.UserActionSet(name)]
         else:
             self.action_sets = []
-        self.action_set_generator = StepToActionSet(self)
+        self.action_set_generator = StepToActionSets(self)
         self.observer_generator = StepToObserver(self)
 
     def remove_all_actions(self):

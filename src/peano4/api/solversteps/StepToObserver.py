@@ -4,6 +4,35 @@ import peano4.api.output.ActionSet
 
 
 class StepToObserver(object):
+  """!
+  
+  Take an action set and construct an observer from it.
+
+  An action set is, as the name suggests, a set of actions. Each action
+  set will have to be mapped onto one C++ action set, which is a where the 
+  action behaviour is implemented: a selection of functions which react to 
+  events such as "I have hit a face for the first time".
+  
+  An observer administers these action sets:
+  
+  - It holds a series of action sets dispatches the events to them.
+  - It manages the data movements induced by the grid traversal automaton
+    running through the mesh.
+    
+  Consequently, each action set among the solver steps yields exactly one
+  observer, but potentially many action sets in the C++ implementation.
+    
+    
+  ## Important links
+
+  - @ref peano_action_sets    
+  - @ref peano4.api.taskgraphs
+
+
+  """
+  
+  
+  
   def __init__(self,step):
     self.step = step
     

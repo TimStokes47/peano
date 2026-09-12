@@ -23,6 +23,20 @@ class Task:
     task realises once it is compiled into an Observer. This sequence is
     empty by default; use add_action_set() to add further action sets to it.
     Their order matters - see peano4.api.solversteps.Step.add_action_set().
+    
+    The tasks will later on be taken by the graph compiler which maps them 
+    onto a sequence of @ref peano4.api.solversteps.Step instances. How many
+    of these logical steps (grid traversals) are required depends on the 
+    structure of the task graph but also the type of compiler chosen. 
+    Contraray, each action set that is added to a task will remain to be a 
+    real @ref peano4.api.solversteps.ActionSet, and subsequently be translated
+    into exactly one @ref peano4.api.output.ActionSet, i.e. one pair of header
+    and implementation file called MyFancyObserverOfAGridTraversal2ThisActionSet.
+    
+    # Things to read to get the full picture:    
+
+    - @ref peano_action_sets    
+    - @ref peano4.api.taskgraphs
 
     """
 

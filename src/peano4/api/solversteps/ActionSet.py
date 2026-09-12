@@ -8,6 +8,7 @@ class ActionSet(object):
 
     Action set (reactions to events)
 
+
     Peano runs through the mesh tied to an observer. The observer 
     "sees" events and issues actions tied to these events. That is
     the observer listens to the tree traversal for events alike "this
@@ -102,11 +103,11 @@ class ActionSet(object):
     @ref peano_action_sets.
 
 
-    ## Order of invocation and concurrency level
     
-    A discussion of the order of events can be found in the documentation of
-    @ref peano_action_sets.
-    
+    ## Important links
+
+    - @ref peano_action_sets    
+    - @ref peano4.api.taskgraphs
 
 
     
