@@ -74,11 +74,11 @@ Steps and its one generator); open-arrow solid lines are the plain
 back-references the generators keep to the object they serve; dashed
 open arrows are "creates" dependencies into @ref peano4.api.output.
 
-@see peano4.api.solversteps.Step.Step
-@see peano4.api.solversteps.Steps.Steps
-@see peano4.api.solversteps.ActionSet.ActionSet
-@see peano4.api.solversteps.UserActionSet.UserActionSet
-@see peano4.api.output.ActionSet.ActionSet
+@see @ref peano4.api.solversteps.Step.Step
+@see @ref peano4.api.solversteps.Steps.Steps
+@see @ref peano4.api.solversteps.ActionSet.ActionSet
+@see @ref peano4.api.solversteps.UserActionSet.UserActionSet
+@see @ref peano4.api.output.ActionSet.ActionSet
 
 """
 

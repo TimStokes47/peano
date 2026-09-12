@@ -34,7 +34,7 @@ class Step:
     and associate it with several observers. In the C++ code, we will flatten
     such a relation, i.e. create the corresponding action set multiple times.
 
-    @see peano4.api.solversteps.ActionSet
+    @see @ref peano4.api.solversteps.ActionSet.ActionSet
 
     name: String
       This name is used to create the underlying action set later on
@@ -77,7 +77,7 @@ class Step:
         Simple bubble sort the action sets, such that their descend_invocation_order
         is preserved.
 
-        @see peano4.api.solversteps.ActionSet.descend_invocation_order
+        @see @ref peano4.api.solversteps.ActionSet.ActionSet.descend_invocation_order
 
         """
         for i in range(0, len(self.action_sets)):
@@ -137,7 +137,7 @@ class Step:
 
         Return max descend_invocation_order over all action sets associated with this step.
 
-        @see peano4.api.solversteps.ActionSet.descend_invocation_order
+        @see @ref peano4.api.solversteps.ActionSet.ActionSet.descend_invocation_order
 
         """
         self.__sort()
@@ -150,7 +150,7 @@ class Step:
 
         Return minimum descend_invocation_order over all action sets associated with this step.
 
-        @see peano4.api.solversteps.ActionSet.descend_invocation_order
+        @see @ref peano4.api.solversteps.ActionSet.ActionSet.descend_invocation_order
 
         """
         self.__sort()

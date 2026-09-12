@@ -107,7 +107,7 @@ class ActionSet(object):
     ## Important links
 
     - @ref peano_action_sets    
-    - @ref peano4.api.taskgraphs
+    - @ref peano4.api.taskgraph
 
 
     
@@ -145,7 +145,7 @@ class ActionSet(object):
         action set owned by a rank, or a number greater or equal 0 if this action
         set is a clone of the glocal action set that's used by one tree traversal.
 
-        @see get_attributes() to add attributes to your action set
+        @see @ref peano4.api.solversteps.ActionSet.ActionSet.get_attributes "get_attributes()" to add attributes to your action set
 
         """
         return "// @todo Should be overwritten\n"

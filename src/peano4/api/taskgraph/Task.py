@@ -36,7 +36,7 @@ class Task:
     # Things to read to get the full picture:    
 
     - @ref peano_action_sets    
-    - @ref peano4.api.taskgraphs
+    - @ref peano4.api.taskgraph
 
     """
 
