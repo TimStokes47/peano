@@ -524,13 +524,13 @@ void {{FULL_QUALIFIED_CLASSNAME}}::unprepareTraversal() {
 
     TemplateGetGridControlEvents_Prologue = """
 
-std::vector< peano4::grid::GridControlEvent > {{FULL_QUALIFIED_CLASSNAME}}::getGridControlEvents() const {
+std::vector< peano4::grid::GridControlEvent > {{FULL_QUALIFIED_CLASSNAME}}::createGridControlEventsForNextTraversal() const {
   std::vector< peano4::grid::GridControlEvent > result;
 """
 
     TemplateGetGridControlEvents_MappingCall = """
   {
-    const std::vector< peano4::grid::GridControlEvent > actionResult = {{ACTIVE_ACTION_SET}}.getGridControlEvents();
+    const std::vector< peano4::grid::GridControlEvent > actionResult = {{ACTIVE_ACTION_SET}}.createGridControlEventsForNextTraversal();
     result.insert(result.begin(),actionResult.begin(),actionResult.end());
   }
 """
@@ -542,7 +542,7 @@ std::vector< peano4::grid::GridControlEvent > {{FULL_QUALIFIED_CLASSNAME}}::getG
 
 """
 
-    def __generate_getGridControlEvents(self, output_file):
+    def __generate_createGridControlEventsForNextTraversal(self, output_file):
         output_file.write(
             jinja2.Template(self.TemplateGetGridControlEvents_Prologue).render(
                 **{"FULL_QUALIFIED_CLASSNAME": self.d["FULL_QUALIFIED_CLASSNAME"]}
@@ -2538,7 +2538,7 @@ tarch::logging::Log {{FULL_QUALIFIED_CLASSNAME}}::_log( "{{FULL_QUALIFIED_CLASSN
 
             self.__generate_constructor(output_file)
             self.__generate_clone(output_file)
-            self.__generate_getGridControlEvents(output_file)
+            self.__generate_createGridControlEventsForNextTraversal(output_file)
             self.__generate_beginTraversal(output_file)
             self.__generate_endTraversal(output_file)
             self.__generate_prepareTraversal(output_file)

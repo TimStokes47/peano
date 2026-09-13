@@ -24,6 +24,8 @@ either use Peano's Python API or they use an extension built on top of Peano
 - Peano's C++ core
   - \subpage peano_main
   - \subpage peano_action_sets
+  - \subpage page_peano_amr
+  - \subpage peano_utilities
 - Tutorials
   - \subpage tutorials_peano4_tutorials
 - Peano's Python API
@@ -32,8 +34,6 @@ either use Peano's Python API or they use an extension built on top of Peano
   - \subpage page_peano_domain_decomposition
 \li \subpage page_peano_localisation
 \li \subpage page_peano_performance_optimisation
-\li \subpage page_peano_amr
-\li \subpage peano_utilities
 \li \subpage page_peano_merging_applications
 - Related pages
   - @ref page_tarch_home

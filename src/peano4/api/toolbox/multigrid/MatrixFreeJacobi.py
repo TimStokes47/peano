@@ -45,7 +45,7 @@ class MatrixFreeJacobi(ActionSet):
     self._store_residual_persistently_and_update_in_touch_first = store_residual_persistently_and_update_in_touch_first
     
 
-  def get_body_of_getGridControlEvents(self):
+  def get_body_of_createGridControlEventsForNextTraversal(self):
     return "  return std::vector< peano4::grid::GridControlEvent >();\n" 
 
 

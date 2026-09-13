@@ -126,6 +126,22 @@ CMakeCache.txt
 # Built Visual Studio Code Extensions
 *.vsix
 
+# Eclipse / CDT / PyDev / TeXlipse project files
+.project
+.cproject
+.pydevproject
+.texlipse
+.autotools
+.settings/
+.externalToolBuilders/
+
+# Instrumentation preprocessing intermediate files that tracing tools
+# (opari/scorep etc.) drop directly into src/
+src/*.input.cpp
+src/*.input.prep.cpp
+src/*.input.prep.cpp.opari.inc
+src/*.input.prep.opari.cpp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -256,6 +272,10 @@ ENV/
 env.bak/
 venv.bak/
 .formatting_python_env/
+
+# Stray venv created directly at the repo root (bin/lib/include instead of
+# a dedicated venv/ subdirectory)
+/bin/
 
 # Spyder project settings
 .spyderproject

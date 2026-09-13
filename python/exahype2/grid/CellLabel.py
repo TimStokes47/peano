@@ -46,7 +46,7 @@ class UpdateCellLabel(ActionSet):
     return ""
 
 
-  #def get_body_of_getGridControlEvents(self):
+  #def get_body_of_createGridControlEventsForNextTraversal(self):
   #  return self.__Template_GridControlEvents.format(**self.d)
 
 

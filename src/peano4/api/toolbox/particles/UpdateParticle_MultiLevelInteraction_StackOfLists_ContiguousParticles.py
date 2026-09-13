@@ -499,7 +499,7 @@ class UpdateParticle_MultiLevelInteraction_StackOfLists_ContiguousParticles(Acti
             result = self.__Template_EndTraversal.render(**self.d)
         return result
 
-    def get_body_of_getGridControlEvents(self):
+    def get_body_of_createGridControlEventsForNextTraversal(self):
         return "  return std::vector< peano4::grid::GridControlEvent >();\n"
 
     def get_body_of_prepareTraversal(self):

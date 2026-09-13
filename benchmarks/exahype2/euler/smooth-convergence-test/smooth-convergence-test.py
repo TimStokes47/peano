@@ -13,8 +13,8 @@ auxiliary_variables = 0
 mesh_size   = 0.2 / 9.0
 patch_size  = 9
 dimensions  = 2
-#verbosity   = peano4.api.LoggerVerbosity.TEXT
-verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
+verbosity   = peano4.api.LoggerVerbosity.TEXT
+#verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
 
 thesolver = exahype2.api.Solver(
   solver_name,

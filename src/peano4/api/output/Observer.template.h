@@ -63,7 +63,7 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public peano4::grid::TraversalO
 
     virtual TraversalObserver* clone(int spacetreeId) override;
 
-    virtual std::vector< peano4::grid::GridControlEvent > getGridControlEvents() const override;
+    virtual std::vector< peano4::grid::GridControlEvent > createGridControlEventsForNextTraversal() const override;
 
     /**
      * Prepare traversal

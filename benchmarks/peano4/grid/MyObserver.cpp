@@ -81,7 +81,7 @@ peano4::grid::TraversalObserver* examples::grid::MyObserver::clone(int spacetree
 }
 
 
-std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGridControlEvents() {
+std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::createGridControlEventsForNextTraversal() {
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
 
   if (_iterationCounter<GridRefinementIterations) {

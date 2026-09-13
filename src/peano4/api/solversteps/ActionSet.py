@@ -157,7 +157,14 @@ class ActionSet(object):
     def get_destructor_body(self):
         return "// @todo Should be overwritten\n"
 
-    def get_body_of_getGridControlEvents(self):
+    def get_body_of_createGridControlEventsForNextTraversal(self):
+        """!
+        
+        Return the grid control events that this action set wants to trigger
+        
+        Please consult the documentation of @ref peano_action_sets "grid control events" for details on what these events are and how they are used.
+        
+        """
         return "return std::vector< peano4::grid::GridControlEvent >();\n"
 
     @abstractmethod

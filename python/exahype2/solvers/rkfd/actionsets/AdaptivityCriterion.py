@@ -156,10 +156,10 @@ class AdaptivityCriterion(AbstractRKFDActionSet):
     self._called_by_grid_construction                = called_by_grid_construction
 
   
-  def get_body_of_getGridControlEvents(self):
+  def get_body_of_createGridControlEventsForNextTraversal(self):
     if self._implement_previous_refinement_instructions:
       return """
-    return ::exahype2::RefinementControlService::getInstance().getGridControlEvents();
+    return ::exahype2::RefinementControlService::getInstance().createGridControlEventsForNextTraversal();
 """ 
     else:
       return """

@@ -94,7 +94,7 @@ public:
   /**
    * @see RefinementControl::clear()
    */
-  std::vector<peano4::grid::GridControlEvent> getGridControlEvents() const;
+  std::vector<peano4::grid::GridControlEvent> createGridControlEventsForNextTraversal() const;
 
   virtual void shutdown() override;
 

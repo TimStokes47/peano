@@ -207,7 +207,7 @@ class AssignNumbersToMesh(ActionSet):
             )
         return ""
 
-    def get_body_of_getGridControlEvents(self):
+    def get_body_of_createGridControlEventsForNextTraversal(self):
         return "  return std::vector< peano4::grid::GridControlEvent >();\n"
 
     def get_action_set_name(self):
@@ -262,7 +262,7 @@ class ClearNumbersOnMesh(ActionSet):
             )
         return ""
 
-    def get_body_of_getGridControlEvents(self):
+    def get_body_of_createGridControlEventsForNextTraversal(self):
         return "  return std::vector< peano4::grid::GridControlEvent >();\n"
 
     def get_action_set_name(self):

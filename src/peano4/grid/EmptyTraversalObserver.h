@@ -50,5 +50,5 @@ class peano4::grid::EmptyTraversalObserver: public peano4::grid::TraversalObserv
     ) override;
 
     virtual TraversalObserver* clone(int spacetreeId) override;
-    virtual std::vector< GridControlEvent > getGridControlEvents() const override;
+    virtual std::vector< GridControlEvent > createGridControlEventsForNextTraversal() const override;
 };

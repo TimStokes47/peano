@@ -24,7 +24,7 @@ class ActionSet(object):
   such solversteps.ActionSet instance (held as self.implementation), it
   emits the actual C++ .h/.cpp pair - the include guard, the class
   declaration inside the right namespace, a static tarch::logging::Log
-  _log, the constructor/destructor, getGridControlEvents(),
+  _log, the constructor/destructor, createGridControlEventsForNextTraversal(),
   prepareTraversal()/unprepareTraversal(), and one method per grid event
   (touchCellFirstTime, createPersistentVertex, ...) - calling back into
   your get_body_of_*() overrides to fill in each method body.
@@ -193,7 +193,7 @@ class ActionSet(object):
           outputfile.write( "    " + self.classname + "(int treeNumber);\n\n" )
           outputfile.write( "    ~" + self.classname + "();\n\n" )
           outputfile.write( """
-    std::vector< peano4::grid::GridControlEvent > getGridControlEvents() const;
+    std::vector< peano4::grid::GridControlEvent > createGridControlEventsForNextTraversal() const;
     static void prepareTraversal();
     static void unprepareTraversal();
 """ )
@@ -232,8 +232,8 @@ class ActionSet(object):
       outputfile.write( self.implementation.get_destructor_body() )
       outputfile.write( "}\n\n\n" )
 
-      outputfile.write( "std::vector< peano4::grid::GridControlEvent > " + self.__get_full_qualified_class_name() + "::getGridControlEvents() const {\n" )
-      outputfile.write( self.implementation.get_body_of_getGridControlEvents() )
+      outputfile.write( "std::vector< peano4::grid::GridControlEvent > " + self.__get_full_qualified_class_name() + "::createGridControlEventsForNextTraversal() const {\n" )
+      outputfile.write( self.implementation.get_body_of_createGridControlEventsForNextTraversal() )
       outputfile.write( "}\n\n\n" )
 
       outputfile.write( "void " + self.__get_full_qualified_class_name() + "::prepareTraversal() {\n" )

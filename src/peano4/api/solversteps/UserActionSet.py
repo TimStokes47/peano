@@ -40,7 +40,7 @@ class UserActionSet(ActionSet):
     return "// @todo Please implement\n"
 
 
-  def get_body_of_getGridControlEvents(self):
+  def get_body_of_createGridControlEventsForNextTraversal(self):
     return "// @todo Please implement\nreturn std::vector< peano4::grid::GridControlEvent >();\n" 
 
 

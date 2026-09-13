@@ -50,6 +50,6 @@ peano4::grid::TraversalObserver* peano4::grid::EmptyTraversalObserver::clone([[m
   return new EmptyTraversalObserver();
 }
 
-std::vector< peano4::grid::GridControlEvent > peano4::grid::EmptyTraversalObserver::getGridControlEvents() const {
+std::vector< peano4::grid::GridControlEvent > peano4::grid::EmptyTraversalObserver::createGridControlEventsForNextTraversal() const {
   return std::vector< peano4::grid::GridControlEvent >();
 }
