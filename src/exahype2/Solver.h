@@ -46,25 +46,6 @@ class exahype2::Solver {
     ) = 0;
     virtual void finishTimeStep() = 0;
 
-    /**
-     * Not pure virtual, unlike the other lifecycle hooks above: overriding
-     * it is optional. The legacy python/exahype2 solvers override it to
-     * drive their own _solverState transitions into
-     * SolverState::Plotting/PlottingAfterGridInitialisation; newer solvers
-     * that have no use for it can simply not override it.
-     */
-    virtual void startPlottingStep(
-      double globalMinTimeStamp,
-      double globalMaxTimeStamp,
-      double globalMinTimeStepSize,
-      double globalMaxTimeStepSize
-    ) {}
-
-    /**
-     * Not pure virtual - @see startPlottingStep().
-     */
-    virtual void finishPlottingStep() {}
-
     virtual double getMaxMeshSize() const = 0;
     virtual double getMinMeshSize() const = 0;
 };
