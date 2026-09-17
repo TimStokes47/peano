@@ -2,7 +2,6 @@ import os, sys
 import peano4.api
 import exahype2
 
-# import exahype2.fv.api.Solver as MySolver
 
 project = exahype2.api.Project(
     namespace=["benchmarks", "exahype2", "euler", "smooth_convergence_test"],
@@ -10,7 +9,6 @@ project = exahype2.api.Project(
     directory=".",
     executable="smooth-convergence-test",
 )
-# new_project = exahype2.api.Project(namespace=["benchmarks", "exahype2", "euler", "smooth_setup"], project_name="smooth-convergence-test", directory=".", executable="smooth-convergence-test")
 
 solver_name = "EulerFVSmooth"
 unknowns = 4
@@ -29,56 +27,9 @@ thesolver = exahype2.api.Solver(
 
 thesolver.add_user_solver_includes("#include <cmath>\n" "#include <algorithm>\n")
 
-thesolver.add_pde_term(
-    exahype2.api.Flux(
-        implementation="""
-      const double irho  = 1.0 / Q[0];
-      constexpr double gamma = 1.4;
-      const double p = (gamma - 1.0) * (Q[3] - 0.5 * irho * (Q[1] * Q[1] + Q[2] * Q[2]));
+thesolver.add_pde_term( exahype2.api.Flux(stateless=False,))
+thesolver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False,))
 
-      switch (normal) {
-        case 0:
-          F[0] = Q[1];
-          F[1] = irho * Q[1] * Q[1] + p;
-          F[2] = irho * Q[1] * Q[2];
-          F[3] = irho * Q[1] * (Q[3] + p);
-          break;
-        case 1:
-          F[0] = Q[2];
-          F[1] = irho * Q[2] * Q[1];
-          F[2] = irho * Q[2] * Q[2] + p;
-          F[3] = irho * Q[2] * (Q[3] + p);
-          break;
-      }
-    """,
-        stateless=True,
-    )
-)
-thesolver.add_pde_term(
-    exahype2.api.MaxEigenvalue(
-        implementation="""
-      // Eigenvalues of the Euler flux Jacobian in direction "normal" are
-      // u_n +/- c, where u_n is the *velocity* component (momentum/density),
-      // not the raw momentum component - several earlier ExaHyPE
-      // applications/benchmarks used the raw momentum here by mistake, which
-      // silently gives a wrong (and usually too small) CFL time step bound.
-      const double irho  = 1.0 / Q[0];
-      constexpr double gamma = 1.4;
-      const double p = (gamma - 1.0) * (Q[3] - 0.5 * irho * (Q[1] * Q[1] + Q[2] * Q[2]));
-      const double c = std::sqrt(gamma * p * irho);
-
-      switch (normal) {
-        case 0:
-          lambdaMax[0] = std::max(std::abs(Q[1] * irho + c), std::abs(Q[1] * irho - c));
-          break;
-        case 1:
-          lambdaMax[0] = std::max(std::abs(Q[2] * irho + c), std::abs(Q[2] * irho - c));
-          break;
-      }
-    """,
-        stateless=True,
-    )
-)
 thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
     thesolver, volume_size=0.001

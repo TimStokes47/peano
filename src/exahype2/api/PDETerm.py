@@ -27,6 +27,11 @@ class PDETerm:
     subclass instead of generating it. A term you don't want at all is
     simply never passed to solver.add_pde_term() in the first place.
 
+    implementation must not be None when stateless is True: the constructor
+    raises ValueError in that case, since a stateless term's generated
+    method is static, and static methods cannot be pure virtual - there
+    would be no declaration left to signal "implement this by hand".
+
     PDETerm only models *what* the term is (name, signature, implementation).
     It deliberately knows nothing about Jinja2 or the code generator: turning
     a solver's collection of terms into the generated abstract solver header
@@ -52,9 +57,18 @@ class PDETerm:
         implementation: str
           A C++ snippet that becomes the method's body verbatim (the empty
           string is a valid, generated no-op body), or None (the default) to
-          leave the method pure virtual for you to implement by hand.
+          leave the method pure virtual for you to implement by hand. Must
+          not be None if stateless is True: the generated method is then
+          static, and static methods cannot be pure virtual, so there would
+          be nothing left to tell you to implement it by hand.
 
         """
+        if stateless and implementation is None:
+            raise ValueError(
+                f"PDETerm {name!r} is stateless, so its generated method is static - "
+                "static methods cannot be pure virtual, so implementation must not be "
+                "None (pass a C++ snippet, or the empty string for a no-op body)."
+            )
         self.name = name
         self.implementation = implementation
         self.stateless = stateless
@@ -198,6 +212,55 @@ class PDETerm:
                 f"void {qualified_class_name}::{self.term.name}(\n"
                 f"  {self.signature}\n"
                 f") {{\n  {body}\n}}\n"
+            )
+
+        def generate_stub_declaration(self) -> str:
+            """!
+            Override declaration for the concrete solver class that the
+            Python API generates when the user hasn't provided their own
+            implementation of this term - the empty string if the term
+            isn't left abstract (term.implementation is not None; a
+            stateless term's method is static and thus never overridable
+            in the first place, but that combination cannot occur anyway,
+            @see PDETerm.__init__).
+            """
+            if self.term.implementation is not None or self.term.stateless:
+                return ""
+            return (
+                f"virtual void {self.term.name}(\n"
+                f"  {self.signature}\n"
+                ") override;\n"
+            )
+
+        def generate_stub_definition(self, qualified_class_name: str) -> str:
+            """!
+            Out-of-class body for generate_stub_declaration(): a trace-in
+            (with x, and normal too if the term's signature has one), a
+            logWarning noting the method is unimplemented, a
+            "// @todo implement" comment, and logTraceOut - or the empty
+            string under the same condition as generate_stub_declaration().
+
+            qualified_class_name: str
+              Fully qualified class name the definition is attached to,
+              e.g. "examples::MySolver::MySolver".
+            """
+            if self.term.implementation is not None or self.term.stateless:
+                return ""
+            method_name = f"{self.term.name}(...)"
+            log_trace_in = (
+                f'logTraceInWith2Arguments("{method_name}", x, normal);'
+                if "normal" in self.signature
+                else f'logTraceInWith1Argument("{method_name}", x);'
+            )
+            return (
+                f"void {qualified_class_name}::{self.term.name}(\n"
+                f"  {self.signature}\n"
+                f") {{\n"
+                f"  {log_trace_in}\n"
+                f'  logWarning("{method_name}", "not implemented yet");\n'
+                f"  // @todo implement\n"
+                f'  logTraceOut("{method_name}");\n'
+                f"}}\n"
             )
 
     @property

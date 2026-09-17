@@ -30,7 +30,7 @@ class ReconstructPatchWithHalo(ReconstructPatchAndApplyFunctor):
         ::exahype2::CellData patchData(oldQWithHalo, marker.x(), marker.h(), timeStamp, timeStepSize, newQ);
 
         {% if STATELESS_PDE_TERMS %}
-        if (repositories::{{SOLVER_INSTANCE}}.patchCanUseStatelessPDETerms(
+        if (repositories::{{SOLVER_INSTANCE}}.cellCanUseStatelessPDETerms(
           marker.x(),
           marker.h(),
           timeStamp,

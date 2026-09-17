@@ -1,17 +1,33 @@
+
+// This file is part of the ExaHyPE2 project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 #include "AbstractEulerFVSmooth.h"
-#include "tarch/logging/Log.h"
 
-namespace benchmarks {namespace exahype2 {namespace euler {namespace smooth_convergence_test {
+
+namespace benchmarks {
+  namespace exahype2 {
+  namespace euler {
+  namespace smooth_convergence_test {
+  
   class EulerFVSmooth;
+
 }}}}
 
-class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: public benchmarks::exahype2::euler::smooth_convergence_test::AbstractEulerFVSmooth {
-  private:
-    static tarch::logging::Log   _log;
 
-  public: 
+class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: public benchmarks::exahype2::euler::smooth_convergence_test::AbstractEulerFVSmooth {
+  public:
+    EulerFVSmooth() = default;
+
+    virtual void flux(
+      const double* __restrict__ Q, const tarch::la::Vector<Dimensions, double>& x, int normal, double* __restrict__ F
+    ) override;
+
+    virtual void maxEigenvalue(
+     const double* __restrict__ Q, const tarch::la::Vector<Dimensions, double>& x, int normal, double* __restrict__ lambdaMax
+    ) override;
+
 /*
     void initialCondition(
       double * __restrict__ Q,
@@ -29,26 +45,5 @@ class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: publi
       int                                          normal
     )  override;
 */
-  
-/*
-    virtual void maxEigenvalue(
-      const double * __restrict__ Q, // Q[4+0],
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      double                                       t,
-      double                                       dt,
-      int                                          normal,
-      double* __restrict__                         maxEigenvalue
-    ) override;
-    
-    virtual void flux(
-      const double * __restrict__ Q, // Q[4+0],
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      double                                       t,
-      double                                       dt,
-      int                                          normal,
-      double * __restrict__ F // F[4]
-    ) override;
-*/
 };
+

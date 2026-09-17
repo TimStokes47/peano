@@ -1,8 +1,4 @@
 #include "EulerFVSmooth.h"
-#include "exahype2/RefinementControl.h"
-#include <cmath>
-
-tarch::logging::Log benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::_log( "examples::exahype2::test::euler_sod::benchmark::euler_sod" );
 
 /*
 void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::initialCondition(
@@ -37,17 +33,35 @@ void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::bounda
   Qoutside[3] = Qinside[3];
   logTraceOut( "boundaryConditions(...)" );
 }
+*/
 
-void ::benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::maxEigenvalue(
-  const double * __restrict__ Q, // Q[4+0],
-  const tarch::la::Vector<Dimensions,double>&  faceCentre,
-  const tarch::la::Vector<Dimensions,double>&  volumeH,
-  double                                       t,
-  double                                       dt,
-  int                                          normal,
-  double* __restrict__                         maxEigenvalue
-)  {
-  logTraceInWith4Arguments( "maxEigenvalue(...)", faceCentre, volumeH, t, normal );
+void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::flux(
+  const double* __restrict__ Q, const tarch::la::Vector<Dimensions, double>& x, int normal, double* __restrict__ F
+) {
+  const double irho  = 1.0 / Q[0];
+  constexpr double gamma = 1.4;
+  const double p = (gamma - 1.0) * (Q[3] - 0.5 * irho * (Q[1] * Q[1] + Q[2] * Q[2]));
+
+  switch (normal) {
+    case 0:
+      F[0] = Q[1];
+      F[1] = irho * Q[1] * Q[1] + p;
+      F[2] = irho * Q[1] * Q[2];
+      F[3] = irho * Q[1] * (Q[3] + p);
+      break;
+    case 1:
+      F[0] = Q[2];
+      F[1] = irho * Q[2] * Q[1];
+      F[2] = irho * Q[2] * Q[2] + p;
+      F[3] = irho * Q[2] * (Q[3] + p);
+      break;
+  }
+}
+
+void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::maxEigenvalue(
+  const double* __restrict__ Q, const tarch::la::Vector<Dimensions, double>& x, int normal, double* __restrict__ lambdaMax
+) {
+  logTraceInWith2Arguments( "maxEigenvalue(...)", x, normal );
   const double irho = 1.0 / Q[0];
   const double gamma = 1.4;
   const double p = (gamma - 1) * (Q[3] - 0.5 * irho * (Q[1] * Q[1] + Q[2] * Q[2]));
@@ -63,43 +77,6 @@ void ::benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::maxE
     result = std::max(std::abs(Q[2] + c), std::abs(Q[2] - c));
     break;
   }
-  logTraceOut("maxEigenvalue(...)");
-  maxEigenvalue[0] = result;
+  lambdaMax[0] = result;
+  logTraceOutWith1Argument("maxEigenvalue(...)", result);
 }
-
-void ::benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::flux(
-  const double * __restrict__ Q, // Q[4+0],
-  const tarch::la::Vector<Dimensions,double>&  faceCentre,
-  const tarch::la::Vector<Dimensions,double>&  volumeH,
-  double                                       t,
-  double                                       dt,
-  int                                          normal,
-  double * __restrict__ F // F[4]
-)  {
-  logTraceInWith4Arguments( "flux(...)", faceCentre, volumeH, t, normal );
-  const double irho = 1.0 / Q[0];
-  const double gamma = 1.4;
-  const double p =
-      (gamma - 1) * (Q[3] - 0.5 * irho * (Q[1] * Q[1] + Q[2] * Q[2]));
-
-  switch (normal)
-  {
-  case 0:
-    F[0] = Q[1];
-    F[1] = irho * Q[1] * Q[1] + p;
-    F[2] = irho * Q[1] * Q[2];
-    F[3] = irho * Q[1] * (Q[3] + p);
-    break;
-
-  case 1:
-    F[0] = Q[2];
-    F[1] = irho * Q[2] * Q[1];
-    F[2] = irho * Q[2] * Q[2] + p;
-    F[3] = irho * Q[2] * (Q[3] + p);
-    break;
-  }
-  logTraceOut( "flux(...)" );
-}
-*/
-
-
