@@ -19,16 +19,13 @@ class PDETerm:
     for a new, solver-specific term that does not warrant its own subclass
     (yet).
 
-    A term's implementation is either one of the three sentinel strings
-    below - PDETerm.USER_DEFINED (the generated C++ method is left pure
-    virtual for the user to implement by hand), PDETerm.NONE (the term is not
-    generated at all, i.e. the PDE does not have this contribution), or
-    PDETerm.EMPTY (the method is generated but does nothing) - or an actual
-    C++ code snippet that becomes the method body verbatim. These correspond
-    1:1 to python/exahype2/solvers/PDETerms.py's User_Defined_Implementation/
-    None_Implementation/Empty_Implementation; they are redeclared here so
-    that exahype2.api does not have to reach back into the legacy
-    exahype2.solvers tree for three string constants.
+    A term's implementation is a C++ code snippet that becomes the generated
+    method's body verbatim - including the empty string, which generates a
+    method that does nothing (a no-op, not "contributes zero": it does not
+    zero out the output for you) - or None (the default), which leaves the
+    method pure virtual for you to implement by hand in your solver
+    subclass instead of generating it. A term you don't want at all is
+    simply never passed to solver.add_pde_term() in the first place.
 
     PDETerm only models *what* the term is (name, signature, implementation).
     It deliberately knows nothing about Jinja2 or the code generator: turning
@@ -39,15 +36,12 @@ class PDETerm:
 
     """
 
-    USER_DEFINED = "<user-defined>"
-    NONE = "<none>"
-    EMPTY = "<empty>"
-
-    def __init__(self,
-                 name: str,
-                 implementation: str  = None,
-                 stateless:      bool = False,
-                 ):
+    def __init__(
+        self,
+        name: str,
+        implementation: str = None,
+        stateless: bool = False,
+    ):
         """!
 
         name: str
@@ -56,35 +50,14 @@ class PDETerm:
           unique per solver.
 
         implementation: str
-          One of PDETerm.USER_DEFINED/NONE/EMPTY, or a C++ snippet that
-          becomes the method body. None (the default) is treated the same as
-          PDETerm.NONE, i.e. the term is switched off until the user
-          actively enables it.
+          A C++ snippet that becomes the method's body verbatim (the empty
+          string is a valid, generated no-op body), or None (the default) to
+          leave the method pure virtual for you to implement by hand.
 
         """
-        self.name           = name
+        self.name = name
         self.implementation = implementation
-        self.stateless      = stateless
-
-    @property
-    def is_user_defined(self) -> bool:
-        """! Method is generated as pure virtual for the user to implement. """
-        return self.implementation == PDETerm.USER_DEFINED
-
-    @property
-    def is_disabled(self) -> bool:
-        """! Term is switched off - the method is not generated at all. """
-        return self.implementation is None or self.implementation == PDETerm.NONE
-
-    @property
-    def is_empty(self) -> bool:
-        """! Method is generated but its body does nothing. """
-        return self.implementation == PDETerm.EMPTY
-
-    @property
-    def has_custom_implementation(self) -> bool:
-        """! Implementation is an actual C++ snippet rather than one of the three sentinels. """
-        return not (self.is_user_defined or self.is_disabled or self.is_empty)
+        self.stateless = stateless
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name!r}, implementation={self.implementation!r})"
@@ -95,14 +68,18 @@ class PDETerm:
     class Generator:
         """!
 
-        Turns a PDETerm into the C++ text for its generated method, following
-        the pattern used throughout exahype2's Finite Volume kernels (see
-        python/exahype2/solvers/fv/riemann/kernels.py): a disabled term is
-        not declared at all; a user-defined term is declared pure virtual for
-        the user to implement by hand; anything else is declared as a
-        generated, non-overridable ("final") method whose body becomes the
-        definition. A stateless term additionally gets a GPU-offloadable
-        static overload declared alongside the virtual one.
+        Turns a PDETerm into the C++ text for its generated method: exactly
+        one method - the static, GPU-offloadable overload if the term is
+        stateless, otherwise the virtual instance method. Never both from
+        the same term; @see exahype2.api.Solver.add_pde_term() for how to
+        get both variants of the same conceptual operation.
+
+        If term.implementation is None, the method is left for the user to
+        implement by hand: pure virtual (" = 0") for the non-stateless case,
+        or - since static methods cannot be pure virtual - simply declared
+        without a matching out-of-class definition for the stateless case.
+        Otherwise the method is generated non-overridable ("final") with
+        term.implementation as its body.
 
         Embedded into PDETerm (reachable as term.generator) so that a term
         subclass can supply its own Generator - @see Flux.Generator - and
@@ -132,7 +109,16 @@ class PDETerm:
             return signature
 
         def _generate_static_offloadable_declaration(self) -> str:
-            if not self.term.stateless or self.term.is_user_defined:
+            """!
+            static GPU-offloadable declaration, or the empty string if the
+            term isn't stateless. exahype2::Solver::Offloadable is a dummy
+            tag argument that exists precisely because C++ cannot overload on
+            staticness alone - it is what lets this static method coexist
+            with the same-named, non-static, no-Offloadable-argument method
+            that registering the same term name again without stateless
+            would produce.
+            """
+            if not self.term.stateless:
                 return ""
             return (
                 "#if defined(GPUOffloadingOMP)\n"
@@ -149,27 +135,70 @@ class PDETerm:
 
         def generate_declaration(self) -> str:
             """!
-            Declaration text for the abstract solver header: the (optional)
-            GPU-offloadable static overload followed by the virtual method,
-            or the empty string if the term is disabled.
+            Declaration text for the abstract solver header: the static,
+            GPU-offloadable overload if this term is stateless, otherwise
+            the virtual instance method - never both from one term. Pure
+            virtual (" = 0") if term.implementation is None, "final"
+            otherwise; the static, stateless overload is unaffected by this
+            distinction (static methods cannot be pure virtual) - @see
+            generate_out_of_class_definitions for how it is left for the
+            user to implement by hand instead.
             """
-            if self.term.is_disabled:
-                return ""
-            body_suffix = " = 0" if self.term.is_user_defined else " final"
+            if self.term.stateless:
+                return self._generate_static_offloadable_declaration()
+            body_suffix = " = 0" if self.term.implementation is None else " final"
             return (
-                self._generate_static_offloadable_declaration()
-                + f"virtual void {self.term.name}(\n"
-                + f"  {self.signature}\n"
-                + f"){body_suffix};\n"
+                f"virtual void {self.term.name}(\n"
+                f"  {self.signature}\n"
+                f"){body_suffix};\n"
             )
 
         def generate_definition(self) -> str:
             """!
-            Body of the generated method, or the empty string if the term is
-            disabled or the user implements it by hand (nothing to generate
-            in either case).
+            Body of the generated method: the term's implementation verbatim.
+            Only meaningful when term.implementation is not None - @see
+            generate_out_of_class_definitions, which never calls this
+            otherwise.
             """
-            return self.term.implementation if self.term.has_custom_implementation else ""
+            return self.term.implementation
+
+        def generate_out_of_class_definitions(self, qualified_class_name: str) -> str:
+            """!
+            Out-of-class method body for the solver's .cpp file: the static,
+            GPU-offloadable overload if this term is stateless, otherwise
+            the virtual instance method - mirrors generate_declaration(),
+            never both from one term. The empty string if
+            term.implementation is None: the user implements that method by
+            hand instead, whether as an override of the pure virtual
+            instance method or, for a stateless term, as an ordinary static
+            method matching the declaration (name hiding, not override -
+            static methods cannot be virtual).
+
+            qualified_class_name: str
+              Fully qualified class name the definition is attached to,
+              e.g. "examples::MySolver::AbstractMySolver".
+            """
+            if self.term.implementation is None:
+                return ""
+            body = self.generate_definition()
+            if self.term.stateless:
+                return (
+                    "#if defined(GPUOffloadingOMP)\n"
+                    "#pragma omp declare target\n"
+                    "#endif\n"
+                    f"GPUCallableMethod void {qualified_class_name}::{self.term.name}(\n"
+                    f"  {self.signature},\n"
+                    "  Offloadable\n"
+                    f") {{\n  {body}\n}}\n"
+                    "#if defined(GPUOffloadingOMP)\n"
+                    "#pragma omp end declare target\n"
+                    "#endif\n"
+                )
+            return (
+                f"void {qualified_class_name}::{self.term.name}(\n"
+                f"  {self.signature}\n"
+                f") {{\n  {body}\n}}\n"
+            )
 
     @property
     def generator(self) -> "PDETerm.Generator":
@@ -178,4 +207,3 @@ class PDETerm:
         (possibly subclass-specific) Generator. @see PDETerm.Generator
         """
         return self.__class__.Generator(self)
-

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 import peano4.api
 
@@ -43,21 +43,17 @@ class Solver(abc.ABC):
         """!
 
         Turns a Solver into actual classes.
-                
+
         """
 
-        def __init__(self, 
-                     solver: "Solver"):
+        def __init__(self, solver: "Solver"):
             self._solver = solver
 
         @abc.abstractmethod
-        def construct_output(self,
-                             exahype2_project,
-                             peano_project):
+        def construct_output(self, exahype2_project, peano_project):
             """!
             Has to be implemented by subclass
             """
-
 
     class NumericalScheme(abc.ABC):
         """!
@@ -68,15 +64,11 @@ class Solver(abc.ABC):
 
         """
 
-        def __init__(self,
-                     solver: "Solver"):
+        def __init__(self, solver: "Solver"):
             self._solver = solver
 
         @abc.abstractmethod
-        def construct_output(self,
-                             exahype2_project,
-                             peano_project,
-                             time_step):
+        def construct_output(self, exahype2_project, peano_project, time_step):
             """!
             Has to be implemented by subclass
 
@@ -85,7 +77,6 @@ class Solver(abc.ABC):
               stepping phase, so the numerical scheme can add its own tasks
               into it.
             """
-
 
     class GridConstruction(abc.ABC):
         """!
@@ -96,15 +87,11 @@ class Solver(abc.ABC):
 
         """
 
-        def __init__(self,
-                     solver: "Solver"):
+        def __init__(self, solver: "Solver"):
             self._solver = solver
 
         @abc.abstractmethod
-        def construct_output(self,
-                             exahype2_project,
-                             peano_project,
-                             setup_simulation):
+        def construct_output(self, exahype2_project, peano_project, setup_simulation):
             """!
             Has to be implemented by subclass
 
@@ -112,7 +99,6 @@ class Solver(abc.ABC):
               The task graph of the surrounding exahype2_project's setup
               phase, so the grid construction can add its own tasks into it.
             """
-
 
     class Plotter(abc.ABC):
         """!
@@ -122,15 +108,11 @@ class Solver(abc.ABC):
 
         """
 
-        def __init__(self,
-                     solver: "Solver"):
+        def __init__(self, solver: "Solver"):
             self._solver = solver
 
         @abc.abstractmethod
-        def construct_output(self,
-                             exahype2_project,
-                             peano_project,
-                             plot):
+        def construct_output(self, exahype2_project, peano_project, plot):
             """!
             Has to be implemented by subclass
 
@@ -138,7 +120,6 @@ class Solver(abc.ABC):
               The task graph of the surrounding exahype2_project's plotting
               phase, so the plotter can add its own tasks into it.
             """
-
 
     def __init__(
         self,
@@ -174,7 +155,7 @@ class Solver(abc.ABC):
         """
         self._name = name
 
-# @todo Maybe can go away?
+        # @todo Maybe can go away?
         self._use_var_shortcut = False
         self._variable_names: List[str] = []
         self._variable_pos: List[int] = [0]
@@ -186,7 +167,7 @@ class Solver(abc.ABC):
         self._user_solver_includes = ""
         self._solver_constants = ""
 
-        self._pde_terms: Dict[str, PDETerm] = {}
+        self._pde_terms: Dict[Tuple[str, bool], PDETerm] = {}
 
         # Deferred/local imports: these classes all subclass either one of
         # the Solver.* nested classes above or a class from a sibling
@@ -196,6 +177,7 @@ class Solver(abc.ABC):
         # own import of them would then run before class Solver is even
         # defined.
         from .SolverToCPPFiles import SolverToCPPFiles
+
         self.solver_generator = SolverToCPPFiles(self)
 
         # NumericalScheme has no default realisation - concrete solver
@@ -215,7 +197,6 @@ class Solver(abc.ABC):
         # instance to it, e.g. exahype2.api.fv.PlotAsVTKFile, through the
         # plotter attribute below.
         self.plotter: "Solver.Plotter" = None
-
 
     def _register_variables(self, variables: VariableSpecification) -> int:
         """!
@@ -322,7 +303,9 @@ class Solver(abc.ABC):
     def pde_terms(self) -> List[PDETerm]:
         """!
         All PDE terms (flux, eigenvalues, ...) registered with this solver,
-        in registration order. Read-only - use add_pde_term() to add one and
+        in registration order. A given name can appear at most twice - once
+        stateless, once not, @see add_pde_term() - since each generates a
+        different C++ method. Read-only - use add_pde_term() to add one and
         remove_pde_term() to take one away again.
         """
         return list(self._pde_terms.values())
@@ -331,26 +314,34 @@ class Solver(abc.ABC):
         """!
 
         Register a PDE term with this solver, or replace the one already
-        registered under the same name. A solver aggregates an arbitrary
-        number of terms - the well-known ones (Flux(), PDETerm.eigenvalues(),
-        .nonconservative_product(), .source_term()) as well as new,
-        solver-specific ones users construct themselves via PDETerm(name=...,
-        signature=..., implementation=...).
+        registered under the same name and statelessness. A solver
+        aggregates an arbitrary number of terms - the well-known ones
+        (Flux(), MaxEigenvalue(), ...) as well as new, solver-specific ones
+        users construct themselves via PDETerm(name=..., implementation=...).
+
+        Each term generates exactly one C++ method: the static,
+        GPU-offloadable overload if term.stateless, otherwise the virtual
+        instance method (@see PDETerm.Generator.generate_declaration()),
+        never both. To get both variants of the same conceptual operation
+        (e.g. a stateless flux for GPU kernels and a stateful one for
+        everything else), add the term twice - once with stateless=True,
+        once without - which is why terms are keyed by (name, stateless)
+        rather than by name alone.
 
         """
         if not isinstance(term, PDETerm):
             raise TypeError(f"term has to be a PDETerm, but got {type(term)}")
-        self._pde_terms[term.name] = term
+        self._pde_terms[(term.name, term.stateless)] = term
 
-    def remove_pde_term(self, name: str):
-        """! Remove a previously registered PDE term by name. """
-        del self._pde_terms[name]
+    def remove_pde_term(self, name: str, stateless: bool = False):
+        """! Remove a previously registered PDE term by name and statelessness."""
+        del self._pde_terms[(name, stateless)]
 
-    def get_pde_term(self, name: str) -> PDETerm:
-        """! Look up a previously registered PDE term by name. """
-        return self._pde_terms[name]
+    def get_pde_term(self, name: str, stateless: bool = False) -> PDETerm:
+        """! Look up a previously registered PDE term by name and statelessness."""
+        return self._pde_terms[(name, stateless)]
 
-# @todo This one is important
+    # @todo This one is important
     def create_readme_descriptor(self, domain_offset, domain_size) -> str:
         """!
         Return a human-readable description of this solver instance, to be
@@ -358,13 +349,14 @@ class Solver(abc.ABC):
         """
         pass
 
-    def generate_solver_realisation(self,
-                                exahype2_project,
-                                peano_project,
-                                setup_simulation,
-                                time_step,
-                                plot,
-                                ):
+    def generate_solver_realisation(
+        self,
+        exahype2_project,
+        peano_project,
+        setup_simulation,
+        time_step,
+        plot,
+    ):
         """!
         Turn this solver specification into a task graph and create the required C++ kernels/stubs
 
@@ -395,10 +387,11 @@ class Solver(abc.ABC):
         )
 
         self.solver_generator.construct_output(exahype2_project, peano_project)
-        self.grid_construction.construct_output(exahype2_project, peano_project, setup_simulation)
-        self.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
+        self.grid_construction.construct_output(
+            exahype2_project, peano_project, setup_simulation
+        )
+        self.numerical_scheme.construct_output(
+            exahype2_project, peano_project, time_step
+        )
         if self.plotter is not None:
             self.plotter.construct_output(exahype2_project, peano_project, plot)
-                    
-            
-

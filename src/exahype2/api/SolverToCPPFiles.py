@@ -99,6 +99,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
       double                                       dt
     ) const;
 
+    {{PDE_TERM_DECLARATIONS}}
+
   protected:
     static tarch::logging::Log  _log;
 
@@ -129,10 +131,10 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
 {# Empty line here #}
 """
 
-
     TEMPLATE_ABSTRACT_CPP_FILE = """
 #include "{{CLASSNAME}}.h"
 #include "exahype2/RefinementControl.h"
+{{USER_SOLVER_INCLUDES}}
 
 tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPACE | join("::")}}::{{CLASSNAME}}" );
 
@@ -218,52 +220,70 @@ bool {{NAMESPACE | join("::")}}::{{CLASSNAME}}::patchCanUseStatelessPDETerms(
 ) const {
   return false;
 }
+
+
+{{PDE_TERM_DEFINITIONS}}
 """
-    
+
     """!
 
     Default implementation that takes a solver and maps it onto two C++ classes:
     An abstract base class and a class for the user to implement it.
 
     """
+
     def __init__(self, solver: Solver):
         super().__init__(solver)
 
-
-    def construct_output(self,
-                         exahype2_project,
-                         peano_project,
-                         ):
+    def construct_output(
+        self,
+        exahype2_project,
+        peano_project,
+    ):
         """!
 
         Dump the solver into actual C++ classes.
 
         """
         class_name = "Abstract" + self._solver.name
-        templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
-        
-        peano4.api.Logger().log(
-            "Map class {} onto C++ class {} using {}".format(self._solver.name, class_name, templatefile_prefix)
+        templatefile_prefix = (
+            os.path.realpath(__file__).replace(".pyc", "").replace(".py", "")
         )
 
+        peano4.api.Logger().log(
+            "Map class {} onto C++ class {} using {}".format(
+                self._solver.name, class_name, templatefile_prefix
+            )
+        )
+
+        qualified_class_name = "::".join(peano_project.namespace) + "::" + class_name
+
         local_d = {
-          "NUMBER_OF_UNKNOWNS": self._solver._unknowns,
-          "NUMBER_OF_AUXILIARY_VARIABLES": self._solver._auxiliary_variables,
+            "NUMBER_OF_UNKNOWNS": self._solver._unknowns,
+            "NUMBER_OF_AUXILIARY_VARIABLES": self._solver._auxiliary_variables,
+            "USER_SOLVER_INCLUDES": self._solver.user_solver_includes,
+            "PDE_TERM_DECLARATIONS": "\n".join(
+                term.generator.generate_declaration() for term in self._solver.pde_terms
+            ),
+            "PDE_TERM_DEFINITIONS": "\n".join(
+                term.generator.generate_out_of_class_definitions(qualified_class_name)
+                for term in self._solver.pde_terms
+            ),
         }
 
-
-        generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(
-            headerfile_template = self.TEMPLATE_ABSTRACT_HEADER_FILE,
-            cppfile_template    = self.TEMPLATE_ABSTRACT_CPP_FILE,
-            classname           = class_name,
-            namespace           = peano_project.namespace,
-            subdirectory        = peano_project.subdirectory,
-            dictionary          = local_d,
-            default_overwrite=True,
-            apply_iteratively=False,
+        generated_files = (
+            peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(
+                headerfile_template=self.TEMPLATE_ABSTRACT_HEADER_FILE,
+                cppfile_template=self.TEMPLATE_ABSTRACT_CPP_FILE,
+                classname=class_name,
+                namespace=peano_project.namespace,
+                subdirectory=peano_project.subdirectory,
+                dictionary=local_d,
+                default_overwrite=True,
+                apply_iteratively=False,
+            )
         )
         peano_project.output.add(generated_files)
         peano_project.output.makefile.add_cpp_file(
             peano_project.subdirectory + class_name + ".cpp", generated=True
         )
-
