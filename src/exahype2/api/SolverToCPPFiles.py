@@ -67,23 +67,6 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
     virtual void finishTimeStep() override;
 
     /**
-     * If you hook into this routine, ensure the abstract base class
-     * operation is still invoked.
-     */
-    virtual void startPlottingStep(
-      double globalMinTimeStamp,
-      double globalMaxTimeStamp,
-      double globalMinTimeStepSize,
-      double globalMaxTimeStepSize
-    ) override;
-
-    /**
-     * If you hook into this routine, ensure the abstract base class
-     * operation is still invoked.
-     */
-    virtual void finishPlottingStep() override;
-
-    /**
      * mesh is an aAlias for patch
      */
     virtual double getMaxMeshSize() const override final;
@@ -186,19 +169,6 @@ void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::startTimeStep(
 
 
 void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::finishTimeStep() {
-}
-
-
-void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::startPlottingStep(
-  double globalMinTimeStamp,
-  double globalMaxTimeStamp,
-  double globalMinTimeStepSize,
-  double globalMaxTimeStepSize
-) {
-}
-
-
-void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::finishPlottingStep() {
 }
 
 
