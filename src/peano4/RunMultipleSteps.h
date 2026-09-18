@@ -45,7 +45,7 @@ class peano4::RunMultipleSteps {
         /**
          * Report on one particular step sequence right after it has run.
          */
-        virtual void reportStep(RunMultipleSteps& step) = 0;
+        virtual void reportStep(const RunMultipleSteps& step) = 0;
 
         /**
          * Report on an arbitrary, unspecified number of step sequences,

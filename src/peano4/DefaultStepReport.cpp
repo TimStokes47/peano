@@ -1,13 +1,21 @@
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www.peano-framework.org
 #include "peano4/DefaultStepReport.h"
+#include "peano4/parallel/SpacetreeSet.h"
 
 
 tarch::logging::Log peano4::DefaultStepReport::_log("peano4::DefaultStepReport");
 
 
-void peano4::DefaultStepReport::reportStep(RunMultipleSteps& step) {
-  logInfo( "reportStep()", "step " << step.getName() << ": " << step.getRuntimeMeasurements().getValue() << "s" );
+void peano4::DefaultStepReport::reportStep(const RunMultipleSteps& step) {
+  const auto stats = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
+
+  logInfo( "reportStep(RunMultipleSteps)", "step " << step.getName() << ": " << step.getRuntimeMeasurements().getValue() << "s" );
+
+  logInfo(
+    "reportStep(RunMultipleSteps)",
+    "min mesh size="    << tarch::la::max(stats.getMinH()) <<
+    ", #local cells=("  << stats.getNumberOfLocalUnrefinedCells()  << "/" << stats.getNumberOfLocalRefinedCells()  << ")" <<
+    ", #remote cells=(" << stats.getNumberOfRemoteUnrefinedCells() << "/" << stats.getNumberOfRemoteRefinedCells() << ")"
+  );
 }
 
 

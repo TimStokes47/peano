@@ -1,0 +1,91 @@
+/**
+\page page_grid_statistics Grid statistics and other global mesh information
+
+
+## Grid statistics 
+
+Besides the actual vertex/face/cell data your solver attaches to the mesh,
+Peano's core continuously tracks a small set of statistics about the mesh
+itself while it traverses it: how many cells are refined vs unrefined, how
+long the mesh has been unchanged, how fine the finest cells currently are,
+and so forth. These data live in @ref peano4::grid::GridStatistics.
+
+
+### Dataflow
+
+- Every peano4::grid::Spacetree accumulates its own
+  @ref peano4::grid::GridStatistics object while it descends through its cells
+  during a traversal.
+- Each rank typically owns several spacetrees at once. All of them are
+  collected within @ref peano4::parallel::SpacetreeSet, the singleton that
+  owns and traverses all of a rank's local trees.
+- At the end of a traversal, the @ref peano4::parallel::SpacetreeSet will 
+  reduce the local statistics into one @ref peano4::grid::GridStatistics 
+  object.
+- All the ranks reduce their statistics onto the global master.
+
+\dot
+digraph GridStatisticsDataflow {
+  rankdir=LR
+  fontname="Helvetica"
+  node [shape=box, style="rounded,filled", fillcolor=white, fontname="Helvetica", fontsize=10]
+  edge [fontname="Helvetica", fontsize=9]
+
+  subgraph cluster_rank {
+    label     = "one rank"
+    fontname  = "Helvetica"
+    fontsize  = 10
+    style     = dashed
+
+    Spacetree1 [label="Spacetree #1"]
+    Spacetree2 [label="Spacetree #2"]
+    SpacetreeN [label="…"]
+    SpacetreeSet [label="SpacetreeSet", fillcolor=lightgrey]
+    RankStats [label="GridStatistics\n(this rank)"]
+
+    Spacetree1 -> SpacetreeSet [label="1: accumulate\nwhile descending"]
+    Spacetree2 -> SpacetreeSet
+    SpacetreeN -> SpacetreeSet [label="2: owns/traverses\nall local trees", style=dashed]
+    SpacetreeSet -> RankStats [label="3: reduce at end\nof traversal"]
+  }
+
+  GlobalStats [label="GridStatistics\n(global master)", fillcolor=lightyellow]
+  RankStats -> GlobalStats [label="4: reduce\nacross ranks"]
+}
+\enddot
+
+
+
+### A typical use
+
+The information on each rank or tree can be read out through the 
+spacetree set:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+peano4::grid::GridStatistics stats =
+  peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A common place, where this is used, is the default step reporter
+@ref peano4::DefaultStepReport::reportStep() which you can use as a
+starting point for our own use of the stats:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+const auto stats = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
+
+logInfo(
+  "finishTimeStep()",
+  "min mesh size="    << tarch::la::max(stats.getMinH()) <<
+  ", #local cells=("  << stats.getNumberOfLocalUnrefinedCells()  << "/" << stats.getNumberOfLocalRefinedCells()  << ")" <<
+  ", #remote cells=(" << stats.getNumberOfRemoteUnrefinedCells() << "/" << stats.getNumberOfRemoteRefinedCells() << ")"
+);
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+## Load balancing information
+
+@todo Add more data
+
+
+*/

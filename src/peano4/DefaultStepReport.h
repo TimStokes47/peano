@@ -26,7 +26,7 @@ class peano4::DefaultStepReport: public peano4::RunMultipleSteps::Report {
     DefaultStepReport() = default;
     virtual ~DefaultStepReport() = default;
 
-    virtual void reportStep(RunMultipleSteps& step) override;
+    virtual void reportStep(const RunMultipleSteps& step) override;
 
     virtual void reportFinalResults(const std::vector<std::reference_wrapper<RunMultipleSteps>>& steps) override;
   private:
