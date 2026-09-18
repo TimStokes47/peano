@@ -1,6 +1,6 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-"""!
+r"""!
 
 The Python-side model of "what happens during one mesh sweep"
 
@@ -82,7 +82,7 @@ open arrows are "creates" dependencies into @ref peano4.api.output.
 
 """
 
-from .Step            import Step
-from .Steps           import Steps
-from .ActionSet       import ActionSet
-from .UserActionSet   import UserActionSet
+from .Step import Step
+from .Steps import Steps
+from .ActionSet import ActionSet
+from .UserActionSet import UserActionSet

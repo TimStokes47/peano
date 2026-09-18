@@ -1,33 +1,33 @@
-# This file is part of the ExaHyPE2 project. For conditions of distribution and 
+# This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 
 from .AbstractRKFDActionSet import AbstractRKFDActionSet
-from exahype2.solvers.ButcherTableau                import ButcherTableau
+from exahype2.solvers.ButcherTableau import ButcherTableau
 
 import peano4.api
 import jinja2
 
 
 class LinearCombinationOfEstimates(AbstractRKFDActionSet):
-  """
-  
-  Computes a linear combination of all of the estimates according to the
-  Butcher Tableau.
-  
-  The linear combination is a volumetric representation which includes both
-  the degrees of freedom and the auxiliary variables. However, the auxiliary
-  variables are not developing over time. In Runge-Kutta, I have estimates 
-  for the right-hand side, i.e. for the derivatives
-  
-  @f$ \partial _t Q = F(Q) @f$
-  
-  This is the stuff stored in RhsEstimates. It does not comprise any auxiliary
-  variables. So I have to copy the auxiliary variables from the last valid
-  time step every time I reconstruct a new guess.
-  
-  """
-  
-  TemplateLinearCombination = """
+    r"""
+
+    Computes a linear combination of all of the estimates according to the
+    Butcher Tableau.
+
+    The linear combination is a volumetric representation which includes both
+    the degrees of freedom and the auxiliary variables. However, the auxiliary
+    variables are not developing over time. In Runge-Kutta, I have estimates
+    for the right-hand side, i.e. for the derivatives
+
+    @f$ \partial _t Q = F(Q) @f$
+
+    This is the stuff stored in RhsEstimates. It does not comprise any auxiliary
+    variables. So I have to copy the auxiliary variables from the last valid
+    time step every time I reconstruct a new guess.
+
+    """
+
+    TemplateLinearCombination = """
   // Set the variable
   // double timeStepSize
   {{COMPUTE_TIME_STEP_SIZE}}
@@ -58,53 +58,63 @@ class LinearCombinationOfEstimates(AbstractRKFDActionSet):
   }
   {% endfor %} 
 """
-  
-  def __init__(self,solver):
-    """
-    
-    guard: [String]  (C++ code)
-      Sequence of predicates which determine when we compute the respective RK 
-      linear combination. Can be empty.
-    
-    """
-    super(LinearCombinationOfEstimates,self).__init__(solver)
-    self._guards              = []
-    self._butcher_tableau     = ButcherTableau(self._solver._rk_order)
-    
 
-  @property
-  def guards(self):
-    if self._guards==[]:
-      raise Exception( "Guards are not initialised" )
-    return self._guards
-      
-    
-  @guards.setter
-  def guards(self,new_guards):
-    if new_guards!=[] and len(new_guards)!=self._solver.number_of_Runge_Kutta_steps():
-      raise Exception( "Expect one guard per Runge Kutta step. Have {} steps but got guards {}".format(solver.number_of_Runge_Kutta_steps(),guards) )
-    self._guards = new_guards
+    def __init__(self, solver):
+        """
 
+        guard: [String]  (C++ code)
+          Sequence of predicates which determine when we compute the respective RK
+          linear combination. Can be empty.
 
-  def get_body_of_operation(self,operation_name):
-    result = ""
-    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
-      d = {}
-      self._solver._init_dictionary_with_default_parameters(d)
-      self._solver.add_entries_to_text_replacement_dictionary(d)
-      d[ "PREDICATES" ]                               = self.guards
-      d[ "BUTCHER_TABLEAU_WEIGHTS" ]                  = self._butcher_tableau.weight_matrix()
-      d[ "BUTCHER_TABLEAU_RELATIVE_TIME_STEP_SIZES" ] = self._butcher_tableau.time_step_sizes()
-      result = jinja2.Template(self.TemplateLinearCombination).render(**d)
-      pass 
-    return result
+        """
+        super(LinearCombinationOfEstimates, self).__init__(solver)
+        self._guards = []
+        self._butcher_tableau = ButcherTableau(self._solver._rk_order)
 
+    @property
+    def guards(self):
+        if self._guards == []:
+            raise Exception("Guards are not initialised")
+        return self._guards
 
-  def get_action_set_name(self):
-    return __name__.replace(".py", "").replace(".", "_")
+    @guards.setter
+    def guards(self, new_guards):
+        if (
+            new_guards != []
+            and len(new_guards) != self._solver.number_of_Runge_Kutta_steps()
+        ):
+            raise Exception(
+                "Expect one guard per Runge Kutta step. Have {} steps but got guards {}".format(
+                    solver.number_of_Runge_Kutta_steps(), guards
+                )
+            )
+        self._guards = new_guards
 
+    def get_body_of_operation(self, operation_name):
+        result = ""
+        if (
+            operation_name
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+        ):
+            d = {}
+            self._solver._init_dictionary_with_default_parameters(d)
+            self._solver.add_entries_to_text_replacement_dictionary(d)
+            d["PREDICATES"] = self.guards
+            d["BUTCHER_TABLEAU_WEIGHTS"] = self._butcher_tableau.weight_matrix()
+            d[
+                "BUTCHER_TABLEAU_RELATIVE_TIME_STEP_SIZES"
+            ] = self._butcher_tableau.time_step_sizes()
+            result = jinja2.Template(self.TemplateLinearCombination).render(**d)
+            pass
+        return result
 
-  def get_includes(self):
-    return super(LinearCombinationOfEstimates,self).get_includes() + """
+    def get_action_set_name(self):
+        return __name__.replace(".py", "").replace(".", "_")
+
+    def get_includes(self):
+        return (
+            super(LinearCombinationOfEstimates, self).get_includes()
+            + """
 #include "exahype2/enumerator/AoSLexicographicEnumerator.h"
 """
+        )
