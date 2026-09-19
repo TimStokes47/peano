@@ -325,6 +325,9 @@ namespace peano4 {
      */
     void reduceGridControlEvents(std::vector<GridControlEvent>& events);
 
+    bool isGridStationary( const peano4::grid::GridStatistics& statistics );
+
+
     std::string toString(const std::vector<GridControlEvent>& events);
     std::string toString(const std::list<GridControlEvent>& events);
 

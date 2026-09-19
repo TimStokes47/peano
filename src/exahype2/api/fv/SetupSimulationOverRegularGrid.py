@@ -48,7 +48,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
 
 # Eigentlich sollte immer erst mal refinement drin sein, also bei jedem einzelnen Task.
         refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh", entity=peano4.api.taskgraph.Task.GridEntity.VERTEX)
-        refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size, work_with_cells=True))
+        refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size))
 
         initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)

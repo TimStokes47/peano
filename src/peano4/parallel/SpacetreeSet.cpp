@@ -666,9 +666,8 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees(peano4::grid::TraversalObserve
     } else if (p->mayJoinWithMaster()) {
       const int localRank  = Node::getInstance().getRank(p->_id);
       const int masterRank = Node::getInstance().getRank(p->_masterId);
-      if (localRank == masterRank and getSpacetree(p->_masterId).getGridStatistics().getCoarseningHasBeenVetoed()) {
-        // @todo erste Meldung info
-        logError(
+      if (localRank == masterRank and getSpacetree(p->_masterId).getGridStatistics().getEraseCommandHasBeenVetoed()) {
+        logWarning(
           "traverse(Observer)",
           "join tree "
             << p->_id << " as it is deteriorated (encodes no hierarchical data) while master " << p->_masterId
@@ -711,7 +710,10 @@ peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics()
       0, // __numberOfRemoteUnrefinedCells,
       0, // __numberOfLocalRefinedCells
       0, // __numberOfRemoteRefinedCells,
-      0, // __stationarySweeps,
+      0, // __numberOfRefiningVertices
+      0, // __numberOfErasingVertices
+      0, // __numberOfRefinementTriggeredVertices
+      0, // __numberOfEraseTriggeredVertices
       false,
       false,
       tarch::la::Vector<Dimensions, double>(std::numeric_limits<double>::max()) // minH

@@ -14,7 +14,11 @@ void peano4::DefaultStepReport::reportStep(const RunMultipleSteps& step) {
     "reportStep(RunMultipleSteps)",
     "min mesh size="    << tarch::la::max(stats.getMinH()) <<
     ", #local cells=("  << stats.getNumberOfLocalUnrefinedCells()  << "/" << stats.getNumberOfLocalRefinedCells()  << ")" <<
-    ", #remote cells=(" << stats.getNumberOfRemoteUnrefinedCells() << "/" << stats.getNumberOfRemoteRefinedCells() << ")"
+    ", #remote cells=(" << stats.getNumberOfRemoteUnrefinedCells() << "/" << stats.getNumberOfRemoteRefinedCells() << ")" <<
+    ", #refining vertices="           << stats.getNumberOfRefiningVertices() <<
+    ", #erasing vertices="            << stats.getNumberOfErasingVertices() <<
+    ", #refinement-triggered vertices=" << stats.getNumberOfRefinementTriggeredVertices() <<
+    ", #erase-triggered vertices="    << stats.getNumberOfEraseTriggeredVertices()
   );
 }
 

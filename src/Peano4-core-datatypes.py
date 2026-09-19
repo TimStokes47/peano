@@ -1,6 +1,6 @@
-"""
+"""!
  This Python script uses/invokes DaStGen2 to generate all the datatypes
- required by the core.
+ required by the core. Please invoke it by calling 
 """
 import dastgen2
 import peano4.api.dastgen2
@@ -166,7 +166,6 @@ grid_control_event.write_implementation_file("../src/peano4/grid/GridControlEven
 #
 grid_statistics = dastgen2.DataModel("peano4::grid::GridStatistics")
 
-# all the five integer values are >=0
 grid_statistics.add_attribute(
     dastgen2.attributes.Integer(
         "numberOfLocalUnrefinedCells",
@@ -195,14 +194,28 @@ grid_statistics.add_attribute(
         max_value="std::numeric_limits<int>::max()",
     )
 )
-
 grid_statistics.add_attribute(
     dastgen2.attributes.Integer(
-        "stationarySweeps", min_value=0, max_value="std::numeric_limits<int>::max()"
+        "numberOfRefiningVertices", min_value=0, max_value="std::numeric_limits<int>::max()"
+    )
+)
+grid_statistics.add_attribute(
+    dastgen2.attributes.Integer(
+        "numberOfErasingVertices", min_value=0, max_value="std::numeric_limits<int>::max()"
+    )
+)
+grid_statistics.add_attribute(
+    dastgen2.attributes.Integer(
+        "numberOfRefinementTriggeredVertices", min_value=0, max_value="std::numeric_limits<int>::max()"
+    )
+)
+grid_statistics.add_attribute(
+    dastgen2.attributes.Integer(
+        "numberOfEraseTriggeredVertices", min_value=0, max_value="std::numeric_limits<int>::max()"
     )
 )
 
-grid_statistics.add_attribute(dastgen2.attributes.Boolean("coarseningHasBeenVetoed"))
+grid_statistics.add_attribute(dastgen2.attributes.Boolean("eraseCommandHasBeenVetoed"))
 grid_statistics.add_attribute(dastgen2.attributes.Boolean("removedEmptySubtree"))
 
 grid_statistics.add_attribute(peano4.api.dastgen2.Peano4DoubleArray("minH", "Dimensions"))

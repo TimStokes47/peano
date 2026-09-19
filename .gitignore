@@ -313,6 +313,7 @@ cython_debug/
 
 # Generated documentation
 doxygen-html/
+.doxygen-rebuild.lock
 
 # Submodules
 submodules/
