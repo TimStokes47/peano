@@ -33,9 +33,10 @@ class Graph:
         A filled black circle - the UML initial pseudostate - transitions
         into every task that has no dependencies; every task nothing else
         depends on transitions into a bullseye - the UML final pseudostate.
-        A task with may_repeat set is additionally drawn with a small
-        self-transition loop above its state, the standard UML notation
-        for "this state can re-trigger itself".
+        A task with has_to_repeat set (i.e. not None) is additionally drawn
+        with a small self-transition loop above its state, the standard UML
+        notation for "this state can re-trigger itself", labelled with the
+        task's has_to_repeat string itself.
 
         Every action set attached to a task (@see Task.add_action_set) is
         listed inside that task's own state box as a "do / <name>" line,
@@ -133,6 +134,7 @@ class Graph:
             task for task in self.tasks if not any(task in other.dependencies for other in self.tasks)
         ]
         SELF_LOOP_HEIGHT = 0.4
+        SELF_LOOP_LABEL_HEIGHT = 0.22
         PSEUDOSTATE_OFFSET = x_step * 0.55
 
         # Text is sized in points, so - to guarantee it actually fits the
@@ -149,8 +151,11 @@ class Graph:
         min_y = min(position_of_task[task][1] - height_of_task[task] / 2 for task in self.tasks)
         max_y = max(position_of_task[task][1] + height_of_task[task] / 2 for task in self.tasks)
         for task in self.tasks:
-            if task.may_repeat:
-                max_y = max(max_y, position_of_task[task][1] + height_of_task[task] / 2 + SELF_LOOP_HEIGHT)
+            if task.has_to_repeat:
+                max_y = max(
+                    max_y,
+                    position_of_task[task][1] + height_of_task[task] / 2 + SELF_LOOP_HEIGHT + SELF_LOOP_LABEL_HEIGHT,
+                )
         if root_tasks:
             min_x = min(min_x, -PSEUDOSTATE_OFFSET - 0.09)
         if sink_tasks:
@@ -261,7 +266,7 @@ class Graph:
                     )
                 )
 
-            if task.may_repeat:
+            if task.has_to_repeat:
                 x, y = position_of_task[task]
                 w, h = width_of_task[task], height_of_task[task]
                 top_y = y + h / 2
@@ -280,6 +285,11 @@ class Graph:
                         linewidth=1.1,
                         zorder=2.5,
                     )
+                )
+                axes.annotate(
+                    task.has_to_repeat,
+                    (x, top_y + loop_height + 0.06),
+                    ha="center", va="bottom", zorder=3, fontsize=6, style="italic", color="crimson",
                 )
 
         # UML initial pseudostate (filled circle) transitioning into every

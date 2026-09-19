@@ -47,7 +47,10 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         peano4.api.Logger().log("Create setup task graph for Finite Volume scheme over a regular, block-structured mesh with Rusanov flux")
 
 # Eigentlich sollte immer erst mal refinement drin sein, also bei jedem einzelnen Task.
-        refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh", entity=peano4.api.taskgraph.Task.GridEntity.VERTEX)
+        refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh", 
+                                                                entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL,
+                                                                task_has_to_repeat="peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
+                                                                )
         refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size))
 
         initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)

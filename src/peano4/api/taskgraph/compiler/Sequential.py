@@ -20,11 +20,8 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     reordering" baseline compiler that smarter compilers can be measured
     against.
 
-    In the Peano terminology, a Step corresponds to an Observer: for every
-    mesh traversal, the traversal automaton is handed an observer that
-    distributes the grid events among the action sets tied to it.
-    @see peano4.api.solversteps.Step
-    
+    ## Implementation
+        
     The implementation of the serialisation is rather straightforward using a 
     recursive implementation: We start from an arbitrary node in the graph.
     If it has no predecessor, we can add it. If not, we call the graph 
@@ -64,6 +61,7 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
                 name=f"{identifier}_{task_name}",
                 add_user_defined_actions=False,
             )
+            step.has_to_repeat = task.has_to_repeat
             for action_set in task.action_sets:
                 step.add_action_set(action_set)
             observer_of_task[task] = step

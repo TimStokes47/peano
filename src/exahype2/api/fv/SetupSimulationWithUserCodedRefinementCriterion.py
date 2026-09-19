@@ -14,9 +14,10 @@ class SetupSimulationWithUserCodedRefinementCriterion(Solver.GridConstruction):
     for the first time step.
 
     Unlike SetupSimulationOverRegularGrid, this variant repeats its "Refine
-    cell" task (task_may_repeat=True): the mesh is refined adaptively,
-    driven by a user-coded refinement criterion checked afresh every grid
-    sweep, rather than built once and left alone.
+    cell" task (task_has_to_repeat is set to a string rather than left at
+    its default None): the mesh is refined adaptively, driven by a
+    user-coded refinement criterion checked afresh every grid sweep,
+    rather than built once and left alone.
 
     """
 
@@ -32,7 +33,7 @@ class SetupSimulationWithUserCodedRefinementCriterion(Solver.GridConstruction):
         """
         peano4.api.Logger().log("Create setup task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
-        refine_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL, task_may_repeat=True)
+        refine_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL, task_has_to_repeat="user-coded refinement criterion re-evaluated every grid sweep")
         initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 

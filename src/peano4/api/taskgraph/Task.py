@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 
 import enum
-from typing import List
+from typing import List, Optional
 
 
 class Task:
@@ -13,18 +13,38 @@ class Task:
     Every task works on exactly one kind of mesh entity - a vertex, a face
     or a cell - which has to be specified through entity when the task is
     constructed.
+    
+    ## Task dependencies
 
     Every task also holds dependencies, i.e. other Task instances that have
     to be completed before this task can run. This sequence is empty by
     default; use add_dependency() to add further tasks to it.
+
+    ## Task action sets
 
     Every task furthermore holds an arbitrary number of Peano 4 action sets
     (peano4.api.solversteps.ActionSet), i.e. the actual grid-sweep logic the
     task realises once it is compiled into an Observer. This sequence is
     empty by default; use add_action_set() to add further action sets to it.
     Their order matters - see peano4.api.solversteps.Step.add_action_set().
+
+    ## Task repetitions
     
-    The tasks will later on be taken by the graph compiler which maps them 
+    Finally, a task can be marked as repeating via task_has_to_repeat. By
+    default (None), a task runs once. Passing a non-None string works if 
+    and only if it is a valid boolean C++ expression. Peano will evaluate
+    it on the global runner after the task has finished and then decide if
+    to rerun this step. An all time classic is the following expression
+    
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    which means this task will repeat until the mesh becomes stationary.
+
+    ## Task processing
+
+    The tasks will later on be taken by the graph compiler which maps them
     onto a sequence of @ref peano4.api.solversteps.Step instances. How many
     of these logical steps (grid traversals) are required depends on the 
     structure of the task graph but also the type of compiler chosen. 
@@ -33,27 +53,44 @@ class Task:
     into exactly one @ref peano4.api.output.ActionSet, i.e. one pair of header
     and implementation file called MyFancyObserverOfAGridTraversal2ThisActionSet.
     
-    # Things to read to get the full picture:    
+    ## Things to read to get the full picture:    
 
+    - @ref peano4.api.taskgraph This is the overall description of the task 
+           graph API and should be the starting point for understanding how to use it.
+           It notably describes some design decisions re dependencies, grid
+           entities and action sets.
     - @ref peano_action_sets    
     - @ref peano4.api.taskgraph
 
     """
 
     class GridEntity(enum.Enum):
-        """! Which kind of mesh entity a Task works on. """
+        """! 
+        
+        Which kind of mesh entity a Task works on. 
+        
+        - GLOBAL implies that the task either has only a global semantics
+          such as one global reduction, or that it touches each and every
+          entity in the mesh, i.e. vertices, cells and faces.
+          
+        """
 
         VERTEX = 1
         FACE = 2
         CELL = 3
         GLOBAL = 4
 
-    def __init__(self, name: str, entity: "Task.GridEntity", task_may_repeat: bool = False):
+    def __init__(
+        self,
+        name: str,
+        entity: "Task.GridEntity",
+        task_has_to_repeat: Optional[str] = None,
+    ):
         self.name = name
         self.entity = entity
         self.dependencies: List["Task"] = []
         self.action_sets: List["peano4.api.solversteps.ActionSet"] = []
-        self.may_repeat = task_may_repeat
+        self.has_to_repeat = task_has_to_repeat
 
     def add_dependency(self, task: "Task"):
         self.dependencies.append(task)
@@ -64,6 +101,11 @@ class Task:
         A task can hold an arbitrary number of Peano 4 action sets. Eventually
         the overarching task graph will be mapped onto a sequence of steps
         (observers) and those steps then grab those action sets from the tasks and execute them. 
+        
+        It is important to note that the action set passed in can define 
+        actions for multiple grid entities, while the task is specified over 
+        a particular mesh entity. This seems to be contradiction but is
+        actually explained in @ref peano4.api.taskgraph.
         
         """
         self.action_sets.append(action_set)

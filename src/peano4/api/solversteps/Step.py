@@ -6,12 +6,6 @@ from peano4.api.solversteps.StepToActionSets import StepToActionSets
 from peano4.api.solversteps.StepToObserver import StepToObserver
 
 
-#
-# @todo Aufteilen in mehrere Files mit ToXXXXX wie im Model.
-#
-# TODO MLADEN: Ist der Kommentar oben noch aktuell?
-
-
 class Step:
     """!
 

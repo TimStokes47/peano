@@ -51,11 +51,12 @@ TEMPLATE_RUNNER_CPP_FILE = """
 void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::run() {
   _watch.start();
   {% for step in STEPS %}
-  {
+  do {
     tarch::logging::LogFilter::getInstance().switchProgramPhase("{{step}}");
     {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{step}} observer;
     peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
   }
+  while ( {{REPEAT_CONDITIONS[loop.index0] or "false"}} );
   {% endfor %}
   _watch.stop();
   _runtimeMeasurement.setValue(_watch.getCalendarTime());
@@ -67,10 +68,18 @@ def create_runner(peano_project, identifier, steps):
     """!
 
     Create the header/implementation file pair that represents one of a
-    project's algorithmic phases (setup, time stepping, plotting, ...) as a
-    runner in the generated kernels/ subdirectory. Its run() traverses the
-    spacetree set once per step, in the order the phase's task graph was
-    compiled into.
+    project's algorithmic phases represented by a sequence of steps. 
+    It yields one class of the classname identifier which is held in 
+    repositories. This class holds exactly one method run() which 
+    toggles through the steps one by one.
+
+    Even though the runner seems to accept only a sequence of steps
+    (which are members of @ref peano4.api.solversteps), the runner 
+    belongs into the task graph repository, as it assumes that each 
+    step has a field has_to_repeat. This field is not defined within
+    @ref peano4.api.solversteps.Step. It is something graph compilers
+    add to the data model. Consult the compiler description in 
+    @ref peano4.api.taskgraph.compiler.
 
     peano_project: peano4.api.Project
       The Peano 4 project to add the generated files to.
@@ -95,6 +104,7 @@ def create_runner(peano_project, identifier, steps):
     """
     step_names = [step.name for step in steps]
     first_step = step_names[0] if step_names else "Undef"
+    repeat_conditions = [step.has_to_repeat for step in steps]
 
     generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(
         headerfile_template = TEMPLATE_RUNNER_HEADER_FILE,
@@ -108,6 +118,7 @@ def create_runner(peano_project, identifier, steps):
             "SUBDIRECTORY":      peano_project.subdirectory,
             "STEPS":             step_names,
             "FIRST_STEP":        first_step,
+            "REPEAT_CONDITIONS": repeat_conditions,
         },
         default_overwrite   = True,
         apply_iteratively   = False,
