@@ -31,6 +31,8 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         """
         super().__init__(solver)
         self.volume_size = volume_size
+        
+        
 
     def construct_output(self,
                          exahype2_project,
@@ -48,9 +50,16 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
 
         refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh", 
                                                                 entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL,
-                                                                task_has_to_repeat="peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
+                                                                task_has_to_repeat="not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
                                                                 )
-        refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size))
+        # @todo Wie also have to test against load balancing!
+
+        assert hasattr(self._solver.numerical_scheme, "patch_size"), (
+            f"Solver {self._solver.name}'s numerical scheme has no attribute "
+            "patch_size. SetupSimulationOverRegularGrid assumes the numerical "
+            "scheme has added this field to itself immediately upon construction."
+        )
+        refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size * self._solver.numerical_scheme.patch_size))
 
         initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)

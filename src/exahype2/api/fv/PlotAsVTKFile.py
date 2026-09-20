@@ -1,6 +1,9 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+import os
+
 import peano4.api
+import peano4.toolbox.blockstructured.api
 
 from ..Solver import Solver
 
@@ -14,17 +17,27 @@ class PlotAsVTKFile(Solver.Plotter):
 
     """
 
-    def __init__(self, solver: Solver, plotter_precision=5):
+    def __init__(self,
+                 solver: Solver,
+                 plotter_precision=5,
+                 output_path = "."):
         super().__init__(solver)
 
         if plotter_precision <= 0:
             raise Exception("Plotter precision has to be bigger than 0")
         self._plotter_precision = plotter_precision
         self._plot_filters = []
+        self._output_path = output_path
 
     def add_plot_filter(self, offset, size, frequency=1):
         """
         Add a new filter to Peano/ExaHyPE
+
+        Restrict plotting to patches overlapping a given box. Filters are
+        baked directly into the guard of the generated plot action set (@see
+        construct_output()), i.e. the generated C++ code evaluates the exact
+        offset/size this filter was constructed with - it never consults any
+        project-wide, separately configured filter object.
 
         offset: (float,float,float)
 
@@ -34,22 +47,18 @@ class PlotAsVTKFile(Solver.Plotter):
           A positive value. Peano makes snapshots every dt simulation
           units. This is something you specify once per simulation. But
           you might decide only to splot every k of these snapshots.
-        """
-        new_entry = "{{"
-        new_entry += str(offset[0])
-        for i in offset[1:]:
-            new_entry += ","
-            new_entry += str(i)
-        new_entry += "},{"
-        new_entry += str(size[0])
-        for i in size[1:]:
-            new_entry += ","
-            new_entry += str(i)
-        new_entry += "},"
-        new_entry += str(frequency)
-        new_entry += "}"
 
-        self._plot_filters.append(new_entry)
+          @todo Not evaluated yet: every filter currently plots on every
+            snapshot it spatially overlaps with, regardless of frequency.
+        """
+        if frequency != 1:
+            raise Exception(
+                "Frequency-based plot filtering is not wired up yet in the "
+                "new exahype2.api - PlotAsVTKFile only supports spatial "
+                "(offset/size) plot filters for now. Call add_plot_filter() "
+                "with frequency=1 (the default)."
+            )
+        self._plot_filters.append((offset, size))
 
     def construct_output(self,
                          exahype2_project,
@@ -60,11 +69,46 @@ class PlotAsVTKFile(Solver.Plotter):
         """
         peano4.api.Logger().log("Create plot task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
-        peano_project.constants.export("PlotterPrecision", str(self._plotter_precision))
-
         write_vtk_file_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Write VTK file", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
         plot.add_task(write_vtk_file_task)
+
+        assert hasattr(self._solver, "_patch"), (
+            f"Solver {self._solver.name} has no attribute _patch. "
+            "PlotAsVTKFile assumes the numerical scheme has added this field "
+            "to the solver immediately upon construction."
+        )
+
+        # Guard is built directly from self._plot_filters (known here, in
+        # Python) rather than delegating to some project-wide C++ filter
+        # object: the generated code below carries the exact offset/size
+        # values this plotter was configured with, and nothing else.
+        if self._plot_filters:
+            guard = " or ".join(
+                "marker.overlaps({"
+                + ",".join(str(x) for x in offset)
+                + "},{"
+                + ",".join(str(x) for x in size)
+                + "})"
+                for offset, size in self._plot_filters
+            )
+        else:
+            guard = "true"
+
+        plot_patches_action_set = peano4.toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
+            filename=os.path.join(self._output_path, "solution-" + self._solver.name),
+            patch=self._solver._patch,
+            dataset_name=self._solver._unknown_identifier(),
+            description=self._solver._unknown_identifier(),
+            guard=guard,
+            additional_includes="""
+#include "../repositories/SolverRepository.h"
+""",
+            precision=self._plotter_precision,
+            time_stamp_evaluation="0.5*(repositories::getMinTimeStamp()+repositories::getMaxTimeStamp())",
+        )
+
+        write_vtk_file_task.add_action_set( plot_patches_action_set)
 
         if peano4.api.Logger().is_visualisation:
             plot.visualise(title="Plot task graph for {}".format(self._solver.name))
