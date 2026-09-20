@@ -166,6 +166,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
       false
     );
     vertices[kScalar].setHasBeenParentOfSubtreeVertexInPreviousTreeSweep(true);
+    if (isFirstTraversal) {
+      _statistics.setNumberOfRefinementTriggeredVertices( _statistics.getNumberOfRefinementTriggeredVertices()+1 );
+    }
     logDebug("traverse(TraversalObserver)", "create " << vertices[kScalar].toString() << " for tree " << _id);
   enddforx
 
