@@ -77,7 +77,7 @@ thesolver.add_pde_term(
         stateless=True,
     )
 )
-thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver)
+thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver, patch_size)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
     thesolver, volume_size=0.001
 )

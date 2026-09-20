@@ -30,7 +30,7 @@ thesolver.add_user_solver_includes("#include <cmath>\n" "#include <algorithm>\n"
 thesolver.add_pde_term( exahype2.api.Flux(stateless=False,))
 thesolver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False,))
 
-thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver)
+thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver, patch_size)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
     thesolver, volume_size=0.001
 )
