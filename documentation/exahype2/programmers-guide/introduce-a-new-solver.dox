@@ -1,18 +1,19 @@
 /**
 
-@page page_exahype_programmers_guide_new_solver Introduce a new solver
+@page page_exahype_programmers_guide_new_solver Introduce a new numerical scheme
 
 \tableofcontents
 
 This page walks through what it takes to add a genuinely new solver to
-ExaHyPE 2, i.e. a new discretisation (or a new variant of an existing one)
-rather than a new PDE solved with an existing discretisation. Modelling the
-*what* of a PDE (unknowns, PDE terms) against an existing solver is covered
+ExaHyPE 2, i.e. a new discretisation (or a new variant of an existing one).
+Modelling the
+***what*** of a PDE (unknowns, PDE terms) against an existing solver is covered
 on the @ref page_exahype_modelling_pde_solver "modelling the PDE solver" page
-and does not require anything below. This page is for the *how*.
+and does not require anything below. This page is for the ***how*** this continuous
+description is translated into code using a numerical scheme.
 
 
-# The four building blocks
+## Context
 
 An exahype2.api.Solver only holds the descriptive, discretisation-independent
 part of a solver (name, unknowns, auxiliary variables, PDE terms). It does
@@ -21,17 +22,61 @@ abstract building blocks, all nested classes of exahype2.api.Solver
 (`src/exahype2/api/Solver.py`), each of which a concrete discretisation has
 to subclass and assign an instance of onto the solver:
 
-- **Solver.NumericalScheme** - the actual discretisation. Implements
-  `construct_output(exahype2_project, peano_project, time_step)`, which adds
-  the discretisation's tasks (reconstruct, update, project onto faces, ...)
-  into the time-stepping task graph. Assigned via `solver.numerical_scheme`.
+- **Solver.NumericalScheme** - the actual discretisation. 
 - **Solver.GridConstruction** - how the mesh this solver runs on is built and
   kept up to date. Implements `construct_output(exahype2_project,
   peano_project, setup_simulation)`, adding tasks into the setup-phase task
   graph. Assigned via `solver.grid_construction`.
-- **Solver.Plotter** - how the solution is written out. Implements
-  `construct_output(exahype2_project, peano_project, plot)`. Assigned via
-  `solver.plotter` (optional - a solver without a plotter is valid).
+- **Solver.Plotter** - how the solution is written out. 
+
+We focus on the first aspect here. 
+
+<br /><br />
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
+<b> Pattern </b>: Each solver has to be tied to three generators (for the numerics, 
+the grid/simulation construction and the plotting. Later on, ExaHyPE invokes
+construct_output() on each of these guys. They don't know of each other. However,
+the numerical scheme can add attributes to the solver once it is attached to the
+object in its constructor (that is before anybody calls construct_output()) and 
+deposit information there. For example, Finite Volume solvers typicall add information
+on patch sizes to the baseline solver, and they also attach the core data storage
+(patch objects) to the solver. 
+</div>
+
+
+# Determine what grid data your solver needs
+
+Every solver needs certain data.
+Add patches for example to solver.
+
+
+Adding these data to the underlying solver object is enough to allow other generators
+to see this augmentation. It does however not mean that anything actually happens.
+We still have to ensure that the generated Peano project also creates these data.
+This is typically done within construct_output():
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+peano_project.datamodel.add_cell(self._solver._patch)
+peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
+peano_project.datamodel.add_face(self._solver._patch_overlap_update)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+is an example from @ref exahype.api.fv.RusanovWithExplicitEuler.__add_data_to_repository()
+which I would recommend to study.
+Not only does it add the data to the repository.
+It also configures the data such that we tweak the realisation of the data structures.
+For example, it ensures that the data goes to the heap and does not move over stacks
+for the big double fields.
+It changes the storage scheme.
+
+
+# Change the storage scheme
+
+
+
+
+# The four building blocks
+
 - **Solver.SolverGenerator** - turns the solver description into the
   Abstract*.h/.cpp glue classes (`construct_output(exahype2_project,
   peano_project)`). Solvers typically reuse the generic implementation rather

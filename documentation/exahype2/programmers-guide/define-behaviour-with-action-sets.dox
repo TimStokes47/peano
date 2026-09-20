@@ -5,107 +5,60 @@
 \tableofcontents
 
 The @ref page_exahype_programmers_guide_new_solver "introduce a new numerical scheme"
-page shows the skeleton: a Solver.NumericalScheme (or Solver.GridConstruction, or
-Solver.Plotter) builds a task graph out of peano4.api.taskgraph.Task objects and wires
-up their dependencies. That skeleton alone does nothing, though - a bare Task is inert.
-This page is about the missing piece: how you actually define *what happens* when one
-of these tasks runs.
+page shows how a Solver.NumericalScheme (or Solver.GridConstruction, or
+Solver.Plotter) adds data to a solver and ensures that these data are also 
+tied to the mesh properly.
+This is all about static setups.
+On this page, we discuss how to add dynamic behaviour.
 
 
-# Tasks are containers, action sets are the behaviour
-
-A Task corresponds to one grid sweep. What Peano does during that sweep is defined by
-the peano4.api.solversteps.ActionSet objects attached to the task via
-`task.add_action_set(my_action_set)` (@see @ref page_architecture_home "the architecture
-page's discussion of the Hollywood principle" for why control flow works this way: Peano
-drives the traversal and calls back into your action sets, not the other way round).
-
-During a grid sweep, Peano's traversal fires a fixed set of events - entered/left a cell,
-touched a vertex/face/cell for the first/last time, created a hanging vertex, and so on.
-Every ActionSet subclass can react to any subset of these events by overriding
-`get_body_of_operation(operation_name)`, where `operation_name` is one of the
-`ActionSet.OPERATION_*` string constants (`OPERATION_TOUCH_CELL_FIRST_TIME`,
-`OPERATION_BEGIN_TRAVERSAL`, `OPERATION_CREATE_HANGING_VERTEX`, ... - see
-`src/peano4/api/solversteps/ActionSet.py` for the full list) and returns a plain C++
-code snippet as a Python string. That snippet is spliced verbatim into the generated
-observer class at the point where the corresponding event fires.
-
-A minimal action set that does something on every cell looks like this:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-class MyActionSet(peano4.api.solversteps.ActionSet):
-    def get_action_set_name(self):
-        return __name__.replace(".py", "").replace(".", "_")
-
-    def get_body_of_operation(self, operation_name):
-        if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
-            return "// your C++ goes here\n"
-        return ""
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-and it is attached to a task, inside your building block's `construct_output()`, with
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-my_task.add_action_set(MyActionSet())
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A task can have several action sets; they all run, in the order attached, at every
-matching event of that task's grid sweep.
+ExaHyPE's current rewrite uses task graphs to model all behaviour.
+You find the prototype of such a task graph in 
+@ref exahype.api.fv.RusanovWithExplicitEuler.construct_output().
+In general, any construct_output() from a numerical scheme, plot strategy
+or mesh setup is responsible for returning a task graph
+which describes what is to be done in this step.
 
 
-# The other hooks besides get_body_of_operation
 
-Besides `get_body_of_operation()`, an ActionSet subclass typically also overrides:
-
-- `get_includes()` - any `#include` statements the snippets above need.
-- `get_attributes()` - C++ member variables the generated action-set class should carry
-  (e.g. a writer object that is opened in `OPERATION_BEGIN_TRAVERSAL` and used in
-  `OPERATION_TOUCH_CELL_FIRST_TIME`).
-- `get_constructor_body()` / `get_destructor_body()`.
-- `get_action_set_name()` - has to be unique per project; the idiom above
-  (`__name__.replace(".py", "").replace(".", "_")`) derives it from the Python module
-  path, which is what every existing action set in the code base does.
-- `user_should_modify_template()` - return `False` unless you are deliberately shipping
-  a class the generated project is meant to overwrite.
-
-Consult the full doc comment on `peano4.api.solversteps.ActionSet` for the lifecycle
-guarantees (one instance per grid sweep per tree, copy-constructed per tree for fork/join
-parallelism, and so on) before you rely on instance state surviving across events.
+## Construct the task graph
 
 
-# Templating the C++ snippet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruction", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        compute_cfl_condition_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute CFL condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        compute_time_step_size_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute time step size", entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL)
+        
+        update_cell_task.add_dependency(reconstruction_task)
+        compute_cfl_condition_task.add_dependency(update_cell_task)
+        project_on_faces_task.add_dependency(update_cell_task)
+        compute_time_step_size_task.add_dependency(compute_cfl_condition_task)
 
-Once a snippet grows beyond a line or two of fixed text, hand-building it with string
-concatenation gets unreadable fast. Every non-trivial action set in the code base
-instead keeps the C++ as a class-level Jinja2 template string and renders it with a
-dictionary of substitutions built up in `get_body_of_operation()`, e.g.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-d = {}
-d["PREDICATE"] = self.guard
-result = jinja2.Template(self.__Template_TouchCellFirstTime).render(**d)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This keeps the C++ template readable as C++ (rather than as a Python f-string) and keeps
-the substitution logic in Python, in line with the design choice documented on the
-@ref page_developer_guidelines_home "developer guidelines" page to move away from Jinja
-templates that also carry logic - here, the template only ever holds placeholders.
+        time_step.add_task(reconstruction_task)
+        time_step.add_task(update_cell_task)
+        time_step.add_task(compute_cfl_condition_task)
+        time_step.add_task(project_on_faces_task)
+        time_step.add_task(compute_time_step_size_task)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-# Reference action sets to study
+@todo Needs cross references where ot read about these steps
 
-- `src/peano4/api/actionsets/ConstructRegularGrid.py` - grid setup: refines a regular
-  mesh down to a given volume size.
-- `src/peano4/toolbox/blockstructured/api/PlotPatchesInPeanoBlockFormat.py` - plotting:
-  opens a VTK-style writer in `OPERATION_BEGIN_TRAVERSAL`, dumps one patch per
-  `OPERATION_TOUCH_CELL_FIRST_TIME`, and closes the writer in `OPERATION_END_TRAVERSAL`.
-  This is the action set @ref page_exahype_programmers_guide_new_solver
-  "PlotAsVTKFile" attaches to its plot task.
-- `src/exahype2/api/fv/actionsets/` (`InitialCondition.py`, `ReconstructPatchWithHalo.py`,
-  `RollOverUpdatedFace.py`, `AdaptivityCriterion.py`, `HandleBoundary.py`) - numerical
-  scheme: the guard-predicate pattern (`self.guard`, computed by the surrounding
-  Solver.NumericalScheme and passed into the action set's constructor) used to switch
-  the generated C++ on or off per cell without baking the condition into the template
-  itself is worth studying across all of these.
+
+
+## Add action sets
+
+
+
+## Ensure that action sets get all the data they are working on
+
+
+
+## Minimise data movements
+
+
+
 
 */
