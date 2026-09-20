@@ -24,6 +24,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public peano4::RunMultipleSteps
     {{CLASSNAME}}();
 
     virtual void run() override;
+  private:
+    static tarch::logging::Log _log;
 };
 """
 
@@ -37,6 +39,8 @@ TEMPLATE_RUNNER_CPP_FILE = """
 {% for step in STEPS -%}
 #include "{{SUBDIRECTORY}}observers/{{step}}.h"
 {% endfor %}
+
+tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPACE | join("::")}}::{{CLASSNAME}}" );
 
 {{NAMESPACE | join("::")}}::{{CLASSNAME}}::{{CLASSNAME}}():
   peano4::RunMultipleSteps(
@@ -55,6 +59,7 @@ void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::run() {
     tarch::logging::LogFilter::getInstance().switchProgramPhase("{{step}}");
     {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{step}} observer;
     peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+    logDebug( "run()", "will rerun this step: {{REPEAT_CONDITIONS[loop.index0] or "false"}}=" << {{REPEAT_CONDITIONS[loop.index0] or "false"}} );
   }
   while ( {{REPEAT_CONDITIONS[loop.index0] or "false"}} );
   {% endfor %}

@@ -25,10 +25,7 @@ Creating such a task graph is simple with the present API.
 Rather than exercising throught the example above, we refer to @ref exahype2.api.fv.SetupSimulationOverRegularGrid
 which uses exactly the same API to create a task graph for the setup phase of a Finite Volume scheme over a regular, block-structured mesh:
 
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@input exahype2/api/fv/SetupSimulationOverRegularGrid.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@include src/exahype2/api/fv/SetupSimulationOverRegularGrid.py
 
 Note the nice feature at the end of the script: The API comes along
 with a routine to visualise the arising task graph. This is the same
