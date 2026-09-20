@@ -250,6 +250,7 @@ But there is no such thing as a Peano application.
 </div>
 
 
+\anchor sec_installation_build_variants
 # Build variants
 
 Peano currently is delivered as a set of archives, i.e. static libraries.

@@ -81,6 +81,6 @@ fall under implementation details and should be handled by a generator not the d
 PDE terms to enable and the patch size should be used however is a property of the model itself.
 
 For general design patterns and idioms that recur across Peano and its extensions, see the
-@ref page_design_philosophy_home "design philosophy and architecture" page.
+@ref page_developer_guidelines_home "developer guidelines and tips" page.
 
 */

@@ -58,6 +58,9 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
   - \subpage page_exahype_gpu
   - \subpage page_exahype_runtime_analysis
   - \subpage page_exahype_performance_optimisation
+- Programmer's guide
+  - \subpage page_exahype_programmers_guide_new_solver
+  - \subpage page_exahype_programmers_guide_action_sets
 - Utilities
   - \subpage exahype2_enumerator
 - Related pages

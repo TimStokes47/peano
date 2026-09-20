@@ -1,0 +1,103 @@
+/**
+
+@page page_exahype_programmers_guide_new_solver Introduce a new solver
+
+\tableofcontents
+
+This page walks through what it takes to add a genuinely new solver to
+ExaHyPE 2, i.e. a new discretisation (or a new variant of an existing one)
+rather than a new PDE solved with an existing discretisation. Modelling the
+*what* of a PDE (unknowns, PDE terms) against an existing solver is covered
+on the @ref page_exahype_modelling_pde_solver "modelling the PDE solver" page
+and does not require anything below. This page is for the *how*.
+
+
+# The four building blocks
+
+An exahype2.api.Solver only holds the descriptive, discretisation-independent
+part of a solver (name, unknowns, auxiliary variables, PDE terms). It does
+not know how to turn that description into C++. That is delegated to four
+abstract building blocks, all nested classes of exahype2.api.Solver
+(`src/exahype2/api/Solver.py`), each of which a concrete discretisation has
+to subclass and assign an instance of onto the solver:
+
+- **Solver.NumericalScheme** - the actual discretisation. Implements
+  `construct_output(exahype2_project, peano_project, time_step)`, which adds
+  the discretisation's tasks (reconstruct, update, project onto faces, ...)
+  into the time-stepping task graph. Assigned via `solver.numerical_scheme`.
+- **Solver.GridConstruction** - how the mesh this solver runs on is built and
+  kept up to date. Implements `construct_output(exahype2_project,
+  peano_project, setup_simulation)`, adding tasks into the setup-phase task
+  graph. Assigned via `solver.grid_construction`.
+- **Solver.Plotter** - how the solution is written out. Implements
+  `construct_output(exahype2_project, peano_project, plot)`. Assigned via
+  `solver.plotter` (optional - a solver without a plotter is valid).
+- **Solver.SolverGenerator** - turns the solver description into the
+  Abstract*.h/.cpp glue classes (`construct_output(exahype2_project,
+  peano_project)`). Solvers typically reuse the generic implementation rather
+  than provide their own.
+
+`Solver.generate_solver_realisation()` asserts that `grid_construction` and
+`numerical_scheme` are set before it calls into any of them, so both are
+mandatory; only `plotter` is optional.
+
+
+# Reference implementation to copy from
+
+Rather than starting from a blank page, base a new discretisation on the
+Finite Volumes / Rusanov implementation under `src/exahype2/api/fv/`, which
+exercises all four building blocks against the task-graph architecture:
+
+- `RusanovWithExplicitEuler.py` - Solver.NumericalScheme. Creates the patch
+  and patch-overlap mesh data in its constructor (@see
+  `__create_data_structures()`), wires up the storage generators and mesh
+  data repository (@see `__add_data_to_repository()`), and assembles the
+  time-stepping task graph (reconstruction, cell update, CFL condition,
+  project on faces, compute time step size).
+- `SetupSimulationOverRegularGrid.py` / `SetupSimulationWithUserCodedRefinementCriterion.py`
+  - two Solver.GridConstruction variants: a mesh that is refined once and
+  then stays regular, versus one refined adaptively every sweep by a
+  user-coded criterion.
+- `PlotAsVTKFile.py` - Solver.Plotter, maps the patch data onto a plot mesh
+  and writes it as VTK.
+
+A new discretisation typically needs its own patch/data layout and its own
+task graph in the Solver.NumericalScheme subclass, but can often reuse the
+existing Solver.GridConstruction and Solver.Plotter variants unchanged if its
+data still fits the same patch-based layout.
+
+
+# Wiring it into a project
+
+The user-facing Python script that exercises a solver assigns the three
+building blocks and hands the solver to an exahype2.api.Project, e.g. (see
+`benchmarks/exahype2/euler/smooth-convergence-test/smooth-convergence-test.py`
+for the full, working example):
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+thesolver = exahype2.api.Solver(solver_name, unknowns, auxiliary_variables)
+thesolver.add_pde_term(exahype2.api.Flux(stateless=False))
+thesolver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False))
+
+thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver, patch_size)
+thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(thesolver, volume_size=...)
+thesolver.plotter = exahype2.api.fv.PlotAsVTKFile(thesolver)
+
+project.add_solver(thesolver)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`project.generate_Peano4_project()` then calls
+`Solver.generate_solver_realisation()` on every registered solver, which in
+turn calls each building block's `construct_output()` in sequence
+(`solver_generator`, then `grid_construction`, then `numerical_scheme`, then
+`plotter` if set).
+
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;">
+This task-graph-based exahype2.api is under active development. Some of the
+building blocks referenced here (patch data layout, storage generators) are
+still being ported over from the legacy `python/exahype2/solvers` API, so
+check `git log` on the files above before relying on details not covered on
+this page.
+</div>
+
+*/
