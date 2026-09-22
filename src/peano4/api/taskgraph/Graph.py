@@ -19,6 +19,55 @@ class Graph:
     def add_task(self, task: Task):
         self.tasks.append(task)
 
+    def log_as_text(self, title: str = "Task graph"):
+        """!
+        Textual counterpart to visualise(): logs a plain-text rendering of
+        this task graph through peano4.api.Logger(), for LoggerVerbosity.TEXT
+        runs, where a matplotlib window is neither wanted nor - in a batch/
+        non-interactive run - even possible.
+
+        Renders the same information visualise() draws as a UML state
+        diagram - every task's grid entity, its dependencies, its action
+        sets (as "do / <name>" lines) and whether it repeats - as one block
+        of text per task, ordered root to sink by dependency depth exactly
+        like visualise() lays its layers out left to right.
+        """
+        import peano4.api
+
+        if not self.tasks:
+            peano4.api.Logger().log(f"Task graph '{title}' is empty.")
+            return
+
+        # Depth of a task = 0 if it has no dependencies, else 1 + the
+        # deepest of its dependencies. Recursive but memoised - task graphs
+        # here are small and acyclic by construction. @see visualise(),
+        # which computes the very same notion of depth to lay its layers
+        # out left to right.
+        depth_of_task = {}
+
+        def depth(task: Task) -> int:
+            if task not in depth_of_task:
+                depth_of_task[task] = (
+                    0 if not task.dependencies else 1 + max(depth(dependency) for dependency in task.dependencies)
+                )
+            return depth_of_task[task]
+
+        ordered_tasks = sorted(self.tasks, key=depth)
+
+        lines = [f"Task graph '{title}':"]
+        for task in ordered_tasks:
+            lines.append(f"- {task.name} «{task.entity.name.lower()}»")
+            if task.dependencies:
+                lines.append(
+                    "    depends on: " + ", ".join(dependency.name for dependency in task.dependencies)
+                )
+            for action_set in task.action_sets:
+                lines.append(f"    do / {action_set.get_action_set_name()}")
+            if task.has_to_repeat:
+                lines.append(f"    repeats while: {task.has_to_repeat}")
+
+        peano4.api.Logger().log("\n".join(lines))
+
     def visualise(self, title: str = "Task graph"):
         """!
         Render this task graph with matplotlib as a UML state diagram: one

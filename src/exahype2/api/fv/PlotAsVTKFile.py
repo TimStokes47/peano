@@ -113,3 +113,5 @@ class PlotAsVTKFile(Solver.Plotter):
 
         if peano4.api.Logger().is_visualisation:
             plot.visualise(title="Plot task graph for {}".format(self._solver.name))
+        elif peano4.api.Logger().is_text:
+            plot.log_as_text(title="Plot task graph for {}".format(self._solver.name))

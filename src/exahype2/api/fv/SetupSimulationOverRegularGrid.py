@@ -76,3 +76,5 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
 
         if peano4.api.Logger().is_visualisation:
             setup_simulation.visualise(title="Setup task graph for {}".format(self._solver.name))
+        elif peano4.api.Logger().is_text:
+            setup_simulation.log_as_text(title="Setup task graph for {}".format(self._solver.name))

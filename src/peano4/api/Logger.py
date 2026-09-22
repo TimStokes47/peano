@@ -112,6 +112,11 @@ class Logger:
         return self._verbosity == LoggerVerbosity.VISUALISATION
 
     @property
+    def is_text(self) -> bool:
+        """! True if and only if verbosity is set to LoggerVerbosity.TEXT. """
+        return self._verbosity == LoggerVerbosity.TEXT
+
+    @property
     def file_name(self) -> str:
         return self._file_name
 
