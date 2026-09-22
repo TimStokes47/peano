@@ -3,8 +3,8 @@
 import os
 import argparse
 
-import peano4.api.visualisation.filters
-import peano4.api.visualisation.output
+import tarch.plotter.api.filters
+import tarch.plotter.api.output
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Peano 4 - Render Script")
@@ -127,7 +127,7 @@ if __name__ == "__main__":
 
     visualiser = None
     if args.type == "vtu-unstructured":
-        visualiser = peano4.api.visualisation.output.VTUUnstructuredGrid(
+        visualiser = tarch.plotter.api.output.VTUUnstructuredGrid(
             file_name=args.filename,
             output_directory=args.dir,
             verbose=args.verbose,
@@ -140,19 +140,19 @@ if __name__ == "__main__":
     #
     if args.filter_average:
         visualiser.append_filter(
-            peano4.api.visualisation.filters.AverageOverCell(args.verbose)
+            tarch.plotter.api.filters.AverageOverCell(args.verbose)
         )
     if args.filter_fine_grid:
         visualiser.append_filter(
-            peano4.api.visualisation.filters.ExtractFineGrid(False, args.verbose)
+            tarch.plotter.api.filters.ExtractFineGrid(False, args.verbose)
         )
     if args.norm_calculator:
         visualiser.append_filter(
-            peano4.api.visualisation.filters.Calculator(verbose=args.verbose)
+            tarch.plotter.api.filters.Calculator(verbose=args.verbose)
         )
     if args.shrink_cells != 1.0:
         visualiser.append_filter(
-            peano4.api.visualisation.filters.ShrinkPatches(
+            tarch.plotter.api.filters.ShrinkPatches(
                 args.shrink_cells, verbose=args.verbose
             )
         )

@@ -1,7 +1,7 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 from .Filter import Filter
-from peano4.api.visualisation.input.Patch import Patch
+from tarch.plotter.api.input.Patch import Patch
 
 
 class AverageOverCell(Filter):

@@ -5,6 +5,7 @@ from .Visualiser import Visualiser
 import vtk
 import time
 import traceback
+import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 
 
@@ -426,48 +427,88 @@ class VTUUnstructuredGrid(Visualiser):
               - this should write the VTUUnstructuredGrid file and return the filename it wrote
               - we collect these filenames and then write the PVD files at the end
             """
-            with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                print(
-                    f"Processing snapshots in parallel using {executor._max_workers} workers"
-                )
-                # Loop over all the snapshots we detected whilst reading metadata
-                # Submit all snapshots to be processed in parallel
-                futures = [
-                    executor.submit(self.process_snapshot, snapshot, i)
+            if max_workers == 1:
+                # A process pool with exactly one worker buys no parallelism,
+                # and spinning one up at all touches Python's multiprocessing
+                # machinery - including its resource-tracker helper process,
+                # which is always forked regardless of start method (see the
+                # comment on the ProcessPoolExecutor branch below). That is
+                # reliably unsafe under pvpython, whose process already has
+                # VTK/ParaView's C++ runtime initialised. So for the common,
+                # default case of a single worker, just process every
+                # snapshot directly in this process - no subprocess at all.
+                workers_used = 1
+                print("Processing snapshots sequentially (1 worker)")
+                results = [
+                    self.process_snapshot(snapshot, i)
                     for i, snapshot in enumerate(self.snapshots)
                 ]
-
-                for future in futures:
-                    timestamp, written_filenames = future.result()
-
-                    # Update filenames dictionary with the results from each completed future
-                    for unknown_name, file_name in written_filenames.items():
-                        if unknown_name not in filenames.keys():
-                            # Haven't seen the name of this unknown before
-                            filenames[unknown_name] = []
-                        # Add the vtu filename we've written to the list for this unknown
-                        filenames[unknown_name].append(
-                            (timestamp, file_name)
-                        )  # Assuming file_name is not a list
-
-                    completed_snapshots += 1
-                    progress = (completed_snapshots / total_snapshots) * 100
+            else:
+                # Explicitly use "spawn" rather than the platform default
+                # ("fork" on Linux): render.py is frequently run through
+                # pvpython, whose process already has VTK/ParaView's C++
+                # runtime (and possibly MPI) fully initialised before this
+                # script starts. Forking that process to create worker
+                # processes inherits that half-initialised state and
+                # reliably crashes the worker (BrokenProcessPool / heap
+                # corruption). "spawn" starts genuinely fresh interpreters
+                # instead. Note this does not protect against
+                # multiprocessing's own resource-tracker helper process,
+                # which is always forked regardless of context - real
+                # (>1-worker) parallelism may therefore still be unsafe
+                # under some pvpython builds; if so, run render.py through
+                # plain python3 instead (with vtk installed from Peano's
+                # requirements.txt), not through pvpython.
+                with ProcessPoolExecutor(
+                    max_workers=max_workers,
+                    mp_context=multiprocessing.get_context("spawn"),
+                ) as executor:
+                    workers_used = executor._max_workers
                     print(
-                        f"Progress: {completed_snapshots}/{total_snapshots} snapshots processed ({progress:.2f}%)"
+                        f"Processing snapshots in parallel using {workers_used} workers"
                     )
+                    # Loop over all the snapshots we detected whilst reading metadata
+                    # Submit all snapshots to be processed in parallel
+                    futures = [
+                        executor.submit(self.process_snapshot, snapshot, i)
+                        for i, snapshot in enumerate(self.snapshots)
+                    ]
+                    results = [future.result() for future in futures]
+
+            for timestamp, written_filenames in results:
+                # Update filenames dictionary with the results from each snapshot
+                for unknown_name, file_name in written_filenames.items():
+                    if unknown_name not in filenames.keys():
+                        # Haven't seen the name of this unknown before
+                        filenames[unknown_name] = []
+                    # Add the vtu filename we've written to the list for this unknown
+                    filenames[unknown_name].append(
+                        (timestamp, file_name)
+                    )  # Assuming file_name is not a list
+
+                completed_snapshots += 1
+                progress = (completed_snapshots / total_snapshots) * 100
+                print(
+                    f"Progress: {completed_snapshots}/{total_snapshots} snapshots processed ({progress:.2f}%)"
+                )
 
         except Exception as e:
             print("Got an exception: " + str(e))
             traceback.print_exc()
-            pass
+            print(
+                "Aborting: not all snapshots were rendered, so no .pvd file(s) will "
+                "be written. Re-run once the underlying problem above is fixed."
+            )
+            return
         end_time = time.time()
 
         print(
-            f"Completed in {end_time - start_time:.2f} seconds with {executor._max_workers} workers"
+            f"Completed in {end_time - start_time:.2f} seconds with {workers_used} workers"
         )
         print(f"Dumped {sum([len(v) for _,v in filenames.items()])} datasets")
 
         # Next, we need to write a pvd "glue" file for each of these data series
+        any_relative_path_written = False
         for unknown_name, file_data in filenames.items():
             # Make a copy of self.pvd file
             pvd_file = self.pvd_file
@@ -476,6 +517,8 @@ class VTUUnstructuredGrid(Visualiser):
             for timestamp, file_name in file_data:
                 if self._strip_relative_paths:
                     file_name = file_name.split("/")[-1]
+                elif "/" in file_name:
+                    any_relative_path_written = True
 
                 # Add the vtu filename to the pvd file.
                 pvd_file += f"""
@@ -491,13 +534,11 @@ class VTUUnstructuredGrid(Visualiser):
             ) as meta_file:
                 meta_file.write(pvd_file)
 
-        if "/" in file_name and not self._strip_relative_paths:
+        if any_relative_path_written:
             print(
                 """
 WARNING: The conversion tool has processed a dataset stored in a different
-directory. If the resulting .pvd file ("""
-                + file_name
-                + """.pvd)
+directory. If the resulting .pvd file(s)
 contains relative paths, you will have to copy it into the present working
 directory before you load the outcome into ParaView. Otherwise, ParaView
 will not be able to locate your actual data files.

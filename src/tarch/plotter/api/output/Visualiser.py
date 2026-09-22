@@ -1,6 +1,6 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.api.visualisation.input.PatchFileParser import PatchFileParser
+from tarch.plotter.api.input.PatchFileParser import PatchFileParser
 
 
 def validate(
