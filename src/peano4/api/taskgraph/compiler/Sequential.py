@@ -6,6 +6,7 @@ import peano4.api.solversteps
 
 from ..Graph import Graph
 from ..Task import Task
+from .PropagateUseStatements import propagate_use_statements
 
 
 def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Step"]:
@@ -21,11 +22,21 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     against.
 
     ## Implementation
-        
-    The implementation of the serialisation is rather straightforward using a 
-    recursive implementation: We start from an arbitrary node in the graph.
-    If it has no predecessor, we can add it. If not, we call the graph 
-    traversal for the predecessor first. 
+
+    Construction happens in two phases:
+
+    1. Derive the sequence of Observers, one per task: a straightforward
+       recursive traversal of the graph (start from an arbitrary node; if it
+       has no predecessor, add it; otherwise recurse into the predecessor
+       first). Each Observer is populated with its task's action sets and
+       the cell/face/vertex data that task itself declared via
+       use_cell()/use_face()/use_vertex().
+    2. Postprocess that sequence with
+       @ref peano4.api.taskgraph.compiler.PropagateUseStatements.propagate_use_statements()
+       to add whichever further use_cell()/use_face()/use_vertex()
+       declarations are needed to actually relay each submodel from where it
+       is used to everywhere it has to survive to - @see that function's
+       documentation for the two rules this applies.
 
     graph: peano4.api.taskgraph.Graph
       The task graph to linearise. Assumed to be acyclic - translate() does
@@ -40,8 +51,11 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
 
     @return [peano4.api.solversteps.Step]
       One Observer per task, ordered so that every task's Observer comes
-      after the Observers of all tasks it depends on, and carrying that
-      task's action_sets (in the order they were added to the Task).
+      after the Observers of all tasks it depends on, carrying that task's
+      action_sets (in the order they were added to the Task) plus the
+      cell/face/vertex data use_cell()/use_face()/use_vertex() determined -
+      both what the task declared directly and what
+      propagate_use_statements() added on top.
 
     """
     observer_of_task = {}
@@ -62,6 +76,12 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
                 add_user_defined_actions=False,
             )
             step.has_to_repeat = task.has_to_repeat
+            for cell_data in task.cell_data:
+                step.use_cell(cell_data)
+            for face_data in task.face_data:
+                step.use_face(face_data)
+            for vertex_data in task.vertex_data:
+                step.use_vertex(vertex_data)
             for action_set in task.action_sets:
                 step.add_action_set(action_set)
             observer_of_task[task] = step
@@ -70,4 +90,6 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     for task in graph.tasks:
         visit(task)
 
-    return [observer_of_task[task] for task in order]
+    steps = [observer_of_task[task] for task in order]
+    propagate_use_statements(steps)
+    return steps

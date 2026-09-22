@@ -71,5 +71,8 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         setup_simulation.add_task(initial_condition_task)
         setup_simulation.add_task(project_on_faces_task)
 
+        initial_condition_task.use_cell(self._solver._patch)
+        project_on_faces_task.use_cell(self._solver._patch)
+
         if peano4.api.Logger().is_visualisation:
             setup_simulation.visualise(title="Setup task graph for {}".format(self._solver.name))

@@ -18,7 +18,7 @@ import peano4.api
 import peano4.api.datamodel
 import peano4.api.solversteps
 import peano4.api.output
-import peano4.api.visualisation
+import tarch.plotter.api
 import peano4.toolbox.blockstructured.api
 
 
@@ -298,14 +298,14 @@ success = project.run( ["myarguments"] )
 #
 # Dump grid into VTK
 #
-#convert = peano4.api.visualisation.Convert( "grid-dump" )
+#convert = tarch.plotter.api.Convert( "grid-dump" )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
 #convert.extract_fine_grid()
 #convert.convert_to_vtk()
 
 
 if success:
-  convert = peano4.api.visualisation.Convert( "solution" )
+  convert = tarch.plotter.api.Convert( "solution" )
   convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()

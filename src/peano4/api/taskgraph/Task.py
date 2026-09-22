@@ -28,6 +28,19 @@ class Task:
     empty by default; use add_action_set() to add further action sets to it.
     Their order matters - see peano4.api.solversteps.Step.add_action_set().
 
+    ## Task data usage
+
+    A task's action sets are handed mesh data (fineGridCell..., fineGridFace...,
+    fineGridVertices...) as arguments once they are compiled into an Observer -
+    but only for the vertex/face/cell submodels the surrounding
+    peano4.api.solversteps.Step was told about via its own use_cell()/
+    use_face()/use_vertex(). An action set cannot make that declaration
+    itself (several tasks, and hence several Steps, can share the same
+    action set), so every task has to declare which submodels it needs
+    through use_cell()/use_face()/use_vertex() below. The task graph
+    compiler then forwards these declarations to the Step(s) it compiles
+    this task into.
+
     ## Task repetitions
     
     Finally, a task can be marked as repeating via task_has_to_repeat. By
@@ -90,10 +103,44 @@ class Task:
         self.entity = entity
         self.dependencies: List["Task"] = []
         self.action_sets: List["peano4.api.solversteps.ActionSet"] = []
+        self.cell_data: List["peano4.api.datamodel.DoF"] = []
+        self.face_data: List["peano4.api.datamodel.DoF"] = []
+        self.vertex_data: List["peano4.api.datamodel.DoF"] = []
         self.has_to_repeat = task_has_to_repeat
 
     def add_dependency(self, task: "Task"):
         self.dependencies.append(task)
+
+    def use_cell(self, submodel: "peano4.api.datamodel.DoF"):
+        """!
+
+        Declare that this task's action sets need read/write access to a
+        cell submodel (e.g. a peano4.api.datamodel.Patch registered via
+        peano_project.datamodel.add_cell()). Forwarded to the
+        peano4.api.solversteps.Step this task is compiled into, i.e. to its
+        own use_cell(), so the generated Observer passes fineGridCell<name>
+        into every touch-cell/create-cell/... operation.
+
+        """
+        self.cell_data.append(submodel)
+
+    def use_face(self, submodel: "peano4.api.datamodel.DoF"):
+        """!
+
+        Declare that this task's action sets need read/write access to a
+        face submodel. @see use_cell() for the general mechanism.
+
+        """
+        self.face_data.append(submodel)
+
+    def use_vertex(self, submodel: "peano4.api.datamodel.DoF"):
+        """!
+
+        Declare that this task's action sets need read/write access to a
+        vertex submodel. @see use_cell() for the general mechanism.
+
+        """
+        self.vertex_data.append(submodel)
 
     def add_action_set(self, action_set: "peano4.api.solversteps.ActionSet"):
         """!

@@ -18,7 +18,7 @@ import peano4.api
 import peano4.api.datamodel
 import peano4.api.solversteps
 import peano4.api.output
-import peano4.api.visualisation
+import tarch.plotter.api
 import peano4.toolbox.blockstructured.api
 
 
@@ -96,7 +96,7 @@ success = peano4_project.run( [] )
 
 
 if success:
-  convert = peano4.api.visualisation.Convert( "solutionMHD", True )
+  convert = tarch.plotter.api.Convert( "solutionMHD", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()

@@ -6,7 +6,6 @@ try:
     import peano4.api.solversteps
     import peano4.api.output
     import peano4.api.toolbox
-    import peano4.api.visualisation
     import peano4.api.taskgraph
     import peano4.api.actionsets
 

@@ -2,6 +2,7 @@ debug     tarch                                 -1      black     always-on
 debug     peano4                                -1      black     always-on
 debug     exahype2                              -1      black     always-on
 debug     toolbox                               -1      black     always-on
+debug     benchmarks                            -1      black     always-on
 
 trace     tarch                                 -1      black     always-on
 trace     peano4                                -1      black     always-on

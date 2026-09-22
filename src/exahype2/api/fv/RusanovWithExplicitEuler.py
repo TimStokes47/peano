@@ -222,6 +222,12 @@ Patch overlap data
         time_step.add_task(compute_cfl_condition_task)
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_time_step_size_task)
+
+        reconstruction_task.use_cell(self._solver._patch)
+        update_cell_task.use_cell(self._solver._patch)
+        compute_cfl_condition_task.use_cell(self._solver._patch)
+        project_on_faces_task.use_cell(self._solver._patch)
+        compute_time_step_size_task.use_cell(self._solver._patch)
         
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))

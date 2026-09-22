@@ -3,6 +3,16 @@
  @page documentation_tarch_visualisation_paraview In-situ visualisation in Paraview
 
 
+
+<br /><br />
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
+ You will need to have Paraview installed. On Ubuntum, this can be done through
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+sudo apt install paraview
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+</div>
+
+
 Peano's postprocessing scripts use Python 3. This means you need a Paraview
 version with Python 3 support (oldish Paraview installations only
 support Python 2.7, and some Paraview downloads don't come along with
@@ -12,10 +22,8 @@ You can display Peano's patch files directly within Paraview. Again, there
 are different ways. For all of them, Peano's Python environment has to be
 available within Paraview:
 
-          export PYTHONPATH=Peano-dir/python
+          export PYTHONPATH=Peano-dir/src
 
-Please consult the remarks on third party software on @ref page_faq_home
-for further troubleshooting.
 
 
 # Start Paraview's Python environment
@@ -39,20 +47,20 @@ Both visualisation routes first require you to load Peano's Python
 tools - either within the `pvpython` terminal or the Paraview Python
 window:
 
-          import peano4.visualisation
+          import tarch.plotter.api
 
 
 
 # Work with a whole dataset
 
-Peano provides a Python class peano4.visualise.Visualiser which allows you to navigate
+Peano provides a Python class tarch.plotter.api.Visualiser which allows you to navigate
 through the whole data.
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-import peano4.visualisation
-visualiser = peano4.visualisation.Visualiser( ”solution-Euler.peano-patch-file” )
+import tarch.plotter.api
+visualiser = tarch.plotter.api.Visualiser( ”solution-Euler.peano-patch-file” )
 visualiser.display()
-visualiser.append filter(peano4.visualisation.ExtractFineGridFilter())
+visualiser.append filter(tarch.plotter.api.ExtractFineGridFilter())
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The snippet displays the first dataset (time step) from a  data dump.
@@ -76,6 +84,19 @@ binary file format vtu:
 visualiser.write vtu time series()
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;">
+<b>Don't use pvpython for this.</b> Converting a whole time series to vtu
+this way runs through the exact same code as the standalone
+@ref documentation_tarch_visualisation_offline-conversion "render.py"
+script, and pvpython's bundled VTK/ParaView Python has repeatedly crashed
+on us doing this - anything from a BrokenProcessPool error to a silent
+segmentation fault with no Python traceback. Prefer running
+@ref documentation_tarch_visualisation_offline-conversion "render.py via
+plain python3" for bulk/batch conversion instead of triggering it from
+here; only use this pvpython route if you specifically need to stay
+inside a live Paraview session.
+</div>
+
 Once this routine terminates, you'll find a file with the extension
 `.pvd` in your directory which you can open and play as video.
 Obviously, this conversion can be triggered in Paraview's Python
@@ -90,7 +111,7 @@ is running.
 Load the file you are interested in via
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-data = peano4.visualisation.render single file( ”solution-Euler-tree-0-0.peano-patch-file”, identifier=”MyQName” )
+data = tarch.plotter.api.render single file( ”solution-Euler-tree-0-0.peano-patch-file”, identifier=”MyQName” )
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 This is only one snapshot file, i.e. one file written by one thread in
@@ -110,10 +131,10 @@ Instead of picking a particular file, you can display a particular data
 set (snapshot) from the meta file:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-import peano4.visualisation
-data = peano4.visualisation.render dataset( ”solution-Euler.peano-patch-file”, 
+import tarch.plotter.api
+data = tarch.plotter.api.render dataset( ”solution-Euler.peano-patch-file”, 
                                             display_as_tree=False,
-                                            filter=[peano4.visualisation.ExtractFineGridFilter()],
+                                            filter=[tarch.plotter.api.ExtractFineGridFilter()],
                                             dataset_number=0, 
                                             identifier=”MyQName” )
 tp = TrivialProducer()

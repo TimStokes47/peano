@@ -109,6 +109,7 @@ class PlotAsVTKFile(Solver.Plotter):
         )
 
         write_vtk_file_task.add_action_set( plot_patches_action_set)
+        write_vtk_file_task.use_cell(self._solver._patch)
 
         if peano4.api.Logger().is_visualisation:
             plot.visualise(title="Plot task graph for {}".format(self._solver.name))

@@ -313,9 +313,9 @@ As the code is a stand-alone executable (once I generated the stuff, there's no 
 The new version of Peano/ExaHyPE writes out so-called patch files. This is a bespoke file format. There multiple ways how to manipulate/read it. I prefer to do everything within Paraview via Paraview. For this, I ensure that the PYTHONPATH points to Peano's Python directory, start up Paraview and then open the Python terminal. From here:
 
 <pre>
-import peano4.visualisation
-data = peano4.visualisation.Visualiser( "solution-GPRDR.peano-patch-file" )
-data.append_filter(peano4.visualisation.ExtractFineGridFilter())
+import tarch.plotter.api
+data = tarch.plotter.api.Visualiser( "solution-GPRDR.peano-patch-file" )
+data.append_filter(tarch.plotter.api.ExtractFineGridFilter())
 data.display()
 </pre>
 

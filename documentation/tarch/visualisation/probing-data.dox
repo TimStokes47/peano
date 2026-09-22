@@ -13,8 +13,8 @@ The algorithm does not rely on Paraview/pvpython.
 To probe an individual patch file use the following commands:
 
 ~~~~~~~~~~~~~~~~~~~~~
-cd Peano export PYTHONPATH=python python3
-python/peano4/visualisation/Probe.py
+cd Peano export PYTHONPATH=src python3
+src/tarch/plotter/api/Probe.py
 --input-file=\<path-to-peano-patch-file\> -x=\<x-axis\> -y=\<y-axix\>
 --set-identifier=\<set-identifier\>
 ~~~~~~~~~~~~~~~~~~~~~
