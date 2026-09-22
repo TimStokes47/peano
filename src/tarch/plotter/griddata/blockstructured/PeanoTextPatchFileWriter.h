@@ -233,6 +233,26 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      * An instance of this class has to be owned by each action set that wants
      * to dump data.
      *
+     * ## AppendNewData and the order of operations
+     *
+     * If appendToIndexFile is IndexFileMode::AppendNewData and no index file
+     * exists yet, the constructor has to both create that index file (which,
+     * via createEmptyIndexFile(), already writes one dataset section for
+     * timeStamp) and decide whether the current writer's own timeStamp is
+     * "newer" than whatever is already in the index file, to decide if a
+     * further, separate dataset section is required. That decision has to be
+     * made by calling getLatestTimeStepInIndexFile() *after* the index file
+     * has been (re)created if it had to be - not before. Comparing against
+     * the "no data yet" state that getLatestTimeStepInIndexFile() reports for
+     * a file that does not exist yet would make the writer for the very first
+     * data set of a run believe it also has to open a second, empty dataset
+     * section for its own (freshly written) time stamp, and every later
+     * writer for that same time stamp would then register its data in that
+     * spurious second section rather than the first, correct one. If you
+     * touch the ordering of operations in the AppendNewData branch of the
+     * implementation, preserve this "decide only after creating/recreating"
+     * order.
+     *
      * @param dimension     I make this a free parameter, even though most
      *   codes will pass in the compile time parameter Dimensions. However,
      *   there are codes which plot submanifolds for example or want to write
