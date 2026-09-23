@@ -163,7 +163,6 @@ class Solver(abc.ABC):
         self._unknowns = self._register_variables(unknowns)
         self._auxiliary_variables = self._register_variables(auxiliary_variables)
 
-        self._user_action_set_includes = ""
         self._user_solver_includes = ""
         self._solver_constants = ""
 
@@ -286,6 +285,22 @@ class Solver(abc.ABC):
         additional routines from other header files.
         """
         self._user_solver_includes += value
+
+    def _get_default_includes(self) -> str:
+        """!
+        Includes every generated action set can rely on being available,
+        regardless of which action sets a concrete discretisation (e.g.
+        exahype2.api.fv) actually attaches - @see
+        exahype2.api.fv.actionsets.AbstractFVActionSet.get_includes().
+        """
+        return """
+#include "tarch/la/Vector.h"
+
+#include "peano4/utils/Globals.h"
+#include "peano4/utils/Loop.h"
+
+#include "repositories/SolverRepository.h"
+"""
 
     def set_solver_constants(self, datastring: str):
         self._solver_constants = datastring

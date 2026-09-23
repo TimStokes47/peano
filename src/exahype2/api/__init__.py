@@ -8,6 +8,7 @@ from .MassMatrix import MassMatrix
 from .NonconservativeProduct import NonconservativeProduct
 from .VolumetricSource import VolumetricSource
 from .PointSource import PointSource
+from .InitPointWisely import InitPointWisely
 from .Solver import Solver
 from .SolverToCPPFiles import SolverToCPPFiles
 from . import fv

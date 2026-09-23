@@ -7,217 +7,85 @@ import jinja2
 
 
 class InitialCondition(AbstractFVActionSet):
-    def __init__(self, solver, guard, grid_is_constructed, restart_from_checkpoint=False, loading_scheme="local-loading"):
+    """!
+
+    Fill a Finite Volume patch's initial condition, one volume at a time, by
+    calling the solver's exahype2.api.InitPointWisely PDE term once per
+    volume with that volume's centre.
+
+    Ported from the legacy, cell-wise
+    python/exahype2/solvers/fv/actionsets/InitialCondition.py, which is
+    handed a whole mesh cell's centre and extent, gridIsConstructed, and
+    fills the whole patch itself via the legacy initialCondition() PDE term.
+    This variant instead loops over the patch's volumes itself and calls
+    InitPointWisely's initPointWisely() once per volume, exactly like Flux
+    and MaxEigenvalue are evaluated once per degree of freedom - @see
+    exahype2.api.InitPointWisely.
+
+    Checkpoint-restart support (restart_from_checkpoint/loading_scheme in
+    the legacy version) has deliberately not been ported: it relies on
+    Solver attributes (CheckpointTimeStamp, CheckpointFilesOf...) that do
+    not exist in the new exahype2.api yet.
+
+    """
+
+    def __init__(self, solver, guard):
+        """!
+
+        solver: exahype2.api.Solver
+          Has to have an InitPointWisely PDE term registered - @see
+          exahype2.api.fv.SetupSimulationOverRegularGrid, which asserts
+          this before it attaches an instance of this action set.
+
+        guard: str
+          C++ boolean expression, evaluated per cell, guarding whether the
+          initial condition is (re)written for that cell.
+
+          Unlike the legacy, cell-wise version, this action set takes no
+          grid_is_constructed argument: InitPointWisely fills in a degree of
+          freedom from its coordinate alone, so - unlike the legacy
+          cell-wise initialCondition(), which had to know whether it was
+          still filling in default values during AMR mesh construction or
+          the real initial condition once the grid was done - it produces a
+          well-defined value regardless of how far mesh construction has
+          progressed.
+
+        """
         AbstractFVActionSet.__init__(self, solver)
         self.guard = guard
-        self.grid_is_constructed = grid_is_constructed
-        self._restart_from_checkpoint = restart_from_checkpoint
-        self._loading_scheme = loading_scheme
 
     def get_body_of_operation(self, operation_name):
         result = ""
 
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
-            d = {}
-            self._solver._init_dictionary_with_default_parameters(d)
-            self._solver.add_entries_to_text_replacement_dictionary(d)
-            d["PREDICATE"] = self.guard
-            d["GRID_IS_CONSTRUCTED"] = self.grid_is_constructed
-            d["CHECKPOINTFILELIST"] = "CheckpointFilesOf" + self._solver._name
-            if self._restart_from_checkpoint:
-                result = jinja2.Template(self.get_template_for_restarting()).render(**d)
-            else:
-                result = jinja2.Template(self.TemplateInitialCondition).render(**d)
-
-        return result
-
-    def get_body_of_prepareTraversal(self):
-        result = "\n"
-
-        if self._restart_from_checkpoint:
-            d = {}
-            self._solver._init_dictionary_with_default_parameters(d)
-            self._solver.add_entries_to_text_replacement_dictionary(d)
-            d["PREDICATE"] = self.guard
-            d["GRID_IS_CONSTRUCTED"] = self.grid_is_constructed
-            d["CHECKPOINTFILELIST"] = "CheckpointFilesOf" + self._solver._name
-            result = jinja2.Template(self.get_template_for_restart_preprocessing()).render(**d)
+            d = {
+                "PREDICATE": self.guard,
+                "NUMBER_OF_VOLUMES_PER_AXIS": self._solver.numerical_scheme.patch_size,
+                "NUMBER_OF_UNKNOWNS": self._solver.unknowns,
+                "NUMBER_OF_AUXILIARY_VARIABLES": self._solver.auxiliary_variables,
+                "UNKNOWN_IDENTIFIER": self._solver._unknown_identifier(),
+                "SOLVER_INSTANCE": self._solver.get_name_of_global_instance(),
+            }
+            result = jinja2.Template(self.TemplateInitialCondition).render(**d)
 
         return result
 
     def get_action_set_name(self):
         return __name__.replace(".py", "").replace(".", "_")
 
-    def get_includes(self):
-        return """
-#include <functional>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
-#include "tarch/reader/PeanoTextPatchFileReader.h"
-""" + self._solver._get_default_includes() + self._solver.user_action_set_includes
-
-    def get_static_initialisations(self, full_qualified_classname):
-        if self._restart_from_checkpoint and self._loading_scheme == "global-loading":
-            return """
-std::vector<double> """ + full_qualified_classname + """::domainDataFromFiles;
-std::vector<double> """ + full_qualified_classname + """::offsetIndex;
-int """ + full_qualified_classname + """::domainPatchCount=0;
-"""
-        elif self._restart_from_checkpoint and self._loading_scheme == "local-loading":
-            return """
-//std::unordered_map<std::tuple<double, double, double>, std::string, tarch::reader::offsetHash, tarch::reader::offsetEqual> """ + full_qualified_classname + """::OffsetIndexMap;
-"""
-        else:
-            return """\n"""
-
-    def get_attributes(self):
-        if self._restart_from_checkpoint and self._loading_scheme == "global-loading":
-            return """
-    static std::vector<double> domainDataFromFiles;
-    static std::vector<double> offsetIndex;
-    static int domainPatchCount;
-"""
-        elif self._restart_from_checkpoint and self._loading_scheme == "local-loading":
-            return """
-    static inline std::map< tarch::la::Vector<Dimensions,double> , std::string, tarch::la::VectorCompare<Dimensions> > OffsetIndexMap{ tarch::la::VectorCompare<Dimensions>(1e-5) };
-    static constexpr size_t memoryLimit = 100ULL * 1024 * 1024 * 1024;
-    static tarch::reader::CheckpointFilesManager subFilesManager{memoryLimit};
-"""
-        else:
-            return """\n"""
-
     TemplateInitialCondition = """
   if ({{PREDICATE}}) {
     logTraceIn( "touchCellFirstTime(...)---InitialCondition" );
+    // @todo Tim does it make sense to retire these loops and replace them with your compiler?
+    //           It is only a minor thing, but maybe we can get rid of all of these dfor macros?
     parallelDfor( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}} ) {
       int index = peano4::utils::dLinearised(volume,{{NUMBER_OF_VOLUMES_PER_AXIS}}) * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}});
-      repositories::{{SOLVER_INSTANCE}}.initialCondition(
-        fineGridCell{{UNKNOWN_IDENTIFIER}}.value + index,
+      repositories::{{SOLVER_INSTANCE}}.initPointWisely(
         ::exahype2::fv::getVolumeCentre( marker.x(), marker.h(), {{NUMBER_OF_VOLUMES_PER_AXIS}}, volume),
-        ::exahype2::fv::getVolumeSize( marker.h(), {{NUMBER_OF_VOLUMES_PER_AXIS}} ),
-        {{GRID_IS_CONSTRUCTED}}
+        fineGridCell{{UNKNOWN_IDENTIFIER}}.value + index
       );
     } endParallelDfor
 
-    // relevant for tracing et al which kicks in if and only if cell has been
-    // updated
-    fineGridCell{{SOLVER_NAME}}CellLabel.setHasUpdated(true);
-
     logTraceOut( "touchCellFirstTime(...)---InitialCondition" );
   }
-"""
-
-    def get_template_for_restarting(self):
-        if self._loading_scheme == "global-loading":
-            return """
-//loading-scheme: global-loading
-if ({{PREDICATE}}) {
-  logTraceIn( "touchCellFirstTime(...)---RestartingFromCheckpoint" );
-
-  #if Dimensions==2
-    tarch::la::Vector<2,double> offset;
-    const int totalVolumeCount={{NUMBER_OF_VOLUMES_PER_AXIS}}*{{NUMBER_OF_VOLUMES_PER_AXIS}};
-  #elif Dimensions==3
-    tarch::la::Vector<3,double> offset;
-    const int totalVolumeCount={{NUMBER_OF_VOLUMES_PER_AXIS}}*{{NUMBER_OF_VOLUMES_PER_AXIS}}*{{NUMBER_OF_VOLUMES_PER_AXIS}};
-  #endif
-
-  for (int i=0;i<domainPatchCount;i++) {
-      bool FoundCell = false;
-      #if Dimensions==2
-      offset[0]=offsetIndex[i*2+0];
-      offset[1]=offsetIndex[i*2+1];
-      #elif Dimensions==3
-      offset[0]=offsetIndex[i*3+0];
-      offset[1]=offsetIndex[i*3+1];
-      offset[2]=offsetIndex[i*3+2];
-      #endif
-
-      if ( tarch::la::equals( marker.x() - 0.5*marker.h(), offset, 1e-5) ) { FoundCell=true; }
-
-      if (FoundCell){
-            parallelDfor( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}} ) {
-                  int index = peano4::utils::dLinearised(volume,{{NUMBER_OF_VOLUMES_PER_AXIS}}) * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}});
-                  for (int k=0; k<=({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}}); k++){
-                        fineGridCell{{UNKNOWN_IDENTIFIER}}.value[index+k]=domainDataFromFiles[i*({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}})*totalVolumeCount+index+k];
-                  }
-            } endParallelDfor
-            break;
-      }
-  }
-
-  fineGridCell{{SOLVER_NAME}}CellLabel.setTimeStamp(CheckpointTimeStamp);
-  fineGridCell{{SOLVER_NAME}}CellLabel.setHasUpdated(true);
-  logTraceOut( "touchCellFirstTime(...)---RestartingFromCheckpoint" );
-}
-"""
-        elif self._loading_scheme == "local-loading":
-            return """
-//loading-scheme: local-loading
-//warning: it only support 3D checkpointing file currently!
-if ({{PREDICATE}}) {
-  logTraceIn( "touchCellFirstTime(...)---RestartingFromCheckpoint" );
-
-  #if Dimensions==2
-    tarch::la::Vector<2,double> offset;
-    const int totalCellCount={{NUMBER_OF_VOLUMES_PER_AXIS}}*{{NUMBER_OF_VOLUMES_PER_AXIS}};
-  #elif Dimensions==3
-    tarch::la::Vector<3,double> offset;
-    const int totalCellCount={{NUMBER_OF_VOLUMES_PER_AXIS}}*{{NUMBER_OF_VOLUMES_PER_AXIS}}*{{NUMBER_OF_VOLUMES_PER_AXIS}};
-  #endif
-  double patchDataFromFile[totalCellCount*({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}})];
-
-  std::string targetCheckpointFileName=OffsetIndexMap[{(marker.x() - 0.5*marker.h())[0], (marker.x() - 0.5*marker.h())[1], (marker.x() - 0.5*marker.h())[2]}];
-
-  const auto& lines = subFilesManager.getCheckpointFileData(targetCheckpointFileName);
-  bool PatchFound=false;
-
-  for (const auto& line : lines) {
-    if (line.find("  offset") == 0) {
-      std::istringstream iss(line);
-      std::string token; int index=0;
-
-      while (iss >> token) { try {offset[index]=std::stod(token); index++; } catch (...){ } }
-      if ( tarch::la::equals( marker.x() - 0.5*marker.h(), offset, 1e-6) ){ PatchFound=true; }
-    }
-    if ( PatchFound and (line.find("     ") == 0) ){
-      std::istringstream iss(line);
-      std::string token; int index=0;
-
-      while (iss >> token) { patchDataFromFile[index]=std::stod(token); index++; }
-      break;
-    }
-  }
-
-  parallelDfor( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}} ) {
-      int index = peano4::utils::dLinearised(volume,{{NUMBER_OF_VOLUMES_PER_AXIS}}) * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}}) ;
-      for (int i=0; i<=({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}}); i++){
-            fineGridCell{{UNKNOWN_IDENTIFIER}}.value[index+i]=patchDataFromFile[index+i];
-      }
-  } endParallelDfor
-
-  fineGridCell{{SOLVER_NAME}}CellLabel.setTimeStamp(CheckpointTimeStamp);
-  fineGridCell{{SOLVER_NAME}}CellLabel.setHasUpdated(true);
-  logTraceOut( "touchCellFirstTime(...)---RestartingFromCheckpoint" );
-}
-"""
-
-    def get_template_for_restart_preprocessing(self):
-        if self._loading_scheme == "global-loading":
-            return """
-      tarch::reader::readInCheckpointFiles(CheckpointFilesOf{{SOLVER_NAME}}, domainDataFromFiles, offsetIndex,
-                                             {{NUMBER_OF_UNKNOWNS}}, {{NUMBER_OF_AUXILIARY_VARIABLES}}, Dimensions, {{NUMBER_OF_VOLUMES_PER_AXIS}});
-      #if Dimensions==2
-      domainPatchCount=offsetIndex.size()/2;
-      #elif Dimensions==3
-      domainPatchCount=offsetIndex.size()/3;
-      #endif
-
-"""
-        elif self._loading_scheme == "local-loading":
-            return """
-      tarch::reader::readInCheckpointOffsetIndex(OffsetIndexMap, CheckpointFilesOf{{SOLVER_NAME}});
-
 """

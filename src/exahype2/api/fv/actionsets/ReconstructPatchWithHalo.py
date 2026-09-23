@@ -114,4 +114,4 @@ class ReconstructPatchWithHalo(ReconstructPatchAndApplyFunctor):
         return """
 #include "exahype2/fv/BoundaryConditions.h"
 #include "tarch/NonCriticalAssertions.h"
-""" + self._solver._get_default_includes() + self._solver.user_action_set_includes
+""" + self._solver._get_default_includes() + self._solver.user_solver_includes

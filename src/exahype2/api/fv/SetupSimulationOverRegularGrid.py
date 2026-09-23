@@ -3,7 +3,9 @@
 import peano4.api
 import peano4.api.actionsets
 
+from ..InitPointWisely import InitPointWisely
 from ..Solver import Solver
+from .actionsets import InitialCondition
 
 
 class SetupSimulationOverRegularGrid(Solver.GridConstruction):
@@ -18,6 +20,11 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
     does not refine the mesh at all: it assumes the mesh is already the
     regular grid it is going to stay, so setup only has to fill in the
     initial condition and project it onto the faces.
+
+    The solver this is attached to has to have an exahype2.api.InitPointWisely
+    PDE term registered (via solver.add_pde_term(...)), as that is what fills
+    in the initial condition this class' setup task graph relies on;
+    construct_output() asserts this before it builds anything.
 
     """
 
@@ -48,7 +55,13 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         """
         peano4.api.Logger().log("Create setup task graph for Finite Volume scheme over a regular, block-structured mesh with Rusanov flux")
 
-        refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh", 
+        assert any(isinstance(term, InitPointWisely) for term in self._solver.pde_terms), (
+            f"Solver {self._solver.name} has no InitPointWisely PDE term registered. "
+            "SetupSimulationOverRegularGrid needs one to fill in the initial condition - "
+            "add one via solver.add_pde_term(exahype2.api.InitPointWisely(...))."
+        )
+
+        refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh",
                                                                 entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL,
                                                                 task_has_to_repeat="not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
                                                                 )
@@ -66,6 +79,10 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
 
         initial_condition_task.add_dependency(refine_task)
         project_on_faces_task.add_dependency(initial_condition_task)
+
+        initial_condition_task.add_action_set(
+            InitialCondition(self._solver, guard="true")
+        )
 
         setup_simulation.add_task(refine_task)
         setup_simulation.add_task(initial_condition_task)
