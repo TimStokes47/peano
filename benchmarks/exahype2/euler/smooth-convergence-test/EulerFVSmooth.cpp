@@ -4,9 +4,6 @@ void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::initPo
   const tarch::la::Vector<Dimensions, double>& x, double* __restrict__ Q
 ) {
   logTraceInWith1Argument( "initPointWisely(...)", x );
-  // Smooth density wave advected in x, constant pressure - same closed-form
-  // initial condition the legacy, cell-wise initialCondition() used, just
-  // evaluated at the single point x instead of a whole cell's centre.
   constexpr double gamma = 1.4;
   constexpr double p = 1.0;
   Q[0] = 1.0 + 0.2 * std::cos((2.0 * x[0]) * 3.1415);

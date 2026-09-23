@@ -28,6 +28,12 @@ class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: publi
      const double* __restrict__ Q, const tarch::la::Vector<Dimensions, double>& x, int normal, double* __restrict__ lambdaMax
     ) override;
 
+    /**
+     * Smooth density wave advected in x, constant pressure - same
+     * closed-form initial condition the legacy, cell-wise
+     * initialCondition() used, just evaluated at the single point x
+     * instead of a whole cell's centre.
+     */
     virtual void initPointWisely(
       const tarch::la::Vector<Dimensions, double>& x, double* __restrict__ Q
     ) override;
