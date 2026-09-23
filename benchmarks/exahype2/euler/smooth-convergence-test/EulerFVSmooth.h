@@ -28,14 +28,11 @@ class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: publi
      const double* __restrict__ Q, const tarch::la::Vector<Dimensions, double>& x, int normal, double* __restrict__ lambdaMax
     ) override;
 
-/*
-    void initialCondition(
-      double * __restrict__ Q,
-      const tarch::la::Vector<Dimensions,double>&  volumeCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      bool                                         gridIsConstructed
+    virtual void initPointWisely(
+      const tarch::la::Vector<Dimensions, double>& x, double* __restrict__ Q
     ) override;
 
+/*
     virtual void boundaryConditions(
       const double * __restrict__ Qinside, // Qinside[4+0]
       double * __restrict__ Qoutside, // Qoutside[4+0]

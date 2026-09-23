@@ -1,23 +1,22 @@
 #include "EulerFVSmooth.h"
 
-/*
-void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::initialCondition(
-  double * __restrict__ Q,
-  const tarch::la::Vector<Dimensions,double>&  volumeCentre,
-  const tarch::la::Vector<Dimensions,double>&  volumeH,
-  bool                                         gridIsConstructed
+void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::initPointWisely(
+  const tarch::la::Vector<Dimensions, double>& x, double* __restrict__ Q
 ) {
-  logTraceInWith3Arguments( "initialCondition(...)", volumeCentre, volumeH, gridIsConstructed );
-  // Initial data
+  logTraceInWith1Argument( "initPointWisely(...)", x );
+  // Smooth density wave advected in x, constant pressure - same closed-form
+  // initial condition the legacy, cell-wise initialCondition() used, just
+  // evaluated at the single point x instead of a whole cell's centre.
   constexpr double gamma = 1.4;
   constexpr double p = 1.0;
-  Q[0] = 1.0 + 0.2 * std::cos((2.0 * volumeCentre[0]) * 3.1415);
+  Q[0] = 1.0 + 0.2 * std::cos((2.0 * x[0]) * 3.1415);
   Q[1] = 1.0;
   Q[2] = 0.0;
   Q[3] = p / (gamma - 1) + 0.5 / Q[0] * (Q[1] * Q[1]);
-  logTraceOut( "initialCondition(...)" );
+  logTraceOut( "initPointWisely(...)" );
 }
 
+/*
 void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::boundaryConditions(
   const double * __restrict__                  Qinside, // Qinside[4+0]
   double * __restrict__                        Qoutside, // Qoutside[4+0]
