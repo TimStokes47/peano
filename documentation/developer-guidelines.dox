@@ -56,14 +56,14 @@ Once you are linked against a debug/asserts build, a productive way to narrow do
 1.  **Let assertions fail first.** An assertion failure names the exact file, line and
     (often) the offending values, and it flushes all pending log output before the rank
     goes down. Read that flushed log before you touch anything else - the last few debug
-    lines before the assertion usually tell you which algorithmic step was in flight.
+    lines before the assertion usually tell you which @ref glossary_observer "algorithmic step" was in flight.
 2.  **Reproduce with the smallest configuration you can.** Fewer cells, one rank, one
     thread, a coarse mesh. Peano's traversal order is deterministic for a given setup, so
     a smaller reproducer keeps the same code paths without the noise of a production run.
 3.  **Switch on debug logging for the suspect classes only**, rather than globally. A full
     `-DPeanoDebug=4` run on anything but a toy setup produces gigabytes of output you will
     never read. Use a log filter file (see the log filter section on the logging page) to
-    whitelist just the classes/namespaces you suspect, e.g. the observer or action set you
+    whitelist just the classes/namespaces you suspect, e.g. the @ref glossary_observer "observer" or @ref glossary_events_and_action_sets "action set" you
     are debugging plus `peano4::grid` for the traversal itself.
 4.  **Use `tarch::logging::LogFilter::switchProgramPhase()`** if the bug only shows up in
     one phase of a multi-step algorithm (e.g. only during grid construction, not during

@@ -27,7 +27,7 @@ erase means that the grid is really thrown away.
 # Mesh refinement workflow
 
 Prior to a mesh traversal, the routine @ref peano4::grid::Spacetree::traverse()  asks
-the observer for a list of grid control events. The observer's behaviour is generated
+the @ref glossary_observer "observer" for a list of grid control events. The observer's behaviour is generated
 by __generate_createGridControlEventsForNextTraversal(). 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,11 +43,11 @@ by __generate_createGridControlEventsForNextTraversal().
   return result;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-So it really just runs through all of its action sets and concatenates the results. 
-While the action sets are persistent attributes of their observer, the observer objects
-themselves are not. 
+So it really just runs through all of its @ref glossary_events_and_action_sets "action sets" and concatenates the results.
+While the action sets are persistent attributes of their @ref glossary_observer "observer", the observer objects
+themselves are not.
 
-peano4::parallel::SpacetreeSet::traverse() clones the trees (aka observers). 
+peano4::parallel::SpacetreeSet::traverse() clones the trees (aka @ref glossary_observer "observers").
 
 So that means the events are lost eventually!!!!!!
 
@@ -63,12 +63,12 @@ Fuer REgular grid, ruachen wir Zellen also gar nie auswerten!
 ### Realisation
 
 Prior to each mesh traversal, the automaton running through the mesh 
-asks the active observer hosting one or multiple @ref peano_action_sets "action sets" for 
+asks the active @ref glossary_observer "observer" hosting one or multiple @ref page_peano_action_sets "action sets" for
 a list of grid control events. While is runs through the mesh, it takes 
 these events into account.
 This happens in three steps:
 
-1.  Each subpartition asks the action set (clone) for the refinement and
+1.  Each subpartition asks the @ref glossary_events_and_action_sets "action set" (clone) for the refinement and
     coarsening decisions at the startup of the mesh traversal. For this,
     they query `createGridControlEventsForNextTraversal()`. Before we use the events, they
     are merged/consolidated by peano4::grid::merge().
@@ -160,7 +160,7 @@ refined with a lot of adjacent hanging vertices.
 
 
 In many  applications, the refinement pattern is not known a priori.
-Instead, the action sets build up the knowledge where to refine or
+Instead, the @ref glossary_events_and_action_sets "action sets" build up the knowledge where to refine or
 coarsen: They start with an empty
 `std::vector< peano4::grid::GridControlEvent >`, and push back events
 throughout the grid run-through. As action sets are not persistent
@@ -170,8 +170,8 @@ different action sets, and as  clones one action set per subdomain
 to be careful with the data management.
 
 A popular pattern is to have a static
-`std::vector< peano4::grid::GridControlEvent >`. In this case, an action
-set can build up a local set of control events, and commit them to the
+`std::vector< peano4::grid::GridControlEvent >`. In this case, an @ref glossary_events_and_action_sets "action
+set" can build up a local set of control events, and commit them to the
 static set. The static set is then returned by `createGridControlEventsForNextTraversal()`
 which consequently erases it to accept new events.
 
@@ -182,7 +182,7 @@ that each subtree/subdomain asks for the grid control events before they
 actually trigger `beginIteration()`. So it is safe to hand out the
 static set and to clear it within the begin iteration.
 
-If you work with multiple action sets and an algorithm which switches
+If you work with multiple @ref glossary_events_and_action_sets "action sets" and an algorithm which switches
 between the different ones, you will have to centralise the static
 control events. One action set might feed into the event, while the next
 one delivers from this centralised repository. Alternatively, you can

@@ -28,7 +28,7 @@ chosen, and then you can activate the solvers' vectorisation.
 
 
 Some of ExaParty's solvers are however already well-prepared to exploit the knowledge about
-optimised memory layouts and proper setups of action sets and hence can be
+optimised memory layouts and proper setups of @ref glossary_events_and_action_sets "action sets" and hence can be
 vectorised.
 This does not hold for all solvers. You have to study their documentation,
 typically alter some switches and then tune the memory layout and particle

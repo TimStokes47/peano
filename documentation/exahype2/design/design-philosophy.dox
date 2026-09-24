@@ -49,7 +49,7 @@ so forth.
 Once we have constructed this implementation representation, there's a second layer of
 generators tied to the implementation:
 They take the implementation representation and lower it into a Peano 4 representation.
-On this level, idnividual solver steps are now for example mapped onto action sets or traversals.
+On this level, idnividual solver steps are now for example mapped onto @ref glossary_events_and_action_sets "action sets" or traversals.
 
 
 # Python design principles

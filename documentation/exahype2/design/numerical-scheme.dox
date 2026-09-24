@@ -67,7 +67,7 @@ matplotlib to sanity-check the dependency structure.
 ## Adding the actual computations
 
 The actual computations are now attached to these tasks: The tasks represent
-a logical order, but each then has an action set which does the actual calculations.
+a logical order, but each then has an @ref glossary_events_and_action_sets "action set" which does the actual calculations.
 While the tasks define the order, the action sets define what is to be computed.
 
 
@@ -82,7 +82,7 @@ Peano.
 Depending on what compiler is chosen, the task graph might be linearised into many
 single grid sweeps, where each sweep runs only one task from the graph.
 However, there are also compiler variants which quite aggressively parallelise over
-a task graph, fuse individual steps, or even map some of the action sets into real
+a task graph, fuse individual steps, or even map some of the @ref glossary_events_and_action_sets "action sets" into real
 tasks in a TBB or OpenMP sense of their own.
 
 How this all works is technically speaking not a properly of ExaHyPE, but of Peano. 

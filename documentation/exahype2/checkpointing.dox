@@ -58,7 +58,7 @@ condition stage to restart from checkpoints.
 ## New Checkpoint Stage
 
 The checkpoint stage is actually another plot solution stage, but without any further postprocessing of spatial or solution filter. The whole
-domain data will be dumped onto the disk in this stage. In your solver class, add a function responsible for action set in this new stage
+domain data will be dumped onto the disk in this stage. In your solver class, add a function responsible for @ref glossary_events_and_action_sets "action set" in this new stage
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
  def add_actions_to_checkpoint_solution(self, step, output_path, restart_from_checkpoint=False):
@@ -105,7 +105,7 @@ domain data will be dumped onto the disk in this stage. In your solver class, ad
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once \c first_checkpoint_time_stamp or \c time_in_between_checkpoints in \c project.set_global_simulation_parameters() above
-are set to be non-zero, the code will call this action set function to prepare the ploting code for checkpointing stage. The 
+are set to be non-zero, the code will call this @ref glossary_events_and_action_sets "action set" function to prepare the ploting code for checkpointing stage. The
 new argument \c restart_from_checkpoint is required for pre-processing of the existing index meta file to avoid error, and 
 you will need them in your action set function for plotsolution as well (Once the restart is enabled this argument will be set
 True during function call)
@@ -121,7 +121,7 @@ def add_actions_to_plot_solution(self, step, output_path, restart_from_checkpoin
 
 ## Tuning Initial Condtion Stage
 
-First we also need to add the \c restart_from_checkpoint argument to corresponding action set function to initial condtion stage:
+First we also need to add the \c restart_from_checkpoint argument to corresponding @ref glossary_events_and_action_sets "action set" function to initial condtion stage:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 def add_actions_to_init_grid(self, step, restart_from_checkpoint=False)
@@ -134,7 +134,7 @@ def add_actions_to_init_grid(self, step, restart_from_checkpoint=False)
 .......
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the initial condition action set, you need to add several pieces of code for restarting process, the first part is the file loading
+In the initial condition @ref glossary_events_and_action_sets "action set", you need to add several pieces of code for restarting process, the first part is the file loading
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 def get_body_of_prepareTraversal(self):
@@ -280,7 +280,7 @@ memory to release space for new one. In principle, this strategy will only sligh
 the memory pressure. Unfortunately this strategy is still buggy and gives segmentation fault from time to time. Further tests are required. 
 Interested users are referred to the implemented code of \c local-loading in \c /src/tarch/reader/PeanoTextPatchFileReader.h, 
 \c /src/tarch/reader/PeanoTextPatchFileReader.cpp and \c /python/exahype2/solvers/rkfd/actionsets/InitialCondition.py. You can change load 
-strategy easily by change the argument in the action set.
+strategy easily by change the argument in the @ref glossary_events_and_action_sets "action set".
 
 
 */

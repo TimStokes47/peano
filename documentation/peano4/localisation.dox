@@ -37,8 +37,8 @@ you don't want to store and load the pointers to these heap data and you
 also don't want it to create (temporary) data at any point.
 Along these lines, you can also associate data with grid entitites which is 
 always created temporarily and made available to the solver, but is never
-ever stored or loaded. This is quite useful if you have multiple action sets
-within one observer which pass on information. In some way, such temporary data
+ever stored or loaded. This is quite useful if you have multiple @ref glossary_events_and_action_sets "action sets"
+within one @ref glossary_observer "observer" which pass on information. In some way, such temporary data
 resemble temporary/local variables.
 
 

@@ -37,7 +37,7 @@ with its particles and puzzles out
 - which of the compute steps can internally run in parallel (task-based parallelism).
 
 With this information, the project creates a straight Peano project which
-hosts the computational steps, all data and the action sets and observers.
+hosts the computational steps, all data and the @ref glossary_events_and_action_sets "action sets" and @ref glossary_observer "observers".
 
 @image html architecture.png
 
@@ -50,7 +50,7 @@ Explicit Euler here means that the particle runs through three logical steps.
 The graph compiler takes this specification and finds out that we have to
 employ two mesh traversals to realise this scheme. It therefore builds up
 a Peano project, where the mesh can handle the particles and which has two
-observers. Each observer has all the action sets which are required to
+@ref glossary_observer "observers". Each observer has all the @ref glossary_events_and_action_sets "action sets" which are required to
 administer the particles (such as sorting them), but that also hold the C++
 code snippets that the user originally has added to the explicit Euler.
 So these code snippets are piped through and now inserted at the right point
@@ -63,7 +63,7 @@ observer - until the terminal time is reached.
 This Peano project finally is used to generate the actual C+ code which does
 not contain any Python anymore.
 
-@see peano4.solversteps.ActionSet for a description of action sets from a user
+@see peano4.solversteps.ActionSet for a description of @ref glossary_events_and_action_sets "action sets" from a user
   perspective
 
 
@@ -83,16 +83,16 @@ or their interaction radius, it is the graph compiler's job to ensure that a
 resorting is triggered in the next grid sweep. Along the same lines, any
 resorting should again trigger an adaptive remeshing, as the mesh structure
 typically follows the particle distribution.
-The latter is realised by adding the action set peano4.toolbox.particles.ParticleAMR to
+The latter is realised by adding the @ref glossary_events_and_action_sets "action set" peano4.toolbox.particles.ParticleAMR to
 the relevant computational steps.
 
 
 # Particle-particle interaction
 
 All particle modifications are realised through mesh traversals. That is, an
-observer runs through the mesh. Whenever it observes a relevant action (such
+@ref glossary_observer "observer" runs through the mesh. Whenever it observes a relevant action (such
 as "hey, I've touched this vertex with its particles for the first time"), the
-observer runs through all the action sets that are associated with it and calls
+observer runs through all the @ref glossary_events_and_action_sets "action sets" that are associated with it and calls
 the respective functions. In the case above, this would be touchVertexFirstTime().
 
 It is important to note that Peano's mesh traversals result from top-down tree

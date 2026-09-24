@@ -50,10 +50,10 @@ solver:  $(CXX_OBJS) $(FORTRAN_OBJS)
 	$(CXX) $(FORTRAN_MODULE_OBJS) $(FORTRAN_OBJS) $(CXX_OBJS) $(LDFLAGS) $(GPU_OBJS) $(CU_OBJS) $(LIBS) -o noh2D
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-where the observer file names have to be replaced with the name of the file
+where the @ref glossary_observer "observer" file names have to be replaced with the name of the file
 which uses your altered kernel invocation.
 This tweaked makefile builds all object files. After that, it deletes the object
-file behind the action set StephydroPartForceLoop. This is the step where the
+file behind the @ref glossary_events_and_action_sets "action set" StephydroPartForceLoop. This is the step where the
 force kernel is actually used. We then retranslate this single object file with
 Intel's -opt-report flag which provides ample evidence which vectorisation
 optimisation has been performed by the compiler.

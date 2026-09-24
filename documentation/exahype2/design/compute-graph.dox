@@ -7,9 +7,9 @@
 @ref page_exahype_numerical_scheme "adding a numerical scheme" describes how a
 scheme populates a peano4.api.taskgraph.Graph with Task instances and
 dependencies. That graph is still a purely descriptive, implementation-level
-model: it says which algorithmic steps exist, which mesh entity each works on
+model: it says which @ref glossary_observer "algorithmic steps" exist, which mesh entity each works on
 (Task.GridEntity.VERTEX/FACE/CELL/GLOBAL) and which steps have to happen
-before which others - it does not yet say anything about Peano action sets,
+before which others - it does not yet say anything about Peano @ref glossary_events_and_action_sets "action sets",
 observers or mesh traversals. Turning the graph into those is the job of a
 *task graph compiler*, peano4.api.taskgraph.compiler.
 
@@ -26,14 +26,14 @@ def translate(graph: peano4.api.taskgraph.Graph, identifier: str) -> List[peano4
 that takes a Graph plus an identifier for the surrounding algorithmic phase
 (e.g. "SetupSimulation", "TimeStep", "Plot") and returns a list of
 peano4.api.solversteps.Step objects. In Peano terminology, a Step corresponds
-to an Observer: for every mesh traversal, the traversal automaton is handed an
-observer that distributes the grid events among the action sets tied to it.
+to an @ref glossary_observer "Observer": for every mesh traversal, the traversal automaton is handed an
+observer that distributes the grid @ref glossary_events_and_action_sets "events" among the @ref glossary_events_and_action_sets "action sets" tied to it.
 This is exactly the second generator layer the
 @ref page_exahype_design_philosophy "design philosophy" page describes:
 individual solver steps get mapped onto action sets and traversals here.
 
 peano4.api.taskgraph.compiler.Sequential.translate() is the baseline
-compiler shipped today. It linearises the task graph into one Observer per
+compiler shipped today. It linearises the task graph into one @ref glossary_observer "Observer" per
 task, in an order that respects every dependency, and prefixes every
 generated Observer's name with `identifier` so that observers coming from
 different phases never clash even if their tasks happen to share a name.

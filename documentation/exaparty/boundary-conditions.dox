@@ -43,11 +43,11 @@
 
  ## Plug into each and every grid sweep
 
- The ExaParty project allows us to add our own @ref peano_action_sets "set of actions" to
+ The ExaParty project allows us to add our own @ref page_peano_action_sets "set of actions" to
  each and every mesh sweep. That is, ExaParty's graph compiler will lower the
  abstract SPH steps into a series of mesh sweeps per time step, and we can then
  afterwards add further actions to these mesh sweeps. This is done by appending
- action sets to the project:
+ @ref glossary_events_and_action_sets "action sets" to the project:
 
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 project.additional_action_sets_per_solver_step.append(
@@ -57,7 +57,7 @@ project.additional_action_sets_per_solver_step.append(
 )
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- There are various pre-defined action sets to realise various SPH boundary
+ There are various pre-defined @ref glossary_events_and_action_sets "action sets" to realise various SPH boundary
  conditions:
 
  - exaparty.api.boundaryconditions.Inflow
@@ -65,8 +65,8 @@ project.additional_action_sets_per_solver_step.append(
  - exaparty.api.boundaryconditions.Outflow
 
  The advantage with this approach is that it provides a totally generic
- approach to add boundary conditions. The disadvantage here is that this action
- set is merged into each and every mesh sweep. However, we should not really
+ approach to add boundary conditions. The disadvantage here is that this @ref glossary_events_and_action_sets "action
+ set" is merged into each and every mesh sweep. However, we should not really
  alter the particle position "arbitrarily" (which is what a lot of boundary
  condition action sets do), as we then have to resort the particles. Also, it
  is economically not very clever to check the boundary conditions in each and

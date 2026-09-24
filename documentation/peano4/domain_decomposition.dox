@@ -78,8 +78,8 @@ In this case, you don't have to care about the load balancing realisation itself
 # Domain decomposition within a (typical) Peano application
 
 <div style="background-color: #ccf ; padding: 10px; border: 1px solid green;"> 
-This page will frequently refer to action sets and their order. It therefore
-is reasonable to study @ref peano_action_sets "the description of action sets"
+This page will frequently refer to @ref glossary_events_and_action_sets "action sets" and their order. It therefore
+is reasonable to study @ref page_peano_action_sets "the description of action sets"
 first. 
 </div>
 
@@ -119,10 +119,10 @@ Some synchronisation and consistency rules remain in place:
 If you run Peano 4, you buy into a SPMD paradigm, i.e. every
 single rank hosts one instance of Peano. Each Peano instance in return
 hosts multiple subspacetrees, i.e. multiscale domain partitions. 
-When you pick a new observer with some action sets and you call 
+When you pick a new @ref glossary_observer "observer" with some @ref glossary_events_and_action_sets "action sets" and you call
 traverse(), you expect that all the trees on each and every rank
 run through their mesh and use the same observer, i.e. deploy
-events to the same action sets.
+@ref glossary_events_and_action_sets "events" to the same action sets.
 
 
 It is
@@ -138,10 +138,10 @@ exactly the same.
 
 ## Lifecycle of action sets
 
-Each action set (instance of the class) is created once per tree.
+Each @ref glossary_events_and_action_sets "action set" (instance of the class) is created once per tree.
 In addition, a prototype action set does exist.
 
-In the baseline version, only one instance of an action set does exist
+In the baseline version, only one instance of an @ref glossary_events_and_action_sets "action set" does exist
 per rank. 
 For this action set, we call prepareTraversal().
 Once this routine has terminated, 
@@ -154,11 +154,11 @@ beginTraversal() and endTraversal() are called on the clone, i.e.
 multiple times.
 If vertices or faces sit exactly at the interface of subdomains, they
 their touchVertexFirstTime() is called multiple times, i.e. once per
-instance of this vertex. touchVertexLastTime() and the face events 
+instance of this vertex. touchVertexLastTime() and the face @ref glossary_events_and_action_sets "events"
 follow analogously.
 
 After all trees on a rank have finished their traversal, i.e. all the 
-endTraversal() calls have returned, the clones of the action sets are
+endTraversal() calls have returned, the clones of the @ref glossary_events_and_action_sets "action sets" are
 destroyed, and we all unprepareTraversal() one final time on the 
 vanilla/baseline instance of the action set.
 
@@ -384,7 +384,7 @@ where an iteration feeds into the neighbour's iteration n+1.
 While a new id is booked by one tree if a split is triggered, this new tree
 does not yet physically exist. The original (source) tree keeps the
 complete ownership of all data, i.e. it does all refines and coarses and
-also creates all events. However, it already enters the new, yet to be
+also creates all @ref glossary_events_and_action_sets "events". However, it already enters the new, yet to be
 created, tree's indices into all adjacency lists with are consequently
 sent out to the other ranks. This is the yellow step above. After the grid
 sweep, we mark the new tree id as splitting. At this point, all neighbours
@@ -397,20 +397,20 @@ created: they receive the information about the updated adjacency and can
 send out their stuff to the new tree. Which does not exist yet (grey).
 
 So the splitting rank (orange) traverses its domain and invokes all
-events. It has the semantic ownership. It merges in all boundary data from
+@ref glossary_events_and_action_sets "events". It has the semantic ownership. It merges in all boundary data from
 neighbours, but is does not send out the boundary data (anymore).
 After the splitting tree traversal has terminated, we establish
 the new tree by duplicating all the local data. This includes the
 user data, too.
 
 The new tree (light green) subsequently is traversed once as empty
-tree. That is, all data travel over the stacks, but no events are invoked
+tree. That is, all data travel over the stacks, but no @ref glossary_events_and_action_sets "events" are invoked
 and no communication is happening. The purpose of this empty traversal is
 to get all data inot the right order.
 
 Once the empty traversal has terminated, we run over the new tree
 again. This time, we label it as new (dark green). While we still do not
-invoke any event, we now do send out data. This is the sole purpose of the
+invoke any @ref glossary_events_and_action_sets "event", we now do send out data. This is the sole purpose of the
 new traversal.
 
 It is not guaranteed that the splits are all successful. See the routine
@@ -458,7 +458,7 @@ substeps:
         stack data is in the right order.
 
     3.  Immediately after that, we do a **new tree** sweep. This sweep
-        does not invoke any user events. It however sends out the data
+        does not invoke any user @ref glossary_events_and_action_sets "events". It however sends out the data
         the others expect from us.
 
 @image html domain-decomposition/split-data-flow.png
@@ -467,7 +467,7 @@ substeps:
 ## User data throughout splits
 
 There is no need for the user to implement something manually, as long
-as the user ensures that the grid observer replicates the master tree on
+as the user ensures that the grid @ref glossary_observer "observer" replicates the master tree on
 all new workers. The `SpacetreeSet` offers a function to do this
 automatically.
 
@@ -684,18 +684,18 @@ More general remarks on shared memory primitives and task-based
 programming can be found in the discussion of the tarch::multicore
 namespace.
 
-Realising global variables shared between action sets is in principle
+Realising global variables shared between @ref glossary_events_and_action_sets "action sets" is in principle
 impossible: Action sets are not persistent. They are created per
 traversal per tree. Furthermore, you have absolutely no knowledge how
 many trees any rank hosts. The only thing you know is that all trees
 will kind of start their traversal around the same time.
 
-However, nothing stops you from having a singleton data or static 
-data set somewhere and to let all action sets write into this one.
+However, nothing stops you from having a singleton data or static
+data set somewhere and to let all @ref glossary_events_and_action_sets "action sets" write into this one.
 You just have to ensure that you protected writes with semaphores.
 
 <div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
-  If a lot of action sets all hit the same static data concurrently,
+  If a lot of @ref glossary_events_and_action_sets "action sets" all hit the same static data concurrently,
   you get a lot of lock overhead. In this case I recommend that 
   each data set creates its own local data and reduces all information
   from its tree there. In endTraversal(), you can then lock the static
@@ -707,9 +707,9 @@ You just have to ensure that you protected writes with semaphores.
 
 ## Design patterns for (MPI) global variables between action sets
 
-Realising global variables shared between action sets is in principle
-impossible: 
-Action sets are not persistent. 
+Realising global variables shared between @ref glossary_events_and_action_sets "action sets" is in principle
+impossible:
+Action sets are not persistent.
 They are created per traversal per tree.
 Furthermore, you have absolutely no knowledge how many trees any rank hosts.
 The only thing you know is that all trees will kind of start their traversal
@@ -717,14 +717,14 @@ around the same time.
 
 
 However, there is a design pattern that you can use.
-It relies on the observations that (i) all the beginTraversal() events
+It relies on the observations that (i) all the beginTraversal() @ref glossary_events_and_action_sets "events"
 are triggered after all the global trees have synchronised.
 (ii) Tree 0 exists always.
 
 - There are two `static` datasets per rank. This is the only valid
   data in-between any two grid traversals. One is the current data, one is the
   data from the previous sweep.
-- Every action sets builds up its local current data and commits this 
+- Every @ref glossary_events_and_action_sets "action sets" builds up its local current data and commits this
   data to the static global dataset in endTraversal(). This local
   reduction has to be protected by a (rank-local) semaphore.
 - In the main routine, each rank calls a routine which reduces the
@@ -732,7 +732,7 @@ are triggered after all the global trees have synchronised.
   each rank rolls over the reduced data into the static old data set. The
   current data is cleared. If you don't want to bother your main, you can use 
   prepareTraversal() or unprepareTraversal() for this.
-- Every action set copies the old data set into its local copy.
+- Every @ref glossary_events_and_action_sets "action set" copies the old data set into its local copy.
 
 
 <div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 

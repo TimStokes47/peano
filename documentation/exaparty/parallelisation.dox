@@ -53,7 +53,7 @@
  then you end up with a classic, old-fashioned domain decomposition.
 
  To distinguish particles that are local to a domain and mere copies (halos) 
- from neighbours, each particle carries a state flag. The action set
+ from neighbours, each particle carries a state flag. The @ref glossary_events_and_action_sets "action set"
  peano4.toolbox.particles.api.UpdateParallelState is responsible to keep this
  flag up-to-date, though some updates also are performed when we merge two 
  particles among the domain boundary. Consult the action set's documentation for

@@ -39,7 +39,7 @@ minimal particle search radius. As pointed out: this search radius can
 change over time and thus is solely an initial indicator. You can alter the
 initial mesh and hence start with an adaptive one right from the start. For
 this, you can take the step algorithm_step_create_grid which is an attribute
-of your exaparty.api.Project and add further action sets which refine your mesh
+of your exaparty.api.Project and add further @ref glossary_events_and_action_sets "action sets" which refine your mesh
 according to your needs. However, the initial grid construction will try
 to establish a stationary grid, so ensure that you define a stationary
 grid, i.e. not a grid where you sometimes erase parts and sometimes add
@@ -89,7 +89,7 @@ implementation in exaparty.api.Project.__compute_global_max_h().
 
 The ExaParty project object will export the arising global maximum mesh size
 into the Constants.h file as a simulation-global constant. It will also feed
-this quantity into the action set exaparty.api.Project.action_set_create_regular_grid:
+this quantity into the @ref glossary_events_and_action_sets "action set" exaparty.api.Project.action_set_create_regular_grid:
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -103,7 +103,7 @@ Here is what happens from hereon:
 - The global main file (cmp SWIFTMain.template.cpp) enters its phase 1. This
   means setting up the (initial) grid.
 - It then runs over the mesh in a while loop.
-- Per mesh traversal, the action set from action_set_create_regular_grid will
+- Per mesh traversal, the @ref glossary_events_and_action_sets "action set" from action_set_create_regular_grid will
   be invoked and asked whether to decide the mesh further.
 - Once the global main finds out that the global maximum mesh size constraint
   is met, it sets its flag gridConstructed and consequently switches to phase 2
@@ -142,7 +142,7 @@ reasonable as it gives the load balancing more granularity.
 The initial conditions are added by one mesh sweep modelled by the project's
 attribute algorithm_step_initial_conditions. It represents the grid sweep,
 i.e. mesh sweep, which sets up the initial condition. That is, if you
-want to insert particles, you have to add action sets to this algorithm
+want to insert particles, you have to add @ref glossary_events_and_action_sets "action sets" to this algorithm
 step calling add_action_set(). The passed action sets have to
 throw all the particles you want to have into your mesh.
 There are three mainstream ways to implement initial conditions for the
@@ -153,7 +153,7 @@ simulations:
   - Insert particle along a regular mesh (```src/exaparty/api/input/InsertParticlesAlongCartesianGrid.py```).
   - Insert particles from an HDF5 file (```src/exaparty/api/input/InsertParticlesFromHDF5File.py```).
 
-Nothing stops you from additing further action sets to
+Nothing stops you from additing further @ref glossary_events_and_action_sets "action sets" to
 algorithm_step_initial_conditions. Some scenarios, for example, hard code
 the initial condition of further particles. The @ref tests_exaparty_planet_orbit "planet orbit benchmark"
 is such an example, where no input files are required.
@@ -179,7 +179,7 @@ and, for example, grabs additional particle attributes from the input
 file.
 
 If you don't want to mess with the particle reader, nothing stops you from
-adding an additional action set to the initial condition sweep. This set can
+adding an additional @ref glossary_events_and_action_sets "action set" to the initial condition sweep. This set can
 run over all particles within a vertex - once they are inserted - and set
 meaningful attribute values.
 
@@ -231,7 +231,7 @@ Obviously, the names for the parameters for toolbox::particles::insertParticleIn
 depend on the location from where you call the routine.
 As you insert particles into cells (even though the code will then assign
 them to vertices adjacent to the cells), you plug into touchCellFirstTime()
-or touchCellLastTime(). I recommend the former. These two events always are
+or touchCellLastTime(). I recommend the former. These two @ref glossary_events_and_action_sets "events" always are
 given a parameter
 
        const peano4::datamanagement::CellMarker& marker

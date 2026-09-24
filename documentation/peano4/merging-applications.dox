@@ -9,7 +9,7 @@
   As several code types are built on top of the same Peano infrastructure, we can always combine them or alter the underlying Peano representation by adding additional mesh traversals for example. 
 
   Peano's Python API is a mere wrapper around the Peano C++ core, i.e. it 
-  provides a high-level abstraction of Peano's @ref peano_action_sets "action sets",
+  provides a high-level abstraction of Peano's @ref page_peano_action_sets "action sets",
   the data held by a Peano application, its Makefile, and so forth. Popular 
   Peano extensions then create a layer on top of this API which eventually
   yields a Peano project. Obviously, once you have lowered the abstraction
@@ -32,8 +32,8 @@
     solver functionality but instead synchronise data and exchange all data.
      
   Before we continue, we emphasise that we rely heavily on terms like @ref page_architecture_home "observer"
-  and also make use of the notion of @ref peano_action_sets "action sets". Each
-  mesh sweep is tied to one observer, which in turn is represented by a 
+  and also make use of the notion of @ref page_peano_action_sets "action sets". Each
+  mesh sweep is tied to one @ref glossary_observer "observer", which in turn is represented by a
   peano4.solversteps.Step object. 
   
    
@@ -117,14 +117,14 @@
   instead from the template. Now, the main source file is adapted and includes all the steps from both
   extension projects in the right order.
   
-  Once lowered, you can also add new algorithmic steps as they are required for
+  Once lowered, you can also add new @ref glossary_observer "algorithmic steps" as they are required for
   separate coupling sweeps, e.g. From hereon, the (merged) Peano 4 project is 
   the work data set, as any change in the original project (such as an 
   exahype2.Project instance) does ***not*** propagate through anymore.
   
   Once merged, it is reasonably to doublecheck the generated file
   ```project_A.subdirectory + "repositories/StepRepository.h``` in each extension subdirectory.
-  Each of them defines observers from their corresponding extension project, but 
+  Each of them defines @ref glossary_observer "observers" from their corresponding extension project, but
   `StepRepository` notably hosts an enum called `Steps` which accommodates 
   identifiers for the steps from their corresponding project.
 
@@ -133,7 +133,7 @@
   order.
 
   Peano usually expects that the high-level extension ensures that no two
-  algorithmic steps use the same name for two different observers. Our approach in
+  @ref glossary_observer "algorithmic steps" use the same name for two different observers. Our approach in
   merging two projects guarantees unique names by using namespaces passed as parameters
   when creating extension projects. Therefore, steps with the same name from solvers of
   different extension projects are differentiated as simple as 
@@ -144,8 +144,8 @@
 
   # Add additional mesh sweeps manually
 
-  Once you have the low-level Peano project, you can add an arbitrary number of 
-  additional algorithmic steps. Each step models a new mesh sweep and 
+  Once you have the low-level Peano project, you can add an arbitrary number of
+  additional @ref glossary_observer "algorithmic steps". Each step models a new mesh sweep and
   gives you a brand new observer object:
 
   ~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,14 +157,14 @@
    
   Passing in True gives you a C++ template which you can befill with 
   semantics. Consult the @ref page_architecture_home "architecture" and 
-  @ref peano_action_sets "action set" descriptions. Per step added, you 
+  @ref page_peano_action_sets "action set" descriptions. Per step added, you 
   should find a new class in observers.
   
 
   # Unify the data usage
   
-  Though the repository now contains both solver's data structures and 
-  observers, the observers are not yet compatible with each other: Each
+  Though the repository now contains both solver's data structures and
+  @ref glossary_observer "observers", the observers are not yet compatible with each other: Each
   observer needs to be told via use_face(), use_cell() and use_vertex()
   which data entities are out there. If we construct two separate
   solvers, solver A knows nothing of the data declared in solver B and
@@ -173,11 +173,11 @@
   
   The merge() operation for the projects automatically ensures that all
   data are correct: It runs, for example, through all use_vertex() data of 
-  the first observer of solver A and adds those guys to all steps in solver
+  the first @ref glossary_observer "observer" of solver A and adds those guys to all steps in solver
   B. There are some assumptions here to make this work:
   
   - The attributes all have different names.
-  - All observers use all vertices, faces and cells of a project. There 
+  - All @ref glossary_observer "observers" use all vertices, faces and cells of a project. There
     are not a few observers which only use a subset. Peano allows this 
     to happen, but this is not allowed if we merge projects.
   

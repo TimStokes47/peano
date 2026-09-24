@@ -224,7 +224,7 @@ which are stored on finer levels.
 
 This is not only a constraint for setups with largely varying smoothing
 lengths. It already becomes a serious issue if you employ adaptive grids. The
-action set peano4.toolbox.particles.api.AbstractUpdateParticleGridAssociation
+@ref glossary_events_and_action_sets "action set" peano4.toolbox.particles.api.AbstractUpdateParticleGridAssociation
 discusses this phenomenon in detail.
 
 The solution to this "problem" is to accumulate all data (including the density)
