@@ -29,7 +29,7 @@ Once we have ensured that all pathes are correct, every project built with MGHyP
 
 
 ```python
-import peano4, mghype
+import peano4.api, mghype
 ```
 
 ## An MGHyPE project and its lowering into a Peano project
@@ -51,7 +51,7 @@ This creates the domain-specific project. What follows is the lowering. This low
 
 
 ```python
-project.set_Peano4_installation( "../..", peano4.output.CompileMode.ASSERTS )
+project.set_Peano4_installation( "../..", peano4.api.output.CompileMode.Asserts )
 
 peano4_project = project.generate_Peano4_project()
 peano4_project.generate()
