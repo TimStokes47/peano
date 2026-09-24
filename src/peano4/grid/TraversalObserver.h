@@ -126,7 +126,7 @@ return controlEvents;
    * important it is. So entry 2 overrules entry 1.
    *
    *
-   * Please consult the documentation of @ref peano_action_sets "grid control events" for details on what these events are and how they are used.
+   * Please consult the documentation of @ref page_peano_action_sets "grid control events" for details on what these events are and how they are used.
    */
   virtual std::vector<GridControlEvent> createGridControlEventsForNextTraversal() const = 0;
 

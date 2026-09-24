@@ -15,7 +15,7 @@ class ActionSet(object):
     is the first time I see (touch) a vertex". A list of events
     that we can listen to is specified by this class through class
     attributes starting with OPERATION_. Peano's documentation holds
-    a @ref peano_action_sets "discussion of events and their temporal and spatial ordering".
+    a @ref page_peano_action_sets "discussion of events and their temporal and spatial ordering".
 
     For each grid traversal, Peano expects one C++ observer. The
     observer is represented within Python through
@@ -100,13 +100,13 @@ class ActionSet(object):
     
     A discussion some event functions and their semantics as well as further
     info on the arguments can be found in the documentation of
-    @ref peano_action_sets.
+    @ref page_peano_action_sets.
 
 
     
     ## Important links
 
-    - @ref peano_action_sets    
+    - @ref page_peano_action_sets    
     - @ref peano4.api.taskgraph
 
 
@@ -162,7 +162,7 @@ class ActionSet(object):
         
         Return the grid control events that this action set wants to trigger
         
-        Please consult the documentation of @ref peano_action_sets "grid control events" for details on what these events are and how they are used.
+        Please consult the documentation of @ref page_peano_action_sets "grid control events" for details on what these events are and how they are used.
         
         """
         return "return std::vector< peano4::grid::GridControlEvent >();\n"

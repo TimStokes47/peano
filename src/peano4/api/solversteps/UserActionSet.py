@@ -17,7 +17,7 @@ class UserActionSet(ActionSet):
 
     ## Important links
 
-    - @ref peano_action_sets    
+    - @ref page_peano_action_sets    
     - @ref peano4.api.taskgraph
 
 

@@ -110,7 +110,7 @@ class AlgorithmStep(object):
     class PeanoEventUsedBySwift(IntEnum):
         """!
 
-        Enumeration of different @ref peano_action_sets "Peano events" during a
+        Enumeration of different @ref page_peano_action_sets "Peano events" during a
         grid traversal into which ExaParty plugs in. We don't use all events.
         Therefore, this is a subset of the operations in
         peano4.api.solversteps.ActionSet. The enumeration is based upon integers,
@@ -195,7 +195,7 @@ class AlgorithmStep(object):
           plug into the phase such before these parallel instances are created,
           you can use prepareTraversal() - the C++ code snippet passed to this
           attribute is copied into prepareTraversal(). The overview over
-          @ref peano_action_sets "action sets" provides more details. Note that
+          @ref page_peano_action_sets "action sets" provides more details. Note that
           no action set (or observer object) is created at this point, i.e. the
           C++ code snippet will be injected into a static routine and can
           therefore only access static information. Often, this routine is used
@@ -204,7 +204,7 @@ class AlgorithmStep(object):
 
         @param unprepare_traversal_kernel: String (C++ code snippet)
           Counterpart of prepare_traversal_kernel. Consult
-          @ref peano_action_sets "action sets" for more context.
+          @ref page_peano_action_sets "action sets" for more context.
 
         @param cell_kernel_dependency_policy: String or None
           If it is a string, it should identify one of the variants of

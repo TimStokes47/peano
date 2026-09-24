@@ -72,7 +72,7 @@ class Task:
            graph API and should be the starting point for understanding how to use it.
            It notably describes some design decisions re dependencies, grid
            entities and action sets.
-    - @ref peano_action_sets    
+    - @ref page_peano_action_sets    
     - @ref peano4.api.taskgraph
 
     """
