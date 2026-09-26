@@ -143,12 +143,12 @@ Patch overlap data
             self._solver._patch, "double"
         )
         self._solver._patch_overlap_current_time_step.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
-            self._solver._patch, "double"
+            self._solver._patch_overlap_current_time_step, "double"
         )
-        self._solver._patch._patch_overlap_update = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
-            self._solver._patch, "double"
+        self._solver._patch_overlap_update.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
+            self._solver._patch_overlap_update, "double"
         )
-        
+
         return
         
         self._solver._patch_overlap_old.generator.merge_method_definition = (

@@ -17,7 +17,7 @@ to Peano's Python directory before you invoke the notebook.
 
 ```python
 import os
-import peano4
+import peano4.api
 import exahype2
 ```
 
@@ -159,8 +159,8 @@ The idea is that the ExaHyPE2 front-end generates a Peano Python project. We can
 
 
 ```python
-build_mode = peano4.output.CompileMode.ASSERTS
-#build_mode = peano4.output.CompileMode.RELEASE
+build_mode = peano4.api.output.CompileMode.Asserts
+#build_mode = peano4.api.output.CompileMode.Release
 
 project.set_Peano4_installation("../../..", build_mode)
 
@@ -313,9 +313,9 @@ As the code is a stand-alone executable (once I generated the stuff, there's no 
 The new version of Peano/ExaHyPE writes out so-called patch files. This is a bespoke file format. There multiple ways how to manipulate/read it. I prefer to do everything within Paraview via Paraview. For this, I ensure that the PYTHONPATH points to Peano's Python directory, start up Paraview and then open the Python terminal. From here:
 
 <pre>
-import tarch.plotter.api
-data = tarch.plotter.api.Visualiser( "solution-GPRDR.peano-patch-file" )
-data.append_filter(tarch.plotter.api.ExtractFineGridFilter())
+import peano4.api.visualisation
+data = peano4.api.visualisation.Visualiser( "solution-GPRDR.peano-patch-file" )
+data.append_filter(peano4.api.visualisation.ExtractFineGridFilter())
 data.display()
 </pre>
 

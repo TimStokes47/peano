@@ -278,7 +278,7 @@ with an instance of exahype2.solvers.rkfd.actionsets.PatchWisePostprocessSolutio
 This postprocessing is be executed after both the Finite Volume and the 
 Differences scheme have updated their patch. This is ensured by the 
 fact that postprocessing steps always plug into touchCellLastTime (cmp
-@ref peano_action_sets "Peano's generic discussion of the order of events").
+@ref page_peano_action_sets "Peano's generic discussion of the order of events").
 
 For the realisation, we employ the built-in routines. For example, we call
 toolbox::blockstructured::restrictCellIntoOverlappingCell_inject() for every cell which holds Finite Volume data, i.e. overlaps

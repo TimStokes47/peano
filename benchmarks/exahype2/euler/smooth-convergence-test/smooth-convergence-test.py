@@ -13,7 +13,7 @@ project = exahype2.api.Project(
 solver_name = "EulerFVSmooth"
 unknowns = 4
 auxiliary_variables = 0
-mesh_size = 0.2 / 9.0
+volume_size = 0.0001
 patch_size = 9
 dimensions = 2
 verbosity = peano4.api.LoggerVerbosity.TEXT
@@ -33,7 +33,7 @@ thesolver.add_pde_term(exahype2.api.InitPointWisely(stateless=False,))
 
 thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver, patch_size)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
-    thesolver, volume_size=0.001
+    thesolver, volume_size=volume_size
 )
 thesolver.plotter = exahype2.api.fv.PlotAsVTKFile(thesolver)
 
