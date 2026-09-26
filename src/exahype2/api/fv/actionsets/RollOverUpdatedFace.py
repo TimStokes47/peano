@@ -7,107 +7,69 @@ import jinja2
 
 
 class RollOverUpdatedFace(AbstractFVActionSet):
+    """!
+
+    Copy solver._patch_overlap_update - the face overlap
+    exahype2.api.fv.actionsets.ProjectPatchOntoFaces has just written the
+    latest projection into - onto solver._patch_overlap_current_time_step,
+    the persistent face data
+    exahype2.api.fv.actionsets.ReconstructPatchWithHalo reads from to
+    rebuild a patch's halo. Both halves of the face overlap (left and
+    right, relative to the face's normal) are copied in full,
+    unconditionally subject only to guard.
+
+    Ported and substantially slimmed down from the legacy
+    exahype2.solvers.fv.actionsets.RollOverUpdatedFace: that version
+    additionally rolled a third ("old") buffer over and gated each half
+    of the copy on a per-half "updated" flag read from a face label -
+    neither the third buffer nor the face label exist yet in the new
+    exahype2.api's data structures (@see
+    exahype2.api.fv.RusanovWithExplicitEuler.__create_data_structures(),
+    which creates exactly solver._patch_overlap_current_time_step and
+    solver._patch_overlap_update, and nothing else on the face side).
+
     """
 
-      This action set takes the updated data per face and writes it into
-      new. So it takes the outcome from ProjectPatchOntoFaces and writes
-      it onto the (persistent) face data. Before it does so, the action
-      set also rolls over the new data to the old one.
-
-      We may not roll over data if no data has been written onto the
-      face. So we check the updated flag. It is reset by the UpdateFaceLabel
-      action set in the grid subpackage and set again by either the face
-      projection or the dynamic amr handling.
-
-    """
     TemplateHandleFace = jinja2.Template("""
     if ( {{GUARD}} ) {
       const int normal = marker.getSelectedFaceNumber() % Dimensions;
 
-      logTraceInWith3Arguments( "touchFaceLastTime(...)", fineGridFace{{SOLVER_NAME}}FaceLabel.toString(), marker.toString(), normal );
+      logTraceInWith2Arguments( "touchFaceLastTime(...)---RollOverUpdatedFace", marker.toString(), normal );
 
-      // Left half
-      if ({{FACE_METADATA_ACCESSOR}}.getUpdated(0)) {
-        logTraceInWith1Argument( "touchFaceLastTime(...)", "left half of face"  );
+      ::exahype2::fv::copyHalfOfHalo(
+        {{UNKNOWNS}},
+        {{DOFS_PER_AXIS}},
+        {{OVERLAP}},
+        normal,
+        false,    // left half
+        {{UPDATE_ACCESSOR}}.value,
+        {{CURRENT_TIME_STEP_ACCESSOR}}.value
+      );
+      ::exahype2::fv::copyHalfOfHalo(
+        {{UNKNOWNS}},
+        {{DOFS_PER_AXIS}},
+        {{OVERLAP}},
+        normal,
+        true,    // right half
+        {{UPDATE_ACCESSOR}}.value,
+        {{CURRENT_TIME_STEP_ACCESSOR}}.value
+      );
 
-        ::exahype2::fv::copyHalfOfHalo(
-          {{UNKNOWNS}},
-          {{DOFS_PER_AXIS}},
-          {{OVERLAP}},
-          normal,
-          false,    // it is the left layer, i.e. not right
-          {{NEW_ACCESSOR}}.value,
-          {{OLD_ACCESSOR}}.value
-        );
-        ::exahype2::fv::copyHalfOfHalo(
-          {{UNKNOWNS}},
-          {{DOFS_PER_AXIS}},
-          {{OVERLAP}},
-          normal,
-          false,    // it is the left layer, i.e. not right
-          {{UPDATE_ACCESSOR}}.value,
-          {{NEW_ACCESSOR}}.value
-        );
-
-        {{FACE_METADATA_ACCESSOR}}.setOldTimeStamp(0, {{FACE_METADATA_ACCESSOR}}.getNewTimeStamp(0) );
-        {{FACE_METADATA_ACCESSOR}}.setNewTimeStamp(0, {{FACE_METADATA_ACCESSOR}}.getUpdatedTimeStamp(0) );
-
-        logTraceOut( "touchFaceLastTime(...)"  );
-      }
-      else {
-        logTraceIn( "touchFaceLastTime(...) (skip left part of face)"  );
-        logTraceOut( "touchFaceLastTime(...) (skip left part of face)"  );
-      }
-
-      // Right half
-      if ({{FACE_METADATA_ACCESSOR}}.getUpdated(1)) {
-        logTraceInWith1Argument( "touchFaceLastTime(...)", "right half of face"  );
-
-        ::exahype2::fv::copyHalfOfHalo(
-          {{UNKNOWNS}},
-          {{DOFS_PER_AXIS}},
-          {{OVERLAP}},
-          normal,
-          true,    // it is the left layer, i.e. not right
-          {{NEW_ACCESSOR}}.value,
-          {{OLD_ACCESSOR}}.value
-        );
-        ::exahype2::fv::copyHalfOfHalo(
-          {{UNKNOWNS}},
-          {{DOFS_PER_AXIS}},
-          {{OVERLAP}},
-          normal,
-          true,    // it is the left layer, i.e. not right
-          {{UPDATE_ACCESSOR}}.value,
-          {{NEW_ACCESSOR}}.value
-        );
-
-        {{FACE_METADATA_ACCESSOR}}.setOldTimeStamp(1, {{FACE_METADATA_ACCESSOR}}.getNewTimeStamp(1) );
-        {{FACE_METADATA_ACCESSOR}}.setNewTimeStamp(1, {{FACE_METADATA_ACCESSOR}}.getUpdatedTimeStamp(1) );
-
-        logTraceOut( "touchFaceLastTime(...)" );
-      }
-      else {
-        logTraceIn( "touchFaceLastTime(...) (skip right part of face)"  );
-        logTraceOut( "touchFaceLastTime(...) (skip right part of face)"  );
-      }
-
-      int index = 0;
-      logTraceOut( "touchFaceLastTime(...)" );
+      logTraceOut( "touchFaceLastTime(...)---RollOverUpdatedFace" );
     }
 """)
 
     def __init__(self, solver, guard):
-        """
+        """!
 
-        ## Attributes
+        solver: exahype2.api.Solver
+          Has to have solver._patch_overlap_update and
+          solver._patch_overlap_current_time_step set - @see
+          exahype2.api.fv.RusanovWithExplicitEuler.
 
-        overwrite_old_and_new_solution_with_update: Boolean
-          This flag should be set if you use the action set throughout the
-          initialisation, where you determine an update on the face and
-          this update should then be used for old and new face data (as
-          they are the same). If it is set to false, then the new solution
-          is backuped in old, and the update overwrites the new data field.
+        guard: str
+          C++ boolean expression, evaluated per face in touchFaceLastTime,
+          guarding whether that face's overlap is rolled over.
 
         """
         AbstractFVActionSet.__init__(self, solver)
@@ -117,24 +79,13 @@ class RollOverUpdatedFace(AbstractFVActionSet):
         self.d["DOFS_PER_AXIS"] = str(solver._patch.dim[0])
         self.d["OVERLAP"] = str(int(solver._patch_overlap_update.dim[0] / 2))
         self.d["UPDATE_ACCESSOR"] = "fineGridFace" + solver._patch_overlap_update.name
-        self.d["OLD_ACCESSOR"] = "fineGridFace" + solver._patch_overlap_old.name
-        self.d["NEW_ACCESSOR"] = "fineGridFace" + solver._patch_overlap_new.name
-        self.d["FACE_METADATA_ACCESSOR"] = "fineGridFace" + solver._face_label.name
+        self.d["CURRENT_TIME_STEP_ACCESSOR"] = "fineGridFace" + solver._patch_overlap_current_time_step.name
 
     def get_body_of_operation(self, operation_name):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
-            self._solver._init_dictionary_with_default_parameters(self.d)
-            self._solver.add_entries_to_text_replacement_dictionary(self.d)
             result = self.TemplateHandleFace.render(**self.d)
-            pass
         return result
-
-    def get_includes(self):
-        return """
-#include "peano4/utils/Loop.h"
-#include "toolbox/blockstructured/Enumeration.h"
-""" + AbstractFVActionSet.get_includes(self)
 
     def get_action_set_name(self):
         return __name__.replace(".py", "").replace(".", "_")

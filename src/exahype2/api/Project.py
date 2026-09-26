@@ -3,6 +3,7 @@
 import peano4.api
 import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 from peano4.api.taskgraph.compiler.PropagateUseStatements import propagate_use_statements
+from peano4.api.taskgraph.compiler.DeriveLoadStoreComputeFlag import derive_load_store_compute_flag
 
 import dastgen2
 
@@ -520,6 +521,13 @@ thus appreciate any citation of the original release paper
         setup_simulation_steps = self.compiler(setup_simulation, "SetupSimulation")
         time_step_steps        = self.compiler(time_step, "TimeStep")
         plot_steps             = self.compiler(plot, "Plot")
+
+        # Only now do we actually know which Steps this project runs, and
+        # under which qualifier each of them uses a given submodel - the
+        # compiler above is free to fuse, drop or reorder tasks, so this
+        # cannot be derived from the pre-compilation task graphs above -
+        # @see peano4.api.taskgraph.compiler.DeriveLoadStoreComputeFlag.
+        derive_load_store_compute_flag(setup_simulation_steps + time_step_steps + plot_steps)
 
         # Symmetric to the wait_for_visualisations() call above, but for
         # the triad of *compiled* task graphs each self.compiler() call
