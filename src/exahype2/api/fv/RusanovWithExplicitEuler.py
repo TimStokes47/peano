@@ -149,52 +149,21 @@ Patch overlap data
             self._solver._patch_overlap_update, "double"
         )
 
-        return
-        
-        self._solver._patch_overlap_old.generator.merge_method_definition = (
+        self._solver._patch_overlap_current_time_step.generator.merge_method_definition = (
             peano4.toolbox.blockstructured.api.get_face_merge_implementation(
-                self._solver._patch_overlap_old
+                self._solver._patch_overlap_current_time_step
             )
         )
-        self._solver._patch_overlap_new.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.api.get_face_merge_implementation(
-                self._solver._patch_overlap_new
-            )
-        )
-        self._solver._patch.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.api.get_cell_merge_implementation(
-                self._solver._patch
-            )
-        )
-
-        self._solver._patch_overlap_old.generator.includes += """
+        self._solver._patch_overlap_current_time_step.generator.includes += """
 #include "peano4/utils/Loop.h"
-#include "repositories/SolverRepository.h"
-"""
-        self._solver._patch_overlap_new.generator.includes += """
-#include "peano4/utils/Loop.h"
-#include "repositories/SolverRepository.h"
 """
 
-        self._solver._patch_overlap_old.generator.send_condition = "false"
-        self._solver._patch_overlap_old.generator.receive_and_merge_condition = "false"
-        self._solver._patch_overlap_new.generator.send_condition = "false"
-        self._solver._patch_overlap_new.generator.receive_and_merge_condition = "false"
+        self._solver._patch_overlap_current_time_step.generator.send_condition = "true"
+        self._solver._patch_overlap_current_time_step.generator.receive_and_merge_condition = "true"
+
         self._solver._patch_overlap_update.generator.send_condition = "false"
         self._solver._patch_overlap_update.generator.receive_and_merge_condition = "false"
 
-        self._solver._patch.generator.includes += """
-#include "../repositories/SolverRepository.h"
-"""
-        self._solver._patch_overlap_old.generator.includes += """
-#include "../repositories/SolverRepository.h"
-"""
-        self._solver._patch_overlap_new.generator.includes += """
-#include "../repositories/SolverRepository.h"
-"""
-        self._solver._patch_overlap_update.generator.includes += """
-#include "../repositories/SolverRepository.h"
-"""
 
     def construct_output(self,
                          exahype2_project,
