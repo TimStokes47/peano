@@ -48,6 +48,19 @@ class Step:
         self.cell_data = []
         self.face_data = []
         self.vertex_data = []
+        # Optional side-channel, empty unless a caller populates it: maps a
+        # submodel already in cell_data/face_data/vertex_data to the
+        # peano4.api.taskgraph.Task.DataAccess qualifier it was declared
+        # with on the originating Task. use_cell()/use_face()/use_vertex()
+        # below deliberately do not touch these - they exist purely so
+        # peano4.api.taskgraph.compiler.Sequential.translate() can carry a
+        # Task's qualifiers over onto the Step it compiles into, for
+        # reporting (@see peano4.api.taskgraph.compiler.ReportCompiledStepSequence)
+        # to display; nothing about how this Step's own generated Observer
+        # behaves depends on them.
+        self.cell_data_access = {}
+        self.face_data_access = {}
+        self.vertex_data_access = {}
         if add_user_defined_actions:
             self.action_sets = [peano4.api.solversteps.UserActionSet(name)]
         else:

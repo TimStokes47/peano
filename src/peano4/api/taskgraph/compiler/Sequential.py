@@ -2,11 +2,12 @@
 # use, please see the copyright notice at www.peano-framework.org
 from typing import List
 
+import peano4.api
 import peano4.api.solversteps
 
 from ..Graph import Graph
 from ..Task import Task
-from .PropagateUseStatements import propagate_use_statements
+from .ReportCompiledStepSequence import report_compiled_step_sequence
 
 
 def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Step"]:
@@ -23,20 +24,28 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
 
     ## Implementation
 
-    Construction happens in two phases:
+    A straightforward, direct mapping: graph.ordered_tasks() linearises the
+    graph's tasks into a valid topological order (a task always comes after
+    every task it depends on - @see Graph.ordered_tasks() for how), and
+    every task in that order becomes exactly one Observer, populated with
+    that task's action sets and the cell/face/vertex data it declared via
+    use_cell()/use_face()/use_vertex().
 
-    1. Derive the sequence of Observers, one per task: a straightforward
-       recursive traversal of the graph (start from an arbitrary node; if it
-       has no predecessor, add it; otherwise recurse into the predecessor
-       first). Each Observer is populated with its task's action sets and
-       the cell/face/vertex data that task itself declared via
-       use_cell()/use_face()/use_vertex().
-    2. Postprocess that sequence with
-       @ref peano4.api.taskgraph.compiler.PropagateUseStatements.propagate_use_statements()
-       to add whichever further use_cell()/use_face()/use_vertex()
-       declarations are needed to actually relay each submodel from where it
-       is used to everywhere it has to survive to - @see that function's
-       documentation for the two rules this applies.
+    Note that this function no longer derives any *further* use_cell()/
+    use_face()/use_vertex() declarations itself - that is the job of
+    @ref peano4.api.taskgraph.compiler.PropagateUseStatements.propagate_use_statements(),
+    which has to run *before* translate() (it reasons about tasks, not the
+    Steps translate() produces here, and about the composability of
+    several graphs at once, which a single graph's own translate() call
+    cannot see). By the time translate() runs, every task already carries
+    every use_cell()/use_face()/use_vertex() declaration it will ever need.
+
+    A peano4.api.Logger().new_section() call brackets the translation, and
+    @ref peano4.api.taskgraph.compiler.ReportCompiledStepSequence.report_compiled_step_sequence()
+    reports its outcome right after - a textual listing of the resulting
+    sequence and its action sets under LoggerVerbosity.TEXT, or a flow chart
+    in the same style as Graph.visualise() under
+    LoggerVerbosity.VISUALISATION.
 
     graph: peano4.api.taskgraph.Graph
       The task graph to linearise. Assumed to be acyclic - translate() does
@@ -53,43 +62,43 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
       One Observer per task, ordered so that every task's Observer comes
       after the Observers of all tasks it depends on, carrying that task's
       action_sets (in the order they were added to the Task) plus the
-      cell/face/vertex data use_cell()/use_face()/use_vertex() determined -
-      both what the task declared directly and what
-      propagate_use_statements() added on top.
+      cell/face/vertex data use_cell()/use_face()/use_vertex() determined.
+      Each Step's cell_data_access/face_data_access/vertex_data_access is
+      also populated as a copy of the originating Task's, purely for
+      reporting (@see
+      peano4.api.taskgraph.compiler.ReportCompiledStepSequence) - nothing
+      about the generated Observer depends on it.
 
     """
-    observer_of_task = {}
-    order: List[Task] = []
+    order = graph.ordered_tasks()
 
-    def visit(task: Task):
-        if task not in observer_of_task:
-            for dependency in task.dependencies:
-                visit(dependency)
-            # Turn every whitespace-separated word into its own name
-            # segment, capitalising only its first letter - a blind
-            # .title() would also lower-case the rest of the word, which
-            # mangles existing camel case and acronyms (e.g. "EulerFVSmooth"
-            # would become "Eulerfvsmooth", "CFL" would become "Cfl").
-            task_name = "_".join(word[:1].upper() + word[1:] for word in task.name.split())
-            step = peano4.api.solversteps.Step(
-                name=f"{identifier}_{task_name}",
-                add_user_defined_actions=False,
-            )
-            step.has_to_repeat = task.has_to_repeat
-            for cell_data in task.cell_data:
-                step.use_cell(cell_data)
-            for face_data in task.face_data:
-                step.use_face(face_data)
-            for vertex_data in task.vertex_data:
-                step.use_vertex(vertex_data)
-            for action_set in task.action_sets:
-                step.add_action_set(action_set)
-            observer_of_task[task] = step
-            order.append(task)
+    steps = []
+    for task in order:
+        # Turn every whitespace-separated word into its own name segment,
+        # capitalising only its first letter - a blind .title() would also
+        # lower-case the rest of the word, which mangles existing camel
+        # case and acronyms (e.g. "EulerFVSmooth" would become
+        # "Eulerfvsmooth", "CFL" would become "Cfl").
+        task_name = "_".join(word[:1].upper() + word[1:] for word in task.name.split())
+        step = peano4.api.solversteps.Step(
+            name=f"{identifier}_{task_name}",
+            add_user_defined_actions=False,
+        )
+        step.has_to_repeat = task.has_to_repeat
+        for cell_data in task.cell_data:
+            step.use_cell(cell_data)
+            step.cell_data_access[cell_data] = task.cell_data_access[cell_data]
+        for face_data in task.face_data:
+            step.use_face(face_data)
+            step.face_data_access[face_data] = task.face_data_access[face_data]
+        for vertex_data in task.vertex_data:
+            step.use_vertex(vertex_data)
+            step.vertex_data_access[vertex_data] = task.vertex_data_access[vertex_data]
+        for action_set in task.action_sets:
+            step.add_action_set(action_set)
+        steps.append(step)
 
-    for task in graph.tasks:
-        visit(task)
+    peano4.api.Logger().new_section(f"Compile task graph '{identifier}'")
+    report_compiled_step_sequence(steps, title=f"Compiled task graph for {identifier}")
 
-    steps = [observer_of_task[task] for task in order]
-    propagate_use_statements(steps)
     return steps

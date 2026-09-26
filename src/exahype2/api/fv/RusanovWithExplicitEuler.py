@@ -5,6 +5,7 @@ import peano4.api.datamodel
 import peano4.toolbox.blockstructured.api
 
 from ..Solver import Solver
+from .actionsets import ProjectPatchOntoFaces
 
 
 class RusanovWithExplicitEuler(Solver.NumericalScheme):
@@ -223,11 +224,16 @@ Patch overlap data
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_time_step_size_task)
 
-        reconstruction_task.use_cell(self._solver._patch)
-        update_cell_task.use_cell(self._solver._patch)
-        compute_cfl_condition_task.use_cell(self._solver._patch)
-        project_on_faces_task.use_cell(self._solver._patch)
-        compute_time_step_size_task.use_cell(self._solver._patch)
+        project_on_faces_task.add_action_set(
+            ProjectPatchOntoFaces(self._solver, guard="true")
+        )
+
+        reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
+        update_cell_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        compute_cfl_condition_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
+        project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
+        project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.WRITE)
+        compute_time_step_size_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))

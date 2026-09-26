@@ -19,6 +19,42 @@ class Graph:
     def add_task(self, task: Task):
         self.tasks.append(task)
 
+    def ordered_tasks(self) -> List[Task]:
+        """!
+
+        Linearise this graph's tasks into the order
+        peano4.api.taskgraph.compiler.Sequential.translate() compiles them
+        into: a straightforward recursive traversal of the dependency DAG
+        (visit a task's dependencies before the task itself), which - since
+        every dependency is visited before whatever depends on it - yields
+        a valid topological order.
+
+        This is the single source of truth for "the task after this one"
+        that both translate() and
+        peano4.api.taskgraph.compiler.PropagateUseStatements.propagate_use_statements()
+        rely on; they must agree on the same order, since the latter's
+        whole job is to reason about which task's Observer immediately
+        follows which other one's once compiled.
+
+        Repeated calls recompute the order from scratch (cheap - task
+        graphs here are small) rather than caching it, so adding further
+        tasks/dependencies after an earlier call is always reflected.
+
+        """
+        order: List[Task] = []
+        visited = set()
+
+        def visit(task: Task):
+            if task not in visited:
+                visited.add(task)
+                for dependency in task.dependencies:
+                    visit(dependency)
+                order.append(task)
+
+        for task in self.tasks:
+            visit(task)
+        return order
+
     def log_as_text(self, title: str = "Task graph"):
         """!
         Textual counterpart to visualise(): logs a plain-text rendering of
@@ -28,9 +64,11 @@ class Graph:
 
         Renders the same information visualise() draws as a UML state
         diagram - every task's grid entity, its dependencies, its action
-        sets (as "do / <name>" lines) and whether it repeats - as one block
-        of text per task, ordered root to sink by dependency depth exactly
-        like visualise() lays its layers out left to right.
+        sets (as "do / <name>" lines), the cell/face/vertex submodels it
+        declares via use_cell()/use_face()/use_vertex() (each annotated
+        with its Task.DataAccess qualifier) and whether it repeats - as one
+        block of text per task, ordered root to sink by dependency depth
+        exactly like visualise() lays its layers out left to right.
         """
         import peano4.api
 
@@ -63,6 +101,16 @@ class Graph:
                 )
             for action_set in task.action_sets:
                 lines.append(f"    do / {action_set.get_action_set_name()}")
+            for kind, submodels, access in (
+                ("cell", task.cell_data, task.cell_data_access),
+                ("face", task.face_data, task.face_data_access),
+                ("vertex", task.vertex_data, task.vertex_data_access),
+            ):
+                if submodels:
+                    lines.append(
+                        f"    {kind} / "
+                        + ", ".join(f"{submodel.name} [{access[submodel].name}]" for submodel in submodels)
+                    )
             if task.has_to_repeat:
                 lines.append(f"    repeats while: {task.has_to_repeat}")
 
@@ -92,7 +140,10 @@ class Graph:
         below a separator - the same internal-activity compartment a UML
         state uses to list its entry/exit/do behaviours, as opposed to the
         transition arrows between states, which describe order, not
-        ownership.
+        ownership. The same compartment also lists the cell/face/vertex
+        submodels the task declares via use_cell()/use_face()/use_vertex()
+        as "cell / <name> [<Task.DataAccess>]" (and face/vertex
+        counterparts) lines, one per kind that is actually used.
 
         Every state also carries a small coloured badge in its top-left
         corner indicating which kind of grid entity (vertex/face/cell/
@@ -148,7 +199,18 @@ class Graph:
         VERTICAL_GAP = 0.35
 
         def activity_lines(task: Task):
-            return [f"do / {action_set.get_action_set_name()}" for action_set in task.action_sets]
+            lines = [f"do / {action_set.get_action_set_name()}" for action_set in task.action_sets]
+            for kind, submodels, access in (
+                ("cell", task.cell_data, task.cell_data_access),
+                ("face", task.face_data, task.face_data_access),
+                ("vertex", task.vertex_data, task.vertex_data_access),
+            ):
+                if submodels:
+                    lines.append(
+                        f"{kind} / "
+                        + ", ".join(f"{submodel.name} [{access[submodel].name}]" for submodel in submodels)
+                    )
+            return lines
 
         width_of_task, height_of_task = {}, {}
         for task in self.tasks:
@@ -418,4 +480,41 @@ class Graph:
         axes.set_xlabel("Dependency depth")
         axes.set_yticks([])
         axes.set_aspect("equal")
+        # Non-blocking: several related graphs (e.g. a project's Setup/
+        # TimeStep/Plot task graphs) are typically visualised back to back,
+        # and should all appear together rather than forcing the user to
+        # close each one before the next is even drawn. @see
+        # wait_for_visualisations(), which the caller invokes once after
+        # such a group to actually pause for the user to look at all of
+        # them together.
+        plt.show(block=False)
+
+
+def wait_for_visualisations():
+    """!
+
+    Block until the user closes every currently open matplotlib figure -
+    the counterpart to Graph.visualise() and
+    peano4.api.taskgraph.compiler.ReportCompiledStepSequence.report_compiled_step_sequence()'s
+    own visualisation, both of which render with plt.show(block=False) so
+    that a whole group of related figures (e.g. a project's Setup/
+    TimeStep/Plot task graphs, or their compiled counterparts) can all
+    appear together rather than one at a time. Call this once after such
+    a group has been produced, to actually pause and let the user look at
+    all of them side by side before execution continues.
+
+    A no-op under any verbosity other than LoggerVerbosity.VISUALISATION,
+    and also a no-op (does not even import matplotlib) if nothing is
+    currently open - e.g. because the group in question turned out to be
+    empty.
+
+    """
+    import peano4.api
+
+    if not peano4.api.Logger().is_visualisation:
+        return
+
+    import matplotlib.pyplot as plt
+
+    if plt.get_fignums():
         plt.show()

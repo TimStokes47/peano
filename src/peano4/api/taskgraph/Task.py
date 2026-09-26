@@ -78,20 +78,66 @@ class Task:
     """
 
     class GridEntity(enum.Enum):
-        """! 
-        
-        Which kind of mesh entity a Task works on. 
-        
+        """!
+
+        Which kind of mesh entity a Task works on.
+
         - GLOBAL implies that the task either has only a global semantics
           such as one global reduction, or that it touches each and every
           entity in the mesh, i.e. vertices, cells and faces.
-          
+
         """
 
         VERTEX = 1
         FACE = 2
         CELL = 3
         GLOBAL = 4
+
+    class DataAccess(enum.Enum):
+        """!
+
+        How a task's action sets actually access a submodel it declares via
+        use_cell()/use_face()/use_vertex() - i.e. the qualifier that
+        accompanies every such declaration.
+
+        - READ_AND_DISCARD: the action set only reads the submodel, never
+          writes it, and does not need its value kept around afterwards -
+          this task is a final consumer, not a link in a longer chain.
+        - WRITE: the action sets only write the submodel (e.g. fill in an
+          initial condition), without relying on whatever value it held
+          before.
+        - READ_AND_WRITE: the action sets both read the submodel's
+          existing value and write a new one (e.g. an in-place update).
+          The WRITE component doesn't mean necessarily that we alter the 
+          content. It simply tells the task that the data should not be 
+          discarded afterwards.
+        - TEMPORARY: the submodel is neither meaningfully read nor written
+          by this task for its own sake - available for a task graph
+          author to say so explicitly, though nothing currently derives
+          this qualifier automatically.
+
+        WRITE and READ_AND_WRITE are treated identically by
+        peano4.api.taskgraph.compiler.PropagateUseStatements.propagate_use_statements():
+        both mean this task produces a genuinely new value for the
+        submodel, which someone downstream then has to actually pick up
+        (read) - @see that function's documentation for the precise rule,
+        and note that the READ_AND_WRITE declarations *it* inserts to
+        satisfy that rule are indistinguishable from ones a task graph
+        author wrote by hand. READ_AND_DISCARD and TEMPORARY impose no
+        such obligation on whatever comes after. Whichever qualifier is
+        passed here still translates into exactly the same use_cell()/
+        use_face()/use_vertex() call on the peano4.api.solversteps.Step
+        this task compiles into (@see
+        peano4.api.taskgraph.compiler.Sequential.translate()) - the
+        qualifier only ever affects the task-graph level, not what the
+        generated Observer looks like.
+
+        """
+
+        READ_AND_DISCARD = 1
+        WRITE = 2
+        READ_AND_WRITE = 3
+        TEMPORARY = 4
 
     def __init__(
         self,
@@ -106,41 +152,50 @@ class Task:
         self.cell_data: List["peano4.api.datamodel.DoF"] = []
         self.face_data: List["peano4.api.datamodel.DoF"] = []
         self.vertex_data: List["peano4.api.datamodel.DoF"] = []
+        self.cell_data_access: dict = {}
+        self.face_data_access: dict = {}
+        self.vertex_data_access: dict = {}
         self.has_to_repeat = task_has_to_repeat
 
     def add_dependency(self, task: "Task"):
         self.dependencies.append(task)
 
-    def use_cell(self, submodel: "peano4.api.datamodel.DoF"):
+    def use_cell(self, submodel: "peano4.api.datamodel.DoF", qualifier: "Task.DataAccess"):
         """!
 
-        Declare that this task's action sets need read/write access to a
-        cell submodel (e.g. a peano4.api.datamodel.Patch registered via
-        peano_project.datamodel.add_cell()). Forwarded to the
+        Declare that this task's action sets access a cell submodel (e.g. a
+        peano4.api.datamodel.Patch registered via
+        peano_project.datamodel.add_cell()), and how - @see Task.DataAccess
+        for what qualifier to pass. Forwarded to the
         peano4.api.solversteps.Step this task is compiled into, i.e. to its
         own use_cell(), so the generated Observer passes fineGridCell<name>
         into every touch-cell/create-cell/... operation.
 
         """
         self.cell_data.append(submodel)
+        self.cell_data_access[submodel] = qualifier
 
-    def use_face(self, submodel: "peano4.api.datamodel.DoF"):
+    def use_face(self, submodel: "peano4.api.datamodel.DoF", qualifier: "Task.DataAccess"):
         """!
 
-        Declare that this task's action sets need read/write access to a
-        face submodel. @see use_cell() for the general mechanism.
+        Declare that this task's action sets access a face submodel, and
+        how. @see use_cell() for the general mechanism and Task.DataAccess
+        for what qualifier to pass.
 
         """
         self.face_data.append(submodel)
+        self.face_data_access[submodel] = qualifier
 
-    def use_vertex(self, submodel: "peano4.api.datamodel.DoF"):
+    def use_vertex(self, submodel: "peano4.api.datamodel.DoF", qualifier: "Task.DataAccess"):
         """!
 
-        Declare that this task's action sets need read/write access to a
-        vertex submodel. @see use_cell() for the general mechanism.
+        Declare that this task's action sets access a vertex submodel, and
+        how. @see use_cell() for the general mechanism and Task.DataAccess
+        for what qualifier to pass.
 
         """
         self.vertex_data.append(submodel)
+        self.vertex_data_access[submodel] = qualifier
 
     def add_action_set(self, action_set: "peano4.api.solversteps.ActionSet"):
         """!

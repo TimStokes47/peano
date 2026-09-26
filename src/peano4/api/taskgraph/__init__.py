@@ -84,6 +84,6 @@ but this is not subject to the dependency handling.
 """
 
 from .Task import Task
-from .Graph import Graph
+from .Graph import Graph, wait_for_visualisations
 from .Runner import create_runner
 from . import compiler

@@ -6,6 +6,7 @@ import peano4.api.actionsets
 from ..InitPointWisely import InitPointWisely
 from ..Solver import Solver
 from .actionsets import InitialCondition
+from .actionsets import ProjectPatchOntoFaces
 
 
 class SetupSimulationOverRegularGrid(Solver.GridConstruction):
@@ -74,8 +75,9 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         )
         refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size * self._solver.numerical_scheme.patch_size))
 
-        initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        initial_condition_task        = peano4.api.taskgraph.Task(name=f"{self._solver.name} Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        project_on_faces_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name} Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        roll_over_face_solution_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name} Roll over solution faces", entity=peano4.api.taskgraph.Task.GridEntity.FACE)
 
         initial_condition_task.add_dependency(refine_task)
         project_on_faces_task.add_dependency(initial_condition_task)
@@ -83,13 +85,17 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         initial_condition_task.add_action_set(
             InitialCondition(self._solver, guard="true")
         )
+        project_on_faces_task.add_action_set(
+            ProjectPatchOntoFaces(self._solver, guard="true")
+        )
 
         setup_simulation.add_task(refine_task)
         setup_simulation.add_task(initial_condition_task)
         setup_simulation.add_task(project_on_faces_task)
 
-        initial_condition_task.use_cell(self._solver._patch)
-        project_on_faces_task.use_cell(self._solver._patch)
+        initial_condition_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.WRITE)
+        project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.WRITE)
 
         if peano4.api.Logger().is_visualisation:
             setup_simulation.visualise(title="Setup task graph for {}".format(self._solver.name))

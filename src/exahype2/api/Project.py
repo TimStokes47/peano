@@ -2,6 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
 import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
+from peano4.api.taskgraph.compiler.PropagateUseStatements import propagate_use_statements
 
 import dastgen2
 
@@ -484,6 +485,33 @@ thus appreciate any citation of the original release paper
         for solver in self._solvers:
             solver.generate_solver_realisation(self, peano_project, setup_simulation, time_step, plot)
 
+        # Each solver's construct_output() above visualises the (input)
+        # task graph it just contributed to - Setup, TimeStep and Plot -
+        # via Graph.visualise(), which renders without blocking so all
+        # three can appear together; this is where we actually pause and
+        # let the user look at that whole triad before moving on.
+        peano4.api.taskgraph.wait_for_visualisations()
+
+        #
+        # Setup runs once, as a prequel to both time stepping and plotting;
+        # time stepping and plotting may then follow one another in either
+        # order, repeatedly (each carries a self-edge for that reason) -
+        # @see peano4.api.taskgraph.compiler.PropagateUseStatements for what
+        # these edges mean and why a repeating graph needs a self-edge
+        # rather than a dedicated "cyclic" flag.
+        #
+        propagate_use_statements(
+            [setup_simulation, time_step, plot],
+            edges=[
+                (setup_simulation, time_step),
+                (setup_simulation, plot),
+                (time_step, plot),
+                (plot, time_step),
+                (time_step, time_step),
+                (plot, plot),
+            ],
+        )
+
         #
         # The steps tied to one phase. This is really a sequence of
         # observers (aka Peano grid traversals) which the code should
@@ -493,8 +521,14 @@ thus appreciate any citation of the original release paper
         time_step_steps        = self.compiler(time_step, "TimeStep")
         plot_steps             = self.compiler(plot, "Plot")
 
+        # Symmetric to the wait_for_visualisations() call above, but for
+        # the triad of *compiled* task graphs each self.compiler() call
+        # just reported (@see
+        # peano4.api.taskgraph.compiler.ReportCompiledStepSequence).
+        peano4.api.taskgraph.wait_for_visualisations()
+
         #
-        # Add these observers to the Peano project, so a main file can 
+        # Add these observers to the Peano project, so a main file can
         # trigger them.
         #
         for step in setup_simulation_steps + time_step_steps + plot_steps:
