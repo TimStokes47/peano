@@ -182,7 +182,6 @@ class Graph:
             Task.GridEntity.VERTEX: "tab:blue",
             Task.GridEntity.FACE: "tab:orange",
             Task.GridEntity.CELL: "tab:green",
-            Task.GridEntity.GLOBAL: "tab:red",
         }
 
         # A state's box grows with its content: a fixed-height header

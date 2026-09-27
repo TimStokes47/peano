@@ -2,6 +2,8 @@
 # use, please see the copyright notice at www.peano-framework.org
 from typing import Dict, List, Optional, Tuple
 
+import peano4.api
+
 from ..Graph import Graph
 from ..Task import Task
 
@@ -24,6 +26,19 @@ def propagate_use_statements(
     one another - @see edges below, which is also what replaces the old
     per-graph Graph.cyclic flag (a graph that repeats simply gets a
     (graph, graph) self-edge).
+
+    ## Upgrading a WRITE that immediately follows a READ_AND_WRITE
+
+    Before any of the below runs, a narrower, separate pass first upgrades
+    every WRITE declaration that sits immediately (distance 1, following
+    edges the same way as everything else here) after a READ_AND_WRITE
+    declaration of the same submodel into a READ_AND_WRITE of its own -
+    @see _upgrade_writes_immediately_following_read_and_write() for why
+    (in short: trusting the WRITE there would silently discard whatever
+    the READ_AND_WRITE task explicitly asked to keep). This is logged via
+    peano4.api.Logger().log() whenever it happens. A WRITE immediately
+    after another plain WRITE is deliberately left alone by this - @see
+    that function's own docstring for why that case is different.
 
     ## The rule
 
@@ -161,11 +176,123 @@ def propagate_use_statements(
         ("vertex_data", "vertex_data_access", "use_vertex"),
     ):
         something_changed = (
+            _upgrade_writes_immediately_following_read_and_write(
+                graphs, edges, attribute_name, access_attribute_name
+            )
+            or something_changed
+        )
+        something_changed = (
             _propagate_use_statements_for_one_kind(
                 graphs, edges, attribute_name, access_attribute_name, use_method_name
             )
             or something_changed
         )
+    return something_changed
+
+
+def _step_backward(graph, index, tasks_of_graph, predecessors_of_graph):
+    """!
+
+    The exact reverse of _step_forward(): yield every (graph, index)
+    that can immediately reach (graph, index) - the previous task in the
+    same graph if there is one, or otherwise the last task of every graph
+    declared (via edges) to lead into this one.
+
+    """
+    if index > 0:
+        yield (graph, index - 1)
+    else:
+        for predecessor in predecessors_of_graph.get(graph, []):
+            predecessor_tasks = tasks_of_graph[predecessor]
+            if predecessor_tasks:
+                yield (predecessor, len(predecessor_tasks) - 1)
+
+
+def _upgrade_writes_immediately_following_read_and_write(
+    graphs: List[Graph],
+    edges: List[Tuple[Graph, Graph]],
+    attribute_name: str,
+    access_attribute_name: str,
+) -> bool:
+    """!
+
+    A plain WRITE is normally treated as a fresh, independent production
+    that supersedes whatever came before (@see _fix_forward_gap) - correct
+    whenever a task genuinely does not care what the submodel held before
+    it ran. But a WRITE immediately (distance 1) after a READ_AND_WRITE of
+    the very same submodel is a different, narrower situation: the
+    READ_AND_WRITE task explicitly asked for its result to be kept around,
+    and the very next task then declares itself uninterested in reading it
+    - one of these two declarations has to be wrong, and silently trusting
+    the WRITE would mean the READ_AND_WRITE task's stack storage is
+    populated (predicateForStore true) and then never loaded again
+    (predicateForLoad false for a plain WRITE - @see
+    peano4.api.taskgraph.compiler.DeriveLoadStoreComputeFlag), which is
+    at best wasted storage and at worst - if the very next task's own
+    computation actually does depend on that value, just under the wrong
+    qualifier - silently wrong numerics.
+
+    This is therefore auto-corrected rather than merely reported: every
+    task whose own declaration of a submodel is WRITE, and that has at
+    least one immediate predecessor (@see _step_backward - several, if the
+    task is reachable from more than one graph) that declares the same
+    submodel READ_AND_WRITE, has its own declaration silently upgraded to
+    READ_AND_WRITE, logged via peano4.api.Logger().log() so it is visible
+    without changing behaviour otherwise. Run to a fixed point first,
+    before _propagate_use_statements_for_one_kind()'s own relay-insertion
+    pass: an upgraded declaration is exactly as valid an origin as one a
+    task graph author wrote by hand, and doing this first means the relay
+    pass never has to reason about a WRITE that is about to change.
+
+    This is deliberately narrower than "any WRITE reachable from an
+    earlier WRITE/READ_AND_WRITE": a WRITE immediately after another
+    WRITE of the same submodel is left alone, since that is exactly the
+    legitimate "recompute this fresh every time" pattern
+    _fix_forward_gap() already has to support (@see there) - only a
+    READ_AND_WRITE predecessor, which explicitly asked for its value to
+    survive, triggers the upgrade.
+
+    graphs, edges, attribute_name, access_attribute_name: as in
+    propagate_use_statements().
+
+    @return bool
+      True if this pass upgraded at least one declaration.
+
+    """
+    tasks_of_graph: Dict[Graph, List[Task]] = {graph: graph.ordered_tasks() for graph in graphs}
+
+    predecessors_of_graph: Dict[Graph, List[Graph]] = {graph: [] for graph in graphs}
+    for predecessor, successor in edges:
+        predecessors_of_graph[successor].append(predecessor)
+
+    something_changed = False
+    changed_this_pass = True
+    while changed_this_pass:
+        changed_this_pass = False
+        for graph in graphs:
+            tasks = tasks_of_graph[graph]
+            for index, task in enumerate(tasks):
+                access = getattr(task, access_attribute_name)
+                for submodel in list(getattr(task, attribute_name)):
+                    if access[submodel] != Task.DataAccess.WRITE:
+                        continue
+                    for predecessor_graph, predecessor_index in _step_backward(
+                        graph, index, tasks_of_graph, predecessors_of_graph
+                    ):
+                        predecessor_task = tasks_of_graph[predecessor_graph][predecessor_index]
+                        predecessor_access = getattr(predecessor_task, access_attribute_name)
+                        if predecessor_access.get(submodel) == Task.DataAccess.READ_AND_WRITE:
+                            access[submodel] = Task.DataAccess.READ_AND_WRITE
+                            peano4.api.Logger().log(
+                                f"propagate_use_statements(): task '{task.name}' declared {attribute_name} "
+                                f"submodel '{submodel.name}' as WRITE, but its predecessor task "
+                                f"'{predecessor_task.name}' declares it READ_AND_WRITE - upgrading "
+                                f"'{task.name}' to READ_AND_WRITE to avoid silently discarding it."
+                            )
+                            changed_this_pass = True
+                            break
+        something_changed = something_changed or changed_this_pass
+
     return something_changed
 
 

@@ -83,26 +83,26 @@ int main(int argc, char** argv);
 #include "{{subdirectory}}repositories/DataRepository.h"
 #include "{{subdirectory}}repositories/StepRepository.h"
 #include "{{subdirectory}}repositories/SolverRepository.h"
-#include "{{subdirectory}}kernels/SetupSimulation.h"
-#include "{{subdirectory}}kernels/TimeStep.h"
-#include "{{subdirectory}}kernels/Plot.h"
+#include "{{subdirectory}}runners/SetupSimulation.h"
+#include "{{subdirectory}}runners/TimeStep.h"
+#include "{{subdirectory}}runners/Plot.h"
 {% endfor -%}
 {% else %}
 #include "Constants.h"
 #include "repositories/DataRepository.h"
 #include "repositories/StepRepository.h"
 #include "repositories/SolverRepository.h"
-#include "kernels/SetupSimulation.h"
-#include "kernels/TimeStep.h"
-#include "kernels/Plot.h"
+#include "runners/SetupSimulation.h"
+#include "runners/TimeStep.h"
+#include "runners/Plot.h"
 {%- endif %}
 
 tarch::logging::Log _log( "{{NAMESPACE | join("::")}}" );
 
 
-{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}kernels::SetupSimulation SetupSimulation;
-{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}kernels::Plot Plot;
-{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}kernels::TimeStep TimeStep;
+{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}runners::SetupSimulation SetupSimulation;
+{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}runners::Plot Plot;
+{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}runners::TimeStep TimeStep;
 
 {{STEP_REPORT_CLASS}} stepReport;
 
@@ -199,6 +199,7 @@ int main(int argc, char** argv) {
     peano4::parallel::Node::getInstance().setNextProgramStep(
       SetupSimulation.getFirstSubstep()
     );
+    peano4::parallel::Node::getInstance().continueToRun();
     step();
       
     double maxTimeStepSize = 1.0;
@@ -230,6 +231,7 @@ int main(int argc, char** argv) {
             TimeStep.getFirstSubstep()
           );
         }   
+        peano4::parallel::Node::getInstance().continueToRun();
         step();
         
         maxTimeStepSize = {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStepSize();
@@ -239,6 +241,7 @@ int main(int argc, char** argv) {
         peano4::parallel::Node::getInstance().setNextProgramStep(
           Plot.getFirstSubstep()
         );
+        peano4::parallel::Node::getInstance().continueToRun();
         step();
     }
   }

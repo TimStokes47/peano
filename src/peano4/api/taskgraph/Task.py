@@ -82,16 +82,11 @@ class Task:
 
         Which kind of mesh entity a Task works on.
 
-        - GLOBAL implies that the task either has only a global semantics
-          such as one global reduction, or that it touches each and every
-          entity in the mesh, i.e. vertices, cells and faces.
-
         """
 
         VERTEX = 1
         FACE = 2
         CELL = 3
-        GLOBAL = 4
 
     class DataAccess(enum.Enum):
         """!

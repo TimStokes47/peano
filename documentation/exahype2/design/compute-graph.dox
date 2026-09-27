@@ -8,7 +8,7 @@
 scheme populates a peano4.api.taskgraph.Graph with Task instances and
 dependencies. That graph is still a purely descriptive, implementation-level
 model: it says which @ref glossary_observer "algorithmic steps" exist, which mesh entity each works on
-(Task.GridEntity.VERTEX/FACE/CELL/GLOBAL) and which steps have to happen
+(Task.GridEntity.VERTEX/FACE/CELL) and which steps have to happen
 before which others - it does not yet say anything about Peano @ref glossary_events_and_action_sets "action sets",
 observers or mesh traversals. Turning the graph into those is the job of a
 *task graph compiler*, peano4.api.taskgraph.compiler.

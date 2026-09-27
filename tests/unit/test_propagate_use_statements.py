@@ -374,3 +374,91 @@ def test_time_step_and_plot_composed_in_both_directions():
     )
 
     assert changed is False
+
+
+# ---------------------------------------------------------------------------
+# Upgrading a WRITE that immediately follows a READ_AND_WRITE.
+# ---------------------------------------------------------------------------
+
+
+def test_write_immediately_after_readwrite_is_upgraded():
+    """A READ_AND_WRITE explicitly asks for its value to be kept around -
+    a WRITE immediately after it would otherwise silently discard that
+    value (predicateForLoad false for a plain WRITE), so it gets upgraded
+    to READ_AND_WRITE instead of being left as a superseding WRITE."""
+    graph, tasks = _chain_graph("A", 2)
+    submodel = _FakeSubmodel("Q")
+    tasks[0].use_cell(submodel, READ_AND_WRITE)
+    tasks[1].use_cell(submodel, WRITE)
+
+    changed = propagate_use_statements([graph])
+
+    assert changed is True
+    assert _access(tasks[1])[submodel] == READ_AND_WRITE
+    assert tasks[1].cell_data.count(submodel) == 1  # upgraded in place, not duplicated
+
+
+def test_write_immediately_after_write_is_not_upgraded():
+    """Contrast with the above: a WRITE immediately after another plain
+    WRITE is the legitimate "recompute this fresh every time" pattern and
+    is deliberately left alone - only a READ_AND_WRITE predecessor (which
+    explicitly asked to survive) triggers the upgrade."""
+    graph, tasks = _chain_graph("A", 2)
+    submodel = _FakeSubmodel("Q")
+    tasks[0].use_cell(submodel, WRITE)
+    tasks[1].use_cell(submodel, WRITE)
+
+    changed = propagate_use_statements([graph])
+
+    assert changed is False
+    assert _access(tasks[1])[submodel] == WRITE
+
+
+def test_write_immediately_after_readwrite_across_an_edge_is_upgraded():
+    """The same upgrade, but with the READ_AND_WRITE the last task of one
+    graph and the WRITE the first task of a successor graph."""
+    graph_a, tasks_a = _chain_graph("A", 1)
+    graph_b, tasks_b = _chain_graph("B", 1)
+    submodel = _FakeSubmodel("Q")
+    tasks_a[0].use_cell(submodel, READ_AND_WRITE)
+    tasks_b[0].use_cell(submodel, WRITE)
+
+    changed = propagate_use_statements([graph_a, graph_b], edges=[(graph_a, graph_b)])
+
+    assert changed is True
+    assert _access(tasks_b[0])[submodel] == READ_AND_WRITE
+
+
+def test_write_immediately_after_write_via_self_edge_is_not_upgraded():
+    """The wrap-around counterpart of test_write_immediately_after_write_is_not_upgraded():
+    a single-task graph whose one task WRITEs and self-repeats (e.g.
+    ProjectPatchOntoFaces recomputing face data fresh every time step) must
+    not get upgraded just because it is - via the self-edge - immediately
+    "after" its own previous WRITE."""
+    graph, tasks = _chain_graph("A", 1)
+    submodel = _FakeSubmodel("Q")
+    tasks[0].use_cell(submodel, WRITE)
+
+    changed = propagate_use_statements([graph], edges=[(graph, graph)])
+
+    assert changed is False
+    assert _access(tasks[0])[submodel] == WRITE
+
+
+def test_upgrade_runs_before_relay_insertion_so_no_relay_is_needed():
+    """Mirrors exahype2.api.fv.RusanovWithExplicitEuler's own task graph:
+    task 0 READ_AND_WRITEs, task 1 WRITEs (upgraded to READ_AND_WRITE by
+    this pass), task 2 READ_AND_WRITEs again - once task 1 is upgraded,
+    every remaining gap is distance 1 (odd), so no relay is ever needed."""
+    graph, tasks = _chain_graph("A", 3)
+    submodel = _FakeSubmodel("Q")
+    tasks[0].use_cell(submodel, READ_AND_WRITE)
+    tasks[1].use_cell(submodel, WRITE)
+    tasks[2].use_cell(submodel, READ_AND_WRITE)
+
+    changed = propagate_use_statements([graph])
+
+    assert changed is True
+    assert _access(tasks[1])[submodel] == READ_AND_WRITE
+    assert tasks[0].cell_data.count(submodel) == 1  # unchanged, no relay inserted
+    assert tasks[2].cell_data.count(submodel) == 1  # unchanged, no relay inserted

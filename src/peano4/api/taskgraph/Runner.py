@@ -33,7 +33,9 @@ TEMPLATE_RUNNER_CPP_FILE = """
 #include "{{CLASSNAME}}.h"
 
 #include "{{SUBDIRECTORY}}repositories/StepRepository.h"
+#include "tarch/Assertions.h"
 #include "tarch/logging/LogFilter.h"
+#include "peano4/parallel/Node.h"
 #include "peano4/parallel/SpacetreeSet.h"
 
 {% for step in STEPS -%}
@@ -55,6 +57,24 @@ tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPAC
 void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::run() {
   _watch.start();
   {% for step in STEPS %}
+  {% if loop.index0==0 %}
+  // The caller already had to set Node's program step to this, our very
+  // first step, before it could even decide to invoke run() on us in the
+  // first place (@see getFirstSubstep()) - so this is redundant, and we
+  // only assert on it instead of setting it again.
+  assertionEquals(
+    peano4::parallel::Node::getInstance().getCurrentProgramStep(),
+    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::StepRepository::toProgramStep(
+      {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::StepRepository::Steps::{{step}}
+    )
+  );
+  {% else %}
+  peano4::parallel::Node::getInstance().setNextProgramStep(
+    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::StepRepository::toProgramStep(
+      {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::StepRepository::Steps::{{step}}
+    )
+  );
+  {% endif %}
   do {
     tarch::logging::LogFilter::getInstance().switchProgramPhase("{{step}}");
     {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{step}} observer;
@@ -73,10 +93,10 @@ def create_runner(peano_project, identifier, steps):
     """!
 
     Create the header/implementation file pair that represents one of a
-    project's algorithmic phases represented by a sequence of steps. 
-    It yields one class of the classname identifier which is held in 
-    repositories. This class holds exactly one method run() which 
-    toggles through the steps one by one.
+    project's algorithmic phases represented by a sequence of steps.
+    It yields one class of the classname identifier which is held in
+    the project's runners subdirectory/namespace. This class holds
+    exactly one method run() which toggles through the steps one by one.
 
     Even though the runner seems to accept only a sequence of steps
     (which are members of @ref peano4.api.solversteps), the runner 
@@ -106,6 +126,21 @@ def create_runner(peano_project, identifier, steps):
       all) if the phase has no steps, e.g. no solver contributed to it, so
       the generated code still compiles.
 
+      Before every step but the first, run() also calls
+      peano4::parallel::Node::getInstance().setNextProgramStep(...) with
+      that step's own program step - whoever calls run() in the first
+      place already had to set Node's program step to this phase's first
+      step beforehand (@see getFirstSubstep(), used exactly that way in
+      exahype2.api.generators.DefaultSimulationMain), so run() only
+      asserts on it there rather than setting it again; every subsequent
+      step within the same phase has nothing else to set it, so run()
+      must do so itself. This is what makes
+      peano4::parallel::Node::getInstance().getCurrentProgramStep()
+      reliable for every step, not just a phase's first - in particular,
+      it is what the guard expressions
+      peano4.api.taskgraph.compiler.DeriveLoadStoreComputeFlag builds
+      actually depend on at runtime.
+
     """
     step_names = [step.name for step in steps]
     first_step = step_names[0] if step_names else "Undef"
@@ -115,8 +150,8 @@ def create_runner(peano_project, identifier, steps):
         headerfile_template = TEMPLATE_RUNNER_HEADER_FILE,
         cppfile_template    = TEMPLATE_RUNNER_CPP_FILE,
         classname           = identifier,
-        namespace           = peano_project.namespace + ["kernels"],
-        subdirectory        = peano_project.subdirectory + "kernels",
+        namespace           = peano_project.namespace + ["runners"],
+        subdirectory        = peano_project.subdirectory + "runners",
         dictionary          = {
             "PROJECT_NAMESPACE": peano_project.namespace,
             "SUBNAMESPACE":      peano_project._subdirectory + "::" if peano_project._subdirectory else "",
@@ -130,5 +165,5 @@ def create_runner(peano_project, identifier, steps):
     )
     peano_project.output.add(generated_files)
     peano_project.output.makefile.add_cpp_file(
-        peano_project.subdirectory + "kernels/" + identifier + ".cpp", generated=True
+        peano_project.subdirectory + "runners/" + identifier + ".cpp", generated=True
     )

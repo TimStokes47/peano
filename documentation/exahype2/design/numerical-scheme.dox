@@ -41,7 +41,7 @@ reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.nam
 update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell",            entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 compute_cfl_condition_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute CFL condition",  entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces",       entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-compute_time_step_size_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute time step size", entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL)
+compute_time_step_size_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute time step size", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
 update_cell_task.add_dependency(reconstruction_task)
 compute_cfl_condition_task.add_dependency(update_cell_task)
@@ -56,7 +56,7 @@ time_step.add_task(compute_time_step_size_task)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Every Task is tagged with the kind of mesh entity it works on
-(Task.GridEntity.VERTEX/FACE/CELL/GLOBAL) and the tasks it depends on. A new
+(Task.GridEntity.VERTEX/FACE/CELL) and the tasks it depends on. A new
 numerical scheme typically follows the same pattern: create one Task per
 algorithmic sub-step, wire up add_dependency() calls to express the required
 order, and add every task to the phase's Graph via add_task(). While
