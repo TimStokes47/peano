@@ -17,6 +17,14 @@ class HandleBoundary(AbstractFVActionSet):
       yet set QOld), so apply the boundary conditions here would even confuse
       the assertions.
 
+      @todo get_body_of_operation() currently returns "": the legacy
+      implementation below (still kept around as TemplateHandleBoundary_*)
+      needs a per-face FaceLabel (fineGridFace<solver>FaceLabel.getBoundary())
+      to tell a domain-boundary face apart from an interior one, and that
+      label does not exist in the new exahype2.api yet (@see
+      exahype2.api.fv.RusanovWithExplicitEuler.__create_data_structures()'s
+      own note on this). Look into this separately once face labels exist.
+
     """
     TemplateHandleBoundary_Prologue = """
     if (
@@ -100,23 +108,14 @@ class HandleBoundary(AbstractFVActionSet):
     }
 """
 
-    def __init__(self, solver, guard):
+    def __init__(self, solver, guard="true"):
         AbstractFVActionSet.__init__(self, solver)
         self.guard = guard
 
     def get_body_of_operation(self, operation_name):
-        result = ""
-        if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
-            self.d = {}
-            self._solver._init_dictionary_with_default_parameters(self.d)
-            self._solver.add_entries_to_text_replacement_dictionary(self.d)
-            self.d["PREDICATE"] = self.guard
-            self.d["FACE_METADATA_ACCESSOR"] = "fineGridFace" + self._solver._face_label.name
-            result = jinja2.Template(self.TemplateHandleBoundary_Prologue).render(**self.d)
-            result += jinja2.Template(self.TemplateHandleBoundary_KernelCalls).render(**self.d)
-            result += jinja2.Template(self.TemplateHandleBoundary_Epilogue).render(**self.d)
-            pass
-        return result
+        # @todo Stubbed out - see this class' docstring: needs a per-face
+        # FaceLabel that does not exist yet in the new exahype2.api.
+        return ""
 
     def get_includes(self):
         return """

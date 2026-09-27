@@ -25,23 +25,32 @@ class ProjectPatchOntoFaces(peano4.toolbox.blockstructured.api.ProjectPatchOntoF
 
     """
 
-    def __init__(self, solver, guard):
+    def __init__(self, patch, patch_overlap_update, guard, includes):
         """!
 
-        solver: exahype2.api.Solver
-          Has to have solver._patch and solver._patch_overlap_update set -
+        patch: peano4.api.datamodel.Patch
+          The cell-associated patch to project onto its surrounding faces -
           @see exahype2.api.fv.RusanovWithExplicitEuler.
+
+        patch_overlap_update: peano4.api.datamodel.Patch
+          The face-associated overlap patch to project patch's boundary
+          layer into - @see exahype2.api.fv.RusanovWithExplicitEuler.
 
         guard: str
           C++ boolean expression, evaluated per cell in touchCellLastTime,
           guarding whether that cell's patch is projected onto its faces.
 
+        includes: str
+          Additional includes this action set's generated code needs -
+          callers typically pass solver._get_default_includes() +
+          solver.user_solver_includes.
+
         """
         super().__init__(
-            solver._patch,
-            solver._patch_overlap_update,
+            patch,
+            patch_overlap_update,
             guard,
-            solver._get_default_includes() + solver.user_solver_includes,
+            includes,
         )
 
     def get_action_set_name(self):

@@ -1,117 +1,81 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import jinja2
-
-from peano4.toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
+from peano4.toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import (
+    ReconstructedArrayMemoryLocation,
+    ReconstructPatchAndApplyFunctor,
+)
 
 
 class ReconstructPatchWithHalo(ReconstructPatchAndApplyFunctor):
-    SolveRiemannProblemsOverPatch = jinja2.Template("""
-        double timeStamp = fineGridCell{{SOLVER_NAME}}CellLabel.getTimeStamp();
+    """!
 
-        // Set the variable
-        // double timeStepSize
-        {{COMPUTE_TIME_STEP_SIZE}}
+    Reconstruct solver._patch_with_halo from solver._patch and its
+    surrounding halo (solver._patch_overlap_current_time_step), so
+    exahype2.api.fv.actionsets.UpdateCell has a halo-augmented patch to
+    update from.
 
-        {{PREPROCESS_RECONSTRUCTED_PATCH}}
+    Realised on top of peano4.toolbox.blockstructured.api's
+    ReconstructPatchAndApplyFunctor, which already knows how to gather a
+    cell patch and its face-associated overlaps into one contiguous,
+    temporary oldQWithHalo array (@see its own docstring) - this class only
+    supplies the functor_implementation that copies that temporary array
+    into solver._patch_with_halo's own accessor, since the toolbox class by
+    itself has no notion of a persisted "patch with halo" cell submodel of
+    its own (it only ever exposes the reconstructed data as a local, scratch
+    C++ array to whatever functor you hand it).
 
-        assertion2(tarch::la::greaterEquals(timeStamp, 0.0),    timeStamp, timeStepSize);
-        assertion2(tarch::la::greaterEquals(timeStepSize, 0.0), timeStamp, timeStepSize);
+    @todo Ported and drastically slimmed down from the legacy
+    python/exahype2/solvers/fv/actionsets/ReconstructPatchWithHalo.py: the
+    legacy version additionally read/wrote a per-cell CellLabel (time
+    stamp, time step size, "has updated" flag) and dispatched into
+    solver-generated compute kernels
+    (repositories::<solver>.cellCanUseStatelessPDETerms(...) and friends) -
+    this actually *solved* the PDE here. Neither the cell label nor that
+    kernel dispatch machinery exist in the new exahype2.api yet (@see
+    exahype2.api.fv.RusanovWithExplicitEuler.__create_data_structures()),
+    so none of that is ported here - this class currently only reconstructs
+    the halo; it does not (yet) call any Riemann solver.
 
-        ::exahype2::fv::validatePatch(
-          oldQWithHalo,
-          {{NUMBER_OF_UNKNOWNS}},
-          {{NUMBER_OF_AUXILIARY_VARIABLES}},
-          {{NUMBER_OF_VOLUMES_PER_AXIS}},
-          1, // Halo size
-          std::string(__FILE__) + "(" + std::to_string(__LINE__) + "): " + marker.toString()
-        ); // Previous time step has to be valid
-
-        ::exahype2::CellData patchData(oldQWithHalo, marker.x(), marker.h(), timeStamp, timeStepSize, newQ);
-
-        {% if STATELESS_PDE_TERMS %}
-        if (repositories::{{SOLVER_INSTANCE}}.cellCanUseStatelessPDETerms(
-          marker.x(),
-          marker.h(),
-          timeStamp,
-          timeStepSize
-        )) {
-          ::exahype2::fv::{{KERNEL_NAMESPACE}}::{{COMPUTE_KERNEL_CALL_STATELESS}}
-        } else
-        {% endif %}
-
-        ::exahype2::fv::{{KERNEL_NAMESPACE}}::{{COMPUTE_KERNEL_CALL}}
-
-        {{POSTPROCESS_UPDATED_PATCH}}
-
-        ::exahype2::fv::validatePatch(
-          newQ,
-          {{NUMBER_OF_UNKNOWNS}},
-          {{NUMBER_OF_AUXILIARY_VARIABLES}},
-          {{NUMBER_OF_VOLUMES_PER_AXIS}},
-          0, // Halo size
-          std::string(__FILE__) + "(" + std::to_string(__LINE__) + "): " + marker.toString()
-        ); // Outcome has to be valid
-
-        {% if COMPUTE_MAX_EIGENVALUE %}
-        const double maxEigenvalue = patchData.maxEigenvalue[0];
-        {% endif %}
-
-        // Set the variable
-        // double newTimeStepSize
-        {{COMPUTE_NEW_TIME_STEP_SIZE}}
-
-        fineGridCell{{SOLVER_NAME}}CellLabel.setTimeStamp(timeStamp+timeStepSize);
-        fineGridCell{{SOLVER_NAME}}CellLabel.setTimeStepSize(newTimeStepSize);
-        fineGridCell{{SOLVER_NAME}}CellLabel.setHasUpdated(true);
-
-        repositories::{{SOLVER_INSTANCE}}.update(newTimeStepSize, timeStamp+timeStepSize, marker.h()(0));
-    """)
+    """
 
     def __init__(self, solver):
+        """!
+
+        solver: exahype2.api.Solver
+          Has to have solver._patch, solver._patch_overlap_current_time_step
+          and solver._patch_with_halo set - @see
+          exahype2.api.fv.RusanovWithExplicitEuler.
+
         """
-        """
-        ReconstructPatchAndApplyFunctor.__init__(self,
-            patch = solver._patch,
-            patch_overlap = solver._patch_overlap_new,
-            functor_implementation = """
-#error Please switch to your Riemann solver of choice
+        patch_with_halo_dofs_per_axis = solver._patch_with_halo.dim[0]
+        number_of_values_2d = solver._patch_with_halo.no_of_unknowns * patch_with_halo_dofs_per_axis**2
+        number_of_values_3d = number_of_values_2d * patch_with_halo_dofs_per_axis
+
+        super().__init__(
+            patch=solver._patch,
+            patch_overlap=solver._patch_overlap_current_time_step,
+            functor_implementation=f"""
+    #if Dimensions==2
+    std::copy(oldQWithHalo, oldQWithHalo + {number_of_values_2d}, fineGridCell{solver._patch_with_halo.name}.value);
+    #elif Dimensions==3
+    std::copy(oldQWithHalo, oldQWithHalo + {number_of_values_3d}, fineGridCell{solver._patch_with_halo.name}.value);
+    #endif
 """,
-            reconstructed_array_memory_location = solver._reconstructed_array_memory_location,
-            guard = "not marker.willBeRefined() and not marker.hasBeenRefined()",
-            add_assertions_to_halo_exchange = False
+            reconstructed_array_memory_location=ReconstructedArrayMemoryLocation.Heap,
+            guard="not marker.willBeRefined() and not marker.hasBeenRefined()",
+            add_assertions_to_halo_exchange=False,
         )
         self._solver = solver
 
-        self._Template_TouchCellFirstTime_Epilogue += """
-  else if (not marker.willBeRefined() and not marker.hasBeenRefined()) {{
-    const double timeStamp    = fineGridCell{SOLVER_NAME}CellLabel.getTimeStamp();
-    const double timeStepSize = fineGridCell{SOLVER_NAME}CellLabel.getTimeStepSize();
-
-    assertion2(tarch::la::greaterEquals( timeStepSize, 0.0 ), timeStepSize, timeStamp);
-    assertion2(tarch::la::greaterEquals( timeStamp, 0.0 ),    timeStepSize, timeStamp);
-
-    repositories::{SOLVER_INSTANCE}.update(0.0, timeStamp, marker.h()(0) );
-  }}
-"""
-
-        self._Template_TouchCellFirstTime_Preamble = """
-  fineGridCell""" + solver._name + """CellLabel.setHasUpdated(false);
-""" + self._Template_TouchCellFirstTime_Preamble
-
-    def _add_action_set_entries_to_dictionary(self, d):
-        """
-        This is our plug-in point to alter the underlying dictionary
-        """
-        super(ReconstructPatchWithHalo, self)._add_action_set_entries_to_dictionary(d)
-
-        self._solver._init_dictionary_with_default_parameters(d)
-        self._solver.add_entries_to_text_replacement_dictionary(d)
-
-        d["CELL_FUNCTOR_IMPLEMENTATION"] = self.SolveRiemannProblemsOverPatch.render(**d)
+    def get_action_set_name(self):
+        return __name__.replace(".py", "").replace(".", "_")
 
     def get_includes(self):
-        return """
-#include "exahype2/fv/BoundaryConditions.h"
-#include "tarch/NonCriticalAssertions.h"
-""" + self._solver._get_default_includes() + self._solver.user_solver_includes
+        return (
+            super().get_includes()
+            + """
+#include <algorithm>
+"""
+            + self._solver._get_default_includes()
+            + self._solver.user_solver_includes
+        )

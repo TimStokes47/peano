@@ -64,7 +64,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         )
 
         refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh",
-                                                                entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL,
+                                                                entity=peano4.api.taskgraph.Task.GridEntity.CELL,
                                                                 task_has_to_repeat="not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
                                                                 )
         # @todo Wie also have to test against load balancing!
@@ -78,34 +78,40 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
 
         initial_condition_task        = peano4.api.taskgraph.Task(name=f"{self._solver.name} Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name} Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        roll_over_face_solution_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name} Roll over solution faces", entity=peano4.api.taskgraph.Task.GridEntity.FACE)
 
         initial_condition_task.add_dependency(refine_task)
         project_on_faces_task.add_dependency(initial_condition_task)
-        roll_over_face_solution_task.add_dependency(project_on_faces_task)
 
         initial_condition_task.add_action_set(
             InitialCondition(self._solver, guard="true")
         )
         project_on_faces_task.add_action_set(
-            ProjectPatchOntoFaces(self._solver, guard="true")
+            ProjectPatchOntoFaces(
+                self._solver._patch,
+                self._solver._patch_overlap_update,
+                guard="true",
+                includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
         )
-        roll_over_face_solution_task.add_action_set(
-            RollOverUpdatedFace(self._solver, guard="true")
+        project_on_faces_task.add_action_set(
+            RollOverUpdatedFace(
+                self._solver._patch_overlap_current_time_step,
+                self._solver._patch_overlap_update,
+                guard="true",
+                includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
         )
 
         setup_simulation.add_task(refine_task)
         setup_simulation.add_task(initial_condition_task)
         setup_simulation.add_task(project_on_faces_task)
-        setup_simulation.add_task(roll_over_face_solution_task)
 
         initial_condition_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.WRITE)
         project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.WRITE)
-        roll_over_face_solution_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        roll_over_face_solution_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
+        project_on_faces_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.WRITE)
 
         if peano4.api.Logger().is_visualisation:
             setup_simulation.visualise(title="Setup task graph for {}".format(self._solver.name))
-        elif peano4.api.Logger().is_text:
+        if peano4.api.Logger().is_text:
             setup_simulation.log_as_text(title="Setup task graph for {}".format(self._solver.name))

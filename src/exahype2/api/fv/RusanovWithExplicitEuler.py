@@ -5,7 +5,12 @@ import peano4.api.datamodel
 import peano4.toolbox.blockstructured.api
 
 from ..Solver import Solver
+from .actionsets import ComputeCFLConditionAndGlobalTimeStepSize
+from .actionsets import HandleBoundary
 from .actionsets import ProjectPatchOntoFaces
+from .actionsets import ReconstructPatchWithHalo
+from .actionsets import RollOverUpdatedFace
+from .actionsets import UpdateCell
 
 
 class RusanovWithExplicitEuler(Solver.NumericalScheme):
@@ -50,23 +55,20 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
 
         Ported from the legacy exahype2.solvers.fv.FV.create_data_structures():
         one @ref peano4.api.datamodel.Patch of patch_size^d Finite Volumes
-        per mesh cell, plus three overlap patches of width 2*overlap
-        attached to the mesh faces:
+        per mesh cell (_patch), plus a halo-augmented copy of it
+        (_patch_with_halo, (patch_size+2*overlap)^d, @see
+        exahype2.api.fv.actionsets.ReconstructPatchWithHalo) and two overlap
+        patches of width 2*overlap attached to the mesh faces:
 
-        - _patch_overlap_old: a backup of the previous halo, so schemes that
-          need to interpolate in time (e.g. local time stepping) don't have
-          to back up the whole patch, just its overlap.
-        - _patch_overlap_new: the halo actually used to reconstruct a patch
-          together with its neighbours before the cell update (@see
-          exahype2.api.fv.actionsets.ReconstructPatchWithHalo).
-        - _patch_overlap_update: the update accumulated by the current
-          sweep. Rolled over into _patch_overlap_new (which is itself first
-          backed up into _patch_overlap_old) by
+        - _patch_overlap_current_time_step: the persistent halo data
+          exahype2.api.fv.actionsets.ReconstructPatchWithHalo reads from to
+          rebuild _patch_with_halo.
+        - _patch_overlap_update: the projection of the just-updated _patch
+          accumulated by the current sweep (@see
+          exahype2.api.fv.actionsets.ProjectPatchOntoFaces), rolled over
+          into _patch_overlap_current_time_step by
           exahype2.api.fv.actionsets.RollOverUpdatedFace once the update is
-          complete. This indirection is required for AMR, where a patch may
-          receive several partial updates before it is complete - going
-          through _patch_overlap_new directly would lose the "old" data
-          before every single one of them.
+          complete.
 
         All four are assigned onto self._solver (the shared
         exahype2.api.Solver instance both this numerical scheme and its
@@ -106,6 +108,11 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
             total_unknowns,
             identifier,
         )
+        self._solver._patch_with_halo = peano4.api.datamodel.Patch(
+            (self.patch_size+2*self.overlap, self.patch_size+2*self.overlap, self.patch_size+2*self.overlap),
+            total_unknowns,
+            identifier + "WithHalo",
+        )
         self._solver._patch_overlap_current_time_step = peano4.api.datamodel.Patch(
             (2 * self.overlap, self.patch_size, self.patch_size),
             total_unknowns,
@@ -136,6 +143,7 @@ Patch overlap data
 {}""".format( str(self._solver._patch), str(self._solver._patch_overlap_current_time_step), str(self._solver._patch_overlap_update) ) )
 
         peano_project.datamodel.add_cell(self._solver._patch)
+        peano_project.datamodel.add_cell(self._solver._patch_with_halo)
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
 
@@ -148,7 +156,7 @@ Patch overlap data
         self._solver._patch_overlap_update.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
             self._solver._patch_overlap_update, "double"
         )
-
+        
         self._solver._patch_overlap_current_time_step.generator.merge_method_definition = (
             peano4.toolbox.blockstructured.api.get_face_merge_implementation(
                 self._solver._patch_overlap_current_time_step
@@ -176,35 +184,59 @@ Patch overlap data
 
         self.__add_data_to_repository(peano_project)
         
-        reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruction", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        compute_cfl_condition_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute CFL condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        compute_time_step_size_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute time step size", entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL)
+        compute_time_step_size_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute time step size", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         
-        update_cell_task.add_dependency(reconstruction_task)
-        compute_cfl_condition_task.add_dependency(update_cell_task)
-        project_on_faces_task.add_dependency(update_cell_task)
-        compute_time_step_size_task.add_dependency(compute_cfl_condition_task)
-
         time_step.add_task(reconstruction_task)
         time_step.add_task(update_cell_task)
-        time_step.add_task(compute_cfl_condition_task)
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_time_step_size_task)
 
-        project_on_faces_task.add_action_set(
-            ProjectPatchOntoFaces(self._solver, guard="true")
-        )
+        ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
+        reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        reconstruction_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.WRITE)
+        reconstruction_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
+        reconstruction_task.add_action_set( ReconstructPatchWithHalo(self._solver) )
+        reconstruction_task.add_action_set( HandleBoundary(self._solver) )
 
-        reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
-        update_cell_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        compute_cfl_condition_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
-        project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
-        project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.WRITE)
-        compute_time_step_size_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
+        ## Do the actual time step update
+        update_cell_task.add_dependency(reconstruction_task)
+        update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
+        update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
+        update_cell_task.add_action_set( UpdateCell(self._solver) )
+        
+        ## Next project the new data onto the faces. Also roll over the solution
+        project_on_faces_task.add_dependency(update_cell_task)
+        project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
+        project_on_faces_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.WRITE)
+        project_on_faces_task.add_action_set(
+            ProjectPatchOntoFaces(
+                self._solver._patch,
+                self._solver._patch_overlap_update,
+                guard="true",
+                includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
+        )
+        project_on_faces_task.add_action_set(
+            RollOverUpdatedFace(
+                self._solver._patch_overlap_current_time_step,
+                self._solver._patch_overlap_update,
+                guard="true",
+                includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
+        )
+        
+        ## Parallel to the projection, determine the CFL condition and compute time step size
+        compute_time_step_size_task.add_dependency(update_cell_task)
+        compute_time_step_size_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)        
+        compute_time_step_size_task.add_action_set(
+            ComputeCFLConditionAndGlobalTimeStepSize(self._solver, guard="true")
+        )
         
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))
-        elif peano4.api.Logger().is_text:
+        if peano4.api.Logger().is_text:
             time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
