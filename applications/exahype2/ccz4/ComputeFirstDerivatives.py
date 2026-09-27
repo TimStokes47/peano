@@ -13,7 +13,7 @@ from exahype2.solvers.rkfd.OneSweepPerRungeKuttaStep import ReconstructLinearCom
 # this file is explicitly excluded from documentation in the Doxyfile.
 #
 
-class ComputeFirstDerivativesFV(peano4.toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor):
+class ComputeFirstDerivativesFV(toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor):
     """!
     
     Explicit reconstruction of derivatives for Finite Volumes
@@ -57,7 +57,7 @@ class ComputeFirstDerivativesFV(peano4.toolbox.blockstructured.api.ReconstructPa
 
         
 
-class ComputeFirstDerivativesFD4RK(peano4.toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor):
+class ComputeFirstDerivativesFD4RK(toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor):
     r"""!
     
     Explicit reconstruction of first derivatives for FD4 discretisation

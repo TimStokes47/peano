@@ -7,7 +7,7 @@ import numpy as np
 import peano4.api
 import exahype2
 import peano4.api.toolbox.particles
-from peano4.toolbox.blockstructured.api.DynamicAMR        import DynamicAMR
+from toolbox.blockstructured.api.DynamicAMR        import DynamicAMR
 
 
 from Probe_file_gene          import tracer_seeds_generate

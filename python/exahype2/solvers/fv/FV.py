@@ -263,7 +263,7 @@ class FV(object):
             )
 
         self._reconstructed_array_memory_location = (
-            peano4.toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.CallStack
+            toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.CallStack
         )
 
         self._solver_template_file_class_name = None
@@ -654,17 +654,17 @@ The finest mesh width of """
             )
 
         self._patch_overlap_old.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.api.get_face_merge_implementation(
+            toolbox.blockstructured.api.get_face_merge_implementation(
                 self._patch_overlap_old
             )
         )
         self._patch_overlap_new.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.api.get_face_merge_implementation(
+            toolbox.blockstructured.api.get_face_merge_implementation(
                 self._patch_overlap_new
             )
         )
         self._patch.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.api.get_cell_merge_implementation(self._patch)
+            toolbox.blockstructured.api.get_cell_merge_implementation(self._patch)
         )
 
         self._patch_overlap_old.generator.includes += """
@@ -814,7 +814,7 @@ The finest mesh width of """
             )
         )
         self._action_set_copy_new_faces_onto_old_faces = (
-            peano4.toolbox.blockstructured.api.BackupPatchOverlap(
+            toolbox.blockstructured.api.BackupPatchOverlap(
                 self._patch_overlap_new,
                 self._patch_overlap_old,
                 False,
@@ -1171,7 +1171,7 @@ The finest mesh width of """
         step.add_action_set(self._action_set_project_patch_onto_faces)
         # step.add_action_set( self._action_set_AMR_commit_without_further_analysis )
 
-        plot_patches_action_set = peano4.toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
+        plot_patches_action_set = toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
             filename=output_path + "solution-" + self._name,
             patch=self._patch,
             dataset_name=self._unknown_identifier(),
@@ -1239,7 +1239,7 @@ The finest mesh width of """
         step.add_action_set(self._action_set_project_patch_onto_faces)
         # step.add_action_set( self._action_set_AMR_commit_without_further_analysis )
 
-        plot_patches_action_set = peano4.toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
+        plot_patches_action_set = toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
             filename=output_path + "checkpoint-" + self._name,
             patch=self._patch,
             dataset_name=self._unknown_identifier(),

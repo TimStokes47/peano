@@ -2,13 +2,12 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
 import peano4.api.datamodel
-import peano4.toolbox.blockstructured.api
+import toolbox.blockstructured.api
 
 from ..Solver import Solver
 from .actionsets import ComputeCFLConditionAndGlobalTimeStepSize
 from .actionsets import HandleBoundary
 from .actionsets import ProjectPatchOntoFaces
-from .actionsets import ReconstructPatchWithHalo
 from .actionsets import RollOverUpdatedFace
 from .actionsets import UpdateCell
 
@@ -57,12 +56,14 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         one @ref peano4.api.datamodel.Patch of patch_size^d Finite Volumes
         per mesh cell (_patch), plus a halo-augmented copy of it
         (_patch_with_halo, (patch_size+2*overlap)^d, @see
-        exahype2.api.fv.actionsets.ReconstructPatchWithHalo) and two overlap
+        toolbox.blockstructured.api.ReconstructPatchWithHalo) and two overlap
         patches of width 2*overlap attached to the mesh faces:
 
         - _patch_overlap_current_time_step: the persistent halo data
-          exahype2.api.fv.actionsets.ReconstructPatchWithHalo reads from to
-          rebuild _patch_with_halo.
+          toolbox.blockstructured.api.ReconstructPatchWithHalo reads from to
+          rebuild _patch_with_halo (@see construct_output(), which hands it
+          _patch/_patch_overlap_current_time_step/_patch_with_halo directly
+          rather than the whole solver).
         - _patch_overlap_update: the projection of the just-updated _patch
           accumulated by the current sweep (@see
           exahype2.api.fv.actionsets.ProjectPatchOntoFaces), rolled over
@@ -74,11 +75,11 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         exahype2.api.Solver instance both this numerical scheme and its
         surrounding solver's Solver.GridConstruction/Solver.Plotter
         counterparts hold a reference to as self._solver), not onto self,
-        since every FV action set - @see
-        exahype2.api.fv.actionsets.ReconstructPatchWithHalo,
-        exahype2.api.fv.actionsets.RollOverUpdatedFace,
-        exahype2.api.fv.actionsets.AdaptivityCriterion - is handed that
-        shared solver and looks the patches up as solver._patch /
+        since the remaining FV action sets that need them - @see
+        exahype2.api.fv.actionsets.HandleBoundary,
+        exahype2.api.fv.actionsets.UpdateCell,
+        exahype2.api.fv.actionsets.AdaptivityCriterion - are handed that
+        shared solver and look the patches up as solver._patch /
         solver._patch_overlap_*.
 
         Storage is hardwired to smart pointers (peano4.api.datamodel's
@@ -158,7 +159,7 @@ Patch overlap data
         )
         
         self._solver._patch_overlap_current_time_step.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.api.get_face_merge_implementation(
+            toolbox.blockstructured.api.get_face_merge_implementation(
                 self._solver._patch_overlap_current_time_step
             )
         )
@@ -198,7 +199,16 @@ Patch overlap data
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         reconstruction_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.WRITE)
         reconstruction_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
-        reconstruction_task.add_action_set( ReconstructPatchWithHalo(self._solver) )
+        reconstruction_task.add_action_set(
+            toolbox.blockstructured.api.ReconstructPatchWithHalo(
+                patch=self._solver._patch,
+                patch_overlap=self._solver._patch_overlap_current_time_step,
+                reconstructed_patch=self._solver._patch_with_halo,
+                guard="not marker.willBeRefined() and not marker.hasBeenRefined()",
+                add_assertions_to_halo_exchange=False,
+                additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
+        )
         reconstruction_task.add_action_set( HandleBoundary(self._solver) )
 
         ## Do the actual time step update

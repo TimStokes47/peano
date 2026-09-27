@@ -9,7 +9,7 @@ import dastgen2
 
 from Bindding import tracer_seeds_generate, read_scale_factor_table
 
-from peano4.toolbox.blockstructured.api.DynamicAMR                 import DynamicAMR
+from toolbox.blockstructured.api.DynamicAMR                 import DynamicAMR
 import numpy as np
 
 modes = { 

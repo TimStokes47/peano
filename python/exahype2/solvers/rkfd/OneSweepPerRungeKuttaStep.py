@@ -8,7 +8,7 @@ import exahype2
 
 import jinja2
 
-from peano4.toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
+from toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
 
 from exahype2.solvers.ButcherTableau                import ButcherTableau
 
@@ -315,9 +315,9 @@ class OneSweepPerRungeKuttaStep( CellCenteredFiniteDifferences ):
     if eigenvalues          is not None:  self._eigenvalues_implementation                = eigenvalues
     if source_term          is not None:  self._source_term_implementation                = source_term
     
-    if self._reconstructed_array_memory_location==peano4.toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete or \
-       self._reconstructed_array_memory_location==peano4.toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapWithoutDelete or \
-       self._reconstructed_array_memory_location==peano4.toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.AcceleratorWithoutDelete:
+    if self._reconstructed_array_memory_location==toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete or \
+       self._reconstructed_array_memory_location==toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapWithoutDelete or \
+       self._reconstructed_array_memory_location==toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.AcceleratorWithoutDelete:
       raise Exception( "memory mode without appropriate delete chosen, i.e. this will lead to a memory leak" )
 
     self._user_action_set_includes += additional_action_set_includes

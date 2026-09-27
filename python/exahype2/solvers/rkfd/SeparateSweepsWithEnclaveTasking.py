@@ -13,7 +13,7 @@ import jinja2
 
 import os
 
-from peano4.toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import (
+from toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import (
     ReconstructPatchAndApplyFunctor,
 )
 
@@ -184,7 +184,7 @@ class UpdateCell(ReconstructPatchAndApplyFunctor):
             functor_implementation="""
 #error please switch to your Riemann solver of choice
 """,
-            reconstructed_array_memory_location=peano4.toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete,
+            reconstructed_array_memory_location=toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete,
             guard=one_huge_boolean_guard_expression,
             add_assertions_to_halo_exchange=False,
         )

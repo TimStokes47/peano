@@ -1,14 +1,14 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.toolbox.blockstructured.api
+import toolbox.blockstructured.api
 
 
-class ProjectPatchOntoFaces(peano4.toolbox.blockstructured.api.ProjectPatchOntoFaces):
+class ProjectPatchOntoFaces(toolbox.blockstructured.api.ProjectPatchOntoFaces):
     """!
 
     Project a Finite Volume patch's data onto the overlap held on its
     surrounding faces, so the halo layers can be reconstructed from it later
-    on - @see exahype2.api.fv.actionsets.ReconstructPatchWithHalo.
+    on - @see toolbox.blockstructured.api.ReconstructPatchWithHalo.
 
     Ported from the legacy python/exahype2/solvers/fv/actionsets/ProjectPatchOntoFaces.py,
     slimmed down: the legacy version additionally set the isUpdated()/
@@ -18,7 +18,7 @@ class ProjectPatchOntoFaces(peano4.toolbox.blockstructured.api.ProjectPatchOntoF
     (@see exahype2.api.fv.RusanovWithExplicitEuler) do not create a cell/face
     label yet, and RollOverUpdatedFace has not been ported either, so this
     version does purely what the base class
-    peano4.toolbox.blockstructured.api.ProjectPatchOntoFaces already does:
+    toolbox.blockstructured.api.ProjectPatchOntoFaces already does:
     copy solver._patch's boundary layer into solver._patch_overlap_update.
     Once cell/face labels exist in the new API, the metadata-update behaviour
     can be reinstated here.

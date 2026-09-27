@@ -3,7 +3,7 @@
 import os
 
 import peano4.api
-import peano4.toolbox.blockstructured.api
+import toolbox.blockstructured.api
 
 from ..Solver import Solver
 
@@ -95,7 +95,7 @@ class PlotAsVTKFile(Solver.Plotter):
         else:
             guard = "true"
 
-        plot_patches_action_set = peano4.toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
+        plot_patches_action_set = toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
             filename=os.path.join(self._output_path, "solution-" + self._solver.name),
             patch=self._solver._patch,
             dataset_name=self._solver._unknown_identifier(),

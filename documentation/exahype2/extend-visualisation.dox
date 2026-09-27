@@ -19,7 +19,7 @@ solvers' add_actions_to_plot_solution() routine.
 # Plot the facet data
 
 Peano's patch toolbox offers an @ref glossary_events_and_action_sets "action set" for patches over faces called
-peano4.toolbox.blockstructured.PlotPatchesOverFacesInPeanoBlockFormat. 
+toolbox.blockstructured.PlotPatchesOverFacesInPeanoBlockFormat. 
 
 @todo More docu here please.
 

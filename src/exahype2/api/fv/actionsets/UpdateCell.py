@@ -10,13 +10,13 @@ class UpdateCell(AbstractFVActionSet):
 
     Update a Finite Volume patch (solver._patch) from its halo-augmented
     reconstruction (solver._patch_with_halo, @see
-    exahype2.api.fv.actionsets.ReconstructPatchWithHalo) by applying the
+    toolbox.blockstructured.api.ReconstructPatchWithHalo) by applying the
     solver's numerical scheme (Rusanov flux, explicit Euler time stepping)
     once per volume.
 
     @todo Not implemented yet: the actual Riemann solver / PDE kernel call,
     the per-cell time stamp/time step size bookkeeping (a CellLabel, in the
-    legacy version - @see exahype2.api.fv.actionsets.ReconstructPatchWithHalo's
+    legacy version - @see toolbox.blockstructured.api.ReconstructPatchWithHalo's
     own @todo) and feeding the resulting eigenvalues into the solver's
     global time step size are all missing here. solver._patch is left
     exactly at its storage's default (a zero-initialised value, since
@@ -50,6 +50,7 @@ class UpdateCell(AbstractFVActionSet):
     //       fineGridCell{self._solver._patch_with_halo.name} and write the
     //       result into fineGridCell{self._solver._patch.name} - not
     //       implemented yet, @see this class' docstring.
+    // @Tim. this is you
   }}
 """
         return result

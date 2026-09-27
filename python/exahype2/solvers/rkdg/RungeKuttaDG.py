@@ -4,7 +4,7 @@ import os
 
 import peano4.api
 import peano4.api.datamodel
-import peano4.toolbox.blockstructured.api
+import toolbox.blockstructured.api
 import peano4.api.output.TemplatedHeaderFile
 import peano4.api.output.TemplatedHeaderImplementationFilePair
 import peano4.api.output.Jinja2TemplatedHeaderFile
@@ -762,7 +762,7 @@ We use RK("""
 #include "repositories/SolverRepository.h"
 """
         self._estimate_projection.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.api.get_face_merge_implementation(
+            toolbox.blockstructured.api.get_face_merge_implementation(
                 self._estimate_projection
             )
         )
@@ -787,7 +787,7 @@ We use RK("""
 #include "repositories/SolverRepository.h"
 """
         self._current_time_step.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.api.get_cell_merge_implementation(
+            toolbox.blockstructured.api.get_cell_merge_implementation(
                 self._current_time_step
             )
         )
@@ -1244,7 +1244,7 @@ We use RK("""
                 for x in self._basis.quadrature_points:
                     mapping.append((x, y, z))
 
-        plot_patches_action_set = peano4.toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
+        plot_patches_action_set = toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
             filename=output_path + "solution-" + self._name,
             patch=self._current_time_step,
             dataset_name=self._unknown_identifier(),

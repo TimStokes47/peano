@@ -12,7 +12,7 @@ class RollOverUpdatedFace(ActionSet):
     Copy patch_overlap_update - the face overlap
     exahype2.api.fv.actionsets.ProjectPatchOntoFaces has just written the
     latest projection into - onto patch_overlap_current_time_step, the
-    persistent face data exahype2.api.fv.actionsets.ReconstructPatchWithHalo
+    persistent face data toolbox.blockstructured.api.ReconstructPatchWithHalo
     reads from to rebuild a patch's halo. Both halves of the face overlap
     (left and right, relative to the face's normal) are copied in full,
     unconditionally subject only to guard.

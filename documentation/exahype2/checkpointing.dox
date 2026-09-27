@@ -72,7 +72,7 @@ domain data will be dumped onto the disk in this stage. In your solver class, ad
         step.add_action_set(self._action_set_update_face_label)
         step.add_action_set(self._action_set_update_cell_label)
 
-        checkpoint_patches_action_set = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat(
+        checkpoint_patches_action_set = toolbox.blockstructured.PlotPatchesInPeanoBlockFormat(
             filename=output_path + "checkpoint-" + self._name,
             patch=self._patch,
             dataset_name=self._unknown_identifier(),
@@ -113,7 +113,7 @@ True during function call)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 def add_actions_to_plot_solution(self, step, output_path, restart_from_checkpoint=False):
 ......
-    plot_patches_action_set = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat(
+    plot_patches_action_set = toolbox.blockstructured.PlotPatchesInPeanoBlockFormat(
     	......
         restart_preprocess=restart_from_checkpoint
     )

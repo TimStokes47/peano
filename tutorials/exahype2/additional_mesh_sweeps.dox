@@ -284,7 +284,7 @@ always the same pattern:
 
 A classic example for a sophisticated variant of the the last step is the 
 action set implemented within applications/exahype2/ccz4/ComputeFirstDerivatives.py.
-It extends peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor for a Finite
+It extends toolbox.blockstructured.ReconstructPatchAndApplyFunctor for a Finite
 Difference scheme. This one in turn inherits from peano4.solversteps.ActionSet. 
 Once defined, we again add this to the step via add_action_set().
    
