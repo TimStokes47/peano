@@ -42,8 +42,7 @@ multiple @ref glossary_events_and_action_sets "action sets" with each travesal, 
 series of actions from the individual action sets for each event.
 
 
-Within the Python API, peano4.solversteps.ActionSet represents an @ref glossary_events_and_action_sets "action
-set".
+Within the Python API, peano4.solversteps.ActionSet represents an @ref glossary_events_and_action_sets "action set".
 This class represents the abstraction layer that we use to model the actual
 @ref glossary_events_and_action_sets "event" behaviour.
 
@@ -56,29 +55,24 @@ Event  | Semantics | Dependencies
 ------------- | ------------- | -------------
 prepareTraversal | Static routine of an action set which is called before any action set for the particular mesh travesal is created at all. | Precedes the construction of the action sets for the next mesh traversal. Called once per MPI rank only. Study this routine in the context of @ref page_peano_domain_decomposition "data decomposition discussion".
 unprepareTraversal   | Inform listeners about end of traversal on this particular subtree after all action sets have termianted and have been destructed. Static binding. | Very last event per rank. Study this routine in the context of @ref page_peano_domain_decomposition "data decomposition discussion".
-------------- | ------------- | -------------
 beginTraversal | Inform listeners about start of traversal on this particular subtree. | Called prior to any other event in this grid sweep.
 endTraversal   | Inform listeners about end of traversal on this particular subtree. | Called after all other event in this grid sweep.
-------------- | ------------- | -------------
 createPersistentVertex | Invoked in the context of dynamic mesh refinement when we refine. Usually used to initialise data. | Called before anything is done with this vertex and notably prior to touchVertexFirstTime.
 destroyPersistentVertex | Invoked in the context of dynamic mesh refinement when we erase. Might be used to wrap up data or project data that otherwise would be lost onto coarser resolution levels. | Called after touchVertexLastTime. No further event will be triggered for this vertex. All adjacent faces have been destroed before.
 createPersistentFace | Invoked in the context of dynamic mesh refinement when we refine. Usually used to initialise data. | Called before anything is done with this face and notably prior to touchFaceFirstTime. All adjacent vertices have been created before.
 destroyPersistentFace | Invoked in the context of dynamic mesh refinement when we erase. Might be used to wrap up data or project data that otherwise would be lost onto coarser resolution levels. | Called after touchVertexLastTime. No further event will be triggered for this face.
 createCell | Invoked in the context of dynamic mesh refinement when we refine. Usually used to initialise data. | Called before anything is done with this cell and notably prior to touchCellFirstTime. All adjacent faces and vertices have been created before.
 destroyCell | Invoked in the context of dynamic mesh refinement when we erase. Might be used to wrap up data or project data that otherwise would be lost onto coarser resolution levels. | Called after touchCellLastTime. No further event will be triggered for this cell. Precedes the destruction of the adjacent faces and vertices.
-------------- | ------------- | -------------
 createHangingVertex | Invoked in the context of adaptive meshes. Hanging vertices are not persistent aka stored in-between two mesh traversals. Actually, the traversal automaton might create them multiple times, i.e. up to @f$ 2^d-1 @f$ times throughout the traversal if it wants. Used to project data from the next coarser level onto the hanging entity. | Called before any event for an adjacent face or cell is invoked.
-destroyHangingVertex | Invoked in the context of adaptive meshes. Hanging vertices are not persistent aka stored in-between two mesh traversals and hence are destroyed for every creation encountered per mesh sweep. | Last action happening for a vertex. As we traverse the tree top-down, all the coarser parent data are still valid and no touchLastXXX event has been called for those guys. 
+destroyHangingVertex | Invoked in the context of adaptive meshes. Hanging vertices are not persistent aka stored in-between two mesh traversals and hence are destroyed for every creation encountered per mesh sweep. | Last action happening for a vertex. As we traverse the tree top-down, all the coarser parent data are still valid and no touchLastXXX event has been called for those guys.
 createHangingFace | Invoked in the context of adaptive meshes. Hanging faces are not persistent aka stored in-between two mesh traversals. Used to project data from the next coarser level onto the hanging entity. | Called before any event for an adjacent cell is invoked.
 destroyHangingFace | Invoked in the context of adaptive meshes. Hanging faces are not persistent aka stored in-between two mesh traversals and hence are destroyed for every creation encountered per mesh sweep. | Precedes the destruction of adjacent hanging vertices.
-------------- | ------------- | -------------
-touchVertexFirstTime | Invoked when vertex is loaded for the first time or directly after its creation. | Pior to any other operation on this vertex or an adjacent face or cell. Called directly after createPersistentVertex if this is a brand new vertex. All first and creational events on all coarser data have been called before. 
+touchVertexFirstTime | Invoked when vertex is loaded for the first time or directly after its creation. | Pior to any other operation on this vertex or an adjacent face or cell. Called directly after createPersistentVertex if this is a brand new vertex. All first and creational events on all coarser data have been called before.
 touchVertexLastTime | Invoked when vertex is accessed for the last time in this mesh sweep. | After all adjacent cells have been traversed and all "last" operations on all adjacent faces and cells have complted. destroyPersistentVertex is the only event that might be called afterwards for this vertex in this sweep if the mesh erases. All first and creational events on all coarser data have been called before.
 touchFaceFirstTime | Invoked when face is loaded for the first time. | Invoked after touchVertexFirstTime for adjacent vertices. Precedes event on the two adjacent cells. All first and creational events on all coarser data have been called before.
 touchFaceLastTime | Invoked when face is accessed for the last time in this mesh sweep. | After all adjacent cells have been traversed (see touchCellLastTime). All first and creational events on all coarser data have been called before.
 touchCellFirstTime | Invoked when we hit the cell. | After all adjacent hanging faces and vertices have been created. You can assume that touchXXXFirstTime for the persistent adjacent grid entities has been called. Also, all first events on all coarser data have been called before.
 touchCellLastTime | Invoked when the traversal automaton moves from fine to coarse cells within the spacetree. | Called once all events on finer levels on children within the spacetree have been called.
-------------- | ------------- | -------------
 
 
 ## Example
