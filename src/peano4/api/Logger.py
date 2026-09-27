@@ -108,13 +108,29 @@ class Logger:
 
     @property
     def is_visualisation(self) -> bool:
-        """! True if and only if verbosity is set to LoggerVerbosity.VISUALISATION. """
+        """!
+
+        True if and only if verbosity is set to LoggerVerbosity.VISUALISATION.
+        Implies is_text, since visualising always dumps text alongside the
+        visualisation (@see is_text) - callers that branch on both should
+        therefore never treat these two as mutually exclusive alternatives.
+
+        """
         return self._verbosity == LoggerVerbosity.VISUALISATION
 
     @property
     def is_text(self) -> bool:
-        """! True if and only if verbosity is set to LoggerVerbosity.TEXT. """
-        return self._verbosity == LoggerVerbosity.TEXT
+        """!
+
+        True if verbosity is set to LoggerVerbosity.TEXT or
+        LoggerVerbosity.VISUALISATION - visualising always dumps text
+        alongside the visualisation, it is never the only output, so this
+        is also true whenever is_visualisation is (@see is_visualisation;
+        the converse does not hold: plain TEXT verbosity produces no
+        visualisation).
+
+        """
+        return self._verbosity in (LoggerVerbosity.TEXT, LoggerVerbosity.VISUALISATION)
 
     @property
     def file_name(self) -> str:

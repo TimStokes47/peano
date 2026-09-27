@@ -54,7 +54,7 @@ def report_compiled_step_sequence(
     """
     if peano4.api.Logger().is_visualisation:
         _visualise_compiled_step_sequence(steps, title)
-    elif peano4.api.Logger().is_text:
+    if peano4.api.Logger().is_text:
         _log_compiled_step_sequence_as_text(steps, title)
 
 
