@@ -500,11 +500,6 @@ void peano4::parallel::SpacetreeSet::deleteClonedObservers() {
 void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
   logTraceIn("traverse(TraversalObserver&)");
 
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    peano4::parallel::Node::getInstance().continueToRun();
-  }
-  logDebug("traverse(TraversalObserver)", "start new grid sweep");
-
   tarch::mpi::Rank::getInstance().barrier([&]() -> void {
     tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     answerQuestions();
@@ -558,9 +553,6 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
       break;
     }
   }
-
-  // I use this boolean flag from time to time to debug the code.
-  [[maybe_unused]] const bool runSequentially = false;
 
   logTraceInWith1Argument("traverse(TraversalObserver&)-primary", primaryTasks.size());
   tarch::multicore::spawnAndWait(primaryTasks);

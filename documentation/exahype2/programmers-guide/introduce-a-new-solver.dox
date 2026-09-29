@@ -44,6 +44,8 @@ on patch sizes to the baseline solver, and they also attach the core data storag
 </div>
 
 
+@todo Man kann also alles ueber Tasks abbilden, oder eben auch ueber mehrere Action Sets pro Task. Da ist es nicht eindeutig!
+
 # Determine what grid data your solver needs
 
 Every solver needs certain data.
@@ -73,6 +75,22 @@ It changes the storage scheme.
 # Change the storage scheme
 
 
+
+
+
+If this happens
+
+
+switch program phase to Plot_EulerFVSmooth_Write_VTK_File and, hence, activate potentially different filter set
+assertion in file ../../../..//src/peano4/maps/HierarchicalStackMap.h, line 184 failed: _data[localTreeId]._stackNumberToData.count(key.second)==1
+parameter localTreeId: 0
+parameter _data.size(): 1024
+parameter key.first: 0
+parameter key.second: 1
+smooth-convergence-test: HierarchicalStackMap.h:184: T *peano4::maps::HierarchicalStackMap<peano4::stacks::STDVectorStack<benchmarks::exahype2::euler::smooth_convergence_test::celldata::EulerFVSmoothQ>>::getForPop(const StackKey &) [T = peano4::stacks::STDVectorStack<benchmarks::exahype2::euler::smooth_convergence_test::celldata::EulerFVSmoothQ>]: Assertion `false' failed.
+
+
+then the cell predicates are broken.
 
 
 # The four building blocks
@@ -145,4 +163,25 @@ check `git log` on the files above before relying on details not covered on
 this page.
 </div>
 
+
+        self._solver.add_abstract_solver_attribute("double _timeStamp = 0.0;")
+        self._solver.add_abstract_solver_method(
+            "void increaseTimestamp(double dt);",
+            lambda qualified_class_name: (
+                "void " + qualified_class_name + "::increaseTimestamp(double dt) {\n"
+                "  _timeStamp += dt;\n"
+                "}\n"
+            ),
+        )
+        self._solver.add_abstract_solver_method(
+            "double getTimestamp() const;",
+            lambda qualified_class_name: (
+                "double " + qualified_class_name + "::getTimestamp() const {\n"
+                "  return _timeStamp;\n"
+                "}\n"
+            ),
+        )
+
+
+	
 */

@@ -16,8 +16,8 @@ auxiliary_variables = 0
 volume_size = 0.0001
 patch_size = 9
 dimensions = 2
-verbosity = peano4.api.LoggerVerbosity.TEXT
-# verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
+#verbosity = peano4.api.LoggerVerbosity.TEXT
+verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
 
 thesolver = exahype2.api.Solver(
     solver_name,
@@ -64,11 +64,12 @@ project.set_global_simulation_parameters(
     dimensions=dimensions,
     offset=[-0.1, -0.1],
     size=[0.2, 0.2],
-    min_end_time=0.01,
-    max_end_time=0.01,
+    min_end_time=0.1,
+    max_end_time=0.1,
     first_plot_time_stamp=0.0,
     time_in_between_plots=0.01,
-    periodic_BC=[False, False, False],
+#    periodic_BC=[False, False, False],
+    periodic_BC=[True, True, True],
 )
 
 # project.set_load_balancing("toolbox::loadbalancing::strategies::RecursiveBipartition", "new ::exahype2::LoadBalancingConfiguration()")
