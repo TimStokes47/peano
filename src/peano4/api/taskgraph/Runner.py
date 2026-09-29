@@ -77,8 +77,10 @@ void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::run() {
   {% endif %}
   do {
     tarch::logging::LogFilter::getInstance().switchProgramPhase("{{step}}");
+    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{step}}::prepareTraversal();
     {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{step}} observer;
     peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
+    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{step}}::unprepareTraversal();
     logDebug( "run()", "will rerun this step: {{REPEAT_CONDITIONS[loop.index0] or "false"}}=" << {{REPEAT_CONDITIONS[loop.index0] or "false"}} );
   }
   while ( {{REPEAT_CONDITIONS[loop.index0] or "false"}} );
@@ -121,10 +123,14 @@ def create_runner(peano_project, identifier, steps):
       the generated runner hands to peano4::RunMultipleSteps's constructor
       to kick the phase off. run() instantiates each step's Observer in
       turn and traverses the spacetree set with it, switching the log
-      filter's program phase beforehand and timing the traversal via the
-      inherited _watch/_runtimeMeasurement. "Undef" (and no traversals at
-      all) if the phase has no steps, e.g. no solver contributed to it, so
-      the generated code still compiles.
+      filter's program phase beforehand, bracketing the traversal itself
+      with that Observer's own static prepareTraversal()/
+      unprepareTraversal() (@see peano4.api.output.Observer - the spacetree
+      set never calls these itself, so the runner is exactly the "up to
+      the user" call site its own doc comment asks for), and timing the
+      traversal via the inherited _watch/_runtimeMeasurement. "Undef" (and
+      no traversals at all) if the phase has no steps, e.g. no solver
+      contributed to it, so the generated code still compiles.
 
       Before every step but the first, run() also calls
       peano4::parallel::Node::getInstance().setNextProgramStep(...) with

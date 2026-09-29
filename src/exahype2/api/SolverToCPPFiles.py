@@ -48,8 +48,12 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
 
     {{PDE_TERM_DECLARATIONS}}
 
+    {{ADDITIONAL_METHOD_DECLARATIONS}}
+
   protected:
     static tarch::logging::Log  _log;
+
+    {{ADDITIONAL_ATTRIBUTES}}
 };
 
 {# Empty line here #}
@@ -68,6 +72,8 @@ tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPAC
 
 
 {{PDE_TERM_DEFINITIONS}}
+
+{{ADDITIONAL_METHOD_DEFINITIONS}}
 """
 
     TEMPLATE_SOLVER_HEADER_FILE = """
@@ -153,6 +159,14 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
             "PDE_TERM_DEFINITIONS": "\n".join(
                 term.generator.generate_out_of_class_definitions(qualified_class_name)
                 for term in self._solver.pde_terms
+            ),
+            "ADDITIONAL_ATTRIBUTES": "\n".join(self._solver._abstract_solver_attributes),
+            "ADDITIONAL_METHOD_DECLARATIONS": "\n".join(
+                declaration for declaration, definition_generator in self._solver._abstract_solver_methods
+            ),
+            "ADDITIONAL_METHOD_DEFINITIONS": "\n".join(
+                definition_generator(qualified_class_name)
+                for declaration, definition_generator in self._solver._abstract_solver_methods
             ),
         }
 

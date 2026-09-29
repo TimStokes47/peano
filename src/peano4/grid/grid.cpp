@@ -560,6 +560,44 @@ void peano4::grid::reduceGridControlEvents(
 }
 
 
+peano4::grid::GridStatistics peano4::grid::reduceGridStatistics(
+  const peano4::grid::GridStatistics& localStatistics
+) {
+  GridStatistics result = localStatistics;
+#ifdef Parallel
+  static const int tag = tarch::mpi::Rank::reserveFreeTag("peano4::grid::reduceGridStatistics");
+
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    for (int rank = 0; rank < tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
+      if (rank != tarch::mpi::Rank::getInstance().getGlobalMasterRank()) {
+        GridStatistics remoteStatistics;
+        GridStatistics::receiveAndPollDanglingMessages(
+          remoteStatistics, rank, tag, tarch::mpi::Rank::getInstance().getCommunicator()
+        );
+        result = result + remoteStatistics;
+      }
+    }
+  } else {
+    GridStatistics::sendAndPollDanglingMessages(
+      localStatistics,
+      tarch::mpi::Rank::getInstance().getGlobalMasterRank(),
+      tag,
+      tarch::mpi::Rank::getInstance().getCommunicator()
+    );
+  }
+
+  MPI_Bcast(
+    &result,
+    1,
+    GridStatistics::getGlobalCommunciationDatatype(),
+    tarch::mpi::Rank::getInstance().getGlobalMasterRank(),
+    tarch::mpi::Rank::getInstance().getCommunicator()
+  );
+#endif
+  return result;
+}
+
+
 bool peano4::grid::isGridStationary( const peano4::grid::GridStatistics& statistics ) {
   return  statistics.getNumberOfRefinementTriggeredVertices()==0
       and statistics.getNumberOfRefiningVertices()==0

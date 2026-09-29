@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Tuple, Union
 
 import peano4.api
 
@@ -167,6 +167,13 @@ class Solver(abc.ABC):
         self._solver_constants = ""
 
         self._pde_terms: Dict[Tuple[str, bool], PDETerm] = {}
+
+        # Raw C++ member declarations/methods to splice into the generated
+        # Abstract<SolverName> class, on top of the PDE terms above -
+        # nothing here by default, @see add_abstract_solver_attribute()/
+        # add_abstract_solver_method().
+        self._abstract_solver_attributes: List[str] = []
+        self._abstract_solver_methods: List[Tuple[str, Callable[[str], str]]] = []
 
         # Deferred/local imports: these classes all subclass either one of
         # the Solver.* nested classes above or a class from a sibling
@@ -355,6 +362,69 @@ class Solver(abc.ABC):
     def get_pde_term(self, name: str, stateless: bool = False) -> PDETerm:
         """! Look up a previously registered PDE term by name and statelessness."""
         return self._pde_terms[(name, stateless)]
+
+    def add_abstract_solver_attribute(self, declaration: str):
+        """!
+
+        Add a raw C++ member attribute declaration to the generated
+        Abstract<SolverName> class (@see exahype2.api.SolverToCPPFiles),
+        e.g. "double _timeStamp = 0.0;" - use an in-class initialiser if
+        the attribute needs one, since there is no hook into the generated
+        constructor for this.
+
+        Nothing calls this unconditionally: a plain Solver carries no
+        attributes beyond what PDE terms need. It is up to whichever
+        NumericalScheme/GridConstruction/Plotter a solver uses to call
+        this, if it needs solver-level state of its own that genuinely
+        has no home on exahype2::Solver already - e.g.
+        exahype2.api.fv.RusanovWithExplicitEuler deliberately does *not*
+        use this for time stamp/time step size bookkeeping, since
+        ::exahype2::Solver (which every generated Abstract<SolverName>
+        already inherits from) already carries
+        _minTimeStamp/_maxTimeStamp/_minTimeStepSize/_maxTimeStepSize and
+        the updateCell()/startTimeStep()/finishTimeStep() lifecycle to
+        maintain them - @see exahype2.api.fv.actionsets.
+        ComputeCFLConditionAndGlobalTimeStepSize, which drives that
+        lifecycle instead of introducing parallel state via this method.
+
+        """
+        self._abstract_solver_attributes.append(declaration)
+
+    def add_abstract_solver_method(self, declaration: str, definition_generator: Callable[[str], str]):
+        """!
+
+        Add a raw C++ method to the generated Abstract<SolverName> class:
+        declaration goes into the class body (public section), verbatim.
+        definition_generator is called with the class' fully qualified
+        name once it is known (@see exahype2.api.SolverToCPPFiles,
+        exactly the way PDETerm.Generator.generate_out_of_class_definitions()
+        already is) and has to return the out-of-class definition - a
+        plain string with a "{qualified_class_name}" placeholder is
+        deliberately not supported here, since a C++ method body is full
+        of literal braces of its own; build the string with concatenation
+        instead, e.g.:
+
+        ~~~~~~~~~~~~~~~~~~~~~~~
+        solver.add_abstract_solver_method(
+          "void increaseTimestamp(double dt);",
+          lambda qualified_class_name:
+            "void " + qualified_class_name + "::increaseTimestamp(double dt) {\\n"
+            "  _timeStamp += dt;\\n"
+            "}\\n"
+        )
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        @see add_abstract_solver_attribute() for the attribute counterpart,
+        and exahype2.api.PDETerm.Generator for the more structured
+        alternative this deliberately is not (that one is for PDE terms a
+        user implements; this one is for solver-level bookkeeping a
+        NumericalScheme/etc. needs that has no equivalent on
+        ::exahype2::Solver already - @see add_abstract_solver_attribute()'s
+        own note on why RusanovWithExplicitEuler does not actually use
+        either method for time stamp/time step size bookkeeping).
+
+        """
+        self._abstract_solver_methods.append((declaration, definition_generator))
 
     # @todo This one is important
     def create_readme_descriptor(self, domain_offset, domain_size) -> str:

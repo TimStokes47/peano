@@ -113,10 +113,10 @@ digraph GridStatisticsIndependence {
 
 The absence of any edge between the three clusters above is the point:
 nothing in this dataflow talks to another rank. If you need a genuinely
-global number, you have to compute it yourself (e.g. your own explicit
-MPI_Allreduce over whichever field you need), or lean on the one thing in
-the codebase that already does this, narrowly - see "Load balancing
-information" below.
+global number, you have to compute it yourself - see "Reducing
+GridStatistics across ranks" and "Reducing a plain scalar you track
+yourself" below - or lean on the one thing in the codebase that already
+does this, narrowly - see "Load balancing information" further down.
 
 
 ### A typical use
@@ -146,6 +146,87 @@ logInfo(
 );
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+
+
+### Reducing GridStatistics across ranks
+
+@ref peano4::grid::GridStatistics gives you the per-rank picture; getting a
+genuinely global one is @ref peano4::grid::reduceGridStatistics() - every
+rank calls it with its own local GridStatistics and gets back the same,
+fully combined GridStatistics.
+
+Peano deliberately does not do this itself for every traversal (@see
+"Ranks act independently" above) - reduceGridStatistics() is a blocking
+routine every rank has to call at exactly the same time, so it is only
+appropriate to call from somewhere that already runs once per rank at a
+well-defined point, such as a static prepareTraversal()/
+unprepareTraversal() (@see @ref page_peano_action_sets). It is also, on
+purpose, not realised as one MPI_Allreduce-style collective:
+GridStatistics has no MPI_Op of its own (there is no meaningful "MPI_MIN
+of a GridStatistics" - some fields want a sum, some a min, some a logical
+or - @see its own operator+()). Instead, reduceGridStatistics() gathers
+every rank's GridStatistics to the global master one by one
+(@ref peano4::grid::GridStatistics::receiveAndPollDanglingMessages() -
+deadlock-safe the same way every other point-to-point exchange in Peano
+is), combines each into a running total via GridStatistics' own
+operator+() - the same field-by-field combination @ref
+peano4::parallel::SpacetreeSet already uses locally, per "Dataflow" above
+- and only then broadcasts the combined result back to every rank with a
+real MPI collective (MPI_Bcast), where every rank already knows exactly
+what is coming (one GridStatistics, from the master). A genuine reduction
+for a genuine fixed-size record, realised by hand rather than via
+MPI_Allreduce, deliberately split between "no fancy MPI" (the gather) and
+"MPI is fine here" (the one broadcast) - @see
+src/peano4/grid/grid.cpp's own documentation on reduceGridStatistics()
+for the full rationale, including how it differs from
+reduceGridControlEvents(), its sibling for the one type in this codebase
+that does *not* have a fixed size.
+
+~~~~~~~~~~~~~~~~~~~~~~~
+const peano4::grid::GridStatistics localStatistics  = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
+const peano4::grid::GridStatistics globalStatistics = peano4::grid::reduceGridStatistics(localStatistics);
+const double                       globalMinH       = tarch::la::max( globalStatistics.getMinH() );
+~~~~~~~~~~~~~~~~~~~~~~~
+
+exahype2.api.fv.actionsets.ComputeCFLConditionAndGlobalTimeStepSize
+(src/exahype2/api/fv/actionsets/ComputeCFLConditionAndGlobalTimeStepSize.py)
+is a real, currently-compiling worked example: it reduces the finest mesh
+size on the domain exactly this way, combined with a solver-tracked
+maximum eigenvalue - a plain `double`, *not* part of GridStatistics, @see
+below - into a globally admissible CFL time step size.
+
+
+### Reducing a plain scalar you track yourself
+
+Not everything you might want a global view of lives inside
+GridStatistics. exahype2.api.fv.actionsets.ComputeCFLConditionAndGlobalTimeStepSize's
+own maximum eigenvalue is a plain `double` the solver accumulates itself
+(guarded by its own static tarch::multicore::BooleanSemaphore while
+several trees/threads on the same rank may still be writing it). For a
+plain scalar like that, reduceGridStatistics()'s gather-to-master-then-
+broadcast machinery would be overkill - use
+tarch::mpi::Rank::getInstance().allReduce() directly instead, guarded by
+`#ifdef Parallel` (the call needs MPI-specific types that do not exist in
+a non-MPI build, and with a single rank the reduction would be a no-op
+anyway - local already *is* global there). Do **not** call raw
+`MPI_Allreduce` directly: tarch::mpi::Rank::allReduce()'s own
+documentation explains why a literal blocking allreduce risks deadlocking
+Peano's asynchronous message exchange, and what the `waitor` callback
+(`tarch::services::ServiceRepository::getInstance().receiveDanglingMessages()`
+in the example below) is for. As with reduceGridStatistics(), only call
+this from somewhere that runs once per rank - tarch::mpi::Rank::allReduce()'s
+own documentation requires "only one thread per rank" to ever call it.
+
+~~~~~~~~~~~~~~~~~~~~~~~
+double local  = /* your own locally-accumulated value */;
+double global = local;
+#ifdef Parallel
+tarch::mpi::Rank::getInstance().allReduce(
+  &local, &global, 1, MPI_DOUBLE, MPI_MAX,
+  [&]() -> void { tarch::services::ServiceRepository::getInstance().receiveDanglingMessages(); }
+);
+#endif
+~~~~~~~~~~~~~~~~~~~~~~~
 
 
 ## Load balancing information

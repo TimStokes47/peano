@@ -20,14 +20,14 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
 
     """
 
-    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1):
+    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9):
         """!
-        
+
         The constructor memorises the attributes. However, it does not do this
-        within this class, but it adds the important properties straight to the 
-        solver, so anybody else working against this solver knows about the 
+        within this class, but it adds the important properties straight to the
+        solver, so anybody else working against this solver knows about the
         properties introduced by the numerical scheme.
-        
+
         @see @ref __create_data_structures()
 
         patch_size: int
@@ -38,10 +38,21 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
           Number of Finite Volumes the halo layer reconstructed around a
           patch - from the neighbouring patches' faces - is wide.
 
+        cfl_constant: float
+          Safety factor the admissible time step size (@see
+          exahype2.api.fv.actionsets.ComputeCFLConditionAndGlobalTimeStepSize,
+          which this is passed straight through to) is scaled down by,
+          relative to the theoretical CFL=1 stability limit. 0.9 is a
+          conservative default for an explicit-Euler Finite Volume scheme;
+          this codebase has no prior precedent value to match (grep for
+          "cfl" outside this class finds only exaparty's unrelated SPH
+          solvers, which default to 0.1).
+
         """
         super().__init__(solver)
         self.patch_size = patch_size
         self.overlap = overlap
+        self.cfl_constant = cfl_constant
         self.__create_data_structures()
 
 
@@ -243,7 +254,7 @@ Patch overlap data
         compute_time_step_size_task.add_dependency(update_cell_task)
         compute_time_step_size_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)        
         compute_time_step_size_task.add_action_set(
-            ComputeCFLConditionAndGlobalTimeStepSize(self._solver, guard="true")
+            ComputeCFLConditionAndGlobalTimeStepSize(self._solver, self.cfl_constant, guard="true")
         )
         
         if peano4.api.Logger().is_visualisation:

@@ -211,10 +211,10 @@ int main(int argc, char** argv) {
         tarch::la::greater(maxTimeStepSize,0.0)
     ) {
         if (
-          {{NAMESPACE | join("::")}}::TimeInBetweenPlots > 0.0 
-          and 
+          {{NAMESPACE | join("::")}}::TimeInBetweenPlots > 0.0
+          and
           {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMinTimeStamp() >= nextPlotTimeStamp
-          and 
+          and
           not haveJustWrittenSnapshot
         ) {
           nextPlotTimeStamp += {{NAMESPACE | join("::")}}::TimeInBetweenPlots;
@@ -223,18 +223,25 @@ int main(int argc, char** argv) {
             Plot.getFirstSubstep()
           );
           haveJustWrittenSnapshot = true;
+          peano4::parallel::Node::getInstance().continueToRun();
+          step();
+          // A plot does not itself advance the simulation, so it must never be
+          // what decides whether the loop keeps going: leave maxTimeStepSize
+          // exactly as it was before the plot, and - since
+          // haveJustWrittenSnapshot is now true - the very next iteration is
+          // guaranteed to take the time-step branch below instead.
         }
         else {
           haveJustWrittenSnapshot = false;
-          
+
           peano4::parallel::Node::getInstance().setNextProgramStep(
             TimeStep.getFirstSubstep()
           );
-        }   
-        peano4::parallel::Node::getInstance().continueToRun();
-        step();
-        
-        maxTimeStepSize = {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStepSize();
+          peano4::parallel::Node::getInstance().continueToRun();
+          step();
+
+          maxTimeStepSize = {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStepSize();
+        }
     }
       
     if ( {{NAMESPACE | join("::")}}::TimeInBetweenPlots > 0.0 ) {

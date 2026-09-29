@@ -325,6 +325,35 @@ namespace peano4 {
      */
     void reduceGridControlEvents(std::vector<GridControlEvent>& events);
 
+    /**
+     * Reduce the GridStatistics of every rank into one combined
+     * GridStatistics that every rank then holds a copy of.
+     *
+     * Unlike reduceGridControlEvents(), which relies on a proper MPI
+     * collective (Allgather plus one Bcast per rank, since a vector of
+     * GridControlEvent has no fixed size), GridStatistics is a fixed-size
+     * record, so this routine takes the simpler route deliberately: no
+     * MPI_Allreduce, no MPI_Allgather. The global master receives every
+     * other rank's GridStatistics one by one
+     * (peano4::grid::GridStatistics::receiveAndPollDanglingMessages() -
+     * deadlock-safe the same way every other point-to-point exchange in
+     * Peano is, @see its own implementation), combining each into a
+     * running total via GridStatistics' own operator+(); every other rank
+     * sends its own local GridStatistics the same way. Only the very last
+     * step - handing the combined result back to every rank - is a real
+     * MPI collective (MPI_Bcast), since there every rank already knows
+     * exactly what is coming (one GridStatistics, from the master).
+     *
+     * This is a blocking routine, and it thus requires all ranks to call
+     * it at exactly the same time - @see reduceGridControlEvents() for the
+     * same caveat. Operation becomes identity (a plain copy of
+     * localStatistics) if you don't compile with MPI. @see
+     * page_grid_statistics for when/how to use this, and how it differs
+     * from extracting a single scalar out of GridStatistics and reducing
+     * only that.
+     */
+    GridStatistics reduceGridStatistics(const GridStatistics& localStatistics);
+
     bool isGridStationary( const peano4::grid::GridStatistics& statistics );
 
 
