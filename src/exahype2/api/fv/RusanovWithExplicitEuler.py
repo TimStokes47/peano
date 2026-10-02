@@ -4,6 +4,7 @@ import peano4.api
 import peano4.api.datamodel
 import toolbox.blockstructured.api
 import exahype2.api
+from exahype2.api import Target
 import exahype2.api.dslhype as dslhype
  
 from ..Solver import Solver
@@ -198,7 +199,7 @@ Patch overlap data
         self.__add_data_to_repository(peano_project)
 
         self.__create_time_step_functions()
-        self._solver.compute_kernel_call = self.__construct_kernel_call()
+        self._solver.compute_kernel_call = self.__construct_kernel_call(Target.Serial, False)
         
         reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
@@ -326,27 +327,39 @@ Patch overlap data
 #endif""")
         file.close()
 
-    def __construct_kernel_call(self):
+    def __construct_kernel_call(self, target: Target, stateless: bool):
         """!
 
         This function constructs the calls to the compute kernels based on the
         application PDE terms and the version chosen.
 
         """
-        pde_term_calls = []
         available_terms = ["flux", "nonconservativeProduct", "source", "maxEigenvalue"]
-        for term in available_terms:
-            for application_term in self._solver.pde_terms:
-                output_variable = application_term.SIGNATURE.split(" ")[-1]
-                if application_term.NAME == term:
-                    pde_term_calls.append(f"""
+
+        if stateless:
+            return f"""timeStepWithRusanov<
+        {self.patch_size},
+        {self.overlap},
+        {self._solver.unknowns},
+        {self._solver.auxiliary_variables}
+    >(
+        patchData,
+        {self._solver.name}
+    );"""
+        else:
+            pde_term_calls = []
+            for term in available_terms:
+                for application_term in self._solver.pde_terms:
+                    output_variable = application_term.SIGNATURE.split(" ")[-1]
+                    if application_term.NAME == term:
+                        pde_term_calls.append(f"""
     [&](
         {application_term.SIGNATURE}
     )->void {{
         repositories::instanceOf{self._solver.name}.flux(Q, x, {"" if application_term.NAME == "source" else "normal, "}{output_variable});
     }}""")
 
-        return f"""timeStepWithRusanov<
+            return f"""timeStepWithRusanov<
     {self.patch_size},
     {self.overlap},
     {self._solver.unknowns},

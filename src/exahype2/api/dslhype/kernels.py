@@ -1,11 +1,9 @@
 import exahype2.api.dslhype as dslhype
+from exahype2.api import Target
 import os
 from enum import Enum
 
-class Target(Enum):
-    Serial = 0
-    Multicore = 1
-    Accelerator = 2
+
 
 def translate_dslhype_function(
     function,
