@@ -31,5 +31,7 @@ class AbstractFVActionSet(ActionSet):
     def get_includes(self):
         return """
 #include <functional>
+#include "exahype2/CellData.h"
 #include "exahype2/fv/PatchUtils.h"
+#include "kernels/rusanov.h"
 """ + self._solver._get_default_includes() + self._solver.user_solver_includes

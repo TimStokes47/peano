@@ -1,5 +1,5 @@
 import ast_comments as ast, inspect
-from exahype2.dslhype import SyntaxTree
+from exahype2.api.dslhype import SyntaxTree
 import copy
 
 class Parser:
@@ -289,16 +289,30 @@ class Parser:
             return self._parse_assignment_without_declaration(assignment)
 
     def _parse_if(self, statement: ast.If):
-        if_node = SyntaxTree.If(self._parse_expression(statement.test))
-        SyntaxTree.MemoryAllocation.memoryAllocated.append([])
+        pde_term_is_in_use = False
+        assert(isinstance(statement.test, ast.Name))
+        test = statement.test.id
+        for pde_term in self.inuse_pde_terms:
+            if pde_term.NAME == test:
+                pde_term_is_in_use = True
 
-        for s in statement.body:
-            if_node.add_statement(self._parse_statement(s))
-        for allocation in SyntaxTree.MemoryAllocation.memoryAllocated[-1]:
-                if_node.add_statement(SyntaxTree.MemoryDeallocation(allocation))
-
-        SyntaxTree.MemoryAllocation.memoryAllocated.pop()
-        return if_node
+        if pde_term_is_in_use:
+            statements = []
+            for s in statement.body:
+                statements.append(self._parse_statement(s))
+            return statements
+        else:
+            return None
+#        if_node = SyntaxTree.If(self._parse_expression(statement.test))
+#        SyntaxTree.MemoryAllocation.memoryAllocated.append([])
+#
+#        for s in statement.body:
+#            if_node.add_statement(self._parse_statement(s))
+#        for allocation in SyntaxTree.MemoryAllocation.memoryAllocated[-1]:
+#                if_node.add_statement(SyntaxTree.MemoryDeallocation(allocation))
+#
+#        SyntaxTree.MemoryAllocation.memoryAllocated.pop()
+#        return if_node
 
     def _parse_statement(self, statement: ast.Expr):  
         if type(statement) is ast.Assign:
@@ -333,21 +347,26 @@ class Parser:
         
         SyntaxTree.MemoryAllocation.memoryAllocated.append([])
         for statement in function.body:
-            parsed_function.add_statement(self._parse_statement(statement))
+            next_statement = self._parse_statement(statement)
+            if isinstance(next_statement, list):
+                for nested_statement in next_statement:
+                    parsed_function.add_statement(nested_statement)
+            elif next_statement is not None:
+                parsed_function.add_statement(next_statement)
         for allocation in SyntaxTree.MemoryAllocation.memoryAllocated[-1]:
             parsed_function.add_statement(SyntaxTree.MemoryDeallocation(allocation))
         SyntaxTree.MemoryAllocation.memoryAllocated.pop()
 
         return parsed_function
 
-    def parse(self, function, template_arguments, functor_arguments, namespace = [], stateless = False, use_accelerator = False, mlir_omp = False, use_memory_manager = False):
+    def parse(self, function, template_arguments, functor_arguments, inuse_pde_terms, namespace = [], stateless = False, use_accelerator = False, mlir_omp = False, use_memory_manager = False):
         SyntaxTree.Name.variables.clear()
         SyntaxTree.For._inuse_iteration_variables.clear()
         SyntaxTree.Node.use_accelerator = False
         SyntaxTree.Node.use_mlir_omp = mlir_omp
         SyntaxTree.Node.use_memory_manager = use_memory_manager
         #SyntaxTree.FunctionDefinition._syclDataToCopy.clear()
-
+        self.inuse_pde_terms = inuse_pde_terms
         source_code = inspect.getsource(function)
         
         module = ast.parse(source_code)

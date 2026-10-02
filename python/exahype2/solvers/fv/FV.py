@@ -1464,7 +1464,7 @@ The finest mesh width of """
         ).render(**d)
 
         d["PREPROCESS_RECONSTRUCTED_PATCH"] = jinja2.Template(
-            self._preprocess_reconstructed_patch, undefined=jinja2.DebugUndefined
+            constructed_patch, undefined=jinja2.DebugUndefined
         ).render(**d)
         d["POSTPROCESS_UPDATED_PATCH"] = jinja2.Template(
             self._postprocess_updated_patch, undefined=jinja2.DebugUndefined

@@ -204,6 +204,11 @@ class Solver(abc.ABC):
         # plotter attribute below.
         self.plotter: "Solver.Plotter" = None
 
+        # The kernel function calls are generated as late as possible, to
+        # ensure that all PDE terms and the numerical scheme have been 
+        # specified
+        self.compute_kernel_call: str = None
+
     def _register_variables(self, variables: VariableSpecification) -> int:
         """!
 

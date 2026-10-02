@@ -7,4 +7,5 @@ from .AdaptivityCriterion import AdaptivityCriterion
 from .InitialCondition import InitialCondition
 from .ProjectPatchOntoFaces import ProjectPatchOntoFaces
 from .UpdateCell import UpdateCell
+from .UpdateCellWithEnclaveTasking import UpdateCellWithEnclaveTasking
 from .ComputeCFLConditionAndGlobalTimeStepSize import ComputeCFLConditionAndGlobalTimeStepSize
