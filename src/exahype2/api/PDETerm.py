@@ -41,6 +41,9 @@ class PDETerm:
 
     """
 
+    NAME: str
+    SIGNATURE: str
+    
     def __init__(
         self,
         name: str,

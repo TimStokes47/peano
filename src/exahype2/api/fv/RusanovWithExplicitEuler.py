@@ -58,72 +58,6 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         self.cfl_constant = cfl_constant
         self.__create_data_structures()
 
-    def __create_time_step_functions(self):
-        """!
-        
-        The functions and files created here are those related to the numerical scheme
-        only, not the application. Creating functions to interact with PDE terms and 
-        creating calls to this function is handled in the base solver, as it has knowledge 
-        of these PDE terms.
-
-        Creating a timestep function requires specifying the template parameters that
-        it uses, the functor parameters that are used for non stateless kernels, and
-        the python function that is parsed by dslhypeHyPE.
-
-        TODO: Currently the MLIR types are passed manually here, this should ideally
-        be inferred
-
-        """
-
-        template_parameters = [
-            dslhype.SyntaxTree.Argument("NV", dslhype.SyntaxTree.TInteger()),
-            dslhype.SyntaxTree.Argument("H", dslhype.SyntaxTree.TInteger()),
-            dslhype.SyntaxTree.Argument("NumberOfUnknowns", dslhype.SyntaxTree.TInteger()),
-            dslhype.SyntaxTree.Argument("NumberOfAuxiliaryVariables", dslhype.SyntaxTree.TInteger()),
-            #dslhype.SyntaxTree.Argument("EvaluateFlux", dslhype.SyntaxTree.TBoolean()),
-            #dslhype.SyntaxTree.Argument("EvaluateNonconservativeProduct", dslhype.SyntaxTree.TBoolean()),
-            #dslhype.SyntaxTree.Argument("EvaluateSource", dslhype.SyntaxTree.TBoolean()),
-            #dslhype.SyntaxTree.Argument("EvaluateMaximumEigenvalueAfterTimeStep", dslhype.SyntaxTree.TBoolean())
-        ]
-    
-        functor_parameters = [
-            dslhype.SyntaxTree.Argument("flux", dslhype.SyntaxTree.TCustom("const FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("nonconservativeProduct", dslhype.SyntaxTree.TCustom("const NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("sourceTerm", dslhype.SyntaxTree.TCustom("const SourceFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
-        ]
-
-        time_step_dsl_function_2d = exahype2.api.fv.timeStepWithRusanov2D
-        time_step_dsl_function_3d = exahype2.api.fv.timeStepWithRusanov3D
-        dslhype.translate_dslhype_function(
-            time_step_dsl_function_2d,
-            self.kernel_namespace,
-            template_parameters,
-            functor_parameters,
-            self._solver.pde_terms,
-            "rusanov2d",
-            dslhype.Target.Serial,
-            stateless=False
-        )
-        dslhype.translate_dslhype_function(
-            time_step_dsl_function_3d,
-            self.kernel_namespace,
-            template_parameters,
-            functor_parameters,
-            self._solver.pde_terms,
-            "rusanov3d",
-            dslhype.Target.Serial,
-            stateless=False
-        )
-        file = open("kernels/rusanov.h", "w")
-        file.write("""#if Dimensions == 2
-    #include "rusanov2d.h"
-#else
-    #include "rusanov3d.h"
-#endif""")
-        file.close()
-
-
     def __create_data_structures(self):
         """!
 
@@ -252,40 +186,6 @@ Patch overlap data
         self._solver._patch_overlap_update.generator.send_condition = "false"
         self._solver._patch_overlap_update.generator.receive_and_merge_condition = "false"
 
-    def construct_kernel_call(self):
-        pde_term_calls = []
-        for application_term in self._solver.pde_terms:
-            if application_term.NAME == "flux":
-                pde_term_calls.append(f"""[&](
-    [[maybe_unused]] const double* __restrict__                   Q,
-    [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& x,
-    [[maybe_unused]] int                                          normal,
-    [[maybe_unused]] double* __restrict__                         F
-)->void {{
-    repositories::instanceOf{self._solver.name}.flux(Q, x, normal, F);
-}}""")
-                
-        for application_term in self._solver.pde_terms:
-            if application_term.NAME == "maxEigenvalue":
-                pde_term_calls.append(f"""[&](
-    [[maybe_unused]] const double* __restrict__                   Q,
-    [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& x,
-    [[maybe_unused]] int                                          normal,
-    [[maybe_unused]] double* __restrict__                         lambdaMax
-)->void {{
-    repositories::instanceOf{self._solver.name}.flux(Q, x, normal, lambdaMax);
-}}""")
-        
-        return f"""timeStepWithRusanov<
-    {self.patch_size},
-    {self.overlap},
-    {self._solver.unknowns},
-    {self._solver.auxiliary_variables}
->(
-    patchData,
-    {",\n".join(pde_term_calls)}
-);"""
-
     def construct_output(self,
                          exahype2_project,
                          peano_project,
@@ -298,7 +198,7 @@ Patch overlap data
         self.__add_data_to_repository(peano_project)
 
         self.__create_time_step_functions()
-        self._solver.compute_kernel_call = self.construct_kernel_call()
+        self._solver.compute_kernel_call = self.__construct_kernel_call()
         
         reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
@@ -365,3 +265,88 @@ Patch overlap data
             time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))
         if peano4.api.Logger().is_text:
             time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
+
+    def __create_time_step_functions(self):
+        """!
+        
+        The functions and files created here are those related to the numerical scheme
+        only, not the application. Creating functions to interact with PDE terms and 
+        creating calls to this function is handled in the base solver, as it has knowledge 
+        of these PDE terms.
+
+        Creating a timestep function requires specifying the template parameters that
+        it uses, the functor parameters that are used for non stateless kernels, and
+        the python function that is parsed by dslhypeHyPE.
+
+        TODO: Currently the MLIR types are passed manually here, this should ideally
+        be inferred
+
+        """
+
+        template_parameters = [
+            dslhype.SyntaxTree.Argument("NV", dslhype.SyntaxTree.TInteger()),
+            dslhype.SyntaxTree.Argument("H", dslhype.SyntaxTree.TInteger()),
+            dslhype.SyntaxTree.Argument("NumberOfUnknowns", dslhype.SyntaxTree.TInteger()),
+            dslhype.SyntaxTree.Argument("NumberOfAuxiliaryVariables", dslhype.SyntaxTree.TInteger())
+        ]
+    
+        functor_parameters = [
+            dslhype.SyntaxTree.Argument("flux", dslhype.SyntaxTree.TCustom("const FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
+            dslhype.SyntaxTree.Argument("nonconservativeProduct", dslhype.SyntaxTree.TCustom("const NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
+            dslhype.SyntaxTree.Argument("sourceTerm", dslhype.SyntaxTree.TCustom("const SourceFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()"),
+            dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
+        ]
+
+        time_step_dsl_function_2d = exahype2.api.fv.timeStepWithRusanov2D
+        time_step_dsl_function_3d = exahype2.api.fv.timeStepWithRusanov3D
+        dslhype.translate_dslhype_function(
+            function = time_step_dsl_function_2d,
+            function_namespace = self.kernel_namespace,
+            template_parameters=template_parameters,
+            functor_parameters=functor_parameters,
+            pde_terms=self._solver.pde_terms,
+            output_file_name="rusanov2d",
+            target=dslhype.Target.Serial,
+            stateless=False
+        )
+        dslhype.translate_dslhype_function(
+            function = time_step_dsl_function_3d,
+            function_namespace = self.kernel_namespace,
+            template_parameters=template_parameters,
+            functor_parameters=functor_parameters,
+            pde_terms=self._solver.pde_terms,
+            output_file_name="rusanov3d",
+            target=dslhype.Target.Serial,
+            stateless=False
+        )
+        file = open("kernels/rusanov.h", "w")
+        file.write("""#if Dimensions == 2
+    #include "rusanov2d.h"
+#else
+    #include "rusanov3d.h"
+#endif""")
+        file.close()
+
+    def __construct_kernel_call(self):
+        pde_term_calls = []
+        available_terms = ["flux", "nonconservativeProduct", "source", "maxEigenvalue"]
+        for term in available_terms:
+            for application_term in self._solver.pde_terms:
+                output_variable = application_term.SIGNATURE.split(" ")[-1]
+                if application_term.NAME == term:
+                    pde_term_calls.append(f"""
+    [&](
+        {application_term.SIGNATURE}
+    )->void {{
+        repositories::instanceOf{self._solver.name}.flux(Q, x, {"" if application_term.NAME == "source" else "normal, "}{output_variable});
+    }}""")
+
+        return f"""timeStepWithRusanov<
+    {self.patch_size},
+    {self.overlap},
+    {self._solver.unknowns},
+    {self._solver.auxiliary_variables}
+>(
+    patchData,
+{",\n".join(pde_term_calls)}
+);"""
