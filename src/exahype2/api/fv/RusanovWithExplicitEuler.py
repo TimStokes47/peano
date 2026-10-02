@@ -269,14 +269,13 @@ Patch overlap data
     def __create_time_step_functions(self):
         """!
         
-        The functions and files created here are those related to the numerical scheme
-        only, not the application. Creating functions to interact with PDE terms and 
-        creating calls to this function is handled in the base solver, as it has knowledge 
-        of these PDE terms.
-
-        Creating a timestep function requires specifying the template parameters that
-        it uses, the functor parameters that are used for non stateless kernels, and
-        the python function that is parsed by dslhypeHyPE.
+        Calling this function is delayed until all PDE term information is provided.
+        In this way we can avoid generating code that will not be used. The following
+        information is required to translate a Python function using DSLHyPE:
+        - template_parameters: the variables that are used within the Python function
+          to represent external information
+        - functor_parameters: the PDE terms that can be used by the solver
+        - function: the Python function itself
 
         TODO: Currently the MLIR types are passed manually here, this should ideally
         be inferred
@@ -328,6 +327,12 @@ Patch overlap data
         file.close()
 
     def __construct_kernel_call(self):
+        """!
+
+        This function constructs the calls to the compute kernels based on the
+        application PDE terms and the version chosen.
+
+        """
         pde_term_calls = []
         available_terms = ["flux", "nonconservativeProduct", "source", "maxEigenvalue"]
         for term in available_terms:
