@@ -12,11 +12,11 @@ notebooks. For this, switch to
 
        cd tutorials/exahype2
 
-and issue `jupyter-notebook hitchhikers-guide.ipynb`. All the follow-up notebooks
+and issue `jupyter-notebook 00_getting-started.ipynb`. All the follow-up notebooks
 are held in this directory, too. So simple call Jupyter on different files.
 </div>
 
-- \subpage tutorials_exahype2_hitchhikers-guide
+- \subpage tutorials_exahype2_00_getting-started
 - Exercises (interactive step-by-step examples of core ExaHyPE components)
   - \subpage tutorials_exahype2_exercises_Acoustic-vanilla
   - \subpage tutorials_exahype2_exercises_Acoustic-advanced
@@ -42,7 +42,6 @@ are held in this directory, too. So simple call Jupyter on different files.
   - Adding your own compute kernels <!-- (Harrison's work) -->
   - \subpage tutorials_exahype2_coupling
   - \subpage tutorials_exahype2_additional_mesh_sweeps
-- \subpage tutorials_exahype2_design-patterns
 
 
 ## How to add your own tutorial
