@@ -194,7 +194,6 @@ int main(int argc, char** argv) {
 
   if (isGlobalMaster) {
     bool     haveJustWrittenSnapshot = false;
-    double   nextPlotTimeStamp       = {{NAMESPACE | join("::")}}::FirstPlotTimeStamp;
       
     peano4::parallel::Node::getInstance().setNextProgramStep(
       SetupSimulation.getFirstSubstep()
@@ -210,15 +209,13 @@ int main(int argc, char** argv) {
         and
         tarch::la::greater(maxTimeStepSize,0.0)
     ) {
+        // Each solver's plotter decides itself whether it plots in the plot
+        // phase - we only run that phase if at least one of them wants to.
         if (
-          {{NAMESPACE | join("::")}}::TimeInBetweenPlots > 0.0
-          and
-          {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMinTimeStamp() >= nextPlotTimeStamp
+          {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::wantsToPlot()
           and
           not haveJustWrittenSnapshot
         ) {
-          nextPlotTimeStamp += {{NAMESPACE | join("::")}}::TimeInBetweenPlots;
-
           peano4::parallel::Node::getInstance().setNextProgramStep(
             Plot.getFirstSubstep()
           );
@@ -244,7 +241,7 @@ int main(int argc, char** argv) {
         }
     }
       
-    if ( {{NAMESPACE | join("::")}}::TimeInBetweenPlots > 0.0 ) {
+    if ( {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::wantsToPlot() ) {
         peano4::parallel::Node::getInstance().setNextProgramStep(
           Plot.getFirstSubstep()
         );

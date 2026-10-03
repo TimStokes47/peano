@@ -106,6 +106,20 @@ class Solver(abc.ABC):
         How a Solver writes out its solution. Abstract - concrete solvers
         have to provide a subclass that implements construct_output().
 
+        Each plotter decides itself when to plot. The plotter has to give
+        its solver's C++ class a method
+
+        ~~~~~~~~~~~~~~~~~~~~~~~
+        bool wantsToPlot() const;
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        (@see Solver.add_abstract_solver_method()). The generated main asks
+        all solvers with a plotter (repositories::wantsToPlot()) and runs
+        the plot phase if any of them wants to plot. Within the plot phase,
+        each plotter then checks its own solver's wantsToPlot() and only
+        writes output if it is true. This way, every solver can have its own
+        plotter with its own settings - @see exahype2.api.fv.PlotAsVTKFile.
+
         """
 
         def __init__(self, solver: "Solver"):
@@ -496,7 +510,6 @@ class Solver(abc.ABC):
             "before calling generate_solver_realisation()."
         )
 
-        self.solver_generator.construct_output(exahype2_project, peano_project)
         self.grid_construction.construct_output(
             exahype2_project, peano_project, setup_simulation
         )
@@ -505,3 +518,7 @@ class Solver(abc.ABC):
         )
         if self.plotter is not None:
             self.plotter.construct_output(exahype2_project, peano_project, plot)
+        # Last, so grid construction, numerical scheme and plotter can add
+        # their own members to the solver class first (@see
+        # add_abstract_solver_attribute()/add_abstract_solver_method()).
+        self.solver_generator.construct_output(exahype2_project, peano_project)
