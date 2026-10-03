@@ -10,6 +10,8 @@ import os
 import os.path
 import subprocess
 
+from concurrent.futures import ProcessPoolExecutor
+
 
 from enum import Enum
 
@@ -119,17 +121,35 @@ Peano's @ref page_tutorials_overview "generic description how to generate web do
 
 
 
-for dirpath, dirnames, filenames in os.walk("."):
-    for filename in [f for f in filenames if f.endswith(".ipynb")]:
-        notebook_filename = os.path.join(dirpath, filename)
-        if ".ipynb" in dirpath:
-            print( "ignore {}".format(notebook_filename) )
-        else:
-            print( "convert {} into markdown".format(notebook_filename) )
-            subprocess.run( ["jupyter", "nbconvert", "--to", "markdown", notebook_filename] )
-            name_without_extension = notebook_filename.replace( ".ipynb", "" )
-            print( "postprocess markdown file {}.md".format(name_without_extension) )
-            postprocess_notebook_markdown( name_without_extension )
-            print( "delete markdown file" )
-            subprocess.run( ["rm", name_without_extension + ".md"] )
-        
+def convert_notebook(notebook_filename: str):
+    """!
+
+    Convert one notebook into its .dox file. Runs as an independent process,
+    so all notebooks can be converted in parallel.
+
+    """
+    global current_mode
+    current_mode = Mode.Text
+
+    print( "convert {} into markdown".format(notebook_filename) )
+    subprocess.run( ["jupyter", "nbconvert", "--to", "markdown", notebook_filename] )
+    name_without_extension = notebook_filename.replace( ".ipynb", "" )
+    print( "postprocess markdown file {}.md".format(name_without_extension) )
+    postprocess_notebook_markdown( name_without_extension )
+    print( "delete markdown file" )
+    subprocess.run( ["rm", name_without_extension + ".md"] )
+
+
+if __name__ == "__main__":
+    notebooks = []
+    for dirpath, dirnames, filenames in os.walk("."):
+        for filename in [f for f in filenames if f.endswith(".ipynb")]:
+            notebook_filename = os.path.join(dirpath, filename)
+            if ".ipynb" in dirpath:
+                print( "ignore {}".format(notebook_filename) )
+            else:
+                notebooks.append( notebook_filename )
+
+    # One process per core (default of ProcessPoolExecutor)
+    with ProcessPoolExecutor() as executor:
+        list( executor.map( convert_notebook, notebooks ) )
