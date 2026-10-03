@@ -83,17 +83,19 @@ class PlotAsVTKFile(Solver.Plotter):
         # Python) rather than delegating to some project-wide C++ filter
         # object: the generated code below carries the exact offset/size
         # values this plotter was configured with, and nothing else.
+        # Only leaf cells are plotted: refined cells are not updated (@see
+        # UpdateCellAndComputeGlobalTimeStep's guard), so their patches still
+        # hold the initial condition and would overlap the actual solution.
+        guard = "not marker.willBeRefined() and not marker.hasBeenRefined()"
         if self._plot_filters:
-            guard = " or ".join(
+            guard += " and (" + " or ".join(
                 "marker.overlaps({"
                 + ",".join(str(x) for x in offset)
                 + "},{"
                 + ",".join(str(x) for x in size)
                 + "})"
                 for offset, size in self._plot_filters
-            )
-        else:
-            guard = "true"
+            ) + ")"
 
         plot_patches_action_set = toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
             filename=os.path.join(self._output_path, "solution-" + self._solver.name),
