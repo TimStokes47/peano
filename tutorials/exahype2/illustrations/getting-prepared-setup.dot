@@ -1,0 +1,36 @@
+// Setup workflow for the ExaHyPE 2 tutorials.
+// Regenerate the PNG with
+//
+//   dot -Tpng -Gdpi=110 getting-prepared-setup.dot -o getting-prepared-setup.png
+//
+digraph setup {
+  rankdir=LR;
+  bgcolor="white";
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, fillcolor="#eef3fb", color="#4a6fa5", penwidth=1.2];
+  edge [color="#4a6fa5", penwidth=1.2, arrowsize=0.8];
+
+  clone   [label="Clone Peano"];
+
+  subgraph cluster_cpp {
+    label="C++ libraries (once)"; fontname="Helvetica"; fontsize=11; style="rounded,dashed"; color="#999999";
+    autotools [label="Autotools\n./configure --enable-exahype ...\nmake -j"];
+    cmake     [label="CMake\nbuild/: cmake .. -DENABLE_EXAHYPE=ON ...\nmake -j"];
+  }
+
+  subgraph cluster_python {
+    label="Python (once per machine)"; fontname="Helvetica"; fontsize=11; style="rounded,dashed"; color="#999999";
+    venv    [label="Virtual environment\npython3 -m venv .venv\npip install -r requirements.txt"];
+  }
+
+  jupyter [label="Start JupyterLab\nfrom within the venv"];
+  check   [label="getting-prepared.ipynb\nself-check + empty project", fillcolor="#e3f4e1", color="#3d8b37"];
+  next    [label="First solver\n(acoustic tutorial)", fillcolor="#e3f4e1", color="#3d8b37"];
+
+  clone -> autotools;
+  clone -> cmake;
+  clone -> venv;
+  autotools -> jupyter [style=dashed];
+  cmake -> jupyter [style=dashed];
+  venv -> jupyter;
+  jupyter -> check -> next;
+}
