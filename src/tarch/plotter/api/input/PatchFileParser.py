@@ -160,7 +160,14 @@ class PatchFileParser:
         "begin cell-metadata" and "end cell-metadata".
     """
 
-    def __init__(self, file_path, set_identifier, subdomain_number, show_progress=False):
+    def __init__(
+        self,
+        file_path,
+        set_identifier,
+        subdomain_number,
+        show_progress=False,
+        patch_filter=None,
+    ):
         """!
 
         show_progress: Boolean
@@ -173,8 +180,18 @@ class PatchFileParser:
           responsible for only turning this on when that is guaranteed
           (e.g. sequential, single-worker processing).
 
+        patch_filter: Callable (offset, size) -> Boolean, or None
+          If set, parse_file() calls this predicate on each patch as soon as
+          it has read the patch's offset and size, and skips the patch's
+          values without converting them if the predicate returns False.
+          This is way cheaper than parsing everything and throwing the data
+          away afterwards, if a postprocessing script needs only a few
+          patches (@see output.PointProbe). With multiple worker processes,
+          the predicate has to be picklable, i.e. no lambda.
+
         """
         self.file_path = file_path
+        self.patch_filter = patch_filter
         self.is_data_associated_to_cell = None
         self.dimensions = -1
 
@@ -274,6 +291,11 @@ class PatchFileParser:
             size = (float(line[1]), float(line[2]))
         elif self.dimensions == 3:
             size = (float(line[1]), float(line[2]), float(line[3]))
+
+        if self.patch_filter is not None and not self.patch_filter(offset, size):
+            while end_condition not in current_line:
+                current_line = file_object.readline().strip()
+            return file_object, current_line
 
         # run until we have found all of the fields in this
         # end condition is "end patch" by default

@@ -268,6 +268,11 @@ class Visualiser:
         # terminal would otherwise interleave into garbage.
         self.show_progress = True
 
+        # Optional predicate handed over to each PatchFileParser, so
+        # subclasses can skip patches they are not interested in
+        # (@see PatchFileParser.patch_filter, PointProbe)
+        self.patch_filter = None
+
         self._dimensions = 0
         self._description = ""  #
         self._is_data_associated_to_cell = False
@@ -406,6 +411,7 @@ class Visualiser:
                 self.identifier,
                 file_counter,
                 show_progress=self.show_progress,
+                patch_filter=self.patch_filter,
             )
             parsers.append(parser)
 
