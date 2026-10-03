@@ -5,50 +5,40 @@ from .AbstractFVActionSet import AbstractFVActionSet
 import peano4.api
 
 
-class ComputeCFLConditionAndGlobalTimeStepSize(AbstractFVActionSet):
+class UpdateCellAndComputeGlobalTimeStep(AbstractFVActionSet):
     """!
 
-    Evaluate the CFL condition over solver._patch's volumes and feed the
-    resulting admissible time step size into ::exahype2::Solver's own
-    global time step bookkeeping - repositories::<solver instance>.
-    updateCell(newTimeStepSize, newTimeStamp), immediately finalised via
-    finishTimeStep()+startTimeStep() (@see get_body_of_unprepareTraversal()
-    for why both run back-to-back there, with no lag across TimeStep
-    phases). This is the base class every generated Abstract<SolverName>
-    already inherits (@see exahype2::Solver, src/exahype2/Solver.h) -
-    there is deliberately no separate, solver-level time stamp/time step
-    size state introduced on top of it (RusanovWithExplicitEuler does not
-    call exahype2.api.Solver.add_abstract_solver_attribute()/
-    add_abstract_solver_method() for this).
+    Update a Finite Volume patch (solver._patch) from its halo-augmented
+    reconstruction (solver._patch_with_halo, @see
+    toolbox.blockstructured.api.ReconstructPatchWithHalo) by applying the
+    solver's numerical scheme (Rusanov flux, explicit Euler time stepping)
+    once per volume, and derive the next global time step size from the
+    CFL condition.
 
-    RusanovWithExplicitEuler only ever advances the whole domain by one,
-    globally shared time step size (no local time stepping), so
-    getMinTimeStamp()==getMaxTimeStamp() and
-    getMinTimeStepSize()==getMaxTimeStepSize() always hold here - hence a
-    single updateCell() call per time step (not one per cell/patch) is
-    enough to keep both the min and the max in sync; there is no genuine
-    spread across cells for the base class's min/max tracking to capture
-    for this particular numerical scheme.
+    Global time stepping: all cells share one time stamp and time step
+    size, which are taken from the solver (getMinTimeStamp() and
+    getMinTimeStepSize()) rather than from per-cell bookkeeping.
 
-    @todo Not implemented yet: the actual per-volume eigenvalue evaluation
-    in touchCellFirstTime() is still a placeholder
-    (_maximumEigenvalue = std::max(1.0, _maximumEigenvalue)) - depends on
-    exahype2.api.fv.actionsets.UpdateCellForGlobalTimeStepping's own @todo
-    (the eigenvalues this class would evaluate come out of the kernel call
-    there, which does not hand them on yet). The reduction machinery around that
-    gap (the static _maximumEigenvalue/_semaphore accumulation, and
-    unprepareTraversal()'s MPI reduction into a genuinely global
-    newTimeStepSize, then advancing the solver's time stamp/time step size
-    with it via updateCell()/startTimeStep()/finishTimeStep()) is already
-    in place and correct.
+    The compute kernel returns the maximum eigenvalue over the patch it has
+    just updated. touchCellFirstTime() folds it into the static
+    _maximumEigenvalue, and unprepareTraversal() turns the global maximum
+    into the next time step size and feeds it into ::exahype2::Solver's own
+    time step bookkeeping (updateCell()/finishTimeStep()/startTimeStep()).
+    There is deliberately no separate, solver-level time stamp/time step
+    size state on top of ::exahype2::Solver.
+
+    As this is global time stepping, getMinTimeStamp()==getMaxTimeStamp()
+    and getMinTimeStepSize()==getMaxTimeStepSize() always hold. Hence a
+    single updateCell() call per time step, not one per cell, is enough to
+    keep both the min and the max in sync.
 
     """
 
-    def __init__(self, solver, cfl_constant, guard="true"):
+    def __init__(self, solver, cfl_constant, patch_size, guard="true"):
         """!
 
         solver: exahype2.api.Solver
-          Has to have solver._patch set - @see
+          Has to have solver._patch and solver._patch_with_halo set - @see
           exahype2.api.fv.RusanovWithExplicitEuler.
 
         cfl_constant: float
@@ -58,15 +48,21 @@ class ComputeCFLConditionAndGlobalTimeStepSize(AbstractFVActionSet):
           parameter, which this is meant to be passed straight through
           from.
 
+        patch_size: int
+          Number of Finite Volumes per patch and dimension. The CFL
+          condition is evaluated over the volume size, i.e. the cell size
+          divided by patch_size.
+
         guard: str
           C++ boolean expression, evaluated per cell in touchCellFirstTime,
-          guarding whether that cell's patch contributes to the CFL
-          condition/global time step size.
+          guarding whether that cell's patch is updated and contributes to
+          the CFL condition.
 
         """
         AbstractFVActionSet.__init__(self, solver)
         self.guard = guard
         self.cfl_constant = cfl_constant
+        self.patch_size = patch_size
 
     def get_body_of_prepareTraversal(self):
         """!
@@ -77,9 +73,8 @@ class ComputeCFLConditionAndGlobalTimeStepSize(AbstractFVActionSet):
         static for exactly that reason: it is reset here, once, before
         every grid sweep, and then accumulated into by potentially many
         instances of this action set (one per tree, possibly running on
-        different threads concurrently) as touchCellFirstTime() evaluates
-        the CFL condition per cell - @see _semaphore, which guards that
-        concurrent access.
+        different threads concurrently) as touchCellFirstTime() updates
+        the cells - @see _semaphore, which guards that concurrent access.
 
         """
         return "  _maximumEigenvalue = 0.0;\n"
@@ -111,6 +106,8 @@ class ComputeCFLConditionAndGlobalTimeStepSize(AbstractFVActionSet):
           a point-to-point gather-to-master via operator+(), then one
           MPI_Bcast - and page_grid_statistics for why this is a
           different, coarser-grained pattern than the scalar one below).
+          GridStatistics holds the cell size; the CFL condition needs the
+          volume size, i.e. the cell size divided by the patch size.
         - _maximumEigenvalue is a plain double, already only a local,
           per-rank accumulation (@see _semaphore) - that one *is* reduced
           directly via tarch::mpi::Rank::allReduce(..., MPI_MAX, ...),
@@ -147,7 +144,7 @@ class ComputeCFLConditionAndGlobalTimeStepSize(AbstractFVActionSet):
         return f"""
   const peano4::grid::GridStatistics localStatistics  = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
   const peano4::grid::GridStatistics globalStatistics = peano4::grid::reduceGridStatistics(localStatistics);
-  const double                       globalMinH       = tarch::la::max( globalStatistics.getMinH() );
+  const double                       globalMinVolumeH = tarch::la::max( globalStatistics.getMinH() ) / {self.patch_size};
 
   // No semaphore required here, as it is only called once per rank
   double localMaximumEigenvalue = _maximumEigenvalue;
@@ -159,7 +156,7 @@ class ComputeCFLConditionAndGlobalTimeStepSize(AbstractFVActionSet):
   );
   #endif
 
-  const double newTimeStepSize = {self.cfl_constant} * globalMinH / globalMaximumEigenvalue;
+  const double newTimeStepSize = {self.cfl_constant} * globalMinVolumeH / globalMaximumEigenvalue;
   const double newTimeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMaxTimeStamp() + newTimeStepSize;
 
   repositories::{self._solver.get_name_of_global_instance()}.updateCell( newTimeStepSize, newTimeStamp );
@@ -207,15 +204,14 @@ class ComputeCFLConditionAndGlobalTimeStepSize(AbstractFVActionSet):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             result = f"""
-//  if ({self.guard}) {{
-  if (marker.hasBeenRefined()) {{
-    // @todo Evaluate the CFL condition over fineGridCell{self._solver._patch.name}
-    //       and feed the resulting eigenvalue into _maximumEigenvalue below -
-    //       not implemented yet, @see this class' docstring.
-    
-    // @todo Tim This is you
+  if ({self.guard}) {{
+    double timeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStamp();
+    double timeStepSize = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize();
+    ::exahype2::CellData patchData(fineGridCell{self._solver._patch_with_halo.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch.name}.value);
+    {self._solver.compute_kernel_call}
+
     tarch::multicore::Lock lock(_semaphore);
-    _maximumEigenvalue = std::max(1.0, _maximumEigenvalue);
+    _maximumEigenvalue = std::max(patchData.maxEigenvalue[0], _maximumEigenvalue);
   }}
 """
         return result

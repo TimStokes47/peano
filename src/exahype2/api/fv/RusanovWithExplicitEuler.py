@@ -11,11 +11,10 @@ from exahype2.api import Target
 import exahype2.api.dslhype as dslhype
  
 from ..Solver import Solver
-from .actionsets import ComputeCFLConditionAndGlobalTimeStepSize
 from .actionsets import HandleBoundary
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFace
-from .actionsets import UpdateCellForGlobalTimeStepping
+from .actionsets import UpdateCellAndComputeGlobalTimeStep
 
 
 class RusanovWithExplicitEuler(Solver.NumericalScheme):
@@ -46,7 +45,7 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
 
         cfl_constant: float
           Safety factor the admissible time step size (@see
-          exahype2.api.fv.actionsets.ComputeCFLConditionAndGlobalTimeStepSize,
+          exahype2.api.fv.actionsets.UpdateCellAndComputeGlobalTimeStep,
           which this is passed straight through to) is scaled down by,
           relative to the theoretical CFL=1 stability limit. 0.9 is a
           conservative default for an explicit-Euler Finite Volume scheme;
@@ -105,7 +104,7 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         counterparts hold a reference to as self._solver), not onto self,
         since the remaining FV action sets that need them - @see
         exahype2.api.fv.actionsets.HandleBoundary,
-        exahype2.api.fv.actionsets.UpdateCellForGlobalTimeStepping,
+        exahype2.api.fv.actionsets.UpdateCellAndComputeGlobalTimeStep,
         exahype2.api.fv.actionsets.AdaptivityCriterion - are handed that
         shared solver and look the patches up as solver._patch /
         solver._patch_overlap_*.
@@ -220,12 +219,10 @@ Patch overlap data
         reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        compute_time_step_size_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute time step size", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         
         time_step.add_task(reconstruction_task)
         time_step.add_task(update_cell_task)
         time_step.add_task(project_on_faces_task)
-        time_step.add_task(compute_time_step_size_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
@@ -247,7 +244,14 @@ Patch overlap data
         update_cell_task.add_dependency(reconstruction_task)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
-        update_cell_task.add_action_set( UpdateCellForGlobalTimeStepping(self._solver, guard="not marker.willBeRefined() and not marker.hasBeenRefined()") )
+        update_cell_task.add_action_set(
+            UpdateCellAndComputeGlobalTimeStep(
+                self._solver,
+                self.cfl_constant,
+                self.patch_size,
+                guard="not marker.willBeRefined() and not marker.hasBeenRefined()",
+            )
+        )
         
         ## Next project the new data onto the faces. Also roll over the solution
         project_on_faces_task.add_dependency(update_cell_task)
@@ -269,13 +273,6 @@ Patch overlap data
                 guard="true",
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
-        )
-        
-        ## Parallel to the projection, determine the CFL condition and compute time step size
-        compute_time_step_size_task.add_dependency(update_cell_task)
-        compute_time_step_size_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)        
-        compute_time_step_size_task.add_action_set(
-            ComputeCFLConditionAndGlobalTimeStepSize(self._solver, self.cfl_constant, guard="true")
         )
         
         if peano4.api.Logger().is_visualisation:

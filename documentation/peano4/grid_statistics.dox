@@ -188,8 +188,8 @@ const peano4::grid::GridStatistics globalStatistics = peano4::grid::reduceGridSt
 const double                       globalMinH       = tarch::la::max( globalStatistics.getMinH() );
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-exahype2.api.fv.actionsets.ComputeCFLConditionAndGlobalTimeStepSize
-(src/exahype2/api/fv/actionsets/ComputeCFLConditionAndGlobalTimeStepSize.py)
+exahype2.api.fv.actionsets.UpdateCellAndComputeGlobalTimeStep
+(src/exahype2/api/fv/actionsets/UpdateCellAndComputeGlobalTimeStep.py)
 is a real, currently-compiling worked example: it reduces the finest mesh
 size on the domain exactly this way, combined with a solver-tracked
 maximum eigenvalue - a plain `double`, *not* part of GridStatistics, @see
@@ -199,7 +199,7 @@ below - into a globally admissible CFL time step size.
 ### Reducing a plain scalar you track yourself
 
 Not everything you might want a global view of lives inside
-GridStatistics. exahype2.api.fv.actionsets.ComputeCFLConditionAndGlobalTimeStepSize's
+GridStatistics. exahype2.api.fv.actionsets.UpdateCellAndComputeGlobalTimeStep's
 own maximum eigenvalue is a plain `double` the solver accumulates itself
 (guarded by its own static tarch::multicore::BooleanSemaphore while
 several trees/threads on the same rank may still be writing it). For a
