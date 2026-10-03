@@ -28,7 +28,8 @@ from enum import Enum
 class Mode(Enum):
     Text = 1,
     RawData = 2 ,
-    EquationSystem = 3
+    EquationSystem = 3,
+    Code = 4
 
 
 current_mode = Mode.Text
@@ -51,17 +52,20 @@ def postprocess_markdown_line(line):
         current_mode = Mode.Text
         line = """ @f}
         """
-    elif current_mode == Mode.Text:
-        line = line.replace( "$$", "\n @f$ ")
-        # This replacement messes up any dollar sign in raw data cells (which 
-        # I cannot detect atm). I would have to work on the Jupyter syntax
-        # side. Then, things would be easier.
-        if (
-            "\\rho" in line
-            or "_0" in line
-            or "_1" in line
-        ):
-            line = line.replace( "$", "@f$ ")
+    elif line.startswith("```"):
+        # Code cells are exported as fenced blocks. Dollar signs therein
+        # are shell or Python syntax, not maths.
+        current_mode = Mode.Code if current_mode == Mode.Text else Mode.Text
+    elif current_mode == Mode.Text and not line.startswith( ("    ", "\t") ):
+        # Lines indented by four or more spaces are raw data cells (see
+        # above) and are not touched either. Neither are inline code spans
+        # (between backticks), i.e. every second segment of the line.
+        segments = line.split("`")
+        for i in range(0, len(segments), 2):
+            segments[i] = segments[i].replace( "$$", "\0" )
+            segments[i] = segments[i].replace( "$", "@f$ ")
+            segments[i] = segments[i].replace( "\0", "\n @f$ ")
+        line = "`".join(segments)
     return line
 
 
@@ -143,6 +147,9 @@ def convert_notebook(notebook_filename: str):
 if __name__ == "__main__":
     notebooks = []
     for dirpath, dirnames, filenames in os.walk("."):
+        # Skip hidden directories such as .git or .claude (holding worktrees
+        # with their own copies of all notebooks)
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
         for filename in [f for f in filenames if f.endswith(".ipynb")]:
             notebook_filename = os.path.join(dirpath, filename)
             if ".ipynb" in dirpath:

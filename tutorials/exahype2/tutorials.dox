@@ -17,8 +17,8 @@ are held in this directory, too. So simple call Jupyter on different files.
 </div>
 
 - \subpage tutorials_exahype2_00_getting-started
-- Exercises (interactive step-by-step examples of core ExaHyPE components)
-  - \subpage tutorials_exahype2_exercises_Acoustic-vanilla
+- Modelling a PDE with ExaHyPE 2
+  - \subpage tutorials_exahype2_10_euler
   - \subpage tutorials_exahype2_exercises_Acoustic-advanced
   - \subpage tutorials_exahype2_exercises_SWE-sympy
   - \subpage tutorials_exahype2_exercises_SWE-aderdg
