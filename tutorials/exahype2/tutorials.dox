@@ -19,6 +19,14 @@ are held in this directory, too. So simple call Jupyter on different files.
 - \subpage tutorials_exahype2_00_getting-started
 - Modelling a PDE with ExaHyPE 2
   - \subpage tutorials_exahype2_10_euler
+- Modifying the numerics and the implementation scheme
+- Running codes in parallel
+- Coupling
+- ExaGRyPE
+- ExaSeis 
+  
+  
+  
   - \subpage tutorials_exahype2_exercises_Acoustic-advanced
   - \subpage tutorials_exahype2_exercises_SWE-sympy
   - \subpage tutorials_exahype2_exercises_SWE-aderdg
