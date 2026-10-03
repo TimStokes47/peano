@@ -122,7 +122,13 @@ class UpdateCellAndComputeGlobalTimeStep(AbstractFVActionSet):
 
         Once newTimeStepSize is known, it folds it into the solver's own
         time step bookkeeping (@see this class' docstring for why a single
-        updateCell() call, not one per cell, is correct for this solver):
+        updateCell() call, not one per cell, is correct for this solver).
+        The time stamp is advanced by the time step size the update in
+        this very sweep used (getMaxTimeStepSize() before updateCell()),
+        not by newTimeStepSize, which only the next update uses. The very
+        first time step therefore runs with time step size 0 and leaves
+        the time stamp at 0: it only yields the first admissible time
+        step size.
 
         - updateCell(newTimeStepSize, newTimeStamp) folds the new values
           into exahype2::Solver's ...UpdatedThisTimeStep accumulators
@@ -162,8 +168,11 @@ class UpdateCellAndComputeGlobalTimeStep(AbstractFVActionSet):
   );
   #endif
 
-  const double newTimeStepSize = {self.cfl_constant} * globalMinVolumeH / globalMaximumEigenvalue / Dimensions;
-  const double newTimeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMaxTimeStamp() + newTimeStepSize;
+  // The time stamp advances by the time step size this sweep's update used,
+  // newTimeStepSize is the one the next update will use
+  const double usedTimeStepSize = repositories::{self._solver.get_name_of_global_instance()}.getMaxTimeStepSize();
+  const double newTimeStepSize  = {self.cfl_constant} * globalMinVolumeH / globalMaximumEigenvalue / Dimensions;
+  const double newTimeStamp     = repositories::{self._solver.get_name_of_global_instance()}.getMaxTimeStamp() + usedTimeStepSize;
 
   repositories::{self._solver.get_name_of_global_instance()}.updateCell( newTimeStepSize, newTimeStamp );
   repositories::{self._solver.get_name_of_global_instance()}.finishTimeStep();
