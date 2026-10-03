@@ -324,8 +324,8 @@ class Parser:
         if type(statement) is ast.Expr:
             return self._parse_expression(statement.value)
     
-    def _parse_function(self, function: ast.FunctionDef, template, functor_arguments, namespaces, stateless, use_accelerator, top_level = False):
-        id = function.name
+    def _parse_function(self, function: ast.FunctionDef, template, functor_arguments, namespaces, stateless, use_accelerator, top_level = False, function_name = None):
+        id = function.name if function_name is None else function_name
         return_type = SyntaxTree.TCustom(function.returns.value) if function.returns is not None else SyntaxTree.TCustom(function.returns)
         parsed_function = SyntaxTree.FunctionDefinition(id, return_type, template, namespaces, stateless, top_level)
 
@@ -359,7 +359,7 @@ class Parser:
 
         return parsed_function
 
-    def parse(self, function, template_arguments, functor_arguments, inuse_pde_terms, namespace = [], stateless = False, use_accelerator = False, mlir_omp = False, use_memory_manager = False):
+    def parse(self, function, template_arguments, functor_arguments, inuse_pde_terms, namespace = [], stateless = False, use_accelerator = False, mlir_omp = False, use_memory_manager = False, function_name = None):
         SyntaxTree.Name.variables.clear()
         SyntaxTree.For._inuse_iteration_variables.clear()
         SyntaxTree.Node.use_accelerator = False
@@ -388,6 +388,6 @@ class Parser:
                 SyntaxTree.Name.variables.update({argument.id: SyntaxTree.Float(99.0)})
 
         template_arguments_copy = copy.deepcopy(template_arguments)
-        root = self._parse_function(function_definition, template_arguments_copy, functor_arguments, namespace, stateless, use_accelerator, top_level = True)
+        root = self._parse_function(function_definition, template_arguments_copy, functor_arguments, namespace, stateless, use_accelerator, top_level = True, function_name = function_name)
         #root.top_level(True)
         return root

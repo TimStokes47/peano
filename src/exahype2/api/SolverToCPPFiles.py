@@ -121,6 +121,12 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
     Default implementation that takes a solver and maps it onto two C++ classes:
     An abstract base class and a class for the user to implement it.
 
+    The user class is only generated if at least one PDE term lacks an
+    implementation (@see Solver.requires_user_class). It is never
+    overwritten once it exists, and it is added to the Makefile as a
+    non-generated file. Without it, the solver repository instantiates
+    the abstract base class directly.
+
     """
 
     def __init__(self, solver: Solver):
@@ -187,6 +193,9 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
             peano_project.subdirectory + class_name + ".cpp", generated=True
         )
 
+        if not self._solver.requires_user_class:
+            return
+
         solver_class_name = self._solver.name
         qualified_solver_class_name = (
             "::".join(peano_project.namespace) + "::" + solver_class_name
@@ -216,3 +225,11 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
             )
         )
         peano_project.output.add(solver_generated_files)
+        # Not flagged as generated: the user owns these files, so the
+        # Makefile's clean targets must not delete them.
+        peano_project.output.makefile.add_h_file(
+            peano_project.subdirectory + solver_class_name + ".h", generated=False
+        )
+        peano_project.output.makefile.add_cpp_file(
+            peano_project.subdirectory + solver_class_name + ".cpp", generated=False
+        )

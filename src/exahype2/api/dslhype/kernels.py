@@ -13,8 +13,19 @@ def translate_dslhype_function(
     pde_terms,
     output_file_name,
     target: Target,
-    stateless: bool
+    stateless: bool,
+    function_name: str = None,
+    output_directory: str = ".",
 ):
+    """!
+    function_name: str
+      Name of the generated C++ function. Defaults to the name of the
+      Python DSL function passed in as function.
+
+    output_directory: str
+      Directory the kernels/ subdirectory with the generated files is
+      created in, usually the Peano project's directory.
+    """
     if target == Target.Accelerator and stateless == False:
         raise Exception("Accelerated kernels must be stateless")
 
@@ -35,7 +46,8 @@ def translate_dslhype_function(
         pde_terms,
         namespace=function_namespace, 
         stateless=stateless,
-        use_accelerator=(target==Target.Accelerator)
+        use_accelerator=(target==Target.Accelerator),
+        function_name=function_name,
     )
 
     function_declaration = tree.print_declaration()
@@ -43,9 +55,9 @@ def translate_dslhype_function(
     function_declaration_with_timer = tree.print_declaration_with_timer()
     function_definition_with_timer = tree.print_definition_with_timer()
 
-    if not os.path.exists("kernels"):
-        os.makedirs("kernels")
-    file = open(f"kernels/{output_file_name}.h", "w")
+    kernels_directory = os.path.join(output_directory, "kernels")
+    os.makedirs(kernels_directory, exist_ok=True)
+    file = open(os.path.join(kernels_directory, f"{output_file_name}.h"), "w")
     file.write("""#pragma once
 #include "exahype2/Solver.h"
 #include "exahype2/CellData.h"
@@ -61,7 +73,7 @@ def translate_dslhype_function(
     file.write(f"""#include "{output_file_name}.cpph"\n""")
     file.close()
 
-    file = open(f"kernels/{output_file_name}.cpph", "w")
+    file = open(os.path.join(kernels_directory, f"{output_file_name}.cpph"), "w")
     file.write(f"""#include "{output_file_name}.h"\n""")
     file.write(function_definition)
     file.write(function_definition_with_timer)

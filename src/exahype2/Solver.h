@@ -36,6 +36,11 @@ class exahype2::Solver {
       Yes
     };
 
+    /**
+     * The min and max time stamp and the time step size all start at 0, so
+     * the very first time step does not advance the solution. It only
+     * yields the first admissible time step size.
+     */
     Solver();
 
     virtual double getMinTimeStamp() const;
@@ -94,9 +99,11 @@ class exahype2::Solver {
     virtual double getMinMeshSize() const;
 
     /**
-     * Default implementation: always returns false. A solver overrides
-     * this if it actually offers stateless (GPU-offloadable) variants of
-     * its PDE terms and wants to opt individual cells into using them.
+     * Default implementation: always returns true, i.e. every cell uses
+     * the stateless (GPU-offloadable) variants of the PDE terms wherever
+     * a solver offers both a stateless and a stateful variant. A solver
+     * overrides this to opt individual cells out of the stateless
+     * variants and into the ones with state.
      */
     virtual bool cellCanUseStatelessPDETerms(
       const tarch::la::Vector<Dimensions, double>& cellCentre,

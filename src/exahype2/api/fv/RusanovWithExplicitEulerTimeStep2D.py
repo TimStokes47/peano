@@ -13,7 +13,7 @@ maxEigenvalue: "const maxEigenvalueFunctor&",
 loopParallelism: "peano4::utils::LoopPlacement"
 """
 
-def timeStepWithRusanov(patchData: "CellData<double, double>&") -> "void":
+def timeStepWithRusanov(patchData: "::exahype2::CellData<double, double>&") -> "void":
     N = Integer("patchData.numberOfCells")
     t = DataBlock([[0, N]], "patchData.t", "double")
     dt = DataBlock([[0, N]], "patchData.dt", "double")

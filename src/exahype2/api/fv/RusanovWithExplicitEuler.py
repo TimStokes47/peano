@@ -1,5 +1,8 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+import os
+import re
+
 import peano4.api
 import peano4.api.datamodel
 import toolbox.blockstructured.api
@@ -12,7 +15,7 @@ from .actionsets import ComputeCFLConditionAndGlobalTimeStepSize
 from .actionsets import HandleBoundary
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFace
-from .actionsets import UpdateCell
+from .actionsets import UpdateCellForGlobalTimeStepping
 
 
 class RusanovWithExplicitEuler(Solver.NumericalScheme):
@@ -55,9 +58,20 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         super().__init__(solver)
         self.patch_size = patch_size
         self.overlap = overlap
-        self.kernel_namespace = ["exahype2", "fv", "rusanov"]
+        # Set in construct_output(): the generated kernels live in the project
+        # namespace, as their names are solver-specific
+        self.kernel_namespace = None
         self.cfl_constant = cfl_constant
         self.__create_data_structures()
+
+    @property
+    def kernel_function_name(self) -> str:
+        """!
+        Name of the generated time step kernel. It carries the solver name,
+        as do the kernels/<SolverName>_rusanov*.h files holding it, so two
+        solvers' kernels do not clash.
+        """
+        return self._solver.name + "_timeStepWithRusanov"
 
     def __create_data_structures(self):
         """!
@@ -91,7 +105,7 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         counterparts hold a reference to as self._solver), not onto self,
         since the remaining FV action sets that need them - @see
         exahype2.api.fv.actionsets.HandleBoundary,
-        exahype2.api.fv.actionsets.UpdateCell,
+        exahype2.api.fv.actionsets.UpdateCellForGlobalTimeStepping,
         exahype2.api.fv.actionsets.AdaptivityCriterion - are handed that
         shared solver and look the patches up as solver._patch /
         solver._patch_overlap_*.
@@ -198,8 +212,10 @@ Patch overlap data
 
         self.__add_data_to_repository(peano_project)
 
-        self.__create_time_step_functions()
+        self.kernel_namespace = peano_project.namespace
+        # Construct the call first, as it validates the PDE terms' variants
         self._solver.compute_kernel_call = self.__construct_kernel_call(Target.Serial, False)
+        self.__create_time_step_functions(peano_project.directory)
         
         reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
@@ -231,7 +247,7 @@ Patch overlap data
         update_cell_task.add_dependency(reconstruction_task)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
-        update_cell_task.add_action_set( UpdateCell(self._solver) )
+        update_cell_task.add_action_set( UpdateCellForGlobalTimeStepping(self._solver, guard="not marker.willBeRefined() and not marker.hasBeenRefined()") )
         
         ## Next project the new data onto the faces. Also roll over the solution
         project_on_faces_task.add_dependency(update_cell_task)
@@ -267,7 +283,7 @@ Patch overlap data
         if peano4.api.Logger().is_text:
             time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
 
-    def __create_time_step_functions(self):
+    def __create_time_step_functions(self, output_directory):
         """!
         
         Calling this function is delayed until all PDE term information is provided.
@@ -291,10 +307,10 @@ Patch overlap data
         ]
     
         functor_parameters = [
-            dslhype.SyntaxTree.Argument("flux", dslhype.SyntaxTree.TCustom("const FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("nonconservativeProduct", dslhype.SyntaxTree.TCustom("const NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("sourceTerm", dslhype.SyntaxTree.TCustom("const SourceFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
+            dslhype.SyntaxTree.Argument("flux", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
+            dslhype.SyntaxTree.Argument("nonconservativeProduct", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
+            dslhype.SyntaxTree.Argument("sourceTerm", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::SourceFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()"),
+            dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
         ]
 
         time_step_dsl_function_2d = exahype2.api.fv.timeStepWithRusanov2D
@@ -305,9 +321,11 @@ Patch overlap data
             template_parameters=template_parameters,
             functor_parameters=functor_parameters,
             pde_terms=self._solver.pde_terms,
-            output_file_name="rusanov2d",
+            output_file_name=self._solver.name + "_rusanov2d",
             target=dslhype.Target.Serial,
-            stateless=False
+            stateless=False,
+            function_name=self.kernel_function_name,
+            output_directory=output_directory,
         )
         dslhype.translate_dslhype_function(
             function = time_step_dsl_function_3d,
@@ -315,15 +333,17 @@ Patch overlap data
             template_parameters=template_parameters,
             functor_parameters=functor_parameters,
             pde_terms=self._solver.pde_terms,
-            output_file_name="rusanov3d",
+            output_file_name=self._solver.name + "_rusanov3d",
             target=dslhype.Target.Serial,
-            stateless=False
+            stateless=False,
+            function_name=self.kernel_function_name,
+            output_directory=output_directory,
         )
-        file = open("kernels/rusanov.h", "w")
-        file.write("""#if Dimensions == 2
-    #include "rusanov2d.h"
+        file = open(os.path.join(output_directory, "kernels", f"{self._solver.name}_rusanov.h"), "w")
+        file.write(f"""#if Dimensions == 2
+    #include "{self._solver.name}_rusanov2d.h"
 #else
-    #include "rusanov3d.h"
+    #include "{self._solver.name}_rusanov3d.h"
 #endif""")
         file.close()
 
@@ -337,7 +357,7 @@ Patch overlap data
         available_terms = ["flux", "nonconservativeProduct", "source", "maxEigenvalue"]
 
         if stateless:
-            return f"""timeStepWithRusanov<
+            return f"""::{"::".join(self.kernel_namespace)}::{self.kernel_function_name}<
         {self.patch_size},
         {self.overlap},
         {self._solver.unknowns},
@@ -347,19 +367,50 @@ Patch overlap data
         {self._solver.name}
     );"""
         else:
-            pde_term_calls = []
-            for term in available_terms:
-                for application_term in self._solver.pde_terms:
-                    output_variable = application_term.SIGNATURE.split(" ")[-1]
-                    if application_term.NAME == term:
-                        pde_term_calls.append(f"""
+            # Variants per term the kernel takes: {name: {stateless: PDETerm}}
+            variants = {}
+            for application_term in self._solver.pde_terms:
+                if application_term.NAME in available_terms:
+                    variants.setdefault(application_term.NAME, {})[application_term.stateless] = application_term
+
+            terms_with_both_variants = [name for name in variants if len(variants[name]) == 2]
+            terms_without_stateless_variant = [name for name in variants if True not in variants[name]]
+            if terms_with_both_variants and terms_without_stateless_variant:
+                raise Exception(
+                    f"Solver {self._solver.name}: the PDE terms {terms_with_both_variants} are "
+                    f"registered both with and without state. In this case, the generated code "
+                    f"asks cellCanUseStatelessPDETerms() per cell before it invokes the kernel: "
+                    f"if it returns true, the kernel is called with the stateless variants of all "
+                    f"PDE terms, otherwise with the variants with state. However, the PDE terms "
+                    f"{terms_without_stateless_variant} have no stateless variant, so a kernel "
+                    f"call would mix stateless and stateful routines. Either add stateless "
+                    f"variants of {terms_without_stateless_variant}, or register "
+                    f"{terms_with_both_variants} only once."
+                )
+
+            def kernel_call(stateless: bool) -> str:
+                pde_term_calls = []
+                for term in available_terms:
+                    if term not in variants:
+                        continue
+                    # A term registered only once is used in either case
+                    application_term = variants[term].get(stateless, next(iter(variants[term].values())))
+                    # Commas inside template brackets, e.g. Vector<Dimensions, double>,
+                    # do not separate parameters
+                    arguments = [
+                        parameter.split()[-1]
+                        for parameter in re.split(r",(?![^<]*>)", application_term.SIGNATURE)
+                    ]
+                    # Stateless terms are static and take a dummy tag (@see PDETerm)
+                    if application_term.stateless:
+                        arguments.append("::exahype2::Solver::Offloadable::Yes")
+                    pde_term_calls.append(f"""
     [&](
         {application_term.SIGNATURE}
     )->void {{
-        repositories::instanceOf{self._solver.name}.flux(Q, x, {"" if application_term.NAME == "source" else "normal, "}{output_variable});
+        repositories::{self._solver.get_name_of_global_instance()}.{application_term.name}({", ".join(arguments)});
     }}""")
-
-            return f"""timeStepWithRusanov<
+                return f"""::{"::".join(self.kernel_namespace)}::{self.kernel_function_name}<
     {self.patch_size},
     {self.overlap},
     {self._solver.unknowns},
@@ -368,3 +419,16 @@ Patch overlap data
     patchData,
 {",\n".join(pde_term_calls)}
 );"""
+
+            if not terms_with_both_variants:
+                return kernel_call(stateless=False)
+            return f"""if (repositories::{self._solver.get_name_of_global_instance()}.cellCanUseStatelessPDETerms(
+    patchData.cellCentre[0],
+    patchData.cellSize[0],
+    patchData.t[0],
+    patchData.dt[0]
+)) {{
+{kernel_call(stateless=True)}
+}} else {{
+{kernel_call(stateless=False)}
+}}"""

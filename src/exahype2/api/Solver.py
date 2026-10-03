@@ -337,6 +337,26 @@ class Solver(abc.ABC):
         """
         return list(self._pde_terms.values())
 
+    @property
+    def requires_user_class(self) -> bool:
+        """!
+        True iff at least one PDE term has no implementation. Only then
+        does the user have to provide one, i.e. only then is a
+        <SolverName> class derived from Abstract<SolverName> generated
+        and added to the Makefile (@see exahype2.api.SolverToCPPFiles).
+        Otherwise, Abstract<SolverName> is complete and the solver
+        repository instantiates it directly. Stateless terms always carry
+        an implementation (@see PDETerm), so they never require one.
+        """
+        return any(term.implementation is None for term in self.pde_terms)
+
+    def get_name_of_solver_class(self) -> str:
+        """!
+        Name of the C++ class the solver repository instantiates:
+        <SolverName> if requires_user_class, Abstract<SolverName> otherwise.
+        """
+        return self._name if self.requires_user_class else "Abstract" + self._name
+
     def add_pde_term(self, term: PDETerm):
         """!
 

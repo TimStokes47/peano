@@ -33,9 +33,9 @@ class ComputeCFLConditionAndGlobalTimeStepSize(AbstractFVActionSet):
     @todo Not implemented yet: the actual per-volume eigenvalue evaluation
     in touchCellFirstTime() is still a placeholder
     (_maximumEigenvalue = std::max(1.0, _maximumEigenvalue)) - depends on
-    exahype2.api.fv.actionsets.UpdateCell's own @todo (the eigenvalues this
-    class would evaluate come out of the same Riemann solver / PDE kernel
-    call UpdateCell does not call yet). The reduction machinery around that
+    exahype2.api.fv.actionsets.UpdateCellForGlobalTimeStepping's own @todo
+    (the eigenvalues this class would evaluate come out of the kernel call
+    there, which does not hand them on yet). The reduction machinery around that
     gap (the static _maximumEigenvalue/_semaphore accumulation, and
     unprepareTraversal()'s MPI reduction into a genuinely global
     newTimeStepSize, then advancing the solver's time stamp/time step size

@@ -17,7 +17,7 @@ exahype2::Solver::Solver():
   _maxVolumeH(0.0),
   _minVolumeHUpdatedThisTimeStep(std::numeric_limits<double>::max()),
   _maxVolumeHUpdatedThisTimeStep(0.0),
-  _minTimeStepSize(std::numeric_limits<double>::max()),
+  _minTimeStepSize(0.0),
   _maxTimeStepSize(0.0),
   _minTimeStepSizeUpdatedThisTimeStep(std::numeric_limits<double>::max()),
   _maxTimeStepSizeUpdatedThisTimeStep(0.0),

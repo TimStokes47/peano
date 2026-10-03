@@ -143,7 +143,7 @@ namespace {{ item }} {
 
         for solver in self.project._solvers:
             self.solverRepositoryDictionary["SOLVERS"].append(
-                (solver._name, solver.get_name_of_global_instance())
+                (solver.get_name_of_solver_class(), solver.get_name_of_global_instance())
             )
 
         generated_solver_files = (
