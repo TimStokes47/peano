@@ -47,7 +47,8 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
           Safety factor the admissible time step size (@see
           exahype2.api.fv.actionsets.UpdateCellAndComputeGlobalTimeStep,
           which this is passed straight through to) is scaled down by,
-          relative to the theoretical CFL=1 stability limit. 0.9 is a
+          relative to the theoretical CFL=1 stability limit
+          h / (Dimensions * lambda_max). 0.9 is a
           conservative default for an explicit-Euler Finite Volume scheme;
           this codebase has no prior precedent value to match (grep for
           "cfl" outside this class finds only exaparty's unrelated SPH

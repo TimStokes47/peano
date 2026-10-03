@@ -415,6 +415,14 @@ class VTUUnstructuredGrid(Visualiser):
         # This will be the file name that we output
         self._file_name = self._file_name.replace(".peano-patch-file", "")
 
+        # Per-file progress bars (@see Visualiser.show_progress) only
+        # produce clean output when this process is the only one parsing
+        # files at any given time - true for max_workers==1 (render.py's
+        # own default), but not once snapshots get farmed out to worker
+        # processes below, where several processes would otherwise write
+        # their own \r-updated line to the same shared terminal.
+        self.show_progress = max_workers == 1
+
         start_time = time.time()
         try:
             filenames = {}

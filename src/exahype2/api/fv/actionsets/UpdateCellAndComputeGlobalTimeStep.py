@@ -19,6 +19,11 @@ class UpdateCellAndComputeGlobalTimeStep(AbstractFVActionSet):
     size, which are taken from the solver (getMinTimeStamp() and
     getMinTimeStepSize()) rather than from per-cell bookkeeping.
 
+    The kernel updates all dimensions in one explicit Euler step, so the
+    CFL condition reads dt * sum_d lambda_d/h_d <= 1, i.e. the admissible
+    time step size is cfl_constant * h / (Dimensions * lambda_max), with h
+    the minimal volume size and lambda_max the maximum eigenvalue.
+
     The compute kernel returns the maximum eigenvalue over the patch it has
     just updated. touchCellFirstTime() folds it into the static
     _maximumEigenvalue, and unprepareTraversal() turns the global maximum
@@ -43,7 +48,8 @@ class UpdateCellAndComputeGlobalTimeStep(AbstractFVActionSet):
 
         cfl_constant: float
           Safety factor the admissible time step size is scaled down by,
-          relative to the theoretical CFL=1 stability limit - @see
+          relative to the theoretical CFL=1 stability limit (which already
+          accounts for the number of dimensions, @see class docstring) - @see
           exahype2.api.fv.RusanovWithExplicitEuler's own cfl_constant
           parameter, which this is meant to be passed straight through
           from.
@@ -156,7 +162,7 @@ class UpdateCellAndComputeGlobalTimeStep(AbstractFVActionSet):
   );
   #endif
 
-  const double newTimeStepSize = {self.cfl_constant} * globalMinVolumeH / globalMaximumEigenvalue;
+  const double newTimeStepSize = {self.cfl_constant} * globalMinVolumeH / globalMaximumEigenvalue / Dimensions;
   const double newTimeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMaxTimeStamp() + newTimeStepSize;
 
   repositories::{self._solver.get_name_of_global_instance()}.updateCell( newTimeStepSize, newTimeStamp );

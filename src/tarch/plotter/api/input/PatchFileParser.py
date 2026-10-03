@@ -160,8 +160,20 @@ class PatchFileParser:
         "begin cell-metadata" and "end cell-metadata".
     """
 
-    def __init__(self, file_path, set_identifier, subdomain_number):
-        """ """
+    def __init__(self, file_path, set_identifier, subdomain_number, show_progress=False):
+        """!
+
+        show_progress: Boolean
+          Print a single-line, in-place progress bar (percentage plus
+          patch count) to the terminal while parse_file() works through
+          this file's patches - @see __count_patches()/__print_progress().
+          Off by default: it writes \\r-terminated lines, so it only
+          produces clean output when nothing else concurrently writes to
+          the same terminal - the caller (Visualiser.show_progress) is
+          responsible for only turning this on when that is guaranteed
+          (e.g. sequential, single-worker processing).
+
+        """
         self.file_path = file_path
         self.is_data_associated_to_cell = None
         self.dimensions = -1
@@ -170,6 +182,7 @@ class PatchFileParser:
         self.subdomain_number = subdomain_number
         self.parsed = False
         self.file_contains_patches = False
+        self.show_progress = show_progress
 
         """
     Here we expected the keys to be a list of unknown names that we
@@ -302,6 +315,42 @@ class PatchFileParser:
 
         return file_object, current_line
 
+    def __count_patches(self):
+        """!
+
+        Quick pre-scan (just a substring search per line, no numpy
+        parsing) to count "begin patch" occurrences, i.e. the number of
+        cells/patches this file holds, so parse_file() can show progress
+        against a known total instead of an estimate. Reads the file a
+        second time, but that is negligible next to the actual parse
+        below, which parses a numpy array per patch.
+
+        """
+        count = 0
+        with open(self.file_path, "r") as f:
+            for line in f:
+                if "begin patch" in line:
+                    count += 1
+        return count
+
+    def __print_progress(self, current, total):
+        """!
+
+        Render current/total as an in-place, single-line percentage/bar
+        on the terminal (\\r-terminated, so nothing else may write to
+        stdout while this runs - @see show_progress).
+
+        """
+        fraction = current / total if total > 0 else 1.0
+        bar_length = 30
+        filled = int(bar_length * fraction)
+        bar = "#" * filled + "-" * (bar_length - filled)
+        print(
+            f"\rParsing {self.file_path}: [{bar}] {fraction * 100:5.1f}% ({current}/{total} cells)",
+            end="",
+            flush=True,
+        )
+
     def parse_file(self):
         """!
         Read file and return cell data, dimensions, number of degrees of freedom and number of unknowns
@@ -316,6 +365,13 @@ class PatchFileParser:
         """
         # print("Reading " + self.file_path + " as subdomain " + str(self.subdomain_number))
         current_line = ""
+        total_patches = self.__count_patches() if self.show_progress else 0
+        patches_parsed = 0
+        # Redraw only when the displayed (one-decimal) percentage actually
+        # changes, not on every single patch - flush()ing a print for
+        # every one of a file's potentially hundreds of thousands of
+        # patches measurably slows parsing down otherwise.
+        last_printed_permille = -1
         try:
             with open(self.file_path, "r") as data_file:
                 current_line = data_file.readline()
@@ -365,6 +421,15 @@ class PatchFileParser:
                         data_file, stripped_line = self.__parse_patch_region(
                             stripped_line, data_file
                         )
+                        if self.show_progress:
+                            patches_parsed += 1
+                            permille = (patches_parsed * 1000) // total_patches
+                            if (
+                                permille != last_printed_permille
+                                or patches_parsed == total_patches
+                            ):
+                                last_printed_permille = permille
+                                self.__print_progress(patches_parsed, total_patches)
 
                 # self._initialise_default_mapping_if_no_mapping_specified() # handled in meta data reader
                 self.parsed = True
@@ -378,6 +443,12 @@ class PatchFileParser:
                 + current_line
             )
             self.parsed = False
+        finally:
+            if self.show_progress and total_patches > 0:
+                # Move past the \r-updated progress line so subsequent
+                # output (errors, the next file's own progress bar, ...)
+                # starts on a fresh line.
+                print()
 
         # COMMENTING OUT DEBUG STATEMENTS
         # print("finished parsing the file.")

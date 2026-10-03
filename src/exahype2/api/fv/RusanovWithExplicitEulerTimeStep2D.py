@@ -37,12 +37,12 @@ def timeStepWithRusanov(patchData: "::exahype2::CellData<double, double>&") -> "
     lambdaBottom = max(maxEigenvaluesY[0:1, 0:NV, -1:NV-1], maxEigenvaluesY[0:1, 0:NV, 0:NV])
     lambdaTop = max(maxEigenvaluesY[0:1, 0:NV, 0:NV], maxEigenvaluesY[0:1, 0:NV, 1:NV + 1])
 
-    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV] - input[0:NV, -1:NV-1, 0:NV])    
-    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 1:NV+1, 0:NV] - input[0:NV, 0:NV, 0:NV])
+    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -1:NV-1, 0:NV])    
+    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 1:NV+1, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV])
     output = output + dt / h(0) * (fluxLeft - fluxRight) * NV * 0.5
 
-    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV] - input[0:NV, 0:NV, -1:NV-1])
-    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 1:NV+1] - input[0:NV, 0:NV, 0:NV])
+    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -1:NV-1])
+    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 1:NV+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV])
     output = output + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
 
     if flux:

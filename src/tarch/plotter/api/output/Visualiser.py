@@ -257,6 +257,17 @@ class Visualiser:
         )
         self.verbose = verbose
 
+        # Whether PatchFileParser instances created below should print a
+        # live, in-place per-file progress bar (@see PatchFileParser.
+        # show_progress). Defaults to on, since this class' own two entry
+        # points - display_single_file() and display() - both process
+        # files strictly sequentially in this process unless a subclass
+        # (@see VTUUnstructuredGrid.display()) farms work out to worker
+        # processes, in which case it must switch this off first: several
+        # processes writing their own \r-updated line to the same shared
+        # terminal would otherwise interleave into garbage.
+        self.show_progress = True
+
         self._dimensions = 0
         self._description = ""  #
         self._is_data_associated_to_cell = False
@@ -390,7 +401,12 @@ class Visualiser:
         for file_counter, patch_filename in enumerate(snapshot.filenames):
             if self.verbose:
                 print(f"Parsing file {patch_filename}")
-            parser = PatchFileParser(patch_filename, self.identifier, file_counter)
+            parser = PatchFileParser(
+                patch_filename,
+                self.identifier,
+                file_counter,
+                show_progress=self.show_progress,
+            )
             parsers.append(parser)
 
         for parser in parsers:

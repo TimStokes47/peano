@@ -63,16 +63,11 @@ void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::maxEig
   const double p = (gamma - 1) * (Q[3] - 0.5 * irho * (Q[1] * Q[1] + Q[2] * Q[2]));
   const double c = std::sqrt(gamma * p * irho);
 
-  double result = 1.0;
-  switch (normal)
-  {
-  case 0:
-    result = std::max(std::abs(Q[1] + c), std::abs(Q[1] - c));
-    break;
-  case 1:
-    result = std::max(std::abs(Q[2] + c), std::abs(Q[2] - c));
-    break;
-  }
+  // Eigenvalues of the Euler flux Jacobian in direction normal are u_n +/- c,
+  // where u_n is the velocity (momentum/density), not the raw momentum
+  const double u = Q[1 + normal] * irho;
+
+  const double result = std::max(std::abs(u + c), std::abs(u - c));
   lambdaMax[0] = result;
   logTraceOutWith1Argument("maxEigenvalue(...)", result);
 }

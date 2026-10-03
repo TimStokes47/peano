@@ -13,11 +13,11 @@ project = exahype2.api.Project(
 solver_name = "EulerFVSmooth"
 unknowns = 4
 auxiliary_variables = 0
-volume_size = 0.0001
+volume_size = 0.001
 patch_size = 9
 dimensions = 2
-#verbosity = peano4.api.LoggerVerbosity.TEXT
-verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
+verbosity = peano4.api.LoggerVerbosity.TEXT
+#verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
 
 thesolver = exahype2.api.Solver(
     solver_name,
@@ -25,7 +25,7 @@ thesolver = exahype2.api.Solver(
     auxiliary_variables,
 )
 
-thesolver.add_user_solver_includes("#include <cmath>\n" "#include <algorithm>\n")
+#thesolver.add_user_solver_includes("#include <cmath>\n" "#include <algorithm>\n")
 
 thesolver.add_pde_term( exahype2.api.Flux(stateless=False,))
 thesolver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False,))
@@ -64,10 +64,10 @@ project.set_global_simulation_parameters(
     dimensions=dimensions,
     offset=[-0.1, -0.1],
     size=[0.2, 0.2],
-    min_end_time=0.1,
-    max_end_time=0.1,
+    min_end_time=0.01,
+    max_end_time=0.01,
     first_plot_time_stamp=0.0,
-    time_in_between_plots=0.01,
+    time_in_between_plots=0.001,
 #    periodic_BC=[False, False, False],
     periodic_BC=[True, True, True],
 )

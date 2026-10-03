@@ -84,7 +84,4 @@ follows:
 - How the code is designed, the overarching architecture, how components 
   interact, and so forth all goes into documentation.  
 
-
- are in tutorials. How things are implemented go into documentation if they are high level. Otherwise they go straight into the in source docu. Numerics is a grey area but I decided to move them to the tutorials. 
-
 */

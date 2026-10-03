@@ -40,15 +40,15 @@ def timeStepWithRusanov(patchData: "::exahype2::CellData<double, double>&") -> "
     lambdaNear = max(maxEigenvaluesZ[0:1, 0:NV, 0:NV, -1:NV-1], maxEigenvaluesZ[0:1, 0:NV, 0:NV, 0:NV])
     lambdaFar = max(maxEigenvaluesZ[0:1, 0:NV, 0:NV, 0:NV], maxEigenvaluesZ[0:1, 0:NV, 0:NV, 1:NV + 1])
 
-    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV] - input[0:NV, -1:NV-1, 0:NV, 0:NV])
-    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 1:NV+1, 0:NV, 0:NV] - input[0:NV, 0:NV, 0:NV, 0:NV])
+    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -1:NV-1, 0:NV, 0:NV])
+    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 1:NV+1, 0:NV, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV])
     output = output + dt / h(0) * (fluxLeft - fluxRight) * NV * 0.5
-    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV] - input[0:NV, 0:NV, -1:NV-1, 0:NV])
-    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 1:NV+1, 0:NV] - input[0:NV, 0:NV, 0:NV, 0:NV])
+    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -1:NV-1, 0:NV])
+    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 1:NV+1, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV])
     output = output + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
 
-    fluxNear = -1.0 * lambdaNear * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV] - input[0:NV, 0:NV, 0:NV, -1:NV-1])
-    fluxFar = -1.0 * lambdaFar * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 1:NV+1] - input[0:NV, 0:NV, 0:NV, 0:NV])
+    fluxNear = -1.0 * lambdaNear * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, -1:NV-1])
+    fluxFar = -1.0 * lambdaFar * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 1:NV+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV])
     output = output + dt / h(2) * (fluxNear - fluxFar) * NV * 0.5
 
     if EvaluateFlux:
