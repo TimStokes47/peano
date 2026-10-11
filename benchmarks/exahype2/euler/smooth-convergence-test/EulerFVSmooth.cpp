@@ -4,12 +4,20 @@ void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::initPo
   const tarch::la::Vector<Dimensions, double>& x, double* __restrict__ Q
 ) {
   logTraceInWith1Argument( "initPointWisely(...)", x );
-  constexpr double gamma = 1.4;
-  constexpr double p = 1.0;
-  Q[0] = 1.0 + 0.2 * std::cos((2.0 * x[0]) * 3.1415);
-  Q[1] = 1.0;
+  // Entropy wave: one period of a sine density profile over the periodic
+  // domain [-0.1,0.1], constant velocity u and constant pressure p. The exact
+  // solution is rho(x-u*t), i.e. the wave is back where it started after
+  // t = domain width / u = 0.2.
+  constexpr double gamma       = 1.4;
+  constexpr double p           = 1.0;
+  constexpr double u           = 1.0;
+  constexpr double domainLeft  = -0.1;
+  constexpr double domainWidth = 0.2;
+  const double     rho         = 1.0 + 0.2 * std::sin(2.0 * M_PI * (x[0] - domainLeft) / domainWidth);
+  Q[0] = rho;
+  Q[1] = rho * u;
   Q[2] = 0.0;
-  Q[3] = p / (gamma - 1) + 0.5 / Q[0] * (Q[1] * Q[1]);
+  Q[3] = p / (gamma - 1) + 0.5 * rho * u * u;
   logTraceOut( "initPointWisely(...)" );
 }
 
