@@ -23,6 +23,7 @@ are held in this directory, too. So simple call Jupyter on different files.
 - Modifying the numerics and the implementation scheme
 - Running codes in parallel
 - Coupling
+  - \subpage tutorials_exahype2_41_postprocessing
   - \subpage tutorials_exahype2_44_localisation
   - \subpage tutorials_exahype2_45_coupling
 - \subpage tutorials_exahype2_applications_exagrype (numerical relativity extension built on top of ExaHyPE) 
@@ -42,8 +43,6 @@ are held in this directory, too. So simple call Jupyter on different files.
 - Adding features
   - Adding your own compute kernels <!-- (Harrison's work) -->
   - \subpage tutorials_exahype2_additional_mesh_sweeps
-  - \subpage tutorials_exahype2_41_postprocessing
-  - Using the symbolic names int he output. Should go into a postprocessing tutorial.
 
 
 ## How to add your own tutorial
