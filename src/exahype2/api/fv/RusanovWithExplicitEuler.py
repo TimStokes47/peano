@@ -176,7 +176,17 @@ Patch overlap data
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
 
-        self._solver._patch.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
+        # The task graph compiler only uses, loads and stores data where the
+        # solver's grid selector holds, too (@see peano4.api.datamodel.DoF).
+        for patch in (
+            self._solver._patch,
+            self._solver._patch_with_halo,
+            self._solver._patch_overlap_current_time_step,
+            self._solver._patch_overlap_update,
+        ):
+            patch.grid_selector = self._solver.grid_selector
+
+        self._solver._patch.generator =peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
             self._solver._patch, "double"
         )
         self._solver._patch_overlap_current_time_step.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
