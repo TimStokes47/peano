@@ -39,7 +39,7 @@ with its particles and puzzles out
 With this information, the project creates a straight Peano project which
 hosts the computational steps, all data and the @ref glossary_events_and_action_sets "action sets" and @ref glossary_observer "observers".
 
-@image html architecture.png
+@image html exaparty-architecture.png
 
 The cartoon above tries to illustrate the core principle behind our code:
 The user here has created a project with one particle which implements an
