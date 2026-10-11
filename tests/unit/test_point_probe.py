@@ -15,7 +15,16 @@ from tarch.plotter.api.output.PointProbe import PointProbe, PatchContainsPoint
 # ---------------------------------------------------------------------------
 
 
-def patch_file(dimensions, metadata_kind, name, dof, unknowns, patches, mapping=None):
+def patch_file(
+    dimensions,
+    metadata_kind,
+    name,
+    dof,
+    unknowns,
+    patches,
+    mapping=None,
+    description="test data",
+):
     """
     patches: list of (patch_id, offset, size)
     metadata_kind: "cell" or "vertex"
@@ -31,7 +40,7 @@ def patch_file(dimensions, metadata_kind, name, dof, unknowns, patches, mapping=
         f'begin {metadata_kind}-metadata "{name}"',
         f"  number-of-unknowns {unknowns}",
         f"  number-of-dofs-per-axis {dof}",
-        "  description test data",
+        f"  description {description}",
     ]
     if mapping is not None:
         lines.append("  mapping " + " ".join(str(x) for x in mapping))
@@ -181,6 +190,30 @@ def test_meta_file_with_partial_files_and_multiple_snapshots(tmp_path, monkeypat
     header, rows = read_csv("probe.csv")
     assert header == ["time", "Q_0"]
     assert rows == [[0.0, 270.0], [0.5, 1270.0]]
+
+
+def test_named_unknowns_become_column_names(tmp_path, monkeypatch):
+    content = patch_file(2, "cell", "Q", 3, 2, TWO_PATCHES_2D, description="h, hu")
+    header, rows = probe_single_file(tmp_path, monkeypatch, content, (0.75, 0.45))
+    assert header == ["time", "h", "hu"]
+    assert rows == [[0.0, 270.0, 271.0]]
+
+
+def test_same_names_in_two_data_sets_are_prefixed(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    for name, (patch_id, offset, size) in zip(["A", "B"], TWO_PATCHES_2D):
+        (tmp_path / f"{name}.peano-patch-file").write_text(
+            patch_file(
+                2, "cell", name, 3, 1, [(1, (0.0, 0.0), (1.0, 1.0))], description="h"
+            )
+        )
+    (tmp_path / "data.peano-patch-file").write_text(
+        meta_file([(0.0, ["A.peano-patch-file", "B.peano-patch-file"])])
+    )
+    probe = PointProbe("data.peano-patch-file", (0.5, 0.5), "probe.csv", 0, 10)
+    probe.display(1)
+    header, _ = read_csv("probe.csv")
+    assert header == ["time", "A_h", "B_h"]
 
 
 def test_patch_filter_skips_patches(tmp_path):

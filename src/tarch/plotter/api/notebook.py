@@ -93,8 +93,8 @@ def read_unknown_names(file_name):
     with contextlib.redirect_stdout(io.StringIO()):
         parser.parse_file()
     for attributes in parser.unknown_attributes.values():
-        names = [name.strip() for name in attributes.description.split(",")]
-        if len(names) == attributes.unknowns and all(names):
+        names = attributes.unknown_names()
+        if names is not None:
             return names
     return None
 

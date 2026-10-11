@@ -1,7 +1,9 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 from .Visualiser import Visualiser
+from ..input.PatchFileParser import unknown_names_from_description
 
+import re
 import vtk
 import time
 import traceback
@@ -341,6 +343,71 @@ def prepare_3D_patches_unstructured_grid(
     return grid
 
 
+def group_unknown_names(names):
+    """!
+
+    Group the names of the unknowns into the arrays we write
+
+    A name v[i] belongs to the vector v, all other names are scalars. Returns
+    a list of (array name, list of indices of the unknowns), in the order in
+    which the arrays first show up, e.g. ["p", "v[0]", "v[1]"] yields
+    [("p", [0]), ("v", [1, 2])].
+
+    """
+    groups = {}
+    for index, name in enumerate(names):
+        match = re.fullmatch(r"(.+)\[\d+\]", name)
+        groups.setdefault(match.group(1) if match else name, []).append(index)
+    return list(groups.items())
+
+
+def name_unknowns(
+    grid, description, unknowns, is_data_associated_to_cell, split_unknowns
+):
+    """!
+
+    Label the unknowns of a grid with their symbolic names
+
+    If the description of the unknowns holds one name per unknown (@see
+    unknown_names_from_description()), we name the components of the data
+    array accordingly, plus the trailing subdomain component. Paraview then
+    offers the names when you colour by the array. Otherwise, we leave the
+    grid alone.
+
+    split_unknowns: Boolean
+      If set, we additionally add one array per variable, so filters such as
+      Paraview's Calculator or Contour can address it by name. A scalar
+      becomes an array with one component. The entries v[0], v[1], ... of a
+      variable with multiplicity become one vector array v. As Paraview only
+      treats arrays with three components as vectors, e.g. for glyphs, we
+      pad a vector with two entries with a zero.
+
+    """
+    names = unknown_names_from_description(description, unknowns)
+    if names is None:
+        return
+
+    field_data = (
+        grid.GetCellData() if is_data_associated_to_cell else grid.GetPointData()
+    )
+    data = field_data.GetScalars()
+    for index, name in enumerate(names):
+        data.SetComponentName(index, name)
+    data.SetComponentName(unknowns, "subdomain")
+
+    if split_unknowns:
+        for array_name, indices in group_unknown_names(names):
+            array = vtk.vtkDoubleArray()
+            array.SetName(array_name)
+            array.SetNumberOfComponents(3 if len(indices) == 2 else len(indices))
+            array.SetNumberOfTuples(data.GetNumberOfTuples())
+            if len(indices) == 2:
+                array.FillComponent(2, 0.0)
+            for component, index in enumerate(indices):
+                array.CopyComponent(component, data, index)
+            field_data.AddArray(array)
+
+
 class VTUUnstructuredGrid(Visualiser):
     """!
     The visualiser is first and foremost a persistency layer around
@@ -361,8 +428,16 @@ class VTUUnstructuredGrid(Visualiser):
         start=0,
         end=0,
         verbose=False,
+        split_unknowns=False,
     ):
+        """!
+
+        split_unknowns: Boolean
+          Write one additional array per (named) variable. @see name_unknowns()
+
+        """
         super(VTUUnstructuredGrid, self).__init__(file_name, start, end, verbose)
+        self.split_unknowns = split_unknowns
         self._tp = None
         self._grid = None
         self.output_directory = output_directory
@@ -633,6 +708,13 @@ paths (see documentation/help of your conversion script).
                         unknown_data._is_data_associated_to_cell,
                         unknown_data._mapping,
                     )
+                name_unknowns(
+                    grid,
+                    unknown_data._description,
+                    unknown_data._unknowns,
+                    unknown_data._is_data_associated_to_cell,
+                    self.split_unknowns,
+                )
             else:
                 assert False, "Found empty cell data"
                 # Write this data to vtu, return the filename for later processing

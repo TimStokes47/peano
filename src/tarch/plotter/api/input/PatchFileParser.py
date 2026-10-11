@@ -1,8 +1,40 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+import re
+
 import numpy as np
 
 from .Patch import Patch
+
+
+def unknown_names_from_description(description, unknowns):
+    """!
+
+    Names of the unknowns as stored in the description of a patch file
+
+    Plotters such as exahype2.api.fv.PlotAsVTKFile write the names of the
+    unknowns as comma-separated list into the description, e.g.
+    "h, hu, hv, b". A variable with multiplicity k shows up as k names
+    v[0], ..., v[k-1].
+
+    description: String
+      Description of an unknown as read from the patch file.
+
+    unknowns: Integer
+      Number of unknowns per degree of freedom.
+
+    Returns the list of names, or None if the description does not hold
+    exactly one name per unknown. Names are C++ identifiers, as they stem
+    from the Variables struct of a solver, optionally followed by an index
+    [i]. Any other description is free text, which we do not interpret.
+
+    """
+    names = [name.strip() for name in description.split(",")]
+    if len(names) == unknowns and all(
+        re.fullmatch(r"[A-Za-z_]\w*(\[\d+\])?", name) for name in names
+    ):
+        return names
+    return None
 
 
 class UnknownAttributes:
@@ -88,6 +120,10 @@ class UnknownAttributes:
 
     def set_description(self, description):
         self.description = description
+
+    def unknown_names(self):
+        """! @see unknown_names_from_description()"""
+        return unknown_names_from_description(self.description, self.unknowns)
 
     def set_celldata(self, celldata):
         assert not self.cell_data, "attribute already set!"
@@ -238,7 +274,7 @@ class PatchFileParser:
                 patch_unknown.set_dof(int(current_line.strip().split()[1]))
             if "description" in current_line:
                 patch_unknown.set_description(
-                    current_line.strip().split("description")[1]
+                    current_line.strip().split("description")[1].strip()
                 )
                 if '"' in patch_unknown.description:
                     print(
