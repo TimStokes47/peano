@@ -19,6 +19,7 @@ are held in this directory, too. So simple call Jupyter on different files.
 - \subpage tutorials_exahype2_00_getting-started
 - Modelling a PDE with ExaHyPE 2
   - \subpage tutorials_exahype2_10_euler
+  - \subpage tutorials_exahype2_11_tsunami
 - Modifying the numerics and the implementation scheme
 - Running codes in parallel
 - Coupling
@@ -30,12 +31,6 @@ are held in this directory, too. So simple call Jupyter on different files.
   - \subpage tutorials_exahype2_exercises_Acoustic-advanced
   - \subpage tutorials_exahype2_exercises_SWE-sympy
   - \subpage tutorials_exahype2_exercises_SWE-aderdg
-- Toy problems (as starting point for your own project)
-  - \subpage page_exahype2_tutorials_toyproblems_acoustic
-  - \subpage page_exahype2_tutorials_toyproblems_advection
-  - \subpage page_exahype2_tutorials_toyproblems_elastic
-  - \subpage page_exahype2_tutorials_toyproblems_euler
-  - \subpage page_exahype2_tutorials_toyproblems_swe
 - HPC  
   - \subpage tutorials_exahype2_hpc_domain-decomposition
   - \subpage tutorials_exahype2_hpc_tasking
