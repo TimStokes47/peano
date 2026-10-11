@@ -144,10 +144,11 @@ class PlotAsVTKFile(Solver.Plotter):
         # Python) rather than delegating to some project-wide C++ filter
         # object: the generated code below carries the exact offset/size
         # values this plotter was configured with, and nothing else.
-        # Only leaf cells are plotted: refined cells are not updated (@see
-        # UpdateCellAndComputeGlobalTimeStep's guard), so their patches still
-        # hold the initial condition and would overlap the actual solution.
-        guard = "not marker.willBeRefined() and not marker.hasBeenRefined()"
+        # Only the cells selected by the solver's grid selector are plotted,
+        # as only those are updated (@see UpdateCellAndComputeGlobalTimeStep's
+        # guard). Other cells would hold outdated data overlapping the actual
+        # solution.
+        guard = "(" + self._solver.grid_selector.createCellGuard() + ")"
         if self._plot_filters:
             guard += " and (" + " or ".join(
                 "marker.overlaps({"

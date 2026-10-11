@@ -195,8 +195,10 @@ Patch overlap data
 #include "peano4/utils/Loop.h"
 """
 
-        self._solver._patch_overlap_current_time_step.generator.send_condition = "true"
-        self._solver._patch_overlap_current_time_step.generator.receive_and_merge_condition = "true"
+        # Only faces selected by the solver's grid selector hold valid data,
+        # so only those are exchanged.
+        self._solver._patch_overlap_current_time_step.generator.send_condition = self._solver.grid_selector.createFaceGuard()
+        self._solver._patch_overlap_current_time_step.generator.receive_and_merge_condition = self._solver.grid_selector.createFaceGuard()
 
         self._solver._patch_overlap_update.generator.send_condition = "false"
         self._solver._patch_overlap_update.generator.receive_and_merge_condition = "false"
@@ -234,12 +236,12 @@ Patch overlap data
                 patch=self._solver._patch,
                 patch_overlap=self._solver._patch_overlap_current_time_step,
                 reconstructed_patch=self._solver._patch_with_halo,
-                guard="not marker.willBeRefined() and not marker.hasBeenRefined()",
+                guard=self._solver.grid_selector.createCellGuard(),
                 add_assertions_to_halo_exchange=False,
                 additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
-        reconstruction_task.add_action_set( HandleBoundary(self._solver) )
+        reconstruction_task.add_action_set( HandleBoundary(self._solver, guard=self._solver.grid_selector.createFaceGuard()) )
 
         ## Do the actual time step update
         update_cell_task.add_dependency(reconstruction_task)
@@ -250,7 +252,7 @@ Patch overlap data
                 self._solver,
                 self.cfl_constant,
                 self.patch_size,
-                guard="not marker.willBeRefined() and not marker.hasBeenRefined()",
+                guard=self._solver.grid_selector.createCellGuard(),
             )
         )
         
@@ -263,7 +265,7 @@ Patch overlap data
             ProjectPatchOntoFaces(
                 self._solver._patch,
                 self._solver._patch_overlap_update,
-                guard="true",
+                guard=self._solver.grid_selector.createCellGuard(),
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
@@ -271,7 +273,7 @@ Patch overlap data
             RollOverUpdatedFace(
                 self._solver._patch_overlap_current_time_step,
                 self._solver._patch_overlap_update,
-                guard="true",
+                guard=self._solver.grid_selector.createFaceGuard(),
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )

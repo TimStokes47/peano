@@ -83,13 +83,13 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         project_on_faces_task.add_dependency(initial_condition_task)
 
         initial_condition_task.add_action_set(
-            InitialCondition(self._solver, guard="true")
+            InitialCondition(self._solver, guard=self._solver.grid_selector.createCellGuard())
         )
         project_on_faces_task.add_action_set(
             ProjectPatchOntoFaces(
                 self._solver._patch,
                 self._solver._patch_overlap_update,
-                guard="true",
+                guard=self._solver.grid_selector.createCellGuard(),
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
@@ -97,7 +97,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
             RollOverUpdatedFace(
                 self._solver._patch_overlap_current_time_step,
                 self._solver._patch_overlap_update,
-                guard="true",
+                guard=self._solver.grid_selector.createFaceGuard(),
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )

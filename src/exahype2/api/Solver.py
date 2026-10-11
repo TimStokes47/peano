@@ -6,6 +6,7 @@ import abc
 from typing import Callable, Dict, List, Tuple, Union
 
 import peano4.api
+import peano4.api.toolbox
 
 from .PDETerm import PDETerm
 
@@ -244,6 +245,12 @@ class Solver(abc.ABC):
         # instance to it, e.g. exahype2.api.fv.PlotAsVTKFile, through the
         # plotter attribute below.
         self.plotter: "Solver.Plotter" = None
+
+        # Selects the mesh entities on which all action sets of this solver
+        # act: Each action set's guard is the corresponding output of this
+        # selector. By default, the solver works on the finest mesh level
+        # only. Users can assign any other peano4.api.toolbox.GridSelector.
+        self.grid_selector: peano4.api.toolbox.GridSelector = peano4.api.toolbox.FineGridSelector()
 
         # The kernel function calls are generated as late as possible, to
         # ensure that all PDE terms and the numerical scheme have been

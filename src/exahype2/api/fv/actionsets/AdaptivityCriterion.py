@@ -186,7 +186,7 @@ class AdaptivityCriterion(AbstractFVActionSet):
             d["NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_2D"] = str(self._solver._patch.no_of_unknowns * self._solver._patch.dim[0] * self._solver._patch.dim[0])
             d["NUMBER_OF_DOUBLE_VALUES_IN_ORIGINAL_PATCH_3D"] = str(self._solver._patch.no_of_unknowns * self._solver._patch.dim[0] * self._solver._patch.dim[0] * self._solver._patch.dim[0])
             d["CELL_ACCESSOR"] = "fineGridCell" + self._solver._patch.name
-            d["PREDICATE"] = "not marker.willBeRefined() and not marker.hasBeenRefined() and " + self.guard
+            d["PREDICATE"] = "(" + self._solver.grid_selector.createCellGuard() + ") and (" + self.guard + ")"
             d["EVENT_LIFETIME"] = self._event_lifetime
             d["GRID_CONSTRUCTION"] = self._called_by_grid_construction
             self._solver._init_dictionary_with_default_parameters(d)

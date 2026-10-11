@@ -39,7 +39,7 @@ class UpdateCellAndComputeGlobalTimeStep(AbstractFVActionSet):
 
     """
 
-    def __init__(self, solver, cfl_constant, patch_size, guard="true"):
+    def __init__(self, solver, cfl_constant, patch_size, guard):
         """!
 
         solver: exahype2.api.Solver
@@ -62,7 +62,8 @@ class UpdateCellAndComputeGlobalTimeStep(AbstractFVActionSet):
         guard: str
           C++ boolean expression, evaluated per cell in touchCellFirstTime,
           guarding whether that cell's patch is updated and contributes to
-          the CFL condition.
+          the CFL condition. Typically the output of the solver's
+          grid_selector (@see peano4.api.toolbox.GridSelector).
 
         """
         AbstractFVActionSet.__init__(self, solver)
