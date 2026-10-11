@@ -23,7 +23,7 @@
     example have data which you need only on the finest mesh level but not 
     on coarser ones.
   - Some data are only required in certain domain areas. Limiting with 
-    localised solvers is a classic example @ref tutorials_exahype2_coupling "as we find it in some  ExaHyPE 2 applications".
+    localised solvers is a classic example @ref tutorials_exahype2_44_localisation "as we find it in some  ExaHyPE 2 applications".
 
 
   ## Realisation in the C++ code
