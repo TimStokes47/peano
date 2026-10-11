@@ -46,6 +46,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
     static constexpr int    NumberOfUnknowns           = {{NUMBER_OF_UNKNOWNS}};
     static constexpr int    NumberOfAuxiliaryVariables = {{NUMBER_OF_AUXILIARY_VARIABLES}};
 
+    {{VARIABLES}}
+
     {{PDE_TERM_DECLARATIONS}}
 
     {{ADDITIONAL_METHOD_DECLARATIONS}}
@@ -132,6 +134,28 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
     def __init__(self, solver: Solver):
         super().__init__(solver)
 
+    def _variables_declaration(self) -> str:
+        """!
+
+        Nested struct Variables with the position of each named variable
+        within Q, or the empty string if the solver's variables carry no
+        names. User code (and code injected from Python) then can write
+        Q[Variables::rho] instead of Q[0].
+
+        """
+        if not self._solver._variable_positions:
+            return ""
+        constants = "\n".join(
+            f"      static constexpr int {variable_name} = {position};"
+            for variable_name, position in self._solver._variable_positions.items()
+        )
+        return (
+            "/**\n"
+            "     * Positions of the named unknowns and auxiliary variables within Q\n"
+            "     */\n"
+            "    struct Variables {\n" + constants + "\n    };"
+        )
+
     def construct_output(
         self,
         exahype2_project,
@@ -159,6 +183,7 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
             "NUMBER_OF_UNKNOWNS": self._solver._unknowns,
             "NUMBER_OF_AUXILIARY_VARIABLES": self._solver._auxiliary_variables,
             "USER_SOLVER_INCLUDES": self._solver.user_solver_includes,
+            "VARIABLES": self._variables_declaration(),
             "PDE_TERM_DECLARATIONS": "\n".join(
                 term.generator.generate_declaration() for term in self._solver.pde_terms
             ),
@@ -166,9 +191,12 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
                 term.generator.generate_out_of_class_definitions(qualified_class_name)
                 for term in self._solver.pde_terms
             ),
-            "ADDITIONAL_ATTRIBUTES": "\n".join(self._solver._abstract_solver_attributes),
+            "ADDITIONAL_ATTRIBUTES": "\n".join(
+                self._solver._abstract_solver_attributes
+            ),
             "ADDITIONAL_METHOD_DECLARATIONS": "\n".join(
-                declaration for declaration, definition_generator in self._solver._abstract_solver_methods
+                declaration
+                for declaration, definition_generator in self._solver._abstract_solver_methods
             ),
             "ADDITIONAL_METHOD_DEFINITIONS": "\n".join(
                 definition_generator(qualified_class_name)
