@@ -12,6 +12,8 @@ We detail here some useful info about how we use it within Peano. A few basic th
 \li When a developer pushes to any remote branch, the gitlab website "runs a pipeline". This consists of running any steps in the `.gitlab-ci.yml` file.
 \li Our ```.gitlab-ci.yml``` doesn't contain much actual stuff, but rather it redirects to further `.yml` files in the `.continuous_integration` directory.
 \li We use containers to make sure we have a dependable software environment.
+\li Every job clones the Git LFS files as pointers only (`GIT_LFS_SKIP_SMUDGE` in `.continuous_integration/templates/variables.yml`). A job that reads Git LFS files pulls just those with `git lfs pull --include="<pattern>"`.
+\li Before a job fetches the sources, it deletes the Git configuration lock file that a cancelled job leaves in the reused build directory. GitLab repeats a job up to twice after an infrastructure failure and a failed fetch, artifact download or cache restore up to three times.
 
 ## How do I run the pipeline?
 
