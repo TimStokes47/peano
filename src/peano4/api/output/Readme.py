@@ -115,8 +115,14 @@ paper for previous Peano code generations (generation 2).
     pass
 
   def generate(self,directory):
-    invoking_script_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-    filename = directory + "/README-" + invoking_script_name + ".md"
+    """!
+    Write README-executablename.md into directory, e.g. README-tsunami.md
+
+    If the project has no executable name, we fall back to the name of the
+    Python script which invoked the generation.
+    """
+    name = self._executable_name or os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    filename = directory + "/README-" + name + ".md"
 
     Logger().log("Write README to {}".format(filename))
 
