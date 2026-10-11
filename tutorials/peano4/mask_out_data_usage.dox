@@ -197,11 +197,6 @@ struct benchmarks::mghype::poisson::facedata::DGPoisson {
   subdomain where the solver is active and the large area around it is handled
   properly.   
  
- 
-  ## Realisation 
- 
-  The realisation of this whole localisation feature is subject of 
-  @ref page_peano_localisation "a discussion of its own".
 
  */
  
