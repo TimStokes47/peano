@@ -15,14 +15,20 @@ python3 src/tarch/plotter/api/probe.py --point 0.3 0.6 0.1 -o probe.csv solution
 
 The csv file holds one row per snapshot, sorted by time. The first column
 is the snapshot's time stamp, followed by all unknowns of all data sets
-within the file. The columns are named after the data set and the index of
-the unknown, e.g.
+within the file. If the description of a data set lists one name per
+unknown, e.g. `description h, hu`, the columns carry these names. ExaHyPE's
+solvers write such descriptions if you give their variables names. If two
+data sets use the same name, the columns are prefixed with the data set,
+e.g. `SWEQ_h`. Otherwise, the columns are named after the data set and the
+index of the unknown, e.g.
 
 ~~~~~~~~~~~~~~~~~~~~~
 time,solution_0,solution_1
 0.0,1.0,0.25
 0.1,1.02,0.24
 ~~~~~~~~~~~~~~~~~~~~~
+
+@ref tutorials_exahype2_41_postprocessing "The postprocessing tutorial" shows the probe with named unknowns.
 
 The most important options are
 
