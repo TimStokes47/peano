@@ -23,12 +23,12 @@ are held in this directory, too. So simple call Jupyter on different files.
 - Modifying the numerics and the implementation scheme
 - Running codes in parallel
 - Coupling
+  - \subpage tutorials_exahype2_coupling
 - ExaGRyPE
 - ExaSeis 
   
   
   
-  - \subpage tutorials_exahype2_exercises_Acoustic-advanced
   - \subpage tutorials_exahype2_exercises_SWE-sympy
   - \subpage tutorials_exahype2_exercises_SWE-aderdg
 - HPC  
@@ -43,8 +43,8 @@ are held in this directory, too. So simple call Jupyter on different files.
 - \subpage tutorials_exahype2_applications_exaseis (seismology extension built on top of ExaHyPE)
 - Adding features
   - Adding your own compute kernels <!-- (Harrison's work) -->
-  - \subpage tutorials_exahype2_coupling
   - \subpage tutorials_exahype2_additional_mesh_sweeps
+  - Using the symbolic names int he output. Should go into a postprocessing tutorial.
 
 
 ## How to add your own tutorial
