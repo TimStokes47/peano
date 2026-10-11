@@ -16,6 +16,16 @@ stages:
 
 default:
   interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - scheduler_failure
+      - api_failure
+      - stuck_or_timeout_failure
+  hooks:
+    pre_get_sources_script:
+      - rm -f "${CI_PROJECT_DIR}.tmp/.gitlab-runner.ext.conf.lock" 2>/dev/null || true
 
 .BeforeScriptWithAutomakeSanitiser:
   before_script:
@@ -48,7 +58,6 @@ Build:
     - .Variables
     - .BeforeScript
     - .Build
-  retry: 0
 
 Unit_Tests:
   stage: Test
@@ -62,7 +71,6 @@ Unit_Tests:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_FV_Tests:
   stage: Test
@@ -77,7 +85,6 @@ ExaHyPE2_FV_Tests:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_ADERDG_Tests:
   stage: Test
@@ -92,7 +99,6 @@ ExaHyPE2_ADERDG_Tests:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_ADERDG_AMR_Tests:
   stage: Test
@@ -107,7 +113,6 @@ ExaHyPE2_ADERDG_AMR_Tests:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 #ExaHyPE2_ADERDG_Limiting_Tests:
 #  stage: Test
@@ -122,7 +127,6 @@ ExaHyPE2_ADERDG_AMR_Tests:
 #    - job: Build
 #  dependencies:
 #    - Build
-#  retry: 0
 
 MGHyPE_MatrixFree_Tests:
   stage: Test
@@ -137,7 +141,6 @@ MGHyPE_MatrixFree_Tests:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 # SWIFT2_Dastgen:
 #   stage: Test
@@ -152,7 +155,6 @@ MGHyPE_MatrixFree_Tests:
 #     - job: Build
 #   dependencies:
 #     - Build
-#   retry: 0
 
 SWIFT2_Sod1D:
   stage: Test
@@ -167,7 +169,6 @@ SWIFT2_Sod1D:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 SWIFT2_Noh2D:
   stage: Test
@@ -182,7 +183,6 @@ SWIFT2_Noh2D:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_Tutorials_Exercises:
   stage: Tutorials
@@ -198,7 +198,6 @@ ExaHyPE2_Tutorials_Exercises:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_Tutorials_Toyproblems:
   stage: Tutorials
@@ -214,7 +213,6 @@ ExaHyPE2_Tutorials_Toyproblems:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_Euler:
   stage: Applications
@@ -229,7 +227,6 @@ ExaHyPE2_Euler:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_Acoustic:
   stage: Applications
@@ -244,7 +241,6 @@ ExaHyPE2_Acoustic:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_Elastic:
   stage: Applications
@@ -259,7 +255,6 @@ ExaHyPE2_Elastic:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_ShallowWater:
   stage: Applications
@@ -274,7 +269,6 @@ ExaHyPE2_ShallowWater:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_Kernels:
   stage: Benchmarks
@@ -289,7 +283,6 @@ ExaHyPE2_Kernels:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 ExaHyPE2_SBH:
   stage: Benchmarks
@@ -304,7 +297,6 @@ ExaHyPE2_SBH:
     - job: Build
   dependencies:
     - Build
-  retry: 0
 
 #ExaHyPE2_SBH_Enclave:
 #  stage: Benchmarks
@@ -319,7 +311,6 @@ ExaHyPE2_SBH:
 #    - job: Build
 #  dependencies:
 #    - Build
-#  retry: 0
 
 #ExaHyPE2_SBH_Coupled:
 #  stage: Benchmarks
@@ -334,4 +325,3 @@ ExaHyPE2_SBH:
 #   - job: Build
 #  dependencies:
 #    - Build
-#  retry: 0
