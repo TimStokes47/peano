@@ -1,6 +1,6 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from typing import List
+from typing import List, Optional, Tuple
 
 import peano4.api
 import peano4.api.solversteps
@@ -10,7 +10,11 @@ from ..Task import Task
 from .ReportCompiledStepSequence import report_compiled_step_sequence
 
 
-def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Step"]:
+def translate(
+    graph: Graph,
+    identifier: str,
+    non_fusable_task_pairs: Optional[List[Tuple[Task, Task]]] = None,
+) -> List["peano4.api.solversteps.Step"]:
     """!
 
     Task graph compiler which fuses tasks into as few mesh traversals as possible
@@ -58,6 +62,11 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     traversal of their own, placed right before whatever the remaining
     tasks of their layer yield.
 
+    Furthermore, the caller can annotate the fusion through
+    non_fusable_task_pairs: a node is never appended to a traversal if one
+    of its tasks forms such a pair with a task already within this
+    traversal. The node then starts a new traversal.
+
     ## Constructing the fused step
 
     A fused step's name concatenates the names of its tasks, prefixed with
@@ -89,11 +98,20 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
       graph belongs to (e.g. "SetupSimulation", "TimeStep", "Plot") and
       prefixes every generated Observer's name.
 
+    non_fusable_task_pairs: [(peano4.api.taskgraph.Task, peano4.api.taskgraph.Task)]
+      Pairs of tasks of graph which must not end up in the same traversal.
+      The order within a pair does not matter. Defaults to none.
+
     @return [peano4.api.solversteps.Step]
       One Observer per fused group of tasks, in an order that respects
       every dependency.
 
     """
+    non_fusable = set()
+    for first_task, second_task in non_fusable_task_pairs or []:
+        non_fusable.add((first_task, second_task))
+        non_fusable.add((second_task, first_task))
+
     order = graph.ordered_tasks()
 
     depth_of_task = {}
@@ -137,6 +155,12 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
             not is_repeating
             and current_group is not None
             and lowest_entity >= highest_entity_of_current_group
+            and not any(
+                (task_in_group, task) in non_fusable
+                for group_node in current_group
+                for task_in_group in group_node
+                for task in node
+            )
         ):
             current_group.append(node)
             highest_entity_of_current_group = max(highest_entity_of_current_group, highest_entity)

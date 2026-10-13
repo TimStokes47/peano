@@ -40,7 +40,7 @@ project.add_solver(thesolver)
 
 
 
-project.compiler = peano4.api.taskgraph.compiler.TaskProducerConsumer.translate
+project.compiler = peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate
 
 
 
