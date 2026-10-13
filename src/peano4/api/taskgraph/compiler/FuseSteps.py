@@ -14,6 +14,12 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     """!
 
     Task graph compiler which fuses tasks into as few mesh traversals as possible
+    
+    You can use this task graph in your ExaHypE 2 project through
+    
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+    project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
 
     Where peano4.api.taskgraph.compiler.Sequential.translate() maps every
     task onto a mesh traversal (Observer) of its own, this compiler packs

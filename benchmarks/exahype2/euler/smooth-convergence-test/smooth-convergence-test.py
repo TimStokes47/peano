@@ -9,7 +9,6 @@ project = exahype2.api.Project(
     directory=".",
     executable="smooth-convergence-test",
 )
-project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
 
 solver_name = "EulerFVSmooth"
 unknowns = 4
@@ -17,16 +16,14 @@ auxiliary_variables = 0
 volume_size = 0.001
 patch_size = 9
 dimensions = 2
-verbosity = peano4.api.LoggerVerbosity.TEXT
-#verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
+#verbosity = peano4.api.LoggerVerbosity.TEXT
+verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
 
 thesolver = exahype2.api.Solver(
     solver_name,
     unknowns,
     auxiliary_variables,
 )
-
-#thesolver.add_user_solver_includes("#include <cmath>\n" "#include <algorithm>\n")
 
 thesolver.add_pde_term( exahype2.api.Flux(stateless=False,))
 thesolver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False,))
@@ -39,27 +36,13 @@ thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
 thesolver.plotter = exahype2.api.fv.PlotAsVTKFile(
     thesolver, first_plot_time_stamp=0.0, time_in_between_plots=0.001
 )
-
-#  patch_size,
-#  mesh_size,
-#  mesh_size,
-#  normalised_time_step_size=0.0001,
-#  flux = exahype2.solvers.PDETerms.User_Defined_Implementation,
-#  eigenvalues = exahype2.solvers.PDETerms.User_Defined_Implementation,
-
-
-# oldsolver = exahype2.solvers.fv.musclhancock.GlobalFixedTimeStep(
-#  solver_name,
-#  patch_size,
-#  unknowns, auxiliary_variables,
-#  mesh_size,
-#  mesh_size,
-#  normalised_time_step_size=0.0001,
-#  flux = exahype2.solvers.PDETerms.User_Defined_Implementation,
-#  eigenvalues = exahype2.solvers.PDETerms.User_Defined_Implementation,
-# )
-
 project.add_solver(thesolver)
+
+
+
+project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
+
+
 
 # build_mode = peano4.api.output.CompileMode.RELEASE
 build_mode = peano4.api.output.CompileMode.DEBUG
