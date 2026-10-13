@@ -1,5 +1,11 @@
-from peano4.api.taskgraph import Graph, Task
+import peano4.api.solversteps
+from peano4.api.taskgraph import Task
 from peano4.api.taskgraph.compiler.PropagateUseStatements import propagate_use_statements
+
+# propagate_use_statements() works on compiled step sequences, i.e. on lists
+# of peano4.api.solversteps.Step. Below, a "graph" is such a list and its
+# "tasks" are the Steps within it (one Step per task, as
+# peano4.api.taskgraph.compiler.Sequential.translate() yields them).
 
 
 READ_AND_DISCARD = Task.DataAccess.READ_AND_DISCARD
@@ -21,19 +27,30 @@ class _FakeSubmodel:
         return self.name
 
 
-def _make_task(name):
-    return Task(name=name, entity=Task.GridEntity.CELL)
-
-
 def _chain_graph(name_prefix, length):
-    """A simple linear chain of `length` tasks, all added to one Graph."""
-    graph = Graph()
-    tasks = [_make_task(f"{name_prefix}-{i}") for i in range(length)]
-    for i in range(1, length):
-        tasks[i].add_dependency(tasks[i - 1])
-    for task in tasks:
-        graph.add_task(task)
-    return graph, tasks
+    """A step sequence of `length` steps. Returned twice: once as the
+    sequence handed to propagate_use_statements(), once as the list of
+    steps the tests inspect - both are the same list object."""
+    steps = [
+        peano4.api.solversteps.Step(name=f"{name_prefix}-{i}", add_user_defined_actions=False)
+        for i in range(length)
+    ]
+    return steps, steps
+
+
+def _use_cell(step, submodel, qualifier):
+    step.use_cell(submodel)
+    step.cell_data_access[submodel] = qualifier
+
+
+def _use_face(step, submodel, qualifier):
+    step.use_face(submodel)
+    step.face_data_access[submodel] = qualifier
+
+
+def _use_vertex(step, submodel, qualifier):
+    step.use_vertex(submodel)
+    step.vertex_data_access[submodel] = qualifier
 
 
 def _access(task, attribute_name="cell_data_access"):
@@ -49,8 +66,8 @@ def test_immediate_read_after_write_is_already_valid():
     """Distance 1, WRITE then READ_AND_DISCARD: nothing to do."""
     graph, tasks = _chain_graph("A", 2)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[1].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph])
 
@@ -62,8 +79,8 @@ def test_immediate_readwrite_after_write_is_already_valid():
     """Distance 1, WRITE then READ_AND_WRITE: also fine."""
     graph, tasks = _chain_graph("A", 2)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[1].use_cell(submodel, READ_AND_WRITE)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, READ_AND_WRITE)
 
     changed = propagate_use_statements([graph])
 
@@ -78,8 +95,8 @@ def test_immediate_write_after_write_supersedes_needs_no_relay():
     to do, even though the two are immediately adjacent."""
     graph, tasks = _chain_graph("A", 2)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[1].use_cell(submodel, WRITE)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, WRITE)
 
     changed = propagate_use_statements([graph])
 
@@ -94,9 +111,9 @@ def test_write_then_write_then_read_finds_the_real_read_past_the_superseding_wri
     already fine."""
     graph, tasks = _chain_graph("A", 3)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[1].use_cell(submodel, WRITE)
-    tasks[2].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, WRITE)
+    _use_cell(tasks[2], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph])
 
@@ -109,8 +126,8 @@ def test_distance_two_inserts_readwrite_in_between():
     READ_AND_WRITE declaration on task N+1."""
     graph, tasks = _chain_graph("A", 3)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[2].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[2], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph])
 
@@ -124,8 +141,8 @@ def test_distance_three_needs_no_change():
     already fine as it stands."""
     graph, tasks = _chain_graph("A", 4)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[3].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[3], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph])
 
@@ -139,8 +156,8 @@ def test_distance_four_inserts_readwrite_immediately_before_the_read():
     fixed by inserting a READ_AND_WRITE declaration on task N+3, not N+1."""
     graph, tasks = _chain_graph("A", 5)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[4].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[4], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph])
 
@@ -159,9 +176,9 @@ def test_temporary_declaration_is_transparent_to_the_search():
     not N to N+1 (which would wrongly look like an immediate non-read)."""
     graph, tasks = _chain_graph("A", 4)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[1].use_cell(submodel, TEMPORARY)
-    tasks[3].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, TEMPORARY)
+    _use_cell(tasks[3], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph])
 
@@ -175,7 +192,7 @@ def test_read_origin_triggers_nothing():
     is fine."""
     graph, tasks = _chain_graph("A", 3)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph])
 
@@ -188,7 +205,7 @@ def test_temporary_origin_triggers_nothing():
     """Same for TEMPORARY."""
     graph, tasks = _chain_graph("A", 3)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, TEMPORARY)
+    _use_cell(tasks[0], submodel, TEMPORARY)
 
     changed = propagate_use_statements([graph])
 
@@ -200,8 +217,8 @@ def test_readwrite_origin_is_treated_like_write():
     still obliges whatever comes next (distance 2 here, needs a relay)."""
     graph, tasks = _chain_graph("A", 3)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, READ_AND_WRITE)
-    tasks[2].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, READ_AND_WRITE)
+    _use_cell(tasks[2], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph])
 
@@ -214,8 +231,8 @@ def test_is_idempotent():
     nothing and report False."""
     graph, tasks = _chain_graph("A", 5)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[4].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[4], submodel, READ_AND_DISCARD)
 
     first_changed = propagate_use_statements([graph])
     state_after_first = [list(task.cell_data) for task in tasks]
@@ -232,12 +249,12 @@ def test_cell_face_and_vertex_are_propagated_independently():
     cell_submodel = _FakeSubmodel("Cell")
     face_submodel = _FakeSubmodel("Face")
     vertex_submodel = _FakeSubmodel("Vertex")
-    tasks[0].use_cell(cell_submodel, WRITE)
-    tasks[2].use_cell(cell_submodel, READ_AND_DISCARD)
-    tasks[0].use_face(face_submodel, WRITE)
-    tasks[2].use_face(face_submodel, READ_AND_DISCARD)
-    tasks[0].use_vertex(vertex_submodel, WRITE)
-    tasks[2].use_vertex(vertex_submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], cell_submodel, WRITE)
+    _use_cell(tasks[2], cell_submodel, READ_AND_DISCARD)
+    _use_face(tasks[0], face_submodel, WRITE)
+    _use_face(tasks[2], face_submodel, READ_AND_DISCARD)
+    _use_vertex(tasks[0], vertex_submodel, WRITE)
+    _use_vertex(tasks[2], vertex_submodel, READ_AND_DISCARD)
 
     propagate_use_statements([graph])
 
@@ -253,8 +270,8 @@ def test_graph_with_no_edges_is_analysed_on_its_own():
     sequence."""
     graph, tasks = _chain_graph("A", 3)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[2].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[2], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph])  # no edges at all
 
@@ -274,8 +291,8 @@ def test_gap_across_a_cross_graph_edge_is_fixed_in_the_right_graph():
     graph_a, tasks_a = _chain_graph("A", 2)
     graph_b, tasks_b = _chain_graph("B", 1)
     submodel = _FakeSubmodel("Q")
-    tasks_a[0].use_cell(submodel, WRITE)
-    tasks_b[0].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(tasks_a[0], submodel, WRITE)
+    _use_cell(tasks_b[0], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements([graph_a, graph_b], edges=[(graph_a, graph_b)])
 
@@ -291,8 +308,8 @@ def test_self_edge_propagates_across_the_wrap_around():
     distance 1 across the wrap-around, is already valid."""
     graph, tasks = _chain_graph("A", 3)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, READ_AND_DISCARD)
-    tasks[2].use_cell(submodel, WRITE)
+    _use_cell(tasks[0], submodel, READ_AND_DISCARD)
+    _use_cell(tasks[2], submodel, WRITE)
 
     changed = propagate_use_statements([graph], edges=[(graph, graph)])
 
@@ -307,8 +324,8 @@ def test_self_edge_wrap_around_gap_is_fixed():
     but reached through the self-edge instead of a plain successor."""
     graph, tasks = _chain_graph("A", 3)
     submodel = _FakeSubmodel("Q")
-    tasks[1].use_cell(submodel, READ_AND_DISCARD)
-    tasks[2].use_cell(submodel, WRITE)
+    _use_cell(tasks[1], submodel, READ_AND_DISCARD)
+    _use_cell(tasks[2], submodel, WRITE)
 
     changed = propagate_use_statements([graph], edges=[(graph, graph)])
 
@@ -323,7 +340,7 @@ def test_without_the_self_edge_the_wrap_around_is_not_considered():
     task with no further use is simply left alone."""
     graph, tasks = _chain_graph("A", 2)
     submodel = _FakeSubmodel("Q")
-    tasks[1].use_cell(submodel, WRITE)
+    _use_cell(tasks[1], submodel, WRITE)
 
     changed = propagate_use_statements([graph])  # no self-edge
 
@@ -340,9 +357,9 @@ def test_branching_successor_graphs_are_each_fixed_independently():
     time_step, time_step_tasks = _chain_graph("TimeStep", 2)
     plot, plot_tasks = _chain_graph("Plot", 1)
     submodel = _FakeSubmodel("Q")
-    setup_tasks[0].use_cell(submodel, WRITE)
-    time_step_tasks[1].use_cell(submodel, READ_AND_DISCARD)  # distance 2 from setup
-    plot_tasks[0].use_cell(submodel, READ_AND_DISCARD)  # distance 1 from setup
+    _use_cell(setup_tasks[0], submodel, WRITE)
+    _use_cell(time_step_tasks[1], submodel, READ_AND_DISCARD)  # distance 2 from setup
+    _use_cell(plot_tasks[0], submodel, READ_AND_DISCARD)  # distance 1 from setup
 
     changed = propagate_use_statements(
         [setup, time_step, plot],
@@ -365,8 +382,8 @@ def test_time_step_and_plot_composed_in_both_directions():
     time_step, time_step_tasks = _chain_graph("TimeStep", 1)
     plot, plot_tasks = _chain_graph("Plot", 1)
     submodel = _FakeSubmodel("Q")
-    time_step_tasks[0].use_cell(submodel, WRITE)
-    plot_tasks[0].use_cell(submodel, READ_AND_DISCARD)
+    _use_cell(time_step_tasks[0], submodel, WRITE)
+    _use_cell(plot_tasks[0], submodel, READ_AND_DISCARD)
 
     changed = propagate_use_statements(
         [time_step, plot],
@@ -388,8 +405,8 @@ def test_write_immediately_after_readwrite_is_upgraded():
     to READ_AND_WRITE instead of being left as a superseding WRITE."""
     graph, tasks = _chain_graph("A", 2)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, READ_AND_WRITE)
-    tasks[1].use_cell(submodel, WRITE)
+    _use_cell(tasks[0], submodel, READ_AND_WRITE)
+    _use_cell(tasks[1], submodel, WRITE)
 
     changed = propagate_use_statements([graph])
 
@@ -405,8 +422,8 @@ def test_write_immediately_after_write_is_not_upgraded():
     explicitly asked to survive) triggers the upgrade."""
     graph, tasks = _chain_graph("A", 2)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
-    tasks[1].use_cell(submodel, WRITE)
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, WRITE)
 
     changed = propagate_use_statements([graph])
 
@@ -420,8 +437,8 @@ def test_write_immediately_after_readwrite_across_an_edge_is_upgraded():
     graph_a, tasks_a = _chain_graph("A", 1)
     graph_b, tasks_b = _chain_graph("B", 1)
     submodel = _FakeSubmodel("Q")
-    tasks_a[0].use_cell(submodel, READ_AND_WRITE)
-    tasks_b[0].use_cell(submodel, WRITE)
+    _use_cell(tasks_a[0], submodel, READ_AND_WRITE)
+    _use_cell(tasks_b[0], submodel, WRITE)
 
     changed = propagate_use_statements([graph_a, graph_b], edges=[(graph_a, graph_b)])
 
@@ -437,7 +454,7 @@ def test_write_immediately_after_write_via_self_edge_is_not_upgraded():
     "after" its own previous WRITE."""
     graph, tasks = _chain_graph("A", 1)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, WRITE)
+    _use_cell(tasks[0], submodel, WRITE)
 
     changed = propagate_use_statements([graph], edges=[(graph, graph)])
 
@@ -452,9 +469,9 @@ def test_upgrade_runs_before_relay_insertion_so_no_relay_is_needed():
     every remaining gap is distance 1 (odd), so no relay is ever needed."""
     graph, tasks = _chain_graph("A", 3)
     submodel = _FakeSubmodel("Q")
-    tasks[0].use_cell(submodel, READ_AND_WRITE)
-    tasks[1].use_cell(submodel, WRITE)
-    tasks[2].use_cell(submodel, READ_AND_WRITE)
+    _use_cell(tasks[0], submodel, READ_AND_WRITE)
+    _use_cell(tasks[1], submodel, WRITE)
+    _use_cell(tasks[2], submodel, READ_AND_WRITE)
 
     changed = propagate_use_statements([graph])
 
@@ -462,3 +479,56 @@ def test_upgrade_runs_before_relay_insertion_so_no_relay_is_needed():
     assert _access(tasks[1])[submodel] == READ_AND_WRITE
     assert tasks[0].cell_data.count(submodel) == 1  # unchanged, no relay inserted
     assert tasks[2].cell_data.count(submodel) == 1  # unchanged, no relay inserted
+
+
+def test_relay_upgrades_a_temporary_declaration():
+    """A TEMPORARY use does not relay the submodel through the stacks. If
+    the relay has to go onto a step that already declares the submodel
+    TEMPORARY, that declaration is upgraded to READ_AND_WRITE."""
+    graph, tasks = _chain_graph("A", 3)
+    submodel = _FakeSubmodel("Q")
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, TEMPORARY)
+    _use_cell(tasks[2], submodel, READ_AND_DISCARD)
+
+    changed = propagate_use_statements([graph])
+
+    assert changed is True
+    assert tasks[1].cell_data.count(submodel) == 1
+    assert _access(tasks[1])[submodel] == READ_AND_WRITE
+
+
+# ---------------------------------------------------------------------------
+# Distances count compiled mesh traversals, not tasks.
+# ---------------------------------------------------------------------------
+
+
+def test_distances_count_fused_steps_not_tasks():
+    """Four tasks (cell WRITE, vertex, cell, vertex READ_AND_DISCARD) are
+    three tasks apart, which would be fine. FuseSteps however compiles them
+    into the traversals [A], [B, C], [D], i.e. the read is two traversals
+    after the write, and a relay is required on the fused step [B, C]."""
+    from peano4.api.taskgraph import Graph
+    from peano4.api.taskgraph.compiler import FuseSteps
+
+    submodel = _FakeSubmodel("Q")
+    graph = Graph()
+    task_a = Task("A", Task.GridEntity.CELL)
+    task_b = Task("B", Task.GridEntity.VERTEX)
+    task_c = Task("C", Task.GridEntity.CELL)
+    task_d = Task("D", Task.GridEntity.VERTEX)
+    for task in (task_a, task_b, task_c, task_d):
+        graph.add_task(task)
+    task_b.add_dependency(task_a)
+    task_c.add_dependency(task_b)
+    task_d.add_dependency(task_c)
+    task_a.use_cell(submodel, WRITE)
+    task_d.use_cell(submodel, READ_AND_DISCARD)
+
+    steps = FuseSteps.translate(graph, "Test")
+    assert [step.name for step in steps] == ["Test_A", "Test_B__C", "Test_D"]
+
+    changed = propagate_use_statements([steps])
+
+    assert changed is True
+    assert _access(steps[1])[submodel] == READ_AND_WRITE

@@ -478,26 +478,6 @@ thus appreciate any citation of the original release paper
         peano4.api.taskgraph.wait_for_visualisations()
 
         #
-        # Setup runs once, as a prequel to both time stepping and plotting;
-        # time stepping and plotting may then follow one another in either
-        # order, repeatedly (each carries a self-edge for that reason) -
-        # @see peano4.api.taskgraph.compiler.PropagateUseStatements for what
-        # these edges mean and why a repeating graph needs a self-edge
-        # rather than a dedicated "cyclic" flag.
-        #
-        propagate_use_statements(
-            [setup_simulation, time_step, plot],
-            edges=[
-                (setup_simulation, time_step),
-                (setup_simulation, plot),
-                (time_step, plot),
-                (plot, time_step),
-                (time_step, time_step),
-                (plot, plot),
-            ],
-        )
-
-        #
         # The steps tied to one phase. This is really a sequence of
         # observers (aka Peano grid traversals) which the code should
         # run through for a given phase.
@@ -505,6 +485,27 @@ thus appreciate any citation of the original release paper
         setup_simulation_steps = self.compiler(setup_simulation, "SetupSimulation")
         time_step_steps        = self.compiler(time_step, "TimeStep")
         plot_steps             = self.compiler(plot, "Plot")
+
+        #
+        # Setup runs once, as a prequel to both time stepping and plotting;
+        # time stepping and plotting may then follow one another in either
+        # order, repeatedly (each carries a self-edge for that reason) -
+        # @see peano4.api.taskgraph.compiler.PropagateUseStatements for what
+        # these edges mean and why a repeating sequence needs a self-edge.
+        # This postprocessing runs on the compiled steps, as it counts mesh
+        # traversals, and a compiler might fuse several tasks into one.
+        #
+        propagate_use_statements(
+            [setup_simulation_steps, time_step_steps, plot_steps],
+            edges=[
+                (setup_simulation_steps, time_step_steps),
+                (setup_simulation_steps, plot_steps),
+                (time_step_steps, plot_steps),
+                (plot_steps, time_step_steps),
+                (time_step_steps, time_step_steps),
+                (plot_steps, plot_steps),
+            ],
+        )
 
         # Only now do we actually know which Steps this project runs, and
         # under which qualifier each of them uses a given submodel - the
