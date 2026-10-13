@@ -447,8 +447,10 @@ void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::fuse( const std::vector<Task*>& 
     currentTask = 0;
     for (auto& p: otherTasks) {
       double maxEigenvalue;
+      #if defined (GPUOffloadingOMP)
       omp_target_memcpy(static_cast<{{NAMESPACE | join("::")}}::{{CLASSNAME}}*>(p)->_outputValues, gpuPatchData.QOut, _numberOfResultValues * sizeof(double), 0, _numberOfResultValues * sizeof(double) * currentTask, 0, targetDevice);
       omp_target_memcpy(&maxEigenvalue, gpuPatchData.maxEigenvalue, sizeof(double), 0, sizeof(double) * currentTask, omp_get_initial_device(), targetDevice);
+      #endif
       ::exahype2::EnclaveBookkeeping::getInstance().finishedTask(
         patchData.id[currentTask],
         _numberOfResultValues,
@@ -462,9 +464,10 @@ void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::fuse( const std::vector<Task*>& 
 
     double maxEigenvalue;
     
+    #if defined (GPUOffloadingOMP)
     omp_target_memcpy(_outputValues, gpuPatchData.QOut, _numberOfResultValues * sizeof(double), 0, _numberOfResultValues * sizeof(double) * currentTask, 0, targetDevice);
     omp_target_memcpy(&maxEigenvalue, gpuPatchData.maxEigenvalue, sizeof(double), 0, sizeof(double) * currentTask, omp_get_initial_device(), targetDevice);
-
+    #endif
     ::exahype2::EnclaveBookkeeping::getInstance().finishedTask(
       patchData.id[currentTask],
       _numberOfResultValues,
@@ -473,7 +476,9 @@ void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::fuse( const std::vector<Task*>& 
       patchData.cellCentre[currentTask],
       patchData.cellSize[currentTask]
     );
+    #if defined (GPUOffloadingOMP)
     gpuPatchData.destroyWithoutCopy();
+    #endif
   }
 }
 {% endif %}

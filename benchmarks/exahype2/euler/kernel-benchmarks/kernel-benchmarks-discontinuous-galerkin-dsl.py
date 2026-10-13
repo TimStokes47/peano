@@ -5,6 +5,7 @@ import argparse
 
 import peano4.api
 import exahype2
+import exahype2.dslhype as DSL
 
 parser = argparse.ArgumentParser(
     description="ExaHyPE 2 - Euler Discontinuous Galerkin Kernel Benchmarking Script"
@@ -66,6 +67,18 @@ parser.add_argument(
     help="Evaluate max. eigenvalue",
 )
 parser.add_argument(
+    "--enable-mlir",
+    dest="enable_mlir",
+    action="store_true",
+    help="Enable MLIR kernel compilation support",
+)
+parser.add_argument(
+    "--enable-cpp",
+    dest="enable_cpp",
+    action="store_true",
+    help="Enable CPP kernels",
+)
+parser.add_argument(
     "-cpu",
     "--cpu",
     action="store_true",
@@ -76,6 +89,18 @@ parser.add_argument(
     "--gpu",
     action="store_true",
     help="Assess device kernels",
+)
+parser.add_argument(
+    "-serial",
+    "--serial",
+    action="store_true",
+    help="Assess serial kernels",
+)
+parser.add_argument(
+    "-parallel",
+    "--parallel",
+    action="store_true",
+    help="Assess parallel kernels",
 )
 parser.add_argument(
     "-fpe",
@@ -111,9 +136,10 @@ dg_solver.set_implementation(
     boundary_conditions=exahype2.solvers.PDETerms.Empty_Implementation,
     refinement_criterion=exahype2.solvers.PDETerms.Empty_Implementation,
     flux="applications::exahype2::euler::flux(Q, faceCentre, faceCentre, t, dt, normal, F);",
-    ncp="",
+    ncp=exahype2.solvers.PDETerms.None_Implementation,
     eigenvalues="applications::exahype2::euler::maxEigenvalue(Q, faceCentre, faceCentre, t, dt, normal, maxEigenvalue);",
-    source_term="",
+    source_term=exahype2.solvers.PDETerms.None_Implementation,
+    point_source=exahype2.solvers.PDETerms.None_Implementation
 )
 dg_solver.add_user_solver_includes(
         """
@@ -161,12 +187,19 @@ if args.fpe:
 else:
     project.constants.export_boolean("EnableFPE", False)
 
+# CPU is enabled by default if neither CPU nor GPU are specified
 if args.cpu == False and args.gpu == False:
-    project.constants.export_boolean("AssessHostKernels", True)
-    project.constants.export_boolean("AssessDeviceKernels", True)
+    project.output.makefile.add_CXX_flag("-DASSESS_HOST_KERNELS")
 else:
-    project.constants.export_boolean("AssessHostKernels", True if args.cpu else False)
-    project.constants.export_boolean("AssessDeviceKernels", True if args.gpu else False)
+    if args.cpu: project.output.makefile.add_CXX_flag("-DASSESS_HOST_KERNELS")
+    if args.gpu: project.output.makefile.add_CXX_flag("-DASSESS_DEVICE_KERNELS")
+
+if args.serial == False and args.parallel == False:
+    project.output.makefile.add_CXX_flag("-DASSESS_SERIAL_KERNELS")
+    project.output.makefile.add_CXX_flag("-DASSESS_PARALLEL_KERNELS")
+else:
+    if args.serial: project.output.makefile.add_CXX_flag("-DASSESS_SERIAL_KERNELS")
+    if args.parallel: project.output.makefile.add_CXX_flag("-DASSESS_PARALLEL_KERNELS")
 
 project.constants.export_boolean("EvaluateFlux", True)
 project.constants.export_boolean("EvaluateNonconservativeProduct", False)
@@ -177,9 +210,9 @@ project.constants.export_boolean("EvaluateMaximumEigenvalueAfterTimeStep", True 
 project.constants.define_value("FluxMacro", "1")
 
 if args.function_to_benchmark == "cellIntegral":
-    project.constants.define_value("BenchmarkCellIntegral", "1")
+    project.output.makefile.add_CXX_flag("-DASSESS_CELL_INTEGRAL_KERNELS")
 elif args.function_to_benchmark == "riemannProblem":
-    project.constants.define_value("BenchmarkRiemannProblem", "1")
+    project.output.makefile.add_CXX_flag("-DASSESS_RIEMANN_PROBLEM_KERNELS")
 
 project.constants.define_value("GAMMA", str(1.0))
 
@@ -187,6 +220,16 @@ benchmark_main_file = "../../kernel-benchmarks/KernelBenchmarksDiscontinuousGale
 os.system("cp {} KernelBenchmarksDiscontinuousGalerkinDSL-main.cpp".format(benchmark_main_file))
 
 project.output.makefile.add_CXX_flag("-DGRAV=9.81")
+
+# MLIR Integration Support
+if args.enable_mlir:
+    DSL.set_mlir_environment(project, "dg_cellIntegral", f"euler_{args.dimensions}d.mlir", args.dimensions, args.gpu)
+    project.output.makefile.add_CXX_flag("-DASSESS_MLIR_KERNELS")
+
+# CPP is enabled by default if MLIR is not enabled
+if args.enable_cpp or not args.enable_mlir:
+    project.output.makefile.add_CXX_flag("-DASSESS_CPP_KERNELS")
+
 project.build(make=True, make_clean_first=True, throw_away_data_after_build=True)
 
 print(project)

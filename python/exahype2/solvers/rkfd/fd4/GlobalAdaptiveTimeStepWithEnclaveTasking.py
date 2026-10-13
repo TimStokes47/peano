@@ -172,7 +172,7 @@ class GlobalAdaptiveTimeStepWithEnclaveTasking( SeparateSweepsWithEnclaveTasking
   @property
   def user_action_set_includes(self):
     return super(GlobalAdaptiveTimeStepWithEnclaveTasking, self).user_action_set_includes + """
-#include "kernels/FD4.h"
+#include "kernels/FD43d.h"
 """
 
   def add_entries_to_text_replacement_dictionary(self, d):

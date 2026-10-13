@@ -47,38 +47,7 @@ using OffloadableType = exahype2::Solver::Offloadable;
 // They can be called from within MLIR-generated GPU kernels
 #pragma omp declare target
 extern "C" {
-    void flux_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* F_ptr) {
-        double* Q = static_cast<double*>(Q_ptr);
-        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
-        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
-        double* F = static_cast<double*>(F_ptr);
-        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::flux(Q, *x, *h, t, dt, normal, F, OffloadableType::Yes);
-    }
-    
-    void nonconservativeProduct_bridge(void* Q_ptr, void* deltaQ_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
-        double* Q = static_cast<double*>(Q_ptr);
-        double* deltaQ = static_cast<double*>(deltaQ_ptr);
-        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
-        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
-        double* result = static_cast<double*>(result_ptr);
-        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::nonconservativeProduct(Q, deltaQ, *x, *h, t, dt, normal, result, OffloadableType::Yes);
-    }
-    
-    void sourceTerm_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, void* S_ptr) {
-        double* Q = static_cast<double*>(Q_ptr);
-        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
-        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
-        double* S = static_cast<double*>(S_ptr);
-        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::sourceTerm(Q, *x, *h, t, dt, S, OffloadableType::Yes);
-    }
-    
-    void maxEigenvalue_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
-        double* Q = static_cast<double*>(Q_ptr);
-        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
-        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
-        double* result = static_cast<double*>(result_ptr);
-        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::maxEigenvalue(Q, *x, *h, t, dt, normal, result, OffloadableType::Yes);
-    }
+    {{BRIDGE_FUNCTIONS}}
 }
 #pragma omp end declare target
 
@@ -91,18 +60,14 @@ extern "C" void {{KERNEL_NAME}}_gpu(
 
 extern "C" void {{KERNEL_NAME}}(
     MLIRCellData* patchData,
-    void (*flux_fn)(void*, void*, void*, double, double, int, void*),
-    void (*ncp_fn)(void*, void*, void*, void*, double, double, int, void*),
-    void (*source_fn)(void*, void*, void*, double, double, void*),
-    void (*maxeig_fn)(void*, void*, void*, double, double, int, void*)
+    {{EXTERN_FUNCTION_ARGUMENT_DEFINITIONS}}
+    //void (*maxeig_fn)(void*, void*, /*void*, */double, double, int, void*)
 );
 
 extern "C" void {{KERNEL_NAME}}_omp(
     MLIRCellData* patchData,
-    void (*flux_fn)(void*, void*, void*, double, double, int, void*),
-    void (*ncp_fn)(void*, void*, void*, void*, double, double, int, void*),
-    void (*source_fn)(void*, void*, void*, double, double, void*),
-    void (*maxeig_fn)(void*, void*, void*, double, double, int, void*)
+    {{EXTERN_FUNCTION_ARGUMENT_DEFINITIONS}}
+    //void (*maxeig_fn)(void*, void*, /*void*, */double, double, int, void*)
 );
 
 // Layout-aware conversion creating proper memref descriptors
@@ -214,21 +179,13 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     int64_t haloSize          = static_cast<int64_t>({{HALO_SIZE}});
     int64_t numUnknowns       = static_cast<int64_t>(NumberOfUnknowns + NumberOfAuxiliaryVariables);
     int64_t inputSizePerCell  = (volumes + 2*haloSize) * (volumes + 2*haloSize) 
-    #if Dimensions==3
-                                * (volumes + 2*haloSize) 
-    #endif
-                                * numUnknowns;
-    int64_t outputSizePerCell = volumes * volumes 
-    #if Dimensions==3
-    * volumes 
-    #endif
-    * numUnknowns;
+                                * (volumes + 2*haloSize) * numUnknowns;
+    int64_t outputSizePerCell = volumes * volumes * volumes * numUnknowns;
 
     // Allocate contiguous host memory 
-    //int64_t inputSize = totalCells * inputSizePerCell * sizeof(double);
-    //int64_t outputSize = totalCells * outputSizePerCell * sizeof(double);
-    double* qin_storage  = (double*)mgpuMemAlloc(sizeof(double) * totalCells * inputSizePerCell, nullptr, 0);
-    double* qout_storage = (double*)mgpuMemAlloc(sizeof(double) * totalCells * outputSizePerCell, nullptr, 0);
+    double* qin_storage  = new double[totalCells * inputSizePerCell];
+    double* qout_storage = new double[totalCells * outputSizePerCell]();
+
     // Copy scattered QIn patches into contiguous buffer
     for (int i = 0; i < totalCells; i++) {
         for (int j = 0; j < inputSizePerCell; j++) {
@@ -252,18 +209,9 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     mlir_data->QOut.strides[0] = outputSizePerCell;
     mlir_data->QOut.strides[1] = 1;
 
-    double** cellCentrePtr = (double**)mgpuMemAlloc(sizeof(double*) * totalCells, nullptr, 0);
+    double** cellCentrePtr = new double*[totalCells];
     for (int i = 0; i < totalCells; i++) {
-        #if Dimensions==2
-        cellCentrePtr[i] = (double*)mgpuMemAlloc(sizeof(double) * 2, nullptr, 0);
-        cellCentrePtr[i][0] = cellData->cellCentre[i](0);
-        cellCentrePtr[i][1] = cellData->cellCentre[i](1);
-        #else
-        cellCentrePtr[i] = (double*)mgpuMemAlloc(sizeof(double) * 3, nullptr, 0);
-        cellCentrePtr[i][0] = cellData->cellCentre[i](0);
-        cellCentrePtr[i][1] = cellData->cellCentre[i](1);
-        cellCentrePtr[i][2] = cellData->cellCentre[i](2);
-        #endif
+        cellCentrePtr[i] = (double*)&(cellData->cellCentre[i]);
     }
     mlir_data->cellCentre.allocated  = cellCentrePtr;
     mlir_data->cellCentre.aligned    = cellCentrePtr;
@@ -271,18 +219,9 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     mlir_data->cellCentre.sizes[0]   = totalCells;
     mlir_data->cellCentre.strides[0] = 1;
 
-    double** cellSizePtr = (double**)mgpuMemAlloc(sizeof(double*) * totalCells, nullptr, 0);
+    double** cellSizePtr = new double*[totalCells];
     for (int i = 0; i < totalCells; i++) {
-        #if Dimensions==2
-        cellSizePtr[i] = (double*)mgpuMemAlloc(sizeof(double) * 2, nullptr, 0);
-        cellSizePtr[i][0] = cellData->cellSize[i](0);
-        cellSizePtr[i][1] = cellData->cellSize[i](1);
-        #else
-        cellSizePtr[i] = (double*)mgpuMemAlloc(sizeof(double) * 3, nullptr, 0);
-        cellSizePtr[i][0] = cellData->cellSize[i](0);
-        cellSizePtr[i][1] = cellData->cellSize[i](1);
-        cellSizePtr[i][2] = cellData->cellSize[i](2);
-        #endif
+        cellSizePtr[i] = (double*)&(cellData->cellSize[i]);
     }
     mlir_data->cellSize.allocated  = cellSizePtr;
     mlir_data->cellSize.aligned    = cellSizePtr;
@@ -295,13 +234,9 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     mlir_data->t.offset     = 0;
     mlir_data->t.sizes[0]   = totalCells;
     mlir_data->t.strides[0] = 1;
-    
-    double* dtPtr = (double*)mgpuMemAlloc(sizeof(double) * totalCells, nullptr, 0);
-    for (int i = 0; i < totalCells; i++) {
-        dtPtr[i] = cellData->dt[i];
-    }
-    mlir_data->dt.allocated  = dtPtr;
-    mlir_data->dt.aligned    = dtPtr;
+
+    mlir_data->dt.allocated  = cellData->dt;
+    mlir_data->dt.aligned    = cellData->dt;
     mlir_data->dt.offset     = 0;
     mlir_data->dt.sizes[0]   = totalCells;
     mlir_data->dt.strides[0] = 1;
@@ -317,6 +252,7 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     mlir_data->targetDevice   = static_cast<int64_t>(cellData->targetDevice);
     mlir_data->maxEigenvalue  = cellData->maxEigenvalue;
     mlir_data->QOut_legacy    = nullptr;
+
 }
 #endif
 
@@ -332,27 +268,19 @@ void cleanupMLIRStruct(MLIRCellData* mlir_data) {
 #ifdef MLIR_GPU
 void cleanupMLIRStructGPU(MLIRCellData* mlir_data) {
     if (mlir_data->QIn.allocated != nullptr) {
-        mgpuMemFree((void*)mlir_data->QIn.allocated, nullptr);
-        //delete[] mlir_data->QIn.allocated;
+        delete[] mlir_data->QIn.allocated;
     }
-    
+
     if (mlir_data->QOut.allocated != nullptr) {
-        mgpuMemFree((void*)mlir_data->QOut.allocated, nullptr);
-        //delete[] mlir_data->QOut.allocated;
+        delete[] mlir_data->QOut.allocated;
     }
 
     if (mlir_data->cellCentre.allocated != nullptr) {
-        //delete[] static_cast<double**>(mlir_data->cellCentre.allocated);
-        mgpuMemFree((void*)mlir_data->cellCentre.allocated, nullptr);
-    }
-    
-    if (mlir_data->cellSize.allocated != nullptr) {
-        //delete[] static_cast<double**>(mlir_data->cellSize.allocated);
-        mgpuMemFree((void*)mlir_data->cellSize.allocated, nullptr);
+        delete[] static_cast<double**>(mlir_data->cellCentre.allocated);
     }
 
-    if (mlir_data->dt.allocated != nullptr) {
-        mgpuMemFree((void*)mlir_data->dt.allocated, nullptr);
+    if (mlir_data->cellSize.allocated != nullptr) {
+        delete[] static_cast<double**>(mlir_data->cellSize.allocated);
     }
 }
 #endif
@@ -385,29 +313,26 @@ void {{KERNEL_NAME}}_MLIR_wrapper(exahype2::CellData<double, double>* patchData,
     // Variables to track allocated memory for cleanup
     MLIRCellData mlir_data;  
     
-    try {
+    //try {
         // Convert to MLIR struct with contiguous memory
         convertToMLIRStruct(patchData, &mlir_data);
         
         int64_t totalCells = patchData->numberOfCells;
         int64_t numUnknowns = {{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}}::NumberOfUnknowns;
         
+
+        {{MEMREF_CONSTRUCTORS}}
+
         // Call MLIR-generated kernel
         if (use_omp) {
             {{KERNEL_NAME}}_omp(
                 &mlir_data,  
-                flux_bridge,
-                nonconservativeProduct_bridge,
-                sourceTerm_bridge,
-                maxEigenvalue_bridge
+                {{FUNCTION_ARGUMENTS}}
             );
         } else {
             {{KERNEL_NAME}}(
                 &mlir_data,  
-                flux_bridge,
-                nonconservativeProduct_bridge,
-                sourceTerm_bridge,
-                maxEigenvalue_bridge
+                {{FUNCTION_ARGUMENTS}}
             );
         }
 
@@ -424,9 +349,9 @@ void {{KERNEL_NAME}}_MLIR_wrapper(exahype2::CellData<double, double>* patchData,
             }
         }
         
-    } catch (...) {
-        std::cout << "WRAPPER: Exception caught in MLIR call" << std::endl;
-    }
+    //} catch (...) {
+    //    std::cout << "WRAPPER: Exception caught in MLIR call" << std::endl;
+    //}
     
     cleanupMLIRStruct(&mlir_data);
 }
@@ -472,13 +397,12 @@ void {{KERNEL_NAME}}Stateless<{{TEMPLATE_CALL}}>(
     MLIRCellData* patchData,
     tarch::timing::Measurement& measurement
 ) {
+    {{MEMREF_CONSTRUCTORS}}
+
     tarch::timing::Watch watch("{{KERNEL_NAMESPACE}}::mlir", "{{KERNEL_NAME}}Stateless", false, true);
     {{KERNEL_NAME}}(
         patchData,  
-        flux_bridge,
-        nonconservativeProduct_bridge,
-        sourceTerm_bridge,
-        maxEigenvalue_bridge
+        {{FUNCTION_ARGUMENTS}}
     );
     watch.stop();
     measurement.setValue(watch.getCalendarTime());
@@ -503,13 +427,12 @@ void {{KERNEL_NAME}}Stateless<{{TEMPLATE_CALL}}>(
     MLIRCellData* patchData,
     tarch::timing::Measurement& measurement
 ) {
+    {{MEMREF_CONSTRUCTORS}}
+
     tarch::timing::Watch watch("{{KERNEL_NAMESPACE}}::mlir", "{{KERNEL_NAME}}Stateless", false, true);
     {{KERNEL_NAME}}_omp(
         patchData,  
-        flux_bridge,
-        nonconservativeProduct_bridge,
-        sourceTerm_bridge,
-        maxEigenvalue_bridge
+        {{FUNCTION_ARGUMENTS}}
     );
     watch.stop();
     measurement.setValue(watch.getCalendarTime());

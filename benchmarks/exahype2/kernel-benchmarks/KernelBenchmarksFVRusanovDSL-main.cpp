@@ -198,6 +198,7 @@ void reportRuntime(
   ss << " |\n\t" << timingKernelLaunch.toString();
 
   logInfo("reportRuntime()", ss.str());
+  std::cout.flush();
 }
 
 

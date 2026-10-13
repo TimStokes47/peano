@@ -467,7 +467,7 @@ class CCZ4Solver_FV_GlobalAdaptiveTimeStepWithEnclaveTasking(
         patch_size,
         min_volume_h,
         max_volume_h,
-        pde_terms_without_state,
+        pde_terms_without_state
     ):
         """!
 
@@ -484,7 +484,7 @@ class CCZ4Solver_FV_GlobalAdaptiveTimeStepWithEnclaveTasking(
             min_volume_h=min_volume_h,
             max_volume_h=max_volume_h,
             time_step_relaxation=AbstractCCZ4Solver.Default_Time_Step_Size_Relaxation,
-            pde_terms_without_state=pde_terms_without_state,
+            pde_terms_without_state=pde_terms_without_state
         )
         self._add_standard_includes()
 
@@ -494,7 +494,7 @@ class CCZ4Solver_FV_GlobalAdaptiveTimeStepWithEnclaveTasking(
             flux=exahype2.solvers.PDETerms.None_Implementation,
             source_term=construct_FV_source_term(),
             refinement_criterion=exahype2.solvers.PDETerms.Empty_Implementation,
-            eigenvalues=construct_FV_eigenvalues(),
+            eigenvalues=construct_FV_eigenvalues()
         )
 
         self.postprocess_updated_patch += construct_FV_postprocessing_kernel()
@@ -1580,6 +1580,7 @@ class CCZ4Solver_RKDG_GlobalAdaptiveTimeStepWithEnclaveTasking(
             source_term=construct_DG_source_term(),
             refinement_criterion=exahype2.solvers.PDETerms.Empty_Implementation,
             eigenvalues=construct_DG_eigenvalues(),
+            point_source=exahype2.solvers.PDETerms.None_Implementation
         )
 
         self.postprocess_updated_cell_after_final_linear_combination += (

@@ -42,6 +42,7 @@ class UpdateCell(ReconstructPatchAndApplyFunctor):
       {{COMPUTE_TIME_STEP_SIZE}}
 
       if ({{PREDICATES[0]}}) {
+        #if defined(GPUOffloadingOMP)
         if (marker.willBeEnclaveCell() and {{DEVICE_RESIDENT_RK}}) {
           // The device memory for each cell is maintained across Runge-Kutta substeps to reduce the number of allocations and deallocations.
           // The deallocation takes place in ComputeFinalLinearCombination, which is the last step of a Runge-Kutta time step
@@ -54,6 +55,7 @@ class UpdateCell(ReconstructPatchAndApplyFunctor):
 
           omp_target_memcpy(fineGridCell{{SOLVER_NAME}}CellLabel.getDeviceMemoryAddress(), oldQWithHalo, enumeratorWithAuxiliaryVariablesOnReconstructedPatch.size() * sizeof(double), 0, 0, device, omp_get_initial_device());
         }
+        #endif
       }
       
       

@@ -39,10 +39,10 @@ def create_rusanov_kernel_definitions(patch_size, unknowns, auxiliary_variables,
 #endif
 """)
   
-  create_rusanov_kernel_definitions_for_function(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
-  create_rusanov_kernel_definitions_for_function(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
+  create_rusanov_kernel_definitions_for_function(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, "rusanov2d", patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
+  create_rusanov_kernel_definitions_for_function(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, "rusanov3d", patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
 
-def create_rusanov_kernel_definitions_for_function(function, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step):
+def create_rusanov_kernel_definitions_for_function(function, filename, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step):
   template_parameters = [DSL.SyntaxTree.Argument("NumberOfVolumesPerAxisInPatch", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
                          DSL.SyntaxTree.Argument("HaloSize", DSL.SyntaxTree.TInteger(), "applications::exahype2"),
                          DSL.SyntaxTree.Argument("NumberOfUnknowns", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
@@ -110,14 +110,67 @@ def create_rusanov_kernel_definitions_for_function(function, patch_size, unknown
   """
   d["TEMPLATE_VALUE_DEFINITIONS"] = jinja2.Template(template_value_definitions_jinja).render(**d)
 
+  bridge_functions_jinja = """
+    void flux_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* F_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* F = static_cast<double*>(F_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::flux(Q, *x, *h, t, dt, normal, F, OffloadableType::Yes);
+    }
+    
+    void nonconservativeProduct_bridge(void* Q_ptr, void* deltaQ_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        double* deltaQ = static_cast<double*>(deltaQ_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* result = static_cast<double*>(result_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::nonconservativeProduct(Q, deltaQ, *x, *h, t, dt, normal, result, OffloadableType::Yes);
+    }
+    
+    void sourceTerm_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, void* S_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* S = static_cast<double*>(S_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::sourceTerm(Q, *x, *h, t, dt, S, OffloadableType::Yes);
+    }
+    
+    void maxEigenvalue_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* result = static_cast<double*>(result_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::maxEigenvalue(Q, *x, *h, t, dt, normal, result, OffloadableType::Yes);
+    }
+"""
+  d["BRIDGE_FUNCTIONS"] = jinja2.Template(bridge_functions_jinja).render(**d)
+
+  d["EXTERN_FUNCTION_ARGUMENT_DEFINITIONS"] = """
+    void (*flux_fn)(void*, void*, void*, double, double, int, void*),
+    void (*ncp_fn)(void*, void*, void*, void*, double, double, int, void*),
+    void (*source_fn)(void*, void*, void*, double, double, void*),
+    void (*maxeig_fn)(void*, void*, void*, double, double, int, void*)
+"""
+  enabled_pde_terms = []
+  if flux_implementation is not None and flux_implementation != exahype2.solvers.PDETerms.None_Implementation:
+    enabled_pde_terms.append("EvaluateFlux")
+  if source_term_implementation is not None and source_term_implementation != exahype2.solvers.PDETerms.None_Implementation:
+    enabled_pde_terms.append("EvaluateSource")
+  if ncp_implementation is not None and ncp_implementation != exahype2.solvers.PDETerms.None_Implementation:
+    enabled_pde_terms.append("EvaluateNonconservativeProduct")
+  if compute_max_eigenvalue_of_next_time_step:
+    enabled_pde_terms.append("EvaluateMaximumEigenvalueAfterTimeStep")
+
   DSL.create_kernel_definitions(
     function,
     template_parameters,
     functor_arguments,
-    "rusanov3d",
+    filename,
     solver_includes,
     ["exahype2", "fv", "rusanov"],
-    d
+    d,
+    enabled_pde_terms
   )
 
 def create_compute_Riemann_kernel_for_Rusanov_dsl(flux_implementation,

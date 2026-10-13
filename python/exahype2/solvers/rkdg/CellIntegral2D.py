@@ -6,7 +6,7 @@ def cellIntegral(patchData: "CellData<double, double>&") -> "void":
     x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<2, double>")
 
     input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, DGOrder + 1], [0, DGOrder + 1], [0, N]], "patchData.QIn")
-    output = DataBlock([[0, NumberOfUnknowns], [0, DGOrder + 1], [0, DGOrder + 1], [0, N]], "patchData.QOut")
+    output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, DGOrder + 1], [0, DGOrder + 1], [0, N]], "patchData.QOut")
     
     output = 0.0
     mass_matrix_1d = DiagonalMatrix(DGOrder + 1, "SolverType::MassMatrixDiagonal1d")
