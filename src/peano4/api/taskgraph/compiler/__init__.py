@@ -23,3 +23,4 @@ Consult the description of @ref peano4.api.taskgraph.Task for details on how to 
 
 
 from . import Sequential
+from . import FuseSteps

@@ -9,6 +9,7 @@ project = exahype2.api.Project(
     directory=".",
     executable="smooth-convergence-test",
 )
+project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
 
 solver_name = "EulerFVSmooth"
 unknowns = 4
