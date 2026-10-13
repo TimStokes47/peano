@@ -14,7 +14,7 @@ from . import FuseSteps
 def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Step"]:
     """!
 
-    Task graph compiler which splits every cell task into a producer and a consumer (work in progress)
+    Task graph compiler which splits tasks writing cell data into a producer and a consumer (work in progress)
 
     You can use this task graph in your ExaHyPE 2 project through
 
@@ -29,8 +29,12 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
 
     ## Preamble
 
-    Every task working on a cell (Task.GridEntity.CELL) is replaced by two
-    tasks:
+    Every task which exclusively writes cell data is replaced by two tasks.
+    A task exclusively writes cell data if it declares at least one cell
+    submodel as WRITE or READ_AND_WRITE, but no face or vertex submodel as
+    WRITE or READ_AND_WRITE (@see _exclusively_writes_cell_data()). It may
+    read face or vertex data. All other tasks are kept as they are. The
+    two tasks are:
 
     1. The producer. For the time being, this is the original task, i.e.
        it holds the original action sets and data declarations.
@@ -41,7 +45,10 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     Every task that depended on the original task depends on the consumer
     instead. Producer and consumer are marked as non-fusable, i.e.
     FuseSteps never puts them into the same mesh traversal. A consumer
-    however might be fused with subsequent tasks.
+    however might be fused with subsequent tasks. In an ExaHyPE 2 setup,
+    for example, the initial condition yields a producer (the original
+    task) and a consumer, and the latter is fused with the subsequent
+    projection onto the faces.
 
     The preamble does not alter the graph passed in. It works on a copy of
     the graph's tasks.
@@ -80,6 +87,23 @@ def _copy_task(task: Task) -> Task:
     return result
 
 
+def _exclusively_writes_cell_data(task: Task) -> bool:
+    """!
+
+    True if task declares at least one cell submodel as WRITE or
+    READ_AND_WRITE, and no face or vertex submodel as WRITE or
+    READ_AND_WRITE. @see translate()
+
+    """
+    writing_accesses = (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE)
+    writes_cell_data = any(access in writing_accesses for access in task.cell_data_access.values())
+    writes_other_data = any(
+        access in writing_accesses
+        for access in list(task.face_data_access.values()) + list(task.vertex_data_access.values())
+    )
+    return writes_cell_data and not writes_other_data
+
+
 def _split_cell_tasks(graph: Graph):
     """!
 
@@ -94,7 +118,7 @@ def _split_cell_tasks(graph: Graph):
     consumer_of_task = {}
     for task in graph.tasks:
         producer_of_task[task] = _copy_task(task)
-        if task.entity == Task.GridEntity.CELL:
+        if _exclusively_writes_cell_data(task):
             consumer_of_task[task] = Task(name=f"{task.name} Consumer", entity=Task.GridEntity.CELL)
 
     result = Graph()
