@@ -150,7 +150,7 @@ class ComputeFinalLinearCombination(AbstractRKFDActionSet):
     super(ComputeFinalLinearCombination,self).__init__(solver)
     self.guard            = guard
     self._butcher_tableau = ButcherTableau(self._solver._rk_order)
-    self._device_resident_rk = solver._device_resident_rk
+    self._device_resident_rk = False#solver._device_resident_rk
     
 
   def get_body_of_operation(self,operation_name):

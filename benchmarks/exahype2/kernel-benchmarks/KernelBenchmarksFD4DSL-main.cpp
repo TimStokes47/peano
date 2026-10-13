@@ -10,7 +10,7 @@
 #include "repositories/SolverRepository.h"
 #include "repositories/StepRepository.h"
 
-#include "kernels/FD4.h"
+#include "kernels/FD43d.h"
 
 #include "peano4/peano.h"
 
@@ -195,6 +195,7 @@ void reportRuntime(
   ss << " |\n\t" << timingKernelLaunch.toString();
 
   logInfo("reportRuntime()", ss.str());
+  std::cout.flush();
 }
 
 

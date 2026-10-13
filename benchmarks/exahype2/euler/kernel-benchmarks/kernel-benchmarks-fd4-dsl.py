@@ -6,6 +6,7 @@ import argparse
 
 import peano4.api
 import exahype2
+import exahype2.dslhype as DSL
 
 parser = argparse.ArgumentParser(
     description="ExaHyPE 2 - Euler FD4 Kernel Benchmarking Script"
@@ -111,6 +112,75 @@ parser.add_argument(
     help="Enable CPP kernels",
 )
 parser.add_argument(
+    "--enable-memref-flattening",
+    dest="enable_memref_flattening",
+    action="store_true",
+    help="Enable CPP kernels",
+)
+parser.add_argument(
+    "--enable-function-inlining",
+    dest="enable_function_inlining",
+    action="store_true",
+    help="Enable inlining of Polygeist functions",
+)
+parser.add_argument(
+    "--enable-memory-reuse",
+    dest="enable_memory_reuse",
+    action="store_true",
+    help="Enable reuse of scratchpad memory allocations",
+)
+parser.add_argument(
+    "--enable-memory-fusion",
+    dest="enable_memory_fusion",
+    action="store_true",
+    help="Enable fusion of allocations into one",
+)
+parser.add_argument(
+    "--enable-loop-fusion",
+    dest="enable_loop_fusion",
+    action="store_true",
+    help="Enable fusion of loops with the same bounds",
+)
+parser.add_argument(
+    "--enable-imperfect-nested-loops-to-perfect",
+    dest="enable_imperfect_nested_loops_to_perfect",
+    action="store_true",
+    help="Enable conversion of imperfectly nested parallels into a perfectly nested parallels",
+)
+parser.add_argument(
+    "--enable-nested-parallel-ops-to-multidimensional",
+    dest="enable_nested_parallel_ops_to_multidimensional",
+    action="store_true",
+    help="Enable conversion of nested parallels into a single multidimensional operation",
+)
+parser.add_argument(
+    "--enable-omp-tasks",
+    dest="enable_omp_tasks",
+    action="store_true",
+    help="Enable use of OpenMP tasks as opposed to loop parallelism",
+)
+parser.add_argument(
+    "--omp-task-version",
+    choices=["task", "taskloop"],
+    default="taskloop"
+)
+parser.add_argument(
+    "--omp-single-region",
+    action="store_true",
+)
+parser.add_argument(
+    "--nested-parallel-count",
+    default=-1,
+    type=int,
+    help="Number of dimensions to use: 2 or 3. Conversion is enabled if the count is positive.",
+)
+parser.add_argument(
+    "-o",
+    default="KernelBenchmarksFD4DSL",
+    type=str,
+    help="Name of final application",
+)
+parser.add_argument(
     "-j",
     default=-1,
     type=int,
@@ -152,7 +222,7 @@ project = exahype2.Project(
     namespace=["benchmarks", "exahype2", "kernelbenchmarks"],
     project_name="KernelBenchmarksFD4DSL",
     directory=".",
-    executable=f"KernelBenchmarksFD4DSL.{args.build_mode}",
+    executable=f"{args.o}.{args.build_mode}",
 )
 project.add_solver(fd4_solver)
 
@@ -218,71 +288,27 @@ project.output.makefile.add_CXX_flag("-DGRAV=9.81")
 
 # MLIR Integration Support
 if args.enable_mlir:
-    print(f"Enabling MLIR kernel compilation support for {args.dimensions}D...")
-
-    # Set environment variable for dimension detection
-    import os
-    os.environ['MLIR_DIMENSIONS'] = str(args.dimensions)
-
-    # Add MLIR-specific files and flags
-    project.output.makefile.add_cpp_file("MLIRbridge.cpp")
-    project.output.makefile.add_CXX_flag("-DUSE_MLIR")
-    
-    # NOTE: As we are using LLVM toolings for MLIR, we link against LLVM's OpenMP library  
-    project.output.makefile.add_linker_flag("-lomp")   
-    project.output.makefile.add_linker_flag("-lomptarget") 
-    if args.gpu:
-      print("Enabling MLIR GPU kernel compilation support")
-      project.output.makefile.d["MLIR_GPU"] = True
-      project.output.makefile.add_CXX_flag("-DMLIR_GPU")
-      project.output.makefile.add_linker_flag("-ldl")
-      project.output.makefile.add_linker_flag("-pthread")
-
-      # NOTE: The current MLIR GPU linearization and lowering pipeline uses the base MLIR
-      #       but may use the OMP version in future. Update here, as appropriate
-      project.output.makefile.d["MLIR_SOURCES_GPU"] = f"fd4_{args.dimensions}d.mlir"
-      project.output.makefile.d["MLIR_LL_FILE_GPU"] = f"fd4_{args.dimensions}d_gpu.ll" 
-      project.output.makefile.d["MLIR_OBJECT_GPU"] = f"fd4_{args.dimensions}d_mlir_gpu.o"
-      
-      if project.output.makefile.d["GPU_VENDOR"] == "NVIDIA":
-        project.output.makefile.d["MLIR_GPU_NVIDIA"] = True
-        project.output.makefile.add_CXX_flag("-DMLIR_GPU_NVIDIA")
-        CUDA_HOME = os.path.dirname(subprocess.check_output("which nvcc", shell=True).decode().strip())
-        project.output.makefile.add_cpp_file("MLIRbridgeCUDAfunctions.cpp")
-        project.output.makefile.add_linker_flag("-lcuda")
-        project.output.makefile.add_linker_flag("-lcudart")
-        project.output.makefile.add_linker_flag("-lmlir_cuda_runtime")
-        project.output.makefile.add_linker_flag(f"-L{CUDA_HOME}/../targets/sbsa-linux/lib")
-        cuda_bridge_header_file = "../../../../python/exahype2/dslhype/MLIRbridgeCUDAfunctions.h"
-        cuda_bridge_file = "../../../../python/exahype2/dslhype/MLIRbridgeCUDAfunctions.cpp"
-        os.system("cp {} MLIRbridgeCUDAfunctions.h".format(cuda_bridge_header_file))
-        os.system("cp {} MLIRbridgeCUDAfunctions.cpp".format(cuda_bridge_file))
-      elif project.output.makefile.d["GPU_VENDOR"] == "AMD":
-        project.output.makefile.d["MLIR_GPU_AMD"] = True
-        project.output.makefile.add_CXX_flag("-DMLIR_GPU_AMD")
-        ROCM_HOME = os.path.dirname(subprocess.check_output("which hipcc", shell=True).decode().strip()) + "/.."
-        os.environ["ROCM_HOME"] = ROCM_HOME
-        project.output.makefile.add_cpp_file("MLIRbridgeHIPfunctions.cpp")
-        project.output.makefile.add_CXX_flag("-D__HIP_PLATFORM_AMD__")
-        project.output.makefile.add_linker_flag("-lamdhip64")
-        project.output.makefile.add_CXX_flag(f"-I{ROCM_HOME}/include")
-        project.output.makefile.add_linker_flag("-lmlir_rocm_runtime")
-        hip_bridge_header_file = "../../../../python/exahype2/dslhype/MLIRbridgeHIPfunctions.h"
-        hip_bridge_file = "../../../../python/exahype2/dslhype/MLIRbridgeHIPfunctions.cpp"
-        os.system("cp {} MLIRbridgeHIPfunctions.h".format(hip_bridge_header_file))
-        os.system("cp {} MLIRbridgeHIPfunctions.cpp".format(hip_bridge_file))
-      else:
-        raise RuntimeError("Unknown GPU vendor, please set it when configuring Peano with --with-gpu-vendor")
-        
-    project.output.makefile.d["MLIR_ENABLED"] = True
-    project.output.makefile.d["MLIR_PHYSICS_FILE"] = f"euler_physics_{args.dimensions}d.mlir"
-    project.output.makefile.d["MLIR_SOURCES"] = f"fd4_{args.dimensions}d.mlir"
-    project.output.makefile.d["MLIR_LL_FILE"] = f"fd4_{args.dimensions}d.ll" 
-    project.output.makefile.d["MLIR_OBJECT"] = f"fd4_{args.dimensions}d_mlir.o"
-    project.output.makefile.d["MLIR_SOURCES_OMP"] = f"fd4_{args.dimensions}d_omp.mlir"
-    project.output.makefile.d["MLIR_LL_FILE_OMP"] = f"fd4_{args.dimensions}d_omp.ll" 
-    project.output.makefile.d["MLIR_OBJECT_OMP"] = f"fd4_{args.dimensions}d_mlir_omp.o"
-
+    if args.enable_memory_reuse:
+        max_patch_size = (args.patch_size + 6) * (args.patch_size + 6)
+        if args.dimensions == 2:
+            max_patch_size = max_patch_size * 4
+        else:
+            max_patch_size = max_patch_size * 5 * (args.patch_size + 6)
+    else:
+        max_patch_size = -1
+    DSL.set_mlir_environment(project, "FD4", f"euler_physics_{args.dimensions}d.mlir", args.dimensions, args.gpu, 
+                            args.enable_memref_flattening, 
+                            args.enable_function_inlining, 
+                            args.nested_parallel_count, 
+                            args.enable_imperfect_nested_loops_to_perfect, 
+                            args.enable_nested_parallel_ops_to_multidimensional,
+                            args.enable_omp_tasks,
+                            args.omp_task_version,
+                            args.omp_single_region,
+                            max_patch_size,
+                            args.enable_memory_fusion,
+                            args.enable_loop_fusion
+    )
     project.output.makefile.add_CXX_flag("-DASSESS_MLIR_KERNELS")
 
 # CPP is enabled by default if MLIR is not enabled

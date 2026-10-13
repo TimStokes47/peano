@@ -1,5 +1,5 @@
 import ast_comments as ast, inspect
-from exahype2.dslhype import SyntaxTree
+import exahype2.dslhype.SyntaxTree as SyntaxTree
 import copy
 
 class Parser:
@@ -77,7 +77,6 @@ class Parser:
     def _parse_kronecker_product(self, product: ast.Call):
         lhs_matrix = self._parse_expression(product.args[0])
         rhs_matrix = self._parse_expression(product.args[1])
-
         if type(lhs_matrix.get_type()) is SyntaxTree.TDiagonalMatrix and type(rhs_matrix.get_type()) is SyntaxTree.TDiagonalMatrix:
             if type(lhs_matrix) is SyntaxTree.Name:
                 lhs_width = SyntaxTree.Name.variables[lhs_matrix.id]._width
@@ -136,7 +135,10 @@ class Parser:
                 return SyntaxTree.FaceDataBlock(iteration_range, internal, True, underlying_type=underlying_type) 
         elif type(constructor.args[1]) is ast.Constant:
             if type(constructor.args[1].value) is str:
-                internal = SyntaxTree.String(constructor.args[1].value)
+                if constructor.args[1].value.startswith("SolverType::") and SyntaxTree.FunctionDefinition._stateless == False:
+                    internal = SyntaxTree.String(constructor.args[1].value[len("SolverType::"):])
+                else:
+                    internal = SyntaxTree.String(constructor.args[1].value)
                 if not isFace:
                     if len(constructor.args) > 2:
                         return SyntaxTree.DataBlock(iteration_range, internal, False, underlying_type=SyntaxTree.String(constructor.args[2].value))
@@ -254,7 +256,7 @@ class Parser:
                 value._id = SyntaxTree.String(id)
                 return SyntaxTree.DiagonalMatrixConstructionFromKroneckerProduct(id, value)
             if type(value._internal) is SyntaxTree.String:
-                return None
+                return SyntaxTree.DiagonalMatrixConstructionFromExisting(id, value)
             return SyntaxTree.DiagonalMatrixConstructionFromValue(id, value)
         elif type(value) is SyntaxTree.Matrix:
             SyntaxTree.Name.variables.update({id: value})
@@ -289,16 +291,18 @@ class Parser:
             return self._parse_assignment_without_declaration(assignment)
 
     def _parse_if(self, statement: ast.If):
-        if_node = SyntaxTree.If(self._parse_expression(statement.test))
-        SyntaxTree.MemoryAllocation.memoryAllocated.append([])
+        assert(isinstance(statement.test, ast.Name))
+        test = statement.test.id
+        pde_term_is_in_use = test in self.enabled_pde_terms
 
-        for s in statement.body:
-            if_node.add_statement(self._parse_statement(s))
-        for allocation in SyntaxTree.MemoryAllocation.memoryAllocated[-1]:
-                if_node.add_statement(SyntaxTree.MemoryDeallocation(allocation))
+        if pde_term_is_in_use:
+            statements = []
+            for s in statement.body:
+                statements.append(self._parse_statement(s))
+            return statements
+        else:
+            return None
 
-        SyntaxTree.MemoryAllocation.memoryAllocated.pop()
-        return if_node
 
     def _parse_statement(self, statement: ast.Expr):  
         if type(statement) is ast.Assign:
@@ -334,21 +338,27 @@ class Parser:
         
         SyntaxTree.MemoryAllocation.memoryAllocated.append([])
         for statement in function.body:
-            parsed_function.add_statement(self._parse_statement(statement))
+            next_statement = self._parse_statement(statement)
+            if isinstance(next_statement, list):
+                for nested_statement in next_statement:
+                    parsed_function.add_statement(nested_statement)
+            elif next_statement is not None:
+                parsed_function.add_statement(next_statement)
+
         for allocation in SyntaxTree.MemoryAllocation.memoryAllocated[-1]:
             parsed_function.add_statement(SyntaxTree.MemoryDeallocation(allocation))
         SyntaxTree.MemoryAllocation.memoryAllocated.pop()
 
         return parsed_function
 
-    def parse(self, function, template_arguments, functor_arguments, namespace = [], stateless = False, use_accelerator = False, mlir_omp = False, use_memory_manager = False):
+    def parse(self, function, template_arguments, functor_arguments, namespace = [], enabled_pde_terms = [], stateless = False, use_accelerator = False, mlir_omp = False, use_memory_manager = False):
         SyntaxTree.Name.variables.clear()
         SyntaxTree.For._inuse_iteration_variables.clear()
         SyntaxTree.Node.use_accelerator = False
         SyntaxTree.Node.use_mlir_omp = mlir_omp
         SyntaxTree.Node.use_memory_manager = use_memory_manager
         #SyntaxTree.FunctionDefinition._syclDataToCopy.clear()
-
+        self.enabled_pde_terms = enabled_pde_terms
         source_code = inspect.getsource(function)
         
         module = ast.parse(source_code)

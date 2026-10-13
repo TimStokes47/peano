@@ -21,7 +21,7 @@ def clear_dg_kernel_file():
     file = open("kernels/dg.h", "w")
     file.close()
 
-def create_cell_integral_kernel_definitions(namespace):
+def create_cell_integral_kernel_definitions(namespace, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, point_source_implementation):
   if not os.path.exists("kernels"):
       os.makedirs("kernels")
   
@@ -32,11 +32,11 @@ def create_cell_integral_kernel_definitions(namespace):
 #include "dg_cellIntegral3d.h"
 #endif
 """)
-  
-  create_cell_integral_kernel_definitions_2d(namespace)
-  create_cell_integral_kernel_definitions_3d(namespace)
 
-def create_cell_integral_kernel_definitions_2d(namespace):
+  create_cell_integral_kernel_definitions_for_function(exahype2.solvers.rkdg.cellIntegral2d, "dg_cellIntegral2d", namespace, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, point_source_implementation)
+  create_cell_integral_kernel_definitions_for_function(exahype2.solvers.rkdg.cellIntegral3d, "dg_cellIntegral3d", namespace, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, point_source_implementation)
+
+def create_cell_integral_kernel_definitions_for_function(function, function_name, namespace, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, point_source_implementation):
   template_parameters = [DSL.SyntaxTree.Argument("DGOrder", DSL.SyntaxTree.TInteger()),
                          DSL.SyntaxTree.Argument("NumberOfUnknowns", DSL.SyntaxTree.TInteger()),
                          DSL.SyntaxTree.Argument("NumberOfAuxiliaryVariables", DSL.SyntaxTree.TInteger()),
@@ -45,39 +45,17 @@ def create_cell_integral_kernel_definitions_2d(namespace):
                         DSL.SyntaxTree.Argument("EvaluateSource", DSL.SyntaxTree.TBoolean()),
                         DSL.SyntaxTree.Argument("EvaluatePointSources", DSL.SyntaxTree.TBoolean())]
 
-  functor_arguments = [DSL.SyntaxTree.Argument("flux", DSL.SyntaxTree.TCustom("const Flux&")),
-                       DSL.SyntaxTree.Argument("nonconservativeProduct", DSL.SyntaxTree.TCustom("const NonConservativeProduct&")),
-                       DSL.SyntaxTree.Argument("sourceTerm", DSL.SyntaxTree.TCustom("const Source&")),
-                       DSL.SyntaxTree.Argument("pointSource", DSL.SyntaxTree.TCustom("const PointSources&")),
-                       DSL.SyntaxTree.Argument("getQuadraturePoint", DSL.SyntaxTree.TCustom("const QuadraturePoint&")),
-                       DSL.SyntaxTree.Argument("QuadraturePoints1d", DSL.SyntaxTree.TCustom("const double*")),
-                       DSL.SyntaxTree.Argument("MassMatrixDiagonal1d", DSL.SyntaxTree.TCustom("const double*")),
-                       DSL.SyntaxTree.Argument("StiffnessOperator1d", DSL.SyntaxTree.TCustom("const double*")),
-                       DSL.SyntaxTree.Argument("DerivativeOperator1d", DSL.SyntaxTree.TCustom("const double*"))]
+  functor_arguments = [DSL.SyntaxTree.Argument("flux", DSL.SyntaxTree.TCustom("const Flux&"), "(!llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()", is_function=True),
+                       DSL.SyntaxTree.Argument("nonconservativeProduct", DSL.SyntaxTree.TCustom("const NonConservativeProduct&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()", is_function=True),
+                       DSL.SyntaxTree.Argument("sourceTerm", DSL.SyntaxTree.TCustom("const Source&"), "(!llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()", is_function=True),
+                       DSL.SyntaxTree.Argument("pointSource", DSL.SyntaxTree.TCustom("const PointSources&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> (!llvm.ptr)", is_function=True),
+                       DSL.SyntaxTree.Argument("getQuadraturePoint", DSL.SyntaxTree.TCustom("const QuadraturePoint&"), "(index, index, !llvm.ptr, !llvm.ptr, i32, memref<?xf64>, !llvm.ptr) -> ()", is_function=True),
+                       DSL.SyntaxTree.Argument("QuadraturePoints1d", DSL.SyntaxTree.TCustom("const double*"), "!llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>"),
+                       DSL.SyntaxTree.Argument("MassMatrixDiagonal1d", DSL.SyntaxTree.TCustom("const double*"), "!llvm.ptr"),
+                       DSL.SyntaxTree.Argument("StiffnessOperator1d", DSL.SyntaxTree.TCustom("const double*"), "!llvm.ptr"),
+                       DSL.SyntaxTree.Argument("DerivativeOperator1d", DSL.SyntaxTree.TCustom("const double*"), "!llvm.ptr")]
 
-  dg_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkdg.cellIntegral2d, template_parameters, functor_arguments, ["exahype2", "dg", namespace], stateless=True)
-  dg_stateless_kernel = dg_stateless_tree.print_cpp()
-  dg_stateless_call_with_measurement = dg_stateless_tree.print_definition_with_timer()
-  dg_stateless_kernel_declaration = dg_stateless_tree.print_declaration()
-  dg_stateless_call_with_measurement_declaration = dg_stateless_tree.print_declaration_with_timer()
-
-  dg_stateless_omp_accelerator_tree = DSL.Parser().parse(exahype2.solvers.rkdg.cellIntegral2d, template_parameters, functor_arguments, ["exahype2", "dg", "omp", namespace], stateless=True, use_accelerator=True)
-  dg_stateless_omp_accelerator_kernel = dg_stateless_omp_accelerator_tree.print_omp()
-  dg_stateless_omp_accelerator_call_with_measurement = dg_stateless_omp_accelerator_tree.print_definition_with_timer()
-  dg_stateless_omp_accelerator_kernel_declaration = dg_stateless_omp_accelerator_tree.print_declaration()
-  dg_stateless_omp_accelerator_call_with_measurement_declaration = dg_stateless_omp_accelerator_tree.print_declaration_with_timer()
-
-  dg_tree = DSL.Parser().parse(exahype2.solvers.rkdg.cellIntegral2d, template_parameters, functor_arguments, ["exahype2", "dg", namespace], stateless=False)
-  dg_kernel = dg_tree.print_cpp()
-  dg_call_with_measurement = dg_tree.print_definition_with_timer()
-  dg_kernel_declaration = dg_tree.print_declaration()
-  dg_call_with_measurement_declaration = dg_tree.print_declaration_with_timer()
-
-  if not os.path.exists("kernels"):
-      os.makedirs("kernels")
-  
-  file = open("kernels/dg_cellIntegral2d.h", "w")
-  file.write(f"""#pragma once
+  solver_includes = """#pragma once
 #include "exahype2/CellData.h"
 #include "exahype2/VolumeIndex.h"
 #include "exahype2/dg/DGUtils.h"
@@ -85,104 +63,112 @@ def create_cell_integral_kernel_definitions_2d(namespace):
 #include "peano4/utils/Loop.h"
 #include "tarch/timing/Measurement.h"
 #include "tarch/timing/Watch.h"
-#include <fstream>
-             
-{dg_stateless_kernel_declaration}
-{dg_stateless_call_with_measurement_declaration}
+"""
+  d = {}
+  d["KERNEL_NAMESPACE"] = f"exahype2::dg::{namespace}"
+  d["SOLVER"] = "DG"
+  d["SOLVER_CLASS"] = "DG"
+  d["KERNEL_NAME"] = "cellIntegral"
+  d["SOLVER_INCLUDES"] = solver_includes
+  d["SOLVER_CLASS_NAMESPACE"] = "benchmarks::exahype2::kernelbenchmarks"
 
-{dg_stateless_omp_accelerator_kernel_declaration}
-{dg_stateless_omp_accelerator_call_with_measurement_declaration}
+  d["PATCH_SIZE"] = patch_size
+  d["NUMBER_OF_UNKNOWNS"] = unknowns
+  d["NUMBER_OF_AUXILIARY_VARIABLES"] = auxiliary_variables
+  d["FLUX_IMPLEMENTATION"] = flux_implementation
+  d["NCP_IMPLEMENTATION"] = ncp_implementation
+  d["SOURCE_TERM_IMPLEMENTATION"] = source_term_implementation
+  d["POINT_SOURCE_IMPLEMENTATION"] = point_source_implementation
+  d["HALO_SIZE"] = 0
 
-{dg_kernel_declaration}
-{dg_call_with_measurement_declaration}
+  template_call_jinja = """
+      {{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}},
+      {{PATCH_SIZE}},
+      {{NUMBER_OF_UNKNOWNS}},
+      {{NUMBER_OF_AUXILIARY_VARIABLES}},
+      {% if FLUX_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
+      {% if NCP_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
+      {% if SOURCE_TERM_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
+      {% if POINT_SOURCE_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %}
+    """
+  d["TEMPLATE_CALL"] = jinja2.Template(template_call_jinja).render(**d)
 
-#include "dg_cellIntegral2d.cpph"
-""")
-  file.close()
+  template_value_definitions_jinja = """
+    int DGOrder = {{PATCH_SIZE}};
+    int NumberOfUnknowns = {{NUMBER_OF_UNKNOWNS}};
+    int NumberOfAuxiliaryVariables = {{NUMBER_OF_AUXILIARY_VARIABLES}};
+    bool EvaluateFlux = {% if FLUX_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %};
+    bool EvaluateNonconservativeProduct = {% if NCP_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %};
+    bool EvaluateSource = {% if SOURCE_TERM_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %};
+    bool EvaluatePointSource = {% if POINT_SOURCE_IMPLEMENTATION==False %} false {% else %} true {% endif %};
+  """
+  d["TEMPLATE_VALUE_DEFINITIONS"] = jinja2.Template(template_value_definitions_jinja).render(**d)
 
-  file = open("kernels/dg_cellIntegral2d.cpph", "w")
-  file.write("#include \"exahype2/dg/DGUtils.h\"\n")
-  file.write(dg_stateless_kernel)
-  file.write(dg_stateless_call_with_measurement)
-  file.write(dg_stateless_omp_accelerator_kernel)
-  file.write(dg_stateless_omp_accelerator_call_with_measurement)
-  file.write(dg_kernel)
-  file.write(dg_call_with_measurement)
-  file.close()
+  bridge_functions_jinja = """
+    void flux_bridge(void* Q_ptr, void* x_ptr, double t, double dt, int normal, void* F_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        double* F = static_cast<double*>(F_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::flux(Q, *x, t, dt, normal, F, OffloadableType::Yes);
+    }
+    
+    void nonconservativeProduct_bridge(void* Q_ptr, void* deltaQ_ptr, void* x_ptr, double t, double dt, int normal, void* result_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        double* deltaQ = static_cast<double*>(deltaQ_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        double* result = static_cast<double*>(result_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::nonconservativeProduct(Q, deltaQ, *x, t, dt, normal, result, OffloadableType::Yes);
+    }
+    
+    void sourceTerm_bridge(void* Q_ptr, void* x_ptr, double t, double dt, void* S_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        double* S = static_cast<double*>(S_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::sourceTerm(Q, *x, t, dt, S, OffloadableType::Yes);
+    }
+    
+    void pointSource_bridge(void* Q_ptr, void* x_ptr, void* h_ptr,double t, double dt, void* S_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* S = static_cast<double*>(S_ptr);
+        //{{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::pointSource(Q, *x, *h, t, dt, S, OffloadableType::Yes);
+    }
 
-def create_cell_integral_kernel_definitions_3d(namespace):
-  template_parameters = [DSL.SyntaxTree.Argument("DGOrder", DSL.SyntaxTree.TInteger()),
-                         DSL.SyntaxTree.Argument("NumberOfUnknowns", DSL.SyntaxTree.TInteger()),
-                         DSL.SyntaxTree.Argument("NumberOfAuxiliaryVariables", DSL.SyntaxTree.TInteger()),
-                         DSL.SyntaxTree.Argument("EvaluateFlux", DSL.SyntaxTree.TBoolean()),
-                        DSL.SyntaxTree.Argument("EvaluateNonconservativeProduct", DSL.SyntaxTree.TBoolean()),
-                        DSL.SyntaxTree.Argument("EvaluateSource", DSL.SyntaxTree.TBoolean()),
-                        DSL.SyntaxTree.Argument("EvaluatePointSources", DSL.SyntaxTree.TBoolean())]
+    void getQuadraturePoint_bridge(int i, int j, void* x_ptr, void* h_ptr, int polynomialOrder, void* quadraturePoints1D_ptr, void* result_ptr) {
+        auto index = tarch::la::Vector<Dimensions, int>{i, j};
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* positions = static_cast<double*>(result_ptr);
+        positions[0] = 1.0;
+        //{{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::getQuadraturePoint(index, *x, *h, {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::DGOrder, {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::QuadraturePoints1d, positions, OffloadableType::Yes);
+    }
+"""
+  d["BRIDGE_FUNCTIONS"] = jinja2.Template(bridge_functions_jinja).render(**d)
 
-  functor_arguments = [DSL.SyntaxTree.Argument("flux", DSL.SyntaxTree.TCustom("const Flux&")),
-                       DSL.SyntaxTree.Argument("nonconservativeProduct", DSL.SyntaxTree.TCustom("const NonConservativeProduct&")),
-                       DSL.SyntaxTree.Argument("sourceTerm", DSL.SyntaxTree.TCustom("const Source&")),
-                       DSL.SyntaxTree.Argument("pointSource", DSL.SyntaxTree.TCustom("const PointSources&")),
-                       DSL.SyntaxTree.Argument("getQuadraturePoint", DSL.SyntaxTree.TCustom("const QuadraturePoint&")),
-                       DSL.SyntaxTree.Argument("QuadraturePoints1d", DSL.SyntaxTree.TCustom("const double*")),
-                       DSL.SyntaxTree.Argument("MassMatrixDiagonal1d", DSL.SyntaxTree.TCustom("const double*")),
-                       DSL.SyntaxTree.Argument("StiffnessOperator1d", DSL.SyntaxTree.TCustom("const double*")),
-                       DSL.SyntaxTree.Argument("DerivativeOperator1d", DSL.SyntaxTree.TCustom("const double*"))]
-  
-  dg_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkdg.cellIntegral3d, template_parameters, functor_arguments, ["exahype2", "dg", namespace], stateless=True)
-  dg_stateless_kernel = dg_stateless_tree.print_cpp()
-  dg_stateless_call_with_measurement = dg_stateless_tree.print_definition_with_timer()
-  dg_stateless_kernel_declaration = dg_stateless_tree.print_declaration()
-  dg_stateless_call_with_measurement_declaration = dg_stateless_tree.print_declaration_with_timer()
+  d["EXTERN_FUNCTION_ARGUMENT_DEFINITIONS"] = """
+    void (*flux_fn)(void*, void*, double, double, int, void*),
+    void (*ncp_fn)(void*, void*, void*, double, double, int, void*),
+    void (*source_fn)(void*, void*, double, double, void*),
+    void (*point_source_fn)(void*, void*, void*, double, double, void*),
+    void (*quadrature_points_fn)(int, int, void*, void*, int, void*, void*),
+    MemRefDescriptor1D,
+    MemRefDescriptor1D,
+    MemRefDescriptor1D,
+    MemRefDescriptor1D
+"""
 
-  dg_stateless_omp_accelerator_tree = DSL.Parser().parse(exahype2.solvers.rkdg.cellIntegral3d, template_parameters, functor_arguments, ["exahype2", "dg", "omp", namespace], stateless=True, use_accelerator=True)
-  dg_stateless_omp_accelerator_kernel = dg_stateless_omp_accelerator_tree.print_cpp()
-  dg_stateless_omp_accelerator_call_with_measurement = dg_stateless_omp_accelerator_tree.print_definition_with_timer()
-  dg_stateless_omp_accelerator_kernel_declaration = dg_stateless_omp_accelerator_tree.print_declaration()
-  dg_stateless_omp_accelerator_call_with_measurement_declaration = dg_stateless_omp_accelerator_tree.print_declaration_with_timer()
-
-  dg_tree = DSL.Parser().parse(exahype2.solvers.rkdg.cellIntegral3d, template_parameters, functor_arguments, ["exahype2", "dg", namespace], stateless=False)
-  dg_kernel = dg_tree.print_cpp()
-  dg_call_with_measurement = dg_tree.print_definition_with_timer()
-  dg_kernel_declaration = dg_tree.print_declaration()
-  dg_call_with_measurement_declaration = dg_tree.print_declaration_with_timer()
-
-  if not os.path.exists("kernels"):
-      os.makedirs("kernels")
-  
-  file = open("kernels/dg_cellIntegral3d.h", "w")
-  file.write(f"""#pragma once
-#include "exahype2/CellData.h"
-#include "exahype2/VolumeIndex.h"
-#include "exahype2/dg/DGUtils.h"
-#include "exahype2/dg/Functors.h"
-#include "peano4/utils/Loop.h"
-#include "tarch/timing/Measurement.h"
-#include "tarch/timing/Watch.h"
-#include <fstream>
-             
-{dg_stateless_kernel_declaration}
-{dg_stateless_call_with_measurement_declaration}
-
-{dg_stateless_omp_accelerator_kernel_declaration}
-{dg_stateless_omp_accelerator_call_with_measurement_declaration}
-
-{dg_kernel_declaration}
-{dg_call_with_measurement_declaration}
-
-#include "dg_cellIntegral3d.cpph"
-""")
-  file.close()
-
-  file = open("kernels/dg_cellIntegral3d.cpph", "w")
-  file.write("#include \"exahype2/dg/DGUtils.h\"\n")
-  file.write(dg_stateless_kernel)
-  file.write(dg_stateless_call_with_measurement)
-  file.write(dg_stateless_omp_accelerator_kernel)
-  file.write(dg_stateless_omp_accelerator_call_with_measurement)
-  file.write(dg_kernel)
-  file.write(dg_call_with_measurement)
-  file.close()
+  DSL.create_kernel_definitions(
+    function,
+    template_parameters,
+    functor_arguments,
+    function_name,
+    solver_includes,
+    ["exahype2", "dg", namespace],
+    d,
+    [],
+    use_mlir=False
+  )
 
 def create_abstract_solver_declarations(
     flux_implementation,
