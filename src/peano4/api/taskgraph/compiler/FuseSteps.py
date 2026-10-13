@@ -61,7 +61,10 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     the action sets according to their descend_invocation_order: a
     reconstruction with a higher descend_invocation_order would then
     overtake the update of the subsequent task. The descend_invocation_order
-    is applied (stably) only among the action sets of one task.
+    is applied (stably) only among the action sets of one task. The
+    resulting invocation order, including which action sets run in
+    parallel, is recorded in the step's action_set_numbers - @see
+    _create_step().
 
     A submodel used by several tasks of a fused step is declared once on
     the step. Its qualifier is merged from the tasks' qualifiers: TEMPORARY
@@ -129,10 +132,10 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
             and current_group is not None
             and lowest_entity >= highest_entity_of_current_group
         ):
-            current_group += node
+            current_group.append(node)
             highest_entity_of_current_group = max(highest_entity_of_current_group, highest_entity)
         else:
-            current_group = list(node)
+            current_group = [node]
             highest_entity_of_current_group = highest_entity
             groups.append(current_group)
         if is_repeating:
@@ -194,12 +197,23 @@ def _merge_data_access(accesses: List["Task.DataAccess"]) -> "Task.DataAccess":
     return Task.DataAccess.TEMPORARY
 
 
-def _create_step(tasks: List[Task], identifier: str) -> "peano4.api.solversteps.Step":
+def _create_step(nodes: List[List[Task]], identifier: str) -> "peano4.api.solversteps.Step":
     """!
 
-    Create one step from a group of fused tasks. @see translate()
+    Create one step from a group of fused nodes. @see translate()
+
+    Every node is a list of tasks: either a single task, or several tasks
+    from one layer of the task graph which can run in parallel.
+
+    Besides the action sets, the step is also given an attribute
+    action_set_numbers which holds one invocation number per action set
+    (starting at 1). Action sets that are invoked one after the other have
+    increasing numbers, whereas all action sets of one parallel node share
+    the same number. This attribute is purely used for reporting (@see
+    peano4.api.taskgraph.compiler.ReportCompiledStepSequence).
 
     """
+    tasks = [task for node in nodes for task in node]
     step = peano4.api.solversteps.Step(
         name=f"{identifier}_" + "__".join(_task_name(task) for task in tasks),
         add_user_defined_actions=False,
@@ -221,7 +235,17 @@ def _create_step(tasks: List[Task], identifier: str) -> "peano4.api.solversteps.
             use(submodel)
             step_access[submodel] = _merge_data_access(accesses)
 
-    for task in tasks:
-        step.action_sets += sorted(task.action_sets, key=lambda action_set: action_set.descend_invocation_order)
+    step.action_set_numbers = []
+    number = 0
+    for node in nodes:
+        is_parallel = len(node) > 1
+        if is_parallel:
+            number += 1
+        for task in node:
+            for action_set in sorted(task.action_sets, key=lambda action_set: action_set.descend_invocation_order):
+                if not is_parallel:
+                    number += 1
+                step.action_sets.append(action_set)
+                step.action_set_numbers.append(number)
 
     return step

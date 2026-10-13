@@ -17,11 +17,17 @@ def report_compiled_step_sequence(
 
     Meant to be called right after a compiler (@see
     peano4.api.taskgraph.compiler.Sequential.translate) has derived its
-    Observer sequence and run
+    Observer sequence. Note that
     peano4.api.taskgraph.compiler.PropagateUseStatements.propagate_use_statements()
-    on it, so what gets reported is the actually-final use_cell()/
-    use_face()/use_vertex() declarations, not just what the originating
-    Tasks declared directly.
+    runs as postprocessing after the compiler, i.e. any use_cell()/
+    use_face()/use_vertex() declarations it adds later on are not part of
+    this report.
+
+    Each step's action sets are listed as an enumerated list in the order
+    in which they are invoked ("<number>. do / <name>"). Action sets that
+    run in parallel share the same number and are marked as
+    "(in parallel)" - @see _action_set_numbers() for where these numbers
+    come from.
 
     Dispatches on peano4.api.Logger().verbosity exactly like
     Graph.log_as_text()/visualise() do: LoggerVerbosity.TEXT logs a plain
@@ -31,7 +37,8 @@ def report_compiled_step_sequence(
     diagram style as Graph.visualise() - a left-to-right chain of states
     (one per step, in sequence order, since a compiled sequence has no
     dependency structure left to lay out - it already is the order),
-    listing each step's action sets as "do / <name>" lines and the
+    listing each step's action sets as enumerated "<number>. do / <name>"
+    lines and the
     cell/face/vertex submodels it uses as "cell / <name> [<qualifier>]",
     "face / <name> [<qualifier>]", "vertex / <name> [<qualifier>]" lines -
     <qualifier> being the originating Task's Task.DataAccess
@@ -68,6 +75,49 @@ def _submodel_label(submodel, access) -> str:
     return f"{submodel.name} [{qualifier.name}]" if qualifier is not None else submodel.name
 
 
+def _action_set_numbers(step) -> List[int]:
+    """!
+    One invocation number per action set of step, starting at 1. Action
+    sets with the same number run in parallel.
+
+    A compiler can hand over these numbers explicitly through an attribute
+    action_set_numbers on the step (@see
+    peano4.api.taskgraph.compiler.FuseSteps). Otherwise, we derive them
+    from the action sets' parallel flags (@see
+    peano4.api.solversteps.ActionSet): consecutive action sets which are
+    all labelled as parallel share one number, every other action set gets
+    a number of its own.
+    """
+    numbers = getattr(step, "action_set_numbers", None)
+    if numbers is not None and len(numbers) == len(step.action_sets):
+        return list(numbers)
+
+    numbers = []
+    number = 0
+    for index, action_set in enumerate(step.action_sets):
+        continues_parallel_group = index > 0 and action_set.parallel and step.action_sets[index - 1].parallel
+        if not continues_parallel_group:
+            number += 1
+        numbers.append(number)
+    return numbers
+
+
+def _action_set_lines(step) -> List[str]:
+    """!
+    Enumerated list of the step's action sets in invocation order, i.e.
+    "<number>. do / <name>". Action sets that run in parallel share the
+    same number and are explicitly marked as running in parallel.
+    """
+    numbers = _action_set_numbers(step)
+    lines = []
+    for action_set, number in zip(step.action_sets, numbers):
+        line = f"{number}. do / {action_set.get_action_set_name()}"
+        if numbers.count(number) > 1:
+            line += " (in parallel)"
+        lines.append(line)
+    return lines
+
+
 def _log_compiled_step_sequence_as_text(steps, title: str) -> None:
     if not steps:
         peano4.api.Logger().log(f"Compiled task graph '{title}' is empty.")
@@ -76,8 +126,8 @@ def _log_compiled_step_sequence_as_text(steps, title: str) -> None:
     lines = [f"Compiled task graph '{title}':"]
     for step in steps:
         lines.append(f"- {step.name}")
-        for action_set in step.action_sets:
-            lines.append(f"    do / {action_set.get_action_set_name()}")
+        for line in _action_set_lines(step):
+            lines.append(f"    {line}")
         for kind, submodels, access in (
             ("cell", step.cell_data, step.cell_data_access),
             ("face", step.face_data, step.face_data_access),
@@ -124,7 +174,7 @@ def _visualise_compiled_step_sequence(steps, title: str) -> None:
     PADDING = 0.5
 
     def activity_lines(step):
-        lines = [f"do / {action_set.get_action_set_name()}" for action_set in step.action_sets]
+        lines = _action_set_lines(step)
         for kind, submodels, access in (
             ("cell", step.cell_data, step.cell_data_access),
             ("face", step.face_data, step.face_data_access),
