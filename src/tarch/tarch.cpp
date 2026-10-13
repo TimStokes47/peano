@@ -79,9 +79,6 @@ int tarch::getTotalMemory(MemoryUsageFormat format) {
 }
 
 int tarch::getFreeMemory(MemoryUsageFormat format) {
-  // Platforms without sysinfo (e.g. macOS): ask the VM subsystem how many pages
-  // are free. This matches what the Linux branch reports, as sysinfo's freeram
-  // likewise counts only genuinely free memory and excludes the page cache.
   unsigned int freePages = 0;
   size_t       length    = sizeof(freePages);
 
@@ -128,11 +125,6 @@ int tarch::getMemoryUsage(MemoryUsageFormat format) {
 
   std::size_t rawInput = atol(pCh);
 #else
-  // Platforms without /proc (e.g. macOS): fall back to the resident set size
-  // reported by getrusage. Note: on macOS ru_maxrss is expressed in bytes, which
-  // matches convertMemorySize()'s byte-based conversion. Returning a non-zero
-  // estimate is essential because callers such as the load-balancing strategies
-  // divide by this value.
   std::size_t rawInput = 0;
   struct rusage usage{};
   if (0 == getrusage(RUSAGE_SELF, &usage)) {
