@@ -36,8 +36,9 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     read face or vertex data. All other tasks are kept as they are. The
     two tasks are:
 
-    1. The producer. For the time being, this is the original task, i.e.
-       it holds the original action sets and data declarations.
+    1. The producer, named after the original task plus "Producer". It
+       inherits all action sets and data declarations of the original
+       task.
     2. The consumer, named after the original task plus "Consumer". It
        works on cells, too, depends on the producer and, for the time
        being, holds neither action sets nor data declarations.
@@ -46,9 +47,8 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     instead. Producer and consumer are marked as non-fusable, i.e.
     FuseSteps never puts them into the same mesh traversal. A consumer
     however might be fused with subsequent tasks. In an ExaHyPE 2 setup,
-    for example, the initial condition yields a producer (the original
-    task) and a consumer, and the latter is fused with the subsequent
-    projection onto the faces.
+    for example, the initial condition yields a producer and a consumer,
+    and the latter is fused with the subsequent projection onto the faces.
 
     The preamble does not alter the graph passed in. It works on a copy of
     the graph's tasks.
@@ -119,6 +119,7 @@ def _split_cell_tasks(graph: Graph):
     for task in graph.tasks:
         producer_of_task[task] = _copy_task(task)
         if _exclusively_writes_cell_data(task):
+            producer_of_task[task].name = f"{task.name} Producer"
             consumer_of_task[task] = Task(name=f"{task.name} Consumer", entity=Task.GridEntity.CELL)
 
     result = Graph()
