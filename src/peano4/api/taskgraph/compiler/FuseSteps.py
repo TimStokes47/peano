@@ -13,6 +13,7 @@ from .ReportCompiledStepSequence import report_compiled_step_sequence
 def translate(
     graph: Graph,
     identifier: str,
+    peano_project: "peano4.api.Project",
     non_fusable_task_pairs: Optional[List[Tuple[Task, Task]]] = None,
 ) -> List["peano4.api.solversteps.Step"]:
     """!
@@ -97,6 +98,9 @@ def translate(
       Identifies which of the surrounding project's algorithmic phases this
       graph belongs to (e.g. "SetupSimulation", "TimeStep", "Plot") and
       prefixes every generated Observer's name.
+
+    peano_project: peano4.api.Project
+      Not used by this compiler. @see peano4.api.taskgraph.compiler
 
     non_fusable_task_pairs: [(peano4.api.taskgraph.Task, peano4.api.taskgraph.Task)]
       Pairs of tasks of graph which must not end up in the same traversal.

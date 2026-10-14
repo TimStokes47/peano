@@ -525,7 +525,7 @@ def test_distances_count_fused_steps_not_tasks():
     task_a.use_cell(submodel, WRITE)
     task_d.use_cell(submodel, READ_AND_DISCARD)
 
-    steps = FuseSteps.translate(graph, "Test")
+    steps = FuseSteps.translate(graph, "Test", None)
     assert [step.name for step in steps] == ["Test_A", "Test_B__C", "Test_D"]
 
     changed = propagate_use_statements([steps])

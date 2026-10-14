@@ -482,9 +482,9 @@ thus appreciate any citation of the original release paper
         # observers (aka Peano grid traversals) which the code should
         # run through for a given phase.
         #
-        setup_simulation_steps = self.compiler(setup_simulation, "SetupSimulation")
-        time_step_steps        = self.compiler(time_step, "TimeStep")
-        plot_steps             = self.compiler(plot, "Plot")
+        setup_simulation_steps = self.compiler(setup_simulation, "SetupSimulation", peano_project)
+        time_step_steps        = self.compiler(time_step, "TimeStep", peano_project)
+        plot_steps             = self.compiler(plot, "Plot", peano_project)
 
         #
         # Setup runs once, as a prequel to both time stepping and plotting;

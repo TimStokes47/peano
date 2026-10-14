@@ -10,7 +10,7 @@ from ..Task import Task
 from .ReportCompiledStepSequence import report_compiled_step_sequence
 
 
-def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Step"]:
+def translate(graph: Graph, identifier: str, peano_project: "peano4.api.Project") -> List["peano4.api.solversteps.Step"]:
     """!
 
     Simplest possible task graph compiler
@@ -57,6 +57,9 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
       generated Observer's name is prefixed with this identifier, joined by
       an underscore, so Observers coming from different phases never clash
       even if their tasks happen to share a name.
+
+    peano_project: peano4.api.Project
+      Not used by this compiler. @see peano4.api.taskgraph.compiler
 
     @return [peano4.api.solversteps.Step]
       One Observer per task, ordered so that every task's Observer comes

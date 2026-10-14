@@ -3,15 +3,24 @@
 import copy
 from typing import List
 
+import dastgen2
+
 import peano4.api
+import peano4.api.datamodel
 import peano4.api.solversteps
 
 from ..Graph import Graph
 from ..Task import Task
 from . import FuseSteps
+from . import Sequential
 
 
-def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Step"]:
+def translate(
+    graph: Graph,
+    identifier: str,
+    peano_project: "peano4.api.Project",
+    use_fusion: bool = False,
+) -> List["peano4.api.solversteps.Step"]:
     """!
 
     Task graph compiler which splits tasks writing cell data into a producer and a consumer (work in progress)
@@ -22,10 +31,19 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     project.compiler = peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This compiler is a strict extension of
-    @ref peano4.api.taskgraph.compiler.FuseSteps.translate(): it adds a
-    preamble which rewrites the task graph, and then hands the rewritten
-    graph over to the fusion compiler.
+    This compiler adds a preamble which rewrites the task graph, and then
+    hands the rewritten graph over to either
+    @ref peano4.api.taskgraph.compiler.Sequential.translate() (default) or
+    @ref peano4.api.taskgraph.compiler.FuseSteps.translate(). To use the
+    latter, set the flag use_fusion:
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    import functools
+    project.compiler = functools.partial(
+      peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate,
+      use_fusion=True,
+    )
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     ## Preamble
 
@@ -40,18 +58,32 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
        inherits all action sets and data declarations of the original
        task.
     2. The consumer, named after the original task plus "Consumer". It
-       works on cells, too, depends on the producer and, for the time
-       being, holds neither action sets nor data declarations.
+       works on cells, too, and depends on the producer. For the time
+       being, it holds no action sets. However, it declares every cell
+       submodel that the producer writes (WRITE or READ_AND_WRITE) as
+       READ_AND_WRITE.
 
     Every task that depended on the original task depends on the consumer
-    instead. Producer and consumer are marked as non-fusable, i.e.
-    FuseSteps never puts them into the same mesh traversal. A consumer
-    however might be fused with subsequent tasks. In an ExaHyPE 2 setup,
-    for example, the initial condition yields a producer and a consumer,
-    and the latter is fused with the subsequent projection onto the faces.
+    instead. Producer and consumer are marked as non-fusable, i.e. if we
+    use FuseSteps, it never puts them into the same mesh traversal. A
+    consumer however might be fused with subsequent tasks. In an ExaHyPE 2
+    setup, for example, the initial condition yields a producer and a
+    consumer, and the latter is fused with the subsequent projection onto
+    the faces.
 
     The preamble does not alter the graph passed in. It works on a copy of
     the graph's tasks.
+
+    ## Task labels
+
+    If the preamble identifies at least one producer-consumer pair and a
+    peano_project is given, the compiler furthermore adds a new cell data
+    type <identifier>_TaskLabels to the project's data model. It is
+    modelled via DaStGen2 and holds one integer per producer-consumer pair.
+    The integer's name is the CamelCase version of the original task's
+    name followed by TaskNumber, e.g. EulerFVSmoothInitialConditionTaskNumber
+    (@see _task_number_attribute_name()). For the time being, no step uses
+    these labels.
 
     graph: peano4.api.taskgraph.Graph
       The task graph to compile. Assumed to be acyclic.
@@ -59,12 +91,54 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     identifier: str
       @see peano4.api.taskgraph.compiler.FuseSteps.translate()
 
+    peano_project: peano4.api.Project
+      Project the task labels are added to. If None, no task labels are
+      added.
+
+    use_fusion: bool
+      If True, hand the rewritten graph over to FuseSteps, otherwise to
+      Sequential.
+
     @return [peano4.api.solversteps.Step]
       @see peano4.api.taskgraph.compiler.FuseSteps.translate()
 
     """
-    producer_consumer_graph, non_fusable_task_pairs = _split_cell_tasks(graph)
-    return FuseSteps.translate(producer_consumer_graph, identifier, non_fusable_task_pairs)
+    producer_consumer_graph, non_fusable_task_pairs, split_tasks = _split_cell_tasks(graph)
+
+    if peano_project is not None and split_tasks:
+        peano_project.datamodel.add_cell(_create_task_labels(identifier, split_tasks))
+
+    if use_fusion:
+        return FuseSteps.translate(producer_consumer_graph, identifier, peano_project, non_fusable_task_pairs)
+    else:
+        return Sequential.translate(producer_consumer_graph, identifier, peano_project)
+
+
+def _task_number_attribute_name(task: Task) -> str:
+    """!
+
+    CamelCase version of the task's name followed by TaskNumber. Words are
+    separated by whitespace or underscores, and only the first letter of
+    each word is capitalised, so existing camel case and acronyms are
+    preserved. "EulerFVSmooth_Update cell" for example becomes
+    EulerFVSmoothUpdateCellTaskNumber.
+
+    """
+    words = task.name.replace("_", " ").split()
+    return "".join(word[:1].upper() + word[1:] for word in words) + "TaskNumber"
+
+
+def _create_task_labels(identifier: str, split_tasks: List[Task]) -> "peano4.api.datamodel.DaStGen2":
+    """!
+
+    Create the DaStGen2 cell data type <identifier>_TaskLabels with one
+    integer per split task. @see translate()
+
+    """
+    task_labels = peano4.api.datamodel.DaStGen2(f"{identifier}_TaskLabels")
+    for task in split_tasks:
+        task_labels.data.add_attribute(dastgen2.attributes.Integer(name=_task_number_attribute_name(task)))
+    return task_labels
 
 
 def _copy_task(task: Task) -> Task:
@@ -109,9 +183,9 @@ def _split_cell_tasks(graph: Graph):
 
     Build the producer-consumer graph. @see translate()
 
-    @return (peano4.api.taskgraph.Graph, [(Task, Task)])
-      The new graph and the list of (producer, consumer) pairs, which must
-      not be fused.
+    @return (peano4.api.taskgraph.Graph, [(Task, Task)], [Task])
+      The new graph, the list of (producer, consumer) pairs, which must not
+      be fused, and the list of original tasks that have been split.
 
     """
     producer_of_task = {}
@@ -120,7 +194,11 @@ def _split_cell_tasks(graph: Graph):
         producer_of_task[task] = _copy_task(task)
         if _exclusively_writes_cell_data(task):
             producer_of_task[task].name = f"{task.name} Producer"
-            consumer_of_task[task] = Task(name=f"{task.name} Consumer", entity=Task.GridEntity.CELL)
+            consumer = Task(name=f"{task.name} Consumer", entity=Task.GridEntity.CELL)
+            for submodel in task.cell_data:
+                if task.cell_data_access[submodel] in (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE):
+                    consumer.use_cell(submodel, Task.DataAccess.READ_AND_WRITE)
+            consumer_of_task[task] = consumer
 
     result = Graph()
     non_fusable_task_pairs = []
@@ -137,4 +215,5 @@ def _split_cell_tasks(graph: Graph):
             result.add_task(consumer)
             non_fusable_task_pairs.append((producer, consumer))
 
-    return result, non_fusable_task_pairs
+    split_tasks = [task for task in graph.tasks if task in consumer_of_task]
+    return result, non_fusable_task_pairs, split_tasks
