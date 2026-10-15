@@ -30,32 +30,30 @@ class RollOverUpdatedFace(ActionSet):
     """
 
     TemplateHandleFace = jinja2.Template("""
-    if ( {{GUARD}} ) {
-      const int normal = marker.getSelectedFaceNumber() % Dimensions;
+    const int normal = marker.getSelectedFaceNumber() % Dimensions;
 
-      logTraceInWith2Arguments( "touchFaceLastTime(...)---RollOverUpdatedFace", marker.toString(), normal );
+    logTraceInWith2Arguments( "touchFaceLastTime(...)---RollOverUpdatedFace", marker.toString(), normal );
 
-      ::exahype2::fv::copyHalfOfHalo(
-        {{UNKNOWNS}},
-        {{DOFS_PER_AXIS}},
-        {{OVERLAP}},
-        normal,
-        false,    // left half
-        {{UPDATE_ACCESSOR}}.value,
-        {{CURRENT_TIME_STEP_ACCESSOR}}.value
-      );
-      ::exahype2::fv::copyHalfOfHalo(
-        {{UNKNOWNS}},
-        {{DOFS_PER_AXIS}},
-        {{OVERLAP}},
-        normal,
-        true,    // right half
-        {{UPDATE_ACCESSOR}}.value,
-        {{CURRENT_TIME_STEP_ACCESSOR}}.value
-      );
+    ::exahype2::fv::copyHalfOfHalo(
+      {{UNKNOWNS}},
+      {{DOFS_PER_AXIS}},
+      {{OVERLAP}},
+      normal,
+      false,    // left half
+      {{UPDATE_ACCESSOR}}.value,
+      {{CURRENT_TIME_STEP_ACCESSOR}}.value
+    );
+    ::exahype2::fv::copyHalfOfHalo(
+      {{UNKNOWNS}},
+      {{DOFS_PER_AXIS}},
+      {{OVERLAP}},
+      normal,
+      true,    // right half
+      {{UPDATE_ACCESSOR}}.value,
+      {{CURRENT_TIME_STEP_ACCESSOR}}.value
+    );
 
-      logTraceOut( "touchFaceLastTime(...)---RollOverUpdatedFace" );
-    }
+    logTraceOut( "touchFaceLastTime(...)---RollOverUpdatedFace" );
 """)
 
     def __init__(self, patch_overlap_current_time_step, patch_overlap_update, guard, includes):
@@ -99,6 +97,11 @@ class RollOverUpdatedFace(ActionSet):
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
             result = self.TemplateHandleFace.render(**self.d)
         return result
+
+    def get_guard_of_operation(self, operation_name):
+        if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
+            return self.d["GUARD"]
+        return "true"
 
     def get_action_set_name(self):
         return __name__.replace(".py", "").replace(".", "_")
