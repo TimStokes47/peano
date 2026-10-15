@@ -44,8 +44,8 @@ project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
 
 
 
-build_mode = peano4.api.output.CompileMode.RELEASE
-# build_mode = peano4.api.output.CompileMode.DEBUG
+# build_mode = peano4.api.output.CompileMode.RELEASE
+build_mode = peano4.api.output.CompileMode.DEBUG
 project.set_global_simulation_parameters(
     dimensions=dimensions,
     offset=[-0.1, -0.1],
