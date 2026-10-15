@@ -37,7 +37,7 @@ def translate(
 
     1. **Entity order.** Each grid sweep first does something with the
        vertices, then with the faces, then with the cells (@ref
-       Task.GridEntity, whose values follow exactly this order). A task that
+       peano4.api.taskgraph.Task.Task.GridEntity, whose values follow exactly this order). A task that
        works on a face can therefore be followed by a task working on a face
        or a cell within the same traversal, but a task working on a vertex
        has to go into the next traversal. In general, a node can be appended
@@ -52,7 +52,7 @@ def translate(
        same traversal reads or writes the very same submodel, a cell might
        see the submodel before or after a neighbouring cell has already
        altered it, depending on the traversal order. Such tasks are never
-       fused (@ref _have_conflicting_data()). Cell data are not shared
+       fused (@ref peano4.api.taskgraph.compiler.FuseSteps._have_conflicting_data()). Cell data are not shared
        between cells and hence do not constrain the fusion. TEMPORARY uses
        are ignored. This constraint is conservative: it relies only on the
        Task.DataAccess qualifiers and does not know that a task might for
@@ -80,7 +80,7 @@ def translate(
        (constraint 4). In this case, they start a new node. A node might
        work on several grid entities. If a node holds more than one task,
        every action set of these tasks is labelled as parallel (@ref
-       peano4.api.solversteps.ActionSet.parallel), i.e. they may be invoked
+       peano4.api.solversteps.ActionSet.ActionSet.parallel), i.e. they may be invoked
        concurrently.
     3. The resulting sequence of nodes is fused greedily into traversals:
        a node is appended to the current traversal if constraints 1 to 4
@@ -133,13 +133,13 @@ def translate(
     is applied (stably) only among the action sets of one task. The
     resulting invocation order, including which action sets run in
     parallel, is recorded in the step's action_set_numbers - @ref
-    _create_step().
+    peano4.api.taskgraph.compiler.FuseSteps._create_step().
 
     A submodel used by several tasks of a fused step is declared once on
     the step. Its qualifier is merged from the tasks' qualifiers: TEMPORARY
     uses are ignored, the step loads the submodel if the first remaining
     use reads it, and stores it if the last remaining use writes it -
-    @ref _merge_data_access().
+    @ref peano4.api.taskgraph.compiler.FuseSteps._merge_data_access().
 
     propagate_use_statements() is not invoked here. It is a postprocessing
     step called outside of the translation.
@@ -252,7 +252,7 @@ def _have_conflicting_data(tasks: List[Task], further_tasks: List[Task]) -> bool
     True if one of the tasks writes a face or vertex submodel (WRITE or
     READ_AND_WRITE) which one of the further_tasks reads or writes
     (READ_AND_DISCARD, WRITE or READ_AND_WRITE), or vice versa. Cell data
-    and TEMPORARY uses are ignored. @ref translate()
+    and TEMPORARY uses are ignored. @ref peano4.api.taskgraph.compiler.FuseSteps.translate()
 
     """
     writing_accesses = (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE)
@@ -324,7 +324,7 @@ def _merge_data_access(accesses: List["Task.DataAccess"]) -> "Task.DataAccess":
 def _create_step(nodes: List[List[Task]], identifier: str) -> "peano4.api.solversteps.Step":
     """!
 
-    Create one step from a group of fused nodes. @ref translate()
+    Create one step from a group of fused nodes. @ref peano4.api.taskgraph.compiler.FuseSteps.translate()
 
     Every node is a list of tasks: either a single task, or several tasks
     from one layer of the task graph which can run in parallel.

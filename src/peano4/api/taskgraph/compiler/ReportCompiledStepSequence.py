@@ -26,7 +26,7 @@ def report_compiled_step_sequence(
     Each step's action sets are listed as an enumerated list in the order
     in which they are invoked ("<number>. do / <name>"). Action sets that
     run in parallel share the same number and are marked as
-    "(in parallel)" - @ref _action_set_numbers() for where these numbers
+    "(in parallel)" - @ref peano4.api.taskgraph.compiler.ReportCompiledStepSequence._action_set_numbers() for where these numbers
     come from.
 
     Dispatches on peano4.api.Logger().verbosity exactly like
