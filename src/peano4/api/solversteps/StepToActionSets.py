@@ -36,11 +36,6 @@ class StepToActionSets(object):
       new_action_set = peano4.api.output.ActionSet(
         action_set_name, self.step.project.namespace + [ subnamespace ], self.step.project.subdirectory + subnamespace, action_set
       )
-
-      # Make the generated class known to the action set, so other action
-      # sets can derive from it (@ref peano4.api.solversteps.ActionSet.ActionSet.get_base_class())
-      action_set.generated_class_name  = "::" + "::".join( self.step.project.namespace + [ subnamespace, action_set_name ] )
-      action_set.generated_header_file = self.step.project.subdirectory + subnamespace + "/" + action_set_name + ".h"
  
       for i in self.step.vertex_data:
         new_action_set.include_files.append( i.subdirectory + "vertexdata/" + i.name + ".h" )    

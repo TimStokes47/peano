@@ -178,22 +178,6 @@ class ActionSet(object):
     def get_static_initialisations(self, full_qualified_classname):
         return ""
 
-    def get_base_class(self):
-        """!
-
-        Return the fully qualified name of the C++ base class or None
-
-        By default, a generated action set has no base class. If this routine
-        returns a class name, the generated class derives publicly from this
-        class, and the generated constructor passes the tree number on to the
-        base class' constructor. The base class hence has to be a generated
-        action set itself. Attributes of generated action sets are protected,
-        so the derived class can access them. If you return a base class,
-        you have to make get_includes() include its header.
-
-        """
-        return None
-
     @abstractmethod
     def get_destructor_body(self):
         return "// @todo Should be overwritten\n"
