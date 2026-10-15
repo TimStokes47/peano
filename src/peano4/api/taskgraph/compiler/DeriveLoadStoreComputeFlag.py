@@ -153,7 +153,7 @@ def derive_load_store_compute_flag(steps: List["peano4.api.solversteps.Step"]) -
     what was asked for; the missing operator is a separate, outstanding
     C++-side gap.
 
-    steps: [peano4.api.solversteps.Step]
+    @param steps: [peano4.api.solversteps.Step]
       Every compiled Step to consider, across every algorithmic phase (e.g.
       setup_simulation_steps + time_step_steps + plot_steps) - has to be
       the full set the surrounding project will actually run, so every

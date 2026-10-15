@@ -47,18 +47,18 @@ def translate(graph: Graph, identifier: str, peano_project: "peano4.api.Project"
     in the same style as Graph.visualise() under
     LoggerVerbosity.VISUALISATION.
 
-    graph: peano4.api.taskgraph.Graph
+    @param graph: peano4.api.taskgraph.Graph
       The task graph to linearise. Assumed to be acyclic - translate() does
       not check for cycles and will recurse indefinitely on one.
 
-    identifier: str
+    @param identifier: str
       Identifies which of the surrounding project's algorithmic phases this
       graph belongs to (e.g. "SetupSimulation", "TimeStep", "Plot"). Every
       generated Observer's name is prefixed with this identifier, joined by
       an underscore, so Observers coming from different phases never clash
       even if their tasks happen to share a name.
 
-    peano_project: peano4.api.Project
+    @param peano_project: peano4.api.Project
       Not used by this compiler. @ref peano4.api.taskgraph.compiler
 
     @return [peano4.api.solversteps.Step]

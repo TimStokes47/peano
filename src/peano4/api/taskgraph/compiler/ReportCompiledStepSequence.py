@@ -51,11 +51,11 @@ def report_compiled_step_sequence(
     initial/final pseudostates. Neither happens (this call is then a
     no-op) under any other verbosity.
 
-    steps: [peano4.api.solversteps.Step]
+    @param steps: [peano4.api.solversteps.Step]
       The compiled sequence to report on, exactly as the compiler is about
       to return it.
 
-    title: str
+    @param title: str
       Used as-is as the text report's heading / the flow chart's title.
 
     """

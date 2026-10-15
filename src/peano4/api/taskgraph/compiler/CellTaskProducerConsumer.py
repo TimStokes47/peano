@@ -85,17 +85,17 @@ def translate(
     (@ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._task_number_attribute_name()). For the time being, no step uses
     these labels.
 
-    graph: peano4.api.taskgraph.Graph
+    @param graph: peano4.api.taskgraph.Graph
       The task graph to compile. Assumed to be acyclic.
 
-    identifier: str
+    @param identifier: str
       @ref peano4.api.taskgraph.compiler.FuseSteps.translate()
 
-    peano_project: peano4.api.Project
+    @param peano_project: peano4.api.Project
       Project the task labels are added to. If None, no task labels are
       added.
 
-    use_fusion: bool
+    @param use_fusion: bool
       If True, hand the rewritten graph over to FuseSteps, otherwise to
       Sequential.
 

@@ -146,14 +146,14 @@ def propagate_use_statements(
     task-graph machinery, e.g. plotted from C++ code this Python layer does
     not see).
 
-    sequences: [[peano4.api.solversteps.Step]]
+    @param sequences: [[peano4.api.solversteps.Step]]
       Every step sequence to consider, typically the outcome of one
       compiler call per task graph. A sequence has to be listed here to be
       analysed at all, whether or not it appears in edges (a sequence with
       no edges is simply analysed on its own). The steps are modified in
       place.
 
-    edges: [([peano4.api.solversteps.Step], [peano4.api.solversteps.Step])]
+    @param edges: [([peano4.api.solversteps.Step], [peano4.api.solversteps.Step])]
       Declares which sequences may run immediately after which other ones -
       each (predecessor, successor) pair means "successor's first step may
       immediately follow predecessor's last step". Sequences are
@@ -263,11 +263,21 @@ def _upgrade_writes_immediately_following_read_and_write(
     READ_AND_WRITE predecessor, which explicitly asked for its value to
     survive, triggers the upgrade.
 
-    steps_of_sequence, edges: the sequences and edges handed over to
-      propagate_use_statements(), each sequence identified by its index.
+    @param steps_of_sequence: Dict[int, [peano4.api.solversteps.Step]]
+      The sequences handed over to propagate_use_statements(), each
+      sequence identified by its index.
 
-    attribute_name, access_attribute_name: which kind of submodel
-      (cell/face/vertex) to analyse.
+    @param edges: [(int, int)]
+      The edges handed over to propagate_use_statements(), translated into
+      pairs of sequence indices.
+
+    @param attribute_name: str
+      Which kind of submodel (cell_data, face_data or vertex_data) to
+      analyse.
+
+    @param access_attribute_name: str
+      The access dictionary matching attribute_name (cell_data_access,
+      face_data_access or vertex_data_access).
 
     @return bool
       True if this pass upgraded at least one declaration.
