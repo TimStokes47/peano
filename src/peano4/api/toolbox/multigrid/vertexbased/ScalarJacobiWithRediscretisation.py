@@ -85,28 +85,26 @@ class ScalarJacobiWithRediscretisation(ActionSet):
 
   
   Template_TouchCellFirstTime = """
-  if ({{GUARD}}) {
-    const tarch::la::Vector<ThreePowerD,double> stencil = toolbox::finiteelements::getLaplacian(
-      marker.h(), 1.0
-    );
-    const toolbox::finiteelements::ElementWiseAssemblyMatrix A = toolbox::finiteelements::getElementWiseAssemblyMatrix(
-      stencil
-    );
+  const tarch::la::Vector<ThreePowerD,double> stencil = toolbox::finiteelements::getLaplacian(
+    marker.h(), 1.0
+  );
+  const toolbox::finiteelements::ElementWiseAssemblyMatrix A = toolbox::finiteelements::getElementWiseAssemblyMatrix(
+    stencil
+  );
 
-    tarch::la::Vector<TwoPowerD,double> u;
-    for (int i=0; i<TwoPowerD; i++) {
-      u(i) = fineGridVertices{{UNKNOWN}}(i).{{UNKNOWN_GETTER}}();
-    }
-
-    tarch::la::Vector<TwoPowerD,double> r = A * u;
-  
-    for (int i=0; i<TwoPowerD; i++) {
-      fineGridVertices{{UNKNOWN}}(i).{{RESIDUAL_SETTER}}(
-        fineGridVertices{{UNKNOWN}}(i).{{RESIDUAL_GETTER}}() + r(i)
-      );
-    }
+  tarch::la::Vector<TwoPowerD,double> u;
+  for (int i=0; i<TwoPowerD; i++) {
+    u(i) = fineGridVertices{{UNKNOWN}}(i).{{UNKNOWN_GETTER}}();
   }
-"""  
+
+  tarch::la::Vector<TwoPowerD,double> r = A * u;
+
+  for (int i=0; i<TwoPowerD; i++) {
+    fineGridVertices{{UNKNOWN}}(i).{{RESIDUAL_SETTER}}(
+      fineGridVertices{{UNKNOWN}}(i).{{RESIDUAL_GETTER}}() + r(i)
+    );
+  }
+"""
 
 
   Template_UpdateValue = """
@@ -179,6 +177,12 @@ logTraceIn( "touchVertexLastTime()" );
 logTraceOut( "touchVertexLastTime()" );
 """
     return result
+
+
+  def get_guard_of_operation(self,operation_name):
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+      return self.d[ "GUARD" ]
+    return "true"
 
 
   def get_attributes(self):

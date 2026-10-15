@@ -226,17 +226,20 @@ class UpdateCellAndComputeGlobalTimeStep(AbstractFVActionSet):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             result = f"""
-  if ({self.guard}) {{
-    double timeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStamp();
-    double timeStepSize = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize();
-    ::exahype2::CellData patchData(fineGridCell{self._solver._patch_with_halo.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch.name}.value);
-    {self._solver.compute_kernel_call}
+  double timeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStamp();
+  double timeStepSize = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize();
+  ::exahype2::CellData patchData(fineGridCell{self._solver._patch_with_halo.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch.name}.value);
+  {self._solver.compute_kernel_call}
 
-    tarch::multicore::Lock lock(_semaphore);
-    _maximumEigenvalue = std::max(patchData.maxEigenvalue[0], _maximumEigenvalue);
-  }}
+  tarch::multicore::Lock lock(_semaphore);
+  _maximumEigenvalue = std::max(patchData.maxEigenvalue[0], _maximumEigenvalue);
 """
         return result
+
+    def get_guard_of_operation(self, operation_name):
+        if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            return self.guard
+        return "true"
 
     def get_action_set_name(self):
         return __name__.replace(".py", "").replace(".", "_")
