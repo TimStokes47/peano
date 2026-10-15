@@ -158,7 +158,14 @@ def translate(
     The labels furthermore hold a static tarch::multicore::TaskEnumerator
     (getTaskEnumerator()), from which the producers take their task numbers
     and to which the consumers return them. The producer declares the task
-    labels as WRITE, the consumer as READ_AND_WRITE.
+    labels as WRITE, the consumer as READ_AND_DISCARD: The producer sets
+    the label in every sweep, whether it spawns a task or not, so the
+    consumer's reset does not have to be kept. If the consumer declared
+    READ_AND_WRITE, a fused producer step that directly follows a consumer
+    would read the labels, too
+    (@ref peano4.api.taskgraph.compiler.PropagateUseStatements), and the
+    labels would be relayed through steps of other phases which run before
+    the labels are ever stored.
 
     @param graph: peano4.api.taskgraph.Graph
       The task graph to compile. Assumed to be acyclic.
@@ -524,6 +531,10 @@ def _spawn_tasks(split_tasks, task_labels: "peano4.api.datamodel.DaStGen2"):
 
         if previous_task_number_attribute_name is not None:
             producer.use_cell(task_labels, Task.DataAccess.WRITE)
-            consumer.use_cell(task_labels, Task.DataAccess.READ_AND_WRITE)
+            # The consumer only reads the label. Its reset to NoNumber is not
+            # needed downstream, as every producer sets the label in each
+            # sweep. Declaring READ_AND_WRITE would make the labels persist
+            # into the next producer and, through it, into unrelated steps.
+            consumer.use_cell(task_labels, Task.DataAccess.READ_AND_DISCARD)
 
     return number_of_task_numbers
