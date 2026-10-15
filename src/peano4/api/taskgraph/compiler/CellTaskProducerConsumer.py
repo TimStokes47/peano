@@ -107,20 +107,29 @@ def translate(
       are not preserved from the producer's sweep to the consumer's sweep.
 
     The spawned tasks outlive touchCellFirstTime(). The compiler therefore
-    warns about constructs which are not safe within a task. Every warning
-    has to be accepted or the generation is aborted
+    warns about constructs which might not be safe within a task. It does
+    not inspect the code but only searches the generated C++ text for the
+    names of data and attributes, i.e. the warnings state that a task
+    might access something. Every warning names the generator which
+    realises the data in question and suggests a fix. It has to be
+    accepted or the generation is aborted
     (@ref peano4.api.Logger.Logger.warn_and_confirm()):
 
-    - The task body accesses cell data which is held in a native array
-      (@ref peano4.api.datamodel.PatchToDoubleArray) rather than via a
-      smart pointer. The task copies the whole array, and writes to the copy
-      are lost.
-    - The task body accesses vertex, face or coarse grid data. The
-      enumerators hold pointers into Peano's stacks, which are invalid
-      once touchCellFirstTime() has terminated.
-    - The task body or a moved event uses a non-static attribute of the
-      action set. The task accesses an object which is destroyed after the
-      producer's mesh traversal, and the moved events see a new object.
+    - The task body might access cell data which is not held via a smart
+      pointer, e.g. via @ref peano4.api.datamodel.PatchToDoubleArray or
+      @ref peano4.api.datamodel.PatchToDoubleArrayOnHeap. The task copies
+      the data, and writes to the copy are lost. The fix is a smart-pointer
+      generator such as
+      @ref peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer.
+      Heap-based generators do not suffice, as they deep-copy their data
+      whenever Peano copies an object.
+    - The task body might access vertex, face or coarse grid data via an
+      enumerator. The enumerators hold pointers to the objects on Peano's
+      stacks, which are invalid once touchCellFirstTime() has terminated.
+      This holds even if the data is held via smart pointers.
+    - The task body or a moved event might use a non-static attribute of
+      the action set. The task accesses an object which is destroyed after
+      the producer's mesh traversal, and the moved events see a new object.
     - An action set of the producer has to be modified by the user
       (@ref peano4.api.solversteps.ActionSet.ActionSet.user_should_modify_template()).
       Such a producer is not altered, i.e. it spawns no tasks.
@@ -283,29 +292,88 @@ def _non_static_attribute_names(attributes: str) -> List[str]:
     return result
 
 
+def _generator_name(submodel) -> str:
+    """!
+
+    Name of the generator class which realises the submodel in C++.
+
+    """
+    generator = getattr(submodel, "generator", None)
+    return "no generator" if generator is None else type(generator).__name__
+
+
+def _is_held_via_smart_pointer(submodel) -> bool:
+    """!
+
+    True if the submodel's generator holds the data via a smart pointer,
+    i.e. if copies of a C++ object share the data rather than cloning it.
+
+    """
+    return "SmartPointer" in _generator_name(submodel)
+
+
+_SMART_POINTER_HINT = (
+    "Realise the data via a smart-pointer generator, e.g. peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer. "
+    "Heap-based generators such as peano4.api.datamodel.PatchToDoubleArrayOnHeap do not suffice, as they deep-copy "
+    "their data whenever an object is copied, and Peano copies the objects when it moves them between its stacks."
+)
+
+
 def _warn_about_unsafe_task(task: Task, action_set_index: int, action_set: "peano4.api.solversteps.ActionSet", task_body: str):
     """!
 
-    Issue the warnings about task bodies and moved events which are not
-    safe. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate()
+    Issue the warnings about task bodies and moved events which might not
+    be safe. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate()
+
+    We do not inspect the code. We only search the generated C++ text for
+    the names of data and attributes, i.e. the warnings say that a task
+    might access something.
 
     """
     logger = peano4.api.Logger()
     description = f"action set {action_set_index} ({action_set.get_action_set_name()}) of task {task.name}"
 
     for submodel in task.cell_data:
-        if type(submodel.generator) is peano4.api.datamodel.PatchToDoubleArray and f"fineGridCell{submodel.name}" in task_body:
+        if f"fineGridCell{submodel.name}" in task_body and not _is_held_via_smart_pointer(submodel):
             logger.warn_and_confirm(
-                f"The touchCellFirstTime() task of {description} accesses cell data {submodel.name}, which is held in a native "
-                f"array. The task works on a copy of the array, i.e. all writes are lost. Use a generator with a smart pointer, "
-                f"e.g. peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer."
+                f"The touchCellFirstTime() task of {description} might access cell data {submodel.name} (fineGridCell{submodel.name}). "
+                f"{submodel.name} is realised via the generator {_generator_name(submodel)}, which does not hold its data via a smart "
+                f"pointer. The task captures the cell data by value, i.e. it works on a copy, and all writes are lost. "
+                + _SMART_POINTER_HINT
             )
 
-    for accessor in ("fineGridVertices", "fineGridFaces", "coarseGridVertices", "coarseGridFaces", "coarseGridCell"):
-        if accessor in task_body:
+    # Accessors through which a task might reach data that lives on Peano's
+    # stacks, and the submodels that they might refer to
+    for accessor, submodels, kind in (
+        ("fineGridVertices", task.vertex_data, "vertex"),
+        ("fineGridFaces", task.face_data, "face"),
+        ("coarseGridVertices", task.vertex_data, "vertex"),
+        ("coarseGridFaces", task.face_data, "face"),
+        ("coarseGridCell", task.cell_data, "cell"),
+    ):
+        for submodel in submodels:
+            if f"{accessor}{submodel.name}" not in task_body:
+                continue
+            if _is_held_via_smart_pointer(submodel):
+                realisation = (
+                    f"{submodel.name} is realised via the generator {_generator_name(submodel)}, i.e. its data survives the end of "
+                    f"touchCellFirstTime(). However, {accessor}{submodel.name} holds pointers to the {kind} objects on Peano's stacks, "
+                    f"which are invalid once touchCellFirstTime() has terminated. Let the task read the {kind} data through "
+                    f"pointers or copies of the {kind} objects taken before the task is spawned, rather than through "
+                    f"{accessor}{submodel.name}."
+                )
+            else:
+                realisation = (
+                    f"{submodel.name} is realised via the generator {_generator_name(submodel)}, which does not hold its data via a "
+                    f"smart pointer, and {accessor}{submodel.name} holds pointers to the {kind} objects on Peano's stacks. Both are "
+                    f"invalid once touchCellFirstTime() has terminated. "
+                    + _SMART_POINTER_HINT
+                    + f" In addition, let the task read the {kind} data through pointers or copies of the {kind} objects taken before "
+                    f"the task is spawned, rather than through {accessor}{submodel.name}."
+                )
             logger.warn_and_confirm(
-                f"The touchCellFirstTime() task of {description} accesses {accessor}. The enumerators hold pointers into Peano's "
-                f"stacks, which are invalid once touchCellFirstTime() has terminated."
+                f"The touchCellFirstTime() task of {description} might access {kind} data {submodel.name} via "
+                f"{accessor}{submodel.name}. " + realisation
             )
 
     moved_events = "".join(
@@ -314,12 +382,12 @@ def _warn_about_unsafe_task(task: Task, action_set_index: int, action_set: "pean
     for attribute_name in _non_static_attribute_names(action_set.get_attributes()):
         if re.search(rf"\b{attribute_name}\b", task_body):
             logger.warn_and_confirm(
-                f"The touchCellFirstTime() task of {description} uses the non-static attribute {attribute_name}. The task accesses "
-                f"an action set object which is destroyed after the producer's mesh traversal."
+                f"The touchCellFirstTime() task of {description} might use the non-static attribute {attribute_name}. The task then "
+                f"accesses an action set object which is destroyed after the producer's mesh traversal."
             )
         if re.search(rf"\b{attribute_name}\b", moved_events):
             logger.warn_and_confirm(
-                f"The touch...LastTime() events of {description} use the non-static attribute {attribute_name}. These events are "
+                f"The touch...LastTime() events of {description} might use the non-static attribute {attribute_name}. These events are "
                 f"moved into the consumer, which works with a new action set object, i.e. the attribute's value is not preserved."
             )
 
