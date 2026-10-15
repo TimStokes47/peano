@@ -50,7 +50,7 @@ def translate(
     Every task which exclusively writes cell data is replaced by two tasks.
     A task exclusively writes cell data if it declares at least one cell
     submodel as WRITE or READ_AND_WRITE, but no face or vertex submodel as
-    WRITE or READ_AND_WRITE (@see _exclusively_writes_cell_data()). It may
+    WRITE or READ_AND_WRITE (@ref _exclusively_writes_cell_data()). It may
     read face or vertex data. All other tasks are kept as they are. The
     two tasks are:
 
@@ -82,14 +82,14 @@ def translate(
     modelled via DaStGen2 and holds one integer per producer-consumer pair.
     The integer's name is the CamelCase version of the original task's
     name followed by TaskNumber, e.g. EulerFVSmoothInitialConditionTaskNumber
-    (@see _task_number_attribute_name()). For the time being, no step uses
+    (@ref _task_number_attribute_name()). For the time being, no step uses
     these labels.
 
     graph: peano4.api.taskgraph.Graph
       The task graph to compile. Assumed to be acyclic.
 
     identifier: str
-      @see peano4.api.taskgraph.compiler.FuseSteps.translate()
+      @ref peano4.api.taskgraph.compiler.FuseSteps.translate()
 
     peano_project: peano4.api.Project
       Project the task labels are added to. If None, no task labels are
@@ -100,7 +100,7 @@ def translate(
       Sequential.
 
     @return [peano4.api.solversteps.Step]
-      @see peano4.api.taskgraph.compiler.FuseSteps.translate()
+      @ref peano4.api.taskgraph.compiler.FuseSteps.translate()
 
     """
     producer_consumer_graph, non_fusable_task_pairs, split_tasks = _split_cell_tasks(graph)
@@ -132,7 +132,7 @@ def _create_task_labels(identifier: str, split_tasks: List[Task]) -> "peano4.api
     """!
 
     Create the DaStGen2 cell data type <identifier>_TaskLabels with one
-    integer per split task. @see translate()
+    integer per split task. @ref translate()
 
     """
     task_labels = peano4.api.datamodel.DaStGen2(f"{identifier}_TaskLabels")
@@ -166,7 +166,7 @@ def _exclusively_writes_cell_data(task: Task) -> bool:
 
     True if task declares at least one cell submodel as WRITE or
     READ_AND_WRITE, and no face or vertex submodel as WRITE or
-    READ_AND_WRITE. @see translate()
+    READ_AND_WRITE. @ref translate()
 
     """
     writing_accesses = (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE)
@@ -181,7 +181,7 @@ def _exclusively_writes_cell_data(task: Task) -> bool:
 def _split_cell_tasks(graph: Graph):
     """!
 
-    Build the producer-consumer graph. @see translate()
+    Build the producer-consumer graph. @ref translate()
 
     @return (peano4.api.taskgraph.Graph, [(Task, Task)], [Task])
       The new graph, the list of (producer, consumer) pairs, which must not

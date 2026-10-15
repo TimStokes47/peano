@@ -18,7 +18,7 @@ def propagate_use_statements(
     is safely handed on to whoever reads it next.
 
     This is a postprocessing step that runs on the output of a task graph
-    compiler (@see peano4.api.taskgraph.compiler), i.e. on the sequences of
+    compiler (@ref peano4.api.taskgraph.compiler), i.e. on the sequences of
     peano4.api.solversteps.Step instances (Observers, aka mesh traversals)
     a compiler such as peano4.api.taskgraph.compiler.Sequential.translate()
     or peano4.api.taskgraph.compiler.FuseSteps.translate() yields - one

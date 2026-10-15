@@ -59,7 +59,7 @@ def translate(graph: Graph, identifier: str, peano_project: "peano4.api.Project"
       even if their tasks happen to share a name.
 
     peano_project: peano4.api.Project
-      Not used by this compiler. @see peano4.api.taskgraph.compiler
+      Not used by this compiler. @ref peano4.api.taskgraph.compiler
 
     @return [peano4.api.solversteps.Step]
       One Observer per task, ordered so that every task's Observer comes

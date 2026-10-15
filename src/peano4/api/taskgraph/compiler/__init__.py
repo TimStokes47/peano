@@ -10,7 +10,7 @@ def translate(graph: Graph, identifier: str, peano_project: "peano4.api.Project"
 
 which take a task graph and yield a series of @ref peano4.api.solversteps.Step instances.
 The peano_project is the Peano project the steps eventually are added to.
-Compilers can use it to add further data to the data model (@see
+Compilers can use it to add further data to the data model (@ref
 peano4.api.taskgraph.compiler.CellTaskProducerConsumer). It might be None
 if a compiler is used outside of a project, e.g. in unit tests.
 
