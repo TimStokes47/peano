@@ -55,6 +55,16 @@ class Task:
 
     which means this task will repeat until the mesh becomes stationary.
 
+    ## Background tasks
+
+    Some task graph compilers can run parts of a task in the background,
+    i.e. as tasks that outlive the mesh traversal event which spawns them
+    (@ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate()).
+    Such compilers check whether this is safe, and leave the task as it is
+    if they cannot be sure. Set may_spawn_background_tasks to True if you
+    know that running the task in the background is fine. The compilers
+    then skip these checks. The flag is False by default.
+
     ## Task processing
 
     The tasks will later on be taken by the graph compiler which maps them
@@ -139,6 +149,7 @@ class Task:
         name: str,
         entity: "Task.GridEntity",
         task_has_to_repeat: Optional[str] = None,
+        may_spawn_background_tasks: bool = False,
     ):
         self.name = name
         self.entity = entity
@@ -151,6 +162,7 @@ class Task:
         self.face_data_access: dict = {}
         self.vertex_data_access: dict = {}
         self.has_to_repeat = task_has_to_repeat
+        self.may_spawn_background_tasks = may_spawn_background_tasks
 
     def add_dependency(self, task: "Task"):
         self.dependencies.append(task)

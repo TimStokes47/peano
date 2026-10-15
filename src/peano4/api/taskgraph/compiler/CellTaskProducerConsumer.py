@@ -54,8 +54,20 @@ def translate(
     A task exclusively writes cell data if it declares at least one cell
     submodel as WRITE or READ_AND_WRITE, but no face or vertex submodel as
     WRITE or READ_AND_WRITE (@ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._exclusively_writes_cell_data()). It may
-    read face or vertex data. All other tasks are kept as they are. The
-    two tasks are:
+    read face or vertex data. All other tasks are kept as they are.
+
+    A task is only split if this is safe
+    (@ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._has_events_after_touch_cell_first_time()):
+    The producer spawns tasks which might still run after the producer's
+    mesh traversal. If any action set of the task yields code for
+    unprepareTraversal(), endTraversal() or one of the touch...LastTime()
+    events, these events might be invoked before the spawned tasks have
+    terminated. Such a task is hence not split, and the compiler writes a
+    warning. You can enforce the split by setting the task's flag
+    @ref peano4.api.taskgraph.Task.Task.may_spawn_background_tasks to True,
+    which skips this check.
+
+    The two tasks are:
 
     1. The producer, named after the original task plus "Producer". It
        inherits all action sets and data declarations of the original
@@ -97,14 +109,10 @@ def translate(
     - The consumer is given a cousin
       @ref peano4.api.taskgraph.compiler.WaitForCellTaskActionSet.WaitForCellTaskActionSet
       per wrapped action set. If the cell's task label holds a valid task
-      number, it waits for this task and resets the label to NoNumber=-1.
-    - unprepareTraversal() and all touch...LastTime() events of the
-      wrapped action sets are moved into the consumer's cousins, i.e.
-      they are invoked once the tasks have terminated.
-    - The cousin's generated C++ class derives from the producer's
-      generated class. The two hence share all static attributes, e.g.
-      reductions evaluated by unprepareTraversal(). Non-static attributes
-      are not preserved from the producer's sweep to the consumer's sweep.
+      number, it waits for this task, returns the number to the task
+      enumerator and resets the label to NoNumber=-1.
+    - All other events of the wrapped action sets remain within the
+      producer.
 
     The spawned tasks outlive touchCellFirstTime(). The compiler therefore
     warns about constructs which might not be safe within a task. It does
@@ -127,9 +135,9 @@ def translate(
       enumerator. The enumerators hold pointers to the objects on Peano's
       stacks, which are invalid once touchCellFirstTime() has terminated.
       This holds even if the data is held via smart pointers.
-    - The task body or a moved event might use a non-static attribute of
-      the action set. The task accesses an object which is destroyed after
-      the producer's mesh traversal, and the moved events see a new object.
+    - The task body might use a non-static attribute of the action set.
+      The task accesses an object which is destroyed after the producer's
+      mesh traversal.
     - An action set of the producer has to be modified by the user
       (@ref peano4.api.solversteps.ActionSet.ActionSet.user_should_modify_template()).
       Such a producer is not altered, i.e. it spawns no tasks.
@@ -143,8 +151,10 @@ def translate(
     followed by ActionSet, the action set's index within the task and
     TaskNumber, e.g. EulerFVSmoothInitialConditionActionSet0TaskNumber
     (@ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._task_number_attribute_name()).
-    The producer declares the task labels as WRITE, the consumer as
-    READ_AND_WRITE.
+    The labels furthermore hold a static tarch::multicore::TaskEnumerator
+    (getTaskEnumerator()), from which the producers take their task numbers
+    and to which the consumers return them. The producer declares the task
+    labels as WRITE, the consumer as READ_AND_WRITE.
 
     @param graph: peano4.api.taskgraph.Graph
       The task graph to compile. Assumed to be acyclic.
@@ -168,6 +178,15 @@ def translate(
 
     if peano_project is not None and split_tasks:
         task_labels = peano4.api.datamodel.DaStGen2(f"{identifier}_TaskLabels")
+        task_labels.data.add_attribute(
+            dastgen2.attributes.UserDefinedType(
+                name="taskEnumerator",
+                type="tarch::multicore::TaskEnumerator",
+                include='#include "tarch/multicore/TaskEnumerator.h"',
+                qualifier=dastgen2.attributes.Attribute.Qualifier.STATIC,
+                user_type_has_toString_method=False,
+            )
+        )
         if _spawn_tasks(split_tasks, task_labels) > 0:
             peano_project.datamodel.add_cell(task_labels)
 
@@ -230,6 +249,36 @@ def _exclusively_writes_cell_data(task: Task) -> bool:
     return writes_cell_data and not writes_other_data
 
 
+def _has_events_after_touch_cell_first_time(task: Task) -> List[str]:
+    """!
+
+    List the events which the task's action sets realise and which a
+    producer would invoke before its spawned tasks have necessarily
+    terminated: unprepareTraversal(), endTraversal() and the
+    touch...LastTime() events. An event counts if the action set yields
+    code for it.
+
+    @return [str]
+      One entry "<action set name>::<event>" per such event. The list is
+      empty if the task can be split safely.
+
+    """
+    late_operations = (
+        peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL,
+        peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME,
+        peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME,
+        peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME,
+    )
+    result = []
+    for action_set in task.action_sets:
+        if action_set.get_implementation_of_unprepareTraversal().strip() != "":
+            result.append(f"{action_set.get_action_set_name()}::unprepareTraversal")
+        for operation_name in late_operations:
+            if action_set.get_implementation_of_operation(operation_name).strip() != "":
+                result.append(f"{action_set.get_action_set_name()}::{operation_name}")
+    return result
+
+
 def _split_cell_tasks(graph: Graph):
     """!
 
@@ -244,13 +293,24 @@ def _split_cell_tasks(graph: Graph):
     consumer_of_task = {}
     for task in graph.tasks:
         producer_of_task[task] = _copy_task(task)
-        if _exclusively_writes_cell_data(task):
-            producer_of_task[task].name = f"{task.name} Producer"
-            consumer = Task(name=f"{task.name} Consumer", entity=Task.GridEntity.CELL)
-            for submodel in task.cell_data:
-                if task.cell_data_access[submodel] in (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE):
-                    consumer.use_cell(submodel, Task.DataAccess.READ_AND_WRITE)
-            consumer_of_task[task] = consumer
+        if not _exclusively_writes_cell_data(task):
+            continue
+        late_events = _has_events_after_touch_cell_first_time(task)
+        if late_events and not task.may_spawn_background_tasks:
+            peano4.api.Logger().log(
+                f"Warning: Task {task.name} is not split into a producer and a consumer task, as a split-up might be unsafe: "
+                f"The producer's spawned tasks might still run when the following events are invoked: "
+                + ", ".join(late_events)
+                + f". Set may_spawn_background_tasks=True on task {task.name} to enforce the split.",
+                peano4.api.LoggerPrintOption.ALWAYS_PRINT,
+            )
+            continue
+        producer_of_task[task].name = f"{task.name} Producer"
+        consumer = Task(name=f"{task.name} Consumer", entity=Task.GridEntity.CELL)
+        for submodel in task.cell_data:
+            if task.cell_data_access[submodel] in (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE):
+                consumer.use_cell(submodel, Task.DataAccess.READ_AND_WRITE)
+        consumer_of_task[task] = consumer
 
     result = Graph()
     for task in graph.tasks:
@@ -322,7 +382,7 @@ _SMART_POINTER_HINT = (
 def _warn_about_unsafe_task(task: Task, action_set_index: int, action_set: "peano4.api.solversteps.ActionSet", task_body: str):
     """!
 
-    Issue the warnings about task bodies and moved events which might not
+    Issue the warnings about task bodies which might not
     be safe. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate()
 
     We do not inspect the code. We only search the generated C++ text for
@@ -376,19 +436,11 @@ def _warn_about_unsafe_task(task: Task, action_set_index: int, action_set: "pean
                 f"{accessor}{submodel.name}. " + realisation
             )
 
-    moved_events = "".join(
-        action_set.get_implementation_of_operation(operation_name) for operation_name in SpawnCellTaskActionSet.MovedOperations
-    )
     for attribute_name in _non_static_attribute_names(action_set.get_attributes()):
         if re.search(rf"\b{attribute_name}\b", task_body):
             logger.warn_and_confirm(
                 f"The touchCellFirstTime() task of {description} might use the non-static attribute {attribute_name}. The task then "
                 f"accesses an action set object which is destroyed after the producer's mesh traversal."
-            )
-        if re.search(rf"\b{attribute_name}\b", moved_events):
-            logger.warn_and_confirm(
-                f"The touch...LastTime() events of {description} might use the non-static attribute {attribute_name}. These events are "
-                f"moved into the consumer, which works with a new action set object, i.e. the attribute's value is not preserved."
             )
 
 
@@ -424,7 +476,6 @@ def _spawn_tasks(split_tasks, task_labels: "peano4.api.datamodel.DaStGen2"):
         producer_action_sets = []
         consumer_action_sets = []
         previous_task_number_attribute_name = None
-        moves_events = False
         for action_set_index, action_set in enumerate(task.action_sets):
             task_body = action_set.get_body_of_operation(peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME)
             if task_body.strip() == "":
@@ -448,10 +499,6 @@ def _spawn_tasks(split_tasks, task_labels: "peano4.api.datamodel.DaStGen2"):
             producer_action_sets.append(producer_action_set)
             consumer_action_sets.append(WaitForCellTaskActionSet(producer_action_set))
             previous_task_number_attribute_name = task_number_attribute_name
-            moves_events = moves_events or any(
-                action_set.get_implementation_of_operation(operation_name).strip() != ""
-                for operation_name in SpawnCellTaskActionSet.MovedOperations
-            )
 
         producer.action_sets = producer_action_sets
         consumer.action_sets = consumer_action_sets
@@ -459,16 +506,5 @@ def _spawn_tasks(split_tasks, task_labels: "peano4.api.datamodel.DaStGen2"):
         if previous_task_number_attribute_name is not None:
             producer.use_cell(task_labels, Task.DataAccess.WRITE)
             consumer.use_cell(task_labels, Task.DataAccess.READ_AND_WRITE)
-
-        # The moved touch...LastTime() events might read all the producer's
-        # data, so the consumer has to declare it as well
-        if moves_events:
-            for submodel in task.cell_data:
-                if submodel not in consumer.cell_data:
-                    consumer.use_cell(submodel, Task.DataAccess.READ_AND_DISCARD)
-            for submodel in task.face_data:
-                consumer.use_face(submodel, Task.DataAccess.READ_AND_DISCARD)
-            for submodel in task.vertex_data:
-                consumer.use_vertex(submodel, Task.DataAccess.READ_AND_DISCARD)
 
     return number_of_task_numbers

@@ -16,23 +16,11 @@ class WaitForCellTaskActionSet(ActionSet):
       task number. If so, it waits for this task, returns the number to
       the task enumerator, and resets the label to
       tarch::multicore::TaskEnumerator::NoNumber.
-    - unprepareTraversal() and all touch...LastTime() events are those of the
-      action set wrapped by the producer. They are moved from the producer
-      into the consumer, i.e. they are invoked once the tasks have
-      terminated.
     - createCell() initialises the task label with NoNumber.
 
-    All other events are empty.
-
-    The generated C++ class derives from the generated class of the
-    producer-side action set
-    (@ref peano4.api.solversteps.ActionSet.ActionSet.get_base_class()). It
-    hence shares all static attributes with the producer, e.g. reduction
-    variables which unprepareTraversal() evaluates, and the task enumerator.
-    It does not declare any attributes itself. Non-static attributes exist,
-    but they are not preserved from the producer's sweep: The producer's
-    action set objects are destroyed after the producer's mesh traversal,
-    and the consumer's objects are constructed anew.
+    All other events are empty. The task enumerator is a static attribute of
+    the task labels, i.e. the cousin returns the number to the enumerator
+    from which the producer took it.
 
     """
 
@@ -59,16 +47,6 @@ class WaitForCellTaskActionSet(ActionSet):
             attribute_name[0].capitalize() + attribute_name[1:],
         )
 
-    def get_base_class(self):
-        """!
-
-        The generated class of the producer-side action set. The name is
-        only known once the producer's step has been translated into C++
-        (@ref peano4.api.solversteps.StepToActionSets.StepToActionSets.construct_output()).
-
-        """
-        return self._producer_action_set.generated_class_name
-
     def get_constructor_body(self):
         return ""
 
@@ -82,24 +60,21 @@ class WaitForCellTaskActionSet(ActionSet):
         return "\n"
 
     def get_body_of_unprepareTraversal(self):
-        return self._producer_action_set.action_set.get_implementation_of_unprepareTraversal()
+        return "\n"
 
     def get_body_of_operation(self, operation_name):
         # Not used, as get_implementation_of_operation() is overwritten
         return ""
 
     def get_implementation_of_operation(self, operation_name):
-        if operation_name in SpawnCellTaskActionSet.MovedOperations:
-            return self._producer_action_set.action_set.get_implementation_of_operation(operation_name)
-        elif operation_name == ActionSet.OPERATION_CREATE_CELL:
-            task_label, accessor = self._task_label_accessor()
+        task_label, accessor = self._task_label_accessor()
+        if operation_name == ActionSet.OPERATION_CREATE_CELL:
             return f"\n  {task_label}.set{accessor}( tarch::multicore::TaskEnumerator::NoNumber );\n"
         elif operation_name == ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
-            task_label, accessor = self._task_label_accessor()
             return f"""
   if ( {task_label}.get{accessor}()>=0 ) {{
     tarch::multicore::waitForTask( {task_label}.get{accessor}() );
-    _taskEnumerator.releaseNumber( {task_label}.get{accessor}() );
+    {task_label}.getTaskEnumerator().releaseNumber( {task_label}.get{accessor}() );
     {task_label}.set{accessor}( tarch::multicore::TaskEnumerator::NoNumber );
   }}
 """
@@ -116,8 +91,7 @@ class WaitForCellTaskActionSet(ActionSet):
         return ""
 
     def get_includes(self):
-        return f"""
-#include "{self._producer_action_set.generated_header_file}"
+        return """
 #include "tarch/multicore/multicore.h"
 #include "tarch/multicore/TaskEnumerator.h"
 """

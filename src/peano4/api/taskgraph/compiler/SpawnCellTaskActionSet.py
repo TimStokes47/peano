@@ -12,15 +12,15 @@ class SpawnCellTaskActionSet(ActionSet):
     following exceptions:
 
     - touchCellFirstTime() evaluates the wrapped action set's guard. If the
-      guard holds, the wrapper takes a new task number from a
-      tarch::multicore::TaskEnumerator, stores it in the cell's task label
-      and spawns the wrapped action set's body as a task with this number.
-      If the guard does not hold, the task label is set to
+      guard holds, the wrapper takes a new task number from the task
+      enumerator, stores it in the cell's task label and spawns the wrapped
+      action set's body as a task with this number. If the guard does not
+      hold, the task label is set to
       tarch::multicore::TaskEnumerator::NoNumber.
-    - unprepareTraversal() and all touch...LastTime() events are empty.
-      They are moved into the consumer, i.e. into
-      @ref peano4.api.taskgraph.compiler.WaitForCellTaskActionSet.WaitForCellTaskActionSet.
     - createCell() furthermore initialises the task label with NoNumber.
+
+    The task enumerator is a static attribute of the task labels, i.e. it is
+    shared by all producers and consumers which use these labels.
 
     The spawned task captures its environment by value ([=]). Cell data
     managed via smart pointers (e.g.
@@ -31,9 +31,13 @@ class SpawnCellTaskActionSet(ActionSet):
     terminated. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer
     warns about such cases.
 
-    The task number enumerator is a static attribute of the generated class.
-    The consumer-side action set derives from the generated class, i.e.
-    shares all static attributes with it.
+    All other events, including unprepareTraversal(), endTraversal() and the
+    touch...LastTime() events, remain within the producer. They are hence
+    invoked before the spawned tasks have necessarily terminated.
+    @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer therefore
+    only splits tasks whose action sets do not realise these events, unless
+    the task explicitly allows it
+    (@ref peano4.api.taskgraph.Task.Task.may_spawn_background_tasks).
 
     """
 
@@ -71,12 +75,6 @@ class SpawnCellTaskActionSet(ActionSet):
         self._task_number_attribute_name = task_number_attribute_name
         self._previous_task_number_attribute_name = previous_task_number_attribute_name
 
-    MovedOperations = [
-        ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME,
-        ActionSet.OPERATION_TOUCH_FACE_LAST_TIME,
-        ActionSet.OPERATION_TOUCH_CELL_LAST_TIME,
-    ]
-
     def _accessor(self, attribute_name: str) -> str:
         return attribute_name[0].capitalize() + attribute_name[1:]
 
@@ -87,12 +85,7 @@ class SpawnCellTaskActionSet(ActionSet):
         return self.action_set.get_destructor_body()
 
     def get_static_initialisations(self, full_qualified_classname):
-        return (
-            self.action_set.get_static_initialisations(full_qualified_classname)
-            + "tarch::multicore::TaskEnumerator "
-            + full_qualified_classname
-            + "::_taskEnumerator;\n"
-        )
+        return self.action_set.get_static_initialisations(full_qualified_classname)
 
     def get_body_of_createGridControlEventsForNextTraversal(self):
         return self.action_set.get_implementation_of_createGridControlEventsForNextTraversal()
@@ -101,7 +94,7 @@ class SpawnCellTaskActionSet(ActionSet):
         return self.action_set.get_implementation_of_prepareTraversal()
 
     def get_body_of_unprepareTraversal(self):
-        return "\n"
+        return self.action_set.get_implementation_of_unprepareTraversal()
 
     def get_body_of_operation(self, operation_name):
         # Not used, as get_implementation_of_operation() is overwritten
@@ -115,9 +108,7 @@ class SpawnCellTaskActionSet(ActionSet):
 
         """
         task_label = f"fineGridCell{self._task_labels_name}"
-        if operation_name in SpawnCellTaskActionSet.MovedOperations:
-            return ""
-        elif operation_name == ActionSet.OPERATION_CREATE_CELL:
+        if operation_name == ActionSet.OPERATION_CREATE_CELL:
             return (
                 self.action_set.get_implementation_of_operation(operation_name)
                 + f"\n  {task_label}.set{self._accessor(self._task_number_attribute_name)}( tarch::multicore::TaskEnumerator::NoNumber );\n"
@@ -131,7 +122,7 @@ class SpawnCellTaskActionSet(ActionSet):
             return f"""
   {task_label}.set{self._accessor(self._task_number_attribute_name)}( tarch::multicore::TaskEnumerator::NoNumber );
   if ({self.action_set.get_guard_of_operation(operation_name)}) {{
-    const int taskNumber = _taskEnumerator.getNumber();
+    const int taskNumber = {task_label}.getTaskEnumerator().getNumber();
     {task_label}.set{self._accessor(self._task_number_attribute_name)}( taskNumber );
     tarch::multicore::spawnTask(
       new tarch::multicore::TaskWithCopyOfFunctor(
@@ -156,12 +147,7 @@ class SpawnCellTaskActionSet(ActionSet):
         return False
 
     def get_attributes(self):
-        return (
-            self.action_set.get_attributes()
-            + """
-    static tarch::multicore::TaskEnumerator  _taskEnumerator;
-"""
-        )
+        return self.action_set.get_attributes()
 
     def get_includes(self):
         return (
