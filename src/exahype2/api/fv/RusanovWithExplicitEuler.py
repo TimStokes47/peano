@@ -100,8 +100,9 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
           into _patch_overlap_current_time_step by
           exahype2.api.fv.actionsets.RollOverUpdatedFace once the update is
           complete.
-        - _max_eigenvalue: one double per cell, named
-          <solver name>MaxEigenvalue, which holds the maximum eigenvalue of
+        - _max_eigenvalue: one double per cell, named after the solver
+          followed by MaxEigenvalue (e.g. EulerFVSmoothMaxEigenvalue),
+          which holds the maximum eigenvalue of
           the patch after its last update
           (@see exahype2.api.fv.actionsets.UpdateCell).
           exahype2.api.fv.actionsets.ComputeGlobalCFLCondition reduces these
