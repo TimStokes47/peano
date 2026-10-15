@@ -1,3 +1,4 @@
+import functools
 import os, sys
 import peano4.api
 import exahype2
@@ -40,7 +41,10 @@ project.add_solver(thesolver)
 
 
 
-project.compiler = peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate
+project.compiler = functools.partial(
+    peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate,
+    use_fusion=True,
+)
 
 
 
