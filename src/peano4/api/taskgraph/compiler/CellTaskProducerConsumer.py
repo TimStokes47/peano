@@ -123,18 +123,22 @@ def translate(
     accepted or the generation is aborted
     (@ref peano4.api.Logger.Logger.warn_and_confirm()):
 
-    - The task body might access cell data which is not held via a smart
-      pointer, e.g. via @ref peano4.api.datamodel.PatchToDoubleArray or
+    - The task body might access fine or coarse grid cell data which is not
+      held via a smart pointer, e.g. via @ref peano4.api.datamodel.PatchToDoubleArray or
       @ref peano4.api.datamodel.PatchToDoubleArrayOnHeap. The task copies
       the data, and writes to the copy are lost. The fix is a smart-pointer
       generator such as
       @ref peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer.
       Heap-based generators do not suffice, as they deep-copy their data
       whenever Peano copies an object.
-    - The task body might access vertex, face or coarse grid data via an
-      enumerator. The enumerators hold pointers to the objects on Peano's
-      stacks, which are invalid once touchCellFirstTime() has terminated.
-      This holds even if the data is held via smart pointers.
+    - The task body might access vertex or face data via an enumerator
+      whose data is not held via a smart pointer. The enumerators hold
+      pointers to the objects on Peano's stacks, which are invalid once
+      touchCellFirstTime() has terminated. The task therefore always
+      captures them as peano4::datamanagement::FaceHeapDataEnumerator or
+      peano4::datamanagement::VertexHeapDataEnumerator, which copy the
+      faces or vertices. Without smart pointers, these copies are deep,
+      i.e. writes are lost. With smart pointers, no warning is issued.
     - The task body might use a non-static attribute of the action set.
       The task accesses an object which is destroyed after the producer's
       mesh traversal.
@@ -379,6 +383,35 @@ _SMART_POINTER_HINT = (
 )
 
 
+def _enumerators_used_by(task: Task, task_body: str):
+    """!
+
+    Names of the vertex and face enumerators which a task body might use,
+    i.e. which occur in the generated C++ text. They are realised as
+    peano4::datamanagement::FaceEnumerator or
+    peano4::datamanagement::VertexEnumerator and hold pointers into Peano's
+    stacks, so the spawned task has to capture copies
+    (@ref peano4.api.taskgraph.compiler.SpawnCellTaskActionSet.SpawnCellTaskActionSet).
+
+    @return ([str], [str])
+      Names of the face enumerators and of the vertex enumerators.
+
+    """
+    face_enumerators = [
+        f"{prefix}{submodel.name}"
+        for prefix in ("fineGridFaces", "coarseGridFaces")
+        for submodel in task.face_data
+        if re.search(rf"\b{prefix}{submodel.name}\b", task_body)
+    ]
+    vertex_enumerators = [
+        f"{prefix}{submodel.name}"
+        for prefix in ("fineGridVertices", "coarseGridVertices")
+        for submodel in task.vertex_data
+        if re.search(rf"\b{prefix}{submodel.name}\b", task_body)
+    ]
+    return face_enumerators, vertex_enumerators
+
+
 def _warn_about_unsafe_task(task: Task, action_set_index: int, action_set: "peano4.api.solversteps.ActionSet", task_body: str):
     """!
 
@@ -393,48 +426,31 @@ def _warn_about_unsafe_task(task: Task, action_set_index: int, action_set: "pean
     logger = peano4.api.Logger()
     description = f"action set {action_set_index} ({action_set.get_action_set_name()}) of task {task.name}"
 
-    for submodel in task.cell_data:
-        if f"fineGridCell{submodel.name}" in task_body and not _is_held_via_smart_pointer(submodel):
-            logger.warn_and_confirm(
-                f"The touchCellFirstTime() task of {description} might access cell data {submodel.name} (fineGridCell{submodel.name}). "
-                f"{submodel.name} is realised via the generator {_generator_name(submodel)}, which does not hold its data via a smart "
-                f"pointer. The task captures the cell data by value, i.e. it works on a copy, and all writes are lost. "
-                + _SMART_POINTER_HINT
-            )
+    for accessor in ("fineGridCell", "coarseGridCell"):
+        for submodel in task.cell_data:
+            if f"{accessor}{submodel.name}" in task_body and not _is_held_via_smart_pointer(submodel):
+                logger.warn_and_confirm(
+                    f"The touchCellFirstTime() task of {description} might access cell data {submodel.name} ({accessor}{submodel.name}). "
+                    f"{submodel.name} is realised via the generator {_generator_name(submodel)}, which does not hold its data via a smart "
+                    f"pointer. The task captures the cell data by value, i.e. it works on a copy, and all writes are lost. "
+                    + _SMART_POINTER_HINT
+                )
 
-    # Accessors through which a task might reach data that lives on Peano's
-    # stacks, and the submodels that they might refer to
-    for accessor, submodels, kind in (
-        ("fineGridVertices", task.vertex_data, "vertex"),
-        ("fineGridFaces", task.face_data, "face"),
-        ("coarseGridVertices", task.vertex_data, "vertex"),
-        ("coarseGridFaces", task.face_data, "face"),
-        ("coarseGridCell", task.cell_data, "cell"),
+    face_enumerators, vertex_enumerators = _enumerators_used_by(task, task_body)
+    for kind, submodels, enumerators, prefixes, enumerator_type in (
+        ("face", task.face_data, face_enumerators, ("fineGridFaces", "coarseGridFaces"), "peano4::datamanagement::FaceHeapDataEnumerator"),
+        ("vertex", task.vertex_data, vertex_enumerators, ("fineGridVertices", "coarseGridVertices"), "peano4::datamanagement::VertexHeapDataEnumerator"),
     ):
         for submodel in submodels:
-            if f"{accessor}{submodel.name}" not in task_body:
-                continue
-            if _is_held_via_smart_pointer(submodel):
-                realisation = (
-                    f"{submodel.name} is realised via the generator {_generator_name(submodel)}, i.e. its data survives the end of "
-                    f"touchCellFirstTime(). However, {accessor}{submodel.name} holds pointers to the {kind} objects on Peano's stacks, "
-                    f"which are invalid once touchCellFirstTime() has terminated. Let the task read the {kind} data through "
-                    f"pointers or copies of the {kind} objects taken before the task is spawned, rather than through "
-                    f"{accessor}{submodel.name}."
-                )
-            else:
-                realisation = (
-                    f"{submodel.name} is realised via the generator {_generator_name(submodel)}, which does not hold its data via a "
-                    f"smart pointer, and {accessor}{submodel.name} holds pointers to the {kind} objects on Peano's stacks. Both are "
-                    f"invalid once touchCellFirstTime() has terminated. "
-                    + _SMART_POINTER_HINT
-                    + f" In addition, let the task read the {kind} data through pointers or copies of the {kind} objects taken before "
-                    f"the task is spawned, rather than through {accessor}{submodel.name}."
-                )
-            logger.warn_and_confirm(
-                f"The touchCellFirstTime() task of {description} might access {kind} data {submodel.name} via "
-                f"{accessor}{submodel.name}. " + realisation
-            )
+            for enumerator in [f"{prefix}{submodel.name}" for prefix in prefixes if f"{prefix}{submodel.name}" in enumerators]:
+                if not _is_held_via_smart_pointer(submodel):
+                    logger.warn_and_confirm(
+                        f"The touchCellFirstTime() task of {description} might access {kind} data {submodel.name} via {enumerator}. "
+                        f"The task therefore captures {enumerator} as {enumerator_type}, which copies the {kind}s. {submodel.name} is "
+                        f"realised via the generator {_generator_name(submodel)}, which does not hold its data via a smart pointer, i.e. "
+                        f"the copies are deep: The task reads the data as it was when the task has been spawned, and all writes are lost. "
+                        + _SMART_POINTER_HINT
+                    )
 
     for attribute_name in _non_static_attribute_names(action_set.get_attributes()):
         if re.search(rf"\b{attribute_name}\b", task_body):
@@ -490,11 +506,14 @@ def _spawn_tasks(split_tasks, task_labels: "peano4.api.datamodel.DaStGen2"):
             task_labels.data.add_attribute(dastgen2.attributes.Integer(name=task_number_attribute_name))
             number_of_task_numbers += 1
 
+            face_enumerators, vertex_enumerators = _enumerators_used_by(task, task_body)
             producer_action_set = SpawnCellTaskActionSet(
                 action_set,
                 task_labels.name,
                 task_number_attribute_name,
                 previous_task_number_attribute_name,
+                face_enumerators,
+                vertex_enumerators,
             )
             producer_action_sets.append(producer_action_set)
             consumer_action_sets.append(WaitForCellTaskActionSet(producer_action_set))

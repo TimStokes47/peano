@@ -26,10 +26,18 @@ class SpawnCellTaskActionSet(ActionSet):
     managed via smart pointers (e.g.
     @ref peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer) is copied
     shallowly, i.e. the task writes into the cell's data. Plain arrays are
-    copied, and enumerators over vertices and faces hold pointers into
-    Peano's stacks, which are invalid once touchCellFirstTime() has
-    terminated. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer
-    warns about such cases.
+    copied deeply, i.e. writes are lost.
+
+    Enumerators over vertices and faces hold pointers into Peano's stacks,
+    which are invalid once touchCellFirstTime() has terminated. The task
+    therefore captures each enumerator which its body might use as
+    peano4::datamanagement::FaceHeapDataEnumerator or
+    peano4::datamanagement::VertexHeapDataEnumerator under the same name.
+    These enumerators hold copies of the faces or vertices. The copies are
+    shallow if the data is managed via smart pointers.
+
+    @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer warns about
+    data which is not managed via smart pointers.
 
     All other events, including unprepareTraversal(), endTraversal() and the
     touch...LastTime() events, remain within the producer. They are hence
@@ -47,6 +55,8 @@ class SpawnCellTaskActionSet(ActionSet):
         task_labels_name: str,
         task_number_attribute_name: str,
         previous_task_number_attribute_name: str,
+        face_enumerators: list = [],
+        vertex_enumerators: list = [],
     ):
         """!
 
@@ -68,12 +78,39 @@ class SpawnCellTaskActionSet(ActionSet):
           their original order. If None, the task has no incoming
           dependencies.
 
+        @param face_enumerators: [str]
+          Names of the face enumerators, e.g. fineGridFacesQ, which the task
+          captures as peano4::datamanagement::FaceHeapDataEnumerator.
+
+        @param vertex_enumerators: [str]
+          Names of the vertex enumerators, e.g. fineGridVerticesQ, which the
+          task captures as peano4::datamanagement::VertexHeapDataEnumerator.
+
         """
         super().__init__(descend_invocation_order=action_set.descend_invocation_order, parallel=action_set.parallel)
         self.action_set = action_set
         self._task_labels_name = task_labels_name
         self._task_number_attribute_name = task_number_attribute_name
         self._previous_task_number_attribute_name = previous_task_number_attribute_name
+        self._face_enumerators = list(face_enumerators)
+        self._vertex_enumerators = list(vertex_enumerators)
+
+    def _lambda_captures(self) -> str:
+        """!
+
+        Capture list of the spawned task's lambda: Everything by value, and
+        the vertex and face enumerators as copies of their data under the
+        same name.
+
+        """
+        captures = ["="]
+        captures += [
+            f"{name} = peano4::datamanagement::FaceHeapDataEnumerator({name})" for name in self._face_enumerators
+        ]
+        captures += [
+            f"{name} = peano4::datamanagement::VertexHeapDataEnumerator({name})" for name in self._vertex_enumerators
+        ]
+        return ", ".join(captures)
 
     def _accessor(self, attribute_name: str) -> str:
         return attribute_name[0].capitalize() + attribute_name[1:]
@@ -128,7 +165,7 @@ class SpawnCellTaskActionSet(ActionSet):
       new tarch::multicore::TaskWithCopyOfFunctor(
         tarch::multicore::Task::DontFuse,
         tarch::multicore::Task::DefaultPriority,
-        [=]() mutable {{
+        [{self._lambda_captures()}]() mutable {{
 {self.action_set.get_body_of_operation(operation_name)}
         }}
       ),
@@ -157,5 +194,7 @@ class SpawnCellTaskActionSet(ActionSet):
 #include "tarch/multicore/multicore.h"
 #include "tarch/multicore/Task.h"
 #include "tarch/multicore/TaskEnumerator.h"
+#include "peano4/datamanagement/FaceHeapDataEnumerator.h"
+#include "peano4/datamanagement/VertexHeapDataEnumerator.h"
 """
         )
