@@ -155,18 +155,18 @@ But this option is hidden from the task compiler.
     propagate_use_statements() is not invoked here. It is a postprocessing
     step called outside of the translation.
 
-    graph: peano4.api.taskgraph.Graph
+    @param graph: peano4.api.taskgraph.Graph
       The task graph to compile. Assumed to be acyclic.
 
-    identifier: str
+    @param identifier: str
       Identifies which of the surrounding project's algorithmic phases this
       graph belongs to (e.g. "SetupSimulation", "TimeStep", "Plot") and
       prefixes every generated Observer's name.
 
-    peano_project: peano4.api.Project
+    @param peano_project: peano4.api.Project
       Not used by this compiler. @ref peano4.api.taskgraph.compiler
 
-    non_fusable_task_pairs: [(peano4.api.taskgraph.Task, peano4.api.taskgraph.Task)]
+    @param non_fusable_task_pairs: [(peano4.api.taskgraph.Task, peano4.api.taskgraph.Task)]
       Pairs of tasks of graph which must not end up in the same traversal.
       The order within a pair does not matter. Defaults to none.
 
