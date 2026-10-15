@@ -163,7 +163,6 @@ class ReconstructPatchWithHalo(ActionSet):
     return result;
   }};
 
-  if ({GUARD}) {{
     logTraceInWith1Argument( "touchCellFirstTime(...)", marker.toString() );
 
     double* oldQWithHalo = {RECONSTRUCTED_PATCH_ACCESSOR}.value;
@@ -238,7 +237,6 @@ class ReconstructPatchWithHalo(ActionSet):
 
   _Template_TouchCellFirstTime_Epilogue = """
     logTraceOut( "touchCellFirstTime(...)" );
-  }}
 """
 
 
@@ -253,6 +251,12 @@ class ReconstructPatchWithHalo(ActionSet):
       result += self._Template_TouchCellFirstTime_Epilogue.format(**d)
       pass
     return result
+
+
+  def get_guard_of_operation(self,operation_name):
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+      return self.guard
+    return "true"
 
 
   def get_attributes(self):

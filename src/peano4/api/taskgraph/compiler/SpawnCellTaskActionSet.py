@@ -157,7 +157,6 @@ class SpawnCellTaskActionSet(ActionSet):
                 previous_task_number = f"{task_label}.get{self._accessor(self._previous_task_number_attribute_name)}()"
                 in_dependencies = f"{previous_task_number}>=0 ? std::set<tarch::multicore::TaskNumber>{{ {previous_task_number} }} : tarch::multicore::NoInDependencies"
             return f"""
-  {task_label}.set{self._accessor(self._task_number_attribute_name)}( tarch::multicore::TaskEnumerator::NoNumber );
   if ({self.action_set.get_guard_of_operation(operation_name)}) {{
     const int taskNumber = {task_label}.getTaskEnumerator().getNumber();
     {task_label}.set{self._accessor(self._task_number_attribute_name)}( taskNumber );
@@ -172,6 +171,9 @@ class SpawnCellTaskActionSet(ActionSet):
       {in_dependencies},
       taskNumber
     );
+  }}
+  else {{
+    {task_label}.set{self._accessor(self._task_number_attribute_name)}( tarch::multicore::TaskEnumerator::NoNumber );
   }}
 """
         else:
