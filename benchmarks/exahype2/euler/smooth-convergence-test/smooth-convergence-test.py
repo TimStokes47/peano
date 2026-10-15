@@ -40,6 +40,10 @@ project.add_solver(thesolver)
 
 
 
+project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
+
+
+
 # build_mode = peano4.api.output.CompileMode.RELEASE
 build_mode = peano4.api.output.CompileMode.DEBUG
 project.set_global_simulation_parameters(
