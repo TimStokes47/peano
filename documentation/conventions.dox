@@ -115,6 +115,18 @@ def translate(graph, identifier):
 Please do not write `graph: peano4.api.taskgraph.Graph` without the
 `@param`: Doxygen then does not recognise the parameter description.
 
+Cross-references to other parts of the code are written with `@ref`, never
+with `@see`, and use the fully qualified name of the target, so Doxygen can
+resolve them into links:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+  Such tasks are never fused
+  (@ref peano4.api.taskgraph.compiler.FuseSteps._have_conflicting_data()).
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Short names such as `_have_conflicting_data()` or `translate()` typically
+can not be resolved and yield a Doxygen warning.
+
 More info can be found in the FAQs below.
 
 # C++ conventions / Style Guide
