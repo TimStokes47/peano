@@ -5,6 +5,7 @@ import re
 
 import peano4.api
 import peano4.api.datamodel
+import peano4.api.dastgen2
 import toolbox.blockstructured.api
 import exahype2.api
 from exahype2.api import Target
@@ -14,7 +15,8 @@ from ..Solver import Solver
 from .actionsets import HandleBoundary
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFace
-from .actionsets import UpdateCellAndComputeGlobalTimeStep
+from .actionsets import UpdateCell
+from .actionsets import ComputeGlobalCFLCondition
 
 
 class RusanovWithExplicitEuler(Solver.NumericalScheme):
@@ -45,7 +47,7 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
 
         cfl_constant: float
           Safety factor the admissible time step size (@see
-          exahype2.api.fv.actionsets.UpdateCellAndComputeGlobalTimeStep,
+          exahype2.api.fv.actionsets.ComputeGlobalCFLCondition,
           which this is passed straight through to) is scaled down by,
           relative to the theoretical CFL=1 stability limit
           h / (Dimensions * lambda_max). 0.9 is a
@@ -98,14 +100,24 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
           into _patch_overlap_current_time_step by
           exahype2.api.fv.actionsets.RollOverUpdatedFace once the update is
           complete.
+        - _max_eigenvalue: one double per cell, named
+          <solver name>MaxEigenvalue, which holds the maximum eigenvalue of
+          the patch after its last update
+          (@see exahype2.api.fv.actionsets.UpdateCell).
+          exahype2.api.fv.actionsets.ComputeGlobalCFLCondition reduces these
+          values into the next time step size. It is modelled via DaStGen2
+          as an array of cardinality one. The array is a
+          peano4.api.dastgen2.Peano4SmartPointerDoubleArray, i.e. the value
+          resides on the heap.
 
-        All four are assigned onto self._solver (the shared
+        All five are assigned onto self._solver (the shared
         exahype2.api.Solver instance both this numerical scheme and its
         surrounding solver's Solver.GridConstruction/Solver.Plotter
         counterparts hold a reference to as self._solver), not onto self,
         since the remaining FV action sets that need them - @see
         exahype2.api.fv.actionsets.HandleBoundary,
-        exahype2.api.fv.actionsets.UpdateCellAndComputeGlobalTimeStep,
+        exahype2.api.fv.actionsets.UpdateCell,
+        exahype2.api.fv.actionsets.ComputeGlobalCFLCondition,
         exahype2.api.fv.actionsets.AdaptivityCriterion - are handed that
         shared solver and look the patches up as solver._patch /
         solver._patch_overlap_*.
@@ -152,6 +164,10 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
             total_unknowns,
             identifier + "Update",
         )
+        self._solver._max_eigenvalue = peano4.api.datamodel.DaStGen2(self._solver.name + "MaxEigenvalue")
+        self._solver._max_eigenvalue.data.add_attribute(
+            peano4.api.dastgen2.Peano4SmartPointerDoubleArray("maxEigenvalue", 1)
+        )
 
 
     def __add_data_to_repository(self, peano_project):
@@ -175,6 +191,7 @@ Patch overlap data
         peano_project.datamodel.add_cell(self._solver._patch_with_halo)
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
+        peano_project.datamodel.add_cell(self._solver._max_eigenvalue)
 
         # The task graph compiler only uses, loads and stores data where the
         # solver's grid selector holds, too (@see peano4.api.datamodel.DoF).
@@ -183,6 +200,7 @@ Patch overlap data
             self._solver._patch_with_halo,
             self._solver._patch_overlap_current_time_step,
             self._solver._patch_overlap_update,
+            self._solver._max_eigenvalue,
         ):
             patch.grid_selector = self._solver.grid_selector
 
@@ -235,10 +253,12 @@ Patch overlap data
         reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        compute_cfl_condition_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute global CFL condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         
         time_step.add_task(reconstruction_task)
         time_step.add_task(update_cell_task)
         time_step.add_task(project_on_faces_task)
+        time_step.add_task(compute_cfl_condition_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
@@ -260,8 +280,20 @@ Patch overlap data
         update_cell_task.add_dependency(reconstruction_task)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
+        update_cell_task.use_cell(self._solver._max_eigenvalue,  peano4.api.taskgraph.Task.DataAccess.WRITE)
         update_cell_task.add_action_set(
-            UpdateCellAndComputeGlobalTimeStep(
+            UpdateCell(
+                self._solver,
+                guard=self._solver.grid_selector.createCellGuard(),
+            )
+        )
+
+        ## Reduce the cells' maximum eigenvalues into the next time step size.
+        ## Runs in parallel to the projection onto the faces
+        compute_cfl_condition_task.add_dependency(update_cell_task)
+        compute_cfl_condition_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
+        compute_cfl_condition_task.add_action_set(
+            ComputeGlobalCFLCondition(
                 self._solver,
                 self.cfl_constant,
                 self.patch_size,

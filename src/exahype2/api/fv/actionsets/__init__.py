@@ -6,4 +6,5 @@ from .HandleBoundary import HandleBoundary
 from .AdaptivityCriterion import AdaptivityCriterion
 from .InitialCondition import InitialCondition
 from .ProjectPatchOntoFaces import ProjectPatchOntoFaces
-from .UpdateCellAndComputeGlobalTimeStep import UpdateCellAndComputeGlobalTimeStep
+from .UpdateCell import UpdateCell
+from .ComputeGlobalCFLCondition import ComputeGlobalCFLCondition

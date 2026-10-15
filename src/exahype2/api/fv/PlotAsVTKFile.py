@@ -145,7 +145,7 @@ class PlotAsVTKFile(Solver.Plotter):
         # object: the generated code below carries the exact offset/size
         # values this plotter was configured with, and nothing else.
         # Only the cells selected by the solver's grid selector are plotted,
-        # as only those are updated (@see UpdateCellAndComputeGlobalTimeStep's
+        # as only those are updated (@see UpdateCell's
         # guard). Other cells would hold outdated data overlapping the actual
         # solution.
         guard = "(" + self._solver.grid_selector.createCellGuard() + ")"

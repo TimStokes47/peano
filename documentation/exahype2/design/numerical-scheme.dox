@@ -37,23 +37,28 @@ It represents the logical activities that have to be completed per time step.
 The code below sets this graph up:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-reconstruction_task   = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-update_cell_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell",               entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-project_on_faces_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces",          entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+reconstruction_task        = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs",    entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+update_cell_task           = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell",                  entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+project_on_faces_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces",             entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+compute_cfl_condition_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute global CFL condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
 update_cell_task.add_dependency(reconstruction_task)
 project_on_faces_task.add_dependency(update_cell_task)
+compute_cfl_condition_task.add_dependency(update_cell_task)
 
 time_step.add_task(reconstruction_task)
 time_step.add_task(update_cell_task)
 time_step.add_task(project_on_faces_task)
+time_step.add_task(compute_cfl_condition_task)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There is no separate task for the CFL condition or the time step size: the
-update task's action set
-(exahype2.api.fv.actionsets.UpdateCellAndComputeGlobalTimeStep) also
-collects the maximum eigenvalue of every patch it updates and derives the
-next global time step size from it.
+The CFL condition has a task of its own: The update task's action set
+(exahype2.api.fv.actionsets.UpdateCell) stores the maximum eigenvalue of
+every patch it updates in the cell. The task "Compute global CFL condition"
+(exahype2.api.fv.actionsets.ComputeGlobalCFLCondition) then reduces these
+values and derives the next global time step size from them. It only
+depends on the update, i.e. it can run in parallel to the projection onto
+the faces.
 
 Every Task is tagged with the kind of mesh entity it works on
 (Task.GridEntity.VERTEX/FACE/CELL) and the tasks it depends on. A new
