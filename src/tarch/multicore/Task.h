@@ -71,11 +71,11 @@ namespace tarch {
        * them for all tasks all the time, and I want to avoid that the
        * construction of unique task numbers becomes too expensive.
        *
-       * Some extensions that work with task numbers provide factory methods
-       * for these, which is kind of good practice. ExaHyPE for example
-       * offers exahype2::EnclaveTask::reserveTaskNumber() which ensures that
-       * task numbers are unique among multiple threads and also recycled,
-       * such that they do not overflow.
+       * Codes that work with task numbers should obtain them from a factory,
+       * which is kind of good practice. The tarch for example offers
+       * tarch::multicore::TaskEnumerator which ensures that task numbers are
+       * unique among multiple threads and also recycled, such that they do
+       * not overflow.
        *
        *
        * @see The overview page @ref page_tarch_multicore discusses different
