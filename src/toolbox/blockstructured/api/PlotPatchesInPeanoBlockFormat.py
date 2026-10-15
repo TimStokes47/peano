@@ -169,37 +169,35 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
 
 
   __Template_TouchCellFirstTime_CellPlot = """ 
-  if ( {{GUARD_PREDICATE}} ) {
-    int vertexIndices[TwoPowerD];
+  int vertexIndices[TwoPowerD];
   
-    const double PatchScaling = 1.0;
+  const double PatchScaling = 1.0;
 
-    assertion( _writer!=nullptr );
-    assertion( _dataWriter!=nullptr );
+  assertion( _writer!=nullptr );
+  assertion( _dataWriter!=nullptr );
   
-    const int patchIndex = _writer->plotPatch(
-      marker.x() - marker.h() * PatchScaling * 0.5,
-      marker.h() * PatchScaling
-    );
+  const int patchIndex = _writer->plotPatch(
+    marker.x() - marker.h() * PatchScaling * 0.5,
+    marker.h() * PatchScaling
+  );
  
-    int cellIndex  = _dataWriter->getFirstCellWithinPatch(patchIndex);
-    int currentDoF = 0;
+  int cellIndex  = _dataWriter->getFirstCellWithinPatch(patchIndex);
+  int currentDoF = 0;
   
-    dfor(k,{{DOFS_PER_AXIS}}) {
-      {% if SELECT_DOFS==None %}
-      {{DATATYPE}}* data = fineGridCell{{NAME}}.value + currentDoF;
-      {% else %}
-      {{DATATYPE}} data[] = { 
-          fineGridCell{{NAME}}.value[ currentDoF + {{SELECT_DOFS[0]}} ]
-        {% for i in SELECT_DOFS[1:] %}
-        , fineGridCell{{NAME}}.value[ currentDoF + {{i}} ]
-        {% endfor %}
-      };
-      {% endif %}
-      _dataWriter->plotCell( cellIndex, data );
-      cellIndex++;
-      currentDoF += {{UNKNOWNS}};
-    }
+  dfor(k,{{DOFS_PER_AXIS}}) {
+    {% if SELECT_DOFS==None %}
+    {{DATATYPE}}* data = fineGridCell{{NAME}}.value + currentDoF;
+    {% else %}
+    {{DATATYPE}} data[] = { 
+        fineGridCell{{NAME}}.value[ currentDoF + {{SELECT_DOFS[0]}} ]
+      {% for i in SELECT_DOFS[1:] %}
+      , fineGridCell{{NAME}}.value[ currentDoF + {{i}} ]
+      {% endfor %}
+    };
+    {% endif %}
+    _dataWriter->plotCell( cellIndex, data );
+    cellIndex++;
+    currentDoF += {{UNKNOWNS}};
   }
 """
 
@@ -207,37 +205,35 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
 
 
   __Template_TouchCellFirstTime_VertexPlot = """ 
-  if ( {{GUARD_PREDICATE}} ) {
-    int vertexIndices[TwoPowerD];
+  int vertexIndices[TwoPowerD];
   
-    const double PatchScaling = 1.0;
+  const double PatchScaling = 1.0;
 
-    assertion( _writer!=nullptr );
-    assertion( _dataWriter!=nullptr );
+  assertion( _writer!=nullptr );
+  assertion( _dataWriter!=nullptr );
   
-    const int patchIndex = _writer->plotPatch(
-      marker.x() - marker.h() * PatchScaling * 0.5,
-      marker.h() * PatchScaling
-    );
+  const int patchIndex = _writer->plotPatch(
+    marker.x() - marker.h() * PatchScaling * 0.5,
+    marker.h() * PatchScaling
+  );
  
-    int vertexIndex  = _dataWriter->getFirstVertexWithinPatch(patchIndex);
-    int currentDoF = 0;
+  int vertexIndex  = _dataWriter->getFirstVertexWithinPatch(patchIndex);
+  int currentDoF = 0;
   
-    dfor(k,{{DOFS_PER_AXIS}}) {
-      {% if SELECT_DOFS==None %}
-      {{DATATYPE}}* data = fineGridCell{{NAME}}.value + currentDoF;
-      {% else %}
-      {{DATATYPE}} data[] = { 
-          fineGridCell{{NAME}}.value[ currentDoF + {{SELECT_DOFS[0]}} ]
-        {% for i in SELECT_DOFS[1:] %}
-        , fineGridCell{{NAME}}.value[ currentDoF + {{i}} ]
-        {% endfor %}
-      };
-      {% endif %}
-      _dataWriter->plotVertex( vertexIndex, data );
-      vertexIndex++;
-      currentDoF += {{UNKNOWNS}};
-    }
+  dfor(k,{{DOFS_PER_AXIS}}) {
+    {% if SELECT_DOFS==None %}
+    {{DATATYPE}}* data = fineGridCell{{NAME}}.value + currentDoF;
+    {% else %}
+    {{DATATYPE}} data[] = { 
+        fineGridCell{{NAME}}.value[ currentDoF + {{SELECT_DOFS[0]}} ]
+      {% for i in SELECT_DOFS[1:] %}
+      , fineGridCell{{NAME}}.value[ currentDoF + {{i}} ]
+      {% endfor %}
+    };
+    {% endif %}
+    _dataWriter->plotVertex( vertexIndex, data );
+    vertexIndex++;
+    currentDoF += {{UNKNOWNS}};
   }
 """
 
@@ -328,6 +324,12 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
     if operation_name==ActionSet.OPERATION_END_TRAVERSAL:
       result = jinja2.Template( self.__Template_EndTraversal ).render(**self.d)             
     return result
+
+
+  def get_guard_of_operation(self,operation_name):
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+      return self.d[ "GUARD_PREDICATE" ]
+    return "true"
 
 
   def get_attributes(self):
