@@ -106,6 +106,20 @@ class Solver(abc.ABC):
         How a Solver writes out its solution. Abstract - concrete solvers
         have to provide a subclass that implements construct_output().
 
+        Each plotter decides itself when to plot. The plotter has to give
+        its solver's C++ class a method
+
+        ~~~~~~~~~~~~~~~~~~~~~~~
+        bool wantsToPlot() const;
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        (@see Solver.add_abstract_solver_method()). The generated main asks
+        all solvers with a plotter (repositories::wantsToPlot()) and runs
+        the plot phase if any of them wants to plot. Within the plot phase,
+        each plotter then checks its own solver's wantsToPlot() and only
+        writes output if it is true. This way, every solver can have its own
+        plotter with its own settings - @see exahype2.api.fv.PlotAsVTKFile.
+
         """
 
         def __init__(self, solver: "Solver"):
@@ -143,25 +157,48 @@ class Solver(abc.ABC):
           distinguish them, as only the unknowns are subject to the actual PDE
           formulation. Can be specified either as a plain int, or as a dict
           mapping variable name onto multiplicity (e.g.
-          `{"rho": 1, "j": 3}` for a scalar density plus a 3d momentum). If a
-          dict is used, the code generator emits a `VariableShortcuts` file
-          that lets user code address a variable by name instead of having to
-          remember its offset into the unknowns array by hand.
+          `{"rho": 1, "j": 3}` for a scalar density plus a 3d momentum). If
+          dicts are used, the generated Abstract<SolverName> class hosts a
+          nested struct Variables with one constant per name, so user code
+          can write Q[Variables::j+1] instead of having to remember the
+          offset into the unknowns array by hand.
 
         auxiliary_variables: int or dict
           Same semantics as unknowns, but for variables that may be
-          space-dependent yet do not change over time.
+          space-dependent yet do not change over time. Their names follow
+          the unknowns' names, as the auxiliary variables follow the
+          unknowns in Q.
+
+        If names are used at all, they have to cover all unknowns and all
+        auxiliary variables, i.e. you cannot pass a dict for one and a
+        non-zero int for the other.
 
         """
         self._name = name
 
-        # @todo Maybe can go away?
-        self._use_var_shortcut = False
-        self._variable_names: List[str] = []
-        self._variable_pos: List[int] = [0]
+        # Offset of each named variable within Q. Empty if no names are used.
+        self._variable_positions: Dict[str, int] = {}
 
-        self._unknowns = self._register_variables(unknowns)
-        self._auxiliary_variables = self._register_variables(auxiliary_variables)
+        self._unknowns = self._register_variables(unknowns, 0)
+        self._auxiliary_variables = self._register_variables(
+            auxiliary_variables, self._unknowns
+        )
+
+        named_entries = sum(
+            sum(variables.values())
+            for variables in (unknowns, auxiliary_variables)
+            if isinstance(variables, dict)
+        )
+        if self._variable_positions and named_entries != (
+            self._unknowns + self._auxiliary_variables
+        ):
+            raise ValueError(
+                f"Solver {name}: the variable names {list(self._variable_positions)} "
+                f"cover only {named_entries} of the {self._unknowns} unknowns and "
+                f"{self._auxiliary_variables} auxiliary variables. If you name "
+                f"variables, name all unknowns and all auxiliary variables, i.e. "
+                f"pass dicts for both (or 0 for the one that is empty)."
+            )
 
         self._user_solver_includes = ""
         self._solver_constants = ""
@@ -205,26 +242,28 @@ class Solver(abc.ABC):
         self.plotter: "Solver.Plotter" = None
 
         # The kernel function calls are generated as late as possible, to
-        # ensure that all PDE terms and the numerical scheme have been 
+        # ensure that all PDE terms and the numerical scheme have been
         # specified
         self.compute_kernel_call: str = None
 
-    def _register_variables(self, variables: VariableSpecification) -> int:
+    def _register_variables(self, variables: VariableSpecification, offset: int) -> int:
         """!
 
         Translate a plain int or a name-to-multiplicity dict into a total
-        variable count, and - for the dict case - extend the shared
-        _variable_names/_variable_pos bookkeeping used to emit the
-        VariableShortcuts file. Called once for unknowns and once for
-        auxiliary_variables, so the two end up sharing one contiguous
-        name/offset table.
+        variable count, and - for the dict case - add each name's position
+        within Q to _variable_positions. Called once for unknowns (offset 0)
+        and once for auxiliary_variables (offset = number of unknowns), so
+        the two end up in one contiguous name/offset table.
 
         """
         if isinstance(variables, dict):
-            self._use_var_shortcut = True
-            self._variable_names += list(variables.keys())
-            for multiplicity in variables.values():
-                self._variable_pos.append(multiplicity + self._variable_pos[-1])
+            for variable_name, multiplicity in variables.items():
+                if variable_name in self._variable_positions:
+                    raise ValueError(
+                        f"Solver {self._name}: variable name {variable_name} is used twice"
+                    )
+                self._variable_positions[variable_name] = offset
+                offset += multiplicity
             return sum(variables.values())
         elif isinstance(variables, int):
             return variables
@@ -415,7 +454,9 @@ class Solver(abc.ABC):
         """
         self._abstract_solver_attributes.append(declaration)
 
-    def add_abstract_solver_method(self, declaration: str, definition_generator: Callable[[str], str]):
+    def add_abstract_solver_method(
+        self, declaration: str, definition_generator: Callable[[str], str]
+    ):
         """!
 
         Add a raw C++ method to the generated Abstract<SolverName> class:
@@ -496,7 +537,6 @@ class Solver(abc.ABC):
             "before calling generate_solver_realisation()."
         )
 
-        self.solver_generator.construct_output(exahype2_project, peano_project)
         self.grid_construction.construct_output(
             exahype2_project, peano_project, setup_simulation
         )
@@ -505,3 +545,7 @@ class Solver(abc.ABC):
         )
         if self.plotter is not None:
             self.plotter.construct_output(exahype2_project, peano_project, plot)
+        # Last, so grid construction, numerical scheme and plotter can add
+        # their own members to the solver class first (@see
+        # add_abstract_solver_attribute()/add_abstract_solver_method()).
+        self.solver_generator.construct_output(exahype2_project, peano_project)

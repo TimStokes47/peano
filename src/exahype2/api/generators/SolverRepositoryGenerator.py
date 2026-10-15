@@ -55,6 +55,13 @@ namespace {{ item }} {
    */
   double getMaxTimeStepSize();
 
+  /**
+   * Does any solver want to plot? Only solvers with a plotter are asked.
+   * Each plotter then decides itself within the plot phase whether it
+   * plots (@see exahype2.api.Solver.Plotter).
+   */
+  bool wantsToPlot();
+
 {% for item in NAMESPACE -%}
 }
 {%- endfor %}
@@ -117,6 +124,16 @@ namespace {{ item }} {
     return result;
   }
 
+
+  bool wantsToPlot() {
+    bool result = false;
+    {% for item in PLOTTING_SOLVERS -%}
+    result |= {{ item }}.wantsToPlot();
+    {# Comment to ensure that jinja2 adds a new line#}
+    {%- endfor %}
+    return result;
+  }
+
 {% for item in NAMESPACE -%}
 }
 {%- endfor %}
@@ -128,6 +145,7 @@ namespace {{ item }} {
     def __set_solver_repository_dict(self):
         self.solverRepositoryDictionary = {
             "SOLVERS":                  [],
+            "PLOTTING_SOLVERS":         [],
             "LOAD_BALANCER":            self.project._load_balancer_name,
             "LOAD_BALANCER_ARGUMENTS":  self.project._load_balancer_arguments,
             "LOG_FILTER_FILE":          self.project._log_filter_file,
@@ -145,6 +163,10 @@ namespace {{ item }} {
             self.solverRepositoryDictionary["SOLVERS"].append(
                 (solver.get_name_of_solver_class(), solver.get_name_of_global_instance())
             )
+            if solver.plotter is not None:
+                self.solverRepositoryDictionary["PLOTTING_SOLVERS"].append(
+                    solver.get_name_of_global_instance()
+                )
 
         generated_solver_files = (
             peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(

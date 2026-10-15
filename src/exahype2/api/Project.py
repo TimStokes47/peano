@@ -82,8 +82,6 @@ class Project(object):
         self._dimensions = 3
         self._min_terminal_time = 1.0
         self._max_terminal_time = 0.0
-        self._first_plot_time_stamp = 0.0
-        self._time_in_between_plots = 0.1
         self._load_balancer_name      = ""
         self._load_balancer_arguments = ""
         self._log_filter_file         = "exahype2.log-filter"
@@ -324,14 +322,6 @@ class Project(object):
                 "MaxTerminalTime", "std::numeric_limits<double>::max()"
             )
 
-        peano_project.constants.export(
-            "FirstPlotTimeStamp", str(self._first_plot_time_stamp)
-        )
-
-        peano_project.constants.export(
-            "TimeInBetweenPlots", str(self._time_in_between_plots)
-        )
-
         peano_project.constants.export_boolean_sequence("PeriodicBC", self._periodic_BC)
 
         build_string = "python3 "
@@ -354,8 +344,6 @@ class Project(object):
         offset,
         size,
         min_end_time,
-        first_plot_time_stamp,
-        time_in_between_plots,
         periodic_BC=[False, False, False],
         max_end_time=0.0,
     ):
@@ -374,17 +362,15 @@ class Project(object):
           meshes, most compute kernels do not, so working with something else
           than a square or cube will likely break all numerics.
 
-        @param first_plot_time_stamp: Float
-          Is irrelevant if time_in_between_plots equals zero
-
-        @param time_in_between_plots: Float
-          Set to zero if you don't want to have any plots
-
         @param max_end_time: Float
           If you set it zero (or actually any value smaller than min_end_time), then
           the code will run until the cell that lags behind the most hits the min time.
           If you specify a valid max time however, you can stop the sim as soon as the
           most advanced cell exceeds this threshold.
+
+        There are no plot settings here: when and how often to plot is
+        configured per solver on its plotter, e.g.
+        exahype2.api.fv.PlotAsVTKFile.
         """
         self._domain_offset = offset
         self._domain_size = size
@@ -399,8 +385,6 @@ class Project(object):
 
         self._max_terminal_time = max_end_time
         self._min_terminal_time = min_end_time
-        self._first_plot_time_stamp = first_plot_time_stamp
-        self._time_in_between_plots = time_in_between_plots
 
         self._periodic_BC = []
         for d in range(0, dimensions):

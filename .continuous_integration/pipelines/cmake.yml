@@ -198,21 +198,6 @@ ExaHyPE2_Tutorials_Exercises:
     - Build
   retry: 0
 
-ExaHyPE2_Tutorials_Toyproblems:
-  stage: Tutorials
-  allow_failure: false
-  extends:
-    - .Tags
-    - .Variables
-    - .RunOnlyOn
-    - .BeforeScriptWithCMakeSanitiser
-    - .ExaHyPE2_Tutorials_Toyproblems
-  needs:
-    - job: Build
-  dependencies:
-    - Build
-  retry: 0
-
 ExaHyPE2_Euler:
   stage: Applications
   allow_failure: false

@@ -8,6 +8,37 @@ import toolbox.blockstructured.api
 from ..Solver import Solver
 
 
+class _PlotPatchesIfSolverWantsToPlot(toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat):
+    """!
+
+    PlotPatchesInPeanoBlockFormat which only does something if its solver
+    wants to plot
+
+    The toolbox action set opens a new snapshot file in beginTraversal()
+    and adds it to the index file. That has to be skipped altogether for a
+    solver which does not want to plot, so all operation bodies are wrapped
+    into a check of the solver's wantsToPlot(). wantsToPlot() does not
+    change throughout the plot sweep, as finishPlottingStep() - which moves
+    the solver on to its next plot time stamp - is only called in
+    unprepareTraversal().
+
+    """
+
+    def __init__(self, solver_instance, **kwargs):
+        super().__init__(**kwargs)
+        self._solver_instance = solver_instance
+
+    def get_body_of_operation(self, operation_name):
+        return (
+            "\n  if (repositories::" + self._solver_instance + ".wantsToPlot()) {\n"
+            + super().get_body_of_operation(operation_name)
+            + "\n  }\n"
+        )
+
+    def get_body_of_unprepareTraversal(self):
+        return "  repositories::" + self._solver_instance + ".finishPlottingStep();\n"
+
+
 class PlotAsVTKFile(Solver.Plotter):
     """!
 
@@ -15,16 +46,39 @@ class PlotAsVTKFile(Solver.Plotter):
     a Finite Volume scheme with a Rusanov Riemann solver, realised over a
     block-structured mesh, onto a plot mesh and writes it out as a VTK file.
 
+    The plotter decides itself when to plot (@see Solver.Plotter): it adds
+    the attribute _nextPlotTimeStamp plus the methods wantsToPlot() and
+    finishPlottingStep() to the solver's C++ class. The solver wants to plot
+    as soon as its min time stamp has reached _nextPlotTimeStamp. After each
+    plot, finishPlottingStep() increments _nextPlotTimeStamp by
+    time_in_between_plots.
+
     """
 
     def __init__(self,
                  solver: Solver,
+                 first_plot_time_stamp=0.0,
+                 time_in_between_plots=0.1,
                  plotter_precision=5,
                  output_path = "."):
+        """!
+
+        first_plot_time_stamp: float
+          Time stamp of the first plot.
+
+        time_in_between_plots: float
+          Has to be positive. If you don't want to have any plots for a
+          solver, don't give it a plotter.
+
+        """
         super().__init__(solver)
 
+        if time_in_between_plots <= 0:
+            raise Exception("Time in between plots has to be bigger than 0")
         if plotter_precision <= 0:
             raise Exception("Plotter precision has to be bigger than 0")
+        self._first_plot_time_stamp = first_plot_time_stamp
+        self._time_in_between_plots = time_in_between_plots
         self._plotter_precision = plotter_precision
         self._plot_filters = []
         self._output_path = output_path
@@ -97,7 +151,10 @@ class PlotAsVTKFile(Solver.Plotter):
                 for offset, size in self._plot_filters
             ) + ")"
 
-        plot_patches_action_set = toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
+        self._add_plot_bookkeeping_to_solver()
+
+        plot_patches_action_set = _PlotPatchesIfSolverWantsToPlot(
+            solver_instance=self._solver.get_name_of_global_instance(),
             filename=os.path.join(self._output_path, "solution-" + self._solver.name),
             patch=self._solver._patch,
             dataset_name=self._solver._unknown_identifier(),
@@ -117,3 +174,34 @@ class PlotAsVTKFile(Solver.Plotter):
             plot.visualise(title="Plot task graph for {}".format(self._solver.name))
         if peano4.api.Logger().is_text:
             plot.log_as_text(title="Plot task graph for {}".format(self._solver.name))
+
+    def _add_plot_bookkeeping_to_solver(self):
+        """!
+
+        Add the plot state and wantsToPlot()/finishPlottingStep() to the
+        solver's C++ class. The solver keeps these members once added, so
+        we add them only once, even if the Peano 4 project is generated
+        multiple times.
+
+        """
+        attribute = "double _nextPlotTimeStamp = " + str(self._first_plot_time_stamp) + ";"
+        if attribute in self._solver._abstract_solver_attributes:
+            return
+
+        self._solver.add_abstract_solver_attribute(attribute)
+        self._solver.add_abstract_solver_method(
+            "bool wantsToPlot() const;",
+            lambda qualified_class_name:
+                "bool " + qualified_class_name + "::wantsToPlot() const {\n"
+                "  return tarch::la::greaterEquals(getMinTimeStamp(), _nextPlotTimeStamp);\n"
+                "}\n"
+        )
+        self._solver.add_abstract_solver_method(
+            "void finishPlottingStep() override;",
+            lambda qualified_class_name:
+                "void " + qualified_class_name + "::finishPlottingStep() {\n"
+                "  if (wantsToPlot()) {\n"
+                "    _nextPlotTimeStamp += " + str(self._time_in_between_plots) + ";\n"
+                "  }\n"
+                "}\n"
+        )

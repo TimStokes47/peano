@@ -8,33 +8,46 @@ from .PDETerm import PDETerm
 class NonconservativeProduct(PDETerm):
     """!
 
-    The non-conservative product B(Q) applied to the input in a given
-    direction, i.e. BTimesQ = B(Q) * Q.
+    The non-conservative product B(Q) applied to a jump deltaQ in a given
+    direction, i.e. BTimesDeltaQ = B(Q) * deltaQ
 
-    See python/exahype2/solvers/fv/riemann/kernels.py, whose
-    nonconservativeProduct() multiplies B(Q) with an actual jump deltaQ
-    (BTimesDeltaQ = B(Q) * deltaQ) rather than with Q itself. This new API
-    reduces the signature the same way Flux does and, since there is no
-    deltaQ parameter (yet), applies B(Q) to Q instead - deltaQ and the
-    BTimesDeltaQ naming return once PDE terms are tied to real C code
-    snippets with proper signatures:
+    The signature matches ::exahype2::fv::rusanov::NonconservativeProductFunctor,
+    i.e. what the Rusanov kernels hand over:
 
     @code
     virtual void nonconservativeProduct(
-      const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
+      const double* __restrict__                   Q,          // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
+      const double* __restrict__                   deltaQ,     // deltaQ[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
       const tarch::la::Vector<Dimensions, double>& x,
+      const tarch::la::Vector<Dimensions, double>& volumeSize,
+      double                                       t,
+      double                                       dt,
       int                                          normal,
-      double* __restrict__                         BTimesQ // BTimesQ[{{NUMBER_OF_UNKNOWNS}}]
+      double* __restrict__                         BTimesDeltaQ // BTimesDeltaQ[{{NUMBER_OF_UNKNOWNS}}]
     );
     @endcode
+
+    The kernels evaluate the term on each face of a volume: Q is the average
+    of the two adjacent volumes, deltaQ the difference right minus left (or
+    top minus bottom, ...) along normal. Both include the auxiliary
+    variables, so a term can use the jump of a material parameter, e.g. of
+    a bathymetry. The output only holds unknowns entries.
+
+    The size of the volume is called volumeSize rather than h - as it is in
+    the legacy API - as h frequently is the name of an unknown, e.g. the
+    water height of the shallow water equations.
 
     """
 
     SIGNATURE = (
         "const double* __restrict__ Q, "
+        "const double* __restrict__ deltaQ, "
         "const tarch::la::Vector<Dimensions, double>& x, "
+        "const tarch::la::Vector<Dimensions, double>& volumeSize, "
+        "double t, "
+        "double dt, "
         "int normal, "
-        "double* __restrict__ BTimesQ"
+        "double* __restrict__ BTimesDeltaQ"
     )
 
     NAME = "nonconservativeProduct"

@@ -35,7 +35,9 @@ thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver,
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
     thesolver, volume_size=volume_size
 )
-thesolver.plotter = exahype2.api.fv.PlotAsVTKFile(thesolver)
+thesolver.plotter = exahype2.api.fv.PlotAsVTKFile(
+    thesolver, first_plot_time_stamp=0.0, time_in_between_plots=0.001
+)
 
 #  patch_size,
 #  mesh_size,
@@ -66,8 +68,6 @@ project.set_global_simulation_parameters(
     size=[0.2, 0.2],
     min_end_time=0.01,
     max_end_time=0.01,
-    first_plot_time_stamp=0.0,
-    time_in_between_plots=0.001,
 #    periodic_BC=[False, False, False],
     periodic_BC=[True, True, True],
 )
