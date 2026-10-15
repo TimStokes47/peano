@@ -136,8 +136,7 @@ class ReconstructPatchWithHalo(ActionSet):
 
 
   def get_constructor_body(self):
-    return """  _treeNumber = treeNumber;
-"""
+    return ""
 
 
   def get_action_set_name(self):
@@ -181,7 +180,7 @@ class ReconstructPatchWithHalo(ActionSet):
       int destinationCellSerialised  = peano4::utils::dLinearised(destinationCell,{DOFS_PER_AXIS} + 2*{OVERLAP});
       for (int j=0; j<{UNKNOWNS}; j++) {{
         oldQWithHalo[destinationCellSerialised*{UNKNOWNS}+j] = {CELL_ACCESSOR}.value[ sourceCellSerialised*{UNKNOWNS}+j ];
-        {ASSERTION_WITH_4_ARGUMENTS}( oldQWithHalo[destinationCellSerialised*{UNKNOWNS}+j]==oldQWithHalo[destinationCellSerialised*{UNKNOWNS}+j], sourceCell, j, _treeNumber, marker.toString() );
+        {ASSERTION_WITH_4_ARGUMENTS}( oldQWithHalo[destinationCellSerialised*{UNKNOWNS}+j]==oldQWithHalo[destinationCellSerialised*{UNKNOWNS}+j], sourceCell, j, "Unknown Tree Number", marker.toString() );
       }}
     }}
 """
@@ -213,7 +212,7 @@ class ReconstructPatchWithHalo(ActionSet):
             {ASSERTION_WITH_7_ARGUMENTS}(
               {ASSERTION_PREFIX_FOR_HALO} or
               oldQWithHalo[ destinationCellSerialised*{UNKNOWNS}+j ]==oldQWithHalo[ destinationCellSerialised*{UNKNOWNS}+j ],
-              sourceCell, destinationCell, j, d, marker.toString(), _treeNumber, marker.toString()
+              sourceCell, destinationCell, j, d, marker.toString(), "Unknown Tree Number", marker.toString()
             );
           }}
 
@@ -227,7 +226,7 @@ class ReconstructPatchWithHalo(ActionSet):
             {ASSERTION_WITH_7_ARGUMENTS}(
               {ASSERTION_PREFIX_FOR_HALO} or
               oldQWithHalo[ destinationCellSerialised*{UNKNOWNS}+j ]==oldQWithHalo[ destinationCellSerialised*{UNKNOWNS}+j ],
-              sourceCell, destinationCell, j, d, marker.toString(), _treeNumber, marker.toString()
+              sourceCell, destinationCell, j, d, marker.toString(), "Unknown Tree Number", marker.toString()
             );
           }}
         }}
@@ -257,8 +256,7 @@ class ReconstructPatchWithHalo(ActionSet):
 
 
   def get_attributes(self):
-    return """int  _treeNumber;
-"""
+    return ""
 
 
   def get_includes(self):
