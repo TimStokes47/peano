@@ -6,6 +6,7 @@ import abc
 from typing import Callable, Dict, List, Tuple, Union
 
 import peano4.api
+import peano4.api.toolbox
 
 from .PDETerm import PDETerm
 
@@ -173,6 +174,10 @@ class Solver(abc.ABC):
         auxiliary variables, i.e. you cannot pass a dict for one and a
         non-zero int for the other.
 
+        The variables cannot be changed after construction: the numerical
+        scheme sizes its data structures from them as soon as it is assigned
+        to the solver.
+
         """
         self._name = name
 
@@ -241,6 +246,12 @@ class Solver(abc.ABC):
         # plotter attribute below.
         self.plotter: "Solver.Plotter" = None
 
+        # Selects the mesh entities on which all action sets of this solver
+        # act: Each action set's guard is the corresponding output of this
+        # selector. By default, the solver works on the finest mesh level
+        # only. Users can assign any other peano4.api.toolbox.GridSelector.
+        self.grid_selector: peano4.api.toolbox.GridSelector = peano4.api.toolbox.FineGridSelector()
+
         # The kernel function calls are generated as late as possible, to
         # ensure that all PDE terms and the numerical scheme have been
         # specified
@@ -306,21 +317,9 @@ class Solver(abc.ABC):
     def unknowns(self) -> int:
         return self._unknowns
 
-    @unknowns.setter
-    def unknowns(self, value: VariableSpecification):
-        self._unknowns = self._register_variables(value)
-        self.create_data_structures()
-        self.create_action_sets()
-
     @property
     def auxiliary_variables(self) -> int:
         return self._auxiliary_variables
-
-    @auxiliary_variables.setter
-    def auxiliary_variables(self, value: VariableSpecification):
-        self._auxiliary_variables = self._register_variables(value)
-        self.create_data_structures()
-        self.create_action_sets()
 
     @property
     def user_solver_includes(self) -> str:
@@ -361,6 +360,32 @@ class Solver(abc.ABC):
 
     def _unknown_identifier(self) -> str:
         return self._name + "Q"
+
+    def variable_names_per_entry(self) -> List[str]:
+        """!
+
+        One name per entry of Q, i.e. for the unknowns followed by the
+        auxiliary variables, or the empty list if the variables carry no
+        names. A variable with multiplicity one keeps its name, whereas a
+        variable v with multiplicity k yields the names v[0], ..., v[k-1],
+        i.e. the entries Q[Variables::v+0], ..., Q[Variables::v+k-1].
+        Plotters use these names to label the entries in their output.
+
+        """
+        positions = list(self._variable_positions.items())
+        names = []
+        for i, (variable_name, position) in enumerate(positions):
+            next_position = (
+                positions[i + 1][1]
+                if i + 1 < len(positions)
+                else self._unknowns + self._auxiliary_variables
+            )
+            multiplicity = next_position - position
+            if multiplicity == 1:
+                names.append(variable_name)
+            else:
+                names += [f"{variable_name}[{j}]" for j in range(multiplicity)]
+        return names
 
     def get_name_of_global_instance(self) -> str:
         return "instanceOf" + self._name

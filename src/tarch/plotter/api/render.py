@@ -38,6 +38,12 @@ if __name__ == "__main__":
         default=False,
         help="If you invoke the script on a different directory than your current working directory, ensure that all meta files written do not hold relative paths",
     )
+    parser.add_argument(
+        "--split-unknowns",
+        action="store_true",
+        default=False,
+        help="If the patch file names its unknowns, write one additional array per variable (scalar or vector), so filters can address it by name",
+    )
     parser.add_argument("--dir", default=".", help="Output directory")
     parser.add_argument(
         "-v",
@@ -133,6 +139,7 @@ if __name__ == "__main__":
             verbose=args.verbose,
             start=start_snapshot,
             end=end_snapshot,
+            split_unknowns=args.split_unknowns,
         )
 
     #

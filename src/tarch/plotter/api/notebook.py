@@ -78,6 +78,27 @@ def read_patches(patch_file_name):
     return result
 
 
+def read_unknown_names(file_name):
+    """!
+
+    Names of the unknowns as stored in the description of a patch file
+
+    Plotters such as exahype2.api.fv.PlotAsVTKFile write the names of the
+    unknowns as comma-separated list into the description. Returns this list,
+    or None if the description does not hold one name per unknown.
+
+    """
+    _, patch_files = read_snapshots(file_name)[0]
+    parser = PatchFileParser(patch_files[0], "", 0)
+    with contextlib.redirect_stdout(io.StringIO()):
+        parser.parse_file()
+    for attributes in parser.unknown_attributes.values():
+        names = attributes.unknown_names()
+        if names is not None:
+            return names
+    return None
+
+
 def plot_snapshot(
     file_name, snapshot=-1, unknown=0, clim=None, ax=None, cmap="viridis", label=None
 ):
@@ -148,7 +169,9 @@ def show_solution(file_name, unknown=0, unknown_names=None, clim=None):
     is given - a dropdown to pick the unknown.
 
     unknown_names: List of strings or None
-      Names of the unknowns in the order they are stored.
+      Names of the unknowns in the order they are stored. If None, we take
+      the names from the patch file (@see read_unknown_names()), if it
+      holds any.
 
     clim: (float,float) or None
       Fixed colour range. If None, the colour range per unknown is taken
@@ -159,6 +182,8 @@ def show_solution(file_name, unknown=0, unknown_names=None, clim=None):
     import ipywidgets
 
     snapshots = read_snapshots(file_name)
+    if unknown_names is None:
+        unknown_names = read_unknown_names(file_name)
     if unknown_names is None:
         unknown_names = ["Q[{}]".format(unknown)]
         unknown_indices = {unknown_names[0]: unknown}

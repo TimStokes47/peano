@@ -23,13 +23,14 @@ are held in this directory, too. So simple call Jupyter on different files.
 - Modifying the numerics and the implementation scheme
 - Running codes in parallel
 - Coupling
-- ExaGRyPE
-- ExaSeis 
+  - \subpage tutorials_exahype2_41_postprocessing
+  - \subpage tutorials_exahype2_44_localisation
+  - \subpage tutorials_exahype2_45_coupling
+- \subpage tutorials_exahype2_applications_exagrype (numerical relativity extension built on top of ExaHyPE) 
+- \subpage tutorials_exahype2_applications_exaseis (seismology extension built on top of ExaHyPE)
   
   
   
-  - \subpage tutorials_exahype2_exercises_Acoustic-advanced
-  - \subpage tutorials_exahype2_exercises_SWE-sympy
   - \subpage tutorials_exahype2_exercises_SWE-aderdg
 - HPC  
   - \subpage tutorials_exahype2_hpc_domain-decomposition
@@ -39,11 +40,8 @@ are held in this directory, too. So simple call Jupyter on different files.
   - \ref page_exahype_runtime_analysis "Read the comments on ExaHyPE's bespoke runtime analysis features" besides generic profiling
   - \ref page_exahype_performance_optimisation "Consult ExaHyPE's performance optimisation recommendations"
   - \subpage tutorials_exahype2_dsl_implementing_kernels
-- \subpage tutorials_exahype2_applications_exagrype (numerical relativity extension built on top of ExaHyPE) 
-- \subpage tutorials_exahype2_applications_exaseis (seismology extension built on top of ExaHyPE)
 - Adding features
   - Adding your own compute kernels <!-- (Harrison's work) -->
-  - \subpage tutorials_exahype2_coupling
   - \subpage tutorials_exahype2_additional_mesh_sweeps
 
 

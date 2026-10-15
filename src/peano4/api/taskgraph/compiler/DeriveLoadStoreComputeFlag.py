@@ -87,6 +87,30 @@ def derive_load_store_compute_flag(steps: List["peano4.api.solversteps.Step"]) -
     Task.DataAccess.TEMPORARY. A predicate with no contributing Step at
     all becomes the literal "false".
 
+    ## Grid selector
+
+    If a submodel carries a grid_selector (@see
+    peano4.api.datamodel.DoF, peano4.api.toolbox.GridSelector), the
+    selector's guard for the submodel's kind (createCellGuard(),
+    createFaceGuard() or createVertexGuard()) is AND-combined with each of
+    the three predicates:
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ::peano4::grid::constructLoadStoreComputeFlag((guard) and (use), (guard) and (load), (guard) and (store))
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    That is, data are only used, loaded or stored if the selector holds
+    and the steps above conclude that they are needed. The guard is
+    evaluated within the generated loadStoreComputeFlag(marker), i.e. it
+    can query the marker.
+
+    @note Peano's stacks require that a datum stored in one mesh sweep is
+    loaded in the next one. A selector which depends on the refinement
+    state, such as peano4.api.toolbox.FineGridSelector, therefore has to
+    yield the same answer for the store and the subsequent load. This holds
+    as long as the mesh does not change between the two sweeps, but not
+    in general for dynamically adaptive meshes.
+
     This does not touch generator.send_condition/receive_and_merge_condition -
     those are a separate, MPI rank-boundary concern this function has
     nothing to say about.
@@ -136,12 +160,12 @@ def derive_load_store_compute_flag(steps: List["peano4.api.solversteps.Step"]) -
       submodel's predicates see every Step that might touch it.
 
     """
-    for attribute_name, access_attribute_name in (
-        ("cell_data", "cell_data_access"),
-        ("face_data", "face_data_access"),
-        ("vertex_data", "vertex_data_access"),
+    for attribute_name, access_attribute_name, guard_routine_name in (
+        ("cell_data", "cell_data_access", "createCellGuard"),
+        ("face_data", "face_data_access", "createFaceGuard"),
+        ("vertex_data", "vertex_data_access", "createVertexGuard"),
     ):
-        _derive_load_store_compute_flag_for_one_kind(steps, attribute_name, access_attribute_name)
+        _derive_load_store_compute_flag_for_one_kind(steps, attribute_name, access_attribute_name, guard_routine_name)
 
 
 def _step_active_expression(step: "peano4.api.solversteps.Step") -> str:
@@ -181,6 +205,7 @@ def _derive_load_store_compute_flag_for_one_kind(
     steps: List["peano4.api.solversteps.Step"],
     attribute_name: str,
     access_attribute_name: str,
+    guard_routine_name: str,
 ) -> None:
     use_terms: Dict["peano4.api.datamodel.DoF", List[str]] = {}
     load_terms: Dict["peano4.api.datamodel.DoF", List[str]] = {}
@@ -203,6 +228,14 @@ def _derive_load_store_compute_flag_for_one_kind(
         use_expression = " or ".join(terms)
         load_expression = " or ".join(load_terms.get(submodel, [])) or "false"
         store_expression = " or ".join(store_terms.get(submodel, [])) or "false"
+
+        # getattr: submodels need not be peano4.api.datamodel.DoF instances
+        grid_selector = getattr(submodel, "grid_selector", None)
+        if grid_selector is not None:
+            guard = getattr(grid_selector, guard_routine_name)()
+            use_expression = f"({guard}) and ({use_expression})"
+            load_expression = f"({guard}) and ({load_expression})"
+            store_expression = f"({guard}) and ({store_expression})"
         new_flag = (
             f"::peano4::grid::constructLoadStoreComputeFlag({use_expression}, {load_expression}, {store_expression})"
         )

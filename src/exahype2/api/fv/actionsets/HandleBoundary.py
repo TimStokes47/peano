@@ -108,7 +108,7 @@ class HandleBoundary(AbstractFVActionSet):
     }
 """
 
-    def __init__(self, solver, guard="true"):
+    def __init__(self, solver, guard):
         AbstractFVActionSet.__init__(self, solver)
         self.guard = guard
 

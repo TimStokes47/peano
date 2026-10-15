@@ -82,6 +82,27 @@ Python, or another VTK-aware viewer such as VisIt - only running the
 conversion script itself no longer needs pvpython/Paraview.
 
 
+### Names of the unknowns
+
+If the description of a data set in the patch file lists one name per
+unknown, e.g. `description h, hu, hv, b`, the conversion uses these names:
+the components of the data array are called h, hu, hv, b and subdomain
+rather than 0 to 4, so Paraview offers the names when you colour by the
+array. ExaHyPE's solvers write such descriptions if you give their
+variables names. A description is taken as list of names if and only if it
+holds one C++ identifier, optionally followed by an index such as `[0]`, per
+unknown. Any other description is treated as free text.
+
+With `--split-unknowns`, the conversion additionally writes one array per
+variable, so filters such as Calculator, Contour or Threshold can address
+a variable directly by its name. Entries `v[0]`, `v[1]`, ... form one vector
+array `v`. Vectors with two entries are padded with a zero, as Paraview only
+treats arrays with three components as vectors. The extra arrays roughly
+double the file size.
+
+@ref tutorials_exahype2_41_postprocessing "The postprocessing tutorial" shows both in action.
+
+
 ### Tuning the offline conversion
 
 By default, `render.py` processes snapshots one after another in a single

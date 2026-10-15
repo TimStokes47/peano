@@ -114,13 +114,22 @@ class DoF(object):
       This flag is, by default, an empty list. If you add an entry to this 
       list, each store and load routine will get an additional parameter. 
       Consult documentation above for the semantics of the list entries.
-    
-          
+
+    grid_selector: peano4.api.toolbox.GridSelector or None
+      None by default. If set, the task graph compiler restricts the
+      storage of this DoF to the mesh entities selected: The selector's
+      guard is AND-combined with each of the use/load/store predicates the
+      compiler derives (@see peano4.api.taskgraph.compiler.DeriveLoadStoreComputeFlag).
+      That is, data are only used, loaded or stored if the selector holds
+      and the compiler has concluded that the data are needed.
+
+
     """
     self.association = DoFAssociation.Undef
     self.name        = name
     self.namespace   = []
     self._additional_load_and_store_arguments = []
+    self.grid_selector = None
   
   
   def configure(self,namespace,association, subdirectory=""):

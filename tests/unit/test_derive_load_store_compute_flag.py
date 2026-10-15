@@ -240,3 +240,102 @@ def test_includes_are_not_duplicated_on_repeated_calls():
     assert submodel.generator.includes.count('#include "repositories/StepRepository.h"') == 1
     assert submodel.generator.includes.count('#include "repositories/SolverRepository.h"') == 1
     assert submodel.generator.includes.count('#include "peano4/parallel/Node.h"') == 1
+
+
+class _FakeGridSelector:
+    """Stand-in for a peano4.api.toolbox.GridSelector with one distinct
+    guard per kind, so tests can tell which routine was used."""
+
+    def createCellGuard(self):
+        return "cellGuard"
+
+    def createFaceGuard(self):
+        return "faceGuard"
+
+    def createVertexGuard(self):
+        return "vertexGuard"
+
+
+def test_grid_selector_guard_is_combined_with_each_predicate():
+    writer = _make_step("TimeStep_Writer")
+    reader = _make_step("TimeStep_Reader")
+    submodel = _FakeSubmodel("Q")
+    submodel.grid_selector = _FakeGridSelector()
+    _use_cell(writer, submodel, WRITE)
+    _use_cell(reader, submodel, READ_AND_DISCARD)
+
+    derive_load_store_compute_flag([writer, reader])
+
+    active_writer = _active(writer)
+    active_reader = _active(reader)
+    assert submodel.generator.load_store_compute_flag == _flag(
+        f"(cellGuard) and ({active_writer} or {active_reader})",
+        f"(cellGuard) and ({active_reader})",
+        f"(cellGuard) and ({active_writer})",
+    )
+
+
+def test_grid_selector_guard_is_combined_with_false_predicate():
+    step = _make_step("TimeStep_Step")
+    submodel = _FakeSubmodel("Q")
+    submodel.grid_selector = _FakeGridSelector()
+    _use_cell(step, submodel, TEMPORARY)
+
+    derive_load_store_compute_flag([step])
+
+    active = _active(step)
+    assert submodel.generator.load_store_compute_flag == _flag(
+        f"(cellGuard) and ({active})", "(cellGuard) and (false)", "(cellGuard) and (false)"
+    )
+
+
+def test_grid_selector_guard_matches_kind_of_submodel():
+    step = _make_step("TimeStep_Step")
+    cell_submodel = _FakeSubmodel("Cell")
+    face_submodel = _FakeSubmodel("Face")
+    vertex_submodel = _FakeSubmodel("Vertex")
+    for submodel in (cell_submodel, face_submodel, vertex_submodel):
+        submodel.grid_selector = _FakeGridSelector()
+    _use_cell(step, cell_submodel, READ_AND_WRITE)
+    _use_face(step, face_submodel, READ_AND_WRITE)
+    _use_vertex(step, vertex_submodel, READ_AND_WRITE)
+
+    derive_load_store_compute_flag([step])
+
+    active = _active(step)
+    for submodel, guard in (
+        (cell_submodel, "cellGuard"),
+        (face_submodel, "faceGuard"),
+        (vertex_submodel, "vertexGuard"),
+    ):
+        predicate = f"({guard}) and ({active})"
+        assert submodel.generator.load_store_compute_flag == _flag(predicate, predicate, predicate)
+
+
+def test_no_grid_selector_leaves_predicates_untouched():
+    step = _make_step("TimeStep_Step")
+    submodel = _FakeSubmodel("Q")
+    submodel.grid_selector = None
+    _use_cell(step, submodel, READ_AND_WRITE)
+
+    derive_load_store_compute_flag([step])
+
+    active = _active(step)
+    assert submodel.generator.load_store_compute_flag == _flag(active, active, active)
+
+
+def test_fine_grid_selector_restricts_patch_to_unrefined_cells():
+    """End-to-end with the real classes: a peano4.api.datamodel.Patch
+    carrying a peano4.api.toolbox.FineGridSelector."""
+    import peano4.api.datamodel
+    import peano4.api.toolbox
+
+    step = _make_step("TimeStep_Step")
+    patch = peano4.api.datamodel.Patch((3, 3, 3), 1, "Q")
+    patch.grid_selector = peano4.api.toolbox.FineGridSelector()
+    _use_cell(step, patch, READ_AND_WRITE)
+
+    derive_load_store_compute_flag([step])
+
+    predicate = f"(not marker.hasBeenRefined()) and ({_active(step)})"
+    assert patch.generator.load_store_compute_flag == _flag(predicate, predicate, predicate)

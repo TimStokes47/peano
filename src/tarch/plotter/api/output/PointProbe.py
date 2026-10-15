@@ -1,6 +1,7 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 from .Visualiser import Visualiser
+from ..input.PatchFileParser import unknown_names_from_description
 
 import csv
 import itertools
@@ -153,7 +154,8 @@ class PointProbe(Visualiser):
 
     def process_snapshot(self, snapshot, i):
         """!
-        Return (timestamp, dict from unknown name onto (number of unknowns, values or None))
+        Return (timestamp, dict from unknown name onto (number of unknowns,
+        description, values or None))
         """
         if self.verbose:
             print(f"Probe snapshot {i} (t={snapshot.timestamp})")
@@ -162,6 +164,7 @@ class PointProbe(Visualiser):
         for unknown_name, patch_file_data in data.items():
             result[unknown_name] = (
                 patch_file_data._unknowns,
+                patch_file_data._description,
                 self._probe_patch_data(patch_file_data, self._point),
             )
         return snapshot.timestamp, result
@@ -189,24 +192,52 @@ class PointProbe(Visualiser):
 
         self._write_csv(sorted(results, key=lambda result: result[0]))
 
+    def _column_names(self, columns, descriptions):
+        """!
+
+        One column name per unknown of each data set
+
+        If a data set names its unknowns (@see unknown_names_from_description()),
+        we use these names, e.g. h, hu, hv, b. If two data sets use the same
+        name, we prefix the names with the data set, e.g. SWEQ_h. Data sets
+        without names yield SWEQ_0, SWEQ_1, ...
+
+        """
+        names = {
+            unknown_name: unknown_names_from_description(
+                descriptions.get(unknown_name, ""), unknowns
+            )
+            for unknown_name, unknowns in columns.items()
+        }
+        all_names = [name for n in names.values() if n is not None for name in n]
+        unique = len(all_names) == len(set(all_names))
+        header = []
+        for unknown_name, unknowns in columns.items():
+            if names[unknown_name] is None:
+                header += [f"{unknown_name}_{i}" for i in range(unknowns)]
+            elif unique:
+                header += names[unknown_name]
+            else:
+                header += [f"{unknown_name}_{name}" for name in names[unknown_name]]
+        return header
+
     def _write_csv(self, results):
         columns = {}
+        descriptions = {}
         for _, result in results:
-            for unknown_name, (unknowns, _) in result.items():
+            for unknown_name, (unknowns, description, _) in result.items():
                 columns[unknown_name] = max(unknowns, columns.get(unknown_name, 0))
+                descriptions.setdefault(unknown_name, description)
 
         uncovered_snapshots = 0
         with open(self._output_file, "w", newline="") as csv_file:
             writer = csv.writer(csv_file, delimiter=",")
-            header = ["time"]
-            for unknown_name, unknowns in columns.items():
-                header += [f"{unknown_name}_{i}" for i in range(unknowns)]
-            writer.writerow(header)
+            writer.writerow(["time"] + self._column_names(columns, descriptions))
 
             for timestamp, result in results:
                 row = [timestamp]
                 for unknown_name, unknowns in columns.items():
-                    values = result.get(unknown_name, (unknowns, None))[1]
+                    values = result.get(unknown_name, (unknowns, "", None))[2]
                     if values is None:
                         values = [float("nan")] * unknowns
                         uncovered_snapshots += 1

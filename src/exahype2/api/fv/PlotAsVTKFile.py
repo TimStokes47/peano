@@ -53,6 +53,13 @@ class PlotAsVTKFile(Solver.Plotter):
     plot, finishPlottingStep() increments _nextPlotTimeStamp by
     time_in_between_plots.
 
+    If the solver's variables carry names, the plotter writes them as
+    comma-separated list into the description of the output files (@see
+    Solver.variable_names_per_entry()). Paraview then shows them in the
+    name of the data array, and tarch.plotter.api.notebook.show_solution()
+    uses them to label the unknowns. Otherwise, the description is the
+    solver's unknown identifier.
+
     """
 
     def __init__(self,
@@ -137,10 +144,11 @@ class PlotAsVTKFile(Solver.Plotter):
         # Python) rather than delegating to some project-wide C++ filter
         # object: the generated code below carries the exact offset/size
         # values this plotter was configured with, and nothing else.
-        # Only leaf cells are plotted: refined cells are not updated (@see
-        # UpdateCellAndComputeGlobalTimeStep's guard), so their patches still
-        # hold the initial condition and would overlap the actual solution.
-        guard = "not marker.willBeRefined() and not marker.hasBeenRefined()"
+        # Only the cells selected by the solver's grid selector are plotted,
+        # as only those are updated (@see UpdateCellAndComputeGlobalTimeStep's
+        # guard). Other cells would hold outdated data overlapping the actual
+        # solution.
+        guard = "(" + self._solver.grid_selector.createCellGuard() + ")"
         if self._plot_filters:
             guard += " and (" + " or ".join(
                 "marker.overlaps({"
@@ -158,7 +166,8 @@ class PlotAsVTKFile(Solver.Plotter):
             filename=os.path.join(self._output_path, "solution-" + self._solver.name),
             patch=self._solver._patch,
             dataset_name=self._solver._unknown_identifier(),
-            description=self._solver._unknown_identifier(),
+            description=", ".join(self._solver.variable_names_per_entry())
+            or self._solver._unknown_identifier(),
             guard=guard,
             additional_includes="""
 #include "../repositories/SolverRepository.h"
