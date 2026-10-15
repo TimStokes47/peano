@@ -171,8 +171,11 @@ class ActionSet(object):
           outputfile.write("  class {};\n".format(self.classname))
           for i in self.namespace: outputfile.write( "}\n" )
 
-          outputfile.write( "class " + full_qualified_classname + "{\n" )
-          outputfile.write( "  private:\n" )
+          if self.implementation.get_base_class() is None:
+            outputfile.write( "class " + full_qualified_classname + "{\n" )
+          else:
+            outputfile.write( "class " + full_qualified_classname + ": public " + self.implementation.get_base_class() + " {\n" )
+          outputfile.write( "  protected:\n" )
           outputfile.write( "    static tarch::logging::Log  _log;\n" )
           outputfile.write( self.implementation.get_attributes() )
 
@@ -227,7 +230,10 @@ class ActionSet(object):
       outputfile.write( self.implementation.get_static_initialisations(self.__get_full_qualified_class_name()) )
       outputfile.write( "\n\n\n" )
 
-      outputfile.write( self.__get_full_qualified_class_name() + "::" + self.classname + "(int treeNumber) {\n" )
+      if self.implementation.get_base_class() is None:
+        outputfile.write( self.__get_full_qualified_class_name() + "::" + self.classname + "(int treeNumber) {\n" )
+      else:
+        outputfile.write( self.__get_full_qualified_class_name() + "::" + self.classname + "(int treeNumber):\n  " + self.implementation.get_base_class() + "(treeNumber) {\n" )
       outputfile.write( self.implementation.get_constructor_body() )
       outputfile.write( "}\n\n\n" )
 
