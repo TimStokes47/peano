@@ -2,7 +2,7 @@
 
 @page page_exahype_design_philosophy Design philosophy and principles
 
-@tableofcontents
+\tableofcontents
 
 ExaHyPE 2 is built as a layer on top of Peano 4 and the Peano 4 Technical Architecture. 
 This C++ ExaHyPE 2 layer is built as a set of Peano 4 C++ utility files compiled into one shared library plus a Python API. 
@@ -13,9 +13,9 @@ For this, ExaHyPE 2 provides a Python API that allows users to describe their so
 
 
 
-# Python layer
+## Python layer
 
-## Architecture
+### Architecture
 
 @image html documentation/exahype2/design/python-architecture-layers.png
 
@@ -39,7 +39,7 @@ This part is already an element of the Peano core architecture. and is not speci
 
 
 
-## Simple conventions
+### I/O and user interface conventions
 
 - All steps report against the Peano logger. It enlists information through which 
   steps the generation runs through (but not what exactly has been produced). 

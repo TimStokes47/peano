@@ -4,28 +4,21 @@
 
 \tableofcontents
 
-<br /><br />
-<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
-Needs some kind of nice introduction.
-</div>
 
-
-
-# Technical steps to add a new numerical scheme
-
-The actual numerical scheme is implemented through the method
+A numerical scheme is technically a generator which takes a solver description and produces a task graph of activities.
+Therefore, it is typically implemented through a single method
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def construct_output(self, exahype2_project, peano_project, time_step):
   ...
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-where `time_step` is a peano4.api.taskgraph.Graph: the task graph of the
-surrounding project's time stepping phase. Implementing a numerical scheme
+where `time_step` is the @ref peano4.api.taskgraph.Graph "task graph"
+ of the surrounding project's time stepping phase. Implementing a numerical scheme
 therefore means populating this graph with peano4.api.taskgraph.Task
 instances and the dependencies between them.
 
-## Task graph structure
+## Task graph structurex
 
 Below is a simple example for such a task graph - the time step task graph exahype2.api.fv.RusanovWithExplicitEuler
 builds for a Finite Volume solver, as rendered by Graph.visualise():
@@ -95,5 +88,12 @@ Therefore, all the documentation of these aspects is tied to @ref peano4.api.tas
 while the bigger picture is provided by @ref page_peano4_home.
 
 
+## Best practices and conventions
+
+- Keep the task graph as atomic as possible. That is, don't create tasks that host
+  many action sets. Only group the action sets together that really need to be executed in a single task
+  ***and*** have a similar access pattern to the mesh. For example, it is not a good
+  idea to combine a global (time step or eigenvalue) reduction with a cell update
+  task. Keep tasks separate and leave it to the task compiler to optimise things.
 
 */
