@@ -85,24 +85,22 @@ class InsertRandomParticlesIntoUnrefinedCells(ActionSet):
 
     __Template_TouchCellFirstTime = jinja2.Template(
         """
-  if ( not marker.hasBeenRefined() and not marker.willBeRefined() ) {
-    std::vector< globaldata::{{PARTICLE}}* > newParticles = toolbox::particles::createEquallySpacedParticles<globaldata::{{PARTICLE}}>(
-      {{H}},
-      marker.x(),
-      marker.h(),
-      {{ROUND_DOWN}},
-      {{NOISE}}
-    );
-    for (auto* particle: newParticles) {
-      // See documentation of constructor on initialisation snippet
-      {{INITIALISATION_CALL}}
-    }
-    toolbox::particles::insertParticlesIntoCell(
-      marker,
-      newParticles,
-      fineGridVertices{{PARTICLES_CONTAINER}}
-    );
+  std::vector< globaldata::{{PARTICLE}}* > newParticles = toolbox::particles::createEquallySpacedParticles<globaldata::{{PARTICLE}}>(
+    {{H}},
+    marker.x(),
+    marker.h(),
+    {{ROUND_DOWN}},
+    {{NOISE}}
+  );
+  for (auto* particle: newParticles) {
+    // See documentation of constructor on initialisation snippet
+    {{INITIALISATION_CALL}}
   }
+  toolbox::particles::insertParticlesIntoCell(
+    marker,
+    newParticles,
+    fineGridVertices{{PARTICLES_CONTAINER}}
+  );
 """
     )
 
@@ -111,6 +109,11 @@ class InsertRandomParticlesIntoUnrefinedCells(ActionSet):
         if operation_name == ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             result = self.__Template_TouchCellFirstTime.render(**self.d)
         return result
+
+    def get_guard_of_operation(self, operation_name):
+        if operation_name == ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            return "not marker.hasBeenRefined() and not marker.willBeRefined()"
+        return "true"
 
     def get_body_of_createGridControlEventsForNextTraversal(self):
         return "  return std::vector< peano4::grid::GridControlEvent >();\n"

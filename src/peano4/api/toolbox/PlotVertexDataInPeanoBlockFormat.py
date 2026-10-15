@@ -124,8 +124,7 @@ class PlotVertexDataInPeanoBlockFormat(ActionSet):
     return False
 
 
-  __Template_TouchCellFirstTime = """ 
-if ( {{GUARD_PREDICATE}} ) {
+  __Template_TouchCellFirstTime = """
   int vertexIndices[TwoPowerD];
 
   int patchIndex = _writer->plotPatch(
@@ -140,7 +139,6 @@ if ( {{GUARD_PREDICATE}} ) {
     _dataWriter->plotVertex( vertexIndex, data );
     vertexIndex++;
   enddforx
-}
 """
 
 
@@ -195,8 +193,14 @@ if ( {{GUARD_PREDICATE}} ) {
     if operation_name==ActionSet.OPERATION_BEGIN_TRAVERSAL:
       result = jinja2.Template( self.__Template_BeginTraversal).render(**self.d)             
     if operation_name==ActionSet.OPERATION_END_TRAVERSAL:
-      result = jinja2.Template( self.__Template_EndTraversal).render(**self.d)             
+      result = jinja2.Template( self.__Template_EndTraversal).render(**self.d)
     return result
+
+
+  def get_guard_of_operation(self,operation_name):
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+      return self.d[ "GUARD_PREDICATE" ]
+    return "true"
 
 
   def get_attributes(self):
