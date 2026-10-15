@@ -19,28 +19,50 @@ def translate(
     """!
 
     Task graph compiler which fuses tasks into as few mesh traversals as possible
-    
-    You can use this task graph in your ExaHypE 2 project through
-    
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+
+    You can use this task graph compiler in your ExaHyPE 2 project through
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Where peano4.api.taskgraph.compiler.Sequential.translate() maps every
     task onto a mesh traversal (Observer) of its own, this compiler packs
-    several tasks into one traversal whenever the order in which a
-    traversal visits the mesh entities permits it.
+    several tasks into one traversal whenever this is safe.
 
-    ## The fusion constraint
+    ## When can two tasks be fused?
 
-    Each grid sweep first does something with the vertices, then with the
-    faces, then with the cells (@see Task.GridEntity, whose values follow
-    exactly this order). A task that works on a face can therefore be
-    followed by a task working on a face or a cell within the same
-    traversal, but a task working on a vertex has to go into the next
-    traversal. In general, a node can be appended to the traversal built
-    up so far if and only if the lowest grid entity it works on is not
-    lower than the highest grid entity the traversal works on so far.
+    Two tasks end up in the same traversal if and only if all of the
+    following constraints hold:
+
+    1. **Entity order.** Each grid sweep first does something with the
+       vertices, then with the faces, then with the cells (@see
+       Task.GridEntity, whose values follow exactly this order). A task that
+       works on a face can therefore be followed by a task working on a face
+       or a cell within the same traversal, but a task working on a vertex
+       has to go into the next traversal. In general, a node can be appended
+       to the traversal built up so far if and only if the lowest grid
+       entity it works on is not lower than the highest grid entity the
+       traversal works on so far. Tasks of one dependency layer (see
+       below) are independent of each other, so this constraint does not
+       apply among them.
+    2. **No conflicting face or vertex data.** A face or a vertex is shared
+       between several cells. If one task of a traversal writes a face or
+       vertex submodel (WRITE or READ_AND_WRITE) while another task of the
+       same traversal reads or writes the very same submodel, a cell might
+       see the submodel before or after a neighbouring cell has already
+       altered it, depending on the traversal order. Such tasks are never
+       fused (@see _have_conflicting_data()). Cell data are not shared
+       between cells and hence do not constrain the fusion. TEMPORARY uses
+       are ignored. This constraint is conservative: it relies only on the
+       Task.DataAccess qualifiers and does not know that a task might for
+       example write the face data only when it touches a face for the
+       last time.
+    3. **No repetition.** Tasks which have to repeat (Task.has_to_repeat)
+       are never fused. They always yield a traversal of their own.
+    4. **No annotation.** The caller can annotate the fusion through
+       non_fusable_task_pairs: two tasks forming such a pair never end up
+       in the same traversal.
 
     ## Algorithm
 
@@ -50,23 +72,54 @@ def translate(
        Tasks within one layer can never depend on one another, i.e. they
        can run in parallel. Within a layer, tasks keep the order in which
        Graph.ordered_tasks() lists them.
-    2. All tasks of one layer are first combined into one intermediate
-       node. Such a node might work on several grid entities. If it holds
-       more than one task, every action set of these tasks is labelled as
-       parallel (@see peano4.api.solversteps.ActionSet.parallel), i.e.
-       they may be invoked concurrently.
-    3. The resulting sequence of nodes is fused greedily into traversals
-       subject to the fusion constraint above.
+    2. The tasks of one layer are combined into intermediate nodes. A
+       repeating task forms a node of its own, placed in front of the
+       layer's remaining nodes. The remaining tasks are added one by one to
+       the layer's current node unless they have conflicting data with it
+       (constraint 2) or form a non-fusable pair with one of its tasks
+       (constraint 4). In this case, they start a new node. A node might
+       work on several grid entities. If a node holds more than one task,
+       every action set of these tasks is labelled as parallel (@see
+       peano4.api.solversteps.ActionSet.parallel), i.e. they may be invoked
+       concurrently.
+    3. The resulting sequence of nodes is fused greedily into traversals:
+       a node is appended to the current traversal if constraints 1 to 4
+       hold for the node and all tasks already in the traversal. Otherwise,
+       it starts a new traversal. The fusion never reorders nodes and never
+       looks further ahead.
 
-    Tasks which have to repeat (Task.has_to_repeat) are never fused: they
-    are removed from their layer before step 2 and always yield a
-    traversal of their own, placed right before whatever the remaining
-    tasks of their layer yield.
+    ## Examples
 
-    Furthermore, the caller can annotate the fusion through
-    non_fusable_task_pairs: a node is never appended to a traversal if one
-    of its tasks forms such a pair with a task already within this
-    traversal. The node then starts a new traversal.
+    The illustrations below are generated by
+    src/peano4/api/taskgraph/compiler/fuse-steps-illustrations.py. Each
+    shows the input task graph on top and the compiled sequence of
+    traversals underneath.
+
+    ### Entity order
+
+    A chain of tasks working on a vertex, a face, a cell, a vertex and a
+    cell. The vertex, face and cell tasks are fused into one traversal.
+    The second vertex task has to start a new traversal, which also takes
+    the subsequent cell task.
+
+    @image html fuse-steps-entity-order.png
+
+    ### Parallel tasks
+
+    Two independent vertex tasks form one layer and hence one parallel
+    node. They are fused with the two independent cell tasks of the
+    subsequent layer. Action sets with the same number run in parallel.
+
+    @image html fuse-steps-parallel.png
+
+    ### Conflicting face data
+
+    The time step of an ExaHyPE 2 Finite Volume solver: the reconstruction
+    reads the face data that the projection eventually writes. Therefore,
+    the projection cannot be fused with the reconstruction and the update,
+    and starts a traversal of its own.
+
+    @image html fuse-steps-data-conflict.png
 
     ## Constructing the fused step
 
@@ -116,6 +169,12 @@ def translate(
         non_fusable.add((first_task, second_task))
         non_fusable.add((second_task, first_task))
 
+    def can_be_combined(tasks: List[Task], further_tasks: List[Task]) -> bool:
+        """Constraints 2 and 4 between two lists of tasks"""
+        return not _have_conflicting_data(tasks, further_tasks) and not any(
+            (task, further_task) in non_fusable for task in tasks for further_task in further_tasks
+        )
+
     order = graph.ordered_tasks()
 
     depth_of_task = {}
@@ -131,21 +190,27 @@ def translate(
     for task in order:
         layers.setdefault(depth(task), []).append(task)
 
-    # Step 1 and 2: one node (list of tasks) per layer, plus one node per
-    # repeating task
+    # Step 1 and 2: nodes (lists of tasks) per layer
     nodes = []
     for layer in sorted(layers.keys()):
         tasks_in_layer = layers[layer]
         for task in tasks_in_layer:
             if task.has_to_repeat:
                 nodes.append([task])
-        parallel_tasks = [task for task in tasks_in_layer if not task.has_to_repeat]
-        if len(parallel_tasks) > 1:
-            for task in parallel_tasks:
-                for action_set in task.action_sets:
-                    action_set.parallel = True
-        if parallel_tasks:
-            nodes.append(parallel_tasks)
+        nodes_of_layer = []
+        for task in tasks_in_layer:
+            if task.has_to_repeat:
+                continue
+            if nodes_of_layer and can_be_combined(nodes_of_layer[-1], [task]):
+                nodes_of_layer[-1].append(task)
+            else:
+                nodes_of_layer.append([task])
+        for node in nodes_of_layer:
+            if len(node) > 1:
+                for task in node:
+                    for action_set in task.action_sets:
+                        action_set.parallel = True
+        nodes += nodes_of_layer
 
     # Step 3: greedy fusion along the sequence of nodes
     groups = []
@@ -159,12 +224,7 @@ def translate(
             not is_repeating
             and current_group is not None
             and lowest_entity >= highest_entity_of_current_group
-            and not any(
-                (task_in_group, task) in non_fusable
-                for group_node in current_group
-                for task_in_group in group_node
-                for task in node
-            )
+            and can_be_combined([task for group_node in current_group for task in group_node], node)
         ):
             current_group.append(node)
             highest_entity_of_current_group = max(highest_entity_of_current_group, highest_entity)
@@ -181,6 +241,36 @@ def translate(
     report_compiled_step_sequence(steps, title=f"Compiled task graph for {identifier}")
 
     return steps
+
+
+def _have_conflicting_data(tasks: List[Task], further_tasks: List[Task]) -> bool:
+    """!
+
+    Check whether two sets of tasks can not share one mesh traversal due to
+    their face or vertex data
+
+    True if one of the tasks writes a face or vertex submodel (WRITE or
+    READ_AND_WRITE) which one of the further_tasks reads or writes
+    (READ_AND_DISCARD, WRITE or READ_AND_WRITE), or vice versa. Cell data
+    and TEMPORARY uses are ignored. @see translate()
+
+    """
+    writing_accesses = (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE)
+    using_accesses = (Task.DataAccess.READ_AND_DISCARD, Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE)
+
+    def submodels(task_list, accesses):
+        return {
+            (kind, submodel)
+            for task in task_list
+            for kind, access_of_submodel in (("face", task.face_data_access), ("vertex", task.vertex_data_access))
+            for submodel, access in access_of_submodel.items()
+            if access in accesses
+        }
+
+    return bool(
+        submodels(tasks, writing_accesses) & submodels(further_tasks, using_accesses)
+        or submodels(further_tasks, writing_accesses) & submodels(tasks, using_accesses)
+    )
 
 
 def _task_name(task: Task) -> str:
