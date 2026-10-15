@@ -189,6 +189,9 @@ Patch overlap data
         self._solver._patch.generator =peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
             self._solver._patch, "double"
         )
+        self._solver._patch_with_halo.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
+            self._solver._patch_with_halo, "double"
+        )
         self._solver._patch_overlap_current_time_step.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
             self._solver._patch_overlap_current_time_step, "double"
         )
