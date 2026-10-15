@@ -2,6 +2,42 @@
 
 @page page_exahype_design_philosophy Design philosophy and principles
 
+@tableofcontents
+
+ExaHyPE 2 is built as a layer on top of Peano 4 and the Peano 4 Technical Architecture. 
+This C++ ExaHyPE 2 layer is built as a set of Peano 4 C++ utility files compiled into one shared library plus a Python API. 
+It is relatively straightforward to understand by browsing through the C++ files, but it provides limited structure:
+You find most of the compute ingredients of an ExaHyPE code in there, but the actual logic are not encoded in the C++.
+
+For this, ExaHyPE 2 provides a Python API that allows users to describe their solver and its behaviour in a more abstract way.
+
+
+
+# Python layer
+
+## Architecture
+
+@image html documentation/exahype2/design/python-architecture-layers.png
+
+At the heart of ExaHyPE 2 are the solver classes and its aggregate. 
+They model ***what*** is solved, i.e.~encode the physics.
+Any implementation details how things are solved - either from a 
+numerics point of view or from a performance point of view - are 
+omitted from this description. This is the layer users interact with.
+
+Each solver is tied to generators which determine ***which*** 
+numerical scheme is employed.
+They determine how the solver is mapped onto mesh entities, which
+compute kernels are generated, and which solver steps make up one 
+time step.
+These generators map the solver description (see above) onto a task
+graph of activities.
+
+The task graph is then mapped onto Peano 4's action sets and traversals.
+This part is already an element of the Peano core architecture. and is not specific to ExaHyPE 2.
+
+
+
 
 ## Simple conventions
 
@@ -16,13 +52,6 @@
   
   
 
-ExaHyPE 2 is built as a layer on top of Peano 4 and the Peano 4 Technical Architecture. 
-This C++ ExaHyPE 2 layer is built as a set of Peano 4 C++ utility files compiled into one shared library plus a Python API. 
-It is relatively straightforward to understand by browsing through the C++ files, but it provides limited structure:
-You find most of the compute ingredients of an ExaHyPE code in there, but the actual logic are not encoded in the C++.
-
-For this, ExaHyPE 2 provides a Python API that allows users to describe their solver and its behaviour in a more abstract way.
-ExaHyPE's Python API is actually shipped as two layers:
 
 ## Top-level ExaHyPE 2 layer
 
