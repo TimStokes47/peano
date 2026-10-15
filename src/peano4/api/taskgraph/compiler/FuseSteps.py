@@ -64,6 +64,17 @@ def translate(
        non_fusable_task_pairs: two tasks forming such a pair never end up
        in the same traversal.
 
+<br /><br />
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
+A task does not know if its action sets plug into touch-first or touch-last
+events. That is, a task A1 might use touchVertexFirstTime() and touchVertexLastTime(),
+while its successor task B1 only uses touchCellFirstTime(). In this case, the 
+tasks will not be fused if A1 writes vertex data that B1 reads. Conversely, let A2 only plug into 
+touchVertexFirstTime(), while B2 sticks to touchCellFirstTime(). Now, we could fuse.
+But this option is hidden from the task compiler.
+</div>
+
+
     ## Algorithm
 
     1. Split the graph into layers by dependency depth (a task without
