@@ -91,8 +91,6 @@ class WaitForCellTaskActionSet(ActionSet):
     def get_implementation_of_operation(self, operation_name):
         if operation_name in SpawnCellTaskActionSet.MovedOperations:
             return self._producer_action_set.action_set.get_implementation_of_operation(operation_name)
-        elif self._producer_action_set._task_number_attribute_name is None:
-            return ""
         elif operation_name == ActionSet.OPERATION_CREATE_CELL:
             task_label, accessor = self._task_label_accessor()
             return f"\n  {task_label}.set{accessor}( tarch::multicore::TaskEnumerator::NoNumber );\n"

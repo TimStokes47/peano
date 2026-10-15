@@ -82,20 +82,24 @@ def translate(
     events of its action sets as tasks, and the consumer waits for these
     tasks (@ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._spawn_tasks()):
 
-    - Every action set of the producer is wrapped into a
+    - Every action set of the producer whose touchCellFirstTime() has a
+      non-empty body is wrapped into a
       @ref peano4.api.taskgraph.compiler.SpawnCellTaskActionSet.SpawnCellTaskActionSet.
-      If the action set's touchCellFirstTime() has a non-empty body, the
-      wrapper evaluates the guard. If it holds, the wrapper takes a new
+      The wrapper evaluates the guard. If it holds, the wrapper takes a new
       task number from the tarch, stores it in the cell's task label (see
       below), and spawns the body as a task with this number. The task
-      depends on the task spawned by the previous action set of the same
-      producer, so the bodies are executed in their original order.
+      depends on the task spawned by the previous wrapped action set of the
+      same producer, so the bodies are executed in their original order.
+    - Action sets whose touchCellFirstTime() has an empty body, such as
+      @ref exahype2.api.fv.actionsets.HandleBoundary.HandleBoundary, are not
+      part of the producer-consumer pattern. They remain plain action sets
+      of the producer, i.e. all their events are invoked by the producer.
     - The consumer is given a cousin
       @ref peano4.api.taskgraph.compiler.WaitForCellTaskActionSet.WaitForCellTaskActionSet
-      per producer action set. If the cell's task label holds a valid task
+      per wrapped action set. If the cell's task label holds a valid task
       number, it waits for this task and resets the label to NoNumber=-1.
     - unprepareTraversal() and all touch...LastTime() events of the
-      producer's action sets are moved into the consumer's cousins, i.e.
+      wrapped action sets are moved into the consumer's cousins, i.e.
       they are invoked once the tasks have terminated.
     - The cousin's generated C++ class derives from the producer's
       generated class. The two hence share all static attributes, e.g.
@@ -350,35 +354,39 @@ def _spawn_tasks(split_tasks, task_labels: "peano4.api.datamodel.DaStGen2"):
             continue
 
         producer_action_sets = []
+        consumer_action_sets = []
         previous_task_number_attribute_name = None
         moves_events = False
         for action_set_index, action_set in enumerate(task.action_sets):
             task_body = action_set.get_body_of_operation(peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME)
-            task_number_attribute_name = None
-            if task_body.strip() != "":
-                _warn_about_unsafe_task(task, action_set_index, action_set, task_body)
-                task_number_attribute_name = _task_number_attribute_name(task, action_set_index)
-                task_labels.data.add_attribute(dastgen2.attributes.Integer(name=task_number_attribute_name))
-                number_of_task_numbers += 1
-            else:
-                _warn_about_unsafe_task(task, action_set_index, action_set, "")
-            producer_action_sets.append(
-                SpawnCellTaskActionSet(
-                    action_set,
-                    task_labels.name,
-                    task_number_attribute_name,
-                    previous_task_number_attribute_name,
-                )
+            if task_body.strip() == "":
+                # Nothing to spawn: The action set remains a plain action set
+                # of the producer and is not part of the producer-consumer
+                # pattern
+                producer_action_sets.append(action_set)
+                continue
+
+            _warn_about_unsafe_task(task, action_set_index, action_set, task_body)
+            task_number_attribute_name = _task_number_attribute_name(task, action_set_index)
+            task_labels.data.add_attribute(dastgen2.attributes.Integer(name=task_number_attribute_name))
+            number_of_task_numbers += 1
+
+            producer_action_set = SpawnCellTaskActionSet(
+                action_set,
+                task_labels.name,
+                task_number_attribute_name,
+                previous_task_number_attribute_name,
             )
-            if task_number_attribute_name is not None:
-                previous_task_number_attribute_name = task_number_attribute_name
+            producer_action_sets.append(producer_action_set)
+            consumer_action_sets.append(WaitForCellTaskActionSet(producer_action_set))
+            previous_task_number_attribute_name = task_number_attribute_name
             moves_events = moves_events or any(
                 action_set.get_implementation_of_operation(operation_name).strip() != ""
                 for operation_name in SpawnCellTaskActionSet.MovedOperations
             )
 
         producer.action_sets = producer_action_sets
-        consumer.action_sets = [WaitForCellTaskActionSet(producer_action_set) for producer_action_set in producer_action_sets]
+        consumer.action_sets = consumer_action_sets
 
         if previous_task_number_attribute_name is not None:
             producer.use_cell(task_labels, Task.DataAccess.WRITE)

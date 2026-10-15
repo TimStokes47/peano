@@ -53,10 +53,9 @@ class SpawnCellTaskActionSet(ActionSet):
           Name of the DaStGen2 cell data type holding the task labels. The
           generated observer passes it into the event as fineGridCell<name>.
 
-        @param task_number_attribute_name: str or None
+        @param task_number_attribute_name: str
           Name of the attribute within the task labels which holds the task
-          number. If None, touchCellFirstTime() spawns no task but is
-          delegated to the wrapped action set, too.
+          number.
 
         @param previous_task_number_attribute_name: str or None
           Name of the attribute holding the task number of the task spawned
@@ -118,12 +117,12 @@ class SpawnCellTaskActionSet(ActionSet):
         task_label = f"fineGridCell{self._task_labels_name}"
         if operation_name in SpawnCellTaskActionSet.MovedOperations:
             return ""
-        elif operation_name == ActionSet.OPERATION_CREATE_CELL and self._task_number_attribute_name is not None:
+        elif operation_name == ActionSet.OPERATION_CREATE_CELL:
             return (
                 self.action_set.get_implementation_of_operation(operation_name)
                 + f"\n  {task_label}.set{self._accessor(self._task_number_attribute_name)}( tarch::multicore::TaskEnumerator::NoNumber );\n"
             )
-        elif operation_name == ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME and self._task_number_attribute_name is not None:
+        elif operation_name == ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             if self._previous_task_number_attribute_name is None:
                 in_dependencies = "tarch::multicore::NoInDependencies"
             else:
