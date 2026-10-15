@@ -103,7 +103,32 @@ class ActionSet(object):
     @ref page_peano_action_sets.
 
 
-    
+    ## Guard and body
+
+    The C++ code of each event consists of two parts which you specify
+    separately:
+
+    - get_guard_of_operation() returns a C++ boolean expression which
+      decides whether the event's code is executed. It defaults to true.
+    - get_body_of_operation() returns the actual C++ code of the event,
+      i.e. the code that is executed if the guard holds. It should not
+      wrap itself into an if statement evaluating the guard.
+
+    Do not override get_implementation_of_operation(). It combines guard
+    and body into the C++ code that ends up in the generated
+    implementation file, i.e. it yields
+
+           if (guard) {
+             body
+           }
+
+    The routines prepareTraversal(), unprepareTraversal() and
+    createGridControlEventsForNextTraversal() are not tied to a vertex,
+    face or cell and hence have no guard. Their get_implementation_of_...()
+    routines yield the body only.
+
+
+
     ## Important links
 
     - @ref page_peano_action_sets    
@@ -167,13 +192,49 @@ class ActionSet(object):
         """
         return "return std::vector< peano4::grid::GridControlEvent >();\n"
 
+    def get_implementation_of_createGridControlEventsForNextTraversal(self):
+        """!
+
+        Return the C++ implementation of createGridControlEventsForNextTraversal()
+
+        There is no guard for this routine, i.e. the implementation is the
+        body. Do not override this routine, but override
+        get_body_of_createGridControlEventsForNextTraversal().
+
+        """
+        return self.get_body_of_createGridControlEventsForNextTraversal()
+
     @abstractmethod
     def get_body_of_prepareTraversal(self):
         return "\n"
 
+    def get_implementation_of_prepareTraversal(self):
+        """!
+
+        Return the C++ implementation of prepareTraversal()
+
+        There is no guard for this routine, i.e. the implementation is the
+        body. Do not override this routine, but override
+        get_body_of_prepareTraversal().
+
+        """
+        return self.get_body_of_prepareTraversal()
+
     @abstractmethod
     def get_body_of_unprepareTraversal(self):
         return "\n"
+
+    def get_implementation_of_unprepareTraversal(self):
+        """!
+
+        Return the C++ implementation of unprepareTraversal()
+
+        There is no guard for this routine, i.e. the implementation is the
+        body. Do not override this routine, but override
+        get_body_of_unprepareTraversal().
+
+        """
+        return self.get_body_of_unprepareTraversal()
 
     OPERATION_BEGIN_TRAVERSAL = "beginTraversal"
     OPERATION_END_TRAVERSAL = "endTraversal"
@@ -203,10 +264,53 @@ class ActionSet(object):
         Return actual C++ code snippets to be inserted into C++ code
 
         See class' string constants starting with OPERATION_ for possible values
-        of operation_name.
+        of operation_name. The snippet is executed if and only if the guard
+        returned by get_guard_of_operation() holds, i.e. the body should not
+        evaluate the guard itself. See the section "Guard and body" in the
+        class documentation.
 
         """
         return "// @todo Should be overwritten by mapping\n"
+
+    def get_guard_of_operation(self, operation_name):
+        """!
+
+        Return the guard of an operation
+
+        The guard is a C++ boolean expression. The body of the operation (see
+        get_body_of_operation()) is executed if and only if the guard holds.
+        The guard can use the same arguments as the body, i.e. the marker and
+        the fine and coarse grid data. By default, the guard is true, i.e. the
+        body is always executed.
+
+        See class' string constants starting with OPERATION_ for possible values
+        of operation_name.
+
+        """
+        return "true"
+
+    def get_implementation_of_operation(self, operation_name):
+        """!
+
+        Return the C++ implementation of an operation
+
+        Combines the guard (see get_guard_of_operation()) and the body (see
+        get_body_of_operation()) into
+
+               if (guard) {
+                 body
+               }
+
+        If the body is empty or the guard is true, the routine yields the
+        body only. Do not override this routine, but override
+        get_guard_of_operation() and get_body_of_operation().
+
+        """
+        body = self.get_body_of_operation(operation_name)
+        guard = self.get_guard_of_operation(operation_name)
+        if body.strip() == "" or guard.strip() == "true":
+            return body
+        return "  if (" + guard + ") {\n" + body + "\n  }\n"
 
     @abstractmethod
     def get_action_set_name(self):

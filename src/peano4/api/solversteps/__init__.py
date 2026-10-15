@@ -33,7 +33,7 @@ digraph SolverStepsClasses {
   node [shape=record, fontname="Helvetica", fontsize=10]
   edge [fontname="Helvetica", fontsize=9]
 
-  ActionSet             [label="{«abstract»\nActionSet|+ descend_invocation_order : int\l+ parallel : bool\l|+ get_body_of_operation(name) : str\l+ get_action_set_name() : str\l+ user_should_modify_template() : bool\l+ get_attributes() : str\l+ get_includes() : str\l}"]
+  ActionSet             [label="{«abstract»\nActionSet|+ descend_invocation_order : int\l+ parallel : bool\l|+ get_guard_of_operation(name) : str\l+ get_body_of_operation(name) : str\l+ get_implementation_of_operation(name) : str\l+ get_action_set_name() : str\l+ user_should_modify_template() : bool\l+ get_attributes() : str\l+ get_includes() : str\l}"]
   UserActionSet         [label="{UserActionSet|+ name : str\l}"]
   Step                  [label="{Step|+ name : str\l+ action_sets : [ActionSet]\l+ vertex_data, face_data, cell_data : [...]\l|+ add_action_set(action_set) : void\l+ construct_output(output) : void\l}"]
   Steps                 [label="{Steps|+ _steps : [Step]\l|+ add_step(step) : void\l+ construct_output(output) : void\l}"]
