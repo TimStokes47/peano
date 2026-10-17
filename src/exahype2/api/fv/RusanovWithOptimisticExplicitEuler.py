@@ -1121,6 +1121,28 @@ Patch overlap data
             )
         )
 
+        ## Guards of the two branches. Both are combined with the grid
+        ## selector's guard, i.e. both have to hold.
+        ## - The traditional branch (Update cell and its successors) runs if
+        ##   the estimated time step size, i.e. entry 1 of _max_eigenvalue,
+        ##   is bigger than the solver's time step size (@see
+        ##   ReadjustTimeStepSizeForOptimisticGlobalTimestepping, which sets
+        ##   overestimated time step sizes to the maximum double value), or
+        ##   if the time step size is zero, i.e. in the very first time step.
+        ## - The optimistic branch (Update cell shell and its successors) runs
+        ##   if the estimated time step size equals the solver's time step size.
+        max_eigenvalue = f"fineGridCell{self._solver._max_eigenvalue.name}"
+        time_step_size = f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()"
+        cell_guard = self._solver.grid_selector.createCellGuard()
+        traditional_guard = (
+            f"({cell_guard}) and "
+            f"(tarch::la::greater({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size}) or tarch::la::equals({time_step_size}, 0.0))"
+        )
+        optimistic_guard = (
+            f"({cell_guard}) and "
+            f"tarch::la::equals({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size})"
+        )
+
         ## Do the actual time step update
         update_cell_task.add_dependency(reconstruction_task)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
@@ -1129,7 +1151,7 @@ Patch overlap data
         update_cell_task.add_action_set(
             UpdateCell(
                 self._solver,
-                guard=self._solver.grid_selector.createCellGuard(),
+                guard=traditional_guard,
             )
         )
 
@@ -1143,20 +1165,21 @@ Patch overlap data
                 self._solver,
                 self.cfl_constant,
                 self.patch_size,
-                guard=self._solver.grid_selector.createCellGuard(),
+                guard=traditional_guard,
             )
         )
         
         ## Next project the new data onto the faces. Also roll over the solution
         traditional_project_on_faces_task.add_dependency(update_cell_task)
         traditional_project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        traditional_project_on_faces_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         traditional_project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         traditional_project_on_faces_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.WRITE)
         traditional_project_on_faces_task.add_action_set(
             ProjectPatchOntoFaces(
                 self._solver._patch,
                 self._solver._patch_overlap_update,
-                guard=self._solver.grid_selector.createCellGuard(),
+                guard=traditional_guard,
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
@@ -1178,7 +1201,7 @@ Patch overlap data
         update_cell_shell_task.add_action_set(
             UpdateCellShell(
                 self._solver,
-                guard=self._solver.grid_selector.createCellGuard(),
+                guard=optimistic_guard,
             )
         )
 
@@ -1193,16 +1216,17 @@ Patch overlap data
             SpawnTaskToUpdateCellInterior(
                 self._solver,
                 self.damp_time_step_size,
-                guard=self._solver.grid_selector.createCellGuard(),
+                guard=traditional_guard,
             )
         )
 
         ## The traditional update makes any precomputed patch interior obsolete
         discard_patch_interior_task.add_dependency(update_cell_task)
+        discard_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         discard_patch_interior_task.add_action_set(
             DiscardPatchInterior(
                 self._solver,
-                guard=self._solver.grid_selector.createCellGuard(),
+                guard=traditional_guard,
             )
         )
 
@@ -1216,7 +1240,7 @@ Patch overlap data
                 self._solver,
                 self.patch_size,
                 self.overlap,
-                guard=self._solver.grid_selector.createCellGuard(),
+                guard=optimistic_guard,
             )
         )
 
@@ -1233,7 +1257,7 @@ Patch overlap data
             SpawnTaskToUpdateCellInterior(
                 self._solver,
                 self.damp_time_step_size,
-                guard=self._solver.grid_selector.createCellGuard(),
+                guard=optimistic_guard,
             )
         )
 
