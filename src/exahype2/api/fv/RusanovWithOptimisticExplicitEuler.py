@@ -807,10 +807,38 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
     - timeStepWithRusanov2DOnShell which works only on the shell.
     
     The 3D variants follow equivalently.
-    
-      
-      
-      
+
+    ## Time stepping
+
+    Every time step either runs the traditional branch (Update cell and
+    Discard patch interior) or the optimistic branch (Update cell shell and
+    Insert patch interior). The traditional branch runs if the solver's time
+    step size is zero, or if the estimated time step size, i.e. the second
+    entry of the eigenvalue data, exceeds it. The optimistic branch runs
+    otherwise. Project on faces, Compute global CFL condition and Spawn
+    patch interior update follow either branch.
+
+    Compute global CFL condition does not only compute the next time step
+    size, it also makes it the solver's time step size straightaway (@see
+    exahype2.api.fv.actionsets.ComputeGlobalCFLCondition). Spawn patch
+    interior update runs after it and hence damps the time step size of the
+    next time step, which yields the estimate for the next time step:
+
+    - Time step 0 runs with time step size 0, as the admissible time step
+      size is not known yet. The readjustment of the time step size is
+      skipped, Update cell runs but does not change the solution, and
+      Compute global CFL condition yields the first time step size dt0. The
+      spawn already sees dt0 and updates the patch interior with
+      damp_time_step_size*dt0.
+    - Time step 1 finds this estimate to be smaller than dt0. The
+      readjustment enforces it as time step size, and the optimistic
+      branch runs.
+
+    The CFL condition has to run before the spawn. Otherwise, the spawn
+    damps the time step size of the current time step. In the optimistic
+    branch, this one is already damped, so the time step size would shrink
+    by the factor damp_time_step_size in every time step.
+
     """
 
     def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95):
@@ -1097,6 +1125,9 @@ Patch overlap data
         time_step.add_task(discard_patch_interior_task)
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_cfl_condition_task)
+        # Has to come after compute_cfl_condition_task, so the Sequential
+        # compiler runs the spawn after the CFL condition - see the class
+        # documentation
         time_step.add_task(spawn_patch_interior_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
