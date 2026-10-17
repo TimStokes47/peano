@@ -13,9 +13,9 @@ PYTHONPATH=src python3 src/peano4/api/taskgraph/compiler/fuse-steps-illustration
 The script builds a few small task graphs, compiles them with
 peano4.api.taskgraph.compiler.FuseSteps.translate(), and writes one PNG per
 example next to this script: the input task graph (as drawn by
-peano4.api.taskgraph.Graph.visualise()) on top, the compiled sequence of
-mesh traversals (as drawn by
-peano4.api.taskgraph.compiler.ReportCompiledStepSequence) underneath. The
+peano4.api.taskgraph.Graph.visualise()) on the left, the compiled sequence
+of mesh traversals (as drawn by
+peano4.api.taskgraph.compiler.ReportCompiledStepSequence) on the right. The
 PNGs are referenced from the documentation of FuseSteps.translate().
 
 """
@@ -75,10 +75,10 @@ def _write_illustration(graph: Graph, title: str, file_name: str):
     _visualise_compiled_step_sequence(steps, f"{title}: fused mesh traversals")
     steps_image = _render_current_figure()
 
-    width = max(graph_image.width, steps_image.width)
-    result = Image.new("RGB", (width, graph_image.height + steps_image.height), "white")
-    result.paste(graph_image, ((width - graph_image.width) // 2, 0))
-    result.paste(steps_image, ((width - steps_image.width) // 2, graph_image.height))
+    height = max(graph_image.height, steps_image.height)
+    result = Image.new("RGB", (graph_image.width + steps_image.width, height), "white")
+    result.paste(graph_image, (0, 0))
+    result.paste(steps_image, (graph_image.width, 0))
     result.save(os.path.join(os.path.dirname(os.path.abspath(__file__)), file_name))
 
 
