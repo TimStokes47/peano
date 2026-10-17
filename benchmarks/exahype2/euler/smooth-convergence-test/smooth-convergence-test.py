@@ -1,7 +1,21 @@
-import functools
 import os, sys
 import peano4.api
 import exahype2
+
+
+create_release_build = False
+if (create_release_build):
+    build_mode = peano4.api.output.CompileMode.RELEASE
+    volume_size = 0.0001
+    end_time    = 0.001
+    time_in_between_plots = 0.001
+    verbosity = peano4.api.LoggerVerbosity.TEXT
+else:
+    build_mode = peano4.api.output.CompileMode.DEBUG
+    volume_size = 0.001
+    end_time    = 0.01
+    time_in_between_plots = 0.001
+    verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
 
 
 project = exahype2.api.Project(
@@ -14,11 +28,8 @@ project = exahype2.api.Project(
 solver_name = "EulerFVSmooth"
 unknowns = 4
 auxiliary_variables = 0
-volume_size = 0.001
 patch_size = 9
 dimensions = 2
-#verbosity = peano4.api.LoggerVerbosity.TEXT
-verbosity   = peano4.api.LoggerVerbosity.VISUALISATION
 
 thesolver = exahype2.api.Solver(
     solver_name,
@@ -30,32 +41,27 @@ thesolver.add_pde_term( exahype2.api.Flux(stateless=False,))
 thesolver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False,))
 thesolver.add_pde_term(exahype2.api.InitPointWisely(stateless=False,))
 
-thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver, patch_size)
+thesolver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(thesolver, patch_size)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
     thesolver, volume_size=volume_size
 )
 thesolver.plotter = exahype2.api.fv.PlotAsVTKFile(
-    thesolver, first_plot_time_stamp=0.0, time_in_between_plots=0.001
+    thesolver, first_plot_time_stamp=0.0, time_in_between_plots=time_in_between_plots
 )
 project.add_solver(thesolver)
 
 
 
-project.compiler = functools.partial(
-    peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate,
-    use_fusion=True,
-)
+project.compiler = peano4.api.taskgraph.compiler.Sequential.translate
 
 
 
-# build_mode = peano4.api.output.CompileMode.RELEASE
-build_mode = peano4.api.output.CompileMode.DEBUG
 project.set_global_simulation_parameters(
     dimensions=dimensions,
     offset=[-0.1, -0.1],
     size=[0.2, 0.2],
-    min_end_time=0.01,
-    max_end_time=0.01,
+    min_end_time=end_time,
+    max_end_time=end_time,
 #    periodic_BC=[False, False, False],
     periodic_BC=[True, True, True],
 )
