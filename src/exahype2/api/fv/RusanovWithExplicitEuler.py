@@ -19,6 +19,149 @@ from .actionsets import UpdateCell
 from .actionsets import ComputeGlobalCFLCondition
 
 
+## DSLHyPE time step kernels
+#
+# The two functions below are never executed as Python. DSLHyPE parses their
+# source (@ref exahype2.api.dslhype.Parser) and translates them into the C++
+# time step kernels (@ref RusanovWithExplicitEuler.__create_time_step_functions()).
+# They hence refer to symbols that the parser sets rather than Python imports:
+#
+# - Template parameters: NV, H, NumberOfUnknowns, NumberOfAuxiliaryVariables.
+# - Functors for the non-stateless code: flux, nonconservativeProduct,
+#   sourceTerm, maxEigenvalue.
+# - loopParallelism (peano4::utils::LoopPlacement) for loop parallelisation.
+
+
+## Explicit Euler time step with a Rusanov flux over a 2d patch.
+def timeStepWithRusanov2D(patchData: "::exahype2::CellData<double, double>&") -> "void":
+    N = Integer("patchData.numberOfCells")
+    t = DataBlock([[0, N]], "patchData.t", "double")
+    dt = DataBlock([[0, N]], "patchData.dt", "double")
+    h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<2, double>")
+    x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<2, double>")
+    maxEigenvalues = DataBlock([[0, N]], "patchData.maxEigenvalue", "double")
+
+    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NV + H], [-H, NV + H], [0, N]], "patchData.QIn")
+    output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, N]], "patchData.QOut")
+    output = input[:, 0:NV, 0:NV]
+
+    if source:
+       source = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:NV], x, h, t, dt))
+       output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt * source
+
+    maxEigenvaluesX = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 0))
+    maxEigenvaluesY = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 1))
+
+    lambdaLeft = max(maxEigenvaluesX[0:1, -1:NV-1, 0:NV], maxEigenvaluesX[0:1, 0:NV, 0:NV])
+    lambdaRight = max(maxEigenvaluesX[0:1, 0:NV, 0:NV], maxEigenvaluesX[0:1, 1:NV + 1, 0:NV])
+    lambdaBottom = max(maxEigenvaluesY[0:1, 0:NV, -1:NV-1], maxEigenvaluesY[0:1, 0:NV, 0:NV])
+    lambdaTop = max(maxEigenvaluesY[0:1, 0:NV, 0:NV], maxEigenvaluesY[0:1, 0:NV, 1:NV + 1])
+
+    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns, 0:NV, 0:NV] - input[0:NumberOfUnknowns, -1:NV-1, 0:NV])
+    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns, 1:NV+1, 0:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV])
+    output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt / h(0) * (fluxLeft - fluxRight) * NV * 0.5
+
+    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns, 0:NV, 0:NV] - input[0:NumberOfUnknowns, 0:NV, -1:NV-1])
+    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns, 0:NV, 1:NV+1] - input[0:NumberOfUnknowns, 0:NV, 0:NV])
+    output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
+
+    if flux:
+      flux_x = DataBlock([[0, NumberOfUnknowns], [-H, NV + H], [0, NV], [0, N]], eval("flux", input[:, -1:NV+1, 0:NV], x, 0))
+      flux_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [-H, NV + H], [0, N]], eval("flux", input[:, 0:NV, -1:NV+1], x, 1))
+      
+      output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(0) *  (flux_x[:, -1:NV-1, 0:NV] - flux_x[:, 1:NV+1, 0:NV])
+      output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(1) * (flux_y[:, 0:NV, -1:NV-1] - flux_y[:, 0:NV, 1:NV+1])
+
+    if nonconservativeProduct:
+       average_x = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -1:NV, 0:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + 1, 0:NV])
+       delta_x = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + H, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -H:NV, 0:NV]
+       nonconservative_x = DataBlock([[0, NumberOfUnknowns], [0, NV + H], [0, NV], [0, N]], eval("nonconservativeProduct", average_x, delta_x, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(0) * (-nonconservative_x[:, 0:NV, 0:NV] - nonconservative_x[:, 1:NV+1, 0:NV])
+       
+       average_y = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -1:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV + 1])
+       delta_y = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV + H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -H:NV]
+       nonconservative_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV + H], [0, N]], eval("nonconservativeProduct", average_y, delta_y, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(1) * (-nonconservative_y[:, 0:NV, 0:NV] - nonconservative_y[:, 0:NV, 1:NV+1])
+
+    if maxEigenvalue:
+      maxEigenvaluesX2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 0))
+      maxEigenvaluesY2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 1))
+      maxEigenvaluesPerVolume = max(maxEigenvaluesX2, maxEigenvaluesY2)
+      maxEigenvalues = max(maxEigenvaluesPerVolume)
+
+
+## Explicit Euler time step with a Rusanov flux over a 3d patch.
+def timeStepWithRusanov3D(patchData: "::exahype2::CellData<double, double>&") -> "void":
+    N = Integer("patchData.numberOfCells")
+    t = DataBlock([[0, N]], "patchData.t", "double")
+    dt = DataBlock([[0, N]], "patchData.dt", "double")
+    h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<3, double>")
+    x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<3, double>")
+    maxEigenvalues = DataBlock([[0, N]], "patchData.maxEigenvalue", "double")
+
+    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], "patchData.QIn")
+    output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, NV], [0, N]], "patchData.QOut")
+    output = input[:, 0:NV, 0:NV, 0:NV]
+
+    if EvaluateSource:
+       source = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, NV], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:NV, 0:NV], x, h, t, dt))
+       output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + dt * source
+
+    maxEigenvaluesX = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 0))
+    maxEigenvaluesY = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 1))
+    maxEigenvaluesZ = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 2))
+    
+    lambdaLeft = max(maxEigenvaluesX[0:1, -1:NV-1, 0:NV, 0:NV], maxEigenvaluesX[0:1, 0:NV, 0:NV, 0:NV])
+    lambdaRight = max(maxEigenvaluesX[0:1, 0:NV, 0:NV, 0:NV], maxEigenvaluesX[0:1, 1:NV + 1, 0:NV, 0:NV])
+    lambdaBottom = max(maxEigenvaluesY[0:1, 0:NV, -1:NV-1, 0:NV], maxEigenvaluesY[0:1, 0:NV, 0:NV, 0:NV])
+    lambdaTop = max(maxEigenvaluesY[0:1, 0:NV, 0:NV, 0:NV], maxEigenvaluesY[0:1, 0:NV, 1:NV + 1, 0:NV])
+    lambdaNear = max(maxEigenvaluesZ[0:1, 0:NV, 0:NV, -1:NV-1], maxEigenvaluesZ[0:1, 0:NV, 0:NV, 0:NV])
+    lambdaFar = max(maxEigenvaluesZ[0:1, 0:NV, 0:NV, 0:NV], maxEigenvaluesZ[0:1, 0:NV, 0:NV, 1:NV + 1])
+
+    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV] - input[0:NumberOfUnknowns, -1:NV-1, 0:NV, 0:NV])
+    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns, 1:NV+1, 0:NV, 0:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV])
+    output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + dt / h(0) * (fluxLeft - fluxRight) * NV * 0.5
+    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV] - input[0:NumberOfUnknowns, 0:NV, -1:NV-1, 0:NV])
+    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns, 0:NV, 1:NV+1, 0:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV])
+    output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
+
+    fluxNear = -1.0 * lambdaNear * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV, -1:NV-1])
+    fluxFar = -1.0 * lambdaFar * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 1:NV+1] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV])
+    output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + dt / h(2) * (fluxNear - fluxFar) * NV * 0.5
+
+    if EvaluateFlux:
+      flux_x = DataBlock([[0, NumberOfUnknowns], [-H, NV + H], [0, NV], [0, NV], [0, N]], eval("flux", input[:, -1:NV+1, 0:NV, 0:NV], x, 0))
+      flux_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [-H, NV + H], [0, NV], [0, N]], eval("flux", input[:, 0:NV, -1:NV+1, 0:NV], x, 1))
+      flux_z = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [-H, NV + H], [0, N]], eval("flux", input[:, 0:NV, 0:NV, -1:NV+1], x, 2))
+      output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + 0.5 * NV * dt / h(0) *  (flux_x[:, -1:NV-1, 0:NV, 0:NV] - flux_x[:, 1:NV+1, 0:NV, 0:NV])
+      output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + 0.5 * NV * dt / h(1) * (flux_y[:, 0:NV, -1:NV-1, 0:NV] - flux_y[:, 0:NV, 1:NV+1, 0:NV])
+      output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + 0.5 * NV * dt / h(2) * (flux_z[:, 0:NV, 0:NV, -1:NV-1] - flux_z[:, 0:NV, 0:NV, 1:NV+1])
+
+    if EvaluateNonconservativeProduct:
+       average_x = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -1:NV, 0:NV, 0:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + 1, 0:NV, 0:NV])
+       delta_x = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + H, 0:NV, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -H:NV, 0:NV, 0:NV]
+       nonconservative_x = DataBlock([[0, NumberOfUnknowns], [0, NV + H], [0, NV], [0, NV], [0, N]], eval("nonconservativeProduct", average_x, delta_x, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + 0.5 * NV * dt / h(0) * (-nonconservative_x[:, 0:NV, 0:NV, 0:NV] - nonconservative_x[:, 1:NV+1, 0:NV, 0:NV])
+       
+       average_y = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -1:NV, 0:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV + 1, 0:NV])
+       delta_y = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV + H, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -H:NV, 0:NV]
+       nonconservative_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV + H], [0, NV], [0, N]], eval("nonconservativeProduct", average_y, delta_y, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + 0.5 * NV * dt / h(1) * (-nonconservative_y[:, 0:NV, 0:NV, 0:NV] - nonconservative_y[:, 0:NV, 1:NV+1, 0:NV])
+
+       average_z = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, -1:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV + 1])
+       delta_z = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:NV + H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, -H:NV]
+       nonconservative_z = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, NV + H], [0, N]], eval("nonconservativeProduct", average_z, delta_z, x, h, t, dt, 2))
+       output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + 0.5 * NV * dt / h(2) * (-nonconservative_z[:, 0:NV, 0:NV, 0:NV] - nonconservative_z[:, 0:NV, 0:NV, 1:NV+1])
+
+    if EvaluateMaximumEigenvalueAfterTimeStep:
+      maxEigenvaluesX2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 0))
+      maxEigenvaluesY2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 1))
+      maxEigenvaluesZ2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 2))
+      maxEigenvaluesXY = max(maxEigenvaluesX2, maxEigenvaluesY2)
+      maxEigenvaluesPerVolume = max(maxEigenvaluesXY, maxEigenvaluesZ2)
+      maxEigenvalues = max(maxEigenvaluesPerVolume)
+
+
 class RusanovWithExplicitEuler(Solver.NumericalScheme):
     """!
 
@@ -359,8 +502,8 @@ Patch overlap data
             dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
         ]
 
-        time_step_dsl_function_2d = exahype2.api.fv.timeStepWithRusanov2D
-        time_step_dsl_function_3d = exahype2.api.fv.timeStepWithRusanov3D
+        time_step_dsl_function_2d = timeStepWithRusanov2D
+        time_step_dsl_function_3d = timeStepWithRusanov3D
         dslhype.translate_dslhype_function(
             function = time_step_dsl_function_2d,
             function_namespace = self.kernel_namespace,

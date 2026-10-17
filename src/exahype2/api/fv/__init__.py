@@ -2,8 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .RusanovWithExplicitEuler import RusanovWithExplicitEuler
 from .RusanovWithOptimisticExplicitEuler import RusanovWithOptimisticExplicitEuler
-from .RusanovWithExplicitEulerTimeStep2D import timeStepWithRusanov as timeStepWithRusanov2D
-from .RusanovWithExplicitEulerTimeStep3D import timeStepWithRusanov as timeStepWithRusanov3D
+from .RusanovWithExplicitEuler import timeStepWithRusanov2D, timeStepWithRusanov3D
 from .SetupSimulationWithUserCodedRefinementCriterion import SetupSimulationWithUserCodedRefinementCriterion
 from .SetupSimulationOverRegularGrid import SetupSimulationOverRegularGrid
 from .PlotAsVTKFile import PlotAsVTKFile
