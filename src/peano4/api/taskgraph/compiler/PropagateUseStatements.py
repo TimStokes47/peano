@@ -32,6 +32,29 @@ def propagate_use_statements(
     qualifiers, and it adds use_cell()/use_face()/use_vertex() declarations
     to the Steps where required.
 
+    ## Creating submodels that are read before they are ever written
+
+    The very first pass looks for submodels that a step loads
+    (READ_AND_DISCARD or READ_AND_WRITE) before any step has ever written
+    them. Peano would then try to load data that does not exist yet and
+    stop with an assertion on its stacks. A sequence without any incoming
+    edge (from another sequence or itself) is an entry sequence, i.e. it
+    runs first, such as a setup phase. The pass searches forward from the
+    first step of every entry sequence, following edges, and stops each
+    path at the first step that declares the submodel (TEMPORARY is
+    transparent). If this step reads the submodel, the pass adds a WRITE
+    declaration of the submodel to the last step of the entry sequence:
+    this step then creates the submodel and stores it, and the passes
+    below make it reach the reader. The created submodel holds whatever
+    its default constructor yields, i.e. the steps reading it have to
+    cope with uninitialised values - typically through guards that ensure
+    that they only read it once a "real" WRITE has happened. The WRITE
+    goes into the entry sequence, as this one runs only once: a WRITE
+    within a repeating sequence would overwrite the submodel's value every
+    time the sequence runs. A read within the entry sequence itself cannot
+    be fixed this way and is only logged. @see
+    _create_submodels_read_before_written().
+
     ## Upgrading a WRITE that immediately follows a READ_AND_WRITE
 
     Before any of the below runs, a narrower, separate pass first upgrades
@@ -187,6 +210,12 @@ def propagate_use_statements(
         ("vertex_data", "vertex_data_access", "use_vertex"),
     ):
         something_changed = (
+            _create_submodels_read_before_written(
+                steps_of_sequence, index_edges, attribute_name, access_attribute_name, use_method_name
+            )
+            or something_changed
+        )
+        something_changed = (
             _upgrade_writes_immediately_following_read_and_write(
                 steps_of_sequence, index_edges, attribute_name, access_attribute_name
             )
@@ -198,6 +227,103 @@ def propagate_use_statements(
             )
             or something_changed
         )
+    return something_changed
+
+
+def _create_submodels_read_before_written(
+    steps_of_sequence: Dict[int, List],
+    edges: List[Tuple[int, int]],
+    attribute_name: str,
+    access_attribute_name: str,
+    use_method_name: str,
+) -> bool:
+    """!
+
+    Add a WRITE declaration to the last step of an entry sequence for every
+    submodel that can be read before it is ever written - @see the
+    corresponding section of propagate_use_statements().
+
+    @param steps_of_sequence: Dict[int, [peano4.api.solversteps.Step]]
+      The sequences handed over to propagate_use_statements(), each
+      sequence identified by its index.
+
+    @param edges: [(int, int)]
+      The edges handed over to propagate_use_statements(), translated into
+      pairs of sequence indices.
+
+    @param attribute_name: str
+      Which kind of submodel (cell_data, face_data or vertex_data) to
+      analyse.
+
+    @param access_attribute_name: str
+      The access dictionary matching attribute_name (cell_data_access,
+      face_data_access or vertex_data_access).
+
+    @param use_method_name: str
+      The Step method that declares a submodel of this kind (use_cell,
+      use_face or use_vertex).
+
+    @return bool
+      True if this pass added at least one declaration.
+
+    """
+    successors_of_sequence: Dict[int, List[int]] = {sequence: [] for sequence in steps_of_sequence}
+    has_predecessor = set()
+    for predecessor, successor in edges:
+        successors_of_sequence[predecessor].append(successor)
+        has_predecessor.add(successor)
+    entry_sequences = [
+        sequence for sequence, steps in steps_of_sequence.items() if steps and sequence not in has_predecessor
+    ]
+
+    submodels = []
+    for steps in steps_of_sequence.values():
+        for step in steps:
+            for submodel in getattr(step, attribute_name):
+                if submodel not in submodels:
+                    submodels.append(submodel)
+
+    something_changed = False
+    for entry_sequence in entry_sequences:
+        last_entry_step = steps_of_sequence[entry_sequence][-1]
+        for submodel in submodels:
+            # Breadth-first search from the entry sequence's first step,
+            # each path stopping at the first real use of the submodel
+            frontier = [(entry_sequence, 0)]
+            visited = {(entry_sequence, 0)}
+            readers = []
+            while frontier:
+                sequence, index = frontier.pop(0)
+                step = steps_of_sequence[sequence][index]
+                qualifier = getattr(step, access_attribute_name).get(submodel)
+                if qualifier in (Task.DataAccess.READ_AND_DISCARD, Task.DataAccess.READ_AND_WRITE):
+                    readers.append((sequence, step))
+                    continue
+                if qualifier == Task.DataAccess.WRITE:
+                    continue
+                for next_sequence, next_index in _step_forward(sequence, index, steps_of_sequence, successors_of_sequence):
+                    if (next_sequence, next_index) not in visited:
+                        visited.add((next_sequence, next_index))
+                        frontier.append((next_sequence, next_index))
+
+            for sequence, step in readers:
+                if sequence == entry_sequence:
+                    peano4.api.Logger().log(
+                        f"propagate_use_statements(): step '{step.name}' reads {attribute_name} submodel "
+                        f"'{submodel.name}' before any step has written it, and there is no earlier "
+                        f"sequence which could create it."
+                    )
+                elif getattr(last_entry_step, access_attribute_name).get(submodel) != Task.DataAccess.WRITE:
+                    if getattr(last_entry_step, access_attribute_name).get(submodel) is None:
+                        getattr(last_entry_step, use_method_name)(submodel)
+                    getattr(last_entry_step, access_attribute_name)[submodel] = Task.DataAccess.WRITE
+                    peano4.api.Logger().log(
+                        f"propagate_use_statements(): step '{step.name}' reads {attribute_name} submodel "
+                        f"'{submodel.name}' before any step has written it - adding a WRITE declaration "
+                        f"to step '{last_entry_step.name}', which creates the submodel."
+                    )
+                    something_changed = True
+
     return something_changed
 
 

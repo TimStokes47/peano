@@ -532,3 +532,81 @@ def test_distances_count_fused_steps_not_tasks():
 
     assert changed is True
     assert _access(steps[1])[submodel] == READ_AND_WRITE
+
+
+# ---------------------------------------------------------------------------
+# Submodels that are read before they are ever written.
+# ---------------------------------------------------------------------------
+
+
+def test_read_before_any_write_adds_write_to_last_step_of_entry_sequence():
+    """Setup never touches Q, the time step reads it first: the last setup
+    step creates it."""
+    setup, setup_steps = _chain_graph("Setup", 2)
+    time_step, time_step_steps = _chain_graph("TimeStep", 2)
+    submodel = _FakeSubmodel("Q")
+    _use_cell(time_step_steps[0], submodel, READ_AND_WRITE)
+    _use_cell(time_step_steps[1], submodel, WRITE)
+
+    changed = propagate_use_statements(
+        [setup, time_step],
+        edges=[(setup, time_step), (time_step, time_step)],
+    )
+
+    assert changed is True
+    assert _access(setup_steps[1])[submodel] == WRITE
+    assert submodel not in _access(setup_steps[0])
+
+
+def test_read_before_any_write_via_plot_detour_also_relays_through_plot():
+    """Setup may be followed by a plot first, which does not use Q: the
+    WRITE goes into setup, and the plot relays Q to the time step."""
+    setup, setup_steps = _chain_graph("Setup", 1)
+    time_step, time_step_steps = _chain_graph("TimeStep", 2)
+    plot, plot_steps = _chain_graph("Plot", 1)
+    submodel = _FakeSubmodel("Q")
+    _use_cell(time_step_steps[0], submodel, READ_AND_WRITE)
+    _use_cell(time_step_steps[1], submodel, READ_AND_WRITE)
+
+    propagate_use_statements(
+        [setup, time_step, plot],
+        edges=[
+            (setup, time_step),
+            (setup, plot),
+            (time_step, plot),
+            (plot, time_step),
+            (time_step, time_step),
+            (plot, plot),
+        ],
+    )
+
+    assert _access(setup_steps[0])[submodel] == WRITE
+    assert _access(plot_steps[0])[submodel] == READ_AND_WRITE
+
+
+def test_read_before_write_within_entry_sequence_is_not_changed():
+    """There is no earlier sequence to create Q in: nothing changes."""
+    setup, setup_steps = _chain_graph("Setup", 2)
+    submodel = _FakeSubmodel("Q")
+    _use_cell(setup_steps[0], submodel, READ_AND_DISCARD)
+
+    changed = propagate_use_statements([setup])
+
+    assert changed is False
+    assert submodel not in _access(setup_steps[1])
+
+
+def test_write_before_read_needs_no_creation():
+    """Setup writes Q, so nothing has to be created."""
+    setup, setup_steps = _chain_graph("Setup", 2)
+    time_step, time_step_steps = _chain_graph("TimeStep", 1)
+    submodel = _FakeSubmodel("Q")
+    _use_cell(setup_steps[0], submodel, WRITE)
+    _use_cell(time_step_steps[0], submodel, READ_AND_WRITE)
+
+    propagate_use_statements(
+        [setup, time_step],
+        edges=[(setup, time_step), (time_step, time_step)],
+    )
+
+    assert submodel not in _access(setup_steps[1]) or _access(setup_steps[1])[submodel] == READ_AND_WRITE
