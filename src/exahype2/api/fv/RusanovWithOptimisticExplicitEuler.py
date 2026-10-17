@@ -825,8 +825,12 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           as an array of cardinality one. The array is a
           peano4.api.dastgen2.Peano4SmartPointerDoubleArray, i.e. the value
           resides on the heap.
+        - _patch_interior: the patch interior, i.e. the patch without its
+          shell, so (patch_size-2*overlap)^d Finite Volumes. It matches the
+          region timeStepWithRusanov2DOnPatchInterior() and
+          timeStepWithRusanov3DOnPatchInterior() update.
 
-        All five are assigned onto self._solver (the shared
+        All six are assigned onto self._solver (the shared
         exahype2.api.Solver instance both this numerical scheme and its
         surrounding solver's Solver.GridConstruction/Solver.Plotter
         counterparts hold a reference to as self._solver), not onto self,
@@ -870,6 +874,11 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
             total_unknowns,
             identifier + "WithHalo",
         )
+        self._solver._patch_interior = peano4.api.datamodel.Patch(
+            (self.patch_size-2*self.overlap, self.patch_size-2*self.overlap, self.patch_size-2*self.overlap),
+            total_unknowns,
+            identifier + "PatchInterior",
+        )
         self._solver._patch_overlap_current_time_step = peano4.api.datamodel.Patch(
             (2 * self.overlap, self.patch_size, self.patch_size),
             total_unknowns,
@@ -905,6 +914,7 @@ Patch overlap data
 
         peano_project.datamodel.add_cell(self._solver._patch)
         peano_project.datamodel.add_cell(self._solver._patch_with_halo)
+        peano_project.datamodel.add_cell(self._solver._patch_interior)
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
         peano_project.datamodel.add_cell(self._solver._max_eigenvalue)
@@ -914,6 +924,7 @@ Patch overlap data
         for patch in (
             self._solver._patch,
             self._solver._patch_with_halo,
+            self._solver._patch_interior,
             self._solver._patch_overlap_current_time_step,
             self._solver._patch_overlap_update,
             self._solver._max_eigenvalue,
@@ -925,6 +936,9 @@ Patch overlap data
         )
         self._solver._patch_with_halo.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
             self._solver._patch_with_halo, "double"
+        )
+        self._solver._patch_interior.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
+            self._solver._patch_interior, "double"
         )
         self._solver._patch_overlap_current_time_step.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
             self._solver._patch_overlap_current_time_step, "double"
