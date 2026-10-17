@@ -13,8 +13,9 @@ class InsertPatchInterior(AbstractFVActionSet):
     Copies solver._patch_interior, i.e. the result of
     exahype2.api.fv.actionsets.UpdateCellInterior, into the patch interior
     of solver._patch. Afterwards, the first entry of solver._max_eigenvalue
-    holds the maximum of its two entries, i.e. the maximum eigenvalue of the
-    whole patch (@see
+    holds the maximum of its first entry (the maximum eigenvalue of the
+    shell) and its third entry (the maximum eigenvalue of the patch
+    interior), i.e. the maximum eigenvalue of the whole patch (@see
     exahype2.api.fv.RusanovWithOptimisticExplicitEuler).
 
     """
@@ -60,7 +61,7 @@ class InsertPatchInterior(AbstractFVActionSet):
     }}
   }}
 
-  {max_eigenvalue}.setMaxEigenvalue( 0, std::max( {max_eigenvalue}.getMaxEigenvalue(0), {max_eigenvalue}.getMaxEigenvalue(1) ) );
+  {max_eigenvalue}.setMaxEigenvalue( 0, std::max( {max_eigenvalue}.getMaxEigenvalue(0), {max_eigenvalue}.getMaxEigenvalue(2) ) );
 """
         return result
 

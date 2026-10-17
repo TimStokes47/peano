@@ -891,7 +891,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           into _patch_overlap_current_time_step by
           exahype2.api.fv.actionsets.RollOverUpdatedFace once the update is
           complete.
-        - _max_eigenvalue: two doubles per cell, named after the solver
+        - _max_eigenvalue: three doubles per cell, named after the solver
           followed by MaxEigenvalueAndEstimatedTimeStepSize (e.g.
           EulerFVSmoothMaxEigenvalueAndEstimatedTimeStepSize). The Python
           attribute keeps the name _max_eigenvalue, as
@@ -899,7 +899,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           exahype2.api.fv.actionsets.ComputeGlobalCFLCondition are shared
           with exahype2.api.fv.RusanovWithExplicitEuler and look it up
           under this name.
-          It is modelled via DaStGen2 as an array of cardinality two. The
+          It is modelled via DaStGen2 as an array of cardinality three. The
           array is a peano4.api.dastgen2.Peano4SmartPointerDoubleArray,
           i.e. the values reside on the heap. The two entries are used as
           follows:
@@ -908,7 +908,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
             whole patch into it, while
             exahype2.api.fv.actionsets.UpdateCellShell writes the one of
             the shell only. exahype2.api.fv.actionsets.InsertPatchInterior
-            eventually replaces it with the maximum of both entries, so
+            eventually replaces it with the maximum of entries 0 and 2, so
             it then holds the one of the whole patch, too.
             exahype2.api.fv.actionsets.ComputeGlobalCFLCondition reduces
             entry 0 of all cells into the next time step size.
@@ -916,6 +916,10 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
             interior update, i.e. the current time step size times
             damp_time_step_size, as written by
             exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior.
+          - Entry 2 holds the maximum eigenvalue of the patch interior, as
+            written by exahype2.api.fv.actionsets.UpdateCellInterior when
+            exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior
+            updates the patch interior.
         - _patch_interior: the patch interior, i.e. the patch without its
           shell, so (patch_size-2*overlap)^d Finite Volumes. It matches the
           region timeStepWithRusanov2DOnPatchInterior() and
@@ -982,7 +986,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
         )
         self._solver._max_eigenvalue = peano4.api.datamodel.DaStGen2(self._solver.name + "MaxEigenvalueAndEstimatedTimeStepSize")
         self._solver._max_eigenvalue.data.add_attribute(
-            peano4.api.dastgen2.Peano4SmartPointerDoubleArray("maxEigenvalue", 2)
+            peano4.api.dastgen2.Peano4SmartPointerDoubleArray("maxEigenvalue", 3)
         )
 
 
@@ -1106,12 +1110,15 @@ Patch overlap data
             )
         )
         reconstruction_task.add_action_set( HandleBoundary(self._solver, guard=self._solver.grid_selector.createFaceGuard()) )
-        ## Validate the estimated time step size of the optimistic patch interior update
+        ## Validate the estimated time step size of the optimistic patch
+        ## interior update. There is no estimate yet if the time step size is
+        ## zero, i.e. in the very first time step.
         reconstruction_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         reconstruction_task.add_action_set(
             ReadjustTimeStepSizeForOptimisticGlobalTimestepping(
                 self._solver,
-                guard=self._solver.grid_selector.createCellGuard(),
+                guard=f"({self._solver.grid_selector.createCellGuard()}) and "
+                f"not tarch::la::equals(repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize(), 0.0)",
             )
         )
 
@@ -1132,14 +1139,17 @@ Patch overlap data
         max_eigenvalue = f"fineGridCell{self._solver._max_eigenvalue.name}"
         time_step_size = f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()"
         cell_guard = self._solver.grid_selector.createCellGuard()
+        ## The time step size is tested first: C++ evaluates the expressions
+        ## from left to right and stops as soon as the result is known, so
+        ## entry 1 is never read if the time step size is zero.
         traditional_guard = (
             f"({cell_guard}) and "
-            f"(tarch::la::greater({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size}) or tarch::la::equals({time_step_size}, 0.0))"
+            f"(tarch::la::equals({time_step_size}, 0.0) or tarch::la::greater({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size}))"
         )
         optimistic_guard = (
             f"({cell_guard}) and "
-            f"tarch::la::equals({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size}) and "
-            f"not tarch::la::equals({time_step_size}, 0.0)"
+            f"not tarch::la::equals({time_step_size}, 0.0) and "
+            f"tarch::la::equals({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size})"
         )
 
         ## Traditional branch: update the whole patch

@@ -18,10 +18,9 @@ class UpdateCellInterior(AbstractFVActionSet):
     invokes the patch interior compute kernel, and writes the result into
     solver._patch_interior.
 
-    The kernel also yields the maximum eigenvalue of the patch interior.
-    The action set does not store it for the time being, as the second
-    entry of solver._max_eigenvalue holds the estimated time step size
-    (@see exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior).
+    The maximum eigenvalue of the patch interior goes into the third entry
+    of solver._max_eigenvalue. The second entry holds the estimated time
+    step size (@see exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior).
 
     """
 
@@ -29,7 +28,8 @@ class UpdateCellInterior(AbstractFVActionSet):
         """!
 
         @param solver: exahype2.api.Solver
-          Has to have solver._patch, solver._patch_interior and
+          Has to have solver._patch, solver._patch_interior,
+          solver._max_eigenvalue and
           solver.compute_kernel_call_on_patch_interior set - @see
           exahype2.api.fv.RusanovWithOptimisticExplicitEuler.
 
@@ -58,6 +58,7 @@ class UpdateCellInterior(AbstractFVActionSet):
     double timeStepSize = {time_step_size};
     ::exahype2::CellData patchData(fineGridCell{self._solver._patch.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch_interior.name}.value);
     {self._solver.compute_kernel_call_on_patch_interior}
+    fineGridCell{self._solver._max_eigenvalue.name}.setMaxEigenvalue( 2, patchData.maxEigenvalue[0] );
   }}
 """
         return result
