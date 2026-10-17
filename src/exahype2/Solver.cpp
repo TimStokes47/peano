@@ -171,3 +171,10 @@ void exahype2::Solver::updateCell(double timeStepSize, double timeStamp) {
   _maxTimeStampUpdatedThisTimeStep    = std::max(_maxTimeStampUpdatedThisTimeStep, timeStamp);
   _cellUpdates++;
 }
+
+
+void exahype2::Solver::enforceTimeStepSize(double timeStepSize) {
+  tarch::multicore::Lock lock(_semaphore);
+  _minTimeStepSize = timeStepSize;
+  _maxTimeStepSize = timeStepSize;
+}

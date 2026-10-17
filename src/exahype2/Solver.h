@@ -120,6 +120,18 @@ class exahype2::Solver {
      */
     void updateCell(double timeStepSize, double timeStamp);
 
+    /**
+     * Thread-safely overwrite the current minimum and maximum time step size
+     * (protected by _semaphore), i.e. what getMinTimeStepSize() and
+     * getMaxTimeStepSize() return from now on. Optimistic time stepping uses
+     * this setter to switch to the time step size it has estimated
+     * beforehand (@see
+     * exahype2.api.fv.actionsets.ReadjustTimeStepSizeForOptimisticGlobalTimestepping).
+     * The accumulators of the time step that is currently running remain
+     * unchanged.
+     */
+    void enforceTimeStepSize(double timeStepSize);
+
   protected:
     double _minTimeStamp;
     double _maxTimeStamp;

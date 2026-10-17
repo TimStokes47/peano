@@ -22,6 +22,7 @@ from .actionsets import UpdateCellShell
 from .actionsets import InsertPatchInterior
 from .actionsets import DiscardPatchInterior
 from .actionsets import SpawnTaskToUpdateCellInterior
+from .actionsets import ReadjustTimeStepSizeForOptimisticGlobalTimestepping
 
 
 ## DSLHyPE time step kernels on the patch interior and on the shell of a patch
@@ -1111,6 +1112,14 @@ Patch overlap data
             )
         )
         reconstruction_task.add_action_set( HandleBoundary(self._solver, guard=self._solver.grid_selector.createFaceGuard()) )
+        ## Validate the estimated time step size of the optimistic patch interior update
+        reconstruction_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        reconstruction_task.add_action_set(
+            ReadjustTimeStepSizeForOptimisticGlobalTimestepping(
+                self._solver,
+                guard=self._solver.grid_selector.createCellGuard(),
+            )
+        )
 
         ## Do the actual time step update
         update_cell_task.add_dependency(reconstruction_task)
