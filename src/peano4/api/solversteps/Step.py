@@ -68,6 +68,22 @@ class Step:
         self.action_set_generator = StepToActionSets(self)
         self.observer_generator = StepToObserver(self)
 
+    def get_observer_class_name(self) -> str:
+        """!
+
+        Class name of the observer this step is translated into. This is
+        the step's name, cut down to 64 characters plus a consecutive number
+        if it is longer (@see peano4.api.output.Helper.shortened_class_name()),
+        as the class name also is the observer's file name. Everybody
+        referring to the observer class, such as the generated runners, has
+        to use this getter rather than the step's name.
+
+        """
+        # Imported here, as peano4.api.output in turn imports this package
+        from peano4.api.output.Helper import shortened_class_name
+
+        return shortened_class_name(self.name, max_length=64)
+
     def remove_all_actions(self):
         """
         Each step holds a set of actions. They describe what the step actually

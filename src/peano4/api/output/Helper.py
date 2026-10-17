@@ -33,34 +33,38 @@ def write_file(overwrite,overwrite_is_default,full_qualified_filename):
     return True
 
 
-# Longest class name of a generated observer or action set. The class name is
-# also the file name (plus .h or .cpp), and file names are limited to 255
-# characters on most file systems.
-_MAX_CLASS_NAME_LENGTH = 200
+# Default for the longest class name of a generated action set. The class
+# name is also the file name (plus .h or .cpp), and file names are limited to
+# 255 characters on most file systems.
+MAX_CLASS_NAME_LENGTH = 200
 
 # Long class names handed out so far, mapped onto their shortened counterparts
 _shortened_class_names = {}
 
 
-def shortened_class_name(class_name):
+def shortened_class_name(class_name, max_length=MAX_CLASS_NAME_LENGTH):
   """!
 
   Class name of a generated observer or action set which is short enough
   to serve as file name
 
-  Names up to _MAX_CLASS_NAME_LENGTH characters are returned unchanged.
-  Longer names are cut off and get a consecutive number appended, e.g.
-  ..._1, ..._2. The cut-off names carry no meaning anymore, but every
-  call with the same long name yields the same short name, so the
+  Names up to max_length characters are returned unchanged. Longer names
+  are cut off and get a consecutive number appended, e.g. ..._1, ..._2.
+  The cut-off names carry no meaning anymore, but every call with the same
+  long name and the same max_length yields the same short name, so the
   generated files can refer to each other.
 
   @param class_name: str
     The full class name.
 
+  @param max_length: int
+    Longest admissible class name.
+
   """
-  if len(class_name) <= _MAX_CLASS_NAME_LENGTH:
+  if len(class_name) <= max_length:
     return class_name
-  if class_name not in _shortened_class_names:
+  key = (class_name, max_length)
+  if key not in _shortened_class_names:
     suffix = "_" + str(len(_shortened_class_names) + 1)
-    _shortened_class_names[class_name] = class_name[: _MAX_CLASS_NAME_LENGTH - len(suffix)] + suffix
-  return _shortened_class_names[class_name]
+    _shortened_class_names[key] = class_name[: max_length - len(suffix)] + suffix
+  return _shortened_class_names[key]

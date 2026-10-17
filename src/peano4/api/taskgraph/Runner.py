@@ -149,9 +149,7 @@ def create_runner(peano_project, identifier, steps):
 
     """
     step_names = [step.name for step in steps]
-    # Class names of the observers, which are shortened if they become too
-    # long to serve as file names (@see peano4.api.output.Observer)
-    observer_names = [peano4.api.output.Helper.shortened_class_name(name) for name in step_names]
+    observer_names = [step.get_observer_class_name() for step in steps]
     first_step = step_names[0] if step_names else "Undef"
     repeat_conditions = [step.has_to_repeat for step in steps]
 
