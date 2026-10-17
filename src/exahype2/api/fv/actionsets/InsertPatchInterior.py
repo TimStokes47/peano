@@ -12,7 +12,7 @@ class InsertPatchInterior(AbstractFVActionSet):
 
     Copies solver._patch_interior, i.e. the result of
     exahype2.api.fv.actionsets.UpdateCellInterior, into the patch interior
-    of solver._patch. Afterwards, the first entry of solver._max_eigenvalue
+    of solver._patch. Afterwards, the first entry of solver._max_eigenvalue_and_time_step_sizes
     holds the maximum of its first entry (the maximum eigenvalue of the
     shell) and its third entry (the maximum eigenvalue of the patch
     interior), i.e. the maximum eigenvalue of the whole patch (@see
@@ -25,7 +25,7 @@ class InsertPatchInterior(AbstractFVActionSet):
 
         @param solver: exahype2.api.Solver
           Has to have solver._patch, solver._patch_interior and
-          solver._max_eigenvalue set - @see
+          solver._max_eigenvalue_and_time_step_sizes set - @see
           exahype2.api.fv.RusanovWithOptimisticExplicitEuler.
 
         @param patch_size: int
@@ -50,7 +50,7 @@ class InsertPatchInterior(AbstractFVActionSet):
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             unknowns = self._solver.unknowns + self._solver.auxiliary_variables
             interior_size = self.patch_size - 2 * self.overlap
-            max_eigenvalue = f"fineGridCell{self._solver._max_eigenvalue.name}"
+            max_eigenvalue = f"fineGridCell{self._solver._max_eigenvalue_and_time_step_sizes.name}"
             result = f"""
   dfor(interiorVolume,{interior_size}) {{
     tarch::la::Vector<Dimensions,int> patchVolume = interiorVolume + tarch::la::Vector<Dimensions,int>({self.overlap});

@@ -49,6 +49,13 @@ class exahype2::Solver {
     virtual double getMaxTimeStepSize() const;
 
     /**
+     * The time step size the solver would use if enforceTimeStepSize() had
+     * not been called, i.e. the maximum time step size as startTimeStep()
+     * has rolled it over. enforceTimeStepSize() does not alter it.
+     */
+    virtual double getAdmissibleTimeStepSize() const;
+
+    /**
      * Default implementation: rolls the previous sweep's accumulated
      * _minTimeStampUpdatedThisTimeStep/_maxTimeStampUpdatedThisTimeStep,
      * _minTimeStepSizeUpdatedThisTimeStep/_maxTimeStepSizeUpdatedThisTimeStep and
@@ -128,7 +135,7 @@ class exahype2::Solver {
      * beforehand (@see
      * exahype2.api.fv.actionsets.ReadjustTimeStepSizeForOptimisticGlobalTimestepping).
      * The accumulators of the time step that is currently running remain
-     * unchanged.
+     * unchanged, and so does getAdmissibleTimeStepSize().
      */
     void enforceTimeStepSize(double timeStepSize);
 
@@ -147,6 +154,11 @@ class exahype2::Solver {
 
     double _minTimeStepSize;
     double _maxTimeStepSize;
+
+    /**
+     * @see getAdmissibleTimeStepSize()
+     */
+    double _admissibleTimeStepSize;
 
     double _minTimeStepSizeUpdatedThisTimeStep;
     double _maxTimeStepSizeUpdatedThisTimeStep;

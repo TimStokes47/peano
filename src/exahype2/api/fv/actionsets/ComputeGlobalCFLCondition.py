@@ -37,7 +37,7 @@ class ComputeGlobalCFLCondition(AbstractFVActionSet):
 
     """
 
-    def __init__(self, solver, cfl_constant, patch_size, guard):
+    def __init__(self, solver, cfl_constant, patch_size, guard, max_eigenvalue=None):
         """!
 
         @param solver: exahype2.api.Solver
@@ -63,9 +63,14 @@ class ComputeGlobalCFLCondition(AbstractFVActionSet):
           to match the guard of exahype2.api.fv.actionsets.UpdateCell, as
           only the cells updated there hold a valid maximum eigenvalue.
 
+        @param max_eigenvalue: peano4.api.datamodel.DaStGen2
+          The cell data holding the maximum eigenvalue (first entry).
+          Defaults to solver._max_eigenvalue.
+
         """
         AbstractFVActionSet.__init__(self, solver)
         self.guard = guard
+        self._max_eigenvalue = max_eigenvalue if max_eigenvalue is not None else solver._max_eigenvalue
         self.cfl_constant = cfl_constant
         self.patch_size = patch_size
 
@@ -213,7 +218,7 @@ class ComputeGlobalCFLCondition(AbstractFVActionSet):
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             result = f"""
   tarch::multicore::Lock lock(_semaphore);
-  _maxEigenvalue = std::max( fineGridCell{self._solver._max_eigenvalue.name}.getMaxEigenvalue(0), _maxEigenvalue );
+  _maxEigenvalue = std::max( fineGridCell{self._max_eigenvalue.name}.getMaxEigenvalue(0), _maxEigenvalue );
 """
         return result
 

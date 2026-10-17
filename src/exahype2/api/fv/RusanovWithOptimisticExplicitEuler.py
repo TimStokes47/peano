@@ -818,26 +818,32 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
     otherwise. Project on faces, Compute global CFL condition and Spawn
     patch interior update follow either branch.
 
-    Compute global CFL condition does not only compute the next time step
-    size, it also makes it the solver's time step size straightaway (@see
-    exahype2.api.fv.actionsets.ComputeGlobalCFLCondition). Spawn patch
-    interior update runs after it and hence damps the time step size of the
-    next time step, which yields the estimate for the next time step:
+    The estimate is the admissible time step size of the current time step,
+    i.e. the one the solver could have chosen if it had not been enforced to
+    use a smaller one, times damp_time_step_size. Reconstruct and apply BCs
+    memorises the admissible time step size per cell (@see
+    exahype2.api.fv.actionsets.ReadjustTimeStepSizeForOptimisticGlobalTimestepping),
+    and Spawn patch interior update damps it (@see
+    exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior). As the
+    admissible time step size is never damped itself, the estimates do not
+    shrink from time step to time step:
 
     - Time step 0 runs with time step size 0, as the admissible time step
-      size is not known yet. The readjustment of the time step size is
-      skipped, Update cell runs but does not change the solution, and
-      Compute global CFL condition yields the first time step size dt0. The
-      spawn already sees dt0 and updates the patch interior with
-      damp_time_step_size*dt0.
-    - Time step 1 finds this estimate to be smaller than dt0. The
-      readjustment enforces it as time step size, and the optimistic
-      branch runs.
+      size is not known yet. Update cell runs but does not change the
+      solution, and Compute global CFL condition yields the first time step
+      size dt0. There is no admissible time step size to estimate from, so
+      the spawn does not update the patch interior.
+    - Time step 1 runs with dt0 down the traditional branch. The spawn
+      updates the patch interior with damp_time_step_size*dt0.
+    - Time step 2 finds this estimate to be smaller than the admissible time
+      step size dt1. It enforces the estimate as time step size and runs
+      the optimistic branch.
 
-    The CFL condition has to run before the spawn. Otherwise, the spawn
-    damps the time step size of the current time step. In the optimistic
-    branch, this one is already damped, so the time step size would shrink
-    by the factor damp_time_step_size in every time step.
+    Compute global CFL condition does not only compute the next time step
+    size, it also makes it the solver's time step size and time stamp
+    straightaway (@see exahype2.api.fv.actionsets.ComputeGlobalCFLCondition).
+    The spawn runs after it, so the patch interior update starts from the
+    new time stamp.
 
     """
 
@@ -923,17 +929,16 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           into _patch_overlap_current_time_step by
           exahype2.api.fv.actionsets.RollOverUpdatedFace once the update is
           complete.
-        - _max_eigenvalue: three doubles per cell, named after the solver
-          followed by MaxEigenvalueAndEstimatedTimeStepSize (e.g.
-          EulerFVSmoothMaxEigenvalueAndEstimatedTimeStepSize). The Python
-          attribute keeps the name _max_eigenvalue, as
-          exahype2.api.fv.actionsets.UpdateCell and
+        - _max_eigenvalue_and_time_step_sizes: four doubles per cell, named
+          after the solver followed by MaxEigenvalueAndTimeStepSizes (e.g.
+          EulerFVSmoothMaxEigenvalueAndTimeStepSizes).
+          exahype2.api.fv.RusanovWithExplicitEuler calls the corresponding
+          data _max_eigenvalue. exahype2.api.fv.actionsets.UpdateCell and
           exahype2.api.fv.actionsets.ComputeGlobalCFLCondition are shared
-          with exahype2.api.fv.RusanovWithExplicitEuler and look it up
-          under this name.
-          It is modelled via DaStGen2 as an array of cardinality three. The
+          with that scheme and hence are handed this data explicitly.
+          It is modelled via DaStGen2 as an array of cardinality four. The
           array is a peano4.api.dastgen2.Peano4SmartPointerDoubleArray,
-          i.e. the values reside on the heap. The two entries are used as
+          i.e. the values reside on the heap. The four entries are used as
           follows:
           - Entry 0 holds the maximum eigenvalue of the patch.
             exahype2.api.fv.actionsets.UpdateCell writes the one of the
@@ -945,13 +950,17 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
             exahype2.api.fv.actionsets.ComputeGlobalCFLCondition reduces
             entry 0 of all cells into the next time step size.
           - Entry 1 holds the estimated time step size of the patch
-            interior update, i.e. the current time step size times
-            damp_time_step_size, as written by
+            interior update, i.e. entry 3 times damp_time_step_size, as
+            written by
             exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior.
           - Entry 2 holds the maximum eigenvalue of the patch interior, as
             written by exahype2.api.fv.actionsets.UpdateCellInterior when
             exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior
             updates the patch interior.
+          - Entry 3 holds the time step size the solver could have chosen
+            in the current time step if it had not been enforced to use a
+            smaller one, i.e. the admissible time step size, as written by
+            exahype2.api.fv.actionsets.ReadjustTimeStepSizeForOptimisticGlobalTimestepping.
         - _patch_interior: the patch interior, i.e. the patch without its
           shell, so (patch_size-2*overlap)^d Finite Volumes. It matches the
           region timeStepWithRusanov2DOnPatchInterior() and
@@ -1016,9 +1025,9 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
             total_unknowns,
             identifier + "Update",
         )
-        self._solver._max_eigenvalue = peano4.api.datamodel.DaStGen2(self._solver.name + "MaxEigenvalueAndEstimatedTimeStepSize")
-        self._solver._max_eigenvalue.data.add_attribute(
-            peano4.api.dastgen2.Peano4SmartPointerDoubleArray("maxEigenvalue", 3)
+        self._solver._max_eigenvalue_and_time_step_sizes = peano4.api.datamodel.DaStGen2(self._solver.name + "MaxEigenvalueAndTimeStepSizes")
+        self._solver._max_eigenvalue_and_time_step_sizes.data.add_attribute(
+            peano4.api.dastgen2.Peano4SmartPointerDoubleArray("maxEigenvalue", 4)
         )
 
 
@@ -1044,7 +1053,7 @@ Patch overlap data
         peano_project.datamodel.add_cell(self._solver._patch_interior)
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
-        peano_project.datamodel.add_cell(self._solver._max_eigenvalue)
+        peano_project.datamodel.add_cell(self._solver._max_eigenvalue_and_time_step_sizes)
 
         # The task graph compiler only uses, loads and stores data where the
         # solver's grid selector holds, too (@see peano4.api.datamodel.DoF).
@@ -1054,7 +1063,7 @@ Patch overlap data
             self._solver._patch_interior,
             self._solver._patch_overlap_current_time_step,
             self._solver._patch_overlap_update,
-            self._solver._max_eigenvalue,
+            self._solver._max_eigenvalue_and_time_step_sizes,
         ):
             patch.grid_selector = self._solver.grid_selector
 
@@ -1126,8 +1135,10 @@ Patch overlap data
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_cfl_condition_task)
         # Has to come after compute_cfl_condition_task, so the Sequential
-        # compiler runs the spawn after the CFL condition - see the class
-        # documentation
+        # compiler runs the spawn after the CFL condition. The estimated time
+        # step size does not depend on this order, but the patch interior
+        # update takes its time stamp from the solver, which the CFL condition
+        # advances - see the class documentation
         time_step.add_task(spawn_patch_interior_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
@@ -1146,21 +1157,19 @@ Patch overlap data
         )
         reconstruction_task.add_action_set( HandleBoundary(self._solver, guard=self._solver.grid_selector.createFaceGuard()) )
         ## Validate the estimated time step size of the optimistic patch
-        ## interior update. There is no estimate yet if the time step size is
-        ## zero, i.e. in the very first time step.
-        reconstruction_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        ## interior update, and memorise the admissible time step size
+        reconstruction_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         reconstruction_task.add_action_set(
             ReadjustTimeStepSizeForOptimisticGlobalTimestepping(
                 self._solver,
-                guard=f"({self._solver.grid_selector.createCellGuard()}) and "
-                f"not tarch::la::equals(repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize(), 0.0)",
+                guard=self._solver.grid_selector.createCellGuard(),
             )
         )
 
         ## Guards of the two branches. Both are combined with the grid
         ## selector's guard, i.e. both have to hold.
         ## - The traditional branch (Update cell, Discard patch interior) runs
-        ##   if the estimated time step size, i.e. entry 1 of _max_eigenvalue,
+        ##   if the estimated time step size, i.e. entry 1 of _max_eigenvalue_and_time_step_sizes,
         ##   is bigger than the solver's time step size (@see
         ##   ReadjustTimeStepSizeForOptimisticGlobalTimestepping, which sets
         ##   overestimated time step sizes to the maximum double value), or
@@ -1173,7 +1182,7 @@ Patch overlap data
         ## The projection onto the faces, the CFL condition and the spawn of
         ## the next patch interior update follow both branches and are guarded
         ## by the grid selector only.
-        max_eigenvalue = f"fineGridCell{self._solver._max_eigenvalue.name}"
+        max_eigenvalue = f"fineGridCell{self._solver._max_eigenvalue_and_time_step_sizes.name}"
         time_step_size = f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()"
         cell_guard = self._solver.grid_selector.createCellGuard()
         ## The time step size is tested first: C++ evaluates the expressions
@@ -1192,17 +1201,18 @@ Patch overlap data
         update_cell_task.add_dependency(reconstruction_task)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
-        update_cell_task.use_cell(self._solver._max_eigenvalue,  peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        update_cell_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes,  peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         update_cell_task.add_action_set(
             UpdateCell(
                 self._solver,
                 guard=traditional_guard,
+                max_eigenvalue=self._solver._max_eigenvalue_and_time_step_sizes,
             )
         )
 
         ## Traditional branch: the update makes any precomputed patch interior obsolete
         discard_patch_interior_task.add_dependency(update_cell_task)
-        discard_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        discard_patch_interior_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         discard_patch_interior_task.add_action_set(
             DiscardPatchInterior(
                 self._solver,
@@ -1211,12 +1221,12 @@ Patch overlap data
         )
 
         ## Optimistic branch: update the shell only. The patch interior of
-        ## _patch and entry 1 of _max_eigenvalue remain unchanged, so both are
+        ## _patch and entry 1 of _max_eigenvalue_and_time_step_sizes remain unchanged, so both are
         ## read and written
         update_cell_shell_task.add_dependency(reconstruction_task)
         update_cell_shell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_shell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        update_cell_shell_task.use_cell(self._solver._max_eigenvalue,  peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        update_cell_shell_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes,  peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         update_cell_shell_task.add_action_set(
             UpdateCellShell(
                 self._solver,
@@ -1228,7 +1238,7 @@ Patch overlap data
         insert_patch_interior_task.add_dependency(update_cell_shell_task)
         insert_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         insert_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        insert_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        insert_patch_interior_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         insert_patch_interior_task.add_action_set(
             InsertPatchInterior(
                 self._solver,
@@ -1242,13 +1252,14 @@ Patch overlap data
         ## time step size. Runs in parallel to the projection onto the faces
         compute_cfl_condition_task.add_dependency(update_cell_task)
         compute_cfl_condition_task.add_dependency(insert_patch_interior_task)
-        compute_cfl_condition_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        compute_cfl_condition_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         compute_cfl_condition_task.add_action_set(
             ComputeGlobalCFLCondition(
                 self._solver,
                 self.cfl_constant,
                 self.patch_size,
                 guard=cell_guard,
+                max_eigenvalue=self._solver._max_eigenvalue_and_time_step_sizes,
             )
         )
 
@@ -1281,7 +1292,7 @@ Patch overlap data
         spawn_patch_interior_task.add_dependency(update_cell_task)
         spawn_patch_interior_task.add_dependency(insert_patch_interior_task)
         spawn_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        spawn_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        spawn_patch_interior_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         spawn_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.WRITE)
         spawn_patch_interior_task.add_action_set(
             SpawnTaskToUpdateCellInterior(

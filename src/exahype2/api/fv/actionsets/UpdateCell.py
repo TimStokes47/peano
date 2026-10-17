@@ -26,7 +26,7 @@ class UpdateCell(AbstractFVActionSet):
 
     """
 
-    def __init__(self, solver, guard):
+    def __init__(self, solver, guard, max_eigenvalue=None):
         """!
 
         @param solver: exahype2.api.Solver
@@ -40,9 +40,14 @@ class UpdateCell(AbstractFVActionSet):
           output of the solver's grid_selector (@see
           peano4.api.toolbox.GridSelector).
 
+        @param max_eigenvalue: peano4.api.datamodel.DaStGen2
+          The cell data the maximum eigenvalue goes into (first entry).
+          Defaults to solver._max_eigenvalue.
+
         """
         AbstractFVActionSet.__init__(self, solver)
         self.guard = guard
+        self._max_eigenvalue = max_eigenvalue if max_eigenvalue is not None else solver._max_eigenvalue
 
     def get_body_of_operation(self, operation_name):
         result = ""
@@ -53,7 +58,7 @@ class UpdateCell(AbstractFVActionSet):
   ::exahype2::CellData patchData(fineGridCell{self._solver._patch_with_halo.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch.name}.value);
   {self._solver.compute_kernel_call}
 
-  fineGridCell{self._solver._max_eigenvalue.name}.setMaxEigenvalue( 0, patchData.maxEigenvalue[0] );
+  fineGridCell{self._max_eigenvalue.name}.setMaxEigenvalue( 0, patchData.maxEigenvalue[0] );
 """
         return result
 

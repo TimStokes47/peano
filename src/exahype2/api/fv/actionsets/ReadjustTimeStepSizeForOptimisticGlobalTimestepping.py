@@ -10,18 +10,27 @@ class ReadjustTimeStepSizeForOptimisticGlobalTimestepping(AbstractFVActionSet):
 
     Validate the estimated time step size of an optimistic patch interior update
 
-    The second entry of solver._max_eigenvalue holds the time step size the
-    patch interior has been updated with optimistically (@see
-    exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior). The action
-    set compares it to the solver's current time step size:
+    The second entry of solver._max_eigenvalue_and_time_step_sizes holds the
+    time step size the patch interior has been updated with optimistically
+    (@see exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior). The
+    action set compares it to the admissible time step size, i.e. the time
+    step size the solver would use if it had not been enforced to use a
+    smaller one (@see exahype2::Solver::getAdmissibleTimeStepSize()):
 
-    - If the estimate is bigger than the solver's time step size, we have
+    - If the admissible time step size is zero, i.e. in the very first time
+      step, there is no estimate yet. The action set sets the fourth entry
+      to zero and does not read the second entry.
+    - If the estimate is bigger than the admissible time step size, we have
       overestimated the admissible time step size. The action set
       invalidates the estimate, i.e. sets it to the maximum double value.
-    - If the estimate is smaller than or equal to the solver's time step
+    - If the estimate is smaller than or equal to the admissible time step
       size, subject to floating point accuracy (tarch::la::equals()), the
       action set enforces the estimate as the solver's minimum and maximum
       time step size (@see exahype2::Solver::enforceTimeStepSize()).
+
+    In the latter two cases, the action set stores the admissible time step
+    size in the fourth entry. It is the time step size the solver could have
+    chosen, whether or not the estimate is enforced.
 
     """
 
@@ -29,7 +38,7 @@ class ReadjustTimeStepSizeForOptimisticGlobalTimestepping(AbstractFVActionSet):
         """!
 
         @param solver: exahype2.api.Solver
-          Has to have solver._max_eigenvalue set - @see
+          Has to have solver._max_eigenvalue_and_time_step_sizes set - @see
           exahype2.api.fv.RusanovWithOptimisticExplicitEuler.
 
         @param guard: str
@@ -44,15 +53,21 @@ class ReadjustTimeStepSizeForOptimisticGlobalTimestepping(AbstractFVActionSet):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             solver = f"repositories::{self._solver.get_name_of_global_instance()}"
-            data = f"fineGridCell{self._solver._max_eigenvalue.name}"
+            data = f"fineGridCell{self._solver._max_eigenvalue_and_time_step_sizes.name}"
             result = f"""
-  double estimatedTimeStepSize = {data}.getMaxEigenvalue(1);
-  double solverTimeStepSize    = {solver}.getMinTimeStepSize();
-  if (estimatedTimeStepSize < solverTimeStepSize or tarch::la::equals(estimatedTimeStepSize, solverTimeStepSize)) {{
-    {solver}.enforceTimeStepSize(estimatedTimeStepSize);
+  const double admissibleTimeStepSize = {solver}.getAdmissibleTimeStepSize();
+  if ( tarch::la::equals(admissibleTimeStepSize, 0.0) ) {{
+    {data}.setMaxEigenvalue(3, 0.0);
   }}
   else {{
-    {data}.setMaxEigenvalue(1, std::numeric_limits<double>::max());
+    const double estimatedTimeStepSize = {data}.getMaxEigenvalue(1);
+    if (estimatedTimeStepSize < admissibleTimeStepSize or tarch::la::equals(estimatedTimeStepSize, admissibleTimeStepSize)) {{
+      {solver}.enforceTimeStepSize(estimatedTimeStepSize);
+    }}
+    else {{
+      {data}.setMaxEigenvalue(1, std::numeric_limits<double>::max());
+    }}
+    {data}.setMaxEigenvalue(3, admissibleTimeStepSize);
   }}
 """
         return result

@@ -11,14 +11,18 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
 
     Update the patch interior with a damped time step size
 
-    The action set takes the solver's current time step size, multiplies
-    it with damp_time_step_size, and stores the result as estimated time
-    step size in the second entry of solver._max_eigenvalue. Afterwards, it
-    updates the patch interior with this damped time step size (@see
+    The action set takes the admissible time step size of the current time
+    step, i.e. the fourth entry of solver._max_eigenvalue_and_time_step_sizes
+    (@see exahype2.api.fv.actionsets.ReadjustTimeStepSizeForOptimisticGlobalTimestepping),
+    multiplies it with damp_time_step_size, and stores the result as
+    estimated time step size in the second entry. Afterwards, it updates the
+    patch interior with this damped time step size (@see
     exahype2.api.fv.actionsets.UpdateCellInterior and
-    exahype2.api.fv.RusanovWithOptimisticExplicitEuler).
+    exahype2.api.fv.RusanovWithOptimisticExplicitEuler). As the admissible
+    time step size is never damped itself, the estimates do not shrink from
+    time step to time step.
 
-    If the solver's time step size is zero, i.e. in the very first time
+    If the admissible time step size is zero, i.e. in the very first time
     step, there is nothing to estimate from. The action set then does not
     update the patch interior. It sets the maximum eigenvalue of the patch
     interior (third entry) to zero and the estimated time step size
@@ -35,7 +39,7 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
 
         @param solver: exahype2.api.Solver
           Has to have solver._patch, solver._patch_interior,
-          solver._max_eigenvalue and
+          solver._max_eigenvalue_and_time_step_sizes and
           solver.compute_kernel_call_on_patch_interior set - @see
           exahype2.api.fv.RusanovWithOptimisticExplicitEuler.
 
@@ -57,14 +61,14 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             solver = f"repositories::{self._solver.get_name_of_global_instance()}"
-            data = f"fineGridCell{self._solver._max_eigenvalue.name}"
+            data = f"fineGridCell{self._solver._max_eigenvalue_and_time_step_sizes.name}"
             result = f"""
-  if ( tarch::la::equals({solver}.getMinTimeStepSize(), 0.0) ) {{
+  if ( tarch::la::equals({data}.getMaxEigenvalue(3), 0.0) ) {{
     {data}.setMaxEigenvalue( 1, std::numeric_limits<double>::max() );
     {data}.setMaxEigenvalue( 2, 0.0 );
   }}
   else {{
-    double dampedTimeStepSize = {self.damp_time_step_size} * {solver}.getMinTimeStepSize();
+    double dampedTimeStepSize = {self.damp_time_step_size} * {data}.getMaxEigenvalue(3);
     {data}.setMaxEigenvalue( 1, dampedTimeStepSize );
 """ + self._update_cell_interior.get_body_of_operation(operation_name) + """
   }
