@@ -65,7 +65,8 @@ def translate(
     terminated. Such a task is hence not split, and the compiler writes a
     warning. You can enforce the split by setting the task's flag
     @ref peano4.api.taskgraph.Task.Task.may_spawn_background_tasks to True,
-    which skips this check.
+    which skips this check. If the flag is False, the task is never split,
+    and the compiler writes no warning.
 
     The two tasks are:
 
@@ -304,10 +305,10 @@ def _split_cell_tasks(graph: Graph):
     consumer_of_task = {}
     for task in graph.tasks:
         producer_of_task[task] = _copy_task(task)
-        if not _exclusively_writes_cell_data(task):
+        if task.may_spawn_background_tasks is False or not _exclusively_writes_cell_data(task):
             continue
         late_events = _has_events_after_touch_cell_first_time(task)
-        if late_events and not task.may_spawn_background_tasks:
+        if late_events and task.may_spawn_background_tasks is not True:
             peano4.api.Logger().log(
                 f"Warning: Task {task.name} is not split into a producer and a consumer task, as a split-up might be unsafe: "
                 f"The producer's spawned tasks might still run when the following events are invoked: "
