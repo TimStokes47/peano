@@ -1131,8 +1131,10 @@ Patch overlap data
         ##   overestimated time step sizes to the maximum double value), or
         ##   if the time step size is zero, i.e. in the very first time step.
         ## - The optimistic branch (Update cell shell, Insert patch interior)
-        ##   runs if the estimated time step size equals the solver's time
-        ##   step size, and if the latter is not zero.
+        ##   runs if and only if the traditional condition does not hold. As
+        ##   ReadjustTimeStepSizeForOptimisticGlobalTimestepping enforces any
+        ##   estimate that is smaller than or equal to the solver's time step
+        ##   size, this means that the estimate equals the time step size.
         ## The projection onto the faces, the CFL condition and the spawn of
         ## the next patch interior update follow both branches and are guarded
         ## by the grid selector only.
@@ -1142,15 +1144,14 @@ Patch overlap data
         ## The time step size is tested first: C++ evaluates the expressions
         ## from left to right and stops as soon as the result is known, so
         ## entry 1 is never read if the time step size is zero.
-        traditional_guard = (
-            f"({cell_guard}) and "
+        ## The optimistic condition is the exact negation of the traditional
+        ## one, so every cell runs exactly one of the two branches.
+        traditional_condition = (
             f"(tarch::la::equals({time_step_size}, 0.0) or tarch::la::greater({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size}))"
         )
-        optimistic_guard = (
-            f"({cell_guard}) and "
-            f"not tarch::la::equals({time_step_size}, 0.0) and "
-            f"tarch::la::equals({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size})"
-        )
+        traditional_guard = f"({cell_guard}) and {traditional_condition}"
+        optimistic_guard = f"({cell_guard}) and not {traditional_condition}"
+
 
         ## Traditional branch: update the whole patch
         update_cell_task.add_dependency(reconstruction_task)
