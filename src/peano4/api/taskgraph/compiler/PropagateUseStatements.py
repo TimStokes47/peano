@@ -55,6 +55,22 @@ def propagate_use_statements(
     be fixed this way and is only logged. @see
     _create_submodels_read_before_written().
 
+    ## Keeping submodels that a READ_AND_DISCARD would discard too early
+
+    The second pass looks for READ_AND_DISCARD declarations after which
+    another step still reads the submodel (READ_AND_DISCARD or
+    READ_AND_WRITE) before any step writes it again. This happens, for
+    example, if two sibling tasks both consume the same submodel and the
+    compiler maps them onto two subsequent mesh traversals: each task is
+    done with the submodel, but only the latter traversal may discard it.
+    The pass searches forward from every READ_AND_DISCARD, following
+    edges, and stops each path at the first step that declares the
+    submodel (TEMPORARY is transparent). If this step reads the submodel,
+    the READ_AND_DISCARD is upgraded to READ_AND_WRITE, i.e. the submodel
+    is stored again. The pass runs to a fixed point, and the passes below
+    treat the upgraded declaration like any other one. @see
+    _upgrade_discards_followed_by_reads().
+
     ## Upgrading a WRITE that immediately follows a READ_AND_WRITE
 
     Before any of the below runs, a narrower, separate pass first upgrades
@@ -216,6 +232,12 @@ def propagate_use_statements(
             or something_changed
         )
         something_changed = (
+            _upgrade_discards_followed_by_reads(
+                steps_of_sequence, index_edges, attribute_name, access_attribute_name
+            )
+            or something_changed
+        )
+        something_changed = (
             _upgrade_writes_immediately_following_read_and_write(
                 steps_of_sequence, index_edges, attribute_name, access_attribute_name
             )
@@ -323,6 +345,79 @@ def _create_submodels_read_before_written(
                         f"to step '{last_entry_step.name}', which creates the submodel."
                     )
                     something_changed = True
+
+    return something_changed
+
+
+def _upgrade_discards_followed_by_reads(
+    steps_of_sequence: Dict[int, List],
+    edges: List[Tuple[int, int]],
+    attribute_name: str,
+    access_attribute_name: str,
+) -> bool:
+    """!
+
+    Upgrade every READ_AND_DISCARD declaration to READ_AND_WRITE if a later
+    step still reads the submodel before any step writes it again - @see
+    the corresponding section of propagate_use_statements().
+
+    @param steps_of_sequence: Dict[int, [peano4.api.solversteps.Step]]
+      The sequences handed over to propagate_use_statements(), each
+      sequence identified by its index.
+
+    @param edges: [(int, int)]
+      The edges handed over to propagate_use_statements(), translated into
+      pairs of sequence indices.
+
+    @param attribute_name: str
+      Which kind of submodel (cell_data, face_data or vertex_data) to
+      analyse.
+
+    @param access_attribute_name: str
+      The access dictionary matching attribute_name (cell_data_access,
+      face_data_access or vertex_data_access).
+
+    @return bool
+      True if this pass upgraded at least one declaration.
+
+    """
+    successors_of_sequence: Dict[int, List[int]] = {sequence: [] for sequence in steps_of_sequence}
+    for predecessor, successor in edges:
+        successors_of_sequence[predecessor].append(successor)
+
+    something_changed = False
+    changed_this_pass = True
+    while changed_this_pass:
+        changed_this_pass = False
+        for sequence, steps in steps_of_sequence.items():
+            for index, step in enumerate(steps):
+                access = getattr(step, access_attribute_name)
+                for submodel in list(getattr(step, attribute_name)):
+                    if access[submodel] != Task.DataAccess.READ_AND_DISCARD:
+                        continue
+                    readers = [
+                        next_step
+                        for next_step, _, _ in _find_next_consecutive_uses(
+                            sequence,
+                            index,
+                            submodel,
+                            attribute_name,
+                            access_attribute_name,
+                            steps_of_sequence,
+                            successors_of_sequence,
+                        )
+                        if getattr(next_step, access_attribute_name)[submodel]
+                        in (Task.DataAccess.READ_AND_DISCARD, Task.DataAccess.READ_AND_WRITE)
+                    ]
+                    if readers:
+                        access[submodel] = Task.DataAccess.READ_AND_WRITE
+                        peano4.api.Logger().log(
+                            f"propagate_use_statements(): step '{step.name}' declared {attribute_name} "
+                            f"submodel '{submodel.name}' as READ_AND_DISCARD, but step '{readers[0].name}' "
+                            f"reads it afterwards - upgrading '{step.name}' to READ_AND_WRITE to keep it."
+                        )
+                        changed_this_pass = True
+        something_changed = something_changed or changed_this_pass
 
     return something_changed
 

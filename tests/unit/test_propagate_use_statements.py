@@ -610,3 +610,51 @@ def test_write_before_read_needs_no_creation():
     )
 
     assert submodel not in _access(setup_steps[1]) or _access(setup_steps[1])[submodel] == READ_AND_WRITE
+
+
+# ---------------------------------------------------------------------------
+# READ_AND_DISCARD followed by another read.
+# ---------------------------------------------------------------------------
+
+
+def test_discard_followed_by_read_is_upgraded():
+    """Two sibling consumers in subsequent steps: the first must keep Q."""
+    graph, tasks = _chain_graph("A", 3)
+    submodel = _FakeSubmodel("Q")
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, READ_AND_DISCARD)
+    _use_cell(tasks[2], submodel, READ_AND_DISCARD)
+
+    changed = propagate_use_statements([graph])
+
+    assert changed is True
+    assert _access(tasks[1])[submodel] == READ_AND_WRITE
+    assert _access(tasks[2])[submodel] == READ_AND_DISCARD
+
+
+def test_discard_followed_by_write_is_not_upgraded():
+    """The next use produces Q afresh: discarding is fine."""
+    graph, tasks = _chain_graph("A", 3)
+    submodel = _FakeSubmodel("Q")
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, READ_AND_DISCARD)
+    _use_cell(tasks[2], submodel, WRITE)
+
+    propagate_use_statements([graph])
+
+    assert _access(tasks[1])[submodel] == READ_AND_DISCARD
+
+
+def test_discard_followed_by_read_at_even_distance_gets_a_relay():
+    """The upgraded declaration is an origin like any other: a reader two
+    steps later gets a relay in between."""
+    graph, tasks = _chain_graph("A", 4)
+    submodel = _FakeSubmodel("Q")
+    _use_cell(tasks[0], submodel, WRITE)
+    _use_cell(tasks[1], submodel, READ_AND_DISCARD)
+    _use_cell(tasks[3], submodel, READ_AND_DISCARD)
+
+    propagate_use_statements([graph])
+
+    assert _access(tasks[1])[submodel] == READ_AND_WRITE
+    assert _access(tasks[2])[submodel] == READ_AND_WRITE
