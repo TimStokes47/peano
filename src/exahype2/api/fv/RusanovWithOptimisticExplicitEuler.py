@@ -1073,29 +1073,23 @@ Patch overlap data
         self._solver.compute_kernel_call_on_shell = self.__construct_kernel_call(Target.Serial, False, self.kernel_function_name + "OnShell")
         self.__create_time_step_functions(peano_project.directory)
         
-        reconstruction_task                    = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        update_cell_task                       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        update_cell_shell_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell shell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        traditional_project_on_faces_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Traditional project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        traditional_compute_cfl_condition_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Traditional compute global CFL condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        traditional_spawn_patch_interior_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Traditional spawn patch interior update", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        insert_patch_interior_task             = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Insert patch interior", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        discard_patch_interior_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Discard patch interior", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        optimistic_project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Optimistic project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        optimistic_compute_cfl_condition_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Optimistic compute global CFL condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        optimistic_spawn_patch_interior_task   = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Optimistic spawn patch interior update", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        reconstruction_task           = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        update_cell_task              = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        update_cell_shell_task        = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell shell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        insert_patch_interior_task    = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Insert patch interior", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        discard_patch_interior_task   = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Discard patch interior", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        project_on_faces_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        compute_cfl_condition_task    = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute global CFL condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        spawn_patch_interior_task     = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Spawn patch interior update", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
         time_step.add_task(reconstruction_task)
         time_step.add_task(update_cell_task)
         time_step.add_task(update_cell_shell_task)
-        time_step.add_task(traditional_project_on_faces_task)
-        time_step.add_task(traditional_compute_cfl_condition_task)
-        time_step.add_task(traditional_spawn_patch_interior_task)
         time_step.add_task(insert_patch_interior_task)
         time_step.add_task(discard_patch_interior_task)
-        time_step.add_task(optimistic_project_on_faces_task)
-        time_step.add_task(optimistic_compute_cfl_condition_task)
-        time_step.add_task(optimistic_spawn_patch_interior_task)
+        time_step.add_task(project_on_faces_task)
+        time_step.add_task(compute_cfl_condition_task)
+        time_step.add_task(spawn_patch_interior_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
@@ -1123,14 +1117,18 @@ Patch overlap data
 
         ## Guards of the two branches. Both are combined with the grid
         ## selector's guard, i.e. both have to hold.
-        ## - The traditional branch (Update cell and its successors) runs if
-        ##   the estimated time step size, i.e. entry 1 of _max_eigenvalue,
+        ## - The traditional branch (Update cell, Discard patch interior) runs
+        ##   if the estimated time step size, i.e. entry 1 of _max_eigenvalue,
         ##   is bigger than the solver's time step size (@see
         ##   ReadjustTimeStepSizeForOptimisticGlobalTimestepping, which sets
         ##   overestimated time step sizes to the maximum double value), or
         ##   if the time step size is zero, i.e. in the very first time step.
-        ## - The optimistic branch (Update cell shell and its successors) runs
-        ##   if the estimated time step size equals the solver's time step size.
+        ## - The optimistic branch (Update cell shell, Insert patch interior)
+        ##   runs if the estimated time step size equals the solver's time
+        ##   step size, and if the latter is not zero.
+        ## The projection onto the faces, the CFL condition and the spawn of
+        ## the next patch interior update follow both branches and are guarded
+        ## by the grid selector only.
         max_eigenvalue = f"fineGridCell{self._solver._max_eigenvalue.name}"
         time_step_size = f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()"
         cell_guard = self._solver.grid_selector.createCellGuard()
@@ -1140,10 +1138,11 @@ Patch overlap data
         )
         optimistic_guard = (
             f"({cell_guard}) and "
-            f"tarch::la::equals({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size})"
+            f"tarch::la::equals({max_eigenvalue}.getMaxEigenvalue(1), {time_step_size}) and "
+            f"not tarch::la::equals({time_step_size}, 0.0)"
         )
 
-        ## Do the actual time step update
+        ## Traditional branch: update the whole patch
         update_cell_task.add_dependency(reconstruction_task)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
@@ -1155,45 +1154,19 @@ Patch overlap data
             )
         )
 
-        ## Reduce the cells' maximum eigenvalues into the next time step size.
-        ## Runs in parallel to the projection onto the faces
-        traditional_compute_cfl_condition_task.add_dependency(update_cell_task)
-        # Keep _max_eigenvalue, as insert_patch_interior_task reads it, too
-        traditional_compute_cfl_condition_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        traditional_compute_cfl_condition_task.add_action_set(
-            ComputeGlobalCFLCondition(
+        ## Traditional branch: the update makes any precomputed patch interior obsolete
+        discard_patch_interior_task.add_dependency(update_cell_task)
+        discard_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        discard_patch_interior_task.add_action_set(
+            DiscardPatchInterior(
                 self._solver,
-                self.cfl_constant,
-                self.patch_size,
                 guard=traditional_guard,
             )
         )
-        
-        ## Next project the new data onto the faces. Also roll over the solution
-        traditional_project_on_faces_task.add_dependency(update_cell_task)
-        traditional_project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        traditional_project_on_faces_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        traditional_project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        traditional_project_on_faces_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.WRITE)
-        traditional_project_on_faces_task.add_action_set(
-            ProjectPatchOntoFaces(
-                self._solver._patch,
-                self._solver._patch_overlap_update,
-                guard=traditional_guard,
-                includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
-            )
-        )
-        traditional_project_on_faces_task.add_action_set(
-            RollOverUpdatedFace(
-                self._solver._patch_overlap_current_time_step,
-                self._solver._patch_overlap_update,
-                guard=self._solver.grid_selector.createFaceGuard(),
-                includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
-            )
-        )
-        
-        ## Update the shell only. The patch interior of _patch and entry 1 of
-        ## _max_eigenvalue remain unchanged, so both are read and written
+
+        ## Optimistic branch: update the shell only. The patch interior of
+        ## _patch and entry 1 of _max_eigenvalue remain unchanged, so both are
+        ## read and written
         update_cell_shell_task.add_dependency(reconstruction_task)
         update_cell_shell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_shell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
@@ -1205,32 +1178,7 @@ Patch overlap data
             )
         )
 
-        ## Spawn the next time step's patch interior update once the cell is updated
-        traditional_spawn_patch_interior_task.add_dependency(update_cell_task)
-        # Reads the patch and writes the patch interior plus the estimated
-        # time step size
-        traditional_spawn_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        traditional_spawn_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        traditional_spawn_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.WRITE)
-        traditional_spawn_patch_interior_task.add_action_set(
-            SpawnTaskToUpdateCellInterior(
-                self._solver,
-                self.damp_time_step_size,
-                guard=traditional_guard,
-            )
-        )
-
-        ## The traditional update makes any precomputed patch interior obsolete
-        discard_patch_interior_task.add_dependency(update_cell_task)
-        discard_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        discard_patch_interior_task.add_action_set(
-            DiscardPatchInterior(
-                self._solver,
-                guard=traditional_guard,
-            )
-        )
-
-        ## Insert the patch interior once the shell is updated
+        ## Optimistic branch: insert the patch interior once the shell is updated
         insert_patch_interior_task.add_dependency(update_cell_shell_task)
         insert_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         insert_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
@@ -1244,20 +1192,56 @@ Patch overlap data
             )
         )
 
-        ## The optimistic counterparts of the projection, the CFL reduction and the spawn
-        optimistic_project_on_faces_task.add_dependency(insert_patch_interior_task)
-        optimistic_compute_cfl_condition_task.add_dependency(insert_patch_interior_task)
-        optimistic_spawn_patch_interior_task.add_dependency(insert_patch_interior_task)
-        # Reads the patch and writes the patch interior plus the estimated
-        # time step size
-        optimistic_spawn_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        optimistic_spawn_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        optimistic_spawn_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.WRITE)
-        optimistic_spawn_patch_interior_task.add_action_set(
+        ## Both branches: reduce the cells' maximum eigenvalues into the next
+        ## time step size. Runs in parallel to the projection onto the faces
+        compute_cfl_condition_task.add_dependency(update_cell_task)
+        compute_cfl_condition_task.add_dependency(insert_patch_interior_task)
+        compute_cfl_condition_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        compute_cfl_condition_task.add_action_set(
+            ComputeGlobalCFLCondition(
+                self._solver,
+                self.cfl_constant,
+                self.patch_size,
+                guard=cell_guard,
+            )
+        )
+
+        ## Both branches: project the new data onto the faces. Also roll over the solution
+        project_on_faces_task.add_dependency(update_cell_task)
+        project_on_faces_task.add_dependency(insert_patch_interior_task)
+        project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
+        project_on_faces_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.WRITE)
+        project_on_faces_task.add_action_set(
+            ProjectPatchOntoFaces(
+                self._solver._patch,
+                self._solver._patch_overlap_update,
+                guard=cell_guard,
+                includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
+        )
+        project_on_faces_task.add_action_set(
+            RollOverUpdatedFace(
+                self._solver._patch_overlap_current_time_step,
+                self._solver._patch_overlap_update,
+                guard=self._solver.grid_selector.createFaceGuard(),
+                includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
+        )
+
+        ## Both branches: spawn the next time step's patch interior update.
+        ## Reads the patch and writes the patch interior plus the estimated
+        ## time step size
+        spawn_patch_interior_task.add_dependency(update_cell_task)
+        spawn_patch_interior_task.add_dependency(insert_patch_interior_task)
+        spawn_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        spawn_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        spawn_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.WRITE)
+        spawn_patch_interior_task.add_action_set(
             SpawnTaskToUpdateCellInterior(
                 self._solver,
                 self.damp_time_step_size,
-                guard=optimistic_guard,
+                guard=cell_guard,
             )
         )
 
