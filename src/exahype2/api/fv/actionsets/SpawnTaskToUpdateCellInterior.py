@@ -22,6 +22,18 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
     time step size is never damped itself, the estimates do not shrink from
     time step to time step.
 
+    The action set has to run before
+    exahype2.api.fv.actionsets.ComputeGlobalCFLCondition, which is why
+    exahype2.api.fv.RusanovWithOptimisticExplicitEuler makes the CFL
+    condition's task depend on the spawn's task. This way, the order in
+    which the tasks are added to the task graph does not matter. The CFL
+    condition advances the solver's time stamp and time step size
+    straightaway. Before it runs, the solver still holds the time stamp
+    and time step size of the current time step. The patch, however, has
+    already been advanced by the current time step. The patch interior
+    update hence starts from the solver's time stamp plus its time step
+    size.
+
     If the admissible time step size is zero, i.e. in the very first time
     step, there is nothing to estimate from. The action set then does not
     update the patch interior. It sets the maximum eigenvalue of the patch
@@ -55,7 +67,13 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
         AbstractFVActionSet.__init__(self, solver)
         self.damp_time_step_size = damp_time_step_size
         self.guard = guard
-        self._update_cell_interior = UpdateCellInterior(solver, guard, time_step_size="dampedTimeStepSize")
+        self._update_cell_interior = UpdateCellInterior(
+            solver,
+            guard,
+            time_step_size="dampedTimeStepSize",
+            time_stamp=f"repositories::{solver.get_name_of_global_instance()}.getMinTimeStamp() + "
+            f"repositories::{solver.get_name_of_global_instance()}.getMinTimeStepSize()",
+        )
 
     def get_body_of_operation(self, operation_name):
         result = ""

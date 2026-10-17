@@ -842,8 +842,10 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
     Compute global CFL condition does not only compute the next time step
     size, it also makes it the solver's time step size and time stamp
     straightaway (@see exahype2.api.fv.actionsets.ComputeGlobalCFLCondition).
-    The spawn runs after it, so the patch interior update starts from the
-    new time stamp.
+    It therefore depends on the spawn, which still sees the time stamp and
+    time step size of the current time step and starts the patch interior
+    update from their sum. The order in which the tasks are added to the
+    task graph does not matter.
 
     """
 
@@ -1247,6 +1249,9 @@ Patch overlap data
         ## time step size. Runs in parallel to the projection onto the faces
         compute_cfl_condition_task.add_dependency(update_cell_task)
         compute_cfl_condition_task.add_dependency(insert_patch_interior_task)
+        # The spawn has to see the solver's time stamp and time step size
+        # before the CFL condition advances them
+        compute_cfl_condition_task.add_dependency(spawn_patch_interior_task)
         compute_cfl_condition_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         compute_cfl_condition_task.add_action_set(
             ComputeGlobalCFLCondition(
