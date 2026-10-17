@@ -37,10 +37,11 @@ from .actionsets import SpawnTaskToUpdateCellInterior
 # thick.
 #
 # - The patch interior kernels read the input only within [H-1,NV-H+1) along
-#   each axis. For H=1, they hence do not touch the halo and can run before
-#   the halo data has arrived. Their output is the patch interior only, i.e.
-#   a (NV-2H)^d patch (_patch_interior), and their maximum eigenvalue is the
-#   one of the patch interior.
+#   each axis, i.e. never the halo. Their input hence is the NV^d patch
+#   without halo (_patch), so they can run before the halo data has arrived.
+#   Their output is the patch interior only, i.e. a (NV-2H)^d patch
+#   (_patch_interior), and their maximum eigenvalue is the one of the patch
+#   interior.
 # - The shell kernels tile the shell into rectangular strips (2d) or slabs
 #   (3d) and run the update once per strip with its own set of temporary
 #   variables, as the DSL has no loops. They write the shell of the NV^d
@@ -60,7 +61,7 @@ def timeStepWithRusanov2DOnPatchInterior(patchData: "::exahype2::CellData<double
     x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<2, double>")
     maxEigenvalues = DataBlock([[0, N]], "patchData.maxEigenvalue", "double")
 
-    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NV + H], [-H, NV + H], [0, N]], "patchData.QIn")
+    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, N]], "patchData.QIn")
     output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [H, NV-H], [H, NV-H], [0, N]], "patchData.QOut")
 
     output[:, H:NV-H, H:NV-H] = input[:, H:NV-H, H:NV-H]
@@ -107,7 +108,6 @@ def timeStepWithRusanov2DOnPatchInterior(patchData: "::exahype2::CellData<double
       maxEigenvaluesY2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H], x, 1))
       maxEigenvaluesPerVolume = max(maxEigenvaluesX2, maxEigenvaluesY2)
       maxEigenvalues = max(maxEigenvaluesPerVolume)
-
 
 ## Rusanov update of the shell of a 2d patch.
 def timeStepWithRusanov2DOnShell(patchData: "::exahype2::CellData<double, double>&") -> "void":
@@ -317,7 +317,7 @@ def timeStepWithRusanov3DOnPatchInterior(patchData: "::exahype2::CellData<double
     x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<3, double>")
     maxEigenvalues = DataBlock([[0, N]], "patchData.maxEigenvalue", "double")
 
-    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], "patchData.QIn")
+    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, NV], [0, N]], "patchData.QIn")
     output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], "patchData.QOut")
 
     output[:, H:NV-H, H:NV-H, H:NV-H] = input[:, H:NV-H, H:NV-H, H:NV-H]
@@ -380,7 +380,6 @@ def timeStepWithRusanov3DOnPatchInterior(patchData: "::exahype2::CellData<double
       maxEigenvaluesXY = max(maxEigenvaluesX2, maxEigenvaluesY2)
       maxEigenvaluesPerVolume = max(maxEigenvaluesXY, maxEigenvaluesZ2)
       maxEigenvalues = max(maxEigenvaluesPerVolume)
-
 
 ## Rusanov update of the shell of a 3d patch.
 def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double>&") -> "void":
@@ -809,7 +808,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
       
     """
 
-    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9):
+    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95):
         """!
 
         The constructor memorises the attributes. However, it does not do this
@@ -838,7 +837,15 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           "cfl" outside this class finds only exaparty's unrelated SPH
           solvers, which default to 0.1).
 
+        damp_time_step_size: float
+          Factor, smaller or equal to one, which the current time step size
+          is multiplied with to estimate the time step size of the patch
+          interior update (@see
+          exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior).
+
         """
+        if damp_time_step_size > 1.0:
+            raise Exception(f"damp_time_step_size has to be smaller or equal to 1, but is {damp_time_step_size}")
         super().__init__(solver)
         self.patch_size = patch_size
         self.overlap = overlap
@@ -846,6 +853,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
         # namespace, as their names are solver-specific
         self.kernel_namespace = None
         self.cfl_constant = cfl_constant
+        self.damp_time_step_size = damp_time_step_size
         self.__create_data_structures()
 
     @property
@@ -883,7 +891,13 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           exahype2.api.fv.actionsets.RollOverUpdatedFace once the update is
           complete.
         - _max_eigenvalue: two doubles per cell, named after the solver
-          followed by MaxEigenvalue (e.g. EulerFVSmoothMaxEigenvalue).
+          followed by MaxEigenvalueAndEstimatedTimeStepSize (e.g.
+          EulerFVSmoothMaxEigenvalueAndEstimatedTimeStepSize). The Python
+          attribute keeps the name _max_eigenvalue, as
+          exahype2.api.fv.actionsets.UpdateCell and
+          exahype2.api.fv.actionsets.ComputeGlobalCFLCondition are shared
+          with exahype2.api.fv.RusanovWithExplicitEuler and look it up
+          under this name.
           It is modelled via DaStGen2 as an array of cardinality two. The
           array is a peano4.api.dastgen2.Peano4SmartPointerDoubleArray,
           i.e. the values reside on the heap. The two entries are used as
@@ -897,8 +911,10 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
             it then holds the one of the whole patch, too.
             exahype2.api.fv.actionsets.ComputeGlobalCFLCondition reduces
             entry 0 of all cells into the next time step size.
-          - Entry 1 holds the maximum eigenvalue of the patch interior,
-            as written by exahype2.api.fv.actionsets.UpdateCellInterior.
+          - Entry 1 holds the estimated time step size of the patch
+            interior update, i.e. the current time step size times
+            damp_time_step_size, as written by
+            exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior.
         - _patch_interior: the patch interior, i.e. the patch without its
           shell, so (patch_size-2*overlap)^d Finite Volumes. It matches the
           region timeStepWithRusanov2DOnPatchInterior() and
@@ -963,7 +979,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
             total_unknowns,
             identifier + "Update",
         )
-        self._solver._max_eigenvalue = peano4.api.datamodel.DaStGen2(self._solver.name + "MaxEigenvalue")
+        self._solver._max_eigenvalue = peano4.api.datamodel.DaStGen2(self._solver.name + "MaxEigenvalueAndEstimatedTimeStepSize")
         self._solver._max_eigenvalue.data.add_attribute(
             peano4.api.dastgen2.Peano4SmartPointerDoubleArray("maxEigenvalue", 2)
         )
@@ -1098,10 +1114,9 @@ Patch overlap data
 
         ## Do the actual time step update
         update_cell_task.add_dependency(reconstruction_task)
-        # Keep _patch_with_halo, as update_cell_shell_task reads it, too
-        update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
-        update_cell_task.use_cell(self._solver._max_eigenvalue,  peano4.api.taskgraph.Task.DataAccess.WRITE)
+        update_cell_task.use_cell(self._solver._max_eigenvalue,  peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         update_cell_task.add_action_set(
             UpdateCell(
                 self._solver,
@@ -1160,11 +1175,15 @@ Patch overlap data
 
         ## Spawn the next time step's patch interior update once the cell is updated
         traditional_spawn_patch_interior_task.add_dependency(update_cell_task)
-        # The spawned task produces the patch interior (action set still empty)
+        # Reads the patch and writes the patch interior plus the estimated
+        # time step size
+        traditional_spawn_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        traditional_spawn_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         traditional_spawn_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.WRITE)
         traditional_spawn_patch_interior_task.add_action_set(
             SpawnTaskToUpdateCellInterior(
                 self._solver,
+                self.damp_time_step_size,
                 guard=self._solver.grid_selector.createCellGuard(),
             )
         )
@@ -1196,11 +1215,15 @@ Patch overlap data
         optimistic_project_on_faces_task.add_dependency(insert_patch_interior_task)
         optimistic_compute_cfl_condition_task.add_dependency(insert_patch_interior_task)
         optimistic_spawn_patch_interior_task.add_dependency(insert_patch_interior_task)
-        # The spawned task produces the patch interior (action set still empty)
+        # Reads the patch and writes the patch interior plus the estimated
+        # time step size
+        optimistic_spawn_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        optimistic_spawn_patch_interior_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         optimistic_spawn_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.WRITE)
         optimistic_spawn_patch_interior_task.add_action_set(
             SpawnTaskToUpdateCellInterior(
                 self._solver,
+                self.damp_time_step_size,
                 guard=self._solver.grid_selector.createCellGuard(),
             )
         )

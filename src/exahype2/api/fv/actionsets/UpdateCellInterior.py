@@ -12,20 +12,24 @@ class UpdateCellInterior(AbstractFVActionSet):
 
     Counterpart of exahype2.api.fv.actionsets.UpdateCell which updates only
     the patch interior, i.e. the patch without its shell (@see
-    exahype2.api.fv.RusanovWithOptimisticExplicitEuler). It reads the
-    halo-augmented reconstruction solver._patch_with_halo, invokes the
-    patch interior compute kernel, and writes the result into
-    solver._patch_interior. The maximum eigenvalue of the patch interior
-    goes into the second entry of solver._max_eigenvalue.
+    exahype2.api.fv.RusanovWithOptimisticExplicitEuler). The update of the
+    patch interior does not need any halo data. The action set hence reads
+    the patch solver._patch rather than its halo-augmented reconstruction,
+    invokes the patch interior compute kernel, and writes the result into
+    solver._patch_interior.
+
+    The kernel also yields the maximum eigenvalue of the patch interior.
+    The action set does not store it for the time being, as the second
+    entry of solver._max_eigenvalue holds the estimated time step size
+    (@see exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior).
 
     """
 
-    def __init__(self, solver, guard):
+    def __init__(self, solver, guard, time_step_size=None):
         """!
 
         @param solver: exahype2.api.Solver
-          Has to have solver._patch_with_halo, solver._patch_interior,
-          solver._max_eigenvalue and
+          Has to have solver._patch, solver._patch_interior and
           solver.compute_kernel_call_on_patch_interior set - @see
           exahype2.api.fv.RusanovWithOptimisticExplicitEuler.
 
@@ -33,20 +37,28 @@ class UpdateCellInterior(AbstractFVActionSet):
           C++ boolean expression, evaluated per cell in touchCellFirstTime,
           guarding whether that cell's patch interior is updated.
 
+        @param time_step_size: str
+          C++ expression for the time step size the patch interior is
+          advanced by. Defaults to the solver's getMinTimeStepSize().
+
         """
         AbstractFVActionSet.__init__(self, solver)
         self.guard = guard
+        self.time_step_size = time_step_size
 
     def get_body_of_operation(self, operation_name):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            time_step_size = self.time_step_size
+            if time_step_size is None:
+                time_step_size = f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()"
             result = f"""
-  double timeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStamp();
-  double timeStepSize = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize();
-  ::exahype2::CellData patchData(fineGridCell{self._solver._patch_with_halo.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch_interior.name}.value);
-  {self._solver.compute_kernel_call_on_patch_interior}
-
-  fineGridCell{self._solver._max_eigenvalue.name}.setMaxEigenvalue( 1, patchData.maxEigenvalue[0] );
+  {{
+    double timeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStamp();
+    double timeStepSize = {time_step_size};
+    ::exahype2::CellData patchData(fineGridCell{self._solver._patch.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch_interior.name}.value);
+    {self._solver.compute_kernel_call_on_patch_interior}
+  }}
 """
         return result
 
