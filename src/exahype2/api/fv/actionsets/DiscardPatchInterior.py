@@ -54,10 +54,9 @@ class DiscardPatchInterior(AbstractFVActionSet):
     If the patch interior is updated by a task (@see
     exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior), the action
     set waits for this task, as it would otherwise still write into the
-    patch interior while the next task is spawned. Otherwise, the action set
-    does nothing.
-
-    @todo Beyond waiting for the task, the action set does nothing yet.
+    patch interior while the next task is spawned. It does nothing with the
+    task's outcome afterwards. If the patch interior is not updated by a
+    task, the action set does nothing at all.
 
     """
 
