@@ -51,6 +51,12 @@ from .actionsets import ReadjustTimeStepSizeForOptimisticGlobalTimestepping
 # The 3d kernels test for the PDE terms by the same names as
 # timeStepWithRusanov2D, i.e. source, flux, nonconservativeProduct and
 # maxEigenvalue.
+#
+# The DataBlocks holding the eigenvalues per volume are declared over
+# zero-based ranges, e.g. [0, NV-H-(H)] instead of [H, NV-H]. DSLHyPE's unary
+# max() iterates over the declared range of its argument, but indexes the
+# argument's compact storage as if this range started at zero. A range that
+# does not start at zero hence makes max() read past the end of the storage.
 
 
 ## Rusanov update of the interior of a 2d patch.
@@ -105,8 +111,8 @@ def timeStepWithRusanov2DOnPatchInterior(patchData: "::exahype2::CellData<double
        output[0:NumberOfUnknowns, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(1) * (-nonconservative_y[:, H:NV-H, H:NV-H] - nonconservative_y[:, H:NV-H, H+1:NV-H+1])
 
     if maxEigenvalue:
-      maxEigenvaluesX2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H], x, 0))
-      maxEigenvaluesY2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H], x, 1))
+      maxEigenvaluesX2 = DataBlock([[0, 1], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H], x, 0))
+      maxEigenvaluesY2 = DataBlock([[0, 1], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H], x, 1))
       maxEigenvaluesPerVolume = max(maxEigenvaluesX2, maxEigenvaluesY2)
       maxEigenvalues = max(maxEigenvaluesPerVolume)
 
@@ -289,25 +295,24 @@ def timeStepWithRusanov2DOnShell(patchData: "::exahype2::CellData<double, double
       maxEigenvaluesPerVolumeYLow = max(maxEigenvaluesX2YLow, maxEigenvaluesY2YLow)
       maxEigenvalueYLow = DataBlock([[0, N]], 0.0)
       maxEigenvalueYLow = max(maxEigenvaluesPerVolumeYLow)
-      maxEigenvaluesX2YHigh = DataBlock([[0, 1], [0, NV], [NV-H, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV], x, 0))
-      maxEigenvaluesY2YHigh = DataBlock([[0, 1], [0, NV], [NV-H, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV], x, 1))
+      maxEigenvaluesX2YHigh = DataBlock([[0, 1], [0, NV], [0, NV-(NV-H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV], x, 0))
+      maxEigenvaluesY2YHigh = DataBlock([[0, 1], [0, NV], [0, NV-(NV-H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV], x, 1))
       maxEigenvaluesPerVolumeYHigh = max(maxEigenvaluesX2YHigh, maxEigenvaluesY2YHigh)
       maxEigenvalueYHigh = DataBlock([[0, N]], 0.0)
       maxEigenvalueYHigh = max(maxEigenvaluesPerVolumeYHigh)
-      maxEigenvaluesX2XLow = DataBlock([[0, 1], [0, H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H], x, 0))
-      maxEigenvaluesY2XLow = DataBlock([[0, 1], [0, H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H], x, 1))
+      maxEigenvaluesX2XLow = DataBlock([[0, 1], [0, H], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H], x, 0))
+      maxEigenvaluesY2XLow = DataBlock([[0, 1], [0, H], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H], x, 1))
       maxEigenvaluesPerVolumeXLow = max(maxEigenvaluesX2XLow, maxEigenvaluesY2XLow)
       maxEigenvalueXLow = DataBlock([[0, N]], 0.0)
       maxEigenvalueXLow = max(maxEigenvaluesPerVolumeXLow)
-      maxEigenvaluesX2XHigh = DataBlock([[0, 1], [NV-H, NV], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H], x, 0))
-      maxEigenvaluesY2XHigh = DataBlock([[0, 1], [NV-H, NV], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H], x, 1))
+      maxEigenvaluesX2XHigh = DataBlock([[0, 1], [0, NV-(NV-H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H], x, 0))
+      maxEigenvaluesY2XHigh = DataBlock([[0, 1], [0, NV-(NV-H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H], x, 1))
       maxEigenvaluesPerVolumeXHigh = max(maxEigenvaluesX2XHigh, maxEigenvaluesY2XHigh)
       maxEigenvalueXHigh = DataBlock([[0, N]], 0.0)
       maxEigenvalueXHigh = max(maxEigenvaluesPerVolumeXHigh)
       maxEigenvalues = max(maxEigenvalueYLow, maxEigenvalueYHigh)
       maxEigenvalues = max(maxEigenvalues, maxEigenvalueXLow)
       maxEigenvalues = max(maxEigenvalues, maxEigenvalueXHigh)
-
 
 ## Rusanov update of the interior of a 3d patch.
 def timeStepWithRusanov3DOnPatchInterior(patchData: "::exahype2::CellData<double, double>&") -> "void":
@@ -375,9 +380,9 @@ def timeStepWithRusanov3DOnPatchInterior(patchData: "::exahype2::CellData<double
        output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(2) * (-nonconservative_z[:, H:NV-H, H:NV-H, H:NV-H] - nonconservative_z[:, H:NV-H, H:NV-H, H+1:NV-H+1])
 
     if maxEigenvalue:
-      maxEigenvaluesX2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H, H:NV-H], x, 0))
-      maxEigenvaluesY2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H, H:NV-H], x, 1))
-      maxEigenvaluesZ2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H, H:NV-H], x, 2))
+      maxEigenvaluesX2 = DataBlock([[0, 1], [0, NV-H-(H)], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H, H:NV-H], x, 0))
+      maxEigenvaluesY2 = DataBlock([[0, 1], [0, NV-H-(H)], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H, H:NV-H], x, 1))
+      maxEigenvaluesZ2 = DataBlock([[0, 1], [0, NV-H-(H)], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H, H:NV-H], x, 2))
       maxEigenvaluesXY = max(maxEigenvaluesX2, maxEigenvaluesY2)
       maxEigenvaluesPerVolume = max(maxEigenvaluesXY, maxEigenvaluesZ2)
       maxEigenvalues = max(maxEigenvaluesPerVolume)
@@ -727,37 +732,37 @@ def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double
       maxEigenvaluesPerVolumeZLow = max(maxEigenvaluesXYZLow, maxEigenvaluesZ2ZLow)
       maxEigenvalueZLow = DataBlock([[0, N]], 0.0)
       maxEigenvalueZLow = max(maxEigenvaluesPerVolumeZLow)
-      maxEigenvaluesX2ZHigh = DataBlock([[0, 1], [0, NV], [0, NV], [NV-H, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV, NV-H:NV], x, 0))
-      maxEigenvaluesY2ZHigh = DataBlock([[0, 1], [0, NV], [0, NV], [NV-H, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV, NV-H:NV], x, 1))
-      maxEigenvaluesZ2ZHigh = DataBlock([[0, 1], [0, NV], [0, NV], [NV-H, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV, NV-H:NV], x, 2))
+      maxEigenvaluesX2ZHigh = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV-(NV-H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV, NV-H:NV], x, 0))
+      maxEigenvaluesY2ZHigh = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV-(NV-H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV, NV-H:NV], x, 1))
+      maxEigenvaluesZ2ZHigh = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV-(NV-H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV, NV-H:NV], x, 2))
       maxEigenvaluesXYZHigh = max(maxEigenvaluesX2ZHigh, maxEigenvaluesY2ZHigh)
       maxEigenvaluesPerVolumeZHigh = max(maxEigenvaluesXYZHigh, maxEigenvaluesZ2ZHigh)
       maxEigenvalueZHigh = DataBlock([[0, N]], 0.0)
       maxEigenvalueZHigh = max(maxEigenvaluesPerVolumeZHigh)
-      maxEigenvaluesX2YLow = DataBlock([[0, 1], [0, NV], [0, H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:H, H:NV-H], x, 0))
-      maxEigenvaluesY2YLow = DataBlock([[0, 1], [0, NV], [0, H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:H, H:NV-H], x, 1))
-      maxEigenvaluesZ2YLow = DataBlock([[0, 1], [0, NV], [0, H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:H, H:NV-H], x, 2))
+      maxEigenvaluesX2YLow = DataBlock([[0, 1], [0, NV], [0, H], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:H, H:NV-H], x, 0))
+      maxEigenvaluesY2YLow = DataBlock([[0, 1], [0, NV], [0, H], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:H, H:NV-H], x, 1))
+      maxEigenvaluesZ2YLow = DataBlock([[0, 1], [0, NV], [0, H], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:H, H:NV-H], x, 2))
       maxEigenvaluesXYYLow = max(maxEigenvaluesX2YLow, maxEigenvaluesY2YLow)
       maxEigenvaluesPerVolumeYLow = max(maxEigenvaluesXYYLow, maxEigenvaluesZ2YLow)
       maxEigenvalueYLow = DataBlock([[0, N]], 0.0)
       maxEigenvalueYLow = max(maxEigenvaluesPerVolumeYLow)
-      maxEigenvaluesX2YHigh = DataBlock([[0, 1], [0, NV], [NV-H, NV], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV, H:NV-H], x, 0))
-      maxEigenvaluesY2YHigh = DataBlock([[0, 1], [0, NV], [NV-H, NV], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV, H:NV-H], x, 1))
-      maxEigenvaluesZ2YHigh = DataBlock([[0, 1], [0, NV], [NV-H, NV], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV, H:NV-H], x, 2))
+      maxEigenvaluesX2YHigh = DataBlock([[0, 1], [0, NV], [0, NV-(NV-H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV, H:NV-H], x, 0))
+      maxEigenvaluesY2YHigh = DataBlock([[0, 1], [0, NV], [0, NV-(NV-H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV, H:NV-H], x, 1))
+      maxEigenvaluesZ2YHigh = DataBlock([[0, 1], [0, NV], [0, NV-(NV-H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:NV, NV-H:NV, H:NV-H], x, 2))
       maxEigenvaluesXYYHigh = max(maxEigenvaluesX2YHigh, maxEigenvaluesY2YHigh)
       maxEigenvaluesPerVolumeYHigh = max(maxEigenvaluesXYYHigh, maxEigenvaluesZ2YHigh)
       maxEigenvalueYHigh = DataBlock([[0, N]], 0.0)
       maxEigenvalueYHigh = max(maxEigenvaluesPerVolumeYHigh)
-      maxEigenvaluesX2XLow = DataBlock([[0, 1], [0, H], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H, H:NV-H], x, 0))
-      maxEigenvaluesY2XLow = DataBlock([[0, 1], [0, H], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H, H:NV-H], x, 1))
-      maxEigenvaluesZ2XLow = DataBlock([[0, 1], [0, H], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H, H:NV-H], x, 2))
+      maxEigenvaluesX2XLow = DataBlock([[0, 1], [0, H], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H, H:NV-H], x, 0))
+      maxEigenvaluesY2XLow = DataBlock([[0, 1], [0, H], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H, H:NV-H], x, 1))
+      maxEigenvaluesZ2XLow = DataBlock([[0, 1], [0, H], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, 0:H, H:NV-H, H:NV-H], x, 2))
       maxEigenvaluesXYXLow = max(maxEigenvaluesX2XLow, maxEigenvaluesY2XLow)
       maxEigenvaluesPerVolumeXLow = max(maxEigenvaluesXYXLow, maxEigenvaluesZ2XLow)
       maxEigenvalueXLow = DataBlock([[0, N]], 0.0)
       maxEigenvalueXLow = max(maxEigenvaluesPerVolumeXLow)
-      maxEigenvaluesX2XHigh = DataBlock([[0, 1], [NV-H, NV], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H, H:NV-H], x, 0))
-      maxEigenvaluesY2XHigh = DataBlock([[0, 1], [NV-H, NV], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H, H:NV-H], x, 1))
-      maxEigenvaluesZ2XHigh = DataBlock([[0, 1], [NV-H, NV], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H, H:NV-H], x, 2))
+      maxEigenvaluesX2XHigh = DataBlock([[0, 1], [0, NV-(NV-H)], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H, H:NV-H], x, 0))
+      maxEigenvaluesY2XHigh = DataBlock([[0, 1], [0, NV-(NV-H)], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H, H:NV-H], x, 1))
+      maxEigenvaluesZ2XHigh = DataBlock([[0, 1], [0, NV-(NV-H)], [0, NV-H-(H)], [0, NV-H-(H)], [0, N]], eval("maxEigenvalue", output[:, NV-H:NV, H:NV-H, H:NV-H], x, 2))
       maxEigenvaluesXYXHigh = max(maxEigenvaluesX2XHigh, maxEigenvaluesY2XHigh)
       maxEigenvaluesPerVolumeXHigh = max(maxEigenvaluesXYXHigh, maxEigenvaluesZ2XHigh)
       maxEigenvalueXHigh = DataBlock([[0, N]], 0.0)
@@ -767,7 +772,6 @@ def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double
       maxEigenvalues = max(maxEigenvalues, maxEigenvalueYHigh)
       maxEigenvalues = max(maxEigenvalues, maxEigenvalueXLow)
       maxEigenvalues = max(maxEigenvalues, maxEigenvalueXHigh)
-
 
 class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
     """!
