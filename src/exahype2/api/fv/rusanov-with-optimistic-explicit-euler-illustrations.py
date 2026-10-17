@@ -2,20 +2,25 @@
 # use, please see the copyright notice at www.peano-framework.org
 """!
 
-Generate the illustration of exahype2.api.fv.RusanovWithOptimisticExplicitEuler
+Generate the illustrations of exahype2.api.fv.RusanovWithOptimisticExplicitEuler
 
 Run from the repository root via
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-python3 src/exahype2/api/fv/rusanov-with-optimistic-explicit-euler-illustrations.py
+PYTHONPATH=src:python python3 src/exahype2/api/fv/rusanov-with-optimistic-explicit-euler-illustrations.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The script draws the reconstructed 2d patch of a single cell, i.e. a 10x10
-patch with a halo of one, and colours its volumes by class: halo, shell
-and patch interior. It writes the picture as
-rusanov-with-optimistic-explicit-euler-volume-classes.png next to this
-script. The PNG is referenced from the documentation of
-RusanovWithOptimisticExplicitEuler.
+The script writes two PNGs next to it, which are referenced from the
+documentation of RusanovWithOptimisticExplicitEuler:
+
+- rusanov-with-optimistic-explicit-euler-volume-classes.png draws the
+  reconstructed 2d patch of a single cell, i.e. a 10x10 patch with a halo
+  of one, and colours its volumes by class: halo, shell and patch interior.
+- rusanov-with-optimistic-explicit-euler-time-step-task-graph.png shows
+  the time stepping task graph as drawn by peano4.api.taskgraph.Graph.visualise().
+  The script constructs it from the actual numerical scheme for a solver
+  with a flux and a maximum eigenvalue, so the picture always matches the
+  code. The kernels this requires are generated into a temporary directory.
 
 """
 import os
@@ -49,7 +54,7 @@ def _volume_class(i, j):
     return "patch interior"
 
 
-def main():
+def volume_classes():
     colours = {
         "halo": COLOUR_HALO,
         "halo corner": COLOUR_HALO_CORNER,
@@ -104,8 +109,41 @@ def main():
         os.path.dirname(os.path.abspath(__file__)), "rusanov-with-optimistic-explicit-euler-volume-classes.png"
     )
     figure.savefig(output, dpi=100, bbox_inches="tight")
+    plt.close(figure)
+    print("Wrote", output)
+
+
+def time_step_task_graph():
+    import tempfile
+
+    import peano4.api
+    import peano4.api.taskgraph
+    import exahype2.api
+
+    # The Python API writes a log file when the program terminates. Keep it
+    # out of the working directory.
+    peano4.api.Logger().file_name = os.path.join(
+        tempfile.gettempdir(), "rusanov-with-optimistic-explicit-euler-illustrations-log.md"
+    )
+
+    with tempfile.TemporaryDirectory() as directory:
+        peano_project = peano4.api.Project(["illustration"], "illustration", directory=directory)
+        solver = exahype2.api.Solver("Euler", 4, 0)
+        solver.add_pde_term(exahype2.api.Flux(stateless=False))
+        solver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False))
+        solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, PATCH_SIZE - 1)
+        time_step = peano4.api.taskgraph.Graph()
+        solver.numerical_scheme.construct_output(None, peano_project, time_step)
+
+    time_step.visualise(title="Time stepping task graph of RusanovWithOptimisticExplicitEuler")
+    output = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "rusanov-with-optimistic-explicit-euler-time-step-task-graph.png"
+    )
+    plt.gcf().savefig(output, dpi=90)
+    plt.close(plt.gcf())
     print("Wrote", output)
 
 
 if __name__ == "__main__":
-    main()
+    volume_classes()
+    time_step_task_graph()
