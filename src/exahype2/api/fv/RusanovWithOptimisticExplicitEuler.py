@@ -22,7 +22,8 @@ from .actionsets import ComputeGlobalCFLCondition
 ## DSLHyPE time step kernels on the core and on the shell of a patch
 #
 # Variants of exahype2.api.fv.timeStepWithRusanov2D/3D that update only the
-# core or only the shell of the patch (@ref RusanovWithOptimisticExplicitEuler).
+# core or only the shell of the patch
+# (@ref exahype2.api.fv.RusanovWithOptimisticExplicitEuler.RusanovWithOptimisticExplicitEuler).
 # They are never executed as Python, but parsed by DSLHyPE and hence follow
 # the conventions documented with timeStepWithRusanov2D in
 # RusanovWithExplicitEuler.py. Like the original kernels, they assume that the
