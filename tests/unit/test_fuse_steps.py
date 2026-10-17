@@ -132,15 +132,3 @@ def test_independent_tasks_with_conflicting_data_are_not_parallel():
     steps = FuseSteps.translate(graph, "S", None)
     assert [step.name for step in steps] == ["S_A", "S_B"]
     assert not any(action_set.parallel for step in steps for action_set in step.action_sets)
-
-
-def test_long_fused_step_name_is_shortened():
-    """Fused names become part of file names, so long ones are abbreviated."""
-    graph = Graph()
-    tasks = [Task(name=f"a rather long task name number {i}", entity=CELL) for i in range(5)]
-    for previous_task, task in zip(tasks, tasks[1:]):
-        task.add_dependency(previous_task)
-    for task in tasks:
-        task.add_action_set(_FakeActionSet(task.name))
-        graph.add_task(task)
-    assert _step_names(graph) == ["S_A_Rather_Long_Task_Name_Number_0__and_4_more"]

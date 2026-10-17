@@ -76,4 +76,4 @@ class StepToActionSets(object):
       output.artefacts.append( new_action_set )
       output.makefile.add_cpp_file( new_action_set.get_cpp_file_name(), generated=True )
 
-      return subnamespace + "::" + action_set_name
+      return subnamespace + "::" + new_action_set.classname

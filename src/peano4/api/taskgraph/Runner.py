@@ -38,8 +38,8 @@ TEMPLATE_RUNNER_CPP_FILE = """
 #include "peano4/parallel/Node.h"
 #include "peano4/parallel/SpacetreeSet.h"
 
-{% for step in STEPS -%}
-#include "{{SUBDIRECTORY}}observers/{{step}}.h"
+{% for observer in OBSERVERS -%}
+#include "{{SUBDIRECTORY}}observers/{{observer}}.h"
 {% endfor %}
 
 tarch::logging::Log {{NAMESPACE | join("::")}}::{{CLASSNAME}}::_log( "{{NAMESPACE | join("::")}}::{{CLASSNAME}}" );
@@ -77,10 +77,10 @@ void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::run() {
   {% endif %}
   do {
     tarch::logging::LogFilter::getInstance().switchProgramPhase("{{step}}");
-    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{step}}::prepareTraversal();
-    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{step}} observer;
+    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{OBSERVERS[loop.index0]}}::prepareTraversal();
+    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{OBSERVERS[loop.index0]}} observer;
     peano4::parallel::SpacetreeSet::getInstance().traverse(observer);
-    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{step}}::unprepareTraversal();
+    {{PROJECT_NAMESPACE | join("::")}}::{{SUBNAMESPACE}}observers::{{OBSERVERS[loop.index0]}}::unprepareTraversal();
     logDebug( "run()", "will rerun this step: {{REPEAT_CONDITIONS[loop.index0] or "false"}}=" << {{REPEAT_CONDITIONS[loop.index0] or "false"}} );
   }
   while ( {{REPEAT_CONDITIONS[loop.index0] or "false"}} );
@@ -149,6 +149,9 @@ def create_runner(peano_project, identifier, steps):
 
     """
     step_names = [step.name for step in steps]
+    # Class names of the observers, which are shortened if they become too
+    # long to serve as file names (@see peano4.api.output.Observer)
+    observer_names = [peano4.api.output.Helper.shortened_class_name(name) for name in step_names]
     first_step = step_names[0] if step_names else "Undef"
     repeat_conditions = [step.has_to_repeat for step in steps]
 
@@ -163,6 +166,7 @@ def create_runner(peano_project, identifier, steps):
             "SUBNAMESPACE":      peano_project._subdirectory + "::" if peano_project._subdirectory else "",
             "SUBDIRECTORY":      peano_project.subdirectory,
             "STEPS":             step_names,
+            "OBSERVERS":         observer_names,
             "FIRST_STEP":        first_step,
             "REPEAT_CONDITIONS": repeat_conditions,
         },

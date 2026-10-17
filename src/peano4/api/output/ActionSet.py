@@ -3,7 +3,7 @@
 import os
 import re
 
-from .Helper import write_file
+from .Helper import write_file, shortened_class_name
 
 from .Overwrite import Overwrite
 
@@ -71,7 +71,8 @@ class ActionSet(object):
                     sole interface.
 
     """
-    self.classname    = classname
+    # The class name is also the file name, which might become too long
+    self.classname    = shortened_class_name(classname)
     self.namespace    = namespace
     self.subdirectory = subdirectory
     self.operations   = [

@@ -5,7 +5,7 @@ import re
 import jinja2
 
 
-from .Helper import write_file
+from .Helper import write_file, shortened_class_name
 
 from .Overwrite import Overwrite
 
@@ -28,7 +28,8 @@ class Observer(object):
         """
         Included actions is a list of qualified actions which are used
         """
-        self.classname = classname
+        # The class name is also the file name, which might become too long
+        self.classname = shortened_class_name(classname)
         self.namespace = namespace
         self.subdirectory = subdirectory
 
