@@ -19,6 +19,687 @@ from .actionsets import UpdateCell
 from .actionsets import ComputeGlobalCFLCondition
 
 
+## DSLHyPE time step kernels on the core and on the shell of a patch
+#
+# Variants of exahype2.api.fv.timeStepWithRusanov2D/3D that update only the
+# core or only the shell of the patch (@ref RusanovWithOptimisticExplicitEuler).
+# They are never executed as Python, but parsed by DSLHyPE and hence follow
+# the conventions documented with timeStepWithRusanov2D in
+# RusanovWithExplicitEuler.py. Like the original kernels, they assume that the
+# Rusanov stencil reaches one volume in each direction. All volumes between H
+# and NV-H along each axis are core volumes, so the shell is H volumes thick.
+#
+# - The core kernels read the input only within [H-1,NV-H+1) along each axis.
+#   For H=1, they hence do not touch the halo and can run before the halo
+#   data has arrived. They write the output and the maximum eigenvalue of the
+#   core only.
+# - The shell kernels tile the shell into rectangular strips (2d) or slabs
+#   (3d) and run the update once per strip with its own set of temporary
+#   variables, as the DSL has no loops. They write the output of the shell
+#   only. However, they reduce the maximum eigenvalue over the whole new
+#   patch, so they have to run after the core kernel has written its output.
+#
+# The 3d kernels test for the PDE terms by the same names as
+# timeStepWithRusanov2D, i.e. source, flux, nonconservativeProduct and
+# maxEigenvalue.
+
+
+## Rusanov update of the core of a 2d patch.
+def timeStepWithRusanov2DOnCore(patchData: "::exahype2::CellData<double, double>&") -> "void":
+    N = Integer("patchData.numberOfCells")
+    t = DataBlock([[0, N]], "patchData.t", "double")
+    dt = DataBlock([[0, N]], "patchData.dt", "double")
+    h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<2, double>")
+    x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<2, double>")
+    maxEigenvalues = DataBlock([[0, N]], "patchData.maxEigenvalue", "double")
+
+    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NV + H], [-H, NV + H], [0, N]], "patchData.QIn")
+    output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, N]], "patchData.QOut")
+
+    output[:, H:NV-H, H:NV-H] = input[:, H:NV-H, H:NV-H]
+
+    if source:
+       source = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, H:NV-H, H:NV-H], x, h, t, dt))
+       output[0:NumberOfUnknowns, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H] + dt * source
+
+    maxEigenvaluesX = DataBlock([[0, 1], [H-1, NV-H+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, H-1:NV-H+1, H:NV-H], x, 0))
+    maxEigenvaluesY = DataBlock([[0, 1], [H, NV-H], [H-1, NV-H+1], [0, N]], eval("maxEigenvalue", input[:, H:NV-H, H-1:NV-H+1], x, 1))
+
+    lambdaLeft = max(maxEigenvaluesX[0:1, H-1:NV-H-1, H:NV-H], maxEigenvaluesX[0:1, H:NV-H, H:NV-H])
+    lambdaRight = max(maxEigenvaluesX[0:1, H:NV-H, H:NV-H], maxEigenvaluesX[0:1, H+1:NV-H+1, H:NV-H])
+    lambdaBottom = max(maxEigenvaluesY[0:1, H:NV-H, H-1:NV-H-1], maxEigenvaluesY[0:1, H:NV-H, H:NV-H])
+    lambdaTop = max(maxEigenvaluesY[0:1, H:NV-H, H:NV-H], maxEigenvaluesY[0:1, H:NV-H, H+1:NV-H+1])
+
+    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, H-1:NV-H-1, H:NV-H])
+    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns, H+1:NV-H+1, H:NV-H] - input[0:NumberOfUnknowns, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H] + dt / h(0) * (fluxLeft - fluxRight) * NV * 0.5
+
+    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, H:NV-H, H-1:NV-H-1])
+    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns, H:NV-H, H+1:NV-H+1] - input[0:NumberOfUnknowns, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H] + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
+
+    if flux:
+      flux_x = DataBlock([[0, NumberOfUnknowns], [H-1, NV-H+1], [H, NV-H], [0, N]], eval("flux", input[:, H-1:NV-H+1, H:NV-H], x, 0))
+      flux_y = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H-1, NV-H+1], [0, N]], eval("flux", input[:, H:NV-H, H-1:NV-H+1], x, 1))
+      output[0:NumberOfUnknowns, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(0) * (flux_x[:, H-1:NV-H-1, H:NV-H] - flux_x[:, H+1:NV-H+1, H:NV-H])
+      output[0:NumberOfUnknowns, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(1) * (flux_y[:, H:NV-H, H-1:NV-H-1] - flux_y[:, H:NV-H, H+1:NV-H+1])
+
+    if nonconservativeProduct:
+       average_x = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H-1:NV-H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H+1, H:NV-H])
+       delta_x = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H+1, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H-1:NV-H, H:NV-H]
+       nonconservative_x = DataBlock([[0, NumberOfUnknowns], [H, NV-H+1], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_x, delta_x, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(0) * (-nonconservative_x[:, H:NV-H, H:NV-H] - nonconservative_x[:, H+1:NV-H+1, H:NV-H])
+
+       average_y = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H-1:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H:NV-H+1])
+       delta_y = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H:NV-H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H-1:NV-H]
+       nonconservative_y = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H+1], [0, N]], eval("nonconservativeProduct", average_y, delta_y, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(1) * (-nonconservative_y[:, H:NV-H, H:NV-H] - nonconservative_y[:, H:NV-H, H+1:NV-H+1])
+
+    if maxEigenvalue:
+      maxEigenvaluesX2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H], x, 0))
+      maxEigenvaluesY2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H], x, 1))
+      maxEigenvaluesPerVolume = max(maxEigenvaluesX2, maxEigenvaluesY2)
+      maxEigenvalues = max(maxEigenvaluesPerVolume)
+
+
+## Rusanov update of the shell of a 2d patch. Run after timeStepWithRusanov2DOnCore().
+def timeStepWithRusanov2DOnShell(patchData: "::exahype2::CellData<double, double>&") -> "void":
+    N = Integer("patchData.numberOfCells")
+    t = DataBlock([[0, N]], "patchData.t", "double")
+    dt = DataBlock([[0, N]], "patchData.dt", "double")
+    h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<2, double>")
+    x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<2, double>")
+    maxEigenvalues = DataBlock([[0, N]], "patchData.maxEigenvalue", "double")
+
+    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NV + H], [-H, NV + H], [0, N]], "patchData.QIn")
+    output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, N]], "patchData.QOut")
+
+    # Shell part YLow: [0,NV) x [0,H)
+    output[:, 0:NV, 0:H] = input[:, 0:NV, 0:H]
+
+    if source:
+       sourceYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:H], x, h, t, dt))
+       output[0:NumberOfUnknowns, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:H] + dt * sourceYLow
+
+    maxEigenvaluesXYLow = DataBlock([[0, 1], [0-1, NV+1], [0, H], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, 0:H], x, 0))
+    maxEigenvaluesYYLow = DataBlock([[0, 1], [0, NV], [0-1, H+1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, 0-1:H+1], x, 1))
+
+    lambdaLeftYLow = max(maxEigenvaluesXYLow[0:1, 0-1:NV-1, 0:H], maxEigenvaluesXYLow[0:1, 0:NV, 0:H])
+    lambdaRightYLow = max(maxEigenvaluesXYLow[0:1, 0:NV, 0:H], maxEigenvaluesXYLow[0:1, 0+1:NV+1, 0:H])
+    lambdaBottomYLow = max(maxEigenvaluesYYLow[0:1, 0:NV, 0-1:H-1], maxEigenvaluesYYLow[0:1, 0:NV, 0:H])
+    lambdaTopYLow = max(maxEigenvaluesYYLow[0:1, 0:NV, 0:H], maxEigenvaluesYYLow[0:1, 0:NV, 0+1:H+1])
+
+    fluxLeftYLow = -1.0 * lambdaLeftYLow * (input[0:NumberOfUnknowns, 0:NV, 0:H] - input[0:NumberOfUnknowns, 0-1:NV-1, 0:H])
+    fluxRightYLow = -1.0 * lambdaRightYLow * (input[0:NumberOfUnknowns, 0+1:NV+1, 0:H] - input[0:NumberOfUnknowns, 0:NV, 0:H])
+    output[0:NumberOfUnknowns, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:H] + dt / h(0) * (fluxLeftYLow - fluxRightYLow) * NV * 0.5
+
+    fluxBottomYLow = -1.0 * lambdaBottomYLow * (input[0:NumberOfUnknowns, 0:NV, 0:H] - input[0:NumberOfUnknowns, 0:NV, 0-1:H-1])
+    fluxTopYLow = -1.0 * lambdaTopYLow * (input[0:NumberOfUnknowns, 0:NV, 0+1:H+1] - input[0:NumberOfUnknowns, 0:NV, 0:H])
+    output[0:NumberOfUnknowns, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:H] + dt / h(1) * (fluxBottomYLow - fluxTopYLow) * NV * 0.5
+
+    if flux:
+      flux_xYLow = DataBlock([[0, NumberOfUnknowns], [0-1, NV+1], [0, H], [0, N]], eval("flux", input[:, 0-1:NV+1, 0:H], x, 0))
+      flux_yYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0-1, H+1], [0, N]], eval("flux", input[:, 0:NV, 0-1:H+1], x, 1))
+      output[0:NumberOfUnknowns, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:H] + 0.5 * NV * dt / h(0) * (flux_xYLow[:, 0-1:NV-1, 0:H] - flux_xYLow[:, 0+1:NV+1, 0:H])
+      output[0:NumberOfUnknowns, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:H] + 0.5 * NV * dt / h(1) * (flux_yYLow[:, 0:NV, 0-1:H-1] - flux_yYLow[:, 0:NV, 0+1:H+1])
+
+    if nonconservativeProduct:
+       average_xYLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, 0:H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, 0:H])
+       delta_xYLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, 0:H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, 0:H]
+       nonconservative_xYLow = DataBlock([[0, NumberOfUnknowns], [0, NV+1], [0, H], [0, N]], eval("nonconservativeProduct", average_xYLow, delta_xYLow, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:H] + 0.5 * NV * dt / h(0) * (-nonconservative_xYLow[:, 0:NV, 0:H] - nonconservative_xYLow[:, 0+1:NV+1, 0:H])
+
+       average_yYLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0-1:H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:H+1])
+       delta_yYLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0-1:H]
+       nonconservative_yYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H+1], [0, N]], eval("nonconservativeProduct", average_yYLow, delta_yYLow, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:H] + 0.5 * NV * dt / h(1) * (-nonconservative_yYLow[:, 0:NV, 0:H] - nonconservative_yYLow[:, 0:NV, 0+1:H+1])
+
+    # Shell part YHigh: [0,NV) x [NV-H,NV)
+    output[:, 0:NV, NV-H:NV] = input[:, 0:NV, NV-H:NV]
+
+    if source:
+       sourceYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV], [0, N]], eval("sourceTerm", input[:, 0:NV, NV-H:NV], x, h, t, dt))
+       output[0:NumberOfUnknowns, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV] + dt * sourceYHigh
+
+    maxEigenvaluesXYHigh = DataBlock([[0, 1], [0-1, NV+1], [NV-H, NV], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, NV-H:NV], x, 0))
+    maxEigenvaluesYYHigh = DataBlock([[0, 1], [0, NV], [NV-H-1, NV+1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, NV-H-1:NV+1], x, 1))
+
+    lambdaLeftYHigh = max(maxEigenvaluesXYHigh[0:1, 0-1:NV-1, NV-H:NV], maxEigenvaluesXYHigh[0:1, 0:NV, NV-H:NV])
+    lambdaRightYHigh = max(maxEigenvaluesXYHigh[0:1, 0:NV, NV-H:NV], maxEigenvaluesXYHigh[0:1, 0+1:NV+1, NV-H:NV])
+    lambdaBottomYHigh = max(maxEigenvaluesYYHigh[0:1, 0:NV, NV-H-1:NV-1], maxEigenvaluesYYHigh[0:1, 0:NV, NV-H:NV])
+    lambdaTopYHigh = max(maxEigenvaluesYYHigh[0:1, 0:NV, NV-H:NV], maxEigenvaluesYYHigh[0:1, 0:NV, NV-H+1:NV+1])
+
+    fluxLeftYHigh = -1.0 * lambdaLeftYHigh * (input[0:NumberOfUnknowns, 0:NV, NV-H:NV] - input[0:NumberOfUnknowns, 0-1:NV-1, NV-H:NV])
+    fluxRightYHigh = -1.0 * lambdaRightYHigh * (input[0:NumberOfUnknowns, 0+1:NV+1, NV-H:NV] - input[0:NumberOfUnknowns, 0:NV, NV-H:NV])
+    output[0:NumberOfUnknowns, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV] + dt / h(0) * (fluxLeftYHigh - fluxRightYHigh) * NV * 0.5
+
+    fluxBottomYHigh = -1.0 * lambdaBottomYHigh * (input[0:NumberOfUnknowns, 0:NV, NV-H:NV] - input[0:NumberOfUnknowns, 0:NV, NV-H-1:NV-1])
+    fluxTopYHigh = -1.0 * lambdaTopYHigh * (input[0:NumberOfUnknowns, 0:NV, NV-H+1:NV+1] - input[0:NumberOfUnknowns, 0:NV, NV-H:NV])
+    output[0:NumberOfUnknowns, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV] + dt / h(1) * (fluxBottomYHigh - fluxTopYHigh) * NV * 0.5
+
+    if flux:
+      flux_xYHigh = DataBlock([[0, NumberOfUnknowns], [0-1, NV+1], [NV-H, NV], [0, N]], eval("flux", input[:, 0-1:NV+1, NV-H:NV], x, 0))
+      flux_yYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H-1, NV+1], [0, N]], eval("flux", input[:, 0:NV, NV-H-1:NV+1], x, 1))
+      output[0:NumberOfUnknowns, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(0) * (flux_xYHigh[:, 0-1:NV-1, NV-H:NV] - flux_xYHigh[:, 0+1:NV+1, NV-H:NV])
+      output[0:NumberOfUnknowns, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(1) * (flux_yYHigh[:, 0:NV, NV-H-1:NV-1] - flux_yYHigh[:, 0:NV, NV-H+1:NV+1])
+
+    if nonconservativeProduct:
+       average_xYHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, NV-H:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, NV-H:NV])
+       delta_xYHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, NV-H:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, NV-H:NV]
+       nonconservative_xYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV+1], [NV-H, NV], [0, N]], eval("nonconservativeProduct", average_xYHigh, delta_xYHigh, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(0) * (-nonconservative_xYHigh[:, 0:NV, NV-H:NV] - nonconservative_xYHigh[:, 0+1:NV+1, NV-H:NV])
+
+       average_yYHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H-1:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H:NV+1])
+       delta_yYHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H:NV+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H-1:NV]
+       nonconservative_yYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV+1], [0, N]], eval("nonconservativeProduct", average_yYHigh, delta_yYHigh, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(1) * (-nonconservative_yYHigh[:, 0:NV, NV-H:NV] - nonconservative_yYHigh[:, 0:NV, NV-H+1:NV+1])
+
+    # Shell part XLow: [0,H) x [H,NV-H)
+    output[:, 0:H, H:NV-H] = input[:, 0:H, H:NV-H]
+
+    if source:
+       sourceXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, 0:H, H:NV-H], x, h, t, dt))
+       output[0:NumberOfUnknowns, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H] + dt * sourceXLow
+
+    maxEigenvaluesXXLow = DataBlock([[0, 1], [0-1, H+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0-1:H+1, H:NV-H], x, 0))
+    maxEigenvaluesYXLow = DataBlock([[0, 1], [0, H], [H-1, NV-H+1], [0, N]], eval("maxEigenvalue", input[:, 0:H, H-1:NV-H+1], x, 1))
+
+    lambdaLeftXLow = max(maxEigenvaluesXXLow[0:1, 0-1:H-1, H:NV-H], maxEigenvaluesXXLow[0:1, 0:H, H:NV-H])
+    lambdaRightXLow = max(maxEigenvaluesXXLow[0:1, 0:H, H:NV-H], maxEigenvaluesXXLow[0:1, 0+1:H+1, H:NV-H])
+    lambdaBottomXLow = max(maxEigenvaluesYXLow[0:1, 0:H, H-1:NV-H-1], maxEigenvaluesYXLow[0:1, 0:H, H:NV-H])
+    lambdaTopXLow = max(maxEigenvaluesYXLow[0:1, 0:H, H:NV-H], maxEigenvaluesYXLow[0:1, 0:H, H+1:NV-H+1])
+
+    fluxLeftXLow = -1.0 * lambdaLeftXLow * (input[0:NumberOfUnknowns, 0:H, H:NV-H] - input[0:NumberOfUnknowns, 0-1:H-1, H:NV-H])
+    fluxRightXLow = -1.0 * lambdaRightXLow * (input[0:NumberOfUnknowns, 0+1:H+1, H:NV-H] - input[0:NumberOfUnknowns, 0:H, H:NV-H])
+    output[0:NumberOfUnknowns, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H] + dt / h(0) * (fluxLeftXLow - fluxRightXLow) * NV * 0.5
+
+    fluxBottomXLow = -1.0 * lambdaBottomXLow * (input[0:NumberOfUnknowns, 0:H, H:NV-H] - input[0:NumberOfUnknowns, 0:H, H-1:NV-H-1])
+    fluxTopXLow = -1.0 * lambdaTopXLow * (input[0:NumberOfUnknowns, 0:H, H+1:NV-H+1] - input[0:NumberOfUnknowns, 0:H, H:NV-H])
+    output[0:NumberOfUnknowns, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H] + dt / h(1) * (fluxBottomXLow - fluxTopXLow) * NV * 0.5
+
+    if flux:
+      flux_xXLow = DataBlock([[0, NumberOfUnknowns], [0-1, H+1], [H, NV-H], [0, N]], eval("flux", input[:, 0-1:H+1, H:NV-H], x, 0))
+      flux_yXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H-1, NV-H+1], [0, N]], eval("flux", input[:, 0:H, H-1:NV-H+1], x, 1))
+      output[0:NumberOfUnknowns, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H] + 0.5 * NV * dt / h(0) * (flux_xXLow[:, 0-1:H-1, H:NV-H] - flux_xXLow[:, 0+1:H+1, H:NV-H])
+      output[0:NumberOfUnknowns, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H] + 0.5 * NV * dt / h(1) * (flux_yXLow[:, 0:H, H-1:NV-H-1] - flux_yXLow[:, 0:H, H+1:NV-H+1])
+
+    if nonconservativeProduct:
+       average_xXLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H+1, H:NV-H])
+       delta_xXLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H+1, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:H, H:NV-H]
+       nonconservative_xXLow = DataBlock([[0, NumberOfUnknowns], [0, H+1], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_xXLow, delta_xXLow, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H] + 0.5 * NV * dt / h(0) * (-nonconservative_xXLow[:, 0:H, H:NV-H] - nonconservative_xXLow[:, 0+1:H+1, H:NV-H])
+
+       average_yXLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H-1:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H:NV-H+1])
+       delta_yXLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H:NV-H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H-1:NV-H]
+       nonconservative_yXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H+1], [0, N]], eval("nonconservativeProduct", average_yXLow, delta_yXLow, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H] + 0.5 * NV * dt / h(1) * (-nonconservative_yXLow[:, 0:H, H:NV-H] - nonconservative_yXLow[:, 0:H, H+1:NV-H+1])
+
+    # Shell part XHigh: [NV-H,NV) x [H,NV-H)
+    output[:, NV-H:NV, H:NV-H] = input[:, NV-H:NV, H:NV-H]
+
+    if source:
+       sourceXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H], [0, N]], eval("sourceTerm", input[:, NV-H:NV, H:NV-H], x, h, t, dt))
+       output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] + dt * sourceXHigh
+
+    maxEigenvaluesXXHigh = DataBlock([[0, 1], [NV-H-1, NV+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, NV-H-1:NV+1, H:NV-H], x, 0))
+    maxEigenvaluesYXHigh = DataBlock([[0, 1], [NV-H, NV], [H-1, NV-H+1], [0, N]], eval("maxEigenvalue", input[:, NV-H:NV, H-1:NV-H+1], x, 1))
+
+    lambdaLeftXHigh = max(maxEigenvaluesXXHigh[0:1, NV-H-1:NV-1, H:NV-H], maxEigenvaluesXXHigh[0:1, NV-H:NV, H:NV-H])
+    lambdaRightXHigh = max(maxEigenvaluesXXHigh[0:1, NV-H:NV, H:NV-H], maxEigenvaluesXXHigh[0:1, NV-H+1:NV+1, H:NV-H])
+    lambdaBottomXHigh = max(maxEigenvaluesYXHigh[0:1, NV-H:NV, H-1:NV-H-1], maxEigenvaluesYXHigh[0:1, NV-H:NV, H:NV-H])
+    lambdaTopXHigh = max(maxEigenvaluesYXHigh[0:1, NV-H:NV, H:NV-H], maxEigenvaluesYXHigh[0:1, NV-H:NV, H+1:NV-H+1])
+
+    fluxLeftXHigh = -1.0 * lambdaLeftXHigh * (input[0:NumberOfUnknowns, NV-H:NV, H:NV-H] - input[0:NumberOfUnknowns, NV-H-1:NV-1, H:NV-H])
+    fluxRightXHigh = -1.0 * lambdaRightXHigh * (input[0:NumberOfUnknowns, NV-H+1:NV+1, H:NV-H] - input[0:NumberOfUnknowns, NV-H:NV, H:NV-H])
+    output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] + dt / h(0) * (fluxLeftXHigh - fluxRightXHigh) * NV * 0.5
+
+    fluxBottomXHigh = -1.0 * lambdaBottomXHigh * (input[0:NumberOfUnknowns, NV-H:NV, H:NV-H] - input[0:NumberOfUnknowns, NV-H:NV, H-1:NV-H-1])
+    fluxTopXHigh = -1.0 * lambdaTopXHigh * (input[0:NumberOfUnknowns, NV-H:NV, H+1:NV-H+1] - input[0:NumberOfUnknowns, NV-H:NV, H:NV-H])
+    output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] + dt / h(1) * (fluxBottomXHigh - fluxTopXHigh) * NV * 0.5
+
+    if flux:
+      flux_xXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H-1, NV+1], [H, NV-H], [0, N]], eval("flux", input[:, NV-H-1:NV+1, H:NV-H], x, 0))
+      flux_yXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H-1, NV-H+1], [0, N]], eval("flux", input[:, NV-H:NV, H-1:NV-H+1], x, 1))
+      output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(0) * (flux_xXHigh[:, NV-H-1:NV-1, H:NV-H] - flux_xXHigh[:, NV-H+1:NV+1, H:NV-H])
+      output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(1) * (flux_yXHigh[:, NV-H:NV, H-1:NV-H-1] - flux_yXHigh[:, NV-H:NV, H+1:NV-H+1])
+
+    if nonconservativeProduct:
+       average_xXHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H-1:NV, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV+1, H:NV-H])
+       delta_xXHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV+1, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H-1:NV, H:NV-H]
+       nonconservative_xXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV+1], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_xXHigh, delta_xXHigh, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(0) * (-nonconservative_xXHigh[:, NV-H:NV, H:NV-H] - nonconservative_xXHigh[:, NV-H+1:NV+1, H:NV-H])
+
+       average_yXHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H-1:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H:NV-H+1])
+       delta_yXHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H:NV-H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H-1:NV-H]
+       nonconservative_yXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H+1], [0, N]], eval("nonconservativeProduct", average_yXHigh, delta_yXHigh, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(1) * (-nonconservative_yXHigh[:, NV-H:NV, H:NV-H] - nonconservative_yXHigh[:, NV-H:NV, H+1:NV-H+1])
+
+    if maxEigenvalue:
+      maxEigenvaluesX2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV], x, 0))
+      maxEigenvaluesY2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV], x, 1))
+      maxEigenvaluesPerVolume = max(maxEigenvaluesX2, maxEigenvaluesY2)
+      maxEigenvalues = max(maxEigenvaluesPerVolume)
+
+
+## Rusanov update of the core of a 3d patch.
+def timeStepWithRusanov3DOnCore(patchData: "::exahype2::CellData<double, double>&") -> "void":
+    N = Integer("patchData.numberOfCells")
+    t = DataBlock([[0, N]], "patchData.t", "double")
+    dt = DataBlock([[0, N]], "patchData.dt", "double")
+    h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<3, double>")
+    x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<3, double>")
+    maxEigenvalues = DataBlock([[0, N]], "patchData.maxEigenvalue", "double")
+
+    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], "patchData.QIn")
+    output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, NV], [0, N]], "patchData.QOut")
+
+    output[:, H:NV-H, H:NV-H, H:NV-H] = input[:, H:NV-H, H:NV-H, H:NV-H]
+
+    if source:
+       source = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, H:NV-H, H:NV-H, H:NV-H], x, h, t, dt))
+       output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + dt * source
+
+    maxEigenvaluesX = DataBlock([[0, 1], [H-1, NV-H+1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, H-1:NV-H+1, H:NV-H, H:NV-H], x, 0))
+    maxEigenvaluesY = DataBlock([[0, 1], [H, NV-H], [H-1, NV-H+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, H:NV-H, H-1:NV-H+1, H:NV-H], x, 1))
+    maxEigenvaluesZ = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [H-1, NV-H+1], [0, N]], eval("maxEigenvalue", input[:, H:NV-H, H:NV-H, H-1:NV-H+1], x, 2))
+
+    lambdaLeft = max(maxEigenvaluesX[0:1, H-1:NV-H-1, H:NV-H, H:NV-H], maxEigenvaluesX[0:1, H:NV-H, H:NV-H, H:NV-H])
+    lambdaRight = max(maxEigenvaluesX[0:1, H:NV-H, H:NV-H, H:NV-H], maxEigenvaluesX[0:1, H+1:NV-H+1, H:NV-H, H:NV-H])
+    lambdaBottom = max(maxEigenvaluesY[0:1, H:NV-H, H-1:NV-H-1, H:NV-H], maxEigenvaluesY[0:1, H:NV-H, H:NV-H, H:NV-H])
+    lambdaTop = max(maxEigenvaluesY[0:1, H:NV-H, H:NV-H, H:NV-H], maxEigenvaluesY[0:1, H:NV-H, H+1:NV-H+1, H:NV-H])
+    lambdaNear = max(maxEigenvaluesZ[0:1, H:NV-H, H:NV-H, H-1:NV-H-1], maxEigenvaluesZ[0:1, H:NV-H, H:NV-H, H:NV-H])
+    lambdaFar = max(maxEigenvaluesZ[0:1, H:NV-H, H:NV-H, H:NV-H], maxEigenvaluesZ[0:1, H:NV-H, H:NV-H, H+1:NV-H+1])
+
+    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, H-1:NV-H-1, H:NV-H, H:NV-H])
+    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns, H+1:NV-H+1, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + dt / h(0) * (fluxLeft - fluxRight) * NV * 0.5
+
+    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, H:NV-H, H-1:NV-H-1, H:NV-H])
+    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns, H:NV-H, H+1:NV-H+1, H:NV-H] - input[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
+
+    fluxNear = -1.0 * lambdaNear * (input[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, H:NV-H, H:NV-H, H-1:NV-H-1])
+    fluxFar = -1.0 * lambdaFar * (input[0:NumberOfUnknowns, H:NV-H, H:NV-H, H+1:NV-H+1] - input[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + dt / h(2) * (fluxNear - fluxFar) * NV * 0.5
+
+    if flux:
+      flux_x = DataBlock([[0, NumberOfUnknowns], [H-1, NV-H+1], [H, NV-H], [H, NV-H], [0, N]], eval("flux", input[:, H-1:NV-H+1, H:NV-H, H:NV-H], x, 0))
+      flux_y = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H-1, NV-H+1], [H, NV-H], [0, N]], eval("flux", input[:, H:NV-H, H-1:NV-H+1, H:NV-H], x, 1))
+      flux_z = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H], [H-1, NV-H+1], [0, N]], eval("flux", input[:, H:NV-H, H:NV-H, H-1:NV-H+1], x, 2))
+      output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(0) * (flux_x[:, H-1:NV-H-1, H:NV-H, H:NV-H] - flux_x[:, H+1:NV-H+1, H:NV-H, H:NV-H])
+      output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(1) * (flux_y[:, H:NV-H, H-1:NV-H-1, H:NV-H] - flux_y[:, H:NV-H, H+1:NV-H+1, H:NV-H])
+      output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(2) * (flux_z[:, H:NV-H, H:NV-H, H-1:NV-H-1] - flux_z[:, H:NV-H, H:NV-H, H+1:NV-H+1])
+
+    if nonconservativeProduct:
+       average_x = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H-1:NV-H, H:NV-H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H+1, H:NV-H, H:NV-H])
+       delta_x = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H+1, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H-1:NV-H, H:NV-H, H:NV-H]
+       nonconservative_x = DataBlock([[0, NumberOfUnknowns], [H, NV-H+1], [H, NV-H], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_x, delta_x, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(0) * (-nonconservative_x[:, H:NV-H, H:NV-H, H:NV-H] - nonconservative_x[:, H+1:NV-H+1, H:NV-H, H:NV-H])
+
+       average_y = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H-1:NV-H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H:NV-H+1, H:NV-H])
+       delta_y = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H:NV-H+1, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H-1:NV-H, H:NV-H]
+       nonconservative_y = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H+1], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_y, delta_y, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(1) * (-nonconservative_y[:, H:NV-H, H:NV-H, H:NV-H] - nonconservative_y[:, H:NV-H, H+1:NV-H+1, H:NV-H])
+
+       average_z = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H:NV-H, H-1:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H:NV-H, H:NV-H+1])
+       delta_z = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H:NV-H, H:NV-H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, H:NV-H, H:NV-H, H-1:NV-H]
+       nonconservative_z = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H], [H, NV-H+1], [0, N]], eval("nonconservativeProduct", average_z, delta_z, x, h, t, dt, 2))
+       output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(2) * (-nonconservative_z[:, H:NV-H, H:NV-H, H:NV-H] - nonconservative_z[:, H:NV-H, H:NV-H, H+1:NV-H+1])
+
+    if maxEigenvalue:
+      maxEigenvaluesX2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H, H:NV-H], x, 0))
+      maxEigenvaluesY2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H, H:NV-H], x, 1))
+      maxEigenvaluesZ2 = DataBlock([[0, 1], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", output[:, H:NV-H, H:NV-H, H:NV-H], x, 2))
+      maxEigenvaluesXY = max(maxEigenvaluesX2, maxEigenvaluesY2)
+      maxEigenvaluesPerVolume = max(maxEigenvaluesXY, maxEigenvaluesZ2)
+      maxEigenvalues = max(maxEigenvaluesPerVolume)
+
+
+## Rusanov update of the shell of a 3d patch. Run after timeStepWithRusanov3DOnCore().
+def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double>&") -> "void":
+    N = Integer("patchData.numberOfCells")
+    t = DataBlock([[0, N]], "patchData.t", "double")
+    dt = DataBlock([[0, N]], "patchData.dt", "double")
+    h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<3, double>")
+    x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<3, double>")
+    maxEigenvalues = DataBlock([[0, N]], "patchData.maxEigenvalue", "double")
+
+    input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], "patchData.QIn")
+    output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, NV], [0, N]], "patchData.QOut")
+
+    # Shell part ZLow: [0,NV) x [0,NV) x [0,H)
+    output[:, 0:NV, 0:NV, 0:H] = input[:, 0:NV, 0:NV, 0:H]
+
+    if source:
+       sourceZLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, H], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:NV, 0:H], x, h, t, dt))
+       output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + dt * sourceZLow
+
+    maxEigenvaluesXZLow = DataBlock([[0, 1], [0-1, NV+1], [0, NV], [0, H], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, 0:NV, 0:H], x, 0))
+    maxEigenvaluesYZLow = DataBlock([[0, 1], [0, NV], [0-1, NV+1], [0, H], [0, N]], eval("maxEigenvalue", input[:, 0:NV, 0-1:NV+1, 0:H], x, 1))
+    maxEigenvaluesZZLow = DataBlock([[0, 1], [0, NV], [0, NV], [0-1, H+1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, 0:NV, 0-1:H+1], x, 2))
+
+    lambdaLeftZLow = max(maxEigenvaluesXZLow[0:1, 0-1:NV-1, 0:NV, 0:H], maxEigenvaluesXZLow[0:1, 0:NV, 0:NV, 0:H])
+    lambdaRightZLow = max(maxEigenvaluesXZLow[0:1, 0:NV, 0:NV, 0:H], maxEigenvaluesXZLow[0:1, 0+1:NV+1, 0:NV, 0:H])
+    lambdaBottomZLow = max(maxEigenvaluesYZLow[0:1, 0:NV, 0-1:NV-1, 0:H], maxEigenvaluesYZLow[0:1, 0:NV, 0:NV, 0:H])
+    lambdaTopZLow = max(maxEigenvaluesYZLow[0:1, 0:NV, 0:NV, 0:H], maxEigenvaluesYZLow[0:1, 0:NV, 0+1:NV+1, 0:H])
+    lambdaNearZLow = max(maxEigenvaluesZZLow[0:1, 0:NV, 0:NV, 0-1:H-1], maxEigenvaluesZZLow[0:1, 0:NV, 0:NV, 0:H])
+    lambdaFarZLow = max(maxEigenvaluesZZLow[0:1, 0:NV, 0:NV, 0:H], maxEigenvaluesZZLow[0:1, 0:NV, 0:NV, 0+1:H+1])
+
+    fluxLeftZLow = -1.0 * lambdaLeftZLow * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] - input[0:NumberOfUnknowns, 0-1:NV-1, 0:NV, 0:H])
+    fluxRightZLow = -1.0 * lambdaRightZLow * (input[0:NumberOfUnknowns, 0+1:NV+1, 0:NV, 0:H] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H])
+    output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + dt / h(0) * (fluxLeftZLow - fluxRightZLow) * NV * 0.5
+
+    fluxBottomZLow = -1.0 * lambdaBottomZLow * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] - input[0:NumberOfUnknowns, 0:NV, 0-1:NV-1, 0:H])
+    fluxTopZLow = -1.0 * lambdaTopZLow * (input[0:NumberOfUnknowns, 0:NV, 0+1:NV+1, 0:H] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H])
+    output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + dt / h(1) * (fluxBottomZLow - fluxTopZLow) * NV * 0.5
+
+    fluxNearZLow = -1.0 * lambdaNearZLow * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0-1:H-1])
+    fluxFarZLow = -1.0 * lambdaFarZLow * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 0+1:H+1] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H])
+    output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + dt / h(2) * (fluxNearZLow - fluxFarZLow) * NV * 0.5
+
+    if flux:
+      flux_xZLow = DataBlock([[0, NumberOfUnknowns], [0-1, NV+1], [0, NV], [0, H], [0, N]], eval("flux", input[:, 0-1:NV+1, 0:NV, 0:H], x, 0))
+      flux_yZLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0-1, NV+1], [0, H], [0, N]], eval("flux", input[:, 0:NV, 0-1:NV+1, 0:H], x, 1))
+      flux_zZLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0-1, H+1], [0, N]], eval("flux", input[:, 0:NV, 0:NV, 0-1:H+1], x, 2))
+      output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + 0.5 * NV * dt / h(0) * (flux_xZLow[:, 0-1:NV-1, 0:NV, 0:H] - flux_xZLow[:, 0+1:NV+1, 0:NV, 0:H])
+      output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + 0.5 * NV * dt / h(1) * (flux_yZLow[:, 0:NV, 0-1:NV-1, 0:H] - flux_yZLow[:, 0:NV, 0+1:NV+1, 0:H])
+      output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + 0.5 * NV * dt / h(2) * (flux_zZLow[:, 0:NV, 0:NV, 0-1:H-1] - flux_zZLow[:, 0:NV, 0:NV, 0+1:H+1])
+
+    if nonconservativeProduct:
+       average_xZLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, 0:NV, 0:H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, 0:NV, 0:H])
+       delta_xZLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, 0:NV, 0:H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, 0:NV, 0:H]
+       nonconservative_xZLow = DataBlock([[0, NumberOfUnknowns], [0, NV+1], [0, NV], [0, H], [0, N]], eval("nonconservativeProduct", average_xZLow, delta_xZLow, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + 0.5 * NV * dt / h(0) * (-nonconservative_xZLow[:, 0:NV, 0:NV, 0:H] - nonconservative_xZLow[:, 0+1:NV+1, 0:NV, 0:H])
+
+       average_yZLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0-1:NV, 0:H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV+1, 0:H])
+       delta_yZLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV+1, 0:H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0-1:NV, 0:H]
+       nonconservative_yZLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV+1], [0, H], [0, N]], eval("nonconservativeProduct", average_yZLow, delta_yZLow, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + 0.5 * NV * dt / h(1) * (-nonconservative_yZLow[:, 0:NV, 0:NV, 0:H] - nonconservative_yZLow[:, 0:NV, 0+1:NV+1, 0:H])
+
+       average_zZLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0-1:H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:H+1])
+       delta_zZLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0:H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, 0-1:H]
+       nonconservative_zZLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, H+1], [0, N]], eval("nonconservativeProduct", average_zZLow, delta_zZLow, x, h, t, dt, 2))
+       output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + 0.5 * NV * dt / h(2) * (-nonconservative_zZLow[:, 0:NV, 0:NV, 0:H] - nonconservative_zZLow[:, 0:NV, 0:NV, 0+1:H+1])
+
+    # Shell part ZHigh: [0,NV) x [0,NV) x [NV-H,NV)
+    output[:, 0:NV, 0:NV, NV-H:NV] = input[:, 0:NV, 0:NV, NV-H:NV]
+
+    if source:
+       sourceZHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [NV-H, NV], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:NV, NV-H:NV], x, h, t, dt))
+       output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + dt * sourceZHigh
+
+    maxEigenvaluesXZHigh = DataBlock([[0, 1], [0-1, NV+1], [0, NV], [NV-H, NV], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, 0:NV, NV-H:NV], x, 0))
+    maxEigenvaluesYZHigh = DataBlock([[0, 1], [0, NV], [0-1, NV+1], [NV-H, NV], [0, N]], eval("maxEigenvalue", input[:, 0:NV, 0-1:NV+1, NV-H:NV], x, 1))
+    maxEigenvaluesZZHigh = DataBlock([[0, 1], [0, NV], [0, NV], [NV-H-1, NV+1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, 0:NV, NV-H-1:NV+1], x, 2))
+
+    lambdaLeftZHigh = max(maxEigenvaluesXZHigh[0:1, 0-1:NV-1, 0:NV, NV-H:NV], maxEigenvaluesXZHigh[0:1, 0:NV, 0:NV, NV-H:NV])
+    lambdaRightZHigh = max(maxEigenvaluesXZHigh[0:1, 0:NV, 0:NV, NV-H:NV], maxEigenvaluesXZHigh[0:1, 0+1:NV+1, 0:NV, NV-H:NV])
+    lambdaBottomZHigh = max(maxEigenvaluesYZHigh[0:1, 0:NV, 0-1:NV-1, NV-H:NV], maxEigenvaluesYZHigh[0:1, 0:NV, 0:NV, NV-H:NV])
+    lambdaTopZHigh = max(maxEigenvaluesYZHigh[0:1, 0:NV, 0:NV, NV-H:NV], maxEigenvaluesYZHigh[0:1, 0:NV, 0+1:NV+1, NV-H:NV])
+    lambdaNearZHigh = max(maxEigenvaluesZZHigh[0:1, 0:NV, 0:NV, NV-H-1:NV-1], maxEigenvaluesZZHigh[0:1, 0:NV, 0:NV, NV-H:NV])
+    lambdaFarZHigh = max(maxEigenvaluesZZHigh[0:1, 0:NV, 0:NV, NV-H:NV], maxEigenvaluesZZHigh[0:1, 0:NV, 0:NV, NV-H+1:NV+1])
+
+    fluxLeftZHigh = -1.0 * lambdaLeftZHigh * (input[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] - input[0:NumberOfUnknowns, 0-1:NV-1, 0:NV, NV-H:NV])
+    fluxRightZHigh = -1.0 * lambdaRightZHigh * (input[0:NumberOfUnknowns, 0+1:NV+1, 0:NV, NV-H:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV])
+    output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + dt / h(0) * (fluxLeftZHigh - fluxRightZHigh) * NV * 0.5
+
+    fluxBottomZHigh = -1.0 * lambdaBottomZHigh * (input[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] - input[0:NumberOfUnknowns, 0:NV, 0-1:NV-1, NV-H:NV])
+    fluxTopZHigh = -1.0 * lambdaTopZHigh * (input[0:NumberOfUnknowns, 0:NV, 0+1:NV+1, NV-H:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV])
+    output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + dt / h(1) * (fluxBottomZHigh - fluxTopZHigh) * NV * 0.5
+
+    fluxNearZHigh = -1.0 * lambdaNearZHigh * (input[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H-1:NV-1])
+    fluxFarZHigh = -1.0 * lambdaFarZHigh * (input[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H+1:NV+1] - input[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV])
+    output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + dt / h(2) * (fluxNearZHigh - fluxFarZHigh) * NV * 0.5
+
+    if flux:
+      flux_xZHigh = DataBlock([[0, NumberOfUnknowns], [0-1, NV+1], [0, NV], [NV-H, NV], [0, N]], eval("flux", input[:, 0-1:NV+1, 0:NV, NV-H:NV], x, 0))
+      flux_yZHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [0-1, NV+1], [NV-H, NV], [0, N]], eval("flux", input[:, 0:NV, 0-1:NV+1, NV-H:NV], x, 1))
+      flux_zZHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [NV-H-1, NV+1], [0, N]], eval("flux", input[:, 0:NV, 0:NV, NV-H-1:NV+1], x, 2))
+      output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(0) * (flux_xZHigh[:, 0-1:NV-1, 0:NV, NV-H:NV] - flux_xZHigh[:, 0+1:NV+1, 0:NV, NV-H:NV])
+      output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(1) * (flux_yZHigh[:, 0:NV, 0-1:NV-1, NV-H:NV] - flux_yZHigh[:, 0:NV, 0+1:NV+1, NV-H:NV])
+      output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(2) * (flux_zZHigh[:, 0:NV, 0:NV, NV-H-1:NV-1] - flux_zZHigh[:, 0:NV, 0:NV, NV-H+1:NV+1])
+
+    if nonconservativeProduct:
+       average_xZHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, 0:NV, NV-H:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, 0:NV, NV-H:NV])
+       delta_xZHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, 0:NV, NV-H:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, 0:NV, NV-H:NV]
+       nonconservative_xZHigh = DataBlock([[0, NumberOfUnknowns], [0, NV+1], [0, NV], [NV-H, NV], [0, N]], eval("nonconservativeProduct", average_xZHigh, delta_xZHigh, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(0) * (-nonconservative_xZHigh[:, 0:NV, 0:NV, NV-H:NV] - nonconservative_xZHigh[:, 0+1:NV+1, 0:NV, NV-H:NV])
+
+       average_yZHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0-1:NV, NV-H:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV+1, NV-H:NV])
+       delta_yZHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV+1, NV-H:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0-1:NV, NV-H:NV]
+       nonconservative_yZHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV+1], [NV-H, NV], [0, N]], eval("nonconservativeProduct", average_yZHigh, delta_yZHigh, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(1) * (-nonconservative_yZHigh[:, 0:NV, 0:NV, NV-H:NV] - nonconservative_yZHigh[:, 0:NV, 0+1:NV+1, NV-H:NV])
+
+       average_zZHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, NV-H-1:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, NV-H:NV+1])
+       delta_zZHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, NV-H:NV+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV, NV-H-1:NV]
+       nonconservative_zZHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [NV-H, NV+1], [0, N]], eval("nonconservativeProduct", average_zZHigh, delta_zZHigh, x, h, t, dt, 2))
+       output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + 0.5 * NV * dt / h(2) * (-nonconservative_zZHigh[:, 0:NV, 0:NV, NV-H:NV] - nonconservative_zZHigh[:, 0:NV, 0:NV, NV-H+1:NV+1])
+
+    # Shell part YLow: [0,NV) x [0,H) x [H,NV-H)
+    output[:, 0:NV, 0:H, H:NV-H] = input[:, 0:NV, 0:H, H:NV-H]
+
+    if source:
+       sourceYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:H, H:NV-H], x, h, t, dt))
+       output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + dt * sourceYLow
+
+    maxEigenvaluesXYLow = DataBlock([[0, 1], [0-1, NV+1], [0, H], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, 0:H, H:NV-H], x, 0))
+    maxEigenvaluesYYLow = DataBlock([[0, 1], [0, NV], [0-1, H+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0:NV, 0-1:H+1, H:NV-H], x, 1))
+    maxEigenvaluesZYLow = DataBlock([[0, 1], [0, NV], [0, H], [H-1, NV-H+1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, 0:H, H-1:NV-H+1], x, 2))
+
+    lambdaLeftYLow = max(maxEigenvaluesXYLow[0:1, 0-1:NV-1, 0:H, H:NV-H], maxEigenvaluesXYLow[0:1, 0:NV, 0:H, H:NV-H])
+    lambdaRightYLow = max(maxEigenvaluesXYLow[0:1, 0:NV, 0:H, H:NV-H], maxEigenvaluesXYLow[0:1, 0+1:NV+1, 0:H, H:NV-H])
+    lambdaBottomYLow = max(maxEigenvaluesYYLow[0:1, 0:NV, 0-1:H-1, H:NV-H], maxEigenvaluesYYLow[0:1, 0:NV, 0:H, H:NV-H])
+    lambdaTopYLow = max(maxEigenvaluesYYLow[0:1, 0:NV, 0:H, H:NV-H], maxEigenvaluesYYLow[0:1, 0:NV, 0+1:H+1, H:NV-H])
+    lambdaNearYLow = max(maxEigenvaluesZYLow[0:1, 0:NV, 0:H, H-1:NV-H-1], maxEigenvaluesZYLow[0:1, 0:NV, 0:H, H:NV-H])
+    lambdaFarYLow = max(maxEigenvaluesZYLow[0:1, 0:NV, 0:H, H:NV-H], maxEigenvaluesZYLow[0:1, 0:NV, 0:H, H+1:NV-H+1])
+
+    fluxLeftYLow = -1.0 * lambdaLeftYLow * (input[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] - input[0:NumberOfUnknowns, 0-1:NV-1, 0:H, H:NV-H])
+    fluxRightYLow = -1.0 * lambdaRightYLow * (input[0:NumberOfUnknowns, 0+1:NV+1, 0:H, H:NV-H] - input[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H])
+    output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + dt / h(0) * (fluxLeftYLow - fluxRightYLow) * NV * 0.5
+
+    fluxBottomYLow = -1.0 * lambdaBottomYLow * (input[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] - input[0:NumberOfUnknowns, 0:NV, 0-1:H-1, H:NV-H])
+    fluxTopYLow = -1.0 * lambdaTopYLow * (input[0:NumberOfUnknowns, 0:NV, 0+1:H+1, H:NV-H] - input[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H])
+    output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + dt / h(1) * (fluxBottomYLow - fluxTopYLow) * NV * 0.5
+
+    fluxNearYLow = -1.0 * lambdaNearYLow * (input[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] - input[0:NumberOfUnknowns, 0:NV, 0:H, H-1:NV-H-1])
+    fluxFarYLow = -1.0 * lambdaFarYLow * (input[0:NumberOfUnknowns, 0:NV, 0:H, H+1:NV-H+1] - input[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H])
+    output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + dt / h(2) * (fluxNearYLow - fluxFarYLow) * NV * 0.5
+
+    if flux:
+      flux_xYLow = DataBlock([[0, NumberOfUnknowns], [0-1, NV+1], [0, H], [H, NV-H], [0, N]], eval("flux", input[:, 0-1:NV+1, 0:H, H:NV-H], x, 0))
+      flux_yYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0-1, H+1], [H, NV-H], [0, N]], eval("flux", input[:, 0:NV, 0-1:H+1, H:NV-H], x, 1))
+      flux_zYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H], [H-1, NV-H+1], [0, N]], eval("flux", input[:, 0:NV, 0:H, H-1:NV-H+1], x, 2))
+      output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + 0.5 * NV * dt / h(0) * (flux_xYLow[:, 0-1:NV-1, 0:H, H:NV-H] - flux_xYLow[:, 0+1:NV+1, 0:H, H:NV-H])
+      output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + 0.5 * NV * dt / h(1) * (flux_yYLow[:, 0:NV, 0-1:H-1, H:NV-H] - flux_yYLow[:, 0:NV, 0+1:H+1, H:NV-H])
+      output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + 0.5 * NV * dt / h(2) * (flux_zYLow[:, 0:NV, 0:H, H-1:NV-H-1] - flux_zYLow[:, 0:NV, 0:H, H+1:NV-H+1])
+
+    if nonconservativeProduct:
+       average_xYLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, 0:H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, 0:H, H:NV-H])
+       delta_xYLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, 0:H, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, 0:H, H:NV-H]
+       nonconservative_xYLow = DataBlock([[0, NumberOfUnknowns], [0, NV+1], [0, H], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_xYLow, delta_xYLow, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + 0.5 * NV * dt / h(0) * (-nonconservative_xYLow[:, 0:NV, 0:H, H:NV-H] - nonconservative_xYLow[:, 0+1:NV+1, 0:H, H:NV-H])
+
+       average_yYLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0-1:H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:H+1, H:NV-H])
+       delta_yYLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:H+1, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0-1:H, H:NV-H]
+       nonconservative_yYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H+1], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_yYLow, delta_yYLow, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + 0.5 * NV * dt / h(1) * (-nonconservative_yYLow[:, 0:NV, 0:H, H:NV-H] - nonconservative_yYLow[:, 0:NV, 0+1:H+1, H:NV-H])
+
+       average_zYLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:H, H-1:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:H, H:NV-H+1])
+       delta_zYLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:H, H:NV-H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:H, H-1:NV-H]
+       nonconservative_zYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H], [H, NV-H+1], [0, N]], eval("nonconservativeProduct", average_zYLow, delta_zYLow, x, h, t, dt, 2))
+       output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + 0.5 * NV * dt / h(2) * (-nonconservative_zYLow[:, 0:NV, 0:H, H:NV-H] - nonconservative_zYLow[:, 0:NV, 0:H, H+1:NV-H+1])
+
+    # Shell part YHigh: [0,NV) x [NV-H,NV) x [H,NV-H)
+    output[:, 0:NV, NV-H:NV, H:NV-H] = input[:, 0:NV, NV-H:NV, H:NV-H]
+
+    if source:
+       sourceYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV], [H, NV-H], [0, N]], eval("sourceTerm", input[:, 0:NV, NV-H:NV, H:NV-H], x, h, t, dt))
+       output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + dt * sourceYHigh
+
+    maxEigenvaluesXYHigh = DataBlock([[0, 1], [0-1, NV+1], [NV-H, NV], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, NV-H:NV, H:NV-H], x, 0))
+    maxEigenvaluesYYHigh = DataBlock([[0, 1], [0, NV], [NV-H-1, NV+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0:NV, NV-H-1:NV+1, H:NV-H], x, 1))
+    maxEigenvaluesZYHigh = DataBlock([[0, 1], [0, NV], [NV-H, NV], [H-1, NV-H+1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, NV-H:NV, H-1:NV-H+1], x, 2))
+
+    lambdaLeftYHigh = max(maxEigenvaluesXYHigh[0:1, 0-1:NV-1, NV-H:NV, H:NV-H], maxEigenvaluesXYHigh[0:1, 0:NV, NV-H:NV, H:NV-H])
+    lambdaRightYHigh = max(maxEigenvaluesXYHigh[0:1, 0:NV, NV-H:NV, H:NV-H], maxEigenvaluesXYHigh[0:1, 0+1:NV+1, NV-H:NV, H:NV-H])
+    lambdaBottomYHigh = max(maxEigenvaluesYYHigh[0:1, 0:NV, NV-H-1:NV-1, H:NV-H], maxEigenvaluesYYHigh[0:1, 0:NV, NV-H:NV, H:NV-H])
+    lambdaTopYHigh = max(maxEigenvaluesYYHigh[0:1, 0:NV, NV-H:NV, H:NV-H], maxEigenvaluesYYHigh[0:1, 0:NV, NV-H+1:NV+1, H:NV-H])
+    lambdaNearYHigh = max(maxEigenvaluesZYHigh[0:1, 0:NV, NV-H:NV, H-1:NV-H-1], maxEigenvaluesZYHigh[0:1, 0:NV, NV-H:NV, H:NV-H])
+    lambdaFarYHigh = max(maxEigenvaluesZYHigh[0:1, 0:NV, NV-H:NV, H:NV-H], maxEigenvaluesZYHigh[0:1, 0:NV, NV-H:NV, H+1:NV-H+1])
+
+    fluxLeftYHigh = -1.0 * lambdaLeftYHigh * (input[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] - input[0:NumberOfUnknowns, 0-1:NV-1, NV-H:NV, H:NV-H])
+    fluxRightYHigh = -1.0 * lambdaRightYHigh * (input[0:NumberOfUnknowns, 0+1:NV+1, NV-H:NV, H:NV-H] - input[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H])
+    output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + dt / h(0) * (fluxLeftYHigh - fluxRightYHigh) * NV * 0.5
+
+    fluxBottomYHigh = -1.0 * lambdaBottomYHigh * (input[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] - input[0:NumberOfUnknowns, 0:NV, NV-H-1:NV-1, H:NV-H])
+    fluxTopYHigh = -1.0 * lambdaTopYHigh * (input[0:NumberOfUnknowns, 0:NV, NV-H+1:NV+1, H:NV-H] - input[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H])
+    output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + dt / h(1) * (fluxBottomYHigh - fluxTopYHigh) * NV * 0.5
+
+    fluxNearYHigh = -1.0 * lambdaNearYHigh * (input[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] - input[0:NumberOfUnknowns, 0:NV, NV-H:NV, H-1:NV-H-1])
+    fluxFarYHigh = -1.0 * lambdaFarYHigh * (input[0:NumberOfUnknowns, 0:NV, NV-H:NV, H+1:NV-H+1] - input[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H])
+    output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + dt / h(2) * (fluxNearYHigh - fluxFarYHigh) * NV * 0.5
+
+    if flux:
+      flux_xYHigh = DataBlock([[0, NumberOfUnknowns], [0-1, NV+1], [NV-H, NV], [H, NV-H], [0, N]], eval("flux", input[:, 0-1:NV+1, NV-H:NV, H:NV-H], x, 0))
+      flux_yYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H-1, NV+1], [H, NV-H], [0, N]], eval("flux", input[:, 0:NV, NV-H-1:NV+1, H:NV-H], x, 1))
+      flux_zYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV], [H-1, NV-H+1], [0, N]], eval("flux", input[:, 0:NV, NV-H:NV, H-1:NV-H+1], x, 2))
+      output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(0) * (flux_xYHigh[:, 0-1:NV-1, NV-H:NV, H:NV-H] - flux_xYHigh[:, 0+1:NV+1, NV-H:NV, H:NV-H])
+      output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(1) * (flux_yYHigh[:, 0:NV, NV-H-1:NV-1, H:NV-H] - flux_yYHigh[:, 0:NV, NV-H+1:NV+1, H:NV-H])
+      output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(2) * (flux_zYHigh[:, 0:NV, NV-H:NV, H-1:NV-H-1] - flux_zYHigh[:, 0:NV, NV-H:NV, H+1:NV-H+1])
+
+    if nonconservativeProduct:
+       average_xYHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, NV-H:NV, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, NV-H:NV, H:NV-H])
+       delta_xYHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV+1, NV-H:NV, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:NV, NV-H:NV, H:NV-H]
+       nonconservative_xYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV+1], [NV-H, NV], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_xYHigh, delta_xYHigh, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(0) * (-nonconservative_xYHigh[:, 0:NV, NV-H:NV, H:NV-H] - nonconservative_xYHigh[:, 0+1:NV+1, NV-H:NV, H:NV-H])
+
+       average_yYHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H-1:NV, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H:NV+1, H:NV-H])
+       delta_yYHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H:NV+1, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H-1:NV, H:NV-H]
+       nonconservative_yYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV+1], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_yYHigh, delta_yYHigh, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(1) * (-nonconservative_yYHigh[:, 0:NV, NV-H:NV, H:NV-H] - nonconservative_yYHigh[:, 0:NV, NV-H+1:NV+1, H:NV-H])
+
+       average_zYHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H:NV, H-1:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H:NV, H:NV-H+1])
+       delta_zYHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H:NV, H:NV-H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, NV-H:NV, H-1:NV-H]
+       nonconservative_zYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV], [H, NV-H+1], [0, N]], eval("nonconservativeProduct", average_zYHigh, delta_zYHigh, x, h, t, dt, 2))
+       output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + 0.5 * NV * dt / h(2) * (-nonconservative_zYHigh[:, 0:NV, NV-H:NV, H:NV-H] - nonconservative_zYHigh[:, 0:NV, NV-H:NV, H+1:NV-H+1])
+
+    # Shell part XLow: [0,H) x [H,NV-H) x [H,NV-H)
+    output[:, 0:H, H:NV-H, H:NV-H] = input[:, 0:H, H:NV-H, H:NV-H]
+
+    if source:
+       sourceXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, 0:H, H:NV-H, H:NV-H], x, h, t, dt))
+       output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + dt * sourceXLow
+
+    maxEigenvaluesXXLow = DataBlock([[0, 1], [0-1, H+1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0-1:H+1, H:NV-H, H:NV-H], x, 0))
+    maxEigenvaluesYXLow = DataBlock([[0, 1], [0, H], [H-1, NV-H+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0:H, H-1:NV-H+1, H:NV-H], x, 1))
+    maxEigenvaluesZXLow = DataBlock([[0, 1], [0, H], [H, NV-H], [H-1, NV-H+1], [0, N]], eval("maxEigenvalue", input[:, 0:H, H:NV-H, H-1:NV-H+1], x, 2))
+
+    lambdaLeftXLow = max(maxEigenvaluesXXLow[0:1, 0-1:H-1, H:NV-H, H:NV-H], maxEigenvaluesXXLow[0:1, 0:H, H:NV-H, H:NV-H])
+    lambdaRightXLow = max(maxEigenvaluesXXLow[0:1, 0:H, H:NV-H, H:NV-H], maxEigenvaluesXXLow[0:1, 0+1:H+1, H:NV-H, H:NV-H])
+    lambdaBottomXLow = max(maxEigenvaluesYXLow[0:1, 0:H, H-1:NV-H-1, H:NV-H], maxEigenvaluesYXLow[0:1, 0:H, H:NV-H, H:NV-H])
+    lambdaTopXLow = max(maxEigenvaluesYXLow[0:1, 0:H, H:NV-H, H:NV-H], maxEigenvaluesYXLow[0:1, 0:H, H+1:NV-H+1, H:NV-H])
+    lambdaNearXLow = max(maxEigenvaluesZXLow[0:1, 0:H, H:NV-H, H-1:NV-H-1], maxEigenvaluesZXLow[0:1, 0:H, H:NV-H, H:NV-H])
+    lambdaFarXLow = max(maxEigenvaluesZXLow[0:1, 0:H, H:NV-H, H:NV-H], maxEigenvaluesZXLow[0:1, 0:H, H:NV-H, H+1:NV-H+1])
+
+    fluxLeftXLow = -1.0 * lambdaLeftXLow * (input[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, 0-1:H-1, H:NV-H, H:NV-H])
+    fluxRightXLow = -1.0 * lambdaRightXLow * (input[0:NumberOfUnknowns, 0+1:H+1, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + dt / h(0) * (fluxLeftXLow - fluxRightXLow) * NV * 0.5
+
+    fluxBottomXLow = -1.0 * lambdaBottomXLow * (input[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, 0:H, H-1:NV-H-1, H:NV-H])
+    fluxTopXLow = -1.0 * lambdaTopXLow * (input[0:NumberOfUnknowns, 0:H, H+1:NV-H+1, H:NV-H] - input[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + dt / h(1) * (fluxBottomXLow - fluxTopXLow) * NV * 0.5
+
+    fluxNearXLow = -1.0 * lambdaNearXLow * (input[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, 0:H, H:NV-H, H-1:NV-H-1])
+    fluxFarXLow = -1.0 * lambdaFarXLow * (input[0:NumberOfUnknowns, 0:H, H:NV-H, H+1:NV-H+1] - input[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + dt / h(2) * (fluxNearXLow - fluxFarXLow) * NV * 0.5
+
+    if flux:
+      flux_xXLow = DataBlock([[0, NumberOfUnknowns], [0-1, H+1], [H, NV-H], [H, NV-H], [0, N]], eval("flux", input[:, 0-1:H+1, H:NV-H, H:NV-H], x, 0))
+      flux_yXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H-1, NV-H+1], [H, NV-H], [0, N]], eval("flux", input[:, 0:H, H-1:NV-H+1, H:NV-H], x, 1))
+      flux_zXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H], [H-1, NV-H+1], [0, N]], eval("flux", input[:, 0:H, H:NV-H, H-1:NV-H+1], x, 2))
+      output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(0) * (flux_xXLow[:, 0-1:H-1, H:NV-H, H:NV-H] - flux_xXLow[:, 0+1:H+1, H:NV-H, H:NV-H])
+      output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(1) * (flux_yXLow[:, 0:H, H-1:NV-H-1, H:NV-H] - flux_yXLow[:, 0:H, H+1:NV-H+1, H:NV-H])
+      output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(2) * (flux_zXLow[:, 0:H, H:NV-H, H-1:NV-H-1] - flux_zXLow[:, 0:H, H:NV-H, H+1:NV-H+1])
+
+    if nonconservativeProduct:
+       average_xXLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:H, H:NV-H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H+1, H:NV-H, H:NV-H])
+       delta_xXLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H+1, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0-1:H, H:NV-H, H:NV-H]
+       nonconservative_xXLow = DataBlock([[0, NumberOfUnknowns], [0, H+1], [H, NV-H], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_xXLow, delta_xXLow, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(0) * (-nonconservative_xXLow[:, 0:H, H:NV-H, H:NV-H] - nonconservative_xXLow[:, 0+1:H+1, H:NV-H, H:NV-H])
+
+       average_yXLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H-1:NV-H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H:NV-H+1, H:NV-H])
+       delta_yXLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H:NV-H+1, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H-1:NV-H, H:NV-H]
+       nonconservative_yXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H+1], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_yXLow, delta_yXLow, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(1) * (-nonconservative_yXLow[:, 0:H, H:NV-H, H:NV-H] - nonconservative_yXLow[:, 0:H, H+1:NV-H+1, H:NV-H])
+
+       average_zXLow = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H:NV-H, H-1:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H:NV-H, H:NV-H+1])
+       delta_zXLow = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H:NV-H, H:NV-H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:H, H:NV-H, H-1:NV-H]
+       nonconservative_zXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H], [H, NV-H+1], [0, N]], eval("nonconservativeProduct", average_zXLow, delta_zXLow, x, h, t, dt, 2))
+       output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(2) * (-nonconservative_zXLow[:, 0:H, H:NV-H, H:NV-H] - nonconservative_zXLow[:, 0:H, H:NV-H, H+1:NV-H+1])
+
+    # Shell part XHigh: [NV-H,NV) x [H,NV-H) x [H,NV-H)
+    output[:, NV-H:NV, H:NV-H, H:NV-H] = input[:, NV-H:NV, H:NV-H, H:NV-H]
+
+    if source:
+       sourceXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, NV-H:NV, H:NV-H, H:NV-H], x, h, t, dt))
+       output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + dt * sourceXHigh
+
+    maxEigenvaluesXXHigh = DataBlock([[0, 1], [NV-H-1, NV+1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, NV-H-1:NV+1, H:NV-H, H:NV-H], x, 0))
+    maxEigenvaluesYXHigh = DataBlock([[0, 1], [NV-H, NV], [H-1, NV-H+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, NV-H:NV, H-1:NV-H+1, H:NV-H], x, 1))
+    maxEigenvaluesZXHigh = DataBlock([[0, 1], [NV-H, NV], [H, NV-H], [H-1, NV-H+1], [0, N]], eval("maxEigenvalue", input[:, NV-H:NV, H:NV-H, H-1:NV-H+1], x, 2))
+
+    lambdaLeftXHigh = max(maxEigenvaluesXXHigh[0:1, NV-H-1:NV-1, H:NV-H, H:NV-H], maxEigenvaluesXXHigh[0:1, NV-H:NV, H:NV-H, H:NV-H])
+    lambdaRightXHigh = max(maxEigenvaluesXXHigh[0:1, NV-H:NV, H:NV-H, H:NV-H], maxEigenvaluesXXHigh[0:1, NV-H+1:NV+1, H:NV-H, H:NV-H])
+    lambdaBottomXHigh = max(maxEigenvaluesYXHigh[0:1, NV-H:NV, H-1:NV-H-1, H:NV-H], maxEigenvaluesYXHigh[0:1, NV-H:NV, H:NV-H, H:NV-H])
+    lambdaTopXHigh = max(maxEigenvaluesYXHigh[0:1, NV-H:NV, H:NV-H, H:NV-H], maxEigenvaluesYXHigh[0:1, NV-H:NV, H+1:NV-H+1, H:NV-H])
+    lambdaNearXHigh = max(maxEigenvaluesZXHigh[0:1, NV-H:NV, H:NV-H, H-1:NV-H-1], maxEigenvaluesZXHigh[0:1, NV-H:NV, H:NV-H, H:NV-H])
+    lambdaFarXHigh = max(maxEigenvaluesZXHigh[0:1, NV-H:NV, H:NV-H, H:NV-H], maxEigenvaluesZXHigh[0:1, NV-H:NV, H:NV-H, H+1:NV-H+1])
+
+    fluxLeftXHigh = -1.0 * lambdaLeftXHigh * (input[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, NV-H-1:NV-1, H:NV-H, H:NV-H])
+    fluxRightXHigh = -1.0 * lambdaRightXHigh * (input[0:NumberOfUnknowns, NV-H+1:NV+1, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + dt / h(0) * (fluxLeftXHigh - fluxRightXHigh) * NV * 0.5
+
+    fluxBottomXHigh = -1.0 * lambdaBottomXHigh * (input[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, NV-H:NV, H-1:NV-H-1, H:NV-H])
+    fluxTopXHigh = -1.0 * lambdaTopXHigh * (input[0:NumberOfUnknowns, NV-H:NV, H+1:NV-H+1, H:NV-H] - input[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + dt / h(1) * (fluxBottomXHigh - fluxTopXHigh) * NV * 0.5
+
+    fluxNearXHigh = -1.0 * lambdaNearXHigh * (input[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H-1:NV-H-1])
+    fluxFarXHigh = -1.0 * lambdaFarXHigh * (input[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H+1:NV-H+1] - input[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H])
+    output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + dt / h(2) * (fluxNearXHigh - fluxFarXHigh) * NV * 0.5
+
+    if flux:
+      flux_xXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H-1, NV+1], [H, NV-H], [H, NV-H], [0, N]], eval("flux", input[:, NV-H-1:NV+1, H:NV-H, H:NV-H], x, 0))
+      flux_yXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H-1, NV-H+1], [H, NV-H], [0, N]], eval("flux", input[:, NV-H:NV, H-1:NV-H+1, H:NV-H], x, 1))
+      flux_zXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H], [H-1, NV-H+1], [0, N]], eval("flux", input[:, NV-H:NV, H:NV-H, H-1:NV-H+1], x, 2))
+      output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(0) * (flux_xXHigh[:, NV-H-1:NV-1, H:NV-H, H:NV-H] - flux_xXHigh[:, NV-H+1:NV+1, H:NV-H, H:NV-H])
+      output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(1) * (flux_yXHigh[:, NV-H:NV, H-1:NV-H-1, H:NV-H] - flux_yXHigh[:, NV-H:NV, H+1:NV-H+1, H:NV-H])
+      output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(2) * (flux_zXHigh[:, NV-H:NV, H:NV-H, H-1:NV-H-1] - flux_zXHigh[:, NV-H:NV, H:NV-H, H+1:NV-H+1])
+
+    if nonconservativeProduct:
+       average_xXHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H-1:NV, H:NV-H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV+1, H:NV-H, H:NV-H])
+       delta_xXHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV+1, H:NV-H, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H-1:NV, H:NV-H, H:NV-H]
+       nonconservative_xXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV+1], [H, NV-H], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_xXHigh, delta_xXHigh, x, h, t, dt, 0))
+       output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(0) * (-nonconservative_xXHigh[:, NV-H:NV, H:NV-H, H:NV-H] - nonconservative_xXHigh[:, NV-H+1:NV+1, H:NV-H, H:NV-H])
+
+       average_yXHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H-1:NV-H, H:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H:NV-H+1, H:NV-H])
+       delta_yXHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H:NV-H+1, H:NV-H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H-1:NV-H, H:NV-H]
+       nonconservative_yXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H+1], [H, NV-H], [0, N]], eval("nonconservativeProduct", average_yXHigh, delta_yXHigh, x, h, t, dt, 1))
+       output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(1) * (-nonconservative_yXHigh[:, NV-H:NV, H:NV-H, H:NV-H] - nonconservative_yXHigh[:, NV-H:NV, H+1:NV-H+1, H:NV-H])
+
+       average_zXHigh = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H:NV-H, H-1:NV-H] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H:NV-H, H:NV-H+1])
+       delta_zXHigh = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H:NV-H, H:NV-H+1] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, NV-H:NV, H:NV-H, H-1:NV-H]
+       nonconservative_zXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H], [H, NV-H+1], [0, N]], eval("nonconservativeProduct", average_zXHigh, delta_zXHigh, x, h, t, dt, 2))
+       output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + 0.5 * NV * dt / h(2) * (-nonconservative_zXHigh[:, NV-H:NV, H:NV-H, H:NV-H] - nonconservative_zXHigh[:, NV-H:NV, H:NV-H, H+1:NV-H+1])
+
+    if maxEigenvalue:
+      maxEigenvaluesX2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV, 0:NV], x, 0))
+      maxEigenvaluesY2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV, 0:NV], x, 1))
+      maxEigenvaluesZ2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output[:, 0:NV, 0:NV, 0:NV], x, 2))
+      maxEigenvaluesXY = max(maxEigenvaluesX2, maxEigenvaluesY2)
+      maxEigenvaluesPerVolume = max(maxEigenvaluesXY, maxEigenvaluesZ2)
+      maxEigenvalues = max(maxEigenvaluesPerVolume)
+
+
 class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
     """!
 
@@ -32,14 +713,14 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
     idea is that it splits up the patch into three classes of volumes. Assume
     we have a NxNxN patch of volumes, where N is the patch_size, and this patch
     is surrounded by a halo of size H. So we have in total a (N+2H)x(N+2H)x(N+2H)
-    patch that fees into the time stepping as reconstructed patch.
+    patch that feeds into the time stepping as reconstructed patch.
     We now distinguish three classes of volumes:
     
     - The halo cells
-    - The shall cells, which is the outer layer of the interior volumes within 
+    - The shell cells, which is the outer layer of the interior volumes within 
       the NxNxN arrangement.
     - The core cells, which are the remaining volumes in the interior of the 
-      patch, so effectively a (N-1)x(N-1)x(N-1) patch.
+      patch, so effectively a (N-2H)x(N-2H)x(N-2H) patch.
       
     The sketch below shows the three classes for a 2d patch with N=10 and H=1.
     It is generated by
@@ -47,6 +728,17 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
 
     @image html rusanov-with-optimistic-explicit-euler-volume-classes.png
 
+    For the new solver, we now define two new update kernels:
+    
+    - timeStepWithRusanov2DOnCore which is timeStepWithRusanov2D but acts only on 
+      the core of a patch.
+    - timeStepWithRusanov2DOnShell which works only on the shell.
+    
+    The 3D variants follow equivalently.
+    
+      
+      
+      
     """
 
     def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9):
