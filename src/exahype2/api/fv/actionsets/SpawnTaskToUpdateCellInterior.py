@@ -18,6 +18,13 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
     exahype2.api.fv.actionsets.UpdateCellInterior and
     exahype2.api.fv.RusanovWithOptimisticExplicitEuler).
 
+    If the solver's time step size is zero, i.e. in the very first time
+    step, there is nothing to estimate from. The action set then does not
+    update the patch interior. It sets the maximum eigenvalue of the patch
+    interior (third entry) to zero and the estimated time step size
+    (second entry) to the maximum double value, so the next time step
+    takes the traditional route.
+
     @todo The update runs straightaway for the time being. It does not
           spawn a task yet.
 
@@ -49,16 +56,31 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
     def get_body_of_operation(self, operation_name):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            solver = f"repositories::{self._solver.get_name_of_global_instance()}"
+            data = f"fineGridCell{self._solver._max_eigenvalue.name}"
             result = f"""
-  double dampedTimeStepSize = {self.damp_time_step_size} * repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize();
-  fineGridCell{self._solver._max_eigenvalue.name}.setMaxEigenvalue( 1, dampedTimeStepSize );
-""" + self._update_cell_interior.get_body_of_operation(operation_name)
+  if ( tarch::la::equals({solver}.getMinTimeStepSize(), 0.0) ) {{
+    {data}.setMaxEigenvalue( 1, std::numeric_limits<double>::max() );
+    {data}.setMaxEigenvalue( 2, 0.0 );
+  }}
+  else {{
+    double dampedTimeStepSize = {self.damp_time_step_size} * {solver}.getMinTimeStepSize();
+    {data}.setMaxEigenvalue( 1, dampedTimeStepSize );
+""" + self._update_cell_interior.get_body_of_operation(operation_name) + """
+  }
+"""
         return result
 
     def get_guard_of_operation(self, operation_name):
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             return self.guard
         return "true"
+
+    def get_includes(self):
+        return super().get_includes() + """
+#include <limits>
+#include "tarch/la/ScalarOperations.h"
+"""
 
     def get_action_set_name(self):
         return __name__.replace(".py", "").replace(".", "_")
