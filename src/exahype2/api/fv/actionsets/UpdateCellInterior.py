@@ -24,7 +24,7 @@ class UpdateCellInterior(AbstractFVActionSet):
 
     """
 
-    def __init__(self, solver, guard, time_step_size=None, time_stamp=None):
+    def __init__(self, solver, guard, time_step_size=None, time_stamp=None, input=None):
         """!
 
         @param solver: exahype2.api.Solver
@@ -45,11 +45,16 @@ class UpdateCellInterior(AbstractFVActionSet):
           C++ expression for the time stamp the patch interior update
           starts from. Defaults to the solver's getMinTimeStamp().
 
+        @param input: str
+          C++ expression for the patch the update reads. Defaults to the
+          cell's patch.
+
         """
         AbstractFVActionSet.__init__(self, solver)
         self.guard = guard
         self.time_step_size = time_step_size
         self.time_stamp = time_stamp
+        self.input = input
 
     def get_body_of_operation(self, operation_name):
         result = ""
@@ -60,11 +65,14 @@ class UpdateCellInterior(AbstractFVActionSet):
             time_stamp = self.time_stamp
             if time_stamp is None:
                 time_stamp = f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStamp()"
+            input = self.input
+            if input is None:
+                input = f"fineGridCell{self._solver._patch.name}.value"
             result = f"""
   {{
     double timeStamp    = {time_stamp};
     double timeStepSize = {time_step_size};
-    ::exahype2::CellData patchData(fineGridCell{self._solver._patch.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch_interior.name}.value);
+    ::exahype2::CellData patchData({input}, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch_interior.name}.value);
     {self._solver.compute_kernel_call_on_patch_interior}
     fineGridCell{self._solver._max_eigenvalue_and_time_step_sizes.name}.setMaxEigenvalue( 2, patchData.maxEigenvalue[0] );
   }}

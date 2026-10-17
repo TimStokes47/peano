@@ -41,12 +41,27 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
     (second entry) to the maximum double value, so the next time step
     takes the traditional route.
 
-    @todo The update runs straightaway for the time being. It does not
-          spawn a task yet.
+    ## Spawning the update as a task
+
+    If the action set is given the cell data holding a task number, it does
+    not update the patch interior straightaway. Instead, it takes a new task
+    number, stores it in the cell data, and spawns the update as a task
+    with this number. exahype2.api.fv.actionsets.InsertPatchInterior and
+    exahype2.api.fv.actionsets.DiscardPatchInterior wait for this task.
+    If there is nothing to update, the action set stores
+    tarch::multicore::TaskEnumerator::NoNumber instead.
+
+    The task captures the cell data by value. As the patch interior and the
+    eigenvalue data are managed via smart pointers, the task writes into the
+    cell's data. The patch, however, is handed to the task as a private copy,
+    as the next time step updates the patch's shell, which the task reads,
+    while the task might still be running. The time stamp and the time step
+    size are evaluated before the task is spawned, as the CFL condition
+    changes the solver's values afterwards.
 
     """
 
-    def __init__(self, solver, damp_time_step_size, guard):
+    def __init__(self, solver, damp_time_step_size, guard, task_number=None):
         """!
 
         @param solver: exahype2.api.Solver
@@ -63,24 +78,40 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
           C++ boolean expression, evaluated per cell in touchCellFirstTime,
           guarding whether the patch interior of that cell is updated.
 
+        @param task_number: peano4.api.datamodel.DaStGen2
+          Cell data holding the number of the task updating the patch
+          interior. If None, the update runs straightaway.
+
         """
         AbstractFVActionSet.__init__(self, solver)
         self.damp_time_step_size = damp_time_step_size
         self.guard = guard
-        self._update_cell_interior = UpdateCellInterior(
-            solver,
-            guard,
-            time_step_size="dampedTimeStepSize",
-            time_stamp=f"repositories::{solver.get_name_of_global_instance()}.getMinTimeStamp() + "
-            f"repositories::{solver.get_name_of_global_instance()}.getMinTimeStepSize()",
-        )
+        self.task_number = task_number
+        if task_number is None:
+            self._update_cell_interior = UpdateCellInterior(
+                solver,
+                guard,
+                time_step_size="dampedTimeStepSize",
+                time_stamp=f"repositories::{solver.get_name_of_global_instance()}.getMinTimeStamp() + "
+                f"repositories::{solver.get_name_of_global_instance()}.getMinTimeStepSize()",
+            )
+        else:
+            self._update_cell_interior = UpdateCellInterior(
+                solver,
+                guard,
+                time_step_size="dampedTimeStepSize",
+                time_stamp="timeStampOfPatchInteriorUpdate",
+                input="patchCopy->data()",
+            )
 
     def get_body_of_operation(self, operation_name):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             solver = f"repositories::{self._solver.get_name_of_global_instance()}"
             data = f"fineGridCell{self._solver._max_eigenvalue_and_time_step_sizes.name}"
-            result = f"""
+            update = self._update_cell_interior.get_body_of_operation(operation_name)
+            if self.task_number is None:
+                result = f"""
   if ( tarch::la::equals({data}.getMaxEigenvalue(3), 0.0) ) {{
     {data}.setMaxEigenvalue( 1, std::numeric_limits<double>::max() );
     {data}.setMaxEigenvalue( 2, 0.0 );
@@ -88,8 +119,43 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
   else {{
     double dampedTimeStepSize = {self.damp_time_step_size} * {data}.getMaxEigenvalue(3);
     {data}.setMaxEigenvalue( 1, dampedTimeStepSize );
-""" + self._update_cell_interior.get_body_of_operation(operation_name) + """
+""" + update + """
   }
+"""
+            else:
+                task_number = f"fineGridCell{self.task_number.name}"
+                patch = f"fineGridCell{self._solver._patch.name}"
+                result = f"""
+  if ( tarch::la::equals({data}.getMaxEigenvalue(3), 0.0) ) {{
+    {data}.setMaxEigenvalue( 1, std::numeric_limits<double>::max() );
+    {data}.setMaxEigenvalue( 2, 0.0 );
+    {task_number}.setTaskNumber( tarch::multicore::TaskEnumerator::NoNumber );
+  }}
+  else {{
+    const double dampedTimeStepSize             = {self.damp_time_step_size} * {data}.getMaxEigenvalue(3);
+    const double timeStampOfPatchInteriorUpdate = {solver}.getMinTimeStamp() + {solver}.getMinTimeStepSize();
+    {data}.setMaxEigenvalue( 1, dampedTimeStepSize );
+
+    // The next time step updates the patch's shell while the task might still run
+    auto patchCopy = std::make_shared< std::vector<double> >( {patch}.Cardinality );
+    for (int i=0; i<{patch}.Cardinality; i++) {{
+      (*patchCopy)[i] = {patch}.value[i];
+    }}
+
+    const int taskNumber = {task_number}.getTaskEnumerator().getNumber();
+    {task_number}.setTaskNumber( taskNumber );
+    tarch::multicore::spawnTask(
+      new tarch::multicore::TaskWithCopyOfFunctor(
+        tarch::multicore::Task::DontFuse,
+        tarch::multicore::Task::DefaultPriority,
+        [=]() mutable {{
+""" + update + f"""
+        }}
+      ),
+      tarch::multicore::NoInDependencies,
+      taskNumber
+    );
+  }}
 """
         return result
 
@@ -99,10 +165,19 @@ class SpawnTaskToUpdateCellInterior(AbstractFVActionSet):
         return "true"
 
     def get_includes(self):
-        return super().get_includes() + """
+        result = super().get_includes() + """
 #include <limits>
 #include "tarch/la/ScalarOperations.h"
 """
+        if self.task_number is not None:
+            result += """
+#include <memory>
+#include <vector>
+#include "tarch/multicore/multicore.h"
+#include "tarch/multicore/Task.h"
+#include "tarch/multicore/TaskEnumerator.h"
+"""
+        return result
 
     def get_action_set_name(self):
         return __name__.replace(".py", "").replace(".", "_")

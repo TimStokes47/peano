@@ -10,6 +10,7 @@ import toolbox.blockstructured.api
 import exahype2.api
 from exahype2.api import Target
 import exahype2.api.dslhype as dslhype
+import dastgen2
  
 from ..Solver import Solver
 from .actionsets import HandleBoundary
@@ -852,9 +853,15 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
     update from their sum. The order in which the tasks are added to the
     task graph does not matter.
 
+    If spawn_optimistic_calculations_as_task is set, the spawn runs the
+    patch interior update as a task. Insert patch interior waits for this
+    task before it copies the patch interior into the patch, and Discard
+    patch interior waits for it, too, so no task is still running when the
+    next one is spawned. The task numbers are held per cell.
+
     """
 
-    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95):
+    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95, spawn_optimistic_calculations_as_task: bool = True):
         """!
 
         The constructor memorises the attributes. However, it does not do this
@@ -889,6 +896,13 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           interior update (@see
           exahype2.api.fv.actionsets.SpawnTaskToUpdateCellInterior).
 
+        spawn_optimistic_calculations_as_task: bool
+          If True, Spawn patch interior update spawns the patch interior
+          update as a task, and Insert patch interior and Discard patch
+          interior wait for this task. The task number is held per cell
+          (@see __create_data_structures()). If False, Spawn patch interior
+          update runs the patch interior update straightaway.
+
         """
         if damp_time_step_size > 1.0:
             raise Exception(f"damp_time_step_size has to be smaller or equal to 1, but is {damp_time_step_size}")
@@ -900,6 +914,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
         self.kernel_namespace = None
         self.cfl_constant = cfl_constant
         self.damp_time_step_size = damp_time_step_size
+        self.spawn_optimistic_calculations_as_task = spawn_optimistic_calculations_as_task
         self.__create_data_structures()
 
     @property
@@ -972,6 +987,15 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           shell, so (patch_size-2*overlap)^d Finite Volumes. It matches the
           region timeStepWithRusanov2DOnPatchInterior() and
           timeStepWithRusanov3DOnPatchInterior() update.
+        - _optimistic_cell_update_task_number: only if
+          spawn_optimistic_calculations_as_task is set, otherwise None. One
+          integer per cell, named after the solver followed by
+          OptimisticCellUpdateTaskNumber (e.g.
+          EulerFVSmoothOptimisticCellUpdateTaskNumber), which holds the
+          number of the task updating the patch interior, or
+          tarch::multicore::TaskEnumerator::NoNumber if there is none. The
+          class furthermore holds a static tarch::multicore::TaskEnumerator
+          (getTaskEnumerator()) handing out the task numbers.
 
         All six are assigned onto self._solver (the shared
         exahype2.api.Solver instance both this numerical scheme and its
@@ -1037,6 +1061,24 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
             peano4.api.dastgen2.Peano4SmartPointerDoubleArray("maxEigenvalue", 4)
         )
 
+        self._solver._optimistic_cell_update_task_number = None
+        if self.spawn_optimistic_calculations_as_task:
+            self._solver._optimistic_cell_update_task_number = peano4.api.datamodel.DaStGen2(
+                self._solver.name + "OptimisticCellUpdateTaskNumber"
+            )
+            self._solver._optimistic_cell_update_task_number.data.add_attribute(
+                dastgen2.attributes.Integer(name="taskNumber")
+            )
+            self._solver._optimistic_cell_update_task_number.data.add_attribute(
+                dastgen2.attributes.UserDefinedType(
+                    name="taskEnumerator",
+                    type="tarch::multicore::TaskEnumerator",
+                    include='#include "tarch/multicore/TaskEnumerator.h"',
+                    qualifier=dastgen2.attributes.Attribute.Qualifier.STATIC,
+                    user_type_has_toString_method=False,
+                )
+            )
+
 
     def __add_data_to_repository(self, peano_project):
         """!
@@ -1061,6 +1103,9 @@ Patch overlap data
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
         peano_project.datamodel.add_cell(self._solver._max_eigenvalue_and_time_step_sizes)
+        if self._solver._optimistic_cell_update_task_number is not None:
+            peano_project.datamodel.add_cell(self._solver._optimistic_cell_update_task_number)
+            self._solver._optimistic_cell_update_task_number.grid_selector = self._solver.grid_selector
 
         # The task graph compiler only uses, loads and stores data where the
         # solver's grid selector holds, too (@see peano4.api.datamodel.DoF).
@@ -1185,6 +1230,9 @@ Patch overlap data
         ## the next patch interior update follow both branches and are guarded
         ## by the grid selector only.
         max_eigenvalue = f"fineGridCell{self._solver._max_eigenvalue_and_time_step_sizes.name}"
+        # Cell data holding the number of the task which updates the patch
+        # interior, or None if the patch interior is updated straightaway
+        task_number = self._solver._optimistic_cell_update_task_number
         time_step_size = f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()"
         cell_guard = self._solver.grid_selector.createCellGuard()
         ## The time step size is tested first: C++ evaluates the expressions
@@ -1214,11 +1262,14 @@ Patch overlap data
 
         ## Traditional branch: the update makes any precomputed patch interior obsolete
         discard_patch_interior_task.add_dependency(update_cell_task)
+        if task_number is not None:
+            discard_patch_interior_task.use_cell(task_number, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         discard_patch_interior_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         discard_patch_interior_task.add_action_set(
             DiscardPatchInterior(
                 self._solver,
                 guard=traditional_guard,
+                task_number=task_number,
             )
         )
 
@@ -1238,6 +1289,8 @@ Patch overlap data
 
         ## Optimistic branch: insert the patch interior once the shell is updated
         insert_patch_interior_task.add_dependency(update_cell_shell_task)
+        if task_number is not None:
+            insert_patch_interior_task.use_cell(task_number, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         insert_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         insert_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         insert_patch_interior_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
@@ -1247,6 +1300,7 @@ Patch overlap data
                 self.patch_size,
                 self.overlap,
                 guard=optimistic_guard,
+                task_number=task_number,
             )
         )
 
@@ -1299,11 +1353,14 @@ Patch overlap data
         spawn_patch_interior_task.use_cell(self._solver._patch,          peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         spawn_patch_interior_task.use_cell(self._solver._max_eigenvalue_and_time_step_sizes, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         spawn_patch_interior_task.use_cell(self._solver._patch_interior, peano4.api.taskgraph.Task.DataAccess.WRITE)
+        if task_number is not None:
+            spawn_patch_interior_task.use_cell(task_number, peano4.api.taskgraph.Task.DataAccess.WRITE)
         spawn_patch_interior_task.add_action_set(
             SpawnTaskToUpdateCellInterior(
                 self._solver,
                 self.damp_time_step_size,
                 guard=cell_guard,
+                task_number=task_number,
             )
         )
 
