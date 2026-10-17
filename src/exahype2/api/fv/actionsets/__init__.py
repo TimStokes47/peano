@@ -8,3 +8,8 @@ from .InitialCondition import InitialCondition
 from .ProjectPatchOntoFaces import ProjectPatchOntoFaces
 from .UpdateCell import UpdateCell
 from .ComputeGlobalCFLCondition import ComputeGlobalCFLCondition
+from .UpdateCellInterior import UpdateCellInterior
+from .UpdateCellShell import UpdateCellShell
+from .InsertPatchInterior import InsertPatchInterior
+from .DiscardPatchInterior import DiscardPatchInterior
+from .SpawnTaskToUpdateCellInterior import SpawnTaskToUpdateCellInterior
