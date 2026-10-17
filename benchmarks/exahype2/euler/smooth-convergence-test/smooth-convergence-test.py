@@ -52,7 +52,7 @@ project.add_solver(thesolver)
 
 
 
-project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
+project.compiler = peano4.api.taskgraph.compiler.Sequential.translate
 
 
 
