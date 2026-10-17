@@ -125,7 +125,9 @@ class Graph:
         sits at the top; everything that - directly or transitively -
         depends on it sits below it), so following the transitions always
         moves downwards, exactly like reading a state diagram's flow of
-        control. The tasks of one layer sit side by side.
+        control. The tasks of one layer sit side by side: every task sits
+        straight below its leftmost dependency and is moved to the right
+        only where it would otherwise overlap another task.
 
         A filled black circle - the UML initial pseudostate - transitions
         into every task that has no dependencies; every task nothing else
@@ -232,29 +234,29 @@ class Graph:
             return SELF_LOOP_WIDTH + 0.06 + SELF_LOOP_LABEL_CHAR_WIDTH * len(task.has_to_repeat)
 
         # Every layer forms one row. The rows are stacked top to bottom,
-        # each as tall as its tallest state, and the states within a row
-        # are placed side by side, centred around x=0. Within a row, the
-        # states are sorted by the mean horizontal position of their
-        # dependencies, so they sit below their predecessors and fewer
-        # transitions cross.
+        # each as tall as its tallest state. Every state is placed straight
+        # below its leftmost dependency, i.e. left-aligned with it, and
+        # moved to the right only if it would otherwise overlap the state
+        # left of it in the same row. States without dependencies start at
+        # x=0 and extend to the right.
         position_of_task = {}
         row_y = 0.0
         for layer in sorted(layers):
-            tasks_in_layer = layers[layer]
-            if layer > 0:
-                tasks_in_layer = sorted(
-                    tasks_in_layer,
-                    key=lambda task: sum(position_of_task[dependency][0] for dependency in task.dependencies)
-                    / len(task.dependencies),
+            def preferred_left_edge(task: Task) -> float:
+                if not task.dependencies:
+                    return 0.0
+                return min(
+                    position_of_task[dependency][0] - width_of_task[dependency] / 2
+                    for dependency in task.dependencies
                 )
+
+            tasks_in_layer = sorted(layers[layer], key=preferred_left_edge)
             row_height = max(height_of_task[task] for task in tasks_in_layer)
-            row_width = sum(width_of_task[task] + self_loop_extent(task) for task in tasks_in_layer) + HORIZONTAL_GAP * (
-                len(tasks_in_layer) - 1
-            )
-            x = -row_width / 2
+            next_free_x = float("-inf")
             for task in tasks_in_layer:
-                position_of_task[task] = (x + width_of_task[task] / 2, row_y - row_height / 2)
-                x += width_of_task[task] + self_loop_extent(task) + HORIZONTAL_GAP
+                left_edge = max(preferred_left_edge(task), next_free_x)
+                position_of_task[task] = (left_edge + width_of_task[task] / 2, row_y - row_height / 2)
+                next_free_x = left_edge + width_of_task[task] + self_loop_extent(task) + HORIZONTAL_GAP
             row_y -= row_height + VERTICAL_GAP
         bottom_y = row_y + VERTICAL_GAP
 
