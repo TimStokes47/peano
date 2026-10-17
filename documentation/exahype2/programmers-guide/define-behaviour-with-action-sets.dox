@@ -87,7 +87,6 @@ So we need a read-write. If these are smart pointers, it should not harm.
 @todo Needs some more explanations and then should likely be moved down into the graph compiler.
 
 
-Does it make a difference now if I swap the order in which I add the steps to the task graph?
 */
 
 
