@@ -1134,11 +1134,6 @@ Patch overlap data
         time_step.add_task(discard_patch_interior_task)
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_cfl_condition_task)
-        # Has to come after compute_cfl_condition_task, so the Sequential
-        # compiler runs the spawn after the CFL condition. The estimated time
-        # step size does not depend on this order, but the patch interior
-        # update takes its time stamp from the solver, which the CFL condition
-        # advances - see the class documentation
         time_step.add_task(spawn_patch_interior_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
