@@ -332,6 +332,29 @@ def _merge_data_access(accesses: List["Task.DataAccess"]) -> "Task.DataAccess":
     return Task.DataAccess.TEMPORARY
 
 
+# Longest name of a fused step. The step's name becomes part of file names
+# such as the ones of the generated observers, which also append action set
+# names, and file names are limited to 255 characters on most file systems.
+_MAX_STEP_NAME_LENGTH = 120
+
+
+def _step_name(identifier: str, tasks: List[Task]) -> str:
+    """!
+
+    Name of a step fusing tasks: the identifier followed by all task names,
+    separated by double underscores. If this name exceeds
+    _MAX_STEP_NAME_LENGTH, only the first task's name is kept and the
+    number of further tasks is appended, e.g.
+    TimeStep_Reconstruct__and_4_more. This remains unique, as every task
+    belongs to exactly one step of a sequence.
+
+    """
+    name = f"{identifier}_" + "__".join(_task_name(task) for task in tasks)
+    if len(name) > _MAX_STEP_NAME_LENGTH and len(tasks) > 1:
+        name = f"{identifier}_{_task_name(tasks[0])}__and_{len(tasks) - 1}_more"
+    return name
+
+
 def _create_step(nodes: List[List[Task]], identifier: str) -> "peano4.api.solversteps.Step":
     """!
 
@@ -350,7 +373,7 @@ def _create_step(nodes: List[List[Task]], identifier: str) -> "peano4.api.solver
     """
     tasks = [task for node in nodes for task in node]
     step = peano4.api.solversteps.Step(
-        name=f"{identifier}_" + "__".join(_task_name(task) for task in tasks),
+        name=_step_name(identifier, tasks),
         add_user_defined_actions=False,
     )
     # Repeating tasks are never fused, i.e. a group with a repeating task
