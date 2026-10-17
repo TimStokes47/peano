@@ -12,7 +12,7 @@ python3 src/exahype2/api/fv/rusanov-with-optimistic-explicit-euler-illustrations
 
 The script draws the reconstructed 2d patch of a single cell, i.e. a 10x10
 patch with a halo of one, and colours its volumes by class: halo, shell
-and core. It writes the picture as
+and patch interior. It writes the picture as
 rusanov-with-optimistic-explicit-euler-volume-classes.png next to this
 script. The PNG is referenced from the documentation of
 RusanovWithOptimisticExplicitEuler.
@@ -32,7 +32,7 @@ HALO = 1
 COLOUR_HALO = "#fdae6b"
 COLOUR_HALO_CORNER = "#e0e0e0"
 COLOUR_SHELL = "#9ecae1"
-COLOUR_CORE = "#a1d99b"
+COLOUR_PATCH_INTERIOR = "#a1d99b"
 COLOUR_GRID = "#505050"
 
 
@@ -46,7 +46,7 @@ def _volume_class(i, j):
         return "halo"
     if i < HALO or i >= PATCH_SIZE - HALO or j < HALO or j >= PATCH_SIZE - HALO:
         return "shell"
-    return "core"
+    return "patch interior"
 
 
 def main():
@@ -54,7 +54,7 @@ def main():
         "halo": COLOUR_HALO,
         "halo corner": COLOUR_HALO_CORNER,
         "shell": COLOUR_SHELL,
-        "core": COLOUR_CORE,
+        "patch interior": COLOUR_PATCH_INTERIOR,
     }
     figure, axes = plt.subplots(figsize=(6.5, 7.2))
     for i in range(-HALO, PATCH_SIZE + HALO):
@@ -69,13 +69,13 @@ def main():
                     hatch="////" if volume_class == "halo corner" else None,
                 )
             )
-    # Outlines of the reconstructed patch, of the patch, and of the core
+    # Outlines of the reconstructed patch, of the patch, and of the patch interior
     for offset, linewidth in [(-HALO, 2.0), (0, 2.0), (HALO, 1.5)]:
         size = PATCH_SIZE - 2 * offset
         axes.add_patch(Rectangle((offset, offset), size, size, fill=False, edgecolor="black", linewidth=linewidth))
 
-    core_size = PATCH_SIZE - 2 * HALO
-    axes.text(PATCH_SIZE / 2, PATCH_SIZE / 2, f"core\n{core_size}x{core_size}", ha="center", va="center", fontsize=12)
+    interior_size = PATCH_SIZE - 2 * HALO
+    axes.text(PATCH_SIZE / 2, PATCH_SIZE / 2, f"patch interior\n{interior_size}x{interior_size}", ha="center", va="center", fontsize=12)
     margin = HALO + 0.3
     axes.set_xlim(-margin, PATCH_SIZE + margin)
     axes.set_ylim(-margin, PATCH_SIZE + margin)
@@ -91,7 +91,7 @@ def main():
         handles=[
             Patch(facecolor=COLOUR_HALO, edgecolor=COLOUR_GRID, label="halo"),
             Patch(facecolor=COLOUR_SHELL, edgecolor=COLOUR_GRID, label="shell"),
-            Patch(facecolor=COLOUR_CORE, edgecolor=COLOUR_GRID, label="core"),
+            Patch(facecolor=COLOUR_PATCH_INTERIOR, edgecolor=COLOUR_GRID, label="patch interior"),
             Patch(facecolor=COLOUR_HALO_CORNER, edgecolor=COLOUR_GRID, hatch="////", label="halo corner (not used by Rusanov)"),
         ],
         loc="lower center",
