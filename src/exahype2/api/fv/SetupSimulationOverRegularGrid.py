@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
 import peano4.api.actionsets
-import toolbox.loadbalancing.api.TriggerLoadBalancing
+import toolbox.loadbalancing.api.actionsets
 
 from ..InitPointWisely import InitPointWisely
 from ..Solver import Solver
@@ -84,6 +84,8 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
             "scheme has added this field to itself immediately upon construction."
         )
         refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size * self._solver.numerical_scheme.patch_size))
+        # Inform the load balancing after every mesh refinement sweep
+        refine_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
 
         initial_condition_task        = peano4.api.taskgraph.Task(name=f"{self._solver.name} Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name} Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
@@ -111,14 +113,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
             )
         )
 
-        # Inform the load balancing after every mesh refinement sweep
-        trigger_load_balancing_task = toolbox.loadbalancing.api.TriggerLoadBalancing.TriggerLoadBalancing(
-            name=f"{self._solver.name}_Trigger load balancing"
-        )
-        trigger_load_balancing_task.add_dependency(refine_task)
-
         setup_simulation.add_task(refine_task)
-        setup_simulation.add_task(trigger_load_balancing_task)
         setup_simulation.add_task(initial_condition_task)
         setup_simulation.add_task(project_on_faces_task)
 
