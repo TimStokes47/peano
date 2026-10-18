@@ -65,20 +65,18 @@ class BackupPatchOverlap(ActionSet):
 
 
   __Template = """
-    if ({GUARD_PREDICATE}) {{
-      logTraceInWith3Arguments( "--backup patch overlap from {FACES_ACCESSOR_IN} into {FACES_ACCESSOR_OUT}--(...)", marker.toString(), {FACES_ACCESSOR_OUT}.value, {FACES_ACCESSOR_IN}.value );
-      int counter = 0;
-      dfore(k,{DOFS_PER_AXIS},0,0) {{
-        for (int i=0; i<{OVERLAP}*2; i++) {{
-          for (int j=0; j<{UNKNOWNS}; j++) {{
-            // assertion4( {FACES_ACCESSOR_IN}.value[counter]=={FACES_ACCESSOR_IN}.value[counter], k,i,j, marker.toString() );
-            {FACES_ACCESSOR_OUT}.value[counter] = {FACES_ACCESSOR_IN}.value[counter];
-            counter++;
-          }}
+    logTraceInWith3Arguments( "--backup patch overlap from {FACES_ACCESSOR_IN} into {FACES_ACCESSOR_OUT}--(...)", marker.toString(), {FACES_ACCESSOR_OUT}.value, {FACES_ACCESSOR_IN}.value );
+    int counter = 0;
+    dfore(k,{DOFS_PER_AXIS},0,0) {{
+      for (int i=0; i<{OVERLAP}*2; i++) {{
+        for (int j=0; j<{UNKNOWNS}; j++) {{
+          // assertion4( {FACES_ACCESSOR_IN}.value[counter]=={FACES_ACCESSOR_IN}.value[counter], k,i,j, marker.toString() );
+          {FACES_ACCESSOR_OUT}.value[counter] = {FACES_ACCESSOR_IN}.value[counter];
+          counter++;
         }}
       }}
-      logTraceOutWith1Argument( "--backup patch overlap from {FACES_ACCESSOR_IN} into {FACES_ACCESSOR_OUT}--(...)", {FACES_ACCESSOR_IN}.value[0] );
     }}
+    logTraceOutWith1Argument( "--backup patch overlap from {FACES_ACCESSOR_IN} into {FACES_ACCESSOR_OUT}--(...)", {FACES_ACCESSOR_IN}.value[0] );
 """
 
 
@@ -91,6 +89,14 @@ class BackupPatchOverlap(ActionSet):
       result = self.__Template.format(**self.d)
       pass 
     return result
+
+
+  def get_guard_of_operation(self,operation_name):
+    if self.invoke_in_touch_first and operation_name==ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+      return self.d[ "GUARD_PREDICATE" ]
+    if not self.invoke_in_touch_first and operation_name==ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
+      return self.d[ "GUARD_PREDICATE" ]
+    return "true"
 
 
   def get_attributes(self):

@@ -131,6 +131,16 @@ def derive_load_store_compute_flag(steps: List["peano4.api.solversteps.Step"]) -
     mghype.matrixfree.api.MatrixFreeMain.template.cpp,
     mghype.petsc.api.PETScMain.template.cpp).
 
+    ## DaStGen2 data
+
+    Submodels modelled via DaStGen2 (@ref peano4.api.datamodel.DaStGen2.DaStGen2)
+    do not hold the load/store/compute flag in their generator but in their
+    peano4_mpi_and_storage_aspect (@ref peano4.api.dastgen2.MPIAndStorageAspect.MPIAndStorageAspect).
+    For these, the function writes the flag into the aspect, and appends the
+    includes above to the aspect's implementation_file_includes, as the
+    aspect evaluates the flag within the implementation file. Adding them to
+    the header might yield cyclic includes.
+
     ## Combining with a pre-existing expression
 
     If a submodel's generator.load_store_compute_flag already holds something
@@ -153,7 +163,7 @@ def derive_load_store_compute_flag(steps: List["peano4.api.solversteps.Step"]) -
     what was asked for; the missing operator is a separate, outstanding
     C++-side gap.
 
-    steps: [peano4.api.solversteps.Step]
+    @param steps: [peano4.api.solversteps.Step]
       Every compiled Step to consider, across every algorithmic phase (e.g.
       setup_simulation_steps + time_step_steps + plot_steps) - has to be
       the full set the surrounding project will actually run, so every
@@ -195,10 +205,22 @@ _STEP_REPOSITORY_INCLUDES = (
 )
 
 
-def _ensure_step_repository_includes(generator) -> None:
+def _load_store_compute_flag_holder(submodel):
+    """!
+
+    The object holding the submodel's load_store_compute_flag: The
+    peano4_mpi_and_storage_aspect for DaStGen2 data, the generator otherwise.
+
+    """
+    aspect = getattr(submodel, "peano4_mpi_and_storage_aspect", None)
+    return submodel.generator if aspect is None else aspect
+
+
+def _ensure_step_repository_includes(holder) -> None:
+    attribute_name = "implementation_file_includes" if hasattr(holder, "implementation_file_includes") else "includes"
     for include in _STEP_REPOSITORY_INCLUDES:
-        if include not in generator.includes:
-            generator.includes += include
+        if include not in getattr(holder, attribute_name):
+            setattr(holder, attribute_name, getattr(holder, attribute_name) + include)
 
 
 def _derive_load_store_compute_flag_for_one_kind(
@@ -240,13 +262,14 @@ def _derive_load_store_compute_flag_for_one_kind(
             f"::peano4::grid::constructLoadStoreComputeFlag({use_expression}, {load_expression}, {store_expression})"
         )
 
-        existing_flag = submodel.generator.load_store_compute_flag
+        holder = _load_store_compute_flag_holder(submodel)
+        existing_flag = holder.load_store_compute_flag
         if existing_flag is not None and existing_flag != _DEFAULT_LOAD_STORE_COMPUTE_FLAG:
             # Something (a task graph author, or an earlier call to this
             # function) already customised this submodel's flag - do not
             # discard that, combine with it instead.
-            submodel.generator.load_store_compute_flag = f"{existing_flag} and ({new_flag})"
+            holder.load_store_compute_flag = f"{existing_flag} and ({new_flag})"
         else:
-            submodel.generator.load_store_compute_flag = new_flag
+            holder.load_store_compute_flag = new_flag
 
-        _ensure_step_repository_includes(submodel.generator)
+        _ensure_step_repository_includes(holder)

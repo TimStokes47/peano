@@ -27,9 +27,10 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
   - \subpage page_exahype_design_philosophy
   - \subpage page_exahype_modelling_pde_solver
   - \subpage page_exahype_numerical_scheme
-  - \subpage page_exahype_compute_graph
   - \subpage page_exahype_main_function
-- \subpage page_exahype_solvers
+- Solvers
+  - This is missing
+  - This is missing
 - Numerics tour de force (hands-on explanation of core numerical ingredients)
   - \subpage page_tutorials_exahype2_numerics_finite_volumes
   - \subpage page_tutorials_exahype2_numerics_higher_order_finite_volumes

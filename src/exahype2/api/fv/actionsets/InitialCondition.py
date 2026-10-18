@@ -59,7 +59,6 @@ class InitialCondition(AbstractFVActionSet):
 
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
             d = {
-                "PREDICATE": self.guard,
                 "NUMBER_OF_VOLUMES_PER_AXIS": self._solver.numerical_scheme.patch_size,
                 "NUMBER_OF_UNKNOWNS": self._solver.unknowns,
                 "NUMBER_OF_AUXILIARY_VARIABLES": self._solver.auxiliary_variables,
@@ -70,22 +69,25 @@ class InitialCondition(AbstractFVActionSet):
 
         return result
 
+    def get_guard_of_operation(self, operation_name):
+        if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            return self.guard
+        return "true"
+
     def get_action_set_name(self):
         return __name__.replace(".py", "").replace(".", "_")
 
     TemplateInitialCondition = """
-  if ({{PREDICATE}}) {
-    logTraceIn( "touchCellFirstTime(...)---InitialCondition" );
-    // @todo Tim does it make sense to retire these loops and replace them with your compiler?
-    //           It is only a minor thing, but maybe we can get rid of all of these dfor macros?
-    parallelDfor( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}} ) {
-      int index = peano4::utils::dLinearised(volume,{{NUMBER_OF_VOLUMES_PER_AXIS}}) * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}});
-      repositories::{{SOLVER_INSTANCE}}.initPointWisely(
-        ::exahype2::fv::getVolumeCentre( marker.x(), marker.h(), {{NUMBER_OF_VOLUMES_PER_AXIS}}, volume),
-        fineGridCell{{UNKNOWN_IDENTIFIER}}.value + index
-      );
-    } endParallelDfor
+  logTraceIn( "touchCellFirstTime(...)---InitialCondition" );
+  // @todo Tim does it make sense to retire these loops and replace them with your compiler?
+  //           It is only a minor thing, but maybe we can get rid of all of these dfor macros?
+  parallelDfor( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}} ) {
+    int index = peano4::utils::dLinearised(volume,{{NUMBER_OF_VOLUMES_PER_AXIS}}) * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}});
+    repositories::{{SOLVER_INSTANCE}}.initPointWisely(
+      ::exahype2::fv::getVolumeCentre( marker.x(), marker.h(), {{NUMBER_OF_VOLUMES_PER_AXIS}}, volume),
+      fineGridCell{{UNKNOWN_IDENTIFIER}}.value + index
+    );
+  } endParallelDfor
 
-    logTraceOut( "touchCellFirstTime(...)---InitialCondition" );
-  }
+  logTraceOut( "touchCellFirstTime(...)---InitialCondition" );
 """

@@ -103,6 +103,17 @@ doxygen documentation/Doxyfile
 ```
 Output goes to `doxygen-html/html`.
 
+Python documentation (Doxygen docstrings starting with `"""!`) follows these rules:
+
+- Every parameter description starts with a `@param` statement, followed by the
+  parameter's name, a colon and its type, with the description indented on the
+  next lines. Write
+  ```
+  @param graph: peano4.api.taskgraph.Graph
+    The task graph to compile.
+  ```
+  and not `graph: peano4.api.taskgraph.Graph`.
+
 ## Testing
 
 - `tests/unit/` — Python unit tests (pytest). Run with `pytest` from repo root (see

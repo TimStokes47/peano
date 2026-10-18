@@ -3,7 +3,7 @@
 import os
 import re
 
-from .Helper import write_file
+from .Helper import write_file, shortened_class_name
 
 from .Overwrite import Overwrite
 
@@ -16,7 +16,8 @@ class ActionSet(object):
 
   Do not confuse this with @ref peano4.api.solversteps.ActionSet.ActionSet,
   which is the interface you actually implement (you subclass it and override
-  get_body_of_operation(), get_attributes(), get_includes(), ... to say
+  get_guard_of_operation(), get_body_of_operation(), get_attributes(),
+  get_includes(), ... to say
   *what* the action set does). Users typically never interact with this 
   class. They work against the ActionSet in solversteps.
   
@@ -27,7 +28,9 @@ class ActionSet(object):
   _log, the constructor/destructor, createGridControlEventsForNextTraversal(),
   prepareTraversal()/unprepareTraversal(), and one method per grid event
   (touchCellFirstTime, createPersistentVertex, ...) - calling back into
-  your get_body_of_*() overrides to fill in each method body.
+  the get_implementation_of_*() routines - which combine your
+  get_guard_of_operation() and get_body_of_*() overrides - to fill in each
+  method body.
   @ref peano4.api.solversteps.ActionSet.ActionSet is the data model, this class is the writer.
 
   # Where is is used
@@ -68,7 +71,8 @@ class ActionSet(object):
                     sole interface.
 
     """
-    self.classname    = classname
+    # The class name is also the file name, which might become too long
+    self.classname    = shortened_class_name(classname)
     self.namespace    = namespace
     self.subdirectory = subdirectory
     self.operations   = [
@@ -233,15 +237,15 @@ class ActionSet(object):
       outputfile.write( "}\n\n\n" )
 
       outputfile.write( "std::vector< peano4::grid::GridControlEvent > " + self.__get_full_qualified_class_name() + "::createGridControlEventsForNextTraversal() const {\n" )
-      outputfile.write( self.implementation.get_body_of_createGridControlEventsForNextTraversal() )
+      outputfile.write( self.implementation.get_implementation_of_createGridControlEventsForNextTraversal() )
       outputfile.write( "}\n\n\n" )
 
       outputfile.write( "void " + self.__get_full_qualified_class_name() + "::prepareTraversal() {\n" )
-      outputfile.write( self.implementation.get_body_of_prepareTraversal() )
+      outputfile.write( self.implementation.get_implementation_of_prepareTraversal() )
       outputfile.write( "}\n\n\n" )
 
       outputfile.write( "void " + self.__get_full_qualified_class_name() + "::unprepareTraversal() {\n" )
-      outputfile.write( self.implementation.get_body_of_unprepareTraversal() )
+      outputfile.write( self.implementation.get_implementation_of_unprepareTraversal() )
       outputfile.write( "}\n\n\n" )
 
       for operation in self.operations:
@@ -250,7 +254,7 @@ class ActionSet(object):
         outputfile.write( self.__get_full_qualified_class_name() + "::" + operation[0] )
         outputfile.write( self.__get_operation_arguments(operation) )
         outputfile.write( " {\n" )
-        outputfile.write( self.implementation.get_body_of_operation( operation[0] ) )
+        outputfile.write( self.implementation.get_implementation_of_operation( operation[0] ) )
         outputfile.write( "\n" )
         outputfile.write( "}\n\n\n" )
 

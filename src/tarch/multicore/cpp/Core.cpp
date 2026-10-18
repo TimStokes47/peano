@@ -43,7 +43,9 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
   // control the number of threads in C++
 }
 
-void tarch::multicore::Core::shutdown() {}
+void tarch::multicore::Core::shutdown() {
+  tarch::multicore::waitForAllTasks();
+}
 
 bool tarch::multicore::Core::isInitialised() const {
   return true;

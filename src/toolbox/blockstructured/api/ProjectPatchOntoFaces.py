@@ -91,7 +91,6 @@ class ProjectPatchOntoFaces(ActionSet):
 
 
   __Template_TouchCellLastTime_Preamble = """
-  if ( {GUARD} ) {{
     logTraceIn( "touchCellLastTime(...)---ProjectPatchOntoFaces" );
 """
 
@@ -147,11 +146,6 @@ class ProjectPatchOntoFaces(ActionSet):
 
   __Template_TouchCellLastTime_Epilogue = """
     logTraceOut( "touchCellLastTime(...)---ProjectPatchOntoFaces" );
-  }}
-  else {{
-    logTraceInWith1Argument( "touchCellLastTime(...)---ProjectPatchOntoFaces [skip]", marker.toString() );
-    logTraceOut( "touchCellLastTime(...)---ProjectPatchOntoFaces [skip]" );
-  }}
 """
 
 
@@ -163,6 +157,12 @@ class ProjectPatchOntoFaces(ActionSet):
       result += self.__Template_TouchCellLastTime_Epilogue.format(**self.d)
       pass 
     return result
+
+
+  def get_guard_of_operation(self,operation_name):
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
+      return self.d[ "GUARD" ]
+    return "true"
 
 
   def get_attributes(self):

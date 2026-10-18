@@ -6,6 +6,7 @@ import datetime
 import enum
 import io
 import os
+import sys
 
 
 class LoggerPrintOption(enum.Enum):
@@ -151,6 +152,49 @@ class Logger:
             print(message)
         self._stream.write( message )
         self._stream.write( "\n" )
+
+    AcceptWarningsEnvironmentVariable = "PEANO_ACCEPT_WARNINGS"
+
+    def warn_and_confirm(self, message: str):
+        """!
+
+        Log a warning and let the user decide whether to continue
+
+        The warning is always printed and written into the log. Afterwards,
+        the user has to accept the warning or abort. If the user aborts, the
+        routine raises an exception, i.e. the Python script terminates.
+
+        If the environment variable PEANO_ACCEPT_WARNINGS is set to 1, all
+        warnings are accepted without asking. Use this for batch jobs. If
+        the variable is not set and there is no terminal to ask the user
+        (stdin is not a terminal), the routine aborts.
+
+        @param message: str
+          The warning. It should explain what goes wrong if the user
+          accepts it.
+
+        """
+        self.log("Warning: " + message, LoggerPrintOption.ALWAYS_PRINT)
+
+        if os.environ.get(Logger.AcceptWarningsEnvironmentVariable) == "1":
+            self.log(f"Warning accepted, as {Logger.AcceptWarningsEnvironmentVariable}=1", LoggerPrintOption.ALWAYS_PRINT)
+            return
+
+        if not sys.stdin.isatty():
+            self.log(
+                f"Abort, as there is no terminal to confirm the warning. Set {Logger.AcceptWarningsEnvironmentVariable}=1 to accept all warnings",
+                LoggerPrintOption.ALWAYS_PRINT,
+            )
+            raise Exception("Warning not accepted: " + message)
+
+        while True:
+            answer = input("[A]ccept or a[b]ort? ").strip().lower()
+            if answer in ("a", "accept"):
+                self.log("Warning accepted by user", LoggerPrintOption.NEVER_PRINT)
+                return
+            if answer in ("b", "abort"):
+                self.log("Abort requested by user", LoggerPrintOption.NEVER_PRINT)
+                raise Exception("Warning not accepted: " + message)
 
 
     def new_section(self, section_name: str):

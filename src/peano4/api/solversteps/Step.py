@@ -4,6 +4,7 @@ import peano4.api.solversteps.UserActionSet
 
 from peano4.api.solversteps.StepToActionSets import StepToActionSets
 from peano4.api.solversteps.StepToObserver import StepToObserver
+from peano4.api.solversteps.SynchroniseActionSets import SynchroniseActionSets, get_task_groups
 
 
 class Step:
@@ -67,6 +68,22 @@ class Step:
             self.action_sets = []
         self.action_set_generator = StepToActionSets(self)
         self.observer_generator = StepToObserver(self)
+
+    def get_observer_class_name(self) -> str:
+        """!
+
+        Class name of the observer this step is translated into. This is
+        the step's name, cut down to 64 characters plus a consecutive number
+        if it is longer (@see peano4.api.output.Helper.shortened_class_name()),
+        as the class name also is the observer's file name. Everybody
+        referring to the observer class, such as the generated runners, has
+        to use this getter rather than the step's name.
+
+        """
+        # Imported here, as peano4.api.output in turn imports this package
+        from peano4.api.output.Helper import shortened_class_name
+
+        return shortened_class_name(self.name, max_length=64)
 
     def remove_all_actions(self):
         """
@@ -232,16 +249,30 @@ class Step:
         visitor pattern over the Peano4 tree. The other type is an interface which
         provides plugin points into the created data transitions from a user's
         perspective.
+
+        Markers of type
+        @ref peano4.api.solversteps.SynchroniseActionSets.SynchroniseActionSets
+        yield no C++ code. They only separate the task groups which we hand
+        over to the observer
+        (@ref peano4.api.solversteps.SynchroniseActionSets.get_task_groups()).
         """
 
         included_action_sets = []
+        index_of_action_set = {}
         for action_set in self.action_sets:
+            if isinstance(action_set, SynchroniseActionSets):
+                continue
             full_qualified_action_set_name = self.action_set_generator.construct_output(
                 output, action_set
             )
+            index_of_action_set[id(action_set)] = len(included_action_sets)
             included_action_sets.append(full_qualified_action_set_name)
 
-        self.observer_generator.construct_output(output, included_action_sets)
+        task_groups = [
+            [index_of_action_set[id(action_set)] for action_set in group]
+            for group in get_task_groups(self.action_sets)
+        ]
+        self.observer_generator.construct_output(output, included_action_sets, task_groups)
 
     def copy_action_sets_from_other_step(self, other_step):
         self.action_sets += other_step.action_sets
