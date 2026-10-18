@@ -64,11 +64,19 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
             "add one via solver.add_pde_term(exahype2.api.InitPointWisely(...))."
         )
 
+        # Repeat while the mesh still changes, while the load balancing still
+        # wants to split, or while a split is still being carried out. Splits
+        # within these sweeps are safe, as the sweeps do not hold any data
+        # that lives from one sweep to the next.
         refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh",
                                                                 entity=peano4.api.taskgraph.Task.GridEntity.CELL,
-                                                                task_has_to_repeat="not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
+                                                                task_has_to_repeat=(
+                                                                    "not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
+                                                                    " or ( ::toolbox::loadbalancing::LoadBalancingService::getInstance().hasLoadBalancing()"
+                                                                    " and ( not ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->hasStagnated()"
+                                                                    " or ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->hasSplitRecently() ) )"
                                                                 )
-        # @todo Wie also have to test against load balancing!
+                                                                )
 
         assert hasattr(self._solver.numerical_scheme, "patch_size"), (
             f"Solver {self._solver.name}'s numerical scheme has no attribute "
