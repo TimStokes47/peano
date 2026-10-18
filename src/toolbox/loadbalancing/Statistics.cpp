@@ -18,7 +18,7 @@ toolbox::loadbalancing::Statistics::Statistics():
   _globalNumberOfTrees(1),
   _globalNumberOfRanksWithEnabledLoadBalancing(0),
   _globalNumberOfSplits(0),
-  _numberOfStateUpdatesWithoutAnySplit(0),
+  _numberOfStateUpdatesWithoutAnySplit(MaxNumberOfStateUpdatesWithoutAnySplit),
   _maximumTreesPerRank(1) {}
 
 
@@ -73,7 +73,7 @@ void toolbox::loadbalancing::Statistics::updateGlobalView() {
   #endif
 
   if ( _globalNumberOfSplits==0 ) {
-    _numberOfStateUpdatesWithoutAnySplit = std::min( _numberOfStateUpdatesWithoutAnySplit+1, 65536 );
+    _numberOfStateUpdatesWithoutAnySplit = std::min( _numberOfStateUpdatesWithoutAnySplit+1, MaxNumberOfStateUpdatesWithoutAnySplit );
   }
   else {
     _numberOfStateUpdatesWithoutAnySplit = 0;

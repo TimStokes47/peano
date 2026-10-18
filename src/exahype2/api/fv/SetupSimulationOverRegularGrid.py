@@ -83,7 +83,26 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
             "patch_size. SetupSimulationOverRegularGrid assumes the numerical "
             "scheme has added this field to itself immediately upon construction."
         )
-        refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size * self._solver.numerical_scheme.patch_size))
+        # Load balancing is expensive. Once the load balancing has split,
+        # we therefore do not add any further mesh elements for a while, so
+        # the mesh and the new trees can catch up: if we kept on refining,
+        # the freshly split trees would immediately become unbalanced again,
+        # and the load balancing would have to split once more. The
+        # refinement hence only continues if no load balancing is installed
+        # or if the installed load balancing has not split recently.
+        refine_task.add_action_set(
+            peano4.api.actionsets.ConstructRegularGrid(
+                self.volume_size * self._solver.numerical_scheme.patch_size,
+                guard=(
+                    "not ::toolbox::loadbalancing::LoadBalancingService::getInstance().hasLoadBalancing()"
+                    " or not ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->hasSplitRecently()"
+                ),
+                includes="""
+#include "toolbox/loadbalancing/AbstractLoadBalancing.h"
+#include "toolbox/loadbalancing/LoadBalancingService.h"
+""",
+            )
+        )
         # Inform the load balancing after every mesh refinement sweep
         refine_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
 

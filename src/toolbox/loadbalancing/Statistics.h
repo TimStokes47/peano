@@ -68,7 +68,10 @@ class toolbox::loadbalancing::Statistics {
      *
      * Counts the calls of updateGlobalView() in a row in which the global
      * number of splits has been zero. As the global number of splits is
-     * reduced over all ranks, the counter is the same on all ranks.
+     * reduced over all ranks, the counter is the same on all ranks. The
+     * counter saturates at MaxNumberOfStateUpdatesWithoutAnySplit. It also
+     * starts with this value, as no split has happened before the first
+     * update.
      */
     int getNumberOfStateUpdatesWithoutAnySplit() const;
 
@@ -96,6 +99,11 @@ class toolbox::loadbalancing::Statistics {
 
   private:
     static tarch::logging::Log _log;
+
+    /**
+     * Saturation value of getNumberOfStateUpdatesWithoutAnySplit()
+     */
+    static constexpr int MaxNumberOfStateUpdatesWithoutAnySplit = 65536;
 
     /**
      * Rank-local: Is the load balancing on this rank switched on
