@@ -155,18 +155,24 @@ tarch::mpi::Rank::getInstance().allReduce(
 
 ## Load balancing information
 
-The load balancing needs the weight of each individual rank, which the
-reduced statistics do not provide. @ref toolbox::loadbalancing::Statistics::updateGlobalView()
-and @ref toolbox::loadbalancing::metrics::CellCount::updateGlobalView()
-therefore sum up the number of local unrefined cells over the rank's local
-trees via @ref peano4::parallel::SpacetreeSet::getGridStatistics(int) const.
-@ref toolbox::loadbalancing::Statistics::updateGlobalView() then feeds this
-rank-local count into a non-blocking `MPI_Iallreduce(..., MPI_SUM, ...)` to
-obtain the global cell count (src/toolbox/loadbalancing/Statistics.cpp). A
-handful of other scalars are reduced the same way alongside it: the global
-number of splits, the global number of trees, how many ranks currently have
-load balancing switched on, and the maximum number of trees held by any one
-rank. These data steer the load balancer's own rebalancing decisions only.
+@ref toolbox::loadbalancing::Statistics mirrors the grid statistics: its
+updateGlobalView(), which every load balancing strategy invokes in its
+finishStep(), all-reduces the load balancing's own data over all ranks via
+tarch::mpi::Rank::allReduce() - the global number of trees, how many ranks
+currently have load balancing switched on, the global number of splits, and the
+maximum number of trees held by any one rank. The reduction is blocking, so all
+ranks hold the same values afterwards. Only the data explicitly labelled as
+local, such as the number of splits a rank has triggered itself, remain
+rank-local.
+
+The load balancing statistics do not hold cell counts of their own. The global
+number of cells comes from @ref peano4::parallel::SpacetreeSet::getGridStatistics().
+The load balancing however also needs the weight of each individual rank, which
+the reduced grid statistics do not provide. It therefore sums up the number of
+local unrefined cells over the rank's local trees via
+@ref peano4::parallel::SpacetreeSet::getGridStatistics(int) const
+(@ref toolbox::loadbalancing::Statistics::getLocalNumberOfInnerUnrefinedCells(),
+@ref toolbox::loadbalancing::metrics::CellCount::updateGlobalView()).
 
 
 */

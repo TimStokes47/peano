@@ -26,7 +26,7 @@ toolbox::loadbalancing::strategies::SpreadOut::~SpreadOut() {}
 int toolbox::loadbalancing::strategies::SpreadOut::getNumberOfTreesPerRank() const {
   int result = 0;
 
-  if (_state == State::InterRankDistribution and _statistics.hasConsistentViewOfWorld()) {
+  if (_state == State::InterRankDistribution) {
     const int MaxTreesPerRank = std::min(
       _configuration->getMaxLocalTreesPerRank(_state), tarch::multicore::Core::getInstance().getNumberOfThreads()
     );
@@ -67,7 +67,7 @@ int toolbox::loadbalancing::strategies::SpreadOut::getNumberOfTreesPerRank() con
 
 
 void toolbox::loadbalancing::strategies::SpreadOut::updateLoadBalancing() {
-  if (_statistics.hasConsistentViewOfWorld() and _previousNumberOfCells == _statistics.getGlobalNumberOfInnerUnrefinedCells()) {
+  if (_previousNumberOfCells == _statistics.getGlobalNumberOfInnerUnrefinedCells()) {
     _numberOfStableGridIterations++;
   } else {
     _numberOfStableGridIterations = 0;
@@ -107,8 +107,6 @@ void toolbox::loadbalancing::strategies::SpreadOut::updateLoadBalancing() {
       }
 
     _state = State::Stagnation;
-  } else if (not _statistics.hasConsistentViewOfWorld()) {
-    _previousNumberOfCells = -1;
   } else {
     _previousNumberOfCells = _statistics.getGlobalNumberOfInnerUnrefinedCells();
   }

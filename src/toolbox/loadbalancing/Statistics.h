@@ -3,9 +3,7 @@
 #pragma once
 
 
-#include "tarch/mpi/mpi.h"
 #include "tarch/logging/Log.h"
-#include "tarch/mpi/Rank.h"
 
 
 #include "State.h"
@@ -26,116 +24,115 @@ namespace toolbox {
  * statistics, the other ranks all have to use such an object, too. The
  * individual objects communicate with each other.
  *
+ * The class mirrors peano4::parallel::SpacetreeSet::getGridStatistics():
+ * updateGlobalView() all-reduces the statistics over all ranks, so all ranks
+ * hold the same values afterwards. Only the attributes and getters which are
+ * explicitly labelled as local are rank-local, even if they have a global
+ * counterpart.
+ *
+ * The class does not hold any cell counts of its own. They are taken from
+ * peano4::parallel::SpacetreeSet's grid statistics.
+ *
  */
 class toolbox::loadbalancing::Statistics {
   public:
-    /**
-     * Set all the MPI requests to nullptr.
-     */
     Statistics();
 
     std::string toString() const;
 
     /**
-     * Typically called by
+     * Update the global statistics view on all ranks
      *
-     * - finishSimulation() and
-     * - finishStep()
+     * Per contract, this function has to be called by any
+     * implementation of toolbox::loadbalancing::AbstractLoadBalancing::finishStep().
      *
-     * but we also call it from updateGlobalView() before we issue new
-     * collective MPI calls.
+     * The routine all-reduces the number of trees, the number of ranks with
+     * enabled load balancing, the number of splits and the maximum number of
+     * trees per rank over all ranks through tarch::mpi::Rank::allReduce().
+     * The reduction is blocking, i.e. all ranks hold the same statistics
+     * once the routine has terminated. The routine hence has to be called by
+     * all ranks at the same time, and only by one thread per rank.
+     *
+     * The routine also updates getNumberOfStateUpdatesWithoutAnySplit() and
+     * resets the local number of splits to zero.
      */
-    void waitForGlobalDataExchange();
-
     void updateGlobalView();
 
+    /**
+     * Local number of unrefined cells
+     *
+     * Rank-local: Sum over the statistics of the rank's local trees, i.e.
+     * over peano4::parallel::SpacetreeSet::getGridStatistics(int).
+     */
     int getLocalNumberOfInnerUnrefinedCells() const;
+
+    /**
+     * Global number of unrefined cells
+     *
+     * Taken from peano4::parallel::SpacetreeSet::getGridStatistics(), which
+     * is reduced over all ranks at the end of every traversal.
+     */
     int getGlobalNumberOfInnerUnrefinedCells() const;
+
     int getGlobalNumberOfRanksWithEnabledLoadBalancing() const;
     int getGlobalNumberOfTrees() const;
+
+    /**
+     * Number of updateGlobalView() calls without any split on any rank
+     *
+     * Counts the calls of updateGlobalView() in a row in which the global
+     * number of splits has been zero. As the global number of splits is
+     * reduced over all ranks, the counter is the same on all ranks.
+     */
     int getNumberOfStateUpdatesWithoutAnySplit() const;
+
     int getMaximumTreesPerRank() const;
 
+    /**
+     * Rank-local: Bookmark that this rank has triggered a split
+     */
     void incLocalNumberOfSplits( int delta=1 );
 
     /**
      * Number of splits this rank has triggered since the last
      * updateGlobalView()
      *
-     * updateGlobalView() takes these splits into account and then resets
-     * the counter to zero.
+     * Rank-local. updateGlobalView() takes these splits into account and
+     * then resets the counter to zero.
      */
     int getLocalNumberOfSplits() const;
 
-    void notifyOfStateChange( State state );
-
     /**
-     * If the stats spot some inconsistencies (local number of cells is bigger
-     * than global number, e.g.) this means that the non-blocking data exchange
-     * is lagging behind. In this case, this routine returns false;
+     * Rank-local: Memorise whether the load balancing on this rank is
+     * switched on
      */
-    bool hasConsistentViewOfWorld() const;
+    void notifyOfStateChange( State state );
 
   private:
     static tarch::logging::Log _log;
 
     /**
-     * Required for local stats, but also replicated in cell count metrics
+     * Rank-local: Is the load balancing on this rank switched on
      */
-    int _localNumberOfInnerUnrefinedCells;
+    bool _localLoadBalancingEnabled;
 
     /**
-     * Required for local stats, but also replicated in cell count metrics
+     * Rank-local accumulator where I keep track of how often I did split
+     * since the last updateGlobalView().
      */
-    int _globalNumberOfInnerUnrefinedCells;
+    int _localNumberOfSplits;
 
     int _globalNumberOfTrees;
 
     int _globalNumberOfRanksWithEnabledLoadBalancing;
 
-    bool _localLoadBalancingEnabled;
-
     /**
-     * This is my local accumulator where I keep track of how often I did
-     * split in this iteration. At the end of each iteration, I roll this
-     * one over into global or send it out.
-     */
-    int _localNumberOfSplits;
-
-    /**
-     * Lags behind global number by one iteration in an MPI world as data
-     * will arrive with one iteration delay.
+     * Sum of all ranks' local number of splits at the last
+     * updateGlobalView()
      */
     int _globalNumberOfSplits;
 
     int _numberOfStateUpdatesWithoutAnySplit;
 
     int _maximumTreesPerRank;
-
-    bool _viewConsistent;
-
-    #ifdef Parallel
-    /**
-     * Required for local stats, but also replicated in cell count metrics
-     */
-    MPI_Request*    _globalSumRequest;
-    MPI_Request*    _globalNumberOfSplitsRequest;
-    MPI_Request*    _globalNumberOfTreesRequest;
-    MPI_Request*    _globalNumberOfRanksWithEnabledLoadBalancingRequest;
-    MPI_Request*    _globalMaximumTreesPerRankRequest;
-    #endif
-
-    int             _globalNumberOfInnerUnrefinedCellsBufferIn;
-    int             _globalNumberOfInnerUnrefinedCellsBufferOut;
-    int             _numberOfSplitsIn;
-    int             _numberOfSplitsOut;
-    int             _numberOfTreesIn;
-    int             _numberOfTreesOut;
-    int             _numberOfRanksWithEnabledLoadBalancingIn;
-    int             _numberOfRanksWithEnabledLoadBalancingOut;
-    int             _numberOfMaximumTreesOut;
-    int             _maximumTreesIn;
-
 };
-
-

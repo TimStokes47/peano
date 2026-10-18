@@ -26,8 +26,6 @@ int toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::getNumberOfT
   if (
     _state==State::InterRankDistribution
     and
-    _statistics.hasConsistentViewOfWorld()
-    and
     _numberOfStableGridIterations>3
   ) {
     int maxPermittedTreesPerRank = _configuration->getMaxLocalTreesPerRank(_state)>=1
@@ -68,11 +66,7 @@ int toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::getNumberOfT
 
 
 void toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::updateLoadBalancing() {
-  if (
-    _statistics.hasConsistentViewOfWorld()
-    and
-    _previousNumberOfCells == _statistics.getGlobalNumberOfInnerUnrefinedCells()
-  ) {
+  if ( _previousNumberOfCells == _statistics.getGlobalNumberOfInnerUnrefinedCells() ) {
     _numberOfStableGridIterations++;
   }
   else {
@@ -119,9 +113,6 @@ void toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::updateLoadB
     }
 
     _state = State::Stagnation;
-  }
-  else if (not _statistics.hasConsistentViewOfWorld()) {
-    _previousNumberOfCells = -1;
   }
   else {
     _previousNumberOfCells = _statistics.getGlobalNumberOfInnerUnrefinedCells();

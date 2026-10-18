@@ -249,13 +249,7 @@ void toolbox::loadbalancing::strategies::SpreadOutHierarchically::finishStep() {
   _costMetrics->updateGlobalView();
   _blacklist.update();
 
-  if ( _statistics.hasConsistentViewOfWorld() ) {
-    _stepsToWaitForNextLoadBalancingDecision  = std::max( _stepsToWaitForNextLoadBalancingDecision-1, 0 );
-  }
-  else {
-   logInfo( "finishStep()", "statistics have no consistent view of world, so postpone load balancing decisions" );
-    _stepsToWaitForNextLoadBalancingDecision = std::max(_stepsToWaitForNextLoadBalancingDecision,1);
-  }
+  _stepsToWaitForNextLoadBalancingDecision  = std::max( _stepsToWaitForNextLoadBalancingDecision-1, 0 );
 
   updateLoadBalancing();
   updateState();
