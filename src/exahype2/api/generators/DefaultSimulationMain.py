@@ -130,6 +130,8 @@ void step() {
   else {
     assertionMsg( false, "Unknown step " << step << " in main()." );
   }
+
+  {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::loadBalancer.finishStep();
 }
 
 
