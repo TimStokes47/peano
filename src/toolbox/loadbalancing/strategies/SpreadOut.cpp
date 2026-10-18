@@ -10,9 +10,7 @@ tarch::logging::Log toolbox::loadbalancing::strategies::SpreadOut::_log("toolbox
 
 
 toolbox::loadbalancing::strategies::SpreadOut::SpreadOut(Configuration* configuration, CostMetrics* costMetrics):
-  AbstractLoadBalancing(configuration, costMetrics),
-  _previousNumberOfCells(-1),
-  _numberOfStableGridIterations(0) {
+  AbstractLoadBalancing(configuration, costMetrics) {
   assertion(configuration != nullptr);
   assertion(costMetrics != nullptr);
   _state = State::InterRankDistribution;
@@ -40,9 +38,15 @@ int toolbox::loadbalancing::strategies::SpreadOut::getNumberOfTreesPerRank() con
                                                         ? MaxTotalTrees
                                                         : _configuration->getMinTreeSize(_state) * MaxTotalTrees;
 
+    const peano4::grid::GridStatistics gridStatistics = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
+
     // Mesh is stable, so we should just split up as aggressively as possible,
     // even if we cannot keep all cores busy.
-    if (_numberOfStableGridIterations > 3) {
+    if (
+      gridStatistics.getNumberOfRefiningVertices() == 0
+      and
+      gridStatistics.getNumberOfRefinementTriggeredVertices() == 0
+    ) {
       // min tree but at least give each rank something
       const int MinTreeSize = std::max(_configuration->getMinTreeSize(_state), 1);
 
@@ -71,12 +75,6 @@ int toolbox::loadbalancing::strategies::SpreadOut::getNumberOfTreesPerRank() con
 
 
 void toolbox::loadbalancing::strategies::SpreadOut::updateLoadBalancing() {
-  if (_previousNumberOfCells == peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()) {
-    _numberOfStableGridIterations++;
-  } else {
-    _numberOfStableGridIterations = 0;
-  }
-
   if (not tarch::mpi::Rank::getInstance().isGlobalMaster() and _state == State::InterRankDistribution) {
     _state = State::Stagnation;
   }
@@ -111,8 +109,6 @@ void toolbox::loadbalancing::strategies::SpreadOut::updateLoadBalancing() {
       }
 
     _state = State::Stagnation;
-  } else {
-    _previousNumberOfCells = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
   }
 }
 
