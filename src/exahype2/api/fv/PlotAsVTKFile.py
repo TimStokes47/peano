@@ -130,7 +130,7 @@ class PlotAsVTKFile(Solver.Plotter):
         """
         peano4.api.Logger().log("Create plot task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
-        write_vtk_file_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Write VTK file", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        write_vtk_file_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Write VTK file", entity=peano4.api.taskgraph.Task.GridEntity.CELL, may_spawn_background_tasks=False)
 
         plot.add_task(write_vtk_file_task)
 
