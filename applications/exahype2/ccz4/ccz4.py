@@ -4,10 +4,10 @@ import dastgen2
 import shutil
 import numpy as np
 
-import peano4
+import peano4.api
 import exahype2
-import peano4.toolbox.particles
-from peano4.toolbox.blockstructured.DynamicAMR        import DynamicAMR
+import peano4.api.toolbox.particles
+from toolbox.blockstructured.api.DynamicAMR        import DynamicAMR
 
 
 from Probe_file_gene          import tracer_seeds_generate
@@ -17,11 +17,11 @@ import CCZ4Helper
 
 
 modes = { 
-  "release": peano4.output.CompileMode.Release,
-  "trace":   peano4.output.CompileMode.Trace,
-  "assert":  peano4.output.CompileMode.Asserts, 
-  "stats":  peano4.output.CompileMode.Stats,
-  "debug":   peano4.output.CompileMode.Debug,
+  "release": peano4.api.output.CompileMode.RELEASE,
+  "trace":   peano4.api.output.CompileMode.TRACE,
+  "assert":  peano4.api.output.CompileMode.ASSERTS, 
+  "stats":  peano4.api.output.CompileMode.STATS,
+  "debug":   peano4.api.output.CompileMode.DEBUG,
 }
 
 floatparams = {

@@ -3,7 +3,7 @@
 import os
 import argparse
 
-import peano4
+import peano4.api
 import exahype2
 
 parser = argparse.ArgumentParser(
@@ -12,9 +12,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "-m",
     "--build-mode",
-    choices=peano4.output.CompileModes,
-    default=peano4.output.CompileModes[0], # Release
-    help="|".join(peano4.output.CompileModes),
+    choices=peano4.api.output.CompileModes,
+    default=peano4.api.output.CompileModes[0], # Release
+    help="|".join(peano4.api.output.CompileModes),
 )
 parser.add_argument(
     "-t",
@@ -71,6 +71,18 @@ parser.add_argument(
     help="Assess device kernels",
 )
 parser.add_argument(
+    "-serial",
+    "--serial",
+    action="store_true",
+    help="Assess serial kernels",
+)
+parser.add_argument(
+    "-parallel",
+    "--parallel",
+    action="store_true",
+    help="Assess parallel kernels",
+)
+parser.add_argument(
     "-fpe",
     "--fpe",
     action="store_true",
@@ -124,7 +136,7 @@ project.set_global_simulation_parameters(
     periodic_BC=[False, False]
 )
 
-project.set_Peano4_installation("../../../../", mode=peano4.output.string_to_mode(args.build_mode))
+project.set_Peano4_installation("../../../../", mode=peano4.api.output.string_to_mode(args.build_mode))
 project = project.generate_Peano4_project(verbose=True)
 
 accuracy = args.accuracy
@@ -151,6 +163,16 @@ if args.cpu == False and args.gpu == False:
 else:
     project.constants.export_boolean("AssessHostKernels", True if args.cpu else False)
     project.constants.export_boolean("AssessDeviceKernels", True if args.gpu else False)
+project.constants.export_boolean("AssessMLIRDeviceKernels", False)
+
+if args.serial == False and args.parallel == False:
+    project.constants.export_boolean("AssessSerialKernels", True)
+    project.constants.export_boolean("AssessParallelKernels", True)
+else:
+    project.constants.export_boolean("AssessSerialKernels", True if args.serial else False)
+    project.constants.export_boolean("AssessParallelKernels", True if args.parallel else False)
+
+project.output.makefile.add_CXX_flag("-DUSE_CPP_KERNELS")
 
 project.constants.export_boolean("EvaluateFlux", True)
 project.constants.export_boolean("EvaluateNonconservativeProduct", True)

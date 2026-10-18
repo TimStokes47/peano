@@ -58,7 +58,9 @@ void tarch::multicore::Core::configure( int numberOfThreads) {
 }
 
 
-void tarch::multicore::Core::shutdown() {}
+void tarch::multicore::Core::shutdown() {
+  tarch::multicore::waitForAllTasks();
+}
 
 
 bool tarch::multicore::Core::isInitialised() const {

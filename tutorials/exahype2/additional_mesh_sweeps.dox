@@ -270,7 +270,7 @@ always the same pattern:
     def user_should_modify_template(self):
         return False
    ~~~~~~~~~~~~~~~~~~~~~~~~
-2. Ensure that you main script imports this @ref peano_action_sets "action set".
+2. Ensure that you main script imports this @ref page_peano_action_sets "action set".
 3. Add it to your new user-defined step:
    ~~~~~~~~~~~~~~~~~~~~~~~~
       additional_mesh_traversal = peano4.solversteps.Step( name = "AdditionalMeshTraversal",
@@ -284,7 +284,7 @@ always the same pattern:
 
 A classic example for a sophisticated variant of the the last step is the 
 action set implemented within applications/exahype2/ccz4/ComputeFirstDerivatives.py.
-It extends peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor for a Finite
+It extends toolbox.blockstructured.ReconstructPatchAndApplyFunctor for a Finite
 Difference scheme. This one in turn inherits from peano4.solversteps.ActionSet. 
 Once defined, we again add this to the step via add_action_set().
    
@@ -292,7 +292,7 @@ Once defined, we again add this to the step via add_action_set().
 
 ## Use pre-defined functionality 
 
-You can write your own @ref peano_action_sets "action sets" to it (see above), 
+You can write your own @ref page_peano_action_sets "action sets" to it (see above), 
 and/or you can use existing action sets within your additional mesh sweep. 
 Each additional mesh sweep has access
 to all ExaHyPE solver data. Nothing stops you from using and manipulating these

@@ -63,6 +63,7 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
 
 
 void tarch::multicore::Core::shutdown() {
+  tarch::multicore::waitForAllTasks();
   if (globalControl!=nullptr) delete globalControl;
   globalControl = nullptr;
 }

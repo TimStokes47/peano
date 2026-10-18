@@ -1,7 +1,7 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 
 import dastgen2
 
@@ -32,7 +32,7 @@ class Project(object):
     """
 
     def __init__(self, namespace, project_name, executable, directory=".", subdirectory="", abstract_overwrite=True):
-        self._project = peano4.Project(namespace, project_name, directory, subdirectory)
+        self._project = peano4.api.Project(namespace, project_name, directory, subdirectory)
         self._subdirectory = subdirectory
         self._abstract_overwrite = abstract_overwrite
 
@@ -57,7 +57,7 @@ class Project(object):
                                           "tarch/accelerator/Device.h"
                                         ]
         self._Peano_src_directory     = "."
-        self._build_mode = peano4.output.CompileMode.Asserts
+        self._build_mode = peano4.api.output.CompileMode.ASSERTS
         self._executable_name = executable
         self._periodic_BC = [False, False, False]
         self._plot_filters = []
@@ -72,13 +72,13 @@ class Project(object):
         self._solvers_file_collection=[]
 
 
-        self.create_grid = peano4.solversteps.Step("CreateGrid", False)
-        self.init_grid = peano4.solversteps.Step("InitGrid", False)
-        self.create_grid_but_postpone_refinement = peano4.solversteps.Step("CreateGridButPostponeRefinement", False)
-        self.create_grid_and_converge_lb = peano4.solversteps.Step("CreateGridAndConvergeLoadBalancing", False)
-        self.plot_solution = peano4.solversteps.Step("PlotSolution", False)
-        self.checkpoint_solution = peano4.solversteps.Step("CheckpointSolution", False)
-        self.perform_time_step = peano4.solversteps.Step("TimeStep", False)
+        self.create_grid = peano4.api.solversteps.Step("CreateGrid", False)
+        self.init_grid = peano4.api.solversteps.Step("InitGrid", False)
+        self.create_grid_but_postpone_refinement = peano4.api.solversteps.Step("CreateGridButPostponeRefinement", False)
+        self.create_grid_and_converge_lb = peano4.api.solversteps.Step("CreateGridAndConvergeLoadBalancing", False)
+        self.plot_solution = peano4.api.solversteps.Step("PlotSolution", False)
+        self.checkpoint_solution = peano4.api.solversteps.Step("CheckpointSolution", False)
+        self.perform_time_step = peano4.api.solversteps.Step("TimeStep", False)
 
 
     def set_load_balancing(self, load_balancer_name, load_balancer_arguments=""):
@@ -208,14 +208,14 @@ class Project(object):
     LibraryAsserts = "_asserts"
     LibraryStats = "_stats"
 
-    def set_Peano4_installation(self, src_path, mode=peano4.output.CompileMode.Release):
+    def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.RELEASE):
         """
         src_path: string
           Path (relative or absolute) to the src directory of Peano. This path
           should hold both the headers (in subdirectories) and all the static
           libraries.
 
-        mode: peano4.output.CompileMode
+        mode: peano4.api.output.CompileMode
         """
         self._Peano_src_directory = src_path
         self._build_mode = mode
@@ -561,7 +561,7 @@ thus appreciate any citation of the original release paper
             os.path.realpath(__file__).replace(".pyc", "").replace(".py", "")
         )
         generated_solver_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 templatefile_prefix + "SolverRepository.template.h",
                 templatefile_prefix + "SolverRepository.template.cpp",
                 "SolverRepository",
@@ -601,7 +601,7 @@ thus appreciate any citation of the original release paper
         zero here. This ensures that the particle has no real volume and
         thus is always sieved through to the finest grid level.
 
-        @see peano4.toolbox.particles.Particle
+        @see peano4.api.toolbox.particles.Particle
 
 
         ## Projection of data onto particles and database dumping
@@ -648,7 +648,7 @@ thus appreciate any citation of the original release paper
         the data, as this is a tuple of integers, and Peano's VTK plotter
         supports only double vectors.
 
-        @see peano4.toolbox.particles.PlotParticlesInVTKFormat.add_attribute_to_plot()
+        @see peano4.api.toolbox.particles.PlotParticlesInVTKFormat.add_attribute_to_plot()
 
 
         ## Action set order
@@ -659,7 +659,7 @@ thus appreciate any citation of the original release paper
 
         - UpdateParallelState is added to each and every time step and plotting
           sweep. As we also add
-        - peano4.toolbox.particles.api.UpdateParticleGridAssociation_LiftDrop to each and every time step,
+        - peano4.api.toolbox.particles.api.UpdateParticleGridAssociation_LiftDrop to each and every time step,
           particles can move at any point. We always resort them immediately.
 
         Both action sets are assigned the standard priority of sort_descend_invocation_order_within_action_sets.
@@ -692,10 +692,10 @@ thus appreciate any citation of the original release paper
 
         Returns the particle set that you can use to modify further
         """
-        particle = peano4.toolbox.particles.Particle(name)
+        particle = peano4.api.toolbox.particles.Particle(name)
 
         if attribute_count > 0:
-            particle_attr = peano4.dastgen2.Peano4DoubleArray(
+            particle_attr = peano4.api.dastgen2.Peano4DoubleArray(
                 "data", str(attribute_count)
             )
             particle.data.add_attribute(particle_attr)
@@ -704,10 +704,10 @@ thus appreciate any citation of the original release paper
             dastgen2.attributes.Enumeration("MoveState", ["NotMovedYet", "Moved"])
         )
 
-        particle_number = peano4.dastgen2.Peano4IntegerArray("number", "2")
+        particle_number = peano4.api.dastgen2.Peano4IntegerArray("number", "2")
         particle.data.add_attribute(particle_number)
 
-        particles = peano4.toolbox.particles.ParticleSet(particle)
+        particles = peano4.api.toolbox.particles.ParticleSet(particle)
 
         self._project.datamodel.add_global_object(particle)
         self._project.datamodel.add_vertex(particles)
@@ -724,17 +724,17 @@ thus appreciate any citation of the original release paper
         # Initialisation
         #
         self.init_grid.add_action_set(
-            peano4.toolbox.particles.api.UpdateParticleGridAssociation_LiftDrop(particles)
+            peano4.api.toolbox.particles.api.UpdateParticleGridAssociation_LiftDrop(particles)
         )
 
         update_particle_association_action_set = (
-            peano4.toolbox.particles.api.UpdateParticleGridAssociation_LiftDrop(particles)
+            peano4.api.toolbox.particles.api.UpdateParticleGridAssociation_LiftDrop(particles)
         )
         update_particle_association_action_set.descend_invocation_order = sort_descend_invocation_order_within_action_sets
         update_particle_association_action_set.parallel = True
 
         update_particle_parallel_state_action_set = (
-            peano4.toolbox.particles.api.UpdateParallelState(particles)
+            peano4.api.toolbox.particles.api.UpdateParallelState(particles)
         )
         update_particle_parallel_state_action_set.descend_invocation_order = (
             sort_descend_invocation_order_within_action_sets
@@ -755,7 +755,7 @@ thus appreciate any citation of the original release paper
         # particle
         #
         if plot:
-            particle_plotter = peano4.toolbox.particles.PlotParticlesInVTKFormat(
+            particle_plotter = peano4.api.toolbox.particles.PlotParticlesInVTKFormat(
                 filename=name,
                 particle_set=particles,
                 time_stamp_evaluation="repositories::getMinTimeStamp()",
@@ -944,7 +944,7 @@ thus appreciate any citation of the original release paper
         Peano project. That is, this routine merely initialises the new step,
         but it does not yet add it to the sweeps known by Peano.
 
-        @param step: peano4.solversteps.Step
+        @param step: peano4.api.solversteps.Step
 
         """
         for solver in self._solvers:

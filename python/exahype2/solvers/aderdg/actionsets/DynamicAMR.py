@@ -3,7 +3,7 @@
 from .AbstractADERDGActionSet import AbstractADERDGActionSet
 
 import jinja2
-import peano4.solversteps
+import peano4.api.solversteps
 
 
 class DynamicAMR(AbstractADERDGActionSet):
@@ -129,22 +129,22 @@ class DynamicAMR(AbstractADERDGActionSet):
         self._solver._init_dictionary_with_default_parameters(d)
         self._solver.add_entries_to_text_replacement_dictionary(d)
 
-        if operation_name == peano4.solversteps.ActionSet.OPERATION_CREATE_HANGING_FACE:
+        if operation_name == peano4.api.solversteps.ActionSet.OPERATION_CREATE_HANGING_FACE:
             d["INTERPOLATE_GUARD"] = self._interpolate_guard
             result = jinja2.Template(self._Template_CreateHangingFace).render(**d)
             pass
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_DESTROY_HANGING_FACE
+            == peano4.api.solversteps.ActionSet.OPERATION_DESTROY_HANGING_FACE
         ):
             d["DELETE_GUARD"] = self._delete_guard
             d["RESTRICT_GUARD"] = self._restrict_guard
             result = jinja2.Template(self._Template_DestroyHangingFace).render(**d)
             pass
-        if operation_name==peano4.solversteps.ActionSet.OPERATION_CREATE_CELL:
+        if operation_name==peano4.api.solversteps.ActionSet.OPERATION_CREATE_CELL:
           result  = jinja2.Template(self._Template_CreateCell).render(**d)
           pass
-        if operation_name==peano4.solversteps.ActionSet.OPERATION_DESTROY_CELL:
+        if operation_name==peano4.api.solversteps.ActionSet.OPERATION_DESTROY_CELL:
           result  = jinja2.Template(self._Template_DestroyCell).render(**d)
           pass
         return result

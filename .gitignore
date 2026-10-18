@@ -126,6 +126,22 @@ CMakeCache.txt
 # Built Visual Studio Code Extensions
 *.vsix
 
+# Eclipse / CDT / PyDev / TeXlipse project files
+.project
+.cproject
+.pydevproject
+.texlipse
+.autotools
+.settings/
+.externalToolBuilders/
+
+# Instrumentation preprocessing intermediate files that tracing tools
+# (opari/scorep etc.) drop directly into src/
+src/*.input.cpp
+src/*.input.prep.cpp
+src/*.input.prep.cpp.opari.inc
+src/*.input.prep.opari.cpp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -257,6 +273,10 @@ env.bak/
 venv.bak/
 .formatting_python_env/
 
+# Stray venv created directly at the repo root (bin/lib/include instead of
+# a dedicated venv/ subdirectory)
+/bin/
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -293,6 +313,7 @@ cython_debug/
 
 # Generated documentation
 doxygen-html/
+.doxygen-rebuild.lock
 
 # Submodules
 submodules/
@@ -330,4 +351,10 @@ compile_commands.json
 # Profiling
 scorep*/
 
-/documentation/
+# Do NOT add /documentation/ (or documentation/) here: it holds the
+# hand-written .dox sources and images for the manual, not build output.
+# The generated doxygen HTML output is already covered above by
+# doxygen-html/. If your IDE (e.g. Eclipse/EGit) offers to ignore the
+# documentation/ folder because it looks untracked or "extra", decline it -
+# that almost certainly means new documentation source files or images
+# haven't been git-added yet, not that the folder should be ignored.

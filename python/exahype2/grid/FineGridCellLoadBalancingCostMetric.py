@@ -1,9 +1,9 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import dastgen2
-import peano4.datamodel.DaStGen2
+import peano4.api.datamodel.DaStGen2
 import jinja2
 
 
@@ -100,7 +100,7 @@ class FineGridCellLoadBalancingCostMetric(ActionSet):
        Create a cell label that's then used for the load balancing
          
       """
-      result = peano4.datamodel.DaStGen2( name )
+      result = peano4.api.datamodel.DaStGen2( name )
       
       result.data.add_attribute( dastgen2.attributes.Double("Weight") )
         

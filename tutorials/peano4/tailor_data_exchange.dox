@@ -18,10 +18,9 @@
 
  ## Realisation 
  
- The realisation of this whole communciation tailoring is subject of 
- @ref page_peano_localisation "a discussion of its own".
- It obviously has to be discussed in combination with the logic underlying
- data data storage within the grid.
+ The realisation of this whole communication tailoring has to be discussed
+ in combination with the logic underlying the data storage within the grid,
+ which is subject of @ref tutorials_peano4_mask_out_data_usage "a tutorial of its own".
 
 
 

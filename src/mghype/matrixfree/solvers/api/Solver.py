@@ -2,7 +2,7 @@
  This file is part of the MGHyPE project within Peano 4. For conditions of distribution and 
  use, please see the copyright notice at www.peano-framework.org
 """
-import peano4
+import peano4.api
 import dastgen2
 from abc import abstractmethod
 
@@ -26,9 +26,9 @@ class Solver:
     self.min_h = min_h
     self.max_h = max_h
     
-    self._vertex_data = peano4.datamodel.DaStGen2( name )
-    self._face_data   = peano4.datamodel.DaStGen2( name )
-    self._cell_data   = peano4.datamodel.DaStGen2( name )
+    self._vertex_data = peano4.api.datamodel.DaStGen2( name )
+    self._face_data   = peano4.api.datamodel.DaStGen2( name )
+    self._cell_data   = peano4.api.datamodel.DaStGen2( name )
 
     self._vertex_data.data.add_attribute( dastgen2.attributes.Enumeration( name="type", variants=["Boundary", "Interior", "Coarse", "Outside", "Undefined"] ) )
     self._face_data.data.add_attribute(   dastgen2.attributes.Enumeration( name="type", variants=["Boundary", "Interior", "Coarse", "Outside", "Undefined"] ) )
@@ -80,19 +80,19 @@ Return the name of the object that will be created for this solver.
     """!
     Add in extra attributes on the fly
     """
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( name, size ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( name, size ) )
 
   def add_to_cell_data(self, name, size):
     """!
     Add in extra attributes on the fly
     """
-    self._cell_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( name, size ) )
+    self._cell_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( name, size ) )
 
   def add_to_face_data(self, name, size):
     """!
     Add in extra attributes on the fly
     """
-    self._face_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( name, size ) )
+    self._face_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( name, size ) )
 
   @property
   def name(self):

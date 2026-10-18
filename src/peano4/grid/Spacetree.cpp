@@ -39,7 +39,6 @@ peano4::grid::Spacetree::Spacetree(
     _root.setAccessNumber(i, 0);
   }
 
-  _statistics.setStationarySweeps(0);
   clear(_statistics, _id == 0);
 
   logDebug("Spacetree(...)", "create spacetree with " << offset << "x" << width << " and periodic BCs=" << _periodicBC);
@@ -71,7 +70,6 @@ peano4::grid::Spacetree::Spacetree(
     _root.setAccessNumber(i, 0);
   }
 
-  _statistics.setStationarySweeps(-NumberOfStationarySweepsToWaitAtLeastTillJoin - 2);
   clear(_statistics, _id == 0);
 
   logInfo("Spacetree(...)", "created spacetree " << _id << " with master tree " << masterId);
@@ -144,22 +142,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
   if (_spacetreeState == SpacetreeState::EmptyRun or _spacetreeState == SpacetreeState::NewFromSplit or _spacetreeState == SpacetreeState::Joining) {
     _gridControlEvents.clear();
   } else {
-    _gridControlEvents = merge(observer.getGridControlEvents());
-
-    const int MagicUpperLimitToWhichIDumpEvents = 4;
-#if PeanoDebug > 0
-    if (_gridControlEvents.empty()) {
-      logInfo("traverse(...)", "got no grid refinement events");
-    } else
-#endif
-      if (not _gridControlEvents.empty() and _gridControlEvents.size() <= MagicUpperLimitToWhichIDumpEvents) {
-      std::ostringstream msg;
-      for (auto& p : _gridControlEvents)
-        msg << p.toString();
-      logInfo("traverse(...)", "got " << _gridControlEvents.size() << " grid control events: " << msg.str());
-    } else if (not _gridControlEvents.empty()) {
-      logInfo("traverse(...)", "got " << _gridControlEvents.size() << " grid control events");
-    }
+    _gridControlEvents = merge(observer.createGridControlEventsForNextTraversal());
 
     if (not _gridControlEvents.empty()) {
       tarch::logging::Statistics::getInstance().log(
@@ -183,6 +166,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledF
       false
     );
     vertices[kScalar].setHasBeenParentOfSubtreeVertexInPreviousTreeSweep(true);
+    if (isFirstTraversal) {
+      _statistics.setNumberOfRefinementTriggeredVertices( _statistics.getNumberOfRefinementTriggeredVertices()+1 );
+    }
     logDebug("traverse(TraversalObserver)", "create " << vertices[kScalar].toString() << " for tree " << _id);
   enddforx
 
@@ -394,7 +380,7 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
       if (isVertexAdjacentToLocalSpacetree(vertex, true, true)) {
         logDebug("updateVertexAfterLoad()", "switch vertex to refining on tree " << _id << ": " << vertex.toString());
         vertex.setState(GridVertex::State::Refining);
-        _statistics.setStationarySweeps(0);
+        _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
       } else {
         vertex.setState(GridVertex::State::Unrefined);
         // Could be set by number of adjacent cells, e.g.
@@ -411,14 +397,13 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
             << " as it is father of further refined vertices. Unroll flag"
         );
         vertex.setState(GridVertex::State::Refined);
-        _statistics.setCoarseningHasBeenVetoed(true);
-        _statistics.setStationarySweeps(0);
+        _statistics.setEraseCommandHasBeenVetoed(true);
       } else {
         logDebug(
           "updateVertexAfterLoad(...)", "erase vertex " << vertex.toString() << " outside of domain on tree " << _id
         );
         vertex.setState(GridVertex::State::Erasing);
-        _statistics.setStationarySweeps(0);
+        _statistics.setNumberOfErasingVertices( _statistics.getNumberOfErasingVertices()+1 );
       }
     }
 
@@ -514,11 +499,13 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
 
     if (vertex.getState() == GridVertex::State::RefinementTriggered) {
       restrictIsAntecessorOfRefinedVertex = true;
+      _statistics.setNumberOfRefinementTriggeredVertices( _statistics.getNumberOfRefinementTriggeredVertices()+1 );
     } else if (vertex.getState() == GridVertex::State::Refining) {
       vertex.setState(GridVertex::State::Refined);
       restrictIsAntecessorOfRefinedVertex = true;
     } else if (vertex.getState() == GridVertex::State::EraseTriggered) {
       restrictIsAntecessorOfRefinedVertex = true;
+      _statistics.setNumberOfEraseTriggeredVertices( _statistics.getNumberOfEraseTriggeredVertices()+1 );
     } else if (vertex.getState() == GridVertex::State::Erasing) {
       vertex.setState(GridVertex::State::Unrefined);
     }
@@ -1908,15 +1895,16 @@ bool peano4::grid::Spacetree::maySplit() const {
 }
 
 bool peano4::grid::Spacetree::mayJoinWithWorker() const {
-  return _spacetreeState == SpacetreeState::Running and _splitTriggered.empty() and _joining.empty()
-         and _splitting.empty() and _joinTriggered.empty();
+  return _spacetreeState == SpacetreeState::Running
+     and _splitTriggered.empty() and _joining.empty()
+     and _splitting.empty() and _joinTriggered.empty();
 }
 
 bool peano4::grid::Spacetree::mayJoinWithMaster() const {
   return _spacetreeState == SpacetreeState::Running and _masterId >= 0
-         and _statistics.getStationarySweeps() > NumberOfStationarySweepsToWaitAtLeastTillJoin
-         and _splitTriggered.empty() and _splitting.empty() and _joinTriggered.empty() and _joining.empty()
-         and _statistics.getNumberOfLocalRefinedCells() == 0;
+     and isGridStationary(_statistics)
+     and _splitTriggered.empty() and _splitting.empty() and _joinTriggered.empty() and _joining.empty()
+     and _statistics.getNumberOfLocalRefinedCells() == 0;
 }
 
 void peano4::grid::Spacetree::joinWithMaster() {

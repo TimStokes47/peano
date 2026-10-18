@@ -5,7 +5,7 @@ b = A_DG * u_{random} and u = u_{random} is the initial guess.
 
 import os, sys
 import argparse
-import peano4
+import peano4.api
 import mghype
 import numpy as np
 from time import sleep
@@ -117,13 +117,13 @@ project.add_solver(solver)
 # Configure build
 #
 if args.mode=="release":
-  build_mode = peano4.output.CompileMode.Release
+  build_mode = peano4.api.output.CompileMode.RELEASE
 if args.mode=="stats":
-  build_mode = peano4.output.CompileMode.Stats
+  build_mode = peano4.api.output.CompileMode.STATS
 if args.mode=="asserts":
-  build_mode = peano4.output.CompileMode.Asserts
+  build_mode = peano4.api.output.CompileMode.ASSERTS
 if args.mode=="trace":
-  build_mode = peano4.output.CompileMode.Trace
+  build_mode = peano4.api.output.CompileMode.TRACE
 
 
 cube_size = 1.0

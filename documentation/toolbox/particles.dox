@@ -11,7 +11,7 @@ Peano's particle toolbox provides features to add tracers to your code, but
 also to add particles which swim around. We have some features to dump
 Lagrangian data into data bases and some generic input file readers. However,
 the toolbox has no domain-specific content, i.e. Physics. It is merely the
-base of tracers in ExaHyPE and SPH particles in Swift 2 for example.
+base of tracers in ExaHyPE and SPH particles in ExaParty for example.
 
 Particles in Peano are typically tied to the mesh through the
 Particles-in-Dual-Tree paradigm which we introduce in our paper

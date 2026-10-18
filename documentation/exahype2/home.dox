@@ -19,12 +19,18 @@ ExaHyPE has received funding from the European Union’s Horizon 2020 research
 and innovation programme under grant agreement No 671698 (ExaHyPE).
 
 
-- \subpage page_exahype_faq
-- \subpage page_exahype_solvers
 - \subpage page_exahype2_tutorials
 - Applications and user guides
   - \subpage page_exahype_applications
   - \subpage page_exahype_benchmarks
+- Code architecture, usage and extension
+  - \subpage page_exahype_design_philosophy
+  - \subpage page_exahype_modelling_pde_solver
+  - \subpage page_exahype_numerical_scheme
+  - \subpage page_exahype_main_function
+- Solvers
+  - This is missing
+  - This is missing
 - Numerics tour de force (hands-on explanation of core numerical ingredients)
   - \subpage page_tutorials_exahype2_numerics_finite_volumes
   - \subpage page_tutorials_exahype2_numerics_higher_order_finite_volumes
@@ -53,11 +59,17 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
   - \subpage page_exahype_gpu
   - \subpage page_exahype_runtime_analysis
   - \subpage page_exahype_performance_optimisation
+- Programmer's guide
+  - \subpage page_exahype_programmers_guide_new_solver
+  - \subpage page_exahype_programmers_guide_action_sets
+- How-tos
+  - \subpage page_exahype2_howtos_design-patterns
 - Utilities
   - \subpage exahype2_enumerator
 - Related pages
   - @ref page_peano4_home
   - @ref page_tarch_home
+- \subpage page_exahype_faq
 
 
 

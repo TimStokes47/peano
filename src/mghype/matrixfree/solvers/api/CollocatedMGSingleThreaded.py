@@ -1,7 +1,7 @@
 import dastgen2.attributes
-import peano4
+import peano4.api
 import jinja2
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 import os
 
@@ -16,7 +16,7 @@ from .actionsets.PlotVertexDataInPeanoBlockFormat          import PlotVertexData
 from .actionsets.CollocatedMGSingleThreaded.UpdateSolution         import UpdateSolution
 
 from abc import abstractmethod
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 class CollocatedMGSingleThreaded(CollocatedMG):
   """!

@@ -55,3 +55,24 @@ html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ 
 .title_screenshot .caption {
     display: none;
 }
+
+/*
+ * Visual dividers in the left-hand sidebar tree, bracketing the
+ * "Extensions" / "The C++ core" groups of documentation/home.dox's
+ * top-level table of content: a bar before ExaHyPE 2 (the first
+ * Extensions page) and one after Technical Architecture/tarch (the last
+ * C++ core page). The tree itself is regenerated from scratch on every
+ * Doxygen run with no native separator node, so this is done purely via
+ * CSS, keyed off the two pages' (stable) generated file names.
+ */
+#nav-tree-contents li:has(> div.item > span.label > a[href*="page_exahype2_home.html"]) {
+    border-top: 1px solid var(--separator-color);
+    margin-top: var(--spacing-small);
+    padding-top: var(--spacing-small);
+}
+
+#nav-tree-contents li:has(> div.item > span.label > a[href*="page_tarch_home.html"]) {
+    border-bottom: 1px solid var(--separator-color);
+    margin-bottom: var(--spacing-small);
+    padding-bottom: var(--spacing-small);
+}

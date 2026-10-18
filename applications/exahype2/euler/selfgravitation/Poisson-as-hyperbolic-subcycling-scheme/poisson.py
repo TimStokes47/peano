@@ -1,15 +1,15 @@
 import os
 import sys
 import argparse
-import peano4
+import peano4.api
 import exahype2
 
 modes = {
-  "release": peano4.output.CompileMode.Release,
-  "trace":   peano4.output.CompileMode.Trace,
-  "assert":  peano4.output.CompileMode.Asserts,
-  "stats":   peano4.output.CompileMode.Stats,
-  "debug":   peano4.output.CompileMode.Debug,
+  "release": peano4.api.output.CompileMode.RELEASE,
+  "trace":   peano4.api.output.CompileMode.TRACE,
+  "assert":  peano4.api.output.CompileMode.ASSERTS,
+  "stats":   peano4.api.output.CompileMode.STATS,
+  "debug":   peano4.api.output.CompileMode.DEBUG,
 }
 
 parser = argparse.ArgumentParser(description='ExaHyPE 2 - Euler benchmarking script')

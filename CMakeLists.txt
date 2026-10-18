@@ -121,7 +121,7 @@ option(ENABLE_LOADBALANCING "Enable the loadbalancing toolbox" OFF)
 option(ENABLE_CURVI "Enable the Curvi toolbox" OFF)
 option(ENABLE_EXAHYPE "Enable ExaHyPE 2" OFF)
 option(ENABLE_MGHYPE "Enable MGHyPE" OFF)
-option(ENABLE_SWIFT "Enable Swift 2" OFF)
+option(ENABLE_EXAPARTY "Enable ExaParty" OFF)
 
 list(APPEND AVAILABLE_TOOLCHAINS
   "no"
@@ -365,8 +365,8 @@ if(ENABLE_EXAHYPE)
   target_compile_definitions(PeanoOptions INTERFACE UseExaHyPE)
 endif()
 
-if(ENABLE_SWIFT)
-  target_compile_definitions(PeanoOptions INTERFACE UseSWIFT)
+if(ENABLE_EXAPARTY)
+  target_compile_definitions(PeanoOptions INTERFACE UseExaParty)
 endif()
 
 target_include_directories(PeanoOptions INTERFACE

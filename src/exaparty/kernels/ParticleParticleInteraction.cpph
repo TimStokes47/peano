@@ -1,0 +1,25 @@
+
+template <typename ParticleA, typename ParticleB>
+bool exaparty::kernels::forceKernelDistanceCheck(
+  ParticleA& __restrict__ localParticle, const ParticleB& __restrict__ activeParticle
+) {
+  /*
+   * Unlike the density distance check, here the interaction happens if:
+   *   - the active particle is within the search radius of the local particle OR
+   *   - the local particle is within the search radius of the active particle!
+   */
+
+  tarch::la::Vector<Dimensions, double> dx = localParticle.getX() - activeParticle.getX();
+  const double                          rSquared  = tarch::la::norm2Squared(dx);
+
+  const double h_a = localParticle.getSmoothingLength();
+  const double iactR_aSquared = (kernel_gamma * h_a) * (kernel_gamma * h_a);
+
+  const double h_b = activeParticle.getSmoothingLength();
+  const double iactR_bSquared = (kernel_gamma * h_b) * (kernel_gamma * h_b);
+
+  const bool result = tarch::la::greater(rSquared, 0)
+                        & (tarch::la::smaller(rSquared, iactR_aSquared) | tarch::la::smaller(rSquared, iactR_bSquared));
+
+  return result;
+}

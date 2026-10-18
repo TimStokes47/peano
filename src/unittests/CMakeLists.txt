@@ -32,8 +32,8 @@ foreach(mode IN LISTS PEANO_BUILD_TYPES)
     if(ENABLE_MGHYPE)
       target_link_libraries(UnitTests${dimension}d_${mode_lower} PRIVATE Multigrid${dimension}d_${mode_lower})
     endif()
-    if(ENABLE_SWIFT)
-      target_link_libraries(UnitTests${dimension}d_${mode_lower} PRIVATE SWIFT2Core${dimension}d_${mode_lower})
+    if(ENABLE_EXAPARTY)
+      target_link_libraries(UnitTests${dimension}d_${mode_lower} PRIVATE ExaPartyCore${dimension}d_${mode_lower})
     endif()
 
     install(TARGETS UnitTests${dimension}d_${mode_lower}

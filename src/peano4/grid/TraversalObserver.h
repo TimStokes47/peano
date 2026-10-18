@@ -110,7 +110,7 @@ if (peano4::parallel::Node::isGlobalMaster(spacetreeId)) {
  * adopts. A simple snippet just creating a refined area in a square is
  *
  * <pre>
-std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::getGridControlEvents() {
+std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::createGridControlEventsForNextTraversal() {
 std::vector< peano4::grid::GridControlEvent >  controlEvents;
 peano4::grid::GridControlEvent newEvent;
 newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
@@ -124,8 +124,11 @@ return controlEvents;
    *
    * The entries are logically ordered. The later the entry, the more
    * important it is. So entry 2 overrules entry 1.
+   *
+   *
+   * Please consult the documentation of @ref page_peano_action_sets "grid control events" for details on what these events are and how they are used.
    */
-  virtual std::vector<GridControlEvent> getGridControlEvents() const = 0;
+  virtual std::vector<GridControlEvent> createGridControlEventsForNextTraversal() const = 0;
 
   /**
    * Begin the traversal

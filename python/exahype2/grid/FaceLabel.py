@@ -1,9 +1,9 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import dastgen2
-import peano4.datamodel.DaStGen2
+import peano4.api.datamodel.DaStGen2
 import jinja2
 
 
@@ -192,16 +192,16 @@ def create_face_label(solver_name):
      Name of the solver
      
   """
-  result = peano4.datamodel.DaStGen2( UpdateFaceLabel.get_attribute_name( solver_name ) )
+  result = peano4.api.datamodel.DaStGen2( UpdateFaceLabel.get_attribute_name( solver_name ) )
 
   result.data.add_attribute( dastgen2.attributes.Boolean("Boundary") )
   result.data.add_attribute( dastgen2.attributes.Boolean("IsHanging") )
   result.data.add_attribute( dastgen2.attributes.Boolean("AboveHanging") )
   result.data.add_attribute( dastgen2.attributes.Boolean("NewAboveHanging") )
   result.data.add_attribute( dastgen2.attributes.BooleanArray("Updated","2",compress=True) )
-  result.data.add_attribute( peano4.dastgen2.Peano4DoubleArray("UpdatedTimeStamp","2") )
-  result.data.add_attribute( peano4.dastgen2.Peano4DoubleArray("NewTimeStamp","2") )
-  result.data.add_attribute( peano4.dastgen2.Peano4DoubleArray("OldTimeStamp","2") )
+  result.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray("UpdatedTimeStamp","2") )
+  result.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray("NewTimeStamp","2") )
+  result.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray("OldTimeStamp","2") )
   
   result.peano4_mpi_and_storage_aspect.merge_implementation = """
   switch (context) {

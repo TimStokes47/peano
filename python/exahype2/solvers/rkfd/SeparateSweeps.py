@@ -3,12 +3,12 @@
 from .CellCenteredFiniteDifferences import CellCenteredFiniteDifferences
 from exahype2.solvers.PDETerms import PDETerms
 
-import peano4
+import peano4.api
 import exahype2
 
 import jinja2
 
-from peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import (
+from toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import (
     ReconstructPatchAndApplyFunctor,
 )
 
@@ -560,11 +560,11 @@ class SeparateSweeps(CellCenteredFiniteDifferences):
 
         if (
             self._reconstructed_array_memory_location
-            == peano4.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
+            == toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
             or self._reconstructed_array_memory_location
-            == peano4.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapWithoutDelete
+            == toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapWithoutDelete
             or self._reconstructed_array_memory_location
-            == peano4.toolbox.blockstructured.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete
+            == toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete
         ):
             raise Exception(
                 "memory mode without appropriate delete chosen, i.e. this will lead to a memory leak"

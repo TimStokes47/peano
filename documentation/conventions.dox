@@ -4,10 +4,30 @@
 
  \tableofcontents
  
- The page below enlists some recommendations on how to use particular IDEs, and it 
+ The page below enlists some recommendations on how to use particular IDEs, and it
  also provides coding and formatting guidelines. The
- @ref page_documentation_home "documentation guidlines however are hosted on a separate page". 
- 
+ @ref page_documentation_home "documentation guidlines however are hosted on a separate page".
+
+
+# Repository organisation
+
+Peano's core is a collection of static libraries.
+A Peano application consists of C++ glue code which combines all of these
+libraries.  This glue code is generated through the Python API.
+
+- **documentation** Hosts the sources of the document that you hold
+  in your hands.
+  large-scale Peano applications.
+- **src** Holds the C++ Peano sources of the Peano core and all the
+  toolboxes.
+- **src/.../api** Holds the Python API scripts of the underlying C++ code part.
+- **tests** Collection of small test cases that can be automised.
+- **benchmarks** Collection of benchmark scripts.
+- **tutorials** Holds all the tutorials.
+- **applications** Proper, real-world applications, i.e. bigger pieces of
+  code built on top of Peano or one of its extensions. Often, these features
+  are used in return by benchmarks and tutorials.
+
 
 Configuring Peano in Eclipse
 ============================
@@ -70,6 +90,42 @@ Moreover, class names should be in camel case:
 class MyClassForStoringData:
   # code goes here
 ~~~~~~~~~~~~~~~~~~~~~~~
+
+Python routines are documented with Doxygen docstrings, i.e. docstrings
+whose opening triple quotes are followed by an exclamation mark (see the
+example below). Every parameter description starts with a `@param`
+statement, followed by the parameter's name, a colon and its type. The
+description itself follows on the subsequent, indented lines:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+def translate(graph, identifier):
+  """!
+
+  Translate a task graph into a sequence of mesh traversals
+
+  @param graph: peano4.api.taskgraph.Graph
+    The task graph to compile.
+
+  @param identifier: str
+    Prefix of every generated observer's name.
+
+  """
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Please do not write `graph: peano4.api.taskgraph.Graph` without the
+`@param`: Doxygen then does not recognise the parameter description.
+
+Cross-references to other parts of the code are written with `@ref`, never
+with `@see`, and use the fully qualified name of the target, so Doxygen can
+resolve them into links:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+  Such tasks are never fused
+  (@ref peano4.api.taskgraph.compiler.FuseSteps._have_conflicting_data()).
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Short names such as `_have_conflicting_data()` or `translate()` typically
+can not be resolved and yield a Doxygen warning.
 
 More info can be found in the FAQs below.
 

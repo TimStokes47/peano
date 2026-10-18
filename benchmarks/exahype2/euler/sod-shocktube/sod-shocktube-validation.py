@@ -1,5 +1,5 @@
 import os, sys
-import peano4
+import peano4.api
 import exahype2
 
 project = exahype2.Project(namespace=["benchmarks", "exahype2", "euler", "sod_shocktube"], project_name="sod-shocktube-validation", directory=".", executable="sod-shocktube-validation")
@@ -24,7 +24,7 @@ thesolver = exahype2.solvers.fv.rusanov.GlobalAdaptiveTimeStep(
 
 project.add_solver(thesolver)
 
-build_mode = peano4.output.CompileMode.Release
+build_mode = peano4.api.output.CompileMode.RELEASE
 project.set_global_simulation_parameters(
   dimensions = dimensions,
   offset = [0.0,0.0],

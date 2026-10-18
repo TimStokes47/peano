@@ -24,7 +24,7 @@ GCC_SharedOMP_MPI:
                             -DENABLE_EXAHYPE=ON \
                             -DENABLE_LOADBALANCING=ON \
                             -DENABLE_BLOCKSTRUCTURED=ON \
-                            -DENABLE_SWIFT=ON \
+                            -DENABLE_EXAPARTY=ON \
                             -DENABLE_PARTICLES=ON \
                             -DENABLE_MGHYPE=ON \
                             -DENABLE_FINITEELEMENTS=ON \
@@ -46,7 +46,7 @@ Intel_SharedOMP_MPI:
                             -DENABLE_EXAHYPE=ON \
                             -DENABLE_LOADBALANCING=ON \
                             -DENABLE_BLOCKSTRUCTURED=ON \
-                            -DENABLE_SWIFT=ON \
+                            -DENABLE_EXAPARTY=ON \
                             -DENABLE_PARTICLES=ON \
                             -DENABLE_MGHYPE=ON \
                             -DENABLE_FINITEELEMENTS=ON \
@@ -68,7 +68,7 @@ LLVM_SharedOMP_MPI:
                             -DENABLE_EXAHYPE=ON \
                             -DENABLE_LOADBALANCING=ON \
                             -DENABLE_BLOCKSTRUCTURED=ON \
-                            -DENABLE_SWIFT=ON \
+                            -DENABLE_EXAPARTY=ON \
                             -DENABLE_PARTICLES=ON \
                             -DENABLE_MGHYPE=ON \
                             -DENABLE_FINITEELEMENTS=ON \
@@ -90,7 +90,7 @@ Intel_SharedTBB_MPI:
                             -DENABLE_EXAHYPE=ON \
                             -DENABLE_LOADBALANCING=ON \
                             -DENABLE_BLOCKSTRUCTURED=ON \
-                            -DENABLE_SWIFT=ON \
+                            -DENABLE_EXAPARTY=ON \
                             -DENABLE_PARTICLES=ON \
                             -DENABLE_MGHYPE=ON \
                             -DENABLE_FINITEELEMENTS=ON \
@@ -112,7 +112,7 @@ NVIDIA:
                             -DENABLE_EXAHYPE=ON \
                             -DENABLE_LOADBALANCING=ON \
                             -DENABLE_BLOCKSTRUCTURED=ON \
-                            -DENABLE_SWIFT=ON \
+                            -DENABLE_EXAPARTY=ON \
                             -DENABLE_MGHYPE=ON \
                             -DENABLE_FINITEELEMENTS=ON \
                             -DENABLE_PARTICLES=ON"
@@ -132,7 +132,7 @@ AMD:
                             -DENABLE_EXAHYPE=ON \
                             -DENABLE_LOADBALANCING=ON \
                             -DENABLE_BLOCKSTRUCTURED=ON \
-                            -DENABLE_SWIFT=ON \
+                            -DENABLE_EXAPARTY=ON \
                             -DENABLE_MGHYPE=ON \
                             -DENABLE_FINITEELEMENTS=ON \
                             -DENABLE_PARTICLES=ON"

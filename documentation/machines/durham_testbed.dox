@@ -144,7 +144,7 @@ produce the bytecode that you wanna have, by adding the compile flags
 -O3 -fomit-frame-pointer -fstrict-aliasing -ffast-math -funroll-loops -axCOMMON-AVX512 -march=x86-64-v4 -mavx512vbmi 
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Swift also requires you to pass
+ExaParty also requires you to pass
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 -qopt-zmm-usage=high

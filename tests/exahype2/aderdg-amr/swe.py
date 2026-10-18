@@ -1,6 +1,6 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import exahype2
 
 order = 3
@@ -48,7 +48,7 @@ project.set_load_balancing(
     "toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates",
     "new ::exahype2::LoadBalancingConfiguration(0.98)",
 )
-project.set_Peano4_installation("../../../", peano4.output.CompileMode.Release)
+project.set_Peano4_installation("../../../", peano4.api.output.CompileMode.RELEASE)
 project = project.generate_Peano4_project("False")
 #project.set_fenv_handler("FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW")
 project.output.makefile.add_cpp_file("SWE.cpp")

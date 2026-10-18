@@ -306,8 +306,8 @@ in the CMake configuration.
                       
     Simply unset it to fix the issue.
 
-- The JIT compiler crashes due to the FPGA emulation device on our cluster (NCC). If this happens on
-  your machine, try putting SYCL_DEVICE_FILTER=gpu before the command to run the benchmark.
+  - The JIT compiler crashes due to the FPGA emulation device on our cluster (NCC). If this happens on
+    your machine, try putting SYCL_DEVICE_FILTER=gpu before the command to run the benchmark.
 
 
 # Python
@@ -400,7 +400,15 @@ in the CMake configuration.
 
   and then you should have it within your notebook.
 
+-- ***paraview gives me a glibc error*** similar to 
 
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Fatal glibc error: malloc.c:2599 (sysmalloc): assertion failed: (old_top == initial_top (av) && old_size == 0) || ((unsigned long) (old_size) >= MINSIZE && prev_inuse (old_top) && ((unsigned long) old_end & (pagesize - 1)) == 0)
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   According to https://gitlab.kitware.com/paraview/paraview/-/work_items/22350, this 
+   happens on Ubuntu if your libc is version 2.35 or higher. The only fix that I have
+   found so far is downloading Paraview as source and to recompile it locally.
 
 # Debugging
 

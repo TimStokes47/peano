@@ -665,7 +665,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     /**
      * Invoke traverse on all spacetrees in parallel.
      *
-     * <h2> Sequence </h2>
+     * ## Sequence and barriers
      *
      * It is important that I don't answer to spacetree request messages while I am
      * running through the spacetree set. Some of these request messages add further

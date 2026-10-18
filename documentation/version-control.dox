@@ -64,7 +64,7 @@ branches or top-level branches do not have a name prefix.
   the build systems.
 - ***infrastructure-ci*** and similar branches deal with continuous
   integration.
-- ***particles*** hosts our SPH work, i.e. Swift 2.
+- ***particles*** hosts our SPH work, i.e. ExaParty.
 - ***exahype*** hosts our work around ExaHyPE 2.
 - ***multigrid*** hosts our multigrid work funded under the ExCALIBUR programme.
 

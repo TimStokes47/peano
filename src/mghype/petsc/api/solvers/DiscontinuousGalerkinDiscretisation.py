@@ -1,33 +1,39 @@
-# This file is part of the Peano multigrid project. For conditions of 
+# This file is part of the Peano multigrid project. For conditions of
 # distribution and use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import jinja2
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 
 import os
 
-from .Solver                                              import Solver
-from multigrid.petsc.api.actionsets.EnumerateDoFs             import EnumerateDoFs
-from multigrid.petsc.api.actionsets.InitCellDoFs              import InitCellDoFs
-from multigrid.petsc.api.actionsets.ProjectPETScSolutionBackOntoMesh    import ProjectPETScSolutionOnCellsBackOntoMesh
-from multigrid.petsc.api.actionsets.PlotDGDataInPeanoBlockFormat        import PlotDGDataInPeanoBlockFormat
-from multigrid.petsc.api.actionsets.PlotExactSolution         import PlotExactSolution
-from multigrid.petsc.api.actionsets.ImposeDirichletBoundaryConditionsWithInteriorPenaltyMethod   import ImposeDirichletBoundaryConditionsWithInteriorPenaltyMethod 
+from .Solver import Solver
+from multigrid.petsc.api.actionsets.EnumerateDoFs import EnumerateDoFs
+from multigrid.petsc.api.actionsets.InitCellDoFs import InitCellDoFs
+from multigrid.petsc.api.actionsets.ProjectPETScSolutionBackOntoMesh import (
+    ProjectPETScSolutionOnCellsBackOntoMesh,
+)
+from multigrid.petsc.api.actionsets.PlotDGDataInPeanoBlockFormat import (
+    PlotDGDataInPeanoBlockFormat,
+)
+from multigrid.petsc.api.actionsets.PlotExactSolution import PlotExactSolution
+from multigrid.petsc.api.actionsets.ImposeDirichletBoundaryConditionsWithInteriorPenaltyMethod import (
+    ImposeDirichletBoundaryConditionsWithInteriorPenaltyMethod,
+)
 
 from abc import abstractmethod
 
-from peano4.solversteps.ActionSet import ActionSet
-
+from peano4.api.solversteps.ActionSet import ActionSet
 
 
 class AssemblePetscMatrix(ActionSet):
-  """!
+    """!
 
-  Trigger assembly of PETSc matrix and also assemble rhs vector
+    Trigger assembly of PETSc matrix and also assemble rhs vector
 
-  """
-  TemplateTouchCellFirstTime = """
+    """
+
+    TemplateTouchCellFirstTime = """
   if (fineGridCell{{SOLVER_NAME}}PETScData.getType() == celldata::{{SOLVER_NAME}}PETScData::Type::Interior) {
     std::pair<int,int> localCellIndex = std::make_pair(_spacetreeId, fineGridCell{{SOLVER_NAME}}PETScData.getUnknownBaseNumber());
     int globalCellIndex = repositories::{{SOLVER_INSTANCE}}.getLocalToGlobalMap().getGlobalIndex(localCellIndex, ::petsc::LocalToGlobalMap::Type::Cell);
@@ -139,7 +145,7 @@ class AssemblePetscMatrix(ActionSet):
   }
   """
 
-  TemplateTouchFaceFirstTime="""
+    TemplateTouchFaceFirstTime = """
   auto RiemannSolverMatrix = repositories::{{SOLVER_INSTANCE}}.getRiemannSolver(marker.x(),marker.h());
   int dofsPerFace          = repositories::{{SOLVER_INSTANCE}}.NodesPerFace*repositories::{{SOLVER_INSTANCE}}.FaceUnknowns;
   if ( fineGridFace{{SOLVER_NAME}}PETScData.getType() == facedata::{{SOLVER_NAME}}PETScData::Type::Interior ) {
@@ -183,109 +189,107 @@ class AssemblePetscMatrix(ActionSet):
     // add some more identities!
   }
   """
-  
-  def __init__(self,
-               solver,
-               ):
-    """!
-    
-    Yet to be written
-        
-    """
-    
-    super( AssemblePetscMatrix, self ).__init__()
-    self.d = {}
-    self.d["SOLVER_INSTANCE"]        = solver.instance_name()
-    self.d["SOLVER_NAME"]            = solver.typename()
 
+    def __init__(
+        self,
+        solver,
+    ):
+        """!
 
-  def get_body_of_operation(self,operation_name):
-    """!
+        Yet to be written
 
-Provide C++ code snippet for peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME  
-Provide C++ code snippet for peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME  
-  
-Only touchVertexFirstTime is an event where this action set actually
-does something: It inserts the template TemplateTouchVertexFirstTime and 
-replaces it with entries from the dictionary. The latter is befilled
-in init().
+        """
 
-We actually do something during touchVertexFirstTime and touchCellFirstTime. We insert the 
-appropriate template into each.
-    
-    """
-    result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
-      result = jinja2.Template(self.TemplateTouchCellFirstTime).render(**self.d)
-      pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
-      result = jinja2.Template(self.TemplateTouchFaceFirstTime).render(**self.d)
-      pass 
-    return result
+        super(AssemblePetscMatrix, self).__init__()
+        self.d = {}
+        self.d["SOLVER_INSTANCE"] = solver.instance_name()
+        self.d["SOLVER_NAME"] = solver.typename()
 
+    def get_body_of_operation(self, operation_name):
+        """!
 
-  def get_action_set_name(self):
-    """!
-    
-    Configure name of generated C++ action set
-    
-    This action set will end up in the directory observers with a name that
-    reflects how the observer (initialisation) is mapped onto this action 
-    set. The name pattern is ObserverName2ActionSetIdentifier where this
-    routine co-determines the ActionSetIdentifier. We make is reflect the
-    Python class name.
-     
-    """
-    return __name__.replace(".py", "").replace(".", "_")
+        Provide C++ code snippet for peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME
+        Provide C++ code snippet for peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
 
+        Only touchVertexFirstTime is an event where this action set actually
+        does something: It inserts the template TemplateTouchVertexFirstTime and
+        replaces it with entries from the dictionary. The latter is befilled
+        in init().
 
-  def user_should_modify_template(self):
-    """!
-    
-    The action set that Peano will generate that corresponds to this class
-    should not be modified by users and can safely be overwritten every time
-    we run the Python toolkit.
-    
-    """
-    return False
+        We actually do something during touchVertexFirstTime and touchCellFirstTime. We insert the
+        appropriate template into each.
 
+        """
+        result = ""
+        if (
+            operation_name
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+        ):
+            result = jinja2.Template(self.TemplateTouchCellFirstTime).render(**self.d)
+            pass
+        if (
+            operation_name
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
+        ):
+            result = jinja2.Template(self.TemplateTouchFaceFirstTime).render(**self.d)
+            pass
+        return result
 
-  def get_includes(self):
-    """!
-   
-Consult petsc.Project for details
-    
-"""    
-    return """
+    def get_action_set_name(self):
+        """!
+
+        Configure name of generated C++ action set
+
+        This action set will end up in the directory observers with a name that
+        reflects how the observer (initialisation) is mapped onto this action
+        set. The name pattern is ObserverName2ActionSetIdentifier where this
+        routine co-determines the ActionSetIdentifier. We make is reflect the
+        Python class name.
+
+        """
+        return __name__.replace(".py", "").replace(".", "_")
+
+    def user_should_modify_template(self):
+        """!
+
+        The action set that Peano will generate that corresponds to this class
+        should not be modified by users and can safely be overwritten every time
+        we run the Python toolkit.
+
+        """
+        return False
+
+    def get_includes(self):
+        """!
+
+        Consult petsc.Project for details
+        """
+        return """
 #include "repositories/SolverRepository.h"
 #include "tarch/la/Matrix.h"
 """
 
-  def get_attributes(self):
-    """!
-    
-    
-    """
-    return f"""
+    def get_attributes(self):
+        """!"""
+        return f"""
   int _spacetreeId;    
 """
-      
-  def get_constructor_body(self):
-    """!
-    
-Define body of constructor
 
-@see get_attributes()
-    
-    """
-    return f"""
+    def get_constructor_body(self):
+        """!
+
+        Define body of constructor
+
+        @see get_attributes()
+
+        """
+        return f"""
     _spacetreeId = treeNumber;
 """
 
 
-
 class DiscontinuousGalerkinDiscretisation(Solver):
-  """!
+    r"""!
    
   Discontinuous Galerkin Solver with PETSc
 
@@ -562,307 +566,331 @@ class DiscontinuousGalerkinDiscretisation(Solver):
 
 
   """
-  def __init__(self,
-               name,
-               polynomial_degree,
-               dimensions,
-               cell_unknowns,
-               face_unknowns,
-               min_h,
-               max_h,
-               cell_cell_lhs_matrix,
-               cell_cell_rhs_matrix,
-               cell_cell_lhs_matrix_scaling,
-               cell_cell_rhs_matrix_scaling,
-               cell_to_face_matrix,
-               face_to_cell_matrix,
-               cell_to_face_matrix_scaling,
-               face_to_cell_matrix_scaling,
-               face_face_Riemann_problem_matrix,
-               quadrature_points_in_unit_interval,
-               gaussian_integration_points,
-               gaussian_integration_weights
-               ):
-    """!
-   
- Constructor of DG class
-    
- 
-## Cell to face projection
 
-Consult @ref page_multigrid_terminology "Peano's enumeration for multigrid" page
-for info on the ordering. For 2d with a layout as below
-   
-@image documentation/Doxygen/Multigrid/face-ordering.png
-   
-the matrix is applied to
-   
-@f$
-   P_{cf} 
-   \begin{bmatrix}
-   x_0^+ \\ x_1^+ \\ x_2^- \\ x_3^- 
-   \end{bmatrix}
-   = 
-   x_{c}
-@f$
- 
+    def __init__(
+        self,
+        name,
+        polynomial_degree,
+        dimensions,
+        cell_unknowns,
+        face_unknowns,
+        min_h,
+        max_h,
+        cell_cell_lhs_matrix,
+        cell_cell_rhs_matrix,
+        cell_cell_lhs_matrix_scaling,
+        cell_cell_rhs_matrix_scaling,
+        cell_to_face_matrix,
+        face_to_cell_matrix,
+        cell_to_face_matrix_scaling,
+        face_to_cell_matrix_scaling,
+        face_face_Riemann_problem_matrix,
+        quadrature_points_in_unit_interval,
+        gaussian_integration_points,
+        gaussian_integration_weights,
+    ):
+        r"""!
 
-## Attributes
+         Constructor of DG class
 
 
-@param cell_cell_lhs_matrix: [Float] or []                           
-  Pass in [] if you prefer to assemble the matrix per cell yourself. This
-  is the @f$ \tilde{\mathcal{L}} @f$ part above. The ordering of the 
-  degrees of freedom follows the discussion above. The matrix is from
-  @f$ K(p+1) \times K(p+1) @f$.
-  
-@param cell_cell_rhs_matrix: [Float] or []
-  Pass in [] if you prefer to assemble the matrix per cell yourself. This 
-  matrix arises from @f$ \int f \cdot v \ dx @f$ and is applied to the nodal
-  values of the PDE within the quadrature nodes of a cell. The matrix is 
-  from @f$ K(p+1) \times K(p+1) @f$. 
+        ## Cell to face projection
 
-@param cell_cell_lhs_matrix_scaling: Positive integer
-  The lhs matrix is scaled with @f$ h^x @f$ where the x is defined by this 
-  parameter. If you don't specify an lhs matrix, i.e. you prefer to inject
-  this matrix manually, you can leave this parameter None, as it is not 
-  used.
-  
-@param cell_cell_rhs_matrix_scaling: Positive integer
-  The rhs matrix is scaled with @f$ h^x @f$ where the x is defined by this 
-  parameter. If you don't specify a rhs matrix, i.e. you prefer to inject
-  this matrix manually, you can leave this parameter None, as it is not 
-  used.
+        Consult @ref page_multigrid_terminology "Peano's enumeration for multigrid" page
+        for info on the ordering. For 2d with a layout as below
 
-@param cell_to_face_matrix: [Float]
-  If you study the global equation system above, you recognise that
-  this matrix is applied to the left or right solutions of a cell's
-  faces. 
+        @image documentation/Doxygen/Multigrid/face-ordering.png
 
-@param face_face_Riemann_problem_matrix: [Float] or []
-  Pass in [] if you prefer to assemble the matrix per cell yourself. This 
-  matrix represents the actual Riemann solver. It accepts the left projection
-  @f$ u^- @f$ and @f$ u^+ @f$ and yields a "reconstructed" value at this 
-  point passed into the differential operator. Therefore, this is a band
-  matrix.
+        the matrix is applied to
 
-   
-    """
-    super( DiscontinuousGalerkinDiscretisation, self ).__init__( name,
-                                                                 min_h,
-                                                                 max_h
-                                                                 )
-
-    self.polynomial_degree = polynomial_degree
-    self.dimensions        = dimensions
-    self.cell_unknowns     = cell_unknowns
-    self.face_unknowns     = face_unknowns
-
-    self.cell_cell_lhs_matrix               = cell_cell_lhs_matrix
-    self.cell_cell_rhs_matrix               = cell_cell_rhs_matrix
-    self.cell_to_face_matrix                = cell_to_face_matrix
-    self.face_to_cell_matrix                = face_to_cell_matrix
-    self.face_face_Riemann_problem_matrix   = face_face_Riemann_problem_matrix
-
-    self.cell_cell_lhs_matrix_scaling = cell_cell_lhs_matrix_scaling
-    self.cell_cell_rhs_matrix_scaling = cell_cell_rhs_matrix_scaling
-    self.cell_to_face_matrix_scaling  = cell_to_face_matrix_scaling
-    self.face_to_cell_matrix_scaling  = face_to_cell_matrix_scaling
-    
-    self.quadrature_points_in_unit_interval = quadrature_points_in_unit_interval
-    self.gaussian_integration_points        = gaussian_integration_points
-    self.gaussian_integration_weights       = gaussian_integration_weights
-
-    assert len( quadrature_points_in_unit_interval ) == len( gaussian_integration_points,  "Something has gone wrong. These should all be same length for fixed polynomial degree" )
-    assert len( quadrature_points_in_unit_interval ) == len( gaussian_integration_weights, "Something has gone wrong. These should all be same length for fixed polynomial degree" )
-    
-    self._cell_pde_data   = peano4.datamodel.DaStGen2( name )
-    self._cell_pde_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "value",    str(self.number_of_matrix_entries_per_cell) ) )
-    self._cell_pde_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "rhs",      str(self.number_of_matrix_entries_per_cell) ) )
-    self._cell_pde_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "exactSol", str(self.number_of_matrix_entries_per_cell) ) )
-    
-    pass
+        @f$
+           P_{cf}
+           \begin{bmatrix}
+           x_0^+ \\ x_1^+ \\ x_2^- \\ x_3^-
+           \end{bmatrix}
+           =
+           x_{c}
+        @f$
 
 
-  @property
-  def nodes_per_cell(self):
-    return (self.polynomial_degree + 1) ** self.dimensions
+        ## Attributes
 
 
-  @property
-  def nodes_per_face(self):
-    return (self.polynomial_degree + 1) ** (self.dimensions-1)
+        @param cell_cell_lhs_matrix: [Float] or []
+          Pass in [] if you prefer to assemble the matrix per cell yourself. This
+          is the @f$ \tilde{\mathcal{L}} @f$ part above. The ordering of the
+          degrees of freedom follows the discussion above. The matrix is from
+          @f$ K(p+1) \times K(p+1) @f$.
+
+        @param cell_cell_rhs_matrix: [Float] or []
+          Pass in [] if you prefer to assemble the matrix per cell yourself. This
+          matrix arises from @f$ \int f \cdot v \ dx @f$ and is applied to the nodal
+          values of the PDE within the quadrature nodes of a cell. The matrix is
+          from @f$ K(p+1) \times K(p+1) @f$.
+
+        @param cell_cell_lhs_matrix_scaling: Positive integer
+          The lhs matrix is scaled with @f$ h^x @f$ where the x is defined by this
+          parameter. If you don't specify an lhs matrix, i.e. you prefer to inject
+          this matrix manually, you can leave this parameter None, as it is not
+          used.
+
+        @param cell_cell_rhs_matrix_scaling: Positive integer
+          The rhs matrix is scaled with @f$ h^x @f$ where the x is defined by this
+          parameter. If you don't specify a rhs matrix, i.e. you prefer to inject
+          this matrix manually, you can leave this parameter None, as it is not
+          used.
+
+        @param cell_to_face_matrix: [Float]
+          If you study the global equation system above, you recognise that
+          this matrix is applied to the left or right solutions of a cell's
+          faces.
+
+        @param face_face_Riemann_problem_matrix: [Float] or []
+          Pass in [] if you prefer to assemble the matrix per cell yourself. This
+          matrix represents the actual Riemann solver. It accepts the left projection
+          @f$ u^- @f$ and @f$ u^+ @f$ and yields a "reconstructed" value at this
+          point passed into the differential operator. Therefore, this is a band
+          matrix.
 
 
-  def add_to_Peano4_datamodel( self, datamodel, verbose ):
-    """!
-    
-    Initialise index model 
-    
-    There is an index data model, where all the vertices, faces and cells
-    are properly enumerated. This one is taken care of by the superclass.
-    The thing we have to add our our PDE-specific unknowns.
-    
-    """
-    super( DiscontinuousGalerkinDiscretisation, self ).add_to_Peano4_datamodel(datamodel,verbose)
-    datamodel.add_cell(self._cell_pde_data)
+        """
+        super(DiscontinuousGalerkinDiscretisation, self).__init__(name, min_h, max_h)
 
+        self.polynomial_degree = polynomial_degree
+        self.dimensions = dimensions
+        self.cell_unknowns = cell_unknowns
+        self.face_unknowns = face_unknowns
 
-  def add_use_statements(self, observer):
-    super( DiscontinuousGalerkinDiscretisation, self ).add_use_statements(observer)
-    observer.use_cell(self._cell_pde_data)
-    pass
+        self.cell_cell_lhs_matrix = cell_cell_lhs_matrix
+        self.cell_cell_rhs_matrix = cell_cell_rhs_matrix
+        self.cell_to_face_matrix = cell_to_face_matrix
+        self.face_to_cell_matrix = face_to_cell_matrix
+        self.face_face_Riemann_problem_matrix = face_face_Riemann_problem_matrix
 
+        self.cell_cell_lhs_matrix_scaling = cell_cell_lhs_matrix_scaling
+        self.cell_cell_rhs_matrix_scaling = cell_cell_rhs_matrix_scaling
+        self.cell_to_face_matrix_scaling = cell_to_face_matrix_scaling
+        self.face_to_cell_matrix_scaling = face_to_cell_matrix_scaling
 
-  def add_to_plot(self, observer):
-    """!
-    
-    Tell the project's observer how to plot the data
-    
-    Nothing fancy here. We add plotters from Peano's toolbox to visualise
-    solution and right-hand side. 
-    
-    """
-    observer.add_action_set( PlotDGDataInPeanoBlockFormat(self) )
-    pass
+        self.quadrature_points_in_unit_interval = quadrature_points_in_unit_interval
+        self.gaussian_integration_points = gaussian_integration_points
+        self.gaussian_integration_weights = gaussian_integration_weights
 
+        assert len(quadrature_points_in_unit_interval) == len(
+            gaussian_integration_points,
+            "Something has gone wrong. These should all be same length for fixed polynomial degree",
+        )
+        assert len(quadrature_points_in_unit_interval) == len(
+            gaussian_integration_weights,
+            "Something has gone wrong. These should all be same length for fixed polynomial degree",
+        )
 
-  def add_to_create_grid(self, observer):
-    observer.add_action_set(peano4.toolbox.CreateRegularGrid(self.max_h))
-    pass
+        self._cell_pde_data = peano4.api.datamodel.DaStGen2(name)
+        self._cell_pde_data.data.add_attribute(
+            peano4.api.dastgen2.Peano4DoubleArray(
+                "value", str(self.number_of_matrix_entries_per_cell)
+            )
+        )
+        self._cell_pde_data.data.add_attribute(
+            peano4.api.dastgen2.Peano4DoubleArray(
+                "rhs", str(self.number_of_matrix_entries_per_cell)
+            )
+        )
+        self._cell_pde_data.data.add_attribute(
+            peano4.api.dastgen2.Peano4DoubleArray(
+                "exactSol", str(self.number_of_matrix_entries_per_cell)
+            )
+        )
 
-  
-  def add_to_enumerate_and_init_solution(self, observer):
-    """!
-    
-    Solution initialisation
-    
-    Close to trivial: Just add the action set petsc.actionsets.InitVertexDoFs
-    to the observer.
-    
-    """
-    observer.add_action_set( EnumerateDoFs(self,
-                                           boundary_vertices_hold_data = False,
-                                           boundary_faces_hold_data = True,
-                                           ))
-    
-    
-    observer.add_action_set( InitCellDoFs(self) ) 
-    pass
-  
-  def add_to_assemble(self, observer):
-    observer.add_action_set( AssemblePetscMatrix(self) )
-    observer.add_action_set( ImposeDirichletBoundaryConditionsWithInteriorPenaltyMethod(self) )
-    pass
+        pass
 
-  def add_to_init_petsc(self, observer):
-    pass
+    @property
+    def nodes_per_cell(self):
+        return (self.polynomial_degree + 1) ** self.dimensions
 
-  def add_to_map_solution_onto_mesh(self, observer):
-    observer.add_action_set( ProjectPETScSolutionOnCellsBackOntoMesh(self) )
-    observer.add_action_set( PlotExactSolution(self) )
-    pass
-    
-  def add_implementation_files_to_project(self, namespace, output, subdirectory=""):
-    """
-    
-    The solver creates two classes: An abstract base class and its 
-    implementations. The abstract base class will be overwritten if
-    there is one in the directory. I pipe all the Python constants 
-    into this base class, so they are available in the C++ code. 
-    
-    The implementation file will not be overwritten, as I assume that
-    the users will write their own domain-specific stuff in there. If
-    it does not exist yet, I'll create an empty stub which can be 
-    befilled with something meaningful.
-    
-    Besides the creation of these two files, I also add the files to the
-    project artifacts and the makefile, so they are captured by the build
-    system.
-    
-    """
-    templatefile_prefix  = os.path.dirname( os.path.realpath(__file__) ) + "/"
-    templatefile_prefix += self.__class__.__name__
+    @property
+    def nodes_per_face(self):
+        return (self.polynomial_degree + 1) ** (self.dimensions - 1)
 
-    if(subdirectory):
-        subdirectory += "/"
+    def add_to_Peano4_datamodel(self, datamodel, verbose):
+        """!
 
-    dictionary = {
-        "SOLVER_INCLUDES": "",
-        "MIN_H"             : self.min_h,
-        "MAX_H"             : self.max_h,
-        "POLYNOMIAL_DEGREE":  self.polynomial_degree,
-        "CELL_UNKNOWNS":      self.cell_unknowns,
-        "FACE_UNKNOWNS":      self.face_unknowns,
-        "CELL_CELL_LHS_MATRIX":      self.cell_cell_lhs_matrix,
-        "CELL_CELL_RHS_MATRIX":      self.cell_cell_rhs_matrix,
-        "FACE_FACE_RIEMANN_PROBLEM_MATRIX":      self.face_face_Riemann_problem_matrix,
-        "CELL_TO_FACE_MATRIX":       self.cell_to_face_matrix,
-        "FACE_TO_CELL_MATRIX":                   self.face_to_cell_matrix,
-        "QUADRATURE_POINTS_IN_UNIT_INTERVAL":    self.quadrature_points_in_unit_interval,
-        "GAUSSIAN_INTEGRATION_POINTS"       :    self.gaussian_integration_points,
-        "GAUSSIAN_INTEGRATION_WEIGHTS"       :    self.gaussian_integration_weights,
-        "CELL_CELL_LHS_MATRIX_SCALING": self.cell_cell_lhs_matrix_scaling,
-        "CELL_CELL_RHS_MATRIX_SCALING": self.cell_cell_rhs_matrix_scaling,
-        "CELL_TO_FACE_MATRIX_SCALING":           self.cell_to_face_matrix_scaling,
-        "FACE_TO_CELL_MATRIX_SCALING":           self.face_to_cell_matrix_scaling,
-        "SOLVER_NAME":                           self.typename(),
+        Initialise index model
+
+        There is an index data model, where all the vertices, faces and cells
+        are properly enumerated. This one is taken care of by the superclass.
+        The thing we have to add our our PDE-specific unknowns.
+
+        """
+        super(DiscontinuousGalerkinDiscretisation, self).add_to_Peano4_datamodel(
+            datamodel, verbose
+        )
+        datamodel.add_cell(self._cell_pde_data)
+
+    def add_use_statements(self, observer):
+        super(DiscontinuousGalerkinDiscretisation, self).add_use_statements(observer)
+        observer.use_cell(self._cell_pde_data)
+        pass
+
+    def add_to_plot(self, observer):
+        """!
+
+        Tell the project's observer how to plot the data
+
+        Nothing fancy here. We add plotters from Peano's toolbox to visualise
+        solution and right-hand side.
+
+        """
+        observer.add_action_set(PlotDGDataInPeanoBlockFormat(self))
+        pass
+
+    def add_to_create_grid(self, observer):
+        observer.add_action_set(peano4.api.toolbox.CreateRegularGrid(self.max_h))
+        pass
+
+    def add_to_enumerate_and_init_solution(self, observer):
+        """!
+
+        Solution initialisation
+
+        Close to trivial: Just add the action set petsc.actionsets.InitVertexDoFs
+        to the observer.
+
+        """
+        observer.add_action_set(
+            EnumerateDoFs(
+                self,
+                boundary_vertices_hold_data=False,
+                boundary_faces_hold_data=True,
+            )
+        )
+
+        observer.add_action_set(InitCellDoFs(self))
+        pass
+
+    def add_to_assemble(self, observer):
+        observer.add_action_set(AssemblePetscMatrix(self))
+        observer.add_action_set(
+            ImposeDirichletBoundaryConditionsWithInteriorPenaltyMethod(self)
+        )
+        pass
+
+    def add_to_init_petsc(self, observer):
+        pass
+
+    def add_to_map_solution_onto_mesh(self, observer):
+        observer.add_action_set(ProjectPETScSolutionOnCellsBackOntoMesh(self))
+        observer.add_action_set(PlotExactSolution(self))
+        pass
+
+    def add_implementation_files_to_project(self, namespace, output, subdirectory=""):
+        """
+
+        The solver creates two classes: An abstract base class and its
+        implementations. The abstract base class will be overwritten if
+        there is one in the directory. I pipe all the Python constants
+        into this base class, so they are available in the C++ code.
+
+        The implementation file will not be overwritten, as I assume that
+        the users will write their own domain-specific stuff in there. If
+        it does not exist yet, I'll create an empty stub which can be
+        befilled with something meaningful.
+
+        Besides the creation of these two files, I also add the files to the
+        project artifacts and the makefile, so they are captured by the build
+        system.
+
+        """
+        templatefile_prefix = os.path.dirname(os.path.realpath(__file__)) + "/"
+        templatefile_prefix += self.__class__.__name__
+
+        if subdirectory:
+            subdirectory += "/"
+
+        dictionary = {
+            "SOLVER_INCLUDES": "",
+            "MIN_H": self.min_h,
+            "MAX_H": self.max_h,
+            "POLYNOMIAL_DEGREE": self.polynomial_degree,
+            "CELL_UNKNOWNS": self.cell_unknowns,
+            "FACE_UNKNOWNS": self.face_unknowns,
+            "CELL_CELL_LHS_MATRIX": self.cell_cell_lhs_matrix,
+            "CELL_CELL_RHS_MATRIX": self.cell_cell_rhs_matrix,
+            "FACE_FACE_RIEMANN_PROBLEM_MATRIX": self.face_face_Riemann_problem_matrix,
+            "CELL_TO_FACE_MATRIX": self.cell_to_face_matrix,
+            "FACE_TO_CELL_MATRIX": self.face_to_cell_matrix,
+            "QUADRATURE_POINTS_IN_UNIT_INTERVAL": self.quadrature_points_in_unit_interval,
+            "GAUSSIAN_INTEGRATION_POINTS": self.gaussian_integration_points,
+            "GAUSSIAN_INTEGRATION_WEIGHTS": self.gaussian_integration_weights,
+            "CELL_CELL_LHS_MATRIX_SCALING": self.cell_cell_lhs_matrix_scaling,
+            "CELL_CELL_RHS_MATRIX_SCALING": self.cell_cell_rhs_matrix_scaling,
+            "CELL_TO_FACE_MATRIX_SCALING": self.cell_to_face_matrix_scaling,
+            "FACE_TO_CELL_MATRIX_SCALING": self.face_to_cell_matrix_scaling,
+            "SOLVER_NAME": self.typename(),
         }
 
-    generated_abstract_header_file = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
-      templatefile_prefix + ".Abstract.template.h",
-      templatefile_prefix + ".Abstract.template.cpp",
-      "Abstract" + self.typename(), 
-      namespace,
-      subdirectory + ".", 
-      dictionary,
-      True,
-      True)
-    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
-      templatefile_prefix + ".template.h",
-      templatefile_prefix + ".template.cpp",
-      self.typename(), 
-      namespace,
-      subdirectory + ".", 
-      dictionary,
-      False,
-      True)
+        generated_abstract_header_file = (
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
+                templatefile_prefix + ".Abstract.template.h",
+                templatefile_prefix + ".Abstract.template.cpp",
+                "Abstract" + self.typename(),
+                namespace,
+                subdirectory + ".",
+                dictionary,
+                True,
+                True,
+            )
+        )
+        generated_solver_files = (
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
+                templatefile_prefix + ".template.h",
+                templatefile_prefix + ".template.cpp",
+                self.typename(),
+                namespace,
+                subdirectory + ".",
+                dictionary,
+                False,
+                True,
+            )
+        )
 
-    output.add( generated_abstract_header_file )
-    output.add( generated_solver_files )
-    output.makefile.add_h_file( subdirectory + "Abstract" + self._name + ".h", generated=True )
-    output.makefile.add_h_file( subdirectory + self._name + ".h", generated=True )
-    output.makefile.add_cpp_file( subdirectory + "Abstract" + self._name + ".cpp", generated=True )
-    output.makefile.add_cpp_file( subdirectory + self._name + ".cpp", generated=True )
+        output.add(generated_abstract_header_file)
+        output.add(generated_solver_files)
+        output.makefile.add_h_file(
+            subdirectory + "Abstract" + self._name + ".h", generated=True
+        )
+        output.makefile.add_h_file(subdirectory + self._name + ".h", generated=True)
+        output.makefile.add_cpp_file(
+            subdirectory + "Abstract" + self._name + ".cpp", generated=True
+        )
+        output.makefile.add_cpp_file(subdirectory + self._name + ".cpp", generated=True)
 
+    @property
+    def number_of_matrix_entries_per_vertex(self):
+        """!
 
-  @property
-  def number_of_matrix_entries_per_vertex(self):
-    """!
-    
-    Nothing is associated with the vertex. There's nothing to be done here.
-    
-    """
-    return 0
-  
-  @property
-  def number_of_matrix_entries_per_face(self):
-    """!
-    
-    In the DG scheme, we have a projection from the left and we have a 
-    projection from the right. These values are proper projections, i.e.
-    they do not carry any semantics. Then we have to solve the Riemann
-    problem, and need one more unknown to store the outcome of that one.
-    
-    """
-    return 3 * self.face_unknowns * self.nodes_per_face
-  
-  @property
-  def number_of_matrix_entries_per_cell(self):
-    """!
-    
-    This is the actual unknowns per cell
-    
-    """
-    return self.cell_unknowns * self.nodes_per_cell
-  
+        Nothing is associated with the vertex. There's nothing to be done here.
+
+        """
+        return 0
+
+    @property
+    def number_of_matrix_entries_per_face(self):
+        """!
+
+        In the DG scheme, we have a projection from the left and we have a
+        projection from the right. These values are proper projections, i.e.
+        they do not carry any semantics. Then we have to solve the Riemann
+        problem, and need one more unknown to store the outcome of that one.
+
+        """
+        return 3 * self.face_unknowns * self.nodes_per_face
+
+    @property
+    def number_of_matrix_entries_per_cell(self):
+        """!
+
+        This is the actual unknowns per cell
+
+        """
+        return self.cell_unknowns * self.nodes_per_cell

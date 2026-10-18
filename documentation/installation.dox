@@ -98,7 +98,7 @@ applications, as it builds merely Peano's core libraries.
 This might be the right time to look ahead and study the tutorials of the codes you wanna use.
 All of them need different toolboxes and extensions. ExaHyPE, for example, requires
 you to activate --enable-blockstructured and --enable-exahype at least (--enable-loadbalancing is recommended),
-while the SPH code Swift needs at least --enable-particles and --enable-swift.
+while the SPH code ExaParty needs at least --enable-particles and --enable-exaparty.
 </div>
 
 Besides Peano's toolboxes and extensions,
@@ -157,7 +157,7 @@ Handing in .. does the job for most of the setups.
 This might be the right time to look ahead and study the tutorials of the codes you wanna use.
 All of them need different toolboxes and extensions. ExaHyPE, for example, requires
 you to activate BLOCKSTRUCTURED and EXAHYPE at least (LOADBALANCING is recommended),
-while the SPH code Swift needs at least PARTICLES and SWIFT.
+while the SPH code ExaParty needs at least PARTICLES and EXAPARTY.
 </div>
 
 Configure by pressing c and then q to finish the configuration. Next, continue
@@ -250,6 +250,54 @@ But there is no such thing as a Peano application.
 </div>
 
 
+\anchor sec_installation_build_variants
+# Build variants
+
+Peano currently is delivered as a set of archives, i.e. static libraries.
+By default, the code builds various versions of each library:
+
+- Each archive variant is available as a release version, as a debug
+  version, as a version with tracing and assertions and as a
+  tracing-only version.
+- Each archive variant is available as 2d build and as 3d build. If
+  you need higher dimensions, you have to build the required libraries
+  manually.
+
+The version terminology is as follows:
+
+-  **debug** The debug versions of the archives all have the postfix
+   ```_debug```. If you link against these versions, the full set of
+   assertions, of all tracing and all debug messages is available;
+   though you can always filter on the application-level which
+   information you want to see.
+-  **asserts** These versions of the archives all have the postfix
+   ```_asserts```. If you link against these versions, all assertions are
+   on. The code also contains tracing macros (see below).
+-  **tracing** The release versions of the archives all have the
+   postfix ```_trace```. If you link against these versions, all assertions
+   and debug messages are removed, but some tracing is active. You can
+   switch on/off the tracing per class, and different tracing backends allow
+   you to connect to different (profiling) tools.
+-  **stats** Stats builds are a release flavour of all libraries, where the
+   libraries track some statistics besides the core core performance.
+   Please note that statistics are ***not*** included in any other build
+   type by default.
+-  **release** The release versions of the archives have no particular
+   postfix. They disable tracing, any debugging and all assertions.
+   These archives should be used by production runs.
+
+Peano's release components still write info messages (they suppress
+debug, tracing and logging, but not essential information). If you want
+to filter out these messages, too, you have to apply a log filter.
+
+<br /><br />
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;">
+The tracing backend includes, by default, the assertions. If you want to use
+the tracing for profiling, the assertions might spoil the outcomes. Please
+consult the discussion on
+</div>
+
+
 # Python Configuration
 
 Peano's Python front-end (API) is developed with Python 3.
@@ -257,28 +305,24 @@ Python 2 is not supported.
 
 ## Package Installation
 
-Our code base relies on several Python packages. Best practice it to install
-these into a virtual environment. There's a requirements specification file which 
-you can use to ensure that all requirements are met:
+Our code base relies on several Python packages.
+Best practice is to install these into a virtual environment.
+The recommended way is an editable install: navigate to `myPeanoDirectory/` first
+(you're in the right place if you see the `pyproject.toml` file),
+then create a virtual environment and install by running:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-python -m venv python-env
-source python-env/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -e .
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-where the requirements.txt file resides within Peano's root directory.
-Depending on your system, you might have to use pip3 or install the
-packages in your user space by adding ```--user```.
-
-The easiest way to install the Peano Python packages and to set the Python path directly
-is to navigate to `myPeanoDirectory/` first (you're in the right place if you see the
-`pyproject.toml` file), and then run
-
-    pip3 install -e .
-
-to install the packages.
+This installs both the third-party dependencies (declared in
+`pyproject.toml`, which imports `requirements.txt` from Peano's root directory)
+and Peano's own Python packages, and it sets the Python path automatically.
+There is no need to run `pip install -r requirements.txt` separately on this
+path. Depending on your system, you might have to use `pip3` instead of `pip`.
 
 Note:
 - The Python path is set automatically to the respective Peano modules.
@@ -292,21 +336,29 @@ Note:
 Manually Adding the Python Path
 -------------------
 
-As an alternative to installing the packages, you can modify your Python path manually.
+As an alternative to the editable install above, you can modify your Python path manually.
 There are multiple ways to do so.
 The standard way is to set the `PYTHONPATH`, e.g.:
 
     export PYTHONPATH=$PYTHONPATH:myPeanoDirectory/python
 
 This can even be done in the `.bashrc`. If you "install" the Peano Python
-packages this way, you will also need to manually install additional
-dependencies, as noted below.
+packages this way, you skip `pip install -e .`, so you must install the
+third-party dependencies yourself from the requirements file in Peano's root
+directory:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Python Dependencies
 
 Peano currently relies on the following Python packages/projects:
 
-<!-- @include ../requirements.txt -->
+@verbinclude requirements.txt
 
 
 # Fortran

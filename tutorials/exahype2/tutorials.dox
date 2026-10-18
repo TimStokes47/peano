@@ -5,34 +5,54 @@
 @image html documentation/exahype2/ExaHyPE-logo.jpg
 
 <div style="background-color: #ccf ; padding: 10px; border: 1px solid green;">
-The first few tutorials are based upon Jupyter notebooks. Please browse through
+The tutorials are based upon Jupyter notebooks. Please browse through
 the links below and study the webpages. However, they are created ***from*** the
 notebooks automatically, i.e. you get the full experience only by studying the
-notebooks. For this, switch to
-
-       cd tutorials/exahype2
-
-and issue `jupyter-notebook hitchhikers-guide.ipynb`. All the follow-up notebooks
-are then held within the exercises subdirectory. Change into the subfolders there
-and fire up the notebook to get started.
-
-The more advanced tutorials then rely on scripts, i.e. do not recommend to you to
-change into some subdirectories and to use Jupyter notebooks. Simply follow the
-instructions!
+notebooks. Start with the getting started notebook below, which checks that your
+machine is ready for all the other tutorials.
 </div>
 
-- \subpage tutorials_exahype2_hitchhikers-guide
-- Exercises (interactive step-by-step examples of core ExaHyPE components)
-  - \subpage tutorials_exahype2_exercises_Acoustic-vanilla
-  - \subpage tutorials_exahype2_exercises_Acoustic-advanced
-  - \subpage tutorials_exahype2_exercises_SWE-sympy
+# Getting started
+
+Build Peano with ExaHyPE 2 enabled as described in the
+@ref page_installation_home "installation instructions" first. Then create a
+virtual environment in Peano's root directory, install the Python requirements
+into it, and launch Jupyter from within this environment:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+cd tutorials/exahype2
+jupyter lab 00_getting-started.ipynb
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The notebooks set the path to Peano's Python API themselves, so you do not have
+to set any `PYTHONPATH`. When you come back later, reactivate the environment
+with `source .venv/bin/activate` before you launch Jupyter. If you prefer to
+start Jupyter from somewhere else, register the environment as a kernel via
+`python -m ipykernel install --user --name peano` and pick this kernel within
+Jupyter.
+
+# Overview
+
+- \subpage tutorials_exahype2_00_getting-started
+- Modelling a PDE with ExaHyPE 2
+  - \subpage tutorials_exahype2_10_euler
+  - \subpage tutorials_exahype2_11_tsunami
+- Modifying the numerics and the implementation scheme
+- Running codes in parallel
+- Coupling
+  - \subpage tutorials_exahype2_41_postprocessing
+  - \subpage tutorials_exahype2_44_localisation
+  - \subpage tutorials_exahype2_45_coupling
+- \subpage tutorials_exahype2_applications_exagrype (numerical relativity extension built on top of ExaHyPE) 
+- \subpage tutorials_exahype2_applications_exaseis (seismology extension built on top of ExaHyPE)
+  
+  
+  
   - \subpage tutorials_exahype2_exercises_SWE-aderdg
-- Toy problems (as starting point for your own project)
-  - \subpage page_exahype2_tutorials_toyproblems_acoustic
-  - \subpage page_exahype2_tutorials_toyproblems_advection
-  - \subpage page_exahype2_tutorials_toyproblems_elastic
-  - \subpage page_exahype2_tutorials_toyproblems_euler
-  - \subpage page_exahype2_tutorials_toyproblems_swe
 - HPC  
   - \subpage tutorials_exahype2_hpc_domain-decomposition
   - \subpage tutorials_exahype2_hpc_tasking
@@ -41,13 +61,9 @@ instructions!
   - \ref page_exahype_runtime_analysis "Read the comments on ExaHyPE's bespoke runtime analysis features" besides generic profiling
   - \ref page_exahype_performance_optimisation "Consult ExaHyPE's performance optimisation recommendations"
   - \subpage tutorials_exahype2_dsl_implementing_kernels
-- \subpage tutorials_exahype2_applications_exagrype (numerical relativity extension built on top of ExaHyPE) 
-- \subpage tutorials_exahype2_applications_exaseis (seismology extension built on top of ExaHyPE)
 - Adding features
   - Adding your own compute kernels <!-- (Harrison's work) -->
-  - \subpage tutorials_exahype2_coupling
   - \subpage tutorials_exahype2_additional_mesh_sweeps
-- \subpage tutorials_exahype2_design-patterns
 
 
 ## How to add your own tutorial
