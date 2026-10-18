@@ -100,6 +100,15 @@ public:
    *
    * If we have then not come to the conclusion that we should immediately
    * split again, then we haven't split recently.
+   *
+   * Splits which this rank has triggered since the last state update count,
+   * too. Most strategies trigger their splits in finishStep() after they
+   * have updated their statistics. Without this check, the predicate would
+   * hence not hold right after a strategy has triggered a split, but only
+   * once the subsequent finishStep() has updated the statistics. Code which
+   * decides right after finishStep() whether to run another grid sweep,
+   * such as the repeat condition of a mesh construction, would then stop
+   * before the split has been carried out.
    */
   virtual bool hasSplitRecently() const;
 

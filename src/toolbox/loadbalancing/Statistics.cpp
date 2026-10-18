@@ -187,6 +187,11 @@ void toolbox::loadbalancing::Statistics::incLocalNumberOfSplits( int delta ) {
 }
 
 
+int toolbox::loadbalancing::Statistics::getLocalNumberOfSplits() const {
+  return _localNumberOfSplits;
+}
+
+
 int toolbox::loadbalancing::Statistics::getLocalNumberOfInnerUnrefinedCells() const {
   return _localNumberOfInnerUnrefinedCells;
 }

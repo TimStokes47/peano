@@ -58,6 +58,15 @@ class toolbox::loadbalancing::Statistics {
 
     void incLocalNumberOfSplits( int delta=1 );
 
+    /**
+     * Number of splits this rank has triggered since the last
+     * updateGlobalView()
+     *
+     * updateGlobalView() takes these splits into account and then resets
+     * the counter to zero.
+     */
+    int getLocalNumberOfSplits() const;
+
     void notifyOfStateChange( State state );
 
     /**
