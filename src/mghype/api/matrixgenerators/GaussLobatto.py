@@ -5,7 +5,7 @@ from   numpy.polynomial.legendre  import leggauss
 from   scipy.interpolate import lagrange
 from abc import abstractmethod
 
-import peano4
+import peano4.api
 import mghype
 
 from .MatrixGenerator import MatrixGenerator

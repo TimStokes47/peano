@@ -1,8 +1,8 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import jinja2
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 
 import os
@@ -14,7 +14,7 @@ from multigrid.petsc.api.actionsets.ProjectPETScSolutionBackOntoMesh import Proj
 
 from abc import abstractmethod
 
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 
 
@@ -134,8 +134,8 @@ solver: petsc.solvers.CollocatedLowOrderDiscretisation or similar solver where
   def get_body_of_operation(self,operation_name):
     """!
 
-Provide C++ code snippet for peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME  
-Provide C++ code snippet for peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME  
+Provide C++ code snippet for peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME  
+Provide C++ code snippet for peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME  
   
 Only touchVertexFirstTime is an event where this action set actually
 does something: It inserts the template TemplateTouchVertexFirstTime and 
@@ -147,10 +147,10 @@ appropriate template into each.
     
     """
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.TemplateTouchCellFirstTime).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
       result = jinja2.Template(self.TemplateTouchVertexFirstTime).render(**self.d)
       pass 
     return result
@@ -265,9 +265,9 @@ class CollocatedLowOrderDiscretisation(Solver):
                                                               max_h
                                                               )
     self._unknowns  = unknowns
-    self._vertex_pde_data = peano4.datamodel.DaStGen2( name )
-    self._vertex_pde_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "value",  str(unknowns) ) )
-    self._vertex_pde_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "rhs",    str(unknowns) ) )
+    self._vertex_pde_data = peano4.api.datamodel.DaStGen2( name )
+    self._vertex_pde_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "value",  str(unknowns) ) )
+    self._vertex_pde_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( "rhs",    str(unknowns) ) )
 
     self.cell_lhs_matrix = cell_lhs_matrix
     self.cell_rhs_matrix = cell_rhs_matrix
@@ -295,21 +295,21 @@ class CollocatedLowOrderDiscretisation(Solver):
     solution and right-hand side. 
     
     """
-    observer.add_action_set( peano4.toolbox.PlotVertexDataInPeanoBlockFormat(
+    observer.add_action_set( peano4.api.toolbox.PlotVertexDataInPeanoBlockFormat(
       filename       = "solution-" + self._name,
       vertex_unknown = self._vertex_pde_data,
       getter         = "getValue().data()",
       description    = "u",
-      time_stamp_evaluation        = peano4.toolbox.PlotVertexDataInPeanoBlockFormat.CountTimeSteps, 
+      time_stamp_evaluation        = peano4.api.toolbox.PlotVertexDataInPeanoBlockFormat.CountTimeSteps, 
       number_of_unknows_per_vertex = self._unknowns,
       guard_predicate              = "true", 
       ))
-    observer.add_action_set( peano4.toolbox.PlotVertexDataInPeanoBlockFormat(
+    observer.add_action_set( peano4.api.toolbox.PlotVertexDataInPeanoBlockFormat(
       filename       = "rhs-" + self._name,
       vertex_unknown = self._vertex_pde_data,
       getter         = "getRhs().data()",
       description    = "u",
-      time_stamp_evaluation        = peano4.toolbox.PlotVertexDataInPeanoBlockFormat.CountTimeSteps, 
+      time_stamp_evaluation        = peano4.api.toolbox.PlotVertexDataInPeanoBlockFormat.CountTimeSteps, 
       number_of_unknows_per_vertex = self._unknowns,
       guard_predicate              = "true", 
       ))
@@ -317,7 +317,7 @@ class CollocatedLowOrderDiscretisation(Solver):
 
 
   def add_to_create_grid(self, observer):
-    observer.add_action_set(peano4.toolbox.CreateRegularGrid(self.max_h))
+    observer.add_action_set(peano4.api.toolbox.CreateRegularGrid(self.max_h))
     pass
 
   
@@ -385,7 +385,7 @@ class CollocatedLowOrderDiscretisation(Solver):
         "SOLVER_NAME":                           self.typename(),
         }
 
-    generated_abstract_header_file = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_abstract_header_file = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".Abstract.template.h",
       templatefile_prefix + ".Abstract.template.cpp",
       "Abstract" + self.typename(), 
@@ -394,7 +394,7 @@ class CollocatedLowOrderDiscretisation(Solver):
       dictionary,
       True,
       True)
-    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_solver_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".template.h",
       templatefile_prefix + ".template.cpp",
       self.typename(), 

@@ -1,6 +1,6 @@
 # This file is part of the Peano multigrid project. For conditions of 
 # distribution and use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import dastgen2
 
 import numpy as np
@@ -33,7 +33,7 @@ project, is it the project's job to ask each solver
   visualisation, ...
 
 For further information how the solvers add their solver-specific data to the 
-project's generic mesh traversals, consult also generic documentation in peano4.actionsets.ActionSet.
+project's generic mesh traversals, consult also generic documentation in peano4.api.actionsets.ActionSet.
 
 
 ## Realisation
@@ -96,9 +96,9 @@ vertex for the first time of a mesh traversal, e.g.
     self.min_h = min_h
     self.max_h = max_h
     
-    self._vertex_petsc_data = peano4.datamodel.DaStGen2( name + "PETScData")
-    self._face_petsc_data   = peano4.datamodel.DaStGen2( name + "PETScData" )
-    self._cell_petsc_data   = peano4.datamodel.DaStGen2( name + "PETScData" )
+    self._vertex_petsc_data = peano4.api.datamodel.DaStGen2( name + "PETScData")
+    self._face_petsc_data   = peano4.api.datamodel.DaStGen2( name + "PETScData" )
+    self._cell_petsc_data   = peano4.api.datamodel.DaStGen2( name + "PETScData" )
     
     self._vertex_petsc_data.data.add_attribute( dastgen2.attributes.Integer( "unknownBaseNumber" ) )
     self._face_petsc_data.data.add_attribute(   dastgen2.attributes.Integer( "unknownBaseNumber" ) )
@@ -220,7 +220,7 @@ vertex for the first time of a mesh traversal, e.g.
     
 This routine is typically not invoked by a user.
 
-output: peano4.output.Output
+output: peano4.api.output.Output
   Add artefacts this output in any implementation.
      
     """

@@ -146,6 +146,6 @@ peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int s
   );
 }
 
-std::vector< peano4::grid::GridControlEvent > peano4::grid::TraversalVTKPlotter::getGridControlEvents() const {
+std::vector< peano4::grid::GridControlEvent > peano4::grid::TraversalVTKPlotter::createGridControlEventsForNextTraversal() const {
   return std::vector< peano4::grid::GridControlEvent >();
 }

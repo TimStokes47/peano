@@ -1,0 +1,72 @@
+# This file is part of the Peano project. For conditions of distribution and
+# use, please see the copyright notice at www.peano-framework.org
+from .ActionSet import ActionSet
+
+
+class UserActionSet(ActionSet):
+  """!
+  
+    User action set, i.e. action set that's there for the users to inject their code manually
+    
+    This class is barely every used, as most people nowadays do not program
+    Peano in pure C++ anymore. The class is there to give you a stub for a 
+    code that you then fill out with your own code.
+    
+    To understand how this class fits into the big picture, it is worth studying the namespace
+    documentation, where we host a good overview in the form of an UML diagram.
+
+    ## Important links
+
+    - @ref page_peano_action_sets    
+    - @ref peano4.api.taskgraph
+
+
+  """
+  def __init__(self,name,descend_invocation_order = 0, parallel = True):
+    super(UserActionSet,self).__init__(descend_invocation_order,parallel)
+    self.name = name
+    pass
+
+
+  def user_should_modify_template(self):
+    return True
+
+
+  def get_constructor_body(self):
+    return "// @todo Please implement\n"
+
+
+  def get_destructor_body(self):
+    return "// @todo Please implement\n"
+
+
+  def get_body_of_createGridControlEventsForNextTraversal(self):
+    return "// @todo Please implement\nreturn std::vector< peano4::grid::GridControlEvent >();\n" 
+
+
+  def get_body_of_operation(self,operation_name):
+    return """
+// Feel free to comment in and to add arguments if you want to trace them.
+// Ensure the logTraceOut is activated, too, if you switch on traceIn.     
+// logTraceIn( \"""" + operation_name + """()" );
+// @todo Please implement
+// logTraceOut( \"""" + operation_name + """()" );
+"""
+
+
+  def get_action_set_name(self):
+    """
+     Returns a description (word) for the mapping which is also used as class name
+     for the generated type. As a consequence, the result should be one word (if 
+     possible) and uppercase. Also, every subclass should overwrite this routine.
+    """
+    return self.name
+
+
+  def get_attributes(self):
+    return "// @todo Please implement\n"
+
+
+  def get_includes(self):
+    return "// @todo Please implement\n"
+

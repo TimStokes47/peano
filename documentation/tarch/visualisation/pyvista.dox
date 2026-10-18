@@ -6,12 +6,30 @@
  lot of end users prefer Python for postprocessing, or even want to embed the
  postprocessing into Jupyter notebooks.
  
- # Preparation
- 
+ # Installation
+
+ As with the rest of Peano's Python side, install into a virtual environment
+ rather than into your system Python - @ref page_installation_home
+ "consult the installation page" if you have not set one up for Peano yet:
+
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- pip3 install pyvista
- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
- 
+ python3 -m venv .venv
+ source .venv/bin/activate
+ pip install --upgrade pip
+ pip install -e .
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ PyVista itself is not part of Peano's own `requirements.txt` - it is an
+ optional, purely postprocessing-side dependency - so install it into that
+ same virtual environment on top:
+
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ pip install pyvista
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Remember to run `source .venv/bin/activate` again in every new terminal
+ session before you use PyVista.
+
  # Using PyVista
  
  @todo This is yet to be written.

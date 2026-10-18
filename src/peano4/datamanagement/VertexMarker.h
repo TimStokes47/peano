@@ -269,7 +269,7 @@ public:
    * touchVertexFirstTime() or touchVertexLastTime() event, the Peano
    * core has actually entered a cell and recognised "whoops, I haven't
    * used that vertex yet" or "this will be the last time this vertex
-   * is available". See the @ref peano_action_sets "generic event description" on
+   * is available". See the @ref page_peano_action_sets "generic event description" on
    * an overview of all of these events.
    *
    * @image html VertexMarker_isParentVertexLocal.png

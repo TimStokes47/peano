@@ -179,6 +179,6 @@ void exahype2::RefinementControlService::triggerSendOfCopyOfCommittedEvents() {
 }
 #endif
 
-std::vector<peano4::grid::GridControlEvent> exahype2::RefinementControlService::getGridControlEvents() const {
+std::vector<peano4::grid::GridControlEvent> exahype2::RefinementControlService::createGridControlEventsForNextTraversal() const {
   return _committedEvents;
 }

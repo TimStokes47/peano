@@ -4,7 +4,7 @@ import os
 import re
 import sys
 
-import peano4
+import peano4.api
 import exahype2
 
 sys.path.insert(0, os.path.abspath(".."))
@@ -136,7 +136,7 @@ if args.load_balancing_strategy != "None":
 
 project.set_number_of_threads(args.threads)
 project.set_timeout(3600)
-project.set_Peano4_installation("../../../../", mode=peano4.output.string_to_mode(args.build_mode))
+project.set_Peano4_installation("../../../../", mode=peano4.api.output.string_to_mode(args.build_mode))
 project = project.generate_Peano4_project(verbose=True)
 if args.fpe:
     project.set_fenv_handler("FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW")

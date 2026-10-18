@@ -3,7 +3,7 @@
 
 from .AbstractFVActionSet import AbstractFVActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -110,7 +110,7 @@ class VolumeWisePostprocessSolution(AbstractFVActionSet):
         result = ""
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME
         ):
             d = {}
             self._solver._init_dictionary_with_default_parameters(d)

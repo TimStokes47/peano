@@ -9,6 +9,7 @@ stages:
 # so that this job does everything in the .yml file linked below.
 Automake:
   stage: BuildSystem
+  needs: []
   trigger:
     include:
       - .continuous_integration/gitlab-automake.yml
@@ -18,6 +19,7 @@ Automake:
 # so that this job does everything in the .yml file linked below.
 CMake:
   stage: BuildSystem
+  needs: []
   trigger:
     include:
       - .continuous_integration/gitlab-cmake.yml

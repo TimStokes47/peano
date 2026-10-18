@@ -3,7 +3,7 @@
 from .AbstractADERDGActionSet import AbstractADERDGActionSet
 
 import jinja2
-import peano4.solversteps
+import peano4.api.solversteps
 
 
 class HandleBoundary(AbstractADERDGActionSet):
@@ -95,7 +95,7 @@ class HandleBoundary(AbstractADERDGActionSet):
         result = ""
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
         ):
             d = {}
             self._solver._init_dictionary_with_default_parameters(d)

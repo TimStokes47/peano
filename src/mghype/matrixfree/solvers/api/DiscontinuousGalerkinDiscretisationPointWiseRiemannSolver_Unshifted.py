@@ -2,8 +2,8 @@
  This file is part of the MGHyPE project within Peano 4. For conditions of distribution and 
  use, please see the copyright notice at www.peano-framework.org
 """
-import peano4
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 import dastgen2
 import os
 import jinja2

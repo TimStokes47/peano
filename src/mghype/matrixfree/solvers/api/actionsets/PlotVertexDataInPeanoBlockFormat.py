@@ -1,49 +1,49 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import jinja2
 
 
 class PlotVertexDataInPeanoBlockFormat(ActionSet):
+    def __init__(
+        self,
+        solver,
+        variable_name,
+        getter,
+        plot_predicate="true",
+        cell_predicate="true",
+    ):
+        r"""!
 
-  def __init__(self,
-               solver,
-               variable_name,
-               getter,
-               plot_predicate="true",
-               cell_predicate="true"
-               ):
-    """!
-    
-      Plot grid and assume all data are associated with vertices
-      
-      This is a copy of the one in toolbox, but for the time being
-      we hardcode the number of unknowns per vertex that we plot
-      to 1, and we make some important customisations. Particularly
-      regarding the place we plot.
+        Plot grid and assume all data are associated with vertices
 
-      \param plot_predicate: string
-        This determines whether we want to plot in this cell. This prevents
-        spurious creation of patch files that we don't want to print.
+        This is a copy of the one in toolbox, but for the time being
+        we hardcode the number of unknowns per vertex that we plot
+        to 1, and we make some important customisations. Particularly
+        regarding the place we plot.
 
-      \param cell_predicate: string
-        This determines whether we want to plot in this cell. For instance,
-        we use this flag to prevent plotting on levels that are not the
-        finest level.
-        
-    """
-    super( PlotVertexDataInPeanoBlockFormat, self ).__init__()
+        \param plot_predicate: string
+          This determines whether we want to plot in this cell. This prevents
+          spurious creation of patch files that we don't want to print.
 
-    self.d = {}
-    self.d["SOLVER_INSTANCE"]        = solver.instance_name()
-    self.d["SOLVER_NAME"]            = solver.typename()
-    self.d[ "VARIABLE" ]             = variable_name
-    self.d[ "GETTER" ]               = getter
-    self.d["PLOT_PREDICATE"]         = plot_predicate
-    self.d["CELL_PREDICATE"]         = cell_predicate
-        
-  __Template_Constructor = """
+        \param cell_predicate: string
+          This determines whether we want to plot in this cell. For instance,
+          we use this flag to prevent plotting on levels that are not the
+          finest level.
+
+        """
+        super(PlotVertexDataInPeanoBlockFormat, self).__init__()
+
+        self.d = {}
+        self.d["SOLVER_INSTANCE"] = solver.instance_name()
+        self.d["SOLVER_NAME"] = solver.typename()
+        self.d["VARIABLE"] = variable_name
+        self.d["GETTER"] = getter
+        self.d["PLOT_PREDICATE"] = plot_predicate
+        self.d["CELL_PREDICATE"] = cell_predicate
+
+    __Template_Constructor = """
   _writer      = nullptr;
   _dataWriter  = nullptr;
   _treeNumber  = treeNumber;
@@ -53,12 +53,10 @@ class PlotVertexDataInPeanoBlockFormat(ActionSet):
   logDebug( "PlotGrid2PlotGridInPeanoBlockFormat1()", "created tree instance for " << treeNumber );
 """
 
+    def get_constructor_body(self):
+        return self.__Template_Constructor.format(**self.d)
 
-  def get_constructor_body(self):
-    return self.__Template_Constructor.format(**self.d)
-
-
-  __Template_EndTraversal = """
+    __Template_EndTraversal = """
   if ( {{PLOT_PREDICATE}} ) {
     assertion(_dataWriter!=nullptr);
     assertion1(_dataWriter!=nullptr,_treeNumber);
@@ -74,24 +72,19 @@ class PlotVertexDataInPeanoBlockFormat(ActionSet):
   }
 """
 
-    
-  def get_destructor_body(self):
-    return ""
+    def get_destructor_body(self):
+        return ""
 
+    def get_body_of_createGridControlEventsForNextTraversal(self):
+        return "  return std::vector< peano4::grid::GridControlEvent >();\n"
 
-  def get_body_of_getGridControlEvents(self):
-    return "  return std::vector< peano4::grid::GridControlEvent >();\n" 
+    def get_action_set_name(self):
+        return __name__.replace(".py", "").replace(".", "_")
 
+    def user_should_modify_template(self):
+        return False
 
-  def get_action_set_name(self):
-    return __name__.replace(".py", "").replace(".", "_")
-
-
-  def user_should_modify_template(self):
-    return False
-
-
-  __Template_TouchCellFirstTime = """ 
+    __Template_TouchCellFirstTime = """ 
   if (
     fineGridCell{{SOLVER_NAME}}.getType() == celldata::{{SOLVER_NAME}}::Type::Interior
     and
@@ -114,8 +107,7 @@ class PlotVertexDataInPeanoBlockFormat(ActionSet):
 }
 """
 
-
-  __Template_BeginTraversal = """
+    __Template_BeginTraversal = """
   if ({{PLOT_PREDICATE}}) {
     tarch::mpi::Lock lock( _semaphore );
 
@@ -146,20 +138,20 @@ class PlotVertexDataInPeanoBlockFormat(ActionSet):
   }
 """
 
+    def get_body_of_operation(self, operation_name):
+        result = "\n"
+        if operation_name == ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            result = jinja2.Template(self.__Template_TouchCellFirstTime).render(
+                **self.d
+            )
+        if operation_name == ActionSet.OPERATION_BEGIN_TRAVERSAL:
+            result = jinja2.Template(self.__Template_BeginTraversal).render(**self.d)
+        if operation_name == ActionSet.OPERATION_END_TRAVERSAL:
+            result = jinja2.Template(self.__Template_EndTraversal).render(**self.d)
+        return result
 
-  def get_body_of_operation(self,operation_name):
-    result = "\n"
-    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
-      result = jinja2.Template( self.__Template_TouchCellFirstTime).render(**self.d) 
-    if operation_name==ActionSet.OPERATION_BEGIN_TRAVERSAL:
-      result = jinja2.Template( self.__Template_BeginTraversal).render(**self.d)             
-    if operation_name==ActionSet.OPERATION_END_TRAVERSAL:
-      result = jinja2.Template( self.__Template_EndTraversal).render(**self.d)             
-    return result
-
-
-  def get_attributes(self):
-    return """
+    def get_attributes(self):
+        return """
     static tarch::mpi::BooleanSemaphore                                              _semaphore;
     
     int                _treeNumber;
@@ -168,9 +160,8 @@ class PlotVertexDataInPeanoBlockFormat(ActionSet):
     tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter*  _dataWriter;
 """
 
-
-  def get_includes(self):
-    return """
+    def get_includes(self):
+        return """
 #include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
 #include "tarch/mpi/Lock.h"
 #include "tarch/mpi/BooleanSemaphore.h"
@@ -181,9 +172,11 @@ class PlotVertexDataInPeanoBlockFormat(ActionSet):
 #include "../repositories/SolverRepository.h"
 """
 
-
-  def get_static_initialisations(self,full_qualified_classname):
-    return """
-tarch::mpi::BooleanSemaphore  """ + full_qualified_classname + """::_semaphore;
+    def get_static_initialisations(self, full_qualified_classname):
+        return (
+            """
+tarch::mpi::BooleanSemaphore  """
+            + full_qualified_classname
+            + """::_semaphore;
 """
-    
+        )

@@ -9,7 +9,7 @@
 
 import os, sys
 import argparse
-import peano4
+import peano4.api
 import exahype2
 
 
@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser(description='ExaHyPE 2 - Euler benchmarking scr
 parser.add_argument("-j",   "--parallel-builds",    dest="j",              type=int, default=-1, help="Parallel builds" )
 parser.add_argument("-pd",  "--peano-dir",          dest="peanodir",       default="../../../../", help="Peano4 directory" )
 parser.add_argument("-v",   "--verbose",            dest="verbose",        action="store_true", default=False, help="Verbose")
-parser.add_argument("-m",   "--mode",               dest="mode",           choices=peano4.output.CompileModes, default=peano4.output.CompileModes[0], help="|".join(peano4.output.CompileModes) )
+parser.add_argument("-m",   "--mode",               dest="mode",           choices=peano4.api.output.CompileModes, default=peano4.api.output.CompileModes[0], help="|".join(peano4.api.output.CompileModes) )
 parser.add_argument("-t",   "--type",               dest="type",           choices=["plot-0","plot-1","plot-2","plot-3","reg-0"], required=True, help="Pick scenario" )
 parser.add_argument(        "--optimise-stateless", dest="optimise_stateless",            action="store_true", default=False, help="Optimise stateless/side-effect free cells (required for GPU offloading)")
 parser.add_argument("-s",   "--solver",             dest="solver",         choices=["fv-4", "fv-6", "fv-8", "dg1-rk1", "dg2-rk2", "dg3-rk3", "dg4-rk4", "fd4-rk1", "fd4-rk4"], required=True, help="Pick solver type. For the Finite Volume (fv) solvers, the second index is the patch/block size. For DG, you can pick different Runge-Kutta time integration orders" )
@@ -245,7 +245,7 @@ project.set_global_simulation_parameters(
 
 
 project.set_load_balancing( "toolbox::loadbalancing::strategies::RecursiveBipartition", "new ::exahype2::LoadBalancingConfiguration()" )
-project.set_Peano4_installation( args.peanodir, peano4.output.string_to_mode(args.mode) )
+project.set_Peano4_installation( args.peanodir, peano4.api.output.string_to_mode(args.mode) )
 
 #
 # Generate code and then copy cpp file over main

@@ -50,7 +50,7 @@ intermediate steps which are required to couple the core algorithmic steps:
   
 To discuss the temporal logic of these steps, it is important to reiterate that
 Peano runs through the underlying spacetree in a top-down fashion and users can 
-only plug into vertex, face and cell events. That is, we can never access the 
+only plug into vertex, face and cell @ref glossary_events_and_action_sets "events". That is, we can never access the
 adjacent cells of a cell or a face, and we have no control over the order of 
 the traversal. We only know that it follows these top-down/bottom-up 
 constraints. 
@@ -59,7 +59,7 @@ constraints.
 
 ## Algorithmic blueprint of a two-sweep realisation
 
-As we distinguish plug-in points for cells from plug-in points (events 
+As we distinguish plug-in points for cells from plug-in points (@ref glossary_events_and_action_sets "events"
 tiggering actions) for faces, we can map a vanilla version of one ADER-DG step
 onto two mesh traversals:
 
@@ -94,7 +94,7 @@ onto two mesh traversals:
 
 For a serial code, we could solve the Riemann problem straightaway in
 touchFaceLastTime(). touchFaceLastTime() is invoked after touchCellLastTime()
-(see Peano's @ref peano_action_sets "generic description of the order of events over action sets") has been 
+(see Peano's @ref page_peano_action_sets "generic description of the order of events over action sets") has been 
 called for both adjacent cells. While this is an appealing idea, as it means
 that we could throw away the projected data and keep only the Riemann solve
 result, this would break down in a parallel setup, where each subdomain has to
@@ -109,7 +109,7 @@ In the context of adaptive meshes, it is important to take into account that
 - hanging faces are not persistent in-between two mesh traversals;
 - we run through the spacetree in a top-down order.
 
-This is reflected by the @ref peano_action_sets "order of the events". 
+This is reflected by the @ref page_peano_action_sets "order of the events". 
 Therefore, whenever we project a solution onto a hanging face in step (1), this 
 information will be lost after this mesh traversal. We have to save it
 by moving the information from the face to the next coarser level.
@@ -146,7 +146,7 @@ therefore forming important gradients that lead to instabilities.
 If we want to solve the Riemann problem on the fine (hanging) faces, we have to
 be very careful:
 
-- We do not know the order of the mesh travesal events. Notably, we cannot
+- We do not know the order of the mesh travesal @ref glossary_events_and_action_sets "events". Notably, we cannot
   assume that all adjacent cells of a hanging face have already been traversed
   when we enounter destroyHangingFace, as one adjacent cell is coarser than
   the other face's cell. The solution is therefore in general not available.

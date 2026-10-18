@@ -82,7 +82,7 @@ export PYTHONPATH=../../../../python
 /opt/paraview/bin/pvpython ~/git/Peano/python/peano4/visualisation/render.py --filter-fine-grid solution-CCZ4SBH_FD4.peano-patch-file
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The picture below is taken from @ref tutorials_exahype2_coupling "ExaHyPE's coupling discussion" and
+The picture below is taken from @ref tutorials_exahype2_44_localisation "ExaHyPE's coupling discussion" and
 illustrates that the higher order solver covers the whole domain, while the FV 
 is only active in a tiny cross-shaped region within.
 

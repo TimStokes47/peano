@@ -4,7 +4,7 @@ from .AbstractADERDGActionSet import AbstractADERDGActionSet
 from exahype2.solvers.PDETerms import PDETerms
 
 import jinja2
-import peano4.solversteps
+import peano4.api.solversteps
 
 
 class Correction(AbstractADERDGActionSet):
@@ -180,7 +180,7 @@ class Correction(AbstractADERDGActionSet):
         self._solver.add_entries_to_text_replacement_dictionary(d)
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
         ):
             d["PREDICATE"] = self.riemann_guard
             if self._use_custom_riemann_solver:
@@ -194,7 +194,7 @@ class Correction(AbstractADERDGActionSet):
             result = jinja2.Template(self._Template_TouchFaceFirstTime).render(**d)
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
         ):
             d["PREDICATE"] = self.guard
             d["CORRECTOR_ALLOCATIONS"] = jinja2.Template(

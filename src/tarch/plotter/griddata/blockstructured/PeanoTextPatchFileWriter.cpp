@@ -184,16 +184,12 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
       break;
     case IndexFileMode::AppendNewData:
       {
+        // Only ever used to decide whether a *pre-existing* index file is
+        // stale (see the "else if" below) - deliberately not reused for the
+        // newDatasetBelongsToSnapshotBiggerThanLatestWrite decision further
+        // down; see the comment there for why.
         const bool newDatasetBelongsToSnapshotSmallerThanLatestWrite =
           tarch::la::smaller(
-            timeStamp,
-            getLatestTimeStepInIndexFile(),
-            tarch::la::relativeEpsNormalisedAgainstValueGreaterOne(
-              timeStamp, getLatestTimeStepInIndexFile(), DefaultTimeStampPrecision
-            )
-          );
-        const bool newDatasetBelongsToSnapshotBiggerThanLatestWrite =
-          tarch::la::greater(
             timeStamp,
             getLatestTimeStepInIndexFile(),
             tarch::la::relativeEpsNormalisedAgainstValueGreaterOne(
@@ -217,6 +213,25 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
 
         createBackupOfMetaFile();
 
+        // Evaluated only now, after the index file has potentially just been
+        // (re)created above: createEmptyIndexFile() itself already adds a
+        // first dataset entry for timeStamp 0.0, so querying
+        // getLatestTimeStepInIndexFile() here (rather than before the block
+        // above ran) correctly picks that entry up. Evaluating this earlier,
+        // alongside newDatasetBelongsToSnapshotSmallerThanLatestWrite above,
+        // used to compare timeStamp against a stale "no data yet" sentinel
+        // whenever the index file did not exist before this call, which made
+        // this condition spuriously true on the very first writer of a run
+        // and opened a second, empty dataset section as a result.
+        const bool newDatasetBelongsToSnapshotBiggerThanLatestWrite =
+          tarch::la::greater(
+            timeStamp,
+            getLatestTimeStepInIndexFile(),
+            tarch::la::relativeEpsNormalisedAgainstValueGreaterOne(
+              timeStamp, getLatestTimeStepInIndexFile(), DefaultTimeStampPrecision
+            )
+          );
+
         if (newDatasetBelongsToSnapshotBiggerThanLatestWrite) {
           logDebug(
             "PeanoTextPatchFileWriter(...)",
@@ -225,7 +240,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
           );
           addNewDatasetToIndexFile(timeStamp);
         }
-      addNewFileToCurrentDataSetInIndexFile(_fileName);
+        addNewFileToCurrentDataSetInIndexFile(_fileName);
       }
       break;
   }

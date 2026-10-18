@@ -1,5 +1,5 @@
 
-import peano4, exahype2
+import peano4.api, exahype2
 import os
 
 from exahype2.solvers.aderdg.ADERDG import Polynomials
@@ -63,7 +63,7 @@ if use_tracers:
     )
 
     project.add_action_set_to_timestepping(
-        peano4.toolbox.particles.api.UpdateParallelState(particle_set=tracer_particles)
+        peano4.api.toolbox.particles.api.UpdateParallelState(particle_set=tracer_particles)
     )
 
     project.add_action_set_to_timestepping(
@@ -98,7 +98,7 @@ project.set_global_simulation_parameters(
 )
 
 project.set_load_balancing( "toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates", "new ::exahype2::LoadBalancingConfiguration()" )
-project.set_Peano4_installation( "../../../../", peano4.output.CompileMode.Release )
+project.set_Peano4_installation( "../../../../", peano4.api.output.CompileMode.RELEASE )
 peano4_project = project.generate_Peano4_project("False")
 peano4_project.output.makefile.add_h_file("elastic.h")
 peano4_project.output.makefile.add_cpp_file("elastic.cpp")

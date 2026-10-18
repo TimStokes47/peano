@@ -1,7 +1,7 @@
 # This file is part of the Peano multigrid project. For conditions of 
 # distribution and use, please see the copyright notice at www.peano-framework.org
 import numpy as np
-import peano4
+import peano4.api
 import mghype
 
 from .MatrixGenerator import MatrixGenerator

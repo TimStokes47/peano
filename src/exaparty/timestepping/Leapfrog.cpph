@@ -1,0 +1,47 @@
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
+
+
+template <typename Particle>
+bool exaparty::timestepping::leapfrogDriftWithGlobalTimeStepSizeUpdateParticlePredicate(
+  const peano4::datamanagement::VertexMarker&  marker,
+  const Particle&                              particle
+) {
+  return ::exaparty::kernels::localParticleCanBeUpdatedAndMovedInVertexKernel(marker, particle);
+}
+
+
+template <typename Particle>
+void exaparty::timestepping::leapfrogDriftWithGlobalTimeStepSize(
+  const peano4::datamanagement::VertexMarker&  marker,
+  Particle&                                    particle
+) {
+  assertion( leapfrogDriftWithGlobalTimeStepSizeUpdateParticlePredicate(marker, particle) );
+
+  double timeStepSize = Particle::getSpecies().getMinTimeStepSize();
+  particle.setX( particle.getX() + timeStepSize * particle.getV() );
+  assertion1(tarch::la::isEntryFinite(particle.getX()), particle.toString());
+  particle.setMoveState(Particle::MoveState::Moved);
+}
+
+
+
+template <typename Particle>
+bool exaparty::timestepping::leapfrogKickWithGlobalTimeStepSizeUpdateParticlePredicate(
+  const peano4::datamanagement::VertexMarker&  marker,
+  const Particle&                              particle
+) {
+  return ::exaparty::kernels::localParticleCanBeUpdatedInVertexKernel(marker, particle);
+}
+
+
+template <typename Particle>
+void exaparty::timestepping::leapfrogKickWithGlobalTimeStepSize(
+  const peano4::datamanagement::VertexMarker&  marker,
+  Particle&                                    particle
+) {
+  assertion( leapfrogKickWithGlobalTimeStepSizeUpdateParticlePredicate(marker, particle) );
+
+  double timeStepSize = 0.5 * Particle::getSpecies().getMinTimeStepSize();
+  particle.setV( particle.getV() + timeStepSize * particle.getA() );
+}
+

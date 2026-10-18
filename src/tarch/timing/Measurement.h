@@ -135,6 +135,10 @@ public:
    * returns the average.
    */
   void        setValue(const double& value);
+
+  /**
+   * Total number of measurements
+   */
   int         getNumberOfMeasurements() const;
   std::string toString() const;
 

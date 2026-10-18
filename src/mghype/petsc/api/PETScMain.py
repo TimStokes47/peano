@@ -1,10 +1,10 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.runner.DefaultSequence
+import peano4.api.runner.DefaultSequence
 import os
 
 
-class PETScMain(peano4.runner.DefaultSequence):
+class PETScMain(peano4.api.runner.DefaultSequence):
 
   def __init__(self,
                project,
@@ -13,7 +13,7 @@ class PETScMain(peano4.runner.DefaultSequence):
                ):
     """
     
-     project: peano4.Project
+     project: peano4.api.Project
           
     """
     super(PETScMain,self).__init__(project)

@@ -29,7 +29,7 @@ Here are a few recommendations:
     eager to rendeszouz communication which can lead to deadlocks.
 
 3.  Do never impose any synchronisation unless absolutely required.
-    Notably, try to avoid synchronisation within the action sets! In the
+    Notably, try to avoid synchronisation within the @ref glossary_events_and_action_sets "action sets"! In the
     ideal case, you implement a Jacobi-like data exchange: The action
     sets send stuff out. There's a service (see above) which receives
     the data. This data is then used by the action set (or another one)

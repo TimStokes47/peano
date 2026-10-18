@@ -3,7 +3,7 @@
 
 from .AbstractRungeKuttaDGActionSet import AbstractRungeKuttaDGActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 from exahype2.solvers.ButcherTableau                import ButcherTableau
@@ -168,10 +168,10 @@ class ProjectLinearCombinationOfEstimatesOntoFaces(AbstractRungeKuttaDGActionSet
     d[ "CELL_METADATA_ACCESSOR" ]   = "fineGridCell""" + self._solver._cell_label.name
     d[ "WEIGHTS" ]                  = self._butcher_tableau.final_estimate_weights()
     d[ "BUTCHER_TABLEAU_RELATIVE_TIME_STEP_SIZES" ] = self._butcher_tableau.time_step_sizes()
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME and self.face_projections==FaceProjections.Solution:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME and self.face_projections==FaceProjections.Solution:
       result = jinja2.Template(self.TemplateProjectLinearCombinationSolution).render(**d)
       pass 
-    elif operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    elif operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       assert False, "face projection variant {} not supported yet ".format( self.face_projections)
       
     return result

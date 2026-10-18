@@ -9,7 +9,7 @@ from .ProjectLinearCombinationOfEstimatesOntoFaces import (
 
 from exahype2.solvers.ButcherTableau import ButcherTableau
 
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -192,13 +192,13 @@ class ComputeFinalLinearCombination(AbstractRungeKuttaDGActionSet):
         )
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
         ):
             result = jinja2.Template(self.TemplateProject).render(**d)
             pass
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME
         ):
             result = jinja2.Template(self.TemplateUpdateFace).render(**d)
             pass

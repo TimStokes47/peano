@@ -40,15 +40,15 @@ balancing, sophisticated geometry representations, and other features.
    @ref page_multigrid_home
   </td>
   <td>
-   @image html documentation/icons/swift.png width=200px
-   @ref page_swift2_home
+   @image html documentation/icons/exaparty.png width=200px
+   @ref page_exaparty_home
   </td>
  </tr>
 </table>
 
 
 On top of Peano, we have created multiple extensions which use this meshing infrastructure for particular application domains.
-Examples are extensions for SPH (@ref page_swift2_home), hyperbolic solvers (@ref page_exahype2_home) or multigrid (@ref page_multigrid_home).
+Examples are extensions for SPH (@ref page_exaparty_home), hyperbolic solvers (@ref page_exahype2_home) or multigrid (@ref page_multigrid_home).
 The @ref page_architecture_home "architecture page" provides an overview including some illustrations.
 Again, the extensions are kind of tools that allow you to write simulations for your particular domain.
 They are typically not "ready to use" products, even though some of these applications can almost be used as such.
@@ -75,22 +75,7 @@ All components are integrated into one repository, one code base, and documented
 - Getting started
   - @subpage page_installation_home
   - @subpage page_compiler_specific_settings_home
-  - @subpage page_architecture_home
   - @subpage page_faq_home
-- Contributing
-  - @subpage page_conventions_home
-  - @subpage page_version_control_home
-  - @subpage page_documentation_home
-  - @subpage page_continuous_integration
-- @subpage page_tutorials_overview
-- Extensions
-  - @subpage page_exahype2_home
-  - @subpage page_multigrid_home
-  - @subpage page_swift2_home
-- The C++ core
-  - @subpage page_peano4_home
-  - @subpage page_toolbox_home
-  - @subpage page_tarch_home
 - @subpage page_third_party_home
   - @ref page_third-party_dastgen
   - @ref tarch_multicore_otter
@@ -98,10 +83,34 @@ All components are integrated into one repository, one code base, and documented
   - @ref page_third-party_hdf5
   - @ref page_third-party_xDSL
   - @ref tbb_extension
-  
+
+<hr>
+
+- @subpage page_developer_guidelines_home
+- Contributing
+  - @subpage page_conventions_home
+  - @subpage page_version_control_home
+  - @subpage page_documentation_home
+  - @subpage page_continuous_integration
+- @subpage page_tutorials_overview
+- @subpage page_glossary_home
+
+<hr>
+
+- Extensions
+  - @subpage page_exahype2_home
+  - @subpage page_multigrid_home
+  - @subpage page_exaparty_home
+- The C++ core
+  - @subpage page_peano4_home
+  - @subpage page_toolbox_home
+  - @subpage page_tarch_home
+
+<hr>
+
 This is the documentation of Peano which is generated automatically through Doxygen.
 Peano comprises the core Peano 4 modules, the Python API, and a set of Peano extensions as well as benchmarks.
-The most important extensions at the moment are ExaHyPE 2, our PETSc toolkit and a prototype version of Swift 2.
+The most important extensions at the moment are ExaHyPE 2, our PETSc toolkit and a prototype version of ExaParty.
 
 
 # Recent updates

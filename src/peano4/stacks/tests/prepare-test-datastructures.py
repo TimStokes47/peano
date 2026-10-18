@@ -6,16 +6,16 @@
  the documentation of the class STDVectorStackOverObjectsWithSmartPointersTest.
 """
 import dastgen2
-import peano4.dastgen2
+import peano4.api.dastgen2
 
 
 test_object = dastgen2.DataModel("peano4::stacks::tests::GeneratedTestObject")
 
 test_object.add_attribute(dastgen2.attributes.Integer("id"))
-test_object.add_attribute(peano4.dastgen2.Peano4SmartPointerDoubleArray( "data", "256" ))
+test_object.add_attribute(peano4.api.dastgen2.Peano4SmartPointerDoubleArray( "data", "256" ))
 
 test_object.add_aspect( dastgen2.aspects.MPIForSmartPointers(test_object) )
-test_object.add_aspect( peano4.dastgen2.MPIAndStorageAspect(peano4.datamodel.DoFAssociation.Generic) )
+test_object.add_aspect( peano4.api.dastgen2.MPIAndStorageAspect(peano4.api.datamodel.DoFAssociation.Generic) )
 
 test_object.write_header_file("GeneratedTestObject.h")
 test_object.write_implementation_file("GeneratedTestObject.cpp")
@@ -24,10 +24,10 @@ test_object.write_implementation_file("GeneratedTestObject.cpp")
 flattened_test_object = dastgen2.DataModel("peano4::stacks::tests::GeneratedTestObject_Flattened")
 
 flattened_test_object.add_attribute(dastgen2.attributes.Integer("id"))
-flattened_test_object.add_attribute(peano4.dastgen2.Peano4DoubleArray( "data", "256" ))
+flattened_test_object.add_attribute(peano4.api.dastgen2.Peano4DoubleArray( "data", "256" ))
 
 flattened_test_object.add_aspect( dastgen2.aspects.MPI() )
-flattened_test_object.add_aspect( peano4.dastgen2.MPIAndStorageAspect(peano4.datamodel.DoFAssociation.Generic) )
+flattened_test_object.add_aspect( peano4.api.dastgen2.MPIAndStorageAspect(peano4.api.datamodel.DoFAssociation.Generic) )
 
 flattened_test_object.write_header_file("GeneratedTestObject_Flattened.h")
 flattened_test_object.write_implementation_file("GeneratedTestObject_Flattened.cpp")

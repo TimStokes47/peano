@@ -2,12 +2,12 @@
 # use, please see the copyright notice at www.peano-framework.org
 import os
 
-import peano4
-import peano4.datamodel
-import peano4.output.TemplatedHeaderFile
-import peano4.output.TemplatedHeaderImplementationFilePair
-import peano4.output.Jinja2TemplatedHeaderFile
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.datamodel
+import peano4.api.output.TemplatedHeaderFile
+import peano4.api.output.TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderFile
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 
 import jinja2
 
@@ -186,7 +186,7 @@ class CellCenteredFiniteDifferences(object):
             )
 
         self._reconstructed_array_memory_location = (
-            peano4.toolbox.blockstructured.ReconstructedArrayMemoryLocation.CallStack
+            toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.CallStack
         )
 
         self._solver_template_file_class_name = None
@@ -482,12 +482,12 @@ The finest mesh width of """
           persistently.
 
         """
-        self._patch = peano4.datamodel.Patch(
+        self._patch = peano4.api.datamodel.Patch(
             (self._patch_size, self._patch_size, self._patch_size),
             self._unknowns + self._auxiliary_variables,
             self._unknown_identifier(),
         )
-        self._patch_estimates = peano4.datamodel.Patch(
+        self._patch_estimates = peano4.api.datamodel.Patch(
             (
                 self.number_of_Runge_Kutta_steps() * self._patch_size,
                 self._patch_size,
@@ -496,85 +496,85 @@ The finest mesh width of """
             self._unknowns,
             self._unknown_identifier() + "RhsEstimates",
         )
-        self._patch_overlap_old = peano4.datamodel.Patch(
+        self._patch_overlap_old = peano4.api.datamodel.Patch(
             (2 * self._overlap, self._patch_size, self._patch_size),
             self._unknowns + self._auxiliary_variables,
             self._unknown_identifier() + "Old",
         )
-        self._patch_overlap_new = peano4.datamodel.Patch(
+        self._patch_overlap_new = peano4.api.datamodel.Patch(
             (2 * self._overlap, self._patch_size, self._patch_size),
             self._unknowns + self._auxiliary_variables,
             self._unknown_identifier() + "New",
         )
-        self._patch_overlap_update = peano4.datamodel.Patch(
+        self._patch_overlap_update = peano4.api.datamodel.Patch(
             (2 * self._overlap, self._patch_size, self._patch_size),
             self._unknowns + self._auxiliary_variables,
             self._unknown_identifier() + "Update",
         )
 
         if self._cell_data_storage == Storage.CallStack:
-            self._patch.generator = peano4.datamodel.PatchToDoubleArray(
+            self._patch.generator = peano4.api.datamodel.PatchToDoubleArray(
                 self._patch, "double"
             )
-            self._patch_estimates.generator = peano4.datamodel.PatchToDoubleArray(
+            self._patch_estimates.generator = peano4.api.datamodel.PatchToDoubleArray(
                 self._patch_estimates, "double"
             )
         elif self._cell_data_storage == Storage.Heap:
-            self._patch.generator = peano4.datamodel.PatchToDoubleArrayOnHeap(
+            self._patch.generator = peano4.api.datamodel.PatchToDoubleArrayOnHeap(
                 self._patch, "double"
             )
-            self._patch_estimates.generator = peano4.datamodel.PatchToDoubleArrayOnHeap(
+            self._patch_estimates.generator = peano4.api.datamodel.PatchToDoubleArrayOnHeap(
                 self._patch_estimates, "double"
             )
         elif self._cell_data_storage == Storage.SmartPointers:
-            self._patch.generator = peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+            self._patch.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
                 self._patch, "double"
             )
             self._patch_estimates.generator = (
-                peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+                peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
                     self._patch_estimates, "double"
                 )
             )
 
         if self._face_data_storage == Storage.CallStack:
-            self._patch_overlap_old.generator = peano4.datamodel.PatchToDoubleArray(
+            self._patch_overlap_old.generator = peano4.api.datamodel.PatchToDoubleArray(
                 self._patch_overlap_old, "double"
             )
-            self._patch_overlap_new.generator = peano4.datamodel.PatchToDoubleArray(
+            self._patch_overlap_new.generator = peano4.api.datamodel.PatchToDoubleArray(
                 self._patch_overlap_new, "double"
             )
-            self._patch_overlap_update.generator = peano4.datamodel.PatchToDoubleArray(
+            self._patch_overlap_update.generator = peano4.api.datamodel.PatchToDoubleArray(
                 self._patch_overlap_update, "double"
             )
         elif self._face_data_storage == Storage.Heap:
             self._patch_overlap_old.generator = (
-                peano4.datamodel.PatchToDoubleArrayOnHeap(
+                peano4.api.datamodel.PatchToDoubleArrayOnHeap(
                     self._patch_overlap_old, "double"
                 )
             )
             self._patch_overlap_new.generator = (
-                peano4.datamodel.PatchToDoubleArrayOnHeap(
+                peano4.api.datamodel.PatchToDoubleArrayOnHeap(
                     self._patch_overlap_new, "double"
                 )
             )
             self._patch_overlap_update.generator = (
-                peano4.datamodel.PatchToDoubleArrayOnHeap(
+                peano4.api.datamodel.PatchToDoubleArrayOnHeap(
                     self._patch_overlap_update, "double"
                 )
             )
         elif self._face_data_storage == Storage.SmartPointers:
             self._patch_overlap_old.generator = (
-                peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+                peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
                     self._patch_overlap_old, "double"
                 )
             )
             self._patch_overlap_new.generator = (
-                peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+                peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
                     self._patch_overlap_new, "double"
                 )
             )
             self._patch_overlap_update.generator = (
-                peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+                peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
                     self._patch_overlap_update, "double"
                 )
             )
@@ -584,17 +584,17 @@ The finest mesh width of """
             )
 
         self._patch_overlap_old.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.get_face_merge_implementation(
+            toolbox.blockstructured.api.get_face_merge_implementation(
                 self._patch_overlap_old
             )
         )
         self._patch_overlap_new.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.get_face_merge_implementation(
+            toolbox.blockstructured.api.get_face_merge_implementation(
                 self._patch_overlap_new
             )
         )
         self._patch.generator.merge_method_definition = (
-            peano4.toolbox.blockstructured.get_cell_merge_implementation(self._patch)
+            toolbox.blockstructured.api.get_cell_merge_implementation(self._patch)
         )
 
         self._patch_overlap_old.generator.includes += """
@@ -771,7 +771,7 @@ The finest mesh width of """
             )
         )
         self._action_set_copy_new_faces_onto_old_faces = (
-            peano4.toolbox.blockstructured.BackupPatchOverlap(
+            toolbox.blockstructured.api.BackupPatchOverlap(
                 self._patch_overlap_new,
                 self._patch_overlap_old,
                 False,
@@ -1139,7 +1139,7 @@ The finest mesh width of """
         step.add_action_set(self._action_set_update_cell_label)
         #    step.add_action_set( self._action_set_project_patch_onto_faces )
 
-        plot_patches_action_set = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat(
+        plot_patches_action_set = toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
             filename=output_path + "solution-" + self._name,
             patch=self._patch,
             dataset_name=self._unknown_identifier(),
@@ -1159,7 +1159,7 @@ The finest mesh width of """
         step.add_action_set(plot_patches_action_set)
 
         if self._plot_grid_properties:
-            plot_grid_action_set = peano4.toolbox.PlotGridInPeanoBlockFormat(
+            plot_grid_action_set = peano4.api.toolbox.PlotGridInPeanoBlockFormat(
                 filename=output_path + "grid-" + self._name,
                 cell_unknown=None,
                 additional_includes="""
@@ -1214,7 +1214,7 @@ The finest mesh width of """
         step.add_action_set(self._action_set_update_cell_label)
         #    step.add_action_set( self._action_set_project_patch_onto_faces )
 
-        checkpoint_patches_action_set = peano4.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat(
+        checkpoint_patches_action_set = toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
             filename=output_path + "checkpoint-" + self._name,
             patch=self._patch,
             dataset_name=self._unknown_identifier(),
@@ -1270,7 +1270,7 @@ The finest mesh width of """
 
         This routine is typically not invoked by a user.
 
-        output: peano4.output.Output
+        output: peano4.api.output.Output
 
         """
         templatefile_prefix = os.path.dirname(os.path.realpath(__file__)) + "/"
@@ -1291,7 +1291,7 @@ The finest mesh width of """
         self.add_entries_to_text_replacement_dictionary(implementationDictionary)
 
         generated_abstract_header_file = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 templatefile_prefix + "Abstract.template.h",
                 templatefile_prefix + "Abstract.template.cpp",
                 "Abstract" + self._name,
@@ -1303,7 +1303,7 @@ The finest mesh width of """
             )
         )
         generated_solver_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 templatefile_prefix + ".template.h",
                 templatefile_prefix + ".template.cpp",
                 self._name,
@@ -1323,7 +1323,7 @@ The finest mesh width of """
         output.makefile.add_cpp_file(subdirectory + self._name + ".cpp", generated=True)
 
         if self._use_var_shortcut:
-            generated_shortcut_file = peano4.output.Jinja2TemplatedHeaderFile(
+            generated_shortcut_file = peano4.api.output.Jinja2TemplatedHeaderFile(
                 os.path.dirname(os.path.realpath(__file__))
                 + "/"
                 + "../VariableShortcuts.template.h",
