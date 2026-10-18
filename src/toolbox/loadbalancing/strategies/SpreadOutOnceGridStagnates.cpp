@@ -11,9 +11,7 @@ tarch::logging::Log  toolbox::loadbalancing::strategies::SpreadOutOnceGridStagna
 
 
 toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::SpreadOutOnceGridStagnates(Configuration* configuration, CostMetrics*   costMetrics ):
-  AbstractLoadBalancing( configuration, costMetrics ),
-  _previousNumberOfCells(-1),
-  _numberOfStableGridIterations(0) {
+  AbstractLoadBalancing( configuration, costMetrics ) {
   assertion( configuration!=nullptr );
   _state = State::InterRankDistribution;
   _statistics.notifyOfStateChange(_state);
@@ -27,10 +25,14 @@ int toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::getNumberOfT
   }
   int result = 0;
 
+  const peano4::grid::GridStatistics gridStatistics = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
+
   if (
     _state==State::InterRankDistribution
     and
-    _numberOfStableGridIterations>3
+    gridStatistics.getNumberOfRefiningVertices()==0
+    and
+    gridStatistics.getNumberOfRefinementTriggeredVertices()==0
   ) {
     int maxPermittedTreesPerRank = _configuration->getMaxLocalTreesPerRank(_state)>=1
                                  ? _configuration->getMaxLocalTreesPerRank(_state)
@@ -70,12 +72,6 @@ int toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::getNumberOfT
 
 
 void toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::updateLoadBalancing() {
-  if ( _previousNumberOfCells == peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() ) {
-    _numberOfStableGridIterations++;
-  }
-  else {
-    _numberOfStableGridIterations = 0;
-  }
  
   if (
     not tarch::mpi::Rank::getInstance().isGlobalMaster()
@@ -117,9 +113,6 @@ void toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::updateLoadB
     }
 
     _state = State::Stagnation;
-  }
-  else {
-    _previousNumberOfCells = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
   }
 }
 
