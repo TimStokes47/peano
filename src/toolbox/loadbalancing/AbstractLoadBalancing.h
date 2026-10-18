@@ -21,6 +21,9 @@ namespace toolbox {
 } // namespace toolbox
 
 
+/**
+ * Abstract superclass of any load balancing
+ */
 class toolbox::loadbalancing::AbstractLoadBalancing {
 public:
   /**
@@ -158,6 +161,10 @@ public:
    *          _blacklist.update();
    *
    * in this routine.
+   *
+   * If you use the actionset toolbox.laodbalancing.api.LoadBalancing, then
+   * the unprepareTraversal() invokes the finishStep() for you. This in turn
+   * means, as per contract, that the statistics have an updated global view.
    */
   virtual void finishStep() = 0;
 
