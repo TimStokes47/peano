@@ -31,6 +31,19 @@ public:
   static constexpr int NoHeaviestTreeAvailable = -1;
 
   /**
+   * Number of mesh sweeps a split needs until the mesh is consistent again
+   *
+   * We need three sweeps to perform a proper split:
+   *
+   * 1. Trigger the split,
+   * 2. split the mesh actually,
+   * 3. update all the stats.
+   *
+   * @see hasSplitRecently()
+   */
+  static constexpr int NumberOfMeshSweepsAfterSplitToMakeMeshConsistentAgain = 3;
+
+  /**
    * Constructor
    *
    * Data ownership is handed over to the load balancing, i.e. the balancing
@@ -91,12 +104,9 @@ public:
   /**
    * Has mesh split recently
    *
-   * Means that mesh has split over the past three iterations. The number three
-   * is hard-coded, as we need three iterations to perform a proper split:
-   *
-   * 1. Trigger the split,
-   * 2. split the mesh actually,
-   * 3. update all the stats.
+   * Means that mesh has split over the past
+   * NumberOfMeshSweepsAfterSplitToMakeMeshConsistentAgain iterations, i.e.
+   * the iterations a proper split needs until the mesh is consistent again.
    *
    * If we have then not come to the conclusion that we should immediately
    * split again, then we haven't split recently.

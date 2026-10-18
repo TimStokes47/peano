@@ -57,7 +57,7 @@ std::string toolbox::loadbalancing::AbstractLoadBalancing::toString() const {
 
 
 bool toolbox::loadbalancing::AbstractLoadBalancing::hasSplitRecently() const {
-  return _statistics.getNumberOfStateUpdatesWithoutAnySplit() < 3 or _statistics.getLocalNumberOfSplits() > 0;
+  return _statistics.getNumberOfStateUpdatesWithoutAnySplit() < NumberOfMeshSweepsAfterSplitToMakeMeshConsistentAgain or _statistics.getLocalNumberOfSplits() > 0;
 }
 
 
