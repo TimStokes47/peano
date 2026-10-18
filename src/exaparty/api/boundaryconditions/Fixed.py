@@ -66,19 +66,16 @@ project.additional_action_sets_per_solver_step.append(
 
     __Template_TouchVertexLastTime = jinja2.Template(
         """
-    // check only boundary vertices
-    if (::exaparty::boundaryconditions::isVertexOnGlobalBoundary(marker,DomainOffset,DomainSize)) {
-      for (auto& particle: fineGridVertex{{PARTICLES_CONTAINER}}) {
-        ::exaparty::boundaryconditions::applyFixedBoundaryCondition(
-          *particle,
-          marker,
-          DomainOffset,
-          DomainSize,
-          {{RELATIVE_DOMAIN_HALO}},
-          _spacetreeId
-        );
-      } // for loop over particles
-    } // if on marker
+    for (auto& particle: fineGridVertex{{PARTICLES_CONTAINER}}) {
+      ::exaparty::boundaryconditions::applyFixedBoundaryCondition(
+        *particle,
+        marker,
+        DomainOffset,
+        DomainSize,
+        {{RELATIVE_DOMAIN_HALO}},
+        _spacetreeId
+      );
+    } // for loop over particles
     """
     )
 
@@ -87,6 +84,16 @@ project.additional_action_sets_per_solver_step.append(
         if operation_name == ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME:
             result = self.__Template_TouchVertexLastTime.render(**self.d)
         return result
+
+    def get_guard_of_operation(self, operation_name):
+        """!
+
+        Check only boundary vertices
+
+        """
+        if operation_name == ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME:
+            return "::exaparty::boundaryconditions::isVertexOnGlobalBoundary(marker,DomainOffset,DomainSize)"
+        return "true"
 
     def user_should_modify_template(self):
         return False

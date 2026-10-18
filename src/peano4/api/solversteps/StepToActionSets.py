@@ -31,7 +31,7 @@ class StepToActionSets(object):
         print( "user has to modify class " + action_set.get_action_set_name() + " in actions directory manually ")
       else:
         subnamespace = "observers" 
-        action_set_name = self.step.name + "2" + action_set.get_action_set_name() + str( self.step.action_sets.index(action_set))
+        action_set_name = self.step.get_observer_class_name() + "2" + action_set.get_action_set_name() + str( self.step.action_sets.index(action_set))
 
       new_action_set = peano4.api.output.ActionSet(
         action_set_name, self.step.project.namespace + [ subnamespace ], self.step.project.subdirectory + subnamespace, action_set
@@ -76,4 +76,4 @@ class StepToActionSets(object):
       output.artefacts.append( new_action_set )
       output.makefile.add_cpp_file( new_action_set.get_cpp_file_name(), generated=True )
 
-      return subnamespace + "::" + action_set_name
+      return subnamespace + "::" + new_action_set.classname

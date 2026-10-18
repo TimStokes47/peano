@@ -94,8 +94,7 @@ class PlotGridInPeanoBlockFormat(ActionSet):
     return False
 
 
-  __Template_TouchCellFirstTime = jinja2.Template(""" 
-  if ( {{GUARD_PREDICATE}} ) {
+  __Template_TouchCellFirstTime = jinja2.Template("""
   int vertexIndices[TwoPowerD];
 
   int indices = _writer->plotPatch(
@@ -113,7 +112,6 @@ class PlotGridInPeanoBlockFormat(ActionSet):
     marker.willBeEnclaveCell() ? 1.0 : 0.0
   };
  _dataWriter->plotCell(indices,markerData);
- }
 """)
 
 
@@ -163,8 +161,14 @@ class PlotGridInPeanoBlockFormat(ActionSet):
     if operation_name==ActionSet.OPERATION_BEGIN_TRAVERSAL:
       result = self.__Template_BeginTraversal.render(**self.d)             
     if operation_name==ActionSet.OPERATION_END_TRAVERSAL:
-      result = self.__Template_EndTraversal.render(**self.d)             
+      result = self.__Template_EndTraversal.render(**self.d)
     return result
+
+
+  def get_guard_of_operation(self,operation_name):
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+      return self.d[ "GUARD_PREDICATE" ]
+    return "true"
 
 
   def get_attributes(self):

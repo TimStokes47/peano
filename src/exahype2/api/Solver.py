@@ -473,7 +473,7 @@ class Solver(abc.ABC):
         _minTimeStamp/_maxTimeStamp/_minTimeStepSize/_maxTimeStepSize and
         the updateCell()/startTimeStep()/finishTimeStep() lifecycle to
         maintain them - @see exahype2.api.fv.actionsets.
-        UpdateCellAndComputeGlobalTimeStep, which drives that
+        ComputeGlobalCFLCondition, which drives that
         lifecycle instead of introducing parallel state via this method.
 
         """

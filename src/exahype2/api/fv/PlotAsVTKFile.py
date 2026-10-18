@@ -16,8 +16,8 @@ class _PlotPatchesIfSolverWantsToPlot(toolbox.blockstructured.api.PlotPatchesInP
 
     The toolbox action set opens a new snapshot file in beginTraversal()
     and adds it to the index file. That has to be skipped altogether for a
-    solver which does not want to plot, so all operation bodies are wrapped
-    into a check of the solver's wantsToPlot(). wantsToPlot() does not
+    solver which does not want to plot, so the guards of all operations
+    are combined with a check of the solver's wantsToPlot(). wantsToPlot() does not
     change throughout the plot sweep, as finishPlottingStep() - which moves
     the solver on to its next plot time stamp - is only called in
     unprepareTraversal().
@@ -28,11 +28,11 @@ class _PlotPatchesIfSolverWantsToPlot(toolbox.blockstructured.api.PlotPatchesInP
         super().__init__(**kwargs)
         self._solver_instance = solver_instance
 
-    def get_body_of_operation(self, operation_name):
+    def get_guard_of_operation(self, operation_name):
         return (
-            "\n  if (repositories::" + self._solver_instance + ".wantsToPlot()) {\n"
-            + super().get_body_of_operation(operation_name)
-            + "\n  }\n"
+            "repositories::" + self._solver_instance + ".wantsToPlot() and ("
+            + super().get_guard_of_operation(operation_name)
+            + ")"
         )
 
     def get_body_of_unprepareTraversal(self):
@@ -130,7 +130,7 @@ class PlotAsVTKFile(Solver.Plotter):
         """
         peano4.api.Logger().log("Create plot task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
-        write_vtk_file_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Write VTK file", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        write_vtk_file_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Write VTK file", entity=peano4.api.taskgraph.Task.GridEntity.CELL, may_spawn_background_tasks=False)
 
         plot.add_task(write_vtk_file_task)
 
@@ -145,7 +145,7 @@ class PlotAsVTKFile(Solver.Plotter):
         # object: the generated code below carries the exact offset/size
         # values this plotter was configured with, and nothing else.
         # Only the cells selected by the solver's grid selector are plotted,
-        # as only those are updated (@see UpdateCellAndComputeGlobalTimeStep's
+        # as only those are updated (@see UpdateCell's
         # guard). Other cells would hold outdated data overlapping the actual
         # solution.
         guard = "(" + self._solver.grid_selector.createCellGuard() + ")"

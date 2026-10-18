@@ -11,8 +11,33 @@ from .Overwrite import Overwrite
 
 from .Jinja2TemplatedHeaderFile import Jinja2TemplatedHeaderFile
 
+from ..Logger import Logger
+
 
 class Observer(object):
+    """!
+
+    C++ observer of one mesh traversal
+
+    ## Task groups
+
+    The observer invokes its action sets one by one: Per event, such as
+    touchVertexFirstTime() or createCell(), it runs through the action sets
+    and invokes the event on each of them. The action sets can be split
+    into task groups, i.e. consecutive action sets which may run in parallel
+    (@ref peano4.api.solversteps.SynchroniseActionSets.get_task_groups()).
+    Within enterCell() and leaveCell(), the observer embeds the code which
+    invokes the events of a group's action sets into one task per action
+    set, spawns these tasks and waits for them
+    (tarch::multicore::spawnAndWait()) before it continues with the next
+    group. This holds for all events, i.e. the create, touch and destroy
+    events of vertices, faces and cells. The tasks capture everything by
+    reference, which is safe, as the observer waits for them. A group with
+    one action set yields exactly the same code as an observer without task
+    groups.
+
+    """
+
     default_overwrite = True
 
     def __init__(
@@ -24,15 +49,33 @@ class Observer(object):
         vertices,
         faces,
         cells,
+        task_groups=None,
     ):
-        """
-        Included actions is a list of qualified actions which are used
+        """!
+
+        @param included_actions: [str]
+          Full qualified names of the action sets in invocation order.
+
+        @param task_groups: [[int]] or None
+          Groups of indices into included_actions. The groups are invoked
+          one after the other, the action sets within a group in parallel.
+          Concatenated, the groups have to yield 0, 1, 2, ..., i.e. every
+          action set exactly once and in invocation order. If None, every
+          action set forms a group of its own.
+
         """
         self.classname = classname
         self.namespace = namespace
         self.subdirectory = subdirectory
 
         self.included_actions = included_actions
+        if task_groups is None:
+            task_groups = [[index] for index in range(len(included_actions))]
+        if [index for group in task_groups for index in group] != list(range(len(included_actions))):
+            raise Exception(
+                f"Task groups {task_groups} of observer {classname} do not enumerate its {len(included_actions)} action sets in order"
+            )
+        self.task_groups = task_groups
         self.vertices = vertices
         self.faces = faces
         self.cells = cells
@@ -521,6 +564,63 @@ void {{FULL_QUALIFIED_CLASSNAME}}::unprepareTraversal() {
                     output_file.write(jinja2.Template(template).render(**manual_dict))
                 else:
                     return jinja2.Template(template).render(**manual_dict)
+
+    def __render_template_for_action(self, template, action_index, manual_dict):
+        """!
+
+        Render template for the action set with the given index, i.e. the
+        C++ code with which the observer invokes this action set's events
+
+        """
+        dictionary = self.d if manual_dict is None else manual_dict
+        dictionary["ACTIVE_ACTION_SET"] = "_actionSet" + str(action_index)
+        dictionary["ACTIVE_ACTION_SET_FULL_QUALIFIED_NAME"] = self.included_actions[action_index]
+        return jinja2.Template(template).render(**dictionary)
+
+    def __format_template_per_task_group(
+        self, output_file, template, reverse_order=False, manual_dict=None
+    ):
+        """!
+
+        Counterpart of __format_template_per_action() which takes the task
+        groups into account
+
+        The groups are handled one after the other. A group with one action
+        set yields exactly the code of __format_template_per_action(). For a
+        group with several action sets, the code of each action set is
+        embedded into a lambda which captures everything by reference. Each
+        lambda is spawned as a task, and the code waits for all of them
+        before it continues. See the class documentation.
+
+        @param reverse_order: bool
+          Invoke the groups, and the action sets within each group, in
+          reversed order, as we do for all events of leaveCell().
+
+        """
+        groups = [list(group) for group in self.task_groups]
+        if reverse_order:
+            groups = [list(reversed(group)) for group in reversed(groups)]
+
+        for group in groups:
+            if len(group) == 1:
+                output_file.write(self.__render_template_for_action(template, group[0], manual_dict))
+                continue
+
+            code = "\n  {\n"
+            code += "    // Action sets " + ", ".join(str(index) for index in group) + " run in parallel\n"
+            code += "    std::vector< tarch::multicore::Task* > parallelActionSets;\n"
+            for index in group:
+                code += f"    std::function<void()> invokeActionSet{index} = [&]() -> void {{\n"
+                code += self.__render_template_for_action(template, index, manual_dict)
+                code += "\n    };\n"
+                code += "    parallelActionSets.push_back( new tarch::multicore::TaskWithoutCopyOfFunctor(\n"
+                code += "      tarch::multicore::Task::DontFuse,\n"
+                code += "      tarch::multicore::Task::DefaultPriority,\n"
+                code += f"      invokeActionSet{index}\n"
+                code += "    ));\n"
+            code += "    tarch::multicore::spawnAndWait( parallelActionSets );\n"
+            code += "  }\n"
+            output_file.write(code)
 
     TemplateGetGridControlEvents_Prologue = """
 
@@ -1133,7 +1233,7 @@ void {{FULL_QUALIFIED_CLASSNAME}}::enterCell( const peano4::grid::GridTraversalE
                     ",MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS",
                 ]
             )
-            self.__format_template_per_action(
+            self.__format_template_per_task_group(
                 output_file,
                 self.TemplateEnterCell_VertexMappingCall,
                 False,
@@ -1153,7 +1253,7 @@ void {{FULL_QUALIFIED_CLASSNAME}}::enterCell( const peano4::grid::GridTraversalE
                     ",MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS",
                 ]
             )
-            self.__format_template_per_action(
+            self.__format_template_per_task_group(
                 output_file,
                 self.TemplateEnterCell_FaceMappingCall,
                 False,
@@ -1172,7 +1272,7 @@ void {{FULL_QUALIFIED_CLASSNAME}}::enterCell( const peano4::grid::GridTraversalE
                     ",MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS",
                 ]
             )
-            self.__format_template_per_action(
+            self.__format_template_per_task_group(
                 output_file,
                 self.TemplateEnterCell_CellMappingCall,
                 False,
@@ -1186,7 +1286,7 @@ void {{FULL_QUALIFIED_CLASSNAME}}::enterCell( const peano4::grid::GridTraversalE
             ]
         )
 
-        self.__format_template_per_action(
+        self.__format_template_per_task_group(
             output_file, self.TemplateEnterCell_MappingCall, False, manual_dict=md
         )
         output_file.write(jinja2.Template(self.TemplateEnterCell_Epilogue).render({}))
@@ -1550,7 +1650,7 @@ void {{FULL_QUALIFIED_CLASSNAME}}::leaveCell( const peano4::grid::GridTraversalE
                 ",MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS_CELL_EVENT",
             ]
         )
-        self.__format_template_per_action(
+        self.__format_template_per_task_group(
             output_file, self.TemplateLeaveCell_MappingCall, True, manual_dict=md
         )
 
@@ -1562,7 +1662,7 @@ void {{FULL_QUALIFIED_CLASSNAME}}::leaveCell( const peano4::grid::GridTraversalE
                     ",MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS",
                 ]
             )
-            self.__format_template_per_action(
+            self.__format_template_per_task_group(
                 output_file,
                 self.TemplateLeaveCell_CellStore_MappingCall,
                 True,
@@ -1581,7 +1681,7 @@ void {{FULL_QUALIFIED_CLASSNAME}}::leaveCell( const peano4::grid::GridTraversalE
                     ",MAPPING_SIGNATURE_COARSE_GRID_VERTICES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_FACES_ARGUMENTS,MAPPING_SIGNATURE_COARSE_GRID_CELL_ARGUMENTS",
                 ]
             )
-            self.__format_template_per_action(
+            self.__format_template_per_task_group(
                 output_file,
                 self.TemplateLeaveCell_FaceStore_MappingCall,
                 True,
@@ -1598,7 +1698,7 @@ void {{FULL_QUALIFIED_CLASSNAME}}::leaveCell( const peano4::grid::GridTraversalE
                     "MAPPING_SIGNATURE_FINE_GRID_VERTICES_ARGUMENTS_PICK_ENTRY",
                 ]
             )
-            self.__format_template_per_action(
+            self.__format_template_per_task_group(
                 output_file,
                 self.TemplateLeaveCell_VertexStore_MappingCall,
                 True,
@@ -2566,11 +2666,11 @@ tarch::logging::Log {{FULL_QUALIFIED_CLASSNAME}}::_log( "{{FULL_QUALIFIED_CLASSN
         cpp_written = write_file(overwrite, self.default_overwrite, cpp_filename)
 
         if header_written and cpp_written:
-            print("write " + header_filename + " and " + cpp_filename)
+            Logger().log("write " + header_filename + " and " + cpp_filename)
         elif header_written:
-            print("write " + header_filename)
+            Logger().log("write " + header_filename)
         elif cpp_written:
-            print("write " + cpp_filename)
+            Logger().log("write " + cpp_filename)
 
         self.__generate_header(overwrite, directory)
         self.__generate_implementation(overwrite, cpp_filename)

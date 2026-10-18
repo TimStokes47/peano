@@ -19,6 +19,7 @@ exahype2::Solver::Solver():
   _maxVolumeHUpdatedThisTimeStep(0.0),
   _minTimeStepSize(0.0),
   _maxTimeStepSize(0.0),
+  _admissibleTimeStepSize(0.0),
   _minTimeStepSizeUpdatedThisTimeStep(std::numeric_limits<double>::max()),
   _maxTimeStepSizeUpdatedThisTimeStep(0.0),
   _cellUpdates(0) {
@@ -42,6 +43,11 @@ double exahype2::Solver::getMinTimeStepSize() const {
 
 double exahype2::Solver::getMaxTimeStepSize() const {
   return _maxTimeStepSize;
+}
+
+
+double exahype2::Solver::getAdmissibleTimeStepSize() const {
+  return _admissibleTimeStepSize;
 }
 
 
@@ -79,6 +85,7 @@ void exahype2::Solver::startTimeStep(
 
   _minTimeStepSize = _minTimeStepSizeUpdatedThisTimeStep;
   _maxTimeStepSize = _maxTimeStepSizeUpdatedThisTimeStep;
+  _admissibleTimeStepSize = _maxTimeStepSize;
 
   _minTimeStepSizeUpdatedThisTimeStep = std::numeric_limits<double>::max();
   _maxTimeStepSizeUpdatedThisTimeStep = std::numeric_limits<double>::min();
@@ -170,4 +177,11 @@ void exahype2::Solver::updateCell(double timeStepSize, double timeStamp) {
   _minTimeStampUpdatedThisTimeStep    = std::min(_minTimeStampUpdatedThisTimeStep, timeStamp);
   _maxTimeStampUpdatedThisTimeStep    = std::max(_maxTimeStampUpdatedThisTimeStep, timeStamp);
   _cellUpdates++;
+}
+
+
+void exahype2::Solver::enforceTimeStepSize(double timeStepSize) {
+  tarch::multicore::Lock lock(_semaphore);
+  _minTimeStepSize = timeStepSize;
+  _maxTimeStepSize = timeStepSize;
 }

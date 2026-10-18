@@ -10,7 +10,7 @@ from ..Task import Task
 from .ReportCompiledStepSequence import report_compiled_step_sequence
 
 
-def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Step"]:
+def translate(graph: Graph, identifier: str, peano_project: "peano4.api.Project") -> List["peano4.api.solversteps.Step"]:
     """!
 
     Simplest possible task graph compiler
@@ -47,16 +47,19 @@ def translate(graph: Graph, identifier: str) -> List["peano4.api.solversteps.Ste
     in the same style as Graph.visualise() under
     LoggerVerbosity.VISUALISATION.
 
-    graph: peano4.api.taskgraph.Graph
+    @param graph: peano4.api.taskgraph.Graph
       The task graph to linearise. Assumed to be acyclic - translate() does
       not check for cycles and will recurse indefinitely on one.
 
-    identifier: str
+    @param identifier: str
       Identifies which of the surrounding project's algorithmic phases this
       graph belongs to (e.g. "SetupSimulation", "TimeStep", "Plot"). Every
       generated Observer's name is prefixed with this identifier, joined by
       an underscore, so Observers coming from different phases never clash
       even if their tasks happen to share a name.
+
+    @param peano_project: peano4.api.Project
+      Not used by this compiler. @ref peano4.api.taskgraph.compiler
 
     @return [peano4.api.solversteps.Step]
       One Observer per task, ordered so that every task's Observer comes

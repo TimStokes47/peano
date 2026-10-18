@@ -68,7 +68,7 @@ class Graph:
         declares via use_cell()/use_face()/use_vertex() (each annotated
         with its Task.DataAccess qualifier) and whether it repeats - as one
         block of text per task, ordered root to sink by dependency depth
-        exactly like visualise() lays its layers out left to right.
+        exactly like visualise() lays its layers out top to bottom.
         """
         import peano4.api
 
@@ -80,7 +80,7 @@ class Graph:
         # deepest of its dependencies. Recursive but memoised - task graphs
         # here are small and acyclic by construction. @see visualise(),
         # which computes the very same notion of depth to lay its layers
-        # out left to right.
+        # out top to bottom.
         depth_of_task = {}
 
         def depth(task: Task) -> int:
@@ -121,17 +121,19 @@ class Graph:
         Render this task graph with matplotlib as a UML state diagram: one
         rounded-rectangle state per task, a solid transition arrow from
         every dependency to the task that depends on it. Tasks are laid
-        out left to right by dependency depth (a task without dependencies
-        sits on the left; everything that - directly or transitively -
-        depends on it sits to its right), so following the transitions
-        always moves rightwards, exactly like reading a state diagram's
-        flow of control.
+        out top to bottom by dependency depth (a task without dependencies
+        sits at the top; everything that - directly or transitively -
+        depends on it sits below it), so following the transitions always
+        moves downwards, exactly like reading a state diagram's flow of
+        control. The tasks of one layer sit side by side: every task sits
+        straight below its leftmost dependency and is moved to the right
+        only where it would otherwise overlap another task.
 
         A filled black circle - the UML initial pseudostate - transitions
         into every task that has no dependencies; every task nothing else
         depends on transitions into a bullseye - the UML final pseudostate.
         A task with has_to_repeat set (i.e. not None) is additionally drawn
-        with a small self-transition loop above its state, the standard UML
+        with a small self-transition loop right of its state, the standard UML
         notation for "this state can re-trigger itself", labelled with the
         task's has_to_repeat string itself.
 
@@ -194,8 +196,8 @@ class Graph:
         BODY_PADDING = 0.14
         MIN_WIDTH = 1.7
         CHAR_WIDTH = 0.10
-        HORIZONTAL_GAP = 1.3
-        VERTICAL_GAP = 0.35
+        HORIZONTAL_GAP = 0.6
+        VERTICAL_GAP = 0.9
 
         def activity_lines(task: Task):
             lines = [f"do / {action_set.get_action_set_name()}" for action_set in task.action_sets]
@@ -220,32 +222,48 @@ class Graph:
                 BODY_PADDING + len(lines) * ACTIVITY_LINE_HEIGHT + 0.5 * BODY_PADDING if lines else 0
             )
 
-        x_step = max(width_of_task.values()) + HORIZONTAL_GAP
+        SELF_LOOP_WIDTH = 0.4
+        SELF_LOOP_LABEL_CHAR_WIDTH = 0.065
+        PSEUDOSTATE_OFFSET = 0.6
 
-        # Stack the tasks of every layer top to bottom by their actual
-        # (content-dependent) height, then centre the resulting column
-        # around y=0 so layers with a different number of tasks still
-        # line up symmetrically around the horizontal midline.
+        # Horizontal space a task's self-transition loop and its label take
+        # right of the task's state
+        def self_loop_extent(task: Task) -> float:
+            if not task.has_to_repeat:
+                return 0.0
+            return SELF_LOOP_WIDTH + 0.06 + SELF_LOOP_LABEL_CHAR_WIDTH * len(task.has_to_repeat)
+
+        # Every layer forms one row. The rows are stacked top to bottom,
+        # each as tall as its tallest state. Every state is placed straight
+        # below its leftmost dependency, i.e. left-aligned with it, and
+        # moved to the right only if it would otherwise overlap the state
+        # left of it in the same row. States without dependencies start at
+        # x=0 and extend to the right.
         position_of_task = {}
-        for layer, tasks_in_layer in layers.items():
-            y = 0.0
-            rows = []
+        row_y = 0.0
+        for layer in sorted(layers):
+            def preferred_left_edge(task: Task) -> float:
+                if not task.dependencies:
+                    return 0.0
+                return min(
+                    position_of_task[dependency][0] - width_of_task[dependency] / 2
+                    for dependency in task.dependencies
+                )
+
+            tasks_in_layer = sorted(layers[layer], key=preferred_left_edge)
+            row_height = max(height_of_task[task] for task in tasks_in_layer)
+            next_free_x = float("-inf")
             for task in tasks_in_layer:
-                h = height_of_task[task]
-                rows.append((task, y - h / 2))
-                y -= h + VERTICAL_GAP
-            column_height = -y - VERTICAL_GAP
-            offset = column_height / 2
-            for task, center_y in rows:
-                position_of_task[task] = (layer * x_step, center_y + offset)
+                left_edge = max(preferred_left_edge(task), next_free_x)
+                position_of_task[task] = (left_edge + width_of_task[task] / 2, row_y - row_height / 2)
+                next_free_x = left_edge + width_of_task[task] + self_loop_extent(task) + HORIZONTAL_GAP
+            row_y -= row_height + VERTICAL_GAP
+        bottom_y = row_y + VERTICAL_GAP
 
         root_tasks = [task for task in self.tasks if not task.dependencies]
         sink_tasks = [
             task for task in self.tasks if not any(task in other.dependencies for other in self.tasks)
         ]
-        SELF_LOOP_HEIGHT = 0.4
-        SELF_LOOP_LABEL_HEIGHT = 0.22
-        PSEUDOSTATE_OFFSET = x_step * 0.55
 
         # Text is sized in points, so - to guarantee it actually fits the
         # (content-dependent) box widths/heights computed above in data
@@ -257,19 +275,15 @@ class Graph:
         PADDING = 0.5
 
         min_x = min(position_of_task[task][0] - width_of_task[task] / 2 for task in self.tasks)
-        max_x = max(position_of_task[task][0] + width_of_task[task] / 2 for task in self.tasks)
-        min_y = min(position_of_task[task][1] - height_of_task[task] / 2 for task in self.tasks)
-        max_y = max(position_of_task[task][1] + height_of_task[task] / 2 for task in self.tasks)
-        for task in self.tasks:
-            if task.has_to_repeat:
-                max_y = max(
-                    max_y,
-                    position_of_task[task][1] + height_of_task[task] / 2 + SELF_LOOP_HEIGHT + SELF_LOOP_LABEL_HEIGHT,
-                )
+        max_x = max(
+            position_of_task[task][0] + width_of_task[task] / 2 + self_loop_extent(task) for task in self.tasks
+        )
+        min_y = bottom_y
+        max_y = 0.0
         if root_tasks:
-            min_x = min(min_x, -PSEUDOSTATE_OFFSET - 0.09)
+            max_y = PSEUDOSTATE_OFFSET + 0.09
         if sink_tasks:
-            max_x = max(max_x, max(layers.keys()) * x_step + PSEUDOSTATE_OFFSET + 0.11)
+            min_y = bottom_y - PSEUDOSTATE_OFFSET - 0.11
         min_x, max_x, min_y, max_y = min_x - PADDING, max_x + PADDING, min_y - PADDING, max_y + PADDING
 
         # Reserve a fixed number of inches around the axes for title/
@@ -279,7 +293,7 @@ class Graph:
         # come out to exactly INCH_PER_UNIT inches per data unit in both
         # directions.
         LEGEND_HEIGHT = 0.26
-        LEFT_CHROME, RIGHT_CHROME, TOP_CHROME, BOTTOM_CHROME = 0.1, 0.1, 0.4 + LEGEND_HEIGHT, 0.5
+        LEFT_CHROME, RIGHT_CHROME, TOP_CHROME, BOTTOM_CHROME = 0.35, 0.1, 0.4 + LEGEND_HEIGHT, 0.15
         data_width_inches = (max_x - min_x) * INCH_PER_UNIT
         data_height_inches = (max_y - min_y) * INCH_PER_UNIT
         figure_width = data_width_inches + LEFT_CHROME + RIGHT_CHROME
@@ -379,11 +393,15 @@ class Graph:
             if task.has_to_repeat:
                 x, y = position_of_task[task]
                 w, h = width_of_task[task], height_of_task[task]
-                top_y = y + h / 2
-                left_x, right_x = x - 0.18 * w, x + 0.18 * w
-                loop_height = SELF_LOOP_HEIGHT
+                right_x = x + w / 2
+                upper_y, lower_y = y + 0.18 * h, y - 0.18 * h
                 path = Path(
-                    [(left_x, top_y), (left_x, top_y + loop_height), (right_x, top_y + loop_height), (right_x, top_y)],
+                    [
+                        (right_x, upper_y),
+                        (right_x + SELF_LOOP_WIDTH, upper_y),
+                        (right_x + SELF_LOOP_WIDTH, lower_y),
+                        (right_x, lower_y),
+                    ],
                     [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4],
                 )
                 axes.add_patch(
@@ -398,16 +416,16 @@ class Graph:
                 )
                 axes.annotate(
                     task.has_to_repeat,
-                    (x, top_y + loop_height + 0.06),
-                    ha="center", va="bottom", zorder=3, fontsize=6, style="italic", color="crimson",
+                    (right_x + SELF_LOOP_WIDTH + 0.06, y),
+                    ha="left", va="center", zorder=3, fontsize=6, style="italic", color="crimson",
                 )
 
         # UML initial pseudostate (filled circle) transitioning into every
         # task without dependencies, and UML final pseudostate (bullseye)
         # collecting every task nothing else depends on.
         if root_tasks:
-            y = sum(position_of_task[task][1] for task in root_tasks) / len(root_tasks)
-            initial_pos = (-PSEUDOSTATE_OFFSET, y)
+            x = sum(position_of_task[task][0] for task in root_tasks) / len(root_tasks)
+            initial_pos = (x, PSEUDOSTATE_OFFSET)
             initial_patch = Circle(initial_pos, 0.09, facecolor="black", edgecolor="black", zorder=3)
             axes.add_patch(initial_patch)
             for task in root_tasks:
@@ -426,9 +444,8 @@ class Graph:
                 )
 
         if sink_tasks:
-            max_layer = max(layers.keys())
-            y = sum(position_of_task[task][1] for task in sink_tasks) / len(sink_tasks)
-            final_pos = (max_layer * x_step + PSEUDOSTATE_OFFSET, y)
+            x = sum(position_of_task[task][0] for task in sink_tasks) / len(sink_tasks)
+            final_pos = (x, bottom_y - PSEUDOSTATE_OFFSET)
             final_outer = Circle(final_pos, 0.11, facecolor="white", edgecolor="black", linewidth=1.3, zorder=3)
             axes.add_patch(final_outer)
             axes.add_patch(Circle(final_pos, 0.05, facecolor="black", edgecolor="none", zorder=4))
@@ -476,7 +493,8 @@ class Graph:
             columnspacing=1.2,
         )
 
-        axes.set_xlabel("Dependency depth")
+        axes.set_ylabel("Dependency depth")
+        axes.set_xticks([])
         axes.set_yticks([])
         axes.set_aspect("equal")
         # Non-blocking: several related graphs (e.g. a project's Setup/

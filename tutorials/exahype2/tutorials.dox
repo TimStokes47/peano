@@ -8,13 +8,34 @@
 The tutorials are based upon Jupyter notebooks. Please browse through
 the links below and study the webpages. However, they are created ***from*** the
 notebooks automatically, i.e. you get the full experience only by studying the
-notebooks. For this, switch to
-
-       cd tutorials/exahype2
-
-and issue `jupyter-notebook 00_getting-started.ipynb`. All the follow-up notebooks
-are held in this directory, too. So simple call Jupyter on different files.
+notebooks. Start with the getting started notebook below, which checks that your
+machine is ready for all the other tutorials.
 </div>
+
+# Getting started
+
+Build Peano with ExaHyPE 2 enabled as described in the
+@ref page_installation_home "installation instructions" first. Then create a
+virtual environment in Peano's root directory, install the Python requirements
+into it, and launch Jupyter from within this environment:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+cd tutorials/exahype2
+jupyter lab 00_getting-started.ipynb
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The notebooks set the path to Peano's Python API themselves, so you do not have
+to set any `PYTHONPATH`. When you come back later, reactivate the environment
+with `source .venv/bin/activate` before you launch Jupyter. If you prefer to
+start Jupyter from somewhere else, register the environment as a kernel via
+`python -m ipykernel install --user --name peano` and pick this kernel within
+Jupyter.
+
+# Overview
 
 - \subpage tutorials_exahype2_00_getting-started
 - Modelling a PDE with ExaHyPE 2

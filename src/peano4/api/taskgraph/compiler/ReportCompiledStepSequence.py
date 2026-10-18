@@ -3,6 +3,7 @@
 from typing import List
 
 import peano4.api
+import peano4.api.solversteps
 
 
 def report_compiled_step_sequence(
@@ -17,21 +18,29 @@ def report_compiled_step_sequence(
 
     Meant to be called right after a compiler (@see
     peano4.api.taskgraph.compiler.Sequential.translate) has derived its
-    Observer sequence and run
+    Observer sequence. Note that
     peano4.api.taskgraph.compiler.PropagateUseStatements.propagate_use_statements()
-    on it, so what gets reported is the actually-final use_cell()/
-    use_face()/use_vertex() declarations, not just what the originating
-    Tasks declared directly.
+    runs as postprocessing after the compiler, i.e. any use_cell()/
+    use_face()/use_vertex() declarations it adds later on are not part of
+    this report.
+
+    Each step's action sets are listed as an enumerated list in the order
+    in which they are invoked ("<number>. do / <name>"). Action sets that
+    may run in parallel share the same number and are told apart by
+    letters ("1.a do / <name>", "1.b do / <name>", ...). The numbering
+    follows the task groups of the generated observer - @ref
+    peano4.api.taskgraph.compiler.ReportCompiledStepSequence._action_set_lines().
 
     Dispatches on peano4.api.Logger().verbosity exactly like
     Graph.log_as_text()/visualise() do: LoggerVerbosity.TEXT logs a plain
     listing of the sequence and, for each step, its action sets plus the
     cell/face/vertex submodels it uses;
     LoggerVerbosity.VISUALISATION draws a flow chart in the same UML state
-    diagram style as Graph.visualise() - a left-to-right chain of states
+    diagram style as Graph.visualise() - a top-to-bottom chain of states
     (one per step, in sequence order, since a compiled sequence has no
     dependency structure left to lay out - it already is the order),
-    listing each step's action sets as "do / <name>" lines and the
+    listing each step's action sets as enumerated "<number>. do / <name>"
+    lines and the
     cell/face/vertex submodels it uses as "cell / <name> [<qualifier>]",
     "face / <name> [<qualifier>]", "vertex / <name> [<qualifier>]" lines -
     <qualifier> being the originating Task's Task.DataAccess
@@ -44,11 +53,11 @@ def report_compiled_step_sequence(
     initial/final pseudostates. Neither happens (this call is then a
     no-op) under any other verbosity.
 
-    steps: [peano4.api.solversteps.Step]
+    @param steps: [peano4.api.solversteps.Step]
       The compiled sequence to report on, exactly as the compiler is about
       to return it.
 
-    title: str
+    @param title: str
       Used as-is as the text report's heading / the flow chart's title.
 
     """
@@ -68,6 +77,24 @@ def _submodel_label(submodel, access) -> str:
     return f"{submodel.name} [{qualifier.name}]" if qualifier is not None else submodel.name
 
 
+def _action_set_lines(step) -> List[str]:
+    """!
+    Enumerated list of the step's action sets in invocation order, i.e.
+    "<number>. do / <name>". The numbers enumerate the task groups which
+    the generated observer invokes one after the other
+    (@ref peano4.api.solversteps.SynchroniseActionSets.get_task_groups()).
+    The action sets of a group with more than one action set run in
+    parallel. They share the number and get a letter each, i.e.
+    "1.a do / <name>", "1.b do / <name>", ...
+    """
+    lines = []
+    for number, group in enumerate(peano4.api.solversteps.get_task_groups(step.action_sets), start=1):
+        for letter_index, action_set in enumerate(group):
+            label = f"{number}.{chr(ord('a') + letter_index)}" if len(group) > 1 else f"{number}."
+            lines.append(f"{label} do / {action_set.get_action_set_name()}")
+    return lines
+
+
 def _log_compiled_step_sequence_as_text(steps, title: str) -> None:
     if not steps:
         peano4.api.Logger().log(f"Compiled task graph '{title}' is empty.")
@@ -76,8 +103,8 @@ def _log_compiled_step_sequence_as_text(steps, title: str) -> None:
     lines = [f"Compiled task graph '{title}':"]
     for step in steps:
         lines.append(f"- {step.name}")
-        for action_set in step.action_sets:
-            lines.append(f"    do / {action_set.get_action_set_name()}")
+        for line in _action_set_lines(step):
+            lines.append(f"    {line}")
         for kind, submodels, access in (
             ("cell", step.cell_data, step.cell_data_access),
             ("face", step.face_data, step.face_data_access),
@@ -100,7 +127,7 @@ def _visualise_compiled_step_sequence(steps, title: str) -> None:
     compartment listing "do / <name>" per action set plus "cell / <name>",
     "face / <name>", "vertex / <name>" per kind of mesh data the step uses,
     self-loops for repeating steps, initial/final pseudostates), but laid
-    out as a single left-to-right chain following steps' list order, since a
+    out as a single top-to-bottom chain following steps' list order, since a
     compiled sequence - unlike a Graph - has no dependency structure left to
     derive layers from; it already is the order.
     """
@@ -109,7 +136,7 @@ def _visualise_compiled_step_sequence(steps, title: str) -> None:
     from matplotlib.path import Path
 
     if not steps:
-        print(f"Compiled task graph '{title}' is empty - nothing to visualise.")
+        peano4.api.Logger().log(f"Compiled task graph '{title}' is empty - nothing to visualise.")
         return
 
     HEADER_HEIGHT = 0.52
@@ -117,14 +144,15 @@ def _visualise_compiled_step_sequence(steps, title: str) -> None:
     BODY_PADDING = 0.14
     MIN_WIDTH = 1.7
     CHAR_WIDTH = 0.10
-    HORIZONTAL_GAP = 1.3
-    SELF_LOOP_HEIGHT = 0.4
-    SELF_LOOP_LABEL_HEIGHT = 0.22
+    VERTICAL_GAP = 0.6
+    SELF_LOOP_WIDTH = 0.4
+    SELF_LOOP_LABEL_CHAR_WIDTH = 0.065
+    PSEUDOSTATE_OFFSET = 0.6
     INCH_PER_UNIT = 0.62
     PADDING = 0.5
 
     def activity_lines(step):
-        lines = [f"do / {action_set.get_action_set_name()}" for action_set in step.action_sets]
+        lines = _action_set_lines(step)
         for kind, submodels, access in (
             ("cell", step.cell_data, step.cell_data_access),
             ("face", step.face_data, step.face_data_access),
@@ -143,21 +171,25 @@ def _visualise_compiled_step_sequence(steps, title: str) -> None:
             BODY_PADDING + len(lines) * ACTIVITY_LINE_HEIGHT + 0.5 * BODY_PADDING if lines else 0
         )
 
-    x_step = max(width_of_step.values()) + HORIZONTAL_GAP
-    position_of_step = {step: (i * x_step, 0.0) for i, step in enumerate(steps)}
-    PSEUDOSTATE_OFFSET = x_step * 0.55
+    # One step per row, stacked top to bottom and centred around x=0
+    position_of_step = {}
+    row_y = 0.0
+    for step in steps:
+        position_of_step[step] = (0.0, row_y - height_of_step[step] / 2)
+        row_y -= height_of_step[step] + VERTICAL_GAP
+    bottom_y = row_y + VERTICAL_GAP
 
-    max_height = max(height_of_step.values())
-    max_repeat_extra = (
-        SELF_LOOP_HEIGHT + SELF_LOOP_LABEL_HEIGHT if any(step.has_to_repeat for step in steps) else 0.0
-    )
+    def self_loop_extent(step) -> float:
+        if not step.has_to_repeat:
+            return 0.0
+        return SELF_LOOP_WIDTH + 0.06 + SELF_LOOP_LABEL_CHAR_WIDTH * len(step.has_to_repeat)
 
-    min_x = -PSEUDOSTATE_OFFSET - 0.09 - PADDING
-    max_x = (len(steps) - 1) * x_step + PSEUDOSTATE_OFFSET + 0.11 + PADDING
-    min_y = -max_height / 2 - PADDING
-    max_y = max_height / 2 + max_repeat_extra + PADDING
+    min_x = -max(width_of_step.values()) / 2 - PADDING
+    max_x = max(width_of_step[step] / 2 + self_loop_extent(step) for step in steps) + PADDING
+    min_y = bottom_y - PSEUDOSTATE_OFFSET - 0.11 - PADDING
+    max_y = PSEUDOSTATE_OFFSET + 0.09 + PADDING
 
-    LEFT_CHROME, RIGHT_CHROME, TOP_CHROME, BOTTOM_CHROME = 0.1, 0.1, 0.4, 0.5
+    LEFT_CHROME, RIGHT_CHROME, TOP_CHROME, BOTTOM_CHROME = 0.1, 0.1, 0.4, 0.15
     data_width_inches = (max_x - min_x) * INCH_PER_UNIT
     data_height_inches = (max_y - min_y) * INCH_PER_UNIT
     figure_width = data_width_inches + LEFT_CHROME + RIGHT_CHROME
@@ -234,14 +266,14 @@ def _visualise_compiled_step_sequence(steps, title: str) -> None:
         if step.has_to_repeat:
             x, y = position_of_step[step]
             w, h = width_of_step[step], height_of_step[step]
-            top_y = y + h / 2
-            left_x, right_x = x - 0.18 * w, x + 0.18 * w
+            right_x = x + w / 2
+            upper_y, lower_y = y + 0.18 * h, y - 0.18 * h
             path = Path(
                 [
-                    (left_x, top_y),
-                    (left_x, top_y + SELF_LOOP_HEIGHT),
-                    (right_x, top_y + SELF_LOOP_HEIGHT),
-                    (right_x, top_y),
+                    (right_x, upper_y),
+                    (right_x + SELF_LOOP_WIDTH, upper_y),
+                    (right_x + SELF_LOOP_WIDTH, lower_y),
+                    (right_x, lower_y),
                 ],
                 [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4],
             )
@@ -257,12 +289,12 @@ def _visualise_compiled_step_sequence(steps, title: str) -> None:
             )
             axes.annotate(
                 step.has_to_repeat,
-                (x, top_y + SELF_LOOP_HEIGHT + 0.06),
-                ha="center", va="bottom", zorder=3, fontsize=6, style="italic", color="crimson",
+                (right_x + SELF_LOOP_WIDTH + 0.06, y),
+                ha="left", va="center", zorder=3, fontsize=6, style="italic", color="crimson",
             )
 
     first_pos = position_of_step[steps[0]]
-    initial_pos = (-PSEUDOSTATE_OFFSET, first_pos[1])
+    initial_pos = (first_pos[0], PSEUDOSTATE_OFFSET)
     initial_patch = Circle(initial_pos, 0.09, facecolor="black", edgecolor="black", zorder=3)
     axes.add_patch(initial_patch)
     axes.add_patch(
@@ -274,7 +306,7 @@ def _visualise_compiled_step_sequence(steps, title: str) -> None:
     )
 
     last_pos = position_of_step[steps[-1]]
-    final_pos = (last_pos[0] + PSEUDOSTATE_OFFSET, last_pos[1])
+    final_pos = (last_pos[0], bottom_y - PSEUDOSTATE_OFFSET)
     final_outer = Circle(final_pos, 0.11, facecolor="white", edgecolor="black", linewidth=1.3, zorder=3)
     axes.add_patch(final_outer)
     axes.add_patch(Circle(final_pos, 0.05, facecolor="black", edgecolor="none", zorder=4))

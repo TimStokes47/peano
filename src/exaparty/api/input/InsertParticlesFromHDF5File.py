@@ -52,169 +52,167 @@ class InsertParticlesFromHDF5File(ActionSet):
   // Start of snippet template in src/exaparty/api/input/InsertParticlesFromHDF5File.py
   // ----------------------------------------------------------------------------------
 
-  if ( not marker.hasBeenRefined() and not marker.willBeRefined() ) {
-    tarch::multicore::Lock lock( _semaphore );
+  tarch::multicore::Lock lock( _semaphore );
+
+  /*
+   * List of particles that overlap with the current cell.
+   */
+
+  using namespace ::exaparty::kernels::legacy::kernelHydro; // for kernel_gamma
+
+  std::list< tarch::la::Vector<Dimensions,double> > coords = _fileReaderHDF5.getParticlesWithinVoxel( marker.x(), marker.h(), true );
+
+  /* Retrieve the rest of fields for same set of particles */
+  std::vector< tarch::la::Vector<Dimensions,double> > VelocityWithinVoxel = _fileReaderHDF5.getVelocityWithinVoxel();
+  std::vector <double> MassWithinVoxel            = _fileReaderHDF5.getMassWithinVoxel();
+  std::vector <double> SmoothingLengthWithinVoxel = _fileReaderHDF5.getSmoothingLengthWithinVoxel();
+  std::vector <double> InternalEnergyWithinVoxel  = _fileReaderHDF5.getInternalEnergyWithinVoxel();
+  std::vector <int>    PartidWithinVoxel          = _fileReaderHDF5.getParticleIDsWithinVoxel();
+
+  int indexEntry = 0;
+  const double SmlMin = globaldata::{{PARTICLE}}::getSmlMin();
+  const double SmlMax = globaldata::{{PARTICLE}}::getSmlMax();
+
+
+  // Now loop over these particle coordinates
+  for (auto& p: coords) {
+
+    // Create a particle pointer
+    globaldata::{{PARTICLE}}* newParticle = new globaldata::{{PARTICLE}}();
+
+    // Initialise the particle with x=coords and SearchRadius=0
+    toolbox::particles::init(*newParticle, p, 0.0);
+    _particleNumberOnThisTree++;
 
     /*
-     * List of particles that overlap with the current cell.
+     * Initialise the full set of particle attributes
      */
 
-    using namespace ::exaparty::kernels::legacy::kernelHydro; // for kernel_gamma
+    tarch::la::Vector<Dimensions,double> Velocity;
+    /* Density is not encoded in all SWIFT HDF5 IC files as it is recomputed
+    by the density loop anyway. Here we just initialse to an arbitrary value */
+    double Density         = 1.0;
+    double Mass            = MassWithinVoxel[indexEntry];
+    double SmoothingLength = SmoothingLengthWithinVoxel[indexEntry];
+    double InternalEnergy  = InternalEnergyWithinVoxel[indexEntry];
+    int    ParticleID      = PartidWithinVoxel[indexEntry];
 
-    std::list< tarch::la::Vector<Dimensions,double> > coords = _fileReaderHDF5.getParticlesWithinVoxel( marker.x(), marker.h(), true );
+    if (SmoothingLength > SmlMax){
+      logWarning("InsertParticlesFromHDF5File.py",
+        "particle smoothing length > global smoothing length max;"
+        << " h= " << SmoothingLength << " h_max= " << SmlMax <<
+        "setting it to 0.9 * Max");
+      SmoothingLength = 0.9 * SmlMax;
+    }
 
-    /* Retrieve the rest of fields for same set of particles */
-    std::vector< tarch::la::Vector<Dimensions,double> > VelocityWithinVoxel = _fileReaderHDF5.getVelocityWithinVoxel();
-    std::vector <double> MassWithinVoxel            = _fileReaderHDF5.getMassWithinVoxel();
-    std::vector <double> SmoothingLengthWithinVoxel = _fileReaderHDF5.getSmoothingLengthWithinVoxel();
-    std::vector <double> InternalEnergyWithinVoxel  = _fileReaderHDF5.getInternalEnergyWithinVoxel();
-    std::vector <int>    PartidWithinVoxel          = _fileReaderHDF5.getParticleIDsWithinVoxel();
+    /*
+     * Other attributes not set in HDF5 file
+     */
 
-    int indexEntry = 0;
-    const double SmlMin = globaldata::{{PARTICLE}}::getSmlMin();
-    const double SmlMax = globaldata::{{PARTICLE}}::getSmlMax();
+    tarch::la::Vector<Dimensions,double> acceleration;
 
+    /* Compute the pressure from the EoS */
+    const double Pressure = ::exaparty::kernels::legacy::eos::gas_pressure_from_internal_energy( Density, InternalEnergy );
 
-    // Now loop over these particle coordinates
-    for (auto& p: coords) {
+    /* Sound speed */
+    const double Soundspeed = ::exaparty::kernels::legacy::eos::gas_soundspeed_from_internal_energy( InternalEnergy );
 
-      // Create a particle pointer
-      globaldata::{{PARTICLE}}* newParticle = new globaldata::{{PARTICLE}}();
+    /* Now set the values */
+    newParticle->setV              ( Velocity );
+    newParticle->setDensity        ( Density );
+    newParticle->setMass           ( Mass );
+    newParticle->setSmoothingLength( SmoothingLength );
 
-      // Initialise the particle with x=coords and SearchRadius=0
-      toolbox::particles::init(*newParticle, p, 0.0);
-      _particleNumberOnThisTree++;
+    newParticle->setSmlIterLeftBound(SmlMin);
+    newParticle->setSmlIterRightBound(SmlMax);
 
-      /*
-       * Initialise the full set of particle attributes
-       */
+    newParticle->setU              ( InternalEnergy );
 
-      tarch::la::Vector<Dimensions,double> Velocity;
-      /* Density is not encoded in all SWIFT HDF5 IC files as it is recomputed
-      by the density loop anyway. Here we just initialse to an arbitrary value */
-      double Density         = 1.0;
-      double Mass            = MassWithinVoxel[indexEntry];
-      double SmoothingLength = SmoothingLengthWithinVoxel[indexEntry];
-      double InternalEnergy  = InternalEnergyWithinVoxel[indexEntry];
-      int    ParticleID      = PartidWithinVoxel[indexEntry];
+    /*
+     * Initialize remaining fields
+     * @todo some of these should be initialised elsewhere to keep this
+     * initialisation script general for any hydro scheme, etc.
+     * See exaparty::kernels::legacy::first_init_particle()
+     */
 
-      if (SmoothingLength > SmlMax){
-        logWarning("InsertParticlesFromHDF5File.py",
-          "particle smoothing length > global smoothing length max;"
-          << " h= " << SmoothingLength << " h_max= " << SmlMax <<
-          "setting it to 0.9 * Max");
-        SmoothingLength = 0.9 * SmlMax;
-      }
+    /* Internal search radius used by Peano.
+     * We set the maximum allowed value, R = grid_size/2.  */
+    tarch::la::Vector<Dimensions,double> GridSize = marker.h();
+    const double GridSize_x = GridSize(0);
+    const double searchRadiusGlobal = SmlMax * kernel_gamma;
 
-      /*
-       * Other attributes not set in HDF5 file
-       */
+    if (searchRadiusGlobal > 0.5 * GridSize_x) {
+        // Don't use assertion macro, check this in non-debug modes too
+        std::ostringstream out;
+        out << " Global upper limit for search radius is > 2. * mesh size." <<
+            " You need to increase your cell size" <<
+            " or reduce hydro_h_max in your project python file." <<
+            " GridSize:" << GridSize_x <<
+            " max global search radius: " << searchRadiusGlobal;
+        logError("InsertParticlesFromHDF5File.py:", out.str());
+        std::abort();
+    }
 
-      tarch::la::Vector<Dimensions,double> acceleration;
+    newParticle->setSearchRadius( searchRadiusGlobal );
 
-      /* Compute the pressure from the EoS */
-      const double Pressure = ::exaparty::kernels::legacy::eos::gas_pressure_from_internal_energy( Density, InternalEnergy );
+    newParticle->setPressure  ( Pressure );
+    newParticle->setSoundSpeed( Soundspeed );
 
-      /* Sound speed */
-      const double Soundspeed = ::exaparty::kernels::legacy::eos::gas_soundspeed_from_internal_energy( InternalEnergy );
-
-      /* Now set the values */
-      newParticle->setV              ( Velocity );
-      newParticle->setDensity        ( Density );
-      newParticle->setMass           ( Mass );
-      newParticle->setSmoothingLength( SmoothingLength );
-
-      newParticle->setSmlIterLeftBound(SmlMin);
-      newParticle->setSmlIterRightBound(SmlMax);
-
-      newParticle->setU              ( InternalEnergy );
-
-      /*
-       * Initialize remaining fields
-       * @todo some of these should be initialised elsewhere to keep this
-       * initialisation script general for any hydro scheme, etc.
-       * See exaparty::kernels::legacy::first_init_particle()
-       */
-
-      /* Internal search radius used by Peano.
-       * We set the maximum allowed value, R = grid_size/2.  */
-      tarch::la::Vector<Dimensions,double> GridSize = marker.h();
-      const double GridSize_x = GridSize(0);
-      const double searchRadiusGlobal = SmlMax * kernel_gamma;
-
-      if (searchRadiusGlobal > 0.5 * GridSize_x) {
-          // Don't use assertion macro, check this in non-debug modes too
-          std::ostringstream out;
-          out << " Global upper limit for search radius is > 2. * mesh size." <<
-              " You need to increase your cell size" <<
-              " or reduce hydro_h_max in your project python file." <<
-              " GridSize:" << GridSize_x <<
-              " max global search radius: " << searchRadiusGlobal;
-          logError("InsertParticlesFromHDF5File.py:", out.str());
-          std::abort();
-      }
-
-      newParticle->setSearchRadius( searchRadiusGlobal );
-
-      newParticle->setPressure  ( Pressure );
-      newParticle->setSoundSpeed( Soundspeed );
-
-      // Vectors
-      for (int d=0; d<Dimensions; d++) {
-         newParticle->setA(d,0);
+    // Vectors
+    for (int d=0; d<Dimensions; d++) {
+       newParticle->setA(d,0);
 #if Dimensions > 2
-         newParticle->setRot_v(d, 0);
+       newParticle->setRot_v(d, 0);
 #endif
-      }
+    }
 
 #if Dimensions <= 2
-      /* For 2D sims, we only get one component */
-      newParticle->setRot_v(0);
+    /* For 2D sims, we only get one component */
+    newParticle->setRot_v(0);
 #endif
 
-      /* Initialise the "extended" arrays */
-      newParticle->setV_full( newParticle->getV() );
-      newParticle->setU_full( newParticle->getU() );
+    /* Initialise the "extended" arrays */
+    newParticle->setV_full( newParticle->getV() );
+    newParticle->setU_full( newParticle->getU() );
 
-      newParticle->setUDot  (0.0);
-      newParticle->setHDot  (0.0);
-      newParticle->setWcount(0.0);
-      newParticle->setF(0.0);
-      newParticle->setRho_dh(0.0);
-      newParticle->setWcount_dh(0.0);
+    newParticle->setUDot  (0.0);
+    newParticle->setHDot  (0.0);
+    newParticle->setWcount(0.0);
+    newParticle->setF(0.0);
+    newParticle->setRho_dh(0.0);
+    newParticle->setWcount_dh(0.0);
 
 
 //      newParticle->setTimeStepSize(GLOBAL_TIME_STEP_SIZE);
-      newParticle->setSmoothingLengthIterCount(0);
+    newParticle->setSmoothingLengthIterCount(0);
 
-      // Artificial viscosity scheme
-      newParticle->setDiv_v   (0.0);
-      newParticle->setV_sig_AV(2.0 * newParticle->getSoundSpeed());
-      newParticle->setBalsara (0.0);
+    // Artificial viscosity scheme
+    newParticle->setDiv_v   (0.0);
+    newParticle->setV_sig_AV(2.0 * newParticle->getSoundSpeed());
+    newParticle->setBalsara (0.0);
 
-      // Set particle id
+    // Set particle id
 #if PeanoDebug > 0
-      newParticle->setPartid( ParticleID );
+    newParticle->setPartid( ParticleID );
 #endif
 
-      /*
-       * All particle attributes for SPH have thus been set
-       */
+    /*
+     * All particle attributes for SPH have thus been set
+     */
 
-      indexEntry++;
+    indexEntry++;
 
-      toolbox::particles::insertParticleIntoCell(
-        marker,
-        newParticle,
-        fineGridVertices{{PARTICLE}}Set,
-        _spacetreeId
-      );
-    }
-
-    logDebug( "touchVertexFirstTime(...)", "assigned " << coords.size() << " particle(s) to vertex "
-                                                       << marker.toString() << " on tree " << _spacetreeId );
-
+    toolbox::particles::insertParticleIntoCell(
+      marker,
+      newParticle,
+      fineGridVertices{{PARTICLE}}Set,
+      _spacetreeId
+    );
   }
+
+  logDebug( "touchVertexFirstTime(...)", "assigned " << coords.size() << " particle(s) to vertex "
+                                                     << marker.toString() << " on tree " << _spacetreeId );
+
   // -----------------------------------------------------------------------------
   // End of snippet template in src/exaparty/api/input/InsertParticlesFromHDF5File.py
   // -----------------------------------------------------------------------------
@@ -250,6 +248,11 @@ class InsertParticlesFromHDF5File(ActionSet):
         if operation_name == ActionSet.OPERATION_END_TRAVERSAL:
             result = self.__Template_EndTraversal.render(**self.d)
         return result
+
+    def get_guard_of_operation(self, operation_name):
+        if operation_name == ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            return "not marker.hasBeenRefined() and not marker.willBeRefined()"
+        return "true"
 
     def get_body_of_createGridControlEventsForNextTraversal(self):
         return "  return std::vector< peano4::grid::GridControlEvent >();\n"
