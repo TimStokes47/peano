@@ -81,7 +81,7 @@ returns the statistics of the local trees as set up by
 @ref peano4::parallel::SpacetreeSet::init().
 
 If you need the statistics of one individual local tree, use
-@ref peano4::parallel::SpacetreeSet::getGridStatistics(int). These are not
+@ref peano4::parallel::SpacetreeSet::getGridStatistics(int) const. These are not
 reduced.
 
 
@@ -159,7 +159,7 @@ The load balancing needs the weight of each individual rank, which the
 reduced statistics do not provide. @ref toolbox::loadbalancing::Statistics::updateGlobalView()
 and @ref toolbox::loadbalancing::metrics::CellCount::updateGlobalView()
 therefore sum up the number of local unrefined cells over the rank's local
-trees via @ref peano4::parallel::SpacetreeSet::getGridStatistics(int).
+trees via @ref peano4::parallel::SpacetreeSet::getGridStatistics(int) const.
 @ref toolbox::loadbalancing::Statistics::updateGlobalView() then feeds this
 rank-local count into a non-blocking `MPI_Iallreduce(..., MPI_SUM, ...)` to
 obtain the global cell count (src/toolbox/loadbalancing/Statistics.cpp). A
