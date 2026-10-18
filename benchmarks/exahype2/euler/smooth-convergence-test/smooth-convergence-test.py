@@ -53,7 +53,8 @@ project.add_solver(thesolver)
 
 
 #project.compiler = peano4.api.taskgraph.compiler.Sequential.translate
-project.compiler = peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate
+project.compiler = peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_sequential
+#project.compiler = peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion
 
 
 project.set_global_simulation_parameters(

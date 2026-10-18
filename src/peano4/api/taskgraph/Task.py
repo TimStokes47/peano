@@ -59,7 +59,7 @@ class Task:
 
     Some task graph compilers can run parts of a task in the background,
     i.e. as tasks that outlive the mesh traversal event which spawns them
-    (@ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate()).
+    (@ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_sequential(), @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion()).
     Such compilers check whether this is safe, and leave the task as it is
     if they cannot be sure. The flag may_spawn_background_tasks steers this
     behaviour:

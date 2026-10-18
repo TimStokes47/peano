@@ -18,35 +18,75 @@ from .SpawnCellTaskActionSet import SpawnCellTaskActionSet
 from .WaitForCellTaskActionSet import WaitForCellTaskActionSet
 
 
-def translate(
+def translate_with_sequential(
     graph: Graph,
     identifier: str,
     peano_project: "peano4.api.Project",
-    use_fusion: bool = False,
+) -> List["peano4.api.solversteps.Step"]:
+    """!
+
+    Split tasks writing cell data into producer and consumer, and map each task onto its own mesh traversal
+
+    You can use this task graph compiler in your ExaHyPE 2 project through
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    project.compiler = peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_sequential
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    The rewritten graph is handed over to
+    @ref peano4.api.taskgraph.compiler.Sequential.translate(). See
+    @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._translate()
+    for a description of the rewrite and of the parameters.
+
+    """
+    return _translate(graph, identifier, peano_project, use_fusion=False)
+
+
+def translate_with_fusion(
+    graph: Graph,
+    identifier: str,
+    peano_project: "peano4.api.Project",
+) -> List["peano4.api.solversteps.Step"]:
+    """!
+
+    Split tasks writing cell data into producer and consumer, and fuse tasks into as few mesh traversals as possible
+
+    You can use this task graph compiler in your ExaHyPE 2 project through
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    project.compiler = peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    The rewritten graph is handed over to
+    @ref peano4.api.taskgraph.compiler.FuseSteps.translate(), which never
+    fuses a producer with its consumer. See
+    @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._translate()
+    for a description of the rewrite and of the parameters.
+
+    """
+    return _translate(graph, identifier, peano_project, use_fusion=True)
+
+
+def _translate(
+    graph: Graph,
+    identifier: str,
+    peano_project: "peano4.api.Project",
+    use_fusion: bool,
 ) -> List["peano4.api.solversteps.Step"]:
     """!
 
     Task graph compiler which splits tasks writing cell data into a producer spawning tasks and a consumer waiting for them (work in progress)
 
-    You can use this task graph in your ExaHyPE 2 project through
-
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    project.compiler = peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Do not use this routine directly. Pick
+    @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_sequential()
+    or
+    @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion()
+    instead.
 
     This compiler adds a preamble which rewrites the task graph, and then
     hands the rewritten graph over to either
-    @ref peano4.api.taskgraph.compiler.Sequential.translate() (default) or
-    @ref peano4.api.taskgraph.compiler.FuseSteps.translate(). To use the
-    latter, set the flag use_fusion:
-
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    import functools
-    project.compiler = functools.partial(
-      peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate,
-      use_fusion=True,
-    )
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @ref peano4.api.taskgraph.compiler.Sequential.translate() or
+    @ref peano4.api.taskgraph.compiler.FuseSteps.translate().
 
     ## Preamble
 
@@ -249,7 +289,7 @@ def _exclusively_writes_cell_data(task: Task) -> bool:
 
     True if task declares at least one cell submodel as WRITE or
     READ_AND_WRITE, and no face or vertex submodel as WRITE or
-    READ_AND_WRITE. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate()
+    READ_AND_WRITE. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._translate()
 
     """
     writing_accesses = (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE)
@@ -294,7 +334,7 @@ def _has_events_after_touch_cell_first_time(task: Task) -> List[str]:
 def _split_cell_tasks(graph: Graph):
     """!
 
-    Build the producer-consumer graph. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate()
+    Build the producer-consumer graph. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._translate()
 
     @return (peano4.api.taskgraph.Graph, [(Task, Task, Task)])
       The new graph and the list of (original task, producer, consumer)
@@ -424,7 +464,7 @@ def _warn_about_unsafe_task(task: Task, action_set_index: int, action_set: "pean
     """!
 
     Issue the warnings about task bodies which might not
-    be safe. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate()
+    be safe. @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._translate()
 
     We do not inspect the code. We only search the generated C++ text for
     the names of data and attributes, i.e. the warnings say that a task
@@ -473,7 +513,7 @@ def _spawn_tasks(split_tasks, task_labels: "peano4.api.datamodel.DaStGen2"):
 
     Make the producers spawn tasks and the consumers wait for them, and add
     one task number per spawning action set to the task labels.
-    @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate()
+    @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._translate()
 
     @param split_tasks: [(Task, Task, Task)]
       Triples of original task, producer and consumer.
