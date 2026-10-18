@@ -76,7 +76,10 @@ void toolbox::loadbalancing::Statistics::waitForGlobalDataExchange() {
 
 
 void toolbox::loadbalancing::Statistics::updateGlobalView() {
-  _localNumberOfInnerUnrefinedCells = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
+  _localNumberOfInnerUnrefinedCells = 0;
+  for (int treeId : peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees()) {
+    _localNumberOfInnerUnrefinedCells += peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(treeId).getNumberOfLocalUnrefinedCells();
+  }
 
   _viewConsistent = true;
 
