@@ -16,9 +16,10 @@ class LoadBalancing(ActionSet):
     is informed exactly once after each grid sweep.
 
     The action set does not install a strategy itself. Some other code, the
-    main routine typically, has to hand one over via
-    toolbox::loadbalancing::LoadBalancingService::setLoadBalancing() before
-    the first traversal that uses this action set.
+    main routine typically, hands one over via
+    toolbox::loadbalancing::LoadBalancingService::setLoadBalancing(). If
+    no strategy is installed, i.e. getLoadBalancing() returns nullptr, the
+    action set does nothing.
 
     """
 
@@ -36,11 +37,9 @@ class LoadBalancing(ActionSet):
 
     def get_body_of_unprepareTraversal(self):
         return """
-  assertionMsg(
-    ::toolbox::loadbalancing::LoadBalancingService::getInstance().hasLoadBalancing(),
-    "no load balancing installed in toolbox::loadbalancing::LoadBalancingService"
-  );
-  ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->finishStep();
+  if (::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing() != nullptr) {
+    ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->finishStep();
+  }
 """
 
     def get_body_of_operation(self, operation_name):
@@ -57,7 +56,6 @@ class LoadBalancing(ActionSet):
 
     def get_includes(self):
         return """
-#include "tarch/Assertions.h"
 #include "toolbox/loadbalancing/AbstractLoadBalancing.h"
 #include "toolbox/loadbalancing/LoadBalancingService.h"
 """
