@@ -343,6 +343,22 @@ class ActionSet(object):
         """
         return True
 
+    def may_run_in_background_task(self) -> bool:
+        """!
+
+        May a task graph compiler move touchCellFirstTime() into a task
+
+        Some task graph compilers spawn the touchCellFirstTime() event of an
+        action set as a task
+        (@ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer._translate()).
+        Return False if this is not worth it, e.g. as the event is so cheap
+        that the tasking overhead dominates. The action set is then invoked
+        directly within the mesh traversal. By default, every action set may
+        run in a task.
+
+        """
+        return True
+
     @abstractmethod
     def get_attributes(self):
         """!

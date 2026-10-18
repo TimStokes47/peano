@@ -147,6 +147,13 @@ def _translate(
       @ref exahype2.api.fv.actionsets.HandleBoundary.HandleBoundary, are not
       part of the producer-consumer pattern. They remain plain action sets
       of the producer, i.e. all their events are invoked by the producer.
+    - The same holds for action sets which do not want to run in a task
+      (@ref peano4.api.solversteps.ActionSet.ActionSet.may_run_in_background_task()),
+      such as
+      @ref exahype2.api.fv.actionsets.ReadjustTimeStepSizeForOptimisticGlobalTimestepping.ReadjustTimeStepSizeForOptimisticGlobalTimestepping.
+      Their touchCellFirstTime() is invoked directly by the producer, i.e.
+      possibly while tasks spawned by previous action sets of the same
+      producer still run. They hence must not depend on these tasks.
     - The consumer is given a cousin
       @ref peano4.api.taskgraph.compiler.WaitForCellTaskActionSet.WaitForCellTaskActionSet
       per wrapped action set. If the cell's task label holds a valid task
@@ -542,10 +549,10 @@ def _spawn_tasks(split_tasks, task_labels: "peano4.api.datamodel.DaStGen2"):
         previous_task_number_attribute_name = None
         for action_set_index, action_set in enumerate(task.action_sets):
             task_body = action_set.get_body_of_operation(peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME)
-            if task_body.strip() == "":
-                # Nothing to spawn: The action set remains a plain action set
-                # of the producer and is not part of the producer-consumer
-                # pattern
+            if task_body.strip() == "" or not action_set.may_run_in_background_task():
+                # Nothing to spawn, or not worth spawning: The action set
+                # remains a plain action set of the producer and is not part
+                # of the producer-consumer pattern
                 producer_action_sets.append(action_set)
                 continue
 

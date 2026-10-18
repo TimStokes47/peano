@@ -77,6 +77,21 @@ class ReadjustTimeStepSizeForOptimisticGlobalTimestepping(AbstractFVActionSet):
             return self.guard
         return "true"
 
+    def may_run_in_background_task(self):
+        """!
+
+        Never spawn this action set as a task
+
+        The check is a handful of floating point comparisons per cell, i.e.
+        far too cheap to justify the overhead of a task. Task graph compilers
+        such as @ref peano4.api.taskgraph.compiler.CellTaskProducerConsumer
+        therefore keep it within the mesh traversal. It does not touch the
+        patch data, so it does not depend on the reconstruction task which
+        the producer spawns before.
+
+        """
+        return False
+
     def get_includes(self):
         return super().get_includes() + """
 #include <limits>
