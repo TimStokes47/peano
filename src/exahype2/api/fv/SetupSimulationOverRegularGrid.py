@@ -2,6 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
 import peano4.api.actionsets
+import toolbox.loadbalancing.api.TriggerLoadBalancing
 
 from ..InitPointWisely import InitPointWisely
 from ..Solver import Solver
@@ -102,7 +103,14 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
             )
         )
 
+        # Inform the load balancing after every mesh refinement sweep
+        trigger_load_balancing_task = toolbox.loadbalancing.api.TriggerLoadBalancing.TriggerLoadBalancing(
+            name=f"{self._solver.name}_Trigger load balancing"
+        )
+        trigger_load_balancing_task.add_dependency(refine_task)
+
         setup_simulation.add_task(refine_task)
+        setup_simulation.add_task(trigger_load_balancing_task)
         setup_simulation.add_task(initial_condition_task)
         setup_simulation.add_task(project_on_faces_task)
 

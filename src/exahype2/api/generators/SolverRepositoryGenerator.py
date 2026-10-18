@@ -20,12 +20,6 @@ class SolverRepositoryGenerator(Project.Generator):
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
-#include "toolbox/loadbalancing/strategies/NoLoadBalancing.h"
-
-{% if LOAD_BALANCER!="" -%}
-#include "{{LOAD_BALANCER | replace('::', '/') }}.h"
-{% endif -%}
-
 {% for item in SOLVERS -%}
 #include "{{ item[0] }}.h"
 {# Comment to ensure that jinja2 adds a new line#}
@@ -40,17 +34,6 @@ namespace {{ item }} {
   extern {{ item[0] }}  {{ item[1] }};
   {# Comment to ensure that jinja2 adds a new line#}
   {%- endfor %}
-
-  /**
-   * Load balancer chosen via exahype2.api.Project.set_load_balancing(),
-   * or NoLoadBalancing if none has been set. main() calls its
-   * finishStep() after every program step.
-   */
-  {% if LOAD_BALANCER!="" -%}
-  extern {{LOAD_BALANCER}}  loadBalancer;
-  {% else -%}
-  extern toolbox::loadbalancing::strategies::NoLoadBalancing  loadBalancer;
-  {% endif %}
 
   /**
    * Return the global min time stamp over all solvers.
@@ -89,8 +72,6 @@ namespace {{ item }} {
 // use, please see the copyright notice at www.peano-framework.org
 #include "SolverRepository.h"
 
-#include "exahype2/LoadBalancingConfiguration.h"
-
 #include <algorithm>
 #include <limits>
 
@@ -102,12 +83,6 @@ namespace {{ item }} {
   {{ item[0] }}  {{ item[1] }};
   {# Comment to ensure that jinja2 adds a new line#}
   {%- endfor %}
-
-  {% if LOAD_BALANCER!="" -%}
-  {{LOAD_BALANCER}}  loadBalancer({{LOAD_BALANCER_ARGUMENTS}});
-  {% else -%}
-  toolbox::loadbalancing::strategies::NoLoadBalancing  loadBalancer;
-  {% endif %}
 
 
   double getMinTimeStamp() {

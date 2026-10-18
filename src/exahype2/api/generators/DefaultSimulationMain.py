@@ -76,6 +76,13 @@ int main(int argc, char** argv);
 #include "peano4/peano.h"
 #include "peano4/parallel/SpacetreeSet.h"
 #include "peano4/DefaultStepReport.h"
+#include "exahype2/LoadBalancingConfiguration.h"
+#include "toolbox/loadbalancing/LoadBalancingService.h"
+{% if LOAD_BALANCER!="" -%}
+#include "{{LOAD_BALANCER | replace('::', '/') }}.h"
+{% else -%}
+#include "toolbox/loadbalancing/strategies/NoLoadBalancing.h"
+{% endif %}
 
 {% if SUBDIRECTORIES -%}
 {% for subdirectory in SUBDIRECTORIES %}
@@ -130,8 +137,6 @@ void step() {
   else {
     assertionMsg( false, "Unknown step " << step << " in main()." );
   }
-
-  {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::loadBalancer.finishStep();
 }
 
 
@@ -167,6 +172,16 @@ int main(int argc, char** argv) {
   tarch::multicore::Core::getInstance().configure( {{NUMBER_OF_THREADS}} );
   tarch::accelerator::Device::getInstance().configure( { {{GPUS|join(",")}} } );
   tarch::multicore::setOrchestration( {{MULTICORE_ORCHESTRATION}} );
+
+  {% if LOAD_BALANCER!="" -%}
+  toolbox::loadbalancing::LoadBalancingService::getInstance().setLoadBalancing(
+    new {{LOAD_BALANCER}}({{LOAD_BALANCER_ARGUMENTS}})
+  );
+  {% else -%}
+  toolbox::loadbalancing::LoadBalancingService::getInstance().setLoadBalancing(
+    new toolbox::loadbalancing::strategies::NoLoadBalancing()
+  );
+  {% endif %}
 
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks() > 1 and tarch::multicore::Core::getInstance().getNumberOfThreads() <= 1) {
     logError("main()", "MPI runs without multithreading are not supported currently.");
@@ -268,7 +283,8 @@ int main(int argc, char** argv) {
   stepReport.reportFinalResults( { SetupSimulation, TimeStep, Plot } );
 
   tarch::logging::Statistics::getInstance().writeToCSV();
-  
+
+  toolbox::loadbalancing::LoadBalancingService::getInstance().shutdown();
   peano4::shutdownSingletons();
   {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::DataRepository::shutdownDatatypes();
   tarch::multicore::shutdownSmartMPI();
@@ -293,6 +309,8 @@ int main(int argc, char** argv) {
             "GPUS": self.exahype_project._gpus,
             "LOG_FILTER_FILE": self.exahype_project._log_filter_file,
             "STEP_REPORT_CLASS": self.exahype_project._step_report_class,
+            "LOAD_BALANCER": self.exahype_project._load_balancer_name,
+            "LOAD_BALANCER_ARGUMENTS": self.exahype_project._load_balancer_arguments,
         }
 
         generated_files = peano4.api.output.Jinja2TemplateStringHeaderImplementationFilePair(

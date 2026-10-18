@@ -63,6 +63,11 @@ def translate(
     4. **No annotation.** The caller can annotate the fusion through
        non_fusable_task_pairs: two tasks forming such a pair never end up
        in the same traversal.
+    5. **Global tasks.** A GLOBAL task (@ref peano4.api.taskgraph.Task.Task.GridEntity)
+       does not touch any mesh entity. It does not take part in the
+       algorithm below. Instead, it is appended to the traversal holding
+       its last dependency, even if this traversal repeats. A GLOBAL task
+       without dependencies goes into the very last traversal.
 
 <br /><br />
 <div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
@@ -202,7 +207,11 @@ But this option is hidden from the task compiler.
             (task, further_task) in non_fusable for task in tasks for further_task in further_tasks
         )
 
-    order = graph.ordered_tasks()
+    global_tasks = [task for task in graph.ordered_tasks() if task.entity == Task.GridEntity.GLOBAL]
+    order = [task for task in graph.ordered_tasks() if task.entity != Task.GridEntity.GLOBAL]
+    for task in order:
+        for dependency in task.dependencies:
+            assert dependency not in global_tasks, f"Task {task.name} depends on GLOBAL task {dependency.name}, which is not supported"
 
     depth_of_task = {}
 
@@ -260,6 +269,20 @@ But this option is hidden from the task compiler.
             groups.append(current_group)
         if is_repeating:
             current_group = None
+
+    # Constraint 5: append each global task to the group of its last dependency
+    for global_task in global_tasks:
+        groups_with_dependency = [
+            index
+            for index, group in enumerate(groups)
+            if any(dependency in node for node in group for dependency in global_task.dependencies)
+        ]
+        if groups_with_dependency:
+            groups[max(groups_with_dependency)].append([global_task])
+        elif groups:
+            groups[-1].append([global_task])
+        else:
+            groups.append([[global_task]])
 
     steps = [_create_step(group, identifier) for group in groups]
 
@@ -373,9 +396,11 @@ def _create_step(nodes: List[List[Task]], identifier: str) -> "peano4.api.solver
         name=f"{identifier}_" + "__".join(_task_name(task) for task in tasks),
         add_user_defined_actions=False,
     )
-    # Repeating tasks are never fused, i.e. a group with a repeating task
-    # holds exactly this one task
-    step.has_to_repeat = tasks[0].has_to_repeat if len(tasks) == 1 else None
+    # Repeating tasks are never fused with other non-global tasks, i.e. a
+    # group holds at most one repeating task
+    repeating_tasks = [task for task in tasks if task.has_to_repeat]
+    assert len(repeating_tasks) <= 1
+    step.has_to_repeat = repeating_tasks[0].has_to_repeat if repeating_tasks else None
 
     for data_attribute, access_attribute, step_access, use in (
         ("cell_data", "cell_data_access", step.cell_data_access, step.use_cell),

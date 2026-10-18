@@ -7,6 +7,7 @@ import peano4.api
 import peano4.api.datamodel
 import peano4.api.dastgen2
 import toolbox.blockstructured.api
+import toolbox.loadbalancing.api.TriggerLoadBalancing
 import exahype2.api
 from exahype2.api import Target
 import exahype2.api.dslhype as dslhype
@@ -1187,6 +1188,14 @@ Patch overlap data
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_cfl_condition_task)
         time_step.add_task(spawn_patch_interior_task)
+
+        # Inform the load balancing once the time step has finished
+        trigger_load_balancing_task = toolbox.loadbalancing.api.TriggerLoadBalancing.TriggerLoadBalancing(
+            name=f"{self._solver.name}_Trigger load balancing"
+        )
+        trigger_load_balancing_task.add_dependency(compute_cfl_condition_task)
+        trigger_load_balancing_task.add_dependency(project_on_faces_task)
+        time_step.add_task(trigger_load_balancing_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)

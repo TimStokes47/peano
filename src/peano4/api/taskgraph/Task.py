@@ -12,7 +12,8 @@ class Task:
 
     Every task works on exactly one kind of mesh entity - a vertex, a face
     or a cell - which has to be specified through entity when the task is
-    constructed.
+    constructed. GLOBAL tasks are the exception: they do not work on any
+    mesh entity (@ref peano4.api.taskgraph.Task.Task.GridEntity).
     
     ## Task dependencies
 
@@ -100,11 +101,21 @@ class Task:
 
         Which kind of mesh entity a Task works on.
 
+        GLOBAL tasks do not work on any mesh entity at all. They only plug
+        into prepareTraversal()/unprepareTraversal(), i.e. they realise
+        global (per rank) activities such as triggering the load balancing.
+        They therefore may not declare any cell, face or vertex data, may
+        not repeat, and no other task may depend on them. Task graph
+        compilers which fuse tasks append a GLOBAL task to the traversal
+        holding its last dependency
+        (@ref peano4.api.taskgraph.compiler.FuseSteps.translate()).
+
         """
 
         VERTEX = 1
         FACE = 2
         CELL = 3
+        GLOBAL = 4
 
     class DataAccess(enum.Enum):
         """!
@@ -171,6 +182,9 @@ class Task:
         self.vertex_data_access: dict = {}
         self.has_to_repeat = task_has_to_repeat
         self.may_spawn_background_tasks = may_spawn_background_tasks
+        assert not (entity == Task.GridEntity.GLOBAL and task_has_to_repeat is not None), (
+            f"Task {name} is GLOBAL and hence may not repeat"
+        )
 
     def add_dependency(self, task: "Task"):
         self.dependencies.append(task)
@@ -187,6 +201,7 @@ class Task:
         into every touch-cell/create-cell/... operation.
 
         """
+        assert self.entity != Task.GridEntity.GLOBAL, f"Task {self.name} is GLOBAL and hence may not use cell data"
         self.cell_data.append(submodel)
         self.cell_data_access[submodel] = qualifier
 
@@ -198,6 +213,7 @@ class Task:
         for what qualifier to pass.
 
         """
+        assert self.entity != Task.GridEntity.GLOBAL, f"Task {self.name} is GLOBAL and hence may not use face data"
         self.face_data.append(submodel)
         self.face_data_access[submodel] = qualifier
 
@@ -209,6 +225,7 @@ class Task:
         for what qualifier to pass.
 
         """
+        assert self.entity != Task.GridEntity.GLOBAL, f"Task {self.name} is GLOBAL and hence may not use vertex data"
         self.vertex_data.append(submodel)
         self.vertex_data_access[submodel] = qualifier
 
