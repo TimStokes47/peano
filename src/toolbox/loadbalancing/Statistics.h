@@ -30,8 +30,10 @@ namespace toolbox {
  * explicitly labelled as local are rank-local, even if they have a global
  * counterpart.
  *
- * The class does not hold any cell counts of its own. They are taken from
- * peano4::parallel::SpacetreeSet's grid statistics.
+ * The class does not provide any cell counts. Use the grid statistics
+ * directly: peano4::parallel::SpacetreeSet::getGridStatistics() yields the
+ * global number of cells, and peano4::parallel::SpacetreeSet::getGridStatistics(int)
+ * the cells of an individual local tree.
  *
  */
 class toolbox::loadbalancing::Statistics {
@@ -57,22 +59,6 @@ class toolbox::loadbalancing::Statistics {
      * resets the local number of splits to zero.
      */
     void updateGlobalView();
-
-    /**
-     * Local number of unrefined cells
-     *
-     * Rank-local: Sum over the statistics of the rank's local trees, i.e.
-     * over peano4::parallel::SpacetreeSet::getGridStatistics(int).
-     */
-    int getLocalNumberOfInnerUnrefinedCells() const;
-
-    /**
-     * Global number of unrefined cells
-     *
-     * Taken from peano4::parallel::SpacetreeSet::getGridStatistics(), which
-     * is reduced over all ranks at the end of every traversal.
-     */
-    int getGlobalNumberOfInnerUnrefinedCells() const;
 
     int getGlobalNumberOfRanksWithEnabledLoadBalancing() const;
     int getGlobalNumberOfTrees() const;

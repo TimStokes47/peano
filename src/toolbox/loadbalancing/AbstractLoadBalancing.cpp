@@ -102,9 +102,7 @@ bool toolbox::loadbalancing::AbstractLoadBalancing::fitsIntoMemory([[maybe_unuse
 }
 
 
-void toolbox::loadbalancing::AbstractLoadBalancing::finishSimulation() {
-  _costMetrics->waitForGlobalDataExchange();
-}
+void toolbox::loadbalancing::AbstractLoadBalancing::finishSimulation() {}
 
 
 bool toolbox::loadbalancing::AbstractLoadBalancing::isInterRankBalancingBad() const {

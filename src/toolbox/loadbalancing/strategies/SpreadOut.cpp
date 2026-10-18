@@ -24,6 +24,10 @@ toolbox::loadbalancing::strategies::SpreadOut::~SpreadOut() {}
 
 
 int toolbox::loadbalancing::strategies::SpreadOut::getNumberOfTreesPerRank() const {
+  int localNumberOfInnerUnrefinedCells = 0;
+  for (int treeId : peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees()) {
+    localNumberOfInnerUnrefinedCells += peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(treeId).getNumberOfLocalUnrefinedCells();
+  }
   int result = 0;
 
   if (_state == State::InterRankDistribution) {
@@ -42,7 +46,7 @@ int toolbox::loadbalancing::strategies::SpreadOut::getNumberOfTreesPerRank() con
       // min tree but at least give each rank something
       const int MinTreeSize = std::max(_configuration->getMinTreeSize(_state), 1);
 
-      result = _statistics.getLocalNumberOfInnerUnrefinedCells() / MinTreeSize
+      result = localNumberOfInnerUnrefinedCells / MinTreeSize
                / tarch::mpi::Rank::getInstance().getNumberOfRanks();
       logInfo(
         "getNumberOfTreesPerRank()",
@@ -50,12 +54,12 @@ int toolbox::loadbalancing::strategies::SpreadOut::getNumberOfTreesPerRank() con
           << result << " trees even though we might end up with fewer cells per tree than the lower bound "
           << _configuration->getMinTreeSize(_state) << " or might not be able to use all cores"
       );
-    } else if (_statistics.getLocalNumberOfInnerUnrefinedCells() >= MinMeshSizeToAccommodateMaxTotalTrees) {
+    } else if (localNumberOfInnerUnrefinedCells >= MinMeshSizeToAccommodateMaxTotalTrees) {
       result = MaxTotalTrees / tarch::mpi::Rank::getInstance().getNumberOfRanks();
       logInfo(
         "getNumberOfTreesPerRank()",
         "mesh has "
-          << _statistics.getLocalNumberOfInnerUnrefinedCells() << " cells already, so create " << result
+          << localNumberOfInnerUnrefinedCells << " cells already, so create " << result
           << " trees per rank (min tree size=" << _configuration->getMinTreeSize(_state)
           << ", max-trees-per-rank=" << _configuration->getMaxLocalTreesPerRank(_state) << ")"
       );
@@ -67,7 +71,7 @@ int toolbox::loadbalancing::strategies::SpreadOut::getNumberOfTreesPerRank() con
 
 
 void toolbox::loadbalancing::strategies::SpreadOut::updateLoadBalancing() {
-  if (_previousNumberOfCells == _statistics.getGlobalNumberOfInnerUnrefinedCells()) {
+  if (_previousNumberOfCells == peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()) {
     _numberOfStableGridIterations++;
   } else {
     _numberOfStableGridIterations = 0;
@@ -83,7 +87,7 @@ void toolbox::loadbalancing::strategies::SpreadOut::updateLoadBalancing() {
     const int ranks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
 
     int cellsPerTree = std::max(
-      static_cast<int>(std::round(_statistics.getGlobalNumberOfInnerUnrefinedCells() / ranks / numberOfTreesPerRank)), 1
+      static_cast<int>(std::round(peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / ranks / numberOfTreesPerRank)), 1
     );
 
     logInfo(
@@ -97,7 +101,7 @@ void toolbox::loadbalancing::strategies::SpreadOut::updateLoadBalancing() {
     for (int targetRank = 0; targetRank < ranks; targetRank++)
       for (int treeNumber = targetRank == 0 ? 1 : 0; treeNumber < numberOfTreesPerRank; treeNumber++) {
         int thisTreesCells = cellsPerTree;
-        if (static_cast<int>(_statistics.getGlobalNumberOfInnerUnrefinedCells()) % (ranks * numberOfTreesPerRank) >= totalSplits) {
+        if (static_cast<int>(peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()) % (ranks * numberOfTreesPerRank) >= totalSplits) {
           thisTreesCells++;
         }
 
@@ -108,7 +112,7 @@ void toolbox::loadbalancing::strategies::SpreadOut::updateLoadBalancing() {
 
     _state = State::Stagnation;
   } else {
-    _previousNumberOfCells = _statistics.getGlobalNumberOfInnerUnrefinedCells();
+    _previousNumberOfCells = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
   }
 }
 

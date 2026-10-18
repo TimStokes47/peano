@@ -30,9 +30,7 @@ void toolbox::loadbalancing::Statistics::notifyOfStateChange( State state ) {
 std::string  toolbox::loadbalancing::Statistics::toString() const {
   std::ostringstream msg;
 
-  msg << "(local-number-of-inner-unrefined-cells=" << getLocalNumberOfInnerUnrefinedCells()
-      << ",global-number-of-inner-unrefined-cells=" << getGlobalNumberOfInnerUnrefinedCells()
-      << ",global-number-of-trees=" << _globalNumberOfTrees
+  msg << "(global-number-of-trees=" << _globalNumberOfTrees
       << ",max-trees-per-rank=" << _maximumTreesPerRank
       << ",local-load-balancing-enabled=" << _localLoadBalancingEnabled
       << ",global-number-of-ranks-with-enabled-lb=" << _globalNumberOfRanksWithEnabledLoadBalancing
@@ -93,20 +91,6 @@ void toolbox::loadbalancing::Statistics::incLocalNumberOfSplits( int delta ) {
 
 int toolbox::loadbalancing::Statistics::getLocalNumberOfSplits() const {
   return _localNumberOfSplits;
-}
-
-
-int toolbox::loadbalancing::Statistics::getLocalNumberOfInnerUnrefinedCells() const {
-  int result = 0;
-  for (int treeId : peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees()) {
-    result += peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(treeId).getNumberOfLocalUnrefinedCells();
-  }
-  return result;
-}
-
-
-int toolbox::loadbalancing::Statistics::getGlobalNumberOfInnerUnrefinedCells() const {
-  return peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
 }
 
 

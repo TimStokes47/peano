@@ -165,14 +165,18 @@ ranks hold the same values afterwards. Only the data explicitly labelled as
 local, such as the number of splits a rank has triggered itself, remain
 rank-local.
 
-The load balancing statistics do not hold cell counts of their own. The global
-number of cells comes from @ref peano4::parallel::SpacetreeSet::getGridStatistics().
-The load balancing however also needs the weight of each individual rank, which
-the reduced grid statistics do not provide. It therefore sums up the number of
-local unrefined cells over the rank's local trees via
-@ref peano4::parallel::SpacetreeSet::getGridStatistics(int) const
-(@ref toolbox::loadbalancing::Statistics::getLocalNumberOfInnerUnrefinedCells(),
-@ref toolbox::loadbalancing::metrics::CellCount::updateGlobalView()).
+@ref toolbox::loadbalancing::CostMetrics follows the same pattern: its
+updateGlobalView() all-reduces the global weight, the lightest rank and the
+minimum of the rank weights with blocking reductions.
+
+The load balancing statistics do not provide cell counts. Strategies which need
+the global number of cells read it from
+@ref peano4::parallel::SpacetreeSet::getGridStatistics(). The load balancing
+however also needs the weight of each individual rank, which the reduced grid
+statistics do not provide. The strategies and
+@ref toolbox::loadbalancing::metrics::CellCount::updateGlobalView() therefore
+sum up the number of local unrefined cells over the rank's local trees via
+@ref peano4::parallel::SpacetreeSet::getGridStatistics(int) const.
 
 
 */

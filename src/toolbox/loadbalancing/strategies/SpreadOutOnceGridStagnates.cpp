@@ -21,6 +21,10 @@ toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::SpreadOutOnceGri
 
 
 int toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::getNumberOfTreesPerRank() const {
+  int localNumberOfInnerUnrefinedCells = 0;
+  for (int treeId : peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees()) {
+    localNumberOfInnerUnrefinedCells += peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(treeId).getNumberOfLocalUnrefinedCells();
+  }
   int result = 0;
 
   if (
@@ -43,7 +47,7 @@ int toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::getNumberOfT
     );
 
     int treesPerRankAccommodatingMinTreeSize = std::max(
-      _statistics.getLocalNumberOfInnerUnrefinedCells() / minTreeSize / tarch::mpi::Rank::getInstance().getNumberOfRanks(),
+      localNumberOfInnerUnrefinedCells / minTreeSize / tarch::mpi::Rank::getInstance().getNumberOfRanks(),
       1
     );
 
@@ -51,7 +55,7 @@ int toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::getNumberOfT
 
     logInfo(
       "getNumberOfTreesPerRank()",
-      "mesh has " << _statistics.getLocalNumberOfInnerUnrefinedCells() <<
+      "mesh has " << localNumberOfInnerUnrefinedCells <<
       " cells, so split " << result << " times " <<
       "(maxPermittedTreesPerRank=" << maxPermittedTreesPerRank <<
       ",treesPerRankToExploitAllThreads=" << treesPerRankToExploitAllThreads <<
@@ -66,7 +70,7 @@ int toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::getNumberOfT
 
 
 void toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::updateLoadBalancing() {
-  if ( _previousNumberOfCells == _statistics.getGlobalNumberOfInnerUnrefinedCells() ) {
+  if ( _previousNumberOfCells == peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() ) {
     _numberOfStableGridIterations++;
   }
   else {
@@ -87,7 +91,7 @@ void toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::updateLoadB
     const int ranks   = tarch::mpi::Rank::getInstance().getNumberOfRanks();
 
     int cellsPerTree = std::max(
-      static_cast<int>(std::round(_statistics.getGlobalNumberOfInnerUnrefinedCells() / ranks / numberOfTreesPerRank )),
+      static_cast<int>(std::round(peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / ranks / numberOfTreesPerRank )),
       1
     );
 
@@ -103,7 +107,7 @@ void toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::updateLoadB
     for (int targetRank=0; targetRank<ranks;   targetRank++ )
     for (int treeNumber= targetRank==0 ? 1 : 0; treeNumber<numberOfTreesPerRank; treeNumber++ ) {
       int thisTreesCells = cellsPerTree;
-      if (static_cast<int>(_statistics.getGlobalNumberOfInnerUnrefinedCells()) % (ranks*numberOfTreesPerRank) >= totalSplits) {
+      if (static_cast<int>(peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()) % (ranks*numberOfTreesPerRank) >= totalSplits) {
         thisTreesCells++;
       }
 
@@ -115,7 +119,7 @@ void toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates::updateLoadB
     _state = State::Stagnation;
   }
   else {
-    _previousNumberOfCells = _statistics.getGlobalNumberOfInnerUnrefinedCells();
+    _previousNumberOfCells = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
   }
 }
 
