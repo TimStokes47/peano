@@ -21,8 +21,10 @@ The pipeline runs automatically for all branches and all pushes.
 However, it only runs fully on the protected branches.
 For all other branches, the pipeline only executes the build and test (unit tests) stages.
 
-At time of writing, ```gitlab-runner``` is installed multiple nodes of DINE.
-The workers are kept alive by recurring slurm jobs. Peano developers should not need to do
+At time of writing, ```gitlab-runner``` runs as Slurm jobs on COSMA: one permanent runner on the node ga004 of the partition `cosma8-shm2`
+and on-demand runners on the DINE nodes of the partition `bluefield1`, which the permanent runner submits when all of its job slots are busy.
+Every runner keeps its configuration, build directories and container images in one runner directory `<runner-dir>` on `/cosma/apps`, which every runner node mounts.
+Recurring Slurm jobs keep the runners alive. Peano developers should not need to do
 anything other than push to a branch, and [check the pipelines page on the gitlab](https://gitlab.lrz.de/hpcsoftware/Peano/-/pipelines)
 to check that their code has correctly built for each compiler toolchain.
 
@@ -77,7 +79,8 @@ It will then show you a token. Write it down.
 Now we need to register this runner. Log into a node where `gitlab-runner` is available, and then type `gitlab-runner register`. Type in the url and
 token as prompted. Pick `shell` as an executor.
 
-This will then create a new config file in `$HOME/.gitlab-runner` directory. Move this to the /dine/data/do009/peano/configs directory.
+This will then create a new config file in `$HOME/.gitlab-runner` directory. Move this to the `<runner-dir>/configs` directory,
+add the paths of the config template below and list the runner with its node, partition and mode in `runners.txt` there.
 
 You can then run the gitlab-runner and supply this config by calling `gitlab-runner run --config /path/to/config.toml`. This is what the slurm job is supposed to do.
 
@@ -100,11 +103,13 @@ shutdown_timeout = 0
   token_obtained_at = 2024-06-19T11:16:06Z
   token_expires_at = 0001-01-01T00:00:00Z
   executor = "shell"
-  builds_dir = "/dine/data/do009/peano/builds_dir"
-  cache_dir  = "/dine/data/do009/peano/cache_dir"
+  builds_dir = "<runner-dir>/builds_dir"
+  cache_dir  = "<runner-dir>/cache_dir"
+  environment = ["APPTAINER_BINDDIR=<runner-dir>", "APPTAINER_IMAGEDIR=<runner-dir>/images"]
 
 \endverbatim
 
 concurrent denotes the number of concurrent builds that can run at once.
+environment sets the directory that Apptainer binds into the containers and the directory of the container images.
 
 */
