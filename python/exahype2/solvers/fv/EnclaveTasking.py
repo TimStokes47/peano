@@ -3,13 +3,13 @@
 from .FV import FV
 from exahype2.solvers.PDETerms import PDETerms
 
-import peano4
+import peano4.api
 import exahype2
 
 import jinja2
 import os
 
-from peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import (
+from toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import (
     ReconstructPatchAndApplyFunctor,
 )
 from exahype2.solvers.fv.actionsets.AbstractFVActionSet import AbstractFVActionSet
@@ -136,7 +136,7 @@ class UpdateCell(ReconstructPatchAndApplyFunctor):
             # todo hier muessen beide rein, denn ich muss ja interpolieren -> machen die anderen Codes dann
             patch_overlap=solver._patch_overlap_new,
             functor_implementation="<not yet set - will do this later>",
-            reconstructed_array_memory_location=peano4.toolbox.blockstructured.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete,
+            reconstructed_array_memory_location=toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete,
             # todo Dokumentieren, dass net willBeRefined(), weil wir ja das brauchen wenn wir runtergehen
             guard="not marker.hasBeenRefined() and ("
             + "repositories::"
@@ -281,7 +281,7 @@ class MergeEnclaveTaskOutcome(AbstractFVActionSet):
         result = ""
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
         ):
             d = {}
             self._solver._init_dictionary_with_default_parameters(d)
@@ -703,7 +703,7 @@ class EnclaveTasking(FV):
 
         if (
             memory_location
-            != peano4.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
+            != toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete
             and memory_location != None
         ):
             raise Exception(
@@ -814,7 +814,7 @@ class EnclaveTasking(FV):
 
         task_name = self._enclave_task_name()
         generated_solver_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 "{}.h".format(templatefile_prefix),
                 "{}.cpp".format(templatefile_prefix),
                 task_name,

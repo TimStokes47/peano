@@ -4,7 +4,7 @@ from .AbstractADERDGActionSet import AbstractADERDGActionSet
 from exahype2.solvers.PDETerms import PDETerms
 
 import jinja2
-import peano4.solversteps
+import peano4.api.solversteps
 
 
 class Prediction(AbstractADERDGActionSet):
@@ -309,7 +309,7 @@ class Prediction(AbstractADERDGActionSet):
         result = ""
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
         ):
             d = {}
             self._solver._init_dictionary_with_default_parameters(d)

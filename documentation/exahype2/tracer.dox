@@ -32,7 +32,7 @@ track only some attributes, they can move or stay at one place, and they
 can also interact with each other.
 
 
-Next, you have add a few action sets to ExaHyPE's solver steps: 
+Next, you have add a few @ref glossary_events_and_action_sets "action sets" to ExaHyPE's solver steps:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 project.add_action_set_to_initialisation( exahype2.tracer.InsertParticlesByCoordinates( 
@@ -183,7 +183,7 @@ project.add_action_set_to_timestepping(exahype2.tracer.FiniteVolumesTracing(trac
 
 If the arguments that the default kernel accepts are not sufficient or a fit, you can 
 define your own arguments by setting the tracer
-action set's projection_kernel_arguments string. This notably
+@ref glossary_events_and_action_sets "action set's" projection_kernel_arguments string. This notably
 allows you to read out the time stamp associated with a cell:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   

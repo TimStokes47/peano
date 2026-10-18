@@ -1,10 +1,10 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import jinja2
 
-import peano4.datamodel.DaStGen2
+import peano4.api.datamodel.DaStGen2
 
 import dastgen2.attributes.Integer
 
@@ -86,7 +86,7 @@ class InsertParticlesFromFile(ActionSet):
             result = self.__Template_EndTraversal.render(**self.d)
         return result
 
-    def get_body_of_getGridControlEvents(self):
+    def get_body_of_createGridControlEventsForNextTraversal(self):
         return "  return std::vector< peano4::grid::GridControlEvent >();\n"
 
     def get_action_set_name(self):

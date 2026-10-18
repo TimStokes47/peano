@@ -1,0 +1,41 @@
+/**
+
+@page exaparty_tests Tests
+
+ExaParty comes along with a set of test programs.
+These can be found under `/tests/exaparty/`
+and should all run out-of-the-box via the provided `run.sh` scripts.
+Before you start, ensure that you have configured and built Peano as specified
+for @ref section_compile_peano4_for_exaparty "ExaParty".
+Notice that some of these will use HDF5 files and hence require the correponding
+configuration for Peano. See @ref section_compile_peano4_for_exaparty.
+
+The tests located in `tests/exaparty/hydro-simple-sph-physics` are intended to
+verify that the physics solvers are correct on classic problems. They are
+well-suited to use as first examples to get familiar with ExaParty.
+
+
+## Functional Tests
+- \subpage tests_exaparty_dastgen_test
+- \subpage tests_exaparty_test_density_calculation
+- \subpage tests_exaparty_test_smoothing_length_computation
+- \subpage tests_exaparty_test_boundary_conditions
+
+## Physics Tests
+- \subpage tests_exaparty_planet_orbit
+- \subpage tests_exaparty_hydro_simple_sph_sod_1d
+- \subpage tests_exaparty_hydro_simple_sph_noh_2d
+- \subpage tests_exaparty_hydro_simple_sph_noh_3d
+- \subpage tests_exaparty_hydro_simple_sph_sedov_blast_1D
+- \subpage tests_exaparty_hydro_simple_sph_sedov_blast_2D
+- \subpage tests_exaparty_hydro_simple_sph_sedov_blast_3D
+- \subpage tests_exaparty_hydro_simple_sph_sod_1d
+
+## Tests from the Jupyter notebooks
+<!--
+- \subpage tests_exaparty_hydro-simple-sph-physics_sedov-blast_plot-sedov-1d
+- \subpage tests_exaparty_hydro-simple-sph-physics_sedov-blast_plot-sedov-1d
+-->
+
+ */
+

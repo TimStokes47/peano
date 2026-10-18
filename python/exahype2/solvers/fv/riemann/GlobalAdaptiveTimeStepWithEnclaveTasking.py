@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .kernels import *
 
-from peano4.toolbox.blockstructured import ReconstructedArrayMemoryLocation
+from toolbox.blockstructured.api import ReconstructedArrayMemoryLocation
 
 from exahype2.solvers import PDETerms
 from exahype2.solvers.fv.EnclaveTasking import EnclaveTasking

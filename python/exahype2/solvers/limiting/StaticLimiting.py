@@ -6,7 +6,7 @@ from abc import abstractmethod
 import jinja2
 
 import dastgen2
-import peano4.output
+import peano4.api.output
 import exahype2.grid
 import exahype2.solvers.limiting.kernels
 
@@ -379,7 +379,7 @@ Type:                   """ + self.__class__.__name__
 
         This routine is typically not invoked by a user.
 
-        output: peano4.output.Output
+        output: peano4.api.output.Output
         """
 
         if(subdirectory):
@@ -389,7 +389,7 @@ Type:                   """ + self.__class__.__name__
         self._init_dictionary_with_default_parameters(HeaderDictionary)
 
         generated_abstract_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 os.path.dirname(os.path.realpath(__file__)) + "/StaticLimitingAbstract.template.h",
                 os.path.dirname(os.path.realpath(__file__)) + "/StaticLimitingAbstract.template.cpp",
                 "Abstract" + self._name,
@@ -402,7 +402,7 @@ Type:                   """ + self.__class__.__name__
         )
 
         generated_solver_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 os.path.dirname(os.path.realpath(__file__)) + "/StaticLimiting.template.h",
                 os.path.dirname(os.path.realpath(__file__)) + "/StaticLimiting.template.cpp",
                 self._name,

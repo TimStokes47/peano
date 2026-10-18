@@ -273,8 +273,13 @@ peano4::grid::GridStatistics operator+(
     ) + rhs.getNumberOfRemoteUnrefinedCells(),
     lhs.getNumberOfLocalRefinedCells() + rhs.getNumberOfLocalRefinedCells(),
     lhs.getNumberOfRemoteRefinedCells() + rhs.getNumberOfRemoteRefinedCells(),
-    std::min(lhs.getStationarySweeps(), rhs.getStationarySweeps()),
-    lhs.getCoarseningHasBeenVetoed() or rhs.getCoarseningHasBeenVetoed(),
+    lhs.getNumberOfRefiningVertices() + rhs.getNumberOfRefiningVertices(),
+    lhs.getNumberOfErasingVertices() + rhs.getNumberOfErasingVertices(),
+    lhs.getNumberOfRefinementTriggeredVertices(
+    ) + rhs.getNumberOfRefinementTriggeredVertices(),
+    lhs.getNumberOfEraseTriggeredVertices(
+    ) + rhs.getNumberOfEraseTriggeredVertices(),
+    lhs.getEraseCommandHasBeenVetoed() or rhs.getEraseCommandHasBeenVetoed(),
     lhs.getRemovedEmptySubtree() or rhs.getRemovedEmptySubtree(),
     tarch::la::min(lhs.getMinH(), rhs.getMinH())
   );
@@ -285,9 +290,12 @@ void peano4::grid::clear(GridStatistics& statistics, bool isGlobalMasterTree) {
   statistics.setNumberOfRemoteUnrefinedCells(0);
   statistics.setNumberOfLocalRefinedCells(isGlobalMasterTree ? 1 : 0);
   statistics.setNumberOfRemoteRefinedCells(isGlobalMasterTree ? 0 : 1);
-  statistics.setCoarseningHasBeenVetoed(false);
+  statistics.setNumberOfRefiningVertices(0);
+  statistics.setNumberOfErasingVertices(0);
+  statistics.setNumberOfRefinementTriggeredVertices(0);
+  statistics.setNumberOfEraseTriggeredVertices(0);
+  statistics.setEraseCommandHasBeenVetoed(false);
   statistics.setRemovedEmptySubtree(false);
-  statistics.setStationarySweeps(statistics.getStationarySweeps() + 1);
   statistics.setMinH(
     tarch::la::Vector<Dimensions, double>(std::numeric_limits<double>::max())
   );
@@ -549,4 +557,52 @@ void peano4::grid::reduceGridControlEvents(
 
   delete[] sizes;
 #endif
+}
+
+
+peano4::grid::GridStatistics peano4::grid::reduceGridStatistics(
+  const peano4::grid::GridStatistics& localStatistics
+) {
+  GridStatistics result = localStatistics;
+#ifdef Parallel
+  static const int tag = tarch::mpi::Rank::reserveFreeTag("peano4::grid::reduceGridStatistics");
+
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    for (int rank = 0; rank < tarch::mpi::Rank::getInstance().getNumberOfRanks(); rank++) {
+      if (rank != tarch::mpi::Rank::getInstance().getGlobalMasterRank()) {
+        GridStatistics remoteStatistics;
+        GridStatistics::receiveAndPollDanglingMessages(
+          remoteStatistics, rank, tag, tarch::mpi::Rank::getInstance().getCommunicator()
+        );
+        result = result + remoteStatistics;
+      }
+    }
+  } else {
+    GridStatistics::sendAndPollDanglingMessages(
+      localStatistics,
+      tarch::mpi::Rank::getInstance().getGlobalMasterRank(),
+      tag,
+      tarch::mpi::Rank::getInstance().getCommunicator()
+    );
+  }
+
+  MPI_Bcast(
+    &result,
+    1,
+    GridStatistics::getGlobalCommunciationDatatype(),
+    tarch::mpi::Rank::getInstance().getGlobalMasterRank(),
+    tarch::mpi::Rank::getInstance().getCommunicator()
+  );
+#endif
+  return result;
+}
+
+
+bool peano4::grid::isGridStationary( const peano4::grid::GridStatistics& statistics ) {
+  return  statistics.getNumberOfRefinementTriggeredVertices()==0
+      and statistics.getNumberOfRefiningVertices()==0
+      and statistics.getNumberOfEraseTriggeredVertices()==0
+      and statistics.getNumberOfErasingVertices()==0
+      and not statistics.getEraseCommandHasBeenVetoed()
+      and not statistics.getRemovedEmptySubtree();
 }

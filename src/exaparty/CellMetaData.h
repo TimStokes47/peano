@@ -1,0 +1,60 @@
+// This file is part of the ExaParty project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#pragma once
+
+
+#include <vector>
+
+
+#include "peano4/datamanagement/CellMarker.h"
+
+
+namespace exaparty {
+  struct CellMetaData;
+}
+
+
+/**
+ * Provide meta data around ExaParty cell
+ *
+ * Lightweight wrapper around a couple of attributes which have to be passed
+ * into particle (pair) update kernels. I started to add more and more
+ * attributes. Over time, I got fed up with all the variants and therefore
+ * introduce this lightweight wrapper around attributes. Due to this this one,
+ * we can extend the attributes passed in at any point without having to touch
+ * each individual piece of source code.
+ */
+struct exaparty::CellMetaData {
+
+  private:
+    static std::vector<int> _dummyNumberOfCoalescedActiveParticlesPerVertex;
+  public:
+    const peano4::datamanagement::CellMarker&  marker;
+    const std::vector<int>&                    numberOfCoalescedLocalParticlesPerVertex;
+    const std::vector<int>&                    numberOfCoalescedActiveParticlesPerVertex;
+    const std::vector<char>&                   localParticleIsContainedInCell;
+
+    CellMetaData() = delete;
+
+    inline CellMetaData(
+      const peano4::datamanagement::CellMarker&  marker_,
+      const std::vector<int>&                    numberOfCoalescedLocalParticlesPerVertex_,
+      const std::vector<int>&                    numberOfCoalescedActiveParticlesPerVertex_,
+      const std::vector<char>&                   localParticleIsContainedInCell_
+    ):
+      marker(marker_),
+      numberOfCoalescedLocalParticlesPerVertex(numberOfCoalescedLocalParticlesPerVertex_),
+      numberOfCoalescedActiveParticlesPerVertex(numberOfCoalescedActiveParticlesPerVertex_),
+      localParticleIsContainedInCell(localParticleIsContainedInCell_) {
+    }
+
+    inline CellMetaData(
+      const peano4::datamanagement::CellMarker&  marker_,
+      const std::vector<char>&                   localParticleIsContainedInCell_
+    ):
+      marker(marker_),
+      numberOfCoalescedLocalParticlesPerVertex(_dummyNumberOfCoalescedActiveParticlesPerVertex),
+      numberOfCoalescedActiveParticlesPerVertex(_dummyNumberOfCoalescedActiveParticlesPerVertex),
+      localParticleIsContainedInCell(localParticleIsContainedInCell_) {
+    }
+};

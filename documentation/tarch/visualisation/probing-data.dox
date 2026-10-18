@@ -2,43 +2,66 @@
 
 @page documentation_tarch_visualisation_probing-data Probing data files
 
-Probe.py can be used to read out the unknowns at a given point within a
-Peano patch file. That is, it identifies the unknowns that are
-associated with an individual cell that is specified through an x, y and
-(optional) z coordinate. Crucially, the single cell is found at the
-finest level of granularity recorded in the peano patch file.
-
-The algorithm does not rely on Paraview/pvpython.
-
-To probe an individual patch file use the following commands:
+probe.py reads out the unknowns at one point of a Peano patch file over
+time and writes them into a csv file. It is the counterpart of render.py
+(@ref documentation_tarch_visualisation_offline-conversion): it accepts the
+same meta files and snapshot options, but instead of whole VTU files, it
+yields one time series. The script does not rely on ParaView/pvpython or
+vtk.
 
 ~~~~~~~~~~~~~~~~~~~~~
-cd Peano export PYTHONPATH=python python3
-python/peano4/visualisation/Probe.py
---input-file=\<path-to-peano-patch-file\> -x=\<x-axis\> -y=\<y-axix\>
---set-identifier=\<set-identifier\>
+python3 src/tarch/plotter/api/probe.py --point 0.3 0.6 0.1 -o probe.csv solution.peano-patch-file
 ~~~~~~~~~~~~~~~~~~~~~
 
-Here we probe the patch file passed to --input-file. The point to be
-probed is given as a coordinate to -x and -y. If you work with three
-dimensional data add a -z argument with the value of the z axis to be
-probed. The unkowns at the point (x, y) will be saved in a csv file
-called probe\_output.csv, though the name of this file can be configured
-by adding the --ofname flag to the above command and setting it to the
-name of the output file.
+The csv file holds one row per snapshot, sorted by time. The first column
+is the snapshot's time stamp, followed by all unknowns of all data sets
+within the file. If the description of a data set lists one name per
+unknown, e.g. `description h, hu`, the columns carry these names. ExaHyPE's
+solvers write such descriptions if you give their variables names. If two
+data sets use the same name, the columns are prefixed with the data set,
+e.g. `SWEQ_h`. Otherwise, the columns are named after the data set and the
+index of the unknown, e.g.
 
-We can also probe whole sets of patch files at once by swapping the
---input-file flag used above with the --meta-file flag instead. The
---meta-file should be set as the path to the main file that links to a
-set of Peano patch files. The algorithm will then probe all files that
-are listed in the main file.
+~~~~~~~~~~~~~~~~~~~~~
+time,solution_0,solution_1
+0.0,1.0,0.25
+0.1,1.02,0.24
+~~~~~~~~~~~~~~~~~~~~~
 
-In this case, each row in the outputted csv file will list the unknowns
-from an individual patch file. The rows are ordered chronologically.
-This csv, then, will capture the change in unknowns at a given point
-within the mesh over time.
+@ref tutorials_exahype2_41_postprocessing "The postprocessing tutorial" shows the probe with named unknowns.
 
+The most important options are
 
+- **--point x y [z]** The probe point. For 2d data, any z coordinate is
+  ignored.
+- **-o/--output** Name of the csv file (default probe.csv).
+- **--set-identifier** Probe only one data set from the patch file.
+- **-s** The input file is a single snapshot rather than a meta file. Its
+  time stamp is then 0.
+- **-start/-end** Restrict the probing to a range of snapshots.
+- **-j** Number of worker processes probing the snapshots in parallel.
+
+## Which value do we pick?
+
+There is no interpolation. Among all patches that contain the point, we
+take the finest one, i.e. coarser levels of an adaptive mesh are ignored if
+they are dumped, too. If the point sits exactly on a face between two
+patches, we take the patch to the right/top/front. Within the patch, we
+take
+
+- for cell data, the value of the (sub)cell that contains the point;
+- for vertex data, the value of the dof which is nearest to the point.
+  This takes the mapping of the patch file into account, i.e. works for
+  non-equidistant dof layouts such as Gauss-Lobatto points, too.
+
+Cell data with a non-default mapping is not supported. If no patch in a
+snapshot contains the point, the script writes NaN and issues a warning.
+
+## Performance
+
+The script parses only the offset and size of each patch and skips the
+values of all patches that do not contain the point. It therefore is
+considerably cheaper than a conversion into VTU. The I/O remains the same
+though, i.e. each snapshot file is still read once.
 
  */
- 

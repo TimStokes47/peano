@@ -13,8 +13,8 @@ def real_mesh_size_and_level(prescribed_h,
     given refinement instructions exactly. All it can do is to approximate
     them. 
 
-    This routine is a copy of swift2.Project.real_mesh_size(), but I didn't 
-    want to have dependencies between the two packages, i.e. swift2 and 
+    This routine is a copy of exaparty.api.Project.real_mesh_size(), but I didn't 
+    want to have dependencies between the two packages, i.e. exaparty and 
     the load balancing. Therefore, copying seems to be appropriate.
 
     Return a tuple of mesh size and mesh levels

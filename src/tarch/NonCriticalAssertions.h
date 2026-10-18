@@ -82,7 +82,7 @@
  *
  * If you want to support non-critical assertions, you have to alter your main
  * loop to check for the flag every now and then. This is not done
- * automatically, though some extensions such as Swift or ExaHyPE bring up the
+ * automatically, though some extensions such as ExaParty or ExaHyPE bring up the
  * environment for non-critical assertions up by default.
  *
  * Usually, the main driver's code snippet looks as follows:

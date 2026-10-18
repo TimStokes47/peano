@@ -187,14 +187,14 @@ boundary conditions, e.g.), you might be well-advised to swap out the
 whole boundary implementation.
 
 Every  solver has an attribute `_action_set_handle_boundary`. This is
-the action set that we invoke to handle the boundary. It has an
+the @ref glossary_events_and_action_sets "action set" that we invoke to handle the boundary. It has an
 attribute `TemplateHandleBoundary_KernelCalls` which is a string in
 jinja2 format. It is used to actually generate the kernel call. By
 default, it invokes the `applyBoundaryConditions` function of your
 solver. You can redirect this call:
 
 The start of the attribute with an underscore emphasises that I usually
-do not expect users to alter the action set. This is for experienced
+do not expect users to alter the @ref glossary_events_and_action_sets "action set". This is for experienced
 users. Most of them will create their own subclass of the solver. In
 this case, an attribute with an underscore make sense.
 

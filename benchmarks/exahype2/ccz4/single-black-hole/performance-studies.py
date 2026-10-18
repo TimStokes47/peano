@@ -68,7 +68,7 @@ def get_command_line_args():
         required=True,
         help="Minimal cell size (AMR) or regular mesh cell size (without AMR), default=1.8",
     )
-    parser.add_argument("-m",   "--mode",               dest="mode",           choices=peano4.output.CompileModes, default=peano4.output.CompileModes[0], help="|".join(peano4.output.CompileModes) )
+    parser.add_argument("-m",   "--mode",               dest="mode",           choices=peano4.api.output.CompileModes, default=peano4.api.output.CompileModes[0], help="|".join(peano4.api.output.CompileModes) )
     parser.add_argument(
         "-amr",
         "--amr",

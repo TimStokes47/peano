@@ -99,6 +99,10 @@ public:
 
   /**
    * Shutdown parallel environment.
+   *
+   * Waits for all tasks first (@see tarch::multicore::waitForAllTasks()),
+   * as there might still be tasks around which nobody waits for, e.g. tasks
+   * that a simulation's very last mesh traversal has spawned.
    */
   void shutdown();
 

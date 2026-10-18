@@ -1,11 +1,11 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4
+import peano4.api
 import jinja2
 
 from .AbstractRKFDActionSet import AbstractRKFDActionSet
 
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 from exahype2.solvers.ButcherTableau import ButcherTableau
 
@@ -15,7 +15,7 @@ class ProjectPatchOntoFaces(AbstractRKFDActionSet):
 
     Project patch data onto faces, so the faces hold valid data which can feed into the subsequent Runge-Kutta step
 
-    This class is based upon peano4.toolbox.blockstructured.ProjectPatchOntoFaces.
+    This class is based upon toolbox.blockstructured.api.ProjectPatchOntoFaces.
     Yet, it differs fundamentally in the way the inner-most loop is realised:
     The standard projection from the toolbox takes a solution from a patch
     and copies parts of this solution onto the faces. This is not what we want

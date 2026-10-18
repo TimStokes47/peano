@@ -51,7 +51,7 @@ If you want to use compiler feedback, we do routinely use the Intel toolchain.
 For them, the flag -qopt-report=3 yields useful feedback. However, running the 
 whole code with compiler feedback yields a lot and lot of files. It also seems
 to slow the translation process down. I therefore 
-recommend that you first find the observer class which invokes the compute kernel
+recommend that you first find the @ref glossary_observer "observer" class which invokes the compute kernel
 you are interested in. After that, create the Makefile (only once, as it will 
 be overwritten). Within the makefile, alter the linker step:
 
@@ -339,7 +339,7 @@ tarch::MemoryLocation.
 ### Adaptive mesh refinement is very expensive
 
 Peano realises a strict cell-wise traversal paradigm, where individual
-actions @ref peano_action_sets "are tied to single cells, faces or vertices".
+actions @ref page_peano_action_sets "are tied to single cells, faces or vertices".
 Therefore, @ref page_peano_amr "Peano's AMR" is also controlled by sets of 
 refine and erase events. The decision to refine or erase a mesh is made
 by Peano by comparing each and every mesh entity against the set of 
@@ -374,7 +374,7 @@ can still tune this behaviour:
 ## Multithreading optimisation
 
 Peano supports both task-based and data parallelism. The former is specific to 
-extensions such as Swift or ExaHyPE, i.e. each has their own tasking approach.
+extensions such as ExaParty or ExaHyPE, i.e. each has their own tasking approach.
 There are some generic recommendations though, and we discuss them below. All
 Peano codes can support data parallelism by a textbook non-overlapping domain
 decomposition. Actually, we use the same tree-based multiscale domain 

@@ -1,6 +1,6 @@
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -77,16 +77,16 @@ class ProjectIntoCellAndUpdateCellSolution(ActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
       pass
     # This is now done within the abstract solver
-#    if operation_name==peano4.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
+#    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_BEGIN_TRAVERSAL:
 #      result = jinja2.Template("""
 #  _solverStatistics.clearGlobalPrecondResidualUpdate();
 #  _solverStatistics.clearGlobalResidualAndSolutionUpdate();
 #""").render(**self.d)      
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       result = jinja2.Template("""
   repositories::{{SOLVER_INSTANCE}}.merge( _solverStatistics );
 """).render(**self.d)

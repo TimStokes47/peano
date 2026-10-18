@@ -1,6 +1,6 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import jinja2
 
@@ -62,7 +62,7 @@ class PlotDGPatchesInPeanoBlockFormat(ActionSet):
     return ""
 
 
-  def get_body_of_getGridControlEvents(self):
+  def get_body_of_createGridControlEventsForNextTraversal(self):
     return "  return std::vector< peano4::grid::GridControlEvent >();\n" 
 
 

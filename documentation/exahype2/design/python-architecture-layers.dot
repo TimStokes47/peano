@@ -1,0 +1,19 @@
+// Three layers of the ExaHyPE 2 Python architecture, as discussed on
+// page_exahype_design_philosophy. Regenerate the PNG via
+//
+//   dot -Tpng -Gdpi=110 python-architecture-layers.dot -o python-architecture-layers.png
+//
+digraph PythonArchitectureLayers {
+  rankdir=TB;
+  nodesep=0.4;
+  ranksep=0.45;
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=12, width=4.6, margin="0.25,0.12"];
+  edge [fontname="Helvetica", fontsize=10, color="#555555"];
+
+  solver [fillcolor="#d6e9f8", label=<<b>Solvers and their aggregate</b><br/><i>what</i> is solved<br/><font point-size="10">physics only, no numerics or performance details;<br/>the layer users interact with</font>>];
+  generators [fillcolor="#fdf0c8", label=<<b>Generators</b><br/><i>which</i> numerical scheme<br/><font point-size="10">map the solver onto mesh entities, pick the compute kernels,<br/>define the solver steps of one time step</font>>];
+  peano [fillcolor="#dcefd8", label=<<b>Peano 4 core</b><br/><i>executes and optimises</i> the task graph<br/><font point-size="10">action sets and mesh traversals;<br/>not specific to ExaHyPE 2</font>>];
+
+  solver -> generators [label="  solver description"];
+  generators -> peano [label="  task graph of activities"];
+}

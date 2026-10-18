@@ -190,7 +190,7 @@ project.set_Peano4_installation(peano_dir, peano4.output.string_to_mode(mode))
 
 Once the statistics mode is switched on, we can track how many tasks there are,
 on average, in the queue:
-We follow the guidelines on @ref tarch_logging:
+We follow the guidelines on @ref tarch_logging "logging and statistics":
 
 - Compile the code in statistics mode (cmp remarks above)
 - Run the application. You will get an output similar to
@@ -319,7 +319,7 @@ grabbed always in one go.
 One of the purposes of task fusion - besides a reduction of overheads - is the
 capability to introduce bespoke compute kernels that handle a whole set of 
 tasks instead of a single one. They might even take them and ship them to a 
-GPU. For this, you have to overwrite @ref tarch::multicore::Tasks::fuse(). The 
+GPU. For this, you have to overwrite @ref tarch::multicore::Task::fuse(). The 
 default is just a loop over tasks.
 
 In our latest write-up, we call these fusion kernels ***executor***.

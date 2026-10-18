@@ -1,6 +1,6 @@
 import os, sys
 import argparse
-import peano4
+import peano4.api
 import mghype
 import numpy as np
 

@@ -7,13 +7,12 @@ endif
 
 ExaHyPE2Sources = \
   CellAccess.cpp \
-  EnclaveBookkeeping.cpp \
-  EnclaveTask.cpp \
   LoadBalancingConfiguration.cpp \
   PlotFilter.cpp \
   RefinementControl.cpp \
   PrecisionControl.cpp \
   RefinementControlService.cpp \
+  Solver.cpp \
   TimeStepping.cpp \
   UserInterface.cpp \
   UnitTests.cpp \

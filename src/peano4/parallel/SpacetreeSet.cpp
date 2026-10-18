@@ -500,11 +500,6 @@ void peano4::parallel::SpacetreeSet::deleteClonedObservers() {
 void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
   logTraceIn("traverse(TraversalObserver&)");
 
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    peano4::parallel::Node::getInstance().continueToRun();
-  }
-  logDebug("traverse(TraversalObserver)", "start new grid sweep");
-
   tarch::mpi::Rank::getInstance().barrier([&]() -> void {
     tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     answerQuestions();
@@ -558,9 +553,6 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
       break;
     }
   }
-
-  // I use this boolean flag from time to time to debug the code.
-  [[maybe_unused]] const bool runSequentially = false;
 
   logTraceInWith1Argument("traverse(TraversalObserver&)-primary", primaryTasks.size());
   tarch::multicore::spawnAndWait(primaryTasks);
@@ -666,9 +658,8 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees(peano4::grid::TraversalObserve
     } else if (p->mayJoinWithMaster()) {
       const int localRank  = Node::getInstance().getRank(p->_id);
       const int masterRank = Node::getInstance().getRank(p->_masterId);
-      if (localRank == masterRank and getSpacetree(p->_masterId).getGridStatistics().getCoarseningHasBeenVetoed()) {
-        // @todo erste Meldung info
-        logError(
+      if (localRank == masterRank and getSpacetree(p->_masterId).getGridStatistics().getEraseCommandHasBeenVetoed()) {
+        logWarning(
           "traverse(Observer)",
           "join tree "
             << p->_id << " as it is deteriorated (encodes no hierarchical data) while master " << p->_masterId
@@ -711,7 +702,10 @@ peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics()
       0, // __numberOfRemoteUnrefinedCells,
       0, // __numberOfLocalRefinedCells
       0, // __numberOfRemoteRefinedCells,
-      0, // __stationarySweeps,
+      0, // __numberOfRefiningVertices
+      0, // __numberOfErasingVertices
+      0, // __numberOfRefinementTriggeredVertices
+      0, // __numberOfEraseTriggeredVertices
       false,
       false,
       tarch::la::Vector<Dimensions, double>(std::numeric_limits<double>::max()) // minH

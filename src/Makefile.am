@@ -18,7 +18,7 @@ SUBDIRS = . \
 	exahype2 \
 	mghype \
 	petsc \
-	swift2 \
+	exaparty \
 	tbb \
 	unittests
 
@@ -173,6 +173,8 @@ Peano4Core_SOURCES = \
 	peano4/datamanagement/FaceMarker.cpp \
 	peano4/datamanagement/VertexMarker.cpp \
 	peano4/peano.cpp \
+	peano4/RunMultipleSteps.cpp \
+	peano4/DefaultStepReport.cpp \
 	peano4/UnitTests.cpp \
 	peano4/grid/AutomatonState.cpp \
 	peano4/grid/EmptyTraversalObserver.cpp \

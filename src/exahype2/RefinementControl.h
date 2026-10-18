@@ -57,7 +57,7 @@ std::string toString( exahype2::RefinementCommand value );
  * events are called new events. After the sweep, we roll over the refinement
  * requests. We commit them. These committed events then are delivered to the
  * grid traversal automaton. finishStep() does the roll-over, the delivery
- * happens once you call getGridControlEvents() through the AMR observer.
+ * happens once you call createGridControlEventsForNextTraversal() through the AMR observer.
  *
  * Hence, the overall refinement spawns three grid traversals:
  *

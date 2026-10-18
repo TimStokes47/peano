@@ -1,7 +1,7 @@
-import peano4.runner.DefaultSequence
+import peano4.api.runner.DefaultSequence
 import os
 
-class MatrixFreeMain(peano4.runner.DefaultSequence):
+class MatrixFreeMain(peano4.api.runner.DefaultSequence):
   def __init__(self,
                project,
                domain_offset,

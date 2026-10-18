@@ -10,12 +10,17 @@
 
 #include <string>
 
+
+
 #ifdef Parallel
-#include <mpi.h>
-#include <functional>
+  #include <mpi.h>
+  #include <functional>
 #endif
 
+
+
 #include "tarch/la/Vector.h"
+#include "tarch/la/SmartPointerVector.h"
 #include "tarch/mpi/Rank.h"
 #include "tarch/services/ServiceRepository.h"
 #include "peano4/grid/LoadStoreComputeFlag.h"
@@ -24,16 +29,24 @@
 
 
 
+       
+
 namespace peano4{
 namespace grid{
+
   struct GridStatistics;
 }
 }
 
+
+
 struct peano4::grid::GridStatistics {
   public:
+
+
     GridStatistics() {}
-    GridStatistics(int  __numberOfLocalUnrefinedCells, int  __numberOfRemoteUnrefinedCells, int  __numberOfLocalRefinedCells, int  __numberOfRemoteRefinedCells, int  __stationarySweeps, bool  __coarseningHasBeenVetoed, bool  __removedEmptySubtree, tarch::la::Vector<Dimensions,double>  __minH);
+    GridStatistics(int  __numberOfLocalUnrefinedCells, int  __numberOfRemoteUnrefinedCells, int  __numberOfLocalRefinedCells, int  __numberOfRemoteRefinedCells, int  __numberOfRefiningVertices, int  __numberOfErasingVertices, int  __numberOfRefinementTriggeredVertices, int  __numberOfEraseTriggeredVertices, bool  __eraseCommandHasBeenVetoed, bool  __removedEmptySubtree, tarch::la::Vector<Dimensions,double>  __minH);
+
 
     int   getNumberOfLocalUnrefinedCells() const;
     void   setNumberOfLocalUnrefinedCells(int value);
@@ -43,10 +56,16 @@ struct peano4::grid::GridStatistics {
     void   setNumberOfLocalRefinedCells(int value);
     int   getNumberOfRemoteRefinedCells() const;
     void   setNumberOfRemoteRefinedCells(int value);
-    int   getStationarySweeps() const;
-    void   setStationarySweeps(int value);
-    bool   getCoarseningHasBeenVetoed() const;
-    void   setCoarseningHasBeenVetoed(bool value);
+    int   getNumberOfRefiningVertices() const;
+    void   setNumberOfRefiningVertices(int value);
+    int   getNumberOfErasingVertices() const;
+    void   setNumberOfErasingVertices(int value);
+    int   getNumberOfRefinementTriggeredVertices() const;
+    void   setNumberOfRefinementTriggeredVertices(int value);
+    int   getNumberOfEraseTriggeredVertices() const;
+    void   setNumberOfEraseTriggeredVertices(int value);
+    bool   getEraseCommandHasBeenVetoed() const;
+    void   setEraseCommandHasBeenVetoed(bool value);
     bool   getRemovedEmptySubtree() const;
     void   setRemovedEmptySubtree(bool value);
     tarch::la::Vector<Dimensions,double>   getMinH() const;
@@ -131,6 +150,7 @@ struct peano4::grid::GridStatistics {
     #endif
 
 
+
     enum ObjectConstruction {
       NoData
     };
@@ -151,14 +171,19 @@ struct peano4::grid::GridStatistics {
     [[clang::pack_range(0,std::numeric_limits<int>::max())]]  int   _numberOfRemoteUnrefinedCells;
     [[clang::pack_range(0,std::numeric_limits<int>::max())]]  int   _numberOfLocalRefinedCells;
     [[clang::pack_range(0,std::numeric_limits<int>::max())]]  int   _numberOfRemoteRefinedCells;
-    [[clang::pack_range(0,std::numeric_limits<int>::max())]]  int   _stationarySweeps;
-    [[clang::pack]]  bool   _coarseningHasBeenVetoed;
+    [[clang::pack_range(0,std::numeric_limits<int>::max())]]  int   _numberOfRefiningVertices;
+    [[clang::pack_range(0,std::numeric_limits<int>::max())]]  int   _numberOfErasingVertices;
+    [[clang::pack_range(0,std::numeric_limits<int>::max())]]  int   _numberOfRefinementTriggeredVertices;
+    [[clang::pack_range(0,std::numeric_limits<int>::max())]]  int   _numberOfEraseTriggeredVertices;
+    [[clang::pack]]  bool   _eraseCommandHasBeenVetoed;
     [[clang::pack]]  bool   _removedEmptySubtree;
     tarch::la::Vector<Dimensions,double>   _minH;
 
+
+
     #ifdef Parallel
     private:
-      int _senderDestinationRank;
+      int                  _senderDestinationRank;
 
       #if !defined(__MPI_ATTRIBUTES_LANGUAGE_EXTENSION__)
       /**
@@ -170,4 +195,12 @@ struct peano4::grid::GridStatistics {
       static MPI_Datatype  Datatype;
       #endif
     #endif
+
+
+
+
 };
+
+  
+
+

@@ -13,6 +13,7 @@ ToolboxLoadBalancing_SOURCES = \
   Configuration.cpp \
   CostMetrics.cpp \
   loadbalancing.cpp \
+  LoadBalancingService.cpp \
   State.cpp \
   Statistics.cpp \
   metrics/CellCount.cpp \

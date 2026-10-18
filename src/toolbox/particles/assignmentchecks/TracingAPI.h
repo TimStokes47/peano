@@ -11,7 +11,7 @@ namespace toolbox {
      * @namespace toolbox::particles::assignmentchecks Correctness checks of
      * particle-mesh assignment
      *
-     * This API is inspired by SWIFT's swift2::dependencychecks as introduced
+     * This API is inspired by ExaParty's exaparty::dependencychecks as introduced
      * by Mladen: We keep some history of particle-mesh associations, trace new
      * mesh assignments and validate them against the recorded history. All the
      * tracing degenerates to empty routines if we work in release mode, so
@@ -280,7 +280,7 @@ namespace toolbox {
        * the type. However, some compilers only give you something similar to
        *
        * ~~~~~~~~~~~~~~~~~~~~
-       * N10benchmarks6swift23noh10globaldata9HydroPartE
+       * N10benchmarks6exaparty3noh10globaldata9HydroPartE
        * ~~~~~~~~~~~~~~~~~~~~
        *
        * which is really not what you want. This routine tries to reconstruct a

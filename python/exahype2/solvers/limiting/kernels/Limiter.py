@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from copy import deepcopy
 
-import peano4.output
+import peano4.api.output
 
 from exahype2.solvers.aderdg.kernels.Gemms import Gemms
 
@@ -16,7 +16,7 @@ class Limiter:
     ):
         self._build_gemms()
 
-        generated_kernels = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+        generated_kernels = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
             headfile_template=template_prefix + "Limiter.template.h",
             cppfile_template=template_prefix + "Limiter.template.cpp",
             classname=output_path + "/Limiter",

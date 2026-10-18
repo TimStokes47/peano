@@ -16,7 +16,7 @@ examples::finitevolumes::actions::CreateGrid::~CreateGrid() {
 }
 
 
-std::vector< peano4::grid::GridControlEvent > examples::finitevolumes::actions::CreateGrid::getGridControlEvents() {
+std::vector< peano4::grid::GridControlEvent > examples::finitevolumes::actions::CreateGrid::createGridControlEventsForNextTraversal() {
   std::vector< peano4::grid::GridControlEvent > result;
 
   result.push_back(peano4::grid::GridControlEvent(

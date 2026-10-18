@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import argparse
 
-import peano4
+import peano4.api
 import exahype2
 
 class SWEArgumentParser(argparse.ArgumentParser):
@@ -65,9 +65,9 @@ class SWEArgumentParser(argparse.ArgumentParser):
         self.add_argument(
             "-m",
             "--build-mode",
-            choices=peano4.output.CompileModes,
-            default=peano4.output.CompileModes[0], # Release
-            help="|".join(peano4.output.CompileModes),
+            choices=peano4.api.output.CompileModes,
+            default=peano4.api.output.CompileModes[0], # Release
+            help="|".join(peano4.api.output.CompileModes),
         )
 
         self.add_argument(
