@@ -92,10 +92,17 @@ But this option is hidden from the task compiler.
        data counts as conflicting data here, too: Tasks of one node may be
        invoked concurrently on the same cell, i.e. they must not write
        cell data which another task of the node reads or writes. A node
-       might work on several grid entities. If a node holds more than one
-       task, every action set of these tasks is labelled as parallel (@ref
+       might work on several grid entities. A node is parallel if it holds
+       more than one task and each of these tasks holds exactly one action
+       set (@ref peano4.api.taskgraph.compiler.FuseSteps._is_parallel_node()).
+       The action sets of a parallel node are labelled as parallel (@ref
        peano4.api.solversteps.ActionSet.ActionSet.parallel), i.e. they may
-       be invoked concurrently.
+       be invoked concurrently. All other action sets are labelled as not
+       parallel. A task with several action sets never is part of a
+       parallel node: Its action sets have to be invoked one after the
+       other, and the parallel flags of individual action sets can not
+       express that a sequence of action sets runs in parallel to another
+       task.
     3. The resulting sequence of nodes is fused greedily into traversals:
        a node is appended to the current traversal if constraints 1 to 4
        hold for the node and all tasks already in the traversal. Otherwise,
@@ -145,10 +152,15 @@ But this option is hidden from the task compiler.
     the action sets according to their descend_invocation_order: a
     reconstruction with a higher descend_invocation_order would then
     overtake the update of the subsequent task. The descend_invocation_order
-    is applied (stably) only among the action sets of one task. The
-    resulting invocation order, including which action sets run in
-    parallel, is recorded in the step's action_set_numbers - @ref
-    peano4.api.taskgraph.compiler.FuseSteps._create_step().
+    is applied (stably) only among the action sets of one task.
+
+    The generated observer spawns consecutive action sets which are labelled
+    as parallel as one task group
+    (@ref peano4.api.solversteps.SynchroniseActionSets.get_task_groups()).
+    If two parallel nodes follow each other directly within a step, their
+    groups would merge. We therefore insert a
+    @ref peano4.api.solversteps.SynchroniseActionSets.SynchroniseActionSets
+    between them - @ref peano4.api.taskgraph.compiler.FuseSteps._create_step().
 
     A submodel used by several tasks of a fused step is declared once on
     the step. Its qualifier is merged from the tasks' qualifiers: TEMPORARY
@@ -221,10 +233,9 @@ But this option is hidden from the task compiler.
             else:
                 nodes_of_layer.append([task])
         for node in nodes_of_layer:
-            if len(node) > 1:
-                for task in node:
-                    for action_set in task.action_sets:
-                        action_set.parallel = True
+            for task in node:
+                for action_set in task.action_sets:
+                    action_set.parallel = _is_parallel_node(node)
         nodes += nodes_of_layer
 
     # Step 3: greedy fusion along the sequence of nodes
@@ -351,12 +362,10 @@ def _create_step(nodes: List[List[Task]], identifier: str) -> "peano4.api.solver
     Every node is a list of tasks: either a single task, or several tasks
     from one layer of the task graph which can run in parallel.
 
-    Besides the action sets, the step is also given an attribute
-    action_set_numbers which holds one invocation number per action set
-    (starting at 1). Action sets that are invoked one after the other have
-    increasing numbers, whereas all action sets of one parallel node share
-    the same number. This attribute is purely used for reporting (@ref
-    peano4.api.taskgraph.compiler.ReportCompiledStepSequence).
+    Whenever a parallel node directly follows another parallel node, we
+    insert a
+    @ref peano4.api.solversteps.SynchroniseActionSets.SynchroniseActionSets,
+    so the two nodes yield two task groups rather than one.
 
     """
     tasks = [task for node in nodes for task in node]
@@ -381,17 +390,24 @@ def _create_step(nodes: List[List[Task]], identifier: str) -> "peano4.api.solver
             use(submodel)
             step_access[submodel] = _merge_data_access(accesses)
 
-    step.action_set_numbers = []
-    number = 0
+    previous_node_is_parallel = False
     for node in nodes:
-        is_parallel = len(node) > 1
-        if is_parallel:
-            number += 1
+        node_is_parallel = _is_parallel_node(node)
+        if node_is_parallel and previous_node_is_parallel:
+            step.action_sets.append(peano4.api.solversteps.SynchroniseActionSets())
         for task in node:
             for action_set in sorted(task.action_sets, key=lambda action_set: action_set.descend_invocation_order):
-                if not is_parallel:
-                    number += 1
                 step.action_sets.append(action_set)
-                step.action_set_numbers.append(number)
+        previous_node_is_parallel = node_is_parallel
 
     return step
+
+
+def _is_parallel_node(node: List[Task]) -> bool:
+    """!
+
+    A node is parallel if it holds more than one task and each task holds
+    exactly one action set. @ref peano4.api.taskgraph.compiler.FuseSteps.translate()
+
+    """
+    return len(node) > 1 and all(len(task.action_sets) == 1 for task in node)

@@ -3,6 +3,7 @@
 from typing import List
 
 import peano4.api
+import peano4.api.solversteps
 
 
 def report_compiled_step_sequence(
@@ -26,8 +27,9 @@ def report_compiled_step_sequence(
     Each step's action sets are listed as an enumerated list in the order
     in which they are invoked ("<number>. do / <name>"). Action sets that
     may run in parallel share the same number and are told apart by
-    letters ("1.a do / <name>", "1.b do / <name>", ...) - @ref peano4.api.taskgraph.compiler.ReportCompiledStepSequence._action_set_numbers() for where these numbers
-    come from.
+    letters ("1.a do / <name>", "1.b do / <name>", ...). The numbering
+    follows the task groups of the generated observer - @ref
+    peano4.api.taskgraph.compiler.ReportCompiledStepSequence._action_set_lines().
 
     Dispatches on peano4.api.Logger().verbosity exactly like
     Graph.log_as_text()/visualise() do: LoggerVerbosity.TEXT logs a plain
@@ -75,51 +77,21 @@ def _submodel_label(submodel, access) -> str:
     return f"{submodel.name} [{qualifier.name}]" if qualifier is not None else submodel.name
 
 
-def _action_set_numbers(step) -> List[int]:
-    """!
-    One invocation number per action set of step, starting at 1. Action
-    sets with the same number run in parallel.
-
-    A compiler can hand over these numbers explicitly through an attribute
-    action_set_numbers on the step (@ref
-    peano4.api.taskgraph.compiler.FuseSteps). Otherwise, we derive them
-    from the action sets' parallel flags (@ref
-    peano4.api.solversteps.ActionSet): consecutive action sets which are
-    all labelled as parallel share one number, every other action set gets
-    a number of its own.
-    """
-    numbers = getattr(step, "action_set_numbers", None)
-    if numbers is not None and len(numbers) == len(step.action_sets):
-        return list(numbers)
-
-    numbers = []
-    number = 0
-    for index, action_set in enumerate(step.action_sets):
-        continues_parallel_group = index > 0 and action_set.parallel and step.action_sets[index - 1].parallel
-        if not continues_parallel_group:
-            number += 1
-        numbers.append(number)
-    return numbers
-
-
 def _action_set_lines(step) -> List[str]:
     """!
     Enumerated list of the step's action sets in invocation order, i.e.
-    "<number>. do / <name>". Action sets that may run in parallel share
-    the same number and get a letter each, i.e. "1.a do / <name>",
-    "1.b do / <name>", ...
+    "<number>. do / <name>". The numbers enumerate the task groups which
+    the generated observer invokes one after the other
+    (@ref peano4.api.solversteps.SynchroniseActionSets.get_task_groups()).
+    The action sets of a group with more than one action set run in
+    parallel. They share the number and get a letter each, i.e.
+    "1.a do / <name>", "1.b do / <name>", ...
     """
-    numbers = _action_set_numbers(step)
     lines = []
-    letter_index = {}
-    for action_set, number in zip(step.action_sets, numbers):
-        if numbers.count(number) > 1:
-            letter = chr(ord("a") + letter_index.get(number, 0))
-            letter_index[number] = letter_index.get(number, 0) + 1
-            label = f"{number}.{letter}"
-        else:
-            label = f"{number}."
-        lines.append(f"{label} do / {action_set.get_action_set_name()}")
+    for number, group in enumerate(peano4.api.solversteps.get_task_groups(step.action_sets), start=1):
+        for letter_index, action_set in enumerate(group):
+            label = f"{number}.{chr(ord('a') + letter_index)}" if len(group) > 1 else f"{number}."
+            lines.append(f"{label} do / {action_set.get_action_set_name()}")
     return lines
 
 
@@ -164,7 +136,7 @@ def _visualise_compiled_step_sequence(steps, title: str) -> None:
     from matplotlib.path import Path
 
     if not steps:
-        print(f"Compiled task graph '{title}' is empty - nothing to visualise.")
+        peano4.api.Logger().log(f"Compiled task graph '{title}' is empty - nothing to visualise.")
         return
 
     HEADER_HEIGHT = 0.52

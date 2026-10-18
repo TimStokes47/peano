@@ -128,6 +128,25 @@ class ActionSet(object):
     routines yield the body only.
 
 
+    ## Order of invocation and concurrency level
+
+    The observer invokes the events of a step's action sets in the order
+    of the step's action sets (reversed for the events of leaveCell()).
+    @ref peano4.api.solversteps.Step.Step.add_action_set() sorts the action
+    sets according to their descend_invocation_order.
+
+    Consecutive action sets with parallel=True form a task group: Per
+    event, the observer spawns their code as one task per action set and
+    waits for all of them, before it continues. An action set with
+    parallel=False, or a
+    @ref peano4.api.solversteps.SynchroniseActionSets.SynchroniseActionSets
+    marker, ends a group
+    (@ref peano4.api.solversteps.SynchroniseActionSets.get_task_groups()).
+    Label an action set as parallel only if its events do not depend on
+    the events of the other action sets of its group and do not write data
+    they read or write.
+
+
 
     ## Important links
 

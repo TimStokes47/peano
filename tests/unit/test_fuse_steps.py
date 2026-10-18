@@ -1,5 +1,6 @@
 from peano4.api.taskgraph import Graph, Task
 from peano4.api.taskgraph.compiler import FuseSteps
+from peano4.api.solversteps import SynchroniseActionSets, get_task_groups
 
 
 VERTEX = Task.GridEntity.VERTEX
@@ -37,6 +38,11 @@ def _chain(*entities):
         task.add_action_set(_FakeActionSet(task.name))
         graph.add_task(task)
     return graph, tasks
+
+
+def _groups(step):
+    """Names of the action sets per task group of the generated observer"""
+    return [[action_set.name for action_set in group] for group in get_task_groups(step.action_sets)]
 
 
 def _step_names(graph, non_fusable_task_pairs=None):
@@ -116,7 +122,7 @@ def test_independent_tasks_form_one_parallel_node():
         graph.add_task(task)
     steps = FuseSteps.translate(graph, "S", None)
     assert [step.name for step in steps] == ["S_A__B"]
-    assert steps[0].action_set_numbers == [1, 1]
+    assert _groups(steps[0]) == [["a", "b"]]
     assert all(action_set.parallel for action_set in steps[0].action_sets)
 
 
@@ -146,7 +152,7 @@ def test_independent_tasks_with_conflicting_cell_data_are_fused_but_not_parallel
         graph.add_task(task)
     steps = FuseSteps.translate(graph, "S", None)
     assert [step.name for step in steps] == ["S_A__B__C"]
-    assert steps[0].action_set_numbers == [1, 2, 3]
+    assert _groups(steps[0]) == [["a"], ["b"], ["c"]]
     assert not any(action_set.parallel for action_set in steps[0].action_sets)
 
 
@@ -160,4 +166,33 @@ def test_independent_tasks_reading_the_same_cell_data_are_parallel():
         task.add_action_set(_FakeActionSet(task.name))
         graph.add_task(task)
     steps = FuseSteps.translate(graph, "S", None)
-    assert steps[0].action_set_numbers == [1, 1]
+    assert _groups(steps[0]) == [["a", "b"]]
+
+
+def test_adjacent_parallel_nodes_are_separated_by_a_synchronisation_marker():
+    graph = Graph()
+    v1, v2, c1, c2 = Task("v1", VERTEX), Task("v2", VERTEX), Task("c1", CELL), Task("c2", CELL)
+    c1.add_dependency(v1)
+    c2.add_dependency(v2)
+    for task in (v1, v2, c1, c2):
+        task.add_action_set(_FakeActionSet(task.name))
+        graph.add_task(task)
+    steps = FuseSteps.translate(graph, "S", None)
+    assert [step.name for step in steps] == ["S_V1__V2__C1__C2"]
+    assert [type(action_set) for action_set in steps[0].action_sets].count(SynchroniseActionSets) == 1
+    assert isinstance(steps[0].action_sets[2], SynchroniseActionSets)
+    assert _groups(steps[0]) == [["v1", "v2"], ["c1", "c2"]]
+
+
+def test_task_with_several_action_sets_is_never_part_of_a_parallel_node():
+    graph = Graph()
+    first, second = Task("a", CELL), Task("b", CELL)
+    first.add_action_set(_FakeActionSet("a1"))
+    first.add_action_set(_FakeActionSet("a2"))
+    second.add_action_set(_FakeActionSet("b"))
+    graph.add_task(first)
+    graph.add_task(second)
+    steps = FuseSteps.translate(graph, "S", None)
+    assert [step.name for step in steps] == ["S_A__B"]
+    assert not any(action_set.parallel for action_set in steps[0].action_sets)
+    assert _groups(steps[0]) == [["a1"], ["a2"], ["b"]]

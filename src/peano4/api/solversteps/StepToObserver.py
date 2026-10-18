@@ -37,16 +37,21 @@ class StepToObserver(object):
     self.step = step
     
     
-  def construct_output(self,output,included_action_sets):
-    """
+  def construct_output(self,output,included_action_sets,task_groups=None):
+    """!
       Construct one mapping
+
+      @param task_groups: [[int]] or None
+        Groups of indices into included_action_sets, i.e. action sets
+        which run in parallel - @ref peano4.api.output.Observer.Observer.
     """
     observer = peano4.api.output.Observer(
       self.step.get_observer_class_name(), self.step.project.namespace + [ "observers" ], self.step.project.subdirectory + "observers",
       included_action_sets,
       self.step.vertex_data,
       self.step.face_data,
-      self.step.cell_data
+      self.step.cell_data,
+      task_groups
     )
     output.artefacts.append( observer )
     output.makefile.add_cpp_file( observer.get_cpp_file_name(), generated=True )
