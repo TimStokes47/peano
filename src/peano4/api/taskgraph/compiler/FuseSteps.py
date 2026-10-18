@@ -87,12 +87,15 @@ But this option is hidden from the task compiler.
        repeating task forms a node of its own, placed in front of the
        layer's remaining nodes. The remaining tasks are added one by one to
        the layer's current node unless they have conflicting data with it
-       (constraint 2) or form a non-fusable pair with one of its tasks
-       (constraint 4). In this case, they start a new node. A node might
-       work on several grid entities. If a node holds more than one task,
-       every action set of these tasks is labelled as parallel (@ref
-       peano4.api.solversteps.ActionSet.ActionSet.parallel), i.e. they may be invoked
-       concurrently.
+       or form a non-fusable pair with one of its tasks (constraint 4). In
+       this case, they start a new node. Different to constraint 2, cell
+       data counts as conflicting data here, too: Tasks of one node may be
+       invoked concurrently on the same cell, i.e. they must not write
+       cell data which another task of the node reads or writes. A node
+       might work on several grid entities. If a node holds more than one
+       task, every action set of these tasks is labelled as parallel (@ref
+       peano4.api.solversteps.ActionSet.ActionSet.parallel), i.e. they may
+       be invoked concurrently.
     3. The resulting sequence of nodes is fused greedily into traversals:
        a node is appended to the current traversal if constraints 1 to 4
        hold for the node and all tasks already in the traversal. Otherwise,
@@ -119,7 +122,8 @@ But this option is hidden from the task compiler.
 
     Two independent vertex tasks form one layer and hence one parallel
     node. They are fused with the two independent cell tasks of the
-    subsequent layer. Action sets with the same number run in parallel.
+    subsequent layer. Action sets which may run in parallel share a number
+    and are told apart by letters, e.g. 1.a and 1.b.
 
     @image html fuse-steps-parallel.png
 
@@ -180,9 +184,9 @@ But this option is hidden from the task compiler.
         non_fusable.add((first_task, second_task))
         non_fusable.add((second_task, first_task))
 
-    def can_be_combined(tasks: List[Task], further_tasks: List[Task]) -> bool:
-        """Constraints 2 and 4 between two lists of tasks"""
-        return not _have_conflicting_data(tasks, further_tasks) and not any(
+    def can_be_combined(tasks: List[Task], further_tasks: List[Task], include_cell_data: bool = False) -> bool:
+        """Constraints 2 and 4 between two lists of tasks, optionally taking cell data into account"""
+        return not _have_conflicting_data(tasks, further_tasks, include_cell_data) and not any(
             (task, further_task) in non_fusable for task in tasks for further_task in further_tasks
         )
 
@@ -212,7 +216,7 @@ But this option is hidden from the task compiler.
         for task in tasks_in_layer:
             if task.has_to_repeat:
                 continue
-            if nodes_of_layer and can_be_combined(nodes_of_layer[-1], [task]):
+            if nodes_of_layer and can_be_combined(nodes_of_layer[-1], [task], include_cell_data=True):
                 nodes_of_layer[-1].append(task)
             else:
                 nodes_of_layer.append([task])
@@ -254,16 +258,21 @@ But this option is hidden from the task compiler.
     return steps
 
 
-def _have_conflicting_data(tasks: List[Task], further_tasks: List[Task]) -> bool:
+def _have_conflicting_data(tasks: List[Task], further_tasks: List[Task], include_cell_data: bool = False) -> bool:
     """!
 
     Check whether two sets of tasks can not share one mesh traversal due to
-    their face or vertex data
+    their face or vertex data, or can not run in parallel
 
     True if one of the tasks writes a face or vertex submodel (WRITE or
     READ_AND_WRITE) which one of the further_tasks reads or writes
-    (READ_AND_DISCARD, WRITE or READ_AND_WRITE), or vice versa. Cell data
-    and TEMPORARY uses are ignored. @ref peano4.api.taskgraph.compiler.FuseSteps.translate()
+    (READ_AND_DISCARD, WRITE or READ_AND_WRITE), or vice versa. TEMPORARY
+    uses are ignored. @ref peano4.api.taskgraph.compiler.FuseSteps.translate()
+
+    @param include_cell_data: bool
+      If False, cell data is ignored. This is the check whether tasks can
+      share one mesh traversal. If True, conflicting cell data counts,
+      too. This is the check whether tasks can run in parallel.
 
     """
     writing_accesses = (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE)
@@ -273,7 +282,9 @@ def _have_conflicting_data(tasks: List[Task], further_tasks: List[Task]) -> bool
         return {
             (kind, submodel)
             for task in task_list
-            for kind, access_of_submodel in (("face", task.face_data_access), ("vertex", task.vertex_data_access))
+            for kind, access_of_submodel in (
+                (("cell", task.cell_data_access),) if include_cell_data else ()
+            ) + (("face", task.face_data_access), ("vertex", task.vertex_data_access))
             for submodel, access in access_of_submodel.items()
             if access in accesses
         }

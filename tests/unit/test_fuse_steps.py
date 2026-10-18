@@ -132,3 +132,32 @@ def test_independent_tasks_with_conflicting_data_are_not_parallel():
     steps = FuseSteps.translate(graph, "S", None)
     assert [step.name for step in steps] == ["S_A", "S_B"]
     assert not any(action_set.parallel for step in steps for action_set in step.action_sets)
+
+
+def test_independent_tasks_with_conflicting_cell_data_are_fused_but_not_parallel():
+    graph = Graph()
+    first, second, third = Task("a", CELL), Task("b", CELL), Task("c", CELL)
+    cell_data = _FakeSubmodel("Q")
+    first.use_cell(cell_data, READ_AND_WRITE)
+    second.use_cell(cell_data, READ_AND_WRITE)
+    third.use_cell(cell_data, READ_AND_DISCARD)
+    for task in (first, second, third):
+        task.add_action_set(_FakeActionSet(task.name))
+        graph.add_task(task)
+    steps = FuseSteps.translate(graph, "S", None)
+    assert [step.name for step in steps] == ["S_A__B__C"]
+    assert steps[0].action_set_numbers == [1, 2, 3]
+    assert not any(action_set.parallel for action_set in steps[0].action_sets)
+
+
+def test_independent_tasks_reading_the_same_cell_data_are_parallel():
+    graph = Graph()
+    first, second = Task("a", CELL), Task("b", CELL)
+    cell_data = _FakeSubmodel("Q")
+    first.use_cell(cell_data, READ_AND_DISCARD)
+    second.use_cell(cell_data, READ_AND_DISCARD)
+    for task in (first, second):
+        task.add_action_set(_FakeActionSet(task.name))
+        graph.add_task(task)
+    steps = FuseSteps.translate(graph, "S", None)
+    assert steps[0].action_set_numbers == [1, 1]

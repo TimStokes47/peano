@@ -25,8 +25,8 @@ def report_compiled_step_sequence(
 
     Each step's action sets are listed as an enumerated list in the order
     in which they are invoked ("<number>. do / <name>"). Action sets that
-    run in parallel share the same number and are marked as
-    "(in parallel)" - @ref peano4.api.taskgraph.compiler.ReportCompiledStepSequence._action_set_numbers() for where these numbers
+    may run in parallel share the same number and are told apart by
+    letters ("1.a do / <name>", "1.b do / <name>", ...) - @ref peano4.api.taskgraph.compiler.ReportCompiledStepSequence._action_set_numbers() for where these numbers
     come from.
 
     Dispatches on peano4.api.Logger().verbosity exactly like
@@ -105,16 +105,21 @@ def _action_set_numbers(step) -> List[int]:
 def _action_set_lines(step) -> List[str]:
     """!
     Enumerated list of the step's action sets in invocation order, i.e.
-    "<number>. do / <name>". Action sets that run in parallel share the
-    same number and are explicitly marked as running in parallel.
+    "<number>. do / <name>". Action sets that may run in parallel share
+    the same number and get a letter each, i.e. "1.a do / <name>",
+    "1.b do / <name>", ...
     """
     numbers = _action_set_numbers(step)
     lines = []
+    letter_index = {}
     for action_set, number in zip(step.action_sets, numbers):
-        line = f"{number}. do / {action_set.get_action_set_name()}"
         if numbers.count(number) > 1:
-            line += " (in parallel)"
-        lines.append(line)
+            letter = chr(ord("a") + letter_index.get(number, 0))
+            letter_index[number] = letter_index.get(number, 0) + 1
+            label = f"{number}.{letter}"
+        else:
+            label = f"{number}."
+        lines.append(f"{label} do / {action_set.get_action_set_name()}")
     return lines
 
 
