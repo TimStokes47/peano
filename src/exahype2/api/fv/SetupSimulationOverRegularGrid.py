@@ -77,6 +77,14 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
                                                                     " or ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->hasSplitRecently() ) )"
                                                                 )
                                                                 )
+        consolidate_load_balancing_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Consolidate mesh",
+                                                                entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+                                                                task_has_to_repeat=(
+                                                                    "not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
+                                                                    " or ( ::toolbox::loadbalancing::LoadBalancingService::getInstance().hasLoadBalancing()"
+                                                                    " and ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->hasSplitRecently() )"
+                                                                )
+                                                                )
 
         assert hasattr(self._solver.numerical_scheme, "patch_size"), (
             f"Solver {self._solver.name}'s numerical scheme has no attribute "
@@ -105,11 +113,21 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         )
         # Inform the load balancing after every mesh refinement sweep
         refine_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
+        # Once the mesh is constructed, switch the load balancing off and let
+        # the mesh consolidate: we keep on running mesh sweeps until the
+        # mesh is stationary and the most recent splits have been carried out.
+        consolidate_load_balancing_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                enable_load_balancing=False, plug_into_prepare_traversal=True
+            )
+        )
+        consolidate_load_balancing_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
 
         initial_condition_task        = peano4.api.taskgraph.Task(name=f"{self._solver.name} Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name} Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
-        initial_condition_task.add_dependency(refine_task)
+        consolidate_load_balancing_task.add_dependency(refine_task)
+        initial_condition_task.add_dependency(consolidate_load_balancing_task)
         project_on_faces_task.add_dependency(initial_condition_task)
 
         initial_condition_task.add_action_set(
@@ -133,6 +151,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         )
 
         setup_simulation.add_task(refine_task)
+        setup_simulation.add_task(consolidate_load_balancing_task)
         setup_simulation.add_task(initial_condition_task)
         setup_simulation.add_task(project_on_faces_task)
 
