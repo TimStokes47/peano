@@ -25,7 +25,8 @@ class DaStGen2Artefact(object):
   do not know the directory of the project when they construct the output.
   Instead, they register one artefact per data model with the output, which
   writes the header and the implementation once the output is generated
-  into the project directory (@ref peano4.api.output.Output.generate()).
+  into the project directory, as @ref peano4.api.output.Output "the output"
+  calls generate() on each of its artefacts.
 
   """
   def __init__(self, data_model, file_name_without_extension):
