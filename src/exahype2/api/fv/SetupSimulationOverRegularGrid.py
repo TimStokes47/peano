@@ -51,7 +51,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         """!
         
         Create the actual sequence of tasks following the description
-        from @ref "Adding a numerical scheme", as grid construction, 
+        from @ref page_exahype_numerical_scheme "Adding a numerical scheme", as grid construction, 
         numerical scheme, but also plotting all follow the same pattern 
         of tasks and dependencies.
 

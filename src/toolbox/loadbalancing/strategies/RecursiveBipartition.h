@@ -40,7 +40,7 @@ namespace toolbox {
  * splitting variants and constraints in peano4::grid::Spacetree::isCellTopDownSplitCandidate()
  * and  peano4::grid::Spacetree::isCellBottomUpSplitCandidate(),
  * peano4::grid::Spacetree::splitOrJoinCell() and the general
- * @ref peano_domain_decomposition "domain decomposition overview".
+ * @ref page_peano_domain_decomposition "domain decomposition overview".
  *
  * The splitting stops, once we have met the maximum number of trees on a node
  * (or cannot split anymore).

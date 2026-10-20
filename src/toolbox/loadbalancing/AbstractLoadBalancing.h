@@ -263,9 +263,6 @@ protected:
    * If two or more trees have the same weight, the routine should
    * randomly return one of them.
    *
-   * @param tolerance By default, you get the last heaviest tree. But you
-   *   can ask for a random tree
-   *
    * @return NoHeaviestTreeAvailable If there are no local trees or
    *   if the heaviest tree is on the blacklist, i.e. we have to
    *   assume that it still is splitting.
@@ -285,8 +282,9 @@ protected:
    *
    * @f$ \frac{m_i}{m_{max}} \geq tolerance @f$
    *
-   *
-   *
+   * @param tolerance Relative weight a tree has to have compared to the
+   *   heaviest local tree to be a candidate. By default, you get the last
+   *   heaviest tree. But you can ask for a random tree close to it.
    */
   int getIdOfHeaviestLocalSpacetree(double tolerance) const;
 };

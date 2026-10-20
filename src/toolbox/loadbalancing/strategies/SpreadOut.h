@@ -38,7 +38,7 @@ namespace toolbox {
  * splitting variants and constraints in peano4::grid::Spacetree::isCellTopDownSplitCandidate()
  * and  peano4::grid::Spacetree::isCellBottomUpSplitCandidate(),
  * peano4::grid::Spacetree::splitOrJoinCell() and notably the general
- * @ref peano_domain_decomposition "domain decomposition overview" for the
+ * @ref page_peano_domain_decomposition "domain decomposition overview" for the
  * rationale.
  */
 class toolbox::loadbalancing::strategies::SpreadOut: public toolbox::loadbalancing::AbstractLoadBalancing {
