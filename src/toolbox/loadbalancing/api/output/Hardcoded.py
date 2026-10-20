@@ -155,11 +155,46 @@ def _normalise_destination_ranks(destination_ranks, subtrees):
     )
 
 
+def _validate_round_robin(subtrees, destination_ranks, number_of_ranks=None):
+    """!
+    Ensure that the subtrees are assigned to the ranks round robin
+
+    Peano's tree numbers encode the rank which hosts a tree:
+    peano4::parallel::Node::getId() gives the nth tree on rank r the number
+    n*R+r for R ranks, and peano4::parallel::Node::getRank() hence maps tree
+    number t onto rank t%R. The offline plan refers to the trees through its
+    subtree numbers, i.e. a split of subtree s is meant to split the tree
+    with number s in Peano. This only holds if subtree s lives on rank s%R,
+    which is exactly what assign_trees_to_ranks_round_Robin() yields.
+
+    @param subtrees: [int]
+      Subtree created by the kth split.
+
+    @param destination_ranks: [int]
+      Rank which receives the subtree of the kth split.
+
+    @param number_of_ranks: int or None
+      Number of ranks R. None derives R from the largest destination rank.
+    """
+    if number_of_ranks is None:
+        number_of_ranks = max(destination_ranks, default=0) + 1
+    for subtree, rank in zip(subtrees, destination_ranks):
+        if rank != subtree % number_of_ranks:
+            raise ValueError(
+                "subtree {} is assigned to rank {}, but Peano can only host a tree with number {} on rank {} "
+                "for {} rank(s). Assign the trees to the ranks round robin, e.g. through "
+                "assign_trees_to_ranks_round_Robin()".format(
+                    subtree, rank, subtree, subtree % number_of_ranks, number_of_ranks
+                )
+            )
+
+
 def create_constructor_initialisation_string(
     peano_tree: "Tree",
     destination_ranks: list[int],
     verbose: bool = False,
     modes=None,
+    number_of_ranks: int | None = None,
 ) -> tuple[str, str]:
     """!
     Construct the constructor arguments for an instance of Hardcoded
@@ -192,6 +227,10 @@ def create_constructor_initialisation_string(
       TopDown ("top-down") or BottomUp ("bottom-up") which holds for all
       splits, or a sequence with one marker per split.
 
+    @param number_of_ranks: int or None
+      Number of MPI ranks. None derives it from the largest destination
+      rank. See _validate_round_robin() for why we need it.
+
     @return `(hardcoded_config, hardcoded_mode)` where hardcoded_config is the
       complete constructor argument string and hardcoded_mode is the mode
       argument within this string.
@@ -214,6 +253,7 @@ def create_constructor_initialisation_string(
     hardcoded_mode = _format_modes(markers)
 
     destination_ranks = _normalise_destination_ranks(destination_ranks, subtrees)
+    _validate_round_robin(subtrees, destination_ranks, number_of_ranks)
 
     if verbose:
         print("Extracted hardcoded parameters:")

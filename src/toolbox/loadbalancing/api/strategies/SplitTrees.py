@@ -16,6 +16,7 @@ def split_tree(
     enable_propagate_bottom_up: bool = False,
     enable_optimize_hierarchy: bool = False,
     require_all_children_for_hierarchy_optimization: bool = True,
+    periodic_BC: list[bool] | None = None,
 #    enable_extract_split_instructions: bool = False,
 #    destination_ranks: list[int] | None = None,
     verbose: bool = False,
@@ -43,6 +44,11 @@ def split_tree(
             propagation after leaf redecomposition.
         enable_optimize_hierarchy: If True, enable Stage III hierarchical
             optimisation to minimise split operations through hierarchy lifting.
+        periodic_BC: One flag per axis. Peano never hands over cells along a
+            periodic boundary, so these cells stay on tree 0. If you pass the
+            periodic boundary conditions of your experiment, Stage I keeps
+            the leaves along periodic boundaries on tree 0, too, and counts
+            them towards tree 0's share. None means no periodic boundaries.
         require_all_children_for_hierarchy_optimization: Stage III guard for
             parent promotion. If True (default), a parent is only considered if
             all 3^d children exist. If False, Stage III may also promote mixed
@@ -75,14 +81,16 @@ def split_tree(
     traversal_mode = traversal.lower()
     if traversal_mode == "bfs":
         has_leaves_to_split, moved_nodes = distribute_leaves_bottom_up(
-            peano_tree, decomposition=decomposition, finest_level_first=False
+            peano_tree, decomposition=decomposition, finest_level_first=False, periodic_BC=periodic_BC
         )
     elif traversal_mode == "bfs_finest_first":
         has_leaves_to_split, moved_nodes = distribute_leaves_bottom_up(
-            peano_tree, decomposition=decomposition, finest_level_first=True
+            peano_tree, decomposition=decomposition, finest_level_first=True, periodic_BC=periodic_BC
         )
     elif traversal_mode == "dfs":
-        has_leaves_to_split, moved_nodes = distribute_leaves_top_down(peano_tree, decomposition=decomposition)
+        has_leaves_to_split, moved_nodes = distribute_leaves_top_down(
+            peano_tree, decomposition=decomposition, periodic_BC=periodic_BC
+        )
     else:
         raise ValueError(
             f"Unsupported traversal '{traversal}'. Use 'bfs', 'bfs_finest_first' or 'dfs'."
@@ -126,10 +134,79 @@ def split_tree(
     #return ("", "")    
 
 
+def _is_along_periodic_boundary(level: int, coordinates, periodic_BC) -> bool:
+    """
+    Does a cell touch a periodic boundary?
+
+    Args:
+        level: Level of the cell (0-based w.r.t. the API tree arrays).
+        coordinates: Integer coordinates of the cell on this level.
+        periodic_BC: One flag per axis, or None if there are no periodic
+            boundaries.
+    """
+    if periodic_BC is None:
+        return False
+    size = 3 ** (level + 1)
+    return any(
+        is_periodic and (coordinate == 0 or coordinate == size - 1)
+        for coordinate, is_periodic in zip(coordinates, periodic_BC)
+    )
+
+
+def _assign_leaves(peano_tree: Tree, leaf_nodes, decomposition, periodic_BC=None) -> list[int]:
+    """
+    Assign leaves to subtrees in the order given
+
+    Leaves along periodic boundaries stay on subtree 0 and count towards its
+    share, as Peano never hands over such cells. The remaining leaves are
+    handed out in the order of leaf_nodes: Subtree 0 gets the first ones until
+    its share is reached, then subtree 1, and so forth.
+
+    Args:
+        peano_tree: Tree to update (modified in place).
+        leaf_nodes: Leaves as (level, a, b) or (level, a, b, c) tuples.
+        decomposition: Number of leaves per subtree.
+        periodic_BC: One flag per axis, or None.
+
+    Returns:
+        Number of leaves per subtree.
+    """
+    def assign(leaf, subtree):
+        level, *coordinates = leaf
+        if peano_tree._dimension == 2:
+            a, b = coordinates
+            peano_tree._tree_arrays[level][a][b] = (1, subtree)
+        else:
+            a, b, c = coordinates
+            peano_tree._tree_arrays[level][a][b][c] = (1, subtree)
+
+    moved_nodes = [0] * len(decomposition)
+    remaining_leaves = []
+    for leaf in leaf_nodes:
+        if _is_along_periodic_boundary(leaf[0], leaf[1:], periodic_BC):
+            assign(leaf, 0)
+            moved_nodes[0] += 1
+        else:
+            remaining_leaves.append(leaf)
+
+    current_subtree = 0
+    for leaf in remaining_leaves:
+        while (
+            moved_nodes[current_subtree] >= decomposition[current_subtree]
+            and current_subtree < len(decomposition) - 1
+        ):
+            current_subtree += 1
+        assign(leaf, current_subtree)
+        moved_nodes[current_subtree] += 1
+
+    return moved_nodes
+
+
 def distribute_leaves_bottom_up(
     peano_tree: Tree,
     decomposition,
     finest_level_first: bool = False,
+    periodic_BC: list[bool] | None = None,
 ) -> tuple[bool, list[int]]:
     """
     Stage I: BFS-style leaf redecomposition over Peano SFC order.
@@ -223,42 +300,14 @@ def distribute_leaves_bottom_up(
                     if is_leaf:
                         leaf_nodes.append((level, a, b, c))
 
-    # Apply the redecomposition to leaf nodes
-    current_subtree = 0
-    current_count = 0
-    moved_nodes = [0] * len(decomposition)  # Track actual moves
-    
-    
-
-    level_range = range(peano_tree._max_level)
-    if finest_level_first:
-        level_range = range(peano_tree._max_level - 1, -1, -1)
-        
-    for leaf_coords in leaf_nodes:
-        if peano_tree._dimension == 2:
-            level, a, b = leaf_coords
-            # Assign leaf to current subtree
-            peano_tree._tree_arrays[level][a][b] = (1, current_subtree)
-            moved_nodes[current_subtree] += 1
-            current_count += 1
-            
-        elif peano_tree._dimension == 3:
-            level, a, b, c = leaf_coords
-            # Assign leaf to current subtree
-            peano_tree._tree_arrays[level][a][b][c] = (1, current_subtree)
-            moved_nodes[current_subtree] += 1
-            current_count += 1
-
-        # Check if current subtree is full, move to next
-        if current_count >= decomposition[current_subtree] and current_subtree < len(decomposition) - 1:
-            current_subtree += 1
-            current_count = 0
+    moved_nodes = _assign_leaves(peano_tree, leaf_nodes, decomposition, periodic_BC)
 
     return (True, moved_nodes)
 
 
 def distribute_leaves_top_down(peano_tree: Tree, 
                                decomposition,
+                               periodic_BC: list[bool] | None = None,
                                ) -> tuple[bool, list[int]]:
     """
     Stage I: DFS-style leaf redecomposition over the Peano SFC.
@@ -401,26 +450,7 @@ def distribute_leaves_top_down(peano_tree: Tree,
                 if is_component_root:
                     _dfs_3d(level, a, b, c)
 
-    current_subtree = 0
-    current_count = 0
-    moved_nodes = [0] * len(decomposition)
-
-    for leaf_coords in leaf_nodes:
-        if peano_tree._dimension == 2:
-            level, a, b = leaf_coords
-            peano_tree._tree_arrays[level][a][b] = (1, current_subtree)
-            moved_nodes[current_subtree] += 1
-            current_count += 1
-
-        elif peano_tree._dimension == 3:
-            level, a, b, c = leaf_coords
-            peano_tree._tree_arrays[level][a][b][c] = (1, current_subtree)
-            moved_nodes[current_subtree] += 1
-            current_count += 1
-
-        if current_count >= decomposition[current_subtree] and current_subtree < len(decomposition) - 1:
-            current_subtree += 1
-            current_count = 0
+    moved_nodes = _assign_leaves(peano_tree, leaf_nodes, decomposition, periodic_BC)
 
     return (True, moved_nodes)
 
