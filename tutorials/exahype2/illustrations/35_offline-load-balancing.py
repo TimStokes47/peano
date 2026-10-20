@@ -47,12 +47,13 @@ def offline_decomposition():
         decomposition=Decomposition.equidistant_splitting(
             peano_tree=tree, number_of_subtrees=domain_decomposition.NumberOfThreads
         ),
+        periodic_BC=[True, True],
     )
     destination_ranks = Hardcoded.assign_trees_to_ranks_round_Robin(
         number_of_subtrees=tree.number_of_subtrees, max_ranks=1
     )
     configuration, mode = Hardcoded.create_constructor_initialisation_string(
-        tree, destination_ranks
+        tree, destination_ranks, modes=Hardcoded.BottomUp
     )
     return configuration
 
