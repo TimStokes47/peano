@@ -26,10 +26,11 @@ namespace exagrype {
        */
       #if defined(GPUOffloadingOMP)
       #pragma omp declare simd target
+      static GPUCallableInlineMethod InlineMethod
       #elif defined(SharedOMP)
       #pragma omp declare simd
       #endif
-      static GPUCallableInlineMethod void ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
+      void ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
         const int CCZ4LapseType,
         const double CCZ4ds,
         const double CCZ4c,
@@ -40,7 +41,7 @@ namespace exagrype {
         const double CCZ4xi,
         const double CCZ4mu,
         const double CCZ4SO
-      ) InlineMethod;
+      );
 
       /**
        * The source term is one out of two terms that we use in our CCZ4
@@ -60,10 +61,11 @@ namespace exagrype {
        */
       #if defined(GPUOffloadingOMP)
       #pragma omp declare simd target
+      static GPUCallableInlineMethod InlineMethod
       #elif defined(SharedOMP)
       #pragma omp declare simd
       #endif
-      static GPUCallableInlineMethod void source(double* S, const double* const Q,
+      void source(double* S, const double* const Q,
         const int CCZ4LapseType,
         const double CCZ4ds,
         const double CCZ4c,
@@ -78,14 +80,15 @@ namespace exagrype {
         const double CCZ4k2,
         const double CCZ4k3,
         const double CCZ4SO
-      ) InlineMethod;
+      );
 
       #if defined(GPUOffloadingOMP)
       #pragma omp declare simd target
+      static GPUCallableInlineMethod InlineMethod
       #elif defined(SharedOMP)
       #pragma omp declare simd
       #endif
-      static GPUCallableInlineMethod void maxEigenvalue(
+      void maxEigenvalue(
         const double* const Q,
         int                 normal,
         const double        CCZ4e,
@@ -93,7 +96,7 @@ namespace exagrype {
         const double        CCZ4GLMc,
         const double        CCZ4GLMd,
         double*             maxEigenvalue
-      ) InlineMethod;
+      );
 
       /**
        * @todo Han
@@ -157,8 +160,6 @@ namespace exagrype {
 
 #if defined(GPUOffloadingOMP)
 #include "exagrype/ccz4/KernelsOpenMP.cpph"
-#else
-#include "exagrype/ccz4/Kernels.cpph"
 #endif
 
 
