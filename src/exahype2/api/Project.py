@@ -543,6 +543,15 @@ thus appreciate any citation of the original release paper
         return peano_project
 
     @property
+    def periodic_BC(self):
+        """!
+        One boolean per axis (dimensions entries) telling whether the domain
+        is periodic along this axis. Read-only copy - @see
+        set_global_simulation_parameters() to change it.
+        """
+        return list(self._periodic_BC)
+
+    @property
     def subdirectory(self):
         return self._subdirectory
 

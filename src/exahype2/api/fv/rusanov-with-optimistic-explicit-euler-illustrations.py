@@ -131,9 +131,15 @@ def time_step_task_graph():
         solver = exahype2.api.Solver("Euler", 4, 0)
         solver.add_pde_term(exahype2.api.Flux(stateless=False))
         solver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False))
+        solver.add_pde_term(exahype2.api.DirichletBoundaryConditions(stateless=False))
         solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, PATCH_SIZE - 1)
+        # Non-periodic boundaries, so the graph shows the boundary task
+        exahype2_project = exahype2.api.Project(["illustration"], "illustration", "illustration", directory=directory)
+        exahype2_project.set_global_simulation_parameters(
+            dimensions=2, offset=[0.0, 0.0], size=[1.0, 1.0], min_end_time=1.0, periodic_BC=[False, False]
+        )
         time_step = peano4.api.taskgraph.Graph()
-        solver.numerical_scheme.construct_output(None, peano_project, time_step)
+        solver.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
 
     time_step.visualise(title="Time stepping task graph of RusanovWithOptimisticExplicitEuler")
     output = os.path.join(
