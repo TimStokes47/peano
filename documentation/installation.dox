@@ -212,6 +212,14 @@ if you have compiled with MPI. The executables contain both node
 correctness tests and MPI ping-pong tests, i.e. you can both assess a
 valid build plus a working MPI environment.
 
+The tests of the Python API and the generated test experiments in `tests/` are
+driven by `pytest`, which is installed with Peano's Python dependencies (see
+below). Run the fast ones from Peano's root directory via
+
+    python3 -m pytest
+
+and consult \ref tarch_pytest for the integration tests.
+
 
 <div style="background-color: #ccf ; padding: 10px; border: 1px solid green;">
 Good time to stop. Jump straight into one of the tutorials if you want to.
