@@ -69,9 +69,7 @@ void toolbox::loadbalancing::strategies::SplitOversizedTree::updateState() {
 
 
 bool toolbox::loadbalancing::strategies::SplitOversizedTree::doesLocalTreeViolateThreshold() const {
-  if (not _statistics.hasConsistentViewOfWorld()) { //
-    return false;
-  } else if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() == 0) {
+  if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() == 0) {
     return false;
   } else if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() == 1) {
     return true;

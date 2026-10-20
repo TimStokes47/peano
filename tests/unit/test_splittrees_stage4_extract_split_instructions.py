@@ -22,15 +22,13 @@ def test_extract_split_instructions_no_splits_returns_empty_lists(dimensions):
     )
 
     # Act: extract split instructions
-    grid_sweeps, splitting_trees, num_cells, sub_trees = split_strategy.extract_split_instructions(
-        tree, base_sweep=2
-    )
+    splitting_trees, num_cells, sub_trees, bottom_up_flags = split_strategy.extract_split_instructions(tree)
 
     # Assert: all lists should be empty for unsplit tree
-    assert grid_sweeps == []
     assert splitting_trees == []
     assert num_cells == []
     assert sub_trees == []
+    assert bottom_up_flags == []
 
 
 @pytest.mark.parametrize(
@@ -42,7 +40,7 @@ def test_extract_split_instructions_level_zero_introduction(dimensions):
     Stage IV: Cells introduced at level 0 are attributed to source subtree 0.
 
     When a subtree is present on level 0 (no parent exists), it is treated as
-    introduced from subtree 0 with grid_sweep = base_sweep * 1.
+    introduced from subtree 0.
     """
     # Arrange: tree with 2 levels
     tree = RegularGridGenerator(
@@ -59,13 +57,10 @@ def test_extract_split_instructions_level_zero_introduction(dimensions):
         tree._tree_arrays[0][(0, 0, 0)] = (1, 1)
 
     # Act: extract split instructions
-    grid_sweeps, splitting_trees, num_cells, sub_trees = split_strategy.extract_split_instructions(
-        tree, base_sweep=2
-    )
+    splitting_trees, num_cells, sub_trees, bottom_up_flags = split_strategy.extract_split_instructions(tree)
 
     # Assert: one operation introduced from subtree 0 at level 0
-    assert len(grid_sweeps) == 1
-    assert grid_sweeps[0] == 2  # base_sweep * (level + 1) = 2 * 1
+    assert len(sub_trees) == 1
     assert splitting_trees[0] == 0  # source is always subtree 0 at level 0
     assert num_cells[0] == 1  # one cell assigned to subtree 1
     assert sub_trees[0] == 1  # target subtree is 1
@@ -103,17 +98,11 @@ def test_extract_split_instructions_parent_child_edge_introduction(dimensions):
         tree._tree_arrays[2][(0, 0, 0)] = (1, 1)
 
     # Act: extract split instructions
-    grid_sweeps, splitting_trees, num_cells, sub_trees = split_strategy.extract_split_instructions(
-        tree, base_sweep=2
-    )
+    splitting_trees, num_cells, sub_trees, bottom_up_flags = split_strategy.extract_split_instructions(tree)
 
-    # Assert: introduction detected at level 2 from subtree 0
-    # We should see 1 operation at level 2
-    level2_ops = [i for i, gs in enumerate(grid_sweeps) if gs == 6]  # base_sweep * 3 = 6
-    assert len(level2_ops) >= 1
-
-    # Check the operation at level 2
-    op_idx = level2_ops[0]
+    # Assert: exactly one split, i.e. the introduction at level 2 from subtree 0
+    assert len(sub_trees) == 1
+    op_idx = 0
     assert splitting_trees[op_idx] == 0  # source is parent subtree 0
     assert num_cells[op_idx] == 1  # one cell introduced
     assert sub_trees[op_idx] == 1  # target is subtree 1
@@ -128,7 +117,7 @@ def test_extract_split_instructions_multi_level_split_chain(dimensions):
     Stage IV: Multiple splits across levels are correctly tracked and sorted.
 
     This tests a chain of splits: Subtree 0 -> Subtree 1 -> Subtree 2 across
-    multiple levels, verifying correct source attribution and sweep ordering.
+    multiple levels, verifying that the splits are enumerated in a valid order.
     """
     # Arrange: tree with 3 levels
     tree = RegularGridGenerator(
@@ -155,17 +144,15 @@ def test_extract_split_instructions_multi_level_split_chain(dimensions):
         tree._tree_arrays[2][(0, 0, 4)] = (1, 2)
 
     # Act: extract split instructions
-    grid_sweeps, splitting_trees, num_cells, sub_trees = split_strategy.extract_split_instructions(
-        tree, base_sweep=2
-    )
+    splitting_trees, num_cells, sub_trees, bottom_up_flags = split_strategy.extract_split_instructions(tree)
 
     # Assert: should have at least 2 operations (one for subtree 1, one for subtree 2)
-    assert len(grid_sweeps) >= 2
+    assert len(sub_trees) >= 2
 
-    # Verify operations are sorted by (grid_sweep, target_subtree, level)
-    for i in range(len(grid_sweeps) - 1):
-        if grid_sweeps[i] == grid_sweeps[i + 1]:
-            assert sub_trees[i] <= sub_trees[i + 1]
+    # Subtree 1 is introduced on a coarser level than subtree 2, so its split
+    # has to come first: subtree 2 is split off subtree 1.
+    assert sub_trees.index(1) < sub_trees.index(2)
+    assert splitting_trees[sub_trees.index(2)] == 1
 
 
 @pytest.mark.parametrize(
@@ -207,47 +194,13 @@ def test_extract_split_instructions_ambiguous_parent_source_defaults_to_zero(dim
         tree._tree_arrays[2][(0, 0, 3)] = (1, 2)
 
     # Act: extract split instructions
-    grid_sweeps, splitting_trees, num_cells, sub_trees = split_strategy.extract_split_instructions(
-        tree, base_sweep=2
-    )
+    splitting_trees, num_cells, sub_trees, bottom_up_flags = split_strategy.extract_split_instructions(tree)
 
-    # Assert: when cells with target=2 exist at level 2 (grid_sweep=8)
-    # with parents from subtrees 0 and 1, the source should default to 0 (ambiguous)
-    subtree2_ops = [
-        i for i, st in enumerate(sub_trees) if st == 2 and grid_sweeps[i] == 8
-    ]  # level 2 operation
-    if len(subtree2_ops) > 0:
-        op_idx = subtree2_ops[0]
-        assert splitting_trees[op_idx] == 0  # ambiguous → defaults to 0
-
-
-def test_extract_split_instructions_grid_sweep_calculation():
-    """
-    Stage IV: Grid sweeps are correctly calculated as base_sweep * (level + 1).
-
-    Verify that the grid sweep values follow the formula: base_sweep * (level + 1)
-    for different base_sweep values.
-    """
-    # Arrange: tree with 3 levels
-    tree = RegularGridGenerator(
-        name="pytest-tree-sweep-calc",
-        max_level=3,
-        dimensions=2,
-    )
-    tree._subtree_count = 2
-    tree._tree_arrays[0][(0, 0)] = (1, 1)  # Introduce at level 0
-    tree._tree_arrays[1][(0, 0)] = (1, 1)  # Ensure existence at level 1
-    tree._tree_arrays[2][(0, 0)] = (1, 1)  # Ensure existence at level 2
-
-    # Act: extract with base_sweep = 3
-    grid_sweeps, _, _, _ = split_strategy.extract_split_instructions(
-        tree, base_sweep=3
-    )
-
-    # Assert: sweeps should be multiples of 3
-    expected_sweeps = {3, 6, 9}  # base_sweep * 1, 2, 3
-    actual_sweeps = set(grid_sweeps)
-    assert actual_sweeps.issubset(expected_sweeps)
+    # Assert: cells with target=2 exist at level 2 with parents from
+    # subtrees 0 and 1, so the source should default to 0 (ambiguous)
+    subtree2_ops = [i for i, st in enumerate(sub_trees) if st == 2]
+    assert len(subtree2_ops) == 1
+    assert splitting_trees[subtree2_ops[0]] == 0  # ambiguous → defaults to 0
 
 
 def test_extract_split_instructions_consistency_with_split_tree():
@@ -256,7 +209,7 @@ def test_extract_split_instructions_consistency_with_split_tree():
     and extract_split_instructions when Stage IV is enabled.
 
     This ensures that the instructions extracted from the final tree state
-    match what split_tree reports when enable_extract_split_instructions=True.
+    form one consistent enumerated list of splits.
     """
     # Arrange: tree with 2 levels
     tree = RegularGridGenerator(
@@ -272,18 +225,16 @@ def test_extract_split_instructions_consistency_with_split_tree():
     tree._tree_arrays[1][(0, 1)] = (1, 1)
 
     # Act: extract instructions directly
-    grid_sweeps, splitting_trees, num_cells, sub_trees = split_strategy.extract_split_instructions(
-        tree, base_sweep=2
-    )
+    splitting_trees, num_cells, sub_trees, bottom_up_flags = split_strategy.extract_split_instructions(tree)
 
     # Assert: results should be consistent lists
-    assert isinstance(grid_sweeps, list)
     assert isinstance(splitting_trees, list)
     assert isinstance(num_cells, list)
     assert isinstance(sub_trees, list)
+    assert isinstance(bottom_up_flags, list)
 
     # All lists should have the same length
-    assert len(grid_sweeps) == len(splitting_trees) == len(num_cells) == len(sub_trees)
+    assert len(splitting_trees) == len(num_cells) == len(sub_trees) == len(bottom_up_flags)
 
 
 @pytest.mark.parametrize(
@@ -324,46 +275,11 @@ def test_extract_split_instructions_only_introduced_cells_counted(dimensions):
         tree._tree_arrays[2][(0, 0, 3)] = (1, 1)
 
     # Act: extract split instructions
-    grid_sweeps, splitting_trees, num_cells, sub_trees = split_strategy.extract_split_instructions(
-        tree, base_sweep=2
-    )
+    splitting_trees, num_cells, sub_trees, bottom_up_flags = split_strategy.extract_split_instructions(tree)
 
     # Assert: only the introduced cell at level 2 is counted
-    level2_ops = [i for i, gs in enumerate(grid_sweeps) if gs == 6]
-    assert len(level2_ops) > 0
-    op_idx = level2_ops[0]
-    assert num_cells[op_idx] == 1  # only one cell introduced
-
-
-@pytest.mark.parametrize(
-    "base_sweep",
-    [1, 2, 3, 5],
-)
-def test_extract_split_instructions_parameterized_base_sweep(base_sweep):
-    """
-    Stage IV: Grid sweep values scale correctly with the base_sweep parameter.
-
-    Verify that different base_sweep values produce correctly scaled grid sweeps.
-    """
-    # Arrange: simple 2-level tree with split at level 0
-    tree = RegularGridGenerator(
-        name="pytest-tree-base-sweep",
-        max_level=2,
-        dimensions=2,
-    )
-    tree._subtree_count = 2
-    tree._tree_arrays[0][(0, 0)] = (1, 1)
-
-    # Act: extract with varying base_sweep
-    grid_sweeps, _, _, _ = split_strategy.extract_split_instructions(
-        tree, base_sweep=base_sweep
-    )
-
-    # Assert: grid sweeps are multiples of base_sweep
-    assert len(grid_sweeps) > 0
-    for sweep in grid_sweeps:
-        assert sweep % base_sweep == 0
-        assert sweep // base_sweep in [1, 2]  # level 0 or 1
+    assert len(sub_trees) == 1
+    assert num_cells[0] == 1  # only one cell introduced
 
 
 def test_extract_split_instructions_result_tuple_structure():
@@ -380,7 +296,7 @@ def test_extract_split_instructions_result_tuple_structure():
     )
 
     # Act: extract instructions (no splits)
-    result = split_strategy.extract_split_instructions(tree, base_sweep=2)
+    result = split_strategy.extract_split_instructions(tree)
 
     # Assert: result is always a 4-tuple of lists
     assert isinstance(result, tuple)

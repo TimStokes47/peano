@@ -6,6 +6,7 @@ include:
   - .continuous_integration/templates/mghype.yml
   - .continuous_integration/templates/exahype2.yml
   - .continuous_integration/templates/exaparty.yml
+  - .continuous_integration/templates/python-tests.yml
 
 stages:
   - Build
@@ -71,6 +72,16 @@ Unit_Tests:
     - job: Build
   dependencies:
     - Build
+
+Python_Unit_Tests:
+  stage: Test
+  allow_failure: false
+  extends:
+    - .Tags
+    - .Variables
+    - .BeforeScript
+    - .Python_Unit_Tests
+  needs: []
 
 ExaHyPE2_FV_Tests:
   stage: Test

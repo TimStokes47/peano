@@ -1,6 +1,7 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
+import toolbox.loadbalancing.api.actionsets
 
 from ..Solver import Solver
 
@@ -36,6 +37,9 @@ class SetupSimulationWithUserCodedRefinementCriterion(Solver.GridConstruction):
         refine_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL, task_has_to_repeat="user-coded refinement criterion re-evaluated every grid sweep")
         initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+
+        # Inform the load balancing after every mesh refinement sweep
+        refine_cell_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
 
         initial_condition_task.add_dependency(refine_cell_task)
         project_on_faces_task.add_dependency(initial_condition_task)

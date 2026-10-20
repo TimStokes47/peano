@@ -347,10 +347,13 @@ namespace peano4 {
      * This is a blocking routine, and it thus requires all ranks to call
      * it at exactly the same time - @see reduceGridControlEvents() for the
      * same caveat. Operation becomes identity (a plain copy of
-     * localStatistics) if you don't compile with MPI. @see
-     * page_grid_statistics for when/how to use this, and how it differs
-     * from extracting a single scalar out of GridStatistics and reducing
-     * only that.
+     * localStatistics) if you don't compile with MPI.
+     *
+     * You do not need this routine for the statistics of the whole mesh:
+     * peano4::parallel::SpacetreeSet::getGridStatistics() already returns
+     * them reduced over all ranks. Use it only for GridStatistics objects
+     * you assemble yourself, e.g. from the statistics of individual trees.
+     * @see page_grid_statistics
      */
     GridStatistics reduceGridStatistics(const GridStatistics& localStatistics);
 

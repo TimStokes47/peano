@@ -41,7 +41,7 @@ namespace toolbox {
  * splitting variants and constraints in peano4::grid::Spacetree::isCellTopDownSplitCandidate()
  * and  peano4::grid::Spacetree::isCellBottomUpSplitCandidate(),
  * peano4::grid::Spacetree::splitOrJoinCell() and the general
- * @ref peano_domain_decomposition "domain decomposition overview".
+ * @ref page_peano_domain_decomposition "domain decomposition overview".
  *
  * While forking off trees once they exceed a certain threshold is not as
  * elegant as iterative, recursive splits, this strategy avoids very deep

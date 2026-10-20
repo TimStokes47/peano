@@ -21,7 +21,7 @@ toolbox::loadbalancing::strategies::RecursiveBipartition::RecursiveBipartition(
   _roundRobinToken(0) {
   assertion(configuration != nullptr);
   assertion(costMetrics != nullptr);
-  _state = State::SwitchedOff;
+  _state = State::InterRankDistribution;
   _statistics.notifyOfStateChange(_state);
 }
 
