@@ -40,6 +40,7 @@ thesolver = exahype2.api.Solver(
 thesolver.add_pde_term( exahype2.api.Flux(stateless=False,))
 thesolver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False,))
 thesolver.add_pde_term(exahype2.api.InitPointWisely(stateless=False,))
+thesolver.add_pde_term(exahype2.api.DirichletBoundaryConditions(stateless=False,))
 
 thesolver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(thesolver, patch_size)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
@@ -63,11 +64,11 @@ project.set_global_simulation_parameters(
     size=[0.2, 0.2],
     min_end_time=end_time,
     max_end_time=end_time,
-#    periodic_BC=[False, False, False],
-    periodic_BC=[True, True, True],
+    periodic_BC=[False, False, False],
+#    periodic_BC=[True, True, True],
 )
 
-# project.set_load_balancing("toolbox::loadbalancing::strategies::RecursiveBipartition", "new ::exahype2::LoadBalancingConfiguration()")
+project.set_load_balancing("toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates", "new ::exahype2::LoadBalancingConfiguration()")
 project.set_Peano4_installation("../../../../", build_mode)
 peano4_project = project.generate_Peano4_project(verbosity=verbosity)
 peano4_project.generate()

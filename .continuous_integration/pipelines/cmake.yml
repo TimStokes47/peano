@@ -6,6 +6,7 @@ include:
   - .continuous_integration/templates/mghype.yml
   - .continuous_integration/templates/exahype2.yml
   - .continuous_integration/templates/exaparty.yml
+  - .continuous_integration/templates/python-tests.yml
 
 stages:
   - Build

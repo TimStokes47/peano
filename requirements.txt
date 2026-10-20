@@ -9,3 +9,4 @@ vtk
 VTUinterface
 jupyter
 ast-comments
+pytest

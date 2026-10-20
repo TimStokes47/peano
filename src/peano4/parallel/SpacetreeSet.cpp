@@ -29,6 +29,32 @@ peano4::parallel::SpacetreeSet::SpacetreeSet():
 
 peano4::parallel::SpacetreeSet& peano4::parallel::SpacetreeSet::getInstance() { return _singleton; }
 
+#ifdef Parallel
+namespace {
+  /**
+   * Reduction operator for peano4::grid::GridStatistics. Combines the
+   * entries via GridStatistics' operator+().
+   */
+  void combineGridStatistics(void* in, void* inout, int* length, MPI_Datatype*) {
+    const auto* inStatistics    = static_cast<const peano4::grid::GridStatistics*>(in);
+    auto*       inoutStatistics = static_cast<peano4::grid::GridStatistics*>(inout);
+    for (int i = 0; i < *length; i++) {
+      inoutStatistics[i] = inStatistics[i] + inoutStatistics[i];
+    }
+  }
+
+  MPI_Op getGridStatisticsReductionOperator() {
+    static MPI_Op result = []() -> MPI_Op {
+      MPI_Op op;
+      MPI_Op_create(&combineGridStatistics, 1, &op);
+      return op;
+    }();
+    return result;
+  }
+} // namespace
+#endif
+
+
 void peano4::parallel::SpacetreeSet::init(
   const tarch::la::Vector<Dimensions, double>& offset,
   const tarch::la::Vector<Dimensions, double>& width,
@@ -58,6 +84,8 @@ void peano4::parallel::SpacetreeSet::init(
     _spacetrees.push_back(spacetree);
     logTraceOutWith3Arguments("isGlobalMaster(...)", offset, width, periodicBC);
   }
+
+  _gridStatistics = sumUpLocalGridStatistics();
 }
 
 void peano4::parallel::SpacetreeSet::shutdown() {
@@ -590,6 +618,22 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
   deleteClonedObservers();
 
+  peano4::grid::GridStatistics localGridStatistics = sumUpLocalGridStatistics();
+  _gridStatistics                                  = localGridStatistics;
+#ifdef Parallel
+  tarch::mpi::Rank::getInstance().allReduce(
+    &localGridStatistics,
+    &_gridStatistics,
+    1,
+    peano4::grid::GridStatistics::getGlobalCommunciationDatatype(),
+    getGridStatisticsReductionOperator(),
+    [&]() -> void {
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+      answerQuestions();
+    }
+  );
+#endif
+
   logTraceOut("traverse(TraversalObserver&)");
 }
 
@@ -694,8 +738,11 @@ peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics(i
 }
 
 
-peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics() const {
-  logTraceIn("getGridStatistics()");
+peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics() const { return _gridStatistics; }
+
+
+peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::sumUpLocalGridStatistics() const {
+  logTraceIn("sumUpLocalGridStatistics()");
   if (_spacetrees.empty()) {
     peano4::grid::GridStatistics result(
       0, // __numberOfLocalUnrefinedCells,
@@ -710,7 +757,7 @@ peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics()
       false,
       tarch::la::Vector<Dimensions, double>(std::numeric_limits<double>::max()) // minH
     );
-    logTraceOutWith1Argument("getGridStatistics()", result.toString());
+    logTraceOutWith1Argument("sumUpLocalGridStatistics()", result.toString());
     return result;
   } else {
     peano4::grid::GridStatistics result(_spacetrees.begin()->_statistics);
@@ -719,7 +766,7 @@ peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics()
         result = result + from._statistics;
       }
     }
-    logTraceOutWith1Argument("getGridStatistics()", result.toString());
+    logTraceOutWith1Argument("sumUpLocalGridStatistics()", result.toString());
     return result;
   }
 }

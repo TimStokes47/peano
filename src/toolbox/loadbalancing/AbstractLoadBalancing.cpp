@@ -57,7 +57,7 @@ std::string toolbox::loadbalancing::AbstractLoadBalancing::toString() const {
 
 
 bool toolbox::loadbalancing::AbstractLoadBalancing::hasSplitRecently() const {
-  return _statistics.getNumberOfStateUpdatesWithoutAnySplit() < 3;
+  return _statistics.getNumberOfStateUpdatesWithoutAnySplit() < NumberOfMeshSweepsAfterSplitToMakeMeshConsistentAgain or _statistics.getLocalNumberOfSplits() > 0;
 }
 
 
@@ -102,16 +102,11 @@ bool toolbox::loadbalancing::AbstractLoadBalancing::fitsIntoMemory([[maybe_unuse
 }
 
 
-void toolbox::loadbalancing::AbstractLoadBalancing::finishSimulation() {
-  _statistics.waitForGlobalDataExchange();
-  _costMetrics->waitForGlobalDataExchange();
-}
+void toolbox::loadbalancing::AbstractLoadBalancing::finishSimulation() {}
 
 
 bool toolbox::loadbalancing::AbstractLoadBalancing::isInterRankBalancingBad() const {
-  if (not _statistics.hasConsistentViewOfWorld()) {
-    return false;
-  } else if (_statistics.getGlobalNumberOfTrees() < tarch::mpi::Rank::getInstance().getNumberOfRanks()) {
+  if (_statistics.getGlobalNumberOfTrees() < tarch::mpi::Rank::getInstance().getNumberOfRanks()) {
     return true;
   } else if ( static_cast<int>(peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size()) >= _configuration->getMaxLocalTreesPerRank(_state) ) {
     return false;
@@ -137,9 +132,7 @@ bool toolbox::loadbalancing::AbstractLoadBalancing::isInterRankBalancingBad() co
 
 
 bool toolbox::loadbalancing::AbstractLoadBalancing::isIntraRankBalancingBad() const {
-  if (not _statistics.hasConsistentViewOfWorld()) {
-    return false;
-  } else if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() == 0) {
+  if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() == 0) {
     return false;
   } else if (peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees().size() == 1) {
     return true;
