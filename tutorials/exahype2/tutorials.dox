@@ -43,6 +43,7 @@ Jupyter.
   - \subpage tutorials_exahype2_11_tsunami
 - Modifying the numerics and the implementation scheme
 - Running codes in parallel
+  - \subpage tutorials_exahype2_30_domain-decomposition
 - Coupling
   - \subpage tutorials_exahype2_41_postprocessing
   - \subpage tutorials_exahype2_44_localisation
