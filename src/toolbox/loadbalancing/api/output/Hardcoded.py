@@ -23,9 +23,10 @@ def assign_trees_to_ranks_round_Robin(
 
     Take the trees and assign them to the ranks in a round-robin fashion
 
-    This is likely not the best option in many cases. In many cases, it
-    might be better to assign the trees in chunks to preserve some
-    locality.
+    Round robin is the only assignment that the offline load balancing
+    supports, as Peano numbers its trees round robin, too: Tree t always
+    lives on rank t%R for R ranks. See _validate_round_robin() and the
+    documentation of toolbox::loadbalancing::strategies::Hardcoded.
 
     Note that we implicitly assume that the first tree remains on rank 0,
     so we really only assign number_of_subtrees-1 entries.

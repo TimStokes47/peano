@@ -61,6 +61,11 @@ namespace toolbox {
  * dot -Tpng -Gdpi=110 Hardcoded.dot -o Hardcoded.png
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
+ * Peano inverts its traversal in every other mesh sweep, i.e. a split which
+ * goes out in an inverted sweep picks its cells from the other end of the
+ * space-filling curve. We do not care about this inversion. The new tree
+ * still gets the requested number of cells.
+ *
  * As the splits wait until the splitting tree is large enough, they usually
  * fire once the mesh construction has reached the mesh level on which the
  * cells are to be found. For adaptive meshes, a split might hence fire before
@@ -136,9 +141,22 @@ namespace toolbox {
  *
  * ## MPI
  *
- * Each rank keeps only the splits whose splitting tree lives on this rank
- * (see peano4::parallel::Node::getRank()) and hands them out in the order
- * given. The ranks hence do not have to synchronise.
+ * All ranks receive the same configuration. Each rank keeps only the splits
+ * whose splitting tree lives on this rank and hands them out in the order
+ * given. Splits of trees on other ranks hence never block a rank, and the
+ * ranks do not have to synchronise.
+ *
+ * To tell which rank hosts a tree, we rely on Peano's tree numbering, which
+ * is round robin: peano4::parallel::Node::getId() gives the nth tree on rank
+ * r the number n*R+r for R ranks, and peano4::parallel::Node::getRank() maps
+ * tree number t onto rank t%R. A split instruction cannot say which number
+ * the tree that it creates will get, as Peano picks this number. We therefore
+ * always assume that the trees are assigned to the ranks round robin, i.e.
+ * that the tree which the configuration calls t is created on rank t%R. Only
+ * then does a later split of tree t in the configuration split the right tree.
+ * The Python API (create_constructor_initialisation_string() in
+ * toolbox.loadbalancing.api.output.Hardcoded) checks this assumption, as only
+ * the offline plan knows which tree each split is meant to create.
  *
  * The idea behind the hardcoded strategy is that users pipe in a particular
  * configuration tied to their specific choice of ranks. If a hardcoded setup

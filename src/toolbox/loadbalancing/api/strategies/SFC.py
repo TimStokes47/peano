@@ -21,7 +21,10 @@ the middle child along an axis inverts the flag of this axis
 
 Peano inverts the whole traversal in every other mesh sweep. The routines
 here describe the non-inverted traversal. The inverted one runs through the
-same curve backwards.
+same curve backwards. The offline load balancing ignores this inversion and
+always plans along the non-inverted curve: A split which Peano carries out in
+an inverted sweep picks its cells from the other end of the curve, but it
+still hands over the requested number of cells.
 
 @image html PeanoSFC.png
 
