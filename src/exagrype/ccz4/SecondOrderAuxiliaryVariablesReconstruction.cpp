@@ -1,4 +1,4 @@
-#include "SecondOrderAuxiliaryVariablesReconstruction.h"
+#include "exagrype/ccz4/SecondOrderAuxiliaryVariablesReconstruction.h"
 #include "exahype2/fd/FD_Helper.cpph"
 
 
@@ -101,7 +101,7 @@ namespace {
 }
 
 
-void applications::exahype2::ccz4::recomputeAuxiliaryVariablesFD4_centralDifferences(
+void exagrype::ccz4::recomputeAuxiliaryVariablesFD4_centralDifferences(
   ::exahype2::CellData<double, double>&   patchData,
   int                                     numberOfGridCellsPerPatchPerAxis,
   int                                     haloSize,
@@ -118,7 +118,7 @@ void applications::exahype2::ccz4::recomputeAuxiliaryVariablesFD4_centralDiffere
 }
 
 
-void applications::exahype2::ccz4::recomputeAuxiliaryVariablesFD4_leftDifferences(
+void exagrype::ccz4::recomputeAuxiliaryVariablesFD4_leftDifferences(
   ::exahype2::CellData<double, double>&   patchData,
   int                                     numberOfGridCellsPerPatchPerAxis,
   int                                     haloSize,
@@ -135,7 +135,7 @@ void applications::exahype2::ccz4::recomputeAuxiliaryVariablesFD4_leftDifference
 }
 
 
-void applications::exahype2::ccz4::recomputeAuxiliaryVariablesFD4_rightDifferences(
+void exagrype::ccz4::recomputeAuxiliaryVariablesFD4_rightDifferences(
   ::exahype2::CellData<double, double>&   patchData,
   int                                     numberOfGridCellsPerPatchPerAxis,
   int                                     haloSize,
@@ -152,7 +152,7 @@ void applications::exahype2::ccz4::recomputeAuxiliaryVariablesFD4_rightDifferenc
 }
 
 
-void applications::exahype2::ccz4::recomputeAuxiliaryVariablesFD4_4thOrder(
+void exagrype::ccz4::recomputeAuxiliaryVariablesFD4_4thOrder(
   ::exahype2::CellData<double, double>&   patchData,
   int                                     numberOfGridCellsPerPatchPerAxis,
   int                                     haloSize,
@@ -237,7 +237,7 @@ void applications::exahype2::ccz4::recomputeAuxiliaryVariablesFD4_4thOrder(
 }
 
 
-void applications::exahype2::ccz4::internal::recomputeAuxiliaryVariablesFD4_centralDifferences_LoopBody(
+void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_centralDifferences_LoopBody(
   double* __restrict__                                       QIn,
   const ::exahype2::enumerator::AoSLexicographicEnumerator& QInEnumerator,
   const tarch::la::Vector<Dimensions,double>&  patchCentre,
@@ -278,7 +278,7 @@ void applications::exahype2::ccz4::internal::recomputeAuxiliaryVariablesFD4_cent
 
 
 
-void applications::exahype2::ccz4::internal::recomputeAuxiliaryVariablesFD4_leftDifferences_LoopBody(
+void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_leftDifferences_LoopBody(
   double* __restrict__                                       QIn,
   const ::exahype2::enumerator::AoSLexicographicEnumerator& QInEnumerator,
   const tarch::la::Vector<Dimensions,double>&  patchCentre,
@@ -317,7 +317,7 @@ void applications::exahype2::ccz4::internal::recomputeAuxiliaryVariablesFD4_left
 
 
 
-void applications::exahype2::ccz4::internal::recomputeAuxiliaryVariablesFD4_rightDifferences_LoopBody(
+void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_rightDifferences_LoopBody(
   double* __restrict__                                       QIn,
   const ::exahype2::enumerator::AoSLexicographicEnumerator& QInEnumerator,
   const tarch::la::Vector<Dimensions,double>&  patchCentre,
@@ -354,7 +354,7 @@ void applications::exahype2::ccz4::internal::recomputeAuxiliaryVariablesFD4_righ
 }
 
 
-void applications::exahype2::ccz4::internal::recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody(
+void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody(
   double* __restrict__                                       QIn,
   const ::exahype2::enumerator::AoSLexicographicEnumerator& QInEnumerator,
   const tarch::la::Vector<Dimensions,double>&  patchCentre,

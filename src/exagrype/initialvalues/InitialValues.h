@@ -11,14 +11,15 @@
 
 #include "peano4/utils/Globals.h"
 
-#ifdef IncludeTwoPunctures
-#include "libtwopunctures/TP_bindding.h"
-#endif
 
-
-namespace applications {
-  namespace exahype2 {
-    namespace ccz4 {
+namespace exagrype {
+  /**
+   * Analytical initial conditions for the CCZ4 formulation
+   *
+   * All routines fill the 59 unknowns of the first-order CCZ4 formulation
+   * at point x and time t.
+   */
+  namespace initialvalues {
       void gaugeWave(
         double * __restrict__ Q, // Q[64+0],
         const tarch::la::Vector<Dimensions,double>&  x,
@@ -39,17 +40,5 @@ namespace applications {
         const tarch::la::Vector<Dimensions,double>&  X,
         double t
       );
-
-      #ifdef IncludeTwoPunctures
-      void ApplyTwoPunctures(
-        double * __restrict__ Q, // Q[64+0],
-        const tarch::la::Vector<Dimensions,double>&  X,
-        double t,
-	TP::TwoPunctures* tp,
-        bool low_res
-      );
-      #endif
-    }
   }
 }
-

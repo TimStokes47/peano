@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #if not defined(GPUOffloadingOMP)
-void applications::exahype2::ccz4::maxEigenvalue(
+void exagrype::ccz4::maxEigenvalue(
         const double* const Q,
         int                 normal,
         const double        CCZ4e,
@@ -25,7 +25,7 @@ void applications::exahype2::ccz4::maxEigenvalue(
 
 #if not defined(GPUOffloadingOMP)
 //this version use alpha and phi
-void applications::exahype2::ccz4::source(double* S, const double* const Q,
+void exagrype::ccz4::source(double* S, const double* const Q,
       const int CCZ4LapseType,
       const double CCZ4ds,
       const double CCZ4c,
@@ -538,7 +538,7 @@ void applications::exahype2::ccz4::source(double* S, const double* const Q,
 #endif
 
 #if not defined(GPUOffloadingOMP)
-void applications::exahype2::ccz4::ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
+void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
       const int CCZ4LapseType,
       const double CCZ4ds,
       const double CCZ4c,
@@ -1029,7 +1029,7 @@ void applications::exahype2::ccz4::ncp(double* BgradQ, const double* const Q, co
 
 //we write the quantities hydrodynamics needs required explicitiy to make stuff more clearly
 //for source term, we need most of the quantities (51 in total)
-void applications::exahype2::ccz4::source_hydro(
+void exagrype::ccz4::source_hydro(
     double* S,                          //array of 5, the output source term S(w)
     const double* const Q,              //array of 5, evolving quantities U
     const double* const primitiveQ,     //array of 5, reconstructed quantities w
@@ -1099,7 +1099,7 @@ void applications::exahype2::ccz4::source_hydro(
 
 //we write the quantities hydrodynamics needs required explicitiy to make stuff more clearly
 //for flux term, we only need \alpha, \beta^i, \tilde{\gamma}_{ij}, \phi (11 in total)
-void applications::exahype2::ccz4::flux_hydro(
+void exagrype::ccz4::flux_hydro(
     double* F,                          //array of 5, the output source term F(w)
     const double* const Q,              //array of 5, the evolving quantities U
     const double* const primitiveQ,     //array of 5, reconstructed quantities w
@@ -1112,7 +1112,7 @@ void applications::exahype2::ccz4::flux_hydro(
 
 //function for reconstruction from U(w) to w.
 //it also need spatial quantities \tilde{\gamma}_{ij}, \phi (7 in total)
-void applications::exahype2::ccz4::hydro_primitive_reconstruct(
+void exagrype::ccz4::hydro_primitive_reconstruct(
     double* primitiveQ,                 //array of 5, output reconstructed quantities w
     const double* const Q,              //array of 5, evolving quantities U
     const double* const spacetimeQ,     //array of 7, material variables in this case

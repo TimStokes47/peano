@@ -53,7 +53,7 @@ if __name__ == "__main__":
         number_of_unknowns = sum(unknowns.values())
 
         self._my_user_includes = """
-#include "../../../../applications/exahype2/ccz4/CCZ4Kernels.h"
+#include "exagrype/ccz4/Kernels.h"
 """
         super(CCZ4Solver,self).__init__(
           name=name, patch_size=patch_size,
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     int index = 0;
     for (int i=0;i<itmax;i++)
     {
-      applications::exahype2::ccz4::enforceCCZ4constraints( newQ+index );
+      exagrype::ccz4::enforceCCZ4constraints( newQ+index );
       index += {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}};
     }
   }
@@ -99,7 +99,7 @@ if __name__ == "__main__":
       def create_action_sets(self):
         super(CCZ4Solver,self).create_action_sets()
         self._action_set_couple_resolution_transitions_and_handle_dynamic_mesh_refinement.additional_includes += """ 
-#include "../../../../applications/exahype2/ccz4/CCZ4Kernels.h"
+#include "exagrype/ccz4/Kernels.h"
             """
 
       def get_user_action_set_includes(self):
@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     peano4_project.output.makefile.add_CXX_flag( "-DCCZ4EINSTEIN" )
 
-    peano4_project.output.makefile.add_cpp_file( "../../../../applications/exahype2/ccz4/CCZ4Kernels.cpp" )
+    # The CCZ4 kernels are part of the ExaGRyPE library (configure Peano with --enable-exagrype).
 
     peano4_project.generate( throw_away_data_after_generation=False )
     peano4_project.build( make_clean_first = True )

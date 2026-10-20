@@ -7,9 +7,8 @@
 #include "exahype2/enumerator/AoSLexicographicEnumerator.h"
 
 
-namespace applications {
-  namespace exahype2 {
-    namespace ccz4 {
+namespace exagrype {
+  namespace ccz4 {
       /**
        * Recompute auxiliary variables for FD4 scheme with a 4th order scheme
        *
@@ -19,7 +18,7 @@ namespace applications {
        * want to routine to work for augmented systems, too.
        *
        * The reconstruction uses a 4th order Finite Difference scheme. The
-       * implementation in applications::exahype2::ccz4::internal::recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody()
+       * implementation in exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody()
        * realises the normal stencil
        *
        * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,7 +63,7 @@ namespace applications {
        *   additional quantities within the PDE.
        * @param auxiliaryVariables Typically 0.
        *
-       * @see applications::exahype2::ccz4::internal::recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody()
+       * @see exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody()
        */
       void recomputeAuxiliaryVariablesFD4_4thOrder(
         ::exahype2::CellData<double, double>&   patchData,
@@ -160,6 +159,5 @@ namespace applications {
           int                                          normal
         );
       }
-    }
   }
 }

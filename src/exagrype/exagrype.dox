@@ -1,0 +1,44 @@
+/**
+
+@page page_exagrype_library ExaGRyPE library
+
+ExaGRyPE is Peano's extension for numerical relativity. It sits on top of
+ExaHyPE 2 and hosts the C++ code that all ExaGRyPE applications share. The
+applications themselves (such as \c applications/exahype2/ccz4, see
+@ref applications_exahype2_ExaGRyPE) generate their solvers through the Python
+API and link against this library.
+
+# Configuration
+
+ExaGRyPE is enabled like any other Peano extension or toolbox:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+./configure --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-exagrype ...
+~~~~~~~~~~~~~~~~~~~~~~~
+
+or, with CMake,
+
+~~~~~~~~~~~~~~~~~~~~~~~
+cmake .. -DENABLE_EXAHYPE=ON -DENABLE_BLOCKSTRUCTURED=ON -DENABLE_LOADBALANCING=ON -DENABLE_EXAGRYPE=ON
+~~~~~~~~~~~~~~~~~~~~~~~
+
+ExaGRyPE requires ExaHyPE 2. As the Einstein equations are three-dimensional,
+the library is built for 3d only, i.e. there is a \c libExaGRyPECore3d.a plus
+its \c _debug, \c _asserts, \c _trace and \c _stats variants, but no 2d
+counterpart. If enabled, configure adds the library to the 3d link line of all
+generated Makefiles. Its unit tests run as part of \c UnitTests3d.
+
+# Content
+
+- exagrype::ccz4 holds the CCZ4 compute kernels (non-conservative product,
+  source, eigenvalues, constraint enforcement and diagnostics) plus the
+  reconstruction of the auxiliary variables for the fourth-order finite
+  differences.
+- exagrype::initialvalues holds analytical initial conditions such as the
+  gauge wave or flat spacetime.
+
+The TwoPunctures initial data for black holes is not part of the library yet,
+as it requires GSL. It remains within \c applications/exahype2/ccz4 (see
+\c ApplyTwoPunctures.h there).
+
+*/

@@ -1,4 +1,4 @@
-#include "CCZ4KernelTest.h"
+#include "KernelTest.h"
 
 #include "peano4/utils/Globals.h"
 #include "peano4/utils/Loop.h"
@@ -10,8 +10,7 @@
 //#include "exahype2/CellData.h"
 //#include "exahype2/fd/Functors.h"
 #include "exahype2/fd/fd4/FD4.h"
-#include "../applications/exahype2/ccz4/CCZ4Kernels.h"
-#include "../applications/exahype2/ccz4/CCZ4Kernels.cpph"
+#include "exagrype/ccz4/Kernels.h"
 
 #include "exahype2/enumerator/AoSLexicographicEnumerator.h"
 #include "exahype2/enumerator/SoALexicographicEnumerator.h"
@@ -22,17 +21,17 @@
 #include <math.h>
 
 
-exahype2::fd::tests::CCZ4KernelTest::CCZ4KernelTest():
-  TestCase ("exahype2::fd::tests::CCZ4KernelTest") {
+exagrype::ccz4::tests::KernelTest::KernelTest():
+  TestCase ("exagrype::ccz4::tests::KernelTest") {
 }
 
 
-void exahype2::fd::tests::CCZ4KernelTest::run() {
+void exagrype::ccz4::tests::KernelTest::run() {
   testMethod (AppleWithAppleTest);
 }
 
 
-void exahype2::fd::tests::CCZ4KernelTest::AppleWithAppleTest() {
+void exagrype::ccz4::tests::KernelTest::AppleWithAppleTest() {
   //in this test, the out layers inside the patch is not valid as the volumes 
   // in the halos can not update their first-derivatives. So only volumes with index between [3,26]^3
   // holds valid test data.
@@ -220,7 +219,7 @@ void exahype2::fd::tests::CCZ4KernelTest::AppleWithAppleTest() {
       //for (int i=NumberOfUnknowns; i<NumberOfUnknowns+NumberOfAuxiliaryVariables; i++) {
       //  BgradQ[i] = 0.0;
       //}
-      applications::exahype2::ccz4::ncp(BTimesDeltaQ, Q, gradQSerialised, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);     
+      exagrype::ccz4::ncp(BTimesDeltaQ, Q, gradQSerialised, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);     
     },
     [&](
       const double * __restrict__ Q,
@@ -231,7 +230,7 @@ void exahype2::fd::tests::CCZ4KernelTest::AppleWithAppleTest() {
       double * __restrict__ S
     )->void {
       tarch::memset(S, 0, unknowns*sizeof(double));
-      applications::exahype2::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);   
+      exagrype::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);   
     }
   );
 
@@ -307,7 +306,7 @@ void exahype2::fd::tests::CCZ4KernelTest::AppleWithAppleTest() {
 }
 
 
-void exahype2::fd::tests::CCZ4KernelTest::prepareFieldData(
+void exagrype::ccz4::tests::KernelTest::prepareFieldData(
   double** g, 
   double& phi, 
   double** K, 

@@ -1,10 +1,4 @@
-#include "InitialValues.h"
-#include "Properties.h"
-/**
- *  *  * This file is automatically created by Peano. I need it to interact with
- *   *   * the Python API, i.e. to read out data set there.
- *    *    */
-#include "Constants.h"
+#include "exagrype/initialvalues/InitialValues.h"
 
 #include "tarch/la/Vector.h"
 
@@ -13,11 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef IncludeTwoPunctures
-#include "libtwopunctures/TP_bindding.h"
-#endif
 
-void applications::exahype2::ccz4::gaugeWave(
+void exagrype::initialvalues::gaugeWave(
   double * __restrict__ Q, // Q[64+0],
   const tarch::la::Vector<Dimensions,double>&  x,
   double t
@@ -50,7 +41,7 @@ void applications::exahype2::ccz4::gaugeWave(
   Q[55] = dxphi;					//P_x
 }
 
-void applications::exahype2::ccz4::diagonal_gaugeWave(
+void exagrype::initialvalues::diagonal_gaugeWave(
   double * __restrict__ Q, // Q[64+0],
   const tarch::la::Vector<Dimensions,double>&  x,
   double t
@@ -89,7 +80,7 @@ void applications::exahype2::ccz4::diagonal_gaugeWave(
   Q[56] = pow(H,-1.0)*(peak_number*pi*ICA/3.0)*cos(phase);		//P_x
 }
 
-void applications::exahype2::ccz4::linearWave(
+void exagrype::initialvalues::linearWave(
   double * __restrict__ Q, // Q[64+0],
   const tarch::la::Vector<Dimensions,double>&  X,
   double t
@@ -115,7 +106,7 @@ void applications::exahype2::ccz4::linearWave(
   Q[54] = log(1.0) ;		//ln(\phi)
 }
 
-void applications::exahype2::ccz4::flat(
+void exagrype::initialvalues::flat(
   double * __restrict__ Q, // Q[64+0],
   const tarch::la::Vector<Dimensions,double>&  x,
   double t
@@ -127,34 +118,3 @@ void applications::exahype2::ccz4::flat(
   Q[16] = 1.0;
   Q[54] = 1.0;          //\phi
 }
-
-#ifdef IncludeTwoPunctures
-void applications::exahype2::ccz4::ApplyTwoPunctures(
-  double * __restrict__ Q, // Q[64+0],
-  const tarch::la::Vector<Dimensions,double>&  X,
-  double t,
-  TP::TwoPunctures* tp,
-  bool low_res
-) {
-  constexpr int nVars = 59;
-  const double coor[3]={X[0],X[1],X[2]};
-  double LgradQ[3*nVars];
-  tarch::memset(Q, .0, nVars*sizeof(double));
-  tp->Interpolate(coor,Q,low_res);				//do the interpolate
-  //std::cout << coor[0] <<coor[1] << coor[2] << "\n";
-  //std::cout << "real quantites without tilde" <<"\n";
-  //for (int i=0;i<nVars;i++){std::cout << i <<"\t"<< Q[i] << "\n";}
-  TP_bindding::SOCCZ4Cal(Q);				//calculate corresponding soccz4 quantities
-  //std::cout << "after treatment" <<"\n";
-  //for (int i=0;i<nVars;i++){std::cout << i <<"\t" << Q[i] << "\n";}
-  TP_bindding::GradientCal(coor, Q, LgradQ, nVars, tp, low_res);	//calculate gradient for auxiliary variables
-  //for (int d=0;d<3;d++)
-  //for (int i=0;i<nVars;i++) {std::cout << d <<"\t" << i <<"\t" << LgradQ[d*nVars+i] << "\n";}
-  TP_bindding::AuxiliaryCal(Q, LgradQ, nVars); //calculate the auxiliary variables
-  //std::cout << "after treatment" <<"\n";
-  //for (int i=0;i<nVars;i++){std::cout << i <<"\t" << Q[i] << "\n";}
-
-  //exit(0);
-}
-#endif
-

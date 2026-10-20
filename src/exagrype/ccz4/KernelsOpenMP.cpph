@@ -1,4 +1,4 @@
-void applications::exahype2::ccz4::maxEigenvalue(
+void exagrype::ccz4::maxEigenvalue(
         const double* const Q,
         int                 normal,
         const double        CCZ4e,
@@ -18,7 +18,7 @@ void applications::exahype2::ccz4::maxEigenvalue(
 }
 
 //this version use alpha and phi
-void applications::exahype2::ccz4::source(double* S, const double* const Q,
+void exagrype::ccz4::source(double* S, const double* const Q,
       const int CCZ4LapseType,
       const double CCZ4ds,
       const double CCZ4c,
@@ -1323,7 +1323,7 @@ void applications::exahype2::ccz4::source(double* S, const double* const Q,
 }
 
 
-void applications::exahype2::ccz4::ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
+void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
       const int CCZ4LapseType,
       const double CCZ4ds,
       const double CCZ4c,

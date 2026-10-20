@@ -37,6 +37,10 @@ if(ENABLE_EXAHYPE)
   add_subdirectory(exahype2)
 endif()
 
+if(ENABLE_EXAGRYPE)
+  add_subdirectory(exagrype)
+endif()
+
 if(ENABLE_MGHYPE)
   add_subdirectory(mghype)
 endif()

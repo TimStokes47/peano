@@ -1,15 +1,14 @@
 #include "tarch/multicore/multicore.h"
-#include "Constants.h"
 
 #include <limits>
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
 
-#include "CCZ4Kernels.h"
+#include "exagrype/ccz4/Kernels.h"
 
 
-void applications::exahype2::ccz4::enforceCCZ4constraints(
+void exagrype::ccz4::enforceCCZ4constraints(
   const double* __restrict__  oldQ,
   double* __restrict__        dQdt,
   double                      timeStepSize
@@ -28,7 +27,7 @@ void applications::exahype2::ccz4::enforceCCZ4constraints(
 #if defined(GPUOffloadingOMP)
 #pragma omp declare target
 #endif
-void applications::exahype2::ccz4::enforceCCZ4constraints(double * luh)
+void exagrype::ccz4::enforceCCZ4constraints(double * luh)
 {
     double g_cov[3][3] = { {luh[0], luh[1], luh[2]}, {luh[1], luh[3], luh[4]}, {luh[2], luh[4], luh[5]} };
     const double det = luh[0]*luh[3]*luh[5] - luh[0]*luh[4]*luh[4] - luh[1]*luh[1]*luh[5] + 2*luh[1]*luh[2]*luh[4] -luh[2]*luh[2]*luh[3];
@@ -129,7 +128,7 @@ void applications::exahype2::ccz4::enforceCCZ4constraints(double * luh)
 #if defined(GPUOffloadingOMP)
 #pragma omp declare target
 #endif
-void applications::exahype2::ccz4::admconstraints(double* constraints, const double* const Q, const double* const gradQSerialised)
+void exagrype::ccz4::admconstraints(double* constraints, const double* const Q, const double* const gradQSerialised)
 {
     constexpr int nVar(59);
     double gradQin[59][3] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -373,7 +372,7 @@ void applications::exahype2::ccz4::admconstraints(double* constraints, const dou
 #if defined(GPUOffloadingOMP)
 #pragma omp declare target
 #endif
-void applications::exahype2::ccz4::Psi4Calc(double* Psi4, const double* const Q, const double* const gradQSerialised, double* coor)
+void exagrype::ccz4::Psi4Calc(double* Psi4, const double* const Q, const double* const gradQSerialised, double* coor)
 {
     constexpr int nVar(59);
     double gradQin[59][3] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -675,7 +674,7 @@ void applications::exahype2::ccz4::Psi4Calc(double* Psi4, const double* const Q,
 #if defined(GPUOffloadingOMP)
 #pragma omp declare target
 #endif
-void applications::exahype2::ccz4::TestingOutput(double* terms, const double* const Q, const double* const gradQSerialised)
+void exagrype::ccz4::TestingOutput(double* terms, const double* const Q, const double* const gradQSerialised)
 {
     constexpr int nVar(59);
     double gradQin[59][3] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -952,7 +951,7 @@ void applications::exahype2::ccz4::TestingOutput(double* terms, const double* co
 #if defined(GPUOffloadingOMP)
 #pragma omp declare target
 #endif
-void applications::exahype2::ccz4::ThetaOutputNCP(double* NCPterm, const double* const Q, const double* const gradQSerialised, int normal)
+void exagrype::ccz4::ThetaOutputNCP(double* NCPterm, const double* const Q, const double* const gradQSerialised, int normal)
 {
     const double alpha = std::exp(std::fmax(-20., std::fmin(20.,Q[16])));
     //printf("alpha %f\n",alpha);

@@ -1,5 +1,5 @@
 
-// This file is part of the Peano project. For conditions of distribution and
+// This file is part of the ExaGRyPE project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
@@ -7,16 +7,23 @@
 #include "tarch/tests/TestCase.h"
 
 
-namespace exahype2 {
-  namespace fd {
+namespace exagrype {
+  namespace ccz4 {
     namespace tests {
-      class CCZ4KernelTest;
+      class KernelTest;
     }
   }
 }
 
 
-class exahype2::fd::tests::CCZ4KernelTest : public tarch::tests::TestCase {
+/**
+ * Compare the CCZ4 kernels against GRChombo (apple with apple test)
+ *
+ * This test is work in progress: All validations are commented out, and the
+ * test is not registered in exagrype::getUnitTests(). It used to live in
+ * ExaHyPE 2 as exahype2::fd::tests::CCZ4KernelTest.
+ */
+class exagrype::ccz4::tests::KernelTest : public tarch::tests::TestCase {
   private:
     void AppleWithAppleTest();
 
@@ -34,7 +41,7 @@ class exahype2::fd::tests::CCZ4KernelTest : public tarch::tests::TestCase {
     );
 
   public:
-    CCZ4KernelTest();
+    KernelTest();
 
     /**
      * This routine is triggered by the TestCaseCollection

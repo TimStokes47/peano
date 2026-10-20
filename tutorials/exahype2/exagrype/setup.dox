@@ -2,7 +2,7 @@
 
 @page tutorials_exahype2_applications_exagrype_setup Setup of ExaGRyPE
 
-The ExaGRyPE code is organised by a main Python script (i.e., \c ccz4.py), which we refer to as the Python API. By calling this script, Peano will automatically create the project and generate the actual C++ code according to the user's setup, and then compile the final executable. We integrate most of the tunable features and settings in the API script, so users can easily control the behaviour of their simulations by modifying the single script and the corresponding calling command. There is also some setup in the C++ files such as \c CCZ4.cpp or \c InitialValues.cpp .
+The ExaGRyPE code is organised by a main Python script (i.e., \c ccz4.py), which we refer to as the Python API. By calling this script, Peano will automatically create the project and generate the actual C++ code according to the user's setup, and then compile the final executable. We integrate most of the tunable features and settings in the API script, so users can easily control the behaviour of their simulations by modifying the single script and the corresponding calling command. There is also some setup in the C++ files such as \c CCZ4.cpp or \c src/exagrype/initialvalues/InitialValues.cpp .
 
 Below, we provide a brief introduction to the important setup options provided by ExaGRyPE. One can find useful information by typing \c --help for an explanation of the parameters that can be controlled directly by the calling command. Most of them should be self-explanatory by name as well.
 
@@ -28,11 +28,11 @@ ExaGRyPE now supports both formulations for flexibility, and we find their behav
 
 # Scenarios
 
-The main testing scenarios in ExaGRyPE are given on the previous page, which include the gauge wave, single black hole (SBH), and rotating binary black holes (BBHs). While different scenarios can be switched directly via the calling command, the exact parameters (e.g., the amplitude of the gauge wave, the mass of the black holes) need to be set in the corresponding C++ file (\c InitialValues.cpp). We recommend users always start with the gauge wave benchmark, as it serves as a good starting point for familiarising themselves with how the code is organised. For black hole spacetimes, we import the \c TwoPuncture module from EinsteinToolkit as an external library. If users plan to import their own external library for the initial condition, the binding code for the TwoPuncture module in the \c External directory should serve as a useful reference, and see also \ref tutorials_exahype2_applications_exagrype_advanced.
+The main testing scenarios in ExaGRyPE are given on the previous page, which include the gauge wave, single black hole (SBH), and rotating binary black holes (BBHs). While different scenarios can be switched directly via the calling command, the exact parameters (e.g., the amplitude of the gauge wave, the mass of the black holes) need to be set in the corresponding C++ file (\c src/exagrype/initialvalues/InitialValues.cpp for the gauge wave, \c CCZ4.cpp for the black holes). We recommend users always start with the gauge wave benchmark, as it serves as a good starting point for familiarising themselves with how the code is organised. For black hole spacetimes, we import the \c TwoPuncture module from EinsteinToolkit as an external library. If users plan to import their own external library for the initial condition, the binding code for the TwoPuncture module in the \c External directory should serve as a useful reference, and see also \ref tutorials_exahype2_applications_exagrype_advanced.
 
 ## Black Hole Parameters Setup
 
-ExaGRyPE uses the external library \c TwoPunctures from EinsteinToolkit to generate initial conditions for black hole spacetimes, using the puncture method. In \c InitialValues.cpp you will find the following function:
+ExaGRyPE uses the external library \c TwoPunctures from EinsteinToolkit to generate initial conditions for black hole spacetimes, using the puncture method. In the application's \c CCZ4.cpp you will find the following function:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 void applications::exahype2::ccz4::InitialCondtions::PrepareTPdata(TP::TwoPunctures* tp, ...){

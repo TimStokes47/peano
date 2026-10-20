@@ -846,6 +846,20 @@ AM_CONDITIONAL([UseExaHyPE],[test "x$toolbox_exahype" = xtrue])
 
 
 #
+# ExaGRyPE
+#
+AC_ARG_ENABLE(exagrype,
+  AS_HELP_STRING([--enable-exagrype],[enable ExaGRyPE (3d only, requires ExaHyPE 2) [default=false]]),
+  [ AC_MSG_CHECKING(for exagrype)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);    toolbox_exagrype=false ;;
+      *)     AC_MSG_RESULT(yes);   toolbox_exagrype=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for exagrype); AC_MSG_RESULT(no); toolbox_exagrype=false ])
+AM_CONDITIONAL([UseExaGRyPE],[test "x$toolbox_exagrype" = xtrue])
+
+
+#
 # Curvi
 #
 AC_ARG_ENABLE(curvi,
@@ -1127,6 +1141,33 @@ if test "$toolbox_exahype" != false; then
   LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/exahype2 "
   LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/exahype2 "
   LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/exahype2 "
+fi
+
+
+#
+# ExaGRyPE
+#
+# ExaGRyPE is built for 3d only, so we only extend the 3d link lines. As
+# ExaGRyPE builds on top of ExaHyPE 2, this block has to come after the
+# ExaHyPE 2 block: we prepend the libraries, so ExaGRyPE ends up in front of
+# ExaHyPE 2 on the link line.
+#
+if test "$toolbox_exagrype" != false; then
+  AC_DEFINE([UseExaGRyPE], [1], [UseExaGRyPE])
+  if test "$toolbox_exahype" == false; then
+    AC_MSG_ERROR([ExaGRyPE requires ExaHyPE 2 (run with --help to see the correct enable statement)])
+  fi
+  LDADD_PEANO_3D_RELEASE=" -lExaGRyPECore3d         $LDADD_PEANO_3D_RELEASE "
+  LDADD_PEANO_3D_STATS="   -lExaGRyPECore3d_stats   $LDADD_PEANO_3D_STATS "
+  LDADD_PEANO_3D_ASSERTS=" -lExaGRyPECore3d_asserts $LDADD_PEANO_3D_ASSERTS "
+  LDADD_PEANO_3D_TRACE="   -lExaGRyPECore3d_trace   $LDADD_PEANO_3D_TRACE "
+  LDADD_PEANO_3D_DEBUG="   -lExaGRyPECore3d_debug   $LDADD_PEANO_3D_DEBUG "
+
+  LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/exagrype "
 fi
 
 
@@ -1497,6 +1538,7 @@ AC_CONFIG_FILES([Makefile
   src/tbb/Makefile
   src/convert/Makefile
   src/exahype2/Makefile
+  src/exagrype/Makefile
   src/mghype/Makefile
   src/petsc/Makefile
   src/exaparty/Makefile

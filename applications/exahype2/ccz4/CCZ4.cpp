@@ -149,16 +149,16 @@ void applications::exahype2::ccz4::CCZ4::initialCondition(
   logTraceInWith3Arguments( "initialCondition(...)", volumeX, volumeH, gridIsConstructed );
 
   if ( Scenario==0 ) {
-    applications::exahype2::ccz4::gaugeWave(Q, volumeX, 0);
+    exagrype::initialvalues::gaugeWave(Q, volumeX, 0);
   }
   else if ( Scenario==3 ) {
-    applications::exahype2::ccz4::diagonal_gaugeWave(Q, volumeX, 0);
+    exagrype::initialvalues::diagonal_gaugeWave(Q, volumeX, 0);
   }
   else if ( Scenario==1 ) {
-    applications::exahype2::ccz4::linearWave(Q, volumeX, 0);
+    exagrype::initialvalues::linearWave(Q, volumeX, 0);
   }
   else if ( Scenario==4 ) {
-    applications::exahype2::ccz4::flat(Q, volumeX, 0);
+    exagrype::initialvalues::flat(Q, volumeX, 0);
   }
   #ifdef IncludeTwoPunctures
   else if ( Scenario==2 ) {
@@ -285,7 +285,7 @@ void applications::exahype2::ccz4::CCZ4::nonconservativeProduct(
 
     gradQSerialised[i+normal*NumberOfUnknowns] = deltaQ[i];
   }
-  ncp(BgradQ, Q, gradQSerialised, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
+  ::exagrype::ccz4::ncp(BgradQ, Q, gradQSerialised, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
 }
 #if defined(GPUOffloadingOMP)
 #pragma omp end declare target

@@ -1,6 +1,5 @@
-//
-// ExaHyPE2 CCZ4 implementation
-//
+// This file is part of the ExaGRyPE project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
 
@@ -11,9 +10,8 @@
 #include "tarch/accelerator/accelerator.h"
 
 
-namespace applications {
-  namespace exahype2 {
-    namespace ccz4 {
+namespace exagrype {
+  namespace ccz4 {
 
       /**
        * A bug in the LLVM OpenMP implementation prevents the usage of
@@ -154,14 +152,13 @@ namespace applications {
         double* __restrict__        dQdt,
         double                      timeStepSize
       );
-    }
   }
 }
 
 #if defined(GPUOffloadingOMP)
-#include "CCZ4KernelsOpenMP.cpph"
+#include "exagrype/ccz4/KernelsOpenMP.cpph"
 #else
-#include "CCZ4Kernels.cpph"
+#include "exagrype/ccz4/Kernels.cpph"
 #endif
 
 

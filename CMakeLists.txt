@@ -120,6 +120,7 @@ option(ENABLE_BLOCKSTRUCTURED "Enable the blockstructured toolbox" OFF)
 option(ENABLE_LOADBALANCING "Enable the loadbalancing toolbox" OFF)
 option(ENABLE_CURVI "Enable the Curvi toolbox" OFF)
 option(ENABLE_EXAHYPE "Enable ExaHyPE 2" OFF)
+option(ENABLE_EXAGRYPE "Enable ExaGRyPE (3d only, requires ExaHyPE 2)" OFF)
 option(ENABLE_MGHYPE "Enable MGHyPE" OFF)
 option(ENABLE_EXAPARTY "Enable ExaParty" OFF)
 
@@ -363,6 +364,13 @@ endif()
 
 if(ENABLE_EXAHYPE)
   target_compile_definitions(PeanoOptions INTERFACE UseExaHyPE)
+endif()
+
+if(ENABLE_EXAGRYPE)
+  if(NOT ENABLE_EXAHYPE)
+    message(FATAL_ERROR "ExaGRyPE requires ExaHyPE 2 (set -DENABLE_EXAHYPE=ON)")
+  endif()
+  target_compile_definitions(PeanoOptions INTERFACE UseExaGRyPE)
 endif()
 
 if(ENABLE_EXAPARTY)
