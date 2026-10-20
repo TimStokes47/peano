@@ -113,10 +113,11 @@ namespace toolbox {
  * );
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
- * then the first two splits go out together, while the third split has to
- * wait: It is not allowed to go out in the same sweep as the top-down splits,
- * and Peano does not accept it while tree 0 is still busy with the first two
- * splits.
+ * then the first two splits go out together, while the third split is not
+ * allowed to go out in the same sweep as the top-down splits. It goes out one
+ * mesh sweep later. As it uses BottomUp, it hands over exactly 182 cells,
+ * while the two top-down splits hand over whole refined cells and hence end
+ * up with slightly more or fewer cells.
  *
  * Splits can also continue to split trees that earlier splits have created:
  *
