@@ -13,6 +13,39 @@ import dastgen2.aspects.MPI
 import dastgen2.aspects.MPIForSmartPointers
 
 import copy
+import os
+
+
+class DaStGen2Artefact(object):
+  """!
+
+  Output artefact which writes one DaStGen2 data model into the project
+
+  The generators below do not write their data models straightaway, as they
+  do not know the directory of the project when they construct the output.
+  Instead, they register one artefact per data model with the output, which
+  writes the header and the implementation once the output is generated
+  into the project directory (@ref peano4.api.output.Output.generate()).
+
+  """
+  def __init__(self, data_model, file_name_without_extension):
+    """!
+
+    @param data_model: dastgen2.DataModel
+      Data model to write. Its full qualified name has to be set already.
+
+    @param file_name_without_extension: str
+      File name relative to the project directory.
+
+    """
+    self._data_model                  = data_model
+    self._file_name_without_extension = file_name_without_extension
+
+
+  def generate(self, overwrite, directory):
+    file_name = os.path.join(directory, self._file_name_without_extension)
+    self._data_model.write_header_file( file_name + ".h" )
+    self._data_model.write_implementation_file( file_name + ".cpp" )
 
 
 
@@ -52,8 +85,7 @@ class DaStGen2Generator(object):
     full_qualified_name += self._data.name
     self._data.data.set_full_qualified_name(full_qualified_name)
 
-    self._data.data.write_header_file( self._data.subdirectory + self._data.namespace[-1] + "/" + self._data.name + ".h" )
-    self._data.data.write_implementation_file(  self._data.subdirectory + self._data.namespace[-1] + "/" + self._data.name + ".cpp" )
+    output.add( DaStGen2Artefact( self._data.data, self._data.subdirectory + self._data.namespace[-1] + "/" + self._data.name ) )
     output.makefile.add_cpp_file( self._data.subdirectory + self._data.namespace[-1] + "/" + self._data.name + ".cpp", generated=True )
 
 
@@ -144,13 +176,11 @@ class DaStGen2GeneratorForObjectsWithSmartPointers(object):
         full_qualified_file_without_extension_flattened = self._data.subdirectory + self._data.namespace[-1] + "/" + self._data.name + extension
         
         self._data.data.set_full_qualified_name(full_qualified_name)
-        self._data.data.write_header_file( self._data.subdirectory + self._data.namespace[-1] + "/" + self._data.name + ".h" )
-        self._data.data.write_implementation_file(  self._data.subdirectory + self._data.namespace[-1] + "/" + self._data.name + ".cpp" )
+        output.add( DaStGen2Artefact( self._data.data, self._data.subdirectory + self._data.namespace[-1] + "/" + self._data.name ) )
         output.makefile.add_cpp_file( self._data.subdirectory + self._data.namespace[-1] + "/" + self._data.name + ".cpp", generated=True )
 
         flattened_data_object.set_full_qualified_name(full_qualified_name_flattened)
-        flattened_data_object.write_header_file( full_qualified_file_without_extension_flattened + ".h" )
-        flattened_data_object.write_implementation_file(  full_qualified_file_without_extension_flattened + ".cpp" )
+        output.add( DaStGen2Artefact( flattened_data_object, full_qualified_file_without_extension_flattened ) )
         output.makefile.add_cpp_file( full_qualified_file_without_extension_flattened + ".cpp", generated=True )
 
         
