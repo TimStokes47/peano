@@ -59,19 +59,19 @@
  *   to create a reproducible load balancing scheme or to manually determine
  *   the splitting.
  *   \n
- *   Offline helpers (see @ref page_toolbox_loadbalancing_api) yield four lists:
- *   gridSweeps, splittingTrees, numberOfCells, subTrees (subtree ids).
+ *   Offline helpers (see @ref page_toolbox_loadbalancing_api) yield an
+ *   enumerated list of splits, i.e. four lists splittingTrees, numberOfCells,
+ *   subTrees (subtree ids) and bottomUpFlags, where entry k describes the kth
+ *   split. The strategy itself decides when to issue the kth split.
  *   Interpretation:
- *   - gridSweeps = base_sweep * (level + 1), where level is 0-based w.r.t. the API tree arrays.
- *     The helper may emit multiple entries per subtree, one per level where the subtree is
- *     introduced.
- *   - splittingTrees = unique parent subtree id for all introduced cells on that level,
+ *   - splittingTrees = unique parent subtree id for all introduced cells of the split,
  *     or 0 if ambiguous.
- *   - numberOfCells = number of cells on that level that switch ownership across a parent–child
+ *   - numberOfCells = number of cells that switch ownership across a parent–child
  *     edge (child is target subtree, parent exists and has a different subtree id). For level 0,
  *     it is the number of cells on level 0 that already belong to the target subtree.
  *   - subTrees = subtree identifiers (not MPI ranks); you must map them to destinationRanks for
  *     the Hardcoded constructor.
+ *   - bottomUpFlags = whether the split is a bottom-up or top-down split.
  * - toolbox::loadbalancing::strategies::SpreadOut Ensure that, if the problem is large
  *   enough, each thread on each rank gets one partition.
  * - toolbox::loadbalancing::strategies::SpreadOutHierarchically This strategy is very

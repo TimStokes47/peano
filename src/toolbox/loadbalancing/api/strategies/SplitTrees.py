@@ -883,54 +883,57 @@ def reset_tree_to_single_subtree(peano_tree: Tree) -> Tree:
     return peano_tree
 
 def extract_split_instructions(
-    peano_tree: Tree, base_sweep: int = 2
-) -> tuple[list[int], list[int], list[int], list[int], list[bool]]:
+    peano_tree: Tree,
+) -> tuple[list[int], list[int], list[int], list[bool]]:
     """
     Stage IV of the staged load-balancing workflow.
 
-    Derive constructor lists for Peano's hardcoded load balancer from a split tree.
+    Derive the enumerated splits for Peano's hardcoded load balancer from a split tree.
 
-    The function scans the tree arrays and reconstructs a sequence of split operations
-    to replay the observed decomposition with
-    [`toolbox::loadbalancing::strategies::Hardcoded`](src/toolbox/loadbalancing/strategies/Hardcoded.h).
+    The function scans the tree arrays and reconstructs a sequence of splits
+    which replays the observed decomposition with
+    toolbox::loadbalancing::strategies::Hardcoded. Entry k of each returned
+    list describes the kth split. The C++ strategy decides itself when to
+    issue the kth split, i.e. there is no notion of mesh sweeps here.
 
-    An operation is emitted whenever, on some level, a cell with `subtree_id > 0` exists
+    A split is emitted whenever, on some level, a cell with `subtree_id > 0` exists
     whose parent exists and has a different subtree id (i.e. the subtree gets introduced
     across a parent–child edge). Level 0 has no parent; any cells with `subtree_id > 0`
     on level 0 are treated as introduced from subtree 0.
 
     **BottomUp vs AggressiveTopDown extraction**
 
-    The level at which an operation is emitted depends on how many distinct introduction
+    The level at which a split is emitted depends on how many distinct introduction
     levels the subtree has:
 
-    - *AggressiveTopDown* (single introduction level): an operation is emitted at that one
-      level, preserving the current behaviour.
+    - *AggressiveTopDown* (single introduction level): a split is emitted at that one
+      level.
     - *BottomUp* (multiple introduction levels): the subtree's forest of root cells does
       not all reside on the same level. In BottomUp mode, Peano propagates the split
       upward from the finest level automatically, so there must be no split instruction
-      higher up the tree. A **single** operation is therefore emitted at the **finest**
+      higher up the tree. A **single** split is therefore emitted at the **finest**
       introduction level (the deepest level at which any root cell of the subtree
       borders a parent of a different subtree). Coarser introduction levels are
       suppressed.
 
+    The splits are ordered from coarse to fine emission level and, within a level,
+    by subtree id.
+
     Mapping:
-    - `gridSweeps[i] = base_sweep * (emit_level + 1)` (levels are 0-based in the API arrays).
     - `splittingTrees` is the unique parent subtree id for all introduced cells on the
       emitted level, or 0 if ambiguous.
     - `numberOfCells` is the count of introduced cells on the emitted level.
     - `subTrees` are subtree ids (not MPI ranks); map them to destination ranks
       separately.
-    - `bottomUpFlags` is a per-operation boolean that is `True` when the corresponding
+    - `bottomUpFlags` is a per-split boolean that is `True` when the corresponding
       subtree has multiple introduction levels (BottomUp) and `False` otherwise
       (AggressiveTopDown).
 
     Args:
         peano_tree: Input tree with subtree assignments.
-        base_sweep: Base sweep index used to generate `gridSweeps` (default: 2).
 
     Returns:
-        Tuple `(gridSweeps, splittingTrees, numberOfCells, subTrees, bottomUpFlags)`
+        Tuple `(splittingTrees, numberOfCells, subTrees, bottomUpFlags)`
         suitable for building a `Hardcoded` configuration.
 
     Note:
@@ -939,7 +942,7 @@ def extract_split_instructions(
     """
     if peano_tree._subtree_count <= 1:
         print("No splits to extract - tree has only one subtree")
-        return ([], [], [], [], [])
+        return ([], [], [], [])
 
     dim = peano_tree._dimension
     max_level = peano_tree._max_level
@@ -1044,7 +1047,6 @@ def extract_split_instructions(
 
         split_operations.append(
             {
-                "grid_sweep": base_sweep * (emit_level + 1),
                 "source_subtree": source_subtree,
                 "target_subtree": target_subtree,
                 "num_cells": num_cells,
@@ -1053,12 +1055,11 @@ def extract_split_instructions(
             }
         )
 
-    split_operations.sort(key=lambda op: (op["grid_sweep"], op["target_subtree"], op["level"]))
+    split_operations.sort(key=lambda op: (op["level"], op["target_subtree"]))
 
-    gridSweeps    = [op["grid_sweep"]    for op in split_operations]
     splittingTrees = [op["source_subtree"] for op in split_operations]
     numberOfCells  = [op["num_cells"]      for op in split_operations]
     subTrees       = [op["target_subtree"] for op in split_operations]
     bottomUpFlags  = [op["is_bottom_up"]   for op in split_operations]
 
-    return (gridSweeps, splittingTrees, numberOfCells, subTrees, bottomUpFlags)
+    return (splittingTrees, numberOfCells, subTrees, bottomUpFlags)
