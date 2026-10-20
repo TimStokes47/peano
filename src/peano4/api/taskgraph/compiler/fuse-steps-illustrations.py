@@ -30,7 +30,9 @@ from PIL import Image
 
 from peano4.api.taskgraph import Graph, Task
 from peano4.api.taskgraph.compiler import FuseSteps
-from peano4.api.taskgraph.compiler.ReportCompiledStepSequence import _visualise_compiled_step_sequence
+from peano4.api.taskgraph.compiler.ReportCompiledStepSequence import (
+    _visualise_compiled_step_sequence,
+)
 
 
 class _IllustrationActionSet:
@@ -139,7 +141,40 @@ def data_conflict_example() -> Graph:
     return graph
 
 
+def face_before_cell_example() -> Graph:
+    patch = _IllustrationSubmodel("Q")
+    patch_with_halo = _IllustrationSubmodel("QWithHalo")
+    face_data = _IllustrationSubmodel("QFace")
+
+    graph = Graph()
+    boundary = _task("Apply BCs", Task.GridEntity.FACE, "ApplyBoundaryConditions")
+    reconstruct = _task("Reconstruct", Task.GridEntity.CELL, "ReconstructPatchWithHalo")
+    update = _task("Update cell", Task.GridEntity.CELL, "UpdateCell")
+    reconstruct.add_dependency(boundary)
+    update.add_dependency(reconstruct)
+
+    boundary.use_face(face_data, Task.DataAccess.READ_AND_WRITE)
+    reconstruct.use_cell(patch, Task.DataAccess.READ_AND_WRITE)
+    reconstruct.use_cell(patch_with_halo, Task.DataAccess.WRITE)
+    reconstruct.use_face(face_data, Task.DataAccess.READ_AND_DISCARD)
+    update.use_cell(patch_with_halo, Task.DataAccess.READ_AND_DISCARD)
+    update.use_cell(patch, Task.DataAccess.WRITE)
+
+    for task in (boundary, reconstruct, update):
+        graph.add_task(task)
+    return graph
+
+
 if __name__ == "__main__":
-    _write_illustration(entity_order_example(), "Entity order", "fuse-steps-entity-order.png")
+    _write_illustration(
+        entity_order_example(), "Entity order", "fuse-steps-entity-order.png"
+    )
     _write_illustration(parallel_example(), "Parallel tasks", "fuse-steps-parallel.png")
-    _write_illustration(data_conflict_example(), "Conflicting face data", "fuse-steps-data-conflict.png")
+    _write_illustration(
+        data_conflict_example(), "Conflicting face data", "fuse-steps-data-conflict.png"
+    )
+    _write_illustration(
+        face_before_cell_example(),
+        "Face task before cell task",
+        "fuse-steps-face-before-cell.png",
+    )
