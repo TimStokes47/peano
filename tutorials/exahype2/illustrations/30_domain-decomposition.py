@@ -77,21 +77,36 @@ SaveScreenshot(sys.argv[2], view, ImageResolution=[800, 650])
 """
 
 
-def euler_implementation():
+def euler_implementation(tutorial):
     """! Body of the tutorial's cell which writes EulerFV.cpp"""
-    with open(os.path.join(Here, "..", "30_domain-decomposition.ipynb")) as notebook_file:
+    with open(os.path.join(Here, "..", tutorial + ".ipynb")) as notebook_file:
         cells = json.load(notebook_file)["cells"]
     for cell in cells:
         source = "".join(cell["source"])
-        if source.startswith("%%writefile 30_domain-decomposition/EulerFV.cpp"):
+        if source.startswith("%%writefile " + tutorial + "/EulerFV.cpp"):
             return source.split("\n", 1)[1]
-    raise Exception("tutorial has no cell writing EulerFV.cpp")
+    raise Exception("tutorial {} has no cell writing EulerFV.cpp".format(tutorial))
 
 
-def build_and_run(directory, peano_root):
-    """! Generate, compile and run the tutorial setup within directory"""
+def build_and_run(
+    directory,
+    peano_root,
+    tutorial="30_domain-decomposition",
+    namespace="domaindecomposition",
+    load_balancer="toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates",
+    load_balancer_arguments="new ::exahype2::LoadBalancingConfiguration()",
+):
+    """!
+
+    Generate, compile and run the Euler setup within directory
+
+    The defaults are the setup of 30_domain-decomposition.ipynb. Other
+    tutorials which build upon this setup pass in their own name, namespace
+    and load balancing.
+
+    """
     project = exahype2.api.Project(
-        namespace=["tutorials", "exahype2", "domaindecomposition"],
+        namespace=["tutorials", "exahype2", namespace],
         project_name="Euler",
         directory=directory,
         executable="euler",
@@ -118,14 +133,11 @@ def build_and_run(directory, peano_root):
         max_end_time=0.02,
         periodic_BC=[True, True, True],
     )
-    project.set_load_balancing(
-        "toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates",
-        "new ::exahype2::LoadBalancingConfiguration()",
-    )
+    project.set_load_balancing(load_balancer, load_balancer_arguments)
     project.set_Peano4_installation(peano_root, peano4.api.output.CompileMode.RELEASE)
     project.generate_Peano4_project().generate()
     with open(os.path.join(directory, "EulerFV.cpp"), "w") as implementation_file:
-        implementation_file.write(euler_implementation())
+        implementation_file.write(euler_implementation(tutorial))
     subprocess.run(["make", "-j"], cwd=directory, check=True, stdout=subprocess.DEVNULL)
     with open(os.path.join(directory, "run.log"), "w") as log_file:
         subprocess.run(
@@ -137,8 +149,8 @@ def build_and_run(directory, peano_root):
         )
 
 
-def render_subdomains(directory, pvbatch):
-    """! Convert the output into VTU and let ParaView render the subdomains"""
+def render_subdomains(directory, pvbatch, picture=SubdomainsPicture):
+    """! Convert the output into VTU and let ParaView render the subdomains into picture"""
     subprocess.run(
         [
             sys.executable,
@@ -153,8 +165,8 @@ def render_subdomains(directory, pvbatch):
     script = os.path.join(directory, "render-subdomains.py")
     with open(script, "w") as script_file:
         script_file.write(ParaViewScript)
-    if os.path.exists(SubdomainsPicture):
-        os.remove(SubdomainsPicture)
+    if os.path.exists(picture):
+        os.remove(picture)
     # pvbatch might crash when it shuts down, so we check for the picture
     # rather than for the return code
     subprocess.run(
@@ -163,12 +175,12 @@ def render_subdomains(directory, pvbatch):
             "--force-offscreen-rendering",
             script,
             os.path.join(directory, "solution-EulerFV.EulerFVQ.pvd"),
-            SubdomainsPicture,
+            picture,
         ],
         cwd=directory,
     )
-    if not os.path.exists(SubdomainsPicture):
-        raise Exception("pvbatch did not write {}".format(SubdomainsPicture))
+    if not os.path.exists(picture):
+        raise Exception("pvbatch did not write {}".format(picture))
 
 
 def render_workflow():
