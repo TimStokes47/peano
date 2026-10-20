@@ -274,7 +274,7 @@ if __name__ == "__main__":
         self._auxiliary_variables = 2
 
         self._my_user_includes += """
-  #include "../libtwopunctures/TP_PunctureTracker.h"
+  #include "exagrype/twopunctures/TP_PunctureTracker.h"
   #include "exagrype/ccz4/Kernels.h"
     """
 
@@ -581,21 +581,12 @@ if __name__ == "__main__":
       # needs its own config), and then we might have to adopt the build
       # environment.
       #
-      peano4_project.output.makefile.add_linker_flag( "-lm -lgsl -lgslcblas" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/TP_Utilities.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/TP_Parameters.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/TP_Logging.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/TwoPunctures.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/CoordTransf.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/Equations.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/FuncAndJacobian.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/Newton.cpp" )
+      # TwoPunctures is part of the ExaGRyPE library (configure Peano with --with-gsl).
       peano4_project.output.makefile.add_CXX_flag( "-DIncludeTwoPunctures" )
     else:
       raise Exception( "Scenario " + args.scenario + " is now unknown")
 
     peano4_project.output.makefile.add_CXX_flag( "-DCCZ4EINSTEIN" )
-    peano4_project.output.makefile.add_cpp_file( "ApplyTwoPunctures.cpp" )
 
     peano4_project.generate( throw_away_data_after_generation=False )
     peano4_project.build( make_clean_first = True )

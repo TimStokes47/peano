@@ -180,7 +180,7 @@ class AbstractCCZ4Solver(object):
             """
 #include "exagrype/ccz4/Kernels.h"
 #include "exagrype/initialvalues/InitialValues.h"
-#include "ApplyTwoPunctures.h"
+#include "exagrype/initialvalues/ApplyTwoPunctures.h"
 #include "exagrype/ccz4/SecondOrderAuxiliaryVariablesReconstruction.h"
 #include <cstring>
 """
@@ -228,9 +228,9 @@ class AbstractCCZ4Solver(object):
         of the auxiliary variables are part of the ExaGRyPE library. Peano
         therefore has to be configured with --enable-exagrype (or
         -DENABLE_EXAGRYPE=ON), and the generated Makefile links against that
-        library. The only cpp file that I add here is ApplyTwoPunctures.cpp,
-        which stays with the application as long as TwoPunctures is not part
-        of the library.
+        library. TwoPunctures (black hole initial data) is part of the library
+        if Peano is configured with --with-gsl. Therefore, I only add the
+        application's directory to the header search path.
 
         You can always add further files via
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,9 +241,6 @@ class AbstractCCZ4Solver(object):
         if path_of_ccz4_application[-1] != "/":
             path_of_ccz4_application += "/"
 
-        peano4_project.output.makefile.add_cpp_file(
-            path_of_ccz4_application + "ApplyTwoPunctures.cpp"
-        )
         peano4_project.output.makefile.add_header_search_path(path_of_ccz4_application)
 
     @abstractmethod

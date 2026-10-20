@@ -164,7 +164,7 @@ void applications::exahype2::ccz4::CCZ4::initialCondition(
   else if ( Scenario==2 ) {
 
    // We use the bool to trigger the hgh res interpolation once the grid is constructed
-    applications::exahype2::ccz4::ApplyTwoPunctures(Q, volumeX, 0, _tp, not gridIsConstructed); //we interpolate for real IC here.
+    exagrype::initialvalues::ApplyTwoPunctures(Q, volumeX, 0, _tp, not gridIsConstructed); //we interpolate for real IC here.
   }
   #endif
   else {

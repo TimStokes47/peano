@@ -1,4 +1,4 @@
-#include "libtwopunctures/TwoPunctures.h"
+#include "exagrype/twopunctures/TwoPunctures.h"
 
 namespace TP {
 Parameters::Parameters() {

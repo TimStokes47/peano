@@ -5,7 +5,7 @@
 
 
 #include <math.h>
-#include "libtwopunctures/TwoPunctures.h"
+#include "exagrype/twopunctures/TwoPunctures.h"
 
 namespace TP {
 namespace Utilities {

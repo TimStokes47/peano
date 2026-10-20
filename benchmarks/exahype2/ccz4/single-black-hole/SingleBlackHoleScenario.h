@@ -4,7 +4,7 @@
 
 #include "exagrype/ccz4/Kernels.h"
 #include "exagrype/initialvalues/InitialValues.h"
-#include "ApplyTwoPunctures.h"
+#include "exagrype/initialvalues/ApplyTwoPunctures.h"
 
 
 #include "exahype2/RefinementControl.h"

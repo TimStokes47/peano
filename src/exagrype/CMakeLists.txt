@@ -4,6 +4,11 @@ file(GLOB_RECURSE SOURCES ${SOURCE_EXTENSIONS_TO_GLOB})
 file(GLOB_RECURSE HEADERS ${HEADER_EXTENSIONS_TO_GLOB})
 list(FILTER SOURCES EXCLUDE REGEX "\\.template\\.")
 list(FILTER HEADERS EXCLUDE REGEX "\\.template\\.")
+# TwoPunctures (initial data for black holes) needs GSL
+if(NOT WITH_GSL)
+  list(FILTER SOURCES EXCLUDE REGEX "/twopunctures/")
+  list(FILTER HEADERS EXCLUDE REGEX "/twopunctures/")
+endif()
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HEADERS})
 

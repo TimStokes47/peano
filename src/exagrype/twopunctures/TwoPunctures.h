@@ -1,9 +1,9 @@
 /* TwoPunctures:  File  "TwoPunctures.h"*/
 #pragma once
 
-#include "libtwopunctures/TP_Utilities.h"
-#include "libtwopunctures/TP_Parameters.h"
-#include "libtwopunctures/TP_ConservedVectorNames.h"
+#include "exagrype/twopunctures/TP_Utilities.h"
+#include "exagrype/twopunctures/TP_Parameters.h"
+#include "exagrype/twopunctures/TP_ConservedVectorNames.h"
 
 #include <stdio.h>
 

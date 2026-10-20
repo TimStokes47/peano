@@ -39,8 +39,9 @@ make check                         # runs unit tests (non-MPI only, see below)
 Key `--enable-*` flags: `exahype`, `exagrype`, `exaparty`, `mghype`, `particles`, `blockstructured`,
 `loadbalancing`, `finiteelements`, `multiprecision`, `curvi`. ExaHyPE needs at least
 `--enable-blockstructured --enable-exahype`; ExaParty needs `--enable-particles --enable-exaparty`;
-ExaGRyPE (`src/exagrype`, 3d-only libraries) needs ExaHyPE plus `--enable-exagrype`.
-`--with-mpi`, `--with-vtk`, `--with-hdf5`, `--with-petsc`, `--with-libxsmm` etc. pull in
+ExaGRyPE (`src/exagrype`, 3d-only libraries) needs ExaHyPE plus `--enable-exagrype`, and
+`--with-gsl` for its TwoPunctures (black hole) initial data.
+`--with-mpi`, `--with-vtk`, `--with-hdf5`, `--with-gsl`, `--with-petsc`, `--with-libxsmm` etc. pull in
 optional third-party support.
 
 ### CMake (out-of-tree)

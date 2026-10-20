@@ -1,9 +1,9 @@
 // This file is part of the ExaGRyPE project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#include "ApplyTwoPunctures.h"
+#include "exagrype/initialvalues/ApplyTwoPunctures.h"
 
-#ifdef IncludeTwoPunctures
-void applications::exahype2::ccz4::ApplyTwoPunctures(
+#ifdef UseGSL
+void exagrype::initialvalues::ApplyTwoPunctures(
   double* __restrict__                         Q,
   const tarch::la::Vector<Dimensions, double>& X,
   double                                       t,

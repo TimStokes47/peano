@@ -7,8 +7,8 @@
 #include <math.h>
 #include <ctype.h>
 #include <time.h>
-#include "libtwopunctures/TwoPunctures.h"
-#include "libtwopunctures/TP_Parameters.h"
+#include "exagrype/twopunctures/TwoPunctures.h"
+#include "exagrype/twopunctures/TP_Parameters.h"
 
 
 namespace TP {

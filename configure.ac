@@ -415,6 +415,24 @@ fi
 
 
 #
+# GSL (GNU Scientific Library), e.g. for ExaGRyPE's TwoPunctures initial data
+#
+AC_ARG_WITH(gsl,
+  AS_HELP_STRING([--with-gsl],[enable GSL support [default=no]]),
+  [ AC_MSG_CHECKING(for gsl)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);   use_gsl=false ;;
+      *)     AC_MSG_RESULT(yes);  use_gsl=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for gsl); AC_MSG_RESULT(no); use_gsl=false ])
+AM_CONDITIONAL([UseGSL],[test "x$use_gsl" = xtrue])
+
+if test "$use_gsl" == true; then
+  AC_DEFINE([UseGSL], [UseGSL], [UseGSL])
+fi
+
+
+#
 # NetCDF
 #
 AC_ARG_WITH(netcdf,
@@ -469,6 +487,51 @@ AM_CONDITIONAL([UseOpenblas],[test "x$use_openblas" = xtrue])
 
 if test "$use_openblas" == true; then
   AC_DEFINE([UseOpenblas], [UseOpenblas], [UseOpenblas])
+fi
+
+
+#
+# GSL
+#
+# We use pkg-config if it knows GSL and fall back to the libraries' default
+# names otherwise. GSL is appended to the link line, i.e. it comes after all
+# Peano libraries (which are prepended) that might use it.
+#
+if test "$use_gsl" != false; then
+  AC_PATH_PROG([PKG_CONFIG], [pkg-config])
+  if test -n "$PKG_CONFIG" && $PKG_CONFIG --exists gsl; then
+    GSL_INCLUDE_DIR=`$PKG_CONFIG --cflags gsl`
+    GSL_LIBS=`$PKG_CONFIG --libs gsl`
+  else
+    GSL_INCLUDE_DIR=""
+    GSL_LIBS="-lgsl -lgslcblas -lm"
+  fi
+  AC_MSG_NOTICE([GSL_INCLUDE_DIR: ${GSL_INCLUDE_DIR}])
+  AC_MSG_NOTICE([GSL_LIBS: ${GSL_LIBS}])
+
+  CXXFLAGS_PEANO_2D_RELEASE=" $CXXFLAGS_PEANO_2D_RELEASE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_STATS="   $CXXFLAGS_PEANO_2D_STATS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_ASSERTS=" $CXXFLAGS_PEANO_2D_ASSERTS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_TRACE="   $CXXFLAGS_PEANO_2D_TRACE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_DEBUG="   $CXXFLAGS_PEANO_2D_DEBUG ${GSL_INCLUDE_DIR} "
+
+  CXXFLAGS_PEANO_3D_RELEASE=" $CXXFLAGS_PEANO_3D_RELEASE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_STATS="   $CXXFLAGS_PEANO_3D_STATS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_ASSERTS=" $CXXFLAGS_PEANO_3D_ASSERTS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_TRACE="   $CXXFLAGS_PEANO_3D_TRACE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_DEBUG="   $CXXFLAGS_PEANO_3D_DEBUG ${GSL_INCLUDE_DIR} "
+
+  LDADD_PEANO_2D_RELEASE=" $LDADD_PEANO_2D_RELEASE ${GSL_LIBS} "
+  LDADD_PEANO_2D_STATS="   $LDADD_PEANO_2D_STATS ${GSL_LIBS} "
+  LDADD_PEANO_2D_ASSERTS=" $LDADD_PEANO_2D_ASSERTS ${GSL_LIBS} "
+  LDADD_PEANO_2D_TRACE="   $LDADD_PEANO_2D_TRACE ${GSL_LIBS} "
+  LDADD_PEANO_2D_DEBUG="   $LDADD_PEANO_2D_DEBUG ${GSL_LIBS} "
+
+  LDADD_PEANO_3D_RELEASE=" $LDADD_PEANO_3D_RELEASE ${GSL_LIBS} "
+  LDADD_PEANO_3D_STATS="   $LDADD_PEANO_3D_STATS ${GSL_LIBS} "
+  LDADD_PEANO_3D_ASSERTS=" $LDADD_PEANO_3D_ASSERTS ${GSL_LIBS} "
+  LDADD_PEANO_3D_TRACE="   $LDADD_PEANO_3D_TRACE ${GSL_LIBS} "
+  LDADD_PEANO_3D_DEBUG="   $LDADD_PEANO_3D_DEBUG ${GSL_LIBS} "
 fi
 
 

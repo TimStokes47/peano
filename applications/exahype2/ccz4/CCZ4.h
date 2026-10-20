@@ -14,7 +14,7 @@
 
 #include <cstring>
 #include "exagrype/initialvalues/InitialValues.h"
-#include "ApplyTwoPunctures.h"
+#include "exagrype/initialvalues/ApplyTwoPunctures.h"
 
 #include "exagrype/ccz4/Kernels.h"
 

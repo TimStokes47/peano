@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "libtwopunctures/TP_Utilities.h"
+#include "exagrype/twopunctures/TP_Utilities.h"
 
 namespace TP {
 namespace Utilities {

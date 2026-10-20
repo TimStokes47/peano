@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libtwopunctures/TwoPunctures.h"
+#include "exagrype/twopunctures/TwoPunctures.h"
 //#include "AbstractFiniteVolumeCCZ4.h"
 //The functions in this namespace works as binddings of two puncture library 
 

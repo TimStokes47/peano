@@ -35,10 +35,22 @@ generated Makefiles. Its unit tests run as part of \c UnitTests3d.
   reconstruction of the auxiliary variables for the fourth-order finite
   differences.
 - exagrype::initialvalues holds analytical initial conditions such as the
-  gauge wave or flat spacetime.
+  gauge wave or flat spacetime, plus
+  exagrype::initialvalues::ApplyTwoPunctures() for black holes.
+- \c src/exagrype/twopunctures hosts the TwoPunctures code from the
+  EinsteinToolkit (namespaces TP and TP_bindding), which computes initial
+  data for single and binary black holes.
 
-The TwoPunctures initial data for black holes is not part of the library yet,
-as it requires GSL. It remains within \c applications/exahype2/ccz4 (see
-\c ApplyTwoPunctures.h there).
+# Black holes and GSL
+
+TwoPunctures requires the GNU Scientific Library (GSL). It hence is only
+compiled into the library if you configure Peano with \c --with-gsl
+(\c -DWITH_GSL=ON for CMake). This defines \c UseGSL and adds GSL to the
+link line of all generated Makefiles.
+
+Applications switch black hole initial data on per build through
+\c -DIncludeTwoPunctures. If an application sets this flag but Peano has been
+configured without GSL, the build stops with an error message that tells you
+to reconfigure.
 
 */

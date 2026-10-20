@@ -20,14 +20,15 @@ the proper modules if you are working on a cluster such as COSMA, see \ref tutor
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing
-./configure CC=icx CXX=icpx --with-mpi=mpiicpx --with-multithreading=omp CXXFLAGS="-Ofast -std=c++20 -qopenmp -march=native -mtune=native -fma -fomit-frame-pointer -Wno-attributes=clang:: -w" LDFLAGS="-qopenmp" --enable-loadbalancing --enable-exahype --enable-exagrype --enable-particles --enable-blockstructured --enable-finiteelements
+./configure CC=icx CXX=icpx --with-mpi=mpiicpx --with-multithreading=omp CXXFLAGS="-Ofast -std=c++20 -qopenmp -march=native -mtune=native -fma -fomit-frame-pointer -Wno-attributes=clang:: -w" LDFLAGS="-qopenmp" --enable-loadbalancing --enable-exahype --enable-exagrype --with-gsl --enable-particles --enable-blockstructured --enable-finiteelements
 make -j
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The flag \c --enable-exagrype (\c -DENABLE_EXAGRYPE=ON if you use CMake) builds the ExaGRyPE
 library, which hosts the CCZ4 kernels and the analytical initial conditions (see \ref page_exagrype_library).
 It requires ExaHyPE 2 and is built for 3d only. Without it, the generated ExaGRyPE Makefiles will
-not link.
+not link. The black hole scenarios additionally need \c --with-gsl (\c -DWITH_GSL=ON), as
+their TwoPunctures initial data relies on the GNU Scientific Library.
 
 Missing certain installed libraries may lead to configuration/compilation errors; please check
 \ref tutorials_exahype2_applications_exagrype_faq if necessary. Note you only need to compile Peano

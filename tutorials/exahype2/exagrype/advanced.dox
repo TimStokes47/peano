@@ -30,8 +30,9 @@ void exagrype::initialvalues::newScenario(
 For more complicated initial conditions (e.g., black holes), users can introduce their own calculation library
 and include it before generating and building the Peano project. We also recommend defining a corresponding
 C++ flag to avoid potential linking issues when another scenario is picked. Such scenarios stay with
-your application rather than in the ExaGRyPE library, as the TwoPunctures binding in
-\c applications/exahype2/ccz4/ApplyTwoPunctures.cpp does.
+your application rather than in the ExaGRyPE library. The TwoPunctures binding in
+\c src/exagrype/initialvalues/ApplyTwoPunctures.cpp is an example of such a calculator
+guarded by a flag.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 peano4_project.output.makefile.add_cpp_file( "MyICCalculators/Calculator1.cpp" )
