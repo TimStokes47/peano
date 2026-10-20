@@ -54,10 +54,20 @@ def translate(
        altered it, depending on the traversal order. Such tasks are never
        fused (@ref peano4.api.taskgraph.compiler.FuseSteps._have_conflicting_data()). Cell data are not shared
        between cells and hence do not constrain the fusion. TEMPORARY uses
-       are ignored. This constraint is conservative: it relies only on the
-       Task.DataAccess qualifiers and does not know that a task might for
-       example write the face data only when it touches a face for the
-       last time.
+       are ignored. There is one exception which follows from the entity
+       order: Peano touches every vertex and face of a cell for the first
+       time before it enters the cell, and every vertex of a face before the
+       face. A FACE task which reads or writes face data therefore has
+       finished with a face before any subsequent face or cell task of the
+       same traversal sees this face. The same holds for a VERTEX task and
+       vertex data. A conflict on face (vertex) data hence is ignored if the
+       earlier of the two tasks is a FACE (VERTEX) task. Two FACE tasks with
+       conflicting face data thus can share one traversal, but they never
+       run in parallel (constraint 2 of the algorithm below). Apart from
+       this exception, the constraint is conservative: it relies only on
+       the Task.DataAccess qualifiers and the tasks' grid entities, and does
+       not know that a cell task might for example write the face data only
+       when it touches a face for the last time.
     3. **No repetition.** Tasks which have to repeat (Task.has_to_repeat)
        are never fused. They always yield a traversal of their own.
     4. **No annotation.** The caller can annotate the fusion through
@@ -71,12 +81,15 @@ def translate(
 
 <br /><br />
 <div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
-A task does not know if its action sets plug into touch-first or touch-last
-events. That is, a task A1 might use touchVertexFirstTime() and touchVertexLastTime(),
-while its successor task B1 only uses touchCellFirstTime(). In this case, the 
-tasks will not be fused if A1 writes vertex data that B1 reads. Conversely, let A2 only plug into 
-touchVertexFirstTime(), while B2 sticks to touchCellFirstTime(). Now, we could fuse.
-But this option is hidden from the task compiler.
+A task does not tell the compiler if its action sets plug into touch-first or touch-last
+events. The compiler therefore assumes that a VERTEX (FACE) task works on its vertex
+(face) data within touchVertexFirstTime() (touchFaceFirstTime()), i.e. before any
+adjacent face or cell is entered. A VERTEX or FACE task which writes its data in
+touchVertexLastTime() or touchFaceLastTime() violates this assumption, and the
+compiler might fuse it with a subsequent task that then reads stale data. Conversely,
+a CELL task A might only write face data in touchFaceLastTime(), while its successor
+CELL task B reads this face data in touchCellFirstTime(). We could fuse A and B, but
+this option is hidden from the task compiler.
 </div>
 
 
@@ -148,6 +161,15 @@ But this option is hidden from the task compiler.
 
     @image html fuse-steps-data-conflict.png
 
+    ### Face task before cell task
+
+    A FACE task sets boundary data on the faces, which the subsequent
+    reconstruction reads. As the face task is done with a face before
+    either adjacent cell is entered, all three tasks share one traversal
+    even though the first two share face data.
+
+    @image html fuse-steps-face-before-cell.png
+
     ## Constructing the fused step
 
     A fused step's name concatenates the names of its tasks, prefixed with
@@ -201,9 +223,11 @@ But this option is hidden from the task compiler.
         non_fusable.add((first_task, second_task))
         non_fusable.add((second_task, first_task))
 
-    def can_be_combined(tasks: List[Task], further_tasks: List[Task], include_cell_data: bool = False) -> bool:
-        """Constraints 2 and 4 between two lists of tasks, optionally taking cell data into account"""
-        return not _have_conflicting_data(tasks, further_tasks, include_cell_data) and not any(
+    def can_be_combined(
+        tasks: List[Task], further_tasks: List[Task], include_cell_data: bool = False, respect_entity_order: bool = False
+    ) -> bool:
+        """Constraints 2 and 4 between two lists of tasks, optionally taking cell data and the entity order into account"""
+        return not _have_conflicting_data(tasks, further_tasks, include_cell_data, respect_entity_order) and not any(
             (task, further_task) in non_fusable for task in tasks for further_task in further_tasks
         )
 
@@ -259,7 +283,9 @@ But this option is hidden from the task compiler.
             not is_repeating
             and current_group is not None
             and lowest_entity >= highest_entity_of_current_group
-            and can_be_combined([task for group_node in current_group for task in group_node], node)
+            and can_be_combined(
+                [task for group_node in current_group for task in group_node], node, respect_entity_order=True
+            )
         ):
             current_group.append(node)
             highest_entity_of_current_group = max(highest_entity_of_current_group, highest_entity)
@@ -292,7 +318,12 @@ But this option is hidden from the task compiler.
     return steps
 
 
-def _have_conflicting_data(tasks: List[Task], further_tasks: List[Task], include_cell_data: bool = False) -> bool:
+def _have_conflicting_data(
+    tasks: List[Task],
+    further_tasks: List[Task],
+    include_cell_data: bool = False,
+    respect_entity_order: bool = False,
+) -> bool:
     """!
 
     Check whether two sets of tasks can not share one mesh traversal due to
@@ -308,14 +339,23 @@ def _have_conflicting_data(tasks: List[Task], further_tasks: List[Task], include
       share one mesh traversal. If True, conflicting cell data counts,
       too. This is the check whether tasks can run in parallel.
 
+    @param respect_entity_order: bool
+      If True, tasks precede further_tasks within one traversal, and a
+      conflict on a face (vertex) submodel is ignored if the involved task
+      of tasks is a FACE (VERTEX) task: Such a task has finished with a
+      face (vertex) before any subsequent task sees it. This is the
+      exception of constraint 2 in
+      @ref peano4.api.taskgraph.compiler.FuseSteps.translate(). If False,
+      tasks and further_tasks are treated symmetrically.
+
     """
     writing_accesses = (Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE)
     using_accesses = (Task.DataAccess.READ_AND_DISCARD, Task.DataAccess.WRITE, Task.DataAccess.READ_AND_WRITE)
+    entity_of_kind = {"face": Task.GridEntity.FACE, "vertex": Task.GridEntity.VERTEX}
 
-    def submodels(task_list, accesses):
+    def submodels(task, accesses):
         return {
             (kind, submodel)
-            for task in task_list
             for kind, access_of_submodel in (
                 (("cell", task.cell_data_access),) if include_cell_data else ()
             ) + (("face", task.face_data_access), ("vertex", task.vertex_data_access))
@@ -323,10 +363,16 @@ def _have_conflicting_data(tasks: List[Task], further_tasks: List[Task], include
             if access in accesses
         }
 
-    return bool(
-        submodels(tasks, writing_accesses) & submodels(further_tasks, using_accesses)
-        or submodels(further_tasks, writing_accesses) & submodels(tasks, using_accesses)
-    )
+    for task in tasks:
+        for further_task in further_tasks:
+            conflicts = (submodels(task, writing_accesses) & submodels(further_task, using_accesses)) | (
+                submodels(further_task, writing_accesses) & submodels(task, using_accesses)
+            )
+            if respect_entity_order:
+                conflicts = {(kind, submodel) for kind, submodel in conflicts if entity_of_kind.get(kind) != task.entity}
+            if conflicts:
+                return True
+    return False
 
 
 def _task_name(task: Task) -> str:
