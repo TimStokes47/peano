@@ -67,7 +67,7 @@ must be run manually via `src/unittests/UnitTests2d`/`UnitTests3d`.
 ### Python API
 
 The Python packages are split across two roots: `python/` (`exahype2` legacy API)
-and `src/` (`peano4.api`, `dastgen2`, `exaparty.api`, and the in-progress `exahype2.api`,
+and `src/` (`peano4.api`, `dastgen2`, `exaparty.api`, `exagrype.api`, and the in-progress `exahype2.api`,
 `mghype`, `toolbox.loadbalancing.api` rewrites, colocated with each component's C++
 sources where one exists). Both are installed via:
 ```
