@@ -43,6 +43,8 @@ Jupyter.
   - \subpage tutorials_exahype2_11_tsunami
 - Modifying the numerics and the implementation scheme
 - Running codes in parallel
+  - \subpage tutorials_exahype2_30_domain-decomposition
+  - \subpage tutorials_exahype2_35_offline-load-balancing
 - Coupling
   - \subpage tutorials_exahype2_41_postprocessing
   - \subpage tutorials_exahype2_44_localisation
@@ -54,7 +56,6 @@ Jupyter.
   
   - \subpage tutorials_exahype2_exercises_SWE-aderdg
 - HPC  
-  - \subpage tutorials_exahype2_hpc_domain-decomposition
   - \subpage tutorials_exahype2_hpc_tasking
   - \subpage tutorials_exahype2_hpc_gpus
   - \subpage tutorials_exahype2_hpc_offline-load-balancing

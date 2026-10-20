@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .AbstractFVActionSet import AbstractFVActionSet
 from .RollOverUpdatedFace import RollOverUpdatedFace
-from .HandleBoundary import HandleBoundary
+from .ApplyDirichletBoundaryConditions import ApplyDirichletBoundaryConditions
 from .AdaptivityCriterion import AdaptivityCriterion
 from .InitialCondition import InitialCondition
 from .ProjectPatchOntoFaces import ProjectPatchOntoFaces

@@ -13,7 +13,7 @@ from exahype2.api import Target
 import exahype2.api.dslhype as dslhype
  
 from ..Solver import Solver
-from .actionsets import HandleBoundary
+from .actionsets import ApplyDirichletBoundaryConditions
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFace
 from .actionsets import UpdateCell
@@ -260,7 +260,7 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         surrounding solver's Solver.GridConstruction/Solver.Plotter
         counterparts hold a reference to as self._solver), not onto self,
         since the remaining FV action sets that need them - @see
-        exahype2.api.fv.actionsets.HandleBoundary,
+        exahype2.api.fv.actionsets.ApplyDirichletBoundaryConditions,
         exahype2.api.fv.actionsets.UpdateCell,
         exahype2.api.fv.actionsets.ComputeGlobalCFLCondition,
         exahype2.api.fv.actionsets.AdaptivityCriterion - are handed that
@@ -395,7 +395,7 @@ Patch overlap data
         self._solver.compute_kernel_call = self.__construct_kernel_call(Target.Serial, False)
         self.__create_time_step_functions(peano_project.directory)
         
-        reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         compute_cfl_condition_task  = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute global CFL condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL, may_spawn_background_tasks=False)
@@ -429,7 +429,9 @@ Patch overlap data
                 additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
-        reconstruction_task.add_action_set( HandleBoundary(self._solver, guard=self._solver.grid_selector.createFaceGuard()) )
+        ## Set the ghost volumes along the domain boundary before the reconstruction reads them.
+        ## No task is added if all axes are periodic
+        ApplyDirichletBoundaryConditions.add_task_to_time_step(self._solver, exahype2_project, time_step, reconstruction_task)
 
         ## Do the actual time step update
         update_cell_task.add_dependency(reconstruction_task)

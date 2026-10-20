@@ -14,6 +14,20 @@ The tests located in `tests/exaparty/hydro-simple-sph-physics` are intended to
 verify that the physics solvers are correct on classic problems. They are
 well-suited to use as first examples to get familiar with ExaParty.
 
+All of these tests are also available through pytest:
+[tests/exaparty/test_exaparty.py](../../tests/exaparty/test_exaparty.py) runs the
+`run.sh` scripts one by one, and a test passes if its script returns with exit code
+zero. Run the commands from Peano's root directory:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~
+python3 -m pytest -m "integration and not slow" tests/exaparty   # functional tests
+python3 -m pytest -m integration tests/exaparty                  # plus physics tests
+python3 -m pytest -m integration tests/exaparty -k sod-1d        # one test case
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The tests are skipped if Peano has not been built with ExaParty. The physics tests
+are marked as `slow`. See \ref tarch_pytest for the overall pytest setup.
+
 
 ## Functional Tests
 - \subpage tests_exaparty_dastgen_test

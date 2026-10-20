@@ -1,0 +1,211 @@
+# This file is part of the ExaHyPE2 project. For conditions of distribution and
+# use, please see the copyright notice at www.peano-framework.org
+from peano4.api.solversteps.ActionSet import ActionSet
+
+import peano4.api
+import peano4.api.taskgraph
+import jinja2
+
+from ...DirichletBoundaryConditions import DirichletBoundaryConditions
+
+
+class ApplyDirichletBoundaryConditions(ActionSet):
+    """!
+
+    Set the ghost volumes along the domain boundary through the solver's
+    exahype2.api.DirichletBoundaryConditions term
+
+    The action set plugs into touchFaceFirstTime(). Each face carries an
+    overlap of 2*overlap volumes along its normal (solver._patch_overlap_current_time_step):
+    the left half belongs to the cell left of the face, the right half to
+    the cell right of it. On the domain boundary, one of these two cells
+    lies outside of the domain. Nobody ever writes its half of the face
+    data. This action set fills exactly this half: For each of the
+    outside's volumes, it invokes
+
+    @code
+    repositories::<solver>.dirichletBoundaryConditions( x, t, Q );
+    @endcode
+
+    with x being the centre of the (ghost) volume and t the solver's
+    current time stamp getMinTimeStamp(). Faces along periodic axes are
+    skipped (PeriodicBC from the project's Constants.h). Whether a face is
+    on the domain boundary is derived from its position, i.e. compared
+    against DomainOffset and DomainOffset+DomainSize.
+
+    The subsequent reconstruction
+    (toolbox.blockstructured.api.ReconstructPatchWithHalo) reads the face
+    data in touchCellFirstTime(). As Peano touches all faces of a cell for
+    the first time before it enters the cell, the boundary task and the
+    reconstruction can share one mesh traversal (@ref
+    peano4.api.taskgraph.compiler.FuseSteps.translate()).
+
+    Use add_task_to_time_step() to add the corresponding task to a time
+    step's task graph.
+
+    """
+
+    TemplateTouchFaceFirstTime = jinja2.Template(
+        """
+  const int  normal          = marker.getSelectedFaceNumber() % Dimensions;
+  const bool isLowerBoundary = tarch::la::equals( marker.x()(normal), DomainOffset(normal) );
+  const bool isUpperBoundary = tarch::la::equals( marker.x()(normal), DomainOffset(normal) + DomainSize(normal) );
+
+  if ( not PeriodicBC[normal] and (isLowerBoundary or isUpperBoundary) ) {
+    logTraceInWith1Argument( "touchFaceFirstTime(...)---ApplyDirichletBoundaryConditions", marker.toString() );
+
+    const double t = repositories::{{SOLVER_INSTANCE}}.getMinTimeStamp();
+    const tarch::la::Vector<Dimensions,double> volumeH = ::exahype2::fv::getVolumeSize( marker.h(), {{NUMBER_OF_VOLUMES_PER_AXIS}} );
+
+    dfore( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}}, normal, 0 ) {
+      for (int layer=0; layer<{{OVERLAP}}; layer++) {
+        tarch::la::Vector<Dimensions,int>    overlapCell = volume;
+        tarch::la::Vector<Dimensions,double> x;
+        for (int d=0; d<Dimensions; d++) {
+          x(d) = marker.x()(d) - 0.5 * marker.h()(d) + (volume(d) + 0.5) * volumeH(d);
+        }
+        // layer 0 is the ghost volume adjacent to the face
+        if (isLowerBoundary) {
+          overlapCell(normal) = {{OVERLAP}} - 1 - layer;
+          x(normal)           = marker.x()(normal) - (layer + 0.5) * volumeH(normal);
+        }
+        else {
+          overlapCell(normal) = {{OVERLAP}} + layer;
+          x(normal)           = marker.x()(normal) + (layer + 0.5) * volumeH(normal);
+        }
+        const int index = toolbox::blockstructured::serialiseVoxelIndexInOverlap( overlapCell, {{NUMBER_OF_VOLUMES_PER_AXIS}}, {{OVERLAP}}, normal );
+        repositories::{{SOLVER_INSTANCE}}.dirichletBoundaryConditions(
+          x,
+          t,
+          {{FACE_ACCESSOR}}.value + index * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}})
+        );
+      }
+    }
+
+    logTraceOut( "touchFaceFirstTime(...)---ApplyDirichletBoundaryConditions" );
+  }
+"""
+    )
+
+    def __init__(self, solver, patch_overlap, guard):
+        """!
+
+        @param solver: exahype2.api.Solver
+          The solver whose dirichletBoundaryConditions() is invoked.
+
+        @param patch_overlap: peano4.api.datamodel.Patch
+          The face data to set, i.e. solver._patch_overlap_current_time_step.
+          Its dim[0] is twice the overlap, its dim[1] the number of volumes
+          per axis of the cell patch.
+
+        @param guard: str
+          C++ boolean expression over a FaceMarker called marker. Typically
+          solver.grid_selector.createFaceGuard().
+
+        """
+        super().__init__(descend_invocation_order=1, parallel=False)
+        self._solver = solver
+        self.guard = guard
+        self.d = {
+            "SOLVER_INSTANCE": solver.get_name_of_global_instance(),
+            "NUMBER_OF_VOLUMES_PER_AXIS": str(patch_overlap.dim[1]),
+            "OVERLAP": str(int(patch_overlap.dim[0] / 2)),
+            "NUMBER_OF_UNKNOWNS": str(solver.unknowns),
+            "NUMBER_OF_AUXILIARY_VARIABLES": str(solver.auxiliary_variables),
+            "FACE_ACCESSOR": "fineGridFace" + patch_overlap.name,
+        }
+
+    def get_body_of_operation(self, operation_name):
+        if (
+            operation_name
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
+        ):
+            return self.TemplateTouchFaceFirstTime.render(**self.d)
+        return ""
+
+    def get_guard_of_operation(self, operation_name):
+        if (
+            operation_name
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
+        ):
+            return self.guard
+        return "true"
+
+    def get_action_set_name(self):
+        return __name__.replace(".py", "").replace(".", "_")
+
+    def user_should_modify_template(self):
+        return False
+
+    def get_includes(self):
+        return (
+            """
+#include "exahype2/fv/PatchUtils.h"
+#include "toolbox/blockstructured/Enumeration.h"
+"""
+            + self._solver._get_default_includes()
+            + self._solver.user_solver_includes
+        )
+
+    @staticmethod
+    def add_task_to_time_step(solver, exahype2_project, time_step, reconstruction_task):
+        """!
+
+        Add the boundary task in front of a Finite Volume reconstruction
+
+        If all axes of the domain are periodic, the routine does nothing:
+        The time step's task graph then does not contain any boundary
+        handling. Otherwise, it adds a FACE task which sets the ghost volumes
+        of solver._patch_overlap_current_time_step, and makes
+        reconstruction_task depend on it.
+
+        @param solver: exahype2.api.Solver
+          The solver. Has to hold a non-stateless
+          exahype2.api.DirichletBoundaryConditions term unless all axes are
+          periodic.
+
+        @param exahype2_project: exahype2.api.Project
+          Provides the periodic boundary conditions.
+
+        @param time_step: peano4.api.taskgraph.Graph
+          The time step's task graph.
+
+        @param reconstruction_task: peano4.api.taskgraph.Task
+          The task reading solver._patch_overlap_current_time_step to
+          reconstruct the patches' halos.
+
+        @return peano4.api.taskgraph.Task or None
+          The boundary task, or None if all axes are periodic.
+
+        """
+        if all(exahype2_project.periodic_BC):
+            return None
+
+        assert any(
+            isinstance(term, DirichletBoundaryConditions) and not term.stateless
+            for term in solver.pde_terms
+        ), (
+            f"Solver {solver.name} has non-periodic boundaries "
+            f"(periodic_BC={exahype2_project.periodic_BC}), but no DirichletBoundaryConditions PDE term. "
+            "Add one via solver.add_pde_term(exahype2.api.DirichletBoundaryConditions(...)), "
+            "or make all axes periodic."
+        )
+
+        boundary_task = peano4.api.taskgraph.Task(
+            name=f"{solver.name}_Apply Dirichlet BCs",
+            entity=peano4.api.taskgraph.Task.GridEntity.FACE,
+        )
+        boundary_task.use_face(
+            solver._patch_overlap_current_time_step,
+            peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE,
+        )
+        boundary_task.add_action_set(
+            ApplyDirichletBoundaryConditions(
+                solver,
+                solver._patch_overlap_current_time_step,
+                guard=solver.grid_selector.createFaceGuard(),
+            )
+        )
+        time_step.add_task(boundary_task)
+        reconstruction_task.add_dependency(boundary_task)
+        return boundary_task

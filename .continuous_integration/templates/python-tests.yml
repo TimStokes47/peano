@@ -1,0 +1,12 @@
+# The container images do not necessarily ship pytest. We therefore install it
+# into a virtual environment which still sees all Python packages of the image.
+.Install_Pytest:
+  script:
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} bash <<< "python3 -m venv --system-site-packages .pytest-venv; .pytest-venv/bin/python -m pip install -q pytest"
+
+# Python unit tests from tests/. pytest.ini restricts plain pytest runs to the
+# fast tests, i.e. tests marked as integration or slow are not executed here.
+.Python_Unit_Tests:
+  script:
+    - !reference [".Install_Pytest", "script"]
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} .pytest-venv/bin/python -m pytest

@@ -116,13 +116,22 @@ Python documentation (Doxygen docstrings starting with `"""!`) follows these rul
 
 ## Testing
 
-- `tests/unit/` — Python unit tests (pytest). Run with `pytest` from repo root (see
-  `pytest.ini`: default testpaths is `tests/unit`, pattern `test_*.py`). Markers
-  `integration` and `slow` are opt-in (`pytest -m integration`); plain `pytest` skips them.
-- `tests/exahype2/`, `tests/exaparty/`, `tests/multigrid/`, `tests/integration/` — C++/Python
-  hybrid test cases, each typically a Python build script (e.g. `fv.py`, `aderdg.py`,
-  `dastgen-test.py`) that generates and compiles a small C++ executable, plus generated
-  build artifacts (`.o`, binaries) that should not be committed if regenerated locally.
+- Everything under `tests/` is driven by pytest (see `pytest.ini`: testpaths is `tests`,
+  pattern `test_*.py`, `src/` is on the Python path). Plain `pytest` from the repo root
+  runs only the fast tests; markers `integration` and `slow` are opt-in
+  (`pytest -m integration tests/integration`). `documentation/tarch/pytest.dox` is the
+  authoritative description.
+- `tests/unit/` — fast Python unit tests. `tests/integration/` — Python-only integration
+  tests (load balancing).
+- `tests/exaparty/` — one directory per C++/Python hybrid test case with a `run.sh` that
+  generates, compiles, runs and checks it; `tests/exaparty/test_exaparty.py` runs these
+  scripts (`pytest -m integration tests/exaparty -k <case>`, skipped unless ExaParty is
+  built). Some generator scripts there are named `test_*.py`; `tests/conftest.py` excludes
+  them from collection.
+- `tests/exahype2/` (legacy `python/` API) and `tests/multigrid/` (MGHyPE) are not driven by
+  pytest; run their build scripts (e.g. `fv.py`, `aderdg.py`) manually.
+- Generated build artifacts (`.o`, binaries) in the test directories should not be
+  committed if regenerated locally.
 - `src/unittests/` builds `UnitTests2d`/`UnitTests3d` executables covering the C++ core
   and enabled extensions/toolboxes — this is what `make check`/`make test` runs.
 

@@ -37,6 +37,27 @@ Unfortunately, the use of the apptainer containers is not pretty, and
 so the best thing to do is describe your desired actions in a bash script and ask for help on the
 continuous-integration channel of the Slack.
 
+### Tests driven by pytest
+
+The preferred way to add a test is to write it as a pytest test in `tests/` (see
+\ref tarch_pytest) and to let the CI job call pytest. The container images do not
+necessarily ship pytest, so the template `.Install_Pytest` in
+`.continuous_integration/templates/python-tests.yml` installs it into the virtual
+environment `.pytest-venv`, which still sees the image's Python packages.
+A job then reads
+
+```
+.My_Test:
+  script:
+    - !reference [".Install_Pytest", "script"]
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} .pytest-venv/bin/python -m pytest -m integration tests/exaparty -k sod-1d
+```
+
+The jobs `Python_Unit_Tests` (all fast tests, i.e. plain `pytest`) and
+`ExaParty_*` in `.continuous_integration/templates/exaparty.yml` follow this pattern.
+`Python_Unit_Tests` does not need the `Build` job, as the unit tests do not compile
+any code.
+
 ### Anatomy of a test
 
 It's best to copy examples, such as the ones in `.continuous_integration/templates/exahype2.yml`. But here are some general tips:
