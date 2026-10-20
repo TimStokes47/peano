@@ -7,9 +7,7 @@
 #include <limits.h>
 #include <iostream>
 
-#if defined(CompilerHasProcStat)
 #include <unistd.h>
-#endif
 
 #include <cstdlib>
 #include <cstring>
@@ -81,13 +79,19 @@ int tarch::getTotalMemory(MemoryUsageFormat format) {
 }
 
 int tarch::getFreeMemory(MemoryUsageFormat format) {
-  struct rusage usage{};
-  if(0 == getrusage(RUSAGE_SELF, &usage)) {
-    long freeMem = tarch::getTotalMemory( tarch::MemoryUsageFormat::MByte ) - usage.ru_maxrss;
-    return convertMemorySize(freeMem, format);
-  }
-  else
+  unsigned int freePages = 0;
+  size_t       length    = sizeof(freePages);
+
+  if (0 != sysctlbyname("vm.page_free_count", &freePages, &length, nullptr, 0)) {
     return 0;
+  }
+
+  const long pageSize = sysconf(_SC_PAGESIZE);
+  if (pageSize <= 0) {
+    return 0;
+  }
+
+  return convertMemorySize(static_cast<long>(freePages) * pageSize, format);
 }
 
 #endif
@@ -122,6 +126,10 @@ int tarch::getMemoryUsage(MemoryUsageFormat format) {
   std::size_t rawInput = atol(pCh);
 #else
   std::size_t rawInput = 0;
+  struct rusage usage{};
+  if (0 == getrusage(RUSAGE_SELF, &usage)) {
+    rawInput = static_cast<std::size_t>(usage.ru_maxrss);
+  }
 #endif
 
   return convertMemorySize(rawInput,format);

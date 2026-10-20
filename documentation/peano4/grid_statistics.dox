@@ -2,13 +2,13 @@
 \page page_grid_statistics Grid statistics and other global mesh information
 
 
-## Grid statistics 
+## Grid statistics
 
 Besides the actual vertex/face/cell data your solver attaches to the mesh,
 Peano's core continuously tracks a small set of statistics about the mesh
-itself while it traverses it: how many cells are refined vs unrefined, how
-long the mesh has been unchanged, how fine the finest cells currently are,
-and so forth. These data live in @ref peano4::grid::GridStatistics.
+itself while it traverses it: how many cells are refined vs unrefined, whether
+the mesh still changes, how fine the finest cells currently are, and so forth.
+These data live in @ref peano4::grid::GridStatistics.
 
 
 ### Dataflow
@@ -19,17 +19,14 @@ and so forth. These data live in @ref peano4::grid::GridStatistics.
 - Each rank typically owns several spacetrees at once. All of them are
   collected within @ref peano4::parallel::SpacetreeSet, the singleton that
   owns and traverses all of a rank's local trees.
-- At the end of a traversal, the @ref peano4::parallel::SpacetreeSet reduces
-  the local statistics into one @ref peano4::grid::GridStatistics object -
-  a plain, in-process C++ `operator+` (src/peano4/grid/grid.cpp) that just
-  adds up the per-tree counters field by field. No MPI is involved in this
-  step.
-- **This is where it stops.** The resulting @ref peano4::grid::GridStatistics
-  object is never combined across MPI ranks: there is no reduce, no
-  send/receive, no global master collecting everyone else's numbers, despite
-  what the diagram in an earlier revision of this page implied. If you run
-  with several ranks, each one accumulates and reports its own, independent
-  view of the mesh - see "Ranks act independently" below.
+- At the very end of @ref peano4::parallel::SpacetreeSet::traverse(), the set
+  sums up the statistics of its local trees via GridStatistics' `operator+`
+  (src/peano4/grid/grid.cpp), which adds up the counters, combines the flags
+  with a logical or and takes the minimum of the mesh sizes.
+- It then all-reduces this sum over all ranks through
+  tarch::mpi::Rank::allReduce(), using the very same `operator+` as reduction
+  operator, and stores the outcome. Without MPI, this step degenerates to a
+  plain copy.
 
 \dot
 digraph GridStatisticsDataflow {
@@ -38,91 +35,59 @@ digraph GridStatisticsDataflow {
   node [shape=box, style="rounded,filled", fillcolor=white, fontname="Helvetica", fontsize=10]
   edge [fontname="Helvetica", fontsize=9]
 
-  subgraph cluster_rank {
-    label     = "one rank"
+  subgraph cluster_rank0 {
+    label     = "rank 0"
     fontname  = "Helvetica"
     fontsize  = 10
     style     = dashed
 
-    Spacetree1 [label="Spacetree #1"]
-    Spacetree2 [label="Spacetree #2"]
-    SpacetreeN [label="…"]
-    SpacetreeSet [label="SpacetreeSet", fillcolor=lightgrey]
-    RankStats [label="GridStatistics\n(this rank)"]
-
-    Spacetree1 -> SpacetreeSet [label="1: accumulate\nwhile descending"]
-    Spacetree2 -> SpacetreeSet
-    SpacetreeN -> SpacetreeSet [label="2: owns/traverses\nall local trees", style=dashed]
-    SpacetreeSet -> RankStats [label="3: reduce at end\nof traversal\n(local operator+, no MPI)"]
-  }
-}
-\enddot
-
-
-### Ranks act independently
-
-Nothing above ever crosses a rank boundary. @ref peano4::DefaultStepReport::reportStep()
-- and exaparty's GlobalState.template.cpp, despite "Global" being in its name -
-simply logs whatever @ref peano4::parallel::SpacetreeSet::getGridStatistics()
-returns *on that rank*. Run the same code with, say, three MPI ranks, and you
-get three independent log lines, one per rank, each describing only that
-rank's share of the mesh - never a sum, and never anything resembling a
-combined, global view.
-
-\dot
-digraph GridStatisticsIndependence {
-  rankdir=LR
-  fontname="Helvetica"
-  node [shape=box, style="rounded,filled", fillcolor=white, fontname="Helvetica", fontsize=10]
-  edge [fontname="Helvetica", fontsize=9]
-
-  subgraph cluster_rank0 {
-    label    = "rank 0"
-    fontname = "Helvetica"
-    fontsize = 10
-    style    = dashed
+    Spacetree01 [label="Spacetree #1"]
+    Spacetree02 [label="Spacetree #2"]
     SpacetreeSet0 [label="SpacetreeSet", fillcolor=lightgrey]
-    Stats0        [label="GridStatistics\n(rank 0)"]
-    Log0          [label="logInfo(...)", shape=note, fillcolor=lightyellow]
-    SpacetreeSet0 -> Stats0 -> Log0
+
+    Spacetree01 -> SpacetreeSet0 [label="1: accumulate\nwhile descending"]
+    Spacetree02 -> SpacetreeSet0
   }
 
   subgraph cluster_rank1 {
-    label    = "rank 1"
-    fontname = "Helvetica"
-    fontsize = 10
-    style    = dashed
+    label     = "rank 1"
+    fontname  = "Helvetica"
+    fontsize  = 10
+    style     = dashed
+
+    Spacetree11 [label="Spacetree #3"]
     SpacetreeSet1 [label="SpacetreeSet", fillcolor=lightgrey]
-    Stats1        [label="GridStatistics\n(rank 1)"]
-    Log1          [label="logInfo(...)", shape=note, fillcolor=lightyellow]
-    SpacetreeSet1 -> Stats1 -> Log1
+
+    Spacetree11 -> SpacetreeSet1
   }
 
-  subgraph cluster_rankN {
-    label    = "rank …"
-    fontname = "Helvetica"
-    fontsize = 10
-    style    = dashed
-    SpacetreeSetN [label="SpacetreeSet", fillcolor=lightgrey]
-    StatsN        [label="GridStatistics\n(rank …)"]
-    LogN          [label="logInfo(...)", shape=note, fillcolor=lightyellow]
-    SpacetreeSetN -> StatsN -> LogN
-  }
+  GlobalStats [label="GridStatistics\n(same on all ranks)"]
+
+  SpacetreeSet0 -> GlobalStats [label="2: sum up local trees,\n3: all-reduce at end\nof traverse()"]
+  SpacetreeSet1 -> GlobalStats
 }
 \enddot
 
-The absence of any edge between the three clusters above is the point:
-nothing in this dataflow talks to another rank. If you need a genuinely
-global number, you have to compute it yourself - see "Reducing
-GridStatistics across ranks" and "Reducing a plain scalar you track
-yourself" below - or lean on the one thing in the codebase that already
-does this, narrowly - see "Load balancing information" further down.
+
+### All ranks see the same statistics
+
+@ref peano4::parallel::SpacetreeSet::getGridStatistics() returns the reduced
+statistics, i.e. the same values on every rank. They describe the whole mesh
+after the most recent traversal. As every rank runs traverse() at the same
+time, the reduction is safe, and decisions taken on the statistics, such as
+peano4::grid::isGridStationary() in the repeat condition of a mesh refinement
+step, are the same on all ranks. Before the first traversal, getGridStatistics()
+returns the statistics of the local trees as set up by
+@ref peano4::parallel::SpacetreeSet::init().
+
+If you need the statistics of one individual local tree, use
+@ref peano4::parallel::SpacetreeSet::getGridStatistics(int) const. These are not
+reduced.
 
 
 ### A typical use
 
-The information on each rank or tree can be read out through the
-spacetree set:
+The statistics can be read out through the spacetree set:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 peano4::grid::GridStatistics stats =
@@ -131,9 +96,7 @@ peano4::grid::GridStatistics stats =
 
 A common place, where this is used, is the default step reporter
 @ref peano4::DefaultStepReport::reportStep() which you can use as a
-starting point for our own use of the stats. Remember, per the above, that
-this is always the *local* view - the exact same call made on another rank
-will in general return different numbers:
+starting point for your own use of the stats:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 const auto stats = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
@@ -146,76 +109,37 @@ logInfo(
 );
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
-### Reducing GridStatistics across ranks
-
-@ref peano4::grid::GridStatistics gives you the per-rank picture; getting a
-genuinely global one is @ref peano4::grid::reduceGridStatistics() - every
-rank calls it with its own local GridStatistics and gets back the same,
-fully combined GridStatistics.
-
-Peano deliberately does not do this itself for every traversal (@see
-"Ranks act independently" above) - reduceGridStatistics() is a blocking
-routine every rank has to call at exactly the same time, so it is only
-appropriate to call from somewhere that already runs once per rank at a
-well-defined point, such as a static prepareTraversal()/
-unprepareTraversal() (@see @ref page_peano_action_sets). It is also, on
-purpose, not realised as one MPI_Allreduce-style collective:
-GridStatistics has no MPI_Op of its own (there is no meaningful "MPI_MIN
-of a GridStatistics" - some fields want a sum, some a min, some a logical
-or - @see its own operator+()). Instead, reduceGridStatistics() gathers
-every rank's GridStatistics to the global master one by one
-(@ref peano4::grid::GridStatistics::receiveAndPollDanglingMessages() -
-deadlock-safe the same way every other point-to-point exchange in Peano
-is), combines each into a running total via GridStatistics' own
-operator+() - the same field-by-field combination @ref
-peano4::parallel::SpacetreeSet already uses locally, per "Dataflow" above
-- and only then broadcasts the combined result back to every rank with a
-real MPI collective (MPI_Bcast), where every rank already knows exactly
-what is coming (one GridStatistics, from the master). A genuine reduction
-for a genuine fixed-size record, realised by hand rather than via
-MPI_Allreduce, deliberately split between "no fancy MPI" (the gather) and
-"MPI is fine here" (the one broadcast) - @see
-src/peano4/grid/grid.cpp's own documentation on reduceGridStatistics()
-for the full rationale, including how it differs from
-reduceGridControlEvents(), its sibling for the one type in this codebase
-that does *not* have a fixed size.
-
-~~~~~~~~~~~~~~~~~~~~~~~
-const peano4::grid::GridStatistics localStatistics  = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
-const peano4::grid::GridStatistics globalStatistics = peano4::grid::reduceGridStatistics(localStatistics);
-const double                       globalMinH       = tarch::la::max( globalStatistics.getMinH() );
-~~~~~~~~~~~~~~~~~~~~~~~
-
 exahype2.api.fv.actionsets.ComputeGlobalCFLCondition
-(src/exahype2/api/fv/actionsets/ComputeGlobalCFLCondition.py)
-is a real, currently-compiling worked example: it reduces the finest mesh
-size on the domain exactly this way, combined with a solver-tracked
-maximum eigenvalue - a plain `double`, *not* part of GridStatistics, @see
-below - into a globally admissible CFL time step size.
+(src/exahype2/api/fv/actionsets/ComputeGlobalCFLCondition.py) is a worked
+example: it reads the finest mesh size from the statistics and combines it
+with a solver-tracked maximum eigenvalue into a globally admissible CFL time
+step size.
 
 
-### Reducing a plain scalar you track yourself
+### Reducing your own data
 
-Not everything you might want a global view of lives inside
-GridStatistics. exahype2.api.fv.actionsets.ComputeGlobalCFLCondition's
-own maximum eigenvalue is a plain `double` the solver accumulates itself
-(guarded by its own static tarch::multicore::BooleanSemaphore while
-several trees/threads on the same rank may still be writing it). For a
-plain scalar like that, reduceGridStatistics()'s gather-to-master-then-
-broadcast machinery would be overkill - use
-tarch::mpi::Rank::getInstance().allReduce() directly instead, guarded by
-`#ifdef Parallel` (the call needs MPI-specific types that do not exist in
-a non-MPI build, and with a single rank the reduction would be a no-op
-anyway - local already *is* global there). Do **not** call raw
-`MPI_Allreduce` directly: tarch::mpi::Rank::allReduce()'s own
-documentation explains why a literal blocking allreduce risks deadlocking
-Peano's asynchronous message exchange, and what the `waitor` callback
+The statistics of the whole mesh are already reduced. If you assemble a
+GridStatistics object yourself, e.g. from the statistics of some individual
+trees, @ref peano4::grid::reduceGridStatistics() combines such an object over
+all ranks. It is a blocking routine which every rank has to call at the same
+time, so only call it from somewhere that runs once per rank at a well-defined
+point, such as a static prepareTraversal()/unprepareTraversal()
+(@see @ref page_peano_action_sets).
+
+Not everything you might want a global view of lives inside GridStatistics.
+exahype2.api.fv.actionsets.ComputeGlobalCFLCondition's maximum eigenvalue is a
+plain `double` the solver accumulates itself (guarded by its own static
+tarch::multicore::BooleanSemaphore while several trees/threads on the same
+rank may still be writing it). For a plain scalar like that, use
+tarch::mpi::Rank::getInstance().allReduce() directly, guarded by
+`#ifdef Parallel` (the call needs MPI-specific types that do not exist in a
+non-MPI build). Do **not** call raw `MPI_Allreduce` directly:
+tarch::mpi::Rank::allReduce()'s own documentation explains why a literal
+blocking allreduce risks deadlocking Peano's asynchronous message exchange,
+and what the `waitor` callback
 (`tarch::services::ServiceRepository::getInstance().receiveDanglingMessages()`
-in the example below) is for. As with reduceGridStatistics(), only call
-this from somewhere that runs once per rank - tarch::mpi::Rank::allReduce()'s
-own documentation requires "only one thread per rank" to ever call it.
+in the example below) is for. As tarch::mpi::Rank::allReduce()'s documentation
+requires, only one thread per rank may call it.
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 double local  = /* your own locally-accumulated value */;
@@ -231,22 +155,28 @@ tarch::mpi::Rank::getInstance().allReduce(
 
 ## Load balancing information
 
-Unlike the reporting path above, @ref toolbox::loadbalancing::Statistics::updateGlobalView()
-does perform a real, MPI-level reduction - but a much narrower one than
-"reduce the GridStatistics object" would suggest. It pulls exactly one
-scalar out of the local GridStatistics -
-peano4::grid::GridStatistics::getNumberOfLocalUnrefinedCells() - copies it
-into a plain `int`, and feeds that into a non-blocking
-`MPI_Iallreduce(..., MPI_SUM, ...)` to obtain a genuinely global cell count
-(src/toolbox/loadbalancing/Statistics.cpp). A handful of other scalars are
-Allreduce'd the same way alongside it: the global number of splits, the
-global number of trees, how many ranks currently have load balancing
-switched on, and the maximum number of trees held by any one rank.
+@ref toolbox::loadbalancing::Statistics mirrors the grid statistics: its
+updateGlobalView(), which every load balancing strategy invokes in its
+finishStep(), all-reduces the load balancing's own data over all ranks via
+tarch::mpi::Rank::allReduce() - the global number of trees, how many ranks
+currently have load balancing switched on, the global number of splits, and the
+maximum number of trees held by any one rank. The reduction is blocking, so all
+ranks hold the same values afterwards. Only the data explicitly labelled as
+local, such as the number of splits a rank has triggered itself, remain
+rank-local.
 
-This global view exists exclusively to steer the load balancer's own
-rebalancing decisions. It is not exposed as part of GridStatistics itself,
-and it does not feed back into the per-rank reporting path described above -
-the two remain entirely separate.
+@ref toolbox::loadbalancing::CostMetrics follows the same pattern: its
+updateGlobalView() all-reduces the global weight, the lightest rank and the
+minimum of the rank weights with blocking reductions.
+
+The load balancing statistics do not provide cell counts. Strategies which need
+the global number of cells read it from
+@ref peano4::parallel::SpacetreeSet::getGridStatistics(). The load balancing
+however also needs the weight of each individual rank, which the reduced grid
+statistics do not provide. The strategies and
+@ref toolbox::loadbalancing::metrics::CellCount::updateGlobalView() therefore
+sum up the number of local unrefined cells over the rank's local trees via
+@ref peano4::parallel::SpacetreeSet::getGridStatistics(int) const.
 
 
 */

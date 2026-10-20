@@ -38,15 +38,15 @@ class benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth: publi
       const tarch::la::Vector<Dimensions, double>& x, double* __restrict__ Q
     ) override;
 
-/*
-    virtual void boundaryConditions(
-      const double * __restrict__ Qinside, // Qinside[4+0]
-      double * __restrict__ Qoutside, // Qoutside[4+0]
-      const tarch::la::Vector<Dimensions,double>&  faceCentre,
-      const tarch::la::Vector<Dimensions,double>&  volumeH,
-      double                                       t,
-      int                                          normal
-    )  override;
-*/
+    /**
+     * Prescribe the exact solution outside of the domain: The density wave
+     * is advected with constant velocity u, i.e. the solution at (x,t)
+     * equals the initial condition at x-ut. With these Dirichlet
+     * conditions, the numerical solution should converge towards the
+     * same exact solution as with periodic boundary conditions.
+     */
+    virtual void dirichletBoundaryConditions(
+      const tarch::la::Vector<Dimensions, double>& x, double t, double* __restrict__ Q
+    ) override;
 };
 

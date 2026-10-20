@@ -22,7 +22,7 @@ This approach allows us to make informed splitting decisions that minimise both 
 The API is organised into four phases:
 
 - **Phase 1: Input Generators** — read or generate the tree structure to be analysed.
-- **Phase 2: Splitting Strategies** — apply configurable staged transformations (_Stage I-III_) to redistribute computational work, optionally optimise the split hierarchy, and optionally extract replay instructions (_Stage IV_).
+- **Phase 2: Splitting Strategies** — apply configurable staged transformations (_Stage I-III_) to redistribute computational work and optionally optimise the split hierarchy.
 - **Phase 3: Hardcoded parameter extraction (offline replay)** — translate the final subtree assignment into split instructions for `toolbox::loadbalancing::strategies::Hardcoded`.
 - **Phase 4: Output and Visualisation** — export YAML and visual artefacts for inspection and integration.
 
@@ -47,22 +47,21 @@ The splitting phase is now a configurable staged workflow executed inside `split
 ```python
 split_tree(
   peano_tree,
-  number_of_subtrees,
+  decomposition,                     # e.g. Decomposition.equidistant_splitting(...)
   traversal="bfs"|"bfs_finest_first"|"dfs",
   enable_propagate_bottom_up=False,
   enable_optimize_hierarchy=False,
-  enable_extract_split_instructions=False,
-  destination_ranks=None,
-  output=False,
-):
+  periodic_BC=None,                  # e.g. [True, True] for a periodic 2d domain
+  verbose=False,
+)
   # Stage I:            distribute leaf nodes across subtrees (`distribute_leaves_bottom_up()` or `distribute_leaves_top_down()`)
   # Stage II (opt.):    bottom-up propagation (`_propagate_bottom_up()`)
   # Stage III (opt.):   hierarchical optimisation (`_optimize_hierarchy()`)
-  # Stage IV (opt.):    constructor initialisation + mode inference (`create_constructor_initialisation_string()`)
 ```
 
-`split_tree()` now returns a tuple `(hardcoded_config, hardcoded_mode)`.
-If _Stage IV_ is disabled, the function returns `("", "")` while still applying the enabled transformation stages in place.
+`split_tree()` modifies the tree in place. _Stage IV_ is a separate call:
+`create_constructor_initialisation_string()` (see Phase 3) turns the split tree
+into the constructor arguments of the hardcoded load balancing.
 
 | Stage | Function | Objective | Complexity |
 |-------|----------|-----------|------------|
@@ -76,6 +75,34 @@ _Stage I_ always executes when splitting is requested. _Stage II_, _Stage III_, 
 Here, `Ncells` denotes the total number of represented cells across all stored levels. For _Stage I_, BFS and DFS traversal have the same asymptotic complexity O(Ncells); they differ only in visitation order and constant-factor overhead.
 
 ### Stage I: Leaf Distribution
+
+#### The space-filling curve
+
+_Stage I_ runs through the leaves along Peano's space-filling curve, as
+implemented in `src/toolbox/loadbalancing/api/strategies/SFC.py`. This curve is
+exactly the order in which Peano's spacetree traversal runs through the mesh,
+i.e. Peano later hands out cells in the same order in which the offline
+decomposition plans them. Without this match, the subdomains that Peano builds
+would differ from the planned ones.
+
+Peano inverts its traversal in every other mesh sweep, i.e. it runs through
+the same curve forth and back. The offline decomposition ignores this
+inversion and always plans along the non-inverted curve. If all split-off
+trees request the same number of cells, the inversion does not change the
+subdomains anyway. Otherwise, a subdomain might end up on the other end of the
+curve than planned, but it still holds the planned number of cells.
+
+#### Periodic boundaries
+
+Peano never hands over cells along a periodic boundary to another tree, i.e.
+these cells always remain on tree 0. Pass the periodic boundary conditions of
+the experiment through `split_tree(..., periodic_BC=[...])`. _Stage I_ then
+keeps all leaves along periodic boundaries on subtree 0 and counts them
+towards subtree 0's share. If the frame of periodic boundary cells is larger
+than subtree 0's share, subtree 0 holds more cells than planned and the last
+subtree fewer.
+
+#### Leaf assignment
 
 The core loop of `split_tree()` identifies all leaf nodes across every refinement level and distributes them as evenly as possible across the requested number of subtrees. A node is a leaf if it resides on the finest level or has no children on the next level. After _Stage I_, only leaf nodes carry updated subtree assignments; all non-leaf nodes still belong to their original subtree and are updated by _Stage II_.
 
@@ -249,45 +276,82 @@ This preserves the Stage-II leaf mapping while reducing hierarchy depth for Subt
 
 ## Phase 3: Hardcoded parameter extraction (offline replay)
 
-_Stage IV_ can be requested through `split_tree(..., enable_extract_split_instructions=True, destination_ranks=[...])`.
-Internally, Stage IV calls `create_constructor_initialisation_string()` and returns:
-- `hardcoded_config`: full constructor initialisation string
-- `hardcoded_mode`: inferred split mode (`AggressiveTopDown` or `BottomUp`)
+_Stage IV_ translates the split tree into the constructor arguments of
+[`toolbox::loadbalancing::strategies::Hardcoded`](src/toolbox/loadbalancing/strategies/Hardcoded.h):
 
-These values can be passed directly into
-[`toolbox::loadbalancing::strategies::Hardcoded`](src/toolbox/loadbalancing/strategies/Hardcoded.h).
-
-The lower-level helper `extract_split_instructions()` remains available for analysis/debugging and
-returns the raw replay lists `(grid_sweeps, splitting_trees, number_of_cells, subtrees)`.
-
-Semantics (multi-level, non-leaf-centric):
-- `grid_sweeps`: `base_sweep * (level + 1)`, where `level` is 0-based w.r.t. the API tree arrays.
-  The helper can emit multiple split operations for the same target subtree, one per level.
-- `splitting_trees`: unique parent subtree id for all introduced cells on that level, or 0 if ambiguous.
-- `number_of_cells`: number of cells introduced on that level, i.e. cells with the target subtree id whose
-  parent exists (level>0) and has a different subtree id. For level 0, it is the number of cells on level 0
-  that already belong to the target subtree.
-- `subtrees`: subtree ids introduced by the splits (not ranks). You must map these subtree ids to destination
-  MPI ranks when constructing the hardcoded strategy.
-
-Example usage from Python:
 ```python
-hardcoded_config, hardcoded_mode = split_tree(
+destination_ranks = Hardcoded.assign_trees_to_ranks_round_Robin(
+    number_of_subtrees=tree.number_of_subtrees,
+    max_ranks=number_of_ranks,
+)
+hardcoded_config, hardcoded_mode = Hardcoded.create_constructor_initialisation_string(
     tree,
-    number_of_subtrees=number_of_subtrees,
-    enable_extract_split_instructions=True,
-    destination_ranks=destination_ranks,
+    destination_ranks,
+    modes=Hardcoded.BottomUp,   # optional: one marker, or one marker per split
 )
 project.set_load_balancing("toolbox::loadbalancing::strategies::Hardcoded", hardcoded_config)
 ```
 
+### Enumerated splits
+
+The hardcoded strategy works with an enumerated list of splits. The _k_th
+split reads
+
+> Tree `splitting_trees[k]` hands `number_of_cells[k]` cells over to a new tree
+> on rank `destination_ranks[k]`, and it uses `modes[k]` to select these cells.
+
+There is no notion of mesh sweeps. The C++ strategy hands out the splits in the
+order given and issues the _k_th split as soon as its splitting tree exists
+locally and holds more than `number_of_cells[k]` cells. See the class
+documentation of `toolbox::loadbalancing::strategies::Hardcoded` for all rules.
+
+The lower-level helper `extract_split_instructions()` remains available for
+analysis/debugging and returns the raw lists
+`(splitting_trees, number_of_cells, subtrees, bottom_up_flags)`:
+- `splitting_trees`: unique parent subtree id for all introduced cells of the split, or 0 if ambiguous.
+- `number_of_cells`: number of cells introduced by the split, i.e. cells with the target subtree id whose
+  parent exists (level>0) and has a different subtree id. For level 0, it is the number of cells on level 0
+  that already belong to the target subtree.
+- `subtrees`: subtree ids introduced by the splits (not ranks).
+- `bottom_up_flags`: whether the split is a bottom-up split, i.e. whether the subtree is introduced on
+  several levels.
+
+The splits are ordered from coarse to fine levels and, within a level, by subtree id.
+
+### Split modes
+
+Each split is either a top-down split (`peano4::SplitInstruction::Mode::AggressiveTopDown`)
+or a bottom-up split (`peano4::SplitInstruction::Mode::BottomUp`). Top-down splits hand over
+whole refined cells including their children as long as cells are still owed, i.e. the new
+tree might get a few cells more than requested. Bottom-up splits hand over fine grid cells
+one by one along the space-filling curve and hence reproduce the offline plan cell by cell.
+By default, `create_constructor_initialisation_string()` infers the modes from
+`bottom_up_flags`. The argument `modes` overwrites them with a single marker
+`Hardcoded.TopDown` or `Hardcoded.BottomUp`, or with one marker per split.
+
+### Ranks: one configuration, round-robin tree numbers
+
+The constructor string is the same on all ranks. Each rank only keeps the splits whose
+splitting tree it hosts and drops all others, so splits of trees on other ranks never
+block a rank.
+
+To tell which rank hosts a tree, the strategy relies on Peano's tree numbering, which is
+round robin: `peano4::parallel::Node::getId()` gives the _n_th tree on rank _r_ the number
+_n_·_R_+_r_ for _R_ ranks, and `peano4::parallel::Node::getRank()` maps tree number _t_
+onto rank _t_ mod _R_. The offline decomposition refers to trees through their subtree
+numbers. We therefore always assume that subtree _s_ lives on rank _s_ mod _R_, i.e. that
+the subtrees are assigned to the ranks round robin, as
+`assign_trees_to_ranks_round_Robin()` does. Only then does a split of subtree _s_ in the
+offline plan split tree _s_ in Peano. `create_constructor_initialisation_string()` checks
+this and raises an error for any other assignment. It takes the number of ranks from the
+largest destination rank, unless you pass `number_of_ranks`.
+
 Equivalent constructor usage in C++:
 ```
 toolbox::loadbalancing::strategies::Hardcoded(
-  {2,4,6},      // grid_sweeps
-  {0,0,0},      // splitting_trees
-  {9,81,1093},  // number_of_cells
-  {1,1,1},      // destination_ranks (mapped from subtrees)
+  {0, 0, 0},          // splitting_trees
+  {182, 182, 182},    // number_of_cells
+  {1, 2, 0},          // destination_ranks, round robin over three ranks
   peano4::SplitInstruction::Mode::BottomUp
 );
 ```
@@ -347,7 +411,7 @@ python3 OfflineDecomposition.py -d 3 -l 3 -s 4 --no-topology-update
 The script integrates all API components into a complete workflow:
 1. **Phase 1: Input Generators** via [`GridPatchFileReader`](src/toolbox/loadbalancing/api/Input/GridPatchFileReader.py) or [`RegularGridGenerator`](src/toolbox/loadbalancing/api/Input/RegularGridGenerator.py), represented through the [`Tree`](src/toolbox/loadbalancing/api/Tree.py) data structure.
 2. **Phase 2: Splitting Strategies** through [`SplitTrees`](src/toolbox/loadbalancing/api/strategies/SplitTrees.py), including Stage I (leaf distribution), Stage II (bottom-up propagation), and optional Stage III (hierarchical optimisation).
-3. **Phase 3: Hardcoded parameter extraction (offline replay)** via _Stage IV_ in `split_tree()` (internally `create_constructor_initialisation_string()`) to obtain `(hardcoded_config, hardcoded_mode)` for [`toolbox::loadbalancing::strategies::Hardcoded`](src/toolbox/loadbalancing/strategies/Hardcoded.h).
+3. **Phase 3: Hardcoded parameter extraction (offline replay)** via _Stage IV_, i.e. `create_constructor_initialisation_string()`, to obtain `(hardcoded_config, hardcoded_mode)` for [`toolbox::loadbalancing::strategies::Hardcoded`](src/toolbox/loadbalancing/strategies/Hardcoded.h).
 4. **Phase 4: Output and Visualisation** by exporting YAML (e.g. via [`generate_tree_yaml`](src/toolbox/loadbalancing/api/strategies/SplitTrees.py)) plus optional visual artefacts for inspection and integration.
 
 For complete command-line options, parameter details, and usage examples, see the [`OfflineDecomposition.py`](src/toolbox/loadbalancing/api/OfflineDecomposition.py) script documentation.

@@ -111,7 +111,7 @@ def display_hardcoded_split_parameters(peano_tree: Tree, title: str) -> None:
         return
     
     # Get the split parameters
-    grid_sweeps, splitting_trees, cell_counts, subtrees = split_strategy.extract_split_instructions(peano_tree)
+    splitting_trees, cell_counts, subtrees, bottom_up_flags = split_strategy.extract_split_instructions(peano_tree)
     
     print("\n" + title)
     print("-" * len(title))
@@ -121,7 +121,6 @@ def display_hardcoded_split_parameters(peano_tree: Tree, title: str) -> None:
     
     # Display parameters as C++ initializer lists for direct copy-paste into code
     print("Hardcoded Constructor Parameters:")
-    print(f"  gridSweeps = {{{', '.join(map(str, grid_sweeps))}}}")
     print(f"  splittingTrees = {{{', '.join(map(str, splitting_trees))}}}")
     print(f"  numberOfCells = {{{', '.join(map(str, cell_counts))}}}")
     print(f"  subTrees = {{{', '.join(map(str, subtrees))}}}")
@@ -129,8 +128,9 @@ def display_hardcoded_split_parameters(peano_tree: Tree, title: str) -> None:
     
     # Display as individual tuples for better readability
     print("Individual Split Operations:")
-    for i in range(len(grid_sweeps)):
-        print(f"  {{{grid_sweeps[i]}; {splitting_trees[i]} → {subtrees[i]}; {cell_counts[i]}}}")
+    for i in range(len(subtrees)):
+        mode = "bottom-up" if bottom_up_flags[i] else "top-down"
+        print(f"  split {i}: tree {splitting_trees[i]} → tree {subtrees[i]}; {cell_counts[i]} cells; {mode}")
     print()
 
 
