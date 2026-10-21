@@ -1,0 +1,176 @@
+import types
+
+import pytest
+
+import peano4.api
+import peano4.api.taskgraph
+import peano4.api.solversteps
+
+import exahype2.api
+
+
+def _solver(time_step_size=None, rk_order=3):
+    solver = exahype2.api.Solver("Probe", 2, 1)
+    solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))
+    solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation="*lambdaMax = 1.0;"))
+    solver.add_pde_term(
+        exahype2.api.DirichletBoundaryConditions(implementation="Q[0] = 0.0;")
+    )
+    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        solver, patch_size=4, rk_order=rk_order, time_step_size=time_step_size
+    )
+    return solver
+
+
+def _construct_time_step(solver, directory, periodic_BC=(False, False, False)):
+    exahype2_project = types.SimpleNamespace(periodic_BC=list(periodic_BC))
+    peano_project = peano4.api.Project(["probe"], "probe", str(directory))
+    time_step = peano4.api.taskgraph.Graph()
+    solver.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
+    return {task.name: task for task in time_step.tasks}
+
+
+def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
+    tasks = _construct_time_step(_solver(rk_order=3), tmp_path)
+    assert set(tasks) == {
+        "Probe_Apply Dirichlet BCs stage 0",
+        "Probe_Apply Dirichlet BCs stage 1",
+        "Probe_Apply Dirichlet BCs stage 2",
+        "Probe_Reconstruct stage 0",
+        "Probe_Reconstruct stage 1",
+        "Probe_Reconstruct stage 2",
+        "Probe_Evaluate right hand side stage 0",
+        "Probe_Evaluate right hand side stage 1",
+        "Probe_Evaluate right hand side stage 2",
+        "Probe_Prepare stage 1",
+        "Probe_Prepare stage 2",
+        "Probe_Complete time step",
+        "Probe_Compute time step size",
+        "Probe_Trigger load balancing",
+    }
+    assert (
+        tasks["Probe_Prepare stage 1"]
+        in tasks["Probe_Reconstruct stage 1"].dependencies
+    )
+    assert (
+        tasks["Probe_Prepare stage 2"]
+        in tasks["Probe_Reconstruct stage 2"].dependencies
+    )
+    # The boundary values have to be set after the previous stage's roll-over
+    assert (
+        tasks["Probe_Prepare stage 1"]
+        in tasks["Probe_Apply Dirichlet BCs stage 1"].dependencies
+    )
+    assert (
+        tasks["Probe_Apply Dirichlet BCs stage 1"]
+        in tasks["Probe_Reconstruct stage 1"].dependencies
+    )
+    assert (
+        tasks["Probe_Complete time step"]
+        in tasks["Probe_Compute time step size"].dependencies
+    )
+
+
+def test_boundary_values_use_stage_time_stamp(tmp_path):
+    tasks = _construct_time_step(_solver(rk_order=3), tmp_path)
+    [action_set] = tasks["Probe_Apply Dirichlet BCs stage 2"].action_sets
+    body = action_set.get_body_of_operation(
+        peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
+    )
+    # c_2 = 1 for Kutta's third-order scheme
+    assert (
+        "const double t = repositories::instanceOfProbe.getMinTimeStamp() + 1.0 * "
+        "repositories::instanceOfProbe.getMinTimeStepSize();" in body
+    )
+
+
+def test_periodic_domain_needs_no_boundary_tasks(tmp_path):
+    tasks = _construct_time_step(
+        _solver(rk_order=2), tmp_path, periodic_BC=(True, True, True)
+    )
+    assert not any("Dirichlet" in name for name in tasks)
+
+
+def test_stage_combinations_use_rows_of_butcher_tableau(tmp_path):
+    solver = _solver(rk_order=4)
+    tasks = _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))
+    tableau = solver.numerical_scheme.butcher_tableau
+
+    def combination(task_name):
+        [action_set] = [
+            action_set
+            for action_set in tasks[task_name].action_sets
+            if isinstance(
+                action_set, exahype2.api.rkfd4.actionsets.ComputeLinearCombination
+            )
+        ]
+        return action_set
+
+    for stage in range(1, 4):
+        action_set = combination(f"Probe_Prepare stage {stage}")
+        assert action_set.weights == tableau.weight_matrix()[stage]
+        assert action_set.output is solver._stage_input
+    final = combination("Probe_Complete time step")
+    assert final.weights == tableau.final_estimate_weights()
+    assert final.output is solver._patch
+
+
+def test_kernels_are_generated_for_both_dimensions(tmp_path):
+    _construct_time_step(_solver(), tmp_path)
+    kernels = tmp_path / "kernels"
+    for name in [
+        "Probe_fd4_2d",
+        "Probe_fd4_3d",
+        "Probe_fd4_eigenvalue_2d",
+        "Probe_fd4_eigenvalue_3d",
+        "rungekutta_linear_combination",
+    ]:
+        assert (kernels / (name + ".h")).exists(), name
+        assert (kernels / (name + ".cpph")).exists(), name
+    wrapper = (kernels / "Probe_fd4.h").read_text()
+    assert '#include "Probe_fd4_2d.h"' in wrapper
+    assert '#include "Probe_fd4_eigenvalue_3d.h"' in wrapper
+    assert "Probe_rightHandSideWithFD4" in (kernels / "Probe_fd4_2d.cpph").read_text()
+
+
+def test_fixed_time_step_size_skips_eigenvalue(tmp_path):
+    solver = _solver(time_step_size=0.01)
+    tasks = _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))
+    assert not (tmp_path / "kernels" / "Probe_fd4_eigenvalue_2d.h").exists()
+    assert not any(
+        isinstance(action_set, exahype2.api.rkfd4.actionsets.ComputeMaxEigenvalue)
+        for task in tasks.values()
+        for action_set in task.action_sets
+    )
+    [time_step_size] = tasks["Probe_Compute time step size"].action_sets
+    assert (
+        "const double admissibleTimeStepSize = 0.01;"
+        in time_step_size.get_body_of_unprepareTraversal()
+    )
+
+
+def test_right_hand_side_uses_stage_time_stamp_and_estimate_slot(tmp_path):
+    solver = _solver(rk_order=4)
+    tasks = _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))
+    [action_set] = tasks["Probe_Evaluate right hand side stage 2"].action_sets
+    body = action_set.get_body_of_operation(
+        peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+    )
+    # c_2 = 2/3 for Kutta's 3/8 rule, and each stage's estimate holds 2*4^d values
+    assert "getMinTimeStamp() + 0.6666666666666666 * timeStepSize" in body
+    assert "fineGridCellProbeQRhsEstimates.value + 64;" in body
+    assert "fineGridCellProbeQRhsEstimates.value + 256;" in body
+    assert (
+        "Probe_rightHandSideWithFD4<\n    4,\n    3,\n    2,\n    1\n>(\n    patchData,0.0,"
+        in body
+    )
+
+
+def test_adaptive_time_stepping_requires_max_eigenvalue(tmp_path):
+    solver = exahype2.api.Solver("Probe", 1, 0)
+    solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0];"))
+    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        solver, patch_size=4, rk_order=2
+    )
+    with pytest.raises(AssertionError):
+        _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))

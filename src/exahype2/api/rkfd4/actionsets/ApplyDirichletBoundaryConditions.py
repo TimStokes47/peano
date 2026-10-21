@@ -29,8 +29,10 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     repositories::<solver>.dirichletBoundaryConditions( x, t, Q );
     @endcode
 
-    with x being the centre of the (ghost) grid cell and t the solver's
-    current time stamp getMinTimeStamp(). Faces along periodic axes are
+    with x being the centre of the (ghost) grid cell and t the time stamp
+    of the Runge-Kutta stage, i.e. the solver's current time stamp
+    getMinTimeStamp() plus relative_time_step_size times its time step size
+    getMinTimeStepSize(). Faces along periodic axes are
     skipped (PeriodicBC from the project's Constants.h). Whether a face is
     on the domain boundary is derived from its position, i.e. compared
     against DomainOffset and DomainOffset+DomainSize.
@@ -47,10 +49,11 @@ class ApplyDirichletBoundaryConditions(ActionSet):
 
     The class is a copy of
     exahype2.api.fv.actionsets.ApplyDirichletBoundaryConditions, as rkfd4
-    does not depend on the Finite Volume package.
-
-    @todo The ghost grid cells hold the boundary value at the solver's
-      current time stamp, not at the time stamp of the Runge-Kutta stage.
+    does not depend on the Finite Volume package. Different to the original,
+    it evaluates the boundary values at the time stamp of the Runge-Kutta
+    stage. With the time stamp of the time step instead, all stages would
+    see the same boundary values, and the scheme would drop to first order
+    along the boundary.
 
     """
 
@@ -63,7 +66,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
   if ( not PeriodicBC[normal] and (isLowerBoundary or isUpperBoundary) ) {
     logTraceInWith1Argument( "touchFaceFirstTime(...)---ApplyDirichletBoundaryConditions", marker.toString() );
 
-    const double t = repositories::{{SOLVER_INSTANCE}}.getMinTimeStamp();
+    const double t = repositories::{{SOLVER_INSTANCE}}.getMinTimeStamp() + {{RELATIVE_TIME_STEP_SIZE}} * repositories::{{SOLVER_INSTANCE}}.getMinTimeStepSize();
     const tarch::la::Vector<Dimensions,double> gridCellH = ::exahype2::fd::getGridCellSize( marker.h(), {{NUMBER_OF_GRID_CELLS_PER_AXIS}} );
 
     dfore( gridCell, {{NUMBER_OF_GRID_CELLS_PER_AXIS}}, normal, 0 ) {
@@ -96,7 +99,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
 """
     )
 
-    def __init__(self, solver, patch_overlap, guard):
+    def __init__(self, solver, patch_overlap, guard, relative_time_step_size=0.0):
         """!
 
         @param solver: exahype2.api.Solver
@@ -111,11 +114,17 @@ class ApplyDirichletBoundaryConditions(ActionSet):
           C++ boolean expression over a FaceMarker called marker. Typically
           solver.grid_selector.createFaceGuard().
 
+        @param relative_time_step_size: float
+          The @f$ c_k @f$ of the Runge-Kutta stage, i.e. the stage's time
+          stamp relative to the time step size, @ref
+          exahype2.api.rungekutta.ButcherTableau.relative_time_step_sizes().
+
         """
         super().__init__(descend_invocation_order=1, parallel=False)
         self._solver = solver
         self.guard = guard
         self.d = {
+            "RELATIVE_TIME_STEP_SIZE": repr(float(relative_time_step_size)),
             "SOLVER_INSTANCE": solver.get_name_of_global_instance(),
             "NUMBER_OF_GRID_CELLS_PER_AXIS": str(patch_overlap.dim[1]),
             "OVERLAP": str(int(patch_overlap.dim[0] / 2)),
@@ -157,7 +166,14 @@ class ApplyDirichletBoundaryConditions(ActionSet):
         )
 
     @staticmethod
-    def add_task_to_time_step(solver, exahype2_project, time_step, reconstruction_task):
+    def add_task_to_time_step(
+        solver,
+        exahype2_project,
+        time_step,
+        reconstruction_task,
+        name_suffix="",
+        relative_time_step_size=0.0,
+    ):
         """!
 
         Add the boundary task in front of the reconstruction of the halo
@@ -183,6 +199,14 @@ class ApplyDirichletBoundaryConditions(ActionSet):
           The task reading solver._patch_overlap_current_time_step to
           reconstruct the patches' halos.
 
+        @param name_suffix: str
+          Appended to the task's name. A time step with several Runge-Kutta
+          stages adds one boundary task per stage, and the names of the
+          tasks have to differ.
+
+        @param relative_time_step_size: float
+          The @f$ c_k @f$ of the Runge-Kutta stage, @ref __init__().
+
         @return peano4.api.taskgraph.Task or None
           The boundary task, or None if all axes are periodic.
 
@@ -201,7 +225,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
         )
 
         boundary_task = peano4.api.taskgraph.Task(
-            name=f"{solver.name}_Apply Dirichlet BCs",
+            name=f"{solver.name}_Apply Dirichlet BCs{name_suffix}",
             entity=peano4.api.taskgraph.Task.GridEntity.FACE,
         )
         boundary_task.use_face(
@@ -213,6 +237,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
                 solver,
                 solver._patch_overlap_current_time_step,
                 guard=solver.grid_selector.createFaceGuard(),
+                relative_time_step_size=relative_time_step_size,
             )
         )
         time_step.add_task(boundary_task)

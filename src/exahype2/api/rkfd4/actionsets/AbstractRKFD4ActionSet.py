@@ -38,11 +38,19 @@ class AbstractRKFD4ActionSet(ActionSet):
         return False
 
     def get_includes(self):
+        """!
+        The includes cover the kernels the numerical scheme generates (@ref
+        exahype2.api.rkfd4.CentralDifferencesWithRungeKutta), so all action
+        sets can invoke them.
+        """
         return (
-            """
+            f"""
+#include <algorithm>
 #include <functional>
 #include "exahype2/CellData.h"
 #include "exahype2/fd/PatchUtils.h"
+#include "kernels/{self._solver.name}_fd4.h"
+#include "kernels/rungekutta_linear_combination.h"
 """
             + self._solver._get_default_includes()
             + self._solver.user_solver_includes

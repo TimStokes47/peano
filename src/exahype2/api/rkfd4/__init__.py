@@ -18,8 +18,7 @@ by a halo of three grid cells, which is reconstructed from the faces.
 
 The numerical scheme is @ref
 exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.CentralDifferencesWithRungeKutta.
-
-@todo The task graph of the Runge-Kutta stages is not there yet.
+Its DSLHyPE kernels reside in @ref exahype2.api.rkfd4.FD4Kernels.
 
 """
 from .CentralDifferencesWithRungeKutta import CentralDifferencesWithRungeKutta

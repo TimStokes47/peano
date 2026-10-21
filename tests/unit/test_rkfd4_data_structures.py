@@ -6,10 +6,10 @@ import peano4.api.datamodel
 import exahype2.api
 
 
-def _scheme(patch_size=5, rk_order=3):
+def _scheme(patch_size=5, rk_order=3, time_step_size=None):
     solver = exahype2.api.Solver("Probe", 4, 2)
     scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-        solver, patch_size=patch_size, rk_order=rk_order
+        solver, patch_size=patch_size, rk_order=rk_order, time_step_size=time_step_size
     )
     solver.numerical_scheme = scheme
     return solver, scheme
@@ -20,6 +20,8 @@ def test_patches_have_halo_of_three():
     assert scheme.overlap == 3
     assert solver._patch.dim == (5, 5, 5)
     assert solver._patch.no_of_unknowns == 6
+    assert solver._stage_input.dim == (5, 5, 5)
+    assert solver._stage_input.no_of_unknowns == 6
     assert solver._patch_with_halo.dim == (11, 11, 11)
     assert solver._patch_with_halo.no_of_unknowns == 6
     for overlap in (
@@ -44,6 +46,7 @@ def test_data_names_carry_solver_name():
         data.name
         for data in [
             solver._patch,
+            solver._stage_input,
             solver._patch_with_halo,
             solver._rhs_estimates,
             solver._patch_overlap_current_time_step,
@@ -52,6 +55,7 @@ def test_data_names_carry_solver_name():
         ]
     ] == [
         "ProbeQ",
+        "ProbeQStageInput",
         "ProbeQWithHalo",
         "ProbeQRhsEstimates",
         "ProbeQCurrentTimeStep",
@@ -60,18 +64,18 @@ def test_data_names_carry_solver_name():
     ]
 
 
+def test_fixed_time_step_size_needs_no_eigenvalue():
+    solver, scheme = _scheme(time_step_size=0.01)
+    assert not scheme.has_adaptive_time_step_size
+    assert solver._max_eigenvalue is None
+
+
 def test_add_data_to_repository_exchanges_current_face_data_only():
     solver, scheme = _scheme()
     project = peano4.api.Project(["probe"], "probe", ".")
     scheme._CentralDifferencesWithRungeKutta__add_data_to_repository(project)
 
-    for patch in (
-        solver._patch,
-        solver._patch_with_halo,
-        solver._rhs_estimates,
-        solver._patch_overlap_current_time_step,
-        solver._patch_overlap_update,
-    ):
+    for patch in scheme._patches():
         assert isinstance(
             patch.generator, peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer
         )
@@ -95,9 +99,17 @@ def test_unsupported_runge_kutta_order_is_rejected(rk_order):
         _scheme(rk_order=rk_order)
 
 
-def test_negative_kreiss_oliger_sigma_is_rejected():
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        {"kreiss_oliger_sigma": -1.0},
+        {"time_step_size": 0.0},
+        {"cfl_constant": 0.0},
+    ],
+)
+def test_invalid_arguments_are_rejected(arguments):
     solver = exahype2.api.Solver("Probe", 1, 0)
     with pytest.raises(ValueError):
         exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-            solver, patch_size=5, rk_order=2, kreiss_oliger_sigma=-1.0
+            solver, patch_size=5, rk_order=2, **arguments
         )
