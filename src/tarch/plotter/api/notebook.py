@@ -32,19 +32,15 @@ def read_snapshots(file_name):
 
     Return list of (time stamp, list of patch files) from a patch meta file
 
-    The included patch files are given relative to the meta file, so we
-    can call the routine from any directory.
+    The visualiser resolves the included patch files relative to the meta
+    file, so we can call the routine from any directory.
 
     """
     visualiser = Visualiser(file_name, start=0, end=sys.maxsize)
     with contextlib.redirect_stdout(io.StringIO()):
         visualiser.read_metadata()
-    directory = os.path.dirname(file_name)
     return [
-        (
-            snapshot.timestamp,
-            [os.path.join(directory, f) for f in snapshot.filenames],
-        )
+        (snapshot.timestamp, list(snapshot.filenames))
         for snapshot in visualiser.snapshots
     ]
 

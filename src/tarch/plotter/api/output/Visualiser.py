@@ -1,5 +1,7 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+import os
+
 from tarch.plotter.api.input.PatchFileParser import PatchFileParser
 
 
@@ -310,6 +312,10 @@ class Visualiser:
         Read the patch file metadata. In this routine we should:
          - Count the number of timesteps this patch file records
          - Get each of the file paths for the timestep
+
+        The meta file includes the snapshot files relative to its own
+        location. We therefore prefix each included file with the directory
+        of the meta file, so the visualiser works from any working directory.
         """
         found_snapshot = False
         found_snapshots = []
@@ -330,7 +336,9 @@ class Visualiser:
                             s.set_timestamp(float(list(line.split("  "))[2][:-1]))
 
                         if "include" in line:
-                            file_name = line.split('"')[1]
+                            file_name = os.path.join(
+                                os.path.dirname(self._file_name), line.split('"')[1]
+                            )
                             # print(f"Adding {file_name} to snapshot")
                             s.add_patch_file(file_name)
                         line = f.readline()

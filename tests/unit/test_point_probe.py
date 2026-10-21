@@ -1,4 +1,5 @@
 import csv
+import os
 import math
 
 import pytest
@@ -190,6 +191,28 @@ def test_meta_file_with_partial_files_and_multiple_snapshots(tmp_path, monkeypat
     header, rows = read_csv("probe.csv")
     assert header == ["time", "Q_0"]
     assert rows == [[0.0, 270.0], [0.5, 1270.0]]
+
+
+def test_meta_file_in_other_directory(tmp_path, monkeypatch):
+    # The meta file includes its snapshots relative to its own directory, so
+    # the probe has to work from any working directory.
+    monkeypatch.chdir(tmp_path)
+    output = tmp_path / "output"
+    output.mkdir()
+    for snapshot in range(2):
+        (output / f"s{snapshot}.peano-patch-file").write_text(
+            patch_file(2, "cell", "Q", 3, 1, [(10 * snapshot, (0.0, 0.0), (1.0, 1.0))])
+        )
+    (output / "data.peano-patch-file").write_text(
+        meta_file([(0.0, ["./s0.peano-patch-file"]), (0.5, ["s1.peano-patch-file"])])
+    )
+    probe = PointProbe(
+        os.path.join("output", "data.peano-patch-file"), (0.5, 0.5), "probe.csv", 0, 10
+    )
+    probe.display(1)
+    _, rows = read_csv("probe.csv")
+    assert [row[0] for row in rows] == [0.0, 0.5]
+    assert rows[0][1] != rows[1][1]
 
 
 def test_named_unknowns_become_column_names(tmp_path, monkeypatch):
