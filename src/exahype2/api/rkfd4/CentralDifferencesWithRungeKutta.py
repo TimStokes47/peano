@@ -208,8 +208,8 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
           stage and read by the next one.
         - _patch_with_halo: the input of the current Runge-Kutta stage
           with its halo, i.e. (patch_size+2*HALO_SIZE)^d grid cells,
-          reconstructed from _patch or _stage_input and the faces (@ref
-          toolbox.blockstructured.api.ReconstructPatchWithHalo.ReconstructPatchWithHalo). It is
+          reconstructed from _patch or _stage_input and the faces (see
+          toolbox.blockstructured.api.ReconstructPatchWithHalo). It is
           logically temporary.
         - _rhs_estimates: the right-hand side estimates @f$ K_k @f$ of all
           rk_order stages. They hold the unknowns only, as the auxiliary
