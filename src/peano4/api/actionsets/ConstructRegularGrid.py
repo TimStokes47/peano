@@ -26,9 +26,11 @@ class ConstructRegularGrid(ActionSet):
     def __init__(self, cell_size: float, descend_invocation_order=0, parallel=True):
         """!
 
-        cell_size: float
-          Target edge length of one cell on the regular grid this action
-          set is supposed to build.
+        @param cell_size: float
+          Upper bound on the edge length of the cells of the regular grid.
+          Peano refines every cell whose edge length is greater than or equal
+          to cell_size, i.e. the resulting cells are strictly smaller than
+          cell_size. Peano always refines the root cell at least once.
 
         """
         super().__init__(descend_invocation_order, parallel)

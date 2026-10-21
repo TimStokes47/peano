@@ -49,10 +49,13 @@ EndTime = 1.0
 PatchFile = "solution-CCZ4.peano-patch-file"
 Amplitude = 0.1
 
-## Volume sizes handed to the grid construction and the number of volumes
-## per axis that they yield. We avoid exact powers of 1/3, as the
-## refinement criterion would then (due to round-off) add one more level.
-VolumeSizes = {9: 0.12, 27: 0.04, 81: 0.013}
+## Maximum volume sizes handed to the grid construction, indexed by the
+## number of volumes per axis that they yield. Peano refines every cell whose
+## edge length is greater than or equal to the maximum volume size times the
+## patch size, i.e. the resulting volume size h is strictly smaller than the
+## maximum volume size. We therefore pass in values slightly bigger than
+## the volume sizes 1/9, 1/27 and 1/81 that we want to obtain.
+MaxVolumeSizes = {9: 0.12, 27: 0.04, 81: 0.013}
 
 ## (volumes per axis, patch size) pairs of the convergence study. Peano
 ## always refines the root cell at least once, i.e. we need at least three
@@ -97,48 +100,45 @@ def build_and_run(volumes_per_axis, patch_size, directory, peano_installation):
             volumes_per_axis, patch_size, directory
         )
     )
-    # The generator writes some data structures relative to the current
-    # working directory, so we generate from within the build directory.
-    with contextlib.chdir(directory):
-        project = exahype2.api.Project(
-            namespace=["tutorials", "exagrype", "gaugewave"],
-            project_name="GaugeWave",
-            directory=".",
-            executable="gauge-wave",
+    project = exahype2.api.Project(
+        namespace=["tutorials", "exagrype", "gaugewave"],
+        project_name="GaugeWave",
+        directory=directory,
+        executable="gauge-wave",
+    )
+    solver = exagrype.api.CCZ4Solver(
+        "CCZ4", initial_condition=exagrype.api.initialvalues.gauge_wave()
+    )
+    solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(
+        solver, patch_size
+    )
+    solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
+        solver, volume_size=MaxVolumeSizes[volumes_per_axis]
+    )
+    solver.plotter = exahype2.api.fv.PlotAsVTKFile(
+        solver,
+        first_plot_time_stamp=0.0,
+        time_in_between_plots=0.05,
+        plotter_precision=10,
+    )
+    solver.plotter.add_plot_filter([0.0, 0.49, 0.49], [1.0, 0.02, 0.02])
+    project.add_solver(solver)
+    project.set_global_simulation_parameters(
+        dimensions=3,
+        offset=[0.0, 0.0, 0.0],
+        size=[1.0, 1.0, 1.0],
+        min_end_time=EndTime,
+        max_end_time=EndTime,
+        periodic_BC=[True, True, True],
+    )
+    project.set_Peano4_installation(
+        peano_installation, peano4.api.output.CompileMode.RELEASE
+    )
+    with contextlib.redirect_stdout(io.StringIO()):
+        peano4_project = project.generate_Peano4_project(
+            verbosity=peano4.api.LoggerVerbosity.TEXT
         )
-        solver = exagrype.api.CCZ4Solver(
-            "CCZ4", initial_condition=exagrype.api.initialvalues.gauge_wave()
-        )
-        solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(
-            solver, patch_size
-        )
-        solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
-            solver, volume_size=VolumeSizes[volumes_per_axis]
-        )
-        solver.plotter = exahype2.api.fv.PlotAsVTKFile(
-            solver,
-            first_plot_time_stamp=0.0,
-            time_in_between_plots=0.05,
-            plotter_precision=10,
-        )
-        solver.plotter.add_plot_filter([0.0, 0.49, 0.49], [1.0, 0.02, 0.02])
-        project.add_solver(solver)
-        project.set_global_simulation_parameters(
-            dimensions=3,
-            offset=[0.0, 0.0, 0.0],
-            size=[1.0, 1.0, 1.0],
-            min_end_time=EndTime,
-            max_end_time=EndTime,
-            periodic_BC=[True, True, True],
-        )
-        project.set_Peano4_installation(
-            peano_installation, peano4.api.output.CompileMode.RELEASE
-        )
-        with contextlib.redirect_stdout(io.StringIO()):
-            peano4_project = project.generate_Peano4_project(
-                verbosity=peano4.api.LoggerVerbosity.TEXT
-            )
-            peano4_project.generate()
+        peano4_project.generate()
 
     subprocess.run(
         ["make", "-j"],
@@ -161,19 +161,17 @@ def probe(directory, point, output_file):
 
     Probe all snapshots at one point and return (time stamps, lapse)
 
-    This is the Python counterpart of src/tarch/plotter/api/probe.py. The
-    probe resolves the snapshot files included by the meta file relative to
-    the current working directory, so we probe from within directory.
+    This is the Python counterpart of src/tarch/plotter/api/probe.py.
 
     """
-    with contextlib.chdir(directory), contextlib.redirect_stdout(io.StringIO()):
-        point_probe = tarch.plotter.api.output.PointProbe(
-            file_name=PatchFile,
-            point=point,
-            output_file=output_file,
-            start=0,
-            end=sys.maxsize,
-        )
+    point_probe = tarch.plotter.api.output.PointProbe(
+        file_name=os.path.join(directory, PatchFile),
+        point=point,
+        output_file=os.path.join(directory, output_file),
+        start=0,
+        end=sys.maxsize,
+    )
+    with contextlib.redirect_stdout(io.StringIO()):
         point_probe.display()
     with open(os.path.join(directory, output_file)) as csv_file:
         rows = list(csv.DictReader(csv_file))
@@ -339,7 +337,7 @@ def plot_convergence(results):
     h = np.array([1.0 / 81, 1.0 / 9])
     reference = results[(81, 3)]["max errors"][1]
     ax.loglog(h, reference * h / h[0], "k--", linewidth=1, label="first order")
-    ax.set_xlabel("volume size h")
+    ax.set_xlabel("volume size h = 1 / (volumes per axis)")
     ax.set_ylabel("max error of the lapse")
     ax.set_title("Convergence of the Finite Volume scheme (lines: patch size 3)")
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
