@@ -140,17 +140,19 @@ pip install -e .
 
 ExaGRyPE currently offers two entry points:
 
+- The new Python API \c exagrype.api layers on top of \c exahype2.api. It
+  currently offers Finite Volumes only and no black holes yet. Start with
+  the Jupyter notebook \c tutorials/exahype2/exagrype/521_gauge-wave.ipynb
+  (\ref tutorials_exahype2_exagrype_521_gauge-wave), which runs the gauge wave
+  with this API. \ref benchmarks_exagrype_gauge_wave and
+  \ref page_exagrype_library provide further details.
 - \c applications/exahype2/ccz4 hosts the main script \c ccz4.py, which
   provides all scenarios (gauge wave, single and binary black holes), tracers
-  and the different numerical schemes. The remainder of these tutorials
-  (starting with the standard benchmark \ref tutorials_exahype2_applications_exagrype_gauge_wave) works
+  and the different numerical schemes. The remaining ExaGRyPE tutorials work
   with this script:
   ~~~~~~~~~~~~~~~~~~~~~~~
   cd applications/exahype2/ccz4
   ~~~~~~~~~~~~~~~~~~~~~~~
-- \c benchmarks/exagrype/gauge-wave uses the new Python API \c exagrype.api.
-  It currently offers Finite Volumes only and no black holes yet. See
-  \ref benchmarks_exagrype_gauge_wave and \ref page_exagrype_library.
 
 
 # Reference papers
