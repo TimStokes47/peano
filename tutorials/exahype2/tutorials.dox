@@ -49,10 +49,10 @@ Jupyter.
   - \subpage tutorials_exahype2_45_coupling
 - ExaGRyPE (numerical relativity extension built on top of ExaHyPE)
   - \subpage tutorials_exahype2_applications_exagrype_configure
-  - \subpage tutorials_exahype2_applications_exagrype_running
-    - Gauge Wave
-    - Single Schwarzschild Black Hole
-    - Binary Black Hole Merger
+  - ExaGRyPE standard benchmarks
+    - \subpage tutorials_exahype2_applications_exagrype_gauge_wave
+    - \subpage tutorials_exahype2_applications_exagrype_single_black_hole
+    - \subpage tutorials_exahype2_applications_exagrype_binary_black_hole
   - \subpage tutorials_exahype2_applications_exagrype_visualize
   - \subpage tutorials_exahype2_applications_exagrype_setup
   - \subpage tutorials_exahype2_applications_exagrype_clusters

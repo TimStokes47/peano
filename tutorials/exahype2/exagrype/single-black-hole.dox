@@ -1,5 +1,5 @@
 /**
-@page tutorials_exahype2_applications_exagrype_running Use ExaGRyPE
+@page tutorials_exahype2_applications_exagrype_single_black_hole Single Schwarzschild Black Hole
 
 The build and running of ExaGRyPE is wrapped by a Python API for convenience. By calling
 the Python script in a command terminal, one can easily generate an executable that can run on any
@@ -11,26 +11,7 @@ Users are referred to the general \ref page_exahype2_tutorials of ExaHyPE 2 if t
 what is going on behind the screens. We also provide a dedicated page 
 for @ref tutorials_exahype2_applications_exagrype_setup "setup of ExaGRyPE".
 
-# Gauge Wave
-
-The gauge wave scenario represents a dynamic foliation of a static Minkowski spacetime; it serves as
-a good benchmark setup for users (and also developers) to test their implementations of the code. The detailed
-explanations and equations of this benchmark can be found in <a href="https://arxiv.org/abs/gr-qc/0305023">this paper</a>, section IV.B.
-To run a gauge wave simulation in ExaGRyPE, use the command
-
-~~~~~~~~~~~~~~~~~~~~~~~
-python3 ccz4.py -impl fd4-rk1-dsl -s gauge -maxh 0.05 -minh 0.05 -ps 9 -plt 0.1 -et 0.5 -exn gauge --domain_r 0.5 --ReSwi 0 -cfl 0.1 --KOSigma 8.0
-export OMP_NUM_THREADS=1
-mpirun -n 1 ./peano4_gauge
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Typing parameter --help makes the Python script yield further information and an explanation of each parameter option.
-We recommend users not to change the running parameters of ExaGRyPE during benchmarking, as the parameter space is vast
-and some combinations lead to unpredictable behaviour.
-
-This example should yield a harmonic gauge wave propagating stably along the positive x-direction.
-
-# Single Schwarzschild Black Hole
+# Run the benchmark
 
 This scenario describes a single stable, non-spinning black hole in spacetime, located at the center of the
 domain. One should expect the system to become (quasi-) static after some elapsed time. The puncture method is adopted here to
@@ -44,17 +25,9 @@ python3 ccz4.py -ext adm -impl fd4-rk1-dsl -s single-puncture -maxh 0.4 -minh 0.
 
 This example should yield a stable and static black hole staying in the origin of the domain.
 
-# Binary Black Hole Merger
-
-Two black holes rotate around each other in a quasi-circular orbit, and finally merge at the center in this scenario.
-We set the initial physics conditions of the system following <a href="https://arxiv.org/abs/gr-qc/0307027">this paper</a>, Table I.
-Again, the following example is not suitable for a normal PC:
-
-~~~~~~~~~~~~~~~~~~~~~~~
-python3 ccz4.py -impl fd4-rk1-dsl -s two-punctures -maxh 0.4 -minh 0.04 -ps 8 -plt 0.5 -et 120 -exn bbh --domain_r 12.0 --ReSwi 6 -cfl 0.1 -outdir /path/to/data/folder/ --KOSigma 8.0 --BBHType 2 -sommerfeld -so -ext adm -interp second_order -restrict second_order
-~~~~~~~~~~~~~~~~~~~~~~~
-
-This example should yield two black holes rotating and finally merging at the center.
+Typing parameter --help makes the Python script yield further information and an explanation of each parameter option.
+We recommend users not to change the running parameters of ExaGRyPE during benchmarking, as the parameter space is vast
+and some combinations lead to unpredictable behaviour.
 
 # Clean up old and temporary files
 

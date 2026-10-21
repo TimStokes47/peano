@@ -143,7 +143,7 @@ ExaGRyPE currently offers two entry points:
 - \c applications/exahype2/ccz4 hosts the main script \c ccz4.py, which
   provides all scenarios (gauge wave, single and binary black holes), tracers
   and the different numerical schemes. The remainder of these tutorials
-  (starting with \ref tutorials_exahype2_applications_exagrype_running) works
+  (starting with the standard benchmark \ref tutorials_exahype2_applications_exagrype_gauge_wave) works
   with this script:
   ~~~~~~~~~~~~~~~~~~~~~~~
   cd applications/exahype2/ccz4
