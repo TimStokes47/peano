@@ -16,10 +16,13 @@ fourth-order stencils (plus the optional Kreiss-Oliger dissipation) reach
 three grid cells into the neighbouring patches, so each patch is surrounded
 by a halo of three grid cells, which is reconstructed from the faces.
 
-@todo The numerical scheme itself, i.e. the Runge-Kutta stages and their
-  task graph, is not there yet.
+The numerical scheme is @ref
+exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.CentralDifferencesWithRungeKutta.
+
+@todo The task graph of the Runge-Kutta stages is not there yet.
 
 """
+from .CentralDifferencesWithRungeKutta import CentralDifferencesWithRungeKutta
 from .SetupSimulationOverRegularGrid import SetupSimulationOverRegularGrid
 from .PlotAsVTKFile import PlotAsVTKFile
 from . import actionsets
