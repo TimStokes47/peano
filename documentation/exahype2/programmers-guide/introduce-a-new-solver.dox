@@ -129,6 +129,15 @@ task graph in the Solver.NumericalScheme subclass, but can often reuse the
 existing Solver.GridConstruction and Solver.Plotter variants unchanged if its
 data still fits the same patch-based layout.
 
+The fourth-order Finite Differences under `src/exahype2/api/rkfd4/` are a
+second example. They follow the same structure, but are fully independent of
+`src/exahype2/api/fv/`: grid construction, plotter and action sets are copies
+adapted to a halo of three grid cells. Their numerical scheme
+(`CentralDifferencesWithRungeKutta.py`) shows how a scheme with several
+stages per time step builds its task graph, and how it combines kernels
+written in DSLHyPE (`FD4Kernels.py`) with the discretisation-independent
+Runge-Kutta tools from `src/exahype2/api/rungekutta/`.
+
 
 # Wiring it into a project
 

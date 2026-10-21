@@ -57,8 +57,17 @@ solver = exagrype.api.CCZ4Solver("CCZ4", initial_condition=exagrype.api.initialv
 solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, patch_size)
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+For the fourth-order Finite Differences of the production runs, use the
+numerical scheme, grid construction and plotter of \c exahype2.api.rkfd4
+instead:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+solver.numerical_scheme  = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(solver, patch_size, rk_order=4)
+solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(solver, volume_size=0.04)
+~~~~~~~~~~~~~~~~~~~~~~~
+
 @ref benchmarks_exagrype_gauge_wave is a complete example. Please
-note the current limitations: \c exahype2.api offers Finite Volumes only, there
+note the current limitations: \c exahype2.api.rkfd4 supports regular grids only, there
 is no constraint enforcement after the time steps yet, and black holes,
 tracers and the second-order formulation are not available through the new
 API yet.

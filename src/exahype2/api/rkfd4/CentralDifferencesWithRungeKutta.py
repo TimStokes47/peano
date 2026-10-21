@@ -42,7 +42,31 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     integrates in time with the explicit Runge-Kutta scheme from @ref
     exahype2.api.rungekutta.ButcherTableau. The stencils reach three grid
     cells into the neighbouring patches, i.e. the halo is HALO_SIZE=3 grid
-    cells wide.
+    cells wide:
+
+    @image html central-differences-with-runge-kutta-stencil.png
+
+    The script central-differences-with-runge-kutta-illustrations.py next to
+    this file generates the illustrations of this page.
+
+    ## Usage
+
+    The scheme plugs into an exahype2.api.Solver like the Finite Volumes of
+    exahype2.api.fv, but with the grid construction and the plotter of
+    exahype2.api.rkfd4:
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    solver.numerical_scheme  = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(solver, patch_size=9, rk_order=4)
+    solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(solver, volume_size=0.01)
+    solver.plotter           = exahype2.api.rkfd4.PlotAsVTKFile(solver, time_in_between_plots=0.1)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    The solver can have a Flux, a NonconservativeProduct and a
+    VolumetricSource. It needs an InitPointWisely term, a MaxEigenvalue term
+    unless the time step size is fixed, and a DirichletBoundaryConditions
+    term unless all axes are periodic. @ref
+    benchmarks_exahype2_euler_smooth_fd4 demonstrates fourth-order
+    convergence for the Euler equations.
 
     ## Data flow
 
@@ -69,6 +93,14 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     As the reconstruction of a stage reads the face data the previous stage
     has written, the task graph compiler maps each stage onto a mesh
     traversal of its own (@ref peano4.api.taskgraph.compiler.FuseSteps).
+    For a second-order Runge-Kutta scheme with Dirichlet boundary
+    conditions, the time step's task graph reads:
+
+    @image html central-differences-with-runge-kutta-time-step-task-graph.png
+
+    The boundary values are evaluated at the time stamp of the respective
+    stage, i.e. at @f$ t^n + c_k \\Delta t @f$. Otherwise, the scheme would
+    drop to first order along the boundary.
 
     ## Time step sizes
 
