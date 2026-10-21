@@ -7,7 +7,7 @@ import exahype2.api.dslhype as dslhype
 #
 # The function below is never executed as Python. DSLHyPE parses its source
 # (@ref exahype2.api.dslhype.Parser) and translates it into a C++ function
-# template (@ref generate_linear_combination_kernel()). It refers to symbols
+# template (see generate_linear_combination_kernel()). It refers to symbols
 # the parser sets rather than Python imports:
 #
 # - Template parameters: NumberOfDoFs, NumberOfUnknowns,
@@ -132,7 +132,7 @@ def create_linear_combination_call(
     are zero, the code copies the solution into the output.
 
     @param namespace: [str]
-      Namespace of the kernel, @ref generate_linear_combination_kernel().
+      Namespace of the kernel, see generate_linear_combination_kernel().
 
     @param number_of_dofs: int
       Degrees of freedom per cell.

@@ -52,7 +52,7 @@ class PlotAsVTKFile(Solver.Plotter):
     Finite Differences are cell-centred, each grid cell of a patch is
     plotted as one cell of the plot mesh.
 
-    The plotter decides itself when to plot (@ref exahype2.api.Solver.Plotter): it adds
+    The plotter decides itself when to plot (@ref exahype2.api.Solver.Solver.Plotter): it adds
     the attribute _nextPlotTimeStamp plus the methods wantsToPlot() and
     finishPlottingStep() to the solver's C++ class. The solver wants to plot
     as soon as its min time stamp has reached _nextPlotTimeStamp. After each
@@ -61,7 +61,7 @@ class PlotAsVTKFile(Solver.Plotter):
 
     If the solver's variables carry names, the plotter writes them as
     comma-separated list into the description of the output files (@ref
-    exahype2.api.Solver.variable_names_per_entry()). Paraview then shows them in the
+    exahype2.api.Solver.Solver.variable_names_per_entry()). Paraview then shows them in the
     name of the data array, and tarch.plotter.api.notebook.show_solution()
     uses them to label the unknowns. Otherwise, the description is the
     solver's unknown identifier.

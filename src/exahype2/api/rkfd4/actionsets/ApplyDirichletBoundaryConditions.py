@@ -18,7 +18,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     The action set plugs into touchFaceFirstTime(). Each face carries an
     overlap of 2*overlap grid cells along its normal
     (solver._patch_overlap_current_time_step), i.e. 2*3 for the
-    fourth-order Finite Differences of @ref exahype2.api.rkfd4:
+    fourth-order Finite Differences of @ref exahype2.api.rkfd4 :
     the left half belongs to the cell left of the face, the right half to
     the cell right of it. On the domain boundary, one of these two cells
     lies outside of the domain. Nobody ever writes its half of the face
@@ -117,7 +117,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
         @param relative_time_step_size: float
           The @f$ c_k @f$ of the Runge-Kutta stage, i.e. the stage's time
           stamp relative to the time step size, @ref
-          exahype2.api.rungekutta.ButcherTableau.relative_time_step_sizes().
+          exahype2.api.rungekutta.ButcherTableau.ButcherTableau.relative_time_step_sizes().
 
         """
         super().__init__(descend_invocation_order=1, parallel=False)
@@ -205,7 +205,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
           tasks have to differ.
 
         @param relative_time_step_size: float
-          The @f$ c_k @f$ of the Runge-Kutta stage, @ref __init__().
+          The @f$ c_k @f$ of the Runge-Kutta stage, see the constructor.
 
         @return peano4.api.taskgraph.Task or None
           The boundary task, or None if all axes are periodic.

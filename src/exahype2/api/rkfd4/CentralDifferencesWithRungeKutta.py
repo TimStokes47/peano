@@ -46,7 +46,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
 
     ## Data flow
 
-    @ref __create_data_structures() documents the data per mesh cell and
+    __create_data_structures() documents the data per mesh cell and
     face. Per time step, the scheme runs through the Runge-Kutta stages
     k=0,...,s-1. Stage k
 
@@ -182,7 +182,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     def right_hand_side_kernel_name(self) -> str:
         """!
         Name of the generated right-hand side kernel. It carries the solver
-        name, as do the kernels/<SolverName>_fd4*.h files holding it, so
+        name, as do the kernels/{SolverName}_fd4*.h files holding it, so
         two solvers' kernels do not clash.
         """
         return self._solver.name + "_rightHandSideWithFD4"
@@ -209,7 +209,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
         - _patch_with_halo: the input of the current Runge-Kutta stage
           with its halo, i.e. (patch_size+2*HALO_SIZE)^d grid cells,
           reconstructed from _patch or _stage_input and the faces (@ref
-          toolbox.blockstructured.api.ReconstructPatchWithHalo). It is
+          toolbox.blockstructured.api.ReconstructPatchWithHalo.ReconstructPatchWithHalo). It is
           logically temporary.
         - _rhs_estimates: the right-hand side estimates @f$ K_k @f$ of all
           rk_order stages. They hold the unknowns only, as the auxiliary
@@ -375,13 +375,13 @@ Patch overlap data
 
         The kernels end up in the kernels/ subdirectory of output_directory:
 
-        - <SolverName>_fd4_2d.h/.cpph and <SolverName>_fd4_3d.h/.cpph hold
+        - {SolverName}_fd4_2d.h/.cpph and {SolverName}_fd4_3d.h/.cpph hold
           the right-hand side (@ref exahype2.api.rkfd4.FD4Kernels).
-        - <SolverName>_fd4_eigenvalue_2d.h/.cpph and
-          <SolverName>_fd4_eigenvalue_3d.h/.cpph hold the maximum
+        - {SolverName}_fd4_eigenvalue_2d.h/.cpph and
+          {SolverName}_fd4_eigenvalue_3d.h/.cpph hold the maximum
           eigenvalue over a patch. They exist only with adaptive time step
           sizes.
-        - <SolverName>_fd4.h includes the variants for the dimension the
+        - {SolverName}_fd4.h includes the variants for the dimension the
           code is compiled for.
         - rungekutta_linear_combination.h/.cpph holds the linear combination
           of the Runge-Kutta estimates (@ref
@@ -504,7 +504,7 @@ Patch overlap data
         The kernel takes a ::exahype2::CellData called patchData, the
         additional arguments and one functor per PDE term the solver has,
         in the order flux, nonconservativeProduct, volumetricSource,
-        maxEigenvalue (@ref __create_kernels()). Each functor forwards to
+        maxEigenvalue (see __create_kernels()). Each functor forwards to
         the solver instance.
 
         If PDE terms are registered both with and without state, the
@@ -610,21 +610,21 @@ Patch overlap data
         Add the data to the Peano 4 project, generate the kernels and add
         the tasks of one Runge-Kutta step to time_step
 
-        Per stage k, the time step holds the following tasks (@ref
-        CentralDifferencesWithRungeKutta for the data flow):
+        Per stage k, the time step holds the following tasks (see the class
+        documentation for the data flow):
 
-        - <SolverName>_Apply Dirichlet BCs stage k: sets the ghost grid
+        - {SolverName}_Apply Dirichlet BCs stage k: sets the ghost grid
           cells along the domain boundary, unless all axes are periodic.
-        - <SolverName>_Reconstruct stage k: reconstructs the stage's input
+        - {SolverName}_Reconstruct stage k: reconstructs the stage's input
           with its halo.
-        - <SolverName>_Evaluate right hand side stage k.
-        - <SolverName>_Prepare stage k+1, or <SolverName>_Complete time step
+        - {SolverName}_Evaluate right hand side stage k.
+        - {SolverName}_Prepare stage k+1, or {SolverName}_Complete time step
           after the last stage: computes the linear combination of the
           estimates and projects it onto the faces.
 
-        After the last stage, <SolverName>_Compute time step size determines
+        After the last stage, {SolverName}_Compute time step size determines
         the time step size of the next time step and advances the solver's
-        time stamp, and <SolverName>_Trigger load balancing informs the load
+        time stamp, and {SolverName}_Trigger load balancing informs the load
         balancing.
 
         """

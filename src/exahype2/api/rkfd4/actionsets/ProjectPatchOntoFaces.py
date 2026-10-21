@@ -8,7 +8,7 @@ class ProjectPatchOntoFaces(toolbox.blockstructured.api.ProjectPatchOntoFaces):
 
     Project a patch's data onto the overlap held on its surrounding faces,
     so the halo layers can be reconstructed from it later on - @ref
-    toolbox.blockstructured.api.ReconstructPatchWithHalo.
+    toolbox.blockstructured.api.ReconstructPatchWithHalo.ReconstructPatchWithHalo.
 
     The fourth-order Finite Differences of @ref exahype2.api.rkfd4 use an
     overlap of three grid cells, i.e. each face holds 2*3 layers along its
