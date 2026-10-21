@@ -28,7 +28,7 @@ from .actionsets import ComputeGlobalCFLCondition
 #
 # - Template parameters: NV, H, NumberOfUnknowns, NumberOfAuxiliaryVariables.
 # - Functors for the non-stateless code: flux, nonconservativeProduct,
-#   sourceTerm, maxEigenvalue.
+#   volumetricSource, maxEigenvalue.
 # - loopParallelism (peano4::utils::LoopPlacement) for loop parallelisation.
 
 
@@ -45,12 +45,16 @@ def timeStepWithRusanov2D(patchData: "::exahype2::CellData<double, double>&") ->
     output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, N]], "patchData.QOut")
     output = input[:, 0:NV, 0:NV]
 
-    if source:
-       source = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:NV], x, h, t, dt))
+    if volumetricSource:
+       source = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, N]], eval("volumetricSource", input[:, 0:NV, 0:NV], x, t))
        output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt * source
 
-    maxEigenvaluesX = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 0))
-    maxEigenvaluesY = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 1))
+    # The Rusanov flux at a face needs the eigenvalues of both adjacent
+    # volumes, i.e. the patch volumes plus the one halo layer across each
+    # face along the normal. We never evaluate the remaining halo (edges,
+    # corners), which holds no valid data.
+    maxEigenvaluesX = DataBlock([[0, 1], [-1, NV + 1], [0, NV], [0, N]], eval("maxEigenvalue", input[:, -1:NV+1, 0:NV], x, 0))
+    maxEigenvaluesY = DataBlock([[0, 1], [0, NV], [-1, NV + 1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, -1:NV+1], x, 1))
 
     lambdaLeft = max(maxEigenvaluesX[0:1, -1:NV-1, 0:NV], maxEigenvaluesX[0:1, 0:NV, 0:NV])
     lambdaRight = max(maxEigenvaluesX[0:1, 0:NV, 0:NV], maxEigenvaluesX[0:1, 1:NV + 1, 0:NV])
@@ -103,13 +107,15 @@ def timeStepWithRusanov3D(patchData: "::exahype2::CellData<double, double>&") ->
     output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, NV], [0, N]], "patchData.QOut")
     output = input[:, 0:NV, 0:NV, 0:NV]
 
-    if EvaluateSource:
-       source = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, NV], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:NV, 0:NV], x, h, t, dt))
+    if volumetricSource:
+       source = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, NV], [0, N]], eval("volumetricSource", input[:, 0:NV, 0:NV, 0:NV], x, t))
        output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + dt * source
 
-    maxEigenvaluesX = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 0))
-    maxEigenvaluesY = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 1))
-    maxEigenvaluesZ = DataBlock([[0, 1], [-H, NV + H], [-H, NV + H], [-H, NV + H], [0, N]], eval("maxEigenvalue", input, x, 2))
+    # As in 2d: patch volumes plus the one halo layer across each face along
+    # the normal only, never the edges and corners of the halo
+    maxEigenvaluesX = DataBlock([[0, 1], [-1, NV + 1], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", input[:, -1:NV+1, 0:NV, 0:NV], x, 0))
+    maxEigenvaluesY = DataBlock([[0, 1], [0, NV], [-1, NV + 1], [0, NV], [0, N]], eval("maxEigenvalue", input[:, 0:NV, -1:NV+1, 0:NV], x, 1))
+    maxEigenvaluesZ = DataBlock([[0, 1], [0, NV], [0, NV], [-1, NV + 1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, 0:NV, -1:NV+1], x, 2))
     
     lambdaLeft = max(maxEigenvaluesX[0:1, -1:NV-1, 0:NV, 0:NV], maxEigenvaluesX[0:1, 0:NV, 0:NV, 0:NV])
     lambdaRight = max(maxEigenvaluesX[0:1, 0:NV, 0:NV, 0:NV], maxEigenvaluesX[0:1, 1:NV + 1, 0:NV, 0:NV])
@@ -129,7 +135,7 @@ def timeStepWithRusanov3D(patchData: "::exahype2::CellData<double, double>&") ->
     fluxFar = -1.0 * lambdaFar * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 1:NV+1] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV])
     output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + dt / h(2) * (fluxNear - fluxFar) * NV * 0.5
 
-    if EvaluateFlux:
+    if flux:
       flux_x = DataBlock([[0, NumberOfUnknowns], [-H, NV + H], [0, NV], [0, NV], [0, N]], eval("flux", input[:, -1:NV+1, 0:NV, 0:NV], x, 0))
       flux_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [-H, NV + H], [0, NV], [0, N]], eval("flux", input[:, 0:NV, -1:NV+1, 0:NV], x, 1))
       flux_z = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [-H, NV + H], [0, N]], eval("flux", input[:, 0:NV, 0:NV, -1:NV+1], x, 2))
@@ -137,7 +143,7 @@ def timeStepWithRusanov3D(patchData: "::exahype2::CellData<double, double>&") ->
       output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + 0.5 * NV * dt / h(1) * (flux_y[:, 0:NV, -1:NV-1, 0:NV] - flux_y[:, 0:NV, 1:NV+1, 0:NV])
       output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + 0.5 * NV * dt / h(2) * (flux_z[:, 0:NV, 0:NV, -1:NV-1] - flux_z[:, 0:NV, 0:NV, 1:NV+1])
 
-    if EvaluateNonconservativeProduct:
+    if nonconservativeProduct:
        average_x = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -1:NV, 0:NV, 0:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + 1, 0:NV, 0:NV])
        delta_x = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + H, 0:NV, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -H:NV, 0:NV, 0:NV]
        nonconservative_x = DataBlock([[0, NumberOfUnknowns], [0, NV + H], [0, NV], [0, NV], [0, N]], eval("nonconservativeProduct", average_x, delta_x, x, h, t, dt, 0))
@@ -153,7 +159,7 @@ def timeStepWithRusanov3D(patchData: "::exahype2::CellData<double, double>&") ->
        nonconservative_z = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, NV + H], [0, N]], eval("nonconservativeProduct", average_z, delta_z, x, h, t, dt, 2))
        output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + 0.5 * NV * dt / h(2) * (-nonconservative_z[:, 0:NV, 0:NV, 0:NV] - nonconservative_z[:, 0:NV, 0:NV, 1:NV+1])
 
-    if EvaluateMaximumEigenvalueAfterTimeStep:
+    if maxEigenvalue:
       maxEigenvaluesX2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 0))
       maxEigenvaluesY2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 1))
       maxEigenvaluesZ2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 2))
@@ -498,7 +504,7 @@ Patch overlap data
         functor_parameters = [
             dslhype.SyntaxTree.Argument("flux", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
             dslhype.SyntaxTree.Argument("nonconservativeProduct", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("sourceTerm", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::SourceFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()"),
+            dslhype.SyntaxTree.Argument("volumetricSource", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::VolumetricSourceFunctor&"), "(!llvm.ptr, !llvm.ptr, f64, !llvm.ptr) -> ()"),
             dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
         ]
 
@@ -543,7 +549,7 @@ Patch overlap data
         application PDE terms and the version chosen.
 
         """
-        available_terms = ["flux", "nonconservativeProduct", "source", "maxEigenvalue"]
+        available_terms = ["flux", "nonconservativeProduct", "volumetricSource", "maxEigenvalue"]
 
         if stateless:
             return f"""::{"::".join(self.kernel_namespace)}::{self.kernel_function_name}<

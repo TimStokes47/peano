@@ -34,9 +34,6 @@ class CCZ4Solver(exahype2.api.Solver):
 
     - exahype2.api offers Finite Volumes only, while the production runs of
       the legacy ExaGRyPE use fourth-order Finite Differences.
-    - The Finite Volume kernels of exahype2.api do not evaluate volumetric
-      sources yet, i.e. the source term registered here is currently
-      ignored. It takes effect as soon as exahype2.api supports it.
     - There is no hook yet that pushes the solution back onto the CCZ4
       constraints after each time step (exagrype::ccz4::enforceCCZ4constraints()).
       Long runs therefore drift away from the constraint surface.

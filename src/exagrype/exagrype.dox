@@ -58,9 +58,8 @@ solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(sol
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 @ref benchmarks_exagrype_gauge_wave is a complete example. Please
-note the current limitations: \c exahype2.api offers Finite Volumes only, its
-Finite Volume kernels do not evaluate volumetric sources yet (so the CCZ4 source
-is ignored), there is no constraint enforcement after the time steps yet, and black holes,
+note the current limitations: \c exahype2.api offers Finite Volumes only, there
+is no constraint enforcement after the time steps yet, and black holes,
 tracers and the second-order formulation are not available through the new
 API yet.
 

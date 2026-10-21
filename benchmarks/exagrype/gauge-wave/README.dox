@@ -32,14 +32,8 @@ The script builds a small debug version by default. Set
 
 # Limitations
 
-The Finite Volume kernels of exahype2.api currently do not evaluate
-volumetric source terms, i.e. the CCZ4 source is ignored, and there is no
-constraint enforcement after the time steps yet. Furthermore, the 3d kernels
-of exahype2.api.fv.RusanovWithOptimisticExplicitEuler evaluate the maximum
-eigenvalue on entries that hold no data (all zero). For CCZ4, this yields an
-infinite eigenvalue, i.e. a time step size of zero, and the simulation stops
-after its first time step. The benchmark therefore checks that the setup
-generates, compiles and runs, but its results are not physically meaningful
-yet.
+There is no constraint enforcement after the time steps yet, i.e. the
+solution is not pushed back onto the CCZ4 constraint surface. Long runs hence
+drift away from it.
 
 */
