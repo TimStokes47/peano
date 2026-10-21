@@ -5,7 +5,6 @@ import exahype2.grid
 import exahype2.dslhype
 
 import exahype2.solvers.fv
-import exahype2.solvers.rkfd
 import exahype2.solvers.elliptic
 
 
