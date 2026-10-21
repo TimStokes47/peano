@@ -14,6 +14,7 @@ Before you start, ensure that you have configured and built Peano as specified f
   - \subpage benchmarks_exahype2_ccz4_kernel_benchmarks
 - Euler benchmarks
   - \subpage benchmarks_exahype2_euler_smooth_setup
+  - \subpage benchmarks_exahype2_euler_smooth_fd4
 <!--  - \subpage benchmarks_exahype2_ccz4_kernel_benchmarks -->
 - Shallow water benchmarks
   - \subpage benchmarks_exahype2_shallow_water_artificial_tsunami
