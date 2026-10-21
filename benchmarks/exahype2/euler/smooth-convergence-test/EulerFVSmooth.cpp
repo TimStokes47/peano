@@ -4,10 +4,11 @@ void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::initPo
   const tarch::la::Vector<Dimensions, double>& x, double* __restrict__ Q
 ) {
   logTraceInWith1Argument( "initPointWisely(...)", x );
-  // Entropy wave: one period of a sine density profile over the periodic
-  // domain [-0.1,0.1], constant velocity u and constant pressure p. The exact
+  // Entropy wave: one period of a sine density profile over the domain
+  // [-0.1,0.1], constant velocity u and constant pressure p. The exact
   // solution is rho(x-u*t), i.e. the wave is back where it started after
-  // t = domain width / u = 0.2.
+  // t = domain width / u = 0.2. dirichletBoundaryConditions() prescribes
+  // this exact solution outside of the domain.
   constexpr double gamma       = 1.4;
   constexpr double p           = 1.0;
   constexpr double u           = 1.0;
@@ -21,23 +22,17 @@ void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::initPo
   logTraceOut( "initPointWisely(...)" );
 }
 
-/*
-void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::boundaryConditions(
-  const double * __restrict__                  Qinside, // Qinside[4+0]
-  double * __restrict__                        Qoutside, // Qoutside[4+0]
-  const tarch::la::Vector<Dimensions,double>&  faceCentre,
-  const tarch::la::Vector<Dimensions,double>&  volumeH,
-  double                                       t,
-  int                                          normal
+void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::dirichletBoundaryConditions(
+  const tarch::la::Vector<Dimensions, double>& x, double t, double* __restrict__ Q
 ) {
-  logTraceInWith4Arguments( "boundaryConditions(...)", faceCentre, volumeH, t, normal );
-  Qoutside[0] = Qinside[0];
-  Qoutside[1] = Qinside[1];
-  Qoutside[2] = Qinside[2];
-  Qoutside[3] = Qinside[3];
-  logTraceOut( "boundaryConditions(...)" );
+  logTraceInWith2Arguments( "dirichletBoundaryConditions(...)", x, t );
+  // Same velocity as in initPointWisely()
+  constexpr double u = 1.0;
+  tarch::la::Vector<Dimensions, double> xAtTimeZero = x;
+  xAtTimeZero(0) -= u * t;
+  initPointWisely(xAtTimeZero, Q);
+  logTraceOut( "dirichletBoundaryConditions(...)" );
 }
-*/
 
 void benchmarks::exahype2::euler::smooth_convergence_test::EulerFVSmooth::flux(
   const double* __restrict__ Q, const tarch::la::Vector<Dimensions, double>& x, int normal, double* __restrict__ F

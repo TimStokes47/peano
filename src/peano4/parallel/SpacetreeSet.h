@@ -12,6 +12,7 @@
 
 #include "peano4/maps/maps.h"
 #include "peano4/grid/grid.h"
+#include "peano4/grid/GridStatistics.h"
 
 #include "TreeManagementMessage.h"
 
@@ -334,6 +335,23 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * These are the local spacetrees.
      */
     std::list< peano4::grid::Spacetree >  _spacetrees;
+
+    /**
+     * Grid statistics over all trees on all ranks
+     *
+     * Set by traverse() at the very end of each traversal. See
+     * getGridStatistics().
+     */
+    peano4::grid::GridStatistics          _gridStatistics;
+
+    /**
+     * Sum up the statistics of all local trees
+     *
+     * Trees in the state NewFromSplit are skipped, as their master still
+     * holds the cells. Without any local tree, the result holds no cells and
+     * the maximal mesh size.
+     */
+    peano4::grid::GridStatistics  sumUpLocalGridStatistics() const;
 
     /**
      * The state identifies what the set is doing right now. The flag is for example
@@ -696,10 +714,31 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     void traverse(peano4::grid::TraversalObserver& observer);
 
     /**
-     * Return statistics object for primary spacetree.
+     * Return the grid statistics of the whole mesh
+     *
+     * The statistics combine all trees on all ranks, i.e. every rank gets the
+     * same, global view. At the end of each traverse(), the set sums up the
+     * statistics of its local trees and then all-reduces the outcome over all
+     * ranks via tarch::mpi::Rank::allReduce(), using
+     * peano4::grid::GridStatistics' operator+() as reduction operator. The
+     * result therefore always refers to the most recent traversal. Before the
+     * first traversal, the routine returns the statistics of the local trees
+     * as set up by init().
+     *
+     * As every rank runs traverse() at the same time, the reduction is safe,
+     * and predicates such as peano4::grid::isGridStationary() yield the same
+     * result on all ranks.
+     *
+     * @see getGridStatistics(int) for the statistics of one local tree.
      */
     peano4::grid::GridStatistics  getGridStatistics() const;
 
+    /**
+     * Return the statistics of one local tree
+     *
+     * Different to getGridStatistics(), these statistics are not reduced:
+     * they describe the tree's own cells and vertices only.
+     */
     peano4::grid::GridStatistics  getGridStatistics(int treeId) const;
 
     /**

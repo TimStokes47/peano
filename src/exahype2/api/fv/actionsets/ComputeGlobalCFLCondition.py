@@ -104,17 +104,12 @@ class ComputeGlobalCFLCondition(AbstractFVActionSet):
         This combines two different kinds of "global", reduced two different
         ways:
 
-        - The mesh size comes out of peano4::grid::GridStatistics, which -
-          see @ref page_grid_statistics - Peano itself never reduces across
-          ranks, only ever accumulates locally per rank.
-          peano4::grid::GridStatistics has no MPI_Op of its own (there is no
-          meaningful "MPI_MIN of a GridStatistics"), so
-          tarch::mpi::Rank::allReduce() cannot reduce it directly - this
-          uses peano4::grid::reduceGridStatistics() instead, which every
-          rank calls with its own local GridStatistics and gets back the
-          same, fully combined one. GridStatistics holds the cell size; the
-          CFL condition needs the volume size, i.e. the cell size divided by
-          the patch size.
+        - The mesh size comes out of peano4::grid::GridStatistics, which
+          peano4::parallel::SpacetreeSet reduces over all ranks at the end
+          of every traversal (@ref page_grid_statistics). Every rank hence
+          reads the same, global value. GridStatistics holds the cell size;
+          the CFL condition needs the volume size, i.e. the cell size
+          divided by the patch size.
         - _maxEigenvalue is a plain double, already only a local, per-rank
           accumulation (see _semaphore) - that one *is* reduced directly via
           tarch::mpi::Rank::allReduce(..., MPI_MAX, ...).
@@ -148,8 +143,7 @@ class ComputeGlobalCFLCondition(AbstractFVActionSet):
 
         """
         return f"""
-  const peano4::grid::GridStatistics localStatistics  = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
-  const peano4::grid::GridStatistics globalStatistics = peano4::grid::reduceGridStatistics(localStatistics);
+  const peano4::grid::GridStatistics globalStatistics = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics();
   const double                       globalMinVolumeH = tarch::la::max( globalStatistics.getMinH() ) / {self.patch_size};
 
   // No semaphore required here, as it is only called once per rank

@@ -2,6 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
 import peano4.api.actionsets
+import toolbox.loadbalancing.api.actionsets
 
 from ..InitPointWisely import InitPointWisely
 from ..Solver import Solver
@@ -56,7 +57,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         """!
         
         Create the actual sequence of tasks following the description
-        from @ref "Adding a numerical scheme", as grid construction, 
+        from @ref page_exahype_numerical_scheme "Adding a numerical scheme", as grid construction, 
         numerical scheme, but also plotting all follow the same pattern 
         of tasks and dependencies.
 
@@ -69,23 +70,70 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
             "add one via solver.add_pde_term(exahype2.api.InitPointWisely(...))."
         )
 
+        # Repeat while the mesh still changes, while the load balancing still
+        # wants to split, or while a split is still being carried out. Splits
+        # within these sweeps are safe, as the sweeps do not hold any data
+        # that lives from one sweep to the next.
         refine_task                 = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine mesh",
                                                                 entity=peano4.api.taskgraph.Task.GridEntity.CELL,
-                                                                task_has_to_repeat="not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
+                                                                task_has_to_repeat=(
+                                                                    "not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
+                                                                    " or ( ::toolbox::loadbalancing::LoadBalancingService::getInstance().hasLoadBalancing()"
+                                                                    " and ( not ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->hasStagnated()"
+                                                                    " or ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->hasSplitRecently() ) )"
                                                                 )
-        # @todo Wie also have to test against load balancing!
+                                                                )
+        consolidate_load_balancing_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Consolidate mesh",
+                                                                entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+                                                                task_has_to_repeat=(
+                                                                    "not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
+                                                                    " or ( ::toolbox::loadbalancing::LoadBalancingService::getInstance().hasLoadBalancing()"
+                                                                    " and ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->hasSplitRecently() )"
+                                                                )
+                                                                )
 
         assert hasattr(self._solver.numerical_scheme, "patch_size"), (
             f"Solver {self._solver.name}'s numerical scheme has no attribute "
             "patch_size. SetupSimulationOverRegularGrid assumes the numerical "
             "scheme has added this field to itself immediately upon construction."
         )
-        refine_task.add_action_set(peano4.api.actionsets.ConstructRegularGrid(self.volume_size * self._solver.numerical_scheme.patch_size))
+        # Load balancing is expensive. Once the load balancing has split,
+        # we therefore do not add any further mesh elements for a while, so
+        # the mesh and the new trees can catch up: if we kept on refining,
+        # the freshly split trees would immediately become unbalanced again,
+        # and the load balancing would have to split once more. The
+        # refinement hence only continues if no load balancing is installed
+        # or if the installed load balancing has not split recently.
+        refine_task.add_action_set(
+            peano4.api.actionsets.ConstructRegularGrid(
+                self.volume_size * self._solver.numerical_scheme.patch_size,
+                guard=(
+                    "not ::toolbox::loadbalancing::LoadBalancingService::getInstance().hasLoadBalancing()"
+                    " or not ::toolbox::loadbalancing::LoadBalancingService::getInstance().getLoadBalancing()->hasSplitRecently()"
+                ),
+                includes="""
+#include "toolbox/loadbalancing/AbstractLoadBalancing.h"
+#include "toolbox/loadbalancing/LoadBalancingService.h"
+""",
+            )
+        )
+        # Inform the load balancing after every mesh refinement sweep
+        refine_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
+        # Once the mesh is constructed, switch the load balancing off and let
+        # the mesh consolidate: we keep on running mesh sweeps until the
+        # mesh is stationary and the most recent splits have been carried out.
+        consolidate_load_balancing_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                enable_load_balancing=False, plug_into_prepare_traversal=True
+            )
+        )
+        consolidate_load_balancing_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
 
         initial_condition_task        = peano4.api.taskgraph.Task(name=f"{self._solver.name} Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         project_on_faces_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name} Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
-        initial_condition_task.add_dependency(refine_task)
+        consolidate_load_balancing_task.add_dependency(refine_task)
+        initial_condition_task.add_dependency(consolidate_load_balancing_task)
         project_on_faces_task.add_dependency(initial_condition_task)
 
         initial_condition_task.add_action_set(
@@ -109,6 +157,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         )
 
         setup_simulation.add_task(refine_task)
+        setup_simulation.add_task(consolidate_load_balancing_task)
         setup_simulation.add_task(initial_condition_task)
         setup_simulation.add_task(project_on_faces_task)
 

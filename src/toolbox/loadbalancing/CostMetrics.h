@@ -10,7 +10,6 @@ namespace toolbox {
 
 
 
-#include "tarch/mpi/mpi.h"
 #include "tarch/logging/Log.h"
 #include <string>
 
@@ -28,6 +27,12 @@ namespace toolbox {
  *    CostMetric's updateGlobalView() to finish all global data exchange.
  * 2. Next, you have to implement getCostOfLocalTree().
  *
+ * updateGlobalView() all-reduces the metrics over all ranks, i.e. all ranks
+ * hold the same global weight, lightest rank and minimum of rank weights
+ * afterwards. This mirrors toolbox::loadbalancing::Statistics and
+ * peano4::parallel::SpacetreeSet::getGridStatistics(). Only _localRankWeight
+ * and getCostOfLocalRank() are rank-local.
+ *
  */
 class toolbox::loadbalancing::CostMetrics {
   public:
@@ -42,19 +47,15 @@ class toolbox::loadbalancing::CostMetrics {
     std::string toString(const std::string& metricName) const;
 
     /**
-     * Typically called by
-     *
-     * - finishSimulation() and
-     * - finishStep()
-     *
-     * Should wrap up any pending MPI stuff. If you add your own collectives
-     * in a subclass, overwrite it, but still invoke the superclass.
-     */
-    virtual void waitForGlobalDataExchange();
-
-    /**
      * Please overwrite in subclass and set the value of _localRankWeight.
      * Afterwards, call this superclass routine
+     *
+     * The superclass routine all-reduces the global weight, the lightest
+     * rank and the minimum of the rank weights over all ranks through
+     * tarch::mpi::Rank::allReduce(). The reduction is blocking, i.e. all
+     * ranks hold the same values once the routine has terminated. The
+     * routine hence has to be called by all ranks at the same time, and only
+     * by one thread per rank.
      */
     virtual void updateGlobalView();
 
@@ -96,6 +97,8 @@ class toolbox::loadbalancing::CostMetrics {
     /**
      * Weight of local rank
      *
+     * Rank-local.
+     *
      * Weight of the whole rank. This quantity is the key quantity
      * whenever we actually ask the metrics for information, as it
      * feeds into the total weight, but also helps us to identify
@@ -107,23 +110,6 @@ class toolbox::loadbalancing::CostMetrics {
     ReductionBuffer  _lightestRank;
     double           _minimumOfMaximumOfRankWeights;
 
-    #ifdef Parallel
-    /**
-     * Replicate compared to stats
-     */
-    MPI_Request*    _globalWeightRequest;
-    MPI_Request*    _lightestRankRequest;
-    MPI_Request*    _minimumOfMaximumOfRankWeightsRequest;
-    #endif
-
-    double          _globalWeightIn;
-    double          _globalWeightOut;
-
-    ReductionBuffer _lightestRankIn;
-    ReductionBuffer _lightestRankOut;
-
-    double          _minimumOfMaximumOfRankWeightsIn;
-    double          _minimumOfMaximumOfRankWeightsOut;
   private:
     static tarch::logging::Log _log;
 };

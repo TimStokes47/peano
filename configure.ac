@@ -82,7 +82,19 @@ AC_LANG(C++)
 #AX_COMPILER_VENDOR
 
 AR="ar"
-ARFLAGS="rcD"
+# The "D" modifier requests deterministic archives. It is a GNU ar extension;
+# BSD ar (the default on macOS) rejects it with "illegal option -- D". Probe for
+# support and fall back to plain "rc" so the build works with either archiver.
+AC_MSG_CHECKING([whether $AR accepts the D (deterministic) modifier])
+: > conftest_ar.$$
+if $AR rcD conftest_ar_$$.a conftest_ar.$$ >/dev/null 2>&1; then
+  ARFLAGS="rcD"
+  AC_MSG_RESULT([yes])
+else
+  ARFLAGS="rc"
+  AC_MSG_RESULT([no])
+fi
+rm -f conftest_ar.$$ conftest_ar_$$.a
 AC_SUBST(AR)
 AC_SUBST(ARFLAGS)
 

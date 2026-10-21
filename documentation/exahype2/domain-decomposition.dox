@@ -18,7 +18,7 @@ while its solvers themselves obviously are made domain decomposition-aware.
 This page is all about how the domain decomposition is realised within ExaHyPE, i.e. what specific aspects an
 ExaHyPE solver has to take into account. There is other domain decomposition material available on the pages:
 
-- The page @ref tutorials_exahype2_hpc_domain-decomposition in the tutorials discusses how to use the domain decomposition.
+- The tutorials @ref tutorials_exahype2_30_domain-decomposition and @ref tutorials_exahype2_35_offline-load-balancing discuss how to use the domain decomposition.
 - The page @ref toolbox_loadbalancing discusses various load balancing variants as offered through the load balancing toolbox.
 - The page @ref page_peano_domain_decomposition in Peano's documentation demonstrates how the domain decomposition is technically realised on the mesh level.
 - The page @ref page_exahype_runtime_analysis touches upon domain decomposition from a performance point of view. 
@@ -86,7 +86,8 @@ such as the maximum mesh size or the admissible time step sizes.
 This is the reason why you have to call the superclass implementation, too.
 
 \par See also
-- @ref tutorials_exahype2_hpc_domain-decomposition "Domain decomposition in ExaHyPE 2"
+- @ref tutorials_exahype2_30_domain-decomposition "Domain decomposition tutorial"
+- @ref tutorials_exahype2_35_offline-load-balancing "Offline load balancing tutorial"
 - @ref page_toolbox_loadbalancing_api "Load balancing API"
 - @ref toolbox_loadbalancing "Load Balancing (Domain Decomposition)"
 - @ref page_exahype_runtime_analysis "Runtime analysis"
