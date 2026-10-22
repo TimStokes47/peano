@@ -8,8 +8,7 @@ picked by feeding different physics parameters into the Python script; the simul
 can also be controlled directly via the command line.
 
 Users are referred to the general \ref page_exahype2_tutorials of ExaHyPE 2 if they are interested in
-what is going on behind the screens. We also provide a dedicated page 
-for @ref tutorials_exahype2_applications_exagrype_setup "setup of ExaGRyPE".
+what is going on behind the screens.
 
 # Run the benchmark
 

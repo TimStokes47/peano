@@ -56,7 +56,6 @@ Jupyter.
     - \subpage tutorials_exahype2_applications_exagrype_single_black_hole
     - \subpage tutorials_exahype2_applications_exagrype_binary_black_hole
   - \subpage tutorials_exahype2_applications_exagrype_visualize
-  - \subpage tutorials_exahype2_applications_exagrype_setup
   - \subpage tutorials_exahype2_applications_exagrype_clusters
   - \subpage tutorials_exahype2_applications_exagrype_advanced
     - Adding New Physics Scenarios
