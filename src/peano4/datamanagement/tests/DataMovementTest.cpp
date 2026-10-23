@@ -2,6 +2,12 @@
 // use, please see the copyright notice at www.peano-framework.org
 #include "DataMovementTest.h"
 
+// STDStackMap.h uses peano4::parallel::Node without including it, so Node.h
+// has to come first. clang-format would sort it behind STDStackMap.h.
+// clang-format off
+#include "peano4/parallel/Node.h"
+// clang-format on
+
 #include "peano4/datamanagement/CellDataMovement.h"
 #include "peano4/datamanagement/FaceDataMovement.h"
 #include "peano4/datamanagement/VertexDataMovement.h"
@@ -10,7 +16,6 @@
 #include "peano4/grid/PeanoCurve.h"
 #include "peano4/grid/TraversalObserver.h"
 #include "peano4/maps/STDStackMap.h"
-#include "peano4/parallel/Node.h"
 #include "peano4/stacks/STDVectorStack.h"
 #include "peano4/utils/Globals.h"
 #include "tarch/la/Vector.h"
