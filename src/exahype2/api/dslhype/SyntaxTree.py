@@ -104,6 +104,7 @@ class Node(ABC):
     type_map.update({'flux': '(memref<?xf64>, !llvm.ptr, !llvm.ptr, f64, f64, i32, memref<?xf64>) -> ()'})
     type_map.update({'nonconservativeProduct': '(memref<?xf64>, memref<?xf64>, !llvm.ptr, !llvm.ptr, f64, f64, i32, memref<?xf64>) -> ()'})
     type_map.update({'sourceTerm': '(memref<?xf64>, !llvm.ptr, !llvm.ptr, f64, f64, memref<?xf64>) -> ()'})
+    type_map.update({'volumetricSource': '(memref<?xf64>, !llvm.ptr, f64, memref<?xf64>) -> ()'})
     type_map.update({'maxEigenvalue': '(memref<?xf64>, !llvm.ptr, !llvm.ptr, f64, f64, i32, memref<?xf64>) -> ()'})    
 
     # Local variable storage types (for runtime-allocated temporary variables)

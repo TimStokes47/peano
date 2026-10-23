@@ -22,7 +22,7 @@ void benchmarks::exahype2::ccz4::OfflineLoadBalancingTutorial_CCZ4SBH_FD4::initi
 ) {
   logTraceInWith3Arguments("initialCondition(...)", meshCellCentre, meshCellH, gridIsConstructed);
 
-  applications::exahype2::ccz4::ApplyTwoPunctures(Q, meshCellCentre, 0, twoPunctures, not gridIsConstructed);
+  exagrype::initialvalues::ApplyTwoPunctures(Q, meshCellCentre, 0, twoPunctures, not gridIsConstructed);
 
   logTraceOut("initialCondition(...)");
 }

@@ -14,12 +14,16 @@ class VolumetricSource(PDETerm):
     See python/exahype2/solvers/fv/riemann/kernels.py's sourceTerm(), which
     is not normal-dependent (a volumetric source has no notion of a face
     direction), so unlike Flux/MaxEigenvalue/MassMatrix/
-    NonconservativeProduct this term has no normal parameter to begin with:
+    NonconservativeProduct this term has no normal parameter to begin with.
+    It depends on the position x and the time stamp t only, i.e. neither on
+    the mesh size nor on the time step size. The signature matches
+    ::exahype2::fv::rusanov::VolumetricSourceFunctor:
 
     @code
     virtual void volumetricSource(
       const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
       const tarch::la::Vector<Dimensions, double>& x,
+      double                                       t,
       double* __restrict__                         S // S[{{NUMBER_OF_UNKNOWNS}}]
     );
     @endcode
@@ -29,6 +33,7 @@ class VolumetricSource(PDETerm):
     SIGNATURE = (
         "const double* __restrict__ Q, "
         "const tarch::la::Vector<Dimensions, double>& x, "
+        "double t, "
         "double* __restrict__ S"
     )
 

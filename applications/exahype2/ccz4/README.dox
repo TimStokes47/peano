@@ -92,6 +92,7 @@ This part is still under testing.
 # Further links
 
 - @ref tutorials_exahype2_applications_exagrype "Tutorials"
+- \subpage page_exagrype_library "The ExaGRyPE library" (kernels and initial conditions in \c src/exagrype, configuration via \c --enable-exagrype)
 - ExaGRyPE benchmarks (cmp @ref page_exahype_benchmarks "overview of all ExaHyPE benchmarks")
   - \ref benchmarks_exahype2_ccz4_kernel_benchmarks
   - \ref benchmarks_exahype2_ccz4_gauge_wave

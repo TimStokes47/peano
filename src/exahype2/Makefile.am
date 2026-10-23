@@ -38,7 +38,6 @@ ExaHyPE2Sources = \
   fv/PostprocessingKernels.cpp \
   fv/Tracer.cpp \
   fd/tests/SommerfeldBCTest.cpp\
-  fd/tests/CCZ4KernelTest.cpp\
   fv/tests/InterpolationRestrictionTest.cpp \
   fd/fd4/LoopBody.cpp \
   fd/fd4/FD4_patchwise_functors.cpp \

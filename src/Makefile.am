@@ -16,6 +16,7 @@ SUBDIRS = . \
 	toolbox/curvi \
 	convert \
 	exahype2 \
+	exagrype \
 	mghype \
 	petsc \
 	exaparty \

@@ -13,9 +13,9 @@
 
 
 #include <cstring>
-#include "InitialValues.h"
+#include "exagrype/initialvalues/InitialValues.h"
 
-#include "CCZ4Kernels.h"
+#include "exagrype/ccz4/Kernels.h"
 
 
 namespace benchmarks {
@@ -130,7 +130,7 @@ class benchmarks::exahype2::ccz4::CCZ4: public AbstractCCZ4 {
        ::exahype2::Solver::Offloadable
      ) {
       memset(S, 0, NumberOfUnknowns*sizeof(double));
-      applications::exahype2::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
+      exagrype::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
     }
     #if defined(GPUOffloadingOMP)
     #pragma omp end declare target

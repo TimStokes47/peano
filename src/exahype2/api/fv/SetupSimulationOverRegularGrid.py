@@ -34,9 +34,15 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
     def __init__(self, solver: Solver, volume_size: float):
         """!
 
-        volume_size: float
-          Edge length of one Finite Volume on the regular grid this setup
-          phase assumes.
+        @param volume_size: float
+          Maximum edge length of one Finite Volume. Every mesh cell hosts one
+          patch of patch_size volumes per axis. The setup refines every cell
+          whose edge length is greater than or equal to volume_size times the
+          patch size (@ref peano4.api.actionsets.ConstructRegularGrid), i.e.
+          the resulting volumes are strictly smaller than volume_size. If you
+          want volumes of exactly 1/27 with patches of size 9, pass in a value
+          slightly bigger than 1/27: 1/27 itself yields cells of size 1/9 and
+          hence volumes of size 1/81.
 
         """
         super().__init__(solver)

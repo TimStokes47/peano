@@ -1,0 +1,177 @@
+/**
+
+@page tutorials_exahype2_applications_exagrype_configure Configure ExaGRyPE
+
+@image html tutorials/exahype2/exagrype/arty.png
+
+ExaGRyPE is Peano's extension for numerical relativity and is built as part of
+Peano. For general remarks on how to install Peano, please see
+\ref page_installation_home. This page is designed to be self-contained,
+i.e. it should include all the steps you need to run the example codes.
+
+
+# Get the code
+
+~~~~~~~~~~~~~~~~~~~~~~~
+git clone https://gitlab.lrz.de/hpcsoftware/Peano.git
+cd Peano
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# Prerequisites
+
+Besides a C++20 compiler with OpenMP support (and MPI if you want to run
+in parallel on a cluster), ExaGRyPE needs
+
+- Python 3 for the code generation (see the Python environment below);
+- the GNU Scientific Library (GSL), but only for the black hole scenarios:
+  their TwoPunctures initial data relies on GSL. The gauge wave does not need
+  it.
+
+On a workstation, GSL is typically installed via the package manager, e.g.
+
+~~~~~~~~~~~~~~~~~~~~~~~
+sudo apt install libgsl-dev      # Debian/Ubuntu
+sudo dnf install gsl-devel       # Fedora/RHEL
+brew install gsl                 # macOS
+~~~~~~~~~~~~~~~~~~~~~~~
+
+On a cluster, load the corresponding module (e.g. \c module load \c gsl)
+before you configure, and load the proper modules for your compiler and MPI
+(see \ref tutorials_exahype2_applications_exagrype_clusters).
+
+
+# Configure and build Peano
+
+Configure and compile Peano in the Peano root directory. With GCC and
+Autotools, a minimal setup reads
+
+~~~~~~~~~~~~~~~~~~~~~~~
+libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing
+./configure --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-particles \
+            --enable-exagrype --with-gsl --with-multithreading=omp \
+            CXXFLAGS="-std=c++20 -O3 -fopenmp -Wno-attributes" LDFLAGS="-fopenmp"
+make -j
+~~~~~~~~~~~~~~~~~~~~~~~
+
+On a cluster with the Intel toolchain and MPI, the call becomes
+
+~~~~~~~~~~~~~~~~~~~~~~~
+./configure CC=icx CXX=icpx --with-mpi=mpiicpx --with-multithreading=omp \
+            CXXFLAGS="-Ofast -std=c++20 -qopenmp -march=native -mtune=native -fma -fomit-frame-pointer -Wno-attributes=clang:: -w" \
+            LDFLAGS="-qopenmp" \
+            --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-particles \
+            --enable-exagrype --with-gsl
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The flags have the following roles:
+
+- \c --enable-exahype, \c --enable-blockstructured and \c --enable-loadbalancing
+  build ExaHyPE 2, on top of which ExaGRyPE sits.
+- \c --enable-particles builds the particle toolbox, which ExaGRyPE uses for
+  its tracers.
+- \c --enable-exagrype builds the ExaGRyPE library, which hosts the CCZ4
+  kernels and the initial conditions (see \ref page_exagrype_library). It
+  requires ExaHyPE 2 and is built for 3d only. Without it, the generated
+  ExaGRyPE Makefiles do not link.
+- \c --with-gsl compiles the TwoPunctures black hole initial data into the
+  ExaGRyPE library and adds GSL to the link line of all generated Makefiles.
+  You can drop it if you only run the gauge wave. If you build a black hole
+  scenario against a Peano configured without GSL, the build stops with an
+  error message that asks you to reconfigure.
+
+\c --with-gsl does not take a path. Configure asks \c pkg-config for GSL and
+otherwise falls back to \c -lgsl \c -lgslcblas \c -lm. If GSL is installed
+in a non-standard location that \c pkg-config does not know, add its
+directories by hand:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+./configure ... --with-gsl CXXFLAGS="... -I/path/to/gsl/include" LDFLAGS="... -L/path/to/gsl/lib"
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you prefer CMake, build out-of-tree with the equivalent options:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+mkdir build && cd build
+cmake .. -DENABLE_EXAHYPE=ON -DENABLE_BLOCKSTRUCTURED=ON -DENABLE_LOADBALANCING=ON -DENABLE_PARTICLES=ON \
+         -DENABLE_EXAGRYPE=ON -DWITH_GSL=ON -DWITH_MULTITHREADING=omp
+make -j
+~~~~~~~~~~~~~~~~~~~~~~~
+
+CMake locates GSL via its \c FindGSL module. For a non-standard installation,
+pass \c -DGSL_ROOT_DIR=/path/to/gsl.
+
+Missing libraries may lead to configuration or compilation errors; please check
+\ref tutorials_exahype2_applications_exagrype_faq if necessary. You only need to
+compile Peano once as long as your working environment and the Peano kernel code
+remain unchanged. We recommend re-compiling it after you pull a new code version
+or change working environments (e.g. when you switch between different login
+nodes of a cluster).
+
+To clean the Peano root directory completely, e.g. before a fresh configure,
+use the following lines:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+rm -rf aclocal.m4 compile src/config.* configure *sh Makefile Makefile.in missing stamp* ar-lib autom4te.cache *.log libtool depcomp *.scan
+find . -name Makefile -delete
+find . -name Makefile.in -delete
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# Python environment
+
+ExaGRyPE's code generation relies on several Python packages. The recommended
+way to install them is an editable install from the Peano root directory (where
+the \c pyproject.toml file resides). This installs the full set of required
+dependencies and sets the Python path to the Peano modules automatically, so
+there is no need to export \c PYTHONPATH by hand. For the complete dependency
+list and alternative setups (e.g. setting \c PYTHONPATH manually), see
+\ref page_installation_home.
+
+~~~~~~~~~~~~~~~~~~~~~~~
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -e .
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# Where to go next
+
+ExaGRyPE currently offers two entry points:
+
+- The new Python API \c exagrype.api layers on top of \c exahype2.api. It
+  currently offers Finite Volumes only and no black holes yet. Start with
+  the Jupyter notebook \c tutorials/exahype2/exagrype/521_gauge-wave.ipynb
+  (\ref tutorials_exahype2_exagrype_521_gauge-wave), which runs the gauge wave
+  with this API. \ref benchmarks_exagrype_gauge_wave and
+  \ref page_exagrype_library provide further details.
+- \c applications/exahype2/ccz4 hosts the main script \c ccz4.py, which
+  provides all scenarios (gauge wave, single and binary black holes), tracers
+  and the different numerical schemes. The remaining ExaGRyPE tutorials work
+  with this script:
+  ~~~~~~~~~~~~~~~~~~~~~~~
+  cd applications/exahype2/ccz4
+  ~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# Reference papers
+
+The following paper contains the physics and code design of ExaGRyPE.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@article{Zhang:2024:ExaGRyPE,
+title = {ExaGRyPE: Numerical general relativity solvers based upon the hyperbolic PDEs solver engine ExaHyPE},
+journal = {Computer Physics Communications},
+volume = {307},
+pages = {109435},
+year = {2025},
+issn = {0010-4655},
+doi = {https://doi.org/10.1016/j.cpc.2024.109435},
+url = {https://www.sciencedirect.com/science/article/pii/S0010465524003588},
+author = {Han Zhang and Baojiu Li and Tobias Weinzierl and Cristian Barrera-Hinojosa},
+keywords = {Software design, Numerical relativity, Hyperbolic partial differential equations, Finite Differences, Adaptive mesh refinement, Domain decomposition, Task parallelism},
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*/

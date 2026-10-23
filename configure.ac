@@ -427,6 +427,24 @@ fi
 
 
 #
+# GSL (GNU Scientific Library), e.g. for ExaGRyPE's TwoPunctures initial data
+#
+AC_ARG_WITH(gsl,
+  AS_HELP_STRING([--with-gsl],[enable GSL support [default=no]]),
+  [ AC_MSG_CHECKING(for gsl)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);   use_gsl=false ;;
+      *)     AC_MSG_RESULT(yes);  use_gsl=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for gsl); AC_MSG_RESULT(no); use_gsl=false ])
+AM_CONDITIONAL([UseGSL],[test "x$use_gsl" = xtrue])
+
+if test "$use_gsl" == true; then
+  AC_DEFINE([UseGSL], [UseGSL], [UseGSL])
+fi
+
+
+#
 # NetCDF
 #
 AC_ARG_WITH(netcdf,
@@ -481,6 +499,51 @@ AM_CONDITIONAL([UseOpenblas],[test "x$use_openblas" = xtrue])
 
 if test "$use_openblas" == true; then
   AC_DEFINE([UseOpenblas], [UseOpenblas], [UseOpenblas])
+fi
+
+
+#
+# GSL
+#
+# We use pkg-config if it knows GSL and fall back to the libraries' default
+# names otherwise. GSL is appended to the link line, i.e. it comes after all
+# Peano libraries (which are prepended) that might use it.
+#
+if test "$use_gsl" != false; then
+  AC_PATH_PROG([PKG_CONFIG], [pkg-config])
+  if test -n "$PKG_CONFIG" && $PKG_CONFIG --exists gsl; then
+    GSL_INCLUDE_DIR=`$PKG_CONFIG --cflags gsl`
+    GSL_LIBS=`$PKG_CONFIG --libs gsl`
+  else
+    GSL_INCLUDE_DIR=""
+    GSL_LIBS="-lgsl -lgslcblas -lm"
+  fi
+  AC_MSG_NOTICE([GSL_INCLUDE_DIR: ${GSL_INCLUDE_DIR}])
+  AC_MSG_NOTICE([GSL_LIBS: ${GSL_LIBS}])
+
+  CXXFLAGS_PEANO_2D_RELEASE=" $CXXFLAGS_PEANO_2D_RELEASE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_STATS="   $CXXFLAGS_PEANO_2D_STATS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_ASSERTS=" $CXXFLAGS_PEANO_2D_ASSERTS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_TRACE="   $CXXFLAGS_PEANO_2D_TRACE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_DEBUG="   $CXXFLAGS_PEANO_2D_DEBUG ${GSL_INCLUDE_DIR} "
+
+  CXXFLAGS_PEANO_3D_RELEASE=" $CXXFLAGS_PEANO_3D_RELEASE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_STATS="   $CXXFLAGS_PEANO_3D_STATS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_ASSERTS=" $CXXFLAGS_PEANO_3D_ASSERTS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_TRACE="   $CXXFLAGS_PEANO_3D_TRACE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_DEBUG="   $CXXFLAGS_PEANO_3D_DEBUG ${GSL_INCLUDE_DIR} "
+
+  LDADD_PEANO_2D_RELEASE=" $LDADD_PEANO_2D_RELEASE ${GSL_LIBS} "
+  LDADD_PEANO_2D_STATS="   $LDADD_PEANO_2D_STATS ${GSL_LIBS} "
+  LDADD_PEANO_2D_ASSERTS=" $LDADD_PEANO_2D_ASSERTS ${GSL_LIBS} "
+  LDADD_PEANO_2D_TRACE="   $LDADD_PEANO_2D_TRACE ${GSL_LIBS} "
+  LDADD_PEANO_2D_DEBUG="   $LDADD_PEANO_2D_DEBUG ${GSL_LIBS} "
+
+  LDADD_PEANO_3D_RELEASE=" $LDADD_PEANO_3D_RELEASE ${GSL_LIBS} "
+  LDADD_PEANO_3D_STATS="   $LDADD_PEANO_3D_STATS ${GSL_LIBS} "
+  LDADD_PEANO_3D_ASSERTS=" $LDADD_PEANO_3D_ASSERTS ${GSL_LIBS} "
+  LDADD_PEANO_3D_TRACE="   $LDADD_PEANO_3D_TRACE ${GSL_LIBS} "
+  LDADD_PEANO_3D_DEBUG="   $LDADD_PEANO_3D_DEBUG ${GSL_LIBS} "
 fi
 
 
@@ -858,6 +921,20 @@ AM_CONDITIONAL([UseExaHyPE],[test "x$toolbox_exahype" = xtrue])
 
 
 #
+# ExaGRyPE
+#
+AC_ARG_ENABLE(exagrype,
+  AS_HELP_STRING([--enable-exagrype],[enable ExaGRyPE (3d only, requires ExaHyPE 2) [default=false]]),
+  [ AC_MSG_CHECKING(for exagrype)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);    toolbox_exagrype=false ;;
+      *)     AC_MSG_RESULT(yes);   toolbox_exagrype=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for exagrype); AC_MSG_RESULT(no); toolbox_exagrype=false ])
+AM_CONDITIONAL([UseExaGRyPE],[test "x$toolbox_exagrype" = xtrue])
+
+
+#
 # Curvi
 #
 AC_ARG_ENABLE(curvi,
@@ -1139,6 +1216,33 @@ if test "$toolbox_exahype" != false; then
   LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/exahype2 "
   LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/exahype2 "
   LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/exahype2 "
+fi
+
+
+#
+# ExaGRyPE
+#
+# ExaGRyPE is built for 3d only, so we only extend the 3d link lines. As
+# ExaGRyPE builds on top of ExaHyPE 2, this block has to come after the
+# ExaHyPE 2 block: we prepend the libraries, so ExaGRyPE ends up in front of
+# ExaHyPE 2 on the link line.
+#
+if test "$toolbox_exagrype" != false; then
+  AC_DEFINE([UseExaGRyPE], [1], [UseExaGRyPE])
+  if test "$toolbox_exahype" == false; then
+    AC_MSG_ERROR([ExaGRyPE requires ExaHyPE 2 (run with --help to see the correct enable statement)])
+  fi
+  LDADD_PEANO_3D_RELEASE=" -lExaGRyPECore3d         $LDADD_PEANO_3D_RELEASE "
+  LDADD_PEANO_3D_STATS="   -lExaGRyPECore3d_stats   $LDADD_PEANO_3D_STATS "
+  LDADD_PEANO_3D_ASSERTS=" -lExaGRyPECore3d_asserts $LDADD_PEANO_3D_ASSERTS "
+  LDADD_PEANO_3D_TRACE="   -lExaGRyPECore3d_trace   $LDADD_PEANO_3D_TRACE "
+  LDADD_PEANO_3D_DEBUG="   -lExaGRyPECore3d_debug   $LDADD_PEANO_3D_DEBUG "
+
+  LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/exagrype "
 fi
 
 
@@ -1509,6 +1613,7 @@ AC_CONFIG_FILES([Makefile
   src/tbb/Makefile
   src/convert/Makefile
   src/exahype2/Makefile
+  src/exagrype/Makefile
   src/mghype/Makefile
   src/petsc/Makefile
   src/exaparty/Makefile

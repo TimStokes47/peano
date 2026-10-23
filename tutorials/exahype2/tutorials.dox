@@ -49,7 +49,24 @@ Jupyter.
   - \subpage tutorials_exahype2_41_postprocessing
   - \subpage tutorials_exahype2_44_localisation
   - \subpage tutorials_exahype2_45_coupling
-- \subpage tutorials_exahype2_applications_exagrype (numerical relativity extension built on top of ExaHyPE) 
+- ExaGRyPE (numerical relativity extension built on top of ExaHyPE)
+  - \subpage tutorials_exahype2_applications_exagrype_configure
+  - ExaGRyPE standard benchmarks
+    - \subpage tutorials_exahype2_exagrype_521_gauge-wave
+    - \subpage tutorials_exahype2_applications_exagrype_single_black_hole
+    - \subpage tutorials_exahype2_applications_exagrype_binary_black_hole
+  - \subpage tutorials_exahype2_applications_exagrype_visualize
+  - \subpage tutorials_exahype2_applications_exagrype_setup
+  - \subpage tutorials_exahype2_applications_exagrype_clusters
+  - \subpage tutorials_exahype2_applications_exagrype_advanced
+    - Adding New Physics Scenarios
+    - Postprocessing on-the-fly
+    - Particles as Probes and Tracers
+    - Coupling Multiple Numerical Schemes (Solvers)
+  - Feature benchmarks
+    - \ref benchmarks_exahype2_ccz4_gauge_wave
+    - \ref benchmarks_exahype2_ccz4_single_black_hole
+  - \subpage tutorials_exahype2_applications_exagrype_faq
 - \subpage tutorials_exahype2_applications_exaseis (seismology extension built on top of ExaHyPE)
   
   

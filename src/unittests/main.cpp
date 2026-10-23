@@ -45,6 +45,10 @@
 #include "exaparty/UnitTests.h"
 #endif
 
+#if defined(UseExaGRyPE) and Dimensions == 3
+#include "exagrype/UnitTests.h"
+#endif
+
 tarch::logging::Log _log("unittests");
 
 void runTests() {
@@ -103,6 +107,13 @@ void runTests() {
 
 #ifdef UseExaParty
   tests = exaparty::getUnitTests();
+  tests->run();
+  unitTestsErrors += tests->getNumberOfErrors();
+  delete tests;
+#endif
+
+#if defined(UseExaGRyPE) and Dimensions == 3
+  tests = exagrype::getUnitTests();
   tests->run();
   unitTestsErrors += tests->getNumberOfErrors();
   delete tests;

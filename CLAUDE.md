@@ -36,10 +36,12 @@ Then:
 make -j
 make check                         # runs unit tests (non-MPI only, see below)
 ```
-Key `--enable-*` flags: `exahype`, `exaparty`, `mghype`, `particles`, `blockstructured`,
+Key `--enable-*` flags: `exahype`, `exagrype`, `exaparty`, `mghype`, `particles`, `blockstructured`,
 `loadbalancing`, `finiteelements`, `multiprecision`, `curvi`. ExaHyPE needs at least
-`--enable-blockstructured --enable-exahype`; ExaParty needs `--enable-particles --enable-exaparty`.
-`--with-mpi`, `--with-vtk`, `--with-hdf5`, `--with-petsc`, `--with-libxsmm` etc. pull in
+`--enable-blockstructured --enable-exahype`; ExaParty needs `--enable-particles --enable-exaparty`;
+ExaGRyPE (`src/exagrype`, 3d-only libraries) needs ExaHyPE plus `--enable-exagrype`, and
+`--with-gsl` for its TwoPunctures (black hole) initial data.
+`--with-mpi`, `--with-vtk`, `--with-hdf5`, `--with-gsl`, `--with-petsc`, `--with-libxsmm` etc. pull in
 optional third-party support.
 
 ### CMake (out-of-tree)
@@ -65,7 +67,7 @@ must be run manually via `src/unittests/UnitTests2d`/`UnitTests3d`.
 ### Python API
 
 The Python packages are split across two roots: `python/` (`exahype2` legacy API)
-and `src/` (`peano4.api`, `dastgen2`, `exaparty.api`, and the in-progress `exahype2.api`,
+and `src/` (`peano4.api`, `dastgen2`, `exaparty.api`, `exagrype.api`, and the in-progress `exahype2.api`,
 `mghype`, `toolbox.loadbalancing.api` rewrites, colocated with each component's C++
 sources where one exists). Both are installed via:
 ```
@@ -157,7 +159,7 @@ for the authoritative version):
    solver-independent building blocks layered on `peano4`/`tarch`: particle management,
    blockstructured mesh support, load balancing, finite elements, multigrid support, etc.
    Individually enabled via `--enable-*`/`ENABLE_*` flags.
-4. **Extensions** (`src/exahype2`, `src/exaparty`, `src/mghype`, Python packages of the same
+4. **Extensions** (`src/exahype2`, `src/exagrype`, `src/exaparty`, `src/mghype`, Python packages of the same
    names) — Domain-specific frameworks built on Peano + toolboxes: ExaHyPE 2 (hyperbolic
    PDE solvers: Finite Volumes, ADER-DG, Limiting), ExaParty (SPH), MGHyPE (multigrid /
    PETSc coupling). Each provides its own Python `Project` API layered over `peano4`'s.
