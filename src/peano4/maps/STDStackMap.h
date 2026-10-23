@@ -5,7 +5,7 @@
 
 #include "maps.h"
 #include "tarch/multicore/Lock.h"
-
+#include "peano4/parallel/Node.h"
 #include <map>
 
 
