@@ -33,16 +33,31 @@ python3 single-black-hole.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The script builds a small debug version by default: \f$ 9^3 \f$ mesh cells,
-each carrying a patch of \f$ 6^3 \f$ volumes, run until t=0.1. Set
-\c create_release_build to True for \f$ 27^3 \f$ cells and a run until t=10.
+each carrying a patch of \f$ 6^3 \f$ volumes, run until t=0.1. It takes
+around 2.5 minutes on an eight-core workstation. Set \c create_release_build
+to True for an optimised build on the same mesh which runs until t=10. It
+takes around 230 time steps of 5 seconds each. Every time you make the mesh
+cells three times smaller (cells_per_axis), the run becomes 81 times more
+expensive: 27 times more volumes and three times more time steps.
+
+# What to expect
+
+The initial data matches the closed form of a Schwarzschild black hole in
+isotropic coordinates up to round-off. The run is stable, but the mesh is far
+too coarse for the black hole: the horizon spans about three volumes, and the
+first-order Finite Volumes diffuse the puncture away. By t=10, the lapse next
+to the puncture has grown from 0.37 to 0.89, and the conformal factor phi
+from 0.13 to 0.93. Without constraint enforcement, the numbers are almost the
+same (0.88 and 0.93), i.e. the enforcement does not cure the dissolving black
+hole. A resolved black hole would instead show a collapsing
+lapse. The tutorial @ref tutorials_exahype2_exagrype_522_single-black-hole
+discusses this behaviour.
 
 # Differences to the legacy benchmark
 
 - The legacy code imposes Sommerfeld boundary conditions. This benchmark
   uses Dirichlet conditions instead, which hold the boundary at the
   (static) initial data.
-- There is no constraint enforcement after the time steps yet, i.e. the
-  solution is not pushed back onto the CCZ4 constraint surface.
 - The mesh is regular. The legacy code zooms into the black hole with
   adaptive mesh refinement, and couples the Finite Volumes with fourth-order
   Finite Differences.

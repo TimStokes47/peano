@@ -67,3 +67,11 @@ def test_parameters_override_defaults():
 def test_unknown_parameter_is_rejected():
     with pytest.raises(KeyError):
         exagrype.api.CCZ4Solver("CCZ4", parameters={"CCZ4kk1": 0.0})
+
+
+def test_constraint_enforcement_is_opt_in():
+    assert exagrype.api.CCZ4Solver("CCZ4")._point_wise_postprocessing == []
+    solver = exagrype.api.CCZ4Solver("CCZ4", enforce_constraints=True)
+    [(name, implementation, _)] = solver._point_wise_postprocessing
+    assert name == "Enforce constraints"
+    assert "::exagrype::ccz4::enforceCCZ4constraints(Q)" in implementation

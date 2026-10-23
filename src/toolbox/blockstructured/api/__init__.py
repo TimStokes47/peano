@@ -11,3 +11,4 @@ from .ProjectPatchOntoFaces           import ProjectPatchOntoFaces
 from .ReconstructPatchWithHalo        import ReconstructPatchWithHalo
 from .ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
 
+from .ApplyPointWiselyToPatch      import ApplyPointWiselyToPatch

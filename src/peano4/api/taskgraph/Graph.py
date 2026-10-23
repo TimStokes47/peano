@@ -19,6 +19,53 @@ class Graph:
     def add_task(self, task: Task):
         self.tasks.append(task)
 
+    def find_tasks(self, tag) -> List[Task]:
+        """!
+
+        Return all tasks of this graph which carry the tag, in the order
+        in which they have been added to the graph
+
+        @param tag: object
+          Key of the tag, @see peano4.api.taskgraph.Task.Task.tags.
+
+        """
+        return [task for task in self.tasks if tag in task.tags]
+
+    def insert_after(self, anchor: Task, task: Task):
+        """!
+
+        Insert a task directly after anchor
+
+        The routine adds task to the graph and makes it depend on anchor.
+        All tasks which have depended on anchor so far depend on task
+        instead. Consequently, task runs after anchor but before anything
+        that used to follow anchor.
+
+        Use this routine to add a step to a task graph which someone else
+        has built, e.g. to postprocess the outcome of a task. task should
+        not depend on any other task yet, unless these dependencies run
+        before anchor anyway.
+
+        @param anchor: peano4.api.taskgraph.Task
+          A task of this graph.
+
+        @param task: peano4.api.taskgraph.Task
+          The new task. It must not be part of the graph yet.
+
+        """
+        assert anchor in self.tasks, f"Task {anchor.name} is not part of the graph"
+        assert task not in self.tasks, f"Task {task.name} is already part of the graph"
+        for successor in self.tasks:
+            if anchor in successor.dependencies:
+                redirected = []
+                for dependency in successor.dependencies:
+                    replacement = task if dependency is anchor else dependency
+                    if replacement not in redirected:
+                        redirected.append(replacement)
+                successor.dependencies = redirected
+        task.add_dependency(anchor)
+        self.add_task(task)
+
     def ordered_tasks(self) -> List[Task]:
         """!
 

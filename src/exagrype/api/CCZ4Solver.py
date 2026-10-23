@@ -36,9 +36,10 @@ class CCZ4Solver(exahype2.api.Solver):
       available through exahype2.api.rkfd4, i.e. pass a
       CentralDifferencesWithRungeKutta as numerical scheme. Unlike the
       legacy ExaGRyPE, they do not support adaptive mesh refinement yet.
-    - There is no hook yet that pushes the solution back onto the CCZ4
-      constraints after each time step (exagrype::ccz4::enforceCCZ4constraints()).
-      Long runs therefore drift away from the constraint surface.
+    - The solver pushes the solution back onto the CCZ4 constraints
+      (exagrype::ccz4::enforceCCZ4constraints()) only if you pass
+      enforce_constraints=True. Without it, long runs drift away from the
+      constraint surface.
     - The second-order formulation, black holes (TwoPunctures), tracers and
       the ADM/Psi4 postprocessing are not available yet.
 
@@ -104,6 +105,7 @@ class CCZ4Solver(exahype2.api.Solver):
         name: str,
         parameters: Dict[str, Union[int, float]] = None,
         initial_condition: exahype2.api.InitPointWisely = None,
+        enforce_constraints: bool = False,
     ):
         """!
 
@@ -121,6 +123,14 @@ class CCZ4Solver(exahype2.api.Solver):
           Initial condition. Defaults to exagrype.api.initialvalues.gauge_wave().
           Pass any other routine from exagrype.api.initialvalues, or your
           own exahype2.api.InitPointWisely.
+
+        @param enforce_constraints: bool
+          If True, the solver pushes the solution back onto the algebraic
+          CCZ4 constraints (exagrype::ccz4::enforceCCZ4constraints()) after
+          each update, i.e. after each time step and, for Runge-Kutta
+          schemes, after each Runge-Kutta stage. The legacy ExaGRyPE always
+          does this. The solver realises the enforcement as point-wise
+          postprocessing, @see exahype2.api.Solver.add_point_wise_postprocessing().
 
         """
         super().__init__(name, unknowns=self.Unknowns, auxiliary_variables=0)
@@ -171,6 +181,11 @@ class CCZ4Solver(exahype2.api.Solver):
             if initial_condition is not None
             else initialvalues.gauge_wave()
         )
+
+        if enforce_constraints:
+            self.add_point_wise_postprocessing(
+                "Enforce constraints", "::exagrype::ccz4::enforceCCZ4constraints(Q);"
+            )
 
     @property
     def parameters(self) -> Dict[str, Union[int, float]]:

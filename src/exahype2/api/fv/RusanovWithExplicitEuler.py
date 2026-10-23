@@ -450,6 +450,9 @@ Patch overlap data
                 guard=self._solver.grid_selector.createCellGuard(),
             )
         )
+        update_cell_task.tags[Solver.SolutionUpdate] = Solver.SolutionUpdate(
+            self._solver, self._solver._patch, self._solver.grid_selector.createCellGuard()
+        )
 
         ## Reduce the cells' maximum eigenvalues into the next time step size.
         ## Runs in parallel to the projection onto the faces

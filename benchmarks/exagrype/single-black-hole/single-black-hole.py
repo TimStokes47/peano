@@ -26,7 +26,7 @@ create_release_build = False
 
 if create_release_build:
     build_mode = peano4.api.output.CompileMode.RELEASE
-    cells_per_axis = 27
+    cells_per_axis = 9
     end_time = 10.0
     time_in_between_plots = 1.0
     verbosity = peano4.api.LoggerVerbosity.TEXT
@@ -64,6 +64,9 @@ solver = exagrype.api.CCZ4Solver(
     initial_condition=exagrype.api.initialvalues.single_black_hole(
         mass=black_hole_mass
     ),
+    # Push the solution back onto the CCZ4 constraints after each update,
+    # as the legacy code does
+    enforce_constraints=True,
 )
 
 # The legacy code uses Sommerfeld conditions. We impose the (static) initial
