@@ -12,6 +12,7 @@ ExaHyPE2Sources = \
   RefinementControl.cpp \
   PrecisionControl.cpp \
   RefinementControlService.cpp \
+  Simulation.cpp \
   Solver.cpp \
   TimeStepping.cpp \
   UserInterface.cpp \

@@ -1,0 +1,178 @@
+// This file is part of the ExaHyPE2 project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#include "Simulation.h"
+
+#include "peano4/parallel/Node.h"
+#include "peano4/peano.h"
+#include "tarch/accelerator/Device.h"
+#include "tarch/Assertions.h"
+#include "tarch/la/ScalarOperations.h"
+#include "tarch/logging/Log.h"
+#include "tarch/logging/Statistics.h"
+#include "tarch/mpi/Rank.h"
+#include "tarch/multicore/Core.h"
+#include "tarch/multicore/multicore.h"
+#include "tarch/NonCriticalAssertions.h"
+#include "toolbox/loadbalancing/LoadBalancingService.h"
+
+
+namespace {
+  tarch::logging::Log _log("exahype2");
+
+  /**
+   * Run the runner which belongs to Node's current program step and report it
+   */
+  void runCurrentStep(
+    peano4::RunMultipleSteps&         setupSimulation,
+    peano4::RunMultipleSteps&         plot,
+    peano4::RunMultipleSteps&         timeStep,
+    peano4::RunMultipleSteps::Report& report
+  ) {
+    const int step = peano4::parallel::Node::getInstance().getCurrentProgramStep(
+    );
+
+    if (step == plot.getFirstSubstep()) {
+      plot.run();
+      report.reportStep(plot);
+    } else if (step == timeStep.getFirstSubstep()) {
+      timeStep.run();
+      report.reportStep(timeStep);
+    } else if (step == setupSimulation.getFirstSubstep()) {
+      setupSimulation.run();
+      report.reportStep(setupSimulation);
+    } else {
+      assertionMsg(false, "Unknown step " << step << " in main().");
+    }
+  }
+
+  /**
+   * Make all ranks run the runner and run it locally
+   */
+  void runStep(
+    peano4::RunMultipleSteps&         runner,
+    peano4::RunMultipleSteps&         setupSimulation,
+    peano4::RunMultipleSteps&         plot,
+    peano4::RunMultipleSteps&         timeStep,
+    peano4::RunMultipleSteps::Report& report
+  ) {
+    peano4::parallel::Node::getInstance().setNextProgramStep(
+      runner.getFirstSubstep()
+    );
+    peano4::parallel::Node::getInstance().continueToRun();
+    runCurrentStep(setupSimulation, plot, timeStep, report);
+  }
+} // namespace
+
+
+bool exahype2::configureRuntime(
+  int                                        timeout,
+  int                                        numberOfThreads,
+  const std::set<int>&                       gpus,
+  tarch::multicore::orchestration::Strategy* orchestration
+) {
+  if (timeout >= 0) {
+    tarch::mpi::Rank::getInstance().setDeadlockTimeOut(timeout);
+  }
+  tarch::multicore::Core::getInstance().configure(numberOfThreads);
+  tarch::accelerator::Device::getInstance().configure(gpus);
+  tarch::multicore::setOrchestration(orchestration);
+
+  if (tarch::mpi::Rank::getInstance().getNumberOfRanks() > 1 and tarch::multicore::Core::getInstance().getNumberOfThreads() <= 1) {
+    logError(
+      "configureRuntime(...)",
+      "MPI runs without multithreading are not supported currently."
+    );
+    return false;
+  }
+  return true;
+}
+
+
+void exahype2::runSimulation(
+  peano4::RunMultipleSteps&         setupSimulation,
+  peano4::RunMultipleSteps&         plot,
+  peano4::RunMultipleSteps&         timeStep,
+  peano4::RunMultipleSteps::Report& report,
+  std::function<bool()>             wantsToPlot,
+  std::function<double()>           getMinTimeStamp,
+  std::function<double()>           getMaxTimeStamp,
+  std::function<double()>           getMaxTimeStepSize,
+  double                            minTerminalTime,
+  double                            maxTerminalTime
+) {
+#if defined(SharedOMP)
+#pragma omp parallel
+  {
+#pragma omp master
+    {
+#endif
+
+#if defined(UseSmartMPI)
+      const bool isGlobalMaster = tarch::mpi::Rank::getInstance().isGlobalMaster(
+      );
+      const bool isPeanoWorker = not tarch::mpi::Rank::getInstance()
+                                       .isGlobalMaster()
+                                 and smartmpi::isComputeRank();
+#else
+  const bool isGlobalMaster = tarch::mpi::Rank::getInstance().isGlobalMaster();
+  const bool isPeanoWorker  = not isGlobalMaster;
+#endif
+
+      if (isGlobalMaster) {
+        bool haveJustWrittenSnapshot = false;
+
+        runStep(setupSimulation, setupSimulation, plot, timeStep, report);
+
+        double maxTimeStepSize = 1.0;
+        while (
+          getMinTimeStamp() < minTerminalTime
+          and getMaxTimeStamp() < maxTerminalTime
+          and tarch::la::greater(maxTimeStepSize, 0.0)
+        ) {
+          // Each solver's plotter decides itself whether it plots in the plot
+          // phase. A plot does not advance the simulation, so it never
+          // decides whether the loop goes on, and the next iteration runs a
+          // time step.
+          if (wantsToPlot() and not haveJustWrittenSnapshot) {
+            haveJustWrittenSnapshot = true;
+            runStep(plot, setupSimulation, plot, timeStep, report);
+          } else {
+            haveJustWrittenSnapshot = false;
+            runStep(timeStep, setupSimulation, plot, timeStep, report);
+            maxTimeStepSize = getMaxTimeStepSize();
+          }
+        }
+
+        if (wantsToPlot()) {
+          runStep(plot, setupSimulation, plot, timeStep, report);
+        }
+      } else if (isPeanoWorker) {
+        while (peano4::parallel::Node::getInstance().continueToRun()) {
+          runCurrentStep(setupSimulation, plot, timeStep, report);
+        }
+      } else {
+        assertionMsg(
+          false,
+          "This rank is neither global master nor Peano worker. This should not happen yet, as SmartMPI is not active."
+        );
+      }
+
+#if defined(SharedOMP)
+    }
+  }
+#endif
+
+  report.reportFinalResults({setupSimulation, timeStep, plot});
+}
+
+
+void exahype2::shutdownRuntime(std::function<void()> shutdownDatatypes) {
+  tarch::logging::Statistics::getInstance().writeToCSV();
+
+  toolbox::loadbalancing::LoadBalancingService::getInstance().shutdown();
+  peano4::shutdownSingletons();
+  shutdownDatatypes();
+  tarch::multicore::shutdownSmartMPI();
+  tarch::shutdownNonCriticalAssertionEnvironment();
+  peano4::shutdownParallelEnvironment();
+}

@@ -20,6 +20,12 @@ class DefaultSimulationMain(Project.Generator):
     construct_output(output, main_name) protocol but fills the file pair
     with ExaHyPE-flavoured content instead of the mesh-agnostic default.
 
+    The generated main() contains only what is specific to the project:
+    the runners, the data types, the domain, the log filter and the load
+    balancing. The runtime configuration, the main loop over the runners
+    and the shutdown are plain C++, i.e. exahype2::configureRuntime(),
+    exahype2::runSimulation() and exahype2::shutdownRuntime().
+
     """
 
     def __init__(self, project: Project):
@@ -67,16 +73,13 @@ int main(int argc, char** argv);
 
 #include "tarch/logging/Log.h"
 #include "tarch/logging/LogFilterFileReader.h"
-#include "tarch/logging/Statistics.h"
 #include "tarch/mpi/Rank.h"
 #include "tarch/multicore/Core.h"
-#include "tarch/multicore/multicore.h"
-#include "tarch/accelerator/Device.h"
-#include "tarch/NonCriticalAssertions.h"
+#include "tarch/multicore/orchestration/Strategy.h"
 #include "peano4/peano.h"
-#include "peano4/parallel/SpacetreeSet.h"
 #include "peano4/DefaultStepReport.h"
 #include "exahype2/LoadBalancingConfiguration.h"
+#include "exahype2/Simulation.h"
 #include "toolbox/loadbalancing/LoadBalancingService.h"
 {% if LOAD_BALANCER!="" -%}
 #include "{{LOAD_BALANCER | replace('::', '/') }}.h"
@@ -114,32 +117,6 @@ tarch::logging::Log _log( "{{NAMESPACE | join("::")}}" );
 {{STEP_REPORT_CLASS}} stepReport;
 
 
-void step() {
-  int  stepIdentifier = peano4::parallel::Node::getInstance().getCurrentProgramStep();
-  auto stepName       = {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::StepRepository::toStepEnum(stepIdentifier);
-
-  static tarch::logging::Log _log("");
-
-  int  step = peano4::parallel::Node::getInstance().getCurrentProgramStep();
-
-  if (step == Plot.getFirstSubstep()) {
-    Plot.run();
-    stepReport.reportStep(Plot);
-  }
-  else if (step == TimeStep.getFirstSubstep()) {
-    TimeStep.run();
-    stepReport.reportStep(TimeStep);
-  }
-  else if (step == SetupSimulation.getFirstSubstep()) {
-    SetupSimulation.run();
-    stepReport.reportStep(SetupSimulation);
-  }
-  else {
-    assertionMsg( false, "Unknown step " << step << " in main()." );
-  }
-}
-
-
 int main(int argc, char** argv) {
   constexpr int ExitCodeSuccess          = 0;
   constexpr int ExitCodeUnitTestsFailed  = 1;
@@ -166,12 +143,14 @@ int main(int argc, char** argv) {
     {{NAMESPACE | join("::")}}::PeriodicBC
   );
 
-  {% if TIMEOUT>=0 %}
-  tarch::mpi::Rank::getInstance().setDeadlockTimeOut( {{TIMEOUT}} );
-  {% endif %}
-  tarch::multicore::Core::getInstance().configure( {{NUMBER_OF_THREADS}} );
-  tarch::accelerator::Device::getInstance().configure( { {{GPUS|join(",")}} } );
-  tarch::multicore::setOrchestration( {{MULTICORE_ORCHESTRATION}} );
+  if ( not ::exahype2::configureRuntime(
+    {{TIMEOUT}},
+    {{NUMBER_OF_THREADS}},
+    { {{GPUS|join(",")}} },
+    {{MULTICORE_ORCHESTRATION}}
+  ) ) {
+    return ExitCodeInvalidBuild;
+  }
 
   {% if LOAD_BALANCER!="" -%}
   toolbox::loadbalancing::LoadBalancingService::getInstance().setLoadBalancing(
@@ -183,113 +162,26 @@ int main(int argc, char** argv) {
   );
   {% endif %}
 
-  if (tarch::mpi::Rank::getInstance().getNumberOfRanks() > 1 and tarch::multicore::Core::getInstance().getNumberOfThreads() <= 1) {
-    logError("main()", "MPI runs without multithreading are not supported currently.");
-    return ExitCodeInvalidBuild;
-  }
-
-  {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::DataRepository::initDatatypes();
-
   {% if FENV_ARGS is defined and FENV_ARGS != "" -%}
   feenableexcept({{FENV_ARGS}} );
   {% endif -%}
-  
-  #if defined(SharedOMP)
-    #pragma omp parallel
-    {
-      #pragma omp master
-      {
-  #endif
 
-  #if defined(UseSmartMPI)
-  const bool isGlobalMaster =     tarch::mpi::Rank::getInstance().isGlobalMaster();
-  const bool isPeanoWorker  = not tarch::mpi::Rank::getInstance().isGlobalMaster() and smartmpi::isComputeRank();
-  #else
-  const bool isGlobalMaster = tarch::mpi::Rank::getInstance().isGlobalMaster();
-  const bool isPeanoWorker  = not isGlobalMaster;
-  #endif
+  ::exahype2::runSimulation(
+    SetupSimulation,
+    Plot,
+    TimeStep,
+    stepReport,
+    {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::wantsToPlot,
+    {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMinTimeStamp,
+    {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStamp,
+    {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStepSize,
+    {{NAMESPACE | join("::")}}::MinTerminalTime,
+    {{NAMESPACE | join("::")}}::MaxTerminalTime
+  );
 
-  if (isGlobalMaster) {
-    bool     haveJustWrittenSnapshot = false;
-      
-    peano4::parallel::Node::getInstance().setNextProgramStep(
-      SetupSimulation.getFirstSubstep()
-    );
-    peano4::parallel::Node::getInstance().continueToRun();
-    step();
-      
-    double maxTimeStepSize = 1.0;
-    while ( 
-        {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMinTimeStamp() < {{NAMESPACE | join("::")}}::MinTerminalTime 
-        and 
-        {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStamp() < {{NAMESPACE | join("::")}}::MaxTerminalTime
-        and
-        tarch::la::greater(maxTimeStepSize,0.0)
-    ) {
-        // Each solver's plotter decides itself whether it plots in the plot
-        // phase - we only run that phase if at least one of them wants to.
-        if (
-          {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::wantsToPlot()
-          and
-          not haveJustWrittenSnapshot
-        ) {
-          peano4::parallel::Node::getInstance().setNextProgramStep(
-            Plot.getFirstSubstep()
-          );
-          haveJustWrittenSnapshot = true;
-          peano4::parallel::Node::getInstance().continueToRun();
-          step();
-          // A plot does not itself advance the simulation, so it must never be
-          // what decides whether the loop keeps going: leave maxTimeStepSize
-          // exactly as it was before the plot, and - since
-          // haveJustWrittenSnapshot is now true - the very next iteration is
-          // guaranteed to take the time-step branch below instead.
-        }
-        else {
-          haveJustWrittenSnapshot = false;
-
-          peano4::parallel::Node::getInstance().setNextProgramStep(
-            TimeStep.getFirstSubstep()
-          );
-          peano4::parallel::Node::getInstance().continueToRun();
-          step();
-
-          maxTimeStepSize = {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMaxTimeStepSize();
-        }
-    }
-      
-    if ( {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::wantsToPlot() ) {
-        peano4::parallel::Node::getInstance().setNextProgramStep(
-          Plot.getFirstSubstep()
-        );
-        peano4::parallel::Node::getInstance().continueToRun();
-        step();
-    }
-  }
-  else if (isPeanoWorker) {
-    while (peano4::parallel::Node::getInstance().continueToRun()) {
-      step();
-    }
-  }
-  else {
-    assertionMsg( false, "This rank is neither global master nor Peano worker. This should not happen yet, as SmartMPI is not active." );
-  }
-  
-  #if defined(SharedOMP)
-      }
-    }
-  #endif
-
-  stepReport.reportFinalResults( { SetupSimulation, TimeStep, Plot } );
-
-  tarch::logging::Statistics::getInstance().writeToCSV();
-
-  toolbox::loadbalancing::LoadBalancingService::getInstance().shutdown();
-  peano4::shutdownSingletons();
-  {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::DataRepository::shutdownDatatypes();
-  tarch::multicore::shutdownSmartMPI();
-  tarch::shutdownNonCriticalAssertionEnvironment();
-  peano4::shutdownParallelEnvironment();
+  ::exahype2::shutdownRuntime(
+    {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::DataRepository::shutdownDatatypes
+  );
 
   return ExitCodeSuccess;
 }
