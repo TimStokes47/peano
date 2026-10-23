@@ -46,8 +46,10 @@ The initial data matches the closed form of a Schwarzschild black hole in
 isotropic coordinates up to round-off. The run is stable, but the mesh is far
 too coarse for the black hole: the horizon spans about three volumes, and the
 first-order Finite Volumes diffuse the puncture away. By t=10, the lapse next
-to the puncture has grown from 0.37 to 0.88, and the conformal factor phi
-from 0.13 to 0.93. A resolved black hole would instead show a collapsing
+to the puncture has grown from 0.37 to 0.89, and the conformal factor phi
+from 0.13 to 0.93. Without constraint enforcement, the numbers are almost the
+same (0.88 and 0.93), i.e. the enforcement does not cure the dissolving black
+hole. A resolved black hole would instead show a collapsing
 lapse. The tutorial @ref tutorials_exahype2_exagrype_522_single-black-hole
 discusses this behaviour.
 
@@ -56,8 +58,6 @@ discusses this behaviour.
 - The legacy code imposes Sommerfeld boundary conditions. This benchmark
   uses Dirichlet conditions instead, which hold the boundary at the
   (static) initial data.
-- There is no constraint enforcement after the time steps yet, i.e. the
-  solution is not pushed back onto the CCZ4 constraint surface.
 - The mesh is regular. The legacy code zooms into the black hole with
   adaptive mesh refinement, and couples the Finite Volumes with fourth-order
   Finite Differences.
