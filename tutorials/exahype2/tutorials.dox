@@ -43,6 +43,7 @@ Jupyter.
   - \subpage tutorials_exahype2_11_tsunami
 - Modifying the numerics and the implementation scheme
   - \subpage tutorials_exahype2_12_higher-order-solvers
+  - \subpage tutorials_exahype2_20_additional-solver-steps
 - Running codes in parallel
   - \subpage tutorials_exahype2_30_domain-decomposition
   - \subpage tutorials_exahype2_35_offline-load-balancing
@@ -54,7 +55,7 @@ Jupyter.
   - \subpage tutorials_exahype2_applications_exagrype_configure
   - ExaGRyPE standard benchmarks
     - \subpage tutorials_exahype2_exagrype_521_gauge-wave
-    - \subpage tutorials_exahype2_applications_exagrype_single_black_hole
+    - \subpage tutorials_exahype2_exagrype_522_single-black-hole
     - \subpage tutorials_exahype2_applications_exagrype_binary_black_hole
   - \subpage tutorials_exahype2_applications_exagrype_visualize
   - \subpage tutorials_exahype2_applications_exagrype_clusters

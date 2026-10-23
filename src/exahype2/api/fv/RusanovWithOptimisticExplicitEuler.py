@@ -1276,6 +1276,10 @@ Patch overlap data
                 max_eigenvalue=self._solver._max_eigenvalue_and_time_step_sizes,
             )
         )
+        update_cell_task.tags[Solver.SolutionUpdate] = Solver.SolutionUpdate(
+            self._solver, self._solver._patch, traditional_guard,
+            guard_data=[self._solver._max_eigenvalue_and_time_step_sizes],
+        )
 
         ## Traditional branch: the update makes any precomputed patch interior obsolete
         discard_patch_interior_task.add_dependency(update_cell_task)
@@ -1319,6 +1323,10 @@ Patch overlap data
                 guard=optimistic_guard,
                 task_number=task_number,
             )
+        )
+        insert_patch_interior_task.tags[Solver.SolutionUpdate] = Solver.SolutionUpdate(
+            self._solver, self._solver._patch, optimistic_guard,
+            guard_data=[self._solver._max_eigenvalue_and_time_step_sizes],
         )
 
         ## Both branches: reduce the cells' maximum eigenvalues into the next

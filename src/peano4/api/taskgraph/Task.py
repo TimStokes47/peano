@@ -74,6 +74,17 @@ class Task:
       The compilers leave the task as it is without any further check or
       warning.
 
+    ## Task tags
+
+    Every task can carry tags, i.e. a dictionary which maps a key onto an
+    arbitrary value. The task graph compilers ignore them. Tags allow the
+    code which creates a task graph to tell other code what a task does,
+    without that code having to know how the graph is built. Find tagged
+    tasks via peano4.api.taskgraph.Graph.find_tasks(). ExaHyPE's numerical
+    schemes, for example, tag all tasks which produce a new solution, such
+    that a solver can add postprocessing steps after them (@ref
+    exahype2.api.Solver.Solver.postprocess_task_graphs()).
+
     ## Task processing
 
     The tasks will later on be taken by the graph compiler which maps them
@@ -169,8 +180,10 @@ class Task:
         entity: "Task.GridEntity",
         task_has_to_repeat: Optional[str] = None,
         may_spawn_background_tasks: Optional[bool] = None,
+        tags: Optional[dict] = None,
     ):
         self.name = name
+        self.tags: dict = dict(tags) if tags is not None else {}
         self.entity = entity
         self.dependencies: List["Task"] = []
         self.action_sets: List["peano4.api.solversteps.ActionSet"] = []

@@ -136,6 +136,59 @@ class Solver(abc.ABC):
               phase, so the plotter can add its own tasks into it.
             """
 
+    class SolutionUpdate:
+        """!
+
+        Tag of a task which writes a new solution
+
+        Every numerical scheme tags each task of its time stepping task
+        graph which produces a new solution, and, for Runge-Kutta schemes,
+        each task which produces the input of a further Runge-Kutta stage.
+        The tag's key is the class SolutionUpdate itself, its value an
+        instance of this class:
+
+        ~~~~~~~~~~~~~~~~~~~~~~~
+        task.tags[Solver.SolutionUpdate] = Solver.SolutionUpdate(solver, patch, guard)
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        Code which wants to postprocess the solution, e.g. to enforce
+        constraints, searches for these tags via
+        peano4.api.taskgraph.Graph.find_tasks() and inserts its own tasks
+        after the tagged ones (@ref Solver.postprocess_task_graphs()). The
+        tags hence are the contract between the numerical schemes and any
+        postprocessing: A scheme has to tag all of its solution writers, and
+        it must not read the outcome of a writer within the writer's own
+        task, i.e. it has to project the solution onto the faces or compute
+        eigenvalues from it in a subsequent task.
+
+        """
+
+        def __init__(self, solver: "Solver", patch, guard: str, guard_data=None):
+            """!
+
+            @param solver: exahype2.api.Solver
+              The solver whose solution the tagged task writes.
+
+            @param patch: peano4.api.datamodel.Patch
+              The cell data the tagged task writes the solution into, i.e.
+              the solution patch or a Runge-Kutta stage input.
+
+            @param guard: str
+              C++ boolean expression which selects the cells the tagged task
+              updates. Postprocessing should use the same guard. The guard
+              has to evaluate to the same value before and after the update.
+
+            @param guard_data: List[peano4.api.datamodel.DoF]
+              Cell data besides the patch which the guard reads.
+              Postprocessing tasks have to declare these data, too, as the
+              generated code would not see them otherwise.
+
+            """
+            self.solver = solver
+            self.patch = patch
+            self.guard = guard
+            self.guard_data = list(guard_data) if guard_data is not None else []
+
     def __init__(
         self,
         name: str,
@@ -209,6 +262,10 @@ class Solver(abc.ABC):
         self._solver_constants = ""
 
         self._pde_terms: Dict[Tuple[str, bool], PDETerm] = {}
+
+        # Point-wise postprocessing steps as (name, implementation, includes)
+        # triples, @see add_point_wise_postprocessing()
+        self._point_wise_postprocessing: List[Tuple[str, str, str]] = []
 
         # Raw C++ member declarations/methods to splice into the generated
         # Abstract<SolverName> class, on top of the PDE terms above -
@@ -452,6 +509,116 @@ class Solver(abc.ABC):
         """! Look up a previously registered PDE term by name and statelessness."""
         return self._pde_terms[(name, stateless)]
 
+    def add_point_wise_postprocessing(
+        self, name: str, implementation: str, additional_includes: str = ""
+    ):
+        """!
+
+        Postprocess every new solution point-wisely
+
+        After the numerical scheme has written a new solution, or, for
+        Runge-Kutta schemes, the input of a further Runge-Kutta stage, the
+        solver runs implementation for each volume (or grid point) of each
+        patch. The snippet may read and write Q, i.e. all unknowns and
+        auxiliary variables of one volume, and read its position x, @see
+        toolbox.blockstructured.api.ApplyPointWiselyToPatch.
+
+        The postprocessing becomes a task of its own in the time stepping
+        task graph, which runs directly after each task that writes a new
+        solution. @see postprocess_task_graphs() for the mechanism.
+
+        @param name: str
+          Name of the step. The task names read
+          "{solver}_{name} after {task}".
+
+        @param implementation: str
+          C++ snippet which is applied to each volume.
+
+        @param additional_includes: str
+          Includes that the snippet needs.
+
+        """
+        self._point_wise_postprocessing.append(
+            (name, implementation, additional_includes)
+        )
+
+    def postprocess_task_graphs(
+        self,
+        exahype2_project,
+        peano_project,
+        setup_simulation,
+        time_step,
+        plot,
+    ):
+        """!
+
+        Alter the task graphs after they have been created, but before they are compiled
+
+        generate_solver_realisation() calls this routine after the grid
+        construction, the numerical scheme and the plotter have added their
+        tasks to the three task graphs. Afterwards, the project hands the
+        graphs over to the task graph compiler. Subclasses can override the
+        routine to add further tasks or to modify the graphs. In this case,
+        they should call the superclass' implementation, too.
+
+        The default implementation inserts the point-wise postprocessing
+        steps (@ref add_point_wise_postprocessing()) into the time stepping
+        task graph. For each task tagged with Solver.SolutionUpdate of this
+        solver, and for each postprocessing step, it creates a new task and
+        inserts it directly after the tagged task (@ref
+        peano4.api.taskgraph.Graph.insert_after()). A Runge-Kutta scheme
+        tags the writer of each stage, so the postprocessing runs after each
+        Runge-Kutta stage.
+
+        @param setup_simulation, time_step, plot: peano4.api.taskgraph.Graph
+          The task graphs of the three algorithmic phases.
+
+        """
+        if not self._point_wise_postprocessing:
+            return
+
+        import toolbox.blockstructured.api
+
+        includes = self._get_default_includes() + self.user_solver_includes
+        anchors = [
+            task
+            for task in time_step.find_tasks(Solver.SolutionUpdate)
+            if task.tags[Solver.SolutionUpdate].solver is self
+        ]
+        assert anchors, (
+            f"Solver {self._name} has point-wise postprocessing, but its numerical "
+            "scheme does not tag any task with exahype2.api.Solver.SolutionUpdate"
+        )
+        for anchor in anchors:
+            update = anchor.tags[Solver.SolutionUpdate]
+            anchor_name = anchor.name
+            if anchor_name.startswith(self._name + "_"):
+                anchor_name = anchor_name[len(self._name) + 1 :]
+            for name, implementation, additional_includes in self._point_wise_postprocessing:
+                task = peano4.api.taskgraph.Task(
+                    name=f"{self._name}_{name} after {anchor_name}",
+                    entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+                )
+                task.use_cell(update.patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+                ## READ_AND_WRITE keeps the data alive for later tasks
+                for data in update.guard_data:
+                    task.use_cell(data, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+                task.add_action_set(
+                    toolbox.blockstructured.api.ApplyPointWiselyToPatch(
+                        patch=update.patch,
+                        implementation=implementation,
+                        guard=update.guard,
+                        additional_includes=includes + additional_includes,
+                    )
+                )
+                time_step.insert_after(anchor, task)
+                anchor = task
+
+        if peano4.api.Logger().is_visualisation:
+            time_step.visualise(title=f"Time stepping task graph for {self._name} with postprocessing")
+        if peano4.api.Logger().is_text:
+            time_step.log_as_text(title=f"Time stepping task graph for {self._name} with postprocessing")
+
     def add_abstract_solver_attribute(self, declaration: str):
         """!
 
@@ -570,6 +737,9 @@ class Solver(abc.ABC):
         )
         if self.plotter is not None:
             self.plotter.construct_output(exahype2_project, peano_project, plot)
+        self.postprocess_task_graphs(
+            exahype2_project, peano_project, setup_simulation, time_step, plot
+        )
         # Last, so grid construction, numerical scheme and plotter can add
         # their own members to the solver class first (@see
         # add_abstract_solver_attribute()/add_abstract_solver_method()).
