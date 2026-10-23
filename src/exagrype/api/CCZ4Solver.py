@@ -149,6 +149,7 @@ class CCZ4Solver(exahype2.api.Solver):
             """
 #include "exagrype/ccz4/Kernels.h"
 #include "exagrype/initialvalues/InitialValues.h"
+#include "exagrype/initialvalues/ApplyTwoPunctures.h"
 """
         )
 

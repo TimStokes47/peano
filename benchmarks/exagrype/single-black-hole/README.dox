@@ -1,0 +1,50 @@
+/**
+
+@page benchmarks_exagrype_single_black_hole Single black hole (ExaGRyPE Python API)
+
+A single Schwarzschild black hole at the origin of the domain
+\f$ [-9,9]^3 \f$. The initial data stems from TwoPunctures. The simulation
+should settle into a (quasi-)stationary state after a while, but it is
+numerically challenging: there is a singularity at the puncture, and the
+boundary of the domain is not physical.
+
+This benchmark sets up the black hole with exagrype.api.CCZ4Solver and
+discretises it with the Finite Volume scheme of exahype2.api on a regular
+mesh. It mirrors the pure Finite Volume runs of the legacy benchmark
+@ref benchmarks_exahype2_ccz4_single_black_hole. The tutorial
+@ref tutorials_exahype2_exagrype_522_single-black-hole explains how the
+benchmark is built step by step.
+
+# Build and run
+
+Configure Peano with
+
+~~~~~~~~~~~~~~~~~~~~~~~
+./configure --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-exagrype --with-gsl ...
+~~~~~~~~~~~~~~~~~~~~~~~
+
+TwoPunctures needs the GNU Scientific Library (GSL). Without --with-gsl, the
+generated solver refuses to compile. Build Peano, then run, within this
+directory,
+
+~~~~~~~~~~~~~~~~~~~~~~~
+python3 single-black-hole.py
+./single-black-hole
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The script builds a small debug version by default: \f$ 9^3 \f$ mesh cells,
+each carrying a patch of \f$ 6^3 \f$ volumes, run until t=0.1. Set
+\c create_release_build to True for \f$ 27^3 \f$ cells and a run until t=10.
+
+# Differences to the legacy benchmark
+
+- The legacy code imposes Sommerfeld boundary conditions. This benchmark
+  uses Dirichlet conditions instead, which hold the boundary at the
+  (static) initial data.
+- There is no constraint enforcement after the time steps yet, i.e. the
+  solution is not pushed back onto the CCZ4 constraint surface.
+- The mesh is regular. The legacy code zooms into the black hole with
+  adaptive mesh refinement, and couples the Finite Volumes with fourth-order
+  Finite Differences.
+
+*/
