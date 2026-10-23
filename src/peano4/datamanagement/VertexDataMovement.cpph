@@ -1,0 +1,326 @@
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#include "peano4/grid/LoadStoreComputeFlag.h"
+#include "peano4/grid/PeanoCurve.h"
+#include "peano4/utils/Globals.h"
+#include "tarch/Assertions.h"
+#include "tarch/logging/Log.h"
+
+#include <utility>
+
+
+template <typename Data, typename StackMap, typename LoadStoreComputeFlag>
+void peano4::datamanagement::loadVertexData(
+  StackMap&                               stackMap,
+  int                                     spacetreeId,
+  const peano4::grid::GridTraversalEvent& event,
+  const VertexMarker&                     vertexMarker,
+  [[maybe_unused]] const char*            name,
+  LoadStoreComputeFlag                    loadStoreComputeFlag
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::VertexDataMovement"
+  );
+
+  auto view = stackMap
+                .getForPush(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                ->pushBlock(TwoPowerD);
+  for (int i = 0; i < TwoPowerD; i++) {
+    int inVertexStack          = event.getVertexDataFrom(i);
+    int outVertexStackPosition = event.getVertexDataTo(i);
+    logDebug(
+      "loadCell(...)",
+      "vertex stack " << inVertexStack << "->pos-" << outVertexStackPosition
+    );
+
+    VertexMarker marker(vertexMarker, outVertexStackPosition);
+
+    bool dataResidesOnIntermediateStack
+      = not peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
+        and inVertexStack
+              != peano4::grid::TraversalObserver::
+                CreateOrDestroyPersistentGridEntity
+        and inVertexStack
+              != peano4::grid::TraversalObserver::
+                CreateOrDestroyHangingGridEntity
+        and inVertexStack != peano4::grid::TraversalObserver::NoData;
+    bool dataResidesOnInputStack
+      = peano4::grid::PeanoCurve::isInOutStack(inVertexStack)
+        and ::peano4::grid::loadPersistently(loadStoreComputeFlag(marker));
+    bool initialiseStackContentForNewData
+      = ::peano4::grid::computeOnData(loadStoreComputeFlag(marker))
+        or inVertexStack
+             == peano4::grid::TraversalObserver::
+               CreateOrDestroyPersistentGridEntity
+        or inVertexStack
+             == peano4::grid::TraversalObserver::
+               CreateOrDestroyHangingGridEntity;
+
+    if (dataResidesOnIntermediateStack or dataResidesOnInputStack) {
+      logDebug(
+        "loadCell(...)",
+        "load data of vertex "
+          << name << " with " << marker.x(outVertexStackPosition) << " x "
+          << marker.h() << ": "
+          << ::peano4::grid::toString(loadStoreComputeFlag(marker))
+      );
+      assertion4(
+        not stackMap.getForPop(spacetreeId, inVertexStack)->empty(),
+        event.toString(),
+        VertexMarker(event).toString(),
+        spacetreeId,
+        inVertexStack
+      );
+      Data data = std::move(
+        stackMap.getForPop(spacetreeId, inVertexStack)->pop()
+      );
+#if PeanoDebug > 0
+      if (peano4::grid::PeanoCurve::isInOutStack(inVertexStack)) {
+        assertionVectorNumericalEquals7(
+          data.getDebugX(),
+          marker.x(outVertexStackPosition),
+          event.toString(),
+          data.getDebugX(),
+          marker.toString(),
+          inVertexStack,
+          i,
+          outVertexStackPosition,
+          spacetreeId
+        );
+        assertionVectorNumericalEquals6(
+          data.getDebugH(),
+          marker.h(),
+          event.toString(),
+          data.getDebugX(),
+          marker.toString(),
+          inVertexStack,
+          i,
+          spacetreeId
+        );
+      }
+#endif
+      view.set(outVertexStackPosition, data);
+    } else if (initialiseStackContentForNewData) {
+      Data data;
+#if PeanoDebug > 0
+      logDebug(
+        "loadCell(...)",
+        "initialise meta data of new vertex "
+          << name << " with " << marker.x(outVertexStackPosition) << " x "
+          << marker.h() << ": "
+          << ::peano4::grid::toString(loadStoreComputeFlag(marker))
+      );
+      data.setDebugX(marker.x(outVertexStackPosition));
+      data.setDebugH(marker.h());
+#endif
+      view.set(outVertexStackPosition, data);
+    } else {
+#if PeanoDebug > 0
+      logDebug(
+        "loadCell(...)",
+        "initialise meta data of unused vertex "
+          << name << " with " << marker.x(outVertexStackPosition) << " x "
+          << marker.h() << ": "
+          << ::peano4::grid::toString(loadStoreComputeFlag(marker))
+      );
+      view.get(outVertexStackPosition)
+        .setDebugX(marker.x(outVertexStackPosition));
+      view.get(outVertexStackPosition).setDebugH(marker.h());
+#endif
+    }
+  }
+}
+
+
+template <typename Data, typename StackMap, typename LoadStoreComputeFlag>
+void peano4::datamanagement::storeVertexData(
+  StackMap&                               stackMap,
+  int                                     spacetreeId,
+  const peano4::grid::GridTraversalEvent& event,
+  const VertexMarker&                     vertexMarker,
+  [[maybe_unused]] const char*            name,
+  LoadStoreComputeFlag                    loadStoreComputeFlag
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::VertexDataMovement"
+  );
+
+  auto view = stackMap
+                .getForPop(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                ->popBlock(TwoPowerD);
+  for (int i = 0; i < TwoPowerD; i++) {
+    int inVertexStackPosition = event.getVertexDataFrom(i);
+    int outVertexStack        = event.getVertexDataTo(i);
+    logDebug(
+      "storeCell(...)",
+      "pos-" << inVertexStackPosition << "->vertex stack " << outVertexStack
+    );
+
+    VertexMarker marker(vertexMarker, inVertexStackPosition);
+
+    Data& data = view.get(inVertexStackPosition);
+
+    bool dataShallBePushedOntoIntermediateStack
+      = not peano4::grid::PeanoCurve::isInOutStack(outVertexStack)
+        and outVertexStack
+              != peano4::grid::TraversalObserver::
+                CreateOrDestroyPersistentGridEntity
+        and outVertexStack
+              != peano4::grid::TraversalObserver::
+                CreateOrDestroyHangingGridEntity
+        and outVertexStack != peano4::grid::TraversalObserver::NoData;
+    bool dataShallBePushedOntoOutputStack
+      = peano4::grid::PeanoCurve::isInOutStack(outVertexStack)
+        and ::peano4::grid::storePersistently(loadStoreComputeFlag(marker));
+
+    if (dataShallBePushedOntoIntermediateStack or dataShallBePushedOntoOutputStack) {
+      logDebug(
+        "storeCell(...)",
+        "store vertex "
+          << name << " with " << marker.x(inVertexStackPosition) << " x "
+          << marker.h()
+      );
+      stackMap.getForPush(spacetreeId, outVertexStack)->push(data);
+    } else {
+      logDebug(
+        "storeCell(...)",
+        "do not store vertex "
+          << name << " with " << marker.x(inVertexStackPosition) << " x "
+          << marker.h()
+      );
+    }
+  }
+}
+
+
+template <
+  typename Data,
+  typename StackMap,
+  typename LoadStoreComputeFlag,
+  typename Send>
+void peano4::datamanagement::sendVertexData(
+  StackMap&                                           stackMap,
+  int                                                 spacetreeId,
+  int                                                 position,
+  int                                                 toStack,
+  peano4::grid::TraversalObserver::SendReceiveContext context,
+  const VertexMarker&                                 vertexMarker,
+  LoadStoreComputeFlag                                loadStoreComputeFlag,
+  Send                                                send
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::VertexDataMovement"
+  );
+
+  VertexMarker marker(vertexMarker, position);
+
+  const Data& data = stackMap
+                       .getForPop(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                       ->top(TwoPowerD - 1 - position);
+  if (::peano4::grid::storePersistently(loadStoreComputeFlag(marker)) and (send(data, marker) or context == peano4::grid::TraversalObserver::SendReceiveContext::ForkDomain or context == peano4::grid::TraversalObserver::SendReceiveContext::JoinDomain)) {
+    logDebug(
+      "sendVertex(...)",
+      "send out "
+        << data.toString() << " to stack " << toStack << " on tree "
+        << spacetreeId << " for marker " << marker.toString()
+    );
+
+    stackMap.getForPush(spacetreeId, toStack)->push(data);
+  }
+}
+
+
+template <
+  typename Data,
+  typename StackMap,
+  typename LoadStoreComputeFlag,
+  typename ReceiveAndMerge>
+void peano4::datamanagement::receiveAndMergeVertexData(
+  StackMap&                                                stackMap,
+  int                                                      spacetreeId,
+  int                                                      position,
+  int                                                      fromStack,
+  peano4::grid::TraversalObserver::SendReceiveContext      context,
+  [[maybe_unused]] const peano4::grid::GridTraversalEvent& event,
+  const VertexMarker&                                      vertexMarker,
+  LoadStoreComputeFlag                                     loadStoreComputeFlag,
+  ReceiveAndMerge                                          receiveAndMerge
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::VertexDataMovement"
+  );
+
+  VertexMarker marker(vertexMarker, position);
+  Data&        data = stackMap
+                 .getForPush(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                 ->top(TwoPowerD - 1 - position);
+
+  if (::peano4::grid::loadPersistently(loadStoreComputeFlag(marker)) and receiveAndMerge(data, marker)) {
+    assertion5(
+      not stackMap.getForPop(spacetreeId, fromStack)->empty(),
+      spacetreeId,
+      fromStack,
+      event.toString(),
+      position,
+      marker.toString()
+    );
+
+    auto incomingData = std::move(
+      stackMap.getForPop(spacetreeId, fromStack)->pop()
+    );
+
+    logDebug(
+      "receiveAndMergeVertex(...)",
+      "merge " << incomingData.toString() << " into " << data.toString()
+    );
+
+    if (context == ::peano4::grid::TraversalObserver::SendReceiveContext::PeriodicBoundaryDataSwap) {
+      // @todo Different to faces. As we can have diagonal exchange, too,
+      //       we only know that it has to be unequal
+      assertion8(
+        data.getDebugX() != incomingData.getDebugX(),
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+      assertionVectorNumericalEquals6(
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+    } else {
+      assertionVectorNumericalEquals6(
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+      assertionVectorNumericalEquals6(
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+    }
+
+    data.merge(context, incomingData, marker, spacetreeId);
+  }
+}
