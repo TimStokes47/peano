@@ -29,9 +29,6 @@ see @ref page_toolbox_loadbalancing_api.
 
 # Prepare the benchmark
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/BH_LMC.png" width="60%"/>
-
-
 We follow more or less the instructions on @ref benchmarks_exahype2_ccz4_single_black_hole.
 The page provides more in-depth information on which modules you need, what 
 other tools you might want to combine with ExaHyPE, and so forth. 
