@@ -15,7 +15,9 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     Set the ghost grid cells along the domain boundary through the solver's
     exahype2.api.DirichletBoundaryConditions term
 
-    The action set plugs into touchFaceFirstTime(). Each face carries an
+    The action set plugs into touchFaceFirstTime() and delegates to
+    exahype2::blockstructured::applyDirichletBoundaryConditions(), which
+    holds the logic described below. Each face carries an
     overlap of 2*overlap grid cells along its normal
     (solver._patch_overlap_current_time_step), i.e. 2*3 for the
     fourth-order Finite Differences of @ref exahype2.api.rkfd4 :
@@ -47,11 +49,11 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     Use add_task_to_time_step() to add the corresponding task to a time
     step's task graph.
 
-    The class is a copy of
+    The class mirrors
     exahype2.api.fv.actionsets.ApplyDirichletBoundaryConditions, as rkfd4
-    does not depend on the Finite Volume package. Different to the original,
-    it evaluates the boundary values at the time stamp of the Runge-Kutta
-    stage. With the time stamp of the time step instead, all stages would
+    does not depend on the Finite Volume package. Both share the C++
+    routine. Different to the Finite Volume version, it evaluates the
+    boundary values at the time stamp of the Runge-Kutta stage. With the time stamp of the time step instead, all stages would
     see the same boundary values, and the scheme would drop to first order
     along the boundary.
 
@@ -59,43 +61,20 @@ class ApplyDirichletBoundaryConditions(ActionSet):
 
     TemplateTouchFaceFirstTime = jinja2.Template(
         """
-  const int  normal          = marker.getSelectedFaceNumber() % Dimensions;
-  const bool isLowerBoundary = tarch::la::equals( marker.x()(normal), DomainOffset(normal) );
-  const bool isUpperBoundary = tarch::la::equals( marker.x()(normal), DomainOffset(normal) + DomainSize(normal) );
-
-  if ( not PeriodicBC[normal] and (isLowerBoundary or isUpperBoundary) ) {
-    logTraceInWith1Argument( "touchFaceFirstTime(...)---ApplyDirichletBoundaryConditions", marker.toString() );
-
-    const double t = repositories::{{SOLVER_INSTANCE}}.getMinTimeStamp() + {{RELATIVE_TIME_STEP_SIZE}} * repositories::{{SOLVER_INSTANCE}}.getMinTimeStepSize();
-    const tarch::la::Vector<Dimensions,double> gridCellH = ::exahype2::fd::getGridCellSize( marker.h(), {{NUMBER_OF_GRID_CELLS_PER_AXIS}} );
-
-    dfore( gridCell, {{NUMBER_OF_GRID_CELLS_PER_AXIS}}, normal, 0 ) {
-      for (int layer=0; layer<{{OVERLAP}}; layer++) {
-        tarch::la::Vector<Dimensions,int>    overlapCell = gridCell;
-        tarch::la::Vector<Dimensions,double> x;
-        for (int d=0; d<Dimensions; d++) {
-          x(d) = marker.x()(d) - 0.5 * marker.h()(d) + (gridCell(d) + 0.5) * gridCellH(d);
-        }
-        // layer 0 is the ghost grid cell adjacent to the face
-        if (isLowerBoundary) {
-          overlapCell(normal) = {{OVERLAP}} - 1 - layer;
-          x(normal)           = marker.x()(normal) - (layer + 0.5) * gridCellH(normal);
-        }
-        else {
-          overlapCell(normal) = {{OVERLAP}} + layer;
-          x(normal)           = marker.x()(normal) + (layer + 0.5) * gridCellH(normal);
-        }
-        const int index = toolbox::blockstructured::serialiseVoxelIndexInOverlap( overlapCell, {{NUMBER_OF_GRID_CELLS_PER_AXIS}}, {{OVERLAP}}, normal );
-        repositories::{{SOLVER_INSTANCE}}.dirichletBoundaryConditions(
-          x,
-          t,
-          {{FACE_ACCESSOR}}.value + index * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}})
-        );
-      }
-    }
-
-    logTraceOut( "touchFaceFirstTime(...)---ApplyDirichletBoundaryConditions" );
-  }
+  ::exahype2::blockstructured::applyDirichletBoundaryConditions(
+    [](const tarch::la::Vector<Dimensions,double>& x, double t, double* Q) -> void {
+      repositories::{{SOLVER_INSTANCE}}.dirichletBoundaryConditions(x, t, Q);
+    },
+    marker,
+    DomainOffset,
+    DomainSize,
+    PeriodicBC,
+    {{NUMBER_OF_GRID_CELLS_PER_AXIS}},
+    {{OVERLAP}},
+    {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}},
+    repositories::{{SOLVER_INSTANCE}}.getMinTimeStamp() + {{RELATIVE_TIME_STEP_SIZE}} * repositories::{{SOLVER_INSTANCE}}.getMinTimeStepSize(),
+    {{FACE_ACCESSOR}}.value
+  );
 """
     )
 
@@ -158,8 +137,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     def get_includes(self):
         return (
             """
-#include "exahype2/fd/PatchUtils.h"
-#include "toolbox/blockstructured/Enumeration.h"
+#include "exahype2/blockstructured/DirichletBoundaryConditions.h"
 """
             + self._solver._get_default_includes()
             + self._solver.user_solver_includes

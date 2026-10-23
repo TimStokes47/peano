@@ -5,6 +5,7 @@
 #include "config.h"
 #include "tarch/tests/TreeTestCaseCollection.h"
 
+#include "exahype2/blockstructured/tests/DirichletBoundaryConditionsTest.h"
 #include "exahype2/dg/rusanov/tests/RiemannTest.h"
 #include "exahype2/dg/tests/CellIntegralTest.h"
 #include "exahype2/dg/tests/DGUtilsTest.h"
@@ -21,6 +22,7 @@ tarch::tests::TestCase* exahype2::getUnitTests() {
   // result->addTestCase( new exahype2::dg::tests::DGUtilsTest() );
   // result->addTestCase( new exahype2::dg::tests::RiemannTest() );
   // result->addTestCase( new exahype2::dg::rusanov::tests::RiemannTest() );
+  result->addTestCase(new exahype2::blockstructured::tests::DirichletBoundaryConditionsTest());
   result->addTestCase(new exahype2::fd::tests::SommerfeldBCTest());
   // result->addTestCase(new exahype2::fv::tests::InterpolationRestrictionTest());
   result->addTestCase(new exahype2::fv::rusanov::tests::CopyPatchTest());

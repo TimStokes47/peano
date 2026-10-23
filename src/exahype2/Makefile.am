@@ -16,6 +16,8 @@ ExaHyPE2Sources = \
   TimeStepping.cpp \
   UserInterface.cpp \
   UnitTests.cpp \
+  blockstructured/DirichletBoundaryConditions.cpp \
+  blockstructured/tests/DirichletBoundaryConditionsTest.cpp \
   dg/BoundaryConditions.cpp \
   dg/DGUtils.cpp \
   dg/CellIntegral.cpp \

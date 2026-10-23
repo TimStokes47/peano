@@ -79,8 +79,8 @@ def test_boundary_values_use_stage_time_stamp(tmp_path):
     )
     # c_2 = 1 for Kutta's third-order scheme
     assert (
-        "const double t = repositories::instanceOfProbe.getMinTimeStamp() + 1.0 * "
-        "repositories::instanceOfProbe.getMinTimeStepSize();" in body
+        "repositories::instanceOfProbe.getMinTimeStamp() + 1.0 * "
+        "repositories::instanceOfProbe.getMinTimeStepSize()," in body
     )
 
 
