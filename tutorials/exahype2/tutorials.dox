@@ -42,6 +42,7 @@ Jupyter.
   - \subpage tutorials_exahype2_10_euler
   - \subpage tutorials_exahype2_11_tsunami
 - Modifying the numerics and the implementation scheme
+  - \subpage tutorials_exahype2_12_higher-order-solvers
 - Running codes in parallel
   - \subpage tutorials_exahype2_30_domain-decomposition
   - \subpage tutorials_exahype2_35_offline-load-balancing
