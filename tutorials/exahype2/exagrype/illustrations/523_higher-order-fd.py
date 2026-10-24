@@ -316,6 +316,10 @@ def plot_over_time_and_profile(runs, names, file_name):
     axes[1].set_title(
         "Lapse along the x-axis at t={:.1f}".format(runs[names[0]]["t"][last])
     )
+    # Runs which collapse write nonsensical values into their last snapshot
+    for ax in axes:
+        ax.set_ylim(0.0, 1.0)
+    axes[0].set_xlim(0.0, max(runs[name]["t"][-1] for name in names))
     axes[1].legend(loc="lower right")
     fig.savefig(os.path.join(Here, file_name), dpi=100, bbox_inches="tight")
     plt.close(fig)
