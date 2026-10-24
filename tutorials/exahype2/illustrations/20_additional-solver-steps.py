@@ -43,6 +43,7 @@ import numpy as np
 import peano4.api
 import peano4.api.taskgraph
 import exahype2.api
+import toolbox.blockstructured.api
 import tarch.plotter.api.notebook
 
 
@@ -100,6 +101,53 @@ DensityFloor = """
   }
 """
 
+
+
+class SolverWithDensityFloor(exahype2.api.Solver):
+    """!
+
+    Euler solver which inserts the density floor after each solution update
+
+    Mirrors the class of the tutorial: For each task which writes a new
+    solution or an intermediate solution, the solver inserts a task which
+    applies DensityFloor to the patch that the tagged task writes.
+
+    """
+
+    def postprocess_task_graphs(
+        self, exahype2_project, peano_project, setup_simulation, time_step, plot
+    ):
+        super().postprocess_task_graphs(
+            exahype2_project, peano_project, setup_simulation, time_step, plot
+        )
+        for anchor in time_step.find_tasks(
+            exahype2.api.Solver.SolutionUpdateTaskTag,
+            exahype2.api.Solver.IntermediateSolutionUpdateTag,
+        ):
+            if not anchor.name.startswith(self.name + "_"):
+                continue
+            patch = (
+                self._patch
+                if exahype2.api.Solver.SolutionUpdateTaskTag in anchor.tags
+                else self._stage_input
+            )
+            task = peano4.api.taskgraph.Task(
+                name=f"{self.name}_Density floor after {anchor.name[len(self.name) + 1:]}",
+                entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+            )
+            task.use_cell(patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+            task.add_action_set(
+                toolbox.blockstructured.api.ApplyPointWiselyToPatch(
+                    patch=patch,
+                    implementation=DensityFloor,
+                    guard=self.grid_selector.createCellGuard(),
+                    additional_includes=self._get_default_includes()
+                    + self.user_solver_includes,
+                )
+            )
+            time_step.insert_after(anchor, task)
+
+
 DomainOffset = -0.1
 DomainWidth = 0.2
 VolumeSize = 0.0075
@@ -122,7 +170,9 @@ def create_solver(name, rk_order, density_floor):
       Differences with the Runge-Kutta scheme of this order.
 
     """
-    solver = exahype2.api.Solver(name, 4, 0)
+    solver = (SolverWithDensityFloor if density_floor else exahype2.api.Solver)(
+        name, 4, 0
+    )
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
     solver.add_pde_term(
@@ -149,8 +199,6 @@ def create_solver(name, rk_order, density_floor):
         solver.plotter = exahype2.api.rkfd4.PlotAsVTKFile(
             solver, first_plot_time_stamp=0.0, time_in_between_plots=0.05
         )
-    if density_floor:
-        solver.add_point_wise_postprocessing("Density floor", DensityFloor)
     return solver
 
 

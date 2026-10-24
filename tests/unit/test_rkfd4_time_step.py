@@ -76,7 +76,7 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
 
 
 def _tagged(tasks, tag):
-    return {name: task.tags[tag] for name, task in tasks.items() if tag in task.tags}
+    return {name for name, task in tasks.items() if tag in task.tags}
 
 
 def test_stage_combinations_are_tagged_as_solution_updates(tmp_path):
@@ -86,10 +86,7 @@ def test_stage_combinations_are_tagged_as_solution_updates(tmp_path):
     intermediate = _tagged(tasks, exahype2.api.Solver.IntermediateSolutionUpdateTag)
     assert set(final) == {"Probe_Complete time step"}
     assert set(intermediate) == {"Probe_Prepare stage 1", "Probe_Prepare stage 2"}
-    assert intermediate["Probe_Prepare stage 1"].patch is solver._stage_input
-    assert final["Probe_Complete time step"].patch is solver._patch
-    tagged = {**final, **intermediate}
-    assert all(update.solver is solver for update in tagged.values())
+    tagged = final | intermediate
     # The combination must not project onto the faces itself: the projection
     # has to see the postprocessed solution
     for name in tagged:

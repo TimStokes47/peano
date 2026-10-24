@@ -64,9 +64,6 @@ solver = exagrype.api.CCZ4Solver(
     initial_condition=exagrype.api.initialvalues.single_black_hole(
         mass=black_hole_mass
     ),
-    # Push the solution back onto the CCZ4 constraints after each update,
-    # as the legacy code does
-    enforce_constraints=True,
 )
 
 # The legacy code uses Sommerfeld conditions. We impose the (static) initial
@@ -81,7 +78,11 @@ solver.add_pde_term(
 )
 
 solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(
-    solver, patch_size
+    solver,
+    patch_size,
+    # Push the solution back onto the CCZ4 constraints after each update,
+    # as the legacy code does
+    enforce_ccz4_constraints=True,
 )
 solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
     solver, volume_size=volume_size

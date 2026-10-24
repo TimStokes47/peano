@@ -14,7 +14,9 @@ modify the task graph before it is compiled.
 This page describes the mechanism. The tutorial
 @ref tutorials_exahype2_20_additional-solver-steps walks through a hands-on
 example, a density floor for the Euler equations, for both Finite Volumes and
-Runge-Kutta Finite Differences.
+Runge-Kutta Finite Differences. The enforcement of the CCZ4 constraints, which
+the numerical schemes offer through the flag enforce_ccz4_constraints, uses
+the same mechanism.
 
 
 # From a solver to task graphs
@@ -43,7 +45,7 @@ do not have to decide this yourself. However, you have to declare correctly
 which data a task uses, as the compiler relies on these declarations.
 
 
-# The tags Solver.SolutionUpdateTaskTag and Solver.IntermediateSolutionUpdateTag
+# Tags
 
 To insert a step after a solution update, you have to find the tasks which
 update the solution. You do not want to know how a particular numerical
@@ -52,77 +54,67 @@ tasks.
 
 ## Tags in general
 
-Every peano4.api.taskgraph.Task carries a dictionary tags, which maps a key
-onto an arbitrary value. Each key identifies one tag, so a task can carry
-arbitrarily many tags at the same time:
+Every peano4.api.taskgraph.Task carries a set tags of plain strings. A task can
+carry arbitrarily many tags at the same time. Tags are global labels: Nobody
+constructs a tag object, you add a string to the set:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-task = peano4.api.taskgraph.Task(name="My task", entity=peano4.api.taskgraph.Task.GridEntity.CELL, tags={"MyLabel": None})
-task.tags[Solver.SolutionUpdateTaskTag] = Solver.SolutionUpdateTaskTag(solver, patch, guard)
-task.tags[MyOwnTag]                     = MyOwnTag(...)
+task = peano4.api.taskgraph.Task(name="My task", entity=peano4.api.taskgraph.Task.GridEntity.CELL, tags={"mylibrary.MyLabel"})
+task.tags.add(exahype2.api.Solver.SolutionUpdateTaskTag)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The task graph compilers ignore tags. They exist only so that the code which
 builds a graph can tell other code what a task does.
 peano4.api.taskgraph.Graph.find_tasks(tag) returns all tasks of a graph which
-carry a certain key, in the order in which they have been added to the graph.
-If you pass several keys, i.e. find_tasks(tag_a, tag_b), it returns all tasks
-which carry at least one of them, each task once.
-
-Use classes, rather than strings, as keys of your own tags. They cannot
-clash with the tags of others by accident, and the value can be an instance
-of the class which holds the information others need.
+carry a certain tag, in the order in which they have been added to the graph.
+If you pass several tags, i.e. find_tasks(tag_a, tag_b), it returns all tasks
+which carry at least one of them, each task once. Prefix your own tags, e.g.
+with the name of your library, so they cannot clash with the tags of others.
 
 ## The solution update tags
 
-Each numerical scheme of ExaHyPE tags each task of its time stepping graph
-which writes a new solution with exahype2.api.Solver.SolutionUpdateTaskTag.
-Runge-Kutta schemes compute intermediate solutions, i.e. the inputs of further
-stages, before they compute the new solution. They tag each task which writes
-such an intermediate solution with
-exahype2.api.Solver.IntermediateSolutionUpdateTag.
+exahype2.api.Solver defines two tags, i.e. two string constants:
 
-The key of a tag is its class itself. Its value is an instance of this class:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-task.tags[Solver.SolutionUpdateTaskTag]             = Solver.SolutionUpdateTaskTag(solver, patch, guard, guard_data)
-task.tags[Solver.IntermediateSolutionUpdateTag] = Solver.IntermediateSolutionUpdateTag(solver, stage_input, guard, guard_data)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- exahype2.api.Solver.SolutionUpdateTaskTag: Each numerical scheme of ExaHyPE
+  adds this tag to each task of its time stepping graph which writes a new
+  solution.
+- exahype2.api.Solver.IntermediateSolutionUpdateTag: Runge-Kutta schemes
+  compute intermediate solutions, i.e. the inputs of further stages, before
+  they compute the new solution. They add this tag to each task which writes
+  such an intermediate solution.
 
 The distinction allows you to pick: A step which should act on the solution
 only, e.g. some statistics, searches for SolutionUpdateTaskTag. A step which
 should act on every intermediate solution, too, e.g. the enforcement of
-constraints, searches for both tags.
+constraints or a density floor, searches for both tags.
 
-IntermediateSolutionUpdateTag is a subclass of SolutionUpdateTaskTag.
-Both hold the same four attributes:
-
-- solver: The exahype2.api.Solver whose solution the task writes. A project
-  with several solvers has several tagged tasks per graph, so filter for
-  your own solver.
-- patch: The cell data (peano4.api.datamodel.Patch) into which the task
-  writes, i.e. the solution patch or, for an intermediate solution, the
-  input of a Runge-Kutta stage. Your step has to work on this patch.
-- guard: A C++ boolean expression which selects the cells that the task
-  updates. Use the same guard in your step, so it touches only cells that
-  have just been updated, and no cells of other solvers. The guard has to
-  evaluate to the same value before and after the update.
-- guard_data: A list of further cell data which the guard reads. Your task
-  has to declare these data, too, as the generated code would not see them
-  otherwise. The list is empty for most schemes.
+A tag only says what a task does. It does not say which data the task
+writes or which cells it updates. If you insert a step, you have to know the
+numerical scheme you work with: The table below lists, per scheme, the tagged
+tasks, the patch they write, and the guard, i.e. the C++ boolean expression
+which selects the cells that a task updates.
 
 ## Which tasks are tagged
 
 | Numerical scheme | Tag | Tagged tasks | Patch | Guard |
 |------------------|-----|--------------|-------|-------|
-| exahype2.api.fv.RusanovWithExplicitEuler | SolutionUpdateTaskTag | the cell update | solution | the solver's cell guard |
-| exahype2.api.fv.RusanovWithOptimisticExplicitEuler | SolutionUpdateTaskTag | the update of the whole patch (traditional branch) and the insertion of the precomputed patch interior (optimistic branch) | solution | the cell guard combined with the condition that picks the branch; guard_data holds the cell's eigenvalue and time step sizes, which this condition reads |
-| exahype2.api.rkfd4.CentralDifferencesWithRungeKutta | IntermediateSolutionUpdateTag | "Prepare stage k+1" for every stage but the last one | the stage input | the solver's cell guard |
-| exahype2.api.rkfd4.CentralDifferencesWithRungeKutta | SolutionUpdateTaskTag | "Complete time step" after the last stage | solution | the solver's cell guard |
+| exahype2.api.fv.RusanovWithExplicitEuler | SolutionUpdateTaskTag | "Update cell" | solver._patch | solver.grid_selector.createCellGuard() |
+| exahype2.api.fv.RusanovWithOptimisticExplicitEuler | SolutionUpdateTaskTag | "Update cell" (traditional branch) and "Insert patch interior" (optimistic branch) | solver._patch | the cell guard combined with the condition that picks the branch, see below |
+| exahype2.api.rkfd4.CentralDifferencesWithRungeKutta | IntermediateSolutionUpdateTag | "Prepare stage k+1" for every stage but the last one | solver._stage_input | solver.grid_selector.createCellGuard() |
+| exahype2.api.rkfd4.CentralDifferencesWithRungeKutta | SolutionUpdateTaskTag | "Complete time step" after the last stage | solver._patch | solver.grid_selector.createCellGuard() |
+
+All task names carry the solver's name as prefix, i.e. read
+"{solver}_Update cell". A project with several solvers has several tagged
+tasks per graph, so filter for the tasks of your solver.
 
 The optimistic Finite Volumes compute the new solution in one of two tasks,
-depending on the cell. Each of them is tagged with its own guard. A step that
-you insert after both tasks hence runs once per cell and time step.
+depending on the cell. The scheme picks the branch per cell through a guard
+which reads the cell's eigenvalue and time step sizes. A step that you insert
+after both tasks with the plain cell guard runs twice for the cells of the
+optimistic branch, and its first run sees a half-updated patch. This is fine
+for steps which you can apply twice, such as a density floor, but it is
+wasteful. The scheme's own constraint enforcement (enforce_ccz4_constraints)
+uses the branch guards instead.
 
 The Runge-Kutta scheme tags the writer of each stage. A step that you insert
 after each task with either tag runs after each stage. Consequently, the
@@ -151,8 +143,9 @@ The numerical schemes promise to
 Code which inserts steps has to
 
 - declare all data that a new task reads or writes via use_cell(),
-  use_face() or use_vertex(), including the tag's patch and guard_data;
-- use the tag's guard;
+  use_face() or use_vertex(), including the patch and all data which the
+  guard reads;
+- use the guard of the tagged task;
 - insert the task via peano4.api.taskgraph.Graph.insert_after() instead of
   adding a plain dependency.
 
@@ -162,6 +155,8 @@ far to the new task. Your task hence runs after the update but before
 anything which used to follow the update, such as the projection onto the
 faces. A plain task.add_dependency(anchor) would allow these successors to
 run before your task, i.e. on data which has not been postprocessed yet.
+As insert_after() redirects the successors which exist when you call it,
+insert your task once the graph is complete.
 
 If you insert several steps after the same anchor, chain them: use the task
 which you have just inserted as the anchor of the next one.
@@ -169,91 +164,100 @@ which you have just inserted as the anchor of the next one.
 
 # Inserting steps
 
-## Point-wise postprocessing
+## Inserting a step yourself
 
-Many steps alter each volume, or grid point, of a patch independently,
-e.g. a density floor or the enforcement of an algebraic constraint. For
-these, you do not have to touch the task graph yourself:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-solver.add_point_wise_postprocessing(
-  name           = "Density floor",
-  implementation = "Q[0] = std::max(Q[0], 0.9);",
-)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The snippet may read and write Q, i.e. all unknowns and auxiliary variables
-of one volume, and read the volume's position x. The default implementation
-of postprocess_task_graphs() searches the time stepping graph for all tasks
-which carry this solver's SolutionUpdateTaskTag or
-IntermediateSolutionUpdateTag. After each of them, it
-inserts one task per postprocessing step, which runs the snippet via
-toolbox.blockstructured.api.ApplyPointWiselyToPatch on the tag's patch with
-the tag's guard. The task names read "{solver}_{name} after {task}". If you
-run the generator with TEXT or VISUALISATION logging, it prints or plots the
-time stepping graph including these tasks.
-
-exagrype.api.CCZ4Solver relies on this mechanism: With
-enforce_constraints=True, it adds exagrype::ccz4::enforceCCZ4constraints()
-as point-wise postprocessing.
-
-## Arbitrary steps
-
-If a step does not fit the point-wise pattern, e.g. as it needs a halo or
-works on faces or vertices, override postprocess_task_graphs() in a
-subclass of exahype2.api.Solver. Call the superclass' implementation, so the
-point-wise postprocessing remains in place:
+Inserting a step always follows the same pattern: Call find_tasks(), and,
+for each task returned, create a new task and add it to the graph via
+insert_after(). The solver itself does not know which patch a tagged task
+writes or which guard it uses, so the insertion is up to the code which knows
+the numerical scheme. The natural place is postprocess_task_graphs() in a
+subclass of exahype2.api.Solver, as all tasks are known there. The sketch
+below adds a density floor after each update of a Runge-Kutta scheme:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class MySolver(exahype2.api.Solver):
   def postprocess_task_graphs(self, exahype2_project, peano_project, setup_simulation, time_step, plot):
     super().postprocess_task_graphs(exahype2_project, peano_project, setup_simulation, time_step, plot)
-    tags = [exahype2.api.Solver.SolutionUpdateTaskTag, exahype2.api.Solver.IntermediateSolutionUpdateTag]
-    for anchor in time_step.find_tasks(*tags):
-      update = next(anchor.tags[tag] for tag in tags if tag in anchor.tags)
-      if update.solver is not self:
+    for anchor in time_step.find_tasks(
+      exahype2.api.Solver.SolutionUpdateTaskTag,
+      exahype2.api.Solver.IntermediateSolutionUpdateTag,
+    ):
+      if not anchor.name.startswith(self.name + "_"):
         continue
+      patch = self._patch if exahype2.api.Solver.SolutionUpdateTaskTag in anchor.tags else self._stage_input
       task = peano4.api.taskgraph.Task(
-        name   = f"{self._name}_My step after {anchor.name}",
+        name   = f"{self.name}_Density floor after {anchor.name}",
         entity = peano4.api.taskgraph.Task.GridEntity.CELL,
       )
-      task.use_cell(update.patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-      for data in update.guard_data:
-        task.use_cell(data, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-      task.add_action_set(MyActionSet(update.patch, guard=update.guard))
+      task.use_cell(patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+      task.add_action_set(
+        toolbox.blockstructured.api.ApplyPointWiselyToPatch(
+          patch               = patch,
+          implementation      = "Q[0] = std::max(Q[0], 0.9);",
+          guard               = self.grid_selector.createCellGuard(),
+          additional_includes = self._get_default_includes() + self.user_solver_includes,
+        )
+      )
       time_step.insert_after(anchor, task)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Drop IntermediateSolutionUpdateTag from the list if your step should
-run once per time step only, i.e. not after each Runge-Kutta stage.
+toolbox.blockstructured.api.ApplyPointWiselyToPatch runs a C++ snippet for each
+volume, or grid point, of a patch. The snippet may read and write Q, i.e. all
+unknowns and auxiliary variables of one volume, and read the volume's
+position x. Your step can use any other action set as well, e.g. one which
+needs a halo or works on faces or vertices.
 
 Declare the patch with READ_AND_WRITE even if your step only reads it:
-the access mode keeps the data alive for the tasks which follow.
+the access mode keeps the data alive for the tasks which follow. Drop
+IntermediateSolutionUpdateTag from the find_tasks() call if your step should
+run once per time step only, i.e. not after each Runge-Kutta stage.
 
 The routine receives the setup and the plot graph, too. The tags are only
 used within the time stepping graph, though. If you want to alter the other
 graphs, you have to identify the tasks of interest yourself, e.g. via their
 names, or add tasks which do not depend on any existing task.
 
+## Enforcing the CCZ4 constraints
+
+The numerical schemes know their patches and guards. They hence can insert
+steps themselves. All schemes listed above accept a flag
+enforce_ccz4_constraints, which is False by default. If you set it, the
+scheme inserts a task which applies exagrype::ccz4::enforceCCZ4constraints()
+to each volume after each tagged task, using the patch and the guard of this
+task (exahype2.api.Solver.Solver.NumericalScheme._insert_ccz4_constraint_enforcement()):
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(
+  solver,
+  patch_size,
+  enforce_ccz4_constraints = True,
+)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The task names read "{solver}_Enforce CCZ4 constraints after {task}". Use the
+flag with exagrype.api.CCZ4Solver only, as the routine requires the CCZ4
+unknowns. If you run the generator with TEXT or VISUALISATION logging, it
+prints or plots the time stepping graph including these tasks.
+
 
 # Writing a new numerical scheme
 
 If you write a numerical scheme of your own, i.e. a subclass of
 exahype2.api.Solver.NumericalScheme, you have to keep the scheme's side of the
-contract. Otherwise, add_point_wise_postprocessing() and every step which
-relies on the tags will silently miss your updates. postprocess_task_graphs()
-asserts that a solver with point-wise postprocessing has at least one tagged
-task, but it cannot check that you have tagged all of them.
+contract. Otherwise, every step which relies on the tags will silently miss
+your updates.
 
 - Tag each task which writes a new solution with
-  Solver.SolutionUpdateTaskTag(solver, patch, guard, guard_data).
+  task.tags.add(Solver.SolutionUpdateTaskTag).
 - Tag each task which writes the input of a further stage, i.e. an
   intermediate solution, with
-  Solver.IntermediateSolutionUpdateTag(solver, patch, guard, guard_data).
-- If the guard reads cell data besides the patch, pass these data as
-  guard_data.
+  task.tags.add(Solver.IntermediateSolutionUpdateTag).
 - Do not read the written patch in the same task. Move eigenvalue
   computations, the projection onto the faces and similar operations into
   a subsequent task.
+- Document which patch each tagged task writes and which guard it uses.
+- If you want to support enforce_ccz4_constraints, pass the flag to
+  NumericalScheme.__init__() and call _insert_ccz4_constraint_enforcement()
+  for each tagged task once your graph is complete.
 
 */

@@ -122,6 +122,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
         kreiss_oliger_sigma: float = 0.0,
         time_step_size: float = None,
         cfl_constant: float = 0.5,
+        enforce_ccz4_constraints: bool = False,
     ):
         """!
 
@@ -160,8 +161,13 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
           two for linear advection without dissipation, so 0.5 is a
           conservative default.
 
+        @param enforce_ccz4_constraints: bool
+          If True, push the solution back onto the CCZ4 constraints after
+          each Runge-Kutta stage, @see
+          exahype2.api.Solver.Solver.NumericalScheme.
+
         """
-        super().__init__(solver)
+        super().__init__(solver, enforce_ccz4_constraints)
         if patch_size < self.HALO_SIZE:
             raise ValueError(
                 f"Solver {solver.name}: patch_size has to be at least {self.HALO_SIZE}, "
@@ -655,8 +661,11 @@ Patch overlap data
           estimates. Prepare stage k+1 is tagged with
           exahype2.api.Solver.IntermediateSolutionUpdateTag, Complete time
           step with exahype2.api.Solver.SolutionUpdateTaskTag, i.e.
-          postprocessing such as the enforcement of constraints runs directly
-          after them (see @ref exahype2.api.Solver.Solver.postprocess_task_graphs()).
+          postprocessing such as the enforcement of constraints can be
+          inserted directly after them (see @ref
+          page_exahype2_solver_manipulate_solver_steps). With
+          enforce_ccz4_constraints, the scheme inserts
+          {SolverName}_Enforce CCZ4 constraints after ... itself.
         - {SolverName}_Project stage k+1 onto faces, or {SolverName}_Project
           solution onto faces after the last stage: projects the outcome of
           the linear combination onto the faces. After the last stage, it
@@ -708,6 +717,8 @@ Patch overlap data
         Entity = peano4.api.taskgraph.Task.GridEntity
 
         previous_stage_task = None
+        # Tagged combination tasks and the patches they write
+        solution_writers = []
         for stage in range(self.rk_order):
             is_last_stage = stage == self.rk_order - 1
             stage_input = (
@@ -811,12 +822,12 @@ Patch overlap data
                     self._solver, weights, output, guard=cell_guard
                 )
             )
-            tag = (
+            combination_task.tags.add(
                 Solver.SolutionUpdateTaskTag
                 if is_last_stage
                 else Solver.IntermediateSolutionUpdateTag
             )
-            combination_task.tags[tag] = tag(self._solver, output, cell_guard)
+            solution_writers.append((combination_task, output))
 
             ## Project the outcome onto the faces. After the last stage, also
             ## determine the maximum eigenvalue of the new solution
@@ -892,6 +903,14 @@ Patch overlap data
         trigger_load_balancing_task.add_dependency(time_step_size_task)
         trigger_load_balancing_task.add_dependency(previous_stage_task)
         time_step.add_task(trigger_load_balancing_task)
+
+        ## Insert the constraint enforcement once the graph is complete, so
+        ## all successors of the combinations see the constrained data
+        if self.enforce_ccz4_constraints:
+            for anchor, patch in solution_writers:
+                self._insert_ccz4_constraint_enforcement(
+                    time_step, anchor, patch, cell_guard
+                )
 
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title="Time stepping task graph for {}".format(name))
