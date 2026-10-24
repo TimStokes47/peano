@@ -2,15 +2,12 @@
 # the run scripts of the individual test cases. Use -k to pick a test case.
 .ExaParty_Dastgen:
   script:
-    - !reference [".Install_Pytest", "script"]
-    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} .pytest-venv/bin/python -m pytest -m integration tests/exaparty -k dastgen-test
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} python3 -m pytest -m integration tests/exaparty -k dastgen-test
 
 .ExaParty_Sod1D:
   script:
-    - !reference [".Install_Pytest", "script"]
-    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} .pytest-venv/bin/python -m pytest -m integration tests/exaparty -k sod-1d
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} python3 -m pytest -m integration tests/exaparty -k sod-1d
 
 .ExaParty_Noh2D:
   script:
-    - !reference [".Install_Pytest", "script"]
-    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} .pytest-venv/bin/python -m pytest -m integration tests/exaparty -k noh-2d
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} python3 -m pytest -m integration tests/exaparty -k noh-2d

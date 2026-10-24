@@ -165,6 +165,10 @@ class ActionSet(object):
 
     """
 
+    # Default values if no constructor is called
+    descend_invocation_order = 0
+    parallel = False
+
     def __init__(self, descend_invocation_order=0, parallel=False):
         self.descend_invocation_order = descend_invocation_order
         self.parallel = parallel

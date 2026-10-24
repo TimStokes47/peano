@@ -65,6 +65,7 @@ tarch::timing::Measurement   timeStepMeasurement;
 
 bool {{NAMESPACE | join("::")}}::selectNextAlgorithmicStep() {
   static bool   gridConstructed                             = false;
+  static int    stationaryGridSweeps                        = 0;
   static double nextMaxPlotTimeStamp                        = {{NAMESPACE | join("::")}}::FirstPlotTimeStamp;
   static double nextMinPlotTimeStamp                        = {{NAMESPACE | join("::")}}::FirstPlotTimeStamp;
   static tarch::la::Vector<Dimensions,double> minH          = tarch::la::Vector<Dimensions,double>( std::numeric_limits<double>::max() );
@@ -114,9 +115,12 @@ bool {{NAMESPACE | join("::")}}::selectNextAlgorithmicStep() {
         ". Continue with load balancing even though mesh would, in principle, already be sufficient to host all particles"
       );
     }
-    if (
-      peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getStationarySweeps()>5
-    ) {
+    if (peano4::grid::isGridStationary(peano4::parallel::SpacetreeSet::getInstance().getGridStatistics())) {
+      stationaryGridSweeps++;
+    } else {
+      stationaryGridSweeps = 0;
+    }
+    if (stationaryGridSweeps > 5) {
       logInfo(
         "selectNextAlgorithmicStep()",
         "mesh has been stationary for more than 5 grid sweeps. Stop grid construction"
