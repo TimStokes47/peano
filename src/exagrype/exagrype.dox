@@ -1,0 +1,86 @@
+/**
+
+@page page_exagrype_library ExaGRyPE library
+
+ExaGRyPE is Peano's extension for numerical relativity. It sits on top of
+ExaHyPE 2 and hosts the C++ code that all ExaGRyPE applications share. The
+applications themselves (such as \c applications/exahype2/ccz4, see
+@ref applications_exahype2_ExaGRyPE) generate their solvers through the Python
+API and link against this library.
+
+# Configuration
+
+ExaGRyPE is enabled like any other Peano extension or toolbox:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+./configure --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-exagrype ...
+~~~~~~~~~~~~~~~~~~~~~~~
+
+or, with CMake,
+
+~~~~~~~~~~~~~~~~~~~~~~~
+cmake .. -DENABLE_EXAHYPE=ON -DENABLE_BLOCKSTRUCTURED=ON -DENABLE_LOADBALANCING=ON -DENABLE_EXAGRYPE=ON
+~~~~~~~~~~~~~~~~~~~~~~~
+
+ExaGRyPE requires ExaHyPE 2. As the Einstein equations are three-dimensional,
+the library is built for 3d only, i.e. there is a \c libExaGRyPECore3d.a plus
+its \c _debug, \c _asserts, \c _trace and \c _stats variants, but no 2d
+counterpart. If enabled, configure adds the library to the 3d link line of all
+generated Makefiles. Its unit tests run as part of \c UnitTests3d.
+
+# Content
+
+- exagrype::ccz4 holds the CCZ4 compute kernels (non-conservative product,
+  source, eigenvalues, constraint enforcement and diagnostics) plus the
+  reconstruction of the auxiliary variables for the fourth-order finite
+  differences.
+- exagrype::initialvalues holds analytical initial conditions such as the
+  gauge wave or flat spacetime, plus
+  exagrype::initialvalues::ApplyTwoPunctures() for black holes.
+- \c src/exagrype/twopunctures hosts the TwoPunctures code from the
+  EinsteinToolkit (namespaces TP and TP_bindding), which computes initial
+  data for single and binary black holes.
+
+# Python API
+
+The package \c exagrype.api (in \c src/exagrype/api) layers on top of
+\c exahype2.api. Its exagrype.api.CCZ4Solver is an exahype2.api.Solver
+with the 59 CCZ4 unknowns, the CCZ4 parameters and all PDE terms of CCZ4
+pre-registered, i.e. the terms call the kernels from exagrype::ccz4. The
+module \c exagrype.api.initialvalues provides the analytical initial
+conditions. You pick a numerical scheme, a grid construction and a plotter
+for the solver as for any other exahype2.api.Solver, and add it to an
+exahype2.api.Project:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+solver = exagrype.api.CCZ4Solver("CCZ4", initial_condition=exagrype.api.initialvalues.gauge_wave())
+solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, patch_size)
+~~~~~~~~~~~~~~~~~~~~~~~
+
+For the fourth-order Finite Differences of the production runs, use the
+numerical scheme, grid construction and plotter of \c exahype2.api.rkfd4
+instead:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+solver.numerical_scheme  = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(solver, patch_size, rk_order=4)
+solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(solver, volume_size=0.04)
+~~~~~~~~~~~~~~~~~~~~~~~
+
+@ref benchmarks_exagrype_gauge_wave is a complete example. Please
+note the current limitations: \c exahype2.api.rkfd4 supports regular grids only,
+and tracers and the second-order formulation are not available through the
+new API yet.
+
+# Black holes and GSL
+
+TwoPunctures requires the GNU Scientific Library (GSL). It hence is only
+compiled into the library if you configure Peano with \c --with-gsl
+(\c -DWITH_GSL=ON for CMake). This defines \c UseGSL and adds GSL to the
+link line of all generated Makefiles.
+
+Applications switch black hole initial data on per build through
+\c -DIncludeTwoPunctures. If an application sets this flag but Peano has been
+configured without GSL, the build stops with an error message that tells you
+to reconfigure.
+
+*/

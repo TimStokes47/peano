@@ -111,7 +111,7 @@ if __name__ == "__main__":
         number_of_unknowns = sum(unknowns.values())
 
         self._my_user_includes = """
-#include "../CCZ4Kernels.h"
+#include "exagrype/ccz4/Kernels.h"
 """
         if SuperClass==exahype2.solvers.fv.rusanov.GlobalAdaptiveTimeStep:
           SuperClass.__init__(
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     int index = 0;
     for (int i=0;i<itmax;i++)
     {
-      applications::exahype2::ccz4::enforceCCZ4constraints( newQ+index );
+      exagrype::ccz4::enforceCCZ4constraints( newQ+index );
       index += {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}};
     }
   }
@@ -242,7 +242,7 @@ if __name__ == "__main__":
       def create_action_sets(self):
         SuperClass.create_action_sets(self)
         self._action_set_couple_resolution_transitions_and_handle_dynamic_mesh_refinement.additional_includes += """ 
-#include "../CCZ4Kernels.h"
+#include "exagrype/ccz4/Kernels.h"
             """
 
       def get_user_action_set_includes(self):
@@ -258,7 +258,7 @@ if __name__ == "__main__":
         self._auxiliary_variables = 4
 
         self._my_user_includes += """
-  #include "../CCZ4Kernels.h"
+  #include "exagrype/ccz4/Kernels.h"
     """
 
         self._preprocess_reconstructed_patch = CCZ4Helper.get_body_of_adm_constraints(
@@ -274,8 +274,8 @@ if __name__ == "__main__":
         self._auxiliary_variables = 2
 
         self._my_user_includes += """
-  #include "../libtwopunctures/TP_PunctureTracker.h"
-  #include "../CCZ4Kernels.h"
+  #include "exagrype/twopunctures/TP_PunctureTracker.h"
+  #include "exagrype/ccz4/Kernels.h"
     """
 
         self._preprocess_reconstructed_patch = CCZ4Helper.get_body_of_Psi_Calc(
@@ -581,22 +581,12 @@ if __name__ == "__main__":
       # needs its own config), and then we might have to adopt the build
       # environment.
       #
-      peano4_project.output.makefile.add_linker_flag( "-lm -lgsl -lgslcblas" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/TP_Utilities.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/TP_Parameters.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/TP_Logging.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/TwoPunctures.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/CoordTransf.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/Equations.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/FuncAndJacobian.cpp" )
-      peano4_project.output.makefile.add_cpp_file( "libtwopunctures/Newton.cpp" )
+      # TwoPunctures is part of the ExaGRyPE library (configure Peano with --with-gsl).
       peano4_project.output.makefile.add_CXX_flag( "-DIncludeTwoPunctures" )
     else:
       raise Exception( "Scenario " + args.scenario + " is now unknown")
 
     peano4_project.output.makefile.add_CXX_flag( "-DCCZ4EINSTEIN" )
-    peano4_project.output.makefile.add_cpp_file( "InitialValues.cpp" )
-    peano4_project.output.makefile.add_cpp_file( "CCZ4Kernels.cpp" )
 
     peano4_project.generate( throw_away_data_after_generation=False )
     peano4_project.build( make_clean_first = True )

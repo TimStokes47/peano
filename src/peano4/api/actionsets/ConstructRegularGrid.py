@@ -34,8 +34,10 @@ class ConstructRegularGrid(ActionSet):
         """!
 
         @param cell_size: float
-          Target edge length of one cell on the regular grid this action
-          set is supposed to build.
+          Upper bound on the edge length of the cells of the regular grid.
+          Peano refines every cell whose edge length is greater than or equal
+          to cell_size, i.e. the resulting cells are strictly smaller than
+          cell_size. Peano always refines the root cell at least once.
 
         @param guard: str
           C++ boolean expression. The action set only returns its

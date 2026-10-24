@@ -16,6 +16,7 @@ SUBDIRS = . \
 	toolbox/curvi \
 	convert \
 	exahype2 \
+	exagrype \
 	mghype \
 	petsc \
 	exaparty \
@@ -172,6 +173,7 @@ Peano4Core_SOURCES = \
 	peano4/datamanagement/CellMarker.cpp \
 	peano4/datamanagement/FaceMarker.cpp \
 	peano4/datamanagement/VertexMarker.cpp \
+	peano4/datamanagement/tests/DataMovementTest.cpp \
 	peano4/peano.cpp \
 	peano4/RunMultipleSteps.cpp \
 	peano4/DefaultStepReport.cpp \

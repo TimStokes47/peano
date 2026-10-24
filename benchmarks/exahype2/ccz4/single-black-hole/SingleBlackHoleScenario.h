@@ -2,8 +2,9 @@
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
-#include "CCZ4Kernels.h"
-#include "InitialValues.h"
+#include "exagrype/ccz4/Kernels.h"
+#include "exagrype/initialvalues/InitialValues.h"
+#include "exagrype/initialvalues/ApplyTwoPunctures.h"
 
 
 #include "exahype2/RefinementControl.h"

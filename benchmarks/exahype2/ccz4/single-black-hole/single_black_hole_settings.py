@@ -313,31 +313,7 @@ def lower_to_peano4_project(project: exahype2.Project,
         peano4_project, "../../../../applications/exahype2/ccz4"
     )
 
-    peano4_project.output.makefile.add_linker_flag("-lm -lgsl -lgslcblas")
-    peano4_project.output.makefile.add_cpp_file(
-        "../../../../applications/exahype2/ccz4/libtwopunctures/TP_Utilities.cpp"
-    )
-    peano4_project.output.makefile.add_cpp_file(
-        "../../../../applications/exahype2/ccz4/libtwopunctures/TP_Parameters.cpp"
-    )
-    peano4_project.output.makefile.add_cpp_file(
-        "../../../../applications/exahype2/ccz4/libtwopunctures/TP_Logging.cpp"
-    )
-    peano4_project.output.makefile.add_cpp_file(
-        "../../../../applications/exahype2/ccz4/libtwopunctures/TwoPunctures.cpp"
-    )
-    peano4_project.output.makefile.add_cpp_file(
-        "../../../../applications/exahype2/ccz4/libtwopunctures/CoordTransf.cpp"
-    )
-    peano4_project.output.makefile.add_cpp_file(
-        "../../../../applications/exahype2/ccz4/libtwopunctures/Equations.cpp"
-    )
-    peano4_project.output.makefile.add_cpp_file(
-        "../../../../applications/exahype2/ccz4/libtwopunctures/FuncAndJacobian.cpp"
-    )
-    peano4_project.output.makefile.add_cpp_file(
-        "../../../../applications/exahype2/ccz4/libtwopunctures/Newton.cpp"
-    )
+    # TwoPunctures is part of the ExaGRyPE library (configure Peano with --with-gsl).
 
     peano4_project.output.makefile.add_cpp_file("MulticoreOrchestration.cpp")
     peano4_project.output.makefile.add_cpp_file("SingleBlackHoleScenario.cpp")

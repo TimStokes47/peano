@@ -15,7 +15,9 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     Set the ghost volumes along the domain boundary through the solver's
     exahype2.api.DirichletBoundaryConditions term
 
-    The action set plugs into touchFaceFirstTime(). Each face carries an
+    The action set plugs into touchFaceFirstTime() and delegates to
+    exahype2::blockstructured::applyDirichletBoundaryConditions(), which
+    holds the logic described below. Each face carries an
     overlap of 2*overlap volumes along its normal (solver._patch_overlap_current_time_step):
     the left half belongs to the cell left of the face, the right half to
     the cell right of it. On the domain boundary, one of these two cells
@@ -47,43 +49,20 @@ class ApplyDirichletBoundaryConditions(ActionSet):
 
     TemplateTouchFaceFirstTime = jinja2.Template(
         """
-  const int  normal          = marker.getSelectedFaceNumber() % Dimensions;
-  const bool isLowerBoundary = tarch::la::equals( marker.x()(normal), DomainOffset(normal) );
-  const bool isUpperBoundary = tarch::la::equals( marker.x()(normal), DomainOffset(normal) + DomainSize(normal) );
-
-  if ( not PeriodicBC[normal] and (isLowerBoundary or isUpperBoundary) ) {
-    logTraceInWith1Argument( "touchFaceFirstTime(...)---ApplyDirichletBoundaryConditions", marker.toString() );
-
-    const double t = repositories::{{SOLVER_INSTANCE}}.getMinTimeStamp();
-    const tarch::la::Vector<Dimensions,double> volumeH = ::exahype2::fv::getVolumeSize( marker.h(), {{NUMBER_OF_VOLUMES_PER_AXIS}} );
-
-    dfore( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}}, normal, 0 ) {
-      for (int layer=0; layer<{{OVERLAP}}; layer++) {
-        tarch::la::Vector<Dimensions,int>    overlapCell = volume;
-        tarch::la::Vector<Dimensions,double> x;
-        for (int d=0; d<Dimensions; d++) {
-          x(d) = marker.x()(d) - 0.5 * marker.h()(d) + (volume(d) + 0.5) * volumeH(d);
-        }
-        // layer 0 is the ghost volume adjacent to the face
-        if (isLowerBoundary) {
-          overlapCell(normal) = {{OVERLAP}} - 1 - layer;
-          x(normal)           = marker.x()(normal) - (layer + 0.5) * volumeH(normal);
-        }
-        else {
-          overlapCell(normal) = {{OVERLAP}} + layer;
-          x(normal)           = marker.x()(normal) + (layer + 0.5) * volumeH(normal);
-        }
-        const int index = toolbox::blockstructured::serialiseVoxelIndexInOverlap( overlapCell, {{NUMBER_OF_VOLUMES_PER_AXIS}}, {{OVERLAP}}, normal );
-        repositories::{{SOLVER_INSTANCE}}.dirichletBoundaryConditions(
-          x,
-          t,
-          {{FACE_ACCESSOR}}.value + index * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}})
-        );
-      }
-    }
-
-    logTraceOut( "touchFaceFirstTime(...)---ApplyDirichletBoundaryConditions" );
-  }
+  ::exahype2::blockstructured::applyDirichletBoundaryConditions(
+    [](const tarch::la::Vector<Dimensions,double>& x, double t, double* Q) -> void {
+      repositories::{{SOLVER_INSTANCE}}.dirichletBoundaryConditions(x, t, Q);
+    },
+    marker,
+    DomainOffset,
+    DomainSize,
+    PeriodicBC,
+    {{NUMBER_OF_VOLUMES_PER_AXIS}},
+    {{OVERLAP}},
+    {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}},
+    repositories::{{SOLVER_INSTANCE}}.getMinTimeStamp(),
+    {{FACE_ACCESSOR}}.value
+  );
 """
     )
 
@@ -140,8 +119,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     def get_includes(self):
         return (
             """
-#include "exahype2/fv/PatchUtils.h"
-#include "toolbox/blockstructured/Enumeration.h"
+#include "exahype2/blockstructured/DirichletBoundaryConditions.h"
 """
             + self._solver._get_default_includes()
             + self._solver.user_solver_includes

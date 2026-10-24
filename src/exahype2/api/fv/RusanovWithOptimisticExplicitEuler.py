@@ -51,7 +51,7 @@ from .actionsets import ReadjustTimeStepSizeForOptimisticGlobalTimestepping
 #   output only, and their maximum eigenvalue is the one of the shell.
 #
 # The 3d kernels test for the PDE terms by the same names as
-# timeStepWithRusanov2D, i.e. source, flux, nonconservativeProduct and
+# timeStepWithRusanov2D, i.e. volumetricSource, flux, nonconservativeProduct and
 # maxEigenvalue.
 #
 # The DataBlocks holding the eigenvalues per volume are declared over
@@ -75,8 +75,8 @@ def timeStepWithRusanov2DOnPatchInterior(patchData: "::exahype2::CellData<double
 
     output[:, H:NV-H, H:NV-H] = input[:, H:NV-H, H:NV-H]
 
-    if source:
-       source = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, H:NV-H, H:NV-H], x, h, t, dt))
+    if volumetricSource:
+       source = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H], [0, N]], eval("volumetricSource", input[:, H:NV-H, H:NV-H], x, t))
        output[0:NumberOfUnknowns, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H] + dt * source
 
     maxEigenvaluesX = DataBlock([[0, 1], [H-1, NV-H+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, H-1:NV-H+1, H:NV-H], x, 0))
@@ -133,8 +133,8 @@ def timeStepWithRusanov2DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part YLow: [0,NV) x [0,H)
     output[:, 0:NV, 0:H] = input[:, 0:NV, 0:H]
 
-    if source:
-       sourceYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:H], x, h, t, dt))
+    if volumetricSource:
+       sourceYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H], [0, N]], eval("volumetricSource", input[:, 0:NV, 0:H], x, t))
        output[0:NumberOfUnknowns, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:H] + dt * sourceYLow
 
     maxEigenvaluesXYLow = DataBlock([[0, 1], [0-1, NV+1], [0, H], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, 0:H], x, 0))
@@ -173,8 +173,8 @@ def timeStepWithRusanov2DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part YHigh: [0,NV) x [NV-H,NV)
     output[:, 0:NV, NV-H:NV] = input[:, 0:NV, NV-H:NV]
 
-    if source:
-       sourceYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV], [0, N]], eval("sourceTerm", input[:, 0:NV, NV-H:NV], x, h, t, dt))
+    if volumetricSource:
+       sourceYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV], [0, N]], eval("volumetricSource", input[:, 0:NV, NV-H:NV], x, t))
        output[0:NumberOfUnknowns, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV] + dt * sourceYHigh
 
     maxEigenvaluesXYHigh = DataBlock([[0, 1], [0-1, NV+1], [NV-H, NV], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, NV-H:NV], x, 0))
@@ -213,8 +213,8 @@ def timeStepWithRusanov2DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part XLow: [0,H) x [H,NV-H)
     output[:, 0:H, H:NV-H] = input[:, 0:H, H:NV-H]
 
-    if source:
-       sourceXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, 0:H, H:NV-H], x, h, t, dt))
+    if volumetricSource:
+       sourceXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H], [0, N]], eval("volumetricSource", input[:, 0:H, H:NV-H], x, t))
        output[0:NumberOfUnknowns, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H] + dt * sourceXLow
 
     maxEigenvaluesXXLow = DataBlock([[0, 1], [0-1, H+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0-1:H+1, H:NV-H], x, 0))
@@ -253,8 +253,8 @@ def timeStepWithRusanov2DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part XHigh: [NV-H,NV) x [H,NV-H)
     output[:, NV-H:NV, H:NV-H] = input[:, NV-H:NV, H:NV-H]
 
-    if source:
-       sourceXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H], [0, N]], eval("sourceTerm", input[:, NV-H:NV, H:NV-H], x, h, t, dt))
+    if volumetricSource:
+       sourceXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H], [0, N]], eval("volumetricSource", input[:, NV-H:NV, H:NV-H], x, t))
        output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H] + dt * sourceXHigh
 
     maxEigenvaluesXXHigh = DataBlock([[0, 1], [NV-H-1, NV+1], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, NV-H-1:NV+1, H:NV-H], x, 0))
@@ -330,8 +330,8 @@ def timeStepWithRusanov3DOnPatchInterior(patchData: "::exahype2::CellData<double
 
     output[:, H:NV-H, H:NV-H, H:NV-H] = input[:, H:NV-H, H:NV-H, H:NV-H]
 
-    if source:
-       source = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, H:NV-H, H:NV-H, H:NV-H], x, h, t, dt))
+    if volumetricSource:
+       source = DataBlock([[0, NumberOfUnknowns], [H, NV-H], [H, NV-H], [H, NV-H], [0, N]], eval("volumetricSource", input[:, H:NV-H, H:NV-H, H:NV-H], x, t))
        output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, H:NV-H, H:NV-H, H:NV-H] + dt * source
 
     maxEigenvaluesX = DataBlock([[0, 1], [H-1, NV-H+1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, H-1:NV-H+1, H:NV-H, H:NV-H], x, 0))
@@ -404,8 +404,8 @@ def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part ZLow: [0,NV) x [0,NV) x [0,H)
     output[:, 0:NV, 0:NV, 0:H] = input[:, 0:NV, 0:NV, 0:H]
 
-    if source:
-       sourceZLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, H], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:NV, 0:H], x, h, t, dt))
+    if volumetricSource:
+       sourceZLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, H], [0, N]], eval("volumetricSource", input[:, 0:NV, 0:NV, 0:H], x, t))
        output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] = output[0:NumberOfUnknowns, 0:NV, 0:NV, 0:H] + dt * sourceZLow
 
     maxEigenvaluesXZLow = DataBlock([[0, 1], [0-1, NV+1], [0, NV], [0, H], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, 0:NV, 0:H], x, 0))
@@ -458,8 +458,8 @@ def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part ZHigh: [0,NV) x [0,NV) x [NV-H,NV)
     output[:, 0:NV, 0:NV, NV-H:NV] = input[:, 0:NV, 0:NV, NV-H:NV]
 
-    if source:
-       sourceZHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [NV-H, NV], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:NV, NV-H:NV], x, h, t, dt))
+    if volumetricSource:
+       sourceZHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [NV-H, NV], [0, N]], eval("volumetricSource", input[:, 0:NV, 0:NV, NV-H:NV], x, t))
        output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] = output[0:NumberOfUnknowns, 0:NV, 0:NV, NV-H:NV] + dt * sourceZHigh
 
     maxEigenvaluesXZHigh = DataBlock([[0, 1], [0-1, NV+1], [0, NV], [NV-H, NV], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, 0:NV, NV-H:NV], x, 0))
@@ -512,8 +512,8 @@ def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part YLow: [0,NV) x [0,H) x [H,NV-H)
     output[:, 0:NV, 0:H, H:NV-H] = input[:, 0:NV, 0:H, H:NV-H]
 
-    if source:
-       sourceYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, 0:NV, 0:H, H:NV-H], x, h, t, dt))
+    if volumetricSource:
+       sourceYLow = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, H], [H, NV-H], [0, N]], eval("volumetricSource", input[:, 0:NV, 0:H, H:NV-H], x, t))
        output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, 0:H, H:NV-H] + dt * sourceYLow
 
     maxEigenvaluesXYLow = DataBlock([[0, 1], [0-1, NV+1], [0, H], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, 0:H, H:NV-H], x, 0))
@@ -566,8 +566,8 @@ def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part YHigh: [0,NV) x [NV-H,NV) x [H,NV-H)
     output[:, 0:NV, NV-H:NV, H:NV-H] = input[:, 0:NV, NV-H:NV, H:NV-H]
 
-    if source:
-       sourceYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV], [H, NV-H], [0, N]], eval("sourceTerm", input[:, 0:NV, NV-H:NV, H:NV-H], x, h, t, dt))
+    if volumetricSource:
+       sourceYHigh = DataBlock([[0, NumberOfUnknowns], [0, NV], [NV-H, NV], [H, NV-H], [0, N]], eval("volumetricSource", input[:, 0:NV, NV-H:NV, H:NV-H], x, t))
        output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] = output[0:NumberOfUnknowns, 0:NV, NV-H:NV, H:NV-H] + dt * sourceYHigh
 
     maxEigenvaluesXYHigh = DataBlock([[0, 1], [0-1, NV+1], [NV-H, NV], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0-1:NV+1, NV-H:NV, H:NV-H], x, 0))
@@ -620,8 +620,8 @@ def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part XLow: [0,H) x [H,NV-H) x [H,NV-H)
     output[:, 0:H, H:NV-H, H:NV-H] = input[:, 0:H, H:NV-H, H:NV-H]
 
-    if source:
-       sourceXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, 0:H, H:NV-H, H:NV-H], x, h, t, dt))
+    if volumetricSource:
+       sourceXLow = DataBlock([[0, NumberOfUnknowns], [0, H], [H, NV-H], [H, NV-H], [0, N]], eval("volumetricSource", input[:, 0:H, H:NV-H, H:NV-H], x, t))
        output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, 0:H, H:NV-H, H:NV-H] + dt * sourceXLow
 
     maxEigenvaluesXXLow = DataBlock([[0, 1], [0-1, H+1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, 0-1:H+1, H:NV-H, H:NV-H], x, 0))
@@ -674,8 +674,8 @@ def timeStepWithRusanov3DOnShell(patchData: "::exahype2::CellData<double, double
     # Shell part XHigh: [NV-H,NV) x [H,NV-H) x [H,NV-H)
     output[:, NV-H:NV, H:NV-H, H:NV-H] = input[:, NV-H:NV, H:NV-H, H:NV-H]
 
-    if source:
-       sourceXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H], [H, NV-H], [0, N]], eval("sourceTerm", input[:, NV-H:NV, H:NV-H, H:NV-H], x, h, t, dt))
+    if volumetricSource:
+       sourceXHigh = DataBlock([[0, NumberOfUnknowns], [NV-H, NV], [H, NV-H], [H, NV-H], [0, N]], eval("volumetricSource", input[:, NV-H:NV, H:NV-H, H:NV-H], x, t))
        output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] = output[0:NumberOfUnknowns, NV-H:NV, H:NV-H, H:NV-H] + dt * sourceXHigh
 
     maxEigenvaluesXXHigh = DataBlock([[0, 1], [NV-H-1, NV+1], [H, NV-H], [H, NV-H], [0, N]], eval("maxEigenvalue", input[:, NV-H-1:NV+1, H:NV-H, H:NV-H], x, 0))
@@ -1276,6 +1276,7 @@ Patch overlap data
                 max_eigenvalue=self._solver._max_eigenvalue_and_time_step_sizes,
             )
         )
+        update_cell_task.tags.add(Solver.SolutionUpdateTaskTag)
 
         ## Traditional branch: the update makes any precomputed patch interior obsolete
         discard_patch_interior_task.add_dependency(update_cell_task)
@@ -1320,6 +1321,7 @@ Patch overlap data
                 task_number=task_number,
             )
         )
+        insert_patch_interior_task.tags.add(Solver.SolutionUpdateTaskTag)
 
         ## Both branches: reduce the cells' maximum eigenvalues into the next
         ## time step size. Runs in parallel to the projection onto the faces
@@ -1412,7 +1414,7 @@ Patch overlap data
         functor_parameters = [
             dslhype.SyntaxTree.Argument("flux", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
             dslhype.SyntaxTree.Argument("nonconservativeProduct", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("sourceTerm", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::SourceFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()"),
+            dslhype.SyntaxTree.Argument("volumetricSource", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::VolumetricSourceFunctor&"), "(!llvm.ptr, !llvm.ptr, f64, !llvm.ptr) -> ()"),
             dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
         ]
 
@@ -1484,7 +1486,7 @@ Patch overlap data
           the kernel updating the whole patch.
 
         """
-        available_terms = ["flux", "nonconservativeProduct", "source", "maxEigenvalue"]
+        available_terms = ["flux", "nonconservativeProduct", "volumetricSource", "maxEigenvalue"]
         if function_name is None:
             function_name = self.kernel_function_name
 

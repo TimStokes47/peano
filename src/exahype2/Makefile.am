@@ -12,10 +12,13 @@ ExaHyPE2Sources = \
   RefinementControl.cpp \
   PrecisionControl.cpp \
   RefinementControlService.cpp \
+  Simulation.cpp \
   Solver.cpp \
   TimeStepping.cpp \
   UserInterface.cpp \
   UnitTests.cpp \
+  blockstructured/DirichletBoundaryConditions.cpp \
+  blockstructured/tests/DirichletBoundaryConditionsTest.cpp \
   dg/BoundaryConditions.cpp \
   dg/DGUtils.cpp \
   dg/CellIntegral.cpp \
@@ -38,7 +41,6 @@ ExaHyPE2Sources = \
   fv/PostprocessingKernels.cpp \
   fv/Tracer.cpp \
   fd/tests/SommerfeldBCTest.cpp\
-  fd/tests/CCZ4KernelTest.cpp\
   fv/tests/InterpolationRestrictionTest.cpp \
   fd/fd4/LoopBody.cpp \
   fd/fd4/FD4_patchwise_functors.cpp \

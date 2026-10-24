@@ -30,7 +30,7 @@ void benchmarks::exahype2::ccz4::CCZ4SBH_FV::initialCondition(
 ) {
   logTraceInWith3Arguments("initialCondition(...)", volumeCentre, volumeH, gridIsConstructed);
 
-  applications::exahype2::ccz4::ApplyTwoPunctures(Q, volumeCentre, 0, twoPunctures, not gridIsConstructed);
+  exagrype::initialvalues::ApplyTwoPunctures(Q, volumeCentre, 0, twoPunctures, not gridIsConstructed);
 
   logTraceOut("initialCondition(...)");
 }

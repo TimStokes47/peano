@@ -62,6 +62,26 @@ developing a scheme, Graph.visualise() renders the resulting graph with
 matplotlib to sanity-check the dependency structure.
 
 
+## Schemes with several stages
+
+A scheme with several stages per time step, such as a Runge-Kutta scheme,
+adds one chain of tasks per stage to the same graph. The fourth-order Finite
+Differences @ref exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.CentralDifferencesWithRungeKutta
+are an example: each stage reconstructs its input with a halo, evaluates the
+right-hand side, and projects the input of the next stage onto the faces,
+from where the next stage's reconstruction reads it. The scheme does not
+have to say that each stage needs a mesh traversal of its own. It follows
+from the data the tasks use: a task which reads face data another task
+writes cannot run in the same traversal, and the task graph compiler hence
+starts a new one (@ref peano4.api.taskgraph.compiler.FuseSteps).
+
+Tasks within one graph need unique names, so a scheme which adds the same
+kind of task once per stage has to number them. The Runge-Kutta tools which
+do not depend on the discretisation in space, i.e. the Butcher tableaus and
+the linear combination of the estimates, reside in @ref exahype2.api.rungekutta,
+so further Runge-Kutta schemes can reuse them.
+
+
 ## Adding the actual computations
 
 The actual computations are now attached to these tasks: The tasks represent

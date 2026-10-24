@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 
 import enum
-from typing import List, Optional
+from typing import Iterable, List, Optional, Set
 
 
 class Task:
@@ -73,6 +73,21 @@ class Task:
       reduces data in unprepareTraversal() such as a global CFL condition.
       The compilers leave the task as it is without any further check or
       warning.
+
+    ## Task tags
+
+    Every task carries a set of tags, i.e. of plain strings. A task can carry
+    arbitrarily many tags at the same time. The task graph compilers ignore
+    them. Tags allow the code which creates a task graph to tell other code
+    what a task does, without that code having to know how the graph is
+    built. Tags are global: Add a tag via task.tags.add(tag) and find
+    all tasks with a tag via peano4.api.taskgraph.Graph.find_tasks().
+    ExaHyPE's numerical schemes, for example, tag all tasks which produce a
+    new solution with exahype2.api.Solver.Solver.SolutionUpdateTaskTag, such
+    that others can add postprocessing steps after them (@ref
+    page_exahype2_solver_manipulate_solver_steps). Use names with a prefix,
+    e.g. the name of the defining class, so tags of different parties
+    cannot clash by accident.
 
     ## Task processing
 
@@ -169,8 +184,10 @@ class Task:
         entity: "Task.GridEntity",
         task_has_to_repeat: Optional[str] = None,
         may_spawn_background_tasks: Optional[bool] = None,
+        tags: Optional[Iterable[str]] = None,
     ):
         self.name = name
+        self.tags: Set[str] = set(tags) if tags is not None else set()
         self.entity = entity
         self.dependencies: List["Task"] = []
         self.action_sets: List["peano4.api.solversteps.ActionSet"] = []

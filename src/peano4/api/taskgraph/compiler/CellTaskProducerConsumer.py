@@ -144,7 +144,7 @@ def _translate(
       depends on the task spawned by the previous wrapped action set of the
       same producer, so the bodies are executed in their original order.
     - Action sets whose touchCellFirstTime() has an empty body, such as
-      @ref exahype2.api.fv.actionsets.HandleBoundary.HandleBoundary, are not
+      @ref exahype2.api.fv.actionsets.ApplyDirichletBoundaryConditions.ApplyDirichletBoundaryConditions, are not
       part of the producer-consumer pattern. They remain plain action sets
       of the producer, i.e. all their events are invoked by the producer.
     - The same holds for action sets which do not want to run in a task
