@@ -53,6 +53,18 @@ def test_find_tasks_by_tag():
     assert graph.find_tasks("y") == []
 
 
+def test_find_tasks_with_several_tags():
+    graph = peano4.api.taskgraph.Graph()
+    a = Task(name="a", entity=Task.GridEntity.CELL, tags={"x": 1, "y": 2})
+    b = Task(name="b", entity=Task.GridEntity.CELL, tags={"y": 3})
+    c = _cell_task("c")
+    for task in [a, b, c]:
+        graph.add_task(task)
+    assert graph.find_tasks("x") == [a]
+    assert graph.find_tasks("y") == [a, b]
+    assert graph.find_tasks("x", "y") == [a, b]
+
+
 def _postprocessed_time_step(scheme_factory, tmp_path, rk_order=None):
     solver = exahype2.api.Solver("Probe", 2, 1)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))

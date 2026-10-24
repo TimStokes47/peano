@@ -19,17 +19,19 @@ class Graph:
     def add_task(self, task: Task):
         self.tasks.append(task)
 
-    def find_tasks(self, tag) -> List[Task]:
+    def find_tasks(self, *tags) -> List[Task]:
         """!
 
-        Return all tasks of this graph which carry the tag, in the order
-        in which they have been added to the graph
+        Return all tasks of this graph which carry at least one of the tags,
+        in the order in which they have been added to the graph
 
-        @param tag: object
-          Key of the tag, @see peano4.api.taskgraph.Task.Task.tags.
+        A task which carries several of the tags is returned only once.
+
+        @param tags: object
+          Keys of the tags, see @ref peano4.api.taskgraph.Task.Task.tags.
 
         """
-        return [task for task in self.tasks if tag in task.tags]
+        return [task for task in self.tasks if any(tag in task.tags for tag in tags)]
 
     def insert_after(self, anchor: Task, task: Task):
         """!

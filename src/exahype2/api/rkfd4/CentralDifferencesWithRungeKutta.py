@@ -652,9 +652,11 @@ Patch overlap data
         - {SolverName}_Evaluate right hand side stage k.
         - {SolverName}_Prepare stage k+1, or {SolverName}_Complete time step
           after the last stage: computes the linear combination of the
-          estimates. The task is tagged with exahype2.api.Solver.SolutionUpdateTaskTag,
-          i.e. postprocessing such as the enforcement of constraints runs
-          directly after it (@see exahype2.api.Solver.postprocess_task_graphs()).
+          estimates. Prepare stage k+1 is tagged with
+          exahype2.api.Solver.IntermediateSolutionUpdateTaskTag, Complete time
+          step with exahype2.api.Solver.SolutionUpdateTaskTag, i.e.
+          postprocessing such as the enforcement of constraints runs directly
+          after them (see @ref exahype2.api.Solver.Solver.postprocess_task_graphs()).
         - {SolverName}_Project stage k+1 onto faces, or {SolverName}_Project
           solution onto faces after the last stage: projects the outcome of
           the linear combination onto the faces. After the last stage, it
@@ -788,7 +790,8 @@ Patch overlap data
             ## Combine the estimates into the input of the next stage or into
             ## the new solution. The combination is a task of its own, tagged
             ## as solution update, so postprocessing can be inserted between
-            ## the combination and the projection onto the faces
+            ## the combination and the projection onto the faces. Stage inputs
+            ## carry the intermediate tag
             ## (@see exahype2.api.Solver.postprocess_task_graphs()).
             if is_last_stage:
                 weights = self.butcher_tableau.final_estimate_weights()
@@ -808,9 +811,12 @@ Patch overlap data
                     self._solver, weights, output, guard=cell_guard
                 )
             )
-            combination_task.tags[Solver.SolutionUpdateTaskTag] = Solver.SolutionUpdateTaskTag(
-                self._solver, output, cell_guard
+            tag = (
+                Solver.SolutionUpdateTaskTag
+                if is_last_stage
+                else Solver.IntermediateSolutionUpdateTaskTag
             )
+            combination_task.tags[tag] = tag(self._solver, output, cell_guard)
 
             ## Project the outcome onto the faces. After the last stage, also
             ## determine the maximum eigenvalue of the new solution
