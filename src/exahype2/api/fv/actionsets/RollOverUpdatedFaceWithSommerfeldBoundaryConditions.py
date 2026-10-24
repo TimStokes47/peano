@@ -120,7 +120,7 @@ class RollOverUpdatedFaceWithSommerfeldBoundaryConditions(RollOverUpdatedFace):
 
         @param origin: List[float]
           Centre of the system, one entry per dimension, @ref
-          exahype2.api.SommerfeldBoundaryConditions.get_origin().
+          exahype2.api.SommerfeldBoundaryConditions.SommerfeldBoundaryConditions.get_origin().
 
         @param time_step_size: str
           C++ expression for the time step size by which the ghost volumes
