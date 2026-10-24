@@ -26,27 +26,70 @@ namespace exahype2 {
      * that are emitted in the interior should leave this box as if the box
      * was not there. Dirichlet conditions, which hold the boundary at a
      * prescribed value, do not achieve this: Everything that travels
-     * outward is reflected back into the domain.
+     * outward is reflected back into the domain. It is like a wave hitting
+	 * a wall.
      *
-     * Sommerfeld conditions, also called radiative or outgoing boundary
-     * conditions, assume that, close to the boundary, every unknown @f$ u
+     * So instead, we apply Sommerfeld conditions. To be precise, we apply
+	 * outgoing Sommerfeld conditions: Normally, these conditions handle 
+	 * incoming waves (there should be none) different to outgoing waves
+	 * (they should not reflect). The calculations here always assume that
+	 * the waves travel outwards, i.e. the eigenvalues along the normal are
+	 * positive.
+	 *
+	 * We observe that we cannot use plain homogeneous Neumann conditions
+	 * either:
+	 * If we set the voxels outside of the domain (in the halo) to the same 
+	 * value as their interior counterpart, they adopt to the solution too
+	 * quickly. A wave front approaches the boundary and the voxel outside
+	 * jumps immediately to the wave value in the domain. What it has to do
+	 * instead, it has to lag a little bit behind. Just enough to mimick the
+	 * behaviour as if the wave travelled outside since the previous time 
+	 * stamp.
+	 * 
+	 * More mathematical: If we derive the solution along the radius r, 
+	 * so look how it changes along the outgoing normal, and then derive
+	 * by time, so see how things change as we walk out of the domain
+	 * over time, then the result should be exactly as if we took our
+	 * first-order PDE along the normal, which also describes how the 
+	 * solution changes over time. We assume that this outgoing beam 
+	 * describes a characteristic.
+	 *  
+	 * Now let's assume that we are far away and the PDE does not really
+	 * do anything anymore. It only propagates the solution similar to a
+	 * pure advection. It totally has deteriorated. In this case, the 
+	 * values outside of the domain (our ghost values) change depending 
+	 * on the the distance from their inner counterpart and the signal
+	 * speed given by the maximum eigenvalue.
+	 *
+	 * Let's make one further assumption: They assume that it is totally
+	 * sufficient to know the maximum eigenvalue. For systems of PDEs, we
+	 * would have to know the eigenvalue per equation, but we just use 
+	 * the maximum eigenvalue as stand-in approximation, ignoring that we 
+	 * look along the radius r and not along the Cartesian axes.
+	 *
+	 * With all the considerations, we assume that, close to the boundary, every unknown @f$ u
      * @f$ behaves like an outgoing spherical wave which decays towards a
      * far-field value @f$ u_\infty @f$:
      *
      * @f{eqnarray*}{
-     *   u(r,t) = u_\infty + \frac{f(r - v t)}{r}.
+     *   u(r,t) = u_\infty + \frac{f(r - \lambda _{\text{max}} t)}{r}.
      * @f}
      *
-     * Here, @f$ v @f$ is the speed at which the field propagates, @f$ f @f$
+     * Here, @f$ \lambda _{\text{max}} @f$ is the speed at which the field propagates, @f$ f @f$
      * an arbitrary profile, and @f$ r = |x-x_0| @f$ the distance from the
      * centre @f$ x_0 @f$ (origin) of the system, i.e. the point that emits
-     * the waves. Differentiating the ansatz with respect to @f$ t @f$ and
+     * the waves. 
+	 * As the equation depends on r only, the ansatz is radially symmetric. 
+	 * The argument in @f$ f @f$ models how quickly a signal propagates through
+	 * the boundary. It almost serves as a countdown. 
+	 *
+	 * Differentiating the ansatz with respect to @f$ t @f$ and
      * @f$ r @f$ eliminates the unknown profile @f$ f @f$, and we obtain a
      * partial differential equation which the solution has to satisfy along
      * the boundary:
      *
      * @f{eqnarray*}{
-     *   \partial_t u + v \partial_r u + \frac{v}{r} ( u - u_\infty ) = 0
+     *   \partial_t u + \lambda _{\text{max}} \partial_r u + \frac{ \lambda _{\text{max}} }{r} ( u - u_\infty ) = 0
      *   \qquad \text{with} \qquad
      *   \partial_r u = \frac{x_i - x_{0,i}}{r} \partial_i u.
      * @f}
@@ -94,9 +137,9 @@ namespace exahype2 {
      * @f{eqnarray*}{
      *   \frac{o^{n+1}-o^n+i^{n+1}-i^n}{\Delta t}
      *   + \sigma \left( o^{n+1}-i^{n+1}+o^n-i^n \right)
-     *   + \frac{v}{r} \left( o^n+i^n-2u_\infty \right) = 0
+     *   + \frac{ \lambda _{\text{max}} }{r} \left( o^n+i^n-2u_\infty \right) = 0
      *   \qquad \text{with} \qquad
-     *   \sigma = \frac{v}{h} \frac{r}{|x_n - x_{0,n}|}.
+     *   \sigma = \frac{ \lambda _{\text{max}} }{h} \frac{r}{|x_n - x_{0,n}|}.
      * @f}
      *
      * @f$ h @f$ is the grid cell size along the normal. The damping term is
@@ -108,11 +151,11 @@ namespace exahype2 {
      *       (1 - \sigma \Delta t) o^n
      *     + (1 + \sigma \Delta t) i^n
      *     - (1 - \sigma \Delta t) i^{n+1}
-     *     - \Delta t \frac{v}{r} \left( o^n+i^n-2u_\infty \right)
+     *     - \Delta t \frac{ \lambda _{\text{max}} }{r} \left( o^n+i^n-2u_\infty \right)
      *   }{ 1 + \sigma \Delta t }.
      * @f}
      *
-     * The routine evaluates @f$ v @f$ via waveSpeed() for @f$ o^n @f$, @f$
+     * The routine evaluates @f$ \lambda _{\text{max}} @f$ via waveSpeed() for @f$ o^n @f$, @f$
      * u_\infty @f$ via farFieldSolution(), and @f$ r @f$ and @f$ x_n @f$ at
      * the centre of the ghost cell. It runs through the ghost layers from
      * the face outward. Therefore, @f$ i^{n+1} @f$ is the new interior
@@ -145,36 +188,49 @@ namespace exahype2 {
      * treatment writes them. The layout of the face data is the one of
      * toolbox::blockstructured::serialiseVoxelIndexInOverlap().
      *
-     * Different to @ref
-     * exahype2::blockstructured::applyDirichletBoundaryConditions(), which only
-     * needs a position and a time stamp, the Sommerfeld update needs two
-     * versions of the face data:
+     * Different to
+     * @ref exahype2::blockstructured::applyDirichletBoundaryConditions(),
+     * which only needs a position and a time stamp, the Sommerfeld update
+     * needs two versions of the face data:
      *
      * - faceDataOld at @f$ t^n @f$: both halves have to be valid, i.e. the
      *   interior half holds @f$ i^n @f$ and the ghost half @f$ o^n @f$.
      * - faceDataNew at @f$ t^{n+1} @f$: the interior half holds the new
      *   interior solution. The routine writes the ghost half.
      *
-     * A scheme which projects its patches onto the faces into a temporary
-     * buffer and then copies (rolls over) this buffer into the persistent
-     * face data meets these requirements without any additional storage:
-     * Directly before the roll over, the persistent face data still holds
-     * the old solution, and the temporary buffer already holds the new
-     * interior solution. The scheme hence calls the routine with
-     * faceDataOld being the persistent face data and faceDataNew the
-     * temporary buffer, and then rolls over both halves of the face. After
-     * the roll over, the persistent ghost half holds @f$ o^{n+1} @f$, i.e.
-     * it is ready for the next time step. A typical call from within the
-     * generated touchFaceLastTime() reads
+     *
+     * ## The routine is part of the roll over
+     *
+     * Block-structured schemes project their patches onto the faces into a
+     * temporary buffer, and then copy (roll over) this buffer into the
+     * persistent face data, which the reconstruction of the halo reads in
+     * the next sweep. Directly before the roll over, the persistent face
+     * data still holds the old solution, and the temporary buffer already
+     * holds the new interior solution. This is exactly what the routine
+     * needs, so it does not need any additional storage.
+     *
+     * Therefore, the Sommerfeld update replaces the plain roll over of a
+     * face: There is no separate boundary task in the scheme's task graph,
+     * which sets the ghost cells before the reconstruction. Instead, the
+     * roll over first calls the routine with faceDataOld being the
+     * persistent face data and faceDataNew the temporary buffer, and then
+     * copies both halves of the face. After the roll over, the persistent
+     * ghost half holds @f$ o^{n+1} @f$, i.e. it is ready for the next time
+     * step or Runge-Kutta stage. A typical roll over within the generated
+     * touchFaceLastTime() reads
      *
      * @code
      * ::exahype2::blockstructured::applySommerfeldBoundaryConditions(
-     *   [](const double* Q, const tarch::la::Vector<Dimensions,double>& x, int
-     * normal) -> double { double lambdaMax;
-     *     repositories::instanceOfMySolver.maxEigenvalue(Q, x, normal,
-     * &lambdaMax); return lambdaMax;
+     *   [](
+     *     const double*                                Q,
+     *     const tarch::la::Vector<Dimensions, double>& x,
+     *     int                                          normal
+     *   ) -> double {
+     *     double lambdaMax;
+     *     repositories::instanceOfMySolver.maxEigenvalue(Q, x, normal, &lambdaMax);
+     *     return lambdaMax;
      *   },
-     *   [](const tarch::la::Vector<Dimensions,double>& x, double* Q) -> void {
+     *   [](const tarch::la::Vector<Dimensions, double>& x, double* Q) -> void {
      *     repositories::instanceOfMySolver.sommerfeldFarFieldSolution(x, Q);
      *   },
      *   marker,
@@ -190,42 +246,80 @@ namespace exahype2 {
      *   fineGridFaceQCurrentTimeStep.value,
      *   fineGridFaceQUpdate.value
      * );
-     * // ... roll over fineGridFaceQUpdate into fineGridFaceQCurrentTimeStep
+     * // copy both halves of fineGridFaceQUpdate into fineGridFaceQCurrentTimeStep
      * @endcode
      *
-     * The routine can be called for any face. It leaves faces which are
-     * not on the domain boundary or which lie along a periodic axis
-     * unchanged, and it never writes into faceDataOld.
+     * The roll over runs in touchFaceLastTime() of the sweep that projects
+     * the new solution. The solver's time stamp and time step size are
+     * still the ones of the time step which has just been computed, as the
+     * solver only advances them in unprepareTraversal(). The roll over does
+     * not need to know whether a face is on the domain boundary: It may call
+     * the routine for all faces. The routine leaves faces which are not on
+     * the domain boundary or which lie along a periodic axis unchanged, and
+     * it never writes into faceDataOld.
      *
      * A scheme has to take care of three further points:
      *
      * 1. <b>Initial data.</b> The ghost half of the persistent face data has
      *    to hold valid data before the first time step, as it is the
      *    @f$ o^n @f$ of the first update. A natural choice is to evaluate
-     *    the initial condition at the centres of the ghost cells. This is
-     *    exactly what @ref
-     * exahype2::blockstructured::applyDirichletBoundaryConditions() does if it
-     * is handed the initial condition as boundary condition.
+     *    the initial condition at the centres of the ghost cells within the
+     *    roll over of the grid construction. This is exactly what
+     *    @ref exahype2::blockstructured::applyDirichletBoundaryConditions()
+     *    does if it is handed the initial condition as boundary condition.
      * 2. <b>Single-step schemes</b> such as explicit Euler in time call the
      *    routine once per time step with the time step size @f$ \Delta t
      *    @f$.
      * 3. <b>Runge-Kutta schemes</b> project the input @f$ Y_k @f$ of each
      *    stage onto the faces. The ghost cells of stage @f$ k @f$ should
      *    represent the boundary at the stage's time stamp @f$ t^n + c_k
-     *    \Delta t @f$. Therefore, a scheme calls the routine before every
-     *    roll over, and advances the ghost cells from one stage's time stamp
-     *    to the next one, i.e. by @f$ (c_{k+1}-c_k) \Delta t @f$, and by
-     *    @f$ (1-c_{s-1}) \Delta t @f$ after the last stage. Over a time
-     *    step, these increments add up to @f$ \Delta t @f$. Stages with the
-     *    same time stamp (classic RK4 has @f$ c = 0, \frac{1}{2},
-     *    \frac{1}{2}, 1 @f$) yield an increment of zero. The stage inputs
-     *    then differ, but they represent the same time, so the ghost cells
-     *    remain unchanged. This is the reason why the routine copies the
-     *    ghost cells for @f$ \Delta t = 0 @f$.
+     *    \Delta t @f$. Therefore, the roll over after each stage advances
+     *    the ghost cells from one stage's time stamp to the next one, i.e.
+     *    by @f$ (c_{k+1}-c_k) \Delta t @f$, and by @f$ (1-c_{s-1}) \Delta t
+     *    @f$ after the last stage. Over a time step, these increments add up
+     *    to @f$ \Delta t @f$. Stages with the same time stamp (classic RK4
+     *    has @f$ c = 0, \frac{1}{2}, \frac{1}{2}, 1 @f$) yield an increment
+     *    of zero. The stage inputs then differ, but they represent the same
+     *    time, so the ghost cells remain unchanged. This is the reason why
+     *    the routine copies the ghost cells for @f$ \Delta t = 0 @f$.
      *
-     * The scheme does not need to know whether a face is on the domain
-     * boundary: It may call the routine for all faces, and the routine
-     * returns immediately for all faces within the domain.
+     *
+     * ## Constraint: the stage time stamps must not decrease
+     *
+     * As the roll over chains the ghost cells from one stage to the next,
+     * a Runge-Kutta scheme may only use the routine if its stage time stamps
+     * never decrease, i.e. if
+     *
+     * @f{eqnarray*}{
+     *   0 = c_0 \leq c_1 \leq \dots \leq c_{s-1} \leq 1.
+     * @f}
+     *
+     * A scheme which uses Sommerfeld conditions has to check this
+     * constraint for its Butcher tableau and has to refuse tableaus which
+     * violate it. All tableaus of exahype2.api.rungekutta.ButcherTableau
+     * fulfil it: Their stage time stamps are 0 (explicit Euler),
+     * @f$ 0, \frac{1}{2} @f$ (explicit midpoint rule),
+     * @f$ 0, \frac{1}{2}, 1 @f$ (Kutta's third-order scheme), and
+     * @f$ 0, \frac{1}{3}, \frac{2}{3}, 1 @f$ (Kutta's 3/8 rule).
+     *
+     * The order conditions of Runge-Kutta schemes do not require
+     * non-decreasing time stamps, and several popular schemes violate the
+     * constraint. The strong-stability-preserving third-order scheme of
+     * Shu and Osher has @f$ c = 0, 1, \frac{1}{2} @f$, the
+     * Runge-Kutta-Fehlberg scheme of order 4(5) has
+     * @f$ c = 0, \frac{1}{4}, \frac{3}{8}, \frac{12}{13}, 1, \frac{1}{2} @f$.
+     * For such a scheme, an increment @f$ c_{k+1}-c_k @f$ is negative. The
+     * increments still add up to @f$ \Delta t @f$, but the roll over then
+     * integrates the damped outgoing wave equation backward in time:
+     * Instead of damping the ghost cells, it amplifies them, and the
+     * denominator @f$ 1 + \sigma \Delta t @f$ of the update shrinks.
+     *
+     * Schemes with decreasing stage time stamps have to start the update
+     * of every stage from the beginning of the time step instead, i.e.
+     * advance the ghost cells of stage @f$ k @f$ from @f$ t^n @f$ by
+     * @f$ c_k \Delta t @f$. This requires the ghost cells at @f$ t^n @f$
+     * throughout all stages of a time step, i.e. an additional persistent
+     * buffer per face which the roll over does not overwrite.
      *
      *
      * # Choice of the wave speed and of the far field
@@ -253,6 +347,8 @@ namespace exahype2 {
      * - The time stepping of the ghost cells is first order for Runge-Kutta
      *   stages of higher order, as the box scheme only sees the interior
      *   solution at the stages' time stamps.
+     * - Runge-Kutta schemes may only use the routine if their stage time
+     *   stamps do not decrease (see the constraint above).
      * - The routine works on one resolution level. It is up to the scheme
      *   to provide valid data on all boundary faces it reads from.
      *
