@@ -6,8 +6,18 @@ Create the PNG illustrations of the tutorial 522_single-black-hole.ipynb
 
 The script builds the single black hole setup of the tutorial, runs it,
 extracts the lapse and the conformal factor along the x-axis with Peano's
-PointProbe, and writes all pictures into the directory of this script. Call
-it from anywhere:
+PointProbe, and writes all pictures into the directory of this script. It
+runs three variants, one after the other, so their runtimes can be
+compared:
+
+- plain: the main run of the tutorial, exahype2.api.fv.RusanovWithExplicitEuler;
+- optimistic: exahype2.api.fv.RusanovWithOptimisticExplicitEuler;
+- constrained: the plain Finite Volumes with the CCZ4 constraint
+  enforcement after each time step.
+
+The pictures of the initial data and of the lapse stem from the plain run,
+522_single-black-hole-variations.png compares the three variants. Call it
+from anywhere:
 
      python3 tutorials/exahype2/exagrype/illustrations/522_single-black-hole.py
 
@@ -63,10 +73,36 @@ def psi(r):
     return 1.0 + Mass / 2.0 / r
 
 
-def build_and_run(directory, peano_installation, end_time):
+## The variants of the tutorial: name, numerical scheme, constraint enforcement
+Variants = [
+    (
+        "plain",
+        exahype2.api.fv.RusanovWithExplicitEuler,
+        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.No,
+    ),
+    (
+        "optimistic",
+        exahype2.api.fv.RusanovWithOptimisticExplicitEuler,
+        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.No,
+    ),
+    (
+        "constrained",
+        exahype2.api.fv.RusanovWithExplicitEuler,
+        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
+    ),
+]
+
+
+def build_and_run(directory, peano_installation, end_time, scheme, enforce):
     """!
 
     Generate, compile and run the tutorial setup within directory
+
+    @param scheme: type
+      Numerical scheme, i.e. a Finite Volume class from exahype2.api.fv.
+
+    @param enforce: exagrype.api.CCZ4Solver.EnforceCCZ4Constraint
+      Constraint enforcement.
 
     Returns the runtime of the executable in seconds. If the directory holds
     the result of a previous run, we do not rerun but return the stored
@@ -100,9 +136,8 @@ def build_and_run(directory, peano_installation, end_time):
             )
         )
     )
-    solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(
-        solver, PatchSize
-    )
+    solver.numerical_scheme = scheme(solver, PatchSize)
+    solver.enforce_ccz4_constraint(enforce)
     solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
         solver, volume_size=1.01 * DomainSize / VolumesPerAxis
     )
@@ -298,6 +333,34 @@ def plot_lapse_over_time(x, t, lapse):
     plt.close(fig)
 
 
+def plot_variations(results):
+    """! Lapse and phi next to the puncture over time for all variants"""
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+    for (name, _, _), marker in zip(Variants, ["o", "s", "^"]):
+        runtime, x, t, lapse, phi = results[name]
+        centre = VolumesPerAxis // 2
+        label = "{} ({:.0f} s)".format(name, runtime)
+        axes[0].plot(
+            t, lapse[:, centre], marker + "-", markersize=3, linewidth=1, label=label
+        )
+        axes[1].plot(
+            t, phi[:, centre], marker + "-", markersize=3, linewidth=1, label=label
+        )
+    for ax, quantity in zip(axes, ["lapse", "phi"]):
+        ax.set_xlabel("t")
+        ax.set_ylabel(quantity)
+        ax.set_title(
+            "{} next to the puncture (r={:.2f})".format(quantity, radius(LineOffset))
+        )
+    axes[1].legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
+    fig.savefig(
+        os.path.join(Here, "522_single-black-hole-variations.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Create the PNGs of the tutorial 522_single-black-hole.ipynb"
@@ -321,13 +384,41 @@ if __name__ == "__main__":
         work_directory = args.work_directory or stack.enter_context(
             tempfile.TemporaryDirectory()
         )
-        directory = os.path.join(os.path.abspath(work_directory), "run")
-        runtime = build_and_run(
-            directory, os.path.abspath(args.peano_root), args.end_time
-        )
-        print("runtime: {:.1f}s".format(runtime))
+        results = {}
+        for name, scheme, enforce in Variants:
+            directory = os.path.join(os.path.abspath(work_directory), name)
+            runtime = build_and_run(
+                directory,
+                os.path.abspath(args.peano_root),
+                args.end_time,
+                scheme,
+                enforce,
+            )
+            results[name] = (runtime, *profile(directory))
+            x, t, lapse, phi = results[name][1:]
+            centre = VolumesPerAxis // 2
+            print(
+                "{}: runtime {:.1f}s, {} snapshots, next to the puncture lapse {:.4f} -> {:.4f}, phi {:.4f} -> {:.4f}".format(
+                    name,
+                    runtime,
+                    len(t),
+                    lapse[0, centre],
+                    lapse[-1, centre],
+                    phi[0, centre],
+                    phi[-1, centre],
+                )
+            )
+        for name in ["optimistic", "constrained"]:
+            print(
+                "max deviation of {} from plain: lapse {:.3e}, phi {:.3e}".format(
+                    name,
+                    np.max(np.abs(results[name][3] - results["plain"][3])),
+                    np.max(np.abs(results[name][4] - results["plain"][4])),
+                )
+            )
+        plot_variations(results)
 
-        x, t, lapse, phi = profile(directory)
+        runtime, x, t, lapse, phi = results["plain"]
         print("snapshots at t =", np.round(t, 3))
         for i in [
             VolumesPerAxis // 2,
