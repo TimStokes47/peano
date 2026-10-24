@@ -9,3 +9,6 @@ from .EvaluateRightHandSide import EvaluateRightHandSide
 from .InitialCondition import InitialCondition
 from .ProjectPatchOntoFaces import ProjectPatchOntoFaces
 from .RollOverUpdatedFace import RollOverUpdatedFace
+from .RollOverUpdatedFaceWithSommerfeldBoundaryConditions import (
+    RollOverUpdatedFaceWithSommerfeldBoundaryConditions,
+)

@@ -7,6 +7,7 @@ import peano4.api.taskgraph
 import jinja2
 
 from ...DirichletBoundaryConditions import DirichletBoundaryConditions
+from ...BoundaryConditions import get_boundary_conditions
 
 
 class ApplyDirichletBoundaryConditions(ActionSet):
@@ -131,16 +132,17 @@ class ApplyDirichletBoundaryConditions(ActionSet):
 
         Add the boundary task in front of a Finite Volume reconstruction
 
-        If all axes of the domain are periodic, the routine does nothing:
-        The time step's task graph then does not contain any boundary
-        handling. Otherwise, it adds a FACE task which sets the ghost volumes
+        If all axes of the domain are periodic, or if the solver uses
+        exahype2.api.SommerfeldBoundaryConditions (which replace the roll
+        over instead), the routine does nothing. Otherwise, it adds a FACE
+        task which sets the ghost volumes
         of solver._patch_overlap_current_time_step, and makes
         reconstruction_task depend on it.
 
         @param solver: exahype2.api.Solver
-          The solver. Has to hold a non-stateless
-          exahype2.api.DirichletBoundaryConditions term unless all axes are
-          periodic.
+          The solver. Its boundary condition terms have to be consistent
+          with the domain, @ref
+          exahype2.api.BoundaryConditions.get_boundary_conditions().
 
         @param exahype2_project: exahype2.api.Project
           Provides the periodic boundary conditions.
@@ -153,21 +155,14 @@ class ApplyDirichletBoundaryConditions(ActionSet):
           reconstruct the patches' halos.
 
         @return peano4.api.taskgraph.Task or None
-          The boundary task, or None if all axes are periodic.
+          The boundary task, or None if no Dirichlet task is required.
 
         """
-        if all(exahype2_project.periodic_BC):
+        if not isinstance(
+            get_boundary_conditions(solver, exahype2_project),
+            DirichletBoundaryConditions,
+        ):
             return None
-
-        assert any(
-            isinstance(term, DirichletBoundaryConditions) and not term.stateless
-            for term in solver.pde_terms
-        ), (
-            f"Solver {solver.name} has non-periodic boundaries "
-            f"(periodic_BC={exahype2_project.periodic_BC}), but no DirichletBoundaryConditions PDE term. "
-            "Add one via solver.add_pde_term(exahype2.api.DirichletBoundaryConditions(...)), "
-            "or make all axes periodic."
-        )
 
         boundary_task = peano4.api.taskgraph.Task(
             name=f"{solver.name}_Apply Dirichlet BCs",

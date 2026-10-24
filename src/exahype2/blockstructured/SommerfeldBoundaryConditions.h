@@ -258,7 +258,14 @@ namespace exahype2 {
      * the domain boundary or which lie along a periodic axis unchanged, and
      * it never writes into faceDataOld.
      *
-     * A scheme has to take care of three further points:
+     * Within the Python API, users add an exahype2.api.SommerfeldBoundaryConditions
+     * term to their solver, and the schemes of exahype2.api.fv and
+     * exahype2.api.rkfd4 then replace their roll over with
+     * RollOverUpdatedFaceWithSommerfeldBoundaryConditions. The schemes do not
+     * add a separate boundary task to their time step in this case (@ref
+     * exahype2.api.BoundaryConditions).
+     *
+     * A scheme has to take care of four further points:
      *
      * 1. <b>Initial data.</b> The ghost half of the persistent face data has
      *    to hold valid data before the first time step, as it is the
@@ -282,6 +289,18 @@ namespace exahype2 {
      *    of zero. The stage inputs then differ, but they represent the same
      *    time, so the ghost cells remain unchanged. This is the reason why
      *    the routine copies the ghost cells for @f$ \Delta t = 0 @f$.
+     * 4. <b>The old face data has to survive until the roll over.</b> A
+     *    scheme with Dirichlet conditions may discard the persistent face
+     *    data once it has reconstructed the halo, and does not have to load
+     *    it again before the projection, as the roll over overwrites it
+     *    completely. With Sommerfeld conditions, the roll over reads it as
+     *    faceDataOld. Within a task graph, every task of the time step
+     *    which uses the persistent face data hence has to declare it as
+     *    READ_AND_WRITE (@ref
+     *    exahype2.api.BoundaryConditions.get_access_to_persistent_face_data()).
+     *    Otherwise, the generated code neither stores the face data after
+     *    the reconstruction nor loads it before the projection, and the
+     *    routine reads garbage.
      *
      *
      * ## Constraint: the stage time stamps must not decrease
@@ -296,7 +315,8 @@ namespace exahype2 {
      *
      * A scheme which uses Sommerfeld conditions has to check this
      * constraint for its Butcher tableau and has to refuse tableaus which
-     * violate it. All tableaus of exahype2.api.rungekutta.ButcherTableau
+     * violate it. exahype2.api.rkfd4.CentralDifferencesWithRungeKutta raises
+     * a ValueError in this case. All tableaus of exahype2.api.rungekutta.ButcherTableau
      * fulfil it: Their stage time stamps are 0 (explicit Euler),
      * @f$ 0, \frac{1}{2} @f$ (explicit midpoint rule),
      * @f$ 0, \frac{1}{2}, 1 @f$ (Kutta's third-order scheme), and

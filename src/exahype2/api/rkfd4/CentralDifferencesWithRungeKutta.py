@@ -17,12 +17,15 @@ from ..rungekutta import ButcherTableau
 from ..rungekutta.LinearCombination import generate_linear_combination_kernel
 from . import FD4Kernels
 from .actionsets import ApplyDirichletBoundaryConditions
+from ..BoundaryConditions import get_access_to_persistent_face_data
+from ..BoundaryConditions import get_boundary_conditions
+from ..SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
 from .actionsets import ComputeLinearCombination
 from .actionsets import ComputeMaxEigenvalue
 from .actionsets import ComputeTimeStepSize
 from .actionsets import EvaluateRightHandSide
 from .actionsets import ProjectPatchOntoFaces
-from .actionsets import RollOverUpdatedFace
+from .actionsets import RollOverUpdatedFaceWithSommerfeldBoundaryConditions
 
 
 class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
@@ -63,8 +66,12 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
 
     The solver can have a Flux, a NonconservativeProduct and a
     VolumetricSource. It needs an InitPointWisely term, a MaxEigenvalue term
-    unless the time step size is fixed, and a DirichletBoundaryConditions
-    term unless all axes are periodic. @ref
+    unless the time step size is fixed, and either a
+    DirichletBoundaryConditions or a SommerfeldBoundaryConditions term
+    unless all axes are periodic (@ref
+    exahype2.api.BoundaryConditions.get_boundary_conditions()). Sommerfeld
+    conditions also require a MaxEigenvalue term, and a Butcher tableau whose
+    stage time stamps do not decrease. @ref
     benchmarks_exahype2_euler_smooth_fd4 demonstrates fourth-order
     convergence for the Euler equations.
 
@@ -646,7 +653,10 @@ Patch overlap data
         documentation for the data flow):
 
         - {SolverName}_Apply Dirichlet BCs stage k: sets the ghost grid
-          cells along the domain boundary, unless all axes are periodic.
+          cells along the domain boundary for Dirichlet boundary conditions.
+          The task does not exist if all axes are periodic, or for Sommerfeld
+          boundary conditions, which advance the ghost grid cells within the
+          roll over of the projection onto the faces.
         - {SolverName}_Reconstruct stage k: reconstructs the stage's input
           with its halo.
         - {SolverName}_Evaluate right hand side stage k.
@@ -683,6 +693,25 @@ Patch overlap data
                 "non-stateless MaxEigenvalue PDE term. Add one via "
                 "solver.add_pde_term(exahype2.api.MaxEigenvalue(...)), or pass a "
                 "time_step_size to CentralDifferencesWithRungeKutta."
+            )
+
+        relative_time_step_sizes = self.butcher_tableau.relative_time_step_sizes()
+        if isinstance(
+            get_boundary_conditions(self._solver, exahype2_project),
+            SommerfeldBoundaryConditions,
+        ) and any(
+            later < earlier
+            for earlier, later in zip(
+                relative_time_step_sizes, relative_time_step_sizes[1:]
+            )
+        ):
+            raise ValueError(
+                f"Solver {self._solver.name} uses Sommerfeld boundary conditions, but "
+                f"the time stamps c={relative_time_step_sizes} of the stages of its "
+                f"Runge-Kutta scheme of order {self.rk_order} decrease. The roll over "
+                "advances the ghost grid cells from one stage to the next, so it "
+                "requires non-decreasing time stamps "
+                "(@ref exahype2::blockstructured::applySommerfeldBoundaryConditions())."
             )
 
         self.__add_data_to_repository(peano_project)
@@ -747,8 +776,13 @@ Patch overlap data
                 reconstruction_task.add_dependency(previous_stage_task)
             reconstruction_task.use_cell(stage_input, Access.READ_AND_WRITE)
             reconstruction_task.use_cell(self._solver._patch_with_halo, Access.WRITE)
+            # Sommerfeld boundary conditions read the old face data within the
+            # roll over, i.e. it has to survive the reconstruction
             reconstruction_task.use_face(
-                self._solver._patch_overlap_current_time_step, Access.READ_AND_DISCARD
+                self._solver._patch_overlap_current_time_step,
+                get_access_to_persistent_face_data(
+                    self._solver, exahype2_project, Access.READ_AND_DISCARD
+                ),
             )
             reconstruction_task.add_action_set(
                 toolbox.blockstructured.api.ReconstructPatchWithHalo(
@@ -763,6 +797,7 @@ Patch overlap data
             ## Set the ghost grid cells along the domain boundary before the
             ## reconstruction reads them, but after the previous stage has
             ## written the face data. No task is added if all axes are periodic
+            ## or for Sommerfeld boundary conditions
             boundary_task = ApplyDirichletBoundaryConditions.add_task_to_time_step(
                 self._solver,
                 exahype2_project,
@@ -826,7 +861,10 @@ Patch overlap data
                 self._solver._patch_overlap_update, Access.TEMPORARY
             )
             projection_task.use_face(
-                self._solver._patch_overlap_current_time_step, Access.WRITE
+                self._solver._patch_overlap_current_time_step,
+                get_access_to_persistent_face_data(
+                    self._solver, exahype2_project, Access.WRITE
+                ),
             )
             if is_last_stage and self.has_adaptive_time_step_size:
                 projection_task.use_cell(self._solver._max_eigenvalue, Access.WRITE)
@@ -841,12 +879,22 @@ Patch overlap data
                     includes=includes,
                 )
             )
+            # Sommerfeld boundary conditions advance the ghost grid cells
+            # within the roll over, from the time stamp of this stage to the
+            # one of the next stage (@ref exahype2.api.BoundaryConditions)
+            next_relative_time_step_size = (
+                1.0 if is_last_stage else relative_time_step_sizes[stage + 1]
+            )
             projection_task.add_action_set(
-                RollOverUpdatedFace(
-                    self._solver._patch_overlap_current_time_step,
-                    self._solver._patch_overlap_update,
+                RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
+                    self._solver,
+                    exahype2_project,
                     guard=face_guard,
                     includes=includes,
+                    time_step_size=(
+                        f"{next_relative_time_step_size - relative_time_step_sizes[stage]!r}"
+                        f" * repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()"
+                    ),
                 )
             )
             previous_stage_task = projection_task

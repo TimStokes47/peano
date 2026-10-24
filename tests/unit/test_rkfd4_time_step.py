@@ -9,13 +9,25 @@ import peano4.api.solversteps
 import exahype2.api
 
 
-def _solver(time_step_size=None, rk_order=3):
+def _solver(time_step_size=None, rk_order=3, boundary="dirichlet"):
+    """!
+
+    @param boundary: str
+      "dirichlet", "sommerfeld", or None for a solver without boundary
+      condition term, i.e. for a domain that is periodic along all axes.
+
+    """
     solver = exahype2.api.Solver("Probe", 2, 1)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation="*lambdaMax = 1.0;"))
-    solver.add_pde_term(
-        exahype2.api.DirichletBoundaryConditions(implementation="Q[0] = 0.0;")
-    )
+    if boundary == "dirichlet":
+        solver.add_pde_term(
+            exahype2.api.DirichletBoundaryConditions(implementation="Q[0] = 0.0;")
+        )
+    elif boundary == "sommerfeld":
+        solver.add_pde_term(
+            exahype2.api.SommerfeldBoundaryConditions(implementation="Q[0] = 0.0;")
+        )
     solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
         solver, patch_size=4, rk_order=rk_order, time_step_size=time_step_size
     )
@@ -111,13 +123,93 @@ def test_boundary_values_use_stage_time_stamp(tmp_path):
 
 def test_periodic_domain_needs_no_boundary_tasks(tmp_path):
     tasks = _construct_time_step(
-        _solver(rk_order=2), tmp_path, periodic_BC=(True, True, True)
+        _solver(rk_order=2, boundary=None), tmp_path, periodic_BC=(True, True, True)
     )
     assert not any("Dirichlet" in name for name in tasks)
+    assert not any(
+        isinstance(
+            action_set,
+            exahype2.api.rkfd4.actionsets.RollOverUpdatedFaceWithSommerfeldBoundaryConditions,
+        )
+        for task in tasks.values()
+        for action_set in task.action_sets
+    )
+
+
+def test_periodic_domain_rejects_boundary_condition_term(tmp_path):
+    with pytest.raises(ValueError, match="all axes are periodic"):
+        _construct_time_step(_solver(), tmp_path, periodic_BC=(True, True, True))
+
+
+def _roll_overs(tasks):
+    return {
+        name: action_set
+        for name, task in tasks.items()
+        for action_set in task.action_sets
+        if isinstance(action_set, exahype2.api.rkfd4.actionsets.RollOverUpdatedFace)
+    }
+
+
+def test_sommerfeld_replaces_roll_over_and_omits_boundary_tasks(tmp_path):
+    tasks = _construct_time_step(_solver(rk_order=3, boundary="sommerfeld"), tmp_path)
+    assert not any("Dirichlet" in name for name in tasks)
+    roll_overs = _roll_overs(tasks)
+    assert set(roll_overs) == {
+        "Probe_Project stage 1 onto faces",
+        "Probe_Project stage 2 onto faces",
+        "Probe_Project solution onto faces",
+    }
+    # Kutta's third-order scheme has c = 0, 1/2, 1, i.e. the roll overs
+    # advance the ghost grid cells by 1/2, 1/2 and 0 times the time step size
+    for name, increment in [
+        ("Probe_Project stage 1 onto faces", "0.5"),
+        ("Probe_Project stage 2 onto faces", "0.5"),
+        ("Probe_Project solution onto faces", "0.0"),
+    ]:
+        action_set = roll_overs[name]
+        assert isinstance(
+            action_set,
+            exahype2.api.rkfd4.actionsets.RollOverUpdatedFaceWithSommerfeldBoundaryConditions,
+        )
+        body = action_set.get_body_of_operation(
+            peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME
+        )
+        assert "::exahype2::blockstructured::applySommerfeldBoundaryConditions(" in body
+        assert (
+            f"{increment} * repositories::instanceOfProbe.getMinTimeStepSize()," in body
+        )
+        assert "tarch::la::Vector<Dimensions, double>({0.0, 0.0, 0.0})" in body
+        # The Sommerfeld update has to precede the copy into the persistent data
+        assert body.index("applySommerfeldBoundaryConditions") < body.index(
+            "copyHalfOfHalo"
+        )
+
+
+def test_sommerfeld_rejects_decreasing_stage_time_stamps(tmp_path, monkeypatch):
+    solver = _solver(rk_order=3, boundary="sommerfeld")
+    # The third-order scheme of Shu and Osher has c = 0, 1, 1/2
+    monkeypatch.setattr(
+        solver.numerical_scheme.butcher_tableau,
+        "relative_time_step_sizes",
+        lambda: [0.0, 1.0, 0.5],
+    )
+    with pytest.raises(ValueError, match="decrease"):
+        _construct_time_step(solver, tmp_path)
+
+
+def test_dirichlet_accepts_decreasing_stage_time_stamps(tmp_path, monkeypatch):
+    solver = _solver(rk_order=3)
+    monkeypatch.setattr(
+        solver.numerical_scheme.butcher_tableau,
+        "relative_time_step_sizes",
+        lambda: [0.0, 1.0, 0.5],
+    )
+    tasks = _construct_time_step(solver, tmp_path)
+    assert "Probe_Apply Dirichlet BCs stage 2" in tasks
 
 
 def test_stage_combinations_use_rows_of_butcher_tableau(tmp_path):
-    solver = _solver(rk_order=4)
+    solver = _solver(rk_order=4, boundary=None)
     tasks = _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))
     tableau = solver.numerical_scheme.butcher_tableau
 
@@ -159,7 +251,7 @@ def test_kernels_are_generated_for_both_dimensions(tmp_path):
 
 
 def test_fixed_time_step_size_skips_eigenvalue(tmp_path):
-    solver = _solver(time_step_size=0.01)
+    solver = _solver(time_step_size=0.01, boundary=None)
     tasks = _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))
     assert not (tmp_path / "kernels" / "Probe_fd4_eigenvalue_2d.h").exists()
     assert not any(
@@ -175,7 +267,7 @@ def test_fixed_time_step_size_skips_eigenvalue(tmp_path):
 
 
 def test_right_hand_side_uses_stage_time_stamp_and_estimate_slot(tmp_path):
-    solver = _solver(rk_order=4)
+    solver = _solver(rk_order=4, boundary=None)
     tasks = _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))
     [action_set] = tasks["Probe_Evaluate right hand side stage 2"].action_sets
     body = action_set.get_body_of_operation(

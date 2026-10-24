@@ -2,6 +2,9 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .AbstractFVActionSet import AbstractFVActionSet
 from .RollOverUpdatedFace import RollOverUpdatedFace
+from .RollOverUpdatedFaceWithSommerfeldBoundaryConditions import (
+    RollOverUpdatedFaceWithSommerfeldBoundaryConditions,
+)
 from .ApplyDirichletBoundaryConditions import ApplyDirichletBoundaryConditions
 from .AdaptivityCriterion import AdaptivityCriterion
 from .InitialCondition import InitialCondition
