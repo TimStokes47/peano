@@ -450,7 +450,7 @@ Patch overlap data
                 guard=self._solver.grid_selector.createCellGuard(),
             )
         )
-        update_cell_task.tags[Solver.SolutionUpdate] = Solver.SolutionUpdate(
+        update_cell_task.tags[Solver.SolutionUpdateTaskTag] = Solver.SolutionUpdateTaskTag(
             self._solver, self._solver._patch, self._solver.grid_selector.createCellGuard()
         )
 

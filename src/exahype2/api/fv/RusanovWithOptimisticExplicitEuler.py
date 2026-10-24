@@ -1276,7 +1276,7 @@ Patch overlap data
                 max_eigenvalue=self._solver._max_eigenvalue_and_time_step_sizes,
             )
         )
-        update_cell_task.tags[Solver.SolutionUpdate] = Solver.SolutionUpdate(
+        update_cell_task.tags[Solver.SolutionUpdateTaskTag] = Solver.SolutionUpdateTaskTag(
             self._solver, self._solver._patch, traditional_guard,
             guard_data=[self._solver._max_eigenvalue_and_time_step_sizes],
         )
@@ -1324,7 +1324,7 @@ Patch overlap data
                 task_number=task_number,
             )
         )
-        insert_patch_interior_task.tags[Solver.SolutionUpdate] = Solver.SolutionUpdate(
+        insert_patch_interior_task.tags[Solver.SolutionUpdateTaskTag] = Solver.SolutionUpdateTaskTag(
             self._solver, self._solver._patch, optimistic_guard,
             guard_data=[self._solver._max_eigenvalue_and_time_step_sizes],
         )
