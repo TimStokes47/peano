@@ -800,7 +800,14 @@ Patch overlap data
             ## Reconstruct the stage's input with its halo
             if previous_stage_task is not None:
                 reconstruction_task.add_dependency(previous_stage_task)
-            reconstruction_task.use_cell(stage_input, Access.READ_AND_WRITE)
+            ## The solution has to survive the reconstruction. The input of a
+            ## later stage does not: The next stage's combination writes it
+            ## from scratch. If we stored it here, nobody would load it again,
+            ## and Peano's stacks would accumulate one patch per cell and stage.
+            reconstruction_task.use_cell(
+                stage_input,
+                Access.READ_AND_WRITE if stage == 0 else Access.READ_AND_DISCARD,
+            )
             reconstruction_task.use_cell(self._solver._patch_with_halo, Access.WRITE)
             # Sommerfeld boundary conditions read the old face data within the
             # roll over, i.e. it has to survive the reconstruction

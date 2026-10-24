@@ -291,3 +291,29 @@ def test_adaptive_time_stepping_requires_max_eigenvalue(tmp_path):
     )
     with pytest.raises(AssertionError):
         _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))
+
+
+def test_stage_input_is_loaded_once_after_each_store(tmp_path):
+    """!
+    Peano's stacks require that each stored datum is loaded by the next
+    sweep which uses it. The reconstruction of a later stage is the last
+    reader of the stage input, as the next combination writes it from
+    scratch, so it must not store it.
+    """
+    solver = _solver(rk_order=4, boundary=None)
+    tasks = _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))
+    Access = peano4.api.taskgraph.Task.DataAccess
+    assert (
+        tasks["Probe_Reconstruct stage 0"].cell_data_access[solver._patch]
+        == Access.READ_AND_WRITE
+    )
+    for stage in range(1, 4):
+        reconstruction = tasks[f"Probe_Reconstruct stage {stage}"]
+        assert (
+            reconstruction.cell_data_access[solver._stage_input]
+            == Access.READ_AND_DISCARD
+        )
+        assert (
+            tasks[f"Probe_Prepare stage {stage}"].cell_data_access[solver._stage_input]
+            == Access.WRITE
+        )
