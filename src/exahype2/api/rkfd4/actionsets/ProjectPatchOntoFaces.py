@@ -11,8 +11,8 @@ class ProjectPatchOntoFaces(toolbox.blockstructured.api.ProjectPatchOntoFaces):
     toolbox.blockstructured.api.ReconstructPatchWithHalo.
 
     The fourth-order Finite Differences of @ref exahype2.api.rkfd4 use an
-    overlap of three grid cells, i.e. each face holds 2*3 layers along its
-    normal. The overlap is taken from the face data, so the action set does
+    overlap of HALO_SIZE grid cells, i.e. each face holds 2*HALO_SIZE layers
+    along its normal. The overlap is taken from the face data, so the action set does
     not need to know it.
 
     The class does exactly what its base class

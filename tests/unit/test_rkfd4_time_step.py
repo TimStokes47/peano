@@ -278,7 +278,7 @@ def test_right_hand_side_uses_stage_time_stamp_and_estimate_slot(tmp_path):
     assert "fineGridCellProbeQRhsEstimates.value + 64;" in body
     assert "fineGridCellProbeQRhsEstimates.value + 256;" in body
     assert (
-        "Probe_rightHandSideWithFD4<\n    4,\n    3,\n    2,\n    1\n>(\n    patchData,0.0,"
+        "Probe_rightHandSideWithFD4<\n    4,\n    2,\n    2,\n    1\n>(\n    patchData,\n    [&]("
         in body
     )
 

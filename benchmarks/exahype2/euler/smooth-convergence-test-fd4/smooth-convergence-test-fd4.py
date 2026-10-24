@@ -53,12 +53,6 @@ parser.add_argument(
     help="CFL constant for adaptive time step sizes (default: 0.5)",
 )
 parser.add_argument(
-    "--kreiss-oliger-sigma",
-    type=float,
-    default=0.0,
-    help="Scaling of the Kreiss-Oliger dissipation (default: 0, i.e. none)",
-)
-parser.add_argument(
     "--periodic",
     action="store_true",
     help="Use periodic boundary conditions instead of Dirichlet conditions with the exact solution",
@@ -174,7 +168,6 @@ solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
     solver,
     patch_size=9,
     rk_order=args.rk_order,
-    kreiss_oliger_sigma=args.kreiss_oliger_sigma,
     time_step_size=args.time_step_size,
     cfl_constant=args.cfl_constant,
 )

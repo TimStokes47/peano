@@ -38,8 +38,10 @@ class CCZ4Solver(exahype2.api.Solver):
 
     - The fourth-order Finite Differences of the production runs are
       available through exahype2.api.rkfd4, i.e. pass a
-      CentralDifferencesWithRungeKutta as numerical scheme. Unlike the
-      legacy ExaGRyPE, they do not support adaptive mesh refinement yet.
+      CentralDifferencesWithRungeKutta as numerical scheme. They have no
+      artificial dissipation. exagrype.api.FD4WithKODissipation is the same
+      scheme with a Kreiss-Oliger dissipation on top. Unlike the legacy
+      ExaGRyPE, neither supports adaptive mesh refinement yet.
     - The solution is pushed back onto the CCZ4 constraints
       (exagrype::ccz4::enforceCCZ4constraints()) only if you switch it on
       via enforce_ccz4_constraint(). Without it, long runs drift away from
@@ -254,7 +256,8 @@ class CCZ4Solver(exahype2.api.Solver):
           both Update cell and Insert patch interior. Each cell runs exactly
           one of the two, so the task constrains every cell once, after its
           update.
-        - exahype2.api.rkfd4.CentralDifferencesWithRungeKutta: one task after
+        - exahype2.api.rkfd4.CentralDifferencesWithRungeKutta and its
+          subclass exagrype.api.FD4WithKODissipation: one task after
           Complete time step and, for IntermediateSteps, one task after each
           Prepare stage k on the stage input.
 

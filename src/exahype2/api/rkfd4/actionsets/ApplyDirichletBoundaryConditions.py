@@ -20,7 +20,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     exahype2::blockstructured::applyDirichletBoundaryConditions(), which
     holds the logic described below. Each face carries an
     overlap of 2*overlap grid cells along its normal
-    (solver._patch_overlap_current_time_step), i.e. 2*3 for the
+    (solver._patch_overlap_current_time_step), i.e. 2*HALO_SIZE for the
     fourth-order Finite Differences of @ref exahype2.api.rkfd4 :
     the left half belongs to the cell left of the face, the right half to
     the cell right of it. On the domain boundary, one of these two cells

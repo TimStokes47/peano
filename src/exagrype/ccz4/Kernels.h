@@ -8,6 +8,7 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/multicore.h"
 #include "tarch/accelerator/accelerator.h"
+#include "tarch/la/Vector.h"
 
 
 namespace exagrype {
@@ -156,6 +157,55 @@ namespace exagrype {
         const double* __restrict__  oldQ,
         double* __restrict__        dQdt,
         double                      timeStepSize
+      );
+
+      /**
+       * Add the Kreiss-Oliger dissipation of a patch to its right-hand side
+       *
+       * The routine adds
+       *
+       * @f$ \frac{\sigma}{64 \Delta x_d} (Q_{i-3} - 6 Q_{i-2} + 15 Q_{i-1} - 20 Q_i + 15 Q_{i+1} - 6 Q_{i+2} + Q_{i+3}) @f$
+       *
+       * per axis d to the right-hand side of each grid cell i of a patch,
+       * i.e. a sixth-order dissipation term which damps oscillations on the
+       * scale of the grid cells. @f$ \Delta x_d @f$ is the patch size along
+       * d divided by the number of grid cells per axis. The term is added to
+       * the selected quantities only, all other entries of the right-hand
+       * side remain unchanged.
+       *
+       * The routine is the dissipation which the legacy fourth-order Finite
+       * Differences of ExaHyPE (exahype2::fd::fd4) built into their kernels.
+       * The Finite Differences of exahype2.api.rkfd4 have no dissipation.
+       * exagrype.api.FD4WithKODissipation invokes this routine after their
+       * right-hand side kernel, within each Runge-Kutta stage.
+       *
+       * Both arrays are stored lexicographically in AoS format, i.e. all
+       * quantities of one grid cell are stored together, and the first axis
+       * runs fastest. The stencil reaches three grid cells into the halo,
+       * i.e. haloSize has to be at least three.
+       *
+       * @param QWithHalo Input of the Runge-Kutta stage with its halo, i.e.
+       *   (numberOfGridCellsPerPatchPerAxis+2*haloSize)^3 grid cells with
+       *   unknowns+auxiliaryVariables entries each.
+       * @param rightHandSide Right-hand side of the stage without halo, i.e.
+       *   numberOfGridCellsPerPatchPerAxis^3 grid cells with unknowns entries
+       *   each. The routine adds the dissipation to it.
+       * @param patchSize Size of the patch, i.e. of the mesh cell.
+       * @param quantities Indices of the unknowns which are subject to the
+       *   dissipation. Each index has to be smaller than unknowns.
+       * @param numberOfQuantities Number of entries of quantities.
+       */
+      void addKreissOligerDissipation(
+        const double* __restrict__          QWithHalo,
+        double* __restrict__                rightHandSide,
+        const tarch::la::Vector<3, double>& patchSize,
+        int                                 numberOfGridCellsPerPatchPerAxis,
+        int                                 haloSize,
+        int                                 unknowns,
+        int                                 auxiliaryVariables,
+        double                              sigma,
+        const int*                          quantities,
+        int                                 numberOfQuantities
       );
   }
 }

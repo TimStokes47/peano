@@ -40,12 +40,11 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
 
     @f$ \\partial _t Q = F(Q) @f$
 
-    through fourth-order central differences, plus an optional Kreiss-Oliger
-    dissipation term of sixth order (@ref exahype2.api.rkfd4.FD4Kernels), and
-    integrates in time with the explicit Runge-Kutta scheme from @ref
-    exahype2.api.rungekutta.ButcherTableau. The stencils reach three grid
-    cells into the neighbouring patches, i.e. the halo is HALO_SIZE=3 grid
-    cells wide:
+    through fourth-order central differences (@ref
+    exahype2.api.rkfd4.FD4Kernels), and integrates in time with the explicit
+    Runge-Kutta scheme from @ref exahype2.api.rungekutta.ButcherTableau. The
+    stencils reach two grid cells into the neighbouring patches, i.e. the
+    halo is HALO_SIZE=2 grid cells wide:
 
     @image html central-differences-with-runge-kutta-stencil.png
 
@@ -74,6 +73,20 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     stage time stamps do not decrease. @ref
     benchmarks_exahype2_euler_smooth_fd4 demonstrates fourth-order
     convergence for the Euler equations.
+
+    ## Extending the scheme
+
+    The scheme has no artificial dissipation. Subclasses can add further
+    terms to the right-hand side:
+
+    - _right_hand_side_action_sets() returns the action sets of the task
+      which evaluates the right-hand side of one stage. Subclasses can
+      append action sets which add their terms to the stage's estimate.
+      They run after the right-hand side kernel, within the same task.
+    - Subclasses which need wider stencils override HALO_SIZE.
+
+    @ref exagrype.api.FD4WithKODissipation adds the Kreiss-Oliger
+    dissipation this way.
 
     ## Data flow
 
@@ -119,14 +132,14 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
 
     """
 
-    HALO_SIZE = 3
+    ## Width of the halo. Subclasses with wider stencils override it.
+    HALO_SIZE = 2
 
     def __init__(
         self,
         solver: Solver,
         patch_size: int,
         rk_order: int,
-        kreiss_oliger_sigma: float = 0.0,
         time_step_size: float = None,
         cfl_constant: float = 0.5,
     ):
@@ -151,10 +164,6 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
           to be between one and four, @ref
           exahype2.api.rungekutta.ButcherTableau.
 
-        @param kreiss_oliger_sigma: float
-          Scaling of the Kreiss-Oliger dissipation. 0.0 switches the
-          dissipation off.
-
         @param time_step_size: float or None
           Fixed time step size. If None, the time step size is adaptive.
 
@@ -172,13 +181,8 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
         if patch_size < self.HALO_SIZE:
             raise ValueError(
                 f"Solver {solver.name}: patch_size has to be at least {self.HALO_SIZE}, "
-                f"as the fourth-order stencils reach {self.HALO_SIZE} grid cells into "
+                f"as the stencils reach {self.HALO_SIZE} grid cells into "
                 f"the neighbouring patches, but got {patch_size}"
-            )
-        if kreiss_oliger_sigma < 0.0:
-            raise ValueError(
-                f"Solver {solver.name}: kreiss_oliger_sigma has to be non-negative, "
-                f"but got {kreiss_oliger_sigma}"
             )
         if time_step_size is not None and time_step_size <= 0.0:
             raise ValueError(
@@ -192,7 +196,6 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
             )
         self.patch_size = patch_size
         self.butcher_tableau = ButcherTableau(rk_order)
-        self.kreiss_oliger_sigma = kreiss_oliger_sigma
         self.time_step_size = time_step_size
         self.cfl_constant = cfl_constant
         # Set in construct_output(): the generated kernels live in the project
@@ -229,6 +232,29 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     @property
     def max_eigenvalue_kernel_name(self) -> str:
         return self._solver.name + "_maxEigenvalueOverPatch"
+
+    def _right_hand_side_action_sets(self, stage, cell_guard):
+        """!
+
+        Action sets of the task which evaluates the right-hand side of one stage
+
+        The task reads solver._patch_with_halo, i.e. the stage's input with
+        its halo, and writes the stage's slot of solver._rhs_estimates. By
+        default, it holds one action set, which invokes the fourth-order
+        Finite Differences kernel. Subclasses can append action sets which
+        add further terms to the estimate. The action sets of one task run
+        one after the other, in the order of the list.
+
+        @param stage: int
+          Number of the Runge-Kutta stage, starting with zero.
+
+        @param cell_guard: str
+          C++ boolean expression, evaluated per cell.
+
+        @return List[peano4.api.solversteps.ActionSet]
+
+        """
+        return [EvaluateRightHandSide(self._solver, stage, guard=cell_guard)]
 
     def __create_data_structures(self):
         """!
@@ -719,7 +745,7 @@ Patch overlap data
         self.kernel_namespace = peano_project.namespace
         # Construct the calls first, as they validate the PDE terms' variants
         self._solver.compute_kernel_call = self.__construct_kernel_call(
-            self.right_hand_side_kernel_name, [repr(float(self.kreiss_oliger_sigma))]
+            self.right_hand_side_kernel_name, []
         )
         if self.has_adaptive_time_step_size:
             self.max_eigenvalue_kernel_call = self.__construct_kernel_call(
@@ -819,9 +845,8 @@ Patch overlap data
             right_hand_side_task.use_cell(
                 self._solver._rhs_estimates, Access.READ_AND_WRITE
             )
-            right_hand_side_task.add_action_set(
-                EvaluateRightHandSide(self._solver, stage, guard=cell_guard)
-            )
+            for action_set in self._right_hand_side_action_sets(stage, cell_guard):
+                right_hand_side_task.add_action_set(action_set)
 
             ## Combine the estimates into the input of the next stage or into
             ## the new solution. The combination is a task of its own, tagged

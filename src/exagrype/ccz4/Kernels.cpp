@@ -7,7 +7,46 @@
 #include <iostream>
 
 #include "exagrype/ccz4/Kernels.h"
+#include "tarch/Assertions.h"
 
+
+void exagrype::ccz4::addKreissOligerDissipation(
+  const double* __restrict__          QWithHalo,
+  double* __restrict__                rightHandSide,
+  const tarch::la::Vector<3, double>& patchSize,
+  int                                 numberOfGridCellsPerPatchPerAxis,
+  int                                 haloSize,
+  int                                 unknowns,
+  int                                 auxiliaryVariables,
+  double                              sigma,
+  const int*                          quantities,
+  int                                 numberOfQuantities
+) {
+  assertion1(haloSize >= 3, haloSize);
+
+  const int    n                     = numberOfGridCellsPerPatchPerAxis;
+  const int    nWithHalo             = n + 2 * haloSize;
+  const int    entriesPerGridCell    = unknowns + auxiliaryVariables;
+  const double weights[7]            = {1.0, -6.0, 15.0, -20.0, 15.0, -6.0, 1.0};
+  const int    strides[3]            = {entriesPerGridCell, nWithHalo * entriesPerGridCell, nWithHalo * nWithHalo * entriesPerGridCell};
+
+  for (int z = 0; z < n; z++)
+  for (int y = 0; y < n; y++)
+  for (int x = 0; x < n; x++) {
+    const int input  = (((z + haloSize) * nWithHalo + (y + haloSize)) * nWithHalo + (x + haloSize)) * entriesPerGridCell;
+    const int output = ((z * n + y) * n + x) * unknowns;
+    for (int i = 0; i < numberOfQuantities; i++) {
+      const int quantity = quantities[i];
+      for (int d = 0; d < 3; d++) {
+        double dissipation = 0.0;
+        for (int shift = -3; shift <= 3; shift++) {
+          dissipation += weights[shift + 3] * QWithHalo[input + shift * strides[d] + quantity];
+        }
+        rightHandSide[output + quantity] += sigma / 64.0 * n / patchSize(d) * dissipation;
+      }
+    }
+  }
+}
 
 void exagrype::ccz4::enforceCCZ4constraints(
   const double* __restrict__  oldQ,

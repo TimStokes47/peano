@@ -14,10 +14,9 @@ The script writes two PNGs next to it, which are referenced from the
 documentation of CentralDifferencesWithRungeKutta:
 
 - central-differences-with-runge-kutta-stencil.png draws the reconstructed
-  2d patch of a single cell, i.e. a 9x9 patch with a halo of three, and the
+  2d patch of a single cell, i.e. a 9x9 patch with a halo of two, and the
   stencil of one grid cell next to the patch boundary: the fourth-order
-  central differences reach two grid cells along each axis, the
-  Kreiss-Oliger dissipation three.
+  central differences reach two grid cells along each axis.
 - central-differences-with-runge-kutta-time-step-task-graph.png shows the
   time stepping task graph of a second-order Runge-Kutta scheme as drawn by
   peano4.api.taskgraph.Graph.visualise(). The script constructs it from the
@@ -35,13 +34,12 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch, Rectangle
 
 PATCH_SIZE = 9
-HALO = 3
+HALO = 2
 
 COLOUR_HALO = "#fdae6b"
 COLOUR_HALO_CORNER = "#e0e0e0"
 COLOUR_PATCH = "#9ecae1"
 COLOUR_DIFFERENCES = "#31a354"
-COLOUR_DISSIPATION = "#a1d99b"
 COLOUR_GRID_CELL = "#de2d26"
 COLOUR_GRID = "#505050"
 
@@ -70,18 +68,16 @@ def stencil():
                 )
             )
 
-    # Stencil of the grid cell (1,4): two neighbours per direction for the
-    # central differences, the third one for the dissipation only
+    # Stencil of the grid cell (1,4): two neighbours per direction
     centre = (1, 4)
     for distance in range(1, HALO + 1):
-        colour = COLOUR_DIFFERENCES if distance <= 2 else COLOUR_DISSIPATION
         for dx, dy in [(distance, 0), (-distance, 0), (0, distance), (0, -distance)]:
             axes.add_patch(
                 Rectangle(
                     (centre[0] + dx + 0.15, centre[1] + dy + 0.15),
                     0.7,
                     0.7,
-                    facecolor=colour,
+                    facecolor=COLOUR_DIFFERENCES,
                     edgecolor="black",
                     linewidth=0.8,
                 )
@@ -140,11 +136,6 @@ def stencil():
                 facecolor=COLOUR_DIFFERENCES,
                 edgecolor="black",
                 label="fourth-order central differences",
-            ),
-            Patch(
-                facecolor=COLOUR_DISSIPATION,
-                edgecolor="black",
-                label="Kreiss-Oliger dissipation only",
             ),
         ],
         loc="lower center",
