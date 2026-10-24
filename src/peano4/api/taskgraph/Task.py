@@ -142,34 +142,56 @@ class Task:
         - READ_AND_DISCARD: the action set only reads the submodel, never
           writes it, and does not need its value kept around afterwards -
           this task is a final consumer, not a link in a longer chain.
+          The submodel is loaded before the step, but it is not stored
+          after the step: Its value is lost unless another task of the
+          same step writes it.
         - WRITE: the action sets only write the submodel (e.g. fill in an
           initial condition), without relying on whatever value it held
-          before.
+          before. The submodel is stored after the step, but it is not
+          loaded before the step: The action sets see uninitialised data,
+          not the value the submodel held before.
         - READ_AND_WRITE: the action sets both read the submodel's
           existing value and write a new one (e.g. an in-place update).
-          The WRITE component doesn't mean necessarily that we alter the 
-          content. It simply tells the task that the data should not be 
-          discarded afterwards.
+          The WRITE component doesn't mean necessarily that we alter the
+          content. It simply tells the task that the data should not be
+          discarded afterwards. The submodel is loaded before and stored
+          after the step.
         - TEMPORARY: the submodel is neither meaningfully read nor written
           by this task for its own sake - available for a task graph
           author to say so explicitly, though nothing currently derives
-          this qualifier automatically.
+          this qualifier automatically. The submodel is neither loaded nor
+          stored.
 
-        WRITE and READ_AND_WRITE are treated identically by
+        The qualifiers matter at two levels. On the task-graph level, WRITE
+        and READ_AND_WRITE are treated identically by
         peano4.api.taskgraph.compiler.PropagateUseStatements.propagate_use_statements():
         both mean this task produces a genuinely new value for the
         submodel, which someone downstream then has to actually pick up
-        (read) - @see that function's documentation for the precise rule,
+        (read) - see that function's documentation for the precise rule,
         and note that the READ_AND_WRITE declarations *it* inserts to
         satisfy that rule are indistinguishable from ones a task graph
         author wrote by hand. READ_AND_DISCARD and TEMPORARY impose no
-        such obligation on whatever comes after. Whichever qualifier is
-        passed here still translates into exactly the same use_cell()/
-        use_face()/use_vertex() call on the peano4.api.solversteps.Step
-        this task compiles into (@see
-        peano4.api.taskgraph.compiler.Sequential.translate()) - the
-        qualifier only ever affects the task-graph level, not what the
-        generated Observer looks like.
+        such obligation on whatever comes after.
+
+        On the level of the generated code, every qualifier translates
+        into the same use_cell()/use_face()/use_vertex() call on the
+        peano4.api.solversteps.Step this task compiles into (@ref
+        peano4.api.taskgraph.compiler.Sequential.translate()). However,
+        the qualifiers decide whether the generated code loads the
+        submodel before and stores it after a step: @ref
+        peano4.api.taskgraph.compiler.DeriveLoadStoreComputeFlag.derive_load_store_compute_flag()
+        derives these flags from the qualifiers as described per qualifier
+        above, and exahype2.api.Project.generate_Peano4_project() applies
+        it to all steps. If several tasks share a step,
+        peano4.api.taskgraph.compiler.FuseSteps merges their qualifiers
+        first.
+
+        Pick the qualifiers with care if a submodel's value has to survive
+        several steps: A task which reads data that an earlier task of
+        another step has declared READ_AND_DISCARD, or a task declaring
+        WRITE which still reads the previous value, reads garbage. The
+        Sommerfeld boundary conditions of exahype2.api are an example
+        (@ref exahype2.api.BoundaryConditions.get_access_to_persistent_face_data()).
 
         """
 
