@@ -46,6 +46,20 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     Use add_task_to_time_step() to add the corresponding task to a time
     step's task graph.
 
+    ## Why Dirichlet conditions are not part of the roll over
+
+    exahype2.api.SommerfeldBoundaryConditions do without a boundary task:
+    They advance the ghost cells within the roll over of the face data
+    after the projection. Dirichlet conditions could be realised the same
+    way, as the roll over could evaluate the boundary values at the time
+    stamp of the next update. We deliberately keep them as a separate task
+    which runs directly before the reconstruction, as this will not work
+    anymore once we support local time stepping: With local time stepping,
+    each cell advances with its own time step size, and the time stamp at
+    which the ghost cells have to hold the boundary values is only known
+    once the adjacent cell starts its next update, but not when the face
+    data are rolled over after its previous update.
+
     """
 
     TemplateTouchFaceFirstTime = jinja2.Template(
