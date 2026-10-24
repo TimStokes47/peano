@@ -1,5 +1,6 @@
 .BeforeScript:
   before_script:
+    - export APPTAINERENV_OMPI_MCA_btl_sm_backing_directory="$CI_PROJECT_DIR"
     - echo "Running CI with $(nproc) cores"
     - ls
     - pwd
