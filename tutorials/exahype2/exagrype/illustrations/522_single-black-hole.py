@@ -7,16 +7,18 @@ Create the PNG illustrations of the tutorial 522_single-black-hole.ipynb
 The script builds the single black hole setup of the tutorial, runs it,
 extracts the lapse and the conformal factor along the x-axis with Peano's
 PointProbe, and writes all pictures into the directory of this script. It
-runs three variants, one after the other, so their runtimes can be
-compared:
+runs three setups, one after the other, so their runtimes can be compared:
 
-- plain: the main run of the tutorial, exahype2.api.fv.RusanovWithExplicitEuler;
-- optimistic: exahype2.api.fv.RusanovWithOptimisticExplicitEuler;
-- constrained: the plain Finite Volumes with the CCZ4 constraint
-  enforcement after each time step.
+- plain: the main run of the tutorial, i.e. exahype2.api.fv.RusanovWithExplicitEuler
+  with 6x6x6 patches and without load balancing;
+- decomposed: the run of the section "Speeding up", i.e. 10x10x10 patches,
+  a domain decomposition and four OpenMP threads;
+- decomposed-constrained: the same with the CCZ4 constraint enforcement
+  after each time step (section "Improving the physics").
 
-The pictures of the initial data and of the lapse stem from the plain run,
-522_single-black-hole-variations.png compares the three variants. Call it
+The pictures of the initial data and of the lapse stem from the plain run.
+522_single-black-hole-speeding-up.png compares the plain and the decomposed
+run, 522_single-black-hole-constraints.png the two decomposed runs. Call it
 from anywhere:
 
      python3 tutorials/exahype2/exagrype/illustrations/522_single-black-hole.py
@@ -73,30 +75,56 @@ def psi(r):
     return 1.0 + Mass / 2.0 / r
 
 
-## The variants of the tutorial: name, numerical scheme, constraint enforcement
-Variants = [
+## The run of the section "Speeding up": the plain Finite Volumes with
+## 10x10x10 patches over the same 9x9x9 mesh cells, the domain decomposed by
+## a load balancing strategy, and four OpenMP threads
+DecomposedPatchSize = 10
+DecomposedThreads = 4
+
+## The runs: name, patch size, load balancing, threads, constraint enforcement
+Runs = [
+    ("plain", PatchSize, False, None, exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.No),
     (
-        "plain",
-        exahype2.api.fv.RusanovWithExplicitEuler,
+        "decomposed",
+        DecomposedPatchSize,
+        True,
+        DecomposedThreads,
         exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.No,
     ),
     (
-        "optimistic",
-        exahype2.api.fv.RusanovWithOptimisticExplicitEuler,
-        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.No,
-    ),
-    (
-        "constrained",
-        exahype2.api.fv.RusanovWithExplicitEuler,
+        "decomposed-constrained",
+        DecomposedPatchSize,
+        True,
+        DecomposedThreads,
         exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
     ),
 ]
 
 
-def build_and_run(directory, peano_installation, end_time, scheme, enforce):
+def build_and_run(
+    directory,
+    peano_installation,
+    end_time,
+    scheme,
+    enforce,
+    patch_size=PatchSize,
+    load_balancing=False,
+    threads=None,
+):
     """!
 
     Generate, compile and run the tutorial setup within directory
+
+    @param patch_size: int
+      Number of volumes per axis within one patch. The mesh always has
+      CellsPerAxis cells per axis.
+
+    @param load_balancing: bool
+      If True, decompose the domain with
+      toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates.
+
+    @param threads: int or None
+      If not None, run with OMP_NUM_THREADS set to this value.
 
     @param scheme: type
       Numerical scheme, i.e. a Finite Volume class from exahype2.api.fv.
@@ -136,10 +164,10 @@ def build_and_run(directory, peano_installation, end_time, scheme, enforce):
             )
         )
     )
-    solver.numerical_scheme = scheme(solver, PatchSize)
+    solver.numerical_scheme = scheme(solver, patch_size)
     solver.enforce_ccz4_constraint(enforce)
     solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
-        solver, volume_size=1.01 * DomainSize / VolumesPerAxis
+        solver, volume_size=1.01 * DomainSize / CellsPerAxis / patch_size
     )
     solver.plotter = exahype2.api.fv.PlotAsVTKFile(
         solver,
@@ -159,6 +187,11 @@ def build_and_run(directory, peano_installation, end_time, scheme, enforce):
         max_end_time=end_time,
         periodic_BC=[False, False, False],
     )
+    if load_balancing:
+        project.set_load_balancing(
+            "toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates",
+            "new ::exahype2::LoadBalancingConfiguration()",
+        )
     project.set_Peano4_installation(
         peano_installation, peano4.api.output.CompileMode.RELEASE
     )
@@ -177,7 +210,16 @@ def build_and_run(directory, peano_installation, end_time, scheme, enforce):
     )
     start = time.time()
     with open(os.path.join(directory, "run.log"), "w") as log:
-        subprocess.run(["./single-black-hole"], cwd=directory, check=True, stdout=log)
+        environment = dict(os.environ)
+        if threads is not None:
+            environment["OMP_NUM_THREADS"] = str(threads)
+        subprocess.run(
+            ["./single-black-hole"],
+            cwd=directory,
+            check=True,
+            stdout=log,
+            env=environment,
+        )
     runtime = time.time() - start
     with open(runtime_file, "w") as f:
         f.write(str(runtime))
@@ -210,29 +252,82 @@ def probe(directory, point, output_file):
     )
 
 
-def profile(directory):
+def profile(directory, volumes_per_axis=VolumesPerAxis):
     """!
 
-    Probe lapse and phi in the centre of each volume along the line y=z=LineOffset
+    Probe lapse and phi in the centre of each volume along the line through the
+    centres of the volumes next to the puncture, i.e. along y=z=h/2
 
     Returns the x coordinates, the time stamps and two 2d arrays
     lapse[snapshot,x] and phi[snapshot,x].
 
     """
-    h = DomainSize / VolumesPerAxis
-    x = DomainOffset + (np.arange(VolumesPerAxis) + 0.5) * h
+    h = DomainSize / volumes_per_axis
+    x = DomainOffset + (np.arange(volumes_per_axis) + 0.5) * h
     lapse, phi = [], []
     for i, x_i in enumerate(x):
         t, lapse_over_time, phi_over_time = probe(
-            directory, [x_i, LineOffset, LineOffset], "profile-{}.csv".format(i)
+            directory, [x_i, h / 2.0, h / 2.0], "profile-{}.csv".format(i)
         )
         lapse.append(lapse_over_time)
         phi.append(phi_over_time)
     return x, t, np.array(lapse).T, np.array(phi).T
 
 
-def radius(x):
-    return np.sqrt(np.asarray(x) ** 2 + 2.0 * LineOffset**2)
+def radius(x, line_offset=LineOffset):
+    return np.sqrt(np.asarray(x) ** 2 + 2.0 * line_offset**2)
+
+
+def time_steps(directory):
+    """!
+
+    Number of time steps and average wall clock time per time step
+
+    Both stem from the final report of peano4::DefaultStepReport in run.log,
+    i.e. from the line "TimeStep: ...s (avg=...,#measurements=...".
+
+    """
+    with open(os.path.join(directory, "run.log")) as log:
+        for line in log:
+            if "reportFinalResults" in line and "TimeStep:" in line:
+                statistics = line.split("(avg=")[1]
+                average = float(statistics.split(",")[0])
+                count = int(statistics.split("#measurements=")[1].split(",")[0])
+                return count, average
+    raise RuntimeError(f"no time step statistics in {directory}/run.log")
+
+
+def plot_speeding_up(coarse, fine):
+    """! Lapse next to the puncture over time, and along the x-axis at the end, for both meshes"""
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+    for (label, (x, t, lapse, volumes_per_axis)), marker in zip(
+        [("54 volumes per axis", coarse), ("90 volumes per axis", fine)], ["o", "s"]
+    ):
+        h = DomainSize / volumes_per_axis
+        centre = volumes_per_axis // 2
+        axes[0].plot(
+            t,
+            lapse[:, centre],
+            marker + "-",
+            markersize=3,
+            linewidth=1,
+            label="{}, r={:.2f}".format(label, radius(x[centre], h / 2.0)),
+        )
+        axes[1].plot(x, lapse[-1], marker + "-", markersize=2, linewidth=1, label=label)
+    axes[0].set_xlabel("t")
+    axes[0].set_ylabel("lapse")
+    axes[0].set_title("Lapse next to the puncture")
+    axes[1].set_xlabel("x")
+    axes[1].set_ylabel("lapse")
+    axes[1].set_title("Lapse along the x-axis at t={:.0f}".format(coarse[1][-1]))
+    axes[0].legend(loc="lower right")
+    axes[1].legend(loc="lower right")
+    fig.savefig(
+        os.path.join(Here, "522_single-black-hole-speeding-up.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
 
 
 def plot_initial_data(x, lapse, phi):
@@ -333,28 +428,39 @@ def plot_lapse_over_time(x, t, lapse):
     plt.close(fig)
 
 
-def plot_variations(results):
-    """! Lapse and phi next to the puncture over time for all variants"""
+def plot_constraints(unconstrained, constrained):
+    """! Lapse and phi next to the puncture over time with and without constraint enforcement"""
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
-    for (name, _, _), marker in zip(Variants, ["o", "s", "^"]):
-        runtime, x, t, lapse, phi = results[name]
-        centre = VolumesPerAxis // 2
-        label = "{} ({:.0f} s)".format(name, runtime)
+    for (label, run), marker in zip(
+        [("without enforcement", unconstrained), ("with enforcement", constrained)],
+        ["o", "s"],
+    ):
+        centre = run["volumes_per_axis"] // 2
         axes[0].plot(
-            t, lapse[:, centre], marker + "-", markersize=3, linewidth=1, label=label
+            run["t"],
+            run["lapse"][:, centre],
+            marker + "-",
+            markersize=3,
+            linewidth=1,
+            label=label,
         )
         axes[1].plot(
-            t, phi[:, centre], marker + "-", markersize=3, linewidth=1, label=label
+            run["t"],
+            run["phi"][:, centre],
+            marker + "-",
+            markersize=3,
+            linewidth=1,
+            label=label,
         )
+    centre = unconstrained["volumes_per_axis"] // 2
+    r = radius(unconstrained["x"][centre], unconstrained["h"] / 2.0)
     for ax, quantity in zip(axes, ["lapse", "phi"]):
         ax.set_xlabel("t")
         ax.set_ylabel(quantity)
-        ax.set_title(
-            "{} next to the puncture (r={:.2f})".format(quantity, radius(LineOffset))
-        )
-    axes[1].legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
+        ax.set_title("{} next to the puncture (r={:.2f})".format(quantity, r))
+    axes[1].legend(loc="lower right")
     fig.savefig(
-        os.path.join(Here, "522_single-black-hole-variations.png"),
+        os.path.join(Here, "522_single-black-hole-constraints.png"),
         dpi=100,
         bbox_inches="tight",
     )
@@ -384,41 +490,87 @@ if __name__ == "__main__":
         work_directory = args.work_directory or stack.enter_context(
             tempfile.TemporaryDirectory()
         )
-        results = {}
-        for name, scheme, enforce in Variants:
+        runs = {}
+        for name, patch_size, load_balancing, threads, enforce in Runs:
             directory = os.path.join(os.path.abspath(work_directory), name)
             runtime = build_and_run(
                 directory,
                 os.path.abspath(args.peano_root),
                 args.end_time,
-                scheme,
+                exahype2.api.fv.RusanovWithExplicitEuler,
                 enforce,
+                patch_size=patch_size,
+                load_balancing=load_balancing,
+                threads=threads,
             )
-            results[name] = (runtime, *profile(directory))
-            x, t, lapse, phi = results[name][1:]
-            centre = VolumesPerAxis // 2
+            volumes_per_axis = CellsPerAxis * patch_size
+            x, t, lapse, phi = profile(directory, volumes_per_axis)
+            count, average = time_steps(directory)
+            h = DomainSize / volumes_per_axis
+            runs[name] = dict(
+                runtime=runtime,
+                x=x,
+                t=t,
+                lapse=lapse,
+                phi=phi,
+                h=h,
+                volumes_per_axis=volumes_per_axis,
+            )
+            centre = volumes_per_axis // 2
             print(
-                "{}: runtime {:.1f}s, {} snapshots, next to the puncture lapse {:.4f} -> {:.4f}, phi {:.4f} -> {:.4f}".format(
+                "{}: runtime {:.1f}s, {} time steps of {:.3f}s, {} volumes, {:.3e}s per volume update".format(
                     name,
                     runtime,
-                    len(t),
+                    count,
+                    average,
+                    volumes_per_axis**3,
+                    average / volumes_per_axis**3,
+                )
+            )
+            print(
+                "{}: next to the puncture (r={:.3f}) lapse {:.4f} -> {:.4f}, phi {:.4f} -> {:.4f}, NaN: {}".format(
+                    name,
+                    radius(x[centre], h / 2.0),
                     lapse[0, centre],
                     lapse[-1, centre],
                     phi[0, centre],
                     phi[-1, centre],
+                    np.isnan(lapse).any(),
                 )
             )
-        for name in ["optimistic", "constrained"]:
-            print(
-                "max deviation of {} from plain: lapse {:.3e}, phi {:.3e}".format(
-                    name,
-                    np.max(np.abs(results[name][3] - results["plain"][3])),
-                    np.max(np.abs(results[name][4] - results["plain"][4])),
-                )
+        print(
+            "max deviation of decomposed-constrained from decomposed: lapse {:.3e}, phi {:.3e}".format(
+                np.max(
+                    np.abs(
+                        runs["decomposed-constrained"]["lapse"]
+                        - runs["decomposed"]["lapse"]
+                    )
+                ),
+                np.max(
+                    np.abs(
+                        runs["decomposed-constrained"]["phi"]
+                        - runs["decomposed"]["phi"]
+                    )
+                ),
             )
-        plot_variations(results)
+        )
+        plot_speeding_up(
+            (
+                runs["plain"]["x"],
+                runs["plain"]["t"],
+                runs["plain"]["lapse"],
+                VolumesPerAxis,
+            ),
+            (
+                runs["decomposed"]["x"],
+                runs["decomposed"]["t"],
+                runs["decomposed"]["lapse"],
+                runs["decomposed"]["volumes_per_axis"],
+            ),
+        )
+        plot_constraints(runs["decomposed"], runs["decomposed-constrained"])
 
-        runtime, x, t, lapse, phi = results["plain"]
+        x, t, lapse, phi = (runs["plain"][key] for key in ["x", "t", "lapse", "phi"])
         print("snapshots at t =", np.round(t, 3))
         for i in [
             VolumesPerAxis // 2,
