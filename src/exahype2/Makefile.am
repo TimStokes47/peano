@@ -19,6 +19,8 @@ ExaHyPE2Sources = \
   UnitTests.cpp \
   blockstructured/DirichletBoundaryConditions.cpp \
   blockstructured/tests/DirichletBoundaryConditionsTest.cpp \
+  blockstructured/SommerfeldBoundaryConditions.cpp \
+  blockstructured/tests/SommerfeldBoundaryConditionsTest.cpp \
   dg/BoundaryConditions.cpp \
   dg/DGUtils.cpp \
   dg/CellIntegral.cpp \
