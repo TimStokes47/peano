@@ -49,7 +49,7 @@ private:
    * The lower and the upper boundary face of a domain around the origin
    * are mirror images of each other. With mirrored data, they have to
    * yield the same ghost values. This test fails for a scheme that uses
-   * the signed coordinate along the normal, as the legacy
+   * the signed coordinate along the normal, as the removed legacy
    * exahype2::fd::applySommerfeldConditions() did.
    */
   void testLowerAndUpperFacesAreSymmetric();

@@ -259,9 +259,11 @@ namespace exahype2 {
      *
      * # Differences to the legacy implementation
      *
-     * The routine replaces exahype2::fd::applySommerfeldConditions(), which
-     * the legacy Python API (python/exahype2) still uses. The legacy
-     * routine realised the same box scheme, but differs in a few details:
+     * The routine replaces the legacy exahype2::fd::applySommerfeldConditions()
+     * (removed), which the legacy Python API (python/exahype2) injected
+     * through the TemplateHandleBoundary_KernelCalls attribute of its
+     * solvers. The legacy routine realised the same box scheme, but differed
+     * in a few details:
      *
      * - It used the signed coordinate @f$ x_n @f$ within @f$ \sigma @f$. On
      *   lower boundary faces of a domain around the origin, @f$ \sigma

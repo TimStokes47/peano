@@ -35,14 +35,12 @@ ExaHyPE2Sources = \
   enumerator/SingleDoFEnumerator.cpp \
   enumerator/AoSoALexicographicEnumerator.cpp \
   enumerator/FaceAoSLexicographicEnumerator.cpp \
-  fd/BoundaryConditions.cpp \
   fd/PatchUtils.cpp \
   fd/LoopBody.cpp \
   fv/BoundaryConditions.cpp \
   fv/PatchUtils.cpp \
   fv/PostprocessingKernels.cpp \
   fv/Tracer.cpp \
-  fd/tests/SommerfeldBCTest.cpp\
   fv/tests/InterpolationRestrictionTest.cpp \
   fd/fd4/LoopBody.cpp \
   fd/fd4/FD4_patchwise_functors.cpp \
