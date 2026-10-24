@@ -32,8 +32,10 @@ class CCZ4Solver(exahype2.api.Solver):
 
     ## Shortcomings
 
-    - exahype2.api offers Finite Volumes only, while the production runs of
-      the legacy ExaGRyPE use fourth-order Finite Differences.
+    - The fourth-order Finite Differences of the production runs are
+      available through exahype2.api.rkfd4, i.e. pass a
+      CentralDifferencesWithRungeKutta as numerical scheme. Unlike the
+      legacy ExaGRyPE, they do not support adaptive mesh refinement yet.
     - There is no hook yet that pushes the solution back onto the CCZ4
       constraints after each time step (exagrype::ccz4::enforceCCZ4constraints()).
       Long runs therefore drift away from the constraint surface.
@@ -181,6 +183,8 @@ class CCZ4Solver(exahype2.api.Solver):
         """!
 
         The Finite Volume kernels hand over the jump deltaQ along one normal,
+        the fourth-order Finite Differences of exahype2.api.rkfd4 the
+        derivative along one normal times the mesh width,
         whereas exagrype::ccz4::ncp() expects the gradient along all three
         directions. We hence embed the jump into an otherwise empty gradient.
 

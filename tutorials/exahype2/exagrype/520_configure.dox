@@ -141,7 +141,8 @@ pip install -e .
 ExaGRyPE currently offers two entry points:
 
 - The new Python API \c exagrype.api layers on top of \c exahype2.api. It
-  currently offers Finite Volumes only and no black holes yet. Start with
+  offers Finite Volumes and the fourth-order Finite Differences
+  (\c exahype2.api.rkfd4), but no black holes yet. Start with
   the Jupyter notebook \c tutorials/exahype2/exagrype/521_gauge-wave.ipynb
   (\ref tutorials_exahype2_exagrype_521_gauge-wave), which runs the gauge wave
   with this API. \ref benchmarks_exagrype_gauge_wave and
@@ -153,6 +154,10 @@ ExaGRyPE currently offers two entry points:
   ~~~~~~~~~~~~~~~~~~~~~~~
   cd applications/exahype2/ccz4
   ~~~~~~~~~~~~~~~~~~~~~~~
+  The script builds on the legacy Finite Differences
+  \c exahype2.solvers.rkfd. They have been removed in favour of
+  \c exahype2.api.rkfd4, so the script and the tutorials which use it do not
+  run until they are ported to the new API.
 
 
 # Reference papers
