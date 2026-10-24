@@ -79,7 +79,7 @@ class Task:
     Every task can carry arbitrarily many tags, i.e. a dictionary which maps
     a key onto an arbitrary value. Each key identifies one tag, so a task can
     carry several tags at the same time, e.g. one per party which wants to
-    label it. The task graph compilers ignore them. Tags allow the
+    tag it. The task graph compilers ignore them. Tags allow the
     code which creates a task graph to tell other code what a task does,
     without that code having to know how the graph is built. Find tagged
     tasks via peano4.api.taskgraph.Graph.find_tasks(). ExaHyPE's numerical

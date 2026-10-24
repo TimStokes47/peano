@@ -47,7 +47,7 @@ which data a task uses, as the compiler relies on these declarations.
 
 To insert a step after a solution update, you have to find the tasks which
 update the solution. You do not want to know how a particular numerical
-scheme builds its graph, though. The schemes therefore label the relevant
+scheme builds its graph, though. The schemes therefore tag the relevant
 tasks.
 
 ## Tags in general
@@ -57,7 +57,7 @@ onto an arbitrary value. Each key identifies one tag, so a task can carry
 arbitrarily many tags at the same time:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-task = peano4.api.taskgraph.Task(name="My task", entity=peano4.api.taskgraph.Task.GridEntity.CELL, tags={"MyLabel": None})
+task = peano4.api.taskgraph.Task(name="My task", entity=peano4.api.taskgraph.Task.GridEntity.CELL, tags={"MyTag": None})
 task.tags[Solver.SolutionUpdateTaskTag] = Solver.SolutionUpdateTaskTag(solver, patch, guard)
 task.tags[MyOwnTag]                     = MyOwnTag(...)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
