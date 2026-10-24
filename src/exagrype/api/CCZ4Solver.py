@@ -2,9 +2,13 @@
  use, please see the copyright notice at www.peano-framework.org
 """
 
+import enum
 from typing import Dict, Union
 
 import exahype2.api
+import peano4.api
+import peano4.api.taskgraph
+import toolbox.blockstructured.api
 
 from . import initialvalues
 
@@ -36,13 +40,36 @@ class CCZ4Solver(exahype2.api.Solver):
       available through exahype2.api.rkfd4, i.e. pass a
       CentralDifferencesWithRungeKutta as numerical scheme. Unlike the
       legacy ExaGRyPE, they do not support adaptive mesh refinement yet.
-    - There is no hook yet that pushes the solution back onto the CCZ4
-      constraints after each time step (exagrype::ccz4::enforceCCZ4constraints()).
-      Long runs therefore drift away from the constraint surface.
+    - The solution is pushed back onto the CCZ4 constraints
+      (exagrype::ccz4::enforceCCZ4constraints()) only if you switch it on
+      via enforce_ccz4_constraint(). Without it, long runs drift away from
+      the constraint surface.
     - The second-order formulation, black holes (TwoPunctures), tracers and
       the ADM/Psi4 postprocessing are not available yet.
 
     """
+
+    class EnforceCCZ4Constraint(enum.Enum):
+        """!
+
+        When to push the solution back onto the algebraic CCZ4 constraints
+
+        - No: never. This is the default.
+        - OnlyFinalSolution: after each task which writes a new solution
+          (exahype2.api.Solver.SolutionUpdateTaskTag), i.e. once per time
+          step.
+        - IntermediateSteps: in addition after each task which writes an
+          intermediate solution (exahype2.api.Solver.IntermediateSolutionUpdateTag),
+          i.e. after each Runge-Kutta stage. For single-step schemes such as
+          the Finite Volumes, this is the same as OnlyFinalSolution.
+
+        @ref CCZ4Solver.enforce_ccz4_constraint()
+
+        """
+
+        No = 0
+        OnlyFinalSolution = 1
+        IntermediateSteps = 2
 
     Unknowns = {
         "G": 6,
@@ -125,6 +152,8 @@ class CCZ4Solver(exahype2.api.Solver):
         """
         super().__init__(name, unknowns=self.Unknowns, auxiliary_variables=0)
 
+        self._enforce_ccz4_constraint = CCZ4Solver.EnforceCCZ4Constraint.No
+
         self._parameters = dict(self.DefaultParameters)
         for key, value in (parameters or {}).items():
             if key not in self.DefaultParameters:
@@ -149,6 +178,7 @@ class CCZ4Solver(exahype2.api.Solver):
             """
 #include "exagrype/ccz4/Kernels.h"
 #include "exagrype/initialvalues/InitialValues.h"
+#include "exagrype/initialvalues/ApplyTwoPunctures.h"
 """
         )
 
@@ -170,6 +200,181 @@ class CCZ4Solver(exahype2.api.Solver):
             if initial_condition is not None
             else initialvalues.gauge_wave()
         )
+
+    def enforce_ccz4_constraint(self, value: "CCZ4Solver.EnforceCCZ4Constraint"):
+        """!
+
+        Set when the solver pushes the solution back onto the CCZ4 constraints
+
+        By default, the solver does not enforce the constraints. If you
+        switch the enforcement on, generate_solver_realisation() inserts a
+        task which applies exagrype::ccz4::enforceCCZ4constraints() to each
+        volume or grid point after each tagged solution update of the
+        numerical scheme.
+
+        @param value: CCZ4Solver.EnforceCCZ4Constraint
+          No, OnlyFinalSolution or IntermediateSteps.
+
+        """
+        if not isinstance(value, CCZ4Solver.EnforceCCZ4Constraint):
+            raise TypeError(
+                f"Solver {self.name}: enforce_ccz4_constraint() expects a "
+                f"CCZ4Solver.EnforceCCZ4Constraint, but got {value!r}"
+            )
+        self._enforce_ccz4_constraint = value
+
+    def generate_solver_realisation(
+        self,
+        exahype2_project,
+        peano_project,
+        setup_simulation,
+        time_step,
+        plot,
+    ):
+        """!
+
+        Create the solver's task graphs and insert the constraint enforcement
+
+        The routine first calls the superclass, which lets the grid
+        construction, the numerical scheme and the plotter add their tasks.
+        If the constraint enforcement is switched on
+        (enforce_ccz4_constraint()), it afterwards inserts the enforcement
+        after each tagged solution update of the numerical scheme. Which
+        patch a tagged task writes and which guard it uses depends on the
+        scheme, so the routine distinguishes the schemes explicitly
+        (@ref page_exahype2_solver_manipulate_solver_steps). It raises an
+        exception for any other scheme.
+
+        All insertions work on the patch which the tagged tasks write and
+        use the cell guard:
+
+        - exahype2.api.fv.RusanovWithExplicitEuler: one task after Update
+          cell.
+        - exahype2.api.fv.RusanovWithOptimisticExplicitEuler: one task after
+          both Update cell and Insert patch interior. Each cell runs exactly
+          one of the two, so the task constrains every cell once, after its
+          update.
+        - exahype2.api.rkfd4.CentralDifferencesWithRungeKutta: one task after
+          Complete time step and, for IntermediateSteps, one task after each
+          Prepare stage k on the stage input.
+
+        The scheme's log of the time stepping graph does not show the
+        enforcement. With TEXT or VISUALISATION logging, the routine hence
+        logs the graph once more.
+
+        """
+        super().generate_solver_realisation(
+            exahype2_project, peano_project, setup_simulation, time_step, plot
+        )
+        Enforce = CCZ4Solver.EnforceCCZ4Constraint
+        if self._enforce_ccz4_constraint == Enforce.No:
+            return
+
+        ## The patches which the tagged tasks write: The solution and, for
+        ## Runge-Kutta, the stage input
+        scheme = self.numerical_scheme
+        match scheme:
+            case (
+                exahype2.api.fv.RusanovWithExplicitEuler()
+                | exahype2.api.fv.RusanovWithOptimisticExplicitEuler()
+            ):
+                stage_input = None
+            case exahype2.api.rkfd4.CentralDifferencesWithRungeKutta():
+                stage_input = self._stage_input
+            case _:
+                raise TypeError(
+                    f"Solver {self.name}: cannot enforce the CCZ4 constraints for "
+                    f"the numerical scheme {type(scheme).__name__}. Supported are "
+                    "exahype2.api.fv.RusanovWithExplicitEuler, "
+                    "exahype2.api.fv.RusanovWithOptimisticExplicitEuler and "
+                    "exahype2.api.rkfd4.CentralDifferencesWithRungeKutta."
+                )
+
+        ## One task after all writers of the new solution: The optimistic
+        ## Finite Volumes write it in one of two tasks, depending on the cell
+        self._insert_constraint_enforcement(
+            time_step,
+            self._tasks_of_this_solver(
+                time_step, exahype2.api.Solver.SolutionUpdateTaskTag
+            ),
+            self._patch,
+        )
+        ## One task after each stage, as the stages run one after the other
+        if (
+            self._enforce_ccz4_constraint == Enforce.IntermediateSteps
+            and stage_input is not None
+        ):
+            for anchor in self._tasks_of_this_solver(
+                time_step, exahype2.api.Solver.IntermediateSolutionUpdateTag
+            ):
+                self._insert_constraint_enforcement(time_step, [anchor], stage_input)
+
+        title = (
+            f"Time stepping task graph for {self.name} with CCZ4 constraint enforcement"
+        )
+        if peano4.api.Logger().is_visualisation:
+            time_step.visualise(title=title)
+        if peano4.api.Logger().is_text:
+            time_step.log_as_text(title=title)
+
+    def _tasks_of_this_solver(self, time_step, tag):
+        """!
+        Tasks of time_step which carry tag and belong to this solver, as the
+        graph holds the tasks of all solvers
+        """
+        return [
+            task
+            for task in time_step.find_tasks(tag)
+            if task.name.startswith(self.name + "_")
+        ]
+
+    def _insert_constraint_enforcement(self, time_step, anchors, patch):
+        """!
+
+        Insert the enforcement of the CCZ4 constraints after anchors
+
+        The routine creates a task which applies
+        exagrype::ccz4::enforceCCZ4constraints() to each volume or grid point
+        of patch, and inserts it directly after all anchors via
+        peano4.api.taskgraph.Graph.insert_after(). The anchors' successors,
+        e.g. the projection onto the faces, hence see the constrained data
+        only. The task uses the solver's cell guard: If several anchors
+        write patch, each cell is updated by one of them, and the task runs
+        once per cell after all of them.
+
+        @param time_step: peano4.api.taskgraph.Graph
+          The time stepping task graph which holds the anchors.
+
+        @param anchors: List[peano4.api.taskgraph.Task]
+          The tasks which write patch. If the list is empty, the routine
+          does nothing.
+
+        @param patch: peano4.api.datamodel.Patch
+          The cell data which the anchors write, i.e. the solution or a
+          stage input.
+
+        """
+        if not anchors:
+            return
+        anchor_names = " and ".join(
+            anchor.name[len(self.name) + 1 :] for anchor in anchors
+        )
+        task = peano4.api.taskgraph.Task(
+            name=f"{self.name}_Enforce CCZ4 constraints after {anchor_names}",
+            entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+        )
+        ## READ_AND_WRITE keeps the data alive for later tasks
+        task.use_cell(patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        task.add_action_set(
+            toolbox.blockstructured.api.ApplyPointWiselyToPatch(
+                patch=patch,
+                implementation="::exagrype::ccz4::enforceCCZ4constraints(Q);",
+                guard=self.grid_selector.createCellGuard(),
+                additional_includes=self._get_default_includes()
+                + self.user_solver_includes,
+            )
+        )
+        time_step.insert_after(anchors, task)
 
     @property
     def parameters(self) -> Dict[str, Union[int, float]]:

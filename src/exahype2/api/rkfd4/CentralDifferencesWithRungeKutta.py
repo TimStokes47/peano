@@ -652,7 +652,16 @@ Patch overlap data
         - {SolverName}_Evaluate right hand side stage k.
         - {SolverName}_Prepare stage k+1, or {SolverName}_Complete time step
           after the last stage: computes the linear combination of the
-          estimates and projects it onto the faces.
+          estimates. Prepare stage k+1 is tagged with
+          exahype2.api.Solver.IntermediateSolutionUpdateTag, Complete time
+          step with exahype2.api.Solver.SolutionUpdateTaskTag, i.e.
+          postprocessing such as the enforcement of constraints can be
+          inserted directly after them (see @ref
+          page_exahype2_solver_manipulate_solver_steps).
+        - {SolverName}_Project stage k+1 onto faces, or {SolverName}_Project
+          solution onto faces after the last stage: projects the outcome of
+          the linear combination onto the faces. After the last stage, it
+          also computes the maximum eigenvalue of the new solution.
 
         After the last stage, {SolverName}_Compute time step size determines
         the time step size of the next time step and advances the solver's
@@ -717,13 +726,21 @@ Patch overlap data
                 combination_task = peano4.api.taskgraph.Task(
                     name=f"{name}_Complete time step", entity=Entity.CELL
                 )
+                projection_task = peano4.api.taskgraph.Task(
+                    name=f"{name}_Project solution onto faces", entity=Entity.CELL
+                )
             else:
                 combination_task = peano4.api.taskgraph.Task(
                     name=f"{name}_Prepare stage {stage + 1}", entity=Entity.CELL
                 )
+                projection_task = peano4.api.taskgraph.Task(
+                    name=f"{name}_Project stage {stage + 1} onto faces",
+                    entity=Entity.CELL,
+                )
             time_step.add_task(reconstruction_task)
             time_step.add_task(right_hand_side_task)
             time_step.add_task(combination_task)
+            time_step.add_task(projection_task)
 
             ## Reconstruct the stage's input with its halo
             if previous_stage_task is not None:
@@ -772,7 +789,11 @@ Patch overlap data
             )
 
             ## Combine the estimates into the input of the next stage or into
-            ## the new solution, and project the outcome onto the faces
+            ## the new solution. The combination is a task of its own, tagged
+            ## as solution update, so postprocessing can be inserted between
+            ## the combination and the projection onto the faces. Stage inputs
+            ## carry the intermediate tag
+            ## (@ref page_exahype2_solver_manipulate_solver_steps).
             if is_last_stage:
                 weights = self.butcher_tableau.final_estimate_weights()
                 output = self._solver._patch
@@ -786,23 +807,33 @@ Patch overlap data
             )
             if not is_last_stage:
                 combination_task.use_cell(self._solver._stage_input, Access.WRITE)
-            combination_task.use_face(
-                self._solver._patch_overlap_update, Access.TEMPORARY
-            )
-            combination_task.use_face(
-                self._solver._patch_overlap_current_time_step, Access.WRITE
-            )
             combination_task.add_action_set(
                 ComputeLinearCombination(
                     self._solver, weights, output, guard=cell_guard
                 )
             )
+            combination_task.tags.add(
+                Solver.SolutionUpdateTaskTag
+                if is_last_stage
+                else Solver.IntermediateSolutionUpdateTag
+            )
+
+            ## Project the outcome onto the faces. After the last stage, also
+            ## determine the maximum eigenvalue of the new solution
+            projection_task.add_dependency(combination_task)
+            projection_task.use_cell(output, Access.READ_AND_WRITE)
+            projection_task.use_face(
+                self._solver._patch_overlap_update, Access.TEMPORARY
+            )
+            projection_task.use_face(
+                self._solver._patch_overlap_current_time_step, Access.WRITE
+            )
             if is_last_stage and self.has_adaptive_time_step_size:
-                combination_task.use_cell(self._solver._max_eigenvalue, Access.WRITE)
-                combination_task.add_action_set(
+                projection_task.use_cell(self._solver._max_eigenvalue, Access.WRITE)
+                projection_task.add_action_set(
                     ComputeMaxEigenvalue(self._solver, guard=cell_guard)
                 )
-            combination_task.add_action_set(
+            projection_task.add_action_set(
                 ProjectPatchOntoFaces(
                     output,
                     self._solver._patch_overlap_update,
@@ -810,7 +841,7 @@ Patch overlap data
                     includes=includes,
                 )
             )
-            combination_task.add_action_set(
+            projection_task.add_action_set(
                 RollOverUpdatedFace(
                     self._solver._patch_overlap_current_time_step,
                     self._solver._patch_overlap_update,
@@ -818,7 +849,7 @@ Patch overlap data
                     includes=includes,
                 )
             )
-            previous_stage_task = combination_task
+            previous_stage_task = projection_task
 
         ## Determine the next time step size and advance the time stamp
         time_step_size_task = peano4.api.taskgraph.Task(

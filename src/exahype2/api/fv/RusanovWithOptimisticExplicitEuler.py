@@ -1276,6 +1276,7 @@ Patch overlap data
                 max_eigenvalue=self._solver._max_eigenvalue_and_time_step_sizes,
             )
         )
+        update_cell_task.tags.add(Solver.SolutionUpdateTaskTag)
 
         ## Traditional branch: the update makes any precomputed patch interior obsolete
         discard_patch_interior_task.add_dependency(update_cell_task)
@@ -1320,6 +1321,7 @@ Patch overlap data
                 task_number=task_number,
             )
         )
+        insert_patch_interior_task.tags.add(Solver.SolutionUpdateTaskTag)
 
         ## Both branches: reduce the cells' maximum eigenvalues into the next
         ## time step size. Runs in parallel to the projection onto the faces

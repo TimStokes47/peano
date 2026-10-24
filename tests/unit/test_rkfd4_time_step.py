@@ -45,20 +45,24 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
         "Probe_Prepare stage 1",
         "Probe_Prepare stage 2",
         "Probe_Complete time step",
+        "Probe_Project stage 1 onto faces",
+        "Probe_Project stage 2 onto faces",
+        "Probe_Project solution onto faces",
         "Probe_Compute time step size",
         "Probe_Trigger load balancing",
     }
-    assert (
-        tasks["Probe_Prepare stage 1"]
-        in tasks["Probe_Reconstruct stage 1"].dependencies
-    )
-    assert (
-        tasks["Probe_Prepare stage 2"]
-        in tasks["Probe_Reconstruct stage 2"].dependencies
-    )
+    for stage in [1, 2]:
+        assert (
+            tasks[f"Probe_Prepare stage {stage}"]
+            in tasks[f"Probe_Project stage {stage} onto faces"].dependencies
+        )
+        assert (
+            tasks[f"Probe_Project stage {stage} onto faces"]
+            in tasks[f"Probe_Reconstruct stage {stage}"].dependencies
+        )
     # The boundary values have to be set after the previous stage's roll-over
     assert (
-        tasks["Probe_Prepare stage 1"]
+        tasks["Probe_Project stage 1 onto faces"]
         in tasks["Probe_Apply Dirichlet BCs stage 1"].dependencies
     )
     assert (
@@ -66,9 +70,30 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
         in tasks["Probe_Reconstruct stage 1"].dependencies
     )
     assert (
-        tasks["Probe_Complete time step"]
+        tasks["Probe_Project solution onto faces"]
         in tasks["Probe_Compute time step size"].dependencies
     )
+
+
+def _tagged(tasks, tag):
+    return {name for name, task in tasks.items() if tag in task.tags}
+
+
+def test_stage_combinations_are_tagged_as_solution_updates(tmp_path):
+    solver = _solver(rk_order=3)
+    tasks = _construct_time_step(solver, tmp_path)
+    final = _tagged(tasks, exahype2.api.Solver.SolutionUpdateTaskTag)
+    intermediate = _tagged(tasks, exahype2.api.Solver.IntermediateSolutionUpdateTag)
+    assert set(final) == {"Probe_Complete time step"}
+    assert set(intermediate) == {"Probe_Prepare stage 1", "Probe_Prepare stage 2"}
+    tagged = final | intermediate
+    # The combination must not project onto the faces itself: the projection
+    # has to see the postprocessed solution
+    for name in tagged:
+        assert not any(
+            isinstance(action_set, exahype2.api.rkfd4.actionsets.ProjectPatchOntoFaces)
+            for action_set in tasks[name].action_sets
+        )
 
 
 def test_boundary_values_use_stage_time_stamp(tmp_path):

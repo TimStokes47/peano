@@ -66,6 +66,12 @@ class Solver(abc.ABC):
         """
 
         def __init__(self, solver: "Solver"):
+            """!
+
+            @param solver: exahype2.api.Solver
+              The solver which the scheme discretises.
+
+            """
             self._solver = solver
 
         @abc.abstractmethod
@@ -135,6 +141,39 @@ class Solver(abc.ABC):
               The task graph of the surrounding exahype2_project's plotting
               phase, so the plotter can add its own tasks into it.
             """
+
+    ## Tag of all tasks which write a new solution
+    #
+    # Tags are plain strings (@ref peano4.api.taskgraph.Task.Task). Every
+    # numerical scheme adds this tag to each task of its time stepping task
+    # graph which writes a new solution:
+    #
+    # ~~~~~~~~~~~~~~~~~~~~~~~
+    # task.tags.add(Solver.SolutionUpdateTaskTag)
+    # ~~~~~~~~~~~~~~~~~~~~~~~
+    #
+    # Code which wants to postprocess the solution, typically a subclass of
+    # a numerical scheme which extends the scheme's construct_output(),
+    # searches for the tag via peano4.api.taskgraph.Graph.find_tasks() and
+    # inserts its own tasks after the tagged ones via
+    # peano4.api.taskgraph.Graph.insert_after(). The tag is a contract
+    # between the numerical schemes and any such code: A scheme has to tag
+    # all of its solution writers, and it must not read the outcome of a
+    # writer within the writer's own task, i.e. it has to project the
+    # solution onto the faces or compute eigenvalues from it in a subsequent
+    # task. The tag does not say which data or cells a task writes. Code
+    # which inserts tasks has to know the scheme it works with (@ref
+    # page_exahype2_solver_manipulate_solver_steps).
+    SolutionUpdateTaskTag = "exahype2.api.Solver.SolutionUpdateTaskTag"
+
+    ## Tag of all tasks which write an intermediate solution
+    #
+    # Runge-Kutta schemes add this tag to each task which writes the input of
+    # a further Runge-Kutta stage, and @ref SolutionUpdateTaskTag to the task
+    # which writes the new solution after the last stage. Postprocessing which
+    # has to act on each stage, such as the enforcement of constraints, hence
+    # searches for both tags. The contract of SolutionUpdateTaskTag applies.
+    IntermediateSolutionUpdateTag = "exahype2.api.Solver.IntermediateSolutionUpdateTag"
 
     def __init__(
         self,

@@ -450,6 +450,7 @@ Patch overlap data
                 guard=self._solver.grid_selector.createCellGuard(),
             )
         )
+        update_cell_task.tags.add(Solver.SolutionUpdateTaskTag)
 
         ## Reduce the cells' maximum eigenvalues into the next time step size.
         ## Runs in parallel to the projection onto the faces
