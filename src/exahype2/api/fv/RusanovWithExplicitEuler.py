@@ -177,7 +177,7 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
 
     """
 
-    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, enforce_ccz4_constraints: bool = False):
+    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9):
         """!
 
         The constructor memorises the attributes. However, it does not do this
@@ -206,12 +206,8 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
           "cfl" outside this class finds only exaparty's unrelated SPH
           solvers, which default to 0.1).
 
-        enforce_ccz4_constraints: bool
-          If True, push the solution back onto the CCZ4 constraints after
-          each update, @see exahype2.api.Solver.Solver.NumericalScheme.
-
         """
-        super().__init__(solver, enforce_ccz4_constraints)
+        super().__init__(solver)
         self.patch_size = patch_size
         self.overlap = overlap
         # Set in construct_output(): the generated kernels live in the project
@@ -491,16 +487,6 @@ Patch overlap data
             )
         )
         
-        ## Insert the constraint enforcement once the graph is complete, so
-        ## all successors of the update see the constrained solution
-        if self.enforce_ccz4_constraints:
-            self._insert_ccz4_constraint_enforcement(
-                time_step,
-                update_cell_task,
-                self._solver._patch,
-                self._solver.grid_selector.createCellGuard(),
-            )
-
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))
         if peano4.api.Logger().is_text:

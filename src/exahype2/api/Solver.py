@@ -65,86 +65,14 @@ class Solver(abc.ABC):
 
         """
 
-        def __init__(self, solver: "Solver", enforce_ccz4_constraints: bool = False):
+        def __init__(self, solver: "Solver"):
             """!
 
             @param solver: exahype2.api.Solver
               The solver which the scheme discretises.
 
-            @param enforce_ccz4_constraints: bool
-              If True, the scheme pushes the solution back onto the algebraic
-              CCZ4 constraints (exagrype::ccz4::enforceCCZ4constraints())
-              after each task which writes a new solution or, for
-              Runge-Kutta schemes, the input of a further stage. Only use
-              it with exagrype.api.CCZ4Solver, @see
-              _insert_ccz4_constraint_enforcement().
-
             """
             self._solver = solver
-            self.enforce_ccz4_constraints = enforce_ccz4_constraints
-
-        def _insert_ccz4_constraint_enforcement(
-            self, time_step, anchor, patch, guard: str, guard_data=()
-        ):
-            """!
-
-            Insert the enforcement of the CCZ4 constraints after anchor
-
-            Subclasses call this routine for each task which they tag with
-            Solver.SolutionUpdateTaskTag or Solver.IntermediateSolutionUpdateTag
-            if enforce_ccz4_constraints is set. The routine creates a task which
-            applies exagrype::ccz4::enforceCCZ4constraints() to each volume of
-            patch and inserts it directly after anchor via
-            peano4.api.taskgraph.Graph.insert_after(). The anchor's successors,
-            e.g. the projection onto the faces, hence see the constrained data
-            only.
-
-            @param time_step: peano4.api.taskgraph.Graph
-              The time stepping task graph which holds anchor.
-
-            @param anchor: peano4.api.taskgraph.Task
-              The task which writes patch.
-
-            @param patch: peano4.api.datamodel.Patch
-              The cell data which anchor writes, i.e. the solution or a stage
-              input.
-
-            @param guard: str
-              C++ boolean expression which selects the cells that anchor
-              updates. It has to evaluate to the same value before and after
-              the update.
-
-            @param guard_data: List[peano4.api.datamodel.DoF]
-              Cell data besides the patch which the guard reads.
-
-            """
-            import toolbox.blockstructured.api
-
-            solver = self._solver
-            anchor_name = anchor.name
-            if anchor_name.startswith(solver.name + "_"):
-                anchor_name = anchor_name[len(solver.name) + 1 :]
-            task = peano4.api.taskgraph.Task(
-                name=f"{solver.name}_Enforce CCZ4 constraints after {anchor_name}",
-                entity=peano4.api.taskgraph.Task.GridEntity.CELL,
-            )
-            ## READ_AND_WRITE keeps the data alive for later tasks
-            task.use_cell(patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-            for data in guard_data:
-                task.use_cell(data, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-            task.add_action_set(
-                toolbox.blockstructured.api.ApplyPointWiselyToPatch(
-                    patch=patch,
-                    implementation="::exagrype::ccz4::enforceCCZ4constraints(Q);",
-                    guard=guard,
-                    additional_includes=solver._get_default_includes()
-                    + solver.user_solver_includes
-                    + """
-#include "exagrype/ccz4/Kernels.h"
-""",
-                )
-            )
-            time_step.insert_after(anchor, task)
 
         @abc.abstractmethod
         def construct_output(self, exahype2_project, peano_project, time_step):

@@ -224,9 +224,22 @@ position x. Your step can use any other action set as well, e.g. one which
 needs a halo or works on faces or vertices.
 
 Declare the patch with READ_AND_WRITE even if your step only reads it:
-the access mode keeps the data alive for the tasks which follow. Drop
-IntermediateSolutionUpdateTag from the find_tasks() call if your step should
+the access mode keeps the data alive for the tasks which follow. Drop the
+IntermediateSolutionUpdateTag entry from the loop if your step should
 run once per time step only, i.e. not after each Runge-Kutta stage.
+
+Some schemes write the new solution in several tasks, of which each cell
+runs exactly one. The optimistic Finite Volumes
+exahype2.api.fv.RusanovWithOptimisticExplicitEuler, for example, tag both
+"Update cell" and "Insert patch interior" with SolutionUpdateTaskTag, i.e.
+the two tasks which complete a time step, but not the partial updates of
+the patch shell or interior. Inserting one step after each of them with the
+plain cell guard would run the step twice for the cells of the optimistic
+branch. Pass all tagged tasks of your solver to insert_after() instead:
+insert_after([update_cell, insert_patch_interior], task) makes task depend
+on both and rewires the successors of both to task. task then runs once per
+cell, after whichever of the two has completed the time step of this cell.
+exagrype.api.CCZ4Solver inserts its constraint enforcement this way.
 
 The numerical scheme's construct_output() receives the time stepping graph
 only. The tags are only used within this graph, too. If you want to alter

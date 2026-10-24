@@ -866,7 +866,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
 
     """
 
-    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95, spawn_optimistic_calculations_as_task: bool = True, enforce_ccz4_constraints: bool = False):
+    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95, spawn_optimistic_calculations_as_task: bool = True):
         """!
 
         The constructor memorises the attributes. However, it does not do this
@@ -908,14 +908,10 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           (@see __create_data_structures()). If False, Spawn patch interior
           update runs the patch interior update straightaway.
 
-        enforce_ccz4_constraints: bool
-          If True, push the solution back onto the CCZ4 constraints after
-          each update, @see exahype2.api.Solver.Solver.NumericalScheme.
-
         """
         if damp_time_step_size > 1.0:
             raise Exception(f"damp_time_step_size has to be smaller or equal to 1, but is {damp_time_step_size}")
-        super().__init__(solver, enforce_ccz4_constraints)
+        super().__init__(solver)
         self.patch_size = patch_size
         self.overlap = overlap
         # Set in construct_output(): the generated kernels live in the project
@@ -1386,23 +1382,6 @@ Patch overlap data
                 task_number=task_number,
             )
         )
-
-        ## Insert the constraint enforcement once the graph is complete, so
-        ## all successors of the updates see the constrained solution. Each
-        ## branch uses its own guard, which reads the time step sizes, so
-        ## every cell is constrained exactly once
-        if self.enforce_ccz4_constraints:
-            for anchor, guard in [
-                (update_cell_task, traditional_guard),
-                (insert_patch_interior_task, optimistic_guard),
-            ]:
-                self._insert_ccz4_constraint_enforcement(
-                    time_step,
-                    anchor,
-                    self._solver._patch,
-                    guard,
-                    guard_data=[self._solver._max_eigenvalue_and_time_step_sizes],
-                )
 
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))

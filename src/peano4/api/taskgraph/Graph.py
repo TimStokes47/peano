@@ -1,7 +1,7 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 
-from typing import List
+from typing import List, Union
 
 from .Task import Task
 
@@ -34,40 +34,76 @@ class Graph:
         """
         return [task for task in self.tasks if any(tag in task.tags for tag in tags)]
 
-    def insert_after(self, anchor: Task, task: Task):
+    def insert_after(self, anchors: Union[Task, List[Task]], task: Task):
         """!
 
-        Insert a task directly after anchor
+        Insert a task directly after one or several anchors
 
-        The routine adds task to the graph and makes it depend on anchor.
-        All tasks which have depended on anchor so far depend on task
-        instead. Consequently, task runs after anchor but before anything
-        that used to follow anchor.
+        The routine adds task to the graph and makes it depend on all
+        anchors. All tasks which have depended on any of the anchors so far
+        depend on task instead. Consequently, task runs after the anchors
+        but before anything that used to follow them.
 
         Use this routine to add a step to a task graph which someone else
         has built, e.g. to postprocess the outcome of a task. task should
         not depend on any other task yet, unless these dependencies run
-        before anchor anyway.
+        before the anchors anyway.
 
-        @param anchor: peano4.api.taskgraph.Task
-          A task of this graph.
+        Pass several anchors if several tasks produce one outcome together.
+        The optimistic Finite Volumes, for example, write the new solution
+        either in one task or in another, depending on the cell. A single
+        task inserted after both runs once per cell, after whichever of the
+        two has updated this cell. The anchors must not depend on each
+        other, neither directly nor indirectly, as the redirection would
+        create a cycle otherwise.
+
+        @param anchors: peano4.api.taskgraph.Task or List[peano4.api.taskgraph.Task]
+          One task or a list of tasks of this graph.
 
         @param task: peano4.api.taskgraph.Task
           The new task. It must not be part of the graph yet.
 
         """
-        assert anchor in self.tasks, f"Task {anchor.name} is not part of the graph"
+        anchors = [anchors] if isinstance(anchors, Task) else list(anchors)
+        assert len(anchors) > 0, f"Task {task.name} needs at least one anchor"
+        for anchor in anchors:
+            assert anchor in self.tasks, f"Task {anchor.name} is not part of the graph"
         assert task not in self.tasks, f"Task {task.name} is already part of the graph"
+        for anchor in anchors:
+            for other in anchors:
+                assert other is anchor or not self._depends_on(anchor, other), (
+                    f"Anchor {anchor.name} depends on anchor {other.name}, so "
+                    f"{task.name} cannot be inserted after both"
+                )
         for successor in self.tasks:
-            if anchor in successor.dependencies:
+            if any(anchor in successor.dependencies for anchor in anchors):
                 redirected = []
                 for dependency in successor.dependencies:
-                    replacement = task if dependency is anchor else dependency
+                    replacement = (
+                        task
+                        if any(dependency is anchor for anchor in anchors)
+                        else dependency
+                    )
                     if replacement not in redirected:
                         redirected.append(replacement)
                 successor.dependencies = redirected
-        task.add_dependency(anchor)
+        for anchor in anchors:
+            task.add_dependency(anchor)
         self.add_task(task)
+
+    @staticmethod
+    def _depends_on(task: Task, other: Task) -> bool:
+        """! True if task depends on other, directly or indirectly"""
+        pending = list(task.dependencies)
+        visited = []
+        while pending:
+            dependency = pending.pop()
+            if dependency is other:
+                return True
+            if dependency not in visited:
+                visited.append(dependency)
+                pending += dependency.dependencies
+        return False
 
     def ordered_tasks(self) -> List[Task]:
         """!

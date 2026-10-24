@@ -80,9 +80,6 @@ solver.add_pde_term(
 solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(
     solver,
     patch_size,
-    # Push the solution back onto the CCZ4 constraints after each update,
-    # as the legacy code does
-    enforce_ccz4_constraints=True,
 )
 solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
     solver, volume_size=volume_size

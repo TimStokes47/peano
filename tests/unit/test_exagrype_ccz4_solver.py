@@ -71,7 +71,11 @@ def test_unknown_parameter_is_rejected():
 
 def test_constraint_enforcement_is_opt_in():
     solver = exagrype.api.CCZ4Solver("CCZ4")
-    assert not exahype2.api.fv.RusanovWithExplicitEuler(solver, 4).enforce_ccz4_constraints
-    assert exahype2.api.fv.RusanovWithExplicitEuler(
-        solver, 4, enforce_ccz4_constraints=True
-    ).enforce_ccz4_constraints
+    Enforce = exagrype.api.CCZ4Solver.EnforceCCZ4Constraint
+    assert solver._enforce_ccz4_constraint == Enforce.No
+    solver.enforce_ccz4_constraint(Enforce.IntermediateSteps)
+    assert solver._enforce_ccz4_constraint == Enforce.IntermediateSteps
+    solver.enforce_ccz4_constraint(Enforce.No)
+    assert solver._enforce_ccz4_constraint == Enforce.No
+    with pytest.raises(TypeError):
+        solver.enforce_ccz4_constraint(True)
