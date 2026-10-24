@@ -144,7 +144,7 @@ class Solver(abc.ABC):
         Every numerical scheme tags each task of its time stepping task
         graph which produces a new solution. Runge-Kutta schemes tag the
         tasks which produce the input of a further Runge-Kutta stage with
-        @ref Solver.IntermediateSolutionUpdateTaskTag instead. The tag's key
+        @ref exahype2.api.Solver.Solver.IntermediateSolutionUpdateTaskTag instead. The tag's key
         is the class SolutionUpdateTaskTag itself, its value an instance of
         this class:
 
@@ -199,7 +199,7 @@ class Solver(abc.ABC):
         Runge-Kutta schemes tag each task of their time stepping task graph
         which produces the input of a further Runge-Kutta stage with this tag,
         and the task which produces the new solution after the last stage
-        with @ref Solver.SolutionUpdateTaskTag. Postprocessing which has to
+        with @ref exahype2.api.Solver.Solver.SolutionUpdateTaskTag. Postprocessing which has to
         act on each stage, such as the enforcement of constraints, hence
         searches for both tags. The key of the tag is the class
         IntermediateSolutionUpdateTaskTag itself:
@@ -209,7 +209,7 @@ class Solver(abc.ABC):
         ~~~~~~~~~~~~~~~~~~~~~~~
 
         The class inherits the attributes and the contract of @ref
-        Solver.SolutionUpdateTaskTag. Its patch is the stage input rather
+        exahype2.api.Solver.Solver.SolutionUpdateTaskTag. Its patch is the stage input rather
         than the solution.
 
         """
