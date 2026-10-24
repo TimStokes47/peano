@@ -63,7 +63,7 @@ class CCZ4Solver(exahype2.api.Solver):
           i.e. after each Runge-Kutta stage. For single-step schemes such as
           the Finite Volumes, this is the same as OnlyFinalSolution.
 
-        @ref CCZ4Solver.enforce_ccz4_constraint()
+        @ref exagrype.api.CCZ4Solver.CCZ4Solver.enforce_ccz4_constraint()
 
         """
 
