@@ -69,7 +69,7 @@ solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(sol
 @ref benchmarks_exagrype_gauge_wave is a complete example. Please
 note the current limitations: \c exahype2.api.rkfd4 supports regular grids only,
 the constraint enforcement after each update is switched off unless you pass
-\c enforce_constraints=True to the CCZ4 solver, and tracers and the
+\c enforce_ccz4_constraints=True to the numerical scheme, and tracers and the
 second-order formulation are not available through the new API yet.
 
 # Black holes and GSL

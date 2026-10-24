@@ -43,10 +43,10 @@ def test_insert_after_last_task():
 
 def test_find_tasks_by_tag():
     graph = peano4.api.taskgraph.Graph()
-    a = Task(name="a", entity=Task.GridEntity.CELL, tags={"x": 1})
+    a = Task(name="a", entity=Task.GridEntity.CELL, tags={"x"})
     b = _cell_task("b")
     c = _cell_task("c")
-    c.tags["x"] = 2
+    c.tags.add("x")
     for task in [a, b, c]:
         graph.add_task(task)
     assert graph.find_tasks("x") == [a, c]
@@ -55,8 +55,8 @@ def test_find_tasks_by_tag():
 
 def test_find_tasks_with_several_tags():
     graph = peano4.api.taskgraph.Graph()
-    a = Task(name="a", entity=Task.GridEntity.CELL, tags={"x": 1, "y": 2})
-    b = Task(name="b", entity=Task.GridEntity.CELL, tags={"y": 3})
+    a = Task(name="a", entity=Task.GridEntity.CELL, tags=["x", "y"])
+    b = Task(name="b", entity=Task.GridEntity.CELL, tags={"y"})
     c = _cell_task("c")
     for task in [a, b, c]:
         graph.add_task(task)
@@ -65,12 +65,12 @@ def test_find_tasks_with_several_tags():
     assert graph.find_tasks("x", "y") == [a, b]
 
 
-def _postprocessed_time_step(scheme_factory, tmp_path, rk_order=None):
+def _postprocessed_time_step(scheme_factory, tmp_path):
+    """! Time step graph of a scheme which enforces the CCZ4 constraints"""
     solver = exahype2.api.Solver("Probe", 2, 1)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation="*lambdaMax = 1.0;"))
     solver.numerical_scheme = scheme_factory(solver)
-    solver.add_point_wise_postprocessing("Clip", "Q[0] = std::max(Q[0], 0.0);")
 
     exahype2_project = types.SimpleNamespace(periodic_BC=[True, True, True])
     peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
@@ -85,7 +85,7 @@ def _postprocessed_time_step(scheme_factory, tmp_path, rk_order=None):
 def test_postprocessing_after_each_runge_kutta_stage(tmp_path):
     solver, tasks = _postprocessed_time_step(
         lambda solver: exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-            solver, patch_size=4, rk_order=3
+            solver, patch_size=4, rk_order=3, enforce_ccz4_constraints=True
         ),
         tmp_path,
     )
@@ -94,7 +94,7 @@ def test_postprocessing_after_each_runge_kutta_stage(tmp_path):
         ("Prepare stage 2", "Project stage 2 onto faces", solver._stage_input),
         ("Complete time step", "Project solution onto faces", solver._patch),
     ]:
-        clip = tasks[f"Probe_Clip after {anchor}"]
+        clip = tasks[f"Probe_Enforce CCZ4 constraints after {anchor}"]
         assert clip.dependencies == [tasks[f"Probe_{anchor}"]]
         assert tasks[f"Probe_{successor}"].dependencies == [clip]
         [action_set] = clip.action_sets
@@ -104,22 +104,24 @@ def test_postprocessing_after_each_runge_kutta_stage(tmp_path):
         body = action_set.get_body_of_operation(
             peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
         )
-        assert "Q[0] = std::max(Q[0], 0.0);" in body
+        assert "::exagrype::ccz4::enforceCCZ4constraints(Q);" in body
         assert f"fineGridCell{patch.name}.value" in body
 
 
 def test_postprocessing_after_both_writers_of_optimistic_finite_volumes(tmp_path):
     solver, tasks = _postprocessed_time_step(
-        lambda solver: exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, 4),
+        lambda solver: exahype2.api.fv.RusanovWithOptimisticExplicitEuler(
+            solver, 4, enforce_ccz4_constraints=True
+        ),
         tmp_path,
     )
-    clips = sorted(name for name in tasks if "_Clip after" in name)
+    clips = sorted(name for name in tasks if "_Enforce CCZ4 constraints after" in name)
     assert clips == [
-        "Probe_Clip after Insert patch interior",
-        "Probe_Clip after Update cell",
+        "Probe_Enforce CCZ4 constraints after Insert patch interior",
+        "Probe_Enforce CCZ4 constraints after Update cell",
     ]
-    update_clip = tasks["Probe_Clip after Update cell"]
-    insert_clip = tasks["Probe_Clip after Insert patch interior"]
+    update_clip = tasks["Probe_Enforce CCZ4 constraints after Update cell"]
+    insert_clip = tasks["Probe_Enforce CCZ4 constraints after Insert patch interior"]
     # The guards read the eigenvalue data, so the clips have to declare it
     for clip in [update_clip, insert_clip]:
         assert solver._max_eigenvalue_and_time_step_sizes in clip.cell_data
@@ -136,7 +138,10 @@ def test_postprocessing_after_both_writers_of_optimistic_finite_volumes(tmp_path
 
 def test_postprocessing_after_plain_finite_volumes(tmp_path):
     solver, tasks = _postprocessed_time_step(
-        lambda solver: exahype2.api.fv.RusanovWithExplicitEuler(solver, 4), tmp_path
+        lambda solver: exahype2.api.fv.RusanovWithExplicitEuler(
+            solver, 4, enforce_ccz4_constraints=True
+        ),
+        tmp_path,
     )
-    clip = tasks["Probe_Clip after Update cell"]
+    clip = tasks["Probe_Enforce CCZ4 constraints after Update cell"]
     assert tasks["Probe_Project on faces"].dependencies == [clip]

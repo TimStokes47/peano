@@ -70,8 +70,8 @@ def test_unknown_parameter_is_rejected():
 
 
 def test_constraint_enforcement_is_opt_in():
-    assert exagrype.api.CCZ4Solver("CCZ4")._point_wise_postprocessing == []
-    solver = exagrype.api.CCZ4Solver("CCZ4", enforce_constraints=True)
-    [(name, implementation, _)] = solver._point_wise_postprocessing
-    assert name == "Enforce constraints"
-    assert "::exagrype::ccz4::enforceCCZ4constraints(Q)" in implementation
+    solver = exagrype.api.CCZ4Solver("CCZ4")
+    assert not exahype2.api.fv.RusanovWithExplicitEuler(solver, 4).enforce_ccz4_constraints
+    assert exahype2.api.fv.RusanovWithExplicitEuler(
+        solver, 4, enforce_ccz4_constraints=True
+    ).enforce_ccz4_constraints
