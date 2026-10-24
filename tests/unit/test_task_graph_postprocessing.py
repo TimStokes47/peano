@@ -76,9 +76,6 @@ def _postprocessed_time_step(scheme_factory, tmp_path):
     peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
     time_step = peano4.api.taskgraph.Graph()
     solver.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
-    solver.postprocess_task_graphs(
-        exahype2_project, peano_project, None, time_step, None
-    )
     return solver, {task.name: task for task in time_step.tasks}
 
 

@@ -224,16 +224,18 @@ class Solver(abc.ABC):
     # task.tags.add(Solver.SolutionUpdateTaskTag)
     # ~~~~~~~~~~~~~~~~~~~~~~~
     #
-    # Code which wants to postprocess the solution searches for the tag via
-    # peano4.api.taskgraph.Graph.find_tasks() and inserts its own tasks after
-    # the tagged ones via peano4.api.taskgraph.Graph.insert_after(). The tag
-    # is a contract between the numerical schemes and any such code: A scheme
-    # has to tag all of its solution writers, and it must not read the
-    # outcome of a writer within the writer's own task, i.e. it has to project
-    # the solution onto the faces or compute eigenvalues from it in a
-    # subsequent task. The tag does not say which data or cells a task
-    # writes. Code which inserts tasks has to know the scheme it works with,
-    # @see @ref page_exahype2_solver_manipulate_solver_steps.
+    # Code which wants to postprocess the solution, typically a subclass of
+    # a numerical scheme which extends the scheme's construct_output(),
+    # searches for the tag via peano4.api.taskgraph.Graph.find_tasks() and
+    # inserts its own tasks after the tagged ones via
+    # peano4.api.taskgraph.Graph.insert_after(). The tag is a contract
+    # between the numerical schemes and any such code: A scheme has to tag
+    # all of its solution writers, and it must not read the outcome of a
+    # writer within the writer's own task, i.e. it has to project the
+    # solution onto the faces or compute eigenvalues from it in a subsequent
+    # task. The tag does not say which data or cells a task writes. Code
+    # which inserts tasks has to know the scheme it works with (@ref
+    # page_exahype2_solver_manipulate_solver_steps).
     SolutionUpdateTaskTag = "exahype2.api.Solver.SolutionUpdateTaskTag"
 
     ## Tag of all tasks which write an intermediate solution
@@ -561,34 +563,6 @@ class Solver(abc.ABC):
         """! Look up a previously registered PDE term by name and statelessness."""
         return self._pde_terms[(name, stateless)]
 
-    def postprocess_task_graphs(
-        self,
-        exahype2_project,
-        peano_project,
-        setup_simulation,
-        time_step,
-        plot,
-    ):
-        """!
-
-        Alter the task graphs after they have been created, but before they are compiled
-
-        generate_solver_realisation() calls this routine after the grid
-        construction, the numerical scheme and the plotter have added their
-        tasks to the three task graphs. Afterwards, the project hands the
-        graphs over to the task graph compiler. The default implementation
-        does nothing. Subclasses can override the routine to add further
-        tasks or to modify the graphs, e.g. to insert a task after each task
-        tagged with @ref SolutionUpdateTaskTag (@ref
-        peano4.api.taskgraph.Graph.find_tasks(), @ref
-        peano4.api.taskgraph.Graph.insert_after()).
-
-        @param setup_simulation, time_step, plot: peano4.api.taskgraph.Graph
-          The task graphs of the three algorithmic phases.
-
-        """
-        pass
-
     def add_abstract_solver_attribute(self, declaration: str):
         """!
 
@@ -707,9 +681,6 @@ class Solver(abc.ABC):
         )
         if self.plotter is not None:
             self.plotter.construct_output(exahype2_project, peano_project, plot)
-        self.postprocess_task_graphs(
-            exahype2_project, peano_project, setup_simulation, time_step, plot
-        )
         # Last, so grid construction, numerical scheme and plotter can add
         # their own members to the solver class first (@see
         # add_abstract_solver_attribute()/add_abstract_solver_method()).

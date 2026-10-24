@@ -36,13 +36,13 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
   - \subpage page_exahype2_numerics_Runge-Kutta
   - \subpage page_exahype2_numerics_ADER-DG
 - Core functionality, numerics and ingredients
+  - \subpage page_exahype2_solver_manipulate_solver_steps
   - \subpage exahype2_dg
   - \subpage exahype2_dg_DG_AMR
   - \subpage documentation_exahype2_dsl
   - \subpage page_exahype_tracer
   - \subpage page_exahype_boundary_conditions
   - \subpage page_exahype_amr
-  - \subpage page_exahype2_solver_manipulate_solver_steps
   - \subpage benchmarks_peano4_interpolation_restriction_performance
 - Postprocessing and data analysis
   - \subpage page_exahype_visualisation

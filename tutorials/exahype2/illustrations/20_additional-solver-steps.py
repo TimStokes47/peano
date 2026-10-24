@@ -103,49 +103,65 @@ DensityFloor = """
 
 
 
-class SolverWithDensityFloor(exahype2.api.Solver):
+def insert_density_floor(solver, time_step, tag, patch):
     """!
 
-    Euler solver which inserts the density floor after each solution update
+    Insert the density floor after each task of solver which carries tag
 
-    Mirrors the class of the tutorial: For each task which writes a new
-    solution or an intermediate solution, the solver inserts a task which
-    applies DensityFloor to the patch that the tagged task writes.
+    Mirrors the routine of the tutorial: The numerical scheme knows which
+    patch its tagged tasks write and passes it in.
 
     """
-
-    def postprocess_task_graphs(
-        self, exahype2_project, peano_project, setup_simulation, time_step, plot
-    ):
-        super().postprocess_task_graphs(
-            exahype2_project, peano_project, setup_simulation, time_step, plot
+    for anchor in time_step.find_tasks(tag):
+        if not anchor.name.startswith(solver.name + "_"):
+            continue
+        task = peano4.api.taskgraph.Task(
+            name=f"{solver.name}_Density floor after {anchor.name[len(solver.name) + 1:]}",
+            entity=peano4.api.taskgraph.Task.GridEntity.CELL,
         )
-        for anchor in time_step.find_tasks(
+        task.use_cell(patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        task.add_action_set(
+            toolbox.blockstructured.api.ApplyPointWiselyToPatch(
+                patch=patch,
+                implementation=DensityFloor,
+                guard=solver.grid_selector.createCellGuard(),
+                additional_includes=solver._get_default_includes()
+                + solver.user_solver_includes,
+            )
+        )
+        time_step.insert_after(anchor, task)
+
+
+class RusanovWithDensityFloor(exahype2.api.fv.RusanovWithExplicitEuler):
+    """! Finite Volumes which insert the density floor after each update"""
+
+    def construct_output(self, exahype2_project, peano_project, time_step):
+        super().construct_output(exahype2_project, peano_project, time_step)
+        insert_density_floor(
+            self._solver,
+            time_step,
             exahype2.api.Solver.SolutionUpdateTaskTag,
+            self._solver._patch,
+        )
+
+
+class RungeKuttaWithDensityFloor(exahype2.api.rkfd4.CentralDifferencesWithRungeKutta):
+    """! Runge-Kutta Finite Differences which insert the density floor after each stage"""
+
+    def construct_output(self, exahype2_project, peano_project, time_step):
+        super().construct_output(exahype2_project, peano_project, time_step)
+        insert_density_floor(
+            self._solver,
+            time_step,
+            exahype2.api.Solver.SolutionUpdateTaskTag,
+            self._solver._patch,
+        )
+        insert_density_floor(
+            self._solver,
+            time_step,
             exahype2.api.Solver.IntermediateSolutionUpdateTag,
-        ):
-            if not anchor.name.startswith(self.name + "_"):
-                continue
-            patch = (
-                self._patch
-                if exahype2.api.Solver.SolutionUpdateTaskTag in anchor.tags
-                else self._stage_input
-            )
-            task = peano4.api.taskgraph.Task(
-                name=f"{self.name}_Density floor after {anchor.name[len(self.name) + 1:]}",
-                entity=peano4.api.taskgraph.Task.GridEntity.CELL,
-            )
-            task.use_cell(patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-            task.add_action_set(
-                toolbox.blockstructured.api.ApplyPointWiselyToPatch(
-                    patch=patch,
-                    implementation=DensityFloor,
-                    guard=self.grid_selector.createCellGuard(),
-                    additional_includes=self._get_default_includes()
-                    + self.user_solver_includes,
-                )
-            )
-            time_step.insert_after(anchor, task)
+            self._solver._stage_input,
+        )
 
 
 DomainOffset = -0.1
@@ -170,9 +186,7 @@ def create_solver(name, rk_order, density_floor):
       Differences with the Runge-Kutta scheme of this order.
 
     """
-    solver = (SolverWithDensityFloor if density_floor else exahype2.api.Solver)(
-        name, 4, 0
-    )
+    solver = exahype2.api.Solver(name, 4, 0)
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
     solver.add_pde_term(
@@ -182,7 +196,12 @@ def create_solver(name, rk_order, density_floor):
         exahype2.api.InitPointWisely(implementation=InitPointWisely, stateless=False)
     )
     if rk_order is None:
-        solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
+        scheme = (
+            RusanovWithDensityFloor
+            if density_floor
+            else exahype2.api.fv.RusanovWithExplicitEuler
+        )
+        solver.numerical_scheme = scheme(solver, 9)
         solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
             solver, volume_size=VolumeSize
         )
@@ -190,9 +209,12 @@ def create_solver(name, rk_order, density_floor):
             solver, first_plot_time_stamp=0.0, time_in_between_plots=0.05
         )
     else:
-        solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-            solver, patch_size=9, rk_order=rk_order
+        scheme = (
+            RungeKuttaWithDensityFloor
+            if density_floor
+            else exahype2.api.rkfd4.CentralDifferencesWithRungeKutta
         )
+        solver.numerical_scheme = scheme(solver, patch_size=9, rk_order=rk_order)
         solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
             solver, volume_size=VolumeSize
         )
@@ -216,9 +238,6 @@ def plot_task_graph(rk_order, file_name, title):
         time_step = peano4.api.taskgraph.Graph()
         solver.numerical_scheme.construct_output(
             exahype2_project, peano_project, time_step
-        )
-        solver.postprocess_task_graphs(
-            exahype2_project, peano_project, None, time_step, None
         )
     time_step.visualise(title=title)
     output = os.path.join(Here, file_name)

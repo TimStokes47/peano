@@ -803,7 +803,7 @@ Patch overlap data
             ## as solution update, so postprocessing can be inserted between
             ## the combination and the projection onto the faces. Stage inputs
             ## carry the intermediate tag
-            ## (@see exahype2.api.Solver.postprocess_task_graphs()).
+            ## (@ref page_exahype2_solver_manipulate_solver_steps).
             if is_last_stage:
                 weights = self.butcher_tableau.final_estimate_weights()
                 output = self._solver._patch
