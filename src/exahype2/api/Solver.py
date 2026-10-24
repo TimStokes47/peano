@@ -144,7 +144,7 @@ class Solver(abc.ABC):
         Every numerical scheme tags each task of its time stepping task
         graph which produces a new solution. Runge-Kutta schemes tag the
         tasks which produce the input of a further Runge-Kutta stage with
-        @ref exahype2.api.Solver.Solver.IntermediateSolutionUpdateTaskTag instead. The tag's key
+        @ref exahype2.api.Solver.Solver.IntermediateSolutionUpdateTag instead. The tag's key
         is the class SolutionUpdateTaskTag itself, its value an instance of
         this class:
 
@@ -191,7 +191,7 @@ class Solver(abc.ABC):
             self.guard = guard
             self.guard_data = list(guard_data) if guard_data is not None else []
 
-    class IntermediateSolutionUpdateTaskTag(SolutionUpdateTaskTag):
+    class IntermediateSolutionUpdateTag(SolutionUpdateTaskTag):
         """!
 
         Tag of a task which writes an intermediate solution
@@ -202,10 +202,10 @@ class Solver(abc.ABC):
         with @ref exahype2.api.Solver.Solver.SolutionUpdateTaskTag. Postprocessing which has to
         act on each stage, such as the enforcement of constraints, hence
         searches for both tags. The key of the tag is the class
-        IntermediateSolutionUpdateTaskTag itself:
+        IntermediateSolutionUpdateTag itself:
 
         ~~~~~~~~~~~~~~~~~~~~~~~
-        task.tags[Solver.IntermediateSolutionUpdateTaskTag] = Solver.IntermediateSolutionUpdateTaskTag(solver, stage_input, guard)
+        task.tags[Solver.IntermediateSolutionUpdateTag] = Solver.IntermediateSolutionUpdateTag(solver, stage_input, guard)
         ~~~~~~~~~~~~~~~~~~~~~~~
 
         The class inherits the attributes and the contract of @ref
@@ -589,7 +589,7 @@ class Solver(abc.ABC):
         The default implementation inserts the point-wise postprocessing
         steps (@ref add_point_wise_postprocessing()) into the time stepping
         task graph. For each task tagged with Solver.SolutionUpdateTaskTag or
-        Solver.IntermediateSolutionUpdateTaskTag of this solver, and for each
+        Solver.IntermediateSolutionUpdateTag of this solver, and for each
         postprocessing step, it creates a new task and inserts it directly
         after the tagged task (@ref peano4.api.taskgraph.Graph.insert_after()).
         A Runge-Kutta scheme tags the writer of each stage with the
@@ -606,7 +606,7 @@ class Solver(abc.ABC):
         import toolbox.blockstructured.api
 
         includes = self._get_default_includes() + self.user_solver_includes
-        tags = [Solver.SolutionUpdateTaskTag, Solver.IntermediateSolutionUpdateTaskTag]
+        tags = [Solver.SolutionUpdateTaskTag, Solver.IntermediateSolutionUpdateTag]
 
         def update_of(task):
             return next(task.tags[tag] for tag in tags if tag in task.tags)

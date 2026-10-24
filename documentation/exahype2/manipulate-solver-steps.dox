@@ -43,7 +43,7 @@ do not have to decide this yourself. However, you have to declare correctly
 which data a task uses, as the compiler relies on these declarations.
 
 
-# The tags Solver.SolutionUpdateTaskTag and Solver.IntermediateSolutionUpdateTaskTag
+# The tags Solver.SolutionUpdateTaskTag and Solver.IntermediateSolutionUpdateTag
 
 To insert a step after a solution update, you have to find the tasks which
 update the solution. You do not want to know how a particular numerical
@@ -80,13 +80,13 @@ which writes a new solution with exahype2.api.Solver.SolutionUpdateTaskTag.
 Runge-Kutta schemes compute intermediate solutions, i.e. the inputs of further
 stages, before they compute the new solution. They tag each task which writes
 such an intermediate solution with
-exahype2.api.Solver.IntermediateSolutionUpdateTaskTag.
+exahype2.api.Solver.IntermediateSolutionUpdateTag.
 
 The key of a tag is its class itself. Its value is an instance of this class:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 task.tags[Solver.SolutionUpdateTaskTag]             = Solver.SolutionUpdateTaskTag(solver, patch, guard, guard_data)
-task.tags[Solver.IntermediateSolutionUpdateTaskTag] = Solver.IntermediateSolutionUpdateTaskTag(solver, stage_input, guard, guard_data)
+task.tags[Solver.IntermediateSolutionUpdateTag] = Solver.IntermediateSolutionUpdateTag(solver, stage_input, guard, guard_data)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The distinction allows you to pick: A step which should act on the solution
@@ -94,7 +94,7 @@ only, e.g. some statistics, searches for SolutionUpdateTaskTag. A step which
 should act on every intermediate solution, too, e.g. the enforcement of
 constraints, searches for both tags.
 
-IntermediateSolutionUpdateTaskTag is a subclass of SolutionUpdateTaskTag.
+IntermediateSolutionUpdateTag is a subclass of SolutionUpdateTaskTag.
 Both hold the same four attributes:
 
 - solver: The exahype2.api.Solver whose solution the task writes. A project
@@ -117,7 +117,7 @@ Both hold the same four attributes:
 |------------------|-----|--------------|-------|-------|
 | exahype2.api.fv.RusanovWithExplicitEuler | SolutionUpdateTaskTag | the cell update | solution | the solver's cell guard |
 | exahype2.api.fv.RusanovWithOptimisticExplicitEuler | SolutionUpdateTaskTag | the update of the whole patch (traditional branch) and the insertion of the precomputed patch interior (optimistic branch) | solution | the cell guard combined with the condition that picks the branch; guard_data holds the cell's eigenvalue and time step sizes, which this condition reads |
-| exahype2.api.rkfd4.CentralDifferencesWithRungeKutta | IntermediateSolutionUpdateTaskTag | "Prepare stage k+1" for every stage but the last one | the stage input | the solver's cell guard |
+| exahype2.api.rkfd4.CentralDifferencesWithRungeKutta | IntermediateSolutionUpdateTag | "Prepare stage k+1" for every stage but the last one | the stage input | the solver's cell guard |
 | exahype2.api.rkfd4.CentralDifferencesWithRungeKutta | SolutionUpdateTaskTag | "Complete time step" after the last stage | solution | the solver's cell guard |
 
 The optimistic Finite Volumes compute the new solution in one of two tasks,
@@ -141,7 +141,7 @@ The numerical schemes promise to
 
 - tag all tasks which write a new solution with SolutionUpdateTaskTag, and
   all tasks which write a new stage input with
-  IntermediateSolutionUpdateTaskTag; and
+  IntermediateSolutionUpdateTag; and
 - not read the outcome of a writer within the writer's own task. A scheme
   must compute eigenvalues or the projection onto the faces in a subsequent
   task instead. This is why the Runge-Kutta scheme splits each stage into
@@ -186,7 +186,7 @@ The snippet may read and write Q, i.e. all unknowns and auxiliary variables
 of one volume, and read the volume's position x. The default implementation
 of postprocess_task_graphs() searches the time stepping graph for all tasks
 which carry this solver's SolutionUpdateTaskTag or
-IntermediateSolutionUpdateTaskTag. After each of them, it
+IntermediateSolutionUpdateTag. After each of them, it
 inserts one task per postprocessing step, which runs the snippet via
 toolbox.blockstructured.api.ApplyPointWiselyToPatch on the tag's patch with
 the tag's guard. The task names read "{solver}_{name} after {task}". If you
@@ -208,7 +208,7 @@ point-wise postprocessing remains in place:
 class MySolver(exahype2.api.Solver):
   def postprocess_task_graphs(self, exahype2_project, peano_project, setup_simulation, time_step, plot):
     super().postprocess_task_graphs(exahype2_project, peano_project, setup_simulation, time_step, plot)
-    tags = [exahype2.api.Solver.SolutionUpdateTaskTag, exahype2.api.Solver.IntermediateSolutionUpdateTaskTag]
+    tags = [exahype2.api.Solver.SolutionUpdateTaskTag, exahype2.api.Solver.IntermediateSolutionUpdateTag]
     for anchor in time_step.find_tasks(*tags):
       update = next(anchor.tags[tag] for tag in tags if tag in anchor.tags)
       if update.solver is not self:
@@ -224,7 +224,7 @@ class MySolver(exahype2.api.Solver):
       time_step.insert_after(anchor, task)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Drop IntermediateSolutionUpdateTaskTag from the list if your step should
+Drop IntermediateSolutionUpdateTag from the list if your step should
 run once per time step only, i.e. not after each Runge-Kutta stage.
 
 Declare the patch with READ_AND_WRITE even if your step only reads it:
@@ -249,7 +249,7 @@ task, but it cannot check that you have tagged all of them.
   Solver.SolutionUpdateTaskTag(solver, patch, guard, guard_data).
 - Tag each task which writes the input of a further stage, i.e. an
   intermediate solution, with
-  Solver.IntermediateSolutionUpdateTaskTag(solver, patch, guard, guard_data).
+  Solver.IntermediateSolutionUpdateTag(solver, patch, guard, guard_data).
 - If the guard reads cell data besides the patch, pass these data as
   guard_data.
 - Do not read the written patch in the same task. Move eigenvalue

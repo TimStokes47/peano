@@ -83,7 +83,7 @@ def test_stage_combinations_are_tagged_as_solution_updates(tmp_path):
     solver = _solver(rk_order=3)
     tasks = _construct_time_step(solver, tmp_path)
     final = _tagged(tasks, exahype2.api.Solver.SolutionUpdateTaskTag)
-    intermediate = _tagged(tasks, exahype2.api.Solver.IntermediateSolutionUpdateTaskTag)
+    intermediate = _tagged(tasks, exahype2.api.Solver.IntermediateSolutionUpdateTag)
     assert set(final) == {"Probe_Complete time step"}
     assert set(intermediate) == {"Probe_Prepare stage 1", "Probe_Prepare stage 2"}
     assert intermediate["Probe_Prepare stage 1"].patch is solver._stage_input
