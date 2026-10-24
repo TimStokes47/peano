@@ -652,7 +652,7 @@ Patch overlap data
         - {SolverName}_Evaluate right hand side stage k.
         - {SolverName}_Prepare stage k+1, or {SolverName}_Complete time step
           after the last stage: computes the linear combination of the
-          estimates. The task is tagged with exahype2.api.Solver.SolutionUpdate,
+          estimates. The task is tagged with exahype2.api.Solver.SolutionUpdateTaskTag,
           i.e. postprocessing such as the enforcement of constraints runs
           directly after it (@see exahype2.api.Solver.postprocess_task_graphs()).
         - {SolverName}_Project stage k+1 onto faces, or {SolverName}_Project
@@ -808,7 +808,7 @@ Patch overlap data
                     self._solver, weights, output, guard=cell_guard
                 )
             )
-            combination_task.tags[Solver.SolutionUpdate] = Solver.SolutionUpdate(
+            combination_task.tags[Solver.SolutionUpdateTaskTag] = Solver.SolutionUpdateTaskTag(
                 self._solver, output, cell_guard
             )
 

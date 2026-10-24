@@ -136,7 +136,7 @@ class Solver(abc.ABC):
               phase, so the plotter can add its own tasks into it.
             """
 
-    class SolutionUpdate:
+    class SolutionUpdateTaskTag:
         """!
 
         Tag of a task which writes a new solution
@@ -144,11 +144,11 @@ class Solver(abc.ABC):
         Every numerical scheme tags each task of its time stepping task
         graph which produces a new solution, and, for Runge-Kutta schemes,
         each task which produces the input of a further Runge-Kutta stage.
-        The tag's key is the class SolutionUpdate itself, its value an
+        The tag's key is the class SolutionUpdateTaskTag itself, its value an
         instance of this class:
 
         ~~~~~~~~~~~~~~~~~~~~~~~
-        task.tags[Solver.SolutionUpdate] = Solver.SolutionUpdate(solver, patch, guard)
+        task.tags[Solver.SolutionUpdateTaskTag] = Solver.SolutionUpdateTaskTag(solver, patch, guard)
         ~~~~~~~~~~~~~~~~~~~~~~~
 
         Code which wants to postprocess the solution, e.g. to enforce
@@ -563,7 +563,7 @@ class Solver(abc.ABC):
 
         The default implementation inserts the point-wise postprocessing
         steps (@ref add_point_wise_postprocessing()) into the time stepping
-        task graph. For each task tagged with Solver.SolutionUpdate of this
+        task graph. For each task tagged with Solver.SolutionUpdateTaskTag of this
         solver, and for each postprocessing step, it creates a new task and
         inserts it directly after the tagged task (@ref
         peano4.api.taskgraph.Graph.insert_after()). A Runge-Kutta scheme
@@ -582,15 +582,15 @@ class Solver(abc.ABC):
         includes = self._get_default_includes() + self.user_solver_includes
         anchors = [
             task
-            for task in time_step.find_tasks(Solver.SolutionUpdate)
-            if task.tags[Solver.SolutionUpdate].solver is self
+            for task in time_step.find_tasks(Solver.SolutionUpdateTaskTag)
+            if task.tags[Solver.SolutionUpdateTaskTag].solver is self
         ]
         assert anchors, (
             f"Solver {self._name} has point-wise postprocessing, but its numerical "
-            "scheme does not tag any task with exahype2.api.Solver.SolutionUpdate"
+            "scheme does not tag any task with exahype2.api.Solver.SolutionUpdateTaskTag"
         )
         for anchor in anchors:
-            update = anchor.tags[Solver.SolutionUpdate]
+            update = anchor.tags[Solver.SolutionUpdateTaskTag]
             anchor_name = anchor.name
             if anchor_name.startswith(self._name + "_"):
                 anchor_name = anchor_name[len(self._name) + 1 :]

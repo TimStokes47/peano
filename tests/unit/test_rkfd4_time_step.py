@@ -79,9 +79,9 @@ def test_stage_combinations_are_tagged_as_solution_updates(tmp_path):
     solver = _solver(rk_order=3)
     tasks = _construct_time_step(solver, tmp_path)
     tagged = {
-        name: task.tags[exahype2.api.Solver.SolutionUpdate]
+        name: task.tags[exahype2.api.Solver.SolutionUpdateTaskTag]
         for name, task in tasks.items()
-        if exahype2.api.Solver.SolutionUpdate in task.tags
+        if exahype2.api.Solver.SolutionUpdateTaskTag in task.tags
     }
     assert set(tagged) == {
         "Probe_Prepare stage 1",
