@@ -1159,7 +1159,9 @@ void exagrype::ccz4::ThetaOutputNCP(double* NCPterm, const double* const Q, cons
 #endif
 
 
-#if not defined(GPUOffloadingOMP)
+#if defined(GPUOffloadingOMP)
+#pragma omp declare target
+#endif
 void exagrype::ccz4::maxEigenvalue(
         const double* const Q,
         int                 normal,
@@ -2177,6 +2179,10 @@ void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* co
         for (int i = 0; i < 3; i++) BgradQ[55+i] = 0.0;
     }
 }
+#if defined(GPUOffloadingOMP)
+#pragma omp end declare target
+#endif
+
 /*
 
 //we write the quantities hydrodynamics needs required explicitiy to make stuff more clearly
@@ -2274,4 +2280,3 @@ void exagrype::ccz4::hydro_primitive_reconstruct(
 }
 
 */
-#endif

@@ -13,21 +13,26 @@
 namespace exagrype {
   namespace ccz4 {
 
-      /**
-       * A bug in the LLVM OpenMP implementation prevents the usage of
-       * arrays in target functions. This means that an alternative version
-       * is required that eliminates these arrays. This applies to the
-       * source and npc functors.
-       * 
-       * TODO: Check if replacing the arrays on the stack with arrays on
-       * the heap fixes the issue.
-       * 
-       * @see source() for a discussion of annotations.
-       */
       #if defined(GPUOffloadingOMP)
-      #pragma omp declare simd target
-      static GPUCallableInlineMethod InlineMethod
-      #elif defined(SharedOMP)
+      #pragma omp declare target
+      #endif
+      /**
+       * Non-conservative product of the first-order CCZ4 formulation.
+       *
+       * ncp(), source() and maxEigenvalue() have one implementation in
+       * Kernels.cpp which serves both the CPU and OpenMP offloading. With
+       * GPUOffloadingOMP, they are device functions (omp declare target),
+       * declared here and defined in Kernels.cpp, i.e. they are not inlined
+       * into the GPU kernels.
+       *
+       * Older LLVM OpenMP implementations failed on local arrays in target
+       * functions, so Peano used to ship a separate array-free GPU variant
+       * of these three functions (KernelsOpenMP.cpph). That copy had drifted
+       * from the CPU version and has been removed.
+       *
+       * @ref source() discusses the remaining annotations.
+       */
+      #if defined(SharedOMP)
       #pragma omp declare simd
       #endif
       void ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
@@ -59,10 +64,7 @@ namespace exagrype {
        *
        * @see ncp()
        */
-      #if defined(GPUOffloadingOMP)
-      #pragma omp declare simd target
-      static GPUCallableInlineMethod InlineMethod
-      #elif defined(SharedOMP)
+      #if defined(SharedOMP)
       #pragma omp declare simd
       #endif
       void source(double* S, const double* const Q,
@@ -82,10 +84,7 @@ namespace exagrype {
         const double CCZ4SO
       );
 
-      #if defined(GPUOffloadingOMP)
-      #pragma omp declare simd target
-      static GPUCallableInlineMethod InlineMethod
-      #elif defined(SharedOMP)
+      #if defined(SharedOMP)
       #pragma omp declare simd
       #endif
       void maxEigenvalue(
@@ -97,6 +96,9 @@ namespace exagrype {
         const double        CCZ4GLMd,
         double*             maxEigenvalue
       );
+      #if defined(GPUOffloadingOMP)
+      #pragma omp end declare target
+      #endif
 
       /**
        * @todo Han
@@ -157,9 +159,3 @@ namespace exagrype {
       );
   }
 }
-
-#if defined(GPUOffloadingOMP)
-#include "exagrype/ccz4/KernelsOpenMP.cpph"
-#endif
-
-
