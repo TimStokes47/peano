@@ -28,7 +28,7 @@ class Graph:
         A task which carries several of the tags is returned only once.
 
         @param tags: object
-          Keys of the tags, see @ref peano4.api.taskgraph.Task.Task.tags.
+          Keys of the tags, i.e. keys of the attribute tags of @ref peano4.api.taskgraph.Task.Task.
 
         """
         return [task for task in self.tasks if any(tag in task.tags for tag in tags)]
