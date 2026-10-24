@@ -174,7 +174,8 @@ namespace exagrype {
        * side remain unchanged.
        *
        * The routine is the dissipation which the legacy fourth-order Finite
-       * Differences of ExaHyPE (exahype2::fd::fd4) built into their kernels.
+       * Differences of ExaHyPE built into their kernels. These kernels have
+       * been removed.
        * The Finite Differences of exahype2.api.rkfd4 have no dissipation.
        * exagrype.api.FD4WithKODissipation invokes this routine after their
        * right-hand side kernel, within each Runge-Kutta stage.
