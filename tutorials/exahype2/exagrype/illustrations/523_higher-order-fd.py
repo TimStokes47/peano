@@ -16,7 +16,16 @@ the final setup of 522_single-black-hole.ipynb, over 9x9x9 mesh cells with
 - fd4: exahype2.api.rkfd4.CentralDifferencesWithRungeKutta with the classic
   fourth-order Runge-Kutta scheme and without dissipation;
 - fd4-ko-{sigma}: exagrype.api.FD4WithKODissipation with the Kreiss-Oliger
-  dissipation scaled by sigma, for all sigma in KreissOligerSigmas.
+  dissipation scaled by sigma, for sigma 0.3, 1 and 8;
+- fd4-lop: the fourth-order Finite Differences with the kernel
+  CentralDifferencesWithLopsidedAdvection, i.e. with the advection terms
+  which exagrype::ccz4::ncp() omits;
+- fd4-lop-ko-8.0: the same with the Kreiss-Oliger dissipation (sigma=8) on
+  all unknowns;
+- fd4-lop-ko-8.0-subset: the same with the dissipation on Q0-Q22 and
+  Q53-Q54 only (DissipationSubset).
+
+The dictionary Runs holds the configurations.
 
 Call it from anywhere:
 
@@ -67,16 +76,37 @@ H = DomainSize / VolumesPerAxis
 Threads = 4
 TimeInBetweenPlots = 0.5
 
-## Scalings of the Kreiss-Oliger dissipation we compare
-KreissOligerSigmas = [0.3, 1.0, 8.0]
+## Unknowns which the restricted Kreiss-Oliger dissipation damps: Q0-Q22
+## (G, K, theta, Z, lapse, shift, b) and Q53-Q54 (traceK, phi)
+DissipationSubset = list(range(0, 23)) + [53, 54]
 
-## Colours and markers per run, so all pictures use the same ones
+## The runs: name -> (Kreiss-Oliger sigma or None, lopsided advection,
+## quantities of the dissipation or None for all). The fv run is special.
+Runs = {
+    "fv": (None, False, None),
+    "fd4": (None, False, None),
+    "fd4-ko-0.3": (0.3, False, None),
+    "fd4-ko-1.0": (1.0, False, None),
+    "fd4-ko-8.0": (8.0, False, None),
+    "fd4-lop": (None, True, None),
+    "fd4-lop-ko-8.0": (8.0, True, None),
+    "fd4-lop-ko-8.0-subset": (8.0, True, DissipationSubset),
+}
+
+## Colours, markers and labels per run, so all pictures use the same ones
 Style = {
     "fv": ("tab:blue", "o", "Finite Volumes"),
     "fd4": ("tab:red", "s", "FD4, no dissipation"),
     "fd4-ko-0.3": ("tab:green", "^", r"FD4, KO $\sigma=0.3$"),
     "fd4-ko-1.0": ("tab:purple", "v", r"FD4, KO $\sigma=1$"),
     "fd4-ko-8.0": ("tab:orange", "D", r"FD4, KO $\sigma=8$"),
+    "fd4-lop": ("tab:brown", "P", "FD4, lopsided, no dissipation"),
+    "fd4-lop-ko-8.0": ("tab:pink", "X", r"FD4, lopsided, KO $\sigma=8$ (all)"),
+    "fd4-lop-ko-8.0-subset": (
+        "tab:olive",
+        "*",
+        r"FD4, lopsided, KO $\sigma=8$ (Q0-Q22, Q53-Q54)",
+    ),
 }
 
 
@@ -89,16 +119,29 @@ def create_scheme(name, solver):
         )
     else:
         package = exahype2.api.rkfd4
-        if name == "fd4":
+        sigma, lopsided, dissipative_quantities = Runs[name]
+        Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
+        arguments = {}
+        if lopsided:
+            arguments = dict(
+                right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
+                advection_velocity=exagrype.api.CCZ4Solver.ADVECTION_VELOCITY,
+                advected_quantities=solver.lopsided_advection_quantities(),
+            )
+        if sigma is None:
             solver.numerical_scheme = (
                 exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-                    solver, PatchSize, rk_order=4
+                    solver, PatchSize, rk_order=4, **arguments
                 )
             )
         else:
-            sigma = float(name.split("-")[-1])
             solver.numerical_scheme = exagrype.api.FD4WithKODissipation(
-                solver, PatchSize, rk_order=4, kreiss_oliger_sigma=sigma
+                solver,
+                PatchSize,
+                rk_order=4,
+                kreiss_oliger_sigma=sigma,
+                quantities=dissipative_quantities,
+                **arguments,
             )
     solver.grid_construction = package.SetupSimulationOverRegularGrid(
         solver, volume_size=1.01 * H
@@ -398,8 +441,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--runs",
         nargs="+",
-        default=list(Style),
-        help="Runs to perform (default: all, i.e. {})".format(" ".join(Style)),
+        default=list(Runs),
+        help="Runs to perform (default: all, i.e. {})".format(" ".join(Runs)),
     )
     args = parser.parse_args()
 
@@ -457,8 +500,19 @@ if __name__ == "__main__":
             plot_over_time_and_profile(
                 runs, ["fv", "fd4"], "523_higher-order-fd-fv-vs-fd4.png"
             )
-        ko_runs = [name for name in Style if name.startswith("fd4") and name in runs]
-        if "fv" in runs and len(ko_runs) > 1:
+        ko_runs = [name for name in Style if name.startswith("fd4-ko") and name in runs]
+        if "fv" in runs and "fd4" in runs and ko_runs:
             plot_over_time_and_profile(
-                runs, ["fv"] + ko_runs, "523_higher-order-fd-kreiss-oliger.png"
+                runs,
+                ["fv", "fd4"] + ko_runs,
+                "523_higher-order-fd-kreiss-oliger.png",
+            )
+        lopsided_runs = [
+            name for name in Style if name.startswith("fd4-lop") and name in runs
+        ]
+        if "fv" in runs and "fd4" in runs and lopsided_runs:
+            plot_over_time_and_profile(
+                runs,
+                ["fv", "fd4"] + lopsided_runs,
+                "523_higher-order-fd-lopsided.png",
             )
