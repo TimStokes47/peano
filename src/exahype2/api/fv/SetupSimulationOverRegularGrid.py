@@ -31,6 +31,20 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
 
     """
 
+    ## Tag of the task which completes the setup over the initial regular mesh
+    #
+    # The setup constructs the regular mesh and then sets the initial
+    # condition. The initial condition task carries this tag. After it, the
+    # mesh and the solution are complete, but the solution has not yet been
+    # projected onto the faces, as the projection is the very last task of the
+    # setup. Subclasses which want to modify the mesh or the solution before
+    # the time stepping starts search for the tag via
+    # peano4.api.taskgraph.Graph.find_tasks() and insert their tasks after the
+    # tagged one via peano4.api.taskgraph.Graph.insert_after(). The tasks
+    # which have followed the tagged task so far, i.e. the projection, then
+    # follow the inserted tasks (@ref exahype2.api.fv.SetupSimulationWithUserCodedRefinementCriterion).
+    FinishedInitialRegularMeshSetup = "exahype2.api.fv.SetupSimulationOverRegularGrid.FinishedInitialRegularMeshSetup"
+
     def __init__(self, solver: Solver, volume_size: float):
         """!
 
@@ -60,6 +74,25 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         from @ref page_exahype_numerical_scheme "Adding a numerical scheme", as grid construction, 
         numerical scheme, but also plotting all follow the same pattern 
         of tasks and dependencies.
+
+        The routine first builds the task graph through
+        _construct_task_graph() and then reports it through
+        _report_task_graph().
+
+        """
+        self._construct_task_graph(exahype2_project, peano_project, setup_simulation)
+        self._report_task_graph(setup_simulation)
+
+    def _construct_task_graph(self,
+                              exahype2_project,
+                              peano_project,
+                              setup_simulation):
+        """!
+
+        Add the tasks of the setup over a regular mesh to setup_simulation
+
+        The initial condition task carries the tag
+        FinishedInitialRegularMeshSetup.
 
         """
         peano4.api.Logger().log("Create setup task graph for Finite Volume scheme over a regular, block-structured mesh with Rusanov flux")
@@ -130,6 +163,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         consolidate_load_balancing_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
 
         initial_condition_task        = peano4.api.taskgraph.Task(name=f"{self._solver.name} Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        initial_condition_task.tags.add(self.FinishedInitialRegularMeshSetup)
         project_on_faces_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name} Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
 
         consolidate_load_balancing_task.add_dependency(refine_task)
@@ -168,6 +202,12 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
         project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         project_on_faces_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.WRITE)
 
+    def _report_task_graph(self, setup_simulation):
+        """!
+
+        Visualise or log the setup task graph, depending on the logger's verbosity
+
+        """
         if peano4.api.Logger().is_visualisation:
             setup_simulation.visualise(title="Setup task graph for {}".format(self._solver.name))
         if peano4.api.Logger().is_text:

@@ -1,56 +1,132 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
-import toolbox.loadbalancing.api.actionsets
 
+from ..RefineErasePointwisely import RefineErasePointwisely
 from ..Solver import Solver
+from .SetupSimulationOverRegularGrid import SetupSimulationOverRegularGrid
+from .actionsets import EvaluateRefineErasePointwisely
+from .actionsets import InitialiseNewCells
 
 
-class SetupSimulationWithUserCodedRefinementCriterion(Solver.GridConstruction):
+class SetupSimulationWithUserCodedRefinementCriterion(SetupSimulationOverRegularGrid):
     """!
 
-    Setup phase counterpart to RusanovWithExplicitEuler: sets the initial
-    condition for a Finite Volume scheme with a Rusanov Riemann solver,
-    realised over a block-structured mesh, and prepares the data required
-    for the first time step.
+    Setup over a regular mesh which is then refined adaptively by the user's
+    point-wise refinement criterion
 
-    Unlike SetupSimulationOverRegularGrid, this variant repeats its "Refine
-    cell" task (task_has_to_repeat is set to a string rather than left at
-    its default None): the mesh is refined adaptively, driven by a
-    user-coded refinement criterion checked afresh every grid sweep,
-    rather than built once and left alone.
+    The setup does everything SetupSimulationOverRegularGrid does: It
+    constructs a regular mesh and sets the initial condition. If the solver
+    has an exahype2.api.RefineErasePointwisely PDE term, the setup then
+    adapts this mesh. It inserts one further task after the task tagged with
+    SetupSimulationOverRegularGrid.FinishedInitialRegularMeshSetup, i.e.
+    after the initial condition. The projection onto the faces, which has
+    followed the initial condition so far, follows this new task instead and
+    hence remains the very last task of the setup.
+
+    The new task repeats until the mesh is stationary. It hosts two action
+    sets:
+
+    - exahype2.api.fv.actionsets.EvaluateRefineErasePointwisely evaluates the
+      refinement criterion in every volume and turns the outcome into refine
+      or erase events for ExaHyPE's refinement service.
+      It also hands the service's events over to Peano.
+    - exahype2.api.fv.actionsets.InitialiseNewCells sets the initial
+      condition within each cell which the refinement creates.
+
+    Without a RefineErasePointwisely term, the setup is the same as
+    SetupSimulationOverRegularGrid.
+
+    Peano realises a refinement event one to two mesh sweeps after the
+    criterion has asked for it (@ref exahype2::RefinementControl). The mesh
+    hence might still be stationary in the sweeps right after the criterion
+    has issued an event. The task therefore repeats as long as the mesh
+    changes or the refinement service still holds events.
 
     """
 
-    def __init__(self, solver: Solver):
-        super().__init__(solver)
-
-    def construct_output(self,
-                         exahype2_project,
-                         peano_project,
-                         setup_simulation):
+    def __init__(self, solver: Solver, volume_size: float, min_volume_size: float):
         """!
 
+        @param volume_size: float
+          Maximum edge length of one Finite Volume. The setup first
+          constructs a regular mesh with this volume size
+          (@ref exahype2.api.fv.SetupSimulationOverRegularGrid). The mesh
+          refinement never erases cells of this regular mesh.
+
+        @param min_volume_size: float
+          Minimum edge length of one Finite Volume. The setup refines a cell
+          only if its volumes are at least of this size, i.e. the resulting
+          volumes are strictly smaller than min_volume_size. The
+          semantics are the same as for volume_size.
+
         """
-        peano4.api.Logger().log("Create setup task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
+        super().__init__(solver, volume_size)
+        assert min_volume_size <= volume_size, (
+            f"min_volume_size={min_volume_size} has to be smaller than or equal to "
+            f"volume_size={volume_size}"
+        )
+        self.min_volume_size = min_volume_size
 
-        refine_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Refine cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL, task_has_to_repeat="user-coded refinement criterion re-evaluated every grid sweep")
-        initial_condition_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Initial condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        project_on_faces_task       = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+    ## Repeat condition of the mesh adaptation task
+    RepeatCondition = (
+        "not peano4::grid::isGridStationary( peano4::parallel::SpacetreeSet::getInstance().getGridStatistics() )"
+        " or not ::exahype2::RefinementControlService::getInstance().createGridControlEventsForNextTraversal().empty()"
+    )
 
-        # Inform the load balancing after every mesh refinement sweep
-        refine_cell_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
+    def construct_output(self, exahype2_project, peano_project, setup_simulation):
+        """!
 
-        initial_condition_task.add_dependency(refine_cell_task)
-        project_on_faces_task.add_dependency(initial_condition_task)
+        Construct the setup over the regular mesh and insert the mesh
+        adaptation after it, if the solver has a RefineErasePointwisely term
 
-        setup_simulation.add_task(refine_cell_task)
-        setup_simulation.add_task(initial_condition_task)
-        setup_simulation.add_task(project_on_faces_task)
-        
-#        refine_cell_task.add_action_set()
+        """
+        peano4.api.Logger().log(
+            "Create setup task graph for Finite Volume scheme with user-coded refinement criterion"
+        )
+        self._construct_task_graph(exahype2_project, peano_project, setup_simulation)
 
-        if peano4.api.Logger().is_visualisation:
-            setup_simulation.visualise(title="Setup task graph for {}".format(self._solver.name))
-        if peano4.api.Logger().is_text:
-            setup_simulation.log_as_text(title="Setup task graph for {}".format(self._solver.name))
+        if any(
+            isinstance(term, RefineErasePointwisely) for term in self._solver.pde_terms
+        ):
+            anchors = setup_simulation.find_tasks(
+                SetupSimulationOverRegularGrid.FinishedInitialRegularMeshSetup
+            )
+            assert len(anchors) == 1, (
+                f"Expected exactly one task tagged with "
+                f"{SetupSimulationOverRegularGrid.FinishedInitialRegularMeshSetup}, "
+                f"got {len(anchors)}"
+            )
+            setup_simulation.insert_after(anchors, self._create_adapt_mesh_task())
+
+        self._report_task_graph(setup_simulation)
+
+    def _create_adapt_mesh_task(self):
+        """!
+
+        Create the repeating task which adapts the mesh
+
+        """
+        patch_size = self._solver.numerical_scheme.patch_size
+        adapt_mesh_task = peano4.api.taskgraph.Task(
+            name=f"{self._solver.name} Adapt mesh",
+            entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+            task_has_to_repeat=self.RepeatCondition,
+        )
+        adapt_mesh_task.add_action_set(
+            EvaluateRefineErasePointwisely(
+                self._solver,
+                guard=self._solver.grid_selector.createCellGuard(),
+                min_cell_size=self.min_volume_size * patch_size,
+                max_cell_size=self.volume_size * patch_size,
+            )
+        )
+        adapt_mesh_task.add_action_set(
+            InitialiseNewCells(
+                self._solver, guard=self._solver.grid_selector.createCellGuard()
+            )
+        )
+        adapt_mesh_task.use_cell(
+            self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE
+        )
+        return adapt_mesh_task

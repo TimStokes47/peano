@@ -8,6 +8,8 @@ from .RollOverUpdatedFaceWithSommerfeldBoundaryConditions import (
 from .ApplyDirichletBoundaryConditions import ApplyDirichletBoundaryConditions
 from .AdaptivityCriterion import AdaptivityCriterion
 from .InitialCondition import InitialCondition
+from .InitialiseNewCells import InitialiseNewCells
+from .EvaluateRefineErasePointwisely import EvaluateRefineErasePointwisely
 from .ProjectPatchOntoFaces import ProjectPatchOntoFaces
 from .UpdateCell import UpdateCell
 from .ComputeGlobalCFLCondition import ComputeGlobalCFLCondition

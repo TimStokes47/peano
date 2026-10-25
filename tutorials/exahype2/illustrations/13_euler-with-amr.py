@@ -5,7 +5,9 @@
 Create the PNG illustrations of the tutorial 13_euler-with-amr.ipynb
 
 The script builds the tutorial's point explosion on a regular grid, runs
-it and writes all pictures into the directory of this script. The PDE
+it and writes all pictures into the directory of this script. It then
+builds the setup with the point-wise refinement criterion, runs the setup
+only, and draws the resulting adaptive mesh plus the setup's task graph. The PDE
 terms are injected from Python, i.e. we do not need any hand-written C++
 file. Call it from anywhere:
 
@@ -16,6 +18,7 @@ All builds and outputs go into a temporary directory (or --work-directory).
 """
 import argparse
 import os
+import types
 import subprocess
 import sys
 import tempfile
@@ -78,19 +81,18 @@ InitPointWisely = """
 """
 
 VolumeSize = 0.005
+AdaptiveVolumeSize = 0.02
+AdaptiveMinVolumeSize = 0.002
+RefineErasePointwisely = """
+  if (Q[0] > 0.8) *refinementCommand = ::exahype2::RefinementCommand::Refine;
+"""
 EndTime = 0.2
 TimeInBetweenPlots = 0.01
 PatchFile = "solution-EulerFV.peano-patch-file"
 
 
-def build_and_run(directory):
-    """! Generate, compile and run the tutorial setup within directory"""
-    project = exahype2.api.Project(
-        namespace=["tutorials", "exahype2", "euler"],
-        project_name="Euler",
-        directory=directory,
-        executable="euler",
-    )
+def create_solver(adaptive):
+    """! The tutorial's solver over a regular or an adaptive mesh"""
     solver = exahype2.api.Solver("EulerFV", 4, 0)
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
@@ -100,20 +102,52 @@ def build_and_run(directory):
     solver.add_pde_term(
         exahype2.api.InitPointWisely(implementation=InitPointWisely, stateless=False)
     )
+    if adaptive:
+        solver.add_pde_term(
+            exahype2.api.RefineErasePointwisely(implementation=RefineErasePointwisely)
+        )
     solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
-    solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
-        solver, volume_size=VolumeSize
-    )
+    if adaptive:
+        solver.grid_construction = (
+            exahype2.api.fv.SetupSimulationWithUserCodedRefinementCriterion(
+                solver,
+                volume_size=AdaptiveVolumeSize,
+                min_volume_size=AdaptiveMinVolumeSize,
+            )
+        )
+    else:
+        solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
+            solver, volume_size=VolumeSize
+        )
     solver.plotter = exahype2.api.fv.PlotAsVTKFile(
         solver, first_plot_time_stamp=0.0, time_in_between_plots=TimeInBetweenPlots
     )
+    return solver
+
+
+def build_and_run(directory, adaptive=False):
+    """!
+
+    Generate, compile and run the tutorial setup within directory
+
+    The adaptive variant runs the setup only, i.e. its end time is zero.
+
+    """
+    end_time = 0.0 if adaptive else EndTime
+    project = exahype2.api.Project(
+        namespace=["tutorials", "exahype2", "euler"],
+        project_name="Euler",
+        directory=directory,
+        executable="euler",
+    )
+    solver = create_solver(adaptive)
     project.add_solver(solver)
     project.set_global_simulation_parameters(
         dimensions=2,
         offset=[-0.5, -0.5],
         size=[1.0, 1.0],
-        min_end_time=EndTime,
-        max_end_time=EndTime,
+        min_end_time=end_time,
+        max_end_time=end_time,
         periodic_BC=[True, True, True],
     )
     project.set_Peano4_installation(PeanoRoot, peano4.api.output.CompileMode.RELEASE)
@@ -285,6 +319,60 @@ def plot_active_patches(directory):
     print("{} of {} patches are active".format(active, len(patches)))
 
 
+def plot_adaptive_mesh(directory):
+    """! Initial density on the adaptive mesh plus the patch boundaries"""
+    file_name = os.path.join(directory, PatchFile)
+    ax = tarch.plotter.api.notebook.plot_snapshot(file_name, 0, 0, label="density")
+    _, patches = read_snapshot(directory, 0)
+    for offset, size, values in patches:
+        ax.add_patch(
+            matplotlib.patches.Rectangle(
+                offset, size[0], size[1], fill=False, edgecolor="white", linewidth=0.3
+            )
+        )
+    sizes = sorted({round(size[0], 6) for _, size, _ in patches}, reverse=True)
+    counts = [sum(1 for _, size, _ in patches if round(size[0], 6) == h) for h in sizes]
+    ax.set_title(
+        "Initial density on the adaptive mesh\n"
+        + ", ".join(
+            "{} patches of size 1/{}".format(count, round(1.0 / h))
+            for h, count in zip(sizes, counts)
+        ),
+        fontsize=9,
+    )
+    ax.figure.savefig(
+        os.path.join(Here, "13_euler-with-amr-adaptive-mesh.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(ax.figure)
+    print("adaptive mesh: {}".format(dict(zip(sizes, counts))))
+
+
+def plot_setup_task_graph():
+    """! Construct the setup task graph with the refinement criterion and draw it"""
+    peano4.api.Logger().file_name = os.path.join(
+        tempfile.gettempdir(), "13-euler-with-amr-log.md"
+    )
+    with tempfile.TemporaryDirectory() as directory:
+        peano_project = peano4.api.Project(
+            ["illustration"], "illustration", directory=directory
+        )
+        solver = create_solver(adaptive=True)
+        exahype2_project = types.SimpleNamespace(periodic_BC=[True, True, True])
+        setup_simulation = peano4.api.taskgraph.Graph()
+        solver.grid_construction.construct_output(
+            exahype2_project, peano_project, setup_simulation
+        )
+    setup_simulation.visualise(
+        title="Setup task graph with point-wise refinement criterion"
+    )
+    output = os.path.join(Here, "13_euler-with-amr-setup-task-graph.png")
+    plt.gcf().savefig(output, dpi=90)
+    plt.close(plt.gcf())
+    print("Wrote", output)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Create the PNGs of the tutorial 13_euler-with-amr.ipynb"
@@ -314,4 +402,12 @@ if __name__ == "__main__":
     plot_snapshots(directory)
     plot_profile(directory)
     plot_active_patches(directory)
+
+    adaptive_directory = os.path.join(work_directory, "adaptive-mesh")
+    os.makedirs(adaptive_directory, exist_ok=True)
+    if not args.skip_run:
+        print("build and run setup over adaptive mesh in {}".format(adaptive_directory))
+        build_and_run(adaptive_directory, adaptive=True)
+    plot_adaptive_mesh(adaptive_directory)
+    plot_setup_task_graph()
     print("wrote PNGs into {}".format(Here))
