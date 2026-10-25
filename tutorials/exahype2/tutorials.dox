@@ -43,6 +43,7 @@ Jupyter.
   - \subpage tutorials_exahype2_11_tsunami
 - Modifying the numerics and the implementation scheme
   - \subpage tutorials_exahype2_12_higher-order-solvers
+  - \subpage tutorials_exahype2_13_euler-with-amr
   - \subpage tutorials_exahype2_20_additional-solver-steps
 - Running codes in parallel
   - \subpage tutorials_exahype2_30_domain-decomposition
