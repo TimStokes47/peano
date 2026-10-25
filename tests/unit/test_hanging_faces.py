@@ -1,6 +1,6 @@
 """Hanging faces on adaptive meshes: the toolbox action sets
-(@ref toolbox.blockstructured.api.InterpolateHangingFaces.InterpolateHangingFaces,
-@ref toolbox.blockstructured.api.RestrictHangingFaces.RestrictHangingFaces) and how the Finite
+(toolbox.blockstructured.api.InterpolateHangingFaces,
+toolbox.blockstructured.api.RestrictHangingFaces) and how the Finite
 Volume scheme uses them."""
 
 import peano4.api
