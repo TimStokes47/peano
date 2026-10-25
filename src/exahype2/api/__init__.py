@@ -10,6 +10,8 @@ from .VolumetricSource import VolumetricSource
 from .PointSource import PointSource
 from .InitPointWisely import InitPointWisely
 from .DirichletBoundaryConditions import DirichletBoundaryConditions
+from .SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
+from . import BoundaryConditions
 from .KernelVariants import Target
 from .Solver import Solver
 from .SolverToCPPFiles import SolverToCPPFiles

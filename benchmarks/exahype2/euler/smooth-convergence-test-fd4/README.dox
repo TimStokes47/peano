@@ -52,7 +52,7 @@ python3 compute-errors.py run-0.0075 run-0.0025 run-0.00083
 The three volume sizes yield 27, 81 and 243 grid cells per axis, as each mesh
 cell hosts a patch of 9x9 grid cells. python3 smooth-convergence-test-fd4.py
 --help lists further options, such as the Runge-Kutta order, fixed time step
-sizes, the Kreiss-Oliger dissipation or three dimensions.
+sizes or three dimensions.
 
 compute-errors.py compares the density of the last snapshot of each run with
 the exact solution, and prints the maximum and the root mean square error

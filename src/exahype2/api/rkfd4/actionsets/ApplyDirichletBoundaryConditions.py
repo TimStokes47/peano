@@ -7,6 +7,7 @@ import peano4.api.taskgraph
 import jinja2
 
 from ...DirichletBoundaryConditions import DirichletBoundaryConditions
+from ...BoundaryConditions import get_boundary_conditions
 
 
 class ApplyDirichletBoundaryConditions(ActionSet):
@@ -19,7 +20,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
     exahype2::blockstructured::applyDirichletBoundaryConditions(), which
     holds the logic described below. Each face carries an
     overlap of 2*overlap grid cells along its normal
-    (solver._patch_overlap_current_time_step), i.e. 2*3 for the
+    (solver._patch_overlap_current_time_step), i.e. 2*HALO_SIZE for the
     fourth-order Finite Differences of @ref exahype2.api.rkfd4 :
     the left half belongs to the cell left of the face, the right half to
     the cell right of it. On the domain boundary, one of these two cells
@@ -48,6 +49,20 @@ class ApplyDirichletBoundaryConditions(ActionSet):
 
     Use add_task_to_time_step() to add the corresponding task to a time
     step's task graph.
+
+    ## Why Dirichlet conditions are not part of the roll over
+
+    exahype2.api.SommerfeldBoundaryConditions do without a boundary task:
+    They advance the ghost cells within the roll over of the face data
+    after the projection. Dirichlet conditions could be realised the same
+    way, as the roll over could evaluate the boundary values at the time
+    stamp of the next update. We deliberately keep them as a separate task
+    which runs directly before the reconstruction, as this will not work
+    anymore once we support local time stepping: With local time stepping,
+    each cell advances with its own time step size, and the time stamp at
+    which the ghost cells have to hold the boundary values is only known
+    once the adjacent cell starts its next update, but not when the face
+    data are rolled over after its previous update.
 
     The class mirrors
     exahype2.api.fv.actionsets.ApplyDirichletBoundaryConditions, as rkfd4
@@ -156,16 +171,17 @@ class ApplyDirichletBoundaryConditions(ActionSet):
 
         Add the boundary task in front of the reconstruction of the halo
 
-        If all axes of the domain are periodic, the routine does nothing:
-        The time step's task graph then does not contain any boundary
-        handling. Otherwise, it adds a FACE task which sets the ghost grid
+        If all axes of the domain are periodic, or if the solver uses
+        exahype2.api.SommerfeldBoundaryConditions (which replace the roll
+        over instead), the routine does nothing. Otherwise, it adds a FACE
+        task which sets the ghost grid
         cells of solver._patch_overlap_current_time_step, and makes
         reconstruction_task depend on it.
 
         @param solver: exahype2.api.Solver
-          The solver. Has to hold a non-stateless
-          exahype2.api.DirichletBoundaryConditions term unless all axes are
-          periodic.
+          The solver. Its boundary condition terms have to be consistent
+          with the domain, @ref
+          exahype2.api.BoundaryConditions.get_boundary_conditions().
 
         @param exahype2_project: exahype2.api.Project
           Provides the periodic boundary conditions.
@@ -186,21 +202,14 @@ class ApplyDirichletBoundaryConditions(ActionSet):
           The @f$ c_k @f$ of the Runge-Kutta stage, see the constructor.
 
         @return peano4.api.taskgraph.Task or None
-          The boundary task, or None if all axes are periodic.
+          The boundary task, or None if no Dirichlet task is required.
 
         """
-        if all(exahype2_project.periodic_BC):
+        if not isinstance(
+            get_boundary_conditions(solver, exahype2_project),
+            DirichletBoundaryConditions,
+        ):
             return None
-
-        assert any(
-            isinstance(term, DirichletBoundaryConditions) and not term.stateless
-            for term in solver.pde_terms
-        ), (
-            f"Solver {solver.name} has non-periodic boundaries "
-            f"(periodic_BC={exahype2_project.periodic_BC}), but no DirichletBoundaryConditions PDE term. "
-            "Add one via solver.add_pde_term(exahype2.api.DirichletBoundaryConditions(...)), "
-            "or make all axes periodic."
-        )
 
         boundary_task = peano4.api.taskgraph.Task(
             name=f"{solver.name}_Apply Dirichlet BCs{name_suffix}",

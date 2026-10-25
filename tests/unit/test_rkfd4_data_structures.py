@@ -15,20 +15,20 @@ def _scheme(patch_size=5, rk_order=3, time_step_size=None):
     return solver, scheme
 
 
-def test_patches_have_halo_of_three():
+def test_patches_have_halo_of_two():
     solver, scheme = _scheme()
-    assert scheme.overlap == 3
+    assert scheme.overlap == 2
     assert solver._patch.dim == (5, 5, 5)
     assert solver._patch.no_of_unknowns == 6
     assert solver._stage_input.dim == (5, 5, 5)
     assert solver._stage_input.no_of_unknowns == 6
-    assert solver._patch_with_halo.dim == (11, 11, 11)
+    assert solver._patch_with_halo.dim == (9, 9, 9)
     assert solver._patch_with_halo.no_of_unknowns == 6
     for overlap in (
         solver._patch_overlap_current_time_step,
         solver._patch_overlap_update,
     ):
-        assert overlap.dim == (6, 5, 5)
+        assert overlap.dim == (4, 5, 5)
         assert overlap.no_of_unknowns == 6
 
 
@@ -87,7 +87,7 @@ def test_add_data_to_repository_exchanges_current_face_data_only():
     assert solver._patch_overlap_update.generator.receive_and_merge_condition == "false"
 
 
-@pytest.mark.parametrize("patch_size", [1, 2])
+@pytest.mark.parametrize("patch_size", [1])
 def test_patch_smaller_than_halo_is_rejected(patch_size):
     with pytest.raises(ValueError):
         _scheme(patch_size=patch_size)
@@ -102,7 +102,6 @@ def test_unsupported_runge_kutta_order_is_rejected(rk_order):
 @pytest.mark.parametrize(
     "arguments",
     [
-        {"kreiss_oliger_sigma": -1.0},
         {"time_step_size": 0.0},
         {"cfl_constant": 0.0},
     ],

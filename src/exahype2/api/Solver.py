@@ -169,7 +169,7 @@ class Solver(abc.ABC):
     ## Tag of all tasks which write an intermediate solution
     #
     # Runge-Kutta schemes add this tag to each task which writes the input of
-    # a further Runge-Kutta stage, and @ref SolutionUpdateTaskTag to the task
+    # a further Runge-Kutta stage, and @ref exahype2.api.Solver.Solver.SolutionUpdateTaskTag to the task
     # which writes the new solution after the last stage. Postprocessing which
     # has to act on each stage, such as the enforcement of constraints, hence
     # searches for both tags. The contract of SolutionUpdateTaskTag applies.

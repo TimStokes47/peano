@@ -1,5 +1,6 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+import enum
 import os
 import re
 
@@ -16,13 +17,18 @@ from ..Solver import Solver
 from ..rungekutta import ButcherTableau
 from ..rungekutta.LinearCombination import generate_linear_combination_kernel
 from . import FD4Kernels
+from .Quantities import resolve_quantities
+from .actionsets import AddLopsidedAdvection
 from .actionsets import ApplyDirichletBoundaryConditions
+from ..BoundaryConditions import get_access_to_persistent_face_data
+from ..BoundaryConditions import get_boundary_conditions
+from ..SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
 from .actionsets import ComputeLinearCombination
 from .actionsets import ComputeMaxEigenvalue
 from .actionsets import ComputeTimeStepSize
 from .actionsets import EvaluateRightHandSide
 from .actionsets import ProjectPatchOntoFaces
-from .actionsets import RollOverUpdatedFace
+from .actionsets import RollOverUpdatedFaceWithSommerfeldBoundaryConditions
 
 
 class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
@@ -37,12 +43,11 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
 
     @f$ \\partial _t Q = F(Q) @f$
 
-    through fourth-order central differences, plus an optional Kreiss-Oliger
-    dissipation term of sixth order (@ref exahype2.api.rkfd4.FD4Kernels), and
-    integrates in time with the explicit Runge-Kutta scheme from @ref
-    exahype2.api.rungekutta.ButcherTableau. The stencils reach three grid
-    cells into the neighbouring patches, i.e. the halo is HALO_SIZE=3 grid
-    cells wide:
+    through fourth-order central differences (@ref
+    exahype2.api.rkfd4.FD4Kernels), and integrates in time with the explicit
+    Runge-Kutta scheme from @ref exahype2.api.rungekutta.ButcherTableau. The
+    stencils reach two grid cells into the neighbouring patches, i.e. the
+    halo is HALO_SIZE=2 grid cells wide:
 
     @image html central-differences-with-runge-kutta-stencil.png
 
@@ -63,10 +68,48 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
 
     The solver can have a Flux, a NonconservativeProduct and a
     VolumetricSource. It needs an InitPointWisely term, a MaxEigenvalue term
-    unless the time step size is fixed, and a DirichletBoundaryConditions
-    term unless all axes are periodic. @ref
+    unless the time step size is fixed, and either a
+    DirichletBoundaryConditions or a SommerfeldBoundaryConditions term
+    unless all axes are periodic (@ref
+    exahype2.api.BoundaryConditions.get_boundary_conditions()). Sommerfeld
+    conditions also require a MaxEigenvalue term, and a Butcher tableau whose
+    stage time stamps do not decrease. @ref
     benchmarks_exahype2_euler_smooth_fd4 demonstrates fourth-order
     convergence for the Euler equations.
+
+    ## Extending the scheme
+
+    The scheme has no artificial dissipation. Subclasses can add further
+    terms to the right-hand side:
+
+    - _right_hand_side_action_sets() returns the action sets of the task
+      which evaluates the right-hand side of one stage. Subclasses can
+      append action sets which add their terms to the stage's estimate.
+      They run after the right-hand side kernel, within the same task.
+    - Subclasses which need wider stencils override HALO_SIZE.
+
+    @ref exagrype.api.FD4WithKODissipation adds the Kreiss-Oliger
+    dissipation this way.
+
+    ## Right-hand side kernels
+
+    The constructor's argument right_hand_side_kernel selects how the
+    scheme evaluates the right-hand side
+    (CentralDifferencesWithRungeKutta.RightHandSideKernel):
+
+    - CentralDifferences: all derivatives through fourth-order central
+      differences (@ref exahype2.api.rkfd4.FD4Kernels). This is the
+      default.
+    - CentralDifferencesWithLopsidedAdvection: the central differences
+      plus advection terms @f$ v_d \\partial _d Q_q @f$, which a separate
+      kernel discretises through lopsided (upwind-biased) fourth-order
+      stencils (@ref exahype2::fd::addLopsidedAdvection()). The kernel
+      runs after the central differences within each Runge-Kutta stage.
+      You specify the velocity v, which has to be part of Q, and the
+      advected quantities q. The PDE terms of the solver must not contain
+      these advection terms themselves. As the lopsided stencils reach
+      three grid cells into the neighbouring patches, the halo is three
+      grid cells wide.
 
     ## Data flow
 
@@ -112,16 +155,27 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
 
     """
 
-    HALO_SIZE = 3
+    ## Width of the halo. Subclasses with wider stencils override it.
+    HALO_SIZE = 2
+
+    class RightHandSideKernel(enum.Enum):
+        """!
+        The kernels which evaluate the right-hand side, @see the class documentation
+        """
+
+        CentralDifferences = 0
+        CentralDifferencesWithLopsidedAdvection = 1
 
     def __init__(
         self,
         solver: Solver,
         patch_size: int,
         rk_order: int,
-        kreiss_oliger_sigma: float = 0.0,
         time_step_size: float = None,
         cfl_constant: float = 0.5,
+        right_hand_side_kernel: "CentralDifferencesWithRungeKutta.RightHandSideKernel" = RightHandSideKernel.CentralDifferences,
+        advection_velocity=None,
+        advected_quantities=None,
     ):
         """!
 
@@ -144,10 +198,6 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
           to be between one and four, @ref
           exahype2.api.rungekutta.ButcherTableau.
 
-        @param kreiss_oliger_sigma: float
-          Scaling of the Kreiss-Oliger dissipation. 0.0 switches the
-          dissipation off.
-
         @param time_step_size: float or None
           Fixed time step size. If None, the time step size is adaptive.
 
@@ -160,18 +210,29 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
           two for linear advection without dissipation, so 0.5 is a
           conservative default.
 
+        @param right_hand_side_kernel: CentralDifferencesWithRungeKutta.RightHandSideKernel
+          The kernel which evaluates the right-hand side, @see the class
+          documentation.
+
+        @param advection_velocity: str or List[str or int] or None
+          Only for CentralDifferencesWithLopsidedAdvection: the entries of Q
+          which hold the advection velocity, one per dimension. Pass the name
+          of a variable with one entry per dimension (e.g. "shift" for
+          exagrype.api.CCZ4Solver), or a list of names or indices. The
+          velocity may be an auxiliary variable.
+
+        @param advected_quantities: List[str or int] or None
+          Only for CentralDifferencesWithLopsidedAdvection: the unknowns
+          which are advected, as names of variables or indices of entries,
+          @see exahype2.api.rkfd4.Quantities.resolve_quantities().
+
         """
         super().__init__(solver)
         if patch_size < self.HALO_SIZE:
             raise ValueError(
                 f"Solver {solver.name}: patch_size has to be at least {self.HALO_SIZE}, "
-                f"as the fourth-order stencils reach {self.HALO_SIZE} grid cells into "
+                f"as the stencils reach {self.HALO_SIZE} grid cells into "
                 f"the neighbouring patches, but got {patch_size}"
-            )
-        if kreiss_oliger_sigma < 0.0:
-            raise ValueError(
-                f"Solver {solver.name}: kreiss_oliger_sigma has to be non-negative, "
-                f"but got {kreiss_oliger_sigma}"
             )
         if time_step_size is not None and time_step_size <= 0.0:
             raise ValueError(
@@ -183,9 +244,47 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
                 f"Solver {solver.name}: cfl_constant has to be positive, "
                 f"but got {cfl_constant}"
             )
+        if not isinstance(
+            right_hand_side_kernel, CentralDifferencesWithRungeKutta.RightHandSideKernel
+        ):
+            raise TypeError(
+                f"Solver {solver.name}: right_hand_side_kernel has to be a "
+                f"CentralDifferencesWithRungeKutta.RightHandSideKernel, but got "
+                f"{right_hand_side_kernel!r}"
+            )
+        self.right_hand_side_kernel = right_hand_side_kernel
+        Kernel = CentralDifferencesWithRungeKutta.RightHandSideKernel
+        if right_hand_side_kernel == Kernel.CentralDifferencesWithLopsidedAdvection:
+            if advection_velocity is None or advected_quantities is None:
+                raise ValueError(
+                    f"Solver {solver.name}: the kernel "
+                    f"CentralDifferencesWithLopsidedAdvection needs an "
+                    f"advection_velocity and advected_quantities"
+                )
+            if isinstance(advection_velocity, (str, int)):
+                advection_velocity = [advection_velocity]
+            self.advection_velocity = resolve_quantities(
+                solver, advection_velocity, include_auxiliary_variables=True
+            )
+            self.advected_quantities = resolve_quantities(solver, advected_quantities)
+            # The lopsided stencils reach three grid cells into the neighbours
+            self.HALO_SIZE = max(self.HALO_SIZE, 3)
+            if patch_size < self.HALO_SIZE:
+                raise ValueError(
+                    f"Solver {solver.name}: patch_size has to be at least "
+                    f"{self.HALO_SIZE} for lopsided advection, but got {patch_size}"
+                )
+        else:
+            if advection_velocity is not None or advected_quantities is not None:
+                raise ValueError(
+                    f"Solver {solver.name}: advection_velocity and "
+                    f"advected_quantities are only used by the kernel "
+                    f"CentralDifferencesWithLopsidedAdvection"
+                )
+            self.advection_velocity = None
+            self.advected_quantities = None
         self.patch_size = patch_size
         self.butcher_tableau = ButcherTableau(rk_order)
-        self.kreiss_oliger_sigma = kreiss_oliger_sigma
         self.time_step_size = time_step_size
         self.cfl_constant = cfl_constant
         # Set in construct_output(): the generated kernels live in the project
@@ -222,6 +321,45 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     @property
     def max_eigenvalue_kernel_name(self) -> str:
         return self._solver.name + "_maxEigenvalueOverPatch"
+
+    def _right_hand_side_action_sets(self, stage, cell_guard):
+        """!
+
+        Action sets of the task which evaluates the right-hand side of one stage
+
+        The task reads solver._patch_with_halo, i.e. the stage's input with
+        its halo, and writes the stage's slot of solver._rhs_estimates. By
+        default, it holds one action set, which invokes the fourth-order
+        Finite Differences kernel. Subclasses can append action sets which
+        add further terms to the estimate. The action sets of one task run
+        one after the other, in the order of the list. For the kernel
+        CentralDifferencesWithLopsidedAdvection, the list holds the
+        lopsided advection as second action set.
+
+        @param stage: int
+          Number of the Runge-Kutta stage, starting with zero.
+
+        @param cell_guard: str
+          C++ boolean expression, evaluated per cell.
+
+        @return List[peano4.api.solversteps.ActionSet]
+
+        """
+        action_sets = [EvaluateRightHandSide(self._solver, stage, guard=cell_guard)]
+        if (
+            self.right_hand_side_kernel
+            == CentralDifferencesWithRungeKutta.RightHandSideKernel.CentralDifferencesWithLopsidedAdvection
+        ):
+            action_sets.append(
+                AddLopsidedAdvection(
+                    self._solver,
+                    stage,
+                    self.advection_velocity,
+                    self.advected_quantities,
+                    guard=cell_guard,
+                )
+            )
+        return action_sets
 
     def __create_data_structures(self):
         """!
@@ -646,7 +784,10 @@ Patch overlap data
         documentation for the data flow):
 
         - {SolverName}_Apply Dirichlet BCs stage k: sets the ghost grid
-          cells along the domain boundary, unless all axes are periodic.
+          cells along the domain boundary for Dirichlet boundary conditions.
+          The task does not exist if all axes are periodic, or for Sommerfeld
+          boundary conditions, which advance the ghost grid cells within the
+          roll over of the projection onto the faces.
         - {SolverName}_Reconstruct stage k: reconstructs the stage's input
           with its halo.
         - {SolverName}_Evaluate right hand side stage k.
@@ -674,6 +815,15 @@ Patch overlap data
             f"with Runge-Kutta of order {self.rk_order} over block-structured meshes"
         )
 
+        if self.advection_velocity is not None and len(self.advection_velocity) != len(
+            exahype2_project.periodic_BC
+        ):
+            raise ValueError(
+                f"Solver {self._solver.name}: the advection velocity has "
+                f"{len(self.advection_velocity)} entries, but the domain has "
+                f"{len(exahype2_project.periodic_BC)} dimensions"
+            )
+
         if self.has_adaptive_time_step_size:
             assert any(
                 isinstance(term, MaxEigenvalue) and not term.stateless
@@ -685,12 +835,31 @@ Patch overlap data
                 "time_step_size to CentralDifferencesWithRungeKutta."
             )
 
+        relative_time_step_sizes = self.butcher_tableau.relative_time_step_sizes()
+        if isinstance(
+            get_boundary_conditions(self._solver, exahype2_project),
+            SommerfeldBoundaryConditions,
+        ) and any(
+            later < earlier
+            for earlier, later in zip(
+                relative_time_step_sizes, relative_time_step_sizes[1:]
+            )
+        ):
+            raise ValueError(
+                f"Solver {self._solver.name} uses Sommerfeld boundary conditions, but "
+                f"the time stamps c={relative_time_step_sizes} of the stages of its "
+                f"Runge-Kutta scheme of order {self.rk_order} decrease. The roll over "
+                "advances the ghost grid cells from one stage to the next, so it "
+                "requires non-decreasing time stamps "
+                "(@ref exahype2::blockstructured::applySommerfeldBoundaryConditions())."
+            )
+
         self.__add_data_to_repository(peano_project)
 
         self.kernel_namespace = peano_project.namespace
         # Construct the calls first, as they validate the PDE terms' variants
         self._solver.compute_kernel_call = self.__construct_kernel_call(
-            self.right_hand_side_kernel_name, [repr(float(self.kreiss_oliger_sigma))]
+            self.right_hand_side_kernel_name, []
         )
         if self.has_adaptive_time_step_size:
             self.max_eigenvalue_kernel_call = self.__construct_kernel_call(
@@ -745,10 +914,22 @@ Patch overlap data
             ## Reconstruct the stage's input with its halo
             if previous_stage_task is not None:
                 reconstruction_task.add_dependency(previous_stage_task)
-            reconstruction_task.use_cell(stage_input, Access.READ_AND_WRITE)
+            ## The solution has to survive the reconstruction. The input of a
+            ## later stage does not: The next stage's combination writes it
+            ## from scratch. If we stored it here, nobody would load it again,
+            ## and Peano's stacks would accumulate one patch per cell and stage.
+            reconstruction_task.use_cell(
+                stage_input,
+                Access.READ_AND_WRITE if stage == 0 else Access.READ_AND_DISCARD,
+            )
             reconstruction_task.use_cell(self._solver._patch_with_halo, Access.WRITE)
+            # Sommerfeld boundary conditions read the old face data within the
+            # roll over, i.e. it has to survive the reconstruction
             reconstruction_task.use_face(
-                self._solver._patch_overlap_current_time_step, Access.READ_AND_DISCARD
+                self._solver._patch_overlap_current_time_step,
+                get_access_to_persistent_face_data(
+                    self._solver, exahype2_project, Access.READ_AND_DISCARD
+                ),
             )
             reconstruction_task.add_action_set(
                 toolbox.blockstructured.api.ReconstructPatchWithHalo(
@@ -763,6 +944,7 @@ Patch overlap data
             ## Set the ghost grid cells along the domain boundary before the
             ## reconstruction reads them, but after the previous stage has
             ## written the face data. No task is added if all axes are periodic
+            ## or for Sommerfeld boundary conditions
             boundary_task = ApplyDirichletBoundaryConditions.add_task_to_time_step(
                 self._solver,
                 exahype2_project,
@@ -784,9 +966,8 @@ Patch overlap data
             right_hand_side_task.use_cell(
                 self._solver._rhs_estimates, Access.READ_AND_WRITE
             )
-            right_hand_side_task.add_action_set(
-                EvaluateRightHandSide(self._solver, stage, guard=cell_guard)
-            )
+            for action_set in self._right_hand_side_action_sets(stage, cell_guard):
+                right_hand_side_task.add_action_set(action_set)
 
             ## Combine the estimates into the input of the next stage or into
             ## the new solution. The combination is a task of its own, tagged
@@ -826,7 +1007,10 @@ Patch overlap data
                 self._solver._patch_overlap_update, Access.TEMPORARY
             )
             projection_task.use_face(
-                self._solver._patch_overlap_current_time_step, Access.WRITE
+                self._solver._patch_overlap_current_time_step,
+                get_access_to_persistent_face_data(
+                    self._solver, exahype2_project, Access.WRITE
+                ),
             )
             if is_last_stage and self.has_adaptive_time_step_size:
                 projection_task.use_cell(self._solver._max_eigenvalue, Access.WRITE)
@@ -841,12 +1025,22 @@ Patch overlap data
                     includes=includes,
                 )
             )
+            # Sommerfeld boundary conditions advance the ghost grid cells
+            # within the roll over, from the time stamp of this stage to the
+            # one of the next stage (@ref exahype2.api.BoundaryConditions)
+            next_relative_time_step_size = (
+                1.0 if is_last_stage else relative_time_step_sizes[stage + 1]
+            )
             projection_task.add_action_set(
-                RollOverUpdatedFace(
-                    self._solver._patch_overlap_current_time_step,
-                    self._solver._patch_overlap_update,
+                RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
+                    self._solver,
+                    exahype2_project,
                     guard=face_guard,
                     includes=includes,
+                    time_step_size=(
+                        f"{next_relative_time_step_size - relative_time_step_sizes[stage]!r}"
+                        f" * repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()"
+                    ),
                 )
             )
             previous_stage_task = projection_task

@@ -30,7 +30,7 @@ def test_initial_condition_loops_over_grid_cells():
     assert '#include "exahype2/fd/PatchUtils.h"' in action_set.get_includes()
 
 
-def test_dirichlet_boundary_conditions_fill_all_three_halo_layers():
+def test_dirichlet_boundary_conditions_fill_all_halo_layers():
     solver = _solver()
     action_set = exahype2.api.rkfd4.actionsets.ApplyDirichletBoundaryConditions(
         solver, solver._patch_overlap_current_time_step, guard="true"
@@ -39,8 +39,8 @@ def test_dirichlet_boundary_conditions_fill_all_three_halo_layers():
         peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
     )
     assert "::exahype2::blockstructured::applyDirichletBoundaryConditions(" in body
-    # 7 grid cells per axis, an overlap of 3, 3+1 doubles per grid cell
-    assert "    7,\n    3,\n    3 + 1,\n" in body
+    # 7 grid cells per axis, an overlap of 2, 3+1 doubles per grid cell
+    assert "    7,\n    2,\n    3 + 1,\n" in body
     assert "fineGridFaceProbeQCurrentTimeStep.value" in body
     assert (
         '#include "exahype2/blockstructured/DirichletBoundaryConditions.h"'
@@ -60,7 +60,7 @@ def test_roll_over_copies_both_halves_of_the_overlap():
         peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME
     )
     assert body.count("::exahype2::fv::copyHalfOfHalo(") == 2
-    assert "      4,\n      7,\n      3," in body
+    assert "      4,\n      7,\n      2," in body
 
 
 def test_rkfd4_does_not_import_the_finite_volume_package():

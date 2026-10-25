@@ -56,6 +56,7 @@ Jupyter.
   - ExaGRyPE standard benchmarks
     - \subpage tutorials_exahype2_exagrype_521_gauge-wave
     - \subpage tutorials_exahype2_exagrype_522_single-black-hole
+    - \subpage tutorials_exahype2_exagrype_523_higher-order-fd
     - \subpage tutorials_exahype2_applications_exagrype_binary_black_hole
   - \subpage tutorials_exahype2_applications_exagrype_visualize
   - \subpage tutorials_exahype2_applications_exagrype_clusters
