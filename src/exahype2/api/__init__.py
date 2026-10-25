@@ -9,6 +9,7 @@ from .NonconservativeProduct import NonconservativeProduct
 from .VolumetricSource import VolumetricSource
 from .PointSource import PointSource
 from .InitPointWisely import InitPointWisely
+from .RefineErasePointwisely import RefineErasePointwisely
 from . import blockstructured
 from .blockstructured import DirichletBoundaryConditions
 from .blockstructured import SommerfeldBoundaryConditions
