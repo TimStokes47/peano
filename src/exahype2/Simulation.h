@@ -59,6 +59,15 @@ namespace exahype2 {
    *   twice in a row, as a plot does not advance the simulation. Once the
    *   loop has terminated, the master plots a final time if wantsToPlot()
    *   holds.
+   * - After each time step, the global master checks whether the minimum
+   *   and the maximum time stamp have changed. If neither has changed, it
+   *   writes a warning, as a single step might legitimately not advance in
+   *   time (a solver might for example reject and rerun a step). If they
+   *   do not change in the subsequent time step either, the simulation
+   *   is stuck. The master writes an error and leaves the loop as if it had
+   *   reached the terminal time, i.e. it plots a final time if
+   *   wantsToPlot() holds and then terminates regularly. Any time step in
+   *   which a time stamp changes resets this check.
    * - All other ranks (Peano workers) run whatever program step the master
    *   has selected until the master tells them to terminate.
    *
