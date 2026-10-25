@@ -13,7 +13,7 @@ class RestrictHangingFaces(ActionSet):
     Restrict the overlap data of hanging faces onto the coarser mesh
 
     A hanging face is a face of a fine cell which sits on the face of a
-    coarser, unrefined cell (@ref toolbox.blockstructured.api.InterpolateHangingFaces).
+    coarser, unrefined cell (@ref toolbox.blockstructured.api.InterpolateHangingFaces.InterpolateHangingFaces).
     The action set plugs into destroyHangingFace(): It takes the half of the
     hanging face which belongs to the fine cell and restricts it onto the
     corresponding half of the coarse face

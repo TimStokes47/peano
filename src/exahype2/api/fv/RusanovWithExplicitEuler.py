@@ -220,14 +220,14 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
           coarser patch on an adaptive mesh. Whenever the time step
           reconstructs the halo of a fine cell, it interpolates the data of
           the adjacent coarse face onto the fine cell's hanging face
-          (@ref toolbox.blockstructured.api.InterpolateHangingFaces). The
+          (@ref toolbox.blockstructured.api.InterpolateHangingFaces.InterpolateHangingFaces). The
           default is linear interpolation.
 
         restriction: toolbox.blockstructured.api.RestrictHangingFaces.Scheme
           How the scheme hands the data of fine patches over to an adjacent
           coarser patch. Whenever the fine cells project their data onto
           their faces, the scheme restricts the data of the hanging faces
-          onto the coarse face (@ref toolbox.blockstructured.api.RestrictHangingFaces).
+          onto the coarse face (@ref toolbox.blockstructured.api.RestrictHangingFaces.RestrictHangingFaces).
           The default is averaging.
 
         On a regular mesh, there are no hanging faces, and the two schemes
