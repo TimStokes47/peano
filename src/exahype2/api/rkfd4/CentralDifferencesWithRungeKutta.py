@@ -1,5 +1,6 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+import enum
 import os
 import re
 
@@ -16,6 +17,8 @@ from ..Solver import Solver
 from ..rungekutta import ButcherTableau
 from ..rungekutta.LinearCombination import generate_linear_combination_kernel
 from . import FD4Kernels
+from .Quantities import resolve_quantities
+from .actionsets import AddLopsidedAdvection
 from .actionsets import ApplyDirichletBoundaryConditions
 from ..BoundaryConditions import get_access_to_persistent_face_data
 from ..BoundaryConditions import get_boundary_conditions
@@ -88,6 +91,26 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     @ref exagrype.api.FD4WithKODissipation adds the Kreiss-Oliger
     dissipation this way.
 
+    ## Right-hand side kernels
+
+    The constructor's argument right_hand_side_kernel selects how the
+    scheme evaluates the right-hand side
+    (CentralDifferencesWithRungeKutta.RightHandSideKernel):
+
+    - CentralDifferences: all derivatives through fourth-order central
+      differences (@ref exahype2.api.rkfd4.FD4Kernels). This is the
+      default.
+    - CentralDifferencesWithLopsidedAdvection: the central differences
+      plus advection terms @f$ v_d \\partial _d Q_q @f$, which a separate
+      kernel discretises through lopsided (upwind-biased) fourth-order
+      stencils (@ref exahype2::fd::addLopsidedAdvection()). The kernel
+      runs after the central differences within each Runge-Kutta stage.
+      You specify the velocity v, which has to be part of Q, and the
+      advected quantities q. The PDE terms of the solver must not contain
+      these advection terms themselves. As the lopsided stencils reach
+      three grid cells into the neighbouring patches, the halo is three
+      grid cells wide.
+
     ## Data flow
 
     __create_data_structures() documents the data per mesh cell and
@@ -135,6 +158,14 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     ## Width of the halo. Subclasses with wider stencils override it.
     HALO_SIZE = 2
 
+    class RightHandSideKernel(enum.Enum):
+        """!
+        The kernels which evaluate the right-hand side, @see the class documentation
+        """
+
+        CentralDifferences = 0
+        CentralDifferencesWithLopsidedAdvection = 1
+
     def __init__(
         self,
         solver: Solver,
@@ -142,6 +173,9 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
         rk_order: int,
         time_step_size: float = None,
         cfl_constant: float = 0.5,
+        right_hand_side_kernel: "CentralDifferencesWithRungeKutta.RightHandSideKernel" = RightHandSideKernel.CentralDifferences,
+        advection_velocity=None,
+        advected_quantities=None,
     ):
         """!
 
@@ -176,6 +210,22 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
           two for linear advection without dissipation, so 0.5 is a
           conservative default.
 
+        @param right_hand_side_kernel: CentralDifferencesWithRungeKutta.RightHandSideKernel
+          The kernel which evaluates the right-hand side, @see the class
+          documentation.
+
+        @param advection_velocity: str or List[str or int] or None
+          Only for CentralDifferencesWithLopsidedAdvection: the entries of Q
+          which hold the advection velocity, one per dimension. Pass the name
+          of a variable with one entry per dimension (e.g. "shift" for
+          exagrype.api.CCZ4Solver), or a list of names or indices. The
+          velocity may be an auxiliary variable.
+
+        @param advected_quantities: List[str or int] or None
+          Only for CentralDifferencesWithLopsidedAdvection: the unknowns
+          which are advected, as names of variables or indices of entries,
+          @see exahype2.api.rkfd4.Quantities.resolve_quantities().
+
         """
         super().__init__(solver)
         if patch_size < self.HALO_SIZE:
@@ -194,6 +244,45 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
                 f"Solver {solver.name}: cfl_constant has to be positive, "
                 f"but got {cfl_constant}"
             )
+        if not isinstance(
+            right_hand_side_kernel, CentralDifferencesWithRungeKutta.RightHandSideKernel
+        ):
+            raise TypeError(
+                f"Solver {solver.name}: right_hand_side_kernel has to be a "
+                f"CentralDifferencesWithRungeKutta.RightHandSideKernel, but got "
+                f"{right_hand_side_kernel!r}"
+            )
+        self.right_hand_side_kernel = right_hand_side_kernel
+        Kernel = CentralDifferencesWithRungeKutta.RightHandSideKernel
+        if right_hand_side_kernel == Kernel.CentralDifferencesWithLopsidedAdvection:
+            if advection_velocity is None or advected_quantities is None:
+                raise ValueError(
+                    f"Solver {solver.name}: the kernel "
+                    f"CentralDifferencesWithLopsidedAdvection needs an "
+                    f"advection_velocity and advected_quantities"
+                )
+            if isinstance(advection_velocity, (str, int)):
+                advection_velocity = [advection_velocity]
+            self.advection_velocity = resolve_quantities(
+                solver, advection_velocity, include_auxiliary_variables=True
+            )
+            self.advected_quantities = resolve_quantities(solver, advected_quantities)
+            # The lopsided stencils reach three grid cells into the neighbours
+            self.HALO_SIZE = max(self.HALO_SIZE, 3)
+            if patch_size < self.HALO_SIZE:
+                raise ValueError(
+                    f"Solver {solver.name}: patch_size has to be at least "
+                    f"{self.HALO_SIZE} for lopsided advection, but got {patch_size}"
+                )
+        else:
+            if advection_velocity is not None or advected_quantities is not None:
+                raise ValueError(
+                    f"Solver {solver.name}: advection_velocity and "
+                    f"advected_quantities are only used by the kernel "
+                    f"CentralDifferencesWithLopsidedAdvection"
+                )
+            self.advection_velocity = None
+            self.advected_quantities = None
         self.patch_size = patch_size
         self.butcher_tableau = ButcherTableau(rk_order)
         self.time_step_size = time_step_size
@@ -243,7 +332,9 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
         default, it holds one action set, which invokes the fourth-order
         Finite Differences kernel. Subclasses can append action sets which
         add further terms to the estimate. The action sets of one task run
-        one after the other, in the order of the list.
+        one after the other, in the order of the list. For the kernel
+        CentralDifferencesWithLopsidedAdvection, the list holds the
+        lopsided advection as second action set.
 
         @param stage: int
           Number of the Runge-Kutta stage, starting with zero.
@@ -254,7 +345,21 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
         @return List[peano4.api.solversteps.ActionSet]
 
         """
-        return [EvaluateRightHandSide(self._solver, stage, guard=cell_guard)]
+        action_sets = [EvaluateRightHandSide(self._solver, stage, guard=cell_guard)]
+        if (
+            self.right_hand_side_kernel
+            == CentralDifferencesWithRungeKutta.RightHandSideKernel.CentralDifferencesWithLopsidedAdvection
+        ):
+            action_sets.append(
+                AddLopsidedAdvection(
+                    self._solver,
+                    stage,
+                    self.advection_velocity,
+                    self.advected_quantities,
+                    guard=cell_guard,
+                )
+            )
+        return action_sets
 
     def __create_data_structures(self):
         """!
@@ -709,6 +814,15 @@ Patch overlap data
             "Create time stepping task graph for fourth-order Finite Differences "
             f"with Runge-Kutta of order {self.rk_order} over block-structured meshes"
         )
+
+        if self.advection_velocity is not None and len(self.advection_velocity) != len(
+            exahype2_project.periodic_BC
+        ):
+            raise ValueError(
+                f"Solver {self._solver.name}: the advection velocity has "
+                f"{len(self.advection_velocity)} entries, but the domain has "
+                f"{len(exahype2_project.periodic_BC)} dimensions"
+            )
 
         if self.has_adaptive_time_step_size:
             assert any(

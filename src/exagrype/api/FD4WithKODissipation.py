@@ -55,6 +55,9 @@ class FD4WithKODissipation(exahype2.api.rkfd4.CentralDifferencesWithRungeKutta):
         quantities: List[Union[str, int]] = None,
         time_step_size: float = None,
         cfl_constant: float = 0.5,
+        right_hand_side_kernel: exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel.CentralDifferences,
+        advection_velocity=None,
+        advected_quantities=None,
     ):
         """!
 
@@ -85,6 +88,19 @@ class FD4WithKODissipation(exahype2.api.rkfd4.CentralDifferencesWithRungeKutta):
         @param cfl_constant: float
           CFL constant for adaptive time step sizes.
 
+        @param right_hand_side_kernel: exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
+          The kernel which evaluates the right-hand side before the
+          dissipation is added, @see
+          exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.
+
+        @param advection_velocity: str or List[str or int] or None
+          Only for lopsided advection, @see
+          exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.
+
+        @param advected_quantities: List[str or int] or None
+          Only for lopsided advection, @see
+          exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.
+
         """
         super().__init__(
             solver,
@@ -92,6 +108,9 @@ class FD4WithKODissipation(exahype2.api.rkfd4.CentralDifferencesWithRungeKutta):
             rk_order,
             time_step_size=time_step_size,
             cfl_constant=cfl_constant,
+            right_hand_side_kernel=right_hand_side_kernel,
+            advection_velocity=advection_velocity,
+            advected_quantities=advected_quantities,
         )
         if kreiss_oliger_sigma < 0.0:
             raise ValueError(
@@ -99,51 +118,11 @@ class FD4WithKODissipation(exahype2.api.rkfd4.CentralDifferencesWithRungeKutta):
                 f"but got {kreiss_oliger_sigma}"
             )
         self.kreiss_oliger_sigma = kreiss_oliger_sigma
-        self.dissipative_quantities = self.__resolve_quantities(solver, quantities)
-
-    @staticmethod
-    def __resolve_quantities(solver, quantities) -> List[int]:
-        """!
-
-        Translate the quantities into sorted indices of the unknowns
-
-        """
-        if quantities is None:
-            return list(range(solver.unknowns))
-        if len(quantities) == 0:
-            raise ValueError(
-                f"Solver {solver.name}: quantities must not be empty. Pass None "
-                "to apply the Kreiss-Oliger dissipation to all unknowns."
-            )
-        names = solver.variable_names_per_entry()[: solver.unknowns]
-        indices = set()
-        for quantity in quantities:
-            if isinstance(quantity, int):
-                if not 0 <= quantity < solver.unknowns:
-                    raise ValueError(
-                        f"Solver {solver.name}: quantity index {quantity} is out of "
-                        f"range, as the solver has {solver.unknowns} unknowns"
-                    )
-                indices.add(quantity)
-            elif isinstance(quantity, str):
-                matches = [
-                    index
-                    for index, name in enumerate(names)
-                    if name == quantity or name.startswith(quantity + "[")
-                ]
-                if not matches:
-                    raise ValueError(
-                        f"Solver {solver.name}: {quantity!r} is not the name of an "
-                        f"unknown. Available names are "
-                        f"{sorted(set(name.split('[')[0] for name in names))}."
-                    )
-                indices.update(matches)
-            else:
-                raise TypeError(
-                    f"Solver {solver.name}: quantities have to be names (str) or "
-                    f"indices (int) of unknowns, but got {quantity!r}"
-                )
-        return sorted(indices)
+        self.dissipative_quantities = (
+            list(range(solver.unknowns))
+            if quantities is None
+            else exahype2.api.rkfd4.Quantities.resolve_quantities(solver, quantities)
+        )
 
     def _right_hand_side_action_sets(self, stage, cell_guard):
         """!

@@ -3,7 +3,7 @@
 """
 
 import enum
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 import exahype2.api
 import peano4.api
@@ -46,6 +46,15 @@ class CCZ4Solver(exahype2.api.Solver):
       (exagrype::ccz4::enforceCCZ4constraints()) only if you switch it on
       via enforce_ccz4_constraint(). Without it, long runs drift away from
       the constraint surface.
+    - exagrype::ccz4::ncp() omits the advection terms
+      @f$ \\beta^k \\partial _k Q @f$ of all unknowns besides the metric,
+      the lapse, the shift and phi (whose advection is part of the
+      algebraic source) and K0. It expects the numerical scheme to add them
+      with lopsided stencils. The fourth-order Finite Differences do so if
+      you select the kernel CentralDifferencesWithLopsidedAdvection with
+      ADVECTION_VELOCITY and lopsided_advection_quantities(). The Finite
+      Volumes of exahype2.api.fv do not add them, i.e. they evolve CCZ4
+      without these advection terms.
     - The second-order formulation, black holes (TwoPunctures), tracers and
       the ADM/Psi4 postprocessing are not available yet.
 
@@ -128,6 +137,14 @@ class CCZ4Solver(exahype2.api.Solver):
 
     """
 
+    ADVECTION_VELOCITY = "shift"
+    """!
+
+    The variable which advects the unknowns, i.e. the velocity to pass to
+    lopsided advection kernels (@see lopsided_advection_quantities()).
+
+    """
+
     def __init__(
         self,
         name: str,
@@ -202,6 +219,52 @@ class CCZ4Solver(exahype2.api.Solver):
             if initial_condition is not None
             else initialvalues.gauge_wave()
         )
+
+    def lopsided_advection_quantities(self) -> List[str]:
+        """!
+
+        The unknowns whose advection terms exagrype::ccz4::ncp() omits
+
+        exagrype::ccz4::ncp() is invoked with its advection switched off.
+        The unknowns returned are those whose advection terms
+        @f$ \\beta^k \\partial _k Q @f$ hence have to be added by the
+        numerical scheme, e.g. via
+
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+          solver, patch_size, rk_order=4,
+          right_hand_side_kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel.CentralDifferencesWithLopsidedAdvection,
+          advection_velocity     = exagrype.api.CCZ4Solver.ADVECTION_VELOCITY,
+          advected_quantities    = solver.lopsided_advection_quantities(),
+        )
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        These are all unknowns besides the conformal metric G, the lapse,
+        the shift, phi and K0: The advection terms of the metric, the lapse,
+        the shift and phi are part of the algebraic source
+        (exagrype::ccz4::source()), which expresses them through the
+        auxiliary unknowns, i.e. the first derivatives. K0 does not evolve.
+
+        The advection of b and of the derivatives of the shift (dxShift,
+        dyShift, dzShift) is scaled with CCZ4bs and CCZ4sk. If either of
+        them is zero, the routine leaves these unknowns out.
+
+        The equation of b couples the advection of b and of Ghat (the
+        unknown Z): Its
+        advection terms are CCZ4sk * (CCZ4xi * beta^k d_k Ghat + CCZ4bs *
+        (beta^k d_k b - beta^k d_k Ghat)). A kernel which advects each
+        quantity on its own, i.e. adds beta^k d_k b to b, reproduces this
+        only for CCZ4xi=1, CCZ4bs=1 and CCZ4sk=1. This is the case for the
+        default CCZ4xi and the moving puncture setups with CCZ4bs=CCZ4sk=1.
+
+        @return List[str]
+          Names of unknowns, @see Unknowns.
+
+        """
+        excluded = {"G", "lapse", "shift", "phi", "K0"}
+        if self._parameters["CCZ4bs"] == 0 or self._parameters["CCZ4sk"] == 0:
+            excluded |= {"b", "dxShift", "dyShift", "dzShift"}
+        return [name for name in self.Unknowns if name not in excluded]
 
     def enforce_ccz4_constraint(self, value: "CCZ4Solver.EnforceCCZ4Constraint"):
         """!

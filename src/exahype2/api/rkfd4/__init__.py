@@ -27,3 +27,5 @@ from .CentralDifferencesWithRungeKutta import CentralDifferencesWithRungeKutta
 from .SetupSimulationOverRegularGrid import SetupSimulationOverRegularGrid
 from .PlotAsVTKFile import PlotAsVTKFile
 from . import actionsets
+from . import Quantities
+from .Quantities import resolve_quantities
