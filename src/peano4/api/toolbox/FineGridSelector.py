@@ -13,6 +13,13 @@ class FineGridSelector(GridSelector):
     current mesh traversal has kicked off. Consult hasBeenRefined() of the
     corresponding marker for details.
 
+    The store guards anticipate the refinement state of the next mesh
+    sweep, i.e. they hold for entities which will not be refined at the end
+    of the current sweep (willBeRefined()). If the mesh changes, the data of
+    an entity which is refined in this sweep is hence not stored, as the
+    next sweep will not load it. This keeps the stores and loads of
+    dynamically adaptive meshes consistent.
+
     """
 
     def createVertexGuard(self) -> str:
@@ -23,3 +30,12 @@ class FineGridSelector(GridSelector):
 
     def createCellGuard(self) -> str:
         return "not marker.hasBeenRefined()"
+
+    def createVertexStoreGuard(self) -> str:
+        return "not marker.willBeRefined()"
+
+    def createFaceStoreGuard(self) -> str:
+        return "not marker.willBeRefined()"
+
+    def createCellStoreGuard(self) -> str:
+        return "not marker.willBeRefined()"
