@@ -181,6 +181,13 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
+        ## On adaptive meshes, restrict the fine data from the hanging faces
+        ## onto the coarse faces. Only numerical schemes which support
+        ## adaptive meshes offer this restriction
+        if hasattr(self._solver.numerical_scheme, "create_restriction_of_hanging_faces"):
+            project_on_faces_task.add_action_set(
+                self._solver.numerical_scheme.create_restriction_of_hanging_faces()
+            )
         ## Sommerfeld boundary conditions initialise the ghost volumes with
         ## the initial condition (@ref exahype2.api.blockstructured.BoundaryConditions)
         project_on_faces_task.add_action_set(

@@ -6,8 +6,9 @@ Create the PNG illustrations of the tutorial 13_euler-with-amr.ipynb
 
 The script builds the tutorial's point explosion on a regular grid, runs
 it and writes all pictures into the directory of this script. It then
-builds the setup with the point-wise refinement criterion, runs the setup
-only, and draws the resulting adaptive mesh plus the setup's task graph. The PDE
+builds the setup with the point-wise refinement criterion, runs it on the
+resulting adaptive mesh, and draws the mesh, the solution, a comparison
+with the regular mesh, plus the setup's task graph. The PDE
 terms are injected from Python, i.e. we do not need any hand-written C++
 file. Call it from anywhere:
 
@@ -126,14 +127,8 @@ def create_solver(adaptive):
 
 
 def build_and_run(directory, adaptive=False):
-    """!
-
-    Generate, compile and run the tutorial setup within directory
-
-    The adaptive variant runs the setup only, i.e. its end time is zero.
-
-    """
-    end_time = 0.0 if adaptive else EndTime
+    """! Generate, compile and run the tutorial setup within directory"""
+    end_time = EndTime
     project = exahype2.api.Project(
         namespace=["tutorials", "exahype2", "euler"],
         project_name="Euler",
@@ -349,6 +344,92 @@ def plot_adaptive_mesh(directory):
     print("adaptive mesh: {}".format(dict(zip(sizes, counts))))
 
 
+def plot_adaptive_snapshots(directory):
+    """! Density at three time stamps on the adaptive mesh plus patch boundaries"""
+    file_name = os.path.join(directory, PatchFile)
+    snapshots = number_of_snapshots(directory)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
+    for ax, snapshot in zip(
+        axes, [(snapshots - 1) // 4, (snapshots - 1) // 2, snapshots - 1]
+    ):
+        tarch.plotter.api.notebook.plot_snapshot(
+            file_name, snapshot, 0, label="density", ax=ax
+        )
+        _, patches = read_snapshot(directory, snapshot)
+        for offset, size, values in patches:
+            ax.add_patch(
+                matplotlib.patches.Rectangle(
+                    offset,
+                    size[0],
+                    size[1],
+                    fill=False,
+                    edgecolor="white",
+                    linewidth=0.2,
+                )
+            )
+    fig.tight_layout()
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-adaptive-snapshots.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
+def plot_profile_comparison(regular_directory, adaptive_directory):
+    """! Density along the positive x-axis: regular against adaptive mesh"""
+    fig, ax = plt.subplots(figsize=(7, 4))
+    snapshots = number_of_snapshots(regular_directory)
+    assert snapshots == number_of_snapshots(adaptive_directory)
+    for snapshot, colour in zip(
+        [(snapshots - 1) // 4, (snapshots - 1) // 2, snapshots - 1],
+        ["C1", "C2", "C3"],
+    ):
+        t, x, rho = density_along_x_axis(regular_directory, snapshot)
+        ax.plot(
+            x,
+            rho,
+            "-",
+            color=colour,
+            linewidth=1.0,
+            label="regular, t={:.2f}".format(t),
+        )
+        t, x, rho = density_along_x_axis(adaptive_directory, snapshot)
+        ax.plot(
+            x,
+            rho,
+            "o",
+            color=colour,
+            markersize=1.5,
+            label="adaptive, t={:.2f}".format(t),
+        )
+    ax.set_xlabel("distance r from the centre (along y=0)")
+    ax.set_ylabel("density")
+    ax.set_title("Regular mesh (lines) against adaptive mesh (dots)")
+    ax.legend(fontsize=8)
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-profile-comparison.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
+def print_conservation(directory):
+    """! Total mass and energy of the first and the last snapshot"""
+    for snapshot in [0, number_of_snapshots(directory) - 1]:
+        t, patches = read_snapshot(directory, snapshot)
+        mass = sum(
+            values[..., 0].sum() * (size[0] / values.shape[0]) ** 2
+            for _, size, values in patches
+        )
+        energy = sum(
+            values[..., 3].sum() * (size[0] / values.shape[0]) ** 2
+            for _, size, values in patches
+        )
+        print("t={:.3f}: mass={:.8f}, energy={:.8f}".format(t, mass, energy))
+
+
 def plot_setup_task_graph():
     """! Construct the setup task graph with the refinement criterion and draw it"""
     peano4.api.Logger().file_name = os.path.join(
@@ -406,8 +487,11 @@ if __name__ == "__main__":
     adaptive_directory = os.path.join(work_directory, "adaptive-mesh")
     os.makedirs(adaptive_directory, exist_ok=True)
     if not args.skip_run:
-        print("build and run setup over adaptive mesh in {}".format(adaptive_directory))
+        print("build and run over adaptive mesh in {}".format(adaptive_directory))
         build_and_run(adaptive_directory, adaptive=True)
     plot_adaptive_mesh(adaptive_directory)
+    plot_adaptive_snapshots(adaptive_directory)
+    plot_profile_comparison(directory, adaptive_directory)
+    print_conservation(adaptive_directory)
     plot_setup_task_graph()
     print("wrote PNGs into {}".format(Here))

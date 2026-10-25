@@ -178,7 +178,15 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
 
     """
 
-    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9):
+    def __init__(
+        self,
+        solver: Solver,
+        patch_size: int,
+        overlap: int = 1,
+        cfl_constant: float = 0.9,
+        interpolation: "toolbox.blockstructured.api.InterpolateHangingFaces.Scheme" = toolbox.blockstructured.api.InterpolateHangingFaces.Scheme.Linear,
+        restriction: "toolbox.blockstructured.api.RestrictHangingFaces.Scheme" = toolbox.blockstructured.api.RestrictHangingFaces.Scheme.Averaging,
+    ):
         """!
 
         The constructor memorises the attributes. However, it does not do this
@@ -207,8 +215,30 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
           "cfl" outside this class finds only exaparty's unrelated SPH
           solvers, which default to 0.1).
 
+        interpolation: toolbox.blockstructured.api.InterpolateHangingFaces.Scheme
+          How the scheme initialises the halo of a fine patch next to a
+          coarser patch on an adaptive mesh. Whenever the time step
+          reconstructs the halo of a fine cell, it interpolates the data of
+          the adjacent coarse face onto the fine cell's hanging face
+          (@ref toolbox.blockstructured.api.InterpolateHangingFaces). The
+          default is linear interpolation.
+
+        restriction: toolbox.blockstructured.api.RestrictHangingFaces.Scheme
+          How the scheme hands the data of fine patches over to an adjacent
+          coarser patch. Whenever the fine cells project their data onto
+          their faces, the scheme restricts the data of the hanging faces
+          onto the coarse face (@ref toolbox.blockstructured.api.RestrictHangingFaces).
+          The default is averaging.
+
+        On a regular mesh, there are no hanging faces, and the two schemes
+        are never used. The fluxes along a face between a coarse and a fine
+        patch are not corrected, i.e. the scheme is not exactly conservative
+        on adaptive meshes.
+
         """
         super().__init__(solver)
+        self.interpolation = interpolation
+        self.restriction = restriction
         self.patch_size = patch_size
         self.overlap = overlap
         # Set in construct_output(): the generated kernels live in the project
@@ -441,6 +471,15 @@ Patch overlap data
                 additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
+        ## On adaptive meshes, interpolate the coarse face data onto the hanging
+        ## faces of fine cells, before the reconstruction reads them
+        reconstruction_task.add_action_set(
+            toolbox.blockstructured.api.InterpolateHangingFaces(
+                self._solver._patch_overlap_current_time_step,
+                scheme=self.interpolation,
+                additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
+        )
         ## Set the ghost volumes along the domain boundary before the reconstruction reads them.
         ## No task is added if all axes are periodic or for Sommerfeld boundary
         ## conditions, which advance the ghost volumes within the roll over
@@ -488,6 +527,9 @@ Patch overlap data
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
+        ## On adaptive meshes, restrict the fine data from the hanging faces
+        ## onto the coarse faces, before the roll over copies them
+        project_on_faces_task.add_action_set(self.create_restriction_of_hanging_faces())
         ## Sommerfeld boundary conditions advance the ghost volumes within
         ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
         project_on_faces_task.add_action_set(
@@ -504,6 +546,27 @@ Patch overlap data
             time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))
         if peano4.api.Logger().is_text:
             time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
+
+    def create_restriction_of_hanging_faces(self) -> "toolbox.blockstructured.api.RestrictHangingFaces":
+        """!
+
+        Action set which restricts the projected fine data from the hanging
+        faces onto the coarse faces
+
+        Every task which projects the solution onto the faces has to host
+        this action set, so the faces between coarse and fine patches hold
+        consistent data afterwards. Besides the time step, this is the
+        projection at the end of the setup
+        (@ref exahype2.api.fv.SetupSimulationOverRegularGrid). The task has
+        to write all of _patch_overlap_update, as averaging clears it first.
+
+        """
+        return toolbox.blockstructured.api.RestrictHangingFaces(
+            self._solver._patch_overlap_update,
+            scheme=self.restriction,
+            clear_guard=self._solver.grid_selector.createFaceGuard(),
+            additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+        )
 
     def __create_time_step_functions(self, output_directory):
         """!
