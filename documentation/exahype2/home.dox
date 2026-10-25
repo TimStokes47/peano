@@ -20,8 +20,19 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
 
 
 - \subpage page_exahype2_tutorials
-- Applications and user guides
-  - \subpage page_exahype_applications
+- Applications
+  - Seismology
+    - \subpage applications_exahype2_exaseis
+    - \subpage applications_exahype2_gprdr_GPRDR
+  - Astrophysics
+    - \subpage applications_exahype2_ExaGRyPE
+    - \subpage applications_exahype2_selfgravitation
+  - Tsunamis and flooding
+    - \subpage applications_exahype2_shallow_water
+  - Others
+    - \subpage applications_exahype2_acoustic
+    - \subpage applications_exahype2_elastic
+    - \subpage applications_exahype2_euler
   - \subpage page_exahype_benchmarks
 - Code architecture, usage and extension
   - \subpage page_exahype_design_philosophy
