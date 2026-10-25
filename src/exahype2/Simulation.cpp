@@ -123,11 +123,14 @@ void exahype2::runSimulation(
 
         runStep(setupSimulation, setupSimulation, plot, timeStep, report);
 
-        double maxTimeStepSize = 1.0;
+        double maxTimeStepSize             = 1.0;
+        int    numberOfStagnatingTimeSteps = 0;
+        bool   timeStampsHaveStagnated     = false;
         while (
           getMinTimeStamp() < minTerminalTime
           and getMaxTimeStamp() < maxTerminalTime
           and tarch::la::greater(maxTimeStepSize, 0.0)
+          and not timeStampsHaveStagnated
         ) {
           // Each solver's plotter decides itself whether it plots in the plot
           // phase. A plot does not advance the simulation, so it never
@@ -137,9 +140,35 @@ void exahype2::runSimulation(
             haveJustWrittenSnapshot = true;
             runStep(plot, setupSimulation, plot, timeStep, report);
           } else {
-            haveJustWrittenSnapshot = false;
+            haveJustWrittenSnapshot      = false;
+            const double oldMinTimeStamp = getMinTimeStamp();
+            const double oldMaxTimeStamp = getMaxTimeStamp();
             runStep(timeStep, setupSimulation, plot, timeStep, report);
             maxTimeStepSize = getMaxTimeStepSize();
+
+            if (getMinTimeStamp() == oldMinTimeStamp and getMaxTimeStamp() == oldMaxTimeStamp) {
+              numberOfStagnatingTimeSteps++;
+            } else {
+              numberOfStagnatingTimeSteps = 0;
+            }
+
+            if (numberOfStagnatingTimeSteps == 1) {
+              logWarning(
+                "runSimulation(...)",
+                "min and max time stamp have not changed in time step: min time stamp="
+                  << getMinTimeStamp()
+                  << ", max time stamp=" << getMaxTimeStamp()
+                  << ". Simulation terminates if they do not change in the next time step either"
+              );
+            } else if (numberOfStagnatingTimeSteps >= 2) {
+              logError(
+                "runSimulation(...)",
+                "min and max time stamp have not changed in two consecutive time steps: min time stamp="
+                  << getMinTimeStamp() << ", max time stamp="
+                  << getMaxTimeStamp() << ". Terminate simulation"
+              );
+              timeStampsHaveStagnated = true;
+            }
           }
         }
 
