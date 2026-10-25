@@ -13,9 +13,10 @@ from exahype2.api import Target
 import exahype2.api.dslhype as dslhype
  
 from ..Solver import Solver
+from ..BoundaryConditions import get_access_to_persistent_face_data
 from .actionsets import ApplyDirichletBoundaryConditions
 from .actionsets import ProjectPatchOntoFaces
-from .actionsets import RollOverUpdatedFace
+from .actionsets import RollOverUpdatedFaceWithSommerfeldBoundaryConditions
 from .actionsets import UpdateCell
 from .actionsets import ComputeGlobalCFLCondition
 
@@ -424,7 +425,12 @@ Patch overlap data
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         reconstruction_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.WRITE)
-        reconstruction_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
+        ## Sommerfeld boundary conditions read the old face data within the roll
+        ## over, i.e. it has to survive the reconstruction
+        reconstruction_task.use_face(
+            self._solver._patch_overlap_current_time_step,
+            get_access_to_persistent_face_data(self._solver, exahype2_project, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD),
+        )
         reconstruction_task.add_action_set(
             toolbox.blockstructured.api.ReconstructPatchWithHalo(
                 patch=self._solver._patch,
@@ -436,7 +442,8 @@ Patch overlap data
             )
         )
         ## Set the ghost volumes along the domain boundary before the reconstruction reads them.
-        ## No task is added if all axes are periodic
+        ## No task is added if all axes are periodic or for Sommerfeld boundary
+        ## conditions, which advance the ghost volumes within the roll over
         ApplyDirichletBoundaryConditions.add_task_to_time_step(self._solver, exahype2_project, time_step, reconstruction_task)
 
         ## Do the actual time step update
@@ -469,7 +476,10 @@ Patch overlap data
         project_on_faces_task.add_dependency(update_cell_task)
         project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        project_on_faces_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.WRITE)
+        project_on_faces_task.use_face(
+            self._solver._patch_overlap_current_time_step,
+            get_access_to_persistent_face_data(self._solver, exahype2_project, peano4.api.taskgraph.Task.DataAccess.WRITE),
+        )
         project_on_faces_task.add_action_set(
             ProjectPatchOntoFaces(
                 self._solver._patch,
@@ -478,12 +488,15 @@ Patch overlap data
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
+        ## Sommerfeld boundary conditions advance the ghost volumes within
+        ## the roll over (@ref exahype2.api.BoundaryConditions)
         project_on_faces_task.add_action_set(
-            RollOverUpdatedFace(
-                self._solver._patch_overlap_current_time_step,
-                self._solver._patch_overlap_update,
+            RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
+                self._solver,
+                exahype2_project,
                 guard=self._solver.grid_selector.createFaceGuard(),
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+                time_step_size=f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()",
             )
         )
         

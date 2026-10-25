@@ -9,7 +9,7 @@
 # refer to symbols the parser sets rather than Python imports:
 #
 # - Template parameters: NC (grid cells per axis within a patch), H (halo
-#   size, three), NumberOfUnknowns, NumberOfAuxiliaryVariables.
+#   size, at least two), NumberOfUnknowns, NumberOfAuxiliaryVariables.
 # - Functors for the non-stateless code: flux, nonconservativeProduct,
 #   volumetricSource, maxEigenvalue. An if over a functor's name holds if
 #   and only if the solver has the corresponding PDE term.
@@ -22,9 +22,9 @@
 # rightHandSideWithFD42D() and rightHandSideWithFD43D() evaluate the
 # right-hand side
 #
-# @f$ \partial _t Q = - \nabla \cdot F(Q) - \sum _d B_d(Q) \partial _d Q + S(Q) + D(Q) @f$
+# @f$ \partial _t Q = - \nabla \cdot F(Q) - \sum _d B_d(Q) \partial _d Q + S(Q) @f$
 #
-# over a patch with a halo of three grid cells (patchData.QIn) and write it
+# over a patch with a halo of H grid cells (patchData.QIn) and write it
 # into patchData.QOut, which holds the unknowns only. They do not scale with
 # the time step size nor add the old solution, as the outcome is one estimate
 # of a Runge-Kutta scheme.
@@ -36,11 +36,10 @@
 # - The non-conservative product is handed deltaQ, i.e. the derivative of
 #   all unknowns and auxiliary variables times the mesh width, exactly like
 #   the Finite Volumes of exahype2.api.fv hand over the jump across a face.
-# - D(Q) is the Kreiss-Oliger dissipation of sixth order
-#   @f$ \frac{\sigma}{64 \Delta x} (Q_{i-3} - 6 Q_{i-2} + 15 Q_{i-1} - 20 Q_i + 15 Q_{i+1} - 6 Q_{i+2} + Q_{i+3}) @f$
-#   per axis, with sigma being the kernel's argument kreissOligerSigma. It
-#   is the reason why the halo is three grid cells wide. The kernel always
-#   evaluates it, i.e. also if sigma is zero.
+# - The stencils reach two grid cells into the neighbouring patches, i.e.
+#   they need a halo H of at least two. The kernels are written for an
+#   arbitrary halo H, so subclasses of the numerical scheme can add wider
+#   stencils (@ref exagrype.api.FD4WithKODissipation).
 # - The PDE terms are handed the patch centre and the patch size rather
 #   than the grid cell's centre and size, as DSLHyPE has no notion of the
 #   individual grid cell's position. The Finite Volume kernels of
@@ -49,7 +48,9 @@
 # The functions replace the legacy timeStepWithFD4() of
 # exahype2.solvers.rkfd.fd4, which was three-dimensional only, passed
 # deltaQ instead of the non-conservative product along x into the update,
-# and had the Kreiss-Oliger dissipation commented out.
+# and had a (commented out) Kreiss-Oliger dissipation built in. There is no
+# dissipation in these kernels anymore: @ref exagrype.api.FD4WithKODissipation
+# adds it as a separate kernel on top.
 #
 # ## Maximum eigenvalue
 #
@@ -59,13 +60,12 @@
 # derives the next time step size from it.
 
 
-def rightHandSideWithFD42D(patchData: "::exahype2::CellData<double, double>&", kreissOligerSigma: "double") -> "void":
+def rightHandSideWithFD42D(patchData: "::exahype2::CellData<double, double>&") -> "void":
     N = Integer("patchData.numberOfCells")
     t = DataBlock([[0, N]], "patchData.t", "double")
     dt = DataBlock([[0, N]], "patchData.dt", "double")
     h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<2, double>")
     x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<2, double>")
-    sigma = Float("kreissOligerSigma")
 
     input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NC + H], [-H, NC + H], [0, N]], "patchData.QIn")
     output = DataBlock([[0, NumberOfUnknowns], [0, NC], [0, NC], [0, N]], "patchData.QOut")
@@ -90,19 +90,13 @@ def rightHandSideWithFD42D(patchData: "::exahype2::CellData<double, double>&", k
         ncp_y = DataBlock([[0, NumberOfUnknowns], [0, NC], [0, NC], [0, N]], eval("nonconservativeProduct", input[:, 0:NC, 0:NC], delta_y, x, h, t, dt, 1))
         output = output - NC / h(1) * ncp_y
 
-    dissipation_x = input[0:NumberOfUnknowns, -3:NC-3, 0:NC] - 6.0 * input[0:NumberOfUnknowns, -2:NC-2, 0:NC] + 15.0 * input[0:NumberOfUnknowns, -1:NC-1, 0:NC] - 20.0 * input[0:NumberOfUnknowns, 0:NC, 0:NC] + 15.0 * input[0:NumberOfUnknowns, 1:NC+1, 0:NC] - 6.0 * input[0:NumberOfUnknowns, 2:NC+2, 0:NC] + input[0:NumberOfUnknowns, 3:NC+3, 0:NC]
-    dissipation_y = input[0:NumberOfUnknowns, 0:NC, -3:NC-3] - 6.0 * input[0:NumberOfUnknowns, 0:NC, -2:NC-2] + 15.0 * input[0:NumberOfUnknowns, 0:NC, -1:NC-1] - 20.0 * input[0:NumberOfUnknowns, 0:NC, 0:NC] + 15.0 * input[0:NumberOfUnknowns, 0:NC, 1:NC+1] - 6.0 * input[0:NumberOfUnknowns, 0:NC, 2:NC+2] + input[0:NumberOfUnknowns, 0:NC, 3:NC+3]
-    output = output + sigma / 64.0 * NC / h(0) * dissipation_x
-    output = output + sigma / 64.0 * NC / h(1) * dissipation_y
 
-
-def rightHandSideWithFD43D(patchData: "::exahype2::CellData<double, double>&", kreissOligerSigma: "double") -> "void":
+def rightHandSideWithFD43D(patchData: "::exahype2::CellData<double, double>&") -> "void":
     N = Integer("patchData.numberOfCells")
     t = DataBlock([[0, N]], "patchData.t", "double")
     dt = DataBlock([[0, N]], "patchData.dt", "double")
     h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<3, double>")
     x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<3, double>")
-    sigma = Float("kreissOligerSigma")
 
     input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NC + H], [-H, NC + H], [-H, NC + H], [0, N]], "patchData.QIn")
     output = DataBlock([[0, NumberOfUnknowns], [0, NC], [0, NC], [0, NC], [0, N]], "patchData.QOut")
@@ -132,13 +126,6 @@ def rightHandSideWithFD43D(patchData: "::exahype2::CellData<double, double>&", k
         delta_z = (1.0 / 12.0) * (input[:, 0:NC, 0:NC, -2:NC-2] - 8.0 * input[:, 0:NC, 0:NC, -1:NC-1] + 8.0 * input[:, 0:NC, 0:NC, 1:NC+1] - input[:, 0:NC, 0:NC, 2:NC+2])
         ncp_z = DataBlock([[0, NumberOfUnknowns], [0, NC], [0, NC], [0, NC], [0, N]], eval("nonconservativeProduct", input[:, 0:NC, 0:NC, 0:NC], delta_z, x, h, t, dt, 2))
         output = output - NC / h(2) * ncp_z
-
-    dissipation_x = input[0:NumberOfUnknowns, -3:NC-3, 0:NC, 0:NC] - 6.0 * input[0:NumberOfUnknowns, -2:NC-2, 0:NC, 0:NC] + 15.0 * input[0:NumberOfUnknowns, -1:NC-1, 0:NC, 0:NC] - 20.0 * input[0:NumberOfUnknowns, 0:NC, 0:NC, 0:NC] + 15.0 * input[0:NumberOfUnknowns, 1:NC+1, 0:NC, 0:NC] - 6.0 * input[0:NumberOfUnknowns, 2:NC+2, 0:NC, 0:NC] + input[0:NumberOfUnknowns, 3:NC+3, 0:NC, 0:NC]
-    dissipation_y = input[0:NumberOfUnknowns, 0:NC, -3:NC-3, 0:NC] - 6.0 * input[0:NumberOfUnknowns, 0:NC, -2:NC-2, 0:NC] + 15.0 * input[0:NumberOfUnknowns, 0:NC, -1:NC-1, 0:NC] - 20.0 * input[0:NumberOfUnknowns, 0:NC, 0:NC, 0:NC] + 15.0 * input[0:NumberOfUnknowns, 0:NC, 1:NC+1, 0:NC] - 6.0 * input[0:NumberOfUnknowns, 0:NC, 2:NC+2, 0:NC] + input[0:NumberOfUnknowns, 0:NC, 3:NC+3, 0:NC]
-    dissipation_z = input[0:NumberOfUnknowns, 0:NC, 0:NC, -3:NC-3] - 6.0 * input[0:NumberOfUnknowns, 0:NC, 0:NC, -2:NC-2] + 15.0 * input[0:NumberOfUnknowns, 0:NC, 0:NC, -1:NC-1] - 20.0 * input[0:NumberOfUnknowns, 0:NC, 0:NC, 0:NC] + 15.0 * input[0:NumberOfUnknowns, 0:NC, 0:NC, 1:NC+1] - 6.0 * input[0:NumberOfUnknowns, 0:NC, 0:NC, 2:NC+2] + input[0:NumberOfUnknowns, 0:NC, 0:NC, 3:NC+3]
-    output = output + sigma / 64.0 * NC / h(0) * dissipation_x
-    output = output + sigma / 64.0 * NC / h(1) * dissipation_y
-    output = output + sigma / 64.0 * NC / h(2) * dissipation_z
 
 
 def maxEigenvalueOverPatch2D(patchData: "::exahype2::CellData<double, double>&") -> "void":

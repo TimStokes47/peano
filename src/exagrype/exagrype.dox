@@ -66,6 +66,17 @@ solver.numerical_scheme  = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(s
 solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(solver, volume_size=0.04)
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+These Finite Differences have no artificial dissipation. To add a
+Kreiss-Oliger dissipation, replace the numerical scheme by
+exagrype.api.FD4WithKODissipation, which runs the plain fourth-order kernel
+first and then adds the dissipation per Runge-Kutta stage. By default, the
+dissipation applies to all unknowns. You can restrict it to some of them:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+solver.numerical_scheme  = exagrype.api.FD4WithKODissipation(solver, patch_size, rk_order=4, kreiss_oliger_sigma=8.0)
+solver.numerical_scheme  = exagrype.api.FD4WithKODissipation(solver, patch_size, rk_order=4, kreiss_oliger_sigma=8.0, quantities=["lapse", "shift"])
+~~~~~~~~~~~~~~~~~~~~~~~
+
 @ref benchmarks_exagrype_gauge_wave is a complete example. Please
 note the current limitations: \c exahype2.api.rkfd4 supports regular grids only,
 and tracers and the second-order formulation are not available through the

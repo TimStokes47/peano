@@ -12,9 +12,11 @@ coefficients come from @ref exahype2.api.rungekutta, which does not depend
 on the discretisation in space.
 
 Each mesh cell hosts a patch of patch_size^d cell-centred grid cells. The
-fourth-order stencils (plus the optional Kreiss-Oliger dissipation) reach
-three grid cells into the neighbouring patches, so each patch is surrounded
-by a halo of three grid cells, which is reconstructed from the faces.
+fourth-order stencils reach two grid cells into the neighbouring patches,
+so each patch is surrounded by a halo of two grid cells, which is
+reconstructed from the faces. The scheme has no artificial dissipation.
+@ref exagrype.api.FD4WithKODissipation adds a Kreiss-Oliger dissipation on
+top, with a halo of three grid cells.
 
 The numerical scheme is @ref
 exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.CentralDifferencesWithRungeKutta.
@@ -25,3 +27,5 @@ from .CentralDifferencesWithRungeKutta import CentralDifferencesWithRungeKutta
 from .SetupSimulationOverRegularGrid import SetupSimulationOverRegularGrid
 from .PlotAsVTKFile import PlotAsVTKFile
 from . import actionsets
+from . import Quantities
+from .Quantities import resolve_quantities

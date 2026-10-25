@@ -8,7 +8,7 @@ from ..InitPointWisely import InitPointWisely
 from ..Solver import Solver
 from .actionsets import InitialCondition
 from .actionsets import ProjectPatchOntoFaces
-from .actionsets import RollOverUpdatedFace
+from .actionsets import RollOverUpdatedFaceWithSommerfeldBoundaryConditions
 
 
 class SetupSimulationOverRegularGrid(Solver.GridConstruction):
@@ -167,10 +167,12 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
                 + self._solver.user_solver_includes,
             )
         )
+        # Sommerfeld boundary conditions initialise the ghost grid cells with
+        # the initial condition (@ref exahype2.api.BoundaryConditions)
         project_on_faces_task.add_action_set(
-            RollOverUpdatedFace(
-                self._solver._patch_overlap_current_time_step,
-                self._solver._patch_overlap_update,
+            RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
+                self._solver,
+                exahype2_project,
                 guard=self._solver.grid_selector.createFaceGuard(),
                 includes=self._solver._get_default_includes()
                 + self._solver.user_solver_includes,

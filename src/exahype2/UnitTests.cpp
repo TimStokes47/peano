@@ -6,11 +6,11 @@
 #include "tarch/tests/TreeTestCaseCollection.h"
 
 #include "exahype2/blockstructured/tests/DirichletBoundaryConditionsTest.h"
+#include "exahype2/blockstructured/tests/SommerfeldBoundaryConditionsTest.h"
 #include "exahype2/dg/rusanov/tests/RiemannTest.h"
 #include "exahype2/dg/tests/CellIntegralTest.h"
 #include "exahype2/dg/tests/DGUtilsTest.h"
 #include "exahype2/dg/tests/RiemannTest.h"
-#include "exahype2/fd/tests/SommerfeldBCTest.h"
 #include "exahype2/fv/rusanov/tests/ApplySplit1DRiemannToPatchTest.h"
 #include "exahype2/fv/rusanov/tests/CopyPatchTest.h"
 #include "exahype2/fv/tests/InterpolationRestrictionTest.h"
@@ -23,7 +23,7 @@ tarch::tests::TestCase* exahype2::getUnitTests() {
   // result->addTestCase( new exahype2::dg::tests::RiemannTest() );
   // result->addTestCase( new exahype2::dg::rusanov::tests::RiemannTest() );
   result->addTestCase(new exahype2::blockstructured::tests::DirichletBoundaryConditionsTest());
-  result->addTestCase(new exahype2::fd::tests::SommerfeldBCTest());
+  result->addTestCase(new exahype2::blockstructured::tests::SommerfeldBoundaryConditionsTest());
   // result->addTestCase(new exahype2::fv::tests::InterpolationRestrictionTest());
   result->addTestCase(new exahype2::fv::rusanov::tests::CopyPatchTest());
   result->addTestCase(new exahype2::fv::rusanov::tests::ApplySplit1DRiemannToPatchTest());
