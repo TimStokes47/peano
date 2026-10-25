@@ -131,7 +131,7 @@ Python documentation (Doxygen docstrings starting with `"""!`) follows these rul
   built). Some generator scripts there are named `test_*.py`; `tests/conftest.py` excludes
   them from collection.
 - `tests/exahype2/` (legacy `python/` API) and `tests/multigrid/` (MGHyPE) are not driven by
-  pytest; run their build scripts (e.g. `fv.py`, `aderdg.py`) manually.
+  pytest; run their build scripts (e.g. `aderdg.py`) manually.
 - Generated build artifacts (`.o`, binaries) in the test directories should not be
   committed if regenerated locally.
 - `src/unittests/` builds `UnitTests2d`/`UnitTests3d` executables covering the C++ core

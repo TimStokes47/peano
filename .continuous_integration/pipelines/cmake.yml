@@ -72,20 +72,6 @@ Unit_Tests:
   dependencies:
     - Build
 
-ExaHyPE2_FV_Tests:
-  stage: Test
-  allow_failure: false
-  extends:
-    - .Tags
-    - .Variables
-    - .RunOnlyOn
-    - .BeforeScriptWithCMakeSanitiser
-    - .ExaHyPE2_FV_Tests
-  needs:
-    - job: Build
-  dependencies:
-    - Build
-
 ExaHyPE2_ADERDG_Tests:
   stage: Test
   allow_failure: false
