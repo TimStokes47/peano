@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from .PDETerm import PDETerm
+from ..PDETerm import PDETerm
 
 
 class SommerfeldBoundaryConditions(PDETerm):
@@ -45,7 +45,7 @@ class SommerfeldBoundaryConditions(PDETerm):
 
     A solver needs a boundary condition term if and only if at least one
     axis of the domain is not periodic (@see
-    exahype2.api.BoundaryConditions.get_boundary_conditions()).
+    exahype2.api.blockstructured.BoundaryConditions.get_boundary_conditions()).
 
     Only the non-stateless variant is supported, i.e. the term has to be
     added with stateless=False.

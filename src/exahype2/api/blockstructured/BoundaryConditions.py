@@ -19,7 +19,7 @@ consistent with the domain:
 
 """
 from .DirichletBoundaryConditions import DirichletBoundaryConditions
-from .MaxEigenvalue import MaxEigenvalue
+from ..MaxEigenvalue import MaxEigenvalue
 from .SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
 
 

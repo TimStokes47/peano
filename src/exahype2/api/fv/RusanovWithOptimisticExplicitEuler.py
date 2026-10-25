@@ -14,7 +14,7 @@ import exahype2.api.dslhype as dslhype
 import dastgen2
  
 from ..Solver import Solver
-from ..BoundaryConditions import get_access_to_persistent_face_data
+from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
 from .actionsets import ApplyDirichletBoundaryConditions
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFaceWithSommerfeldBoundaryConditions
@@ -1371,7 +1371,7 @@ Patch overlap data
             )
         )
         ## Sommerfeld boundary conditions advance the ghost volumes within
-        ## the roll over (@ref exahype2.api.BoundaryConditions)
+        ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
         project_on_faces_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
                 self._solver,

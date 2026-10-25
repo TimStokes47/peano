@@ -20,9 +20,9 @@ from . import FD4Kernels
 from .Quantities import resolve_quantities
 from .actionsets import AddLopsidedAdvection
 from .actionsets import ApplyDirichletBoundaryConditions
-from ..BoundaryConditions import get_access_to_persistent_face_data
-from ..BoundaryConditions import get_boundary_conditions
-from ..SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
+from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
+from ..blockstructured.BoundaryConditions import get_boundary_conditions
+from ..blockstructured.SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
 from .actionsets import ComputeLinearCombination
 from .actionsets import ComputeMaxEigenvalue
 from .actionsets import ComputeTimeStepSize
@@ -71,7 +71,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     unless the time step size is fixed, and either a
     DirichletBoundaryConditions or a SommerfeldBoundaryConditions term
     unless all axes are periodic (@ref
-    exahype2.api.BoundaryConditions.get_boundary_conditions()). Sommerfeld
+    exahype2.api.blockstructured.BoundaryConditions.get_boundary_conditions()). Sommerfeld
     conditions also require a MaxEigenvalue term, and a Butcher tableau whose
     stage time stamps do not decrease. @ref
     benchmarks_exahype2_euler_smooth_fd4 demonstrates fourth-order
@@ -1027,7 +1027,7 @@ Patch overlap data
             )
             # Sommerfeld boundary conditions advance the ghost grid cells
             # within the roll over, from the time stamp of this stage to the
-            # one of the next stage (@ref exahype2.api.BoundaryConditions)
+            # one of the next stage (@ref exahype2.api.blockstructured.BoundaryConditions)
             next_relative_time_step_size = (
                 1.0 if is_last_stage else relative_time_step_sizes[stage + 1]
             )

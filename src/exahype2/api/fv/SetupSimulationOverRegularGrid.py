@@ -148,7 +148,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
             )
         )
         ## Sommerfeld boundary conditions initialise the ghost volumes with
-        ## the initial condition (@ref exahype2.api.BoundaryConditions)
+        ## the initial condition (@ref exahype2.api.blockstructured.BoundaryConditions)
         project_on_faces_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
                 self._solver,

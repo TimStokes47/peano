@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from __future__ import annotations
 
-from .PDETerm import PDETerm
+from ..PDETerm import PDETerm
 
 
 class DirichletBoundaryConditions(PDETerm):
