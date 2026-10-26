@@ -150,16 +150,6 @@ namespace exagrype {
       void enforceCCZ4constraints(double* __restrict__  newQ);
 
       /**
-       * Anticipate Euler step and correct dQdt such that outcome does fulfill
-       * constraints.
-       */
-      void enforceCCZ4constraints(
-        const double* __restrict__  oldQ,
-        double* __restrict__        dQdt,
-        double                      timeStepSize
-      );
-
-      /**
        * Add the Kreiss-Oliger dissipation of a patch to its right-hand side
        *
        * The routine adds
