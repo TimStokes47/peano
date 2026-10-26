@@ -102,21 +102,6 @@ namespace exagrype {
       #endif
 
       /**
-       * @todo Han
-       */
-      #if defined(SharedOMP)
-      #pragma omp declare simd
-      #endif
-      KeywordToAvoidDuplicateSymbolsForInlinedFunctions void maxEigenvalue(
-        const double* const Q,
-        int                 normal,
-        const double        CCZ4e,
-        const double        CCZ4ds,
-        const double        CCZ4GLMc,
-        const double        CCZ4GLMd
-      ) InlineMethod;
-
-      /**
        * This is a postprocessing routine to monitor if the physical constraints
        * are fulfilled. Used in python script.
        */
