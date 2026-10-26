@@ -35,6 +35,14 @@ class DynamicMeshRefinement(ActionSet):
     schemes take the two bounds as constructor arguments and pass them
     through.
 
+    Peano erases the children of a cell only if they all ask for it. Erase
+    commands therefore carry the cell's position within its parent, and the
+    refinement service keeps them only if all 3^d children of a parent have
+    asked to be erased within the same mesh sweep
+    (@ref exahype2::RefinementControlService::keepOnlyCompleteSiblingEraseEvents()).
+    Incomplete sets of erase requests are dropped right away, so they never
+    trigger the mesh adaptation phase.
+
     The action set collects the commands of one tree within a local
     ::exahype2::RefinementControl, merges it into the rank's
     ::exahype2::RefinementControlService at the end of the traversal, and
@@ -127,7 +135,7 @@ class DynamicMeshRefinement(ActionSet):
     _localRefinementControl.addCommand( marker.x(), marker.h(), ::exahype2::RefinementCommand::Refine, {{EVENT_LIFETIME}} );
   }
   else if ( not anyVolumeWantsToRefine and allVolumesWantToErase {{ERASE_BOUND}}) {
-    _localRefinementControl.addCommand( marker.x(), marker.h(), ::exahype2::RefinementCommand::Erase, {{EVENT_LIFETIME}} );
+    _localRefinementControl.addCommand( marker.x(), marker.h(), ::exahype2::RefinementCommand::Erase, {{EVENT_LIFETIME}}, marker.getRelativePositionWithinFatherCell() );
   }
   logTraceOut( "touchCellFirstTime(...)---DynamicMeshRefinement" );
 """

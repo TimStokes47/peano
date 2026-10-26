@@ -25,6 +25,9 @@ class EvaluateRefineErasePointwisely(AbstractFVActionSet):
     than the minimum volume size. Erase commands are dropped if the
     coarsened cell would be coarser than the cells of the initial regular
     mesh (@ref exahype2.api.fv.SetupSimulationWithUserCodedRefinementCriterion).
+    Erase commands carry the cell's position within its parent, so the
+    refinement service keeps them only if all 3^d children of the parent ask
+    to be erased (@ref exahype2::RefinementControlService::keepOnlyCompleteSiblingEraseEvents()).
 
     The action set collects the commands of one tree within a local
     ::exahype2::RefinementControl and merges it into the rank's
@@ -94,7 +97,7 @@ class EvaluateRefineErasePointwisely(AbstractFVActionSet):
     _localRefinementControl.addCommand( marker.x(), marker.h(), ::exahype2::RefinementCommand::Refine, {{EVENT_LIFETIME}} );
   }
   else if ( not anyVolumeWantsToRefine and allVolumesWantToErase and 3.0 * tarch::la::max( marker.h() ) < {{MAX_CELL_SIZE}} ) {
-    _localRefinementControl.addCommand( marker.x(), marker.h(), ::exahype2::RefinementCommand::Erase, {{EVENT_LIFETIME}} );
+    _localRefinementControl.addCommand( marker.x(), marker.h(), ::exahype2::RefinementCommand::Erase, {{EVENT_LIFETIME}}, marker.getRelativePositionWithinFatherCell() );
   }
   logTraceOut( "touchCellFirstTime(...)---EvaluateRefineErasePointwisely" );
 """
