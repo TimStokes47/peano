@@ -25,7 +25,7 @@ class LoadBalancing(ActionSet):
     switches the strategy on (enable(true)) and then calls finishStep(). The
     time stepping schemes use this variant in their last mesh sweep, as they
     switch the load balancing off throughout the time step
-    (@ref toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing).
+    (toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing).
 
     """
 
