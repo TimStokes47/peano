@@ -4,6 +4,7 @@
 
 #include "peano4/parallel/Node.h"
 #include "peano4/peano.h"
+#include "RefinementControlService.h"
 #include "tarch/accelerator/Device.h"
 #include "tarch/Assertions.h"
 #include "tarch/la/ScalarOperations.h"
@@ -13,6 +14,7 @@
 #include "tarch/multicore/Core.h"
 #include "tarch/multicore/multicore.h"
 #include "tarch/NonCriticalAssertions.h"
+#include "toolbox/loadbalancing/AbstractLoadBalancing.h"
 #include "toolbox/loadbalancing/LoadBalancingService.h"
 
 
@@ -26,6 +28,7 @@ namespace {
     peano4::RunMultipleSteps&         setupSimulation,
     peano4::RunMultipleSteps&         plot,
     peano4::RunMultipleSteps&         timeStep,
+    peano4::RunMultipleSteps&         meshAdaptation,
     peano4::RunMultipleSteps::Report& report
   ) {
     const int step = peano4::parallel::Node::getInstance().getCurrentProgramStep(
@@ -40,6 +43,9 @@ namespace {
     } else if (step == setupSimulation.getFirstSubstep()) {
       setupSimulation.run();
       report.reportStep(setupSimulation);
+    } else if (step == meshAdaptation.getFirstSubstep() and step != peano4::parallel::Node::UndefProgramStep) {
+      meshAdaptation.run();
+      report.reportStep(meshAdaptation);
     } else {
       assertionMsg(false, "Unknown step " << step << " in main().");
     }
@@ -53,13 +59,14 @@ namespace {
     peano4::RunMultipleSteps&         setupSimulation,
     peano4::RunMultipleSteps&         plot,
     peano4::RunMultipleSteps&         timeStep,
+    peano4::RunMultipleSteps&         meshAdaptation,
     peano4::RunMultipleSteps::Report& report
   ) {
     peano4::parallel::Node::getInstance().setNextProgramStep(
       runner.getFirstSubstep()
     );
     peano4::parallel::Node::getInstance().continueToRun();
-    runCurrentStep(setupSimulation, plot, timeStep, report);
+    runCurrentStep(setupSimulation, plot, timeStep, meshAdaptation, report);
   }
 } // namespace
 
@@ -92,6 +99,7 @@ void exahype2::runSimulation(
   peano4::RunMultipleSteps&         setupSimulation,
   peano4::RunMultipleSteps&         plot,
   peano4::RunMultipleSteps&         timeStep,
+  peano4::RunMultipleSteps&         meshAdaptation,
   peano4::RunMultipleSteps::Report& report,
   std::function<bool()>             wantsToPlot,
   std::function<double()>           getMinTimeStamp,
@@ -121,7 +129,14 @@ void exahype2::runSimulation(
       if (isGlobalMaster) {
         bool haveJustWrittenSnapshot = false;
 
-        runStep(setupSimulation, setupSimulation, plot, timeStep, report);
+        runStep(
+          setupSimulation,
+          setupSimulation,
+          plot,
+          timeStep,
+          meshAdaptation,
+          report
+        );
 
         double maxTimeStepSize             = 1.0;
         int    numberOfStagnatingTimeSteps = 0;
@@ -138,13 +153,38 @@ void exahype2::runSimulation(
           // time step.
           if (wantsToPlot() and not haveJustWrittenSnapshot) {
             haveJustWrittenSnapshot = true;
-            runStep(plot, setupSimulation, plot, timeStep, report);
+            runStep(
+              plot,
+              setupSimulation,
+              plot,
+              timeStep,
+              meshAdaptation,
+              report
+            );
           } else {
             haveJustWrittenSnapshot      = false;
             const double oldMinTimeStamp = getMinTimeStamp();
             const double oldMaxTimeStamp = getMaxTimeStamp();
-            runStep(timeStep, setupSimulation, plot, timeStep, report);
+            runStep(
+              timeStep,
+              setupSimulation,
+              plot,
+              timeStep,
+              meshAdaptation,
+              report
+            );
             maxTimeStepSize = getMaxTimeStepSize();
+
+            if (meshAdaptation.getFirstSubstep() != peano4::parallel::Node::UndefProgramStep and isMeshAdaptationRequired()) {
+              runStep(
+                meshAdaptation,
+                setupSimulation,
+                plot,
+                timeStep,
+                meshAdaptation,
+                report
+              );
+            }
 
             if (getMinTimeStamp() == oldMinTimeStamp and getMaxTimeStamp() == oldMaxTimeStamp) {
               numberOfStagnatingTimeSteps++;
@@ -173,11 +213,17 @@ void exahype2::runSimulation(
         }
 
         if (wantsToPlot()) {
-          runStep(plot, setupSimulation, plot, timeStep, report);
+          runStep(plot, setupSimulation, plot, timeStep, meshAdaptation, report);
         }
       } else if (isPeanoWorker) {
         while (peano4::parallel::Node::getInstance().continueToRun()) {
-          runCurrentStep(setupSimulation, plot, timeStep, report);
+          runCurrentStep(
+            setupSimulation,
+            plot,
+            timeStep,
+            meshAdaptation,
+            report
+          );
         }
       } else {
         assertionMsg(
@@ -191,7 +237,22 @@ void exahype2::runSimulation(
   }
 #endif
 
-  report.reportFinalResults({setupSimulation, timeStep, plot});
+  report.reportFinalResults({setupSimulation, timeStep, plot, meshAdaptation});
+}
+
+
+bool exahype2::isMeshAdaptationRequired() {
+  const bool hasPendingRefinementEvents
+    = not ::exahype2::RefinementControlService::getInstance()
+            .createGridControlEventsForNextTraversal()
+            .empty();
+  const bool hasSplitRecently
+    = ::toolbox::loadbalancing::LoadBalancingService::getInstance()
+        .hasLoadBalancing()
+      and ::toolbox::loadbalancing::LoadBalancingService::getInstance()
+            .getLoadBalancing()
+            ->hasSplitRecently();
+  return hasPendingRefinementEvents or hasSplitRecently;
 }
 
 

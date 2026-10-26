@@ -119,7 +119,7 @@ def _postprocessed_time_step(
         periodic_BC=[True, True, True],
     )
     peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
-    graphs = [peano4.api.taskgraph.Graph() for _ in range(3)]
+    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
     solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
     return solver, {task.name: task for task in graphs[1].tasks}
 

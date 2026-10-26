@@ -96,6 +96,7 @@ int main(int argc, char** argv);
 #include "{{subdirectory}}runners/SetupSimulation.h"
 #include "{{subdirectory}}runners/TimeStep.h"
 #include "{{subdirectory}}runners/Plot.h"
+#include "{{subdirectory}}runners/MeshAdaptation.h"
 {% endfor -%}
 {% else %}
 #include "Constants.h"
@@ -105,6 +106,7 @@ int main(int argc, char** argv);
 #include "runners/SetupSimulation.h"
 #include "runners/TimeStep.h"
 #include "runners/Plot.h"
+#include "runners/MeshAdaptation.h"
 {%- endif %}
 
 tarch::logging::Log _log( "{{NAMESPACE | join("::")}}" );
@@ -113,6 +115,7 @@ tarch::logging::Log _log( "{{NAMESPACE | join("::")}}" );
 {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}runners::SetupSimulation SetupSimulation;
 {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}runners::Plot Plot;
 {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}runners::TimeStep TimeStep;
+{{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}runners::MeshAdaptation MeshAdaptation;
 
 {{STEP_REPORT_CLASS}} stepReport;
 
@@ -170,6 +173,7 @@ int main(int argc, char** argv) {
     SetupSimulation,
     Plot,
     TimeStep,
+    MeshAdaptation,
     stepReport,
     {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::wantsToPlot,
     {{NAMESPACE | join("::")}}::{{SUBNAMESPACE}}repositories::getMinTimeStamp,

@@ -142,6 +142,37 @@ class Solver(abc.ABC):
               phase, so the plotter can add its own tasks into it.
             """
 
+    class MeshAdaptation(abc.ABC):
+        """!
+
+        How a Solver adapts its mesh and rebalances its load between two
+        time steps. Abstract - concrete solvers have to provide a subclass
+        that implements construct_output().
+
+        The mesh adaptation is the fourth phase of an ExaHyPE 2 project
+        next to the setup, the time stepping and the plotting. The
+        generated main runs it right after a time step, and only if this
+        time step has asked for a mesh refinement or erase, or if the load
+        balancing has split recently (@ref exahype2::isMeshAdaptationRequired()).
+        The phase is optional: Solvers without a MeshAdaptation do not
+        contribute to it, and the main never runs an empty phase.
+
+        """
+
+        def __init__(self, solver: "Solver"):
+            self._solver = solver
+
+        @abc.abstractmethod
+        def construct_output(self, exahype2_project, peano_project, mesh_adaptation):
+            """!
+            Has to be implemented by subclass
+
+            mesh_adaptation: peano4.api.taskgraph.Graph
+              The task graph of the surrounding exahype2_project's mesh
+              adaptation phase, so the mesh adaptation can add its own tasks
+              into it.
+            """
+
     ## Tag of all tasks which write a new solution
     #
     # Tags are plain strings (@ref peano4.api.taskgraph.Task.Task). Every
@@ -285,11 +316,19 @@ class Solver(abc.ABC):
         # plotter attribute below.
         self.plotter: "Solver.Plotter" = None
 
+        # MeshAdaptation is optional. Without one, the solver does not
+        # contribute to the mesh adaptation phase. Users can assign their
+        # own Solver.MeshAdaptation subclass instance to it through the
+        # mesh_adaptation attribute below.
+        self.mesh_adaptation: "Solver.MeshAdaptation" = None
+
         # Selects the mesh entities on which all action sets of this solver
         # act: Each action set's guard is the corresponding output of this
         # selector. By default, the solver works on the finest mesh level
         # only. Users can assign any other peano4.api.toolbox.GridSelector.
-        self.grid_selector: peano4.api.toolbox.GridSelector = peano4.api.toolbox.FineGridSelector()
+        self.grid_selector: peano4.api.toolbox.GridSelector = (
+            peano4.api.toolbox.FineGridSelector()
+        )
 
         # The kernel function calls are generated as late as possible, to
         # ensure that all PDE terms and the numerical scheme have been
@@ -571,6 +610,7 @@ class Solver(abc.ABC):
         setup_simulation,
         time_step,
         plot,
+        mesh_adaptation,
     ):
         """!
         Turn this solver specification into a task graph and create the required C++ kernels/stubs
@@ -580,8 +620,8 @@ class Solver(abc.ABC):
           currently assembling. It is a local variable there, not an attribute -
           merely passed through here, so this solver can add its own artefacts to it.
 
-        setup_simulation, time_step, plot: peano4.api.taskgraph.Graph
-          The task graphs of the three algorithmic phases of the surrounding
+        setup_simulation, time_step, plot, mesh_adaptation: peano4.api.taskgraph.Graph
+          The task graphs of the four algorithmic phases of the surrounding
           exahype2_project. They are owned by exahype2_project.generate_Peano4_project()
           and merely passed through here, so this solver can add its own
           tasks into them.
@@ -609,7 +649,11 @@ class Solver(abc.ABC):
         )
         if self.plotter is not None:
             self.plotter.construct_output(exahype2_project, peano_project, plot)
-        # Last, so grid construction, numerical scheme and plotter can add
-        # their own members to the solver class first (@see
-        # add_abstract_solver_attribute()/add_abstract_solver_method()).
+        if self.mesh_adaptation is not None:
+            self.mesh_adaptation.construct_output(
+                exahype2_project, peano_project, mesh_adaptation
+            )
+        # Last, so grid construction, numerical scheme, plotter and mesh
+        # adaptation can add their own members to the solver class first
+        # (@see add_abstract_solver_attribute()/add_abstract_solver_method()).
         self.solver_generator.construct_output(exahype2_project, peano_project)

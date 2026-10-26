@@ -460,21 +460,27 @@ thus appreciate any citation of the original release paper
 
         self.__export_constants(peano_project)
 
-        # The task graphs for the three algorithmic phases every ExaHyPE 2
+        # The task graphs for the four algorithmic phases every ExaHyPE 2
         # project goes through. They only live for the duration of this call
         # - each solver contributes its tasks into them as it is realised.
+        # The mesh adaptation phase is optional: It remains empty if no
+        # solver has a Solver.MeshAdaptation, and the generated main never
+        # runs an empty phase.
         setup_simulation = peano4.api.taskgraph.Graph()
         time_step = peano4.api.taskgraph.Graph()
         plot = peano4.api.taskgraph.Graph()
+        mesh_adaptation = peano4.api.taskgraph.Graph()
 
         for solver in self._solvers:
-            solver.generate_solver_realisation(self, peano_project, setup_simulation, time_step, plot)
+            solver.generate_solver_realisation(
+                self, peano_project, setup_simulation, time_step, plot, mesh_adaptation
+            )
 
         # Each solver's construct_output() above visualises the (input)
-        # task graph it just contributed to - Setup, TimeStep and Plot -
-        # via Graph.visualise(), which renders without blocking so all
-        # three can appear together; this is where we actually pause and
-        # let the user look at that whole triad before moving on.
+        # task graph it just contributed to - Setup, TimeStep, Plot and
+        # MeshAdaptation - via Graph.visualise(), which renders without
+        # blocking so all of them can appear together; this is where we
+        # actually pause and let the user look at them before moving on.
         peano4.api.taskgraph.wait_for_visualisations()
 
         #
@@ -485,6 +491,7 @@ thus appreciate any citation of the original release paper
         setup_simulation_steps = self.compiler(setup_simulation, "SetupSimulation", peano_project)
         time_step_steps        = self.compiler(time_step, "TimeStep", peano_project)
         plot_steps             = self.compiler(plot, "Plot", peano_project)
+        mesh_adaptation_steps  = self.compiler(mesh_adaptation, "MeshAdaptation", peano_project)
 
         #
         # Setup runs once, as a prequel to both time stepping and plotting;
@@ -495,27 +502,42 @@ thus appreciate any citation of the original release paper
         # This postprocessing runs on the compiled steps, as it counts mesh
         # traversals, and a compiler might fuse several tasks into one.
         #
-        propagate_use_statements(
-            [setup_simulation_steps, time_step_steps, plot_steps],
-            edges=[
-                (setup_simulation_steps, time_step_steps),
-                (setup_simulation_steps, plot_steps),
-                (time_step_steps, plot_steps),
-                (plot_steps, time_step_steps),
-                (time_step_steps, time_step_steps),
-                (plot_steps, plot_steps),
-            ],
-        )
+        # The mesh adaptation only ever runs right after a time step, and
+        # it is followed by either a time step or a plot. It never runs
+        # twice in a row, as its tasks repeat themselves until the mesh is
+        # stationary. It takes part only if any solver has contributed to
+        # it: an empty sequence without incoming edges would otherwise
+        # count as an entry sequence.
+        #
+        sequences = [setup_simulation_steps, time_step_steps, plot_steps]
+        edges = [
+            (setup_simulation_steps, time_step_steps),
+            (setup_simulation_steps, plot_steps),
+            (time_step_steps, plot_steps),
+            (plot_steps, time_step_steps),
+            (time_step_steps, time_step_steps),
+            (plot_steps, plot_steps),
+        ]
+        if mesh_adaptation_steps:
+            sequences.append(mesh_adaptation_steps)
+            edges += [
+                (time_step_steps, mesh_adaptation_steps),
+                (mesh_adaptation_steps, time_step_steps),
+                (mesh_adaptation_steps, plot_steps),
+            ]
+        propagate_use_statements(sequences, edges=edges)
 
         # Only now do we actually know which Steps this project runs, and
         # under which qualifier each of them uses a given submodel - the
         # compiler above is free to fuse, drop or reorder tasks, so this
         # cannot be derived from the pre-compilation task graphs above -
         # @see peano4.api.taskgraph.compiler.DeriveLoadStoreComputeFlag.
-        derive_load_store_compute_flag(setup_simulation_steps + time_step_steps + plot_steps)
+        derive_load_store_compute_flag(
+            setup_simulation_steps + time_step_steps + plot_steps + mesh_adaptation_steps
+        )
 
         # Symmetric to the wait_for_visualisations() call above, but for
-        # the triad of *compiled* task graphs each self.compiler() call
+        # the *compiled* task graphs each self.compiler() call
         # just reported (@see
         # peano4.api.taskgraph.compiler.ReportCompiledStepSequence).
         peano4.api.taskgraph.wait_for_visualisations()
@@ -524,7 +546,7 @@ thus appreciate any citation of the original release paper
         # Add these observers to the Peano project, so a main file can
         # trigger them.
         #
-        for step in setup_simulation_steps + time_step_steps + plot_steps:
+        for step in setup_simulation_steps + time_step_steps + plot_steps + mesh_adaptation_steps:
             peano_project.solversteps.add_step(step)
 
         #
@@ -535,6 +557,7 @@ thus appreciate any citation of the original release paper
         peano4.api.taskgraph.create_runner(peano_project, "SetupSimulation", setup_simulation_steps)
         peano4.api.taskgraph.create_runner(peano_project, "TimeStep", time_step_steps)
         peano4.api.taskgraph.create_runner(peano_project, "Plot", plot_steps)
+        peano4.api.taskgraph.create_runner(peano_project, "MeshAdaptation", mesh_adaptation_steps)
 
         self.solver_repository_generator.construct_output(peano_project)
 

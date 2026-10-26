@@ -125,7 +125,7 @@ def _realisation(
         periodic_BC=periodic_BC,
     )
     peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
-    graphs = [peano4.api.taskgraph.Graph() for _ in range(3)]
+    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
     solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
     return [{task.name: task for task in graph.tasks} for graph in graphs[:2]]
 
