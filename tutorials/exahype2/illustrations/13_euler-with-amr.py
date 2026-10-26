@@ -501,7 +501,7 @@ def plot_dynamic_patch_count(directory):
 
 
 def plot_dynamic_mesh_change(directory):
-    """! Density and patch boundaries right before and after the first mesh change"""
+    """! Density and patch boundaries right before the first mesh change and at the end"""
     times, counts = patch_counts(directory)
     changes = [i for i in range(1, len(counts)) if counts[i] != counts[i - 1]]
     if not changes:
@@ -509,7 +509,7 @@ def plot_dynamic_mesh_change(directory):
         return
     file_name = os.path.join(directory, PatchFile)
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
-    for ax, snapshot in zip(axes, [changes[0] - 1, changes[0]]):
+    for ax, snapshot in zip(axes, [changes[0] - 1, len(counts) - 1]):
         tarch.plotter.api.notebook.plot_snapshot(
             file_name, snapshot, 0, label="density", ax=ax, clim=(0.0, 0.4)
         )
