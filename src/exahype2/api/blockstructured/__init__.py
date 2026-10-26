@@ -15,4 +15,5 @@ from .DirichletBoundaryConditions import DirichletBoundaryConditions
 from .SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
 from .DynamicMeshRefinement import DynamicMeshRefinement
 from .ConsumeRefinementRequests import ConsumeRefinementRequests
+from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
 from . import BoundaryConditions

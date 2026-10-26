@@ -179,6 +179,8 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
         advected_quantities=None,
         min_volume_size: float = None,
         max_volume_size: float = None,
+        interpolation: "toolbox.blockstructured.api.InterpolateHangingFaces.Scheme" = toolbox.blockstructured.api.InterpolateHangingFaces.Scheme.Linear,
+        restriction: "toolbox.blockstructured.api.RestrictHangingFaces.Scheme" = toolbox.blockstructured.api.RestrictHangingFaces.Scheme.Averaging,
     ):
         """!
 
@@ -239,8 +241,30 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
           if the grid cells of the coarser cell would be strictly smaller
           than this size. None (the default) does not bound the coarsening.
 
+        @param interpolation: toolbox.blockstructured.api.InterpolateHangingFaces.Scheme
+          How the scheme initialises the halo of a fine patch next to a
+          coarser patch on an adaptive mesh. Whenever a Runge-Kutta stage
+          reconstructs the halo of a fine cell, it interpolates the data of
+          the adjacent coarse face onto the fine cell's hanging face
+          (toolbox.blockstructured.api.InterpolateHangingFaces). The
+          default is linear interpolation.
+
+        @param restriction: toolbox.blockstructured.api.RestrictHangingFaces.Scheme
+          How the scheme hands the data of fine patches over to an adjacent
+          coarser patch. Whenever the fine cells project their data onto
+          their faces, the scheme restricts the data of the hanging faces
+          onto the coarse face (toolbox.blockstructured.api.RestrictHangingFaces).
+          The default is averaging.
+
+        On a regular mesh, there are no hanging faces, and the two schemes
+        are never used. At resolution transitions, the halo of a fine patch
+        is only as accurate as the interpolation, i.e. the scheme drops to
+        low order there.
+
         """
         super().__init__(solver)
+        self.interpolation = interpolation
+        self.restriction = restriction
         if patch_size < self.HALO_SIZE:
             raise ValueError(
                 f"Solver {solver.name}: patch_size has to be at least {self.HALO_SIZE}, "
@@ -794,6 +818,39 @@ Patch overlap data
 {kernel_call(stateless=False)}
 }}"""
 
+    def create_default_mesh_adaptation(self) -> Solver.MeshAdaptation:
+        """!
+
+        The finite differences adapt the mesh and balance the load through
+        exahype2.api.rkfd4.AdaptMeshAndBalanceLoad by default
+
+        """
+        from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
+
+        return AdaptMeshAndBalanceLoad(self._solver)
+
+    def create_restriction_of_hanging_faces(
+        self,
+    ) -> "toolbox.blockstructured.api.RestrictHangingFaces":
+        """!
+
+        Action set which restricts the projected fine data from the hanging
+        faces onto the coarse faces
+
+        Every task which projects the solution onto the faces has to host
+        this action set, so the faces between coarse and fine patches hold
+        consistent data afterwards. The task has to write all of
+        _patch_overlap_update, as averaging clears it first.
+
+        """
+        return toolbox.blockstructured.api.RestrictHangingFaces(
+            self._solver._patch_overlap_update,
+            scheme=self.restriction,
+            clear_guard=self._solver.grid_selector.createFaceGuard(),
+            additional_includes=self._solver._get_default_includes()
+            + self._solver.user_solver_includes,
+        )
+
     def construct_output(self, exahype2_project, peano_project, time_step):
         """!
 
@@ -974,6 +1031,15 @@ Patch overlap data
                     additional_includes=includes,
                 )
             )
+            ## On adaptive meshes, interpolate the coarse face data onto the
+            ## hanging faces of fine cells, before the reconstruction reads them
+            reconstruction_task.add_action_set(
+                toolbox.blockstructured.api.InterpolateHangingFaces(
+                    self._solver._patch_overlap_current_time_step,
+                    scheme=self.interpolation,
+                    additional_includes=includes,
+                )
+            )
             ## Set the ghost grid cells along the domain boundary before the
             ## reconstruction reads them, but after the previous stage has
             ## written the face data. No task is added if all axes are periodic
@@ -1058,6 +1124,9 @@ Patch overlap data
                     includes=includes,
                 )
             )
+            ## On adaptive meshes, restrict the fine data from the hanging
+            ## faces onto the coarse faces, before the roll over copies them
+            projection_task.add_action_set(self.create_restriction_of_hanging_faces())
             # Sommerfeld boundary conditions advance the ghost grid cells
             # within the roll over, from the time stamp of this stage to the
             # one of the next stage (@ref exahype2.api.blockstructured.BoundaryConditions)

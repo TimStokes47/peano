@@ -75,11 +75,59 @@ def test_finite_volumes_adapt_mesh_and_balance_load_by_default(scheme, tmp_path)
     assert discards == (scheme == "fv-optimistic")
 
 
-def test_finite_differences_have_no_default_mesh_adaptation(tmp_path):
+def test_finite_differences_adapt_mesh_and_balance_load_by_default(tmp_path):
     solver = _solver("rkfd4")
     graph = _mesh_adaptation_graph(solver, tmp_path)
-    assert solver.mesh_adaptation is None
-    assert graph.tasks == []
+    assert isinstance(
+        solver.mesh_adaptation, exahype2.api.rkfd4.AdaptMeshAndBalanceLoad
+    )
+    adapt, project = graph.ordered_tasks()
+    kinds = [type(action_set) for action_set in adapt.action_sets]
+    assert Cells in kinds
+    assert exahype2.api.fv.actionsets.DiscardPatchInterior not in kinds
+    projection_kinds = [type(action_set) for action_set in project.action_sets]
+    assert exahype2.api.rkfd4.actionsets.ProjectPatchOntoFaces in projection_kinds
+    assert toolbox.blockstructured.api.RestrictHangingFaces in projection_kinds
+
+
+def _time_step_tasks(solver, tmp_path):
+    exahype2_project = exahype2.api.Project(
+        ["probe"], "probe", "probe", directory=str(tmp_path)
+    )
+    exahype2_project.set_global_simulation_parameters(
+        dimensions=2,
+        offset=[0.0, 0.0],
+        size=[1.0, 1.0],
+        min_end_time=1.0,
+        periodic_BC=[True, True, True],
+    )
+    peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
+    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
+    solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
+    return {task.name: task for task in graphs[1].tasks}
+
+
+def test_finite_differences_handle_hanging_faces_in_every_stage(tmp_path):
+    solver = _solver("rkfd4")
+    tasks = _time_step_tasks(solver, tmp_path)
+    for stage in range(2):
+        reconstruction = tasks[f"Probe_Reconstruct stage {stage}"]
+        assert any(
+            isinstance(a, toolbox.blockstructured.api.InterpolateHangingFaces)
+            for a in reconstruction.action_sets
+        )
+    for name in [
+        "Probe_Project stage 1 onto faces",
+        "Probe_Project solution onto faces",
+    ]:
+        kinds = [type(a) for a in tasks[name].action_sets]
+        restriction = kinds.index(toolbox.blockstructured.api.RestrictHangingFaces)
+        assert (
+            kinds.index(exahype2.api.rkfd4.actionsets.ProjectPatchOntoFaces)
+            < restriction
+        )
+        # The roll over has to copy the restricted data
+        assert restriction < len(kinds) - 1
 
 
 def test_user_defined_mesh_adaptation_is_kept(tmp_path):
