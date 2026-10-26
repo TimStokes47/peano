@@ -1199,10 +1199,26 @@ Patch overlap data
         time_step.add_task(compute_cfl_condition_task)
         time_step.add_task(spawn_patch_interior_task)
 
-        # Inform the load balancing once the time step has finished
+        # The load balancing is switched off throughout the time step, and
+        # switched on again only at its very end, so it may then decide on
+        # splits. Peano carries these splits out in the subsequent mesh sweep.
+        reconstruction_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                enable_load_balancing=False, plug_into_prepare_traversal=True
+            )
+        )
+
+        # Inform the load balancing once the time step has finished. We
+        # switch it on before finishStep() is called, i.e. the order of the
+        # two action sets matters.
         trigger_load_balancing_task = peano4.api.taskgraph.Task(
             name=f"{self._solver.name}_Trigger load balancing",
             entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL,
+        )
+        trigger_load_balancing_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                enable_load_balancing=True, plug_into_prepare_traversal=False
+            )
         )
         trigger_load_balancing_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
         trigger_load_balancing_task.add_dependency(compute_cfl_condition_task)

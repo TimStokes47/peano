@@ -914,6 +914,17 @@ Patch overlap data
             ## Reconstruct the stage's input with its halo
             if previous_stage_task is not None:
                 reconstruction_task.add_dependency(previous_stage_task)
+            else:
+                ## The load balancing is switched off throughout the time
+                ## step, and switched on again only at its very end, so it may
+                ## then decide on splits. Peano carries these splits out in
+                ## the subsequent mesh sweep.
+                reconstruction_task.add_action_set(
+                    toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                        enable_load_balancing=False,
+                        plug_into_prepare_traversal=True,
+                    )
+                )
             ## The solution has to survive the reconstruction. The input of a
             ## later stage does not: The next stage's combination writes it
             ## from scratch. If we stored it here, nobody would load it again,
@@ -1075,10 +1086,17 @@ Patch overlap data
             )
         time_step.add_task(time_step_size_task)
 
-        ## Inform the load balancing once the time step has finished
+        ## Inform the load balancing once the time step has finished. We
+        ## switch it on before finishStep() is called, i.e. the order of the
+        ## two action sets matters.
         trigger_load_balancing_task = peano4.api.taskgraph.Task(
             name=f"{name}_Trigger load balancing",
             entity=Entity.GLOBAL,
+        )
+        trigger_load_balancing_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                enable_load_balancing=True, plug_into_prepare_traversal=False
+            )
         )
         trigger_load_balancing_task.add_action_set(
             toolbox.loadbalancing.api.actionsets.LoadBalancing()
