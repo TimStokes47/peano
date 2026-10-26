@@ -873,7 +873,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
 
     """
 
-    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95, spawn_optimistic_calculations_as_task: bool = True):
+    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95, spawn_optimistic_calculations_as_task: bool = True, min_volume_size: float = None, max_volume_size: float = None):
         """!
 
         The constructor memorises the attributes. However, it does not do this
@@ -915,10 +915,27 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           (@see __create_data_structures()). If False, Spawn patch interior
           update runs the patch interior update straightaway.
 
+        min_volume_size: float
+          The time step asks for a refinement of a cell only if its volumes
+          are at least of this size (@ref exahype2.api.blockstructured.DynamicMeshRefinement).
+          None (the default) does not bound the refinement.
+
+        max_volume_size: float
+          The time step asks for an erase, i.e. coarsening, of a cell only
+          if the volumes of the coarser cell would be strictly smaller than
+          this size. None (the default) does not bound the coarsening.
+
         """
         if damp_time_step_size > 1.0:
             raise Exception(f"damp_time_step_size has to be smaller or equal to 1, but is {damp_time_step_size}")
         super().__init__(solver)
+        assert (
+            min_volume_size is None
+            or max_volume_size is None
+            or min_volume_size <= max_volume_size
+        ), f"min_volume_size={min_volume_size} has to be smaller than or equal to max_volume_size={max_volume_size}"
+        self.min_volume_size = min_volume_size
+        self.max_volume_size = max_volume_size
         self.patch_size = patch_size
         self.overlap = overlap
         # Set in construct_output(): the generated kernels live in the project
@@ -1221,7 +1238,11 @@ Patch overlap data
         dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         dynamic_mesh_refinement_task.add_action_set(
             DynamicMeshRefinement(
-                self._solver, self.patch_size, guard=self._solver.grid_selector.createCellGuard()
+                self._solver,
+                self.patch_size,
+                guard=self._solver.grid_selector.createCellGuard(),
+                min_volume_size=self.min_volume_size,
+                max_volume_size=self.max_volume_size,
             )
         )
         dynamic_mesh_refinement_task.add_action_set(

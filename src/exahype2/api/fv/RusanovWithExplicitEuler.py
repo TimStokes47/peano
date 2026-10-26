@@ -187,6 +187,8 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         cfl_constant: float = 0.9,
         interpolation: "toolbox.blockstructured.api.InterpolateHangingFaces.Scheme" = toolbox.blockstructured.api.InterpolateHangingFaces.Scheme.Linear,
         restriction: "toolbox.blockstructured.api.RestrictHangingFaces.Scheme" = toolbox.blockstructured.api.RestrictHangingFaces.Scheme.Averaging,
+        min_volume_size: float = None,
+        max_volume_size: float = None,
     ):
         """!
 
@@ -231,6 +233,16 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
           onto the coarse face (toolbox.blockstructured.api.RestrictHangingFaces).
           The default is averaging.
 
+        min_volume_size: float
+          The time step asks for a refinement of a cell only if its volumes
+          are at least of this size (@ref exahype2.api.blockstructured.DynamicMeshRefinement).
+          None (the default) does not bound the refinement.
+
+        max_volume_size: float
+          The time step asks for an erase, i.e. coarsening, of a cell only
+          if the volumes of the coarser cell would be strictly smaller than
+          this size. None (the default) does not bound the coarsening.
+
         On a regular mesh, there are no hanging faces, and the two schemes
         are never used. The fluxes along a face between a coarse and a fine
         patch are not corrected, i.e. the scheme is not exactly conservative
@@ -238,6 +250,13 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
 
         """
         super().__init__(solver)
+        assert (
+            min_volume_size is None
+            or max_volume_size is None
+            or min_volume_size <= max_volume_size
+        ), f"min_volume_size={min_volume_size} has to be smaller than or equal to max_volume_size={max_volume_size}"
+        self.min_volume_size = min_volume_size
+        self.max_volume_size = max_volume_size
         self.interpolation = interpolation
         self.restriction = restriction
         self.patch_size = patch_size
@@ -464,7 +483,11 @@ Patch overlap data
         dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         dynamic_mesh_refinement_task.add_action_set(
             DynamicMeshRefinement(
-                self._solver, self.patch_size, guard=self._solver.grid_selector.createCellGuard()
+                self._solver,
+                self.patch_size,
+                guard=self._solver.grid_selector.createCellGuard(),
+                min_volume_size=self.min_volume_size,
+                max_volume_size=self.max_volume_size,
             )
         )
         dynamic_mesh_refinement_task.add_action_set(

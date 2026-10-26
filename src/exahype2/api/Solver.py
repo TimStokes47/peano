@@ -157,48 +157,15 @@ class Solver(abc.ABC):
         The phase is optional: Solvers without a MeshAdaptation do not
         contribute to it, and the main never runs an empty phase.
 
-        The mesh adaptation bounds the mesh size independently of the grid
-        construction. The bounds are given as volume sizes, i.e. as edge
-        lengths of the volumes (or grid cells) within the patches, like the
-        volume sizes of the grid constructions. The numerical schemes'
-        evaluation of the refinement criterion at the end of each time step
-        (@ref exahype2.api.blockstructured.DynamicMeshRefinement) respects
-        them.
+        The mesh adaptation does not decide where to refine or erase. The
+        numerical scheme's last task of the time step collects these
+        requests (@ref exahype2.api.blockstructured.DynamicMeshRefinement),
+        and the mesh adaptation realises them.
 
         """
 
-        def __init__(
-            self,
-            solver: "Solver",
-            min_volume_size: float = None,
-            max_volume_size: float = None,
-        ):
-            """!
-
-            @param solver: exahype2.api.Solver
-              The solver whose mesh is adapted.
-
-            @param min_volume_size: float
-              A cell is refined only if its volumes are at least of this
-              size. None (the default) does not bound the refinement.
-
-            @param max_volume_size: float
-              A cell is erased, i.e. coarsened, only if the volumes of the
-              coarser cell are strictly smaller than this size. None (the
-              default) does not bound the coarsening.
-
-            """
-            assert (
-                min_volume_size is None
-                or max_volume_size is None
-                or min_volume_size <= max_volume_size
-            ), (
-                f"min_volume_size={min_volume_size} has to be smaller than or "
-                f"equal to max_volume_size={max_volume_size}"
-            )
+        def __init__(self, solver: "Solver"):
             self._solver = solver
-            self.min_volume_size = min_volume_size
-            self.max_volume_size = max_volume_size
 
         @abc.abstractmethod
         def construct_output(self, exahype2_project, peano_project, mesh_adaptation):

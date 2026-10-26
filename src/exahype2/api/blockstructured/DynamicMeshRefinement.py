@@ -25,12 +25,15 @@ class DynamicMeshRefinement(ActionSet):
     - If all volumes say Erase, the cell asks to be erased, i.e. coarsened.
     - Otherwise, the cell is kept and does not issue any command.
 
-    The solver's mesh adaptation (@ref exahype2.api.Solver.Solver.MeshAdaptation)
-    can bound the mesh size. Refine commands are dropped for cells whose
-    volumes are already smaller than its min_volume_size. Erase commands are
-    dropped if the volumes of the coarsened cell would not be smaller than
-    its max_volume_size. Without a mesh adaptation, or if a bound is None,
-    the mesh size is not constrained.
+    The action set bounds the mesh size. Refine commands are dropped for
+    cells whose volumes are already smaller than min_volume_size. Erase
+    commands are dropped if the volumes of the coarsened cell would not be
+    smaller than max_volume_size. If a bound is None, the mesh size is not
+    constrained. As the action set drops these commands, it does not issue
+    requests which the mesh cannot realise anyway, and the mesh adaptation
+    phase is only triggered if the mesh actually can change. The numerical
+    schemes take the two bounds as constructor arguments and pass them
+    through.
 
     The action set collects the commands of one tree within a local
     ::exahype2::RefinementControl, merges it into the rank's
@@ -49,12 +52,19 @@ class DynamicMeshRefinement(ActionSet):
 
     """
 
-    def __init__(self, solver, patch_size: int, guard: str, event_lifetime: int = 2):
+    def __init__(
+        self,
+        solver,
+        patch_size: int,
+        guard: str,
+        min_volume_size: float = None,
+        max_volume_size: float = None,
+        event_lifetime: int = 2,
+    ):
         """!
 
         @param solver: exahype2.api.Solver
-          The solver whose criterion is evaluated. Its mesh_adaptation, if
-          there is one, provides the bounds on the mesh size.
+          The solver whose criterion is evaluated.
 
         @param patch_size: int
           Number of volumes per axis within one patch.
@@ -62,6 +72,15 @@ class DynamicMeshRefinement(ActionSet):
         @param guard: str
           C++ boolean expression, evaluated per cell, guarding whether the
           criterion is evaluated for that cell.
+
+        @param min_volume_size: float
+          A cell asks for a refinement only if its volumes are at least of
+          this size. None does not bound the refinement.
+
+        @param max_volume_size: float
+          A cell asks to be erased only if the volumes of the coarser cell
+          are strictly smaller than this size. None does not bound the
+          coarsening.
 
         @param event_lifetime: int
           Number of mesh sweeps a refinement or erase event remains alive
@@ -73,14 +92,8 @@ class DynamicMeshRefinement(ActionSet):
         self.patch_size = patch_size
         self.guard = guard
         self.event_lifetime = event_lifetime
-
-        mesh_adaptation = solver.mesh_adaptation
-        self.min_volume_size = (
-            None if mesh_adaptation is None else mesh_adaptation.min_volume_size
-        )
-        self.max_volume_size = (
-            None if mesh_adaptation is None else mesh_adaptation.max_volume_size
-        )
+        self.min_volume_size = min_volume_size
+        self.max_volume_size = max_volume_size
 
     def has_criterion(self) -> bool:
         """!

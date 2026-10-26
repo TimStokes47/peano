@@ -13,30 +13,25 @@ Task = peano4.api.taskgraph.Task
 ActionSet = peano4.api.solversteps.ActionSet
 
 SCHEMES = {
-    "fv": lambda solver: exahype2.api.fv.RusanovWithExplicitEuler(solver, 4),
-    "fv-optimistic": lambda solver: exahype2.api.fv.RusanovWithOptimisticExplicitEuler(
-        solver, 4
+    "fv": lambda solver, **bounds: exahype2.api.fv.RusanovWithExplicitEuler(
+        solver, 4, **bounds
     ),
-    "rkfd4": lambda solver: exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-        solver, patch_size=4, rk_order=2
+    "fv-optimistic": lambda solver, **bounds: exahype2.api.fv.RusanovWithOptimisticExplicitEuler(
+        solver, 4, **bounds
+    ),
+    "rkfd4": lambda solver, **bounds: exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        solver, patch_size=4, rk_order=2, **bounds
     ),
 }
 
 
-class _MeshAdaptation(exahype2.api.Solver.MeshAdaptation):
-    def construct_output(self, exahype2_project, peano_project, mesh_adaptation):
-        pass
-
-
-def _solver(scheme, criterion=True, mesh_adaptation=None):
+def _solver(scheme, criterion=True, **bounds):
     solver = exahype2.api.Solver("Probe", 2, 0)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation="*lambdaMax = 1.0;"))
     if criterion:
         solver.add_pde_term(exahype2.api.RefineErasePointwisely(implementation=""))
-    if mesh_adaptation is not None:
-        solver.mesh_adaptation = mesh_adaptation(solver)
-    solver.numerical_scheme = SCHEMES[scheme](solver)
+    solver.numerical_scheme = SCHEMES[scheme](solver, **bounds)
     return solver
 
 
@@ -100,13 +95,9 @@ def test_mesh_size_is_unconstrained_by_default(tmp_path):
     assert "3.0 * tarch::la::max( marker.h() ) <" not in body
 
 
-def test_mesh_adaptation_bounds_mesh_size(tmp_path):
-    solver = _solver(
-        "fv",
-        mesh_adaptation=lambda solver: _MeshAdaptation(
-            solver, min_volume_size=0.25, max_volume_size=1.0
-        ),
-    )
+@pytest.mark.parametrize("scheme", SCHEMES)
+def test_numerical_scheme_bounds_mesh_size(scheme, tmp_path):
+    solver = _solver(scheme, min_volume_size=0.25, max_volume_size=1.0)
     [dynamic_mesh_refinement, _] = _last_task(solver, tmp_path).action_sets
     body = _criterion_body(dynamic_mesh_refinement)
     # Volume sizes times patch size 4
@@ -114,7 +105,7 @@ def test_mesh_adaptation_bounds_mesh_size(tmp_path):
     assert "3.0 * tarch::la::max( marker.h() ) < 4.0" in body
 
 
-def test_mesh_adaptation_rejects_inverted_bounds():
-    solver = exahype2.api.Solver("Probe", 2, 0)
+@pytest.mark.parametrize("scheme", SCHEMES)
+def test_numerical_scheme_rejects_inverted_bounds(scheme):
     with pytest.raises(AssertionError):
-        _MeshAdaptation(solver, min_volume_size=1.0, max_volume_size=0.5)
+        _solver(scheme, min_volume_size=1.0, max_volume_size=0.5)
