@@ -204,18 +204,22 @@ namespace toolbox {
     /**
      * Restrict with averaging
      *
-     * This routine works for overlaps of 1 and multiples of 3. However, it
-     * does only set values for the overlap/3 adjacent cells. So if you work
-     * with an overlap of 1, then the overlap just works fine, but it is not
-     * really the average. It is the average of the one layer adjacent to the
-     * fine grid transition. In 2d, it is the sum scaled with 1/3.
+     * The routine maps the half of the fine face overlap which belongs to
+     * the fine cell (or the other half if swapInsideOutside is set) onto
+     * the same half of the coarse face. It accumulates, i.e. the caller has
+     * to clear the coarse half beforehand, and the 3^(d-1) subfaces of a
+     * coarse face together set each coarse volume once.
      *
      * @image html Restriction_averaging.png
      *
-     * If you have an overlap of 3, the routine computes a meaningful average,
-     * but as it has only three overlap cells on the fine grid, it can
-     * only set the overlap cell 1 on the next coarser mesh.
-     *
+     * Each coarse volume of this half receives the average of the
+     * 3^(d-1) fine volumes next to it along the face times all overlap fine
+     * layers. The fine layers span overlap fine volumes along the normal,
+     * i.e. they cover the coarse layer next to the face for overlap<=3, but
+     * not the coarse layers further away. The routine sets these further
+     * layers to the same average, i.e. it extrapolates constantly along the
+     * normal. For an overlap of one, it is the average of the one fine
+     * layer next to the face. The routine works for any overlap.
      */
     void restrictInnerHalfOfHaloLayer_AoS_averaging(
       const peano4::datamanagement::FaceMarker& marker,

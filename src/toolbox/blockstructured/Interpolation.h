@@ -425,7 +425,16 @@ namespace toolbox {
 
 
     /**
-     * Take the coarse grid values and interpolate them onto the fine grid
+     * Interpolate the overlap of a coarse face onto a hanging face
+     *
+     * The hanging face is one of the 3^(d-1) subfaces of the coarse face.
+     * Both hold 2*overlap layers of volumes along the normal, overlap on
+     * each side, and numberOfDoFsPerAxisInPatch volumes along each
+     * tangential axis. Each fine volume takes the value of the coarse
+     * volume which contains its centre. Along the normal, the fine layers
+     * lie within the coarse layers next to the face for overlap<=3
+     * (internal::getCoarseLayerOfFineLayerInOverlap()). The routine works
+     * for any overlap and fills both halves of the hanging face.
      */
     void interpolateHaloLayer_AoS_piecewise_constant(
       const peano4::datamanagement::FaceMarker& marker,
@@ -482,6 +491,18 @@ namespace toolbox {
     );
 
 
+    /**
+     * Interpolate the overlap of a coarse face linearly onto a hanging face
+     *
+     * Same as interpolateHaloLayer_AoS_piecewise_constant() along the
+     * normal, i.e. each fine layer takes the values of the coarse layer
+     * which contains it. Along the tangential axes, the routine
+     * interpolates (bi)linearly between the centres of the coarse volumes.
+     * Beyond the centres of the first and the last coarse volume, the coarse
+     * face holds no further data, and the routine extrapolates constantly.
+     * Linear extrapolation could produce unphysical values such as negative
+     * densities next to steep gradients. The routine works for any overlap.
+     */
     void interpolateHaloLayer_AoS_linear_with_constant_extrapolation(
       const peano4::datamanagement::FaceMarker& marker,
       int                                       numberOfDoFsPerAxisInPatch,
@@ -501,6 +522,17 @@ namespace toolbox {
       double* __restrict__ fineGridFaceValues
     );
 
+    /**
+     * Interpolate the patch of a coarse cell d-linearly into one of its
+     * 3^d children
+     *
+     * Each fine volume interpolates between the centres of the 2^d coarse
+     * volumes around its own centre. Beyond the centres of the outermost
+     * coarse volumes, the coarse patch holds no further data, and the
+     * routine extrapolates constantly. The patches hold
+     * numberOfDoFsPerAxisInPatch^d volumes in the usual lexicographic order
+     * (peano4::utils::dLinearised()) with unknowns entries each.
+     */
     void interpolateCell_AoS_linear_with_constant_extrapolation(
       const peano4::datamanagement::CellMarker& marker,
       int                                       numberOfDoFsPerAxisInPatch,
@@ -704,6 +736,19 @@ namespace toolbox {
     );
 
     namespace internal {
+      /**
+       * Coarse layer of a face overlap which contains a fine layer
+       *
+       * A face overlap holds 2*overlap layers along the normal: Layers
+       * 0,...,overlap-1 lie on the left side of the face, ordered towards
+       * the face, layers overlap,...,2*overlap-1 on the right side, ordered
+       * away from the face. The fine layers are three times thinner than the
+       * coarse ones. The routine returns the coarse layer which contains the
+       * centre of the given fine layer. For overlap<=3, this is always the
+       * coarse layer next to the face on the same side.
+       */
+      int getCoarseLayerOfFineLayerInOverlap(int fineLayer, int overlap);
+
       /**
        * The realisation relies on the following observations/follows these
        * steps:

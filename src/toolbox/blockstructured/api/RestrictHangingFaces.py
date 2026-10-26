@@ -103,7 +103,8 @@ class RestrictHangingFaces(ActionSet):
           hanging face are read, the data of the coarse face are written.
 
         @param scheme: RestrictHangingFaces.Scheme
-          Restriction scheme. Defaults to Scheme.Averaging.
+          Restriction scheme. Defaults to Scheme.Averaging. Injection
+          supports an overlap of one only.
 
         @param guard: str
           C++ boolean expression over the hanging face's
@@ -128,6 +129,14 @@ class RestrictHangingFaces(ActionSet):
             RestrictHangingFaces.Scheme.Averaging if scheme is None else scheme
         )
         assert isinstance(self.scheme, RestrictHangingFaces.Scheme), self.scheme
+        assert (
+            self.scheme != RestrictHangingFaces.Scheme.Inject
+            or patch_overlap.dim[0] == 2
+        ), (
+            "Injection supports an overlap of one only, but the face data "
+            f"{patch_overlap.name} have an overlap of {patch_overlap.dim[0] // 2}. "
+            "Use averaging instead."
+        )
         self.d = {
             "UNKNOWNS": patch_overlap.no_of_unknowns,
             "DOFS_PER_AXIS": patch_overlap.dim[1],
