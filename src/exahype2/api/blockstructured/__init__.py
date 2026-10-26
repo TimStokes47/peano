@@ -14,4 +14,5 @@ exahype2::blockstructured.
 from .DirichletBoundaryConditions import DirichletBoundaryConditions
 from .SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
 from .DynamicMeshRefinement import DynamicMeshRefinement
+from .ConsumeRefinementRequests import ConsumeRefinementRequests
 from . import BoundaryConditions

@@ -1181,6 +1181,17 @@ Patch overlap data
         self._solver._patch_overlap_update.generator.send_condition = "false"
         self._solver._patch_overlap_update.generator.receive_and_merge_condition = "false"
 
+    def create_default_mesh_adaptation(self) -> Solver.MeshAdaptation:
+        """!
+
+        The Finite Volume schemes adapt the mesh and balance the load
+        through exahype2.api.fv.AdaptMeshAndBalanceLoad by default
+
+        """
+        from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
+
+        return AdaptMeshAndBalanceLoad(self._solver)
+
     def construct_output(self,
                          exahype2_project,
                          peano_project,

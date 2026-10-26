@@ -138,9 +138,10 @@ void exahype2::runSimulation(
           report
         );
 
-        double maxTimeStepSize             = 1.0;
-        int    numberOfStagnatingTimeSteps = 0;
-        bool   timeStampsHaveStagnated     = false;
+        double maxTimeStepSize               = 1.0;
+        int    numberOfStagnatingTimeSteps   = 0;
+        bool   timeStampsHaveStagnated       = false;
+        bool   timeStepFollowsMeshAdaptation = false;
         while (
           getMinTimeStamp() < minTerminalTime
           and getMaxTimeStamp() < maxTerminalTime
@@ -173,7 +174,22 @@ void exahype2::runSimulation(
               meshAdaptation,
               report
             );
+            // Read before the mesh adaptation, which might reset the time
+            // step size to zero
             maxTimeStepSize = getMaxTimeStepSize();
+
+            // A time step right after a mesh adaptation might run with a time
+            // step size of zero, i.e. not advance the time stamps
+            // (@ref exahype2::Solver::resetTimeStepSize()). It neither counts
+            // as stagnating nor resets the counter.
+            if (not timeStepFollowsMeshAdaptation) {
+              if (getMinTimeStamp() == oldMinTimeStamp and getMaxTimeStamp() == oldMaxTimeStamp) {
+                numberOfStagnatingTimeSteps++;
+              } else {
+                numberOfStagnatingTimeSteps = 0;
+              }
+            }
+            timeStepFollowsMeshAdaptation = false;
 
             if (meshAdaptation.getFirstSubstep() != peano4::parallel::Node::UndefProgramStep and isMeshAdaptationRequired()) {
               runStep(
@@ -184,12 +200,7 @@ void exahype2::runSimulation(
                 meshAdaptation,
                 report
               );
-            }
-
-            if (getMinTimeStamp() == oldMinTimeStamp and getMaxTimeStamp() == oldMaxTimeStamp) {
-              numberOfStagnatingTimeSteps++;
-            } else {
-              numberOfStagnatingTimeSteps = 0;
+              timeStepFollowsMeshAdaptation = true;
             }
 
             if (numberOfStagnatingTimeSteps == 1) {

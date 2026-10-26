@@ -85,6 +85,19 @@ class Solver(abc.ABC):
               into it.
             """
 
+        def create_default_mesh_adaptation(self) -> "Solver.MeshAdaptation":
+            """!
+
+            The mesh adaptation a solver uses if the user does not assign
+            one to solver.mesh_adaptation
+
+            @return Solver.MeshAdaptation or None
+              The default returns None, i.e. the solver does not contribute
+              to the mesh adaptation phase.
+
+            """
+            return None
+
     class GridConstruction(abc.ABC):
         """!
 
@@ -645,6 +658,12 @@ class Solver(abc.ABC):
             "Solver.NumericalScheme subclass instance to numerical_scheme "
             "before calling generate_solver_realisation()."
         )
+
+        # First, as the numerical scheme might ask for the mesh adaptation
+        if self.mesh_adaptation is None:
+            self.mesh_adaptation = (
+                self.numerical_scheme.create_default_mesh_adaptation()
+            )
 
         self.grid_construction.construct_output(
             exahype2_project, peano_project, setup_simulation

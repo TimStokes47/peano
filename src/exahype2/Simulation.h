@@ -63,7 +63,11 @@ namespace exahype2 {
    * - Right after each time step, the global master runs meshAdaptation if
    *   isMeshAdaptationRequired() holds. It never runs meshAdaptation if
    *   this runner has no mesh sweeps at all, i.e. if no solver has
-   *   contributed to the mesh adaptation phase.
+   *   contributed to the mesh adaptation phase. If the mesh adaptation has
+   *   changed the mesh, it resets the time step size to zero
+   *   (exahype2::Solver::resetTimeStepSize()), so the subsequent time step
+   *   does not advance the time stamps. This time step hence is not taken
+   *   into account by the stagnation check below.
    * - After each time step, the global master checks whether the minimum
    *   and the maximum time stamp have changed. If neither has changed, it
    *   writes a warning, as a single step might legitimately not advance in
