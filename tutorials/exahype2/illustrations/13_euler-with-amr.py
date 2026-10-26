@@ -8,7 +8,10 @@ The script builds the tutorial's point explosion on a regular grid, runs
 it and writes all pictures into the directory of this script. It then
 builds the setup with the point-wise refinement criterion, runs it on the
 resulting adaptive mesh, and draws the mesh, the solution, a comparison
-with the regular mesh, plus the setup's task graph. The PDE
+with the regular mesh, plus the setup's task graph. Finally, it runs the
+dynamically adaptive setup, which also erases cells while it runs time
+steps, and draws its mesh adaptation task graph, the number of patches
+over time and the mesh before and after it changes. The PDE
 terms are injected from Python, i.e. we do not need any hand-written C++
 file. Call it from anywhere:
 
@@ -87,13 +90,18 @@ AdaptiveMinVolumeSize = 0.002
 RefineErasePointwisely = """
   if (Q[0] > 0.8) *refinementCommand = ::exahype2::RefinementCommand::Refine;
 """
+DynamicRefineErasePointwisely = """
+  if (Q[0] > 0.8) *refinementCommand = ::exahype2::RefinementCommand::Refine;
+  else if (Q[0] < 0.1) *refinementCommand = ::exahype2::RefinementCommand::Erase;
+"""
 EndTime = 0.2
+DynamicEndTime = 0.3
 TimeInBetweenPlots = 0.01
 PatchFile = "solution-EulerFV.peano-patch-file"
 
 
-def create_solver(adaptive):
-    """! The tutorial's solver over a regular or an adaptive mesh"""
+def create_solver(adaptive, dynamic=False):
+    """! The tutorial's solver over a regular, an adaptive or a dynamically adaptive mesh"""
     solver = exahype2.api.Solver("EulerFV", 4, 0)
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
@@ -105,9 +113,20 @@ def create_solver(adaptive):
     )
     if adaptive:
         solver.add_pde_term(
-            exahype2.api.RefineErasePointwisely(implementation=RefineErasePointwisely)
+            exahype2.api.RefineErasePointwisely(
+                implementation=DynamicRefineErasePointwisely
+                if dynamic
+                else RefineErasePointwisely
+            )
         )
-    solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
+        solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(
+            solver,
+            9,
+            min_volume_size=AdaptiveMinVolumeSize,
+            max_volume_size=AdaptiveVolumeSize,
+        )
+    else:
+        solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
     if adaptive:
         solver.grid_construction = (
             exahype2.api.fv.SetupSimulationWithUserCodedRefinementCriterion(
@@ -126,16 +145,16 @@ def create_solver(adaptive):
     return solver
 
 
-def build_and_run(directory, adaptive=False):
+def build_and_run(directory, adaptive=False, dynamic=False):
     """! Generate, compile and run the tutorial setup within directory"""
-    end_time = EndTime
+    end_time = DynamicEndTime if dynamic else EndTime
     project = exahype2.api.Project(
         namespace=["tutorials", "exahype2", "euler"],
         project_name="Euler",
         directory=directory,
         executable="euler",
     )
-    solver = create_solver(adaptive)
+    solver = create_solver(adaptive, dynamic)
     project.add_solver(solver)
     project.set_global_simulation_parameters(
         dimensions=2,
@@ -454,6 +473,97 @@ def plot_setup_task_graph():
     print("Wrote", output)
 
 
+def patch_counts(directory):
+    """! Time stamps and numbers of patches of all snapshots"""
+    times, counts = [], []
+    for snapshot in range(number_of_snapshots(directory)):
+        t, patches = read_snapshot(directory, snapshot)
+        times.append(t)
+        counts.append(len(patches))
+    return times, counts
+
+
+def plot_dynamic_patch_count(directory):
+    """! Number of patches per snapshot of the dynamically adaptive run"""
+    times, counts = patch_counts(directory)
+    fig, ax = plt.subplots(figsize=(7, 3.5))
+    ax.step(times, counts, where="post", marker="o", markersize=3)
+    ax.set_xlabel("time")
+    ax.set_ylabel("number of patches")
+    ax.set_title("Patches of the dynamically adaptive mesh")
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-dynamic-patch-count.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+    print("patch counts: {}".format(list(zip([round(t, 3) for t in times], counts))))
+
+
+def plot_dynamic_mesh_change(directory):
+    """! Density and patch boundaries right before and after the first mesh change"""
+    times, counts = patch_counts(directory)
+    changes = [i for i in range(1, len(counts)) if counts[i] != counts[i - 1]]
+    if not changes:
+        print("the dynamically adaptive mesh has not changed")
+        return
+    file_name = os.path.join(directory, PatchFile)
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+    for ax, snapshot in zip(axes, [changes[0] - 1, changes[0]]):
+        tarch.plotter.api.notebook.plot_snapshot(
+            file_name, snapshot, 0, label="density", ax=ax, clim=(0.0, 0.4)
+        )
+        _, patches = read_snapshot(directory, snapshot)
+        for offset, size, values in patches:
+            ax.add_patch(
+                matplotlib.patches.Rectangle(
+                    offset, size[0], size[1], fill=False, edgecolor="white", linewidth=0.3
+                )
+            )
+        ax.set_xlim(-0.3, 0.3)
+        ax.set_ylim(-0.3, 0.3)
+        ax.set_title(
+            "t={:.2f}: {} patches".format(times[snapshot], counts[snapshot]),
+            fontsize=10,
+        )
+    fig.tight_layout()
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-dynamic-mesh-change.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
+def plot_mesh_adaptation_task_graph():
+    """! Construct the mesh adaptation task graph of the dynamically adaptive setup and draw it"""
+    peano4.api.Logger().file_name = os.path.join(
+        tempfile.gettempdir(), "13-euler-with-amr-log.md"
+    )
+    with tempfile.TemporaryDirectory() as directory:
+        exahype2_project = exahype2.api.Project(
+            ["illustration"], "illustration", "illustration", directory=directory
+        )
+        exahype2_project.set_global_simulation_parameters(
+            dimensions=2,
+            offset=[-0.5, -0.5],
+            size=[1.0, 1.0],
+            min_end_time=DynamicEndTime,
+            periodic_BC=[True, True, True],
+        )
+        peano_project = peano4.api.Project(
+            ["illustration"], "illustration", directory=directory
+        )
+        solver = create_solver(adaptive=True, dynamic=True)
+        graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
+        solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
+    graphs[3].visualise(title="Mesh adaptation and load balancing task graph")
+    output = os.path.join(Here, "13_euler-with-amr-mesh-adaptation-task-graph.png")
+    plt.gcf().savefig(output, dpi=90)
+    plt.close(plt.gcf())
+    print("Wrote", output)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Create the PNGs of the tutorial 13_euler-with-amr.ipynb"
@@ -494,4 +604,14 @@ if __name__ == "__main__":
     plot_profile_comparison(directory, adaptive_directory)
     print_conservation(adaptive_directory)
     plot_setup_task_graph()
+
+    dynamic_directory = os.path.join(work_directory, "dynamic-mesh")
+    os.makedirs(dynamic_directory, exist_ok=True)
+    if not args.skip_run:
+        print("build and run over dynamically adaptive mesh in {}".format(dynamic_directory))
+        build_and_run(dynamic_directory, adaptive=True, dynamic=True)
+    plot_dynamic_patch_count(dynamic_directory)
+    plot_dynamic_mesh_change(dynamic_directory)
+    print_conservation(dynamic_directory)
+    plot_mesh_adaptation_task_graph()
     print("wrote PNGs into {}".format(Here))
