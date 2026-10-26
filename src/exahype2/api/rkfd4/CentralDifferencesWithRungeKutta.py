@@ -23,6 +23,7 @@ from .actionsets import ApplyDirichletBoundaryConditions
 from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
 from ..blockstructured.BoundaryConditions import get_boundary_conditions
 from ..blockstructured.SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
+from ..blockstructured.DynamicMeshRefinement import DynamicMeshRefinement
 from .actionsets import ComputeLinearCombination
 from .actionsets import ComputeMaxEigenvalue
 from .actionsets import ComputeTimeStepSize
@@ -806,8 +807,10 @@ Patch overlap data
 
         After the last stage, {SolverName}_Compute time step size determines
         the time step size of the next time step and advances the solver's
-        time stamp, and {SolverName}_Trigger load balancing informs the load
-        balancing.
+        time stamp. {SolverName}_Dynamic mesh refinement finally evaluates the
+        refinement criterion (@ref exahype2.api.blockstructured.DynamicMeshRefinement),
+        switches the load balancing on again and informs it that the time
+        step has finished.
 
         """
         peano4.api.Logger().log(
@@ -1086,24 +1089,29 @@ Patch overlap data
             )
         time_step.add_task(time_step_size_task)
 
-        ## Inform the load balancing once the time step has finished. We
-        ## switch it on before finishStep() is called, i.e. the order of the
-        ## two action sets matters.
-        trigger_load_balancing_task = peano4.api.taskgraph.Task(
-            name=f"{name}_Trigger load balancing",
-            entity=Entity.GLOBAL,
+        ## The very last task evaluates the refinement criterion, i.e. it
+        ## collects refine and erase requests for the mesh adaptation phase,
+        ## and it switches the load balancing on again and informs it that
+        ## the time step has finished.
+        dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
+            name=f"{name}_Dynamic mesh refinement",
+            entity=Entity.CELL,
+            may_spawn_background_tasks=False,
         )
-        trigger_load_balancing_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
-                enable_load_balancing=True, plug_into_prepare_traversal=False
+        dynamic_mesh_refinement_task.use_cell(
+            self._solver._patch, Access.READ_AND_WRITE
+        )
+        dynamic_mesh_refinement_task.add_action_set(
+            DynamicMeshRefinement(self._solver, self.patch_size, guard=cell_guard)
+        )
+        dynamic_mesh_refinement_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.LoadBalancing(
+                enable_load_balancing=True
             )
         )
-        trigger_load_balancing_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.LoadBalancing()
-        )
-        trigger_load_balancing_task.add_dependency(time_step_size_task)
-        trigger_load_balancing_task.add_dependency(previous_stage_task)
-        time_step.add_task(trigger_load_balancing_task)
+        dynamic_mesh_refinement_task.add_dependency(time_step_size_task)
+        dynamic_mesh_refinement_task.add_dependency(previous_stage_task)
+        time_step.add_task(dynamic_mesh_refinement_task)
 
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title="Time stepping task graph for {}".format(name))

@@ -15,6 +15,7 @@ import dastgen2
  
 from ..Solver import Solver
 from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
+from ..blockstructured.DynamicMeshRefinement import DynamicMeshRefinement
 from .actionsets import ApplyDirichletBoundaryConditions
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFaceWithSommerfeldBoundaryConditions
@@ -1208,22 +1209,31 @@ Patch overlap data
             )
         )
 
-        # Inform the load balancing once the time step has finished. We
-        # switch it on before finishStep() is called, i.e. the order of the
-        # two action sets matters.
-        trigger_load_balancing_task = peano4.api.taskgraph.Task(
-            name=f"{self._solver.name}_Trigger load balancing",
-            entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL,
+        # The very last task evaluates the refinement criterion, i.e. it
+        # collects refine and erase requests for the mesh adaptation phase,
+        # and it switches the load balancing on again and informs it that
+        # the time step has finished.
+        dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
+            name=f"{self._solver.name}_Dynamic mesh refinement",
+            entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+            may_spawn_background_tasks=False,
         )
-        trigger_load_balancing_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
-                enable_load_balancing=True, plug_into_prepare_traversal=False
+        dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        dynamic_mesh_refinement_task.add_action_set(
+            DynamicMeshRefinement(
+                self._solver, self.patch_size, guard=self._solver.grid_selector.createCellGuard()
             )
         )
-        trigger_load_balancing_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
-        trigger_load_balancing_task.add_dependency(compute_cfl_condition_task)
-        trigger_load_balancing_task.add_dependency(project_on_faces_task)
-        time_step.add_task(trigger_load_balancing_task)
+        dynamic_mesh_refinement_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
+        )
+        dynamic_mesh_refinement_task.add_dependency(compute_cfl_condition_task)
+        dynamic_mesh_refinement_task.add_dependency(project_on_faces_task)
+        # No other task depends on the discard, so we have to make it a
+        # predecessor explicitly, as the dynamic mesh refinement has to be
+        # the very last task
+        dynamic_mesh_refinement_task.add_dependency(discard_patch_interior_task)
+        time_step.add_task(dynamic_mesh_refinement_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
