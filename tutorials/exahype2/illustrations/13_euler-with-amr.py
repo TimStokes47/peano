@@ -22,6 +22,7 @@ All builds and outputs go into a temporary directory (or --work-directory).
 """
 import argparse
 import os
+import re
 import types
 import subprocess
 import sys
@@ -99,6 +100,19 @@ DynamicEndTime = 0.3
 TimeInBetweenPlots = 0.01
 PatchFile = "solution-EulerFV.peano-patch-file"
 
+FD4InitPointWisely = """
+  constexpr double gamma = 1.4;
+  constexpr double width = 0.05;
+  const double r2  = x[0] * x[0] + x[1] * x[1];
+  const double rho = 1.0 + 0.5 * std::exp(-r2 / (width * width));
+  const double p   = std::pow(rho, gamma);
+  Q[0] = rho;
+  Q[1] = 0.0;
+  Q[2] = 0.0;
+  Q[3] = p / (gamma - 1.0);
+"""
+FD4PatchFile = "solution-EulerFD4.peano-patch-file"
+
 
 def create_solver(adaptive, dynamic=False):
     """! The tutorial's solver over a regular, an adaptive or a dynamically adaptive mesh"""
@@ -171,10 +185,62 @@ def build_and_run(directory, adaptive=False, dynamic=False):
     subprocess.run(["./euler"], cwd=directory, check=True, stdout=subprocess.DEVNULL)
 
 
-def read_snapshot(directory, snapshot):
+def build_and_run_fd4(directory, init_point_wisely):
+    """!
+
+    Generate, compile and run the fourth-order Finite Differences over the
+    regular mesh within directory
+
+    The run writes its output into directory/run.log, so we can parse the
+    time step sizes afterwards. A run of the point explosion breaks down
+    early, so we do not check its exit code.
+
+    """
+    project = exahype2.api.Project(
+        namespace=["tutorials", "exahype2", "euler"],
+        project_name="Euler",
+        directory=directory,
+        executable="euler",
+    )
+    solver = exahype2.api.Solver("EulerFD4", 4, 0)
+    solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
+    solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
+    solver.add_pde_term(
+        exahype2.api.MaxEigenvalue(implementation=MaxEigenvalue, stateless=False)
+    )
+    solver.add_pde_term(
+        exahype2.api.InitPointWisely(implementation=init_point_wisely, stateless=False)
+    )
+    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        solver, patch_size=9, rk_order=4
+    )
+    solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
+        solver, volume_size=VolumeSize
+    )
+    solver.plotter = exahype2.api.rkfd4.PlotAsVTKFile(
+        solver, first_plot_time_stamp=0.0, time_in_between_plots=TimeInBetweenPlots
+    )
+    project.add_solver(solver)
+    project.set_global_simulation_parameters(
+        dimensions=2,
+        offset=[-0.5, -0.5],
+        size=[1.0, 1.0],
+        min_end_time=EndTime,
+        max_end_time=EndTime,
+        periodic_BC=[True, True, True],
+    )
+    project.set_Peano4_installation(PeanoRoot, peano4.api.output.CompileMode.RELEASE)
+    peano4_project = project.generate_Peano4_project()
+    peano4_project.generate()
+    subprocess.run(["make", "-j"], cwd=directory, check=True, stdout=subprocess.DEVNULL)
+    with open(os.path.join(directory, "run.log"), "w") as log:
+        subprocess.run(["./euler"], cwd=directory, stdout=log, stderr=subprocess.STDOUT)
+
+
+def read_snapshot(directory, snapshot, patch_file=PatchFile):
     """! Return the time stamp and all patches (offset, size, values) of a snapshot"""
     snapshots = tarch.plotter.api.notebook.read_snapshots(
-        os.path.join(directory, PatchFile)
+        os.path.join(directory, patch_file)
     )
     time_stamp, patch_files = snapshots[snapshot]
     patches = [
@@ -183,15 +249,15 @@ def read_snapshot(directory, snapshot):
     return time_stamp, patches
 
 
-def number_of_snapshots(directory):
+def number_of_snapshots(directory, patch_file=PatchFile):
     return len(
-        tarch.plotter.api.notebook.read_snapshots(os.path.join(directory, PatchFile))
+        tarch.plotter.api.notebook.read_snapshots(os.path.join(directory, patch_file))
     )
 
 
-def density_along_x_axis(directory, snapshot):
+def density_along_x_axis(directory, snapshot, patch_file=PatchFile):
     """! Return time stamp plus volume centres and densities along y=0, x>=0"""
-    time_stamp, patches = read_snapshot(directory, snapshot)
+    time_stamp, patches = read_snapshot(directory, snapshot, patch_file)
     x, rho = [], []
     for offset, size, values in patches:
         if offset[1] <= 0.0 < offset[1] + size[1]:
@@ -535,6 +601,88 @@ def plot_dynamic_mesh_change(directory):
     plt.close(fig)
 
 
+def plot_fd4_explosion_time_step_sizes(directory):
+    """! Time step sizes of the fourth-order Finite Differences for the point explosion"""
+    times, sizes = [], []
+    with open(os.path.join(directory, "run.log")) as log:
+        for line in log:
+            match = re.search(r"\bt=([0-9.eE+-]+), new dt=([0-9.eE+-]+)", line)
+            if match:
+                times.append(float(match.group(1)))
+                sizes.append(float(match.group(2)))
+    fig, ax = plt.subplots(figsize=(7, 3.5))
+    ax.semilogy(times, sizes, marker="o", markersize=2, linewidth=0.8)
+    ax.set_xlabel("time")
+    ax.set_ylabel("time step size")
+    ax.set_title("Fourth-order Finite Differences for the point explosion")
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-fd4-explosion-time-step-size.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+    print(
+        "FD4 explosion: {} time steps, last t={}, first dt={}, last dt={}".format(
+            len(times), times[-1], sizes[0], sizes[-1]
+        )
+    )
+
+
+def plot_fd4_snapshots(directory):
+    """! Density of the Gaussian pulse at three time stamps side by side"""
+    file_name = os.path.join(directory, FD4PatchFile)
+    snapshots = number_of_snapshots(directory, FD4PatchFile)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
+    for ax, snapshot in zip(
+        axes, [(snapshots - 1) // 4, (snapshots - 1) // 2, snapshots - 1]
+    ):
+        tarch.plotter.api.notebook.plot_snapshot(
+            file_name, snapshot, 0, label="density", ax=ax
+        )
+    fig.tight_layout()
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-fd4-snapshots.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
+def plot_fd4_profile(directory):
+    """! Density of the Gaussian pulse along the positive x-axis at a few time stamps"""
+    fig, ax = plt.subplots(figsize=(7, 4))
+    snapshots = number_of_snapshots(directory, FD4PatchFile)
+    for snapshot, colour in zip(
+        [0, (snapshots - 1) // 4, (snapshots - 1) // 2, snapshots - 1],
+        ["C0", "C1", "C2", "C3"],
+    ):
+        t, x, rho = density_along_x_axis(directory, snapshot, FD4PatchFile)
+        ax.plot(
+            x,
+            rho,
+            "o-",
+            color=colour,
+            markersize=2,
+            linewidth=0.8,
+            label="t={:.2f}".format(t),
+        )
+        print(
+            "FD4 pulse t={:.2f}: density in [{:.4f},{:.4f}], maximum at r={:.3f}".format(
+                t, rho.min(), rho.max(), x[np.argmax(rho)]
+            )
+        )
+    ax.set_xlabel("distance r from the centre (along y=0)")
+    ax.set_ylabel("density")
+    ax.set_title("Density profile of the Gaussian pulse (FD4)")
+    ax.legend()
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-fd4-profile.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
 def plot_mesh_adaptation_task_graph():
     """! Construct the mesh adaptation task graph of the dynamically adaptive setup and draw it"""
     peano4.api.Logger().file_name = os.path.join(
@@ -578,11 +726,31 @@ if __name__ == "__main__":
         action="store_true",
         help="Reuse the output of a previous run within the work directory",
     )
+    parser.add_argument(
+        "--fd4-only",
+        action="store_true",
+        help="Create only the pictures of the section on the fourth-order Finite Differences",
+    )
     args = parser.parse_args()
 
     work_directory = args.work_directory or tempfile.mkdtemp(
         prefix="13_euler-with-amr-"
     )
+    fd4_explosion_directory = os.path.join(work_directory, "fd4-explosion")
+    fd4_pulse_directory = os.path.join(work_directory, "fd4-pulse")
+    os.makedirs(fd4_explosion_directory, exist_ok=True)
+    os.makedirs(fd4_pulse_directory, exist_ok=True)
+    if not args.skip_run:
+        print("build and run FD4 in {} and {}".format(fd4_explosion_directory, fd4_pulse_directory))
+        build_and_run_fd4(fd4_explosion_directory, InitPointWisely)
+        build_and_run_fd4(fd4_pulse_directory, FD4InitPointWisely)
+    plot_fd4_explosion_time_step_sizes(fd4_explosion_directory)
+    plot_fd4_snapshots(fd4_pulse_directory)
+    plot_fd4_profile(fd4_pulse_directory)
+    if args.fd4_only:
+        print("wrote PNGs into {}".format(Here))
+        sys.exit(0)
+
     directory = os.path.join(work_directory, "regular-grid")
     os.makedirs(directory, exist_ok=True)
     if not args.skip_run:
