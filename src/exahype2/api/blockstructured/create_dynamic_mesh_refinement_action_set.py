@@ -14,6 +14,7 @@ def create_dynamic_mesh_refinement_action_set(
     min_volume_size: float = None,
     max_volume_size: float = None,
     hand_events_to_peano: bool = False,
+    veto_erase: bool = False,
 ):
     """!
 
@@ -48,6 +49,9 @@ def create_dynamic_mesh_refinement_action_set(
     @param hand_events_to_peano: bool
       See exahype2.api.blockstructured.DynamicMeshRefinement.
 
+    @param veto_erase: bool
+      See exahype2.api.blockstructured.DynamicMeshRefinement.
+
     @return The action set, or None if the solver has no adaptivity
       criterion.
 
@@ -70,4 +74,5 @@ def create_dynamic_mesh_refinement_action_set(
         min_volume_size=min_volume_size,
         max_volume_size=max_volume_size,
         hand_events_to_peano=hand_events_to_peano,
+        veto_erase=veto_erase,
     )

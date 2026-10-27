@@ -34,8 +34,11 @@ class SetupSimulationWithUserCodedRefinementCriterion(SetupSimulationOverRegular
       turns the criterion's outcome into refine or erase events for
       ExaHyPE's refinement service. Different to the time step, it also
       hands the service's events over to Peano.
-      The mesh is never refined below min_volume_size and never coarsened
-      beyond the regular mesh.
+      The mesh is never refined below min_volume_size.
+      The setup vetoes all erase commands, i.e. it only ever refines the
+      regular mesh: It has no restriction which would hand the patches of
+      erased cells over to their parent. Erase commands of the criterion
+      hence only take effect once the time stepping runs.
     - exahype2.api.fv.actionsets.InitialiseNewCells sets the initial
       condition within each cell which the refinement creates.
 
@@ -124,6 +127,7 @@ class SetupSimulationWithUserCodedRefinementCriterion(SetupSimulationOverRegular
                 min_volume_size=self.min_volume_size,
                 max_volume_size=self.volume_size,
                 hand_events_to_peano=True,
+                veto_erase=True,
             )
         )
         adapt_mesh_task.add_action_set(

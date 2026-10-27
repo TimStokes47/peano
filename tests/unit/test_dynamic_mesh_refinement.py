@@ -111,6 +111,12 @@ def test_gradient_criterion_yields_gradient_action_set(scheme, tmp_path):
     assert "finishStep()" in dynamic_mesh_refinement.get_body_of_unprepareTraversal()
 
 
+@pytest.mark.parametrize("scheme", SCHEMES)
+def test_time_step_does_not_veto_erase(scheme, tmp_path):
+    [dynamic_mesh_refinement, _] = _last_task(_solver(scheme), tmp_path).action_sets
+    assert "RefinementCommand::Erase," in _criterion_body(dynamic_mesh_refinement)
+
+
 def test_two_criteria_are_rejected(tmp_path):
     solver = _solver("fv")
     solver.add_pde_term(exahype2.api.GradientRefinement(implementation=""))

@@ -89,7 +89,8 @@ def test_adapt_mesh_task_hosts_criterion_and_initialisation(tmp_path):
     )
     # Volumes of 0.002 within patches of 9 volumes, regular mesh volumes of 0.02
     assert ">= 0.018" in body
-    assert "< 0.18" in body
+    # The setup never erases
+    assert "RefinementCommand::Erase," not in body
     assert "finishStep()" in criterion.get_body_of_unprepareTraversal()
     assert (
         "createGridControlEventsForNextTraversal()"

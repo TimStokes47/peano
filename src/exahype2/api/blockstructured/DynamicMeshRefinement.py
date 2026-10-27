@@ -49,7 +49,11 @@ class DynamicMeshRefinement(ActionSet):
     requests (@ref exahype2::isMeshAdaptationRequired()). The setup's mesh
     adaptation (@ref exahype2.api.fv.SetupSimulationWithUserCodedRefinementCriterion)
     instead lets the action set hand the events over to Peano right away
-    (hand_events_to_peano).
+    (hand_events_to_peano). It also vetoes all erase commands (veto_erase):
+    The setup has no restriction which would hand the patches of erased
+    cells over to their parent, i.e. a parent would end up with an
+    uninitialised patch. The mesh adaptation phase of the time stepping
+    always restricts (@ref toolbox.blockstructured.api.InterpolateAndRestrictCells).
 
     Subclasses which evaluate a different adaptivity criterion only replace
     the per-volume evaluation (@ref exahype2.api.blockstructured.DynamicMeshRefinement.DynamicMeshRefinement.get_volume_evaluation()), e.g.
@@ -70,6 +74,7 @@ class DynamicMeshRefinement(ActionSet):
         max_volume_size: float = None,
         event_lifetime: int = 2,
         hand_events_to_peano: bool = False,
+        veto_erase: bool = False,
     ):
         """!
 
@@ -101,6 +106,10 @@ class DynamicMeshRefinement(ActionSet):
           Peano realises them in the subsequent mesh sweeps. The time step
           leaves this off, the setup's mesh adaptation switches it on.
 
+        @param veto_erase: bool
+          Drop all erase commands, i.e. only ever refine. The time step
+          leaves this off, the setup's mesh adaptation switches it on.
+
         """
         super().__init__(descend_invocation_order=1, parallel=False)
         self._solver = solver
@@ -110,6 +119,7 @@ class DynamicMeshRefinement(ActionSet):
         self.min_volume_size = min_volume_size
         self.max_volume_size = max_volume_size
         self.hand_events_to_peano = hand_events_to_peano
+        self.veto_erase = veto_erase
 
     ## Per-volume evaluation of the point-wise criterion
     TemplateEvaluateVolume = """
@@ -148,9 +158,11 @@ class DynamicMeshRefinement(ActionSet):
   if ( anyVolumeWantsToRefine {{REFINE_BOUND}}) {
     _localRefinementControl.addCommand( marker.x(), marker.h(), ::exahype2::RefinementCommand::Refine, {{EVENT_LIFETIME}} );
   }
+{%- if not VETO_ERASE %}
   else if ( not anyVolumeWantsToRefine and allVolumesWantToErase {{ERASE_BOUND}}) {
     _localRefinementControl.addCommand( marker.x(), marker.h(), ::exahype2::RefinementCommand::Erase, {{EVENT_LIFETIME}}, marker.getRelativePositionWithinFatherCell() );
   }
+{%- endif %}
   logTraceOut( "touchCellFirstTime(...)---DynamicMeshRefinement" );
 """
 
@@ -179,6 +191,7 @@ class DynamicMeshRefinement(ActionSet):
                 "REFINE_BOUND": refine_bound,
                 "ERASE_BOUND": erase_bound,
                 "EVENT_LIFETIME": self.event_lifetime,
+                "VETO_ERASE": self.veto_erase,
             }
             template = self.TemplateEvaluateCriterion.replace(
                 "{{EVALUATE_VOLUME}}", self.get_volume_evaluation()
