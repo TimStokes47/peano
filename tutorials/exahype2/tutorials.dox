@@ -16,20 +16,23 @@ machine is ready for all the other tutorials.
 
 Build Peano with ExaHyPE 2 enabled as described in the
 @ref page_installation_home "installation instructions" first. Then create a
-virtual environment in Peano's root directory, install the Python requirements
-into it, and launch Jupyter from within this environment:
+virtual environment in Peano's root directory, install Peano's Python API with
+all its requirements into it, and launch Jupyter from within this environment:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -e .
 cd tutorials/exahype2
 jupyter lab 00_getting-started.ipynb
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The notebooks set the path to Peano's Python API themselves, so you do not have
-to set any `PYTHONPATH`. When you come back later, reactivate the environment
+This is the setup that the @ref page_installation_home "installation instructions"
+recommend. In addition, the notebooks put the Python API of the checkout they
+live in first on the search path, so they always use the API that matches the
+Peano build next to them, and you do not have to set any `PYTHONPATH`. When you
+come back later, reactivate the environment
 with `source .venv/bin/activate` before you launch Jupyter. If you prefer to
 start Jupyter from somewhere else, register the environment as a kernel via
 `python -m ipykernel install --user --name peano` and pick this kernel within
