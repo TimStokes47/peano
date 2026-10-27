@@ -1035,8 +1035,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
         since the remaining FV action sets that need them - @see
         exahype2.api.fv.actionsets.ApplyDirichletBoundaryConditions,
         exahype2.api.fv.actionsets.UpdateCell,
-        exahype2.api.fv.actionsets.ComputeGlobalCFLCondition,
-        exahype2.api.fv.actionsets.AdaptivityCriterion - are handed that
+        exahype2.api.fv.actionsets.ComputeGlobalCFLCondition - are handed that
         shared solver and look the patches up as solver._patch /
         solver._patch_overlap_*.
 

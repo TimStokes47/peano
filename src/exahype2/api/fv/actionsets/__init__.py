@@ -6,7 +6,6 @@ from .RollOverUpdatedFaceWithSommerfeldBoundaryConditions import (
     RollOverUpdatedFaceWithSommerfeldBoundaryConditions,
 )
 from .ApplyDirichletBoundaryConditions import ApplyDirichletBoundaryConditions
-from .AdaptivityCriterion import AdaptivityCriterion
 from .InitialCondition import InitialCondition
 from .InitialiseNewCells import InitialiseNewCells
 from .ProjectPatchOntoFaces import ProjectPatchOntoFaces
