@@ -185,3 +185,11 @@ void exahype2::Solver::enforceTimeStepSize(double timeStepSize) {
   _minTimeStepSize = timeStepSize;
   _maxTimeStepSize = timeStepSize;
 }
+
+
+void exahype2::Solver::resetTimeStepSize() {
+  tarch::multicore::Lock lock(_semaphore);
+  _minTimeStepSize        = 0.0;
+  _maxTimeStepSize        = 0.0;
+  _admissibleTimeStepSize = 0.0;
+}

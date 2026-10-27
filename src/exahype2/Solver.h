@@ -139,6 +139,22 @@ class exahype2::Solver {
      */
     void enforceTimeStepSize(double timeStepSize);
 
+    /**
+     * Restart the time stepping with a time step size of zero
+     *
+     * Thread-safely sets the current minimum and maximum time step size and
+     * the admissible time step size to zero (protected by _semaphore). The
+     * next time step hence behaves like the very first one: It does not
+     * advance the time stamp, but it derives an admissible time step size
+     * from the current solution and mesh. The mesh adaptation uses this
+     * routine whenever it has changed the mesh, as the time step size of the
+     * old mesh might violate the CFL condition on the new one (@see
+     * exahype2.api.blockstructured.ConsumeRefinementRequests). Optimistic
+     * time stepping does not apply any estimate in this time step, as the
+     * admissible time step size is zero.
+     */
+    void resetTimeStepSize();
+
   protected:
     double _minTimeStamp;
     double _maxTimeStamp;

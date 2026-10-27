@@ -9,9 +9,12 @@ from .NonconservativeProduct import NonconservativeProduct
 from .VolumetricSource import VolumetricSource
 from .PointSource import PointSource
 from .InitPointWisely import InitPointWisely
-from .DirichletBoundaryConditions import DirichletBoundaryConditions
-from .SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
-from . import BoundaryConditions
+from .AdaptivityCriterion import AdaptivityCriterion
+from .RefineErasePointwisely import RefineErasePointwisely
+from .GradientRefinement import GradientRefinement
+from . import blockstructured
+from .blockstructured import DirichletBoundaryConditions
+from .blockstructured import SommerfeldBoundaryConditions
 from .KernelVariants import Target
 from .Solver import Solver
 from .SolverToCPPFiles import SolverToCPPFiles

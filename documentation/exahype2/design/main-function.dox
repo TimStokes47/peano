@@ -79,14 +79,20 @@ been swapped out for the ExaHyPE-flavoured sequence.
 
 ### The program phases
 
-There are three distinct program phases:
+There are four distinct program phases:
 
 1. Setting up the simulation
 2. Time stepping
 3. Plotting
+4. Mesh adaptation and dynamic load balancing
 
-The default runner simply toggles between those three phases. For each one,
-it 
+The default runner, exahype2::runSimulation(), runs the setup once and then
+toggles between time stepping and plotting. Right after each time step, it
+runs the mesh adaptation if exahype2::isMeshAdaptationRequired() holds, i.e.
+if the time step has asked for a mesh refinement or erase, or if the load
+balancing has split recently. Solvers contribute to this fourth phase only if
+they have a mesh adaptation (exahype2.api.Solver.Solver.MeshAdaptation). The
+runner never runs the phase if no solver has contributed to it.
 
 
 ## The default runner

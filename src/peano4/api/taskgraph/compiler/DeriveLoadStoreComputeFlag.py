@@ -96,20 +96,22 @@ def derive_load_store_compute_flag(steps: List["peano4.api.solversteps.Step"]) -
     the three predicates:
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ::peano4::grid::constructLoadStoreComputeFlag((guard) and (use), (guard) and (load), (guard) and (store))
+    ::peano4::grid::constructLoadStoreComputeFlag((guard) and (use), (guard) and (load), (store guard) and (store))
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     That is, data are only used, loaded or stored if the selector holds
-    and the steps above conclude that they are needed. The guard is
-    evaluated within the generated loadStoreComputeFlag(marker), i.e. it
+    and the steps above conclude that they are needed. The guards are
+    evaluated within the generated loadStoreComputeFlag(marker), i.e. they
     can query the marker.
 
-    @note Peano's stacks require that a datum stored in one mesh sweep is
-    loaded in the next one. A selector which depends on the refinement
-    state, such as peano4.api.toolbox.FineGridSelector, therefore has to
-    yield the same answer for the store and the subsequent load. This holds
-    as long as the mesh does not change between the two sweeps, but not
-    in general for dynamically adaptive meshes.
+    Peano's stacks require that a datum stored in one mesh sweep is
+    loaded in the next one. The store predicate hence uses the selector's
+    store guard (createCellStoreGuard(), createFaceStoreGuard() or
+    createVertexStoreGuard()). It anticipates the guard's value in the next
+    sweep. For a selector which depends on the refinement state, such as
+    peano4.api.toolbox.FineGridSelector, it differs from the guard if the
+    mesh changes. This keeps stores and loads consistent on dynamically
+    adaptive meshes.
 
     This does not touch generator.send_condition/receive_and_merge_condition -
     those are a separate, MPI rank-boundary concern this function has
@@ -255,9 +257,15 @@ def _derive_load_store_compute_flag_for_one_kind(
         grid_selector = getattr(submodel, "grid_selector", None)
         if grid_selector is not None:
             guard = getattr(grid_selector, guard_routine_name)()
+            store_guard_routine_name = guard_routine_name.replace("Guard", "StoreGuard")
+            store_guard = (
+                getattr(grid_selector, store_guard_routine_name)()
+                if hasattr(grid_selector, store_guard_routine_name)
+                else guard
+            )
             use_expression = f"({guard}) and ({use_expression})"
             load_expression = f"({guard}) and ({load_expression})"
-            store_expression = f"({guard}) and ({store_expression})"
+            store_expression = f"({store_guard}) and ({store_expression})"
         new_flag = (
             f"::peano4::grid::constructLoadStoreComputeFlag({use_expression}, {load_expression}, {store_expression})"
         )

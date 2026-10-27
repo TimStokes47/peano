@@ -1,5 +1,5 @@
 """Boundary condition terms of exahype2.api and how the numerical schemes
-realise them (@ref exahype2.api.BoundaryConditions)."""
+realise them (@ref exahype2.api.blockstructured.BoundaryConditions)."""
 import types
 
 import pytest
@@ -46,14 +46,14 @@ def _dirichlet():
 
 
 def test_has_domain_boundary():
-    has_domain_boundary = exahype2.api.BoundaryConditions.has_domain_boundary
+    has_domain_boundary = exahype2.api.blockstructured.BoundaryConditions.has_domain_boundary
     assert not has_domain_boundary(_project([True, True, True]))
     assert has_domain_boundary(_project([True, False, True]))
     assert has_domain_boundary(_project([False, False, False]))
 
 
 def test_get_boundary_conditions_returns_the_one_term():
-    get_boundary_conditions = exahype2.api.BoundaryConditions.get_boundary_conditions
+    get_boundary_conditions = exahype2.api.blockstructured.BoundaryConditions.get_boundary_conditions
     dirichlet = _dirichlet()
     assert (
         get_boundary_conditions(_solver(dirichlet), _project([False] * 3)) is dirichlet
@@ -93,7 +93,7 @@ def test_get_boundary_conditions_rejects_inconsistent_terms(
     solver, periodic_BC, message
 ):
     with pytest.raises(ValueError, match=message):
-        exahype2.api.BoundaryConditions.get_boundary_conditions(
+        exahype2.api.blockstructured.BoundaryConditions.get_boundary_conditions(
             solver(), _project(periodic_BC)
         )
 
@@ -125,7 +125,7 @@ def _realisation(
         periodic_BC=periodic_BC,
     )
     peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
-    graphs = [peano4.api.taskgraph.Graph() for _ in range(3)]
+    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
     solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
     return [{task.name: task for task in graph.tasks} for graph in graphs[:2]]
 

@@ -4,8 +4,8 @@ import jinja2
 import peano4.api
 
 from .RollOverUpdatedFace import RollOverUpdatedFace
-from ...BoundaryConditions import get_boundary_conditions
-from ...SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
+from ...blockstructured.BoundaryConditions import get_boundary_conditions
+from ...blockstructured.SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
 
 
 class RollOverUpdatedFaceWithSommerfeldBoundaryConditions(RollOverUpdatedFace):
@@ -120,7 +120,7 @@ class RollOverUpdatedFaceWithSommerfeldBoundaryConditions(RollOverUpdatedFace):
 
         @param origin: List[float]
           Centre of the system, one entry per dimension, @ref
-          exahype2.api.SommerfeldBoundaryConditions.SommerfeldBoundaryConditions.get_origin().
+          exahype2.api.blockstructured.SommerfeldBoundaryConditions.SommerfeldBoundaryConditions.get_origin().
 
         @param time_step_size: str
           C++ expression for the time step size by which the ghost volumes
@@ -186,7 +186,7 @@ class RollOverUpdatedFaceWithSommerfeldBoundaryConditions(RollOverUpdatedFace):
           The solver whose solver._patch_overlap_update is rolled over into
           solver._patch_overlap_current_time_step. Its boundary condition
           terms have to be consistent with the domain, @ref
-          exahype2.api.BoundaryConditions.get_boundary_conditions().
+          exahype2.api.blockstructured.BoundaryConditions.get_boundary_conditions().
 
         @param exahype2_project: exahype2.api.Project
           Provides the periodic boundary conditions.

@@ -199,6 +199,41 @@ namespace exahype2 {
 
 
     /**
+     * Compute a one-sided difference quotient of the solution within a patch
+     *
+     * The routine computes the difference quotient of all unknowns and
+     * auxiliary variables along one coordinate axis. The left difference
+     * quotient of volume @f$ j @f$ is @f$ (Q_j - Q_{j-1})/h @f$, the right one
+     * is @f$ (Q_{j+1} - Q_j)/h @f$.
+     *
+     * The routine works on the patch without any halo, i.e. a volume at the
+     * patch boundary has no neighbour on one side. For such a volume, the
+     * routine falls back to the difference quotient towards the patch's
+     * interior. If the patch hosts only one volume per axis, there is no
+     * neighbour at all and the routine returns zero.
+     *
+     * Assumes all data are held as AoS.
+     *
+     * @param Q          Patch data without halo, i.e. numberOfVolumesPerAxisInPatch^d volumes
+     * @param volume     Index of the volume within the patch
+     * @param normal     Coordinate axis along which to compute the difference quotient
+     * @param isRight    Compute the right (true) or the left (false) difference quotient
+     * @param volumeSize Edge length of one volume
+     * @param gradient   Output with unknownsPlusAuxiliaryVariables entries
+     */
+    void computeOneSidedGradient(
+      const double* __restrict__               Q,
+      int                                      unknownsPlusAuxiliaryVariables,
+      int                                      numberOfVolumesPerAxisInPatch,
+      const tarch::la::Vector<Dimensions,int>& volume,
+      int                                      normal,
+      bool                                     isRight,
+      double                                   volumeSize,
+      double* __restrict__                     gradient
+    );
+
+
+    /**
      * Helper routine that I need in the log statements. Applies to
      * AoS data only.
      *

@@ -14,7 +14,10 @@ import exahype2.api.dslhype as dslhype
 import dastgen2
  
 from ..Solver import Solver
-from ..BoundaryConditions import get_access_to_persistent_face_data
+from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
+from ..blockstructured.create_dynamic_mesh_refinement_action_set import (
+    create_dynamic_mesh_refinement_action_set,
+)
 from .actionsets import ApplyDirichletBoundaryConditions
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFaceWithSommerfeldBoundaryConditions
@@ -872,7 +875,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
 
     """
 
-    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95, spawn_optimistic_calculations_as_task: bool = True):
+    def __init__(self, solver: Solver, patch_size: int, overlap: int = 1, cfl_constant: float = 0.9, damp_time_step_size: float = 0.95, spawn_optimistic_calculations_as_task: bool = True, min_volume_size: float = None, max_volume_size: float = None):
         """!
 
         The constructor memorises the attributes. However, it does not do this
@@ -914,10 +917,27 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           (@see __create_data_structures()). If False, Spawn patch interior
           update runs the patch interior update straightaway.
 
+        min_volume_size: float
+          The time step asks for a refinement of a cell only if its volumes
+          are at least of this size (@ref exahype2.api.blockstructured.DynamicMeshRefinement).
+          None (the default) does not bound the refinement.
+
+        max_volume_size: float
+          The time step asks for an erase, i.e. coarsening, of a cell only
+          if the volumes of the coarser cell would be strictly smaller than
+          this size. None (the default) does not bound the coarsening.
+
         """
         if damp_time_step_size > 1.0:
             raise Exception(f"damp_time_step_size has to be smaller or equal to 1, but is {damp_time_step_size}")
         super().__init__(solver)
+        assert (
+            min_volume_size is None
+            or max_volume_size is None
+            or min_volume_size <= max_volume_size
+        ), f"min_volume_size={min_volume_size} has to be smaller than or equal to max_volume_size={max_volume_size}"
+        self.min_volume_size = min_volume_size
+        self.max_volume_size = max_volume_size
         self.patch_size = patch_size
         self.overlap = overlap
         # Set in construct_output(): the generated kernels live in the project
@@ -1163,6 +1183,17 @@ Patch overlap data
         self._solver._patch_overlap_update.generator.send_condition = "false"
         self._solver._patch_overlap_update.generator.receive_and_merge_condition = "false"
 
+    def create_default_mesh_adaptation(self) -> Solver.MeshAdaptation:
+        """!
+
+        The Finite Volume schemes adapt the mesh and balance the load
+        through exahype2.api.fv.AdaptMeshAndBalanceLoad by default
+
+        """
+        from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
+
+        return AdaptMeshAndBalanceLoad(self._solver)
+
     def construct_output(self,
                          exahype2_project,
                          peano_project,
@@ -1199,15 +1230,45 @@ Patch overlap data
         time_step.add_task(compute_cfl_condition_task)
         time_step.add_task(spawn_patch_interior_task)
 
-        # Inform the load balancing once the time step has finished
-        trigger_load_balancing_task = peano4.api.taskgraph.Task(
-            name=f"{self._solver.name}_Trigger load balancing",
-            entity=peano4.api.taskgraph.Task.GridEntity.GLOBAL,
+        # The load balancing is switched off throughout the time step, and
+        # switched on again only at its very end, so it may then decide on
+        # splits. Peano carries these splits out in the subsequent mesh sweep.
+        reconstruction_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                enable_load_balancing=False, plug_into_prepare_traversal=True
+            )
         )
-        trigger_load_balancing_task.add_action_set(toolbox.loadbalancing.api.actionsets.LoadBalancing())
-        trigger_load_balancing_task.add_dependency(compute_cfl_condition_task)
-        trigger_load_balancing_task.add_dependency(project_on_faces_task)
-        time_step.add_task(trigger_load_balancing_task)
+
+        # The very last task evaluates the adaptivity criterion if the
+        # solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
+        # collects refine and erase requests for the mesh adaptation phase,
+        # and it switches the load balancing on again and informs it that
+        # the time step has finished.
+        dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
+            name=f"{self._solver.name}_Dynamic mesh refinement",
+            entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+            may_spawn_background_tasks=False,
+        )
+        dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+        dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
+            self._solver,
+            self.patch_size,
+            guard=self._solver.grid_selector.createCellGuard(),
+            min_volume_size=self.min_volume_size,
+            max_volume_size=self.max_volume_size,
+        )
+        if dynamic_mesh_refinement is not None:
+            dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
+        dynamic_mesh_refinement_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
+        )
+        dynamic_mesh_refinement_task.add_dependency(compute_cfl_condition_task)
+        dynamic_mesh_refinement_task.add_dependency(project_on_faces_task)
+        # No other task depends on the discard, so we have to make it a
+        # predecessor explicitly, as the dynamic mesh refinement has to be
+        # the very last task
+        dynamic_mesh_refinement_task.add_dependency(discard_patch_interior_task)
+        time_step.add_task(dynamic_mesh_refinement_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
@@ -1371,7 +1432,7 @@ Patch overlap data
             )
         )
         ## Sommerfeld boundary conditions advance the ghost volumes within
-        ## the roll over (@ref exahype2.api.BoundaryConditions)
+        ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
         project_on_faces_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
                 self._solver,
