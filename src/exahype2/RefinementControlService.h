@@ -101,6 +101,9 @@ public:
   /**
    * Should be called after each traversal per rank.
    *
+   * The routine first keeps only those erase requests of the sweep which
+   * belong to complete sibling groups (keepOnlyCompleteSiblingEraseEvents()).
+   *
    * This routine rolls over _newEvents into the _committedEvents if they are still
    * alive. That is, _newEvents holds all the events including an "expiry date", while
    * _committedEvents holds only those which are committed for this mesh traversal.
@@ -150,6 +153,46 @@ private:
    * that a lot of inserts are done per iteration.
    */
   RefinementControl::NewEvents _localNewEvents;
+
+  /**
+   * Erase requests of cells which know their parent, collected over one
+   * mesh sweep
+   *
+   * finishStep() keeps only those requests which Peano can realise and drops
+   * all other ones (@see keepOnlyCompleteSiblingEraseEvents()). Requests
+   * which could never be realised would only keep the refinement service
+   * busy and hence trigger mesh sweeps which do not change the mesh.
+   *
+   * The service can only check siblings which reside on this rank. If the
+   * children of a parent are distributed over several ranks, their erase
+   * requests are dropped.
+   */
+  RefinementControl::NewSiblingEraseEvents _localNewSiblingEraseEvents;
+
+  /**
+   * Move the erase requests which Peano can realise from
+   * _localNewSiblingEraseEvents into _localNewEvents and drop the remaining
+   * ones
+   *
+   * Peano erases the children of a parent cell only if erase requests
+   * cover the parent plus one parent-sized neighbour along each direction
+   * (@ref peano4::grid::Spacetree::evaluateGridControlEvents()). The routine
+   * mirrors this rule:
+   *
+   * - A parent is complete if all its 3^d children have asked to be erased.
+   * - A parent is erasable if it and all 3^d parents around it are complete.
+   * - The routine replaces the requests of the children by one request per
+   *   erasable parent, which covers exactly the parent's neighbourhood, and
+   *   drops all other requests.
+   *
+   * Peano checks whether one (merged) request contains the neighbourhood.
+   * If we handed over the children's requests, Peano's merge would decide
+   * which parents are erased: It merges along one axis first and hence
+   * yields strips, i.e. it would erase different parents along different
+   * directions even if the solution is rotationally symmetric. One request
+   * per erasable parent makes the outcome independent of the merge.
+   */
+  void keepOnlyCompleteSiblingEraseEvents();
 
   std::list<peano4::grid::GridControlEvent> _remoteNewEvents;
 

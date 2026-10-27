@@ -295,6 +295,7 @@ class CCZ4Solver(exahype2.api.Solver):
         setup_simulation,
         time_step,
         plot,
+        mesh_adaptation,
     ):
         """!
 
@@ -330,7 +331,12 @@ class CCZ4Solver(exahype2.api.Solver):
 
         """
         super().generate_solver_realisation(
-            exahype2_project, peano_project, setup_simulation, time_step, plot
+            exahype2_project,
+            peano_project,
+            setup_simulation,
+            time_step,
+            plot,
+            mesh_adaptation,
         )
         Enforce = CCZ4Solver.EnforceCCZ4Constraint
         if self._enforce_ccz4_constraint == Enforce.No:

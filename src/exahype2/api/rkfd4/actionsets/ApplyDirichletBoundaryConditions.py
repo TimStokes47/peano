@@ -6,8 +6,8 @@ import peano4.api
 import peano4.api.taskgraph
 import jinja2
 
-from ...DirichletBoundaryConditions import DirichletBoundaryConditions
-from ...BoundaryConditions import get_boundary_conditions
+from ...blockstructured.DirichletBoundaryConditions import DirichletBoundaryConditions
+from ...blockstructured.BoundaryConditions import get_boundary_conditions
 
 
 class ApplyDirichletBoundaryConditions(ActionSet):
@@ -181,7 +181,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
         @param solver: exahype2.api.Solver
           The solver. Its boundary condition terms have to be consistent
           with the domain, @ref
-          exahype2.api.BoundaryConditions.get_boundary_conditions().
+          exahype2.api.blockstructured.BoundaryConditions.get_boundary_conditions().
 
         @param exahype2_project: exahype2.api.Project
           Provides the periodic boundary conditions.

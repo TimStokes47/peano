@@ -1,6 +1,14 @@
 #include "RefinementControlService.h"
 
 #include "RefinementControl.h"
+
+#include <cmath>
+#include <map>
+#include <set>
+#include <vector>
+
+#include "peano4/utils/Globals.h"
+#include "peano4/utils/Loop.h"
 #include "peano4/grid/grid.h"
 #include "tarch/multicore/RecursiveLock.h"
 #include "tarch/services/ServiceRepository.h"
@@ -87,10 +95,100 @@ std::string exahype2::RefinementControlService::toString() const {
 void exahype2::RefinementControlService::merge(const RefinementControl& control) {
   tarch::multicore::RecursiveLock lock(_semaphore);
   _localNewEvents.insert(_localNewEvents.end(), control._newEvents.begin(), control._newEvents.end());
+  _localNewSiblingEraseEvents.insert(
+    _localNewSiblingEraseEvents.end(),
+    control._newSiblingEraseEvents.begin(),
+    control._newSiblingEraseEvents.end()
+  );
 }
+
+void exahype2::RefinementControlService::keepOnlyCompleteSiblingEraseEvents() {
+  if (_localNewSiblingEraseEvents.empty()) {
+    return;
+  }
+
+  // Identify a parent by its mesh size and its centre in units of half its
+  // mesh size, which are integers up to round-off
+  typedef std::vector<long long> ParentKey;
+  auto key = [](const RefinementControl::SiblingEraseEvent& event) -> ParentKey {
+    ParentKey result;
+    for (int d = 0; d < Dimensions; d++) {
+      result.push_back(std::llround(1e9 * event.parentH(d)));
+      result.push_back(std::llround(2.0 * event.parentCentre(d) / event.parentH(d)));
+    }
+    return result;
+  };
+
+  std::map<ParentKey, std::set<int>> childrenPerParent;
+  for (const auto& event : _localNewSiblingEraseEvents) {
+    childrenPerParent[key(event)].insert(event.positionWithinParent);
+  }
+
+  std::set<ParentKey> completeParents;
+  for (const auto& [parent, children] : childrenPerParent) {
+    if (static_cast<int>(children.size()) == ThreePowerD) {
+      completeParents.insert(parent);
+    }
+  }
+
+  // The 3^d parents around a parent, including the parent itself. A centre
+  // in units of half the mesh size changes by two per neighbour.
+  auto neighbourhood = [](const ParentKey& parent) -> std::vector<ParentKey> {
+    std::vector<ParentKey> result;
+    dfor3(offset) {
+      ParentKey neighbour = parent;
+      for (int d = 0; d < Dimensions; d++) {
+        neighbour[2 * d + 1] += 2 * (offset(d) - 1);
+      }
+      result.push_back(neighbour);
+    }
+    enddforx
+    return result;
+  };
+
+  // One representative request per parent, which provides the parent's
+  // geometry, the mesh size of the event and the lifetime
+  std::map<ParentKey, RefinementControl::SiblingEraseEvent> representative;
+  for (const auto& event : _localNewSiblingEraseEvents) {
+    representative.emplace(key(event), event);
+  }
+
+  int erasableParents = 0;
+  for (const auto& parent : completeParents) {
+    bool wholeNeighbourhoodIsComplete = true;
+    for (const auto& neighbour : neighbourhood(parent)) {
+      wholeNeighbourhoodIsComplete &= completeParents.count(neighbour) > 0;
+    }
+    if (wholeNeighbourhoodIsComplete) {
+      // One erase event which covers exactly the parent plus one parent-sized
+      // neighbour along each direction, enlarged by a relative tolerance
+      const RefinementControl::SiblingEraseEvent& child = representative.at(parent);
+      const tarch::la::Vector<Dimensions, double> width  = (3.0 + 0.03) * child.parentH;
+      const tarch::la::Vector<Dimensions, double> offset = child.parentCentre - 0.5 * width;
+      _localNewEvents.push_back(std::pair<peano4::grid::GridControlEvent, int>(
+        peano4::grid::GridControlEvent(
+          peano4::grid::GridControlEvent::RefinementControl::Erase, offset, width, child.event.getH()
+        ),
+        child.lifetime
+      ));
+      erasableParents++;
+    }
+  }
+
+  logInfo(
+    "keepOnlyCompleteSiblingEraseEvents()",
+    "replace " << _localNewSiblingEraseEvents.size() << " erase request(s) of " << childrenPerParent.size()
+               << " parent(s), of which " << completeParents.size() << " ask to erase all their children, by "
+               << erasableParents << " erase request(s) for parents whose whole neighbourhood can be erased"
+  );
+  _localNewSiblingEraseEvents.clear();
+}
+
 
 void exahype2::RefinementControlService::finishStep() {
   tarch::multicore::RecursiveLock lock(_semaphore);
+
+  keepOnlyCompleteSiblingEraseEvents();
 
   _committedEvents.clear();
 

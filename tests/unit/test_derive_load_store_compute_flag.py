@@ -338,4 +338,31 @@ def test_fine_grid_selector_restricts_patch_to_unrefined_cells():
     derive_load_store_compute_flag([step])
 
     predicate = f"(not marker.hasBeenRefined()) and ({_active(step)})"
+    store_predicate = f"(not marker.willBeRefined()) and ({_active(step)})"
+    assert patch.generator.load_store_compute_flag == _flag(predicate, predicate, store_predicate)
+
+
+def test_store_guard_defaults_to_guard():
+    """A selector without its own store guard stores whenever it loads."""
+    import peano4.api.datamodel
+    import peano4.api.toolbox
+
+    class _Selector(peano4.api.toolbox.GridSelector):
+        def createVertexGuard(self):
+            return "vertexGuard"
+
+        def createFaceGuard(self):
+            return "faceGuard"
+
+        def createCellGuard(self):
+            return "cellGuard"
+
+    step = _make_step("TimeStep_Step")
+    patch = peano4.api.datamodel.Patch((3, 3, 3), 1, "Q")
+    patch.grid_selector = _Selector()
+    _use_cell(step, patch, READ_AND_WRITE)
+
+    derive_load_store_compute_flag([step])
+
+    predicate = f"(cellGuard) and ({_active(step)})"
     assert patch.generator.load_store_compute_flag == _flag(predicate, predicate, predicate)

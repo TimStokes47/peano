@@ -46,10 +46,11 @@ namespace exahype2 {
   /**
    * Run an ExaHyPE 2 simulation
    *
-   * Every ExaHyPE 2 project consists of three runners: one setting up the
+   * Every ExaHyPE 2 project consists of four runners: one setting up the
    * simulation (mesh construction and initial conditions), one plotting the
-   * solution, and one running a time step. The routine realises the main
-   * loop over these runners:
+   * solution, one running a time step, and one adapting the mesh and
+   * rebalancing the load between two time steps. The routine realises the
+   * main loop over these runners:
    *
    * - The global master runs setupSimulation once. Afterwards, it
    *   alternates between plotting and time stepping as long as the minimum
@@ -59,6 +60,14 @@ namespace exahype2 {
    *   twice in a row, as a plot does not advance the simulation. Once the
    *   loop has terminated, the master plots a final time if wantsToPlot()
    *   holds.
+   * - Right after each time step, the global master runs meshAdaptation if
+   *   isMeshAdaptationRequired() holds. It never runs meshAdaptation if
+   *   this runner has no mesh sweeps at all, i.e. if no solver has
+   *   contributed to the mesh adaptation phase. If the mesh adaptation has
+   *   changed the mesh, it resets the time step size to zero
+   *   (exahype2::Solver::resetTimeStepSize()), so the subsequent time step
+   *   does not advance the time stamps. This time step hence is not taken
+   *   into account by the stagnation check below.
    * - After each time step, the global master checks whether the minimum
    *   and the maximum time stamp have changed. If neither has changed, it
    *   writes a warning, as a single step might legitimately not advance in
@@ -84,6 +93,9 @@ namespace exahype2 {
    * @param setupSimulation Runner setting up the simulation.
    * @param plot Runner plotting the solution.
    * @param timeStep Runner running one time step.
+   * @param meshAdaptation Runner adapting the mesh and rebalancing the load.
+   *   Its getFirstSubstep() is peano4::parallel::Node::UndefProgramStep if
+   *   it has no mesh sweeps.
    * @param report Report to which each run of a runner is reported.
    * @param wantsToPlot Does any solver want to plot?
    * @param getMinTimeStamp Minimum time stamp over all solvers.
@@ -98,6 +110,7 @@ namespace exahype2 {
     peano4::RunMultipleSteps&         setupSimulation,
     peano4::RunMultipleSteps&         plot,
     peano4::RunMultipleSteps&         timeStep,
+    peano4::RunMultipleSteps&         meshAdaptation,
     peano4::RunMultipleSteps::Report& report,
     std::function<bool()>             wantsToPlot,
     std::function<double()>           getMinTimeStamp,
@@ -106,6 +119,26 @@ namespace exahype2 {
     double                            minTerminalTime,
     double                            maxTerminalTime
   );
+
+  /**
+   * Does the mesh have to be adapted or the load to be rebalanced?
+   *
+   * runSimulation() asks this predicate right after each time step. It
+   * holds if
+   *
+   * - ::exahype2::RefinementControlService holds committed refinement or
+   *   erase events, i.e. a time step has asked for a mesh change which
+   *   nobody has realised yet, or
+   * - a load balancing strategy is installed and has split recently
+   *   (toolbox::loadbalancing::AbstractLoadBalancing::hasSplitRecently()),
+   *   i.e. it has triggered a rebalancing which Peano still has to carry
+   *   out.
+   *
+   * These are the same predicates which the repeat conditions of the mesh
+   * construction use. As the predicate is evaluated on the global master
+   * only, both refer to this rank's view of the simulation.
+   */
+  bool isMeshAdaptationRequired();
 
   /**
    * Shut down the runtime of an ExaHyPE 2 simulation

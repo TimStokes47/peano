@@ -102,21 +102,6 @@ namespace exagrype {
       #endif
 
       /**
-       * @todo Han
-       */
-      #if defined(SharedOMP)
-      #pragma omp declare simd
-      #endif
-      KeywordToAvoidDuplicateSymbolsForInlinedFunctions void maxEigenvalue(
-        const double* const Q,
-        int                 normal,
-        const double        CCZ4e,
-        const double        CCZ4ds,
-        const double        CCZ4GLMc,
-        const double        CCZ4GLMd
-      ) InlineMethod;
-
-      /**
        * This is a postprocessing routine to monitor if the physical constraints
        * are fulfilled. Used in python script.
        */
@@ -148,16 +133,6 @@ namespace exagrype {
        * If works on the full set of unknowns of the first-order formulation
        */
       void enforceCCZ4constraints(double* __restrict__  newQ);
-
-      /**
-       * Anticipate Euler step and correct dQdt such that outcome does fulfill
-       * constraints.
-       */
-      void enforceCCZ4constraints(
-        const double* __restrict__  oldQ,
-        double* __restrict__        dQdt,
-        double                      timeStepSize
-      );
 
       /**
        * Add the Kreiss-Oliger dissipation of a patch to its right-hand side
