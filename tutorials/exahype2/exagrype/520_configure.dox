@@ -51,8 +51,19 @@ libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-
 ./configure --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-particles \
             --enable-exagrype --with-gsl --with-multithreading=omp \
             CXXFLAGS="-std=c++20 -O3 -fopenmp -Wno-attributes" LDFLAGS="-fopenmp"
-make -j
+make -j4
 ~~~~~~~~~~~~~~~~~~~~~~~
+
+Give make an explicit number of parallel jobs. A plain \c make \c -j starts
+as many compiler processes as there are files to compile, which exhausts the
+memory of a workstation.
+
+On macOS, \c libtoolize is called \c glibtoolize, and Apple's clang does not
+support \c -fopenmp. Install GCC via Homebrew and pass it to configure, e.g.
+\c CC=gcc-16 \c CXX=g++-16 (use the version number of your GCC). Do not
+configure with \c CPPFLAGS or \c LDFLAGS pointing to Homebrew's \c libomp:
+Peano's libraries then pick up its \c omp.h, while the generated
+applications use GCC's, and the executables crash at start-up.
 
 On a cluster with the Intel toolchain and MPI, the call becomes
 
@@ -95,7 +106,7 @@ If you prefer CMake, build out-of-tree with the equivalent options:
 mkdir build && cd build
 cmake .. -DENABLE_EXAHYPE=ON -DENABLE_BLOCKSTRUCTURED=ON -DENABLE_LOADBALANCING=ON -DENABLE_PARTICLES=ON \
          -DENABLE_EXAGRYPE=ON -DWITH_GSL=ON -DWITH_MULTITHREADING=omp
-make -j
+make -j4
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 CMake locates GSL via its \c FindGSL module. For a non-standard installation,
