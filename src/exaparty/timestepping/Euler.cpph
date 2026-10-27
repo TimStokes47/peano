@@ -1,0 +1,32 @@
+#include "exaparty/kernels/ParticleUpdatePredicates.h"
+
+
+template <typename Particle>
+void exaparty::timestepping::computeExplicitEulerWithGlobalTimeStepSize(
+  const peano4::datamanagement::VertexMarker&  marker,
+  Particle&                                    particle
+) {
+  double timeStepSize = Particle::getSpecies().getMinTimeStepSize();
+
+  if ( ::exaparty::kernels::localParticleCanBeUpdatedAndMovedInVertexKernel(marker, particle) ) {
+    particle.setX( particle.getX() + timeStepSize * particle.getV() );
+    particle.setV( particle.getV() + timeStepSize * particle.getA() );
+    particle.setMoveState(Particle::MoveState::Moved);
+  }
+}
+
+
+template <typename Particle>
+void exaparty::timestepping::computeExplicitEulerCromerWithGlobalTimeStepSize(
+  const peano4::datamanagement::VertexMarker&  marker,
+  Particle&                                    particle
+) {
+  double timeStepSize = Particle::getSpecies().getMinTimeStepSize();
+
+  if ( ::exaparty::kernels::localParticleCanBeUpdatedAndMovedInVertexKernel(marker, particle) ) {
+    particle.setV( particle.getV() + timeStepSize * particle.getA() );
+    particle.setX( particle.getX() + timeStepSize * particle.getV() );
+    particle.setMoveState(Particle::MoveState::Moved);
+  }
+}
+

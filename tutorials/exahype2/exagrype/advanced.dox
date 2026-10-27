@@ -12,10 +12,12 @@ continuing here.
 # Adding New Physics Scenarios
 For vacuum spacetimes, different physics scenarios are represented by different initial
 conditions. The initial conditions of ExaGRyPE can be assigned via a direct function, e.g., as done for the gauge
-wave scenario in \c InitialValues.cpp
+wave scenario in \c src/exagrype/initialvalues/InitialValues.cpp. New analytical scenarios that
+are of general use belong into this file (and the namespace exagrype::initialvalues), so all ExaGRyPE
+applications can use them:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void applications::exahype2::ccz4::newScenario(
+void exagrype::initialvalues::newScenario(
   double * __restrict__ Q, // Q[64+0],
   const tarch::la::Vector<Dimensions,double>&  x,
   double t
@@ -27,7 +29,10 @@ void applications::exahype2::ccz4::newScenario(
 
 For more complicated initial conditions (e.g., black holes), users can introduce their own calculation library
 and include it before generating and building the Peano project. We also recommend defining a corresponding
-C++ flag to avoid potential linking issues when another scenario is picked.
+C++ flag to avoid potential linking issues when another scenario is picked. Such scenarios stay with
+your application rather than in the ExaGRyPE library. The TwoPunctures binding in
+\c src/exagrype/initialvalues/ApplyTwoPunctures.cpp is an example of such a calculator
+guarded by a flag.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 peano4_project.output.makefile.add_cpp_file( "MyICCalculators/Calculator1.cpp" )

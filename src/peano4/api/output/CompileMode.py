@@ -13,11 +13,11 @@ class CompileMode(Enum):
     string representation into an actual modus.
     
   """
-  Debug   = 0
-  Trace   = 1
-  Asserts = 2
-  Release = 3
-  Stats   = 4
+  DEBUG   = 0
+  TRACE   = 1
+  ASSERTS = 2
+  RELEASE = 3
+  STATS   = 4
 
 
 """!
@@ -30,7 +30,7 @@ parser.add_argument("-m", "--mode", dest="mode", choices=peano4.api.output.Compi
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
-CompileModes = [ "Release", "Stats", "Trace", "Asserts", "Debug" ]
+CompileModes = [ "RELEASE", "STATS", "TRACE", "ASSERTS", "DEBUG" ]
 
 
 
@@ -41,13 +41,13 @@ Convert a string into a compile mode
 """
 def string_to_mode(mode: CompileModes):
     if mode==CompileModes[0]:
-        return CompileMode.Release
+        return CompileMode.RELEASE
     if mode==CompileModes[1]:
-        return CompileMode.Stats
+        return CompileMode.STATS
     if mode==CompileModes[2]:
-        return CompileMode.Trace
+        return CompileMode.TRACE
     if mode==CompileModes[3]:
-        return CompileMode.Asserts
+        return CompileMode.ASSERTS
     if mode==CompileModes[4]:
-        return CompileMode.Debug
+        return CompileMode.DEBUG
     raise Exception( "mode {} not supported".format(mode) )

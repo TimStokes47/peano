@@ -82,7 +82,19 @@ AC_LANG(C++)
 #AX_COMPILER_VENDOR
 
 AR="ar"
-ARFLAGS="rcD"
+# The "D" modifier requests deterministic archives. It is a GNU ar extension;
+# BSD ar (the default on macOS) rejects it with "illegal option -- D". Probe for
+# support and fall back to plain "rc" so the build works with either archiver.
+AC_MSG_CHECKING([whether $AR accepts the D (deterministic) modifier])
+: > conftest_ar.$$
+if $AR rcD conftest_ar_$$.a conftest_ar.$$ >/dev/null 2>&1; then
+  ARFLAGS="rcD"
+  AC_MSG_RESULT([yes])
+else
+  ARFLAGS="rc"
+  AC_MSG_RESULT([no])
+fi
+rm -f conftest_ar.$$ conftest_ar_$$.a
 AC_SUBST(AR)
 AC_SUBST(ARFLAGS)
 
@@ -492,6 +504,24 @@ fi
 
 
 #
+# GSL (GNU Scientific Library), e.g. for ExaGRyPE's TwoPunctures initial data
+#
+AC_ARG_WITH(gsl,
+  AS_HELP_STRING([--with-gsl],[enable GSL support [default=no]]),
+  [ AC_MSG_CHECKING(for gsl)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);   use_gsl=false ;;
+      *)     AC_MSG_RESULT(yes);  use_gsl=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for gsl); AC_MSG_RESULT(no); use_gsl=false ])
+AM_CONDITIONAL([UseGSL],[test "x$use_gsl" = xtrue])
+
+if test "$use_gsl" == true; then
+  AC_DEFINE([UseGSL], [UseGSL], [UseGSL])
+fi
+
+
+#
 # NetCDF
 #
 AC_ARG_WITH(netcdf,
@@ -546,6 +576,51 @@ AM_CONDITIONAL([UseOpenblas],[test "x$use_openblas" = xtrue])
 
 if test "$use_openblas" == true; then
   AC_DEFINE([UseOpenblas], [UseOpenblas], [UseOpenblas])
+fi
+
+
+#
+# GSL
+#
+# We use pkg-config if it knows GSL and fall back to the libraries' default
+# names otherwise. GSL is appended to the link line, i.e. it comes after all
+# Peano libraries (which are prepended) that might use it.
+#
+if test "$use_gsl" != false; then
+  AC_PATH_PROG([PKG_CONFIG], [pkg-config])
+  if test -n "$PKG_CONFIG" && $PKG_CONFIG --exists gsl; then
+    GSL_INCLUDE_DIR=`$PKG_CONFIG --cflags gsl`
+    GSL_LIBS=`$PKG_CONFIG --libs gsl`
+  else
+    GSL_INCLUDE_DIR=""
+    GSL_LIBS="-lgsl -lgslcblas -lm"
+  fi
+  AC_MSG_NOTICE([GSL_INCLUDE_DIR: ${GSL_INCLUDE_DIR}])
+  AC_MSG_NOTICE([GSL_LIBS: ${GSL_LIBS}])
+
+  CXXFLAGS_PEANO_2D_RELEASE=" $CXXFLAGS_PEANO_2D_RELEASE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_STATS="   $CXXFLAGS_PEANO_2D_STATS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_ASSERTS=" $CXXFLAGS_PEANO_2D_ASSERTS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_TRACE="   $CXXFLAGS_PEANO_2D_TRACE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_DEBUG="   $CXXFLAGS_PEANO_2D_DEBUG ${GSL_INCLUDE_DIR} "
+
+  CXXFLAGS_PEANO_3D_RELEASE=" $CXXFLAGS_PEANO_3D_RELEASE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_STATS="   $CXXFLAGS_PEANO_3D_STATS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_ASSERTS=" $CXXFLAGS_PEANO_3D_ASSERTS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_TRACE="   $CXXFLAGS_PEANO_3D_TRACE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_DEBUG="   $CXXFLAGS_PEANO_3D_DEBUG ${GSL_INCLUDE_DIR} "
+
+  LDADD_PEANO_2D_RELEASE=" $LDADD_PEANO_2D_RELEASE ${GSL_LIBS} "
+  LDADD_PEANO_2D_STATS="   $LDADD_PEANO_2D_STATS ${GSL_LIBS} "
+  LDADD_PEANO_2D_ASSERTS=" $LDADD_PEANO_2D_ASSERTS ${GSL_LIBS} "
+  LDADD_PEANO_2D_TRACE="   $LDADD_PEANO_2D_TRACE ${GSL_LIBS} "
+  LDADD_PEANO_2D_DEBUG="   $LDADD_PEANO_2D_DEBUG ${GSL_LIBS} "
+
+  LDADD_PEANO_3D_RELEASE=" $LDADD_PEANO_3D_RELEASE ${GSL_LIBS} "
+  LDADD_PEANO_3D_STATS="   $LDADD_PEANO_3D_STATS ${GSL_LIBS} "
+  LDADD_PEANO_3D_ASSERTS=" $LDADD_PEANO_3D_ASSERTS ${GSL_LIBS} "
+  LDADD_PEANO_3D_TRACE="   $LDADD_PEANO_3D_TRACE ${GSL_LIBS} "
+  LDADD_PEANO_3D_DEBUG="   $LDADD_PEANO_3D_DEBUG ${GSL_LIBS} "
 fi
 
 
@@ -923,6 +998,20 @@ AM_CONDITIONAL([UseExaHyPE],[test "x$toolbox_exahype" = xtrue])
 
 
 #
+# ExaGRyPE
+#
+AC_ARG_ENABLE(exagrype,
+  AS_HELP_STRING([--enable-exagrype],[enable ExaGRyPE (3d only, requires ExaHyPE 2) [default=false]]),
+  [ AC_MSG_CHECKING(for exagrype)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);    toolbox_exagrype=false ;;
+      *)     AC_MSG_RESULT(yes);   toolbox_exagrype=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for exagrype); AC_MSG_RESULT(no); toolbox_exagrype=false ])
+AM_CONDITIONAL([UseExaGRyPE],[test "x$toolbox_exagrype" = xtrue])
+
+
+#
 # Curvi
 #
 AC_ARG_ENABLE(curvi,
@@ -937,17 +1026,17 @@ AM_CONDITIONAL([UseToolboxCurvi],[test "x$toolbox_curvi" = xtrue])
 
 
 #
-# SWIFT 2
+# ExaParty
 #
-AC_ARG_ENABLE(swift,
-  AS_HELP_STRING([--enable-swift],[enable SWIFT2 [default=false]]),
-  [ AC_MSG_CHECKING(for swift)
+AC_ARG_ENABLE(exaparty,
+  AS_HELP_STRING([--enable-exaparty],[enable ExaParty [default=false]]),
+  [ AC_MSG_CHECKING(for exaparty)
     case "${withval}" in
-      no)    AC_MSG_RESULT(no);    toolbox_swift=false ;;
-      *)     AC_MSG_RESULT(yes);   toolbox_swift=true  ;;
+      no)    AC_MSG_RESULT(no);    toolbox_exaparty=false ;;
+      *)     AC_MSG_RESULT(yes);   toolbox_exaparty=true  ;;
     esac ],
-  [ AC_MSG_CHECKING(for swift); AC_MSG_RESULT(no); toolbox_swift=false ])
-AM_CONDITIONAL([UseSWIFT],[test "x$toolbox_swift" = xtrue])
+  [ AC_MSG_CHECKING(for exaparty); AC_MSG_RESULT(no); toolbox_exaparty=false ])
+AM_CONDITIONAL([UseExaParty],[test "x$toolbox_exaparty" = xtrue])
 
 
 #
@@ -1208,6 +1297,33 @@ fi
 
 
 #
+# ExaGRyPE
+#
+# ExaGRyPE is built for 3d only, so we only extend the 3d link lines. As
+# ExaGRyPE builds on top of ExaHyPE 2, this block has to come after the
+# ExaHyPE 2 block: we prepend the libraries, so ExaGRyPE ends up in front of
+# ExaHyPE 2 on the link line.
+#
+if test "$toolbox_exagrype" != false; then
+  AC_DEFINE([UseExaGRyPE], [1], [UseExaGRyPE])
+  if test "$toolbox_exahype" == false; then
+    AC_MSG_ERROR([ExaGRyPE requires ExaHyPE 2 (run with --help to see the correct enable statement)])
+  fi
+  LDADD_PEANO_3D_RELEASE=" -lExaGRyPECore3d         $LDADD_PEANO_3D_RELEASE "
+  LDADD_PEANO_3D_STATS="   -lExaGRyPECore3d_stats   $LDADD_PEANO_3D_STATS "
+  LDADD_PEANO_3D_ASSERTS=" -lExaGRyPECore3d_asserts $LDADD_PEANO_3D_ASSERTS "
+  LDADD_PEANO_3D_TRACE="   -lExaGRyPECore3d_trace   $LDADD_PEANO_3D_TRACE "
+  LDADD_PEANO_3D_DEBUG="   -lExaGRyPECore3d_debug   $LDADD_PEANO_3D_DEBUG "
+
+  LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/exagrype "
+fi
+
+
+#
 # Curvi
 #
 if test "$toolbox_curvi" != false; then
@@ -1459,33 +1575,33 @@ fi
 
 
 #
-# SWIFT 2
+# ExaParty
 #
-if test "$toolbox_swift" != false; then
-  AC_DEFINE([UseSWIFT], [1], [UseSWIFT])
+if test "$toolbox_exaparty" != false; then
+  AC_DEFINE([UseExaParty], [1], [UseExaParty])
   if test "$toolbox_loadbalancing" == false; then
-    AC_MSG_ERROR([SWIFT2 requires the load balancing toolbox (run with --help to see the correct enable statement)])
+    AC_MSG_ERROR([ExaParty requires the load balancing toolbox (run with --help to see the correct enable statement)])
   fi
   if test "$toolbox_particles" == false; then
-    AC_MSG_ERROR([SWIFT2 requires the particles toolbox (run with --help to see the correct enable statement)])
+    AC_MSG_ERROR([ExaParty requires the particles toolbox (run with --help to see the correct enable statement)])
   fi
-  LDADD_PEANO_2D_RELEASE=" -lSWIFT2Core2d         $LDADD_PEANO_2D_RELEASE "
-  LDADD_PEANO_2D_STATS="   -lSWIFT2Core2d_stats   $LDADD_PEANO_2D_STATS "
-  LDADD_PEANO_2D_ASSERTS=" -lSWIFT2Core2d_asserts $LDADD_PEANO_2D_ASSERTS "
-  LDADD_PEANO_2D_TRACE="   -lSWIFT2Core2d_trace   $LDADD_PEANO_2D_TRACE "
-  LDADD_PEANO_2D_DEBUG="   -lSWIFT2Core2d_debug   $LDADD_PEANO_2D_DEBUG "
+  LDADD_PEANO_2D_RELEASE=" -lExaPartyCore2d         $LDADD_PEANO_2D_RELEASE "
+  LDADD_PEANO_2D_STATS="   -lExaPartyCore2d_stats   $LDADD_PEANO_2D_STATS "
+  LDADD_PEANO_2D_ASSERTS=" -lExaPartyCore2d_asserts $LDADD_PEANO_2D_ASSERTS "
+  LDADD_PEANO_2D_TRACE="   -lExaPartyCore2d_trace   $LDADD_PEANO_2D_TRACE "
+  LDADD_PEANO_2D_DEBUG="   -lExaPartyCore2d_debug   $LDADD_PEANO_2D_DEBUG "
 
-  LDADD_PEANO_3D_RELEASE=" -lSWIFT2Core3d         $LDADD_PEANO_3D_RELEASE "
-  LDADD_PEANO_3D_STATS="   -lSWIFT2Core3d_stats   $LDADD_PEANO_3D_STATS "
-  LDADD_PEANO_3D_ASSERTS=" -lSWIFT2Core3d_asserts $LDADD_PEANO_3D_ASSERTS "
-  LDADD_PEANO_3D_TRACE="   -lSWIFT2Core3d_trace   $LDADD_PEANO_3D_TRACE "
-  LDADD_PEANO_3D_DEBUG="   -lSWIFT2Core3d_debug   $LDADD_PEANO_3D_DEBUG "
+  LDADD_PEANO_3D_RELEASE=" -lExaPartyCore3d         $LDADD_PEANO_3D_RELEASE "
+  LDADD_PEANO_3D_STATS="   -lExaPartyCore3d_stats   $LDADD_PEANO_3D_STATS "
+  LDADD_PEANO_3D_ASSERTS=" -lExaPartyCore3d_asserts $LDADD_PEANO_3D_ASSERTS "
+  LDADD_PEANO_3D_TRACE="   -lExaPartyCore3d_trace   $LDADD_PEANO_3D_TRACE "
+  LDADD_PEANO_3D_DEBUG="   -lExaPartyCore3d_debug   $LDADD_PEANO_3D_DEBUG "
 
-  LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/swift2 "
-  LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/swift2 "
-  LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/swift2 "
-  LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/swift2 "
-  LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/swift2 "
+  LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/exaparty "
+  LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/exaparty "
+  LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/exaparty "
+  LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/exaparty "
+  LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/exaparty "
 fi
 
 
@@ -1574,9 +1690,10 @@ AC_CONFIG_FILES([Makefile
   src/tbb/Makefile
   src/convert/Makefile
   src/exahype2/Makefile
+  src/exagrype/Makefile
   src/mghype/Makefile
   src/petsc/Makefile
-  src/swift2/Makefile
+  src/exaparty/Makefile
   src/unittests/Makefile
 ])
 AC_OUTPUT

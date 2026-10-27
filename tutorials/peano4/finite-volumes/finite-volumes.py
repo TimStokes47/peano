@@ -18,8 +18,8 @@ import peano4.api
 import peano4.api.datamodel
 import peano4.api.solversteps
 import peano4.api.output
-import peano4.api.visualisation
-import peano4.api.toolbox.blockstructured
+import tarch.plotter.api
+import toolbox.blockstructured.api
 
 
 #
@@ -63,7 +63,7 @@ create_grid = peano4.api.solversteps.Step( "CreateGrid" )
 create_grid.use_face(patch_overlap)
 create_grid.use_cell(patch)
 #create_grid.add_action_set( peano4.api.toolbox.PlotGridInPeanoBlockFormat("grid-dump", patch) )
-create_grid.add_action_set( peano4.api.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
+create_grid.add_action_set( toolbox.blockstructured.api.ProjectPatchOntoFaces(patch,patch_overlap) )
 project.solversteps.add_step(create_grid)
 
 
@@ -78,7 +78,7 @@ print_solution = peano4.api.solversteps.Step( "PlotSolution" )
 print_solution.use_cell(patch)
 print_solution.use_face(patch_overlap)
 print_solution.remove_all_actions()
-plotter = peano4.api.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
+plotter = toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat("solution",patch,"Q")
 print_solution.add_action_set( plotter )
 project.solversteps.add_step(print_solution)
 
@@ -264,8 +264,8 @@ functor = """
 """
 
 
-perform_time_step.add_action_set( peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor(patch,patch_overlap,functor,"","") )
-perform_time_step.add_action_set( peano4.api.toolbox.blockstructured.ProjectPatchOntoFaces(patch,patch_overlap) )
+perform_time_step.add_action_set( toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor(patch,patch_overlap,functor,"","") )
+perform_time_step.add_action_set( toolbox.blockstructured.api.ProjectPatchOntoFaces(patch,patch_overlap) )
 # @todo raus
 perform_time_step.add_action_set( plotter )
 project.solversteps.add_step(perform_time_step)
@@ -298,14 +298,14 @@ success = project.run( ["myarguments"] )
 #
 # Dump grid into VTK
 #
-#convert = peano4.api.visualisation.Convert( "grid-dump" )
+#convert = tarch.plotter.api.Convert( "grid-dump" )
 #convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
 #convert.extract_fine_grid()
 #convert.convert_to_vtk()
 
 
 if success:
-  convert = peano4.api.visualisation.Convert( "solution" )
+  convert = tarch.plotter.api.Convert( "solution" )
   convert.set_visualisation_tools_path( "/home/tobias/git/Peano/src/visualisation" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()

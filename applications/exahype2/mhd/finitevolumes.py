@@ -18,8 +18,8 @@ import peano4.api
 import peano4.api.datamodel
 import peano4.api.solversteps
 import peano4.api.output
-import peano4.api.visualisation
-import peano4.api.toolbox.blockstructured
+import tarch.plotter.api
+import toolbox.blockstructured.api
 
 
 import exahype2
@@ -59,7 +59,7 @@ project.add_solver( exahype2.solvers.fv.GenericRusanovFixedTimeStepSize(
 
 
 dimensions = 2
-build_mode = peano4.api.output.CompileMode.Asserts
+build_mode = peano4.api.output.CompileMode.ASSERTS
 
 #
 # Lets configure some global parameters
@@ -96,7 +96,7 @@ success = peano4_project.run( [] )
 
 
 if success:
-  convert = peano4.api.visualisation.Convert( "solutionMHD", True )
+  convert = tarch.plotter.api.Convert( "solutionMHD", True )
   convert.set_visualisation_tools_path( "../../../../src/visualisation" )
   convert.extract_fine_grid()
   convert.convert_to_vtk()

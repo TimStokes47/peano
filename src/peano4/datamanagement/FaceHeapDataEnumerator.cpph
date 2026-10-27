@@ -1,0 +1,27 @@
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+
+
+template <class Face>
+peano4::datamanagement::FaceHeapDataEnumerator<Face>::FaceHeapDataEnumerator(const FaceEnumerator<Face>& faces) {
+  _faces.reserve(TwoTimesD);
+  for (int i = 0; i < TwoTimesD; i++) {
+    _faces.push_back(faces(i));
+  }
+}
+
+
+template <class Face>
+Face& peano4::datamanagement::FaceHeapDataEnumerator<Face>::operator()(int i) {
+  assertion1(i >= 0, i);
+  assertion1(i < TwoTimesD, i);
+  return _faces[i];
+}
+
+
+template <class Face>
+const Face& peano4::datamanagement::FaceHeapDataEnumerator<Face>::operator()(int i) const {
+  assertion1(i >= 0, i);
+  assertion1(i < TwoTimesD, i);
+  return _faces[i];
+}

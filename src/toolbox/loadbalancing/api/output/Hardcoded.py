@@ -1,132 +1,134 @@
-# This file is part of the Peano load balancing toolbox. For conditions of 
+# This file is part of the Peano load balancing toolbox. For conditions of
 # distribution and use, please see the copyright notice at www.peano-framework.org
-import collections.abc
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from toolbox.loadbalancing.api.Tree import Tree
 
 
-def assign_trees_to_ranks_round_Robin(number_of_subtrees: int,
-                                      max_ranks: int,
-                                      ):
+TopDown = "top-down"
+BottomUp = "bottom-up"
+
+_CppModes = {
+    TopDown: "peano4::SplitInstruction::Mode::AggressiveTopDown",
+    BottomUp: "peano4::SplitInstruction::Mode::BottomUp",
+}
+
+
+def assign_trees_to_ranks_round_Robin(
+    number_of_subtrees: int,
+    max_ranks: int,
+):
     """!
-    
+
     Take the trees and assign them to the ranks in a round-robin fashion
-    
-    This is likely not the best option in many cases. In many cases, it 
-    might be better to assign the trees in chunks to preserve some 
-    locality.
-    
+
+    Round robin is the only assignment that the offline load balancing
+    supports, as Peano numbers its trees round robin, too: Tree t always
+    lives on rank t%R for R ranks. See _validate_round_robin() and the
+    documentation of toolbox::loadbalancing::strategies::Hardcoded.
+
     Note that we implicitly assume that the first tree remains on rank 0,
-    so we really only assign number_of_subtrees-1 entries.    
-    
+    so we really only assign number_of_subtrees-1 entries.
+
     """
     result = []
-    for i in range(1,number_of_subtrees):
-        result.append( i%max_ranks )
+    for i in range(1, number_of_subtrees):
+        result.append(i % max_ranks)
     return result
-    
-    
-def _format_initialisation_lists(sweep_numbers,
-                                 parent_trees,
-                                 subpartition_sizes,
-                                 destination_ranks,
-                                 ):
+
+
+def _format_initialisation_lists(
+    parent_trees,
+    subpartition_sizes,
+    destination_ranks,
+):
     """!
-    @param sweep_numbers: [Integer] or Integer
-      Has to be either a sequence of integers or a single one. If it is a 
-      single one, this means that all splits happen in the same sweep. If 
-      it is a sequence, its length has to match the length of 
-      subpartition_sizes.
-      
-    @param parent_trees: [Integer] or 0
-      Is a sequence describing which trees fork at which point. You can also 
-      pass in a straight 0 meaning that it is always only tree 0 which splits.
-      
-    @param subpartition_sizes: [Integer]
-      Size of the individual splits.
-      
-    @param destination_ranks: [Integer]
-      The size of the destination trees has to match subpartition_sizes.
+    Turn the enumerated splits into the C++ initialiser lists of Hardcoded
+
+    Entry k of each list describes the kth split.
+
+    @param parent_trees: [int]
+      Tree which splits in the kth split.
+
+    @param subpartition_sizes: [int]
+      Number of cells that the kth split hands over.
+
+    @param destination_ranks: [int]
+      Rank which receives the new tree of the kth split.
     """
-    assert not isinstance(sweep_numbers, collections.abc.Sequence) or len(subpartition_sizes)==len(sweep_numbers) 
-    # @todo DMitry I comment this out, as I got errors otherwise
-    #assert not isinstance(parent_trees, collections.abc.Sequence) or parent_trees==0
-    assert len(destination_ranks)==len(subpartition_sizes)
-    
-    sweep_number_string       = "{"
-    parent_tree_string        = "{"
-    subpartition_sizes_string = "{"
-    destination_string        = "{"
-    
-    for i in range(0,len(subpartition_sizes)):
-        if i>0:
-            sweep_number_string       += ", "
-            parent_tree_string        += ", "
-            subpartition_sizes_string += ", "
-            destination_string        += ", "
-          
-        if isinstance(sweep_numbers, collections.abc.Sequence):
-            sweep_number_string += str( sweep_numbers[i] )
-        else:
-            sweep_number_string += str( sweep_numbers )
+    assert len(parent_trees) == len(subpartition_sizes)
+    assert len(destination_ranks) == len(subpartition_sizes)
 
-        if isinstance(parent_trees, collections.abc.Sequence):
-            parent_tree_string += str( parent_trees[i] )
-        else:
-            parent_tree_string += str( parent_trees )
-            
-        subpartition_sizes_string += str( subpartition_sizes[i] )
-        
-        destination_string += str(destination_ranks[i])
-     
-    sweep_number_string       += "}"
-    parent_tree_string        += "}"
-    subpartition_sizes_string += "}"
-    destination_string        += "}"
+    def initialiser_list(values):
+        return "{" + ", ".join(str(value) for value in values) + "}"
 
-    return (sweep_number_string + ", "+
-            parent_tree_string + ", " + 
-            subpartition_sizes_string + ", " + 
-            destination_string
-           )
+    return (
+        initialiser_list(parent_trees)
+        + ", "
+        + initialiser_list(subpartition_sizes)
+        + ", "
+        + initialiser_list(destination_ranks)
+    )
 
 
-def _infer_hardcoded_mode(subtrees):
+def _markers_from_flags(bottom_up_flags):
     """!
-    Infer split mode(s) from extracted split operations.
+    Translate the per-split flags of extract_split_instructions() into markers
 
-    The mode decision is made per subtree independently:
-    - If a subtree appears in split instructions on exactly one level,
-      `AggressiveTopDown` is sufficient.
-    - If it appears on multiple levels, all instructions for that subtree use
-      `BottomUp`.
-
-    The result is either a single mode token (all splits same mode) or a C++
-    initializer-list expression with one mode per split operation.
+    @param bottom_up_flags: [bool]
+      True means that the corresponding split is a bottom-up split.
     """
-    if not subtrees:
-        return "peano4::SplitInstruction::Mode::AggressiveTopDown"
+    return [BottomUp if bottom_up else TopDown for bottom_up in bottom_up_flags]
 
-    occurrences_per_subtree = {}
-    for subtree_id in subtrees:
-        occurrences_per_subtree[subtree_id] = occurrences_per_subtree.get(subtree_id, 0) + 1
 
-    mode_per_subtree = {}
-    for subtree_id, occurrences in occurrences_per_subtree.items():
-        if occurrences > 1:
-            mode_per_subtree[subtree_id] = "peano4::SplitInstruction::Mode::BottomUp"
-        else:
-            mode_per_subtree[subtree_id] = "peano4::SplitInstruction::Mode::AggressiveTopDown"
+def _normalise_markers(modes, number_of_splits):
+    """!
+    Turn the user's modes argument into one marker per split
 
-    per_split_modes = [mode_per_subtree[subtree_id] for subtree_id in subtrees]
-    unique_modes = set(per_split_modes)
+    @param modes: str or [str]
+      Either a single marker which holds for all splits, or a sequence with
+      one marker per split. Each marker is TopDown ("top-down") or BottomUp
+      ("bottom-up").
 
-    if len(unique_modes) == 1:
-        return per_split_modes[0]
+    @param number_of_splits: int
+      Number of splits that the markers have to describe.
+    """
+    if isinstance(modes, str):
+        modes = [modes] * number_of_splits
 
-    return "{" + ", ".join(per_split_modes) + "}"
+    modes = list(modes)
+    if len(modes) != number_of_splits:
+        raise ValueError(
+            "got {} split mode(s), but the decomposition requires {} split(s)".format(
+                len(modes), number_of_splits
+            )
+        )
+    for mode in modes:
+        if mode not in _CppModes:
+            raise ValueError(
+                "unknown split mode '{}'. Use '{}' or '{}'".format(
+                    mode, TopDown, BottomUp
+                )
+            )
+    return modes
+
+
+def _format_modes(markers):
+    """!
+    Turn the markers into the C++ mode argument of Hardcoded
+
+    The result is a single mode if all splits share the same mode, and an
+    initialiser list with one mode per split otherwise.
+
+    @param markers: [str]
+      One marker per split.
+    """
+    if not markers:
+        return _CppModes[TopDown]
+    if len(set(markers)) == 1:
+        return _CppModes[markers[0]]
+    return "{" + ", ".join(_CppModes[marker] for marker in markers) + "}"
 
 
 def _normalise_destination_ranks(destination_ranks, subtrees):
@@ -152,122 +154,131 @@ def _normalise_destination_ranks(destination_ranks, subtrees):
             len(destination_ranks), len(subtrees), max_subtree_id
         )
     )
-    
-    
-@overload
+
+
+def _validate_round_robin(subtrees, destination_ranks, number_of_ranks=None):
+    """!
+    Ensure that the subtrees are assigned to the ranks round robin
+
+    Peano's tree numbers encode the rank which hosts a tree:
+    peano4::parallel::Node::getId() gives the nth tree on rank r the number
+    n*R+r for R ranks, and peano4::parallel::Node::getRank() hence maps tree
+    number t onto rank t%R. The offline plan refers to the trees through its
+    subtree numbers, i.e. a split of subtree s is meant to split the tree
+    with number s in Peano. This only holds if subtree s lives on rank s%R,
+    which is exactly what assign_trees_to_ranks_round_Robin() yields.
+
+    @param subtrees: [int]
+      Subtree created by the kth split.
+
+    @param destination_ranks: [int]
+      Rank which receives the subtree of the kth split.
+
+    @param number_of_ranks: int or None
+      Number of ranks R. None derives R from the largest destination rank.
+    """
+    if number_of_ranks is None:
+        number_of_ranks = max(destination_ranks, default=0) + 1
+    for subtree, rank in zip(subtrees, destination_ranks):
+        if rank != subtree % number_of_ranks:
+            raise ValueError(
+                "subtree {} is assigned to rank {}, but Peano can only host a tree with number {} on rank {} "
+                "for {} rank(s). Assign the trees to the ranks round robin, e.g. through "
+                "assign_trees_to_ranks_round_Robin()".format(
+                    subtree, rank, subtree, subtree % number_of_ranks, number_of_ranks
+                )
+            )
+
+
 def create_constructor_initialisation_string(
     peano_tree: "Tree",
     destination_ranks: list[int],
     verbose: bool = False,
+    modes=None,
+    number_of_ranks: int | None = None,
 ) -> tuple[str, str]:
     """!
-    Docu is missing                
+    Construct the constructor arguments for an instance of Hardcoded
+
+    The routine extracts the enumerated splits from the split tree, i.e.
+    a sequence of splits where the kth split reads "tree t hands n cells
+    over to a new tree on rank r and uses mode m to select these cells".
+    toolbox::loadbalancing::strategies::Hardcoded decides itself when it
+    issues the kth split.
+
+    By default, the mode of each split is inferred (see image below):
+    - `AggressiveTopDown`: all subtrees assigned to rank k start on the same level l.
+    - `BottomUp`: subtrees assigned to rank k start on different levels.
+
+    @image html src/toolbox/loadbalancing/api/output/create_constructor_initialisation_string.png
+
+    You can overwrite the inferred modes through modes.
+
+    @param peano_tree: toolbox.loadbalancing.api.Tree.Tree
+      Tree after the split, i.e. after SplitTrees.split_tree().
+
+    @param destination_ranks: [int]
+      Either one rank per split or one rank per subtree excluding subtree 0.
+
+    @param verbose: bool
+      Print the extracted splits.
+
+    @param modes: None, str or [str]
+      None infers the mode of each split. Otherwise, pass a single marker
+      TopDown ("top-down") or BottomUp ("bottom-up") which holds for all
+      splits, or a sequence with one marker per split.
+
+    @param number_of_ranks: int or None
+      Number of MPI ranks. None derives it from the largest destination
+      rank. See _validate_round_robin() for why we need it.
+
+    @return `(hardcoded_config, hardcoded_mode)` where hardcoded_config is the
+      complete constructor argument string and hardcoded_mode is the mode
+      argument within this string.
     """
-    ...
+    from toolbox.loadbalancing.api.strategies.SplitTrees import (
+        extract_split_instructions,
+    )
 
+    (
+        parent_trees,
+        subpartition_sizes,
+        subtrees,
+        bottom_up_flags,
+    ) = extract_split_instructions(peano_tree)
 
-@overload
-def create_constructor_initialisation_string(
-    peano_tree,
-    destination_ranks,
-    verbose,
-    *legacy_args,
-) -> str:
-    ...
+    if modes is None:
+        markers = _markers_from_flags(bottom_up_flags)
+    else:
+        markers = _normalise_markers(modes, len(subtrees))
+    hardcoded_mode = _format_modes(markers)
 
+    destination_ranks = _normalise_destination_ranks(destination_ranks, subtrees)
+    _validate_round_robin(subtrees, destination_ranks, number_of_ranks)
 
-def create_constructor_initialisation_string(peano_tree,
-                                             destination_ranks,
-                                             verbose=False,
-                                             *legacy_args,
-                                            ) -> str | tuple[str, str]:
-    """!
-        Construct the constructor arguments for an instance of Hardcoded, together with
-        the inferred split mode.
-
-        The mode is chosen as follows (see image below):
-        - `AggressiveTopDown`: all subtrees assigned to rank k start on the same level l.
-            The split (iteration) number then corresponds to level l.
-        - `BottomUp`: subtrees assigned to rank k start on different levels.
-            The split number then corresponds to the coarsest level at which all subtrees
-            belonging to rank k are present.
-
-        @image html src/toolbox/loadbalancing/api/output/create_constructor_initialisation_string.png
-
-        @todo Dmitry: the function is overloaded to preserve backwards compatibility with the
-            legacy 4-argument call in `benchmarks/mghype/poisson/benchmarks.py`.
-            It may make sense to migrate that caller to the tree-based API and remove the overload.
-
-        @return `(hardcoded_config, hardcoded_mode)` when called with a Tree instance;
-            a plain format string when called with the legacy 4-argument signature.
-            
-        @todo Dmitry: There's a bug here. If you run
-        
-        python3 tutorial_offline_load_balancing_sbh.py --trees 8 --cell-size 1.8 --load-balancing-metric offline-regular-bottom-up
-        
-        then you get 
-
-Extracted hardcoded parameters:
-  grid_sweeps       = [4, 4, 4, 4, 4, 4, 4, 6, 6, 6, 6, 6, 6, 6]
-  splitting_trees   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  number_of_cells   = [90, 90, 90, 90, 90, 90, 91, 31, 31, 30, 30, 30, 30, 3]
-  subtrees          = [1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7]
-  destination ranks = [0, 0, 0, 0, 0, 0, 0]
-  modi              = peano4::SplitInstruction::Mode::BottomUp
-
-        The bottom-up is correct. However it all has to be on Level 6, as the rot of node 1 
-        for example is not all on the same level.
-
-
-    """
-    # Backward compatibility path:
-    # create_constructor_initialisation_string(sweep_numbers, parent_trees, subpartition_sizes, destination_ranks)
-    if not hasattr(peano_tree, "_tree_arrays"):
-        if isinstance(verbose, bool):
-            raise ValueError(
-                "Legacy call requires four positional arguments: "
-                "(sweep_numbers, parent_trees, subpartition_sizes, destination_ranks)"
-            )
-        if len(legacy_args) != 1:
-            raise ValueError(
-                "Legacy call requires exactly four positional arguments"
+    if verbose:
+        print("Extracted hardcoded parameters:")
+        for k in range(len(subtrees)):
+            print(
+                "  split {}: tree {} hands {} cells over to tree {} on rank {}, {}".format(
+                    k,
+                    parent_trees[k],
+                    subpartition_sizes[k],
+                    subtrees[k],
+                    destination_ranks[k],
+                    markers[k],
+                )
             )
 
-        sweep_numbers = peano_tree
-        parent_trees = destination_ranks
-        subpartition_sizes = verbose
-        destination_ranks = legacy_args[0]
-        return _format_initialisation_lists(
-            sweep_numbers,
+    hardcoded_config = (
+        "{"
+        + _format_initialisation_lists(
             parent_trees,
             subpartition_sizes,
             destination_ranks,
         )
-
-    if legacy_args:
-        raise ValueError("Tree-based call does not accept additional positional arguments")
-
-    from toolbox.loadbalancing.api.strategies.SplitTrees import extract_split_instructions
-
-    sweep_numbers, parent_trees, subpartition_sizes, subtrees = extract_split_instructions(peano_tree)
-    hardcoded_mode = _infer_hardcoded_mode(subtrees)
-
-    destination_ranks = _normalise_destination_ranks(destination_ranks, subtrees)
-
-    if verbose:
-        print("Extracted hardcoded parameters:")
-        print("  grid_sweeps       =", sweep_numbers)
-        print("  splitting_trees   =", parent_trees)
-        print("  number_of_cells   =", subpartition_sizes)
-        print("  subtrees          =", subtrees)
-        print("  destination ranks =", destination_ranks)
-        print("  modi              =", hardcoded_mode)
-
-    hardcoded_config = "{" + _format_initialisation_lists(
-        sweep_numbers,
-        parent_trees,
-        subpartition_sizes,
-        destination_ranks,
-    ) + ", " + hardcoded_mode + "}"
+        + ", "
+        + hardcoded_mode
+        + "}"
+    )
     return hardcoded_config, hardcoded_mode
-

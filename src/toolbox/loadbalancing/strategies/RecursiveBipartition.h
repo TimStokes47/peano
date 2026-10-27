@@ -40,7 +40,7 @@ namespace toolbox {
  * splitting variants and constraints in peano4::grid::Spacetree::isCellTopDownSplitCandidate()
  * and  peano4::grid::Spacetree::isCellBottomUpSplitCandidate(),
  * peano4::grid::Spacetree::splitOrJoinCell() and the general
- * @ref peano_domain_decomposition "domain decomposition overview".
+ * @ref page_peano_domain_decomposition "domain decomposition overview".
  *
  * The splitting stops, once we have met the maximum number of trees on a node
  * (or cannot split anymore).
@@ -52,6 +52,12 @@ class toolbox::loadbalancing::strategies::RecursiveBipartition: public toolbox::
      *
      * The ownership of the pointer goes over to the recursive subdivision
      * instance, i.e. you don't have to delete the passed object.
+     *
+     * The strategy is enabled by default, i.e. it starts in
+     * State::InterRankDistribution like the other strategies of the
+     * toolbox. Earlier versions started in State::SwitchedOff, so the
+     * strategy never split anything unless user code explicitly called
+     * enable(true). Call enable(false) if you want to switch it off.
      */
     RecursiveBipartition(Configuration* configuration = new DefaultConfiguration(), CostMetrics*   costMetrics = new toolbox::loadbalancing::metrics::CellCount() );
     virtual ~RecursiveBipartition();

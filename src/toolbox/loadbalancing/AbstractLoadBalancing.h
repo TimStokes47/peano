@@ -21,6 +21,9 @@ namespace toolbox {
 } // namespace toolbox
 
 
+/**
+ * Abstract superclass of any load balancing
+ */
 class toolbox::loadbalancing::AbstractLoadBalancing {
 public:
   /**
@@ -29,6 +32,19 @@ public:
    * remarks in class description.
    */
   static constexpr int NoHeaviestTreeAvailable = -1;
+
+  /**
+   * Number of mesh sweeps a split needs until the mesh is consistent again
+   *
+   * We need three sweeps to perform a proper split:
+   *
+   * 1. Trigger the split,
+   * 2. split the mesh actually,
+   * 3. update all the stats.
+   *
+   * @see hasSplitRecently()
+   */
+  static constexpr int NumberOfMeshSweepsAfterSplitToMakeMeshConsistentAgain = 3;
 
   /**
    * Constructor
@@ -91,15 +107,21 @@ public:
   /**
    * Has mesh split recently
    *
-   * Means that mesh has split over the past three iterations. The number three
-   * is hard-coded, as we need three iterations to perform a proper split:
-   *
-   * 1. Trigger the split,
-   * 2. split the mesh actually,
-   * 3. update all the stats.
+   * Means that mesh has split over the past
+   * NumberOfMeshSweepsAfterSplitToMakeMeshConsistentAgain iterations, i.e.
+   * the iterations a proper split needs until the mesh is consistent again.
    *
    * If we have then not come to the conclusion that we should immediately
    * split again, then we haven't split recently.
+   *
+   * Splits which this rank has triggered since the last state update count,
+   * too. Most strategies trigger their splits in finishStep() after they
+   * have updated their statistics. Without this check, the predicate would
+   * hence not hold right after a strategy has triggered a split, but only
+   * once the subsequent finishStep() has updated the statistics. Code which
+   * decides right after finishStep() whether to run another grid sweep,
+   * such as the repeat condition of a mesh construction, would then stop
+   * before the split has been carried out.
    */
   virtual bool hasSplitRecently() const;
 
@@ -139,6 +161,10 @@ public:
    *          _blacklist.update();
    *
    * in this routine.
+   *
+   * If you use the actionset toolbox.laodbalancing.api.LoadBalancing, then
+   * the unprepareTraversal() invokes the finishStep() for you. This in turn
+   * means, as per contract, that the statistics have an updated global view.
    */
   virtual void finishStep() = 0;
 
@@ -237,9 +263,6 @@ protected:
    * If two or more trees have the same weight, the routine should
    * randomly return one of them.
    *
-   * @param tolerance By default, you get the last heaviest tree. But you
-   *   can ask for a random tree
-   *
    * @return NoHeaviestTreeAvailable If there are no local trees or
    *   if the heaviest tree is on the blacklist, i.e. we have to
    *   assume that it still is splitting.
@@ -259,8 +282,9 @@ protected:
    *
    * @f$ \frac{m_i}{m_{max}} \geq tolerance @f$
    *
-   *
-   *
+   * @param tolerance Relative weight a tree has to have compared to the
+   *   heaviest local tree to be a candidate. By default, you get the last
+   *   heaviest tree. But you can ask for a random tree close to it.
    */
   int getIdOfHeaviestLocalSpacetree(double tolerance) const;
 };

@@ -25,7 +25,7 @@ GCC_SharedOMP_MPI:
     CONFIGURATION_OPTIONS: "--enable-exahype \
                             --enable-loadbalancing \
                             --enable-blockstructured \
-                            --enable-swift \
+                            --enable-exaparty \
                             --enable-particles \
                             --enable-mghype \
                             --enable-finiteelements \
@@ -50,7 +50,7 @@ Intel_SharedOMP_MPI:
     CONFIGURATION_OPTIONS: "--enable-exahype \
                             --enable-loadbalancing \
                             --enable-blockstructured \
-                            --enable-swift \
+                            --enable-exaparty \
                             --enable-particles \
                             --enable-mghype \
                             --enable-finiteelements \
@@ -75,7 +75,7 @@ LLVM_SharedOMP_MPI:
     CONFIGURATION_OPTIONS: "--enable-exahype \
                             --enable-loadbalancing \
                             --enable-blockstructured \
-                            --enable-swift \
+                            --enable-exaparty \
                             --enable-particles \
                             --enable-mghype \
                             --enable-finiteelements \
@@ -100,7 +100,7 @@ Intel_SharedTBB_MPI:
     CONFIGURATION_OPTIONS: "--enable-exahype \
                             --enable-loadbalancing \
                             --enable-blockstructured \
-                            --enable-swift \
+                            --enable-exaparty \
                             --enable-particles \
                             --enable-mghype \
                             --enable-finiteelements \
@@ -125,7 +125,7 @@ NVIDIA:
     CONFIGURATION_OPTIONS: "--enable-exahype \
                             --enable-loadbalancing \
                             --enable-blockstructured \
-                            --enable-swift \
+                            --enable-exaparty \
                             --enable-particles \
                             --enable-mghype \
                             --enable-finiteelements"
@@ -148,7 +148,7 @@ AMD:
     CONFIGURATION_OPTIONS: "--enable-exahype \
                             --enable-loadbalancing \
                             --enable-blockstructured \
-                            --enable-swift \
+                            --enable-exaparty \
                             --enable-particles \
                             --enable-mghype \
                             --enable-finiteelements"

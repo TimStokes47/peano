@@ -1,5 +1,7 @@
 #include "UnitTests.h"
 
+#include "peano4/datamanagement/tests/DataMovementTest.h"
+
 #include "peano4/grid/tests/SpacetreeTest.h"
 #include "peano4/grid/tests/GridControlEventTest.h"
 #include "peano4/grid/tests/GridTraversalEventGeneratorTest.h"
@@ -17,6 +19,8 @@ tarch::tests::TestCase* peano4::getUnitTests() {
   tarch::tests::TreeTestCaseCollection* result = new tarch::tests::TreeTestCaseCollection();
 
   result->addTestCase( new peano4::utils::tests::ParallelDForTest() );
+
+  result->addTestCase( new peano4::datamanagement::tests::DataMovementTest() );
 
   result->addTestCase( new peano4::stacks::tests::STDVectorStackOverObjectsWithSmartPointersTest() );
 

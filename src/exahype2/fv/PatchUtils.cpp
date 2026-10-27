@@ -53,6 +53,48 @@ double  exahype2::fv::getVolumeLength(
 }
 
 
+void exahype2::fv::computeOneSidedGradient(
+  const double* __restrict__               Q,
+  int                                      unknownsPlusAuxiliaryVariables,
+  int                                      numberOfVolumesPerAxisInPatch,
+  const tarch::la::Vector<Dimensions,int>& volume,
+  int                                      normal,
+  bool                                     isRight,
+  double                                   volumeSize,
+  double* __restrict__                     gradient
+) {
+  if (numberOfVolumesPerAxisInPatch < 2) {
+    for (int i=0; i<unknownsPlusAuxiliaryVariables; i++) {
+      gradient[i] = 0.0;
+    }
+    return;
+  }
+
+  bool useRight = isRight;
+  if (volume(normal)==0) {
+    useRight = true;
+  }
+  if (volume(normal)==numberOfVolumesPerAxisInPatch-1) {
+    useRight = false;
+  }
+
+  tarch::la::Vector<Dimensions,int> leftVolume  = volume;
+  tarch::la::Vector<Dimensions,int> rightVolume = volume;
+  if (useRight) {
+    rightVolume(normal)++;
+  }
+  else {
+    leftVolume(normal)--;
+  }
+
+  const int leftIndex  = peano4::utils::dLinearised(leftVolume, numberOfVolumesPerAxisInPatch)  * unknownsPlusAuxiliaryVariables;
+  const int rightIndex = peano4::utils::dLinearised(rightVolume, numberOfVolumesPerAxisInPatch) * unknownsPlusAuxiliaryVariables;
+  for (int i=0; i<unknownsPlusAuxiliaryVariables; i++) {
+    gradient[i] = (Q[rightIndex+i] - Q[leftIndex+i]) / volumeSize;
+  }
+}
+
+
 std::string exahype2::fv::plotVolume(
   const double* __restrict__ Q,
   int    unknowns

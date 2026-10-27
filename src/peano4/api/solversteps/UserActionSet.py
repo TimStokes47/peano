@@ -4,6 +4,24 @@ from .ActionSet import ActionSet
 
 
 class UserActionSet(ActionSet):
+  """!
+  
+    User action set, i.e. action set that's there for the users to inject their code manually
+    
+    This class is barely every used, as most people nowadays do not program
+    Peano in pure C++ anymore. The class is there to give you a stub for a 
+    code that you then fill out with your own code.
+    
+    To understand how this class fits into the big picture, it is worth studying the namespace
+    documentation, where we host a good overview in the form of an UML diagram.
+
+    ## Important links
+
+    - @ref page_peano_action_sets    
+    - @ref peano4.api.taskgraph
+
+
+  """
   def __init__(self,name,descend_invocation_order = 0, parallel = True):
     super(UserActionSet,self).__init__(descend_invocation_order,parallel)
     self.name = name
@@ -22,7 +40,7 @@ class UserActionSet(ActionSet):
     return "// @todo Please implement\n"
 
 
-  def get_body_of_getGridControlEvents(self):
+  def get_body_of_createGridControlEventsForNextTraversal(self):
     return "// @todo Please implement\nreturn std::vector< peano4::grid::GridControlEvent >();\n" 
 
 

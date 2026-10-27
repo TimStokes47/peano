@@ -8,7 +8,7 @@ import jinja2
 
 import peano4.api.output
 import peano4.api.datamodel
-import peano4.api.toolbox.blockstructured
+import toolbox.blockstructured.api
 
 import exahype2.grid
 import exahype2.solvers.aderdg.kernels
@@ -807,7 +807,7 @@ Material parameters:    """
 
         # Calls a generator which generates a standard plotter that uses the tarch library.
         step.add_action_set(
-            peano4.api.toolbox.blockstructured.PlotPatchesInPeanoBlockFormat(
+            toolbox.blockstructured.api.PlotPatchesInPeanoBlockFormat(
                 filename=output_path + "solution-" + self._name,
                 patch=self._previous_time_step,
                 dataset_name=self._unknown_identifier()+"_old",

@@ -25,6 +25,7 @@ class Makefile(object):
             """
 ## Makefile settings
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 CXX             = {{CXX}}
 CXXFLAGS        = {{CXXFLAGS}}
 FC              = {{FC}}
@@ -36,10 +37,13 @@ CONFIGUREPATH   = {{CONFIGUREPATH}}
 EXECUTABLENAME  = {{EXECUTABLENAME}}
 FORTRAN_MODULES = {{FORTRAN_MODULES}}
 MODE            = {{MODE}}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Compiler version
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {{VERSION}}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
         )
@@ -144,7 +148,7 @@ the SISC paper
         self.d["CMAKE_BUILD_DIR"] = ""
         self.d["FORTRAN_MODULES"] = []
         self.d["APP_SUBDIRECTORIES"] = []
-        self.set_mode(CompileMode.Debug)
+        self.set_mode(CompileMode.DEBUG)
         self.clear_files()
 
     def set_executable_name(self, fname):
@@ -201,19 +205,19 @@ the SISC paper
         """
         mode should be of type CompileMode. Pass in
 
-        peano4.api.output.CompileMode.Debug
+        peano4.api.output.CompileMode.DEBUG
 
         for example. Debug is the default.
         """
-        if mode == CompileMode.Debug:
+        if mode == CompileMode.DEBUG:
             self.d["MODE"] = "DEBUG"
-        elif mode == CompileMode.Asserts:
+        elif mode == CompileMode.ASSERTS:
             self.d["MODE"] = "ASSERTS"
-        elif mode == CompileMode.Stats:
+        elif mode == CompileMode.STATS:
             self.d["MODE"] = "STATS"
-        elif mode == CompileMode.Trace:
+        elif mode == CompileMode.TRACE:
             self.d["MODE"] = "TRACE"
-        elif mode == CompileMode.Release:
+        elif mode == CompileMode.RELEASE:
             self.d["MODE"] = "RELEASE"
         else:
             assert False

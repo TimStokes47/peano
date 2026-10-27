@@ -18,6 +18,7 @@ import peano4.api.runner
 # peano4.api itself is still being imported - the peano4.api attribute chain
 # is not yet fully wired up at that point.
 from .output import Overwrite
+from .Logger import Logger
 
 class Project (object):
   """!
@@ -138,7 +139,7 @@ class Project (object):
       ExaHyPE). It really strips everything down to the stuff you
       absolutely need to translate and run the code.
     """
-    print( "generate all code ..." )
+    Logger().new_section("Generate code")
     self.is_generated = True
     self.is_built = False
 
@@ -148,14 +149,17 @@ class Project (object):
     self.solversteps.construct_output(self.output)
 
     self.main.construct_output(self.output,self.project_name + "-main")
-    self.output.generate(overwrite, self.directory, self.subdirectories)
     if self.subconstants:
       for i in range(len(self.subconstants)):
         self.subconstants[i].generate(overwrite, self.directory, self.subdirectories[i])
     else:
       self.constants.generate(overwrite, self.directory)
 
-    print("generation complete")
+    # Generate the README last, so it is genuinely the final artefact: its
+    # "is ready" message (see peano4.api.output.Readme) is meant to be the
+    # last thing this routine reports before Logger's own atexit-triggered
+    # close() takes over.
+    self.output.generate(overwrite, self.directory, self.subdirectories)
 
     if throw_away_data_after_generation:
       self.datamodel = None

@@ -17,13 +17,13 @@ and subclasses of this type. In principle all flavours work in a similar way
 and spread up the sorting over at least two mesh traversals. That is, once
 you have updated either a particle position or a particle's search radius,
 you have to ensure that there are two consecutive mesh traversals which 
-integrate a sorting action set. In the ideal case, you add this action set
+integrate a sorting @ref glossary_events_and_action_sets "action set". In the ideal case, you add this action set
 directly to the mesh traversal where you alter the particle state, and then
 you also add the sorting action set to the subsequent mesh sweep.
 
 
 It is important that you merge the two update
-action sets into the action set where you change the particle position (in the
+@ref glossary_events_and_action_sets "action sets" into the action set where you change the particle position (in the
 last access of a vertex) plus into the subsequent grid sweep:
 Once the particle position has changed, Peano tries to associate the particle
 again to the right vertex.
@@ -34,7 +34,7 @@ right resolution of the mesh plus associates it with the right vertex.
 So it needs access to UpdateParticleGridAssocation.
 
 
-Please note that you will need potentially multiple follow-up action sets
+Please note that you will need potentially multiple follow-up @ref glossary_events_and_action_sets "action sets"
 aka mesh sweeps: 
 In the first sweep, all particles are put into the right place in space and 
 the mesh hierarchy yet may be on a too coarse level.
@@ -92,7 +92,7 @@ This is convenient as we know that any particle associated with the respective
 vertex also has been touched for the last time.
 We can safely update it.
 However, if we change a particle's position and merge
-UpdateParticleGridAssociation into the respective algorithmic step,
+UpdateParticleGridAssociation into the respective @ref glossary_observer "algorithmic step",
 then the particle might immediately be associated to another vertex after it has
 been updated and this vertex might later on become subject of touchVertexLastTime().
 

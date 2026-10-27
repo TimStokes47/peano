@@ -3,9 +3,11 @@
 import os
 import re
 
-from .Helper import write_file
+from .Helper import write_file, WARNING_BANNER
 
 from .Overwrite import Overwrite
+
+from ..Logger import Logger
 
 class TemplatedHeaderImplementationFilePair(object):
   def __init__(self,headfile_template,cppfile_template,classname,namespace,subdirectory,dictionary,default_overwrite=True):
@@ -41,19 +43,22 @@ class TemplatedHeaderImplementationFilePair(object):
 
   def generate_file(self,overwrite,full_qualified_filename,template_file):
     if template_file!=None and write_file(overwrite,self.default_overwrite,full_qualified_filename):
-      import inspect
-      print( "{} written by {}".format(full_qualified_filename, os.path.basename(inspect.getfile(self.__class__))))
+      Logger().log( "write " + full_qualified_filename )
       with open( os.path.realpath(template_file), "r" ) as input:
         template = input.read()
+        rendered_text = template.format(**self.d)
+        if self.default_overwrite:
+          rendered_text = WARNING_BANNER + rendered_text
         with open( full_qualified_filename, "w" ) as output:
-          output.write( template.format(**self.d) )
+          output.write( rendered_text )
 
   def generate(self,overwrite,directory):
-    if not os.path.exists( directory + "/" + self.subdirectory ):
-      os.mkdir(directory + "/" + self.subdirectory)
+    subdirectory_path = os.path.normpath( directory + "/" + self.subdirectory )
+    if not os.path.exists( subdirectory_path ):
+      os.mkdir(subdirectory_path)
 
-    header_filename = directory + "/" + self.subdirectory + "/" + self.classname + ".h"
-    cpp_filename    = directory + "/" + self.subdirectory + "/" + self.classname + ".cpp"
+    header_filename = os.path.normpath( subdirectory_path + "/" + self.classname + ".h" )
+    cpp_filename    = os.path.normpath( subdirectory_path + "/" + self.classname + ".cpp" )
 
     self.generate_file(overwrite,header_filename,self.headerfile_template)
     self.generate_file(overwrite,cpp_filename   ,self.cppfile_template)

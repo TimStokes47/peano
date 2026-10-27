@@ -12,7 +12,7 @@
  * impact of task parallelism on the performance and hence provide valuable
  * insight.
  * It is able to guide the development of core components of Peano.
- * For applications built on top of Peano such as ExaHyPE or Swift, it provides
+ * For applications built on top of Peano such as ExaHyPE or ExaParty, it provides
  * information how to schedule tasks efficiently, i.e. how to map various tasks
  * onto various scheduling policies.
  * Otter is hosted at https://github.com/Otter-Taskification/otter/wiki.

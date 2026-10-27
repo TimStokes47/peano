@@ -1,0 +1,217 @@
+/**
+
+@page applications_exahype2_ExaGRyPE ExaGRyPE
+
+@image html tutorials/exahype2/exagrype/exagrype_logo.png
+
+<!-- Add this one for href links to subitems -->
+\tableofcontents
+
+ExaGRyPE is a numerical relativity application built based on the engine
+ExaHyPE2, whose current version conduct simulation of vacuum and black hole spacetimes.
+ExaGRyPE solves the Einstein field equations in the standard CCZ4 formulation under a 3+1 foliation,
+and employs a block-structured Cartesian grid carrying a higher-order Finite Difference scheme with full 
+support of adaptive mesh refinement (AMR). It facilitates massive parallelism combining message passing, 
+domain decomposition and task parallelism, and it supports the injection of particles into the grid as 
+static data probes or as moving tracers.
+
+ExaGRyPE is actively under development as a part of the ExaHyPE projects and is evolving as a novel 
+numerical relativity code within the computational astrophysics field. ExaGRyPE is also a member of the <a href="https://www.uknumericalrelativity.org/home">UKNR community</a>. Planned enhancements include optimizing
+its performance, porting it to GPUs, and extending its capabilities to simulate more complex scenarios beyond
+black hole spacetimes. These advancements will involve incorporating matter components via standard Euler fields
+or Smoothed-Particle Hydrodynamics (SPH). Additionally, thanks to the high flexibility in dimensionality offered
+by ExaHyPE2, future versions will enable full simulations of modified gravity theories in higher dimensions.
+
+The release paper of ExaGRyPE is provided below for interested users. The code is completely open-sources and can 
+be found in the Peano repositories. The @ref page_exahype2_tutorials "ExaHyPE 2 tutorials" include a tutorial series on how to install
+and run the code on a cluster or your laptop. 
+
+
+<div style="background-color: #ccf ; padding: 10px; border: 1px solid green;"> 
+  As ExaHyPE's applications are built on top of ExaHyPE, we decided to embed 
+  all application-specific content straight into ExaHyPE. Consequently, all
+  data are scattered: The application-specific benchmarks are part of ExaHyPE's
+  benchmark collection, the tutorials are a subset of the tutorials (which makes
+  sense as they build on top of ExaHyPE and Peano), and so forth. However, 
+  deep crosslinks are provided below.
+</div>
+
+
+# Physics Note
+## Vacuum Spacetime
+
+The ExaGRyPE code solves the Einstein equations in the Z4 formulation
+
+@f$
+    R_{ab}-\frac{1}{2} g_{ab}R+\nabla_{a} Z_{b}+\nabla_{b} Z_{a}-g_{ab}\nabla^c
+    Z_c -\kappa_{1}[n_{a} Z_{b}+n_{b} Z_{a}+\kappa_{2} g_{ab} n_{c}
+    Z^{c}]  =  8\pi T_{ab}
+@f$
+
+Noabely, we transfer it into a first order formulation following 
+
+@f$
+  \partial_t Q +\nabla_i F_i(Q) +B_i (Q) \nabla_i Q = S(Q).
+@f$
+
+Collecting all derived quantities from CCZ4 decomposition, the gauge quantities and 
+helper variables yields an evolving system of over 24 variables
+
+@f$
+  Q(t) = 
+  \left( \tilde{\gamma}_{ij}, \alpha, \beta^i, \phi, \tilde{A}_{ij},K, \Theta,
+  \hat{\Gamma}^i, b^i \right)(t),
+@f$
+
+if the auxiliary varibles representing the first-order derivatives:
+
+@f$
+   A_{i}:=\partial_{i} \alpha, \ B_{k}^{i}:=\partial_{k} \beta^{i}, \ D_{k i
+   j}:=\frac{1}{2} \partial_{k} \tilde{\gamma}_{i j}, \
+   P_{i}:=\partial_{i} \phi
+@f$
+
+are calculated on-fly. In this case we have the second-order formulation of the code. 
+Adding the auxiliary variables to the system and treating them as further
+evolving variables make the code completely first-order, yielding a system of 58 independent 
+variables with 
+
+@f$
+  Q(t) = 
+  \left(
+   \tilde{\gamma}_{ij}, \alpha, \beta^i, \phi, \tilde{A}_{ij},K, \Theta, \hat{\Gamma}^i, b^i, A_k, B^i_k,
+    D_{kij}, P_k \right).
+@f$
+
+Both formulations are now available in the code for difference scenarios. Users are referred to Appendix B
+of the paper below for more details of equations and formulation used in ExaGRyPE.
+
+## Ordinary Matter (gas fluid)
+This part is still under testing. 
+
+# Further links
+
+- @ref page_exahype2_tutorials "Tutorials"
+- \subpage page_exagrype_library "The ExaGRyPE library" (kernels and initial conditions in \c src/exagrype, configuration via \c --enable-exagrype)
+- ExaGRyPE benchmarks (cmp @ref page_exahype_benchmarks "overview of all ExaHyPE benchmarks")
+  - \ref benchmarks_exahype2_ccz4_kernel_benchmarks
+  - \ref benchmarks_exahype2_ccz4_gauge_wave
+  - \ref benchmarks_exahype2_ccz4_single_black_hole
+- Example simulations
+
+# Reference papers
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@article{Zhang:2024:ExaGRyPE,
+title = {ExaGRyPE: Numerical general relativity solvers based upon the hyperbolic PDEs solver engine ExaHyPE},
+journal = {Computer Physics Communications},
+volume = {307},
+pages = {109435},
+year = {2025},
+issn = {0010-4655},
+doi = {https://doi.org/10.1016/j.cpc.2024.109435},
+url = {https://www.sciencedirect.com/science/article/pii/S0010465524003588},
+author = {Han Zhang and Baojiu Li and Tobias Weinzierl and Cristian Barrera-Hinojosa},
+keywords = {Software design, Numerical relativity, Hyperbolic partial differential equations, Finite Differences, Adaptive mesh refinement, Domain decomposition, Task parallelism},
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*/
+
+/**
+
+@page page_exagrype_library ExaGRyPE library
+
+ExaGRyPE is Peano's extension for numerical relativity. It sits on top of
+ExaHyPE 2 and hosts the C++ code that all ExaGRyPE applications share. The
+applications themselves (such as \c applications/exahype2/ccz4, see
+@ref applications_exahype2_ExaGRyPE) generate their solvers through the Python
+API and link against this library.
+
+# Configuration
+
+ExaGRyPE is enabled like any other Peano extension or toolbox:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+./configure --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-exagrype ...
+~~~~~~~~~~~~~~~~~~~~~~~
+
+or, with CMake,
+
+~~~~~~~~~~~~~~~~~~~~~~~
+cmake .. -DENABLE_EXAHYPE=ON -DENABLE_BLOCKSTRUCTURED=ON -DENABLE_LOADBALANCING=ON -DENABLE_EXAGRYPE=ON
+~~~~~~~~~~~~~~~~~~~~~~~
+
+ExaGRyPE requires ExaHyPE 2. As the Einstein equations are three-dimensional,
+the library is built for 3d only, i.e. there is a \c libExaGRyPECore3d.a plus
+its \c _debug, \c _asserts, \c _trace and \c _stats variants, but no 2d
+counterpart. If enabled, configure adds the library to the 3d link line of all
+generated Makefiles. Its unit tests run as part of \c UnitTests3d.
+
+# Content
+
+- exagrype::ccz4 holds the CCZ4 compute kernels (non-conservative product,
+  source, eigenvalues, constraint enforcement and diagnostics) plus the
+  reconstruction of the auxiliary variables for the fourth-order finite
+  differences.
+- exagrype::initialvalues holds analytical initial conditions such as the
+  gauge wave or flat spacetime, plus
+  exagrype::initialvalues::ApplyTwoPunctures() for black holes.
+- \c src/exagrype/twopunctures hosts the TwoPunctures code from the
+  EinsteinToolkit (namespaces TP and TP_bindding), which computes initial
+  data for single and binary black holes.
+
+# Python API
+
+The package \c exagrype.api (in \c src/exagrype/api) layers on top of
+\c exahype2.api. Its exagrype.api.CCZ4Solver is an exahype2.api.Solver
+with the 59 CCZ4 unknowns, the CCZ4 parameters and all PDE terms of CCZ4
+pre-registered, i.e. the terms call the kernels from exagrype::ccz4. The
+module \c exagrype.api.initialvalues provides the analytical initial
+conditions. You pick a numerical scheme, a grid construction and a plotter
+for the solver as for any other exahype2.api.Solver, and add it to an
+exahype2.api.Project:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+solver = exagrype.api.CCZ4Solver("CCZ4", initial_condition=exagrype.api.initialvalues.gauge_wave())
+solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, patch_size)
+~~~~~~~~~~~~~~~~~~~~~~~
+
+For the fourth-order Finite Differences of the production runs, use the
+numerical scheme, grid construction and plotter of \c exahype2.api.rkfd4
+instead:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+solver.numerical_scheme  = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(solver, patch_size, rk_order=4)
+solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(solver, volume_size=0.04)
+~~~~~~~~~~~~~~~~~~~~~~~
+
+These Finite Differences have no artificial dissipation. To add a
+Kreiss-Oliger dissipation, replace the numerical scheme by
+exagrype.api.FD4WithKODissipation, which runs the plain fourth-order kernel
+first and then adds the dissipation per Runge-Kutta stage. By default, the
+dissipation applies to all unknowns. You can restrict it to some of them:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+solver.numerical_scheme  = exagrype.api.FD4WithKODissipation(solver, patch_size, rk_order=4, kreiss_oliger_sigma=8.0)
+solver.numerical_scheme  = exagrype.api.FD4WithKODissipation(solver, patch_size, rk_order=4, kreiss_oliger_sigma=8.0, quantities=["lapse", "shift"])
+~~~~~~~~~~~~~~~~~~~~~~~
+
+@ref benchmarks_exagrype_gauge_wave is a complete example. Please
+note the current limitations: \c exahype2.api.rkfd4 supports regular grids only,
+and tracers and the second-order formulation are not available through the
+new API yet.
+
+# Black holes and GSL
+
+TwoPunctures requires the GNU Scientific Library (GSL). It hence is only
+compiled into the library if you configure Peano with \c --with-gsl
+(\c -DWITH_GSL=ON for CMake). This defines \c UseGSL and adds GSL to the
+link line of all generated Makefiles.
+
+Applications switch black hole initial data on per build through
+\c -DIncludeTwoPunctures. If an application sets this flag but Peano has been
+configured without GSL, the build stops with an error message that tells you
+to reconfigure.
+
+*/

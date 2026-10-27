@@ -95,37 +95,35 @@ class InsertParticlesAlongCartesianLayoutIntoUnrefinedCells(ActionSet):
 
   // Start of template in python/peano4/toolbox/particles/InsertParticlesAlongCartesianLayoutIntoUnrefinedCells.py
 
-  if ( not marker.hasBeenRefined() and not marker.willBeRefined() ) {
-    #if Dimensions==2
-    tarch::la::Vector<2,double> domainOffset = { {{DOMAIN_OFFSET[0]}}, {{DOMAIN_OFFSET[1]}} };
-    tarch::la::Vector<2,double> domainSize   = { {{DOMAIN_SIZE[0]}}, {{DOMAIN_SIZE[1]}} };
-    #else
-    tarch::la::Vector<3,double> domainOffset = { {{DOMAIN_OFFSET[0]}}, {{DOMAIN_OFFSET[1]}}, {{DOMAIN_OFFSET[2]}} };
-    tarch::la::Vector<3,double> domainSize   = { {{DOMAIN_SIZE[0]}}, {{DOMAIN_SIZE[1]}}, {{DOMAIN_SIZE[2]}} };
-    #endif
-    std::vector< globaldata::{{PARTICLE}}* > newParticles = toolbox::particles::createParticlesAlignedWithGlobalCartesianMesh<globaldata::{{PARTICLE}}>(
-      {{H}},
-      marker.x(),
-      marker.h(),
-      domainOffset,
-      domainSize,
-      {{NOISE}},
-      {{NOISE_SCALE}}
-    );
-    for (auto* particle: newParticles) {
-      if ( {{GUARD}} ) {
-        // See documentation of constructor on initialisation snippet
-        {{INITIALISATION_CALL}}
-        toolbox::particles::insertParticleIntoCell(
-          marker,
-          particle,
-          fineGridVertices{{PARTICLES_CONTAINER}},
-          _spacetreeId
-        );
-      }
-      else {
-        delete particle;
-      }
+  #if Dimensions==2
+  tarch::la::Vector<2,double> domainOffset = { {{DOMAIN_OFFSET[0]}}, {{DOMAIN_OFFSET[1]}} };
+  tarch::la::Vector<2,double> domainSize   = { {{DOMAIN_SIZE[0]}}, {{DOMAIN_SIZE[1]}} };
+  #else
+  tarch::la::Vector<3,double> domainOffset = { {{DOMAIN_OFFSET[0]}}, {{DOMAIN_OFFSET[1]}}, {{DOMAIN_OFFSET[2]}} };
+  tarch::la::Vector<3,double> domainSize   = { {{DOMAIN_SIZE[0]}}, {{DOMAIN_SIZE[1]}}, {{DOMAIN_SIZE[2]}} };
+  #endif
+  std::vector< globaldata::{{PARTICLE}}* > newParticles = toolbox::particles::createParticlesAlignedWithGlobalCartesianMesh<globaldata::{{PARTICLE}}>(
+    {{H}},
+    marker.x(),
+    marker.h(),
+    domainOffset,
+    domainSize,
+    {{NOISE}},
+    {{NOISE_SCALE}}
+  );
+  for (auto* particle: newParticles) {
+    if ( {{GUARD}} ) {
+      // See documentation of constructor on initialisation snippet
+      {{INITIALISATION_CALL}}
+      toolbox::particles::insertParticleIntoCell(
+        marker,
+        particle,
+        fineGridVertices{{PARTICLES_CONTAINER}},
+        _spacetreeId
+      );
+    }
+    else {
+      delete particle;
     }
   }
 
@@ -139,7 +137,12 @@ class InsertParticlesAlongCartesianLayoutIntoUnrefinedCells(ActionSet):
             result = self.__Template_TouchCellFirstTime.render(**self.d)
         return result
 
-    def get_body_of_getGridControlEvents(self):
+    def get_guard_of_operation(self, operation_name):
+        if operation_name == ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            return "not marker.hasBeenRefined() and not marker.willBeRefined()"
+        return "true"
+
+    def get_body_of_createGridControlEventsForNextTraversal(self):
         return "  return std::vector< peano4::grid::GridControlEvent >();\n"
 
     def get_action_set_name(self):

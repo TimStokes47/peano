@@ -2,14 +2,9 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api.solversteps.UserActionSet
 
-from peano4.api.solversteps.StepToActionSet import StepToActionSet
+from peano4.api.solversteps.StepToActionSets import StepToActionSets
 from peano4.api.solversteps.StepToObserver import StepToObserver
-
-
-#
-# @todo Aufteilen in mehrere Files mit ToXXXXX wie im Model.
-#
-# TODO MLADEN: Ist der Kommentar oben noch aktuell?
+from peano4.api.solversteps.SynchroniseActionSets import SynchroniseActionSets, get_task_groups
 
 
 class Step:
@@ -34,7 +29,7 @@ class Step:
     and associate it with several observers. In the C++ code, we will flatten
     such a relation, i.e. create the corresponding action set multiple times.
 
-    @see peano4.api.solversteps.ActionSet
+    @see @ref peano4.api.solversteps.ActionSet.ActionSet
 
     name: String
       This name is used to create the underlying action set later on
@@ -54,12 +49,41 @@ class Step:
         self.cell_data = []
         self.face_data = []
         self.vertex_data = []
+        # Optional side-channel, empty unless a caller populates it: maps a
+        # submodel already in cell_data/face_data/vertex_data to the
+        # peano4.api.taskgraph.Task.DataAccess qualifier it was declared
+        # with on the originating Task. use_cell()/use_face()/use_vertex()
+        # below deliberately do not touch these - they exist purely so
+        # peano4.api.taskgraph.compiler.Sequential.translate() can carry a
+        # Task's qualifiers over onto the Step it compiles into, for
+        # reporting (@see peano4.api.taskgraph.compiler.ReportCompiledStepSequence)
+        # to display; nothing about how this Step's own generated Observer
+        # behaves depends on them.
+        self.cell_data_access = {}
+        self.face_data_access = {}
+        self.vertex_data_access = {}
         if add_user_defined_actions:
             self.action_sets = [peano4.api.solversteps.UserActionSet(name)]
         else:
             self.action_sets = []
-        self.action_set_generator = StepToActionSet(self)
+        self.action_set_generator = StepToActionSets(self)
         self.observer_generator = StepToObserver(self)
+
+    def get_observer_class_name(self) -> str:
+        """!
+
+        Class name of the observer this step is translated into. This is
+        the step's name, cut down to 64 characters plus a consecutive number
+        if it is longer (@see peano4.api.output.Helper.shortened_class_name()),
+        as the class name also is the observer's file name. Everybody
+        referring to the observer class, such as the generated runners, has
+        to use this getter rather than the step's name.
+
+        """
+        # Imported here, as peano4.api.output in turn imports this package
+        from peano4.api.output.Helper import shortened_class_name
+
+        return shortened_class_name(self.name, max_length=64)
 
     def remove_all_actions(self):
         """
@@ -77,7 +101,7 @@ class Step:
         Simple bubble sort the action sets, such that their descend_invocation_order
         is preserved.
 
-        @see peano4.api.solversteps.ActionSet.descend_invocation_order
+        @see @ref peano4.api.solversteps.ActionSet.ActionSet.descend_invocation_order
 
         """
         for i in range(0, len(self.action_sets)):
@@ -137,7 +161,7 @@ class Step:
 
         Return max descend_invocation_order over all action sets associated with this step.
 
-        @see peano4.api.solversteps.ActionSet.descend_invocation_order
+        @see @ref peano4.api.solversteps.ActionSet.ActionSet.descend_invocation_order
 
         """
         self.__sort()
@@ -150,7 +174,7 @@ class Step:
 
         Return minimum descend_invocation_order over all action sets associated with this step.
 
-        @see peano4.api.solversteps.ActionSet.descend_invocation_order
+        @see @ref peano4.api.solversteps.ActionSet.ActionSet.descend_invocation_order
 
         """
         self.__sort()
@@ -225,16 +249,30 @@ class Step:
         visitor pattern over the Peano4 tree. The other type is an interface which
         provides plugin points into the created data transitions from a user's
         perspective.
+
+        Markers of type
+        @ref peano4.api.solversteps.SynchroniseActionSets.SynchroniseActionSets
+        yield no C++ code. They only separate the task groups which we hand
+        over to the observer
+        (@ref peano4.api.solversteps.SynchroniseActionSets.get_task_groups()).
         """
 
         included_action_sets = []
+        index_of_action_set = {}
         for action_set in self.action_sets:
+            if isinstance(action_set, SynchroniseActionSets):
+                continue
             full_qualified_action_set_name = self.action_set_generator.construct_output(
                 output, action_set
             )
+            index_of_action_set[id(action_set)] = len(included_action_sets)
             included_action_sets.append(full_qualified_action_set_name)
 
-        self.observer_generator.construct_output(output, included_action_sets)
+        task_groups = [
+            [index_of_action_set[id(action_set)] for action_set in group]
+            for group in get_task_groups(self.action_sets)
+        ]
+        self.observer_generator.construct_output(output, included_action_sets, task_groups)
 
     def copy_action_sets_from_other_step(self, other_step):
         self.action_sets += other_step.action_sets

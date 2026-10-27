@@ -12,7 +12,11 @@ pages:
   allow_failure: false
   needs: []
   dependencies: []
+  hooks:
+    pre_get_sources_script:
+      - rm -f "${CI_PROJECT_DIR}.tmp/.gitlab-runner.ext.conf.lock" 2>/dev/null || true
   script:
+    - git lfs pull --include="*.gif"
     - apptainer exec -e --bind "$PWD" $APPTAINER_IMAGEDIR/${IMAGE_GCC} python3 documentation/convert-jupyter-notebooks.py
     - apptainer exec -e --bind "$PWD" $APPTAINER_IMAGEDIR/${IMAGE_GCC} doxygen documentation/Doxyfile
     - rm -rf public
@@ -25,4 +29,10 @@ pages:
     - if: '$CI_COMMIT_BRANCH == "p4"'
   when: always
   interruptible: false
-  retry: 0
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - scheduler_failure
+      - api_failure
+      - stuck_or_timeout_failure

@@ -1,5 +1,7 @@
 #include "Interpolation.h"
 
+#include <algorithm>
+#include <cmath>
 #include <vector>
 
 #include "Enumeration.h"
@@ -16,6 +18,10 @@ namespace {
 
   tarch::multicore::BooleanSemaphore interpolationMapSemaphore;
 } // namespace
+
+int toolbox::blockstructured::internal::getCoarseLayerOfFineLayerInOverlap(int fineLayer, int overlap) {
+  return fineLayer >= overlap ? overlap + (fineLayer - overlap) / 3 : overlap - 1 - (overlap - 1 - fineLayer) / 3;
+}
 
 tarch::la::DynamicMatrix* toolbox::blockstructured::internal::
   createPiecewiseConstantInterpolationMatrix(int numberOfDoFsPerAxisInPatch) {
@@ -364,44 +370,23 @@ void toolbox::blockstructured::interpolateHaloLayer_AoS_piecewise_constant(
 
   const int normal = marker.getSelectedFaceNumber() % Dimensions;
 
-  static internal::FaceInterpolationMap faceInterpolationMap;
-  internal::FaceInterpolationOperatorKey
-    key(numberOfDoFsPerAxisInPatch, overlap, normal);
-
-  tarch::multicore::Lock lock(interpolationMapSemaphore);
-  if (faceInterpolationMap.count(key) == 0) {
-    faceInterpolationMap[key] = internal::
-      createPiecewiseConstantInterpolationMatrix(
-        numberOfDoFsPerAxisInPatch,
-        normal,
-        overlap
-      );
+  dfore(tangentialIndex, numberOfDoFsPerAxisInPatch, normal, 0) {
+    for (int fineLayer = 0; fineLayer < 2 * overlap; fineLayer++) {
+      tarch::la::Vector<Dimensions, int> fineVolume   = tangentialIndex;
+      tarch::la::Vector<Dimensions, int> coarseVolume = tangentialIndex;
+      fineVolume(normal)                              = fineLayer;
+      for (int d = 0; d < Dimensions; d++) {
+        coarseVolume(d) = d == normal
+                            ? internal::getCoarseLayerOfFineLayerInOverlap(fineLayer, overlap)
+                            : (fineVolume(d) + marker.getRelativePositionWithinFatherCell()(d) * numberOfDoFsPerAxisInPatch) / 3;
+      }
+      const int fineVolumeLinearised = serialiseVoxelIndexInOverlap(fineVolume, numberOfDoFsPerAxisInPatch, overlap, normal);
+      const int coarseVolumeLinearised = serialiseVoxelIndexInOverlap(coarseVolume, numberOfDoFsPerAxisInPatch, overlap, normal);
+      for (int j = 0; j < unknowns; j++) {
+        fineGridFaceValues[fineVolumeLinearised * unknowns + j] = coarseGridFaceValues[coarseVolumeLinearised * unknowns + j];
+      }
+    }
   }
-  tarch::la::DynamicMatrix* P = faceInterpolationMap[key];
-  lock.free();
-
-#if Dimensions == 2
-  const int patchSize = numberOfDoFsPerAxisInPatch * 2 * overlap;
-#else
-  const int patchSize = numberOfDoFsPerAxisInPatch * numberOfDoFsPerAxisInPatch
-                        * 2 * overlap;
-#endif
-
-  logDebug(
-    "interpolateHaloLayer_AoS_piecewise_constant(...)",
-    marker.toString() << ": " << P->toString()
-  );
-
-  P->batchedMultiplyAoS(
-    fineGridFaceValues,   // image
-    coarseGridFaceValues, // preimage
-    unknowns,  // batch size, i.e. how often to apply it in one AoS rush
-    patchSize, // result size, i.e. size of image
-    serialisePatchIndexInOverlap(
-      marker.getRelativePositionWithinFatherCell(),
-      normal
-    ) * patchSize
-  );
 
   logTraceOut("interpolateHaloLayer_AoS_piecewise_constant(...)");
 }
@@ -574,49 +559,60 @@ void toolbox::blockstructured::
 
   const int normal = marker.getSelectedFaceNumber() % Dimensions;
 
-  static internal::FaceInterpolationMap faceInterpolationMap;
-  internal::FaceInterpolationOperatorKey
-    key(numberOfDoFsPerAxisInPatch, overlap, normal);
+  dfore(tangentialIndex, numberOfDoFsPerAxisInPatch, normal, 0) {
+    // Per tangential axis, the two coarse volumes to interpolate between and
+    // the weight of the second one
+    tarch::la::Vector<Dimensions, int>    leftCoarseVolume  = tangentialIndex;
+    tarch::la::Vector<Dimensions, int>    rightCoarseVolume = tangentialIndex;
+    tarch::la::Vector<Dimensions, double> weightOfRight(0.0);
+    for (int d = 0; d < Dimensions; d++) {
+      if (d != normal) {
+        // Centre of the fine volume in coarse volume units, measured from the
+        // centre of the first coarse volume
+        const double position = (static_cast<double>(tangentialIndex(d) + marker.getRelativePositionWithinFatherCell()(d) * numberOfDoFsPerAxisInPatch) + 0.5) / 3.0 - 0.5;
+        const double clamped  = std::min(std::max(position, 0.0), static_cast<double>(numberOfDoFsPerAxisInPatch - 1));
+        leftCoarseVolume(d)   = std::min(static_cast<int>(std::floor(clamped)), numberOfDoFsPerAxisInPatch - 1);
+        rightCoarseVolume(d)  = std::min(leftCoarseVolume(d) + 1, numberOfDoFsPerAxisInPatch - 1);
+        weightOfRight(d)      = clamped - static_cast<double>(leftCoarseVolume(d));
+      }
+    }
 
-  assertionEquals(overlap, 1);
+    for (int fineLayer = 0; fineLayer < 2 * overlap; fineLayer++) {
+      tarch::la::Vector<Dimensions, int> fineVolume = tangentialIndex;
+      fineVolume(normal)                            = fineLayer;
+      const int fineVolumeLinearised = serialiseVoxelIndexInOverlap(fineVolume, numberOfDoFsPerAxisInPatch, overlap, normal);
+      for (int j = 0; j < unknowns; j++) {
+        fineGridFaceValues[fineVolumeLinearised * unknowns + j] = 0.0;
+      }
 
-  tarch::multicore::Lock lock(interpolationMapSemaphore);
-  if (faceInterpolationMap.count(key) == 0) {
-    faceInterpolationMap[key] = internal::createLinearInterpolationMatrix(
-      numberOfDoFsPerAxisInPatch,
-      normal,
-      false,
-      false
-    );
+      // Tensor product over the tangential axes: each tangential axis picks
+      // either the left or the right coarse volume
+      for (int corner = 0; corner < (1 << Dimensions); corner++) {
+        if ((corner >> normal) & 1) {
+          continue;
+        }
+        tarch::la::Vector<Dimensions, int> coarseVolume;
+        double                             weight = 1.0;
+        for (int d = 0; d < Dimensions; d++) {
+          if (d == normal) {
+            coarseVolume(d) = internal::getCoarseLayerOfFineLayerInOverlap(fineLayer, overlap);
+          } else if ((corner >> d) & 1) {
+            coarseVolume(d) = rightCoarseVolume(d);
+            weight *= weightOfRight(d);
+          } else {
+            coarseVolume(d) = leftCoarseVolume(d);
+            weight *= 1.0 - weightOfRight(d);
+          }
+        }
+        const int coarseVolumeLinearised = serialiseVoxelIndexInOverlap(coarseVolume, numberOfDoFsPerAxisInPatch, overlap, normal);
+        for (int j = 0; j < unknowns; j++) {
+          fineGridFaceValues[fineVolumeLinearised * unknowns + j] += weight * coarseGridFaceValues[coarseVolumeLinearised * unknowns + j];
+        }
+      }
+    }
   }
-  tarch::la::DynamicMatrix* P = faceInterpolationMap[key];
-  lock.free();
 
-#if Dimensions == 2
-  const int patchSize = numberOfDoFsPerAxisInPatch * 2 * overlap;
-#else
-  const int patchSize = numberOfDoFsPerAxisInPatch * numberOfDoFsPerAxisInPatch
-                        * 2 * overlap;
-#endif
-
-  logDebug(
-    "interpolateHaloLayer_AoS_linear_with_constant_extrapolation(...)",
-    marker.toString() << ": " << P->toString()
-  );
-
-  P->batchedMultiplyAoS(
-    fineGridFaceValues,   // image
-    coarseGridFaceValues, // preimage
-    unknowns,  // batch size, i.e. how often to apply it in one AoS rush
-    patchSize, // result size, i.e. size of image
-    serialisePatchIndexInOverlap(
-      marker.getRelativePositionWithinFatherCell(),
-      normal
-    ) * patchSize
-  );
-
-  logTraceOut("interpolateHaloLayer_AoS_linear_with_constant_extrapolation(...)"
-  );
+  logTraceOut("interpolateHaloLayer_AoS_linear_with_constant_extrapolation(...)");
 }
 
 void toolbox::blockstructured::
@@ -720,14 +716,44 @@ void toolbox::blockstructured::
     unknowns
   );
 
-  internal::interpolateCell_AoS_linear(
-    marker.getRelativePositionWithinFatherCell(),
-    numberOfDoFsPerAxisInPatch,
-    unknowns,
-    coarseGridCellValues,
-    fineGridCellValues,
-    false
-  );
+  dfor(fineVolume, numberOfDoFsPerAxisInPatch) {
+    // Per axis, the two coarse volumes to interpolate between and the weight
+    // of the second one
+    tarch::la::Vector<Dimensions, int>    leftCoarseVolume;
+    tarch::la::Vector<Dimensions, int>    rightCoarseVolume;
+    tarch::la::Vector<Dimensions, double> weightOfRight;
+    for (int d = 0; d < Dimensions; d++) {
+      // Centre of the fine volume in coarse volume units, measured from the
+      // centre of the first coarse volume
+      const double position = (static_cast<double>(fineVolume(d) + marker.getRelativePositionWithinFatherCell()(d) * numberOfDoFsPerAxisInPatch) + 0.5) / 3.0 - 0.5;
+      const double clamped  = std::min(std::max(position, 0.0), static_cast<double>(numberOfDoFsPerAxisInPatch - 1));
+      leftCoarseVolume(d)   = std::min(static_cast<int>(std::floor(clamped)), numberOfDoFsPerAxisInPatch - 1);
+      rightCoarseVolume(d)  = std::min(leftCoarseVolume(d) + 1, numberOfDoFsPerAxisInPatch - 1);
+      weightOfRight(d)      = clamped - static_cast<double>(leftCoarseVolume(d));
+    }
+
+    const int fineVolumeLinearised = peano4::utils::dLinearised(fineVolume, numberOfDoFsPerAxisInPatch);
+    for (int j = 0; j < unknowns; j++) {
+      fineGridCellValues[fineVolumeLinearised * unknowns + j] = 0.0;
+    }
+    for (int corner = 0; corner < (1 << Dimensions); corner++) {
+      tarch::la::Vector<Dimensions, int> coarseVolume;
+      double                             weight = 1.0;
+      for (int d = 0; d < Dimensions; d++) {
+        if ((corner >> d) & 1) {
+          coarseVolume(d) = rightCoarseVolume(d);
+          weight *= weightOfRight(d);
+        } else {
+          coarseVolume(d) = leftCoarseVolume(d);
+          weight *= 1.0 - weightOfRight(d);
+        }
+      }
+      const int coarseVolumeLinearised = peano4::utils::dLinearised(coarseVolume, numberOfDoFsPerAxisInPatch);
+      for (int j = 0; j < unknowns; j++) {
+        fineGridCellValues[fineVolumeLinearised * unknowns + j] += weight * coarseGridCellValues[coarseVolumeLinearised * unknowns + j];
+      }
+    }
+  }
 
   logTraceOut("interpolateCell_AoS_linear_with_constant_extrapolation(...)");
 }

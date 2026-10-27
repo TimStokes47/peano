@@ -22,7 +22,7 @@ def iterate_lines(filename):
 
 def found_path(line, start_string, end_string, replacement_path):
     # Produces a match if we see something that looks like:
-    # /dine/do009/ *** /Peano/ ***
+    # $CI_BUILDS_DIR/ *** /Peano/ ***
     pattern = re.compile(rf"{re.escape(start_string)}/.*?{re.escape(end_string)}")
     regex = pattern.search(line)
     if regex:
@@ -63,7 +63,7 @@ def sanitise_file(original_filename, start_string, end_string, replacement_path)
 
 
 if __name__ == "__main__":
-    start_string = "/dine/data/do009"
+    start_string = os.environ["CI_BUILDS_DIR"]
     end_string = "/Peano"
     replacement_path = peano_path
 

@@ -69,7 +69,7 @@ class Project:
     self._Peano_src_directory = "."
 
     # does this get overwritten later?
-    self._build_mode          = peano4.api.output.CompileMode.Asserts
+    self._build_mode          = peano4.api.output.CompileMode.ASSERTS
     self._executable_name = executable
     self._output_path   = "./" 
 
@@ -111,7 +111,7 @@ class Project:
     self._load_balancer_name      = load_balancer_name
     self._load_balancer_arguments = load_balancer_arguments
 
-  def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.Release ):
+  def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.RELEASE ):
     """!
     
     Tell the project where to find Peano

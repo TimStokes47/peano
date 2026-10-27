@@ -20,22 +20,36 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
 
 
 - \subpage page_exahype2_tutorials
-- Applications and user guides
-  - \subpage page_exahype_applications
+- Applications
+  - Seismology
+    - \subpage applications_exahype2_exaseis
+    - \subpage applications_exahype2_gprdr_GPRDR
+  - Astrophysics
+    - \subpage applications_exahype2_ExaGRyPE
+    - \subpage applications_exahype2_selfgravitation
+  - Tsunamis and flooding
+    - \subpage applications_exahype2_shallow_water
+  - Others
+    - \subpage applications_exahype2_acoustic
+    - \subpage applications_exahype2_elastic
+    - \subpage applications_exahype2_euler
   - \subpage page_exahype_benchmarks
-- \subpage page_exahype_architecture
-- \subpage page_exahype_solvers
+- Code architecture, usage and extension
+  - \subpage page_exahype_design_philosophy
+  - \subpage page_exahype_modelling_pde_solver
+  - \subpage page_exahype_numerical_scheme
+  - \subpage page_exahype_main_function
 - Numerics tour de force (hands-on explanation of core numerical ingredients)
-  - \subpage page_tutorials_exahype2_numerics_finite_volumes
-  - \subpage page_tutorials_exahype2_numerics_higher_order_finite_volumes
-  - \subpage page_tutorials_exahype2_numerics_discontinous-Galerkin
-  - \subpage page_tutorials_exahype2_numerics_finite-differences
-  - \subpage page_tutorials_exahype2_numerics_Runge-Kutta
-  - \subpage page_tutorials_exahype2_numerics_ADER-DG
+  - \subpage page_exahype2_numerics_finite_volumes
+  - \subpage page_exahype2_numerics_higher_order_finite_volumes
+  - \subpage page_exahype2_numerics_discontinuous-Galerkin
+  - \subpage page_exahype2_numerics_finite-differences
+  - \subpage page_exahype2_numerics_Runge-Kutta
+  - \subpage page_exahype2_numerics_ADER-DG
 - Core functionality, numerics and ingredients
+  - \subpage page_exahype2_solver_manipulate_solver_steps
   - \subpage exahype2_dg
   - \subpage exahype2_dg_DG_AMR
-  - \subpage documentation_exahype2_solvers_enclave_solvers
   - \subpage documentation_exahype2_dsl
   - \subpage page_exahype_tracer
   - \subpage page_exahype_boundary_conditions
@@ -53,6 +67,11 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
   - \subpage page_exahype_gpu
   - \subpage page_exahype_runtime_analysis
   - \subpage page_exahype_performance_optimisation
+- Programmer's guide
+  - \subpage page_exahype_programmers_guide_new_solver
+  - \subpage page_exahype_programmers_guide_action_sets
+- How-tos
+  - \subpage page_exahype2_howtos_design-patterns
 - Utilities
   - \subpage exahype2_enumerator
 - Related pages

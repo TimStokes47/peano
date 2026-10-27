@@ -8,7 +8,7 @@ import exahype2
 
 import jinja2
 
-from peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
+from toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
 
 
 class UpdateCell(ReconstructPatchAndApplyFunctor):
@@ -248,9 +248,9 @@ class SingleSweep(FV):
     if initial_conditions==exahype2.solvers.PDETerms.None_Implementation:
       assert False, "Initial conditions cannot be none"
 
-    if self._reconstructed_array_memory_location==peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete or \
-       self._reconstructed_array_memory_location==peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.HeapWithoutDelete or \
-       self._reconstructed_array_memory_location==peano4.api.toolbox.blockstructured.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete:
+    if self._reconstructed_array_memory_location==toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapThroughTarchWithoutDelete or \
+       self._reconstructed_array_memory_location==toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.HeapWithoutDelete or \
+       self._reconstructed_array_memory_location==toolbox.blockstructured.api.ReconstructedArrayMemoryLocation.ManagedSharedAcceleratorDeviceMemoryThroughTarchWithoutDelete:
       raise Exception("Memory mode without appropriate delete chosen, i.e. this will lead to a memory leak" )
 
     self._user_action_set_includes += additional_action_set_includes

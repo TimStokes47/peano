@@ -26,7 +26,7 @@ class AbstractCCZ4Solver(object):
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     my_solver.set_implementation(initial_conditions   = " " "
      for (int i=0; i<NumberOfUnknowns+NumberOfAuxiliaryVariables; i++) Q[i] = 0.0;
-        ::applications::exahype2::ccz4::gaugeWave(Q, volumeCentre, 0);
+        ::exagrype::initialvalues::gaugeWave(Q, volumeCentre, 0);
         " " ")
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -172,15 +172,16 @@ class AbstractCCZ4Solver(object):
         """
         self.add_user_action_set_includes(
             """
-#include "CCZ4Kernels.h"
-#include "SecondOrderAuxiliaryVariablesReconstruction.h"
+#include "exagrype/ccz4/Kernels.h"
+#include "exagrype/ccz4/SecondOrderAuxiliaryVariablesReconstruction.h"
 """
         )
         self.add_user_solver_includes(
             """
-#include "CCZ4Kernels.h"
-#include "InitialValues.h"
-#include "SecondOrderAuxiliaryVariablesReconstruction.h"
+#include "exagrype/ccz4/Kernels.h"
+#include "exagrype/initialvalues/InitialValues.h"
+#include "exagrype/initialvalues/ApplyTwoPunctures.h"
+#include "exagrype/ccz4/SecondOrderAuxiliaryVariablesReconstruction.h"
 #include <cstring>
 """
         )
@@ -221,11 +222,15 @@ class AbstractCCZ4Solver(object):
 
         If you have multiple CCZ4 solvers, i.e. different solvers of CCZ4 or multiple
         instances of the CCZ4 type, please call this operation only once on one of
-        your solvers. At the moment, I add hte following cpp files to the setup:
+        your solvers.
 
-        - InitialValues.cpp
-        - CCZ4Kernels.cpp
-        - SecondOrderAuxiliaryVariablesReconstruction.cpp
+        The CCZ4 kernels, the analytical initial values and the reconstruction
+        of the auxiliary variables are part of the ExaGRyPE library. Peano
+        therefore has to be configured with --enable-exagrype (or
+        -DENABLE_EXAGRYPE=ON), and the generated Makefile links against that
+        library. TwoPunctures (black hole initial data) is part of the library
+        if Peano is configured with --with-gsl. Therefore, I only add the
+        application's directory to the header search path.
 
         You can always add further files via
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -236,15 +241,6 @@ class AbstractCCZ4Solver(object):
         if path_of_ccz4_application[-1] != "/":
             path_of_ccz4_application += "/"
 
-        peano4_project.output.makefile.add_cpp_file(
-            path_of_ccz4_application + "InitialValues.cpp"
-        )
-        peano4_project.output.makefile.add_cpp_file(
-            path_of_ccz4_application + "CCZ4Kernels.cpp"
-        )
-        peano4_project.output.makefile.add_cpp_file(
-            path_of_ccz4_application + "SecondOrderAuxiliaryVariablesReconstruction.cpp"
-        )
         peano4_project.output.makefile.add_header_search_path(path_of_ccz4_application)
 
     @abstractmethod
@@ -623,7 +619,7 @@ def construct_FD4_ncp():
 
     deltaQSerialised[i+normal*NumberOfUnknowns] = deltaQ[i];
   }
-  ::applications::exahype2::ccz4::ncp(BTimesDeltaQ, Q, deltaQSerialised, normal%Dimensions, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
+  ::exagrype::ccz4::ncp(BTimesDeltaQ, Q, deltaQSerialised, normal%Dimensions, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
 #if defined(GPUOffloadingOMP)
   delete[] deltaQSerialised;
 #endif
@@ -644,7 +640,7 @@ def construct_FV_ncp():
 
     deltaQSerialised[i+normal*NumberOfUnknowns] = deltaQ[i];
   }
-  ::applications::exahype2::ccz4::ncp(BTimesDeltaQ, Q, deltaQSerialised, normal%Dimensions, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
+  ::exagrype::ccz4::ncp(BTimesDeltaQ, Q, deltaQSerialised, normal%Dimensions, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
 #if defined(GPUOffloadingOMP)
   delete[] deltaQSerialised;
 #endif
@@ -653,25 +649,25 @@ def construct_FV_ncp():
 
 def construct_FD4_source_term():
     return """
-  ::applications::exahype2::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
+  ::exagrype::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
 """
 
 
 def construct_FV_source_term():
     return """
-  ::applications::exahype2::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
+  ::exagrype::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
 """
 
 
 def construct_FD4_eigenvalues():
     return """
-  ::applications::exahype2::ccz4::maxEigenvalue(Q, normal%Dimensions, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd, maxEigenvalue );
+  ::exagrype::ccz4::maxEigenvalue(Q, normal%Dimensions, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd, maxEigenvalue );
 """
 
 
 def construct_FV_eigenvalues():
     return """
-  ::applications::exahype2::ccz4::maxEigenvalue(Q, normal%Dimensions, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd, maxEigenvalue );
+  ::exagrype::ccz4::maxEigenvalue(Q, normal%Dimensions, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd, maxEigenvalue );
 """
 
 
@@ -682,7 +678,7 @@ def construct_FD4_postprocessing_kernel():
     int index = 0;
     for (int i=0;i<itmax;i++)
     {
-      applications::exahype2::ccz4::enforceCCZ4constraints( newQ+index );
+      exagrype::ccz4::enforceCCZ4constraints( newQ+index );
       index += {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}};
     }
   }
@@ -696,7 +692,7 @@ def construct_FV_postprocessing_kernel():
     int index = 0;
     for (int i=0;i<itmax;i++)
     {
-      applications::exahype2::ccz4::enforceCCZ4constraints( newQ+index );
+      exagrype::ccz4::enforceCCZ4constraints( newQ+index );
       index += {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}};
     }
   }
@@ -1244,17 +1240,17 @@ class CCZ4Solver_FD4_SecondOrderFormulation_GlobalAdaptiveTimeStepWithEnclaveTas
 
     deltaQSerialised[i+normal*NumberOfUnknowns] = deltaQ[i];
   }
-  ::applications::exahype2::ccz4::ncpSecondOrderFormulation(BTimesDeltaQ, Q, deltaQSerialised, normal%Dimensions, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
+  ::exagrype::ccz4::ncpSecondOrderFormulation(BTimesDeltaQ, Q, deltaQSerialised, normal%Dimensions, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
 """,
             flux=exahype2.solvers.PDETerms.None_Implementation,
             source_term="""
   tarch::memset(S, 0.0, NumberOfUnknowns*sizeof(double)); 
-  ::applications::exahype2::ccz4::sourceSecondOrderFormulation(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3);
+  ::exagrype::ccz4::sourceSecondOrderFormulation(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3);
 """,
             refinement_criterion=exahype2.solvers.PDETerms.Empty_Implementation,
             eigenvalues="""
           // do we only set Q
-  return ::applications::exahype2::ccz4::maxEigenvalueSecondOrderFormulation(Q, normal%Dimensions, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd );
+  return ::exagrype::ccz4::maxEigenvalueSecondOrderFormulation(Q, normal%Dimensions, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd );
 """,
         )
 
@@ -1264,7 +1260,7 @@ class CCZ4Solver_FD4_SecondOrderFormulation_GlobalAdaptiveTimeStepWithEnclaveTas
     int index = 0;
     for (int i=0;i<itmax;i++)
     {
-      applications::exahype2::ccz4::enforceCCZ4constraintsSecondOrderFormulation( newQ+index );
+      exagrype::ccz4::enforceCCZ4constraintsSecondOrderFormulation( newQ+index );
       index += {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}};
     }
   }
@@ -1316,7 +1312,7 @@ class CCZ4Solver_FD4_SecondOrderFormulation_GlobalAdaptiveTimeStepWithEnclaveTas
   timeStepSize,
   nullptr // targetPatch 
 );
-::applications::exahype2::ccz4::recomputeAuxiliaryVariablesFD4_"""
+::exagrype::ccz4::recomputeAuxiliaryVariablesFD4_"""
             + reconstruction_type
             + """(
   reconstructedPatchData,
@@ -1425,7 +1421,7 @@ def construct_DG_ncp():
 
     dQdxSerialised[i+normal*NumberOfUnknowns] = deltaQ[i];
   }
-  ::applications::exahype2::ccz4::ncp(BTimesDeltaQ, Q, dQdxSerialised, normal%Dimensions, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
+  ::exagrype::ccz4::ncp(BTimesDeltaQ, Q, dQdxSerialised, normal%Dimensions, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
 #if defined(GPUOffloadingOMP)
   delete[] dQdxSerialised;
 #endif
@@ -1435,13 +1431,13 @@ def construct_DG_ncp():
 def construct_DG_source_term():
     return """
   tarch::memset(S, 0.0, NumberOfUnknowns*sizeof(double)); 
-  ::applications::exahype2::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
+  ::exagrype::ccz4::source(S,Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
 """
 
 
 def construct_DG_eigenvalues():
     return """
-  ::applications::exahype2::ccz4::maxEigenvalue(Q, normal%Dimensions, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd, maxEigenvalue );
+  ::exagrype::ccz4::maxEigenvalue(Q, normal%Dimensions, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd, maxEigenvalue );
 """
 
 
@@ -1452,7 +1448,7 @@ def construct_DG_postprocessing_kernel():
     int index = 0;
     for (int i=0;i<itmax;i++)
     {
-      applications::exahype2::ccz4::enforceCCZ4constraints( newQ+index );
+      exagrype::ccz4::enforceCCZ4constraints( newQ+index );
       index += {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}};
     }
   }

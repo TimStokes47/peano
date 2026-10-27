@@ -6,9 +6,11 @@ import jinja2
 
 from copy import deepcopy
 
-from .Helper import write_file
+from .Helper import write_file, WARNING_BANNER
 
 from .Overwrite import Overwrite
+
+from ..Logger import Logger
 
 class Jinja2TemplateStringHeaderImplementationFilePair(object):
   """!
@@ -56,8 +58,7 @@ dynamically in Python rather than read from a file on disk.
 
   def __generate_file(self,overwrite,full_qualified_filename,template_string):
     if template_string!=None and write_file(overwrite,self.default_overwrite,full_qualified_filename):
-      import inspect
-      print( "{} written by {} (from inline template)".format(full_qualified_filename, os.path.basename(inspect.getfile(self.__class__))))
+      Logger().log( "write " + full_qualified_filename )
 
       templateEnv = jinja2.Environment(undefined=jinja2.DebugUndefined)
       template = templateEnv.from_string( template_string )
@@ -70,15 +71,20 @@ dynamically in Python rather than read from a file on disk.
           template      = jinja2.Template(rendered_text, undefined=jinja2.DebugUndefined)
           rendered_text = template.render( self.d )
 
+      rendered_text = template.render(self.d)
+      if self.default_overwrite:
+        rendered_text = WARNING_BANNER + rendered_text
+
       with open( full_qualified_filename, "w" ) as output:
-        output.write( template.render(self.d) )
+        output.write( rendered_text )
 
   def generate(self,overwrite,directory):
-    if not os.path.exists( directory + "/" + self.subdirectory ):
-      os.mkdir(directory + "/" + self.subdirectory)
+    subdirectory_path = os.path.normpath( directory + "/" + self.subdirectory )
+    if not os.path.exists( subdirectory_path ):
+      os.mkdir(subdirectory_path)
 
-    header_filename = directory + "/" + self.subdirectory + "/" + self.classname + ".h"
-    cpp_filename    = directory + "/" + self.subdirectory + "/" + self.classname + ".cpp"
+    header_filename = os.path.normpath( subdirectory_path + "/" + self.classname + ".h" )
+    cpp_filename    = os.path.normpath( subdirectory_path + "/" + self.classname + ".cpp" )
 
     self.__generate_file(overwrite,header_filename,self.headerfile_template)
     self.__generate_file(overwrite,cpp_filename   ,self.cppfile_template)

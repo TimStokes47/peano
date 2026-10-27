@@ -62,7 +62,7 @@ class ParticleSetGenerator_ScatteredOnHeap_IndexByList(AbstractParticleSetGenera
     scattered. The C++ pointer per stack entry that's used to store all the
     particle pointers is realised through std::list.
 
-    Please consult @ref page_swift_performance_optimisation "the generic discussion on the impact of storage schemes".
+    Please consult @ref page_exaparty_performance_optimisation "the generic discussion on the impact of storage schemes".
 
     @image html ParticleSetGenerator_ScatteredOnHeap.png
 
@@ -109,7 +109,7 @@ class ParticleSetGenerator_ScatteredOnHeap_IndexByVector(AbstractParticleSetGene
     scattered. The C++ pointer per stack entry that's used to store all the
     particle pointers is realised through std::list.
 
-    Please consult @ref page_swift_performance_optimisation "the generic discussion on the impact of storage schemes".
+    Please consult @ref page_exaparty_performance_optimisation "the generic discussion on the impact of storage schemes".
 
     @image html ParticleSetGenerator_ScatteredOnHeap.png
 
@@ -156,7 +156,7 @@ class ParticleSetGenerator_ContinuousPerVertex(AbstractParticleSetGenerator):
     scattered. The C++ pointer per stack entry that's used to store all the
     particle pointers is realised through std::list.
 
-    Please consult @ref page_swift_performance_optimisation "the generic discussion on the impact of storage schemes".
+    Please consult @ref page_exaparty_performance_optimisation "the generic discussion on the impact of storage schemes".
 
     @image html ParticleSetGenerator_ContinuousPerVertex.png
 
@@ -203,7 +203,7 @@ class ParticleSetGenerator_GlobalContinuous(AbstractParticleSetGenerator):
     scattered. The C++ pointer per stack entry that's used to store all the
     particle pointers is realised through std::list.
 
-    Please consult @ref page_swift_performance_optimisation "the generic discussion on the impact of storage schemes".
+    Please consult @ref page_exaparty_performance_optimisation "the generic discussion on the impact of storage schemes".
 
     @image html ParticleSetGenerator_GlobalContinuous.png
 

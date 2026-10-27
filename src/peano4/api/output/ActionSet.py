@@ -3,26 +3,76 @@
 import os
 import re
 
-from .Helper import write_file
+from .Helper import write_file, shortened_class_name
 
 from .Overwrite import Overwrite
 
 import peano4.api.solversteps.ActionSet
 
 class ActionSet(object):
+  """!
+
+  Code generator for one action set
+
+  Do not confuse this with @ref peano4.api.solversteps.ActionSet.ActionSet,
+  which is the interface you actually implement (you subclass it and override
+  get_guard_of_operation(), get_body_of_operation(), get_attributes(),
+  get_includes(), ... to say
+  *what* the action set does). Users typically never interact with this 
+  class. They work against the ActionSet in solversteps.
+  
+  This class here is the corresponding writer: given one
+  such solversteps.ActionSet instance (held as self.implementation), it
+  emits the actual C++ .h/.cpp pair - the include guard, the class
+  declaration inside the right namespace, a static tarch::logging::Log
+  _log, the constructor/destructor, createGridControlEventsForNextTraversal(),
+  prepareTraversal()/unprepareTraversal(), and one method per grid event
+  (touchCellFirstTime, createPersistentVertex, ...) - calling back into
+  the get_implementation_of_*() routines - which combine your
+  get_guard_of_operation() and get_body_of_*() overrides - to fill in each
+  method body.
+  @ref peano4.api.solversteps.ActionSet.ActionSet is the data model, this class is the writer.
+
+  # Where is is used
+
+  The class is instantiated in exactly one place: construct_output() of @ref
+  peano4.api.solversteps.StepToActionSets.StepToActionSets, which is called
+  once per action set attached to a @ref peano4.api.solversteps.Step.Step,
+  from Step.construct_output(), as it loops over self.action_sets. That
+  call site decides two things this class here itself does not know about:
+
+  - Which operations to generate.
+  - What the total number of vertices, cells, ... is and what they are called.
+  - Where the file goes and what it is called - if
+    action_set.user_should_modify_template() is True, it is named after the
+    action set itself and placed under actions/ (meant for you to hand-edit,
+    regenerated only if missing); if False, it is placed under observers/
+    and named "{step.name}2{action_set.get_action_set_name()}{index}" -
+    regenerated unconditionally every run.
+
+  # In short
+  
+  - This is the generator which takes one @ref peano4.api.solversteps.StepToActionSets.StepToActionSets and maps it onto a header/implementation file pair.
+  - The outcome either ends up in actions/ (if user_should_modify_template() is True) or in observers/ (if False).
+  - The outcome typically is named Observer2ActionSetName.
+  
+  ## Important links
+
+  - @ref page_peano_action_sets    
+  - @ref peano4.api.taskgraph
+
+  """
+
   def __init__(self,classname,namespace,subdirectory,implementation = None):
     """!
-     
-     Implementation of an Action Set
-    
-     Please consult peano4.api.solversteps.ActionSet for a description.
-     
-     implementation Should be of type peano4.api.solversteps.Mapping or None. If
-                    it is None, then the generated stuff will be a sole
-                    interface.
-                    
+
+     implementation Should be of type peano4.api.solversteps.ActionSet or
+                    None. If it is None, then the generated stuff will be a
+                    sole interface.
+
     """
-    self.classname    = classname
+    # The class name is also the file name, which might become too long
+    self.classname    = shortened_class_name(classname)
     self.namespace    = namespace
     self.subdirectory = subdirectory
     self.operations   = [
@@ -147,7 +197,7 @@ class ActionSet(object):
           outputfile.write( "    " + self.classname + "(int treeNumber);\n\n" )
           outputfile.write( "    ~" + self.classname + "();\n\n" )
           outputfile.write( """
-    std::vector< peano4::grid::GridControlEvent > getGridControlEvents() const;
+    std::vector< peano4::grid::GridControlEvent > createGridControlEventsForNextTraversal() const;
     static void prepareTraversal();
     static void unprepareTraversal();
 """ )
@@ -186,16 +236,16 @@ class ActionSet(object):
       outputfile.write( self.implementation.get_destructor_body() )
       outputfile.write( "}\n\n\n" )
 
-      outputfile.write( "std::vector< peano4::grid::GridControlEvent > " + self.__get_full_qualified_class_name() + "::getGridControlEvents() const {\n" )
-      outputfile.write( self.implementation.get_body_of_getGridControlEvents() )
+      outputfile.write( "std::vector< peano4::grid::GridControlEvent > " + self.__get_full_qualified_class_name() + "::createGridControlEventsForNextTraversal() const {\n" )
+      outputfile.write( self.implementation.get_implementation_of_createGridControlEventsForNextTraversal() )
       outputfile.write( "}\n\n\n" )
 
       outputfile.write( "void " + self.__get_full_qualified_class_name() + "::prepareTraversal() {\n" )
-      outputfile.write( self.implementation.get_body_of_prepareTraversal() )
+      outputfile.write( self.implementation.get_implementation_of_prepareTraversal() )
       outputfile.write( "}\n\n\n" )
 
       outputfile.write( "void " + self.__get_full_qualified_class_name() + "::unprepareTraversal() {\n" )
-      outputfile.write( self.implementation.get_body_of_unprepareTraversal() )
+      outputfile.write( self.implementation.get_implementation_of_unprepareTraversal() )
       outputfile.write( "}\n\n\n" )
 
       for operation in self.operations:
@@ -204,7 +254,7 @@ class ActionSet(object):
         outputfile.write( self.__get_full_qualified_class_name() + "::" + operation[0] )
         outputfile.write( self.__get_operation_arguments(operation) )
         outputfile.write( " {\n" )
-        outputfile.write( self.implementation.get_body_of_operation( operation[0] ) )
+        outputfile.write( self.implementation.get_implementation_of_operation( operation[0] ) )
         outputfile.write( "\n" )
         outputfile.write( "}\n\n\n" )
 

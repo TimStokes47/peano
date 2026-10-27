@@ -8,4 +8,5 @@ h5py
 vtk
 VTUinterface
 jupyter
-xdsl
+ast-comments
+pytest

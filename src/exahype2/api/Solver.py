@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import abc
-from typing import Dict, List, Union
+from typing import Callable, Dict, List, Tuple, Union
+
+import peano4.api
+import peano4.api.toolbox
 
 from .PDETerm import PDETerm
 
@@ -41,22 +44,17 @@ class Solver(abc.ABC):
         """!
 
         Turns a Solver into actual classes.
-                
+
         """
 
-        def __init__(self, 
-                     solver: "Solver"):
+        def __init__(self, solver: "Solver"):
             self._solver = solver
 
         @abc.abstractmethod
-        def construct_output(self,
-                             exahype2_project,
-                             solver_realisation,
-                             verbose):
+        def construct_output(self, exahype2_project, peano_project):
             """!
             Has to be implemented by subclass
             """
-
 
     class NumericalScheme(abc.ABC):
         """!
@@ -67,19 +65,38 @@ class Solver(abc.ABC):
 
         """
 
-        def __init__(self,
-                     solver: "Solver"):
+        def __init__(self, solver: "Solver"):
+            """!
+
+            @param solver: exahype2.api.Solver
+              The solver which the scheme discretises.
+
+            """
             self._solver = solver
 
         @abc.abstractmethod
-        def construct_output(self,
-                             exahype2_project,
-                             solver_realisation,
-                             verbose):
+        def construct_output(self, exahype2_project, peano_project, time_step):
             """!
             Has to be implemented by subclass
+
+            time_step: peano4.api.taskgraph.Graph
+              The task graph of the surrounding exahype2_project's time
+              stepping phase, so the numerical scheme can add its own tasks
+              into it.
             """
 
+        def create_default_mesh_adaptation(self) -> "Solver.MeshAdaptation":
+            """!
+
+            The mesh adaptation a solver uses if the user does not assign
+            one to solver.mesh_adaptation
+
+            @return Solver.MeshAdaptation or None
+              The default returns None, i.e. the solver does not contribute
+              to the mesh adaptation phase.
+
+            """
+            return None
 
     class GridConstruction(abc.ABC):
         """!
@@ -90,19 +107,122 @@ class Solver(abc.ABC):
 
         """
 
-        def __init__(self,
-                     solver: "Solver"):
+        def __init__(self, solver: "Solver"):
             self._solver = solver
 
         @abc.abstractmethod
-        def construct_output(self,
-                             exahype2_project,
-                             solver_realisation,
-                             verbose):
+        def construct_output(self, exahype2_project, peano_project, setup_simulation):
             """!
             Has to be implemented by subclass
+
+            setup_simulation: peano4.api.taskgraph.Graph
+              The task graph of the surrounding exahype2_project's setup
+              phase, so the grid construction can add its own tasks into it.
             """
 
+    class Plotter(abc.ABC):
+        """!
+
+        How a Solver writes out its solution. Abstract - concrete solvers
+        have to provide a subclass that implements construct_output().
+
+        Each plotter decides itself when to plot. The plotter has to give
+        its solver's C++ class a method
+
+        ~~~~~~~~~~~~~~~~~~~~~~~
+        bool wantsToPlot() const;
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        (@see Solver.add_abstract_solver_method()). The generated main asks
+        all solvers with a plotter (repositories::wantsToPlot()) and runs
+        the plot phase if any of them wants to plot. Within the plot phase,
+        each plotter then checks its own solver's wantsToPlot() and only
+        writes output if it is true. This way, every solver can have its own
+        plotter with its own settings - @see exahype2.api.fv.PlotAsVTKFile.
+
+        """
+
+        def __init__(self, solver: "Solver"):
+            self._solver = solver
+
+        @abc.abstractmethod
+        def construct_output(self, exahype2_project, peano_project, plot):
+            """!
+            Has to be implemented by subclass
+
+            plot: peano4.api.taskgraph.Graph
+              The task graph of the surrounding exahype2_project's plotting
+              phase, so the plotter can add its own tasks into it.
+            """
+
+    class MeshAdaptation(abc.ABC):
+        """!
+
+        How a Solver adapts its mesh and rebalances its load between two
+        time steps. Abstract - concrete solvers have to provide a subclass
+        that implements construct_output().
+
+        The mesh adaptation is the fourth phase of an ExaHyPE 2 project
+        next to the setup, the time stepping and the plotting. The
+        generated main runs it right after a time step, and only if this
+        time step has asked for a mesh refinement or erase, or if the load
+        balancing has split recently (@ref exahype2::isMeshAdaptationRequired()).
+        The phase is optional: Solvers without a MeshAdaptation do not
+        contribute to it, and the main never runs an empty phase.
+
+        The mesh adaptation does not decide where to refine or erase. The
+        numerical scheme's last task of the time step collects these
+        requests (@ref exahype2.api.blockstructured.DynamicMeshRefinement),
+        and the mesh adaptation realises them.
+
+        """
+
+        def __init__(self, solver: "Solver"):
+            self._solver = solver
+
+        @abc.abstractmethod
+        def construct_output(self, exahype2_project, peano_project, mesh_adaptation):
+            """!
+            Has to be implemented by subclass
+
+            mesh_adaptation: peano4.api.taskgraph.Graph
+              The task graph of the surrounding exahype2_project's mesh
+              adaptation phase, so the mesh adaptation can add its own tasks
+              into it.
+            """
+
+    ## Tag of all tasks which write a new solution
+    #
+    # Tags are plain strings (@ref peano4.api.taskgraph.Task.Task). Every
+    # numerical scheme adds this tag to each task of its time stepping task
+    # graph which writes a new solution:
+    #
+    # ~~~~~~~~~~~~~~~~~~~~~~~
+    # task.tags.add(Solver.SolutionUpdateTaskTag)
+    # ~~~~~~~~~~~~~~~~~~~~~~~
+    #
+    # Code which wants to postprocess the solution, typically a subclass of
+    # a numerical scheme which extends the scheme's construct_output(),
+    # searches for the tag via peano4.api.taskgraph.Graph.find_tasks() and
+    # inserts its own tasks after the tagged ones via
+    # peano4.api.taskgraph.Graph.insert_after(). The tag is a contract
+    # between the numerical schemes and any such code: A scheme has to tag
+    # all of its solution writers, and it must not read the outcome of a
+    # writer within the writer's own task, i.e. it has to project the
+    # solution onto the faces or compute eigenvalues from it in a subsequent
+    # task. The tag does not say which data or cells a task writes. Code
+    # which inserts tasks has to know the scheme it works with (@ref
+    # page_exahype2_solver_manipulate_solver_steps).
+    SolutionUpdateTaskTag = "exahype2.api.Solver.SolutionUpdateTaskTag"
+
+    ## Tag of all tasks which write an intermediate solution
+    #
+    # Runge-Kutta schemes add this tag to each task which writes the input of
+    # a further Runge-Kutta stage, and @ref exahype2.api.Solver.Solver.SolutionUpdateTaskTag to the task
+    # which writes the new solution after the last stage. Postprocessing which
+    # has to act on each stage, such as the enforcement of constraints, hence
+    # searches for both tags. The contract of SolutionUpdateTaskTag applies.
+    IntermediateSolutionUpdateTag = "exahype2.api.Solver.IntermediateSolutionUpdateTag"
 
     def __init__(
         self,
@@ -126,31 +246,64 @@ class Solver(abc.ABC):
           distinguish them, as only the unknowns are subject to the actual PDE
           formulation. Can be specified either as a plain int, or as a dict
           mapping variable name onto multiplicity (e.g.
-          `{"rho": 1, "j": 3}` for a scalar density plus a 3d momentum). If a
-          dict is used, the code generator emits a `VariableShortcuts` file
-          that lets user code address a variable by name instead of having to
-          remember its offset into the unknowns array by hand.
+          `{"rho": 1, "j": 3}` for a scalar density plus a 3d momentum). If
+          dicts are used, the generated Abstract<SolverName> class hosts a
+          nested struct Variables with one constant per name, so user code
+          can write Q[Variables::j+1] instead of having to remember the
+          offset into the unknowns array by hand.
 
         auxiliary_variables: int or dict
           Same semantics as unknowns, but for variables that may be
-          space-dependent yet do not change over time.
+          space-dependent yet do not change over time. Their names follow
+          the unknowns' names, as the auxiliary variables follow the
+          unknowns in Q.
+
+        If names are used at all, they have to cover all unknowns and all
+        auxiliary variables, i.e. you cannot pass a dict for one and a
+        non-zero int for the other.
+
+        The variables cannot be changed after construction: the numerical
+        scheme sizes its data structures from them as soon as it is assigned
+        to the solver.
 
         """
         self._name = name
 
-# @todo Maybe can go away?
-        self._use_var_shortcut = False
-        self._variable_names: List[str] = []
-        self._variable_pos: List[int] = [0]
+        # Offset of each named variable within Q. Empty if no names are used.
+        self._variable_positions: Dict[str, int] = {}
 
-        self._unknowns = self._register_variables(unknowns)
-        self._auxiliary_variables = self._register_variables(auxiliary_variables)
+        self._unknowns = self._register_variables(unknowns, 0)
+        self._auxiliary_variables = self._register_variables(
+            auxiliary_variables, self._unknowns
+        )
 
-        self._user_action_set_includes = ""
+        named_entries = sum(
+            sum(variables.values())
+            for variables in (unknowns, auxiliary_variables)
+            if isinstance(variables, dict)
+        )
+        if self._variable_positions and named_entries != (
+            self._unknowns + self._auxiliary_variables
+        ):
+            raise ValueError(
+                f"Solver {name}: the variable names {list(self._variable_positions)} "
+                f"cover only {named_entries} of the {self._unknowns} unknowns and "
+                f"{self._auxiliary_variables} auxiliary variables. If you name "
+                f"variables, name all unknowns and all auxiliary variables, i.e. "
+                f"pass dicts for both (or 0 for the one that is empty)."
+            )
+
         self._user_solver_includes = ""
         self._solver_constants = ""
 
-        self._pde_terms: Dict[str, PDETerm] = {}
+        self._pde_terms: Dict[Tuple[str, bool], PDETerm] = {}
+
+        # Raw C++ member declarations/methods to splice into the generated
+        # Abstract<SolverName> class, on top of the PDE terms above -
+        # nothing here by default, @see add_abstract_solver_attribute()/
+        # add_abstract_solver_method().
+        self._abstract_solver_attributes: List[str] = []
+        self._abstract_solver_methods: List[Tuple[str, Callable[[str], str]]] = []
 
         # Deferred/local imports: these classes all subclass either one of
         # the Solver.* nested classes above or a class from a sibling
@@ -160,38 +313,64 @@ class Solver(abc.ABC):
         # own import of them would then run before class Solver is even
         # defined.
         from .SolverToCPPFiles import SolverToCPPFiles
+
         self.solver_generator = SolverToCPPFiles(self)
 
         # NumericalScheme has no default realisation - concrete solver
-        # subclasses have to assign their own subclass instance to it.
-        self.numerical_scheme: "Solver.NumericalScheme" = None
+        # subclasses have to assign their own subclass instance to it,
+        # through the numerical_scheme property below.
+        self._numerical_scheme: "Solver.NumericalScheme" = None
 
-        from .VTKPlotter import VTKPlotter
-        self.plotter: "exahype2.plotter.api.Plotter" = VTKPlotter(self)
+        # GridConstruction has no default realisation - concrete solver
+        # subclasses (or their users) have to assign their own
+        # Solver.GridConstruction subclass instance to it, e.g.
+        # exahype2.api.fv.SetupSimulationOverRegularGrid, through the
+        # grid_construction attribute below.
+        self.grid_construction: "Solver.GridConstruction" = None
 
-        from .DefaultInitialisation import DefaultInitialisation
-        self.initialisation: "exahype2.initialisation.api.HardcodedInitialisation" = DefaultInitialisation(self)
+        # Plotter has no default realisation - concrete solver subclasses
+        # (or their users) have to assign their own Solver.Plotter subclass
+        # instance to it, e.g. exahype2.api.fv.PlotAsVTKFile, through the
+        # plotter attribute below.
+        self.plotter: "Solver.Plotter" = None
 
-        from .HardcodedGridConstruction import HardcodedGridConstruction
-        self.grid_construction: "Solver.GridConstruction" = HardcodedGridConstruction(self)
+        # MeshAdaptation is optional. Without one, the solver does not
+        # contribute to the mesh adaptation phase. Users can assign their
+        # own Solver.MeshAdaptation subclass instance to it through the
+        # mesh_adaptation attribute below.
+        self.mesh_adaptation: "Solver.MeshAdaptation" = None
 
+        # Selects the mesh entities on which all action sets of this solver
+        # act: Each action set's guard is the corresponding output of this
+        # selector. By default, the solver works on the finest mesh level
+        # only. Users can assign any other peano4.api.toolbox.GridSelector.
+        self.grid_selector: peano4.api.toolbox.GridSelector = (
+            peano4.api.toolbox.FineGridSelector()
+        )
 
-    def _register_variables(self, variables: VariableSpecification) -> int:
+        # The kernel function calls are generated as late as possible, to
+        # ensure that all PDE terms and the numerical scheme have been
+        # specified
+        self.compute_kernel_call: str = None
+
+    def _register_variables(self, variables: VariableSpecification, offset: int) -> int:
         """!
 
         Translate a plain int or a name-to-multiplicity dict into a total
-        variable count, and - for the dict case - extend the shared
-        _variable_names/_variable_pos bookkeeping used to emit the
-        VariableShortcuts file. Called once for unknowns and once for
-        auxiliary_variables, so the two end up sharing one contiguous
-        name/offset table.
+        variable count, and - for the dict case - add each name's position
+        within Q to _variable_positions. Called once for unknowns (offset 0)
+        and once for auxiliary_variables (offset = number of unknowns), so
+        the two end up in one contiguous name/offset table.
 
         """
         if isinstance(variables, dict):
-            self._use_var_shortcut = True
-            self._variable_names += list(variables.keys())
-            for multiplicity in variables.values():
-                self._variable_pos.append(multiplicity + self._variable_pos[-1])
+            for variable_name, multiplicity in variables.items():
+                if variable_name in self._variable_positions:
+                    raise ValueError(
+                        f"Solver {self._name}: variable name {variable_name} is used twice"
+                    )
+                self._variable_positions[variable_name] = offset
+                offset += multiplicity
             return sum(variables.values())
         elif isinstance(variables, int):
             return variables
@@ -218,24 +397,25 @@ class Solver(abc.ABC):
         return self._name
 
     @property
+    def numerical_scheme(self) -> "Solver.NumericalScheme":
+        return self._numerical_scheme
+
+    @numerical_scheme.setter
+    def numerical_scheme(self, value: "Solver.NumericalScheme"):
+        if not isinstance(value, Solver.NumericalScheme):
+            raise TypeError(
+                "numerical_scheme has to be a Solver.NumericalScheme, but got "
+                f"{type(value)}"
+            )
+        self._numerical_scheme = value
+
+    @property
     def unknowns(self) -> int:
         return self._unknowns
-
-    @unknowns.setter
-    def unknowns(self, value: VariableSpecification):
-        self._unknowns = self._register_variables(value)
-        self.create_data_structures()
-        self.create_action_sets()
 
     @property
     def auxiliary_variables(self) -> int:
         return self._auxiliary_variables
-
-    @auxiliary_variables.setter
-    def auxiliary_variables(self, value: VariableSpecification):
-        self._auxiliary_variables = self._register_variables(value)
-        self.create_data_structures()
-        self.create_action_sets()
 
     @property
     def user_solver_includes(self) -> str:
@@ -252,6 +432,22 @@ class Solver(abc.ABC):
         """
         self._user_solver_includes += value
 
+    def _get_default_includes(self) -> str:
+        """!
+        Includes every generated action set can rely on being available,
+        regardless of which action sets a concrete discretisation (e.g.
+        exahype2.api.fv) actually attaches - @see
+        exahype2.api.fv.actionsets.AbstractFVActionSet.get_includes().
+        """
+        return """
+#include "tarch/la/Vector.h"
+
+#include "peano4/utils/Globals.h"
+#include "peano4/utils/Loop.h"
+
+#include "repositories/SolverRepository.h"
+"""
+
     def set_solver_constants(self, datastring: str):
         self._solver_constants = datastring
 
@@ -261,6 +457,32 @@ class Solver(abc.ABC):
     def _unknown_identifier(self) -> str:
         return self._name + "Q"
 
+    def variable_names_per_entry(self) -> List[str]:
+        """!
+
+        One name per entry of Q, i.e. for the unknowns followed by the
+        auxiliary variables, or the empty list if the variables carry no
+        names. A variable with multiplicity one keeps its name, whereas a
+        variable v with multiplicity k yields the names v[0], ..., v[k-1],
+        i.e. the entries Q[Variables::v+0], ..., Q[Variables::v+k-1].
+        Plotters use these names to label the entries in their output.
+
+        """
+        positions = list(self._variable_positions.items())
+        names = []
+        for i, (variable_name, position) in enumerate(positions):
+            next_position = (
+                positions[i + 1][1]
+                if i + 1 < len(positions)
+                else self._unknowns + self._auxiliary_variables
+            )
+            multiplicity = next_position - position
+            if multiplicity == 1:
+                names.append(variable_name)
+            else:
+                names += [f"{variable_name}[{j}]" for j in range(multiplicity)]
+        return names
+
     def get_name_of_global_instance(self) -> str:
         return "instanceOf" + self._name
 
@@ -268,35 +490,130 @@ class Solver(abc.ABC):
     def pde_terms(self) -> List[PDETerm]:
         """!
         All PDE terms (flux, eigenvalues, ...) registered with this solver,
-        in registration order. Read-only - use add_pde_term() to add one and
+        in registration order. A given name can appear at most twice - once
+        stateless, once not, @see add_pde_term() - since each generates a
+        different C++ method. Read-only - use add_pde_term() to add one and
         remove_pde_term() to take one away again.
         """
         return list(self._pde_terms.values())
+
+    @property
+    def requires_user_class(self) -> bool:
+        """!
+        True iff at least one PDE term has no implementation. Only then
+        does the user have to provide one, i.e. only then is a
+        <SolverName> class derived from Abstract<SolverName> generated
+        and added to the Makefile (@see exahype2.api.SolverToCPPFiles).
+        Otherwise, Abstract<SolverName> is complete and the solver
+        repository instantiates it directly. Stateless terms always carry
+        an implementation (@see PDETerm), so they never require one.
+        """
+        return any(term.implementation is None for term in self.pde_terms)
+
+    def get_name_of_solver_class(self) -> str:
+        """!
+        Name of the C++ class the solver repository instantiates:
+        <SolverName> if requires_user_class, Abstract<SolverName> otherwise.
+        """
+        return self._name if self.requires_user_class else "Abstract" + self._name
 
     def add_pde_term(self, term: PDETerm):
         """!
 
         Register a PDE term with this solver, or replace the one already
-        registered under the same name. A solver aggregates an arbitrary
-        number of terms - the well-known ones (Flux(), PDETerm.eigenvalues(),
-        .nonconservative_product(), .source_term()) as well as new,
-        solver-specific ones users construct themselves via PDETerm(name=...,
-        signature=..., implementation=...).
+        registered under the same name and statelessness. A solver
+        aggregates an arbitrary number of terms - the well-known ones
+        (Flux(), MaxEigenvalue(), ...) as well as new, solver-specific ones
+        users construct themselves via PDETerm(name=..., implementation=...).
+
+        Each term generates exactly one C++ method: the static,
+        GPU-offloadable overload if term.stateless, otherwise the virtual
+        instance method (@see PDETerm.Generator.generate_declaration()),
+        never both. To get both variants of the same conceptual operation
+        (e.g. a stateless flux for GPU kernels and a stateful one for
+        everything else), add the term twice - once with stateless=True,
+        once without - which is why terms are keyed by (name, stateless)
+        rather than by name alone.
 
         """
         if not isinstance(term, PDETerm):
             raise TypeError(f"term has to be a PDETerm, but got {type(term)}")
-        self._pde_terms[term.name] = term
+        self._pde_terms[(term.name, term.stateless)] = term
 
-    def remove_pde_term(self, name: str):
-        """! Remove a previously registered PDE term by name. """
-        del self._pde_terms[name]
+    def remove_pde_term(self, name: str, stateless: bool = False):
+        """! Remove a previously registered PDE term by name and statelessness."""
+        del self._pde_terms[(name, stateless)]
 
-    def get_pde_term(self, name: str) -> PDETerm:
-        """! Look up a previously registered PDE term by name. """
-        return self._pde_terms[name]
+    def get_pde_term(self, name: str, stateless: bool = False) -> PDETerm:
+        """! Look up a previously registered PDE term by name and statelessness."""
+        return self._pde_terms[(name, stateless)]
 
-# @todo This one is important
+    def add_abstract_solver_attribute(self, declaration: str):
+        """!
+
+        Add a raw C++ member attribute declaration to the generated
+        Abstract<SolverName> class (@see exahype2.api.SolverToCPPFiles),
+        e.g. "double _timeStamp = 0.0;" - use an in-class initialiser if
+        the attribute needs one, since there is no hook into the generated
+        constructor for this.
+
+        Nothing calls this unconditionally: a plain Solver carries no
+        attributes beyond what PDE terms need. It is up to whichever
+        NumericalScheme/GridConstruction/Plotter a solver uses to call
+        this, if it needs solver-level state of its own that genuinely
+        has no home on exahype2::Solver already - e.g.
+        exahype2.api.fv.RusanovWithExplicitEuler deliberately does *not*
+        use this for time stamp/time step size bookkeeping, since
+        ::exahype2::Solver (which every generated Abstract<SolverName>
+        already inherits from) already carries
+        _minTimeStamp/_maxTimeStamp/_minTimeStepSize/_maxTimeStepSize and
+        the updateCell()/startTimeStep()/finishTimeStep() lifecycle to
+        maintain them - @see exahype2.api.fv.actionsets.
+        ComputeGlobalCFLCondition, which drives that
+        lifecycle instead of introducing parallel state via this method.
+
+        """
+        self._abstract_solver_attributes.append(declaration)
+
+    def add_abstract_solver_method(
+        self, declaration: str, definition_generator: Callable[[str], str]
+    ):
+        """!
+
+        Add a raw C++ method to the generated Abstract<SolverName> class:
+        declaration goes into the class body (public section), verbatim.
+        definition_generator is called with the class' fully qualified
+        name once it is known (@see exahype2.api.SolverToCPPFiles,
+        exactly the way PDETerm.Generator.generate_out_of_class_definitions()
+        already is) and has to return the out-of-class definition - a
+        plain string with a "{qualified_class_name}" placeholder is
+        deliberately not supported here, since a C++ method body is full
+        of literal braces of its own; build the string with concatenation
+        instead, e.g.:
+
+        ~~~~~~~~~~~~~~~~~~~~~~~
+        solver.add_abstract_solver_method(
+          "void increaseTimestamp(double dt);",
+          lambda qualified_class_name:
+            "void " + qualified_class_name + "::increaseTimestamp(double dt) {\\n"
+            "  _timeStamp += dt;\\n"
+            "}\\n"
+        )
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        @see add_abstract_solver_attribute() for the attribute counterpart,
+        and exahype2.api.PDETerm.Generator for the more structured
+        alternative this deliberately is not (that one is for PDE terms a
+        user implements; this one is for solver-level bookkeeping a
+        NumericalScheme/etc. needs that has no equivalent on
+        ::exahype2::Solver already - @see add_abstract_solver_attribute()'s
+        own note on why RusanovWithExplicitEuler does not actually use
+        either method for time stamp/time step size bookkeeping).
+
+        """
+        self._abstract_solver_methods.append((declaration, definition_generator))
+
+    # @todo This one is important
     def create_readme_descriptor(self, domain_offset, domain_size) -> str:
         """!
         Return a human-readable description of this solver instance, to be
@@ -304,29 +621,63 @@ class Solver(abc.ABC):
         """
         pass
 
-    def generate_solver_realisation(self,
-                                exahype2_project,
-                                verbose):
+    def generate_solver_realisation(
+        self,
+        exahype2_project,
+        peano_project,
+        setup_simulation,
+        time_step,
+        plot,
+        mesh_adaptation,
+    ):
         """!
-        Turn this solver specification into a realisation.Solver
+        Turn this solver specification into a task graph and create the required C++ kernels/stubs
 
-        Constructs a fresh realisation.Solver tied to this solver, lets the
-        solver_generator populate it (and the surrounding exahype2_project),
-        and returns it. The caller - typically the exahype2_project's
-        generator - collects the realisations of all registered solvers and
-        mangles them into one Peano 4 project.
+        peano_project: peano4.api.Project
+          The Peano 4 project that exahype2_project.generate_Peano4_project() is
+          currently assembling. It is a local variable there, not an attribute -
+          merely passed through here, so this solver can add its own artefacts to it.
 
-        @return exahype2.api.realisation.Solver
+        setup_simulation, time_step, plot, mesh_adaptation: peano4.api.taskgraph.Graph
+          The task graphs of the four algorithmic phases of the surrounding
+          exahype2_project. They are owned by exahype2_project.generate_Peano4_project()
+          and merely passed through here, so this solver can add its own
+          tasks into them.
+
+        @return peano4.api.taskgraph.Graph
         """
-        if verbose:
-            print("---------------------------------------")
-            print("Create data for solver " + self._name)
-            print("---------------------------------------")
+        peano4.api.Logger().new_section("Solver " + self._name)
 
-        from .realisation import Solver as SolverRealisation
-        solver_realisation = SolverRealisation(self)
+        assert self.grid_construction is not None, (
+            f"Solver {self._name} has no grid_construction set. Assign a "
+            "Solver.GridConstruction subclass instance to grid_construction "
+            "before calling generate_solver_realisation()."
+        )
+        assert self.numerical_scheme is not None, (
+            f"Solver {self._name} has no numerical_scheme set. Assign a "
+            "Solver.NumericalScheme subclass instance to numerical_scheme "
+            "before calling generate_solver_realisation()."
+        )
 
-        self.solver_generator.construct_output(exahype2_project,solver_realisation,verbose)
+        # First, as the numerical scheme might ask for the mesh adaptation
+        if self.mesh_adaptation is None:
+            self.mesh_adaptation = (
+                self.numerical_scheme.create_default_mesh_adaptation()
+            )
 
-        return solver_realisation
-
+        self.grid_construction.construct_output(
+            exahype2_project, peano_project, setup_simulation
+        )
+        self.numerical_scheme.construct_output(
+            exahype2_project, peano_project, time_step
+        )
+        if self.plotter is not None:
+            self.plotter.construct_output(exahype2_project, peano_project, plot)
+        if self.mesh_adaptation is not None:
+            self.mesh_adaptation.construct_output(
+                exahype2_project, peano_project, mesh_adaptation
+            )
+        # Last, so grid construction, numerical scheme, plotter and mesh
+        # adaptation can add their own members to the solver class first
+        # (@see add_abstract_solver_attribute()/add_abstract_solver_method()).
+        self.solver_generator.construct_output(exahype2_project, peano_project)

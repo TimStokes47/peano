@@ -167,6 +167,15 @@ public:
    */
   Vector() InlineMethod = default;
 
+  /**
+   * Copy a vector from a pointer
+   *
+   * The constructor will copy Size entries of type Scalar into the
+   * local representation, i.e. it assumes that values points to an
+   * array which hosts at least Scalar entries. The content is
+   * automatically copied, i.e. no need to use a fancy copy operation
+   * or similar.
+   */
   Vector(const Scalar* values) InlineMethod;
 
   /**

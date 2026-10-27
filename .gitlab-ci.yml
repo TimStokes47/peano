@@ -5,10 +5,21 @@ stages:
   - Pages
   - BuildSystem
 
+workflow:
+  rules:
+    # Don't create a pipeline for tags.
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    # Every other event creates a pipeline.
+    - when: always
+
 # We define a job within the BuildSystem stage. We use the include statement
 # so that this job does everything in the .yml file linked below.
 Automake:
   stage: BuildSystem
+  needs: []
   trigger:
     include:
       - .continuous_integration/gitlab-automake.yml
@@ -18,6 +29,7 @@ Automake:
 # so that this job does everything in the .yml file linked below.
 CMake:
   stage: BuildSystem
+  needs: []
   trigger:
     include:
       - .continuous_integration/gitlab-cmake.yml

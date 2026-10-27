@@ -10,7 +10,7 @@ Peano's @ref page_tutorials_overview "generic description how to generate web do
     
 
 This tutorial runs through the basic steps of any multigrid application. For this, we assume that you have followed the @ref page_installation_home "installation instructions" already. We furthermore assume that the following extensions have been added:
-     --enable-blockstructured --enable-particles --enable-loadbalancing --enable-finiteelements --enable-mghype --enable-swift --enable-exahype
+     --enable-blockstructured --enable-particles --enable-loadbalancing --enable-finiteelements --enable-mghype --enable-exaparty --enable-exahype
 If you have a parallel code, you furthermore need
      --enable-loadbalancing
 This is for domain decomposition as we discuss later. Typically, we kick off with a new director for our project. Within this directory, we start with a plain Python script. In this guide, we work with a Jupyter notebook rather than a script. MGHyPE codes need to know where to find the MGHyPE and Peano Python sources. For this, we can either add the Python sources to our environment, or export the path variable prior to invoking our script/kicking off our Jupyter notebook, or we set the path hard-coded in our script. To be honest, this last approach is likely the least elegant one, as it hard-codes the pathes, but it works:
@@ -29,7 +29,7 @@ Once we have ensured that all pathes are correct, every project built with MGHyP
 
 
 ```python
-import peano4, mghype
+import peano4.api, mghype
 ```
 
 ## An MGHyPE project and its lowering into a Peano project
@@ -51,7 +51,7 @@ This creates the domain-specific project. What follows is the lowering. This low
 
 
 ```python
-project.set_Peano4_installation( "../..", peano4.output.CompileMode.Asserts )
+project.set_Peano4_installation( "../..", peano4.api.output.CompileMode.Asserts )
 
 peano4_project = project.generate_Peano4_project()
 peano4_project.generate()

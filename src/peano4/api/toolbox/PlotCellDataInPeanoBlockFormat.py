@@ -118,7 +118,7 @@ class PlotCellDataInPeanoBlockFormat(ActionSet):
     return ""
 
 
-  def get_body_of_getGridControlEvents(self):
+  def get_body_of_createGridControlEventsForNextTraversal(self):
     return "  return std::vector< peano4::grid::GridControlEvent >();\n" 
 
 
@@ -130,8 +130,7 @@ class PlotCellDataInPeanoBlockFormat(ActionSet):
     return False
 
 
-  Template_TouchCellFirstTime = """ 
-if ( {{GUARD_PREDICATE}} ) {
+  Template_TouchCellFirstTime = """
   int cellIndex = _writer->plotPatch(
     marker.x()-0.5 * marker.h(),
     marker.h()
@@ -143,7 +142,6 @@ if ( {{GUARD_PREDICATE}} ) {
   auto data = fineGridCell{{CELL_UNKNOWN_NAME}}.{{GETTER}};
   {% endif %}
   _dataWriter->plotCell( cellIndex, data );
-}
 """
 
 
@@ -203,8 +201,14 @@ if ( {{GUARD_PREDICATE}} ) {
     if operation_name==ActionSet.OPERATION_BEGIN_TRAVERSAL:
       result = jinja2.Template( self.__Template_BeginTraversal).render(**self.d)             
     if operation_name==ActionSet.OPERATION_END_TRAVERSAL:
-      result = jinja2.Template( self.__Template_EndTraversal).render(**self.d)             
+      result = jinja2.Template( self.__Template_EndTraversal).render(**self.d)
     return result
+
+
+  def get_guard_of_operation(self,operation_name):
+    if operation_name==ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+      return self.d[ "GUARD_PREDICATE" ]
+    return "true"
 
 
   def get_attributes(self):

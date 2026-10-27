@@ -3,6 +3,10 @@
 
 import peano4.api.toolbox.api
 
+from .GridSelector                             import GridSelector
+from .FineGridSelector                         import FineGridSelector
+from .FixedResolutionGridSelector              import FixedResolutionGridSelector
+
 try:
   from .CreateRegularGrid                      import CreateRegularGrid
   from .PlotGridInPeanoBlockFormat             import PlotGridInPeanoBlockFormat

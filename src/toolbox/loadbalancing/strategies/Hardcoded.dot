@@ -1,0 +1,33 @@
+// Behaviour of toolbox::loadbalancing::strategies::Hardcoded::finishStep()
+// Regenerate the picture via: dot -Tpng -Gdpi=110 Hardcoded.dot -o Hardcoded.png
+digraph Hardcoded {
+  rankdir=TB; nodesep=0.3; ranksep=0.3;
+  node [shape=box, style="rounded,filled", fillcolor="#f2f2f2", fontname="Helvetica", fontsize=11];
+  edge [fontname="Helvetica", fontsize=10];
+
+  list   [label="Enumerated splits, e.g.\nsplit 0: tree 0 hands 182 cells to rank 0, top-down\nsplit 1: tree 0 hands 182 cells to rank 0, top-down\nsplit 2: tree 0 hands 182 cells to rank 0, bottom-up", fillcolor="#dde6f3"];
+  first  [label="First sweep only: keep splits whose\nsplitting tree lives on this rank"];
+  sweep  [label="End of mesh sweep\n(finishStep)", fillcolor="#f6dcdc"];
+  next   [label="Take next split k", fillcolor="#f6dcdc"];
+  exists [label="Splitting tree\nexists on this rank?", shape=diamond, fillcolor="#ffffff"];
+  big    [label="Tree holds more than numberOfCells[k]\ncells (minus cells promised this sweep)?", shape=diamond, fillcolor="#ffffff"];
+  mode   [label="Tree has not issued a split with\na different mode in this sweep?", shape=diamond, fillcolor="#ffffff"];
+  peano  [label="Peano accepts split?\n(tree not busy splitting/joining)", shape=diamond, fillcolor="#ffffff"];
+  issue  [label="Issue split k", fillcolor="#dde9dd"];
+  wait   [label="Split k and all later splits\nwait for next sweep", fillcolor="#fbeed5"];
+  done   [label="No splits left:\nswitch strategy off", fillcolor="#dde9dd"];
+
+  list -> first -> sweep -> next;
+  next -> exists;
+  next -> done [label=" none left", style=dashed];
+  exists -> big   [label=" yes"];
+  big    -> mode  [label=" yes"];
+  mode   -> peano [label=" yes"];
+  peano  -> issue [label=" yes"];
+  issue  -> next  [label=" k+1"];
+  exists -> wait  [label=" no"];
+  big    -> wait  [label=" no"];
+  mode   -> wait  [label=" no"];
+  peano  -> wait  [label=" no"];
+  wait   -> sweep [label=" next sweep"];
+}

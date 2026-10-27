@@ -483,7 +483,7 @@ class AbstractUpdateParticleGridAssociation(ActionSet):
 """
     )
 
-    def get_body_of_getGridControlEvents(self):
+    def get_body_of_createGridControlEventsForNextTraversal(self):
         return "  return std::vector< peano4::grid::GridControlEvent >();\n"
 
     def user_should_modify_template(self):

@@ -1,0 +1,55 @@
+/**
+@page tutorials_exahype2_applications_exagrype_binary_black_hole Binary Black Hole Merger
+
+The build and running of ExaGRyPE is wrapped by a Python API for convenience. By calling
+the Python script in a command terminal, one can easily generate an executable that can run on any
+computational platform, from a student's laptop to supercomputer clusters. Different scenarios can be
+picked by feeding different physics parameters into the Python script; the simulation setup and running parameters
+can also be controlled directly via the command line.
+
+Users are referred to the general \ref page_exahype2_tutorials of ExaHyPE 2 if they are interested in
+what is going on behind the screens.
+
+# Run the benchmark
+
+Two black holes rotate around each other in a quasi-circular orbit, and finally merge at the center in this scenario.
+We set the initial physics conditions of the system following <a href="https://arxiv.org/abs/gr-qc/0307027">this paper</a>, Table I.
+Again, the following example is not suitable for a normal PC:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+python3 ccz4.py -impl fd4-rk1-dsl -s two-punctures -maxh 0.4 -minh 0.04 -ps 8 -plt 0.5 -et 120 -exn bbh --domain_r 12.0 --ReSwi 6 -cfl 0.1 -outdir /path/to/data/folder/ --KOSigma 8.0 --BBHType 2 -sommerfeld -so -ext adm -interp second_order -restrict second_order
+~~~~~~~~~~~~~~~~~~~~~~~
+
+This example should yield two black holes rotating and finally merging at the center.
+
+Typing parameter --help makes the Python script yield further information and an explanation of each parameter option.
+We recommend users not to change the running parameters of ExaGRyPE during benchmarking, as the parameter space is vast
+and some combinations lead to unpredictable behaviour.
+
+# Clean up old and temporary files
+
+The following statements remove all the glue code and auto-generated C++ files. This would be useful when you
+want to make sure no legacy code is around. There is no risk in deleting them - if you rerun the Python script,
+they will all be re-created.
+
+~~~~~~~~~~~~~~~~~~~~~~~
+rm *.o *.cmake
+rm README-*.md
+rm Makefile CMakeLists.txt
+rm Abstract*
+rm -rf celldata facedata globaldata observers tasks vertexdata repositories
+~~~~~~~~~~~~~~~~~~~~~~~
+
+To get rid of the output files, type
+
+~~~~~~~~~~~~~~~~~~~~~~~
+rm *patch-file *vtu *.pvd *.bak *.csv
+~~~~~~~~~~~~~~~~~~~~~~~
+
+# Visualization
+
+See \ref tutorials_exahype2_applications_exagrype_visualize
+
+Please notice the spatial filter is enabled by default, so the output of the examples above would be a slice of the x-y plane in the domain, instead of a complete cube.
+
+*/

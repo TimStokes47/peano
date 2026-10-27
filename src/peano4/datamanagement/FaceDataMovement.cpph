@@ -1,0 +1,314 @@
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#include "peano4/grid/LoadStoreComputeFlag.h"
+#include "peano4/grid/PeanoCurve.h"
+#include "peano4/utils/Globals.h"
+#include "tarch/Assertions.h"
+#include "tarch/la/VectorVectorOperations.h"
+#include "tarch/logging/Log.h"
+
+#include <utility>
+
+
+template <typename Data, typename StackMap, typename LoadStoreComputeFlag>
+void peano4::datamanagement::loadFaceData(
+  StackMap&                               stackMap,
+  int                                     spacetreeId,
+  const peano4::grid::GridTraversalEvent& event,
+  const FaceMarker&                       faceMarker,
+  [[maybe_unused]] const char*            name,
+  LoadStoreComputeFlag                    loadStoreComputeFlag
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::FaceDataMovement"
+  );
+
+  auto view = stackMap
+                .getForPush(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                ->pushBlock(TwoTimesD);
+  for (int i = 0; i < TwoTimesD; i++) {
+    int inFaceStack          = event.getFaceDataFrom(i);
+    int outFaceStackPosition = event.getFaceDataTo(i);
+    logDebug(
+      "loadCell(...)",
+      "face stack " << inFaceStack << "->pos-" << outFaceStackPosition
+    );
+
+    FaceMarker marker(faceMarker, outFaceStackPosition);
+
+    bool dataResidesOnIntermediateStack
+      = not peano4::grid::PeanoCurve::isInOutStack(inFaceStack)
+        and inFaceStack
+              != peano4::grid::TraversalObserver::
+                CreateOrDestroyPersistentGridEntity
+        and inFaceStack
+              != peano4::grid::TraversalObserver::
+                CreateOrDestroyHangingGridEntity
+        and inFaceStack != peano4::grid::TraversalObserver::NoData;
+    bool dataResidesOnInputStack
+      = peano4::grid::PeanoCurve::isInOutStack(inFaceStack)
+        and ::peano4::grid::loadPersistently(loadStoreComputeFlag(marker));
+    bool initialiseStackContentForNewData
+      = ::peano4::grid::computeOnData(loadStoreComputeFlag(marker))
+        or inFaceStack
+             == peano4::grid::TraversalObserver::
+               CreateOrDestroyPersistentGridEntity
+        or inFaceStack
+             == peano4::grid::TraversalObserver::
+               CreateOrDestroyHangingGridEntity;
+
+    if (dataResidesOnIntermediateStack or dataResidesOnInputStack) {
+      logDebug(
+        "loadCell(...)",
+        "load data of face "
+          << name << " with " << marker.x(outFaceStackPosition) << " x "
+          << marker.h() << ": "
+          << ::peano4::grid::toString(loadStoreComputeFlag(marker))
+      );
+      assertion5(
+        not stackMap.getForPop(spacetreeId, inFaceStack)->empty(),
+        event.toString(),
+        FaceMarker(event).toString(),
+        spacetreeId,
+        inFaceStack,
+        ::peano4::grid::toString(loadStoreComputeFlag(marker))
+      );
+      Data data = std::move(stackMap.getForPop(spacetreeId, inFaceStack)->pop()
+      );
+#if PeanoDebug > 0
+      if (peano4::grid::PeanoCurve::isInOutStack(inFaceStack)) {
+        assertionVectorNumericalEquals5(
+          data.getDebugX(),
+          marker.x(outFaceStackPosition),
+          data.getDebugX(),
+          data.getDebugH(),
+          marker.toString(),
+          outFaceStackPosition,
+          spacetreeId
+        );
+        assertionVectorNumericalEquals5(
+          data.getDebugH(),
+          marker.h(),
+          data.getDebugX(),
+          data.getDebugH(),
+          marker.toString(),
+          outFaceStackPosition,
+          spacetreeId
+        );
+      }
+#endif
+      view.set(outFaceStackPosition, data);
+    } else if (initialiseStackContentForNewData) {
+      Data data;
+#if PeanoDebug > 0
+      logDebug(
+        "loadCell(...)",
+        "initialise meta data of new face "
+          << name << " with " << marker.x(outFaceStackPosition) << " x "
+          << marker.h() << ": "
+          << ::peano4::grid::toString(loadStoreComputeFlag(marker))
+      );
+      data.setDebugX(marker.x(outFaceStackPosition));
+      data.setDebugH(marker.h());
+#endif
+      view.set(outFaceStackPosition, data);
+    } else {
+#if PeanoDebug > 0
+      logDebug(
+        "loadCell(...)",
+        "initialise meta data of unused face "
+          << name << " with " << marker.x(outFaceStackPosition) << " x "
+          << marker.h() << ": "
+          << ::peano4::grid::toString(loadStoreComputeFlag(marker))
+      );
+      view.get(outFaceStackPosition).setDebugX(marker.x(outFaceStackPosition));
+      view.get(outFaceStackPosition).setDebugH(marker.h());
+#endif
+    }
+  }
+}
+
+
+template <typename Data, typename StackMap, typename LoadStoreComputeFlag>
+void peano4::datamanagement::storeFaceData(
+  StackMap&                               stackMap,
+  int                                     spacetreeId,
+  const peano4::grid::GridTraversalEvent& event,
+  const FaceMarker&                       faceMarker,
+  [[maybe_unused]] const char*            name,
+  LoadStoreComputeFlag                    loadStoreComputeFlag
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::FaceDataMovement"
+  );
+
+  auto view = stackMap
+                .getForPop(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                ->popBlock(TwoTimesD);
+  for (int i = 0; i < TwoTimesD; i++) {
+    int inFaceStackPosition = event.getFaceDataFrom(i);
+    int outFaceStack        = event.getFaceDataTo(i);
+    logDebug(
+      "storeCell(...)",
+      "pos-" << inFaceStackPosition << "->face stack " << outFaceStack
+    );
+
+    FaceMarker marker(faceMarker, inFaceStackPosition);
+
+    Data& data = view.get(inFaceStackPosition);
+
+    bool dataShallBePushedOntoIntermediateStack
+      = not peano4::grid::PeanoCurve::isInOutStack(outFaceStack)
+        and outFaceStack
+              != peano4::grid::TraversalObserver::
+                CreateOrDestroyPersistentGridEntity
+        and outFaceStack
+              != peano4::grid::TraversalObserver::
+                CreateOrDestroyHangingGridEntity
+        and outFaceStack != peano4::grid::TraversalObserver::NoData;
+    bool dataShallBePushedOntoOutputStack
+      = peano4::grid::PeanoCurve::isInOutStack(outFaceStack)
+        and ::peano4::grid::storePersistently(loadStoreComputeFlag(marker));
+
+    if (dataShallBePushedOntoIntermediateStack or dataShallBePushedOntoOutputStack) {
+      logDebug(
+        "storeCell(...)",
+        "store face "
+          << name << " with " << marker.x(inFaceStackPosition) << " x "
+          << marker.h()
+      );
+      stackMap.getForPush(spacetreeId, outFaceStack)->push(data);
+    } else {
+      logDebug(
+        "storeCell(...)",
+        "do not store face "
+          << name << " with " << marker.x(inFaceStackPosition) << " x "
+          << marker.h()
+      );
+    }
+  }
+}
+
+
+template <
+  typename Data,
+  typename StackMap,
+  typename LoadStoreComputeFlag,
+  typename Send>
+void peano4::datamanagement::sendFaceData(
+  StackMap&                                           stackMap,
+  int                                                 spacetreeId,
+  int                                                 position,
+  int                                                 toStack,
+  peano4::grid::TraversalObserver::SendReceiveContext context,
+  const FaceMarker&                                   faceMarker,
+  LoadStoreComputeFlag                                loadStoreComputeFlag,
+  Send                                                send
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::FaceDataMovement"
+  );
+
+  FaceMarker  marker(faceMarker, position);
+  const Data& data = stackMap
+                       .getForPop(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                       ->top(TwoTimesD - 1 - position);
+  if (::peano4::grid::storePersistently(loadStoreComputeFlag(marker)) and (send(data, marker) or context == peano4::grid::TraversalObserver::SendReceiveContext::ForkDomain or context == peano4::grid::TraversalObserver::SendReceiveContext::JoinDomain)) {
+    logDebug(
+      "sendFace(...)",
+      "send out "
+        << data.toString() << " to stack " << toStack << " on tree "
+        << spacetreeId << " for marker " << marker.toString()
+    );
+
+    stackMap.getForPush(spacetreeId, toStack)->push(data);
+  }
+}
+
+
+template <
+  typename Data,
+  typename StackMap,
+  typename LoadStoreComputeFlag,
+  typename ReceiveAndMerge>
+void peano4::datamanagement::receiveAndMergeFaceData(
+  StackMap&                                                stackMap,
+  int                                                      spacetreeId,
+  int                                                      position,
+  int                                                      fromStack,
+  peano4::grid::TraversalObserver::SendReceiveContext      context,
+  [[maybe_unused]] const peano4::grid::GridTraversalEvent& event,
+  const FaceMarker&                                        faceMarker,
+  LoadStoreComputeFlag                                     loadStoreComputeFlag,
+  ReceiveAndMerge                                          receiveAndMerge
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::FaceDataMovement"
+  );
+
+  FaceMarker marker(faceMarker, position);
+  Data&      data = stackMap
+                 .getForPush(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                 ->top(TwoTimesD - 1 - position);
+
+  if (::peano4::grid::loadPersistently(loadStoreComputeFlag(marker)) and receiveAndMerge(data, marker)) {
+    auto incomingData = std::move(
+      stackMap.getForPop(spacetreeId, fromStack)->pop()
+    );
+
+    logDebug(
+      "receiveAndMergeFace(...)",
+      "merge "
+        << incomingData.toString() << " into " << data.toString()
+        << " within marker " << marker.toString()
+    );
+
+    if (context == ::peano4::grid::TraversalObserver::SendReceiveContext::PeriodicBoundaryDataSwap) {
+      assertion8(
+        tarch::la::countEqualEntries(data.getDebugX(), incomingData.getDebugX())
+          == Dimensions - 1,
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+      assertionVectorNumericalEquals6(
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+    } else {
+      assertionVectorNumericalEquals6(
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+      assertionVectorNumericalEquals6(
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+    }
+
+    data.merge(context, incomingData, marker, spacetreeId);
+  }
+}

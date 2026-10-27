@@ -88,7 +88,7 @@ def demo(file_path: str, dimensions: int):
     )
 
     # Configure build (adjust path/mode to your setup)
-    project.set_Peano4_installation("../../../../", peano4.api.output.CompileMode.Release)
+    project.set_Peano4_installation("../../../../", peano4.api.output.CompileMode.RELEASE)
 
     # Generate only (no compile) for demonstration
     peano4_project = project.generate_Peano4_project(verbose=True)

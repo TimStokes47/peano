@@ -147,7 +147,7 @@ if args.solver == "fv" and args.enclave:
     my_solver.set_implementation(
         initial_conditions="""
     for (int i=0; i<NumberOfUnknowns+NumberOfAuxiliaryVariables; i++) Q[i] = 0.0; 
-      ::applications::exahype2::ccz4::gaugeWave(Q, volumeCentre, 0);
+      ::exagrype::initialvalues::gaugeWave(Q, volumeCentre, 0);
     """
     )
 if args.solver == "fv" and not args.enclave:
@@ -161,7 +161,7 @@ if args.solver == "fv" and not args.enclave:
     my_solver.set_implementation(
         initial_conditions="""
     for (int i=0; i<NumberOfUnknowns+NumberOfAuxiliaryVariables; i++) Q[i] = 0.0; 
-      ::applications::exahype2::ccz4::gaugeWave(Q, volumeCentre, 0);
+      ::exagrype::initialvalues::gaugeWave(Q, volumeCentre, 0);
     """
     )
 if args.solver == "fv-muscl" and not args.enclave:
@@ -175,7 +175,7 @@ if args.solver == "fv-muscl" and not args.enclave:
     my_solver.set_implementation(
         initial_conditions="""
     for (int i=0; i<NumberOfUnknowns+NumberOfAuxiliaryVariables; i++) Q[i] = 0.0; 
-      ::applications::exahype2::ccz4::gaugeWave(Q, volumeCentre, 0);
+      ::exagrype::initialvalues::gaugeWave(Q, volumeCentre, 0);
     """
     )
 if "fd4-rk" in args.solver or "sofd4-rk" in args.solver:
@@ -204,7 +204,7 @@ if "fd4-rk" in args.solver or "sofd4-rk" in args.solver:
     my_solver.set_implementation(
         initial_conditions="""
     for (int i=0; i<NumberOfUnknowns+NumberOfAuxiliaryVariables; i++) Q[i] = 0.0; 
-      ::applications::exahype2::ccz4::gaugeWave(Q, meshCellCentre, 0);
+      ::exagrype::initialvalues::gaugeWave(Q, meshCellCentre, 0);
     """
     )
 
@@ -232,7 +232,7 @@ if "rk" in args.solver and "dg" in args.solver:
     my_solver.set_implementation(
         initial_conditions="""
                                                        for (int i=0; i<NumberOfUnknowns+NumberOfAuxiliaryVariables; i++) Q[i] = 0.0; 
-                                                       ::applications::exahype2::ccz4::gaugeWave(Q, x, 0);
+                                                       ::exagrype::initialvalues::gaugeWave(Q, x, 0);
                                                      """
     )
 
@@ -252,7 +252,7 @@ project.add_solver(my_solver)
 # Tracer setting
 ########################################################################################
 if args.tracer:
-    if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.Asserts:
+    if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.ASSERTS:
         time_delta_between_two_snapsots = 1e-4
     else:
         time_delta_between_two_snapsots = 0.1
@@ -273,7 +273,7 @@ if args.tracer:
 ########################################################################################
 
 
-if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.Asserts:
+if peano4.api.output.string_to_mode(args.mode)==peano4.api.output.CompileMode.ASSERTS:
     delta_plot = 1.0 / 100
 else:
     delta_plot = 1.0 / 20

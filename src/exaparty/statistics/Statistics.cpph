@@ -1,0 +1,14 @@
+#include "peano4/parallel/SpacetreeSet.h"
+
+template <typename Particle>
+void exaparty::statistics::reduceVelocityAndSearchRadius(
+  const peano4::datamanagement::VertexMarker&  marker,
+  Particle&                                    particle
+) {
+  Particle::getSpecies().setVelocity(
+    tarch::la::norm2(particle.getV()),
+    tarch::la::norm2(particle.getV()),
+    particle.getSearchRadius(),
+    particle.getSearchRadius()
+  );
+}

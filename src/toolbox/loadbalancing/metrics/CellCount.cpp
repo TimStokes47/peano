@@ -15,7 +15,10 @@ std::string toolbox::loadbalancing::metrics::CellCount::toString() const {
 
 
 void toolbox::loadbalancing::metrics::CellCount::updateGlobalView() {
-  _localRankWeight = peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells();
+  _localRankWeight = 0;
+  for (int treeId : peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees()) {
+    _localRankWeight += peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(treeId).getNumberOfLocalUnrefinedCells();
+  }
   CostMetrics::updateGlobalView();
 }
 

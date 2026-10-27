@@ -111,6 +111,7 @@ option(WITH_PETSC "Build with PETSc support" OFF)
 option(WITH_LIBXSMM "Build with LIBXSMM support" OFF)
 option(WITH_VTK "Build with VTK support" OFF)
 option(WITH_HDF5 "Build with HDF5 support" OFF)
+option(WITH_GSL "Build with GSL support (e.g. for ExaGRyPE's TwoPunctures)" OFF)
 option(WITH_NETCDF "Build with NetCDF support" OFF)
 option(WITH_EASI "Build with easi support" OFF)
 
@@ -120,8 +121,9 @@ option(ENABLE_BLOCKSTRUCTURED "Enable the blockstructured toolbox" OFF)
 option(ENABLE_LOADBALANCING "Enable the loadbalancing toolbox" OFF)
 option(ENABLE_CURVI "Enable the Curvi toolbox" OFF)
 option(ENABLE_EXAHYPE "Enable ExaHyPE 2" OFF)
+option(ENABLE_EXAGRYPE "Enable ExaGRyPE (3d only, requires ExaHyPE 2)" OFF)
 option(ENABLE_MGHYPE "Enable MGHyPE" OFF)
-option(ENABLE_SWIFT "Enable Swift 2" OFF)
+option(ENABLE_EXAPARTY "Enable ExaParty" OFF)
 
 list(APPEND AVAILABLE_TOOLCHAINS
   "no"
@@ -312,6 +314,12 @@ else()
   set(ONLY_IF_VTK_FIND_DEPENDENCY "# VTK not used")
 endif()
 
+if(WITH_GSL)
+  find_package(GSL REQUIRED)
+  target_link_libraries(PeanoOptions INTERFACE GSL::gsl GSL::gslcblas)
+  target_compile_definitions(PeanoOptions INTERFACE UseGSL)
+endif()
+
 if(WITH_HDF5)
   find_package(HDF5 REQUIRED COMPONENTS C CXX)
   target_link_libraries(PeanoOptions INTERFACE HDF5::HDF5)
@@ -365,8 +373,15 @@ if(ENABLE_EXAHYPE)
   target_compile_definitions(PeanoOptions INTERFACE UseExaHyPE)
 endif()
 
-if(ENABLE_SWIFT)
-  target_compile_definitions(PeanoOptions INTERFACE UseSWIFT)
+if(ENABLE_EXAGRYPE)
+  if(NOT ENABLE_EXAHYPE)
+    message(FATAL_ERROR "ExaGRyPE requires ExaHyPE 2 (set -DENABLE_EXAHYPE=ON)")
+  endif()
+  target_compile_definitions(PeanoOptions INTERFACE UseExaGRyPE)
+endif()
+
+if(ENABLE_EXAPARTY)
+  target_compile_definitions(PeanoOptions INTERFACE UseExaParty)
 endif()
 
 target_include_directories(PeanoOptions INTERFACE

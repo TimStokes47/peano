@@ -71,6 +71,10 @@ void toolbox::loadbalancing::strategies::SpreadOutHierarchically::updateState() 
 
 
 toolbox::loadbalancing::strategies::SpreadOutHierarchically::Action toolbox::loadbalancing::strategies::SpreadOutHierarchically::getAction() const {
+  int localNumberOfInnerUnrefinedCells = 0;
+  for (int treeId : peano4::parallel::SpacetreeSet::getInstance().getLocalSpacetrees()) {
+    localNumberOfInnerUnrefinedCells += peano4::parallel::SpacetreeSet::getInstance().getGridStatistics(treeId).getNumberOfLocalUnrefinedCells();
+  }
   if (_stepsToWaitForNextLoadBalancingDecision>0) {
     logDebug(
       "getAction()",
@@ -96,10 +100,10 @@ toolbox::loadbalancing::strategies::SpreadOutHierarchically::Action toolbox::loa
         ) {
           return Action::None;
         }
-        else if ( _statistics.getLocalNumberOfInnerUnrefinedCells() < MinOriginalTreeSizeToTriggerMPISpreadOut ) {
+        else if ( localNumberOfInnerUnrefinedCells < MinOriginalTreeSizeToTriggerMPISpreadOut ) {
           logInfo(
             "getAction()",
-            "have to postpone any decision, as local no of inner unrefined cells of " << _statistics.getLocalNumberOfInnerUnrefinedCells() << " is smaller than " << MinOriginalTreeSizeToTriggerMPISpreadOut << " (which would occupy all ranks)" );
+            "have to postpone any decision, as local no of inner unrefined cells of " << localNumberOfInnerUnrefinedCells << " is smaller than " << MinOriginalTreeSizeToTriggerMPISpreadOut << " (which would occupy all ranks)" );
           return Action::None;
         }
         else {
@@ -114,8 +118,8 @@ toolbox::loadbalancing::strategies::SpreadOutHierarchically::Action toolbox::loa
           tarch::multicore::Core::getInstance().getNumberOfThreads()
         );
 
-        if ( _statistics.getLocalNumberOfInnerUnrefinedCells() < MinOriginalTreeSizeToTriggerThreadSpreadOut ) {
-          logInfo( "getAction()", "have to postpone any decision, as local no of inner unrefined cells of " << _statistics.getLocalNumberOfInnerUnrefinedCells() << " is smaller than " << MinOriginalTreeSizeToTriggerThreadSpreadOut << " (which would occupy all threads)" );
+        if ( localNumberOfInnerUnrefinedCells < MinOriginalTreeSizeToTriggerThreadSpreadOut ) {
+          logInfo( "getAction()", "have to postpone any decision, as local no of inner unrefined cells of " << localNumberOfInnerUnrefinedCells << " is smaller than " << MinOriginalTreeSizeToTriggerThreadSpreadOut << " (which would occupy all threads)" );
           return Action::None;
         }
         else {
@@ -137,7 +141,7 @@ int toolbox::loadbalancing::strategies::SpreadOutHierarchically::getNumberOfSpli
   int maxLocalTrees      = std::min( {_configuration->getMaxLocalTreesPerRank(_state)-1, maxSizeOfLocalRank-1, tarch::multicore::Core::getInstance().getNumberOfThreads()-1} );
   int numberOfSplits     = std::max(1,maxLocalTrees);
 
-  int worstCaseEstimateForSizeOfSpacetree = tarch::getMemoryUsage( tarch::MemoryUsageFormat::MByte );
+  int worstCaseEstimateForSizeOfSpacetree = std::max( 1, tarch::getMemoryUsage( tarch::MemoryUsageFormat::MByte ) );
   int maxAdditionalSplitsDueToMemory      = tarch::getFreeMemory( tarch::MemoryUsageFormat::MByte ) / worstCaseEstimateForSizeOfSpacetree;
   int estimatedCellsPerTree               = maxSizeOfLocalRank / (numberOfSplits+1);
 
@@ -197,13 +201,13 @@ void toolbox::loadbalancing::strategies::SpreadOutHierarchically::updateLoadBala
     case Action::SpreadEquallyOverAllRanks:
       {
         int cellsPerRank = std::max(
-          static_cast<int>(std::round(_statistics.getGlobalNumberOfInnerUnrefinedCells() / tarch::mpi::Rank::getInstance().getNumberOfRanks())),
+          static_cast<int>(std::round(peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells() / tarch::mpi::Rank::getInstance().getNumberOfRanks())),
           1
         );
 
         for (int targetRank=1; targetRank<tarch::mpi::Rank::getInstance().getNumberOfRanks(); targetRank++ ) {
           int thisRanksCells = cellsPerRank;
-          if (static_cast<int>(_statistics.getGlobalNumberOfInnerUnrefinedCells()) % tarch::mpi::Rank::getInstance().getNumberOfRanks() >= targetRank) {
+          if (static_cast<int>(peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()) % tarch::mpi::Rank::getInstance().getNumberOfRanks() >= targetRank) {
             thisRanksCells++;
           }
           triggerSplit(thisRanksCells, targetRank);
@@ -249,13 +253,7 @@ void toolbox::loadbalancing::strategies::SpreadOutHierarchically::finishStep() {
   _costMetrics->updateGlobalView();
   _blacklist.update();
 
-  if ( _statistics.hasConsistentViewOfWorld() ) {
-    _stepsToWaitForNextLoadBalancingDecision  = std::max( _stepsToWaitForNextLoadBalancingDecision-1, 0 );
-  }
-  else {
-   logInfo( "finishStep()", "statistics have no consistent view of world, so postpone load balancing decisions" );
-    _stepsToWaitForNextLoadBalancingDecision = std::max(_stepsToWaitForNextLoadBalancingDecision,1);
-  }
+  _stepsToWaitForNextLoadBalancingDecision  = std::max( _stepsToWaitForNextLoadBalancingDecision-1, 0 );
 
   updateLoadBalancing();
   updateState();

@@ -198,7 +198,7 @@ class ParticleAMR(ActionSet):
             result = self.__Template_EndTraversal.render(**self.d)
         return result
 
-    def get_body_of_getGridControlEvents(self):
+    def get_body_of_createGridControlEventsForNextTraversal(self):
         return """
   return _oldGridControlEvents;
 """

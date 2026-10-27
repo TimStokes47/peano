@@ -41,8 +41,12 @@
 #include "exahype2/UnitTests.h"
 #endif
 
-#ifdef UseSWIFT
-#include "swift2/UnitTests.h"
+#ifdef UseExaParty
+#include "exaparty/UnitTests.h"
+#endif
+
+#if defined(UseExaGRyPE) and Dimensions == 3
+#include "exagrype/UnitTests.h"
 #endif
 
 tarch::logging::Log _log("unittests");
@@ -101,8 +105,15 @@ void runTests() {
   delete tests;
 #endif
 
-#ifdef UseSWIFT
-  tests = swift2::getUnitTests();
+#ifdef UseExaParty
+  tests = exaparty::getUnitTests();
+  tests->run();
+  unitTestsErrors += tests->getNumberOfErrors();
+  delete tests;
+#endif
+
+#if defined(UseExaGRyPE) and Dimensions == 3
+  tests = exagrype::getUnitTests();
   tests->run();
   unitTestsErrors += tests->getNumberOfErrors();
   delete tests;

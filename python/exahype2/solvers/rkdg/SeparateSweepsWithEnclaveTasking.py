@@ -13,7 +13,7 @@ import os
 
 from exahype2.solvers.fv.actionsets.AbstractFVActionSet import AbstractFVActionSet
 
-from peano4.api.toolbox.blockstructured.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
+from toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor import ReconstructPatchAndApplyFunctor
 from exahype2.solvers.Storage import Storage
 
 

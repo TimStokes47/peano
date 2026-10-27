@@ -92,7 +92,7 @@ advance in time by one time step. After that one, the Finite Volume scheme
 overwrites the FD4 scheme in points which are covered by both numerical 
 schemes (restriction).
 
-This coupling strategy follows @ref tutorials_exahype2_coupling "the default coupling schema" of
+This coupling strategy follows @ref tutorials_exahype2_44_localisation "the default coupling schema" of
 ExaHyPE. Different to the generic coupling recipes there, we let the higher-order 
 solver cover the whole domain. As FV only will be used in a tiny region, this 
 overhead is acceptable. Furthermore, we do not use any fancy colouring to 
@@ -159,7 +159,7 @@ benchmarks::exahype2::ccz4::CCZ4SBH_FV::areBothAdjacentCellsOverlappingWithBHImp
 and their cousins.
 That is, we implement the actual logic where to apply the limiter within the C++ class.
 
-Within the Python code, we follow @ref tutorials_exahype2_coupling "localisation recommendations for solver coupling" and
+Within the Python code, we follow @ref tutorials_exahype2_44_localisation "localisation recommendations for solver coupling" and
 overwrite the routines 
 
 - _store_cell_data_default_guard()
@@ -278,11 +278,11 @@ with an instance of exahype2.solvers.rkfd.actionsets.PatchWisePostprocessSolutio
 This postprocessing is be executed after both the Finite Volume and the 
 Differences scheme have updated their patch. This is ensured by the 
 fact that postprocessing steps always plug into touchCellLastTime (cmp
-@ref peano_action_sets "Peano's generic discussion of the order of events").
+@ref page_peano_action_sets "Peano's generic discussion of the order of events").
 
 For the realisation, we employ the built-in routines. For example, we call
 toolbox::blockstructured::restrictCellIntoOverlappingCell_inject() for every cell which holds Finite Volume data, i.e. overlaps
-with the black hole. This is slightly different to @ref tutorials_exahype2_coupling "ExaHypE's generic coupling sketch", where
+with the black hole. This is slightly different to @ref tutorials_exahype2_44_localisation "ExaHypE's generic coupling sketch", where
 I recommend to have at least one whole cell overlap between any two solvers:
 I do not only inject data from Finite Volume patches back which are completely
 surrounded by further FV patches.

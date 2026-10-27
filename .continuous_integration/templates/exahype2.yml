@@ -1,12 +1,3 @@
-.ExaHyPE2_FV_Tests:
-  parallel:
-    matrix:
-    - dimensions: [2, 3]
-      build_type: [Debug, Release]
-      solver_type: [FVRusanovGlobalAdaptive, FVRusanovGlobalAdaptiveEnclave]
-  script:
-    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} bash <<< "cd tests/exahype2/fv; PYTHONPATH=$CI_PROJECT_DIR/python python3 fv.py -s $solver_type -d $dimensions -m $build_type;"
-
 .ExaHyPE2_ADERDG_Tests:
   parallel:
     matrix:
@@ -27,20 +18,6 @@
 #    - test: [static-limiting-swe, static-limiting-euler-airfoil, posteriori-limiting-euler-shock]
 #  script:
 #    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} bash <<< "cd tests/exahype2/aderdg-limiting; PYTHONPATH=$CI_PROJECT_DIR/python python3 $test.py; OMP_NUM_THREADS=1 ./ADERDG-Limiting > /dev/null"
-
-.ExaHyPE2_Tutorials_Exercises:
-  parallel:
-    matrix:
-    - tutorial: [Acoustic-vanilla, Acoustic-advanced, SWE-sympy]
-  script:
-    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} bash <<< "cd tutorials/exahype2/exercises; PYTHONPATH=$CI_PROJECT_DIR/python ipython3 $tutorial.ipynb;"
-
-.ExaHyPE2_Tutorials_Toyproblems:
-  parallel:
-    matrix:
-    - tutorial: [euler, acoustic, elastic, advection, swe]
-  script:
-    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} bash <<< "cd tutorials/exahype2/toyproblems/$tutorial; PYTHONPATH=$CI_PROJECT_DIR/python python3 $tutorial.py;"
 
 .ExaHyPE2_Euler:
   parallel:

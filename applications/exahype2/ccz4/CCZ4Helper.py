@@ -12,7 +12,7 @@ def get_body_of_enforceCCZ4constraint():
     int index = 0;
     for (int i=0;i<itmax;i++)
     {
-      applications::exahype2::ccz4::enforceCCZ4constraints( newQ+index );
+      exagrype::ccz4::enforceCCZ4constraints( newQ+index );
       index += {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}};
     }
   }
@@ -68,7 +68,7 @@ def get_body_of_adm_constraints(patch_size, number_of_output_variable, so_flag):
         const int cellSerialised  = peano4::utils::dLinearised(currentCell, patchSize + 2*overlap);
         
         double constraints[n_a_v]={0};
-        admconstraints(constraints, oldQWithHalo+cellSerialised*(59+n_a_v), gradQ);
+        ::exagrype::ccz4::admconstraints(constraints, oldQWithHalo+cellSerialised*(59+n_a_v), gradQ);
         ::exahype2::enumerator::AoSLexicographicEnumerator enumeratorWithAuxiliaryVariables ( 1, patchSize, 0, 59, n_a_v);
         for (int i=0;i<n_a_v;i++){
           fineGridCellCCZ4Q.value[ enumeratorWithAuxiliaryVariables(0,cell,59+i) ] = constraints[i]; 
@@ -141,7 +141,7 @@ def get_body_of_Psi_Calc(patch_size, number_of_output_variable, so_flag):
         double Psi4[n_a_v]={0};
         double currentPosition[3]; 
         for (int d=0; d<3; d++) currentPosition[d]=marker.getOffset()(d)+(cell(d)+0.5)*volumeH;
-        Psi4Calc(Psi4, oldQWithHalo+cellSerialised*(59+n_a_v), gradQ, currentPosition);
+        ::exagrype::ccz4::Psi4Calc(Psi4, oldQWithHalo+cellSerialised*(59+n_a_v), gradQ, currentPosition);
         ::exahype2::enumerator::AoSLexicographicEnumerator enumeratorWithAuxiliaryVariables   ( 1, patchSize, 0, 59, n_a_v);
         fineGridCellCCZ4Q.value[ enumeratorWithAuxiliaryVariables(0,cell,59+0) ] = Psi4[0]; 
         fineGridCellCCZ4Q.value[ enumeratorWithAuxiliaryVariables(0,cell,59+1) ] = Psi4[1];

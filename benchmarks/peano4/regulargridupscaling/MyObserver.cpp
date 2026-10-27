@@ -101,7 +101,7 @@ peano4::grid::TraversalObserver* examples::regulargridupscaling::MyObserver::clo
 }
 
 
-std::vector< peano4::grid::GridControlEvent > examples::regulargridupscaling::MyObserver::getGridControlEvents() {
+std::vector< peano4::grid::GridControlEvent > examples::regulargridupscaling::MyObserver::createGridControlEventsForNextTraversal() {
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
 
   peano4::grid::GridControlEvent newEvent;

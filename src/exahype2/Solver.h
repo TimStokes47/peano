@@ -3,6 +3,9 @@
 #pragma once
 
 
+#include "tarch/la/Vector.h"
+#include "tarch/multicore/BooleanSemaphore.h"
+
 
 namespace exahype2 {
   class Solver;
@@ -33,47 +36,150 @@ class exahype2::Solver {
       Yes
     };
 
-    virtual double getMinTimeStamp() const = 0;
-    virtual double getMaxTimeStamp() const = 0;
-    virtual double getMinTimeStepSize() const = 0;
-    virtual double getMaxTimeStepSize() const = 0;
+    /**
+     * The min and max time stamp and the time step size all start at 0, so
+     * the very first time step does not advance the solution. It only
+     * yields the first admissible time step size.
+     */
+    Solver();
 
-    virtual void startGridConstructionStep() = 0;
-    virtual void finishGridConstructionStep() = 0;
+    virtual double getMinTimeStamp() const;
+    virtual double getMaxTimeStamp() const;
+    virtual double getMinTimeStepSize() const;
+    virtual double getMaxTimeStepSize() const;
 
-    virtual void suspendSolversForOneGridSweep() = 0;
+    /**
+     * The time step size the solver would use if enforceTimeStepSize() had
+     * not been called, i.e. the maximum time step size as startTimeStep()
+     * has rolled it over. enforceTimeStepSize() does not alter it.
+     */
+    virtual double getAdmissibleTimeStepSize() const;
 
-    virtual void startGridInitialisationStep() = 0;
-    virtual void finishGridInitialisationStep() = 0;
-
+    /**
+     * Default implementation: rolls the previous sweep's accumulated
+     * _minTimeStampUpdatedThisTimeStep/_maxTimeStampUpdatedThisTimeStep,
+     * _minTimeStepSizeUpdatedThisTimeStep/_maxTimeStepSizeUpdatedThisTimeStep and
+     * _minVolumeHUpdatedThisTimeStep/_maxVolumeHUpdatedThisTimeStep over into the
+     * corresponding global attributes, and resets the UpdatedThisTimeStep
+     * accumulators (and _cellUpdates) so the new sweep about to start can
+     * accumulate its own contributions via updateCell(). globalMin/Max...
+     * are not used by the default implementation - they are there for
+     * solvers that need to react to the other solvers' bounds in a
+     * multi-solver project.
+     */
     virtual void startTimeStep(
       double globalMinTimeStamp,
       double globalMaxTimeStamp,
       double globalMinTimeStepSize,
       double globalMaxTimeStepSize
-    ) = 0;
-    virtual void finishTimeStep() = 0;
+    );
 
+    /**
+     * Default implementation: MPI-all-reduces the UpdatedThisTimeStep
+     * accumulators (min via MPI_MIN, max via MPI_MAX, _cellUpdates via
+     * MPI_SUM) across ranks, so every rank's startTimeStep() rolls over
+     * the same, globally synchronised values. A no-op in a build without
+     * MPI support.
+     */
+    virtual void finishTimeStep();
+
+    /**
+     * Not pure virtual, unlike the other lifecycle hooks above: overriding
+     * it is optional. The legacy python/exahype2 solvers override it to
+     * drive their own _solverState transitions into
+     * SolverState::Plotting/PlottingAfterGridInitialisation; newer solvers
+     * that have no use for it can simply not override it.
+     */
     virtual void startPlottingStep(
       double globalMinTimeStamp,
       double globalMaxTimeStamp,
       double globalMinTimeStepSize,
       double globalMaxTimeStepSize
-    ) = 0;
-    virtual void finishPlottingStep() = 0;
-
-    virtual double getMaxMeshSize() const = 0;
-    virtual double getMinMeshSize() const = 0;
+    ) {}
 
     /**
-     * Not all solvers allow you to plot after each grid sweep. If a
-     * solver needs multiple steps, it might want to veto that you
-     * plot intermediate data.
+     * Not pure virtual - @see startPlottingStep().
      */
-    virtual bool mayPlot() const = 0;
+    virtual void finishPlottingStep() {}
 
-    virtual void startSimulation() = 0;
-    virtual void finishSimulation() = 0;
+    virtual double getMaxMeshSize() const;
+    virtual double getMinMeshSize() const;
+
+    /**
+     * Default implementation: always returns true, i.e. every cell uses
+     * the stateless (GPU-offloadable) variants of the PDE terms wherever
+     * a solver offers both a stateless and a stateful variant. A solver
+     * overrides this to opt individual cells out of the stateless
+     * variants and into the ones with state.
+     */
+    virtual bool cellCanUseStatelessPDETerms(
+      const tarch::la::Vector<Dimensions, double>& cellCentre,
+      const tarch::la::Vector<Dimensions, double>& cellH,
+      double                                       t,
+      double                                       dt
+    ) const;
+
+    /**
+     * Thread-safely fold one cell's contribution into this time step's
+     * running time stamp and time step size bounds (protected by
+     * _semaphore). Does not touch _minVolumeH/_maxVolumeH - those describe
+     * the mesh, not the time stepping, and are set elsewhere.
+     */
+    void updateCell(double timeStepSize, double timeStamp);
+
+    /**
+     * Thread-safely overwrite the current minimum and maximum time step size
+     * (protected by _semaphore), i.e. what getMinTimeStepSize() and
+     * getMaxTimeStepSize() return from now on. Optimistic time stepping uses
+     * this setter to switch to the time step size it has estimated
+     * beforehand (@see
+     * exahype2.api.fv.actionsets.ReadjustTimeStepSizeForOptimisticGlobalTimestepping).
+     * The accumulators of the time step that is currently running remain
+     * unchanged, and so does getAdmissibleTimeStepSize().
+     */
+    void enforceTimeStepSize(double timeStepSize);
+
+    /**
+     * Restart the time stepping with a time step size of zero
+     *
+     * Thread-safely sets the current minimum and maximum time step size and
+     * the admissible time step size to zero (protected by _semaphore). The
+     * next time step hence behaves like the very first one: It does not
+     * advance the time stamp, but it derives an admissible time step size
+     * from the current solution and mesh. The mesh adaptation uses this
+     * routine whenever it has changed the mesh, as the time step size of the
+     * old mesh might violate the CFL condition on the new one (@see
+     * exahype2.api.blockstructured.ConsumeRefinementRequests). Optimistic
+     * time stepping does not apply any estimate in this time step, as the
+     * admissible time step size is zero.
+     */
+    void resetTimeStepSize();
+
+  protected:
+    double _minTimeStamp;
+    double _maxTimeStamp;
+
+    double _minTimeStampUpdatedThisTimeStep;
+    double _maxTimeStampUpdatedThisTimeStep;
+
+    double _minVolumeH;
+    double _maxVolumeH;
+
+    double _minVolumeHUpdatedThisTimeStep;
+    double _maxVolumeHUpdatedThisTimeStep;
+
+    double _minTimeStepSize;
+    double _maxTimeStepSize;
+
+    /**
+     * @see getAdmissibleTimeStepSize()
+     */
+    double _admissibleTimeStepSize;
+
+    double _minTimeStepSizeUpdatedThisTimeStep;
+    double _maxTimeStepSizeUpdatedThisTimeStep;
+
+    int _cellUpdates;
+
+    tarch::multicore::BooleanSemaphore _semaphore;
 };
-
-
