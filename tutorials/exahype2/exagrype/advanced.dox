@@ -2,6 +2,12 @@
 
 @page tutorials_exahype2_applications_exagrype_advanced Advanced Usage of ExaGRyPE
 
+@note This page describes the legacy script \c applications/exahype2/ccz4/ccz4.py
+and its API. The script builds on the legacy Finite Differences
+\c exahype2.solvers.rkfd, which have been removed, so it does not run until
+it is ported to \c exagrype.api (see
+\ref tutorials_exahype2_applications_exagrype_configure).
+
 \tableofcontents
 <!-- Add this one for href links to subitems -->
 

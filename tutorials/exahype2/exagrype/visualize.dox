@@ -6,14 +6,23 @@
 
 # Plotting
 
+@note The plotting options below belong to the legacy script \c applications/exahype2/ccz4/ccz4.py
+and its API. The script builds on the legacy Finite Differences
+\c exahype2.solvers.rkfd, which have been removed, so it does not run until
+it is ported to \c exagrype.api (see
+\ref tutorials_exahype2_applications_exagrype_configure).
+
 The Peano plotting will be automatically switched on if users pass a positive \c args.plot_step_size. The code will then try to plot at every given step size in code time, and it will plot the initial snapshot and the final snapshot when \c args.end_time is reached, even if it just dumps a regular snapshot according to the time interval. The default plotting format of Peano is the patch file, which contains the solution arrays in each cell; each thread on each rank will dump its own patch file in a parallel run.
 
 The following commands convert the Peano patch files into standard vtu files, which can then be inspected in other standard visualization tools such as ParaView.
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-export PYTHONPATH=/path/to/Peano/python/
-python3 /path/to/Peano/python/peano4/visualisation/render.py solution-CCZ4.peano-patch-file -j32
+python3 /path/to/Peano/src/tarch/plotter/api/render.py solution-CCZ4.peano-patch-file -j32
 ~~~~~~~~~~~~~~~~~~~~~~~
+
+Run it within the Python environment set up in
+\ref tutorials_exahype2_applications_exagrype_configure, so the Peano modules
+and the VTK Python libraries are found.
 
 The render script supports parallel snapshot processing, and you can set the number of processes you
 would like to run at the same time by setting the parameter after \c -j.
