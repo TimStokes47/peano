@@ -887,7 +887,7 @@ Patch overlap data
         the time step size of the next time step and advances the solver's
         time stamp. {SolverName}_Dynamic mesh refinement finally evaluates the
         adaptivity criterion if the solver has one
-        (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set()),
+        (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set.create_dynamic_mesh_refinement_action_set()),
         switches the load balancing on again and informs it that the time
         step has finished.
 

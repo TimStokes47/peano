@@ -30,7 +30,7 @@ class SetupSimulationWithUserCodedRefinementCriterion(SetupSimulationOverRegular
     sets:
 
     - The action set which also evaluates the criterion within the time
-      step (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set())
+      step (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set.create_dynamic_mesh_refinement_action_set())
       turns the criterion's outcome into refine or erase events for
       ExaHyPE's refinement service. Different to the time step, it also
       hands the service's events over to Peano.

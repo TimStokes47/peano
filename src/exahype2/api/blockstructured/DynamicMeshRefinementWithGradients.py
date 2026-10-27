@@ -52,3 +52,6 @@ class DynamicMeshRefinementWithGradients(DynamicMeshRefinement):
       }
     }
 """
+
+    def get_action_set_name(self):
+        return __name__.replace(".py", "").replace(".", "_")

@@ -13,7 +13,7 @@ class DynamicMeshRefinement(ActionSet):
 
     The numerical schemes add this action set to the very last task of their
     time step if the solver has an exahype2.api.RefineErasePointwisely PDE
-    term (@ref create_dynamic_mesh_refinement_action_set()). The action set
+    term (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set.create_dynamic_mesh_refinement_action_set()). The action set
     loops over all volumes of each patch and invokes the term per volume
     centre. It initialises the term's output with Keep. From the outcomes of
     all the volumes, it derives one command for the whole cell:
@@ -52,7 +52,7 @@ class DynamicMeshRefinement(ActionSet):
     (hand_events_to_peano).
 
     Subclasses which evaluate a different adaptivity criterion only replace
-    the per-volume evaluation (@ref get_volume_evaluation()), e.g.
+    the per-volume evaluation (@ref exahype2.api.blockstructured.DynamicMeshRefinement.DynamicMeshRefinement.get_volume_evaluation()), e.g.
     exahype2.api.blockstructured.DynamicMeshRefinementWithGradients.
 
     The action set works for all block-structured schemes which hold their

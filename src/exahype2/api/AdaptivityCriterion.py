@@ -28,7 +28,7 @@ class AdaptivityCriterion(PDETerm):
 
     Only if a solver has an adaptivity criterion do the numerical schemes
     and the setup evaluate it, i.e. add the action sets which collect refine
-    and erase requests (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set()).
+    and erase requests (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set.create_dynamic_mesh_refinement_action_set()).
     A solver may have at most one adaptivity criterion.
 
     The class itself defines no signature, i.e. you always add one of its
