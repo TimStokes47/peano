@@ -153,11 +153,20 @@ ExaGRyPE currently offers two entry points:
 
 - The new Python API \c exagrype.api layers on top of \c exahype2.api. It
   offers Finite Volumes and the fourth-order Finite Differences
-  (\c exahype2.api.rkfd4), but no black holes yet. Start with
-  the Jupyter notebook \c tutorials/exahype2/exagrype/521_gauge-wave.ipynb
-  (\ref tutorials_exahype2_exagrype_521_gauge-wave), which runs the gauge wave
-  with this API. \ref benchmarks_exagrype_gauge_wave and
-  \ref page_exagrype_library provide further details.
+  (\c exahype2.api.rkfd4, optionally with Kreiss-Oliger dissipation and
+  lopsided advection) on regular meshes, the gauge wave, and a single black
+  hole with TwoPunctures initial data. Binary black holes, adaptive mesh
+  refinement for the Finite Differences and tracers are not available yet.
+  Its tutorials are Jupyter notebooks in \c tutorials/exahype2/exagrype:
+  - \ref tutorials_exahype2_exagrype_521_gauge-wave runs the gauge wave with
+    Finite Volumes and studies their convergence;
+  - \ref tutorials_exahype2_exagrype_522_single-black-hole evolves a single
+    black hole with Finite Volumes;
+  - \ref tutorials_exahype2_exagrype_523_higher-order-fd evolves the same
+    black hole with fourth-order Finite Differences.
+
+  \ref benchmarks_exagrype_gauge_wave, \ref benchmarks_exagrype_single_black_hole
+  and \ref page_exagrype_library provide further details.
 - \c applications/exahype2/ccz4 hosts the main script \c ccz4.py, which
   provides all scenarios (gauge wave, single and binary black holes), tracers
   and the different numerical schemes. The remaining ExaGRyPE tutorials work

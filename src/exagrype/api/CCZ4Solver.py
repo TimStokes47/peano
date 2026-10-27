@@ -55,8 +55,10 @@ class CCZ4Solver(exahype2.api.Solver):
       ADVECTION_VELOCITY and lopsided_advection_quantities(). The Finite
       Volumes of exahype2.api.fv do not add them, i.e. they evolve CCZ4
       without these advection terms.
-    - The second-order formulation, black holes (TwoPunctures), tracers and
-      the ADM/Psi4 postprocessing are not available yet.
+    - Black holes are limited to a single one
+      (exagrype.api.initialvalues.single_black_hole()). The second-order
+      formulation, tracers and the ADM/Psi4 postprocessing are not
+      available yet.
 
     """
 
@@ -132,7 +134,10 @@ class CCZ4Solver(exahype2.api.Solver):
     """!
 
     Default values of the CCZ4 parameters, taken from the legacy ExaGRyPE
-    solvers. Integer values become int constants of the generated solver
+    gauge wave setup: harmonic slicing (CCZ4LapseType=0) and a shift which
+    does not evolve (CCZ4sk=0, CCZ4bs=0). The legacy black hole runs use
+    1+log slicing (CCZ4LapseType=1) and the Gamma driver (CCZ4sk=1,
+    CCZ4bs=1). Integer values become int constants of the generated solver
     class, all others double constants.
 
     """
