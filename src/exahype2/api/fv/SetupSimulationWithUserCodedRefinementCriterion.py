@@ -2,10 +2,12 @@
 # use, please see the copyright notice at www.peano-framework.org
 import peano4.api
 
-from ..RefineErasePointwisely import RefineErasePointwisely
+from ..AdaptivityCriterion import get_adaptivity_criterion
+from ..blockstructured.create_dynamic_mesh_refinement_action_set import (
+    create_dynamic_mesh_refinement_action_set,
+)
 from ..Solver import Solver
 from .SetupSimulationOverRegularGrid import SetupSimulationOverRegularGrid
-from .actionsets import EvaluateRefineErasePointwisely
 from .actionsets import InitialiseNewCells
 
 
@@ -13,11 +15,11 @@ class SetupSimulationWithUserCodedRefinementCriterion(SetupSimulationOverRegular
     """!
 
     Setup over a regular mesh which is then refined adaptively by the user's
-    point-wise refinement criterion
+    adaptivity criterion
 
     The setup does everything SetupSimulationOverRegularGrid does: It
     constructs a regular mesh and sets the initial condition. If the solver
-    has an exahype2.api.RefineErasePointwisely PDE term, the setup then
+    has an exahype2.api.AdaptivityCriterion PDE term, the setup then
     adapts this mesh. It inserts one further task after the task tagged with
     SetupSimulationOverRegularGrid.FinishedInitialRegularMeshSetup, i.e.
     after the initial condition. The projection onto the faces, which has
@@ -27,14 +29,17 @@ class SetupSimulationWithUserCodedRefinementCriterion(SetupSimulationOverRegular
     The new task repeats until the mesh is stationary. It hosts two action
     sets:
 
-    - exahype2.api.fv.actionsets.EvaluateRefineErasePointwisely evaluates the
-      refinement criterion in every volume and turns the outcome into refine
-      or erase events for ExaHyPE's refinement service.
-      It also hands the service's events over to Peano.
+    - The action set which also evaluates the criterion within the time
+      step (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set())
+      turns the criterion's outcome into refine or erase events for
+      ExaHyPE's refinement service. Different to the time step, it also
+      hands the service's events over to Peano.
+      The mesh is never refined below min_volume_size and never coarsened
+      beyond the regular mesh.
     - exahype2.api.fv.actionsets.InitialiseNewCells sets the initial
       condition within each cell which the refinement creates.
 
-    Without a RefineErasePointwisely term, the setup is the same as
+    Without an adaptivity criterion, the setup is the same as
     SetupSimulationOverRegularGrid.
 
     Peano realises a refinement event one to two mesh sweeps after the
@@ -78,7 +83,7 @@ class SetupSimulationWithUserCodedRefinementCriterion(SetupSimulationOverRegular
         """!
 
         Construct the setup over the regular mesh and insert the mesh
-        adaptation after it, if the solver has a RefineErasePointwisely term
+        adaptation after it, if the solver has an adaptivity criterion
 
         """
         peano4.api.Logger().log(
@@ -86,9 +91,7 @@ class SetupSimulationWithUserCodedRefinementCriterion(SetupSimulationOverRegular
         )
         self._construct_task_graph(exahype2_project, peano_project, setup_simulation)
 
-        if any(
-            isinstance(term, RefineErasePointwisely) for term in self._solver.pde_terms
-        ):
+        if get_adaptivity_criterion(self._solver) is not None:
             anchors = setup_simulation.find_tasks(
                 SetupSimulationOverRegularGrid.FinishedInitialRegularMeshSetup
             )
@@ -114,11 +117,13 @@ class SetupSimulationWithUserCodedRefinementCriterion(SetupSimulationOverRegular
             task_has_to_repeat=self.RepeatCondition,
         )
         adapt_mesh_task.add_action_set(
-            EvaluateRefineErasePointwisely(
+            create_dynamic_mesh_refinement_action_set(
                 self._solver,
+                patch_size,
                 guard=self._solver.grid_selector.createCellGuard(),
-                min_cell_size=self.min_volume_size * patch_size,
-                max_cell_size=self.volume_size * patch_size,
+                min_volume_size=self.min_volume_size,
+                max_volume_size=self.volume_size,
+                hand_events_to_peano=True,
             )
         )
         adapt_mesh_task.add_action_set(

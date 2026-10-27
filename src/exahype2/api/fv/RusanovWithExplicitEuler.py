@@ -14,7 +14,9 @@ import exahype2.api.dslhype as dslhype
  
 from ..Solver import Solver
 from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
-from ..blockstructured.DynamicMeshRefinement import DynamicMeshRefinement
+from ..blockstructured.create_dynamic_mesh_refinement_action_set import (
+    create_dynamic_mesh_refinement_action_set,
+)
 from .actionsets import ApplyDirichletBoundaryConditions
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFaceWithSommerfeldBoundaryConditions
@@ -482,7 +484,8 @@ Patch overlap data
             )
         )
 
-        # The very last task evaluates the refinement criterion, i.e. it
+        # The very last task evaluates the adaptivity criterion if the
+        # solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
         # collects refine and erase requests for the mesh adaptation phase,
         # and it switches the load balancing on again and informs it that
         # the time step has finished.
@@ -492,15 +495,15 @@ Patch overlap data
             may_spawn_background_tasks=False,
         )
         dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        dynamic_mesh_refinement_task.add_action_set(
-            DynamicMeshRefinement(
-                self._solver,
-                self.patch_size,
-                guard=self._solver.grid_selector.createCellGuard(),
-                min_volume_size=self.min_volume_size,
-                max_volume_size=self.max_volume_size,
-            )
+        dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
+            self._solver,
+            self.patch_size,
+            guard=self._solver.grid_selector.createCellGuard(),
+            min_volume_size=self.min_volume_size,
+            max_volume_size=self.max_volume_size,
         )
+        if dynamic_mesh_refinement is not None:
+            dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
         dynamic_mesh_refinement_task.add_action_set(
             toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
         )

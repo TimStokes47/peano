@@ -80,12 +80,42 @@ def test_time_step_never_hands_events_to_peano(scheme, tmp_path):
     )
 
 
-def test_no_criterion_means_no_evaluation(tmp_path):
-    [dynamic_mesh_refinement, _] = _last_task(
-        _solver("fv", criterion=False), tmp_path
-    ).action_sets
-    assert _criterion_body(dynamic_mesh_refinement) == ""
-    assert dynamic_mesh_refinement.get_body_of_unprepareTraversal().strip() == ""
+@pytest.mark.parametrize("scheme", SCHEMES)
+def test_no_criterion_means_no_evaluation(scheme, tmp_path):
+    last = _last_task(_solver(scheme, criterion=False), tmp_path)
+    assert last.name == "Probe_Dynamic mesh refinement"
+    [load_balancing] = last.action_sets
+    assert isinstance(
+        load_balancing, toolbox.loadbalancing.api.actionsets.LoadBalancing
+    )
+
+
+@pytest.mark.parametrize("scheme", SCHEMES)
+def test_gradient_criterion_yields_gradient_action_set(scheme, tmp_path):
+    solver = _solver(scheme, criterion=False)
+    solver.add_pde_term(exahype2.api.GradientRefinement(implementation=""))
+    [dynamic_mesh_refinement, _] = _last_task(solver, tmp_path).action_sets
+    assert isinstance(
+        dynamic_mesh_refinement,
+        exahype2.api.blockstructured.DynamicMeshRefinementWithGradients,
+    )
+    body = _criterion_body(dynamic_mesh_refinement)
+    assert "refineErasePointwisely" not in body
+    assert "for (int normal=0; normal<Dimensions; normal++)" in body
+    assert "for (int side=0; side<2; side++)" in body
+    assert "::exahype2::fv::computeOneSidedGradient(" in body
+    assert "refineEraseWithGradient(" in body
+    assert "double gradient[2 + 0];" in body
+    assert "anyVolumeWantsToRefine or command" in body
+    assert "allVolumesWantToErase  and command" in body
+    assert "finishStep()" in dynamic_mesh_refinement.get_body_of_unprepareTraversal()
+
+
+def test_two_criteria_are_rejected(tmp_path):
+    solver = _solver("fv")
+    solver.add_pde_term(exahype2.api.GradientRefinement(implementation=""))
+    with pytest.raises(ValueError):
+        _last_task(solver, tmp_path)
 
 
 def test_mesh_size_is_unconstrained_by_default(tmp_path):

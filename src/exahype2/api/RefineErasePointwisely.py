@@ -2,10 +2,10 @@
 # use, please see the copyright notice at www.peano-framework.org
 from __future__ import annotations
 
-from .PDETerm import PDETerm
+from .AdaptivityCriterion import AdaptivityCriterion
 
 
-class RefineErasePointwisely(PDETerm):
+class RefineErasePointwisely(AdaptivityCriterion):
     """!
 
     Point-wise refinement criterion: given the solution Q at a single degree
@@ -22,12 +22,8 @@ class RefineErasePointwisely(PDETerm):
     @endcode
 
     Like all the other PDE terms, the generated method returns void and
-    writes its outcome into an output argument: refinementCommand points to
-    one ::exahype2::RefinementCommand, i.e. Keep, Refine or Erase (see
-    exahype2/RefinementControl.h). The caller initialises it with Keep
-    before the call, so an implementation only has to set it if it wants to
-    refine or erase. In particular, the empty string as implementation
-    yields a criterion which always keeps the mesh.
+    writes its outcome into an output argument. The output semantics are
+    those of every adaptivity criterion (@ref exahype2.api.AdaptivityCriterion).
 
     Different to the legacy refinementCriterion(Q, x, h, t), the term is not
     handed the mesh size. Bounds on the mesh size are the job of the grid
@@ -70,7 +66,7 @@ class RefineErasePointwisely(PDETerm):
             stateless=stateless,
         )
 
-    class Generator(PDETerm.Generator):
+    class Generator(AdaptivityCriterion.Generator):
         """!
 
         RefineErasePointwisely-specific code generation

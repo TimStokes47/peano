@@ -5,21 +5,18 @@ import jinja2
 import peano4.api
 from peano4.api.solversteps.ActionSet import ActionSet
 
-from ..RefineErasePointwisely import RefineErasePointwisely
-
-
 class DynamicMeshRefinement(ActionSet):
     """!
 
-    Evaluate the point-wise refinement criterion at the end of a time step
-    and collect the outcome as refine and erase requests
+    Evaluate the point-wise refinement criterion and collect the outcome as
+    refine and erase requests
 
     The numerical schemes add this action set to the very last task of their
-    time step. If the solver has an exahype2.api.RefineErasePointwisely PDE
-    term, the action set loops over all volumes of each patch and invokes the
-    term per volume centre. It initialises the term's output with Keep. From
-    the outcomes of all the volumes, it derives one command for the whole
-    cell:
+    time step if the solver has an exahype2.api.RefineErasePointwisely PDE
+    term (@ref create_dynamic_mesh_refinement_action_set()). The action set
+    loops over all volumes of each patch and invokes the term per volume
+    centre. It initialises the term's output with Keep. From the outcomes of
+    all the volumes, it derives one command for the whole cell:
 
     - If any volume says Refine, the cell asks for a refinement.
     - If all volumes say Erase, the cell asks to be erased, i.e. coarsened.
@@ -46,13 +43,17 @@ class DynamicMeshRefinement(ActionSet):
     The action set collects the commands of one tree within a local
     ::exahype2::RefinementControl, merges it into the rank's
     ::exahype2::RefinementControlService at the end of the traversal, and
-    commits the new events once per rank in unprepareTraversal(). It does not
-    hand any event over to Peano, i.e. the time step itself never changes the
-    mesh. The mesh adaptation phase consumes the requests (@ref
-    exahype2::isMeshAdaptationRequired()).
+    commits the new events once per rank in unprepareTraversal(). By
+    default, it does not hand any event over to Peano, i.e. the time step
+    itself never changes the mesh. The mesh adaptation phase consumes the
+    requests (@ref exahype2::isMeshAdaptationRequired()). The setup's mesh
+    adaptation (@ref exahype2.api.fv.SetupSimulationWithUserCodedRefinementCriterion)
+    instead lets the action set hand the events over to Peano right away
+    (hand_events_to_peano).
 
-    If the solver has no RefineErasePointwisely term, the action set does
-    nothing.
+    Subclasses which evaluate a different adaptivity criterion only replace
+    the per-volume evaluation (@ref get_volume_evaluation()), e.g.
+    exahype2.api.blockstructured.DynamicMeshRefinementWithGradients.
 
     The action set works for all block-structured schemes which hold their
     unknowns as patch_size^d volumes (or grid cells) per mesh cell, i.e. for
@@ -68,6 +69,7 @@ class DynamicMeshRefinement(ActionSet):
         min_volume_size: float = None,
         max_volume_size: float = None,
         event_lifetime: int = 2,
+        hand_events_to_peano: bool = False,
     ):
         """!
 
@@ -94,6 +96,11 @@ class DynamicMeshRefinement(ActionSet):
           Number of mesh sweeps a refinement or erase event remains alive
           within the refinement service (@ref exahype2::RefinementControl::addCommand()).
 
+        @param hand_events_to_peano: bool
+          Hand the refinement service's committed events over to Peano, so
+          Peano realises them in the subsequent mesh sweeps. The time step
+          leaves this off, the setup's mesh adaptation switches it on.
+
         """
         super().__init__(descend_invocation_order=1, parallel=False)
         self._solver = solver
@@ -102,23 +109,10 @@ class DynamicMeshRefinement(ActionSet):
         self.event_lifetime = event_lifetime
         self.min_volume_size = min_volume_size
         self.max_volume_size = max_volume_size
+        self.hand_events_to_peano = hand_events_to_peano
 
-    def has_criterion(self) -> bool:
-        """!
-
-        Does the solver have a RefineErasePointwisely term, i.e. is there
-        anything to evaluate?
-
-        """
-        return any(
-            isinstance(term, RefineErasePointwisely) for term in self._solver.pde_terms
-        )
-
-    TemplateEvaluateCriterion = """
-  logTraceIn( "touchCellFirstTime(...)---DynamicMeshRefinement" );
-  bool anyVolumeWantsToRefine = false;
-  bool allVolumesWantToErase  = true;
-  dfor( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}} ) {
+    ## Per-volume evaluation of the point-wise criterion
+    TemplateEvaluateVolume = """
     const int index = peano4::utils::dLinearised(volume,{{NUMBER_OF_VOLUMES_PER_AXIS}}) * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}});
     ::exahype2::RefinementCommand command = ::exahype2::RefinementCommand::Keep;
     repositories::{{SOLVER_INSTANCE}}.refineErasePointwisely(
@@ -129,6 +123,26 @@ class DynamicMeshRefinement(ActionSet):
     );
     anyVolumeWantsToRefine = anyVolumeWantsToRefine or command == ::exahype2::RefinementCommand::Refine;
     allVolumesWantToErase  = allVolumesWantToErase  and command == ::exahype2::RefinementCommand::Erase;
+"""
+
+    def get_volume_evaluation(self) -> str:
+        """!
+
+        C++ Jinja2 template evaluating the criterion within one volume
+
+        The template runs within a loop over the volumes of the patch, i.e.
+        it has access to the volume's index volume. It has to update the
+        two flags anyVolumeWantsToRefine and allVolumesWantToErase.
+
+        """
+        return self.TemplateEvaluateVolume
+
+    TemplateEvaluateCriterion = """
+  logTraceIn( "touchCellFirstTime(...)---DynamicMeshRefinement" );
+  bool anyVolumeWantsToRefine = false;
+  bool allVolumesWantToErase  = true;
+  dfor( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}} ) {
+{{EVALUATE_VOLUME}}
   }
 
   if ( anyVolumeWantsToRefine {{REFINE_BOUND}}) {
@@ -141,8 +155,6 @@ class DynamicMeshRefinement(ActionSet):
 """
 
     def get_body_of_operation(self, operation_name):
-        if not self.has_criterion():
-            return ""
         if operation_name == ActionSet.OPERATION_BEGIN_TRAVERSAL:
             return "  _localRefinementControl.clear();\n"
         if operation_name == ActionSet.OPERATION_END_TRAVERSAL:
@@ -168,7 +180,10 @@ class DynamicMeshRefinement(ActionSet):
                 "ERASE_BOUND": erase_bound,
                 "EVENT_LIFETIME": self.event_lifetime,
             }
-            return jinja2.Template(self.TemplateEvaluateCriterion).render(**d)
+            template = self.TemplateEvaluateCriterion.replace(
+                "{{EVALUATE_VOLUME}}", self.get_volume_evaluation()
+            )
+            return jinja2.Template(template).render(**d)
         return ""
 
     def get_guard_of_operation(self, operation_name):
@@ -183,13 +198,14 @@ class DynamicMeshRefinement(ActionSet):
         have merged their local events into the service
 
         """
-        if not self.has_criterion():
-            return "\n"
         return "  ::exahype2::RefinementControlService::getInstance().finishStep();\n"
 
+    def get_body_of_createGridControlEventsForNextTraversal(self):
+        if not self.hand_events_to_peano:
+            return super().get_body_of_createGridControlEventsForNextTraversal()
+        return "  return ::exahype2::RefinementControlService::getInstance().createGridControlEventsForNextTraversal();\n"
+
     def get_attributes(self):
-        if not self.has_criterion():
-            return ""
         return """
     ::exahype2::RefinementControl         _localRefinementControl;
 """

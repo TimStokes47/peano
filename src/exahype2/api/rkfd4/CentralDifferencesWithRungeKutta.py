@@ -23,7 +23,9 @@ from .actionsets import ApplyDirichletBoundaryConditions
 from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
 from ..blockstructured.BoundaryConditions import get_boundary_conditions
 from ..blockstructured.SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
-from ..blockstructured.DynamicMeshRefinement import DynamicMeshRefinement
+from ..blockstructured.create_dynamic_mesh_refinement_action_set import (
+    create_dynamic_mesh_refinement_action_set,
+)
 from .actionsets import ComputeLinearCombination
 from .actionsets import ComputeMaxEigenvalue
 from .actionsets import ComputeTimeStepSize
@@ -884,7 +886,8 @@ Patch overlap data
         After the last stage, {SolverName}_Compute time step size determines
         the time step size of the next time step and advances the solver's
         time stamp. {SolverName}_Dynamic mesh refinement finally evaluates the
-        refinement criterion (@ref exahype2.api.blockstructured.DynamicMeshRefinement),
+        adaptivity criterion if the solver has one
+        (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set()),
         switches the load balancing on again and informs it that the time
         step has finished.
 
@@ -1177,7 +1180,8 @@ Patch overlap data
             )
         time_step.add_task(time_step_size_task)
 
-        ## The very last task evaluates the refinement criterion, i.e. it
+        ## The very last task evaluates the adaptivity criterion if the
+        ## solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
         ## collects refine and erase requests for the mesh adaptation phase,
         ## and it switches the load balancing on again and informs it that
         ## the time step has finished.
@@ -1189,15 +1193,15 @@ Patch overlap data
         dynamic_mesh_refinement_task.use_cell(
             self._solver._patch, Access.READ_AND_WRITE
         )
-        dynamic_mesh_refinement_task.add_action_set(
-            DynamicMeshRefinement(
-                self._solver,
-                self.patch_size,
-                guard=cell_guard,
-                min_volume_size=self.min_volume_size,
-                max_volume_size=self.max_volume_size,
-            )
+        dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
+            self._solver,
+            self.patch_size,
+            guard=cell_guard,
+            min_volume_size=self.min_volume_size,
+            max_volume_size=self.max_volume_size,
         )
+        if dynamic_mesh_refinement is not None:
+            dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
         dynamic_mesh_refinement_task.add_action_set(
             toolbox.loadbalancing.api.actionsets.LoadBalancing(
                 enable_load_balancing=True

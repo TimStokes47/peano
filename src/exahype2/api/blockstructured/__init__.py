@@ -14,6 +14,8 @@ exahype2::blockstructured.
 from .DirichletBoundaryConditions import DirichletBoundaryConditions
 from .SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
 from .DynamicMeshRefinement import DynamicMeshRefinement
+from .DynamicMeshRefinementWithGradients import DynamicMeshRefinementWithGradients
+from .create_dynamic_mesh_refinement_action_set import create_dynamic_mesh_refinement_action_set
 from .ConsumeRefinementRequests import ConsumeRefinementRequests
 from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
 from . import BoundaryConditions

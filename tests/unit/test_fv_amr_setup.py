@@ -76,7 +76,7 @@ def test_adapt_mesh_task_hosts_criterion_and_initialisation(tmp_path):
     graph = _setup_graph(_solver(with_criterion=True), tmp_path)
     action_sets = _task(graph, "Adapt mesh").action_sets
     assert [type(action_set) for action_set in action_sets] == [
-        exahype2.api.fv.actionsets.EvaluateRefineErasePointwisely,
+        exahype2.api.blockstructured.DynamicMeshRefinement,
         exahype2.api.fv.actionsets.InitialiseNewCells,
     ]
     criterion, initialisation = action_sets
@@ -107,3 +107,23 @@ def test_min_volume_size_must_not_exceed_volume_size():
     solver = _solver(with_criterion=True)
     with pytest.raises(AssertionError):
         SetupWithCriterion(solver, volume_size=0.002, min_volume_size=0.02)
+
+
+def test_adapt_mesh_task_evaluates_gradient_criterion(tmp_path):
+    solver = exahype2.api.Solver("Probe", 4, 0)
+    solver.add_pde_term(exahype2.api.Flux(implementation=""))
+    solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation=""))
+    solver.add_pde_term(exahype2.api.InitPointWisely(implementation=""))
+    solver.add_pde_term(exahype2.api.GradientRefinement(implementation=""))
+    solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
+    solver.grid_construction = SetupWithCriterion(
+        solver, volume_size=0.02, min_volume_size=0.002
+    )
+    criterion, _ = _task(_setup_graph(solver, tmp_path), "Adapt mesh").action_sets
+    assert isinstance(
+        criterion, exahype2.api.blockstructured.DynamicMeshRefinementWithGradients
+    )
+    assert (
+        "createGridControlEventsForNextTraversal()"
+        in criterion.get_body_of_createGridControlEventsForNextTraversal()
+    )
