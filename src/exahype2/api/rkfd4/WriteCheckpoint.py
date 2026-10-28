@@ -28,7 +28,7 @@ class WriteCheckpoint(Solver.Plotter):
       boundary (Dirichlet boundary conditions), interpolates the hanging
       faces on adaptive meshes and gathers patch and face data into
       solver._patch_with_halo
-      (@ref toolbox.blockstructured.api.ReconstructPatchWithHalo.ReconstructPatchWithHalo). A patch
+      (toolbox.blockstructured.api.ReconstructPatchWithHalo). A patch
       with N grid cells per axis and a halo of M grid cells is written as a
       patch with N+2M grid cells per axis. Its box covers the cell plus the
       halo, so every grid cell sits at its true position, and neighbouring

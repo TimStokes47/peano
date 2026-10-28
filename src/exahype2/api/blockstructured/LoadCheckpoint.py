@@ -214,7 +214,7 @@ class LoadCheckpoint(Solver.GridConstruction):
     - A last sweep loads the data. For every cell, it reads the patch with
       halo into the temporary solver._patch_with_halo, copies the patch into
       solver._patch and writes the patch with halo onto the overlaps of the
-      faces (@ref toolbox.blockstructured.api.ProjectPatchWithHaloOntoFaces.ProjectPatchWithHaloOntoFaces).
+      faces (toolbox.blockstructured.api.ProjectPatchWithHaloOntoFaces).
       The faces hence also hold the ghost data along the domain boundary and
       the data at coarse-fine transitions as they have been at the time of
       the checkpoint. In unprepareTraversal(), the sweep restores the

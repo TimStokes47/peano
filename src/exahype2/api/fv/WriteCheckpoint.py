@@ -27,7 +27,7 @@ class WriteCheckpoint(Solver.Plotter):
       sets the ghost volumes along the domain boundary (Dirichlet
       boundary conditions), interpolates the hanging faces on adaptive
       meshes and gathers patch and face data into solver._patch_with_halo
-      (@ref toolbox.blockstructured.api.ReconstructPatchWithHalo.ReconstructPatchWithHalo). A patch
+      (toolbox.blockstructured.api.ReconstructPatchWithHalo). A patch
       with N volumes per axis and a halo of M volumes is written as a patch
       with N+2M volumes per axis. Its box covers the cell plus the halo, so
       every volume sits at its true position, and neighbouring patches
