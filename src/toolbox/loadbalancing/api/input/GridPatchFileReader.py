@@ -112,7 +112,9 @@ def read_patches(file_path, size_group, dimensions):
 		- Floating point numbers in scientific notation
 		- Space-separated coordinate values
 	"""
-	with open(file_path, "r") as f:
+	# Files with binary quantities hold raw bytes between the text lines.
+	# Latin-1 decodes any byte sequence, and the pattern below only matches text.
+	with open(file_path, "r", encoding="latin-1") as f:
 		content = f.read()
 	
 	# Regular expression to extract offset and size
