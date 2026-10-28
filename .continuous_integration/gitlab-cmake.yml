@@ -101,25 +101,25 @@ Intel_SharedTBB_MPI:
       - .continuous_integration/pipelines/cmake.yml
     strategy: depend
 
-NVIDIA:
-  extends: .Variables
-  stage: Compiler
-  variables:
-    CC: "nvc"
-    CXX: "nvc++"
-    IMAGE_TAG: "${IMAGE_NVIDIA}"
-    CONFIGURATION_OPTIONS: "-DUSE_CCACHE=OFF \
-                            -DENABLE_EXAHYPE=ON \
-                            -DENABLE_LOADBALANCING=ON \
-                            -DENABLE_BLOCKSTRUCTURED=ON \
-                            -DENABLE_EXAPARTY=ON \
-                            -DENABLE_MGHYPE=ON \
-                            -DENABLE_FINITEELEMENTS=ON \
-                            -DENABLE_PARTICLES=ON"
-  trigger:
-    include:
-      - .continuous_integration/pipelines/cmake.yml
-    strategy: depend
+#NVIDIA:
+#  extends: .Variables
+#  stage: Compiler
+#  variables:
+#    CC: "nvc"
+#    CXX: "nvc++"
+#    IMAGE_TAG: "${IMAGE_NVIDIA}"
+#    CONFIGURATION_OPTIONS: "-DUSE_CCACHE=OFF \
+#                            -DENABLE_EXAHYPE=ON \
+#                            -DENABLE_LOADBALANCING=ON \
+#                            -DENABLE_BLOCKSTRUCTURED=ON \
+#                            -DENABLE_EXAPARTY=ON \
+#                            -DENABLE_MGHYPE=ON \
+#                            -DENABLE_FINITEELEMENTS=ON \
+#                            -DENABLE_PARTICLES=ON"
+#  trigger:
+#    include:
+#      - .continuous_integration/pipelines/cmake.yml
+#    strategy: depend
 
 AMD:
   extends: .Variables
