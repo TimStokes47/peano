@@ -1,6 +1,7 @@
 #include "Solver.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <iomanip>
 #include <limits>
 #include <sstream>
@@ -78,6 +79,41 @@ std::string exahype2::Solver::toCheckpointMetaDataEntry(const std::string& key, 
   std::ostringstream out;
   out << std::scientific << std::setprecision(std::numeric_limits<double>::max_digits10 - 1) << key << " " << value;
   return out.str();
+}
+
+
+bool exahype2::Solver::getCheckpointMetaDataEntry(const std::string& metaData, const std::string& key, double& value) {
+  std::istringstream lines(metaData);
+  std::string        line;
+  while (std::getline(lines, line)) {
+    std::istringstream entry(line);
+    std::string        entryKey;
+    std::string        entryValue;
+    if (entry >> entryKey >> entryValue and entryKey == key) {
+      value = std::strtod(entryValue.c_str(), nullptr);
+      return true;
+    }
+  }
+  return false;
+}
+
+
+void exahype2::Solver::fromCheckpointMetaData(const std::string& metaData) {
+  getCheckpointMetaDataEntry(metaData, "minTimeStamp", _minTimeStamp);
+  getCheckpointMetaDataEntry(metaData, "maxTimeStamp", _maxTimeStamp);
+  getCheckpointMetaDataEntry(metaData, "minTimeStepSize", _minTimeStepSize);
+  getCheckpointMetaDataEntry(metaData, "maxTimeStepSize", _maxTimeStepSize);
+  getCheckpointMetaDataEntry(metaData, "admissibleTimeStepSize", _admissibleTimeStepSize);
+  getCheckpointMetaDataEntry(metaData, "minVolumeH", _minVolumeH);
+  getCheckpointMetaDataEntry(metaData, "maxVolumeH", _maxVolumeH);
+
+  _minTimeStampUpdatedThisTimeStep    = std::numeric_limits<double>::max();
+  _maxTimeStampUpdatedThisTimeStep    = std::numeric_limits<double>::min();
+  _minTimeStepSizeUpdatedThisTimeStep = std::numeric_limits<double>::max();
+  _maxTimeStepSizeUpdatedThisTimeStep = std::numeric_limits<double>::min();
+  _minVolumeHUpdatedThisTimeStep      = std::numeric_limits<double>::max();
+  _maxVolumeHUpdatedThisTimeStep      = 0.0;
+  _cellUpdates                        = 0;
 }
 
 

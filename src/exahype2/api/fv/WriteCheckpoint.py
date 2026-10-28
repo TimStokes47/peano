@@ -45,6 +45,9 @@ class WriteCheckpoint(Solver.Plotter):
     The files are called checkpoint-SolverName by default. A solver can
     have a checkpoint next to its other plotters
     (@ref exahype2.api.Solver.Solver.add_plotter()).
+    A simulation continues from a checkpoint with
+    @ref exahype2.api.blockstructured.LoadCheckpoint.LoadCheckpoint instead of
+    its usual grid construction.
 
     The reconstruction only reads the patch and face data, i.e. a
     checkpoint does not change the solution. The Dirichlet boundary

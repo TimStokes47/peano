@@ -7,5 +7,6 @@ from .SetupSimulationWithUserCodedRefinementCriterion import SetupSimulationWith
 from .SetupSimulationOverRegularGrid import SetupSimulationOverRegularGrid
 from .PlotAsVTKFile import PlotAsVTKFile
 from .WriteCheckpoint import WriteCheckpoint
+from ..blockstructured.LoadCheckpoint import LoadCheckpoint
 from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
 import exahype2.api.fv.actionsets

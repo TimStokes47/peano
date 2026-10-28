@@ -143,6 +143,35 @@ class exahype2::Solver {
     static std::string toCheckpointMetaDataEntry(const std::string& key, double value);
 
     /**
+     * Restore the solver state from the header of a checkpoint
+     *
+     * Counterpart of toCheckpointMetaData(): The routine sets the time
+     * stamps, the time step sizes, the admissible time step size and the
+     * mesh sizes to the values in metaData. Attributes which metaData does
+     * not hold keep their values. Afterwards, it resets the bookkeeping of
+     * the time step as startTimeStep() does, so the next time step
+     * continues from the restored state. Generated solvers override it to
+     * restore their own attributes via getCheckpointMetaDataEntry().
+     *
+     * exahype2.api.blockstructured.LoadCheckpoint calls the routine once
+     * the solution has been read from the checkpoint.
+     */
+    virtual void fromCheckpointMetaData(const std::string& metaData);
+
+    /**
+     * Find one entry of a checkpoint's meta data
+     *
+     * @param metaData Key-value pairs as written by toCheckpointMetaData(),
+     *   one per line. Leading white spaces per line are ignored.
+     * @param key Key of the entry, i.e. the attribute's name without
+     *   leading underscore.
+     * @param value Set to the entry's value if metaData holds the key.
+     *   Otherwise, it is left unchanged.
+     * @return Whether metaData holds the key.
+     */
+    static bool getCheckpointMetaDataEntry(const std::string& metaData, const std::string& key, double& value);
+
+    /**
      * Default implementation: always returns true, i.e. every cell uses
      * the stateless (GPU-offloadable) variants of the PDE terms wherever
      * a solver offers both a stateless and a stateful variant. A solver

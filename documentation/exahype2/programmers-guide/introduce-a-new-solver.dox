@@ -129,6 +129,9 @@ exercises all four building blocks against the task-graph architecture:
   to boxes of the domain.
 - `WriteCheckpoint.py` - Solver.Plotter, reconstructs the patches' halos and
   writes the patches with halo plus the solver's state without loss.
+- `../blockstructured/LoadCheckpoint.py` - Solver.GridConstruction which
+  replaces the setup over a regular grid: it rebuilds the mesh of a
+  checkpoint, loads the patches with halo and restores the solver's state.
 
 A new discretisation typically needs its own patch/data layout and its own
 task graph in the Solver.NumericalScheme subclass, but can often reuse the

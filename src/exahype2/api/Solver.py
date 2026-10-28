@@ -873,37 +873,79 @@ class Solver(abc.ABC):
         outputs of the plotters. Only attributes of type double, float or
         int are written, with their name without leading underscore as key.
 
-        The override evaluates the attributes the solver has when the C++
-        code is written, and it is added only once, even if several
-        checkpoints use it or the Peano 4 project is generated multiple
-        times.
+        The counterpart override of exahype2::Solver::fromCheckpointMetaData()
+        restores these attributes. Afterwards, it calls finish<Name>() of
+        all plotters: A plotter which has written output at the time of the
+        checkpoint has done so before it has moved on to its next output, as
+        it only moves on at the end of the plot phase
+        (@ref exahype2.api.Solver.Solver.Plotter). The checkpoint hence holds
+        the time stamp of an output which has already been written.
+        finish<Name>() moves such a plotter on, exactly as the original run
+        has done after the checkpoint, so the restarted simulation does not
+        write this output again.
+
+        The overrides evaluate the attributes and plotters the solver has
+        when the C++ code is written, and they are added only once, even if
+        several checkpoints use them or the Peano 4 project is generated
+        multiple times.
 
         """
         declaration = "std::string toCheckpointMetaData() const override;"
         if declaration in [existing for existing, _ in self._abstract_solver_methods]:
             return
 
-        def definition(qualified_class_name):
+        def checkpointed_attributes():
+            for attribute in self._abstract_solver_attributes:
+                match = re.match(r"\s*(?:double|float|int)\s+(\w+)\s*(=|;)", attribute)
+                if match is not None:
+                    yield match.group(1)
+
+        def to_definition(qualified_class_name):
             result = (
                 "std::string "
                 + qualified_class_name
                 + "::toCheckpointMetaData() const {\n"
                 "  return ::exahype2::Solver::toCheckpointMetaData()"
             )
-            for attribute in self._abstract_solver_attributes:
-                match = re.match(r"\s*(?:double|float|int)\s+(\w+)\s*(=|;)", attribute)
-                if match is not None:
-                    attribute_name = match.group(1)
-                    result += (
-                        '\n    + "\\n" + toCheckpointMetaDataEntry("'
-                        + attribute_name.lstrip("_")
-                        + '", '
-                        + attribute_name
-                        + ")"
-                    )
+            for attribute_name in checkpointed_attributes():
+                result += (
+                    '\n    + "\\n" + toCheckpointMetaDataEntry("'
+                    + attribute_name.lstrip("_")
+                    + '", '
+                    + attribute_name
+                    + ")"
+                )
             return result + ";\n}\n"
 
-        self.add_abstract_solver_method(declaration, definition)
+        def from_definition(qualified_class_name):
+            result = (
+                "void "
+                + qualified_class_name
+                + "::fromCheckpointMetaData(const std::string& metaData) {\n"
+                "  ::exahype2::Solver::fromCheckpointMetaData(metaData);\n"
+                "  double value;\n"
+            )
+            for attribute_name in checkpointed_attributes():
+                result += (
+                    '  if (getCheckpointMetaDataEntry(metaData, "'
+                    + attribute_name.lstrip("_")
+                    + '", value)) {\n'
+                    "    "
+                    + attribute_name
+                    + " = static_cast<decltype("
+                    + attribute_name
+                    + ")>(value);\n"
+                    "  }\n"
+                )
+            for plotter in self._plotters:
+                result += "  finish" + plotter.name + "();\n"
+            return result + "}\n"
+
+        self.add_abstract_solver_method(declaration, to_definition)
+        self.add_abstract_solver_method(
+            "void fromCheckpointMetaData(const std::string& metaData) override;",
+            from_definition,
+        )
 
     # @todo This one is important
     def create_readme_descriptor(self, domain_offset, domain_size) -> str:
