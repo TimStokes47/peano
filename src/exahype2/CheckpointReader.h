@@ -30,6 +30,14 @@ namespace exahype2 {
  * meta-data block in the header of each file holds the solver's state
  * (@ref exahype2::Solver::toCheckpointMetaData()).
  *
+ * ## File formats
+ *
+ * The files are either ASCII or binary files. The reader is format-agnostic:
+ * It looks at the header of each patch file
+ * (@ref tarch::reader::PeanoTextPatchFileReader::readHeader()), instantiates
+ * the matching reader from tarch::reader and lets it parse the file. This
+ * class only maps the patches that come back onto the cells of the mesh.
+ *
  * The reader parses all files of one dataset. It then
  *
  * - yields refinement events which reconstruct the checkpoint's mesh
