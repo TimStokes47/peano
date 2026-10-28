@@ -13,6 +13,7 @@
 \li \subpage tarch_patch_file_format
 \li \subpage documentation_tarch_visualisation_tweaking-pictures
 \li \subpage documentation_tarch_visualisation_probing-data
+\li \subpage documentation_tarch_visualisation_merging-data
 
 
 Peano writes different types of files: Some history data (point probes)
