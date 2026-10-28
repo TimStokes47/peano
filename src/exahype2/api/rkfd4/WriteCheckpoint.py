@@ -69,6 +69,7 @@ class WriteCheckpoint(Solver.Plotter):
         output_path=".",
         filename="checkpoint",
         name: str = None,
+        binary=True,
     ):
         """!
 
@@ -94,6 +95,12 @@ class WriteCheckpoint(Solver.Plotter):
         @param name: str or None
           Name of the plotter (@ref exahype2.api.Solver.Solver.Plotter).
 
+        @param binary: bool
+          Write the values as raw doubles instead of text
+          (@ref tarch::plotter::griddata::blockstructured::PeanoBinaryPatchFileWriter).
+          The checkpoint reader (@ref exahype2::CheckpointReader) reads both
+          formats. Pass False to get human-readable checkpoints.
+
         """
         super().__init__(solver, name)
 
@@ -106,6 +113,7 @@ class WriteCheckpoint(Solver.Plotter):
         self._plotter_precision = plotter_precision
         self._output_path = output_path
         self._filename = filename
+        self._binary = binary
 
     def output_file_prefix(self):
         return os.path.join(self._output_path, self._filename + "-" + self._solver.name)
@@ -225,6 +233,7 @@ class WriteCheckpoint(Solver.Plotter):
 #include "../repositories/SolverRepository.h"
 """,
                 precision=self._plotter_precision,
+                binary=self._binary,
                 time_stamp_evaluation="0.5*(repositories::getMinTimeStamp()+repositories::getMaxTimeStamp())",
                 patch_scaling=self._solver._patch_with_halo.dim[0]
                 / self._solver._patch.dim[0],

@@ -224,6 +224,14 @@ class tarch::plotter::griddata::blockstructured::PeanoBinaryPatchFileWriter: pub
          virtual void plotVertex( int index, double value ) override;
          virtual void plotVertex( int index, double* values ) override;
 
+         /**
+          * Plot a vertex whose values have another type than double. The
+          * values are converted into doubles. Template functions cannot be
+          * virtual, hence this overload sits on the level of the writer.
+          */
+         template <typename T>
+         void plotVertex( int index, T* values );
+
          virtual void close() override;
 
          /**
@@ -338,3 +346,5 @@ class tarch::plotter::griddata::blockstructured::PeanoBinaryPatchFileWriter: pub
     virtual void clear() override;
 };
 
+
+#include "PeanoBinaryPatchFileWriter_VertexDataWriter.cpph"

@@ -39,7 +39,8 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
                dataType="double",
                restart_preprocess=False,
                patch_scaling=1.0,
-               metadata_evaluation=None):
+               metadata_evaluation=None,
+               binary=False):
     """!
     
       Construct the block plotter
@@ -75,6 +76,16 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
         value replaces metadata in the meta-data block of the file header.
         Use it for data which is only known when the file is written, such
         as time stamps.
+
+      binary: Boolean
+        Write the plotted values as raw doubles
+        (@ref tarch::plotter::griddata::blockstructured::PeanoBinaryPatchFileWriter)
+        instead of text
+        (@ref tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter).
+        The file header and the metadata remain text in either case, and the
+        file header says which of the two formats the file has. A binary
+        file is smaller and bit-exact, i.e. precision then only affects the
+        patch offsets and sizes.
 
     """
     super(PlotPatchesInPeanoBlockFormat,self).__init__(descend_invocation_order=1,parallel=False)
@@ -139,6 +150,7 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
       raise Exception("Chosen datatype " + dataType + " for plotting of patches is not a recognized choice.")
 
     self.d[ "PRECISION" ]        = precision
+    self.d[ "WRITER_CLASS" ]     = "PeanoBinaryPatchFileWriter" if binary else "PeanoTextPatchFileWriter"
     self.d[ "DATATYPE"  ]        = dataType
     self.d[ "TIMESTAMP" ]        = time_stamp_evaluation
     self.d[ "PATCH_SCALING" ]    = patch_scaling
@@ -271,9 +283,9 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
     snapshotFileName << "-rank-" << tarch::mpi::Rank::getInstance().getRank();
   }
 
-  _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
+  _writer = new tarch::plotter::griddata::blockstructured::{{WRITER_CLASS}}(
     Dimensions, snapshotFileName.str(), "{{FILENAME}}",
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::AppendNewData,
+    tarch::plotter::griddata::blockstructured::{{WRITER_CLASS}}::IndexFileMode::AppendNewData,
     {{TIMESTAMP}},
     {{WRITER_PRECISION}}
   );
@@ -360,29 +372,22 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
 
 
   def get_attributes(self):
-    if self._plot_cell_data:
-      return """
-    static tarch::mpi::BooleanSemaphore                                              _semaphore;
-      
+    writer = "tarch::plotter::griddata::blockstructured::" + self.d["WRITER_CLASS"]
+    data_writer = "CellDataWriter" if self._plot_cell_data else "VertexDataWriter"
+    return """
+    static tarch::mpi::BooleanSemaphore  _semaphore;
+
     int                _treeNumber;
 
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter*                  _writer;
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*  _dataWriter;
-"""
-    else:
-      return """
-    static tarch::mpi::BooleanSemaphore                                              _semaphore;
-    
-    int                _treeNumber;
-
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter*                    _writer;
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter*  _dataWriter;
+    """ + writer + """*  _writer;
+    """ + writer + "::" + data_writer + """*  _dataWriter;
 """
 
 
   def get_includes(self):
     return """
 #include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
+#include "tarch/plotter/griddata/blockstructured/PeanoBinaryPatchFileWriter.h"
 #include "tarch/multicore/Lock.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/mpi/Lock.h"
