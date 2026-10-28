@@ -186,8 +186,8 @@ def test_checkpoint_reconstructs_and_writes_patch_with_halo(tmp_path, scheme, ha
     assert action_set.d["UNKNOWNS"] == "5"
     assert action_set.d["SELECT_DOFS"] is None
     assert action_set.d["PATCH_SCALING"] == (9 + 2 * halo) / 9
-    assert action_set.d["EXACT_OUTPUT"] is True
     assert action_set.d["PRECISION"] == 17
+    assert action_set.d["WRITER_PRECISION"] == 17
     assert action_set.d["METADATA_EVALUATION"] == (
         "repositories::instanceOfProbe.toCheckpointMetaData()"
     )

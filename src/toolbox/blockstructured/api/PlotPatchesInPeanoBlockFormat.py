@@ -39,8 +39,7 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
                dataType="double",
                restart_preprocess=False,
                patch_scaling=1.0,
-               metadata_evaluation=None,
-               exact_output=False):
+               metadata_evaluation=None):
     """!
     
       Construct the block plotter
@@ -55,6 +54,13 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
       mapping: Series of d-tuples which describe how to distort quadrature/sampling
         points within a reference cube/square. Can be empty alternatively.
          
+      precision: int
+        Number of significant digits of the plotted values. The writer
+        does not round or set small values to zero, so 17 writes the doubles
+        without loss, e.g. for a checkpoint. Patch offsets and sizes use at
+        least six digits
+        (@ref tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter).
+
       select_dofs: [Int] or None
         You can make the plotter only plot some of the dofs of interest
 
@@ -69,11 +75,6 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
         value replaces metadata in the meta-data block of the file header.
         Use it for data which is only known when the file is written, such
         as time stamps.
-
-      exact_output: bool
-        Write the file such that it can be read back without loss, e.g. for
-        a checkpoint (@ref tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::setExactOutput()).
-        Combine it with a precision of 17.
 
     """
     super(PlotPatchesInPeanoBlockFormat,self).__init__(descend_invocation_order=1,parallel=False)
@@ -142,7 +143,9 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
     self.d[ "TIMESTAMP" ]        = time_stamp_evaluation
     self.d[ "PATCH_SCALING" ]    = patch_scaling
     self.d[ "METADATA_EVALUATION" ] = metadata_evaluation
-    self.d[ "EXACT_OUTPUT" ]     = exact_output
+    # Patch offsets and sizes need at least six significant digits on
+    # adaptive meshes, even if the data is written with fewer.
+    self.d[ "WRITER_PRECISION" ] = max(precision, 6)
 
     self._restart_preprocess       = restart_preprocess
 
@@ -271,11 +274,9 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
   _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
     Dimensions, snapshotFileName.str(), "{{FILENAME}}",
     tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::AppendNewData,
-    {{TIMESTAMP}}
+    {{TIMESTAMP}},
+    {{WRITER_PRECISION}}
   );
-  {% if EXACT_OUTPUT %}
-  _writer->setExactOutput(true);
-  {% endif %}
 
   #if Dimensions==2
   {{MAPPING_2D}}

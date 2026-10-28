@@ -139,13 +139,13 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
   const std::string& fileName,
   const std::string& indexFileName,
   IndexFileMode      appendToIndexFile,
-  double             timeStamp
+  double             timeStamp,
+  int                precision
 ):
   _fileName(fileName),
   _indexFile(indexFileName),
   _writtenToFile(false),
-  _dimensions(dimension),
-  _exactOutput(false) {
+  _dimensions(dimension) {
 
   assertion(dimension >= 2);
   assertion(dimension <= 3);
@@ -248,17 +248,10 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
   }
   logDebug("PeanoTextPatchFileWriter(...)", "index file is ready");
 
-  _snapshotFileOut << std::scientific;
+  _snapshotFileOut << std::scientific << std::setprecision(precision);
 }
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::~PeanoTextPatchFileWriter() {}
-
-void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::setExactOutput(bool exactOutput) {
-  _exactOutput = exactOutput;
-  if (_exactOutput) {
-    _snapshotFileOut << std::setprecision(std::numeric_limits<double>::max_digits10 - 1);
-  }
-}
 
 int tarch::plotter::griddata::blockstructured::restartPreprocess(const std::string fileName, double restartTime){
   //todo, remove the snapshot recording at and after the restart time, also return the counter

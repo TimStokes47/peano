@@ -33,10 +33,10 @@ class WriteCheckpoint(Solver.Plotter):
       patch with N+2M grid cells per axis. Its box covers the cell plus the
       halo, so every grid cell sits at its true position, and neighbouring
       patches overlap.
-    - It writes all values without loss: with 17 significant digits by
-      default, small values are not set to zero, and the patch offsets and
-      sizes carry 17 significant digits, too
-      (@ref tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::setExactOutput()).
+    - It writes all values without loss: values, patch offsets and sizes
+      carry 17 significant digits by default, and the writer does not set
+      small values to zero
+      (@ref tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter).
     - The meta-data block in the header of each file holds the solver's
       state (@ref exahype2::Solver::toCheckpointMetaData()): its time
       stamps, time step sizes, admissible time step size and mesh sizes,
@@ -231,7 +231,6 @@ class WriteCheckpoint(Solver.Plotter):
                 metadata_evaluation="repositories::"
                 + self._solver.get_name_of_global_instance()
                 + ".toCheckpointMetaData()",
-                exact_output=True,
             )
         )
 

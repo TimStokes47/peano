@@ -87,11 +87,6 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     std::stringstream _snapshotFileOut;
     bool              _haveWrittenAtLeastOnePatch;
 
-    /**
-     * @see setExactOutput()
-     */
-    bool              _exactOutput;
-
     void writeMetaData(const std::string& metaData);
     void writeMapping(int totalEntries, double* values);
 
@@ -266,8 +261,17 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      *   dump.
      * @param indexFileName Name of the index file. Can we empty if you select
      *   NoIndexFile.
+     * @param precision     Number of significant digits of all floating point
+     *   numbers in the file: patch offsets and sizes, mappings and data. The
+     *   cell and vertex data writers start with this precision and can lower
+     *   or raise it via CellDataWriter::setPrecision(). The writer does not
+     *   round or truncate any value beyond this precision. Small values are
+     *   written as they are (no flush to zero), so a file written with 17
+     *   digits (std::numeric_limits<double>::max_digits10) holds the doubles
+     *   bit-exact, e.g. for a checkpoint. Keep at least six digits on deep
+     *   adaptive meshes, as the patch offsets otherwise become imprecise.
      */
-    PeanoTextPatchFileWriter(int dimension, const std::string&  fileName, const std::string&  indexFileName, IndexFileMode appendToIndexFile, double timeStamp);
+    PeanoTextPatchFileWriter(int dimension, const std::string&  fileName, const std::string&  indexFileName, IndexFileMode appendToIndexFile, double timeStamp, int precision = 6);
 
     /**
      * Destructor
@@ -292,24 +296,6 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description, const std::string& metaData  ) override;
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description, const std::string& metaData, double* mapping ) override;
 
-    /**
-     * Write all values such that they can be read back exactly
-     *
-     * By default, the writer targets visualisation: Patch offsets and sizes
-     * carry six significant digits, and the data writers write every value
-     * with a magnitude below tarch::la::NUMERICAL_ZERO_DIFFERENCE (or, for
-     * vertex data passed as array, below the smallest float) as 0. That is
-     * fine for Paraview, but a checkpoint which is read back has to hold
-     * the data unchanged. With exact output, the writer
-     *
-     * - writes patch offsets and sizes with 17 significant digits, and
-     * - lets the data writers write every value as it is.
-     *
-     * The precision of the values themselves is still set per data writer
-     * (CellDataWriter::setPrecision()). Pass 17 there, too. Call this
-     * routine before the first plotPatch().
-     */
-    void setExactOutput(bool exactOutput);
 
     virtual int plotPatch(
       const tarch::la::Vector<2,double>& offset,
