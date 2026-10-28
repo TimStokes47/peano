@@ -27,7 +27,10 @@ to subclass and assign an instance of onto the solver:
   kept up to date. Implements `construct_output(exahype2_project,
   peano_project, setup_simulation)`, adding tasks into the setup-phase task
   graph. Assigned via `solver.grid_construction`.
-- **Solver.Plotter** - how the solution is written out. 
+- **Solver.Plotter** - how the solution is written out. A solver can have
+  an arbitrary number of plotters, added via `solver.add_plotter()`, e.g. a
+  VTK plotter for visualisation and a checkpoint. Each plotter decides
+  itself when it is active (@ref exahype2.api.Solver.Solver.Plotter).
 
 We focus on the first aspect here. 
 
@@ -102,7 +105,7 @@ then the cell predicates are broken.
 
 `Solver.generate_solver_realisation()` asserts that `grid_construction` and
 `numerical_scheme` are set before it calls into any of them, so both are
-mandatory; only `plotter` is optional.
+mandatory; plotters are optional.
 
 
 # Reference implementation to copy from
@@ -122,7 +125,10 @@ exercises all four building blocks against the task-graph architecture:
   then stays regular, versus one refined adaptively every sweep by a
   user-coded criterion.
 - `PlotAsVTKFile.py` - Solver.Plotter, maps the patch data onto a plot mesh
-  and writes it as VTK.
+  and writes it as VTK. It can be restricted to some of the quantities and
+  to boxes of the domain.
+- `Checkpoint.py` - Solver.Plotter, reconstructs the patches' halos and
+  writes the patches with halo plus the solver's state without loss.
 
 A new discretisation typically needs its own patch/data layout and its own
 task graph in the Solver.NumericalScheme subclass, but can often reuse the
@@ -153,7 +159,8 @@ thesolver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False))
 
 thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver, patch_size)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(thesolver, volume_size=...)
-thesolver.plotter = exahype2.api.fv.PlotAsVTKFile(thesolver)
+thesolver.add_plotter(exahype2.api.fv.PlotAsVTKFile(thesolver))
+thesolver.add_plotter(exahype2.api.fv.Checkpoint(thesolver, time_in_between_plots=1.0))
 
 project.add_solver(thesolver)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -161,8 +168,9 @@ project.add_solver(thesolver)
 `project.generate_Peano4_project()` then calls
 `Solver.generate_solver_realisation()` on every registered solver, which in
 turn calls each building block's `construct_output()` in sequence
-(`solver_generator`, then `grid_construction`, then `numerical_scheme`, then
-`plotter` if set).
+(`grid_construction`, then `numerical_scheme`, then all plotters, then
+`mesh_adaptation`, and last the `solver_generator`, so all of them can add
+members to the solver's C++ class first).
 
 <div style="background-color: #fcc ; padding: 10px; border: 1px solid green;">
 This task-graph-based exahype2.api is under active development. Some of the

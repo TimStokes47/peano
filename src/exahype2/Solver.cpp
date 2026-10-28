@@ -1,7 +1,9 @@
 #include "Solver.h"
 
 #include <algorithm>
+#include <iomanip>
 #include <limits>
+#include <sstream>
 
 #include "tarch/multicore/Lock.h"
 #include "tarch/mpi/Rank.h"
@@ -58,6 +60,24 @@ double exahype2::Solver::getMaxMeshSize() const {
 
 double exahype2::Solver::getMinMeshSize() const {
   return _minVolumeH;
+}
+
+
+std::string exahype2::Solver::toCheckpointMetaData() const {
+  return toCheckpointMetaDataEntry("minTimeStamp", _minTimeStamp) + "\n"
+       + toCheckpointMetaDataEntry("maxTimeStamp", _maxTimeStamp) + "\n"
+       + toCheckpointMetaDataEntry("minTimeStepSize", _minTimeStepSize) + "\n"
+       + toCheckpointMetaDataEntry("maxTimeStepSize", _maxTimeStepSize) + "\n"
+       + toCheckpointMetaDataEntry("admissibleTimeStepSize", _admissibleTimeStepSize) + "\n"
+       + toCheckpointMetaDataEntry("minVolumeH", _minVolumeH) + "\n"
+       + toCheckpointMetaDataEntry("maxVolumeH", _maxVolumeH);
+}
+
+
+std::string exahype2::Solver::toCheckpointMetaDataEntry(const std::string& key, double value) {
+  std::ostringstream out;
+  out << std::scientific << std::setprecision(std::numeric_limits<double>::max_digits10 - 1) << key << " " << value;
+  return out.str();
 }
 
 

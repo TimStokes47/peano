@@ -46,6 +46,9 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
     if ( std::isnan(value) ) {
       _out << " nan";
     }
+    else if (_writer._exactOutput) {
+      _out << " " << value;
+    }
     else {
       if ( std::abs(value) < std::numeric_limits<double>::min() ) value = 0.0;
       if (tarch::la::equals(value,0.0)) {
@@ -69,6 +72,9 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
   for (int i=0; i<_numberOfUnknowns; i++) {
     if ( std::isnan(values[i]) ) {
       _out << " nan";
+    }
+    else if (_writer._exactOutput) {
+      _out << " " << values[i];
     }
     else {
       if ( std::abs(values[i]) < std::numeric_limits<float>::min() ){

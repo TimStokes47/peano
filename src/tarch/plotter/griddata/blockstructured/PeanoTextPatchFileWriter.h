@@ -87,6 +87,11 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     std::stringstream _snapshotFileOut;
     bool              _haveWrittenAtLeastOnePatch;
 
+    /**
+     * @see setExactOutput()
+     */
+    bool              _exactOutput;
+
     void writeMetaData(const std::string& metaData);
     void writeMapping(int totalEntries, double* values);
 
@@ -286,6 +291,25 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description ) override;
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description, const std::string& metaData  ) override;
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description, const std::string& metaData, double* mapping ) override;
+
+    /**
+     * Write all values such that they can be read back exactly
+     *
+     * By default, the writer targets visualisation: Patch offsets and sizes
+     * carry six significant digits, and the data writers write every value
+     * with a magnitude below tarch::la::NUMERICAL_ZERO_DIFFERENCE (or, for
+     * vertex data passed as array, below the smallest float) as 0. That is
+     * fine for Paraview, but a checkpoint which is read back has to hold
+     * the data unchanged. With exact output, the writer
+     *
+     * - writes patch offsets and sizes with 17 significant digits, and
+     * - lets the data writers write every value as it is.
+     *
+     * The precision of the values themselves is still set per data writer
+     * (CellDataWriter::setPrecision()). Pass 17 there, too. Call this
+     * routine before the first plotPatch().
+     */
+    void setExactOutput(bool exactOutput);
 
     virtual int plotPatch(
       const tarch::la::Vector<2,double>& offset,

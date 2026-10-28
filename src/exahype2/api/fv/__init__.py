@@ -6,5 +6,6 @@ from .RusanovWithExplicitEuler import timeStepWithRusanov2D, timeStepWithRusanov
 from .SetupSimulationWithUserCodedRefinementCriterion import SetupSimulationWithUserCodedRefinementCriterion
 from .SetupSimulationOverRegularGrid import SetupSimulationOverRegularGrid
 from .PlotAsVTKFile import PlotAsVTKFile
+from .Checkpoint import Checkpoint
 from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
 import exahype2.api.fv.actionsets

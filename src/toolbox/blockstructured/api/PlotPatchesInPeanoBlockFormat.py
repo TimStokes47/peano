@@ -37,7 +37,10 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
                precision=3,
                select_dofs = None,
                dataType="double",
-               restart_preprocess=False):
+               restart_preprocess=False,
+               patch_scaling=1.0,
+               metadata_evaluation=None,
+               exact_output=False):
     """!
     
       Construct the block plotter
@@ -54,7 +57,24 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
          
       select_dofs: [Int] or None
         You can make the plotter only plot some of the dofs of interest
-           
+
+      patch_scaling: float
+        Factor by which the plotted patch's box is scaled relative to the
+        cell, around the cell's centre. 1.0 plots the patch over the cell.
+        A patch with N dofs per axis plus a halo of M dofs on each side
+        uses (N+2M)/N, so every halo value sits at its true coordinate.
+
+      metadata_evaluation: str or None
+        C++ expression which yields a std::string at runtime. If set, its
+        value replaces metadata in the meta-data block of the file header.
+        Use it for data which is only known when the file is written, such
+        as time stamps.
+
+      exact_output: bool
+        Write the file such that it can be read back without loss, e.g. for
+        a checkpoint (@ref tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::setExactOutput()).
+        Combine it with a precision of 17.
+
     """
     super(PlotPatchesInPeanoBlockFormat,self).__init__(descend_invocation_order=1,parallel=False)
 
@@ -120,6 +140,9 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
     self.d[ "PRECISION" ]        = precision
     self.d[ "DATATYPE"  ]        = dataType
     self.d[ "TIMESTAMP" ]        = time_stamp_evaluation
+    self.d[ "PATCH_SCALING" ]    = patch_scaling
+    self.d[ "METADATA_EVALUATION" ] = metadata_evaluation
+    self.d[ "EXACT_OUTPUT" ]     = exact_output
 
     self._restart_preprocess       = restart_preprocess
 
@@ -171,7 +194,7 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
   __Template_TouchCellFirstTime_CellPlot = """ 
   int vertexIndices[TwoPowerD];
   
-  const double PatchScaling = 1.0;
+  const double PatchScaling = {{PATCH_SCALING}};
 
   assertion( _writer!=nullptr );
   assertion( _dataWriter!=nullptr );
@@ -207,7 +230,7 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
   __Template_TouchCellFirstTime_VertexPlot = """ 
   int vertexIndices[TwoPowerD];
   
-  const double PatchScaling = 1.0;
+  const double PatchScaling = {{PATCH_SCALING}};
 
   assertion( _writer!=nullptr );
   assertion( _dataWriter!=nullptr );
@@ -249,8 +272,11 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
     Dimensions, snapshotFileName.str(), "{{FILENAME}}",
     tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::AppendNewData,
     {{TIMESTAMP}}
-  );    
-      
+  );
+  {% if EXACT_OUTPUT %}
+  _writer->setExactOutput(true);
+  {% endif %}
+
   #if Dimensions==2
   {{MAPPING_2D}}
   #else
@@ -285,20 +311,20 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
 
 
   __Template_BeginTraversal_CellPlot = __Template_BeginTraversal_Generic + """
-  _dataWriter = _writer->createCellDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", "{{METADATA}}", mapping );
+  _dataWriter = _writer->createCellDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", {% if METADATA_EVALUATION %}{{METADATA_EVALUATION}}{% else %}"{{METADATA}}"{% endif %}, mapping );
   _dataWriter->setPrecision( {{PRECISION}} );
 """
   __Template_BeginTraversal_CellPlot_Restart = __Template_BeginTraversal_Generic_Restart + """
-  _dataWriter = _writer->createCellDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", "{{METADATA}}", mapping );
+  _dataWriter = _writer->createCellDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", {% if METADATA_EVALUATION %}{{METADATA_EVALUATION}}{% else %}"{{METADATA}}"{% endif %}, mapping );
   _dataWriter->setPrecision( {{PRECISION}} );
 """
 
   __Template_BeginTraversal_VertexPlot = __Template_BeginTraversal_Generic + """
-  _dataWriter = _writer->createVertexDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", "{{METADATA}}", mapping );
+  _dataWriter = _writer->createVertexDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", {% if METADATA_EVALUATION %}{{METADATA_EVALUATION}}{% else %}"{{METADATA}}"{% endif %}, mapping );
   _dataWriter->setPrecision( {{PRECISION}} );
 """
   __Template_BeginTraversal_VertexPlot_Restart = __Template_BeginTraversal_Generic_Restart + """
-  _dataWriter = _writer->createVertexDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", "{{METADATA}}", mapping );
+  _dataWriter = _writer->createVertexDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", {% if METADATA_EVALUATION %}{{METADATA_EVALUATION}}{% else %}"{{METADATA}}"{% endif %}, mapping );
   _dataWriter->setPrecision( {{PRECISION}} );
 """
 

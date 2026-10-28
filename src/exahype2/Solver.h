@@ -3,6 +3,8 @@
 #pragma once
 
 
+#include <string>
+
 #include "tarch/la/Vector.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 
@@ -104,6 +106,41 @@ class exahype2::Solver {
 
     virtual double getMaxMeshSize() const;
     virtual double getMinMeshSize() const;
+
+    /**
+     * Solver state for the header of a checkpoint
+     *
+     * The checkpoint plotters (@ref exahype2.api.fv.Checkpoint and
+     * @ref exahype2.api.rkfd4.Checkpoint) write the result into the
+     * meta-data block of each Peano patch file. Every line holds one
+     * attribute as key-value pair, with the attribute's name without its
+     * leading underscore as key:
+     *
+     * ~~~~~~~~~~~~~~~~~~~~~~~
+     * minTimeStamp 1.00000000000000006e-01
+     * maxTimeStamp 1.00000000000000006e-01
+     * ~~~~~~~~~~~~~~~~~~~~~~~
+     *
+     * The lines are separated by line breaks. The values carry 17
+     * significant digits, so a double survives the round trip through the
+     * file unchanged.
+     *
+     * The routine writes the time stamps, the time step sizes, the
+     * admissible time step size and the mesh sizes. It leaves out the
+     * bookkeeping of the time step which is currently running (the
+     * *UpdatedThisTimeStep attributes) and the cell update counter.
+     * Generated solvers override it to append their own attributes via
+     * toCheckpointMetaDataEntry().
+     */
+    virtual std::string toCheckpointMetaData() const;
+
+    /**
+     * One line of toCheckpointMetaData()
+     *
+     * @return key and value separated by a blank, with the value in
+     *   scientific notation with 17 significant digits. No line break.
+     */
+    static std::string toCheckpointMetaDataEntry(const std::string& key, double value);
 
     /**
      * Default implementation: always returns true, i.e. every cell uses

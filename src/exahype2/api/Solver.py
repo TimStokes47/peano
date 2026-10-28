@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import abc
+import re
 from typing import Callable, Dict, List, Tuple, Union
 
 import peano4.api
@@ -126,24 +127,64 @@ class Solver(abc.ABC):
         How a Solver writes out its solution. Abstract - concrete solvers
         have to provide a subclass that implements construct_output().
 
-        Each plotter decides itself when to plot. The plotter has to give
-        its solver's C++ class a method
+        A solver can have an arbitrary number of plotters
+        (@ref exahype2.api.Solver.Solver.add_plotter()), e.g. one which
+        writes VTK files for visualisation and one which writes
+        checkpoints. Each plotter has a name which is unique per solver,
+        and it decides itself when it is active. For this, it gives its
+        solver's C++ class a method
+
+        ~~~~~~~~~~~~~~~~~~~~~~~
+        bool is<Name>Active() const;
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        The solver's
 
         ~~~~~~~~~~~~~~~~~~~~~~~
         bool wantsToPlot() const;
         ~~~~~~~~~~~~~~~~~~~~~~~
 
-        (@see Solver.add_abstract_solver_method()). The generated main asks
-        all solvers with a plotter (repositories::wantsToPlot()) and runs
-        the plot phase if any of them wants to plot. Within the plot phase,
-        each plotter then checks its own solver's wantsToPlot() and only
-        writes output if it is true. This way, every solver can have its own
-        plotter with its own settings - @see exahype2.api.fv.PlotAsVTKFile.
+        holds if any of its plotters is active. The generated main asks all
+        solvers with a plotter (repositories::wantsToPlot()) and runs the
+        plot phase if any of them wants to plot. The task graphs of all
+        plotters of all solvers are added to the one plot graph, which the
+        graph compiler then maps onto grid sweeps. Within the plot phase,
+        every action set of a plotter is guarded by its plotter's
+        is<Name>Active(), so only the active plotters do any work.
+
+        is<Name>Active() must not change throughout the plot phase. Each
+        plotter therefore calls its
+
+        ~~~~~~~~~~~~~~~~~~~~~~~
+        void finish<Name>();
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        which moves it on to its next output, in the unprepareTraversal() of
+        its last task, i.e. after all of its tasks have run.
+
+        The class provides this bookkeeping for plotters which write output
+        in regular time intervals (_add_time_interval_bookkeeping_to_solver()).
 
         """
 
-        def __init__(self, solver: "Solver"):
+        def __init__(self, solver: "Solver", name: str = None):
+            """!
+
+            @param solver: exahype2.api.Solver
+              The solver whose solution is written.
+
+            @param name: str or None
+              Name of the plotter, which is unique per solver. It becomes
+              part of the generated C++ method names, i.e. it has to be a
+              valid C++ identifier. If None, the solver derives a name from
+              the plotter's class name once the plotter is added
+              (@ref exahype2.api.Solver.Solver.add_plotter()).
+
+            """
             self._solver = solver
+            if name is not None and not name.isidentifier():
+                raise ValueError(f"Plotter name {name} is no valid C++ identifier")
+            self.name = name
 
         @abc.abstractmethod
         def construct_output(self, exahype2_project, peano_project, plot):
@@ -154,6 +195,113 @@ class Solver(abc.ABC):
               The task graph of the surrounding exahype2_project's plotting
               phase, so the plotter can add its own tasks into it.
             """
+
+        def output_file_prefix(self) -> str:
+            """!
+
+            Prefix of the files the plotter writes, including the path
+
+            The solver uses it to ensure that no two plotters write into
+            the same files. Plotters which write no files return None.
+
+            """
+            return None
+
+        def create_is_active_predicate(self) -> str:
+            """!
+
+            C++ predicate which holds if the plotter is active
+
+            Combine the guards of all of the plotter's action sets with it.
+
+            """
+            return (
+                "repositories::"
+                + self._solver.get_name_of_global_instance()
+                + ".is"
+                + self.name
+                + "Active()"
+            )
+
+        def create_finish_call(self) -> str:
+            """!
+
+            C++ statement which moves the plotter on to its next output
+
+            Insert it into the unprepareTraversal() of the plotter's last
+            task.
+
+            """
+            return (
+                "repositories::"
+                + self._solver.get_name_of_global_instance()
+                + ".finish"
+                + self.name
+                + "();\n"
+            )
+
+        def _add_time_interval_bookkeeping_to_solver(
+            self, first_time_stamp: float, time_in_between: float
+        ):
+            """!
+
+            Make the plotter active in regular time intervals
+
+            Add the attribute _next<Name>TimeStamp plus the methods
+            is<Name>Active() and finish<Name>() to the solver's C++ class.
+            The plotter is active as soon as the solver's min time stamp has
+            reached _next<Name>TimeStamp. finish<Name>() then increments
+            _next<Name>TimeStamp by time_in_between.
+
+            The solver keeps these members once added, so we add them only
+            once, even if the Peano 4 project is generated multiple times.
+
+            @param first_time_stamp: float
+              Time stamp of the first output.
+
+            @param time_in_between: float
+              Time in between two outputs. Has to be positive.
+
+            """
+            attribute = (
+                "double _next"
+                + self.name
+                + "TimeStamp = "
+                + repr(float(first_time_stamp))
+                + ";"
+            )
+            if attribute in self._solver._abstract_solver_attributes:
+                return
+
+            self._solver.add_abstract_solver_attribute(attribute)
+            self._solver.add_abstract_solver_method(
+                "bool is" + self.name + "Active() const;",
+                lambda qualified_class_name: "bool "
+                + qualified_class_name
+                + "::is"
+                + self.name
+                + "Active() const {\n"
+                "  return tarch::la::greaterEquals(getMinTimeStamp(), _next"
+                + self.name
+                + "TimeStamp);\n"
+                "}\n",
+            )
+            self._solver.add_abstract_solver_method(
+                "void finish" + self.name + "();",
+                lambda qualified_class_name: "void "
+                + qualified_class_name
+                + "::finish"
+                + self.name
+                + "() {\n"
+                "  if (is" + self.name + "Active()) {\n"
+                "    _next"
+                + self.name
+                + "TimeStamp += "
+                + repr(float(time_in_between))
+                + ";\n"
+                "  }\n"
+                "}\n",
+            )
 
     class MeshAdaptation(abc.ABC):
         """!
@@ -328,11 +476,10 @@ class Solver(abc.ABC):
         # grid_construction attribute below.
         self.grid_construction: "Solver.GridConstruction" = None
 
-        # Plotter has no default realisation - concrete solver subclasses
-        # (or their users) have to assign their own Solver.Plotter subclass
-        # instance to it, e.g. exahype2.api.fv.PlotAsVTKFile, through the
-        # plotter attribute below.
-        self.plotter: "Solver.Plotter" = None
+        # Plotters have no default realisation - users add their own
+        # Solver.Plotter subclass instances, e.g.
+        # exahype2.api.fv.PlotAsVTKFile, via add_plotter().
+        self._plotters: List["Solver.Plotter"] = []
 
         # MeshAdaptation is optional. Without one, the solver does not
         # contribute to the mesh adaptation phase. Users can assign their
@@ -408,6 +555,83 @@ class Solver(abc.ABC):
                 f"{type(value)}"
             )
         self._numerical_scheme = value
+
+    @property
+    def plotters(self) -> List["Solver.Plotter"]:
+        """!
+        All plotters of the solver, in the order they have been added.
+        """
+        return list(self._plotters)
+
+    def add_plotter(self, plotter: "Solver.Plotter"):
+        """!
+
+        Add a plotter to the solver
+
+        A solver can have an arbitrary number of plotters, which are
+        independent of each other (@ref exahype2.api.Solver.Solver.Plotter).
+        If the plotter has no name yet, it gets the name of its class,
+        followed by a number if the solver has another plotter of that name
+        already.
+
+        @param plotter: exahype2.api.Solver.Plotter
+          The plotter. Its solver has to be this solver.
+
+        """
+        if not isinstance(plotter, Solver.Plotter):
+            raise TypeError(
+                f"plotter has to be a Solver.Plotter, but got {type(plotter)}"
+            )
+        if plotter._solver is not self:
+            raise ValueError(
+                f"Plotter {type(plotter).__name__} belongs to another solver than {self._name}"
+            )
+        names = [p.name for p in self._plotters]
+        if plotter.name is None:
+            name = type(plotter).__name__
+            counter = 2
+            while name in names:
+                name = type(plotter).__name__ + str(counter)
+                counter += 1
+            plotter.name = name
+        elif plotter.name in names:
+            raise ValueError(
+                f"Solver {self._name} has a plotter named {plotter.name} already"
+            )
+        prefix = plotter.output_file_prefix()
+        if prefix is not None and prefix in [
+            p.output_file_prefix() for p in self._plotters
+        ]:
+            raise ValueError(
+                f"Plotter {plotter.name} of solver {self._name} would write into "
+                f"the files {prefix}* of another plotter. Give it another file "
+                "name or output path."
+            )
+        self._plotters.append(plotter)
+
+    @property
+    def plotter(self) -> "Solver.Plotter":
+        """!
+
+        Shorthand for solvers with at most one plotter
+
+        Reading it yields the solver's only plotter, or None if it has none.
+        Assigning a plotter replaces all plotters of the solver by this one,
+        assigning None removes all plotters. Use add_plotter() to give a
+        solver more than one plotter.
+
+        """
+        if len(self._plotters) > 1:
+            raise RuntimeError(
+                f"Solver {self._name} has {len(self._plotters)} plotters. Use the plotters property."
+            )
+        return self._plotters[0] if self._plotters else None
+
+    @plotter.setter
+    def plotter(self, value: "Solver.Plotter"):
+        self._plotters = []
+        if value is not None:
+            self.add_plotter(value)
 
     @property
     def unknowns(self) -> int:
@@ -613,6 +837,74 @@ class Solver(abc.ABC):
         """
         self._abstract_solver_methods.append((declaration, definition_generator))
 
+    def _add_wants_to_plot_to_solver(self):
+        """!
+
+        Add wantsToPlot() to the solver's C++ class: It holds if any of the
+        solver's plotters is active (@ref exahype2.api.Solver.Solver.Plotter).
+        Solvers without plotters do not get the method, as nobody asks them.
+        The method is added only once, even if the Peano 4 project is
+        generated multiple times, and it evaluates the plotters the solver
+        has when the C++ code is written.
+
+        """
+        declaration = "bool wantsToPlot() const;"
+        if not self._plotters or declaration in [
+            existing for existing, _ in self._abstract_solver_methods
+        ]:
+            return
+        self.add_abstract_solver_method(
+            declaration,
+            lambda qualified_class_name: "bool "
+            + qualified_class_name
+            + "::wantsToPlot() const {\n"
+            "  return "
+            + " or ".join("is" + p.name + "Active()" for p in self._plotters)
+            + ";\n"
+            "}\n",
+        )
+
+    def _add_checkpoint_meta_data_to_solver(self):
+        """!
+
+        Override exahype2::Solver::toCheckpointMetaData() in the solver's
+        C++ class such that it also writes the attributes added through
+        add_abstract_solver_attribute(), e.g. the time stamps of the next
+        outputs of the plotters. Only attributes of type double, float or
+        int are written, with their name without leading underscore as key.
+
+        The override evaluates the attributes the solver has when the C++
+        code is written, and it is added only once, even if several
+        checkpoints use it or the Peano 4 project is generated multiple
+        times.
+
+        """
+        declaration = "std::string toCheckpointMetaData() const override;"
+        if declaration in [existing for existing, _ in self._abstract_solver_methods]:
+            return
+
+        def definition(qualified_class_name):
+            result = (
+                "std::string "
+                + qualified_class_name
+                + "::toCheckpointMetaData() const {\n"
+                "  return ::exahype2::Solver::toCheckpointMetaData()"
+            )
+            for attribute in self._abstract_solver_attributes:
+                match = re.match(r"\s*(?:double|float|int)\s+(\w+)\s*(=|;)", attribute)
+                if match is not None:
+                    attribute_name = match.group(1)
+                    result += (
+                        '\n    + "\\n" + toCheckpointMetaDataEntry("'
+                        + attribute_name.lstrip("_")
+                        + '", '
+                        + attribute_name
+                        + ")"
+                    )
+            return result + ";\n}\n"
+
+        self.add_abstract_solver_method(declaration, definition)
+
     # @todo This one is important
     def create_readme_descriptor(self, domain_offset, domain_size) -> str:
         """!
@@ -671,8 +963,9 @@ class Solver(abc.ABC):
         self.numerical_scheme.construct_output(
             exahype2_project, peano_project, time_step
         )
-        if self.plotter is not None:
-            self.plotter.construct_output(exahype2_project, peano_project, plot)
+        for plotter in self._plotters:
+            plotter.construct_output(exahype2_project, peano_project, plot)
+        self._add_wants_to_plot_to_solver()
         if self.mesh_adaptation is not None:
             self.mesh_adaptation.construct_output(
                 exahype2_project, peano_project, mesh_adaptation

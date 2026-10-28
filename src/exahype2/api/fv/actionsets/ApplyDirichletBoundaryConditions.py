@@ -141,7 +141,14 @@ class ApplyDirichletBoundaryConditions(ActionSet):
         )
 
     @staticmethod
-    def add_task_to_time_step(solver, exahype2_project, time_step, reconstruction_task):
+    def add_task_to_time_step(
+        solver,
+        exahype2_project,
+        time_step,
+        reconstruction_task,
+        name_suffix="",
+        additional_guard="true",
+    ):
         """!
 
         Add the boundary task in front of a Finite Volume reconstruction
@@ -168,6 +175,15 @@ class ApplyDirichletBoundaryConditions(ActionSet):
           The task reading solver._patch_overlap_current_time_step to
           reconstruct the patches' halos.
 
+        @param name_suffix: str
+          Appended to the task's name. The names of all tasks within one
+          graph have to differ.
+
+        @param additional_guard: str
+          C++ predicate which is combined with the guard of the boundary
+          action set, e.g. the is<Name>Active() of a plotter which
+          reconstructs the halo (@ref exahype2.api.fv.Checkpoint).
+
         @return peano4.api.taskgraph.Task or None
           The boundary task, or None if no Dirichlet task is required.
 
@@ -179,7 +195,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
             return None
 
         boundary_task = peano4.api.taskgraph.Task(
-            name=f"{solver.name}_Apply Dirichlet BCs",
+            name=f"{solver.name}_Apply Dirichlet BCs{name_suffix}",
             entity=peano4.api.taskgraph.Task.GridEntity.FACE,
         )
         boundary_task.use_face(
@@ -190,7 +206,11 @@ class ApplyDirichletBoundaryConditions(ActionSet):
             ApplyDirichletBoundaryConditions(
                 solver,
                 solver._patch_overlap_current_time_step,
-                guard=solver.grid_selector.createFaceGuard(),
+                guard="("
+                + additional_guard
+                + ") and ("
+                + solver.grid_selector.createFaceGuard()
+                + ")",
             )
         )
         time_step.add_task(boundary_task)
