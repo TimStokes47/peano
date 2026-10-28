@@ -28,7 +28,7 @@ class Checkpoint(Solver.Plotter):
       boundary (Dirichlet boundary conditions), interpolates the hanging
       faces on adaptive meshes and gathers patch and face data into
       solver._patch_with_halo
-      (@ref toolbox.blockstructured.api.ReconstructPatchWithHalo). A patch
+      (@ref toolbox.blockstructured.api.ReconstructPatchWithHalo.ReconstructPatchWithHalo). A patch
       with N grid cells per axis and a halo of M grid cells is written as a
       patch with N+2M grid cells per axis. Its box covers the cell plus the
       halo, so every grid cell sits at its true position, and neighbouring
@@ -43,7 +43,7 @@ class Checkpoint(Solver.Plotter):
       plus the attributes the Python API adds to the solver's class, e.g.
       the time stamps of the next outputs of all of its plotters.
 
-    The files are called checkpoint-<solver name> by default. A solver can
+    The files are called checkpoint-SolverName by default. A solver can
     have a checkpoint next to its other plotters
     (@ref exahype2.api.Solver.Solver.add_plotter()).
 
@@ -86,7 +86,7 @@ class Checkpoint(Solver.Plotter):
           Directory the checkpoint files are written into.
 
         @param filename: str
-          The checkpoint files are called filename-<solver name>.
+          The checkpoint files are called filename-SolverName.
 
         @param name: str or None
           Name of the plotter (@ref exahype2.api.Solver.Solver.Plotter).

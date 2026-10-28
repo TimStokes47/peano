@@ -104,7 +104,7 @@ class PlotAsVTKFile(Solver.Plotter):
           Directory the plot files are written into.
 
         @param filename: str
-          The plot files are called filename-<solver name>. Plotters of the
+          The plot files are called filename-SolverName. Plotters of the
           same solver have to use different file names or output paths.
 
         @param name: str or None
