@@ -1,5 +1,5 @@
 """Unit tests for multiple plotters per solver (@ref exahype2.api.Solver.Solver.add_plotter())
-and the checkpoints (@ref exahype2.api.fv.Checkpoint, @ref exahype2.api.rkfd4.Checkpoint)."""
+and the checkpoints (@ref exahype2.api.fv.WriteCheckpoint, @ref exahype2.api.rkfd4.WriteCheckpoint)."""
 
 import types
 
@@ -48,11 +48,11 @@ def test_plotters_get_names_from_class_and_counter():
     solver = _solver()
     solver.add_plotter(exahype2.api.fv.PlotAsVTKFile(solver))
     solver.add_plotter(exahype2.api.fv.PlotAsVTKFile(solver, filename="other"))
-    solver.add_plotter(exahype2.api.fv.Checkpoint(solver))
+    solver.add_plotter(exahype2.api.fv.WriteCheckpoint(solver))
     assert [p.name for p in solver.plotters] == [
         "PlotAsVTKFile",
         "PlotAsVTKFile2",
-        "Checkpoint",
+        "WriteCheckpoint",
     ]
 
 
@@ -78,10 +78,10 @@ def test_plotter_shorthand_replaces_all_plotters():
     solver = _solver()
     assert solver.plotter is None
     solver.add_plotter(exahype2.api.fv.PlotAsVTKFile(solver))
-    solver.add_plotter(exahype2.api.fv.Checkpoint(solver))
+    solver.add_plotter(exahype2.api.fv.WriteCheckpoint(solver))
     with pytest.raises(RuntimeError):
         solver.plotter
-    checkpoint = exahype2.api.fv.Checkpoint(solver)
+    checkpoint = exahype2.api.fv.WriteCheckpoint(solver)
     solver.plotter = checkpoint
     assert solver.plotters == [checkpoint]
     solver.plotter = None
@@ -93,7 +93,9 @@ def test_each_plotter_gets_own_bookkeeping_and_wants_to_plot_combines_them(tmp_p
     solver.add_plotter(
         exahype2.api.fv.PlotAsVTKFile(solver, time_in_between_plots=0.25)
     )
-    solver.add_plotter(exahype2.api.fv.Checkpoint(solver, first_plot_time_stamp=0.5))
+    solver.add_plotter(
+        exahype2.api.fv.WriteCheckpoint(solver, first_plot_time_stamp=0.5)
+    )
     _plot_graph(solver, tmp_path)
     solver._add_wants_to_plot_to_solver()
     solver._add_wants_to_plot_to_solver()
@@ -103,26 +105,27 @@ def test_each_plotter_gets_own_bookkeeping_and_wants_to_plot_combines_them(tmp_p
         in solver._abstract_solver_attributes
     )
     assert (
-        "double _nextCheckpointTimeStamp = 0.5;" in solver._abstract_solver_attributes
+        "double _nextWriteCheckpointTimeStamp = 0.5;"
+        in solver._abstract_solver_attributes
     )
     assert "_nextPlotAsVTKFileTimeStamp += 0.25;" in _method_definition(
         solver, "void finishPlotAsVTKFile();"
     )
     wants_to_plot = _method_definition(solver, "bool wantsToPlot() const;")
-    assert "isPlotAsVTKFileActive() or isCheckpointActive()" in wants_to_plot
+    assert "isPlotAsVTKFileActive() or isWriteCheckpointActive()" in wants_to_plot
 
 
 def test_checkpoint_meta_data_lists_added_attributes(tmp_path):
     solver = _solver()
     solver.add_plotter(exahype2.api.fv.PlotAsVTKFile(solver))
-    solver.add_plotter(exahype2.api.fv.Checkpoint(solver))
+    solver.add_plotter(exahype2.api.fv.WriteCheckpoint(solver))
     _plot_graph(solver, tmp_path)
     definition = _method_definition(
         solver, "std::string toCheckpointMetaData() const override;"
     )
     assert definition.count("toCheckpointMetaDataEntry(") == 2
     assert (
-        'toCheckpointMetaDataEntry("nextCheckpointTimeStamp", _nextCheckpointTimeStamp)'
+        'toCheckpointMetaDataEntry("nextWriteCheckpointTimeStamp", _nextWriteCheckpointTimeStamp)'
         in definition
     )
 
@@ -145,28 +148,28 @@ def test_vtk_plotter_selects_quantities(tmp_path):
 
 def test_checkpoint_has_neither_filters_nor_quantities():
     solver = _solver()
-    checkpoint = exahype2.api.fv.Checkpoint(solver)
+    checkpoint = exahype2.api.fv.WriteCheckpoint(solver)
     assert not hasattr(checkpoint, "add_plot_filter")
     with pytest.raises(TypeError):
-        exahype2.api.fv.Checkpoint(solver, quantities=["rho"])
+        exahype2.api.fv.WriteCheckpoint(solver, quantities=["rho"])
 
 
 @pytest.mark.parametrize("scheme,halo", [("fv", 1), ("fd4", 2)])
 def test_checkpoint_reconstructs_and_writes_patch_with_halo(tmp_path, scheme, halo):
     solver = _solver(scheme, dirichlet=True)
     solver.add_plotter(
-        exahype2.api.fv.Checkpoint(solver)
+        exahype2.api.fv.WriteCheckpoint(solver)
         if scheme == "fv"
-        else exahype2.api.rkfd4.Checkpoint(solver)
+        else exahype2.api.rkfd4.WriteCheckpoint(solver)
     )
     graph = _plot_graph(solver, tmp_path, periodic=False)
     names = sorted(task.name for task in graph.tasks)
     assert names == [
-        "Probe_Apply Dirichlet BCs for Checkpoint",
-        "Probe_Checkpoint_Reconstruct",
-        "Probe_Checkpoint_Write checkpoint",
+        "Probe_Apply Dirichlet BCs for WriteCheckpoint",
+        "Probe_WriteCheckpoint_Reconstruct",
+        "Probe_WriteCheckpoint_Write checkpoint",
     ]
-    active = "repositories::instanceOfProbe.isCheckpointActive()"
+    active = "repositories::instanceOfProbe.isWriteCheckpointActive()"
     for task in graph.tasks:
         for action_set in task.action_sets:
             for operation in [
@@ -188,4 +191,4 @@ def test_checkpoint_reconstructs_and_writes_patch_with_halo(tmp_path, scheme, ha
     assert action_set.d["METADATA_EVALUATION"] == (
         "repositories::instanceOfProbe.toCheckpointMetaData()"
     )
-    assert "finishCheckpoint();" in action_set.get_body_of_unprepareTraversal()
+    assert "finishWriteCheckpoint();" in action_set.get_body_of_unprepareTraversal()

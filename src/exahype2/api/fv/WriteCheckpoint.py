@@ -10,7 +10,7 @@ from .PlotAsVTKFile import _PlotPatchesIfPlotterIsActive
 from .actionsets import ApplyDirichletBoundaryConditions
 
 
-class Checkpoint(Solver.Plotter):
+class WriteCheckpoint(Solver.Plotter):
     """!
 
     Write checkpoints of a Finite Volume solver
@@ -126,7 +126,7 @@ class Checkpoint(Solver.Plotter):
         ]:
             assert hasattr(self._solver, attribute), (
                 f"Solver {self._solver.name} has no attribute {attribute}. "
-                "Checkpoint assumes the numerical scheme has added this field "
+                "WriteCheckpoint assumes the numerical scheme has added this field "
                 "to the solver immediately upon construction."
             )
 

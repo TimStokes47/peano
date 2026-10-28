@@ -10,7 +10,7 @@ from .PlotAsVTKFile import _PlotPatchesIfPlotterIsActive
 from .actionsets import ApplyDirichletBoundaryConditions
 
 
-class Checkpoint(Solver.Plotter):
+class WriteCheckpoint(Solver.Plotter):
     """!
 
     Write checkpoints of the fourth-order Finite Differences
@@ -52,7 +52,7 @@ class Checkpoint(Solver.Plotter):
     conditions overwrite the ghost grid cells with the values they have at
     the current time stamp anyway, and the next time step sets them again.
 
-    The class is the counterpart of exahype2.api.fv.Checkpoint, as rkfd4
+    The class is the counterpart of exahype2.api.fv.WriteCheckpoint, as rkfd4
     does not depend on the Finite Volume package.
 
     """
@@ -130,7 +130,7 @@ class Checkpoint(Solver.Plotter):
         ]:
             assert hasattr(self._solver, attribute), (
                 f"Solver {self._solver.name} has no attribute {attribute}. "
-                "Checkpoint assumes the numerical scheme has added this field "
+                "WriteCheckpoint assumes the numerical scheme has added this field "
                 "to the solver immediately upon construction."
             )
 

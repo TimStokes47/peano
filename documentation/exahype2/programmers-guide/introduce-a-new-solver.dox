@@ -127,7 +127,7 @@ exercises all four building blocks against the task-graph architecture:
 - `PlotAsVTKFile.py` - Solver.Plotter, maps the patch data onto a plot mesh
   and writes it as VTK. It can be restricted to some of the quantities and
   to boxes of the domain.
-- `Checkpoint.py` - Solver.Plotter, reconstructs the patches' halos and
+- `WriteCheckpoint.py` - Solver.Plotter, reconstructs the patches' halos and
   writes the patches with halo plus the solver's state without loss.
 
 A new discretisation typically needs its own patch/data layout and its own
@@ -160,7 +160,7 @@ thesolver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False))
 thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver, patch_size)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(thesolver, volume_size=...)
 thesolver.add_plotter(exahype2.api.fv.PlotAsVTKFile(thesolver))
-thesolver.add_plotter(exahype2.api.fv.Checkpoint(thesolver, time_in_between_plots=1.0))
+thesolver.add_plotter(exahype2.api.fv.WriteCheckpoint(thesolver, time_in_between_plots=1.0))
 
 project.add_solver(thesolver)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

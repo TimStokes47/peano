@@ -205,7 +205,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
         @param additional_guard: str
           C++ predicate which is combined with the guard of the boundary
           action set, e.g. the is<Name>Active() of a plotter which
-          reconstructs the halo (@ref exahype2.api.rkfd4.Checkpoint).
+          reconstructs the halo (@ref exahype2.api.rkfd4.WriteCheckpoint).
 
         @return peano4.api.taskgraph.Task or None
           The boundary task, or None if no Dirichlet task is required.

@@ -26,7 +26,7 @@ Its DSLHyPE kernels reside in @ref exahype2.api.rkfd4.FD4Kernels.
 from .CentralDifferencesWithRungeKutta import CentralDifferencesWithRungeKutta
 from .SetupSimulationOverRegularGrid import SetupSimulationOverRegularGrid
 from .PlotAsVTKFile import PlotAsVTKFile
-from .Checkpoint import Checkpoint
+from .WriteCheckpoint import WriteCheckpoint
 from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
 from . import actionsets
 from . import Quantities

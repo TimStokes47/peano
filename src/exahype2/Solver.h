@@ -110,8 +110,8 @@ class exahype2::Solver {
     /**
      * Solver state for the header of a checkpoint
      *
-     * The checkpoint plotters (@ref exahype2.api.fv.Checkpoint and
-     * @ref exahype2.api.rkfd4.Checkpoint) write the result into the
+     * The checkpoint plotters (@ref exahype2.api.fv.WriteCheckpoint and
+     * @ref exahype2.api.rkfd4.WriteCheckpoint) write the result into the
      * meta-data block of each Peano patch file. Every line holds one
      * attribute as key-value pair, with the attribute's name without its
      * leading underscore as key:
