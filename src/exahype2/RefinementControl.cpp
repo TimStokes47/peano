@@ -53,6 +53,64 @@ exahype2::RefinementControl::~RefinementControl() {
 
 void exahype2::RefinementControl::clear() {
   _newEvents.clear();
+  _newSiblingEraseEvents.clear();
+}
+
+
+peano4::grid::GridControlEvent exahype2::RefinementControl::createEraseEvent(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  const tarch::la::Vector<Dimensions,double>&  h
+) const {
+  tarch::la::Vector<Dimensions,double> expandedWidth   = (1.0+_Tolerance) * h;
+  tarch::la::Vector<Dimensions,double> shift           = 0.5 * (expandedWidth - h);
+  tarch::la::Vector<Dimensions,double> refinedMeshSize = 3.1 * h;
+
+  peano4::grid::GridControlEvent newEvent(
+    peano4::grid::GridControlEvent::RefinementControl::Erase,
+    x-0.5 * h - shift,
+    expandedWidth,
+    refinedMeshSize
+  );
+
+  assertionNumericalEquals1( newEvent.getWidth(0), newEvent.getWidth(1), newEvent.toString() );
+  assertionNumericalEquals1( newEvent.getH(0), newEvent.getH(1), newEvent.toString() );
+  return newEvent;
+}
+
+
+void exahype2::RefinementControl::addCommand(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  const tarch::la::Vector<Dimensions,double>&  h,
+  exahype2::RefinementCommand                  command,
+  int                                          lifetime,
+  const tarch::la::Vector<Dimensions,int>&     relativePositionWithinFatherCell
+) {
+  if (command != ::exahype2::RefinementCommand::Erase) {
+    addCommand(x, h, command, lifetime);
+    return;
+  }
+
+  logTraceInWith3Arguments( "addCommand()", x, h, relativePositionWithinFatherCell );
+  assertion(lifetime>=1);
+
+  SiblingEraseEvent newEvent;
+  newEvent.event                = createEraseEvent(x, h);
+  newEvent.lifetime             = lifetime;
+  newEvent.parentH              = 3.0 * h;
+  newEvent.positionWithinParent = 0;
+  int base = 1;
+  for (int d=0; d<Dimensions; d++) {
+    assertion2( relativePositionWithinFatherCell(d)>=0 and relativePositionWithinFatherCell(d)<=2, relativePositionWithinFatherCell, x );
+    // The parent's lower left corner is x - h/2 - position*h, its centre lies
+    // 1.5h further
+    newEvent.parentCentre(d)       = x(d) + (1.0 - relativePositionWithinFatherCell(d)) * h(d);
+    newEvent.positionWithinParent += relativePositionWithinFatherCell(d) * base;
+    base *= 3;
+  }
+
+  tarch::multicore::Lock lock( _semaphore );
+  _newSiblingEraseEvents.push_back( newEvent );
+  logTraceOutWith1Argument( "addCommand()", _newSiblingEraseEvents.size() );
 }
 
 
@@ -90,19 +148,7 @@ void exahype2::RefinementControl::addCommand(
       break;
     case ::exahype2::RefinementCommand::Erase:
       {
-        tarch::la::Vector<Dimensions,double> expandedWidth   = (1.0+_Tolerance) * h;
-        tarch::la::Vector<Dimensions,double> shift           = 0.5 * (expandedWidth - h);
-        tarch::la::Vector<Dimensions,double> refinedMeshSize = 3.1 * h;
-
-        peano4::grid::GridControlEvent newEvent(
-          peano4::grid::GridControlEvent::RefinementControl::Erase,
-          x-0.5 * h - shift,
-          expandedWidth,
-          refinedMeshSize
-        );
-
-        assertionNumericalEquals1( newEvent.getWidth(0), newEvent.getWidth(1), newEvent.toString() );
-        assertionNumericalEquals1( newEvent.getH(0), newEvent.getH(1), newEvent.toString() );
+        peano4::grid::GridControlEvent newEvent = createEraseEvent(x, h);
         _newEvents.push_back( std::pair<peano4::grid::GridControlEvent,int>(newEvent, lifetime) );
         logDebug( "addCommend()", "added erase for x=" << x << ", h=" << h << ": " << newEvent.toString() << " (total of " << _newEvents.size() << " instructions)" );
       }

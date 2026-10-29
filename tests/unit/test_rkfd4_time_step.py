@@ -61,7 +61,7 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
         "Probe_Project stage 2 onto faces",
         "Probe_Project solution onto faces",
         "Probe_Compute time step size",
-        "Probe_Trigger load balancing",
+        "Probe_Dynamic mesh refinement",
     }
     for stage in [1, 2]:
         assert (

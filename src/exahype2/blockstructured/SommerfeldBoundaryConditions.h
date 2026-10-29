@@ -263,7 +263,7 @@ namespace exahype2 {
      * exahype2.api.rkfd4 then replace their roll over with
      * RollOverUpdatedFaceWithSommerfeldBoundaryConditions. The schemes do not
      * add a separate boundary task to their time step in this case (@ref
-     * exahype2.api.BoundaryConditions).
+     * exahype2.api.blockstructured.BoundaryConditions).
      *
      * A scheme has to take care of four further points:
      *
@@ -297,7 +297,7 @@ namespace exahype2 {
      *    faceDataOld. Within a task graph, every task of the time step
      *    which uses the persistent face data hence has to declare it as
      *    READ_AND_WRITE (@ref
-     *    exahype2.api.BoundaryConditions.get_access_to_persistent_face_data()).
+     *    exahype2.api.blockstructured.BoundaryConditions.get_access_to_persistent_face_data()).
      *    Otherwise, the generated code neither stores the face data after
      *    the reconstruction nor loads it before the projection, and the
      *    routine reads garbage.

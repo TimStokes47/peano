@@ -2,34 +2,40 @@
 
 @mainpage Peano
 
+[![SQAaaS badge shields.io](https://img.shields.io/badge/sqaaas%20software-silver-lightgrey)](https://api.eu.badgr.io/public/assertions/uhyUShBWT1Wfd0Vx3EoMrQ "SQAaaS silver badge achieved")
+
 @image html documentation/Peano-logo.png
+
+<br />
+<div align="center" style="background-color: #ccc ; padding: 10px; border: 1px solid green;">
+ <b>
+  <a href="http://www.peano-framework.org">Website</a> &bull;
+  <a href="https://hpcsoftware.pages.gitlab.lrz.de/Peano/">Documentation</a> &bull;
+  <a href="https://gitlab.lrz.de/hpcsoftware/Peano">Repository</a> &bull;
+  <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/tags">Tags</a> &bull;
+  <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/releases">Releases</a>
+ </b>
+</div>
 
 \tableofcontents
 
 
 Peano is an open source framework for solvers on dynamically adaptive Cartesian meshes.
-It is written in C++, but many tools around it are Python.
+Its core is written in C++, but many tools around it are written in Python.
 Peano is based upon the fact that spacetrees, a generalisation of the
 classical octree concept, yield a cascade of adaptive Cartesian grids.
 Consequently, any spacetree traversal is equivalent to an element-wise
 traversal of the hierarchy of the adaptive Cartesian grids. The software
-Peano  realises such a grid traversal and storage algorithm, and it provides
+Peano realises such a grid traversal and storage algorithm, and it provides
 hook-in points for applications performing per-element, per-vertex, and so
-forth operations on the grid. It also provides interfaces for dynamic load
-balancing, sophisticated geometry representations, and other features.
+forth operations on the grid. It takes care of mesh management, data storage,
+domain decomposition and the mesh traversal, and it provides interfaces for
+dynamic load balancing, sophisticated geometry representations, and other
+features. Peano is free software and currently available in its fourth
+generation.
 
 
 <table border="0">
- <tr>
-  <td>
-   @image html documentation/icons/exagrype.png width=200px
-   @ref applications_exahype2_ExaGRyPE
-  </td>
-  <td>
-   @image html documentation/icons/exaseis.jpg width=200px
-   @ref applications_exahype2_exaseis
-  </td>
- </tr>
  <tr>
   <td>
    @image html documentation/exahype2/ExaHyPE-logo.jpg width=200px
@@ -44,30 +50,67 @@ balancing, sophisticated geometry representations, and other features.
    @ref page_exaparty_home
   </td>
  </tr>
+ <tr>
+  <td>
+   @image html documentation/icons/exagrype.png width=200px
+   @ref page_exagrype
+  </td>
+  <td>
+   @image html documentation/icons/exaseis.jpg width=200px
+   @ref applications_exahype2_exaseis
+  </td>
+  <td>
+  </td>
+ </tr>
 </table>
 
 
-On top of Peano, we have created multiple extensions which use this meshing infrastructure for particular application domains.
-Examples are extensions for SPH (@ref page_exaparty_home), hyperbolic solvers (@ref page_exahype2_home) or multigrid (@ref page_multigrid_home).
-The @ref page_architecture_home "architecture page" provides an overview including some illustrations.
-Again, the extensions are kind of tools that allow you to write simulations for your particular domain.
-They are typically not "ready to use" products, even though some of these applications can almost be used as such.
+On top of Peano, we have created multiple extensions which use this meshing
+infrastructure for particular application domains: hyperbolic PDE solvers
+(@ref page_exahype2_home), multigrid solvers (@ref page_multigrid_home) and
+SPH (@ref page_exaparty_home, formerly known as Swift 2).
+The @ref page_architecture_home "architecture page" provides an overview
+including some illustrations.
+The extensions are tools that allow you to write simulations for your
+particular domain.
+They are typically not "ready to use" products, even though some of them can
+almost be used as such.
 
-On top of these extensions, we in return implement various applications. 
-@ref applications_exahype2_ExaGRyPE and @ref applications_exahype2_exaseis are popular examples.
-You find more examples of applications in the respective subdirectories.
-
+On top of these extensions, we in return implement various applications.
+@ref page_exagrype (numerical general relativity) and
+@ref applications_exahype2_exaseis (seismology) are popular examples.
+You find more applications in the respective subdirectories.
 
 
 <br /><br />
-<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
-Peano (with any extension) is <b>not</b> a code. It is a tool to build your code. 
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;">
+Peano (with any extension) is <b>not</b> a code. It is a tool to build your code.
 However, some of the applications built on top of Peano with all its toolboxes and extensions provide "ready to use" options.
 All components are integrated into one repository, one code base, and documented on these pages.
 </div>
 
 
 
+# Getting Peano
+
+Peano is hosted on the
+<a href="https://gitlab.lrz.de/hpcsoftware/Peano">LRZ GitLab</a>.
+We do not provide regular snapshots.
+Instead, clone the repository and use the latest version of the default branch
+<tt>p4</tt>:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+git clone -b p4 https://gitlab.lrz.de/hpcsoftware/Peano.git
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tagged versions are listed under
+<a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/tags">Tags</a> and
+<a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/releases">Releases</a>.
+After that, follow the @ref page_installation_home "installation guide".
+For HPC systems and reproducible environments, we also maintain
+@ref page_installation_with_spack "Spack packages",
+@ref page_installation_with_docker "Dockerfiles" and
+@ref page_installation_with_apptainer "Apptainer definition files".
 
 
 # Content
@@ -108,23 +151,79 @@ All components are integrated into one repository, one code base, and documented
 
 <hr>
 
-This is the documentation of Peano which is generated automatically through Doxygen.
-Peano comprises the core Peano 4 modules, the Python API, and a set of Peano extensions as well as benchmarks.
-The most important extensions at the moment are ExaHyPE 2, our PETSc toolkit and a prototype version of ExaParty.
+This is the documentation of Peano, generated automatically through Doxygen.
+The latest version is published at
+<a href="https://hpcsoftware.pages.gitlab.lrz.de/Peano/">hpcsoftware.pages.gitlab.lrz.de/Peano</a>.
+To build it locally, run
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+doxygen documentation/Doxyfile
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+from the repository root.
+The output is written to <tt>doxygen-html/html</tt>.
+Peano comprises the core Peano 4 modules, the Python API, and a set of Peano
+extensions as well as benchmarks.
+The most important extensions at the moment are ExaHyPE 2, MGHyPE (our
+multigrid and PETSc toolkit) and ExaParty.
+
+
+# Citing Peano
+
+Most users work with Peano through one of its Python APIs.
+These generate the glue code and a makefile, plus a Readme file which lists
+the Peano components that your code uses and the papers to cite for each of
+them.
+Please consult this file when you publish results.
+
+If you want to cite Peano in general, please use
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+@article{Weinzierl:2019:Peano,
+  author  = {Weinzierl, Tobias},
+  title   = {The Peano Software---Parallel, Automaton-based, Dynamically Adaptive Grid Traversals},
+  journal = {ACM Transactions on Mathematical Software},
+  volume  = {45},
+  number  = {2},
+  articleno = {14},
+  year    = {2019},
+  doi     = {10.1145/3319797}
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The file <tt>CITATION.cff</tt> in the repository root holds the citation
+metadata of the software itself, including the list of contributors.
+
+
+# Contributing, code of conduct and licence
+
+Contributions are <b>welcome and very much appreciated</b>.
+If you want to merge your work into the main code base, contact us and we will
+give you write access to the repository.
+The contribution guide <tt>CONTRIBUTING.md</tt> in the repository root and the
+@ref page_developer_guidelines_home "developer guidelines" provide more details.
+We follow a code of conduct (<tt>CODE_OF_CONDUCT.md</tt>).
+Please follow its rules when participating in our community.
+
+Peano is released under a modified BSD licence.
+The full terms are in the file <tt>LICENSE</tt> in the repository root.
+
+Peano has been awarded the
+<a href="https://api.eu.badgr.io/public/assertions/uhyUShBWT1Wfd0Vx3EoMrQ">SQAaaS silver badge for software</a>.
 
 
 # Recent updates
 
-- <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/pipelines">Build status (pipelines)</a> 
-- <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/network/p4?ref_type=heads">Latest commits (repository graph)</a> 
+- <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/pipelines">Build status (pipelines)</a>
+- <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/network/p4?ref_type=heads">Latest commits (repository graph)</a>
 
 
 # History
 
 Peano is currently available in its fourth generation.
 The development of the original set of Peano codes started around 2002.
-2005-2009, we merged these codes into one Peano kernel (2nd generation).
-In 2009, I started a complete reimplementation of the kernel with special
+2005-2009, these codes were merged into one Peano kernel (2nd generation).
+In 2009, a complete reimplementation of the kernel started with special
 emphasis on reusability, application-independent design and the support for rapid prototyping.
 This third generation of the code ended around 2019 when we released the
 ExaHyPE code - a hyperbolic equation system solver engine which uses Peano's

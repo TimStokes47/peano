@@ -20,9 +20,12 @@ from . import FD4Kernels
 from .Quantities import resolve_quantities
 from .actionsets import AddLopsidedAdvection
 from .actionsets import ApplyDirichletBoundaryConditions
-from ..BoundaryConditions import get_access_to_persistent_face_data
-from ..BoundaryConditions import get_boundary_conditions
-from ..SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
+from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
+from ..blockstructured.BoundaryConditions import get_boundary_conditions
+from ..blockstructured.SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
+from ..blockstructured.create_dynamic_mesh_refinement_action_set import (
+    create_dynamic_mesh_refinement_action_set,
+)
 from .actionsets import ComputeLinearCombination
 from .actionsets import ComputeMaxEigenvalue
 from .actionsets import ComputeTimeStepSize
@@ -71,7 +74,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     unless the time step size is fixed, and either a
     DirichletBoundaryConditions or a SommerfeldBoundaryConditions term
     unless all axes are periodic (@ref
-    exahype2.api.BoundaryConditions.get_boundary_conditions()). Sommerfeld
+    exahype2.api.blockstructured.BoundaryConditions.get_boundary_conditions()). Sommerfeld
     conditions also require a MaxEigenvalue term, and a Butcher tableau whose
     stage time stamps do not decrease. @ref
     benchmarks_exahype2_euler_smooth_fd4 demonstrates fourth-order
@@ -176,6 +179,10 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
         right_hand_side_kernel: "CentralDifferencesWithRungeKutta.RightHandSideKernel" = RightHandSideKernel.CentralDifferences,
         advection_velocity=None,
         advected_quantities=None,
+        min_volume_size: float = None,
+        max_volume_size: float = None,
+        interpolation: "toolbox.blockstructured.api.InterpolateHangingFaces.Scheme" = toolbox.blockstructured.api.InterpolateHangingFaces.Scheme.Linear,
+        restriction: "toolbox.blockstructured.api.RestrictHangingFaces.Scheme" = toolbox.blockstructured.api.RestrictHangingFaces.Scheme.Averaging,
     ):
         """!
 
@@ -226,8 +233,40 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
           which are advected, as names of variables or indices of entries,
           @see exahype2.api.rkfd4.Quantities.resolve_quantities().
 
+        @param min_volume_size: float
+          The time step asks for a refinement of a cell only if its grid
+          cells are at least of this size (@ref exahype2.api.blockstructured.DynamicMeshRefinement).
+          None (the default) does not bound the refinement.
+
+        @param max_volume_size: float
+          The time step asks for an erase, i.e. coarsening, of a cell only
+          if the grid cells of the coarser cell would be strictly smaller
+          than this size. None (the default) does not bound the coarsening.
+
+        @param interpolation: toolbox.blockstructured.api.InterpolateHangingFaces.Scheme
+          How the scheme initialises the halo of a fine patch next to a
+          coarser patch on an adaptive mesh. Whenever a Runge-Kutta stage
+          reconstructs the halo of a fine cell, it interpolates the data of
+          the adjacent coarse face onto the fine cell's hanging face
+          (toolbox.blockstructured.api.InterpolateHangingFaces). The
+          default is linear interpolation.
+
+        @param restriction: toolbox.blockstructured.api.RestrictHangingFaces.Scheme
+          How the scheme hands the data of fine patches over to an adjacent
+          coarser patch. Whenever the fine cells project their data onto
+          their faces, the scheme restricts the data of the hanging faces
+          onto the coarse face (toolbox.blockstructured.api.RestrictHangingFaces).
+          The default is averaging.
+
+        On a regular mesh, there are no hanging faces, and the two schemes
+        are never used. At resolution transitions, the halo of a fine patch
+        is only as accurate as the interpolation, i.e. the scheme drops to
+        low order there.
+
         """
         super().__init__(solver)
+        self.interpolation = interpolation
+        self.restriction = restriction
         if patch_size < self.HALO_SIZE:
             raise ValueError(
                 f"Solver {solver.name}: patch_size has to be at least {self.HALO_SIZE}, "
@@ -284,6 +323,13 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
             self.advection_velocity = None
             self.advected_quantities = None
         self.patch_size = patch_size
+        assert (
+            min_volume_size is None
+            or max_volume_size is None
+            or min_volume_size <= max_volume_size
+        ), f"min_volume_size={min_volume_size} has to be smaller than or equal to max_volume_size={max_volume_size}"
+        self.min_volume_size = min_volume_size
+        self.max_volume_size = max_volume_size
         self.butcher_tableau = ButcherTableau(rk_order)
         self.time_step_size = time_step_size
         self.cfl_constant = cfl_constant
@@ -774,6 +820,39 @@ Patch overlap data
 {kernel_call(stateless=False)}
 }}"""
 
+    def create_default_mesh_adaptation(self) -> Solver.MeshAdaptation:
+        """!
+
+        The finite differences adapt the mesh and balance the load through
+        exahype2.api.rkfd4.AdaptMeshAndBalanceLoad by default
+
+        """
+        from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
+
+        return AdaptMeshAndBalanceLoad(self._solver)
+
+    def create_restriction_of_hanging_faces(
+        self,
+    ) -> "toolbox.blockstructured.api.RestrictHangingFaces":
+        """!
+
+        Action set which restricts the projected fine data from the hanging
+        faces onto the coarse faces
+
+        Every task which projects the solution onto the faces has to host
+        this action set, so the faces between coarse and fine patches hold
+        consistent data afterwards. The task has to write all of
+        _patch_overlap_update, as averaging clears it first.
+
+        """
+        return toolbox.blockstructured.api.RestrictHangingFaces(
+            self._solver._patch_overlap_update,
+            scheme=self.restriction,
+            clear_guard=self._solver.grid_selector.createFaceGuard(),
+            additional_includes=self._solver._get_default_includes()
+            + self._solver.user_solver_includes,
+        )
+
     def construct_output(self, exahype2_project, peano_project, time_step):
         """!
 
@@ -806,8 +885,11 @@ Patch overlap data
 
         After the last stage, {SolverName}_Compute time step size determines
         the time step size of the next time step and advances the solver's
-        time stamp, and {SolverName}_Trigger load balancing informs the load
-        balancing.
+        time stamp. {SolverName}_Dynamic mesh refinement finally evaluates the
+        adaptivity criterion if the solver has one
+        (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set.create_dynamic_mesh_refinement_action_set()),
+        switches the load balancing on again and informs it that the time
+        step has finished.
 
         """
         peano4.api.Logger().log(
@@ -914,6 +996,17 @@ Patch overlap data
             ## Reconstruct the stage's input with its halo
             if previous_stage_task is not None:
                 reconstruction_task.add_dependency(previous_stage_task)
+            else:
+                ## The load balancing is switched off throughout the time
+                ## step, and switched on again only at its very end, so it may
+                ## then decide on splits. Peano carries these splits out in
+                ## the subsequent mesh sweep.
+                reconstruction_task.add_action_set(
+                    toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                        enable_load_balancing=False,
+                        plug_into_prepare_traversal=True,
+                    )
+                )
             ## The solution has to survive the reconstruction. The input of a
             ## later stage does not: The next stage's combination writes it
             ## from scratch. If we stored it here, nobody would load it again,
@@ -938,6 +1031,15 @@ Patch overlap data
                     reconstructed_patch=self._solver._patch_with_halo,
                     guard=cell_guard,
                     add_assertions_to_halo_exchange=False,
+                    additional_includes=includes,
+                )
+            )
+            ## On adaptive meshes, interpolate the coarse face data onto the
+            ## hanging faces of fine cells, before the reconstruction reads them
+            reconstruction_task.add_action_set(
+                toolbox.blockstructured.api.InterpolateHangingFaces(
+                    self._solver._patch_overlap_current_time_step,
+                    scheme=self.interpolation,
                     additional_includes=includes,
                 )
             )
@@ -1025,9 +1127,12 @@ Patch overlap data
                     includes=includes,
                 )
             )
+            ## On adaptive meshes, restrict the fine data from the hanging
+            ## faces onto the coarse faces, before the roll over copies them
+            projection_task.add_action_set(self.create_restriction_of_hanging_faces())
             # Sommerfeld boundary conditions advance the ghost grid cells
             # within the roll over, from the time stamp of this stage to the
-            # one of the next stage (@ref exahype2.api.BoundaryConditions)
+            # one of the next stage (@ref exahype2.api.blockstructured.BoundaryConditions)
             next_relative_time_step_size = (
                 1.0 if is_last_stage else relative_time_step_sizes[stage + 1]
             )
@@ -1075,17 +1180,36 @@ Patch overlap data
             )
         time_step.add_task(time_step_size_task)
 
-        ## Inform the load balancing once the time step has finished
-        trigger_load_balancing_task = peano4.api.taskgraph.Task(
-            name=f"{name}_Trigger load balancing",
-            entity=Entity.GLOBAL,
+        ## The very last task evaluates the adaptivity criterion if the
+        ## solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
+        ## collects refine and erase requests for the mesh adaptation phase,
+        ## and it switches the load balancing on again and informs it that
+        ## the time step has finished.
+        dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
+            name=f"{name}_Dynamic mesh refinement",
+            entity=Entity.CELL,
+            may_spawn_background_tasks=False,
         )
-        trigger_load_balancing_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.LoadBalancing()
+        dynamic_mesh_refinement_task.use_cell(
+            self._solver._patch, Access.READ_AND_WRITE
         )
-        trigger_load_balancing_task.add_dependency(time_step_size_task)
-        trigger_load_balancing_task.add_dependency(previous_stage_task)
-        time_step.add_task(trigger_load_balancing_task)
+        dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
+            self._solver,
+            self.patch_size,
+            guard=cell_guard,
+            min_volume_size=self.min_volume_size,
+            max_volume_size=self.max_volume_size,
+        )
+        if dynamic_mesh_refinement is not None:
+            dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
+        dynamic_mesh_refinement_task.add_action_set(
+            toolbox.loadbalancing.api.actionsets.LoadBalancing(
+                enable_load_balancing=True
+            )
+        )
+        dynamic_mesh_refinement_task.add_dependency(time_step_size_task)
+        dynamic_mesh_refinement_task.add_dependency(previous_stage_task)
+        time_step.add_task(dynamic_mesh_refinement_task)
 
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title="Time stepping task graph for {}".format(name))

@@ -191,7 +191,7 @@ class Task:
         another step has declared READ_AND_DISCARD, or a task declaring
         WRITE which still reads the previous value, reads garbage. The
         Sommerfeld boundary conditions of exahype2.api are an example
-        (@ref exahype2.api.BoundaryConditions.get_access_to_persistent_face_data()).
+        (@ref exahype2.api.blockstructured.BoundaryConditions.get_access_to_persistent_face_data()).
 
         """
 

@@ -1113,98 +1113,42 @@ void toolbox::blockstructured::restrictInnerHalfOfHaloLayer_AoS_averaging(
     unknowns
   );
 
-  assertion1(overlap == 1 or overlap % 3 == 0, overlap);
-
-  bool mapFromInnerHalfOfHalo
-    = not swapInsideOutside; // mapOuterCoarseGridHaloOntoInnerFineGridHalo
-  const int normal = marker.getSelectedFaceNumber() % Dimensions;
-  double scaleFineGridVolume = std::pow(3.0, -static_cast<double>(Dimensions - 1))
-                               / std::min(3.0, static_cast<double>(overlap));
-  const bool pickLeftHalfOfHalo = (marker.getSelectedFaceNumber() < Dimensions)
-                                  xor mapFromInnerHalfOfHalo;
-
-  const double volumeHCoarse = marker.h()(0)
-                               / static_cast<double>(numberOfDoFsPerAxisInPatch)
-                               * 3.0;
-  const double volumeHFine = marker.h()(0)
-                             / static_cast<double>(numberOfDoFsPerAxisInPatch);
-
-  tarch::la::Vector<Dimensions, double> leftBottomCornerOfHaloFine = marker.x();
-  tarch::la::Vector<Dimensions, double> leftBottomCornerOfHaloCoarse = marker.x(
-  );
-  for (int d = 0; d < Dimensions; d++) {
-    if (d == normal) {
-      leftBottomCornerOfHaloFine(d
-      ) -= static_cast<double>(overlap) * volumeHFine;
-      leftBottomCornerOfHaloCoarse(d
-      ) -= static_cast<double>(overlap) * volumeHCoarse;
-    } else {
-      leftBottomCornerOfHaloFine(d) = marker.x()(d) - marker.h()(d) / 2.0;
-      leftBottomCornerOfHaloCoarse(d
-      )                             = leftBottomCornerOfHaloFine(d)
-          - marker.getRelativePositionWithinFatherCell()(d) * marker.h()(d);
-    }
-  }
+  const bool mapFromInnerHalfOfHalo = not swapInsideOutside;
+  const int  normal                 = marker.getSelectedFaceNumber() % Dimensions;
+  const bool pickLeftHalfOfHalo     = (marker.getSelectedFaceNumber() < Dimensions) xor mapFromInnerHalfOfHalo;
+  // Each coarse volume averages the 3^(d-1) fine volumes next to it along
+  // the face times the overlap fine layers
+  const double scaleFineGridVolume = std::pow(3.0, -static_cast<double>(Dimensions - 1))
+                                     / static_cast<double>(overlap);
 
   dfore(kFine, numberOfDoFsPerAxisInPatch, normal, 0) {
     for (int iFine = 0; iFine < overlap; iFine++) {
       tarch::la::Vector<Dimensions, int> fineVolume = kFine;
       fineVolume(normal) += pickLeftHalfOfHalo ? iFine : iFine + overlap;
-
-      tarch::la::Vector<Dimensions, int> coarseVolume = fineVolume;
-      for (int d = 0; d < Dimensions; d++) {
-        if (d != normal) {
-          coarseVolume(d
-          ) += marker.getRelativePositionWithinFatherCell()(d)
-               * numberOfDoFsPerAxisInPatch;
-        } else {
-          coarseVolume(d
-          ) = pickLeftHalfOfHalo ? fineVolume(d) : fineVolume(d) + overlap * 3;
-        }
-      }
-      coarseVolume /= 3;
-
-      assertion3(coarseVolume(0) >= 0, kFine, iFine, marker);
-      assertion3(coarseVolume(1) >= 0, kFine, iFine, marker);
-      assertion3(
-        coarseVolume(0) < numberOfDoFsPerAxisInPatch,
-        kFine,
-        iFine,
-        marker
-      );
-      assertion3(
-        coarseVolume(1) < numberOfDoFsPerAxisInPatch,
-        kFine,
-        iFine,
-        marker
-      );
-
-      [[maybe_unused]] tarch::la::Vector<Dimensions, double> volumeXCoarse
-        = leftBottomCornerOfHaloCoarse
-          + volumeHCoarse * tarch::la::convertScalar<double>(coarseVolume)
-          + 0.5 * tarch::la::Vector<Dimensions, double>(volumeHCoarse);
-      [[maybe_unused]] tarch::la::Vector<Dimensions, double>
-        volumeXFine = leftBottomCornerOfHaloFine
-                      + volumeHFine
-                          * tarch::la::convertScalar<double>(fineVolume)
-                      + 0.5 * tarch::la::Vector<Dimensions, double>(volumeHFine);
-
-      int coarseVolumeLinearised = serialiseVoxelIndexInOverlap(
-        coarseVolume,
-        numberOfDoFsPerAxisInPatch,
-        overlap,
-        normal
-      );
-      int fineVolumeLinearised = serialiseVoxelIndexInOverlap(
+      const int fineVolumeLinearised = serialiseVoxelIndexInOverlap(
         fineVolume,
         numberOfDoFsPerAxisInPatch,
         overlap,
         normal
       );
-      for (int j = 0; j < unknowns; j++) {
-        coarseGridValues[coarseVolumeLinearised * unknowns + j]
-          += scaleFineGridVolume
-             * fineGridValues[fineVolumeLinearised * unknowns + j];
+
+      for (int iCoarse = 0; iCoarse < overlap; iCoarse++) {
+        tarch::la::Vector<Dimensions, int> coarseVolume;
+        for (int d = 0; d < Dimensions; d++) {
+          coarseVolume(d) = d == normal
+                              ? (pickLeftHalfOfHalo ? iCoarse : iCoarse + overlap)
+                              : (fineVolume(d) + marker.getRelativePositionWithinFatherCell()(d) * numberOfDoFsPerAxisInPatch) / 3;
+        }
+        const int coarseVolumeLinearised = serialiseVoxelIndexInOverlap(
+          coarseVolume,
+          numberOfDoFsPerAxisInPatch,
+          overlap,
+          normal
+        );
+        for (int j = 0; j < unknowns; j++) {
+          coarseGridValues[coarseVolumeLinearised * unknowns + j]
+            += scaleFineGridVolume * fineGridValues[fineVolumeLinearised * unknowns + j];
+        }
       }
     }
   }
