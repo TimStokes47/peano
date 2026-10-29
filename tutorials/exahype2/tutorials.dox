@@ -48,6 +48,7 @@ Jupyter.
 - Running codes in parallel
   - \subpage tutorials_exahype2_30_domain-decomposition
   - \subpage tutorials_exahype2_35_offline-load-balancing
+  - \subpage tutorials_exahype2_36_checkpointing
 - Coupling
   - \subpage tutorials_exahype2_41_postprocessing
   - \subpage tutorials_exahype2_44_localisation
@@ -66,9 +67,6 @@ Jupyter.
     - Postprocessing on-the-fly
     - Particles as Probes and Tracers
     - Coupling Multiple Numerical Schemes (Solvers)
-  - Feature benchmarks
-    - \ref benchmarks_exahype2_ccz4_gauge_wave
-    - \ref benchmarks_exahype2_ccz4_single_black_hole
   - \subpage tutorials_exahype2_applications_exagrype_faq
 - \subpage tutorials_exahype2_applications_exaseis (seismology extension built on top of ExaHyPE)
   

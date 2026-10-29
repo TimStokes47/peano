@@ -27,28 +27,28 @@ create_release_build = False
 if create_release_build:
     build_mode = peano4.api.output.CompileMode.RELEASE
     cells_per_axis = 9
-    end_time = 10.0
+    end_time = 10.0 # This has to be 100 for the final challenge
     time_in_between_plots = 1.0
     verbosity = peano4.api.LoggerVerbosity.TEXT
+    volume_size = 0.4
+    domain_offset = [-9.0, -9.0, -9.0]
+    domain_size = [18.0, 18.0, 18.0]
 else:
     build_mode = peano4.api.output.CompileMode.DEBUG
     cells_per_axis = 9
     end_time = 0.1
     time_in_between_plots = 0.05
     verbosity = peano4.api.LoggerVerbosity.VISUALISATION
+    volume_size = 0.4
+    domain_offset = [-9.0, -9.0, -9.0]
+    domain_size = [18.0, 18.0, 18.0]
 
 # An even patch size ensures that no volume centre coincides with the
 # puncture at the origin, where the initial data is singular.
 patch_size = 6
 
-domain_offset = [-9.0, -9.0, -9.0]
-domain_size = [18.0, 18.0, 18.0]
 black_hole_mass = 1.0
 
-# The regular grid construction refines all cells whose edge length is greater
-# than or equal to volume_size * patch_size. We hence add a small safety margin
-# to get exactly cells_per_axis cells per axis.
-volume_size = 1.01 * domain_size[0] / cells_per_axis / patch_size
 
 
 project = exahype2.api.Project(

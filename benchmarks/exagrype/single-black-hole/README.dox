@@ -1,65 +1,78 @@
-/**
+/** 
 
-@page benchmarks_exagrype_single_black_hole Single black hole (ExaGRyPE Python API)
+@page benchmarks_exagrype_single_black_hole Single Schwarzschild black hole
 
-A single Schwarzschild black hole at the origin of the domain
-\f$ [-9,9]^3 \f$. The initial data stems from TwoPunctures. The simulation
-should settle into a (quasi-)stationary state after a while, but it is
-numerically challenging: there is a singularity at the puncture, and the
-boundary of the domain is not physical.
+<img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/BH_LMC.png" width="600px" />
 
-This benchmark sets up the black hole with exagrype.api.CCZ4Solver and
-discretises it with the Finite Volume scheme of exahype2.api on a regular
-mesh. It mirrors the pure Finite Volume runs of the legacy benchmark
-@ref benchmarks_exahype2_ccz4_single_black_hole. The tutorial
-@ref tutorials_exahype2_exagrype_522_single-black-hole explains how the
-benchmark is built step by step.
+<!-- Add this one for href links to subitems -->
+@tableofcontents
 
-# Build and run
 
-Configure Peano with
+This benchmark solves the single black hole (Schwarzschild black hole)
+with ExaGRyPE.
 
-~~~~~~~~~~~~~~~~~~~~~~~
-./configure --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-exagrype --with-gsl ...
-~~~~~~~~~~~~~~~~~~~~~~~
 
-TwoPunctures needs the GNU Scientific Library (GSL). Without --with-gsl, the
-generated solver refuses to compile. Build Peano, then run, within this
-directory,
+## Benchmark sketch for non-specialists
 
-~~~~~~~~~~~~~~~~~~~~~~~
-python3 single-black-hole.py
-./single-black-hole
-~~~~~~~~~~~~~~~~~~~~~~~
 
-The script builds a small debug version by default: \f$ 9^3 \f$ mesh cells,
-each carrying a patch of \f$ 6^3 \f$ volumes, run until t=0.1. It takes
-around 2.5 minutes on an eight-core workstation. Set \c create_release_build
-to True for an optimised build on the same mesh which runs until t=10. It
-takes around 230 time steps of 5 seconds each. Every time you make the mesh
-cells three times smaller (cells_per_axis), the run becomes 81 times more
-expensive: 27 times more volumes and three times more time steps.
+To understand what is going on here, it might help to read through @ref page_exagrype first.
+According to the description there, ExaGRyPE solves a wave equation, i.e. it models how the effects of mass ripple through spacetime.
 
-# What to expect
+In this benchmark, however, we solve for a stationary black hole. Such an object does not really exist
+(real black holes rotate, accrete matter, and therefore grow), but it provides a good test
+case for our numerical methods, not least because plenty of reference data and analytical solutions are available.
 
-The initial data matches the closed form of a Schwarzschild black hole in
-isotropic coordinates up to round-off. The run is stable, but the mesh is far
-too coarse for the black hole: the horizon spans about three volumes, and the
-first-order Finite Volumes diffuse the puncture away. By t=10, the lapse next
-to the puncture has grown from 0.37 to 0.89, and the conformal factor phi
-from 0.13 to 0.93. Without constraint enforcement, the numbers are almost the
-same (0.88 and 0.93), i.e. the enforcement does not cure the dissolving black
-hole. A resolved black hole would instead show a collapsing
-lapse. The tutorial @ref tutorials_exahype2_exagrype_522_single-black-hole
-discusses this behaviour.
+At the centre of the simulation domain, we have a singularity, i.e. a right-hand-side term
+that represents a stationary distortion of spacetime.
+It is chosen such that it injects just enough change into spacetime at the centre to counteract
+the waves travelling out through the boundary of the simulation domain.
 
-# Differences to the legacy benchmark
+You can think of this as similar to a guitar string that we pluck in the middle while holding it tight.
+Normally, the string would vibrate, but here we pluck it in just the right way to counteract the vibration,
+so everything becomes stationary.
 
-- The legacy code imposes Sommerfeld boundary conditions. This benchmark
-  uses Dirichlet conditions instead, which hold the boundary at the
-  (static) initial data.
-- The mesh is regular. The legacy code zooms into the black hole with
-  adaptive mesh refinement, and couples the Finite Volumes with fourth-order
-  Finite Differences.
+While the output is not particularly exciting (the simulation should eventually yield a
+stationary solution), the problem is numerically challenging. Boundary-condition effects,
+discretisation errors, adaptive mesh refinement effects, and other numerical artefacts all
+feed into a strongly nonlinear equation system that can easily blow up and become unstable.
+Solving a stationary setup with a time-dependent solver is therefore an excellent stress test.
+
+@image html illustration_single_black_hole.png "Illustration of the single black hole benchmark setup."
+
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
+  Before benchmarking this setup, we recommend ensuring that
+  @ref benchmarks_exagrype_kernel_benchmarks and
+  @ref benchmarks_exagrype_gauge_wave complete successfully.
+  The former assesses the computational efficiency of various kernel variants across
+  different platforms, while the latter validates the numerical accuracy of the
+  overall solver assembly, including its convergence orders.
+</div>
+
+
+## Benchmark parameters
+
+### Time duration
+
+The single black hole benchmark needs some time to burn in and reach a stationary state. 
+After that, we have to evolve it long enough to be reasonably confident that there are no tiny little wiggles in the outcome that eventually could blow up.
+Indeed, sometimes we have small errors that travel towards the domain boundary.
+If they are not properly absorbed there, they can reflect back into the domain.
+As they travel forth and back and we inject more and more error, the simulation blows up.
+So we have to evolve the whole setup long enough.
+We go beyond what most papers do at ask for t=100.
+
+
+### Domain size
+
+If we pick the domain too small, we will almost certainly mess up the boundary conditions.
+This setup employs Sommerfeld conditions, which are designed to absorb outgoing waves and should not reflect them back into the domain.
+However, they are only an approximation, and they are only valid if the waves are far enough away from the boundary.
+There will always be some reflection, and the smaller the domain, the stronger the reflection.
+So we pick at least 
+
+- @subpage benchmarks_exahype2_ccz4_single_black_hole_generic_settings
+- @subpage benchmarks_exahype2_ccz4_single_black_hole_production_benchmarks
+- @subpage benchmarks_exahype2_ccz4_single_black_hole_hpc_assessment
+- @subpage benchmarks_exahype2_ccz4_single_black_hole_implementation
 
 */
