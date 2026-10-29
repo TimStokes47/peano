@@ -7,13 +7,15 @@
 @image html documentation/Peano-logo.png
 
 <br />
-<div align="center" style="background-color: #ccc ; padding: 10px; border: 1px solid green;><b>
- <a href="http://www.peano-framework.org">Website</a> &bull;
- <a href="https://hpcsoftware.pages.gitlab.lrz.de/Peano/">Documentation</a> &bull;
- <a href="https://gitlab.lrz.de/hpcsoftware/Peano">Repository</a> &bull;
- <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/tags">Tags</a> &bull;
- <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/releases">Releases</a>
-</b></div>
+<div align="center" style="background-color: #ccc ; padding: 10px; border: 1px solid green;">
+ <b>
+  <a href="http://www.peano-framework.org">Website</a> &bull;
+  <a href="https://hpcsoftware.pages.gitlab.lrz.de/Peano/">Documentation</a> &bull;
+  <a href="https://gitlab.lrz.de/hpcsoftware/Peano">Repository</a> &bull;
+  <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/tags">Tags</a> &bull;
+  <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/releases">Releases</a>
+ </b>
+</div>
 
 \tableofcontents
 
