@@ -2,7 +2,7 @@
 
 @page tutorials_exahype2_applications_exagrype_configure Configure ExaGRyPE
 
-@image html tutorials/exahype2/exagrype/arty.png
+@image html tutorials/exahype2/exagrype/illustrations/arty.png
 
 ExaGRyPE is Peano's extension for numerical relativity and is built as part of
 Peano. For general remarks on how to install Peano, please see

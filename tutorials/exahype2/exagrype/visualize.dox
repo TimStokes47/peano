@@ -2,7 +2,7 @@
 
 @page tutorials_exahype2_applications_exagrype_visualize Visualization of ExaGRyPE Output
 
-@image html tutorials/exahype2/exagrype/GW_visual.png
+@image html tutorials/exahype2/exagrype/illustrations/GW_visual.png
 
 # Plotting
 
@@ -54,15 +54,15 @@ If you set \c project.add_plot_filter as \f$ ([a,b,c],[d,e,f], K)\f$, the code w
 
 Here we provide a brief introduction on how to inspect the output files, using a snapshot from a single black hole simulation as an example. The converted vtu file can be opened directly in ParaView:
 
-@image html tutorials/exahype2/exagrype/para_vis_01.png
+@image html tutorials/exahype2/exagrype/illustrations/para_vis_01.png
 
 As the patch sizes differ across different AMR levels, the thickness differs accordingly. Using the slice tool (fourth in the third line of the quick toolbars) and choosing Z normal gives you an actual slice of the x-y plane of the simulation. You can also switch to "surface with edges" from "surface" on the second line of the quick toolbars to check the AMR pattern:
 
-@image html tutorials/exahype2/exagrype/para_vis_02.png
+@image html tutorials/exahype2/exagrype/illustrations/para_vis_02.png
 
 Using the list in the second line of the quick toolbar you can select the variables you would like to inspect. For black hole spacetimes, the most characteristic variables one may look into are the conformal factor (\f$ \phi \f$, 54), the lapse function (\f$ \alpha \f$, 16), and the physical constraints (\f$ H, M_i \f$, 59-62 if outputted). Using the plot over line tool, you can check the profiles of variables in a separate panel:
 
-@image html tutorials/exahype2/exagrype/para_vis_03.png
+@image html tutorials/exahype2/exagrype/illustrations/para_vis_03.png
 
 You can switch among snapshots of different timestamps using the buttons on the first line of the quick toolbars. For the Single Schwarzschild Black Hole, the solution should remain static after some relaxation time. Therefore, the colour map and the profiles of the variables should change only little, if at all, in the snapshots from the later stages of the simulation.
 

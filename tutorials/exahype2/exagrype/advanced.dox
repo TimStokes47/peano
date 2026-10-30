@@ -91,7 +91,7 @@ can use as examples to implement their own.
 
 # Particles as Probes and Tracers
 
-@image html tutorials/exahype2/exagrype/probes.png
+@image html tutorials/exahype2/exagrype/illustrations/probes.png
 
 ExaGRyPE can have particles inserted into the domain for multiple purposes. These particles
 have no physics interaction and act as data probes or object tracers. To add particles
