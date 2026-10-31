@@ -291,6 +291,9 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   [[maybe_unused]] bool                                      spacetreeStateIsRunning
 ) const {
   logTraceInWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather );
+  VertexType vertexTypes[TwoPowerD];
+  getVertexTypes(coarseGridVertices, relativePositionToFather, vertexTypes);
+
   GridTraversalEvent  event = createGenericCellTraversalEvent(coarseGridVertices, fineGridVertices, state, splitTriggered, splitting, joinTriggered, joining, relativePositionToFather, spacetreeStateIsRunning);
 
   event.setIsVertexAdjacentToParallelDomainBoundary( areVerticesAdjacentToParallelDomainBoundary(fineGridVertices, splitTriggered, splitting, joinTriggered, joining, true) );
@@ -343,7 +346,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
 
   for (int i=0; i<2*Dimensions; i++) {
     int        faceIndex   = PeanoCurve::getFaceNumberAlongCurve(state,i);
-    FaceType   type        = getFaceType(coarseGridVertices,relativePositionToFather,faceIndex);
+    FaceType   type        = getFaceType(vertexTypes,faceIndex);
     const int  stackNumber = PeanoCurve::getFaceWriteStackNumber(state,faceIndex);
 
     event.setFaceDataFrom(i,faceIndex);
@@ -376,7 +379,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   }
 
   {
-    CellType type = getCellType(coarseGridVertices,relativePositionToFather);
+    CellType type = getCellType(vertexTypes);
     const int  stackNumber = PeanoCurve::getCellWriteStackNumber(state);
 
     switch (type) {
@@ -485,6 +488,9 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   [[maybe_unused]] bool                                      spacetreeStateIsRunning
 ) const {
   logTraceInWith7Arguments( "createEnterCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather, coarseGridVertices[0].toString(), coarseGridVertices[1].toString(), coarseGridVertices[2].toString(), coarseGridVertices[3].toString() );
+  VertexType vertexTypes[TwoPowerD];
+  getVertexTypes(coarseGridVertices, relativePositionToFather, vertexTypes);
+
   GridTraversalEvent  event = createGenericCellTraversalEvent(coarseGridVertices, fineGridVertices, state, splitTriggered, splitting, joinTriggered, joining, relativePositionToFather, spacetreeStateIsRunning);
 
   event.setIsVertexAdjacentToParallelDomainBoundary( areVerticesAdjacentToParallelDomainBoundary(fineGridVertices, splitTriggered, splitting, joinTriggered, joining, false) );
@@ -560,7 +566,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
 
   for (int i=0; i<2*Dimensions; i++) {
     int        faceIndex   = PeanoCurve::getFaceNumberAlongCurve(state,i);
-    FaceType   type        = getFaceType(coarseGridVertices,relativePositionToFather,faceIndex);
+    FaceType   type        = getFaceType(vertexTypes,faceIndex);
     const int  stackNumber = PeanoCurve::getFaceReadStackNumber(state,faceIndex);
 
     switch (type) {
@@ -599,7 +605,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   }
 
   {
-    CellType type = getCellType(coarseGridVertices,relativePositionToFather);
+    CellType type = getCellType(vertexTypes);
     const int  stackNumber = PeanoCurve::getCellReadStackNumber(state);
     switch (type) {
       case CellType::New:
@@ -645,6 +651,16 @@ peano4::grid::FaceType peano4::grid::GridTraversalEventGenerator::getFaceType(
   [[maybe_unused]] tarch::la::Vector<Dimensions,int>  positionOfCell,
   [[maybe_unused]] int                                faceNumber
 ) {
+  VertexType vertexTypes[TwoPowerD];
+  getVertexTypes(coarseGridVertices, positionOfCell, vertexTypes);
+  return getFaceType(vertexTypes, faceNumber);
+}
+
+
+peano4::grid::FaceType peano4::grid::GridTraversalEventGenerator::getFaceType(
+  [[maybe_unused]] const VertexType  vertexTypes[TwoPowerD],
+  [[maybe_unused]] int               faceNumber
+) {
   logTraceInWith1Argument( "getFaceType(...)", faceNumber );
 
   bool allVerticesAreHanging         = true;
@@ -655,7 +671,7 @@ peano4::grid::FaceType peano4::grid::GridTraversalEventGenerator::getFaceType(
   for (int i=0; i<TwoPowerD; i++) {
     std::bitset<Dimensions> studiedVertex = i;
     studiedVertex.set(normal,faceNumber>=Dimensions);
-    switch ( getVertexType( coarseGridVertices, positionOfCell + tarch::la::Vector<Dimensions,int>(studiedVertex) ) ) {
+    switch ( vertexTypes[studiedVertex.to_ulong()] ) {
       case VertexType::Hanging:
         break;
       case VertexType::New:
@@ -694,12 +710,20 @@ peano4::grid::CellType peano4::grid::GridTraversalEventGenerator::getCellType(
   [[maybe_unused]] GridVertex                         coarseGridVertices[TwoPowerD],
   [[maybe_unused]] tarch::la::Vector<Dimensions,int>  positionOfCell
 ) {
+  VertexType vertexTypes[TwoPowerD];
+  getVertexTypes(coarseGridVertices, positionOfCell, vertexTypes);
+  return getCellType(vertexTypes);
+}
+
+
+peano4::grid::CellType peano4::grid::GridTraversalEventGenerator::getCellType(
+  [[maybe_unused]] const VertexType  vertexTypes[TwoPowerD]
+) {
   bool allVerticesAreDelete = true;
   bool allVerticesAreNew    = true;
 
   for (int i=0; i<TwoPowerD; i++) {
-        std::bitset<Dimensions> vectorPosition = i;
-    switch ( getVertexType( coarseGridVertices, positionOfCell + tarch::la::Vector<Dimensions,int>(vectorPosition) )) {
+    switch ( vertexTypes[i] ) {
       case VertexType::Hanging:
         break;
       case VertexType::Persistent:
@@ -732,116 +756,90 @@ peano4::grid::CellType peano4::grid::GridTraversalEventGenerator::getCellType(
 }
 
 
-peano4::grid::VertexType peano4::grid::GridTraversalEventGenerator::getVertexType(
-  [[maybe_unused]] GridVertex                         coarseGridVertices[TwoPowerD],
-  [[maybe_unused]] tarch::la::Vector<Dimensions,int>  position
+void peano4::grid::GridTraversalEventGenerator::getVertexTypes(
+  [[maybe_unused]] GridVertex                                coarseGridVertices[TwoPowerD],
+  [[maybe_unused]] const tarch::la::Vector<Dimensions,int>&  positionOfCell,
+  [[maybe_unused]] VertexType                                vertexTypes[TwoPowerD]
 ) {
-  #if Dimensions==2 or Dimensions==3
-  if (
-    coarseGridVertices[0].getState()==GridVertex::State::Refined
-    and
-    coarseGridVertices[1].getState()==GridVertex::State::Refined
-    and
-    coarseGridVertices[2].getState()==GridVertex::State::Refined
-    and
-    coarseGridVertices[3].getState()==GridVertex::State::Refined
-    #if Dimensions==3
-    and
-    coarseGridVertices[4].getState()==GridVertex::State::Refined
-    and
-    coarseGridVertices[5].getState()==GridVertex::State::Refined
-    and
-    coarseGridVertices[6].getState()==GridVertex::State::Refined
-    and
-    coarseGridVertices[7].getState()==GridVertex::State::Refined
-    #endif
-  ) {
-    return VertexType::Persistent;
+  for (int i=0; i<TwoPowerD; i++) {
+    std::bitset<Dimensions> vertexPosition = i;
+    vertexTypes[i] = getVertexType( coarseGridVertices, positionOfCell + tarch::la::Vector<Dimensions,int>(vertexPosition) );
   }
-  #endif
-  return getVertexType(
-    coarseGridVertices,
-    position,
-    Dimensions-1
-  );
+}
+
+
+namespace {
+  /**
+   * Vertex type which a parent vertex in a given state contributes to its
+   * children. Indexed with the integer value of GridVertex::State.
+   */
+  constexpr peano4::grid::VertexType ParentStateToVertexType[] = {
+    peano4::grid::VertexType::Hanging,    // HangingVertex
+    peano4::grid::VertexType::Hanging,    // New
+    peano4::grid::VertexType::Hanging,    // Unrefined
+    peano4::grid::VertexType::Persistent, // Refined
+    peano4::grid::VertexType::Hanging,    // RefinementTriggered
+    peano4::grid::VertexType::New,        // Refining
+    peano4::grid::VertexType::Persistent, // EraseTriggered
+    peano4::grid::VertexType::Delete,     // Erasing
+    peano4::grid::VertexType::Hanging     // Delete
+  };
+
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::HangingVertex)==0 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::Refined)==3 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::Refining)==5 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::EraseTriggered)==6 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::Erasing)==7 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::Delete)==8 );
+
+  constexpr unsigned int toBit(peano4::grid::VertexType type) {
+    return 1u << static_cast<int>(type);
+  }
 }
 
 
 peano4::grid::VertexType peano4::grid::GridTraversalEventGenerator::getVertexType(
   [[maybe_unused]] GridVertex                         coarseGridVertices[TwoPowerD],
-  [[maybe_unused]] tarch::la::Vector<Dimensions,int>  position,
-  [[maybe_unused]] int                                dimension
+  [[maybe_unused]] tarch::la::Vector<Dimensions,int>  position
 ) {
-  if (dimension<0) {
-    switch (coarseGridVertices[ peano4::utils::dLinearised(position,2) ].getState()) {
-      case GridVertex::State::HangingVertex:
-        return VertexType::Hanging;
-      case GridVertex::State::Delete:
-      case GridVertex::State::New:
-      case GridVertex::State::Unrefined:
-        return VertexType::Hanging;
-      case GridVertex::State::Refined:
-        return VertexType::Persistent;
-      case GridVertex::State::RefinementTriggered:
-        return VertexType::Hanging;
-      case GridVertex::State::Refining:
-        return VertexType::New;
-      case GridVertex::State::EraseTriggered:
-        return VertexType::Persistent;
-      case GridVertex::State::Erasing:
-        return VertexType::Delete;
+  // Dimensions along which only one parent vertex is adjacent, and which one
+  int fixedDimensions = 0;
+  int fixedParent     = 0;
+  for (int d=0; d<Dimensions; d++) {
+    assertion2( position(d)>=0 and position(d)<=3, position, d );
+    if (position(d)==0) {
+      fixedDimensions |= (1 << d);
     }
-    assertion3(false, peano4::utils::dLinearised(position,2), position, coarseGridVertices[ peano4::utils::dLinearised(position,2) ].toString() );
-  }
-  else if ( position(dimension)==0 ) {
-    position(dimension)=0;
-    return getVertexType(coarseGridVertices,position,dimension-1);
-  }
-  else if ( position(dimension)==3 ) {
-    position(dimension)=1;
-    return getVertexType(coarseGridVertices,position,dimension-1);
+    else if (position(d)==3) {
+      fixedDimensions |= (1 << d);
+      fixedParent     |= (1 << d);
+    }
   }
 
-  logTraceInWith2Arguments( "getVertexType(...)", position, dimension );
-  position(dimension)=0;
-  peano4::grid::VertexType lhs = getVertexType(coarseGridVertices,position,dimension-1);
+  unsigned int typesOfParents = 0;
+  for (int i=0; i<TwoPowerD; i++) {
+    if ( (i & fixedDimensions)==fixedParent ) {
+      const int state = static_cast<int>(coarseGridVertices[i].getState());
+      assertion2( state>=0 and state<9, state, coarseGridVertices[i].toString() );
+      typesOfParents |= toBit( ParentStateToVertexType[state] );
+    }
+  }
 
-  position(dimension)=1;
-  peano4::grid::VertexType rhs = getVertexType(coarseGridVertices,position,dimension-1);
-
-  VertexType result = lhs;
+  VertexType result = VertexType::Hanging;
   if (
-    (lhs==VertexType::New and rhs==VertexType::Hanging) or (lhs==VertexType::Hanging and rhs==VertexType::New)
+    (typesOfParents & toBit(VertexType::Persistent))
+    or
+    ( (typesOfParents & toBit(VertexType::New)) and (typesOfParents & toBit(VertexType::Delete)) )
   ) {
+    result = VertexType::Persistent;
+  }
+  else if (typesOfParents & toBit(VertexType::New)) {
     result = VertexType::New;
   }
-  if (
-    (lhs==VertexType::New and rhs==VertexType::Persistent) or (lhs==VertexType::Persistent and rhs==VertexType::New)
-  ) {
-    result = VertexType::Persistent;
-  }
-  if (
-    (lhs==VertexType::New and rhs==VertexType::Delete) or (lhs==VertexType::Delete and rhs==VertexType::New)
-  ) {
-    result = VertexType::Persistent;
-  }
-  if (
-    (lhs==VertexType::Hanging and rhs==VertexType::Persistent) or (lhs==VertexType::Persistent and rhs==VertexType::Hanging)
-  ) {
-    result = VertexType::Persistent;
-  }
-  if (
-    (lhs==VertexType::Hanging and rhs==VertexType::Delete) or (lhs==VertexType::Delete and rhs==VertexType::Hanging)
-  ) {
+  else if (typesOfParents & toBit(VertexType::Delete)) {
     result = VertexType::Delete;
   }
-  if (
-    (lhs==VertexType::Persistent and rhs==VertexType::Delete) or (lhs==VertexType::Delete and rhs==VertexType::Persistent)
-  ) {
-    result = VertexType::Persistent;
-  }
 
-  logTraceOutWith1Argument( "getVertexType(...)", toString(result) );
   return result;
 }
 
