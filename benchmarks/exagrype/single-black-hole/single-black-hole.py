@@ -303,18 +303,11 @@ def create_numerical_scheme(solver, arguments):
                 )
             )
 
-    if arguments.amr_levels > 0:
-        solver.grid_construction = (
-            package.SetupSimulationWithUserCodedRefinementCriterion(
-                solver,
-                volume_size=arguments.volume_size,
-                min_volume_size=min_volume_size(arguments),
-            )
-        )
-    else:
-        solver.grid_construction = package.SetupSimulationOverRegularGrid(
-            solver, volume_size=arguments.volume_size
-        )
+    solver.grid_construction = package.SetupSimulationWithUserCodedRefinementCriterion(
+        solver,
+        volume_size=arguments.volume_size,
+        min_volume_size=min_volume_size(arguments),
+    )
     if arguments.checkpoint_interval > 0.0:
         solver.plotter = package.PlotAsVTKFile(
             solver,
@@ -334,32 +327,16 @@ def actual_volume_size(arguments):
 
 
 def min_volume_size(arguments):
-    """! Volumes of this size or bigger may still be refined. None without AMR.
+    """! Volumes of this size or bigger may still be refined.
 
     The regular mesh of --volume-size is the coarsest mesh the benchmark
     allows (README.dox), so the AMR levels sit on top of its actual volume
     size. Refining a cell yields volumes strictly smaller than the bound, so
     the bound is the volume size of the second-finest level, slightly
-    reduced to be robust against rounding.
+    reduced to be robust against rounding. Without AMR levels, the bound
+    exceeds the volume size of the regular mesh, i.e. the mesh stays regular.
     """
-    if arguments.amr_levels == 0:
-        return None
     return actual_volume_size(arguments) / 3.0 ** (arguments.amr_levels - 1) * 0.99
-
-
-def refine_around_puncture(arguments):
-    """! Adaptivity criterion: refine everything within --amr-radius of the puncture
-
-    The criterion never asks for an erase. The mesh is a function of the
-    position only, i.e. it is static, and it never coarsens below the
-    regular mesh anyway.
-    """
-    return exahype2.api.RefineErasePointwisely(
-        implementation=f"""
-  const double r2 = tarch::la::norm2Squared(x);
-  if (r2 < {arguments.amr_radius ** 2}) *refinementCommand = ::exahype2::RefinementCommand::Refine;
-"""
-    )
 
 
 def main():
@@ -385,8 +362,18 @@ def main():
             implementation="::exagrype::initialvalues::flat(Q, x, 0.0);"
         )
     )
-    if arguments.amr_levels > 0:
-        solver.add_pde_term(refine_around_puncture(arguments))
+    # The criterion never asks for an erase. The mesh is a function of the
+    # position only, i.e. it is static, and it never coarsens below the
+    # regular mesh anyway. Without AMR levels, the volume size bound keeps
+    # the mesh regular.
+    solver.add_pde_term(
+        exahype2.api.RefineErasePointwisely(
+            implementation=f"""
+  const double r2 = tarch::la::norm2Squared(x);
+  if (r2 < {arguments.amr_radius ** 2}) *refinementCommand = ::exahype2::RefinementCommand::Refine;
+"""
+        )
+    )
     create_numerical_scheme(solver, arguments)
     project.add_solver(solver)
 
