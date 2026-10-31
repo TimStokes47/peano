@@ -45,9 +45,10 @@ Jupyter.
   - \subpage tutorials_exahype2_12_higher-order-solvers
   - \subpage tutorials_exahype2_13_euler-with-amr
   - \subpage tutorials_exahype2_20_additional-solver-steps
-- Running codes in parallel
+- Running large parallel codes
   - \subpage tutorials_exahype2_30_domain-decomposition
   - \subpage tutorials_exahype2_35_offline-load-balancing
+  - \subpage tutorials_exahype2_36_checkpointing
 - Coupling
   - \subpage tutorials_exahype2_41_postprocessing
   - \subpage tutorials_exahype2_44_localisation

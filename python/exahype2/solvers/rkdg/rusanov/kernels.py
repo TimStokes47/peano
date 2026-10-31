@@ -23,6 +23,7 @@ def create_Riemann_solver_kernel_definitions():
   create_Riemann_solver_kernel_definitions_3d() 
 
 def create_Riemann_solver_kernel_definitions_2d():
+  cpp_printer = DSL.printers.CPPPrinter(spaces_per_tab=4)
   template_parameters = [DSL.SyntaxTree.Argument("DGOrder", DSL.SyntaxTree.TInteger()),
                         DSL.SyntaxTree.Argument("NumberOfUnknowns", DSL.SyntaxTree.TInteger()),
                         DSL.SyntaxTree.Argument("NumberOfAuxiliaryVariables", DSL.SyntaxTree.TInteger()),
@@ -33,16 +34,16 @@ def create_Riemann_solver_kernel_definitions_2d():
                        DSL.SyntaxTree.Argument("nonconservativeProduct", DSL.SyntaxTree.TCustom("const NonConservativeProduct&"))]
   
   dg_riemann_x_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkdg.rusanov.solveRiemannProblemX2D, template_parameters, functor_arguments, ["exahype2", "dg", "rusanov"], stateless=True, use_accelerator=False)
-  dg_riemann_x_stateless_kernel = dg_riemann_x_stateless_tree.print_cpp()
-  dg_riemann_x_stateless_call_with_measurement = dg_riemann_x_stateless_tree.print_definition_with_timer()
-  dg_riemann_x_stateless_kernel_declaration = dg_riemann_x_stateless_tree.print_declaration()
-  dg_riemann_x_stateless_call_with_measurement_declaration = dg_riemann_x_stateless_tree.print_declaration_with_timer()
+  dg_riemann_x_stateless_kernel = dg_riemann_x_stateless_tree.print(cpp_printer)
+  dg_riemann_x_stateless_call_with_measurement = dg_riemann_x_stateless_tree.print_definition_with_timer(cpp_printer)
+  dg_riemann_x_stateless_kernel_declaration = dg_riemann_x_stateless_tree.print_declaration(cpp_printer)
+  dg_riemann_x_stateless_call_with_measurement_declaration = dg_riemann_x_stateless_tree.print_declaration_with_timer(cpp_printer)
 
   dg_riemann_y_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkdg.rusanov.solveRiemannProblemY2D, template_parameters, functor_arguments, ["exahype2", "dg", "rusanov"], stateless=True, use_accelerator=False)
-  dg_riemann_y_stateless_kernel = dg_riemann_y_stateless_tree.print_cpp()
-  dg_riemann_y_stateless_call_with_measurement = dg_riemann_y_stateless_tree.print_definition_with_timer()
-  dg_riemann_y_stateless_kernel_declaration = dg_riemann_y_stateless_tree.print_declaration()
-  dg_riemann_y_stateless_call_with_measurement_declaration = dg_riemann_y_stateless_tree.print_declaration_with_timer()
+  dg_riemann_y_stateless_kernel = dg_riemann_y_stateless_tree.print(cpp_printer)
+  dg_riemann_y_stateless_call_with_measurement = dg_riemann_y_stateless_tree.print_definition_with_timer(cpp_printer)
+  dg_riemann_y_stateless_kernel_declaration = dg_riemann_y_stateless_tree.print_declaration(cpp_printer)
+  dg_riemann_y_stateless_call_with_measurement_declaration = dg_riemann_y_stateless_tree.print_declaration_with_timer(cpp_printer)
 
   if not os.path.exists("kernels"):
       os.makedirs("kernels")
@@ -124,6 +125,7 @@ namespace exahype2::dg::rusanov {
   file.close()
 
 def create_Riemann_solver_kernel_definitions_3d():
+  cpp_printer = DSL.printers.CPPPrinter(spaces_per_tab=4)
   template_parameters = [DSL.SyntaxTree.Argument("DGOrder", DSL.SyntaxTree.TInteger()),
                         DSL.SyntaxTree.Argument("NumberOfUnknowns", DSL.SyntaxTree.TInteger()),
                         DSL.SyntaxTree.Argument("NumberOfAuxiliaryVariables", DSL.SyntaxTree.TInteger()),
@@ -134,22 +136,22 @@ def create_Riemann_solver_kernel_definitions_3d():
                        DSL.SyntaxTree.Argument("nonconservativeProduct", DSL.SyntaxTree.TCustom("const NonConservativeProduct&"))]
   
   dg_riemann_x_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkdg.rusanov.solveRiemannProblemX3D, template_parameters, functor_arguments, ["exahype2", "dg", "rusanov"], stateless=True, use_accelerator=False)
-  dg_riemann_x_stateless_kernel = dg_riemann_x_stateless_tree.print_cpp()
-  dg_riemann_x_stateless_call_with_measurement = dg_riemann_x_stateless_tree.print_definition_with_timer()
-  dg_riemann_x_stateless_kernel_declaration = dg_riemann_x_stateless_tree.print_declaration()
-  dg_riemann_x_stateless_call_with_measurement_declaration = dg_riemann_x_stateless_tree.print_declaration_with_timer()
+  dg_riemann_x_stateless_kernel = dg_riemann_x_stateless_tree.print(cpp_printer)
+  dg_riemann_x_stateless_call_with_measurement = dg_riemann_x_stateless_tree.print_definition_with_timer(cpp_printer)
+  dg_riemann_x_stateless_kernel_declaration = dg_riemann_x_stateless_tree.print_declaration(cpp_printer)
+  dg_riemann_x_stateless_call_with_measurement_declaration = dg_riemann_x_stateless_tree.print_declaration_with_timer(cpp_printer)
 
   dg_riemann_y_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkdg.rusanov.solveRiemannProblemY3D, template_parameters, functor_arguments, ["exahype2", "dg", "rusanov"], stateless=True, use_accelerator=False)
-  dg_riemann_y_stateless_kernel = dg_riemann_y_stateless_tree.print_cpp()
-  dg_riemann_y_stateless_call_with_measurement = dg_riemann_y_stateless_tree.print_definition_with_timer()
-  dg_riemann_y_stateless_kernel_declaration = dg_riemann_y_stateless_tree.print_declaration()
-  dg_riemann_y_stateless_call_with_measurement_declaration = dg_riemann_y_stateless_tree.print_declaration_with_timer()
+  dg_riemann_y_stateless_kernel = dg_riemann_y_stateless_tree.print(cpp_printer)
+  dg_riemann_y_stateless_call_with_measurement = dg_riemann_y_stateless_tree.print_definition_with_timer(cpp_printer)
+  dg_riemann_y_stateless_kernel_declaration = dg_riemann_y_stateless_tree.print_declaration(cpp_printer)
+  dg_riemann_y_stateless_call_with_measurement_declaration = dg_riemann_y_stateless_tree.print_declaration_with_timer(cpp_printer)
 
   dg_riemann_z_stateless_tree = DSL.Parser().parse(exahype2.solvers.rkdg.rusanov.solveRiemannProblemZ3D, template_parameters, functor_arguments, ["exahype2", "dg", "rusanov"], stateless=True, use_accelerator=False)
-  dg_riemann_z_stateless_kernel = dg_riemann_z_stateless_tree.print_cpp()
-  dg_riemann_z_stateless_call_with_measurement = dg_riemann_z_stateless_tree.print_definition_with_timer()
-  dg_riemann_z_stateless_kernel_declaration = dg_riemann_z_stateless_tree.print_declaration()
-  dg_riemann_z_stateless_call_with_measurement_declaration = dg_riemann_z_stateless_tree.print_declaration_with_timer()
+  dg_riemann_z_stateless_kernel = dg_riemann_z_stateless_tree.print(cpp_printer)
+  dg_riemann_z_stateless_call_with_measurement = dg_riemann_z_stateless_tree.print_definition_with_timer(cpp_printer)
+  dg_riemann_z_stateless_kernel_declaration = dg_riemann_z_stateless_tree.print_declaration(cpp_printer)
+  dg_riemann_z_stateless_call_with_measurement_declaration = dg_riemann_z_stateless_tree.print_declaration_with_timer(cpp_printer)
 
   if not os.path.exists("kernels"):
       os.makedirs("kernels")

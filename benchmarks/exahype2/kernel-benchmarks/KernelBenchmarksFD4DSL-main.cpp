@@ -10,7 +10,7 @@
 #include "repositories/SolverRepository.h"
 #include "repositories/StepRepository.h"
 
-#include "kernels/FD4.h"
+#include "kernels/FD43d.h"
 
 #include "peano4/peano.h"
 
@@ -195,6 +195,7 @@ void reportRuntime(
   ss << " |\n\t" << timingKernelLaunch.toString();
 
   logInfo("reportRuntime()", ss.str());
+  std::cout.flush();
 }
 
 
@@ -417,166 +418,162 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
   deviceString = std::to_string(device);
 #endif
 
-  if constexpr (AssessHostKernels) {
-    #if defined (USE_CPP_KERNELS)
-    if constexpr (AssessSerialKernels){
-    assessKernel(wrapHostKernel<
-      exahype2::fd::fd4::timeStepWithFD4Stateless<
-        FD4,
-        FD4::NumberOfGridCellsPerPatchPerAxis,
-        HaloSize,
-        FD4::NumberOfUnknowns,
-        FD4::NumberOfAuxiliaryVariables,
-        KOSigma,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        true>
-      >,
-      "host, AoS, serial",
-      launchingThreads,
-      ::tarch::accelerator::Device::HostDevice,
-      localPatches
-    );
-    }
-    if constexpr (AssessParallelKernels){
-    #if defined (SharedOMP)
-    assessKernel(wrapHostKernel<
-      exahype2::fd::fd4::omp::timeStepWithFD4Stateless<
-        FD4,
-        FD4::NumberOfGridCellsPerPatchPerAxis,
-        HaloSize,
-        FD4::NumberOfUnknowns,
-        FD4::NumberOfAuxiliaryVariables,
-        KOSigma,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        true>
-      >,
-      "host, AoS, omp",
-      launchingThreads,
-      ::tarch::accelerator::Device::HostDevice,
-      localPatches
-    );
-    #endif
-    }
-    #endif
-    #if defined (USE_MLIR)
-    if constexpr (AssessSerialKernels) {
-    // MLIR kernel is accurate to ~1e-12, suitable for now, but should be investigated
-    assessKernel(wrapHostKernel<
-      exahype2::fd::fd4::mlir::timeStepWithFD4Stateless<
-        FD4,
-        FD4::NumberOfGridCellsPerPatchPerAxis,
-        HaloSize,
-        FD4::NumberOfUnknowns,
-        FD4::NumberOfAuxiliaryVariables,
-        KOSigma,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        true>
-      >,
-      "host, AoS, mlir, serial",
-      launchingThreads,
-      ::tarch::accelerator::Device::HostDevice,
-      localPatches
-    );
-    }
-    if constexpr (AssessParallelKernels) {
-    #if defined (SharedOMP)
-    assessKernel(wrapHostKernel<
-      exahype2::fd::fd4::mlir::omp::timeStepWithFD4Stateless<
-        FD4,
-        FD4::NumberOfGridCellsPerPatchPerAxis,
-        HaloSize,
-        FD4::NumberOfUnknowns,
-        FD4::NumberOfAuxiliaryVariables,
-        KOSigma,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        true>
-      >,
-      "host, AoS, mlir, omp",
-      launchingThreads,
-      ::tarch::accelerator::Device::HostDevice,
-      localPatches
-    );
-    #endif
-    }
-    #endif
-  }
+  #if defined (ASSESS_HOST_KERNELS)
+    #if defined (ASSESS_SERIAL_KERNELS)
+      #if defined (ASSESS_CPP_KERNELS)
+        assessKernel(wrapHostKernel<
+          exahype2::fd::fd4::timeStepWithFD4Stateless<
+            FD4,
+            FD4::NumberOfGridCellsPerPatchPerAxis,
+            HaloSize,
+            FD4::NumberOfUnknowns,
+            FD4::NumberOfAuxiliaryVariables,
+            KOSigma,
+            EvaluateFlux,
+            EvaluateNonconservativeProduct,
+            EvaluateSource,
+            true>
+          >,
+          "host, AoS, serial, cpp",
+          launchingThreads,
+          ::tarch::accelerator::Device::HostDevice,
+          localPatches
+        );
+      #endif //ASSESS_CPP_KERNELS
+      #if defined (ASSESS_MLIR_KERNELS)
+        assessKernel(wrapMLIRHostKernel<
+          exahype2::fd::fd4::mlir::timeStepWithFD4Stateless<
+            FD4,
+            FD4::NumberOfGridCellsPerPatchPerAxis,
+            HaloSize,
+            FD4::NumberOfUnknowns,
+            FD4::NumberOfAuxiliaryVariables,
+            KOSigma,
+            EvaluateFlux,
+            EvaluateNonconservativeProduct,
+            EvaluateSource,
+            true>
+          >,
+          "host, AoS, serial, mlir",
+          launchingThreads,
+          ::tarch::accelerator::Device::HostDevice,
+          localPatches
+        );
+      #endif //ASSESS_MLIR_KERNELS
+    #endif //ASSESS_SERIAL_KERNELS
 
-  if constexpr (AssessDeviceKernels) {
-    #if defined (GPUOffloadingOMP)
-    assessKernel(wrapDeviceKernel<
-      exahype2::fd::fd4::omp::timeStepWithFD4Stateless<
-        FD4,
-        FD4::NumberOfGridCellsPerPatchPerAxis,
-        HaloSize,
-        FD4::NumberOfUnknowns,
-        FD4::NumberOfAuxiliaryVariables,
-        KOSigma,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        true>
-      >,
-      "device, AoS, omp",
-      launchingThreads,
-      0,
-      localPatches
-    );
-    #endif
+    #if defined (ASSESS_PARALLEL_KERNELS)
+      #if defined (SharedOMP)
+        #if defined (ASSESS_CPP_KERNELS)
+          assessKernel(wrapHostKernel<
+            exahype2::fd::fd4::omp::timeStepWithFD4Stateless<
+              FD4,
+              FD4::NumberOfGridCellsPerPatchPerAxis,
+              HaloSize,
+              FD4::NumberOfUnknowns,
+              FD4::NumberOfAuxiliaryVariables,
+              KOSigma,
+              EvaluateFlux,
+              EvaluateNonconservativeProduct,
+              EvaluateSource,
+              true>
+            >,
+            "host, AoS, omp, cpp",
+            launchingThreads,
+            ::tarch::accelerator::Device::HostDevice,
+            localPatches
+          );
+        #endif //ASSESS_CPP_KERNELS
+        #if defined (ASSESS_MLIR_KERNELS)
+          assessKernel(wrapMLIRHostKernel<
+            exahype2::fd::fd4::omp::mlir::timeStepWithFD4Stateless<
+              FD4,
+              FD4::NumberOfGridCellsPerPatchPerAxis,
+              HaloSize,
+              FD4::NumberOfUnknowns,
+              FD4::NumberOfAuxiliaryVariables,
+              KOSigma,
+              EvaluateFlux,
+              EvaluateNonconservativeProduct,
+              EvaluateSource,
+              true>
+            >,
+            "host, AoS, omp, mlir",
+            launchingThreads,
+            ::tarch::accelerator::Device::HostDevice,
+            localPatches
+          );
+        #endif //ASSESS_MLIR_KERNELS
+      #endif //SharedOMP
+    #endif //ASSESS_PARALLEL_KERNELS
+  #endif //ASSESS_HOST_KERNELS
 
-    #if defined (GPUOffloadingSYCL)
-    assessKernel(wrapDeviceKernel<
-      exahype2::fd::fd4::sycl::timeStepWithFD4Stateless<
-        FD4,
-        FD4::NumberOfGridCellsPerPatchPerAxis,
-        HaloSize,
-        FD4::NumberOfUnknowns,
-        FD4::NumberOfAuxiliaryVariables,
-        KOSigma,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        true>
-      >,
-      "device, AoS, sycl",
-      launchingThreads,
-      0,
-      localPatches
-    );
-    #endif
-  }
+  #if defined (ASSESS_DEVICE_KERNELS)
+    #if defined (ASSESS_CPP_KERNELS)
+      #if defined (GPUOffloadingOMP)
+        assessKernel(wrapDeviceKernel<
+          exahype2::fd::fd4::omp::timeStepWithFD4Stateless<
+            FD4,
+            FD4::NumberOfGridCellsPerPatchPerAxis,
+            HaloSize,
+            FD4::NumberOfUnknowns,
+            FD4::NumberOfAuxiliaryVariables,
+            KOSigma,
+            EvaluateFlux,
+            EvaluateNonconservativeProduct,
+            EvaluateSource,
+            true>
+          >,
+          "device, AoS, omp",
+          launchingThreads,
+          0,
+          localPatches
+        );
+      #endif //GPUOffloadingOMP
 
-  if constexpr (AssessMLIRDeviceKernels) {
-    #if defined(USE_MLIR)
-    #if defined(MLIR_GPU)
-    assessKernel(wrapMLIRDeviceKernel<
-      exahype2::fd::fd4::mlir::gpu::timeStepWithFD4Stateless<
-        FD4,
-        FD4::NumberOfGridCellsPerPatchPerAxis,
-        HaloSize,
-        FD4::NumberOfUnknowns,
-        FD4::NumberOfAuxiliaryVariables,
-        KOSigma,
-        EvaluateFlux,
-        EvaluateNonconservativeProduct,
-        EvaluateSource,
-        true>
-      >,
-      "device, AoS, mlir, gpu",
-      launchingThreads,
-      0,
-      localPatches
-    );
-    #endif
-    #endif
-  }
+      #if defined (GPUOffloadingSYCL)
+        assessKernel(wrapDeviceKernel<
+          exahype2::fd::fd4::sycl::timeStepWithFD4Stateless<
+            FD4,
+            FD4::NumberOfGridCellsPerPatchPerAxis,
+            HaloSize,
+            FD4::NumberOfUnknowns,
+            FD4::NumberOfAuxiliaryVariables,
+            KOSigma,
+            EvaluateFlux,
+            EvaluateNonconservativeProduct,
+            EvaluateSource,
+            true>
+          >,
+          "device, AoS, sycl",
+          launchingThreads,
+          0,
+          localPatches
+        );
+      #endif //GPUOffloadingSYCL
+    #endif //ASSESS_CPP_KERNELS
+
+    #if defined (ASSESS_MLIR_KERNELS)
+      assessKernel(wrapMLIRDeviceKernel<
+        exahype2::fd::fd4::mlir::gpu::timeStepWithFD4Stateless<
+          FD4,
+          FD4::NumberOfGridCellsPerPatchPerAxis,
+          HaloSize,
+          FD4::NumberOfUnknowns,
+          FD4::NumberOfAuxiliaryVariables,
+          KOSigma,
+          EvaluateFlux,
+          EvaluateNonconservativeProduct,
+          EvaluateSource,
+          true>
+        >,
+        "device, AoS, mlir",
+        launchingThreads,
+        0,
+        localPatches
+      );
+    #endif //ASSESS_MLIR_KERNELS
+  #endif //ASSESS_DEVICE_KERNELS
 }
 
 

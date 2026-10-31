@@ -3,6 +3,8 @@
 #pragma once
 
 
+#include <string>
+
 #include "tarch/la/Vector.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 
@@ -104,6 +106,70 @@ class exahype2::Solver {
 
     virtual double getMaxMeshSize() const;
     virtual double getMinMeshSize() const;
+
+    /**
+     * Solver state for the header of a checkpoint
+     *
+     * The checkpoint plotters (@ref exahype2.api.fv.WriteCheckpoint and
+     * @ref exahype2.api.rkfd4.WriteCheckpoint) write the result into the
+     * meta-data block of each Peano patch file. Every line holds one
+     * attribute as key-value pair, with the attribute's name without its
+     * leading underscore as key:
+     *
+     * ~~~~~~~~~~~~~~~~~~~~~~~
+     * minTimeStamp 1.00000000000000006e-01
+     * maxTimeStamp 1.00000000000000006e-01
+     * ~~~~~~~~~~~~~~~~~~~~~~~
+     *
+     * The lines are separated by line breaks. The values carry 17
+     * significant digits, so a double survives the round trip through the
+     * file unchanged.
+     *
+     * The routine writes the time stamps, the time step sizes, the
+     * admissible time step size and the mesh sizes. It leaves out the
+     * bookkeeping of the time step which is currently running (the
+     * *UpdatedThisTimeStep attributes) and the cell update counter.
+     * Generated solvers override it to append their own attributes via
+     * toCheckpointMetaDataEntry().
+     */
+    virtual std::string toCheckpointMetaData() const;
+
+    /**
+     * One line of toCheckpointMetaData()
+     *
+     * @return key and value separated by a blank, with the value in
+     *   scientific notation with 17 significant digits. No line break.
+     */
+    static std::string toCheckpointMetaDataEntry(const std::string& key, double value);
+
+    /**
+     * Restore the solver state from the header of a checkpoint
+     *
+     * Counterpart of toCheckpointMetaData(): The routine sets the time
+     * stamps, the time step sizes, the admissible time step size and the
+     * mesh sizes to the values in metaData. Attributes which metaData does
+     * not hold keep their values. Afterwards, it resets the bookkeeping of
+     * the time step as startTimeStep() does, so the next time step
+     * continues from the restored state. Generated solvers override it to
+     * restore their own attributes via getCheckpointMetaDataEntry().
+     *
+     * exahype2.api.blockstructured.LoadCheckpoint calls the routine once
+     * the solution has been read from the checkpoint.
+     */
+    virtual void fromCheckpointMetaData(const std::string& metaData);
+
+    /**
+     * Find one entry of a checkpoint's meta data
+     *
+     * @param metaData Key-value pairs as written by toCheckpointMetaData(),
+     *   one per line. Leading white spaces per line are ignored.
+     * @param key Key of the entry, i.e. the attribute's name without
+     *   leading underscore.
+     * @param value Set to the entry's value if metaData holds the key.
+     *   Otherwise, it is left unchanged.
+     * @return Whether metaData holds the key.
+     */
+    static bool getCheckpointMetaDataEntry(const std::string& metaData, const std::string& key, double& value);
 
     /**
      * Default implementation: always returns true, i.e. every cell uses

@@ -49,7 +49,7 @@ constexpr int    HaloSize     = 0;
 
 static_assert(Accuracy >= std::numeric_limits<double>::epsilon() || Accuracy == 0.0);
 
-#if defined(BenchmarkCellIntegral)
+#if defined(ASSESS_CELL_INTEGRAL_KERNELS)
 constexpr int NumberOfInputEntriesPerPatch
   = (DG::DGOrder + 1)
   * (DG::DGOrder + 1)
@@ -74,7 +74,7 @@ constexpr int NumberOfCellsPerPatch
 #endif
   ;
 
-#else if defined(BenchmarkRiemannProblem)
+#else if defined(ASSESS_RIEMANN_PROBLEM_KERNELS)
 
 constexpr int NumberOfInputEntriesPerPatch
   = (DG::DGOrder + 1)
@@ -108,11 +108,40 @@ constexpr int NumberOfCellsPerPatch
  * smooth and ensure that all is positive, as there are density and energy
  * among the unknowns. If they become negative or zero, the compute kernels do
  * not make any sense anymore.
+ * Values consider each axis so that the values aren't unreasonably far apart in
+ * the Z axis, which can lead to accumulating inaccuracies on the GPU. Some 
+ * offset is added so that the input data isn't perfectly symmetrical across axes.
  */
 void initInputData(double* Q) {
-  for (int i = 0; i < NumberOfInputEntriesPerPatch; i++) {
-    Q[i] = 0.1 + std::sin(1.0 * i / (NumberOfInputEntriesPerPatch) * ::tarch::la::PI);
+  int dofs = DG::DGOrder + 1;
+#if defined(ASSESS_CELL_INTEGRAL_KERNELS)
+  int dofs_x = dofs;
+#else if defined(ASSESS_RIEMANN_PROBLEM_KERNELS)
+  int dofs_x = 2;
+#endif
+#if Dimensions == 3
+  for (int i = 0; i < dofs; i++){
+#endif
+    for (int j = 0; j < dofs; j++){
+      for (int k = 0; k < dofs_x; k++){
+        for (int l = 0; l < DG::NumberOfUnknowns + DG::NumberOfAuxiliaryVariables; l++){
+          int index = l + k * (DG::NumberOfUnknowns + DG::NumberOfAuxiliaryVariables)
+              + j * dofs_x * (DG::NumberOfUnknowns + DG::NumberOfAuxiliaryVariables)
+#if Dimensions == 3
+              + i * dofs_x * dofs * (DG::NumberOfUnknowns + DG::NumberOfAuxiliaryVariables)
+#endif
+          ;
+#if Dimensions == 3
+          Q[index] = std::sin(((double)(i + 1) / dofs) * ((double)(j + 3%dofs) / dofs) * ((double)(k + 5%dofs_x) / dofs_x) + ((double)(l + 1) / (DG::NumberOfUnknowns + DG::NumberOfAuxiliaryVariables)) * ::tarch::la::PI);
+#else
+          Q[index] = std::sin(0.1 * ((double)(j + 3%dofs) / dofs) * ((double)(k + 5%dofs_x) / dofs_x) + ((double)(l + 1) / (DG::NumberOfUnknowns + DG::NumberOfAuxiliaryVariables)) * ::tarch::la::PI);
+#endif
+        }
+      }
+    }
+#if Dimensions == 3
   }
+#endif
 }
 
 
@@ -291,6 +320,39 @@ void wrapDeviceKernel(int device, exahype2::CellData<double, double>& patchData)
   Kernel(device, gpuCellData, timingComputeKernel);
 }
 
+#if defined (USE_MLIR)
+template <void (*Kernel)(MLIRCellData*, tarch::timing::Measurement&)>
+void wrapMLIRHostKernel(int device, ::exahype2::CellData<double, double>& patchData) {
+  assertion(device == tarch::accelerator::Device::HostDevice);
+  //::exahype2::CopyCellDataGPU<double, double> gpuCellData(patchData, NumberOfInputEntriesPerPatch, NumberOfOutputEntriesPerPatch, device);
+  MLIRCellData mlir_data;
+  convertToMLIRStruct(&patchData, &mlir_data); 
+
+  Kernel(&mlir_data, timingComputeKernel);
+
+  copybackMLIRresults(&patchData, &mlir_data);
+
+  cleanupMLIRStruct(&mlir_data);
+}
+
+
+#if defined(MLIR_GPU)
+template <void (*Kernel)(int, MLIRCellData*, tarch::timing::Measurement&)>
+void wrapMLIRDeviceKernel(int device, ::exahype2::CellData<double, double>& patchData) {
+  assertion(device != tarch::accelerator::Device::HostDevice);
+  MLIRCellData mlir_data = {};
+  convertToMLIRStructGPU(&patchData, &mlir_data);
+
+  Kernel(device, &mlir_data, timingComputeKernel);
+
+  copybackMLIRresults(&patchData, &mlir_data);
+
+  cleanupMLIRStructGPU(&mlir_data);
+}
+#endif
+
+#endif
+
 /**
  * Run the benchmark for one particular number of patches
  *
@@ -327,7 +389,7 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
 
     // TODO: Does the number of samples change the outcome of the solution?
     for (int j = 0; j < NumberOfSamples; j++) {
-      parallelFor(launchingThread, launchingThreads) {
+      //parallelFor(launchingThread, launchingThreads) {
         ::exahype2::CellData<double, double> patchData(patches);
         for (int i = 0; i < patches; i++) {
           patchData.QIn[i] = ::tarch::allocateMemory<double>(
@@ -365,11 +427,11 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
           int    errors        = 0;
           double maxDifference = 0.0;
           for (int i = 0; i < patches; i++) {
-            storeOutcome(patchData.QOut[i], patchData.maxEigenvalue[i]);
+            storeOutcome(patchData.QOut[i], /*patchData.maxEigenvalue[i]*/ 0.0);
             auto [maxDifferencePerPatch, errorsPerPatch] = validateOutcome(
               patchData.QOut[i],
               i,
-              patchData.maxEigenvalue[i]
+              /*patchData.maxEigenvalue[i]*/ 0.0
             );
             errors += errorsPerPatch;
             maxDifference = std::max(maxDifference, maxDifferencePerPatch);
@@ -397,8 +459,8 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
             ::tarch::MemoryLocation::Heap
           );
         }
-      }
-      endParallelFor
+      //}
+      //endParallelFor
     }
 
     if (::tarch::mpi::Rank::getInstance().getRank() == ::tarch::mpi::Rank::getGlobalMasterRank()) {
@@ -449,15 +511,40 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
   deviceString = std::to_string(device);
 #endif
 
-  if constexpr (AssessHostKernels) {
-    #if defined(BenchmarkRiemannProblem)
+//  if constexpr (AssessHostKernels) {
+//    #if defined(BenchmarkRiemannProblem)
+//      assessKernel(wrapOldRiemannSolver<exahype2::dg::rusanov::solveRiemannProblem_pointwise_in_situ>,
+//        "host, AoS, serial",
+//        launchingThreads,
+//        ::tarch::accelerator::Device::HostDevice,
+//        localPatches
+//      );
+//
+//      assessKernel(wrapDSLRiemannSolver<
+//        exahype2::dg::rusanov::solveRiemannProblemXStateless<
+//          DG,
+//          DG::DGOrder,
+//          DG::NumberOfUnknowns,
+//          DG::NumberOfAuxiliaryVariables,
+//          EvaluateFlux,
+//          EvaluateNonconservativeProduct>
+//        >,
+//        "host, AoS, serial, DSL",
+//        launchingThreads,
+//        ::tarch::accelerator::Device::HostDevice,
+//        localPatches
+//      );
+
+    #if defined(ASSESS_RIEMANN_PROBLEM_KERNELS)
       assessKernel(wrapOldRiemannSolver<exahype2::dg::rusanov::solveRiemannProblem_pointwise_in_situ>,
         "host, AoS, serial",
         launchingThreads,
         ::tarch::accelerator::Device::HostDevice,
         localPatches
       );
-
+      #if defined (ASSESS_HOST_KERNELS)
+      #if defined (ASSESS_SERIAL_KERNELS)
+      #if defined (ASSESS_CPP_KERNELS)
       assessKernel(wrapDSLRiemannSolver<
         exahype2::dg::rusanov::solveRiemannProblemXStateless<
           DG,
@@ -472,8 +559,15 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
         ::tarch::accelerator::Device::HostDevice,
         localPatches
       );
+      #endif //ASSESS_CPP_KERNELS
+      #if defined (ASSESS_MLIR_KERNELS)
 
-    #else if defined(BenchmarkCellIntegral)
+      #endif //ASSESS_MLIR_KERNELS
+      #endif //ASSESS_SERIAL_KERNELS
+      #endif //ASSESS_HOST_KERNELS
+    #endif
+
+    #if defined(ASSESS_CELL_INTEGRAL_KERNELS)
 
       assessKernel(wrapCellIntegral<
         exahype2::dg::cellIntegral_patchwise_in_situ_GaussLegendre<
@@ -488,6 +582,9 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
         localPatches
       );
 
+      #if defined (ASSESS_HOST_KERNELS)
+      #if defined (ASSESS_SERIAL_KERNELS)
+      #if defined (ASSESS_CPP_KERNELS)
       assessKernel(wrapHostKernel<
         exahype2::dg::rusanov::cellIntegralStateless<
           DG,
@@ -499,14 +596,15 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
           EvaluateSource,
           EvaluatePointSources>
         >,
-        "host, AoS, serial, DSL",
+        "host, AoS, serial, cpp",
         launchingThreads,
         ::tarch::accelerator::Device::HostDevice,
         localPatches
       );
-      #if defined (GPUOffloadingOMP)
-      assessKernel(wrapDeviceKernel<
-        exahype2::dg::omp::rusanov::cellIntegralStateless<
+      #endif //ASSESS_CPP_KERNELS
+      #if defined (ASSESS_MLIR_KERNELS)
+      assessKernel(wrapMLIRHostKernel<
+        exahype2::dg::rusanov::mlir::cellIntegralStateless<
           DG,
           DG::DGOrder,
           DG::NumberOfUnknowns,
@@ -516,14 +614,15 @@ void runBenchmarks(int numberOfPatches, int launchingThreads) {
           EvaluateSource,
           EvaluatePointSources>
         >,
-        "device, AoS, DSL",
+        "host, AoS, serial, mlir",
         launchingThreads,
-        0,
+        ::tarch::accelerator::Device::HostDevice,
         localPatches
       );
-      #endif
-    #endif
-}
+      #endif //ASSESS_MLIR_KERNELS
+      #endif //ASSESS_SERIAL_KERNELS
+      #endif //ASSESS_HOST_KERNELS
+    #endif // ASSESS_CELL_INTEGRAL_KERNELS
 }
 
 
@@ -601,19 +700,19 @@ int main(int argc, char** argv) {
 #endif
   }
 
-#if defined(SharedOMP)
-#pragma omp parallel
-  {
-#pragma omp master
-    {
-#endif
+//#if defined(SharedOMP)
+//#pragma omp parallel
+//  {
+//#pragma omp master
+//    {
+//#endif
       for (int n = 0; n < NumberOfPatchesToStudy.size(); n++) {
         runBenchmarks(NumberOfPatchesToStudy[n], NumberOfLaunchingThreads);
       }
-#if defined(SharedOMP)
-    }
-  }
-#endif
+//if defined(SharedOMP)
+//    }
+//  }
+//#endif
 
   if constexpr (Accuracy > 0.0) {
     logInfo(

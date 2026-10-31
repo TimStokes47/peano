@@ -166,6 +166,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
         reconstruction_task,
         name_suffix="",
         relative_time_step_size=0.0,
+        additional_guard="true",
     ):
         """!
 
@@ -201,6 +202,11 @@ class ApplyDirichletBoundaryConditions(ActionSet):
         @param relative_time_step_size: float
           The @f$ c_k @f$ of the Runge-Kutta stage, see the constructor.
 
+        @param additional_guard: str
+          C++ predicate which is combined with the guard of the boundary
+          action set, e.g. the is<Name>Active() of a plotter which
+          reconstructs the halo (@ref exahype2.api.rkfd4.WriteCheckpoint).
+
         @return peano4.api.taskgraph.Task or None
           The boundary task, or None if no Dirichlet task is required.
 
@@ -223,7 +229,11 @@ class ApplyDirichletBoundaryConditions(ActionSet):
             ApplyDirichletBoundaryConditions(
                 solver,
                 solver._patch_overlap_current_time_step,
-                guard=solver.grid_selector.createFaceGuard(),
+                guard="("
+                + additional_guard
+                + ") and ("
+                + solver.grid_selector.createFaceGuard()
+                + ")",
                 relative_time_step_size=relative_time_step_size,
             )
         )

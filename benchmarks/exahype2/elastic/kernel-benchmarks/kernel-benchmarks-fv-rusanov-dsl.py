@@ -157,26 +157,25 @@ if args.fpe:
 else:
     project.constants.export_boolean("EnableFPE", False)
 
+# CPU is enabled by default if neither CPU nor GPU are specified
 if args.cpu == False and args.gpu == False:
-    project.constants.export_boolean("AssessHostKernels", True)
-    project.constants.export_boolean("AssessDeviceKernels", True)
+    project.output.makefile.add_CXX_flag("-DASSESS_HOST_KERNELS")
 else:
-    project.constants.export_boolean("AssessHostKernels", True if args.cpu else False)
-    project.constants.export_boolean("AssessDeviceKernels", True if args.gpu else False)
-project.constants.export_boolean("AssessMLIRDeviceKernels", False)
+    if args.cpu: project.output.makefile.add_CXX_flag("-DASSESS_HOST_KERNELS")
+    if args.gpu: project.output.makefile.add_CXX_flag("-DASSESS_DEVICE_KERNELS")
 
 if args.serial == False and args.parallel == False:
-    project.constants.export_boolean("AssessSerialKernels", True)
-    project.constants.export_boolean("AssessParallelKernels", True)
+    project.output.makefile.add_CXX_flag("-DASSESS_SERIAL_KERNELS")
+    project.output.makefile.add_CXX_flag("-DASSESS_PARALLEL_KERNELS")
 else:
-    project.constants.export_boolean("AssessSerialKernels", True if args.serial else False)
-    project.constants.export_boolean("AssessParallelKernels", True if args.parallel else False)
+    if args.serial: project.output.makefile.add_CXX_flag("-DASSESS_SERIAL_KERNELS")
+    if args.parallel: project.output.makefile.add_CXX_flag("-DASSESS_PARALLEL_KERNELS")
 
-project.output.makefile.add_CXX_flag("-DUSE_CPP_KERNELS")
+project.output.makefile.add_CXX_flag("-DASSESS_CPP_KERNELS")
 
 project.constants.export_boolean("EvaluateFlux", True)
-project.constants.export_boolean("EvaluateNonconservativeProduct", True)
-project.constants.export_boolean("EvaluateSource", False)
+project.constants.export_boolean("EvaluateNonconservativeProduct", False)
+project.constants.export_boolean("EvaluateSource", True)
 project.constants.export_boolean("EvaluateMaximumEigenvalueAfterTimeStep", True if args.eval_eig else False)  # Reduction
 
 project.constants.define_value("RHO", str(1.0))

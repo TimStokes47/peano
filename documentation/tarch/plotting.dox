@@ -47,6 +47,9 @@ around an global instance of tarch::mpi::BooleanSemaphore.
 
 
 A comprehensive (and documented) version of such a plotter is tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter.
+Its sibling tarch::plotter::griddata::blockstructured::PeanoBinaryPatchFileWriter
+has the same interface and writes the same files, but dumps the quantities as
+raw doubles (@ref tarch_patch_file_format).
 
 
 */

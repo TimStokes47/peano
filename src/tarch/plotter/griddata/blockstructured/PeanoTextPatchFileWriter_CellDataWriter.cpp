@@ -26,7 +26,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWri
   _writer.writeMapping(getCellsPerPatch(),mapping);
 
   _writer._snapshotFileOut << "end cell-metadata" << std::endl << std::endl;
-  _out << std::scientific;
+  _out << std::scientific << std::setprecision(_writer._snapshotFileOut.precision());
 }
 
 
@@ -47,16 +47,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( [[maybe_unused]] int index, double value ) {
   for (int i=0; i<_numberOfUnknowns; i++) {
-    if (std::isnan(value)) {
-      _out << " nan";
-    } else {
-      if ( std::abs(value) < std::numeric_limits<double>::min() ) value = 0.0;
-      if (tarch::la::equals(value,0.0)) {
-        _out << " 0";
-      } else {
-        _out << " " << value;
-      }
-    }
+    _out << " " << value;
     _entryCounter++;
   }
   flushIfPatchIsComplete();
@@ -65,16 +56,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( [[maybe_unused]] int index, double* values ) {
   for (int i=0; i<_numberOfUnknowns; i++) {
-    if (std::isnan(values[i])) {
-      _out << " nan";
-    } else {
-      if ( std::abs(values[i]) < std::numeric_limits<double>::min() ) values[i] = 0.0;
-      if (tarch::la::equals(values[i],0.0)) {
-        _out << " 0";
-      } else {
-        _out << " " << values[i];
-      }
-    }
+    _out << " " << values[i];
     _entryCounter++;
   }
   flushIfPatchIsComplete();

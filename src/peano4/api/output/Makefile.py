@@ -329,6 +329,8 @@ the SISC paper
                   "CXXFLAGS",
                   "LDFLAGS",
                   "LIBS",
+                  "GPU_VENDOR",
+                  "GPU_ARCH"
               ]
 
               for line in input:

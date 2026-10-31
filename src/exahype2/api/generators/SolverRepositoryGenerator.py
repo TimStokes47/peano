@@ -163,7 +163,7 @@ namespace {{ item }} {
             self.solverRepositoryDictionary["SOLVERS"].append(
                 (solver.get_name_of_solver_class(), solver.get_name_of_global_instance())
             )
-            if solver.plotter is not None:
+            if solver.plotters:
                 self.solverRepositoryDictionary["PLOTTING_SOLVERS"].append(
                     solver.get_name_of_global_instance()
                 )

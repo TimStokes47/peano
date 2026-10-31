@@ -37,7 +37,10 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
                precision=3,
                select_dofs = None,
                dataType="double",
-               restart_preprocess=False):
+               restart_preprocess=False,
+               patch_scaling=1.0,
+               metadata_evaluation=None,
+               binary=False):
     """!
     
       Construct the block plotter
@@ -52,9 +55,38 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
       mapping: Series of d-tuples which describe how to distort quadrature/sampling
         points within a reference cube/square. Can be empty alternatively.
          
+      precision: int
+        Number of significant digits of the plotted values. The writer
+        does not round or set small values to zero, so 17 writes the doubles
+        without loss, e.g. for a checkpoint. Patch offsets and sizes use at
+        least six digits
+        (@ref tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter).
+
       select_dofs: [Int] or None
         You can make the plotter only plot some of the dofs of interest
-           
+
+      patch_scaling: float
+        Factor by which the plotted patch's box is scaled relative to the
+        cell, around the cell's centre. 1.0 plots the patch over the cell.
+        A patch with N dofs per axis plus a halo of M dofs on each side
+        uses (N+2M)/N, so every halo value sits at its true coordinate.
+
+      metadata_evaluation: str or None
+        C++ expression which yields a std::string at runtime. If set, its
+        value replaces metadata in the meta-data block of the file header.
+        Use it for data which is only known when the file is written, such
+        as time stamps.
+
+      binary: Boolean
+        Write the plotted values as raw doubles
+        (@ref tarch::plotter::griddata::blockstructured::PeanoBinaryPatchFileWriter)
+        instead of text
+        (@ref tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter).
+        The file header and the metadata remain text in either case, and the
+        file header says which of the two formats the file has. A binary
+        file is smaller and bit-exact, i.e. precision then only affects the
+        patch offsets and sizes.
+
     """
     super(PlotPatchesInPeanoBlockFormat,self).__init__(descend_invocation_order=1,parallel=False)
 
@@ -118,8 +150,14 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
       raise Exception("Chosen datatype " + dataType + " for plotting of patches is not a recognized choice.")
 
     self.d[ "PRECISION" ]        = precision
+    self.d[ "WRITER_CLASS" ]     = "PeanoBinaryPatchFileWriter" if binary else "PeanoTextPatchFileWriter"
     self.d[ "DATATYPE"  ]        = dataType
     self.d[ "TIMESTAMP" ]        = time_stamp_evaluation
+    self.d[ "PATCH_SCALING" ]    = patch_scaling
+    self.d[ "METADATA_EVALUATION" ] = metadata_evaluation
+    # Patch offsets and sizes need at least six significant digits on
+    # adaptive meshes, even if the data is written with fewer.
+    self.d[ "WRITER_PRECISION" ] = max(precision, 6)
 
     self._restart_preprocess       = restart_preprocess
 
@@ -171,7 +209,7 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
   __Template_TouchCellFirstTime_CellPlot = """ 
   int vertexIndices[TwoPowerD];
   
-  const double PatchScaling = 1.0;
+  const double PatchScaling = {{PATCH_SCALING}};
 
   assertion( _writer!=nullptr );
   assertion( _dataWriter!=nullptr );
@@ -207,7 +245,7 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
   __Template_TouchCellFirstTime_VertexPlot = """ 
   int vertexIndices[TwoPowerD];
   
-  const double PatchScaling = 1.0;
+  const double PatchScaling = {{PATCH_SCALING}};
 
   assertion( _writer!=nullptr );
   assertion( _dataWriter!=nullptr );
@@ -245,12 +283,13 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
     snapshotFileName << "-rank-" << tarch::mpi::Rank::getInstance().getRank();
   }
 
-  _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
+  _writer = new tarch::plotter::griddata::blockstructured::{{WRITER_CLASS}}(
     Dimensions, snapshotFileName.str(), "{{FILENAME}}",
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::AppendNewData,
-    {{TIMESTAMP}}
-  );    
-      
+    tarch::plotter::griddata::blockstructured::{{WRITER_CLASS}}::IndexFileMode::AppendNewData,
+    {{TIMESTAMP}},
+    {{WRITER_PRECISION}}
+  );
+
   #if Dimensions==2
   {{MAPPING_2D}}
   #else
@@ -285,20 +324,20 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
 
 
   __Template_BeginTraversal_CellPlot = __Template_BeginTraversal_Generic + """
-  _dataWriter = _writer->createCellDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", "{{METADATA}}", mapping );
+  _dataWriter = _writer->createCellDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", {% if METADATA_EVALUATION %}{{METADATA_EVALUATION}}{% else %}"{{METADATA}}"{% endif %}, mapping );
   _dataWriter->setPrecision( {{PRECISION}} );
 """
   __Template_BeginTraversal_CellPlot_Restart = __Template_BeginTraversal_Generic_Restart + """
-  _dataWriter = _writer->createCellDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", "{{METADATA}}", mapping );
+  _dataWriter = _writer->createCellDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", {% if METADATA_EVALUATION %}{{METADATA_EVALUATION}}{% else %}"{{METADATA}}"{% endif %}, mapping );
   _dataWriter->setPrecision( {{PRECISION}} );
 """
 
   __Template_BeginTraversal_VertexPlot = __Template_BeginTraversal_Generic + """
-  _dataWriter = _writer->createVertexDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", "{{METADATA}}", mapping );
+  _dataWriter = _writer->createVertexDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", {% if METADATA_EVALUATION %}{{METADATA_EVALUATION}}{% else %}"{{METADATA}}"{% endif %}, mapping );
   _dataWriter->setPrecision( {{PRECISION}} );
 """
   __Template_BeginTraversal_VertexPlot_Restart = __Template_BeginTraversal_Generic_Restart + """
-  _dataWriter = _writer->createVertexDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", "{{METADATA}}", mapping );
+  _dataWriter = _writer->createVertexDataWriter( "{{NAME}}", {{DOFS_PER_AXIS}}, {{PLOTTED_UNKNOWNS}}, "{{DESCRIPTION}}", {% if METADATA_EVALUATION %}{{METADATA_EVALUATION}}{% else %}"{{METADATA}}"{% endif %}, mapping );
   _dataWriter->setPrecision( {{PRECISION}} );
 """
 
@@ -333,29 +372,22 @@ class PlotPatchesInPeanoBlockFormat(ActionSet):
 
 
   def get_attributes(self):
-    if self._plot_cell_data:
-      return """
-    static tarch::mpi::BooleanSemaphore                                              _semaphore;
-      
+    writer = "tarch::plotter::griddata::blockstructured::" + self.d["WRITER_CLASS"]
+    data_writer = "CellDataWriter" if self._plot_cell_data else "VertexDataWriter"
+    return """
+    static tarch::mpi::BooleanSemaphore  _semaphore;
+
     int                _treeNumber;
 
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter*                  _writer;
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*  _dataWriter;
-"""
-    else:
-      return """
-    static tarch::mpi::BooleanSemaphore                                              _semaphore;
-    
-    int                _treeNumber;
-
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter*                    _writer;
-    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter*  _dataWriter;
+    """ + writer + """*  _writer;
+    """ + writer + "::" + data_writer + """*  _dataWriter;
 """
 
 
   def get_includes(self):
     return """
 #include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
+#include "tarch/plotter/griddata/blockstructured/PeanoBinaryPatchFileWriter.h"
 #include "tarch/multicore/Lock.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/mpi/Lock.h"

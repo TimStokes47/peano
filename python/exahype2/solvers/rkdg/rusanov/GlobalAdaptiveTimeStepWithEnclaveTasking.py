@@ -74,9 +74,6 @@ class GlobalAdaptiveTimeStepWithEnclaveTasking(SeparateSweepsWithEnclaveTasking)
 
     self._kernel_namespace                                    = "rusanov"
 
-    clear_dg_kernel_file()
-    create_cell_integral_kernel_definitions(self._kernel_namespace)
-    create_Riemann_solver_kernel_definitions()
 
     self._volumetric_compute_kernel_call                      = create_volumetric_solver_call_dsl(self._basis, SolverVariant.WithVirtualFunctions)
     self._volumetric_compute_kernel_call_stateless            = create_volumetric_solver_call_dsl(self._basis, SolverVariant.Stateless)
@@ -136,6 +133,19 @@ class GlobalAdaptiveTimeStepWithEnclaveTasking(SeparateSweepsWithEnclaveTasking)
                                                           source_term=source_term,
                                                           point_source=point_source
                                                           )
+
+    clear_dg_kernel_file()
+    create_cell_integral_kernel_definitions(
+      self._kernel_namespace,
+      self._basis.order,
+      self._unknowns,
+      self._auxiliary_variables,
+      flux,
+      ncp,
+      source_term,
+      point_source
+    )
+    create_Riemann_solver_kernel_definitions()
 
     solver_code_snippets = AdaptiveTimeSteppingCodeSnippets(self._time_step_relaxation)
 

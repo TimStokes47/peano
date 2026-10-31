@@ -158,6 +158,53 @@ class UnknownAttributes:
         return f"{self.unknown_name}: unknowns:{self.unknowns}, dof:{self.dof}"
 
 
+class _PatchFile:
+    """!
+
+    Binary-safe view onto a Peano patch file
+
+    A patch file is a text file, but the quantities of the patches of a
+    file with `format Binary` are raw doubles. We hence open every file in
+    binary mode, hand out the text lines as decoded strings, and let the
+    parser fetch or skip exactly as many bytes as the quantities of a patch
+    occupy (@ref tarch::plotter::griddata::blockstructured::PeanoBinaryPatchFileWriter).
+    For an ASCII file, the class behaves like a text file.
+
+    """
+
+    def __init__(self, file_path):
+        self._file = open(file_path, "rb")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self._file.close()
+
+    def readline(self):
+        return self._file.readline().decode("utf-8", errors="replace")
+
+    def read_doubles(self, count):
+        """!
+
+        Read count doubles in the byte order of this machine, plus the line
+        break behind them. Returns a writable numpy array.
+
+        @param count: int
+          Number of doubles.
+
+        """
+        raw = self._file.read(8 * count)
+        if len(raw) != 8 * count:
+            raise Exception("file ended within the binary quantities of a patch")
+        self._file.readline()
+        return np.frombuffer(raw, dtype=np.float64).copy()
+
+    def skip_doubles(self, count):
+        self._file.seek(8 * count, 1)
+        self._file.readline()
+
+
 class PatchFileParser:
     """!
     Parser for Peano block file output.
@@ -230,6 +277,11 @@ class PatchFileParser:
         self.patch_filter = patch_filter
         self.is_data_associated_to_cell = None
         self.dimensions = -1
+        # "ASCII" or "Binary", as the header of the file says
+        self.file_format = "ASCII"
+        # Number of doubles per patch of each dataset in the file, filled for
+        # binary files only. We need it to step over datasets we ignore.
+        self._doubles_per_patch = {}
 
         self.set_identifier = set_identifier
         self.subdomain_number = subdomain_number
@@ -297,7 +349,56 @@ class PatchFileParser:
 
         # finally, add this unknown to our dictionary
         self.unknown_attributes[unknown_name] = patch_unknown
+        self._doubles_per_patch[unknown_name] = (
+            patch_unknown.unknowns * patch_unknown.dof**self.dimensions
+        )
 
+        return file_object, current_line
+
+    def __read_values(self, unknown_name, file_object):
+        """!
+
+        Read the quantities of one patch of one dataset. The line
+        "begin cell-values" or "begin vertex-values" has just been read.
+
+        """
+        if self.file_format == "Binary":
+            return file_object.read_doubles(self._doubles_per_patch[unknown_name])
+        return np.fromstring(file_object.readline(), dtype=float, sep=" ")
+
+    def __skip_values_if_binary(self, current_line, file_object):
+        """!
+
+        If current_line opens the quantities of a dataset in a binary file,
+        step over them.
+
+        """
+        if self.file_format == "Binary" and (
+            current_line.startswith("begin cell-values")
+            or current_line.startswith("begin vertex-values")
+        ):
+            unknown_name = current_line.split()[-1][1:-1]
+            file_object.skip_doubles(self._doubles_per_patch[unknown_name])
+
+    def __record_doubles_per_patch(self, current_line, file_object, end_condition):
+        """!
+
+        Binary files only: Run through a metadata block of a dataset which
+        we do not parse and remember how many doubles each of its patches
+        holds, so we can step over them.
+
+        """
+        unknown_name = current_line.strip().split()[-1][1:-1]
+        unknowns = 0
+        dof = 0
+        current_line = file_object.readline().strip()
+        while end_condition not in current_line:
+            if "number-of-unknowns" in current_line:
+                unknowns = int(current_line.split()[1])
+            if "number-of-dofs-per-axis" in current_line:
+                dof = int(current_line.split()[1])
+            current_line = file_object.readline().strip()
+        self._doubles_per_patch[unknown_name] = unknowns * dof**self.dimensions
         return file_object, current_line
 
     def __parse_patch_region(
@@ -331,6 +432,7 @@ class PatchFileParser:
         if self.patch_filter is not None and not self.patch_filter(offset, size):
             while end_condition not in current_line:
                 current_line = file_object.readline().strip()
+                self.__skip_values_if_binary(current_line, file_object)
             return file_object, current_line
 
         # run until we have found all of the fields in this
@@ -349,8 +451,8 @@ class PatchFileParser:
                     self.is_data_associated_to_cell
                 ), "is_data_associated_to_cell flag set incorrectly"
                 unknown_name = current_line.strip().split()[-1][1:-1]
-                current_line = file_object.readline()
-                values = np.fromstring(current_line, dtype=float, sep=" ")
+                values = self.__read_values(unknown_name, file_object)
+                current_line = ""
 
             # do same for vertex data
             if current_line.startswith("begin vertex-values") and (
@@ -361,8 +463,13 @@ class PatchFileParser:
                     not self.is_data_associated_to_cell
                 ), "is_data_associated_to_cell flag set incorrectly"
                 unknown_name = current_line.strip().split()[-1][1:-1]
-                current_line = file_object.readline()
-                values = np.fromstring(current_line, dtype=float, sep=" ")
+                values = self.__read_values(unknown_name, file_object)
+                current_line = ""
+
+            # Datasets we are not interested in. Their binary quantities have
+            # to be stepped over, as they may hold any byte sequence.
+            if values is None:
+                self.__skip_values_if_binary(current_line, file_object)
 
             # if we have read some data, let's add it to our list
             if values is not None:
@@ -385,9 +492,9 @@ class PatchFileParser:
 
         """
         count = 0
-        with open(self.file_path, "r") as f:
+        with open(self.file_path, "rb") as f:
             for line in f:
-                if "begin patch" in line:
+                if line.startswith(b"begin patch"):
                     count += 1
         return count
 
@@ -431,7 +538,7 @@ class PatchFileParser:
         # patches measurably slows parsing down otherwise.
         last_printed_permille = -1
         try:
-            with open(self.file_path, "r") as data_file:
+            with _PatchFile(self.file_path) as data_file:
                 current_line = data_file.readline()
                 while current_line:
                     # when we reach EOF, this_line will eval to False
@@ -444,6 +551,13 @@ class PatchFileParser:
                     """
                     current_line = data_file.readline()
                     stripped_line = current_line.strip()
+                    if stripped_line.startswith("format"):
+                        self.file_format = stripped_line.split()[1]
+                        assert self.file_format in [
+                            "ASCII",
+                            "Binary",
+                        ], "Unknown patch file format " + self.file_format
+
                     if stripped_line.startswith("dimensions"):
                         self.dimensions = int(stripped_line.strip().split()[1])
                         assert self.dimensions in [
@@ -470,6 +584,18 @@ class PatchFileParser:
                         # this function advances us along the data file
                         data_file, stripped_line = self.__parse_meta_data_region(
                             stripped_line, data_file, "end vertex-metadata"
+                        )
+
+                    elif self.file_format == "Binary" and (
+                        stripped_line.startswith("begin cell-metadata")
+                        or stripped_line.startswith("begin vertex-metadata")
+                    ):
+                        # Dataset we do not read. We nevertheless need to know
+                        # how many bytes its quantities occupy.
+                        data_file, stripped_line = self.__record_doubles_per_patch(
+                            stripped_line,
+                            data_file,
+                            "end " + stripped_line.split()[1],
                         )
 
                     elif stripped_line.startswith("begin patch"):

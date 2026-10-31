@@ -9,7 +9,9 @@ class ConstructRegularGrid(ActionSet):
     Refine the mesh - solver-agnostic - down to a regular grid of a given
     resolution.
 
-    Unlike exahype2.api.fv.actionsets.AdaptivityCriterion, this action set
+    Unlike the dynamic mesh refinement action sets that evaluate a solver's
+    adaptivity criterion (@ref exahype2.api.AdaptivityCriterion, see
+    @ref exahype2.api.blockstructured.DynamicMeshRefinement), this action set
     does not evaluate any solver data (there is none yet while the grid is
     still being built): it only ever looks at a cell's size and decides to
     refine or keep based on cell_size alone. That is what makes it

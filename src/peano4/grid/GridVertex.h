@@ -50,34 +50,34 @@ public:
     int                                   __level
   );
 
-  peano4::grid::GridVertex::State   getState() const;
-  void                              setState(State value);
-  tarch::la::Vector<TwoPowerD, int> getAdjacentRanks() const;
-  void                              setAdjacentRanks(const tarch::la::Vector<TwoPowerD, int>& value);
-  int                               getAdjacentRanks(int index) const;
-  void                              setAdjacentRanks(int index, int value);
-  tarch::la::Vector<TwoPowerD, int> getBackupOfAdjacentRanks() const;
-  void                              setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD, int>& value);
-  int                               getBackupOfAdjacentRanks(int index) const;
-  void                              setBackupOfAdjacentRanks(int index, int value);
-  bool                              getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const;
-  void                              setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(bool value);
-  bool                              getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const;
-  void                              setIsAntecessorOfRefinedVertexInCurrentTreeSweep(bool value);
-  bool                              getHasBeenParentOfSubtreeVertexInPreviousTreeSweep() const;
-  void                              setHasBeenParentOfSubtreeVertexInPreviousTreeSweep(bool value);
-  bool                              getIsParentOfSubtreeVertexInCurrentTreeSweep() const;
-  void                              setIsParentOfSubtreeVertexInCurrentTreeSweep(bool value);
-  int                               getNumberOfAdjacentRefinedLocalCells() const;
-  void                              setNumberOfAdjacentRefinedLocalCells(int value);
+  inline peano4::grid::GridVertex::State   getState() const;
+  inline void                              setState(State value);
+  inline tarch::la::Vector<TwoPowerD, int> getAdjacentRanks() const;
+  inline void                              setAdjacentRanks(const tarch::la::Vector<TwoPowerD, int>& value);
+  inline int                               getAdjacentRanks(int index) const;
+  inline void                              setAdjacentRanks(int index, int value);
+  inline tarch::la::Vector<TwoPowerD, int> getBackupOfAdjacentRanks() const;
+  inline void                              setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD, int>& value);
+  inline int                               getBackupOfAdjacentRanks(int index) const;
+  inline void                              setBackupOfAdjacentRanks(int index, int value);
+  inline bool                              getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const;
+  inline void                              setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(bool value);
+  inline bool                              getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const;
+  inline void                              setIsAntecessorOfRefinedVertexInCurrentTreeSweep(bool value);
+  inline bool                              getHasBeenParentOfSubtreeVertexInPreviousTreeSweep() const;
+  inline void                              setHasBeenParentOfSubtreeVertexInPreviousTreeSweep(bool value);
+  inline bool                              getIsParentOfSubtreeVertexInCurrentTreeSweep() const;
+  inline void                              setIsParentOfSubtreeVertexInCurrentTreeSweep(bool value);
+  inline int                               getNumberOfAdjacentRefinedLocalCells() const;
+  inline void                              setNumberOfAdjacentRefinedLocalCells(int value);
 #if PeanoDebug > 0
-  tarch::la::Vector<Dimensions, double> getX() const;
-  void                                  setX(const tarch::la::Vector<Dimensions, double>& value);
-  double                                getX(int index) const;
-  void                                  setX(int index, double value);
+  inline tarch::la::Vector<Dimensions, double> getX() const;
+  inline void                                  setX(const tarch::la::Vector<Dimensions, double>& value);
+  inline double                                getX(int index) const;
+  inline void                                  setX(int index, double value);
 #endif
-  int  getLevel() const;
-  void setLevel(int value);
+  inline int  getLevel() const;
+  inline void setLevel(int value);
   GridVertex(const GridVertex& copy);
   GridVertex& operator=(const GridVertex& other);
 
@@ -232,3 +232,153 @@ private:
 #endif
 #endif
 };
+
+
+peano4::grid::GridVertex::State   peano4::grid::GridVertex::getState() const {
+  return _state;
+}
+
+
+void   peano4::grid::GridVertex::setState(State value) {
+  _state = value;
+}
+
+
+tarch::la::Vector<TwoPowerD,int>   peano4::grid::GridVertex::getAdjacentRanks() const {
+
+  tarch::la::Vector<TwoPowerD,int> result;
+  for( int i=0; i<TwoPowerD; i++) {
+    result(i) =   _adjacentRanks[i];
+  }
+  return result;
+      }
+
+
+void   peano4::grid::GridVertex::setAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& value) {
+
+  for( int i=0; i<TwoPowerD; i++) {
+      _adjacentRanks[i] = value(i);
+  }
+      }
+
+
+int   peano4::grid::GridVertex::getAdjacentRanks(int index) const {
+  return   _adjacentRanks[index];
+}
+
+
+void   peano4::grid::GridVertex::setAdjacentRanks(int index, int value) {
+  _adjacentRanks[index] = value;
+}
+
+
+tarch::la::Vector<TwoPowerD,int>   peano4::grid::GridVertex::getBackupOfAdjacentRanks() const {
+  return    _backupOfAdjacentRanks;
+}
+
+
+void   peano4::grid::GridVertex::setBackupOfAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& value) {
+  _backupOfAdjacentRanks = value;
+}
+
+
+int   peano4::grid::GridVertex::getBackupOfAdjacentRanks(int index) const {
+  return   _backupOfAdjacentRanks(index);
+}
+
+
+void   peano4::grid::GridVertex::setBackupOfAdjacentRanks(int index, int value) {
+  _backupOfAdjacentRanks(index) = value;
+}
+
+
+bool   peano4::grid::GridVertex::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const {
+  return _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
+}
+
+
+void   peano4::grid::GridVertex::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(bool value) {
+  _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep = value;
+}
+
+
+bool   peano4::grid::GridVertex::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const {
+  return _isAntecessorOfRefinedVertexInCurrentTreeSweep;
+}
+
+
+void   peano4::grid::GridVertex::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(bool value) {
+  _isAntecessorOfRefinedVertexInCurrentTreeSweep = value;
+}
+
+
+bool   peano4::grid::GridVertex::getHasBeenParentOfSubtreeVertexInPreviousTreeSweep() const {
+  return _hasBeenParentOfSubtreeVertexInPreviousTreeSweep;
+}
+
+
+void   peano4::grid::GridVertex::setHasBeenParentOfSubtreeVertexInPreviousTreeSweep(bool value) {
+  _hasBeenParentOfSubtreeVertexInPreviousTreeSweep = value;
+}
+
+
+bool   peano4::grid::GridVertex::getIsParentOfSubtreeVertexInCurrentTreeSweep() const {
+  return _isParentOfSubtreeVertexInCurrentTreeSweep;
+}
+
+
+void   peano4::grid::GridVertex::setIsParentOfSubtreeVertexInCurrentTreeSweep(bool value) {
+  _isParentOfSubtreeVertexInCurrentTreeSweep = value;
+}
+
+
+int   peano4::grid::GridVertex::getNumberOfAdjacentRefinedLocalCells() const {
+  return _numberOfAdjacentRefinedLocalCells;
+}
+
+
+void   peano4::grid::GridVertex::setNumberOfAdjacentRefinedLocalCells(int value) {
+  _numberOfAdjacentRefinedLocalCells = value;
+}
+
+
+#if PeanoDebug>0
+tarch::la::Vector<Dimensions,double>   peano4::grid::GridVertex::getX() const {
+
+  tarch::la::Vector<Dimensions,double> result;
+  for( int i=0; i<Dimensions; i++) {
+    result(i) =   _x[i];
+  }
+  return result;
+      }
+
+
+void   peano4::grid::GridVertex::setX(const tarch::la::Vector<Dimensions,double>& value) {
+
+  for( int i=0; i<Dimensions; i++) {
+      _x[i] = value(i);
+  }
+      }
+
+
+double   peano4::grid::GridVertex::getX(int index) const {
+  return   _x[index];
+}
+
+
+void   peano4::grid::GridVertex::setX(int index, double value) {
+  _x[index] = value;
+}
+
+
+#endif 
+
+
+int   peano4::grid::GridVertex::getLevel() const {
+  return _level;
+}
+
+
+void   peano4::grid::GridVertex::setLevel(int value) {
+  _level = value;
+}
