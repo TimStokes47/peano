@@ -1,0 +1,33 @@
+#!/bin/bash
+# Numerical scheme study (see README.dox, section on numerical schemes): all
+# schemes on the profile setup, one after another on one node.
+#SBATCH --job-name=sbh-schemes
+#SBATCH -p shared
+#SBATCH --nodes=1
+#SBATCH -c 16
+#SBATCH --time=12:00:00
+#SBATCH --mem=60gb
+#SBATCH --output=sbh-schemes-%j.out
+
+source /etc/profile.d/modules.sh
+
+module purge
+module load oneapi/2024.2
+export FLAVOUR_NOCONFLICT=1
+module load gcc/13.2
+module load intelmpi
+module load gsl
+module load python/3.10.8
+
+export I_MPI_CXX=icpx
+
+# Adapt to your installation: the Peano checkout and its Python environment.
+PEANO=${PEANO:-$HOME/git/Peano}
+source $PEANO/.venv/bin/activate
+export PYTHONPATH=$PEANO/src:$PYTHONPATH
+BENCHMARK=$PEANO/benchmarks/exagrype/single-black-hole
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+python3 $BENCHMARK/studies-single-black-hole.py schemes --variant profile \
+  --work-directory studies-schemes-$SLURM_JOB_ID --timeout 40000
