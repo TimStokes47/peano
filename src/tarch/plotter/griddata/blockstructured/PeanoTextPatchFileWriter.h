@@ -261,8 +261,17 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      *   dump.
      * @param indexFileName Name of the index file. Can we empty if you select
      *   NoIndexFile.
+     * @param precision     Number of significant digits of all floating point
+     *   numbers in the file: patch offsets and sizes, mappings and data. The
+     *   cell and vertex data writers start with this precision and can lower
+     *   or raise it via CellDataWriter::setPrecision(). The writer does not
+     *   round or truncate any value beyond this precision. Small values are
+     *   written as they are (no flush to zero), so a file written with 17
+     *   digits (std::numeric_limits<double>::max_digits10) holds the doubles
+     *   bit-exact, e.g. for a checkpoint. Keep at least six digits on deep
+     *   adaptive meshes, as the patch offsets otherwise become imprecise.
      */
-    PeanoTextPatchFileWriter(int dimension, const std::string&  fileName, const std::string&  indexFileName, IndexFileMode appendToIndexFile, double timeStamp);
+    PeanoTextPatchFileWriter(int dimension, const std::string&  fileName, const std::string&  indexFileName, IndexFileMode appendToIndexFile, double timeStamp, int precision = 6);
 
     /**
      * Destructor
@@ -286,6 +295,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description ) override;
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description, const std::string& metaData  ) override;
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description, const std::string& metaData, double* mapping ) override;
+
 
     virtual int plotPatch(
       const tarch::la::Vector<2,double>& offset,

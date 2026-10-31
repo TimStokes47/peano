@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cuda_runtime.h>
 #include <cuda.h>
+#include "MLIRbridgeCUDAfunctions.h"
 
 // *** NOTE: These are the CUDA-based functions that the generated MLIR code call
 //           to setup the streams, load and launch the kernels etc.

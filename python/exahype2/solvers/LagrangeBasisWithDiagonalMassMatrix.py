@@ -69,6 +69,8 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
   
   def __init__(self,polynomial_order):
     super(LagrangeBasisWithDiagonalMassMatrix,self).__init__(polynomial_order)
+    self.stiffness_matrix = None
+    self.mass_matrix = None
       
       
   def __str__(self):
@@ -233,16 +235,18 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
     as doxygen does not extract documentation from private routines in Python.
          
     """
-    mass_matrix = [ [0.0 for _ in range(0,self.dofs_per_axis)] for _ in range(0,self.dofs_per_axis) ]
-    
-    for row in range(0,self.dofs_per_axis):
-      for col in range(0,self.dofs_per_axis):
-        ans,err = quad(lambda x: self.value1d(x,row) * self.value1d(x,col),0,1)
-        mass_matrix[row][col] = ans
+    if self.mass_matrix is None:
+      self.mass_matrix = [ [0.0 for _ in range(0,self.dofs_per_axis)] for _ in range(0,self.dofs_per_axis) ]
+      
+      for row in range(0,self.dofs_per_axis):
+        for col in range(0,self.dofs_per_axis):
+          ans,err = quad(lambda x: self.value1d(x,row) * self.value1d(x,col),0,1)
+          self.mass_matrix[row][col] = ans
 
-    return [ mass_matrix[i][i] for i in range(0,self.dofs_per_axis) ]
+    return [ self.mass_matrix[i][i] for i in range(0,self.dofs_per_axis) ]
 
 
+  stiffness_matrix = None
   def __compute_stiffness_operator(self):
     r"""
     
@@ -252,14 +256,15 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
       into generated C++ code.
     
     """
-    stiffness_matrix = [ [0.0 for _ in range(0,self.dofs_per_axis)] for _ in range(0,self.dofs_per_axis) ]
-    
-    for row in range(0,self.dofs_per_axis):
-      for col in range(0,self.dofs_per_axis):
-        ans,err = quad(lambda x: self.derivative1d(x,row) * self.value1d(x,col),0,1)
-        stiffness_matrix[row][col] = ans
+    if self.stiffness_matrix is None:
+      self.stiffness_matrix = [ [0.0 for _ in range(0,self.dofs_per_axis)] for _ in range(0,self.dofs_per_axis) ]
+      
+      for row in range(0,self.dofs_per_axis):
+        for col in range(0,self.dofs_per_axis):
+          ans,err = quad(lambda x: self.derivative1d(x,row) * self.value1d(x,col),0,1)
+          self.stiffness_matrix[row][col] = ans
 
-    return stiffness_matrix
+    return self.stiffness_matrix
   
 
   def __compute_interpolation_matrix(self):

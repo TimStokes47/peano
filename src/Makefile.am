@@ -128,10 +128,14 @@ Tarch_SOURCES = tarch/tarch.cpp \
 	tarch/plotter/griddata/blockstructured/PeanoHDF5PatchFileWriter_CellDataWriter.cpp \
 	tarch/plotter/griddata/blockstructured/PeanoHDF5PatchFileWriter_VertexDataWriter.cpp \
 	tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter_CellDataWriter.cpp \
+	tarch/plotter/griddata/blockstructured/PeanoBinaryPatchFileWriter.cpp \
+	tarch/plotter/griddata/blockstructured/PeanoBinaryPatchFileWriter_VertexDataWriter.cpp \
+	tarch/plotter/griddata/blockstructured/PeanoBinaryPatchFileWriter_CellDataWriter.cpp \
 	tarch/plotter/pointdata/vtk/VTKWriter.cpp \
 	tarch/reader/NetCDFFileReader.cpp \
 	tarch/reader/NetCDFFieldParser.cpp \
 	tarch/reader/PeanoTextPatchFileReader.cpp \
+	tarch/reader/PeanoBinaryPatchFileReader.cpp \
 	tarch/mpi/BooleanSemaphore.cpp \
 	tarch/mpi/Lock.cpp \
 	tarch/mpi/Rank.cpp \

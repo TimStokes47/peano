@@ -3,9 +3,14 @@
 #include <cstddef>
 #include <omp.h>
 
-#ifdef MLIR_GPU
+#ifdef MLIR_GPU_AMD
+#include <hip/hip_runtime.h>
+#include "MLIRbridgeHIPfunctions.h"
+#endif
+#ifdef MLIR_GPU_NVIDIA
 #include <cuda_runtime.h>
 #include <cuda.h>
+#include "MLIRbridgeCUDAfunctions.h"
 #endif
 
 {{SOLVER_INCLUDES}}
@@ -25,7 +30,11 @@ extern "C" {
     {{TEMPLATE_VALUE_DEFINITIONS}}
 }
 
-#ifdef MLIR_GPU
+#ifdef MLIR_GPU_AMD
+extern void setupMLIRContextGPU(hipDevice_t);
+extern void releaseMLIRContextGPU(hipDevice_t);
+#endif
+#ifdef MLIR_GPU_NVIDIA
 extern void setupMLIRContextGPU(CUdevice);
 extern void releaseMLIRContextGPU(CUdevice);
 #endif
@@ -38,38 +47,7 @@ using OffloadableType = exahype2::Solver::Offloadable;
 // They can be called from within MLIR-generated GPU kernels
 #pragma omp declare target
 extern "C" {
-    void flux_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* F_ptr) {
-        double* Q = static_cast<double*>(Q_ptr);
-        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
-        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
-        double* F = static_cast<double*>(F_ptr);
-        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::flux(Q, *x, *h, t, dt, normal, F, OffloadableType::Yes);
-    }
-    
-    void nonconservativeProduct_bridge(void* Q_ptr, void* deltaQ_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
-        double* Q = static_cast<double*>(Q_ptr);
-        double* deltaQ = static_cast<double*>(deltaQ_ptr);
-        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
-        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
-        double* result = static_cast<double*>(result_ptr);
-        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::nonconservativeProduct(Q, deltaQ, *x, *h, t, dt, normal, result, OffloadableType::Yes);
-    }
-    
-    void sourceTerm_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, void* S_ptr) {
-        double* Q = static_cast<double*>(Q_ptr);
-        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
-        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
-        double* S = static_cast<double*>(S_ptr);
-        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::sourceTerm(Q, *x, *h, t, dt, S, OffloadableType::Yes);
-    }
-    
-    void maxEigenvalue_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
-        double* Q = static_cast<double*>(Q_ptr);
-        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
-        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
-        double* result = static_cast<double*>(result_ptr);
-        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::maxEigenvalue(Q, *x, *h, t, dt, normal, result, OffloadableType::Yes);
-    }
+    {{BRIDGE_FUNCTIONS}}
 }
 #pragma omp end declare target
 
@@ -82,18 +60,14 @@ extern "C" void {{KERNEL_NAME}}_gpu(
 
 extern "C" void {{KERNEL_NAME}}(
     MLIRCellData* patchData,
-    void (*flux_fn)(void*, void*, void*, double, double, int, void*),
-    void (*ncp_fn)(void*, void*, void*, void*, double, double, int, void*),
-    void (*source_fn)(void*, void*, void*, double, double, void*),
-    void (*maxeig_fn)(void*, void*, void*, double, double, int, void*)
+    {{EXTERN_FUNCTION_ARGUMENT_DEFINITIONS}}
+    //void (*maxeig_fn)(void*, void*, /*void*, */double, double, int, void*)
 );
 
 extern "C" void {{KERNEL_NAME}}_omp(
     MLIRCellData* patchData,
-    void (*flux_fn)(void*, void*, void*, double, double, int, void*),
-    void (*ncp_fn)(void*, void*, void*, void*, double, double, int, void*),
-    void (*source_fn)(void*, void*, void*, double, double, void*),
-    void (*maxeig_fn)(void*, void*, void*, double, double, int, void*)
+    {{EXTERN_FUNCTION_ARGUMENT_DEFINITIONS}}
+    //void (*maxeig_fn)(void*, void*, /*void*, */double, double, int, void*)
 );
 
 // Layout-aware conversion creating proper memref descriptors
@@ -107,8 +81,16 @@ void convertToMLIRStruct(exahype2::CellData<double, double>* patchData, MLIRCell
     int64_t volumes = static_cast<int64_t>({{PATCH_SIZE}});
     int64_t haloSize = static_cast<int64_t>({{HALO_SIZE}});
     
-    int64_t inputSizePerCell = (volumes + 2*haloSize) * (volumes + 2*haloSize) * (volumes + 2*haloSize) * numUnknowns;  // 18*18*18*5
-    int64_t outputSizePerCell = volumes * volumes * volumes * numUnknowns;  // 16*16*16*5
+    int64_t inputSizePerCell = (volumes + 2*haloSize) * (volumes + 2*haloSize) 
+    #if Dimensions==3
+    * (volumes + 2*haloSize) 
+    #endif
+    * numUnknowns;  // 18*18*18*5
+    int64_t outputSizePerCell = volumes * volumes 
+    #if Dimensions==3
+    * volumes 
+    #endif
+    * numUnknowns;  // 16*16*16*5
     
     // Allocate contiguous memory each time (caller will clean up)
     qin_storage = new double[totalCells * inputSizePerCell];
@@ -189,8 +171,7 @@ void convertToMLIRStruct(exahype2::CellData<double, double>* patchData, MLIRCell
 }
 
 
-
-// void convertToMLIRStructGPU(exahype2::CopyCellDataGPU<double, double>* copyCellData, MLIRCellData* mlir_data) {
+#ifdef MLIR_GPU
 void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
                              MLIRCellData* mlir_data) {
     int64_t totalCells        = cellData->numberOfCells;
@@ -271,7 +252,9 @@ void convertToMLIRStructGPU(exahype2::CellData<double, double>* cellData,
     mlir_data->targetDevice   = static_cast<int64_t>(cellData->targetDevice);
     mlir_data->maxEigenvalue  = cellData->maxEigenvalue;
     mlir_data->QOut_legacy    = nullptr;
+
 }
+#endif
 
 void cleanupMLIRStruct(MLIRCellData* mlir_data) {
     if (mlir_data->cellCentre.allocated != nullptr) {
@@ -282,6 +265,7 @@ void cleanupMLIRStruct(MLIRCellData* mlir_data) {
     }
 }
 
+#ifdef MLIR_GPU
 void cleanupMLIRStructGPU(MLIRCellData* mlir_data) {
     if (mlir_data->QIn.allocated != nullptr) {
         delete[] mlir_data->QIn.allocated;
@@ -299,11 +283,16 @@ void cleanupMLIRStructGPU(MLIRCellData* mlir_data) {
         delete[] static_cast<double**>(mlir_data->cellSize.allocated);
     }
 }
+#endif
 
 void copybackMLIRresults(exahype2::CellData<double, double>* patchData, MLIRCellData* mlir_data) {
     int64_t totalCells = patchData->numberOfCells;
     int64_t volumes = static_cast<int64_t>({{PATCH_SIZE}});
-    int64_t outputSizePerCell = volumes * volumes * volumes * ({{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}}::NumberOfUnknowns);
+    int64_t outputSizePerCell = volumes * volumes * ({{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}}::NumberOfUnknowns)
+    #if Dimensions==3
+    * volumes
+    #endif
+    ;
     for (int i = 0; i < totalCells; i++) {
         for (int j = 0; j < outputSizePerCell; j++) {
             patchData->QOut[i][j] = mlir_data->QOut.allocated[i * outputSizePerCell + j];
@@ -324,44 +313,45 @@ void {{KERNEL_NAME}}_MLIR_wrapper(exahype2::CellData<double, double>* patchData,
     // Variables to track allocated memory for cleanup
     MLIRCellData mlir_data;  
     
-    try {
+    //try {
         // Convert to MLIR struct with contiguous memory
         convertToMLIRStruct(patchData, &mlir_data);
         
         int64_t totalCells = patchData->numberOfCells;
         int64_t numUnknowns = {{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}}::NumberOfUnknowns;
         
+
+        {{MEMREF_CONSTRUCTORS}}
+
         // Call MLIR-generated kernel
         if (use_omp) {
             {{KERNEL_NAME}}_omp(
                 &mlir_data,  
-                flux_bridge,
-                nonconservativeProduct_bridge,
-                sourceTerm_bridge,
-                maxEigenvalue_bridge
+                {{FUNCTION_ARGUMENTS}}
             );
         } else {
             {{KERNEL_NAME}}(
                 &mlir_data,  
-                flux_bridge,
-                nonconservativeProduct_bridge,
-                sourceTerm_bridge,
-                maxEigenvalue_bridge
+                {{FUNCTION_ARGUMENTS}}
             );
         }
 
         // Copy results back from contiguous QOut to original double** array
         int64_t volumes = static_cast<int64_t>({{PATCH_SIZE}});
-        int64_t outputSizePerCell = volumes * volumes * volumes * numUnknowns;
+        int64_t outputSizePerCell = volumes * volumes 
+        #if Dimensions==3
+        * volumes 
+        #endif
+        * numUnknowns;
         for (int i = 0; i < totalCells; i++) {
             for (int j = 0; j < outputSizePerCell; j++) {
                 patchData->QOut[i][j] = mlir_data.QOut.allocated[i * outputSizePerCell + j];
             }
         }
         
-    } catch (...) {
-        std::cout << "WRAPPER: Exception caught in MLIR call" << std::endl;
-    }
+    //} catch (...) {
+    //    std::cout << "WRAPPER: Exception caught in MLIR call" << std::endl;
+    //}
     
     cleanupMLIRStruct(&mlir_data);
 }
@@ -407,27 +397,26 @@ void {{KERNEL_NAME}}Stateless<{{TEMPLATE_CALL}}>(
     MLIRCellData* patchData,
     tarch::timing::Measurement& measurement
 ) {
+    {{MEMREF_CONSTRUCTORS}}
+
     tarch::timing::Watch watch("{{KERNEL_NAMESPACE}}::mlir", "{{KERNEL_NAME}}Stateless", false, true);
     {{KERNEL_NAME}}(
         patchData,  
-        flux_bridge,
-        nonconservativeProduct_bridge,
-        sourceTerm_bridge,
-        maxEigenvalue_bridge
+        {{FUNCTION_ARGUMENTS}}
     );
     watch.stop();
     measurement.setValue(watch.getCalendarTime());
 }
 } // namespace {{KERNEL_NAMESPACE}}::mlir
 
-// Template specialization in mlir::omp namespace
-namespace {{KERNEL_NAMESPACE}}::mlir::omp {
+// Template specialization in omp::mlir namespace
+namespace {{KERNEL_NAMESPACE}}::omp::mlir {
 template<>
 void {{KERNEL_NAME}}Stateless<{{TEMPLATE_CALL}}>(
     exahype2::CellData<double, double>& patchData,
     tarch::timing::Measurement& measurement
 ) {
-    tarch::timing::Watch watch("{{KERNEL_NAMESPACE}}::mlir::omp", "{{KERNEL_NAME}}Stateless", false, true);
+    tarch::timing::Watch watch("{{KERNEL_NAMESPACE}}::omp::mlir", "{{KERNEL_NAME}}Stateless", false, true);
     {{KERNEL_NAME}}_MLIR_wrapper(&patchData, true);
     watch.stop();
     measurement.setValue(watch.getCalendarTime());
@@ -438,18 +427,17 @@ void {{KERNEL_NAME}}Stateless<{{TEMPLATE_CALL}}>(
     MLIRCellData* patchData,
     tarch::timing::Measurement& measurement
 ) {
+    {{MEMREF_CONSTRUCTORS}}
+
     tarch::timing::Watch watch("{{KERNEL_NAMESPACE}}::mlir", "{{KERNEL_NAME}}Stateless", false, true);
     {{KERNEL_NAME}}_omp(
         patchData,  
-        flux_bridge,
-        nonconservativeProduct_bridge,
-        sourceTerm_bridge,
-        maxEigenvalue_bridge
+        {{FUNCTION_ARGUMENTS}}
     );
     watch.stop();
     measurement.setValue(watch.getCalendarTime());
 }
-} // namespace {{KERNEL_NAMESPACE}}::mlir::omp
+} // namespace {{KERNEL_NAMESPACE}}::omp::mlir
 
 #ifdef MLIR_GPU
 namespace {{KERNEL_NAMESPACE}}::mlir::gpu {

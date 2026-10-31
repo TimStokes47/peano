@@ -6,6 +6,7 @@ import argparse
 
 import peano4.api
 import exahype2
+import exahype2.dslhype as DSL
 
 parser = argparse.ArgumentParser(
     description="ExaHyPE 2 - Shallow Water Finite Volume Rusanov Kernel Benchmarking Script"
@@ -72,13 +73,6 @@ parser.add_argument(
     help="Assess device kernels",
 )
 parser.add_argument(
-    "-mlirgpu",
-    "--mlir-gpu",
-    action="store_true",
-    dest="mlir_gpu",
-    help="Assess MLIR GPU kernels",
-)
-parser.add_argument(
     "-serial",
     "--serial",
     action="store_true",
@@ -117,6 +111,75 @@ parser.add_argument(
     help="Enable CPP kernels",
 )
 parser.add_argument(
+    "--enable-memref-flattening",
+    dest="enable_memref_flattening",
+    action="store_true",
+    help="Enable CPP kernels",
+)
+parser.add_argument(
+    "--enable-function-inlining",
+    dest="enable_function_inlining",
+    action="store_true",
+    help="Enable inlining of Polygeist functions",
+)
+parser.add_argument(
+    "--enable-memory-reuse",
+    dest="enable_memory_reuse",
+    action="store_true",
+    help="Enable reuse of scratchpad memory allocations",
+)
+parser.add_argument(
+    "--enable-memory-fusion",
+    dest="enable_memory_fusion",
+    action="store_true",
+    help="Enable fusion of allocations into one",
+)
+parser.add_argument(
+    "--enable-loop-fusion",
+    dest="enable_loop_fusion",
+    action="store_true",
+    help="Enable fusion of loops with the same bounds",
+)
+parser.add_argument(
+    "--enable-imperfect-nested-loops-to-perfect",
+    dest="enable_imperfect_nested_loops_to_perfect",
+    action="store_true",
+    help="Enable conversion of imperfectly nested parallels into a perfectly nested parallels",
+)
+parser.add_argument(
+    "--enable-nested-parallel-ops-to-multidimensional",
+    dest="enable_nested_parallel_ops_to_multidimensional",
+    action="store_true",
+    help="Enable conversion of nested parallels into a single multidimensional operation",
+)
+parser.add_argument(
+    "--enable-omp-tasks",
+    dest="enable_omp_tasks",
+    action="store_true",
+    help="Enable use of OpenMP tasks as opposed to loop parallelism",
+)
+parser.add_argument(
+    "--omp-task-version",
+    choices=["task", "taskloop"],
+    default="taskloop"
+)
+parser.add_argument(
+    "--omp-single-region",
+    action="store_true",
+)
+parser.add_argument(
+    "--nested-parallel-count",
+    default=-1,
+    type=int,
+    help="Number of dimensions to use: 2 or 3. Conversion is enabled if the count is positive.",
+)
+parser.add_argument(
+    "-o",
+    default="KernelBenchmarksFVRusanovDSL",
+    type=str,
+    help="Name of final application",
+)
+parser.add_argument(
     "-j",
     default=-1,
     type=int,
@@ -132,7 +195,7 @@ fv_rusanov_solver = exahype2.solvers.fv.rusanov.GlobalAdaptiveTimeStepWithEnclav
     min_volume_h=0.001,  # max_cell_size -> arbitrary value
     max_volume_h=0.001,  # min_cell_size -> arbitrary value
     time_step_relaxation=0.5,
-    pde_terms_without_state=True,
+    pde_terms_without_state=True
 )
 
 fv_rusanov_solver.set_implementation(
@@ -142,7 +205,7 @@ fv_rusanov_solver.set_implementation(
     flux="applications::exahype2::euler::flux(Q, faceCentre, volumeH, t, dt, normal, F);",
     ncp=None,
     eigenvalues="applications::exahype2::euler::maxEigenvalue(Q, faceCentre, volumeH, t, dt, normal, maxEigenvalue);",
-    source_term=None,
+    source_term=None
 )
 fv_rusanov_solver.add_user_solver_includes(
         """
@@ -154,7 +217,7 @@ project = exahype2.Project(
     namespace=["benchmarks", "exahype2", "kernelbenchmarks"],
     project_name="KernelBenchmarksFVRusanovDSL",
     directory=".",
-    executable=f"KernelBenchmarksFVRusanovDSL.{args.build_mode}",
+    executable=f"{args.o}.{args.build_mode}",
 )
 project.add_solver(fv_rusanov_solver)
 
@@ -190,21 +253,19 @@ if args.fpe:
 else:
     project.constants.export_boolean("EnableFPE", False)
 
-if args.cpu == False and args.gpu == False and args.mlir_gpu == False:
-    project.constants.export_boolean("AssessHostKernels", True)
-    project.constants.export_boolean("AssessDeviceKernels", True)
-    project.constants.export_boolean("AssessMLIRDeviceKernels", False)
+# CPU is enabled by default if neither CPU nor GPU are specified
+if args.cpu == False and args.gpu == False:
+    project.output.makefile.add_CXX_flag("-DASSESS_HOST_KERNELS")
 else:
-    project.constants.export_boolean("AssessHostKernels", True if args.cpu else False)
-    project.constants.export_boolean("AssessDeviceKernels", True if args.gpu else False)
-    project.constants.export_boolean("AssessMLIRDeviceKernels", True if args.mlir_gpu else False)
+    if args.cpu: project.output.makefile.add_CXX_flag("-DASSESS_HOST_KERNELS")
+    if args.gpu: project.output.makefile.add_CXX_flag("-DASSESS_DEVICE_KERNELS")
 
 if args.serial == False and args.parallel == False:
-    project.constants.export_boolean("AssessSerialKernels", True)
-    project.constants.export_boolean("AssessParallelKernels", True)
+    project.output.makefile.add_CXX_flag("-DASSESS_SERIAL_KERNELS")
+    project.output.makefile.add_CXX_flag("-DASSESS_PARALLEL_KERNELS")
 else:
-    project.constants.export_boolean("AssessSerialKernels", True if args.serial else False)
-    project.constants.export_boolean("AssessParallelKernels", True if args.parallel else False)
+    if args.serial: project.output.makefile.add_CXX_flag("-DASSESS_SERIAL_KERNELS")
+    if args.parallel: project.output.makefile.add_CXX_flag("-DASSESS_PARALLEL_KERNELS")
 
 project.constants.export_boolean("EvaluateFlux", True)
 project.constants.export_boolean("EvaluateNonconservativeProduct", False)
@@ -216,62 +277,36 @@ project.constants.define_value("GAMMA", str(1.0))
 benchmark_main_file = "../../kernel-benchmarks/KernelBenchmarksFVRusanovDSL-main.cpp"
 os.system("cp {} KernelBenchmarksFVRusanovDSL-main.cpp".format(benchmark_main_file))
 
-# Add the necessary Euler implementation files
-#project.output.makefile.add_cpp_file("AbstractEuler.cpp")
-
 project.output.makefile.add_CXX_flag("-DGRAV=9.81")
 
 # MLIR Integration Support
 if args.enable_mlir:
-    print(f"Enabling MLIR kernel compilation support for {args.dimensions}D...")
+    if args.enable_memory_reuse:
+        max_patch_size = (args.patch_size + 2) * (args.patch_size + 2)
+        if args.dimensions == 2:
+            max_patch_size = max_patch_size * 4
+        else:
+            max_patch_size = max_patch_size * 5 * (args.patch_size + 2)
+    else:
+        max_patch_size = -1
+    DSL.set_mlir_environment(project, "rusanov", f"euler_physics_{args.dimensions}d.mlir", args.dimensions, args.gpu, 
+                             args.enable_memref_flattening, 
+                             args.enable_function_inlining, 
+                             args.nested_parallel_count, 
+                             args.enable_imperfect_nested_loops_to_perfect, 
+                             args.enable_nested_parallel_ops_to_multidimensional,
+                             args.enable_omp_tasks,
+                             args.omp_task_version,
+                             args.omp_single_region,
+                             max_patch_size,
+                             args.enable_memory_fusion,
+                             args.enable_loop_fusion
+    )
+    project.output.makefile.add_CXX_flag("-DASSESS_MLIR_KERNELS")
 
-    # Set environment variable for dimension detection
-    import os
-    os.environ['MLIR_DIMENSIONS'] = str(args.dimensions)
-
-    # Add MLIR-specific files and flags
-    project.output.makefile.add_cpp_file("MLIRbridge.cpp")
-    project.output.makefile.add_CXX_flag("-DUSE_MLIR")
-    project.output.makefile.add_CXX_flag("-DMLIR_KERNEL_ENABLED")
-    project.output.makefile.add_CXX_flag("-DSharedOMP")
-    
-    # NOTE: As we are using LLVM toolings for MLIR, we link against LLVM's OpenMP library  
-    project.output.makefile.add_linker_flag("-lomp")   
-    project.output.makefile.add_linker_flag("-lomptarget") 
-    if args.mlir_gpu:
-      print("Enabling MLIR GPU kernel compilation support")
-      project.output.makefile.add_cpp_file("MLIRbridgeCUDAfunctions.cpp")
-      project.output.makefile.d["MLIR_GPU"] = True
-      project.output.makefile.add_linker_flag("-lcuda")
-      project.output.makefile.add_linker_flag("-lcudart")
-      project.output.makefile.add_linker_flag("-ldl")
-      project.output.makefile.add_linker_flag("-pthread")
-      project.output.makefile.add_linker_flag("-lmlir_cuda_runtime")
-      CUDA_HOME = os.path.dirname(subprocess.check_output("which nvcc", shell=True).decode().strip()) 
-      project.output.makefile.add_linker_flag(f"-L{CUDA_HOME}/../targets/sbsa-linux/lib")
-      project.output.makefile.add_CXX_flag("-DMLIR_GPU")
-      # NOTE: The current MLIR GPU linearization and lowering pipeline uses the base MLIR
-      #       but may use the OMP version in future. Update here, as appropriate
-      project.output.makefile.d["MLIR_SOURCES_GPU"] = f"rusanov{args.dimensions}d.mlir"
-      project.output.makefile.d["MLIR_LL_FILE_GPU"] = f"rusanov{args.dimensions}d_gpu.ll" 
-      project.output.makefile.d["MLIR_OBJECT_GPU"] = f"rusanov{args.dimensions}d_mlir_gpu.o"    
-        
-    project.output.makefile.d["MLIR_ENABLED"] = True
-    project.output.makefile.d["MLIR_PHYSICS_FILE"] = "euler_physics.mlir"
-    project.output.makefile.d["MLIR_SOURCES"] = f"rusanov{args.dimensions}d.mlir"
-    project.output.makefile.d["MLIR_LL_FILE"] = f"rusanov{args.dimensions}d.ll" 
-    project.output.makefile.d["MLIR_OBJECT"] = f"rusanov{args.dimensions}d_mlir.o"
-    project.output.makefile.d["MLIR_SOURCES_OMP"] = f"rusanov{args.dimensions}d_omp.mlir"
-    project.output.makefile.d["MLIR_LL_FILE_OMP"] = f"rusanov{args.dimensions}d_omp.ll" 
-    project.output.makefile.d["MLIR_OBJECT_OMP"] = f"rusanov{args.dimensions}d_mlir_omp.o"
-
-    # Export MLIR enabled constant for C++ code
-    project.constants.export_boolean("MLIRKernelEnabled", True)
-else:
-    project.constants.export_boolean("MLIRKernelEnabled", False)
-
-if args.enable_cpp:
-    project.output.makefile.add_CXX_flag("-DUSE_CPP_KERNELS")
+# CPP is enabled by default if MLIR is not enabled
+if args.enable_cpp or not args.enable_mlir:
+    project.output.makefile.add_CXX_flag("-DASSESS_CPP_KERNELS")
 
 project.build(make=True, make_clean_first=True, throw_away_data_after_build=True, number_of_parallel_builds=32)
 

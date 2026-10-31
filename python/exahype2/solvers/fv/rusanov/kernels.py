@@ -39,148 +39,10 @@ def create_rusanov_kernel_definitions(patch_size, unknowns, auxiliary_variables,
 #endif
 """)
   
-  create_rusanov_kernel_definitions_2d(patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
-  create_rusanov_kernel_definitions_3d(patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
+  create_rusanov_kernel_definitions_for_function(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, "rusanov2d", patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
+  create_rusanov_kernel_definitions_for_function(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, "rusanov3d", patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
 
-def create_rusanov_kernel_definitions_2d(patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step):
-  template_parameters = [DSL.SyntaxTree.Argument("NumberOfVolumesPerAxisInPatch", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
-                         DSL.SyntaxTree.Argument("HaloSize", DSL.SyntaxTree.TInteger(), "applications::exahype2"),
-                         DSL.SyntaxTree.Argument("NumberOfUnknowns", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
-                         DSL.SyntaxTree.Argument("NumberOfAuxiliaryVariables", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
-                         DSL.SyntaxTree.Argument("EvaluateFlux", DSL.SyntaxTree.TBoolean(), "applications::exahype2::ccz4"),
-                         DSL.SyntaxTree.Argument("EvaluateNonconservativeProduct", DSL.SyntaxTree.TBoolean(), "applications::exahype2::ccz4"),
-                         DSL.SyntaxTree.Argument("EvaluateSource", DSL.SyntaxTree.TBoolean(), "applications::exahype2::ccz4"),
-                         DSL.SyntaxTree.Argument("EvaluateMaximumEigenvalueAfterTimeStep", DSL.SyntaxTree.TBoolean(), "applications::exahype2::ccz4")]
-
-  functor_arguments = [DSL.SyntaxTree.Argument("flux", DSL.SyntaxTree.TCustom("const FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-                       DSL.SyntaxTree.Argument("nonconservativeProduct", DSL.SyntaxTree.TCustom("const NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-                       DSL.SyntaxTree.Argument("sourceTerm", DSL.SyntaxTree.TCustom("const SourceFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()"),
-                       DSL.SyntaxTree.Argument("maxEigenvalue", DSL.SyntaxTree.TCustom("const MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")]
-
-  rusanov_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"])
-  rusanov_kernel = rusanov_tree.print_cpp()
-  rusanov_call_with_measurement = rusanov_tree.print_definition_with_timer()
-  rusanov_kernel_declaration = rusanov_tree.print_declaration()
-  rusanov_call_with_measurement_declaration = rusanov_tree.print_declaration_with_timer()
-
-  rusanov_stateless_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], stateless=True)
-  rusanov_stateless_kernel = rusanov_stateless_tree.print_cpp()
-  rusanov_stateless_call_with_measurement = rusanov_stateless_tree.print_definition_with_timer()
-  rusanov_stateless_kernel_declaration = rusanov_stateless_tree.print_declaration()
-  rusanov_stateless_call_with_measurement_declaration = rusanov_stateless_tree.print_declaration_with_timer()
-
-  #rusanov_accelerator_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], True, True).print_cpp()
-  #rusanov_accelerator_kernel = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], True, True).print_cpp()
-  #rusanov_accelerator_call_with_measurement = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], True, True).print_definition_with_timer()
-  #rusanov_accelerator_kernel_declaration = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], True, True).print_declaration()
-  #rusanov_accelerator_call_with_measurement_declaration = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], True, True).print_declaration_with_timer()
-
-  rusanov_omp_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "omp"])
-  rusanov_omp_kernel = rusanov_omp_tree.print_omp()
-  rusanov_omp_call_with_measurement = rusanov_omp_tree.print_definition_with_timer()
-  rusanov_omp_kernel_declaration = rusanov_omp_tree.print_declaration()
-  rusanov_omp_call_with_measurement_declaration = rusanov_omp_tree.print_declaration_with_timer()
-
-  rusanov_omp_stateless_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "omp"], stateless=True)
-  rusanov_omp_stateless_kernel = rusanov_omp_stateless_tree.print_omp()
-  rusanov_omp_stateless_call_with_measurement = rusanov_omp_stateless_tree.print_definition_with_timer()
-  rusanov_omp_stateless_kernel_declaration = rusanov_omp_stateless_tree.print_declaration()
-  rusanov_omp_stateless_call_with_measurement_declaration = rusanov_omp_stateless_tree.print_declaration_with_timer()
-
-  rusanov_omp_accelerator_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "omp"], stateless=True, use_accelerator=True, use_memory_manager=True)
-  rusanov_omp_accelerator_kernel = rusanov_omp_accelerator_tree.print_omp()
-  rusanov_omp_accelerator_call_with_measurement = rusanov_omp_accelerator_tree.print_definition_with_timer()
-  rusanov_omp_accelerator_kernel_declaration = rusanov_omp_accelerator_tree.print_declaration()
-  rusanov_omp_accelerator_call_with_measurement_declaration = rusanov_omp_accelerator_tree.print_declaration_with_timer()
-
-  rusanov_sycl_accelerator_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "sycl"], stateless=True, use_accelerator=True)
-  rusanov_sycl_accelerator_kernel = rusanov_sycl_accelerator_tree.print_sycl()
-  rusanov_sycl_accelerator_call_with_measurement = rusanov_sycl_accelerator_tree.print_definition_with_timer()
-  rusanov_sycl_accelerator_kernel_declaration = rusanov_sycl_accelerator_tree.print_declaration()
-  rusanov_sycl_accelerator_call_with_measurement_declaration = rusanov_sycl_accelerator_tree.print_declaration_with_timer()
-
-  rusanov_mlir_kernel = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"]).print_mlir()
-  rusanov_mlir_omp_kernel = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], mlir_omp=True).print_mlir()
-
-  if not os.path.exists("kernels"):
-      os.makedirs("kernels")
-  
-  file = open("kernels/rusanov2d.h", "w")
-  file.write(f"""#pragma once
-#include "exahype2/CellData.h"
-#include "exahype2/VolumeIndex.h"
-#include "exahype2/fv/PatchUtils.h"
-#include "exahype2/fv/rusanov/Functors.h"
-#include "peano4/utils/Loop.h"
-#include "tarch/timing/Measurement.h"
-#include "tarch/timing/Watch.h"
-#include <fstream>
-
-{rusanov_kernel_declaration}
-{rusanov_call_with_measurement_declaration}        
-
-{rusanov_stateless_kernel_declaration}
-{rusanov_stateless_call_with_measurement_declaration}
-
-#if defined(SharedOMP)
-{rusanov_omp_kernel_declaration}
-{rusanov_omp_call_with_measurement_declaration}
-{rusanov_omp_stateless_kernel_declaration}
-{rusanov_omp_stateless_call_with_measurement_declaration}
-#endif
-
-#if defined(GPUOffloadingOMP)
-{rusanov_omp_accelerator_kernel_declaration}
-{rusanov_omp_accelerator_call_with_measurement_declaration}
-#endif
-
-#if defined(GPUOffloadingSYCL)
-{rusanov_sycl_accelerator_kernel_declaration}
-{rusanov_sycl_accelerator_call_with_measurement_declaration}
-#endif
-
-#ifdef USE_MLIR
-#include "MLIRbridge.cpph"
-#endif
-#include "rusanov2d.cpph"
-
-""")
-  file.close()
-
-  file = open("kernels/rusanov2d.cpph", "w")
-  file.write(rusanov_kernel)
-  file.write(rusanov_call_with_measurement)
-  file.write(rusanov_stateless_kernel)
-  file.write(rusanov_stateless_call_with_measurement)
-
-  file.write("#if defined(SharedOMP)\n")
-  file.write(rusanov_omp_kernel)
-  file.write(rusanov_omp_call_with_measurement)
-  file.write(rusanov_omp_stateless_kernel)
-  file.write(rusanov_omp_stateless_call_with_measurement)
-  file.write("#endif\n")
-
-  file.write("#if defined(GPUOffloadingOMP)\n")
-  file.write(rusanov_omp_accelerator_kernel)
-  file.write(rusanov_omp_accelerator_call_with_measurement)
-  file.write("#endif\n")
-
-  file.write("#if defined(GPUOffloadingSYCL)\n")
-  file.write(rusanov_sycl_accelerator_kernel)
-  file.write(rusanov_sycl_accelerator_call_with_measurement)
-  file.write("#endif\n")
-  file.close()
-
-  # NOTE: MLIR kernel now uses static MLIRbridge.cpp files
-  file = open("kernels/rusanov2d.mlir", "w")
-  file.write(rusanov_mlir_kernel)
-  file.close()
-
-  file = open("kernels/rusanov2d_omp.mlir", "w")
-  file.write(rusanov_mlir_omp_kernel)
-  file.close()  
-
-def create_rusanov_kernel_definitions_3d(patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step):
+def create_rusanov_kernel_definitions_for_function(function, filename, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step):
   template_parameters = [DSL.SyntaxTree.Argument("NumberOfVolumesPerAxisInPatch", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
                          DSL.SyntaxTree.Argument("HaloSize", DSL.SyntaxTree.TInteger(), "applications::exahype2"),
                          DSL.SyntaxTree.Argument("NumberOfUnknowns", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
@@ -196,64 +58,7 @@ def create_rusanov_kernel_definitions_3d(patch_size, unknowns, auxiliary_variabl
                        DSL.SyntaxTree.Argument("sourceTerm", DSL.SyntaxTree.TCustom("const SourceFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()", is_function=True),
                        DSL.SyntaxTree.Argument("maxEigenvalue", DSL.SyntaxTree.TCustom("const MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()", is_function=True)]
 
-  rusanov_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"])
-  rusanov_kernel = rusanov_tree.print_cpp()
-  rusanov_call_with_measurement = rusanov_tree.print_definition_with_timer()
-  rusanov_kernel_declaration = rusanov_tree.print_declaration()
-  rusanov_call_with_measurement_declaration = rusanov_tree.print_declaration_with_timer()
-
-  rusanov_stateless_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], stateless=True)
-  rusanov_stateless_kernel = rusanov_stateless_tree.print_cpp()
-  rusanov_stateless_call_with_measurement = rusanov_stateless_tree.print_definition_with_timer()
-  rusanov_stateless_kernel_declaration = rusanov_stateless_tree.print_declaration()
-  rusanov_stateless_call_with_measurement_declaration = rusanov_stateless_tree.print_declaration_with_timer()
-
-  rusanov_accelerator_kernel = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], True, True).print_cpp()
-  rusanov_accelerator_call_with_measurement = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], True, True).print_definition_with_timer()
-  rusanov_accelerator_kernel_declaration = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], True, True).print_declaration()
-  rusanov_accelerator_call_with_measurement_declaration = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], True, True).print_declaration_with_timer()
-
-  rusanov_omp_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "omp"])
-  rusanov_omp_kernel = rusanov_omp_tree.print_omp()
-  rusanov_omp_call_with_measurement = rusanov_omp_tree.print_definition_with_timer()
-  rusanov_omp_kernel_declaration = rusanov_omp_tree.print_declaration()
-  rusanov_omp_call_with_measurement_declaration = rusanov_omp_tree.print_declaration_with_timer()
-
-  rusanov_omp_stateless_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "omp"], stateless=True)
-  rusanov_omp_stateless_kernel = rusanov_omp_stateless_tree.print_omp()
-  rusanov_omp_stateless_call_with_measurement = rusanov_omp_stateless_tree.print_definition_with_timer()
-  rusanov_omp_stateless_kernel_declaration = rusanov_omp_stateless_tree.print_declaration()
-  rusanov_omp_stateless_call_with_measurement_declaration = rusanov_omp_stateless_tree.print_declaration_with_timer()
-
-  rusanov_omp_accelerator_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "omp"], stateless=True, use_accelerator=True, use_memory_manager=True)
-  rusanov_omp_accelerator_kernel = rusanov_omp_accelerator_tree.print_omp()
-  rusanov_omp_accelerator_call_with_measurement = rusanov_omp_accelerator_tree.print_definition_with_timer()
-  rusanov_omp_accelerator_kernel_declaration = rusanov_omp_accelerator_tree.print_declaration()
-  rusanov_omp_accelerator_call_with_measurement_declaration = rusanov_omp_accelerator_tree.print_declaration_with_timer()
-
-  rusanov_sycl_accelerator_tree = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "sycl"], stateless=True, use_accelerator=True)
-  rusanov_sycl_accelerator_kernel = rusanov_sycl_accelerator_tree.print_sycl()
-  rusanov_sycl_accelerator_call_with_measurement = rusanov_sycl_accelerator_tree.print_definition_with_timer()
-  rusanov_sycl_accelerator_kernel_declaration = rusanov_sycl_accelerator_tree.print_declaration()
-  rusanov_sycl_accelerator_call_with_measurement_declaration = rusanov_sycl_accelerator_tree.print_declaration_with_timer()
-
-  # These function definitions are used to generate declarations in the MLIR bridge files
-  rusanov_mlir_function_definition = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "mlir"])
-  rusanov_mlir_stateless_function_definition = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "mlir"], stateless=True)
-  rusanov_mlir_stateless_omp_function_definition = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "mlir", "omp"], stateless=True)
-  rusanov_mlir_gpu_function_definition = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov", "mlir", "gpu"], stateless=True, use_accelerator=True)
-  
-  rusanov_mlir_kernel = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"]).print_mlir() 
-  rusanov_mlir_omp_kernel = DSL.Parser().parse(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, template_parameters, functor_arguments, ["exahype2", "fv", "rusanov"], mlir_omp=True).print_mlir() 
-
-  mlir_cpu_function_definitions = [
-    rusanov_mlir_function_definition,
-    rusanov_mlir_stateless_function_definition,
-    rusanov_mlir_stateless_omp_function_definition
-  ]
-
-  solver_includes = """
-#include "exahype2/CellData.h"
+  solver_includes = """#include "exahype2/CellData.h"
 #include "exahype2/VolumeIndex.h"
 #include "exahype2/fv/PatchUtils.h"
 #include "exahype2/fv/rusanov/Functors.h"
@@ -261,119 +66,6 @@ def create_rusanov_kernel_definitions_3d(patch_size, unknowns, auxiliary_variabl
 #include "tarch/timing/Measurement.h"
 #include "tarch/timing/Watch.h"
 """
-
-  if not os.path.exists("kernels"):
-      os.makedirs("kernels")
-  
-  file = open("kernels/rusanov3d.h", "w")
-  file.write(f"""#pragma once
-{solver_includes}
-           
-{rusanov_kernel_declaration}
-{rusanov_call_with_measurement_declaration}
-{rusanov_stateless_kernel_declaration}
-{rusanov_stateless_call_with_measurement_declaration}
-{rusanov_accelerator_kernel_declaration}
-{rusanov_accelerator_call_with_measurement_declaration}
-
-#if defined(SharedOMP)
-{rusanov_omp_kernel_declaration}
-{rusanov_omp_call_with_measurement_declaration}
-{rusanov_omp_stateless_kernel_declaration}
-{rusanov_omp_stateless_call_with_measurement_declaration}
-#endif
-
-#if defined(GPUOffloadingOMP)
-{rusanov_omp_accelerator_kernel_declaration}
-{rusanov_omp_accelerator_call_with_measurement_declaration}
-#endif
-
-#if defined(GPUOffloadingSYCL)
-{rusanov_sycl_accelerator_kernel_declaration}
-{rusanov_sycl_accelerator_call_with_measurement_declaration}
-#endif
-
-#ifdef USE_MLIR
-#include "MLIRbridge.cpph"
-#endif
-#include "rusanov3d.cpph"
-
-""")
-  file.close()
-
-  file = open("kernels/rusanov3d.cpph", "w")
-  file.write(rusanov_kernel)
-  file.write(rusanov_call_with_measurement)
-  file.write(rusanov_stateless_kernel)
-  file.write(rusanov_stateless_call_with_measurement)
-  file.write(rusanov_accelerator_kernel)
-  file.write(rusanov_accelerator_call_with_measurement)
-
-  file.write("#if defined(SharedOMP)\n")
-  file.write(rusanov_omp_kernel)
-  file.write(rusanov_omp_call_with_measurement)
-  file.write(rusanov_omp_stateless_kernel)
-  file.write(rusanov_omp_stateless_call_with_measurement)
-  file.write("#endif\n")
-
-  file.write("#if defined(GPUOffloadingOMP)\n")
-  file.write(rusanov_omp_accelerator_kernel)
-  file.write(rusanov_omp_accelerator_call_with_measurement)
-  file.write("#endif\n")
-
-  file.write("#if defined(GPUOffloadingSYCL)\n")
-  file.write(rusanov_sycl_accelerator_kernel)
-  file.write(rusanov_sycl_accelerator_call_with_measurement)
-  file.write("#endif\n")
-
-  file.close()
-
-  file = open("kernels/rusanov3d.mlir", "w")
-  file.write(rusanov_mlir_kernel)
-  file.close()
-
-  file = open("kernels/rusanov3d_omp.mlir", "w")
-  file.write(rusanov_mlir_omp_kernel)
-  file.close()
-
-  # Generate MLIR bridge files
-  with open("MLIRbridge.cpph", 'w') as file:
-    file.write("""
-#include "MemRefDescriptor.cpph"
-// MLIR-compatible structure using memref descriptors
-struct MLIRCellData {
-    MemRefDescriptor2D QIn;             // Field 0
-    MemRefDescriptor2D QOut;            // Field 1  
-    MemRefDescriptorNested cellCentre;  // Field 2
-    MemRefDescriptorNested cellSize;    // Field 3
-    MemRefDescriptor1D t;               // Field 4
-    MemRefDescriptor1D dt;              // Field 5
-    MemRefDescriptor1D id;              // Field 6
-    int64_t numberOfCells;              // Field 7
-    int64_t memoryLocation;             // Field 8
-    int64_t targetDevice;               // Field 9
-    double** QOut_legacy;               // Field 10
-    double* maxEigenvalue;              // Field 11
-};
-void convertToMLIRStruct(exahype2::CellData<double, double>* patchData, MLIRCellData* mlir_data);
-void convertToMLIRStructGPU(exahype2::CellData<double, double>* copyCellData, MLIRCellData* mlir_data);
-void cleanupMLIRStruct(MLIRCellData* mlir_data);
-void cleanupMLIRStructGPU(MLIRCellData* mlir_data);
-void copybackMLIRresults(exahype2::CellData<double, double>* patchData, MLIRCellData* mlir_data);
-""")
-    file.write("""extern "C" void timeStepWithRusanov_MLIR_wrapper(exahype2::CellData<double, double>* patchData, bool use_omp);\n""")
-    for definition in mlir_cpu_function_definitions:
-      file.write(definition.print_declaration())
-      file.write(definition.print_declaration_with_timer())
-      definition._arguments[0]._type = DSL.SyntaxTree.TCustom("MLIRCellData*")
-      file.write(definition.print_declaration())
-      file.write(definition.print_declaration_with_timer())
-
-    file.write("#ifdef MLIR_GPU\n")
-    rusanov_mlir_gpu_function_definition._arguments[1]._type = DSL.SyntaxTree.TCustom("MLIRCellData*")
-    file.write(rusanov_mlir_gpu_function_definition.print_declaration())
-    file.write(rusanov_mlir_gpu_function_definition.print_declaration_with_timer())
-    file.write("#endif")
   
   d = {}
   d["KERNEL_NAMESPACE"] = "exahype2::fv::rusanov"
@@ -392,8 +84,6 @@ void copybackMLIRresults(exahype2::CellData<double, double>* patchData, MLIRCell
   d["COMPUTE_MAX_EIGENVALUE"] = compute_max_eigenvalue_of_next_time_step
   d["HALO_SIZE"] = 1
 
-  template_strings = [argument.print_cpp() for argument in rusanov_mlir_function_definition._template]
-  d["TEMPLATE_DEFINITION"] = "template <" + ",".join(template_strings) + ">\n"
 
   template_call_jinja = """
       {{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}},
@@ -420,13 +110,68 @@ void copybackMLIRresults(exahype2::CellData<double, double>* patchData, MLIRCell
   """
   d["TEMPLATE_VALUE_DEFINITIONS"] = jinja2.Template(template_value_definitions_jinja).render(**d)
 
-  filepath = os.path.realpath(__file__)
-  filepath_root = filepath[0:filepath.find("solvers/")]
-  with open(filepath_root + "dslhype/MLIRbridge.template.cpp", 'r') as template_file:
-    mlir_bridge_template = template_file.read()
-  mlir_bridge_cpp = jinja2.Template(mlir_bridge_template).render(**d)
-  with open("MLIRbridge.cpp", 'w') as file:
-    file.write(mlir_bridge_cpp)
+  bridge_functions_jinja = """
+    void flux_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* F_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* F = static_cast<double*>(F_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::flux(Q, *x, *h, t, dt, normal, F, OffloadableType::Yes);
+    }
+    
+    void nonconservativeProduct_bridge(void* Q_ptr, void* deltaQ_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        double* deltaQ = static_cast<double*>(deltaQ_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* result = static_cast<double*>(result_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::nonconservativeProduct(Q, deltaQ, *x, *h, t, dt, normal, result, OffloadableType::Yes);
+    }
+    
+    void sourceTerm_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, void* S_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* S = static_cast<double*>(S_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::sourceTerm(Q, *x, *h, t, dt, S, OffloadableType::Yes);
+    }
+    
+    void maxEigenvalue_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* result = static_cast<double*>(result_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::maxEigenvalue(Q, *x, *h, t, dt, normal, result, OffloadableType::Yes);
+    }
+"""
+  d["BRIDGE_FUNCTIONS"] = jinja2.Template(bridge_functions_jinja).render(**d)
+
+  d["EXTERN_FUNCTION_ARGUMENT_DEFINITIONS"] = """
+    void (*flux_fn)(void*, void*, void*, double, double, int, void*),
+    void (*ncp_fn)(void*, void*, void*, void*, double, double, int, void*),
+    void (*source_fn)(void*, void*, void*, double, double, void*),
+    void (*maxeig_fn)(void*, void*, void*, double, double, int, void*)
+"""
+  enabled_pde_terms = []
+  if flux_implementation is not None and flux_implementation != exahype2.solvers.PDETerms.None_Implementation:
+    enabled_pde_terms.append("EvaluateFlux")
+  if source_term_implementation is not None and source_term_implementation != exahype2.solvers.PDETerms.None_Implementation:
+    enabled_pde_terms.append("EvaluateSource")
+  if ncp_implementation is not None and ncp_implementation != exahype2.solvers.PDETerms.None_Implementation:
+    enabled_pde_terms.append("EvaluateNonconservativeProduct")
+  if compute_max_eigenvalue_of_next_time_step:
+    enabled_pde_terms.append("EvaluateMaximumEigenvalueAfterTimeStep")
+
+  DSL.create_kernel_definitions(
+    function,
+    template_parameters,
+    functor_arguments,
+    filename,
+    solver_includes,
+    ["exahype2", "fv", "rusanov"],
+    d,
+    enabled_pde_terms
+  )
 
 def create_compute_Riemann_kernel_for_Rusanov_dsl(flux_implementation,
                                               ncp_implementation,

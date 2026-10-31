@@ -19,3 +19,4 @@ from .create_dynamic_mesh_refinement_action_set import create_dynamic_mesh_refin
 from .ConsumeRefinementRequests import ConsumeRefinementRequests
 from .AdaptMeshAndBalanceLoad import AdaptMeshAndBalanceLoad
 from . import BoundaryConditions
+from .LoadCheckpoint import LoadCheckpoint

@@ -75,6 +75,46 @@ This spec file specifies a simple grid that
 
 
 
+# ASCII and binary files
+
+The header of every file carries a line `format ASCII` or `format Binary`.
+The two formats only differ in how the quantities of a patch are stored.
+Everything else, i.e. the header, the metadata, the mappings, offset and size
+of the patches and the `begin`/`end` markers, is text in both formats.
+
+- In an ASCII file (tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter),
+  the line between `begin cell-values` and `end cell-values` (or the vertex
+  counterparts) holds the numbers as text.
+- In a binary file (tarch::plotter::griddata::blockstructured::PeanoBinaryPatchFileWriter),
+  the numbers sit there as raw doubles (8 bytes each, byte order of the machine
+  that wrote the file), followed by one line break:
+
+~~~~~~~~~~~~~~~~~~~~
+begin patch
+  offset 0.0 0.0
+  size   0.5 0.5
+  begin cell-values "solution"
+<number-of-unknowns x number-of-dofs-per-axis^dimensions doubles as raw bytes>
+  end cell-values
+end patch
+~~~~~~~~~~~~~~~~~~~~
+
+  The number of bytes follows from `number-of-unknowns`, `number-of-dofs-per-axis`
+  and `dimensions` of the metadata block. A reader therefore never has to search
+  for the end of the raw data, which may contain any byte value.
+
+Binary files are smaller, faster to write and hold the doubles bit-exact. ASCII
+files can be read by humans and by any tool. ExaHyPE's plotters and checkpoints
+write binary files by default (argument `binary`). Meta files, i.e. the files
+which only link to snapshot files, are always plain text.
+The C++ readers tarch::reader::PeanoTextPatchFileReader and
+tarch::reader::PeanoBinaryPatchFileReader read the two formats, and
+tarch::reader::PeanoTextPatchFileReader::readHeader() tells which one to use. The
+Python scripts in tarch.plotter.api, e.g. render.py, probe.py and
+@ref documentation_tarch_visualisation_merging-data "merge.py", handle both.
+
+
+
 # More sophiciated dumps
 
 - The file format supports `cell-values`.
