@@ -1,6 +1,8 @@
 #include "CheckpointReader.h"
 
 #include "tarch/multicore/Lock.h"
+#include "tarch/reader/PeanoBinaryPatchFileReader.h"
+#include "tarch/reader/PeanoTextPatchFileReader.h"
 
 #include <algorithm>
 #include <cmath>
@@ -166,61 +168,53 @@ std::vector<std::string> exahype2::CheckpointReader::readIndexFile(
 
 
 void exahype2::CheckpointReader::readPatchFile(const std::string& fileName) {
-  std::ifstream in(fileName);
-  if (not in.good()) {
+  if (not std::ifstream(fileName).good()) {
     logError("readPatchFile(...)", "cannot open checkpoint file " << fileName);
     std::abort();
   }
 
-  int                 entriesPerAxis = 0;
-  std::vector<double> offset;
-  std::vector<double> size;
-  std::string         line;
-  while (std::getline(in, line)) {
-    line = trim(line);
-    if (startsWith(line, "dimensions")) {
-      if (static_cast<int>(readNumbers(line).at(0)) != Dimensions) {
-        logError(
-          "readPatchFile(...)",
-          "checkpoint file "
-            << fileName << " has not been written by a " << Dimensions
-            << "d code"
-        );
-        std::abort();
-      }
-    } else if (startsWith(line, "number-of-dofs-per-axis")) {
-      entriesPerAxis = static_cast<int>(readNumbers(line).at(0));
-    } else if (line == "begin meta-data") {
-      std::string metaData;
-      while (std::getline(in, line) and trim(line) != "end meta-data") {
-        metaData += (metaData.empty() ? "" : "\n") + trim(line);
-      }
-      if (_metaData.empty()) {
-        _metaData = metaData;
-      }
-    } else if (startsWith(line, "offset")) {
-      offset = readNumbers(line);
-    } else if (startsWith(line, "size")) {
-      size = readNumbers(line);
-    } else if (startsWith(line, "begin cell-values")) {
-      std::getline(in, line);
-      std::vector<double> values = readNumbers("values " + line);
+  const auto header = tarch::reader::PeanoTextPatchFileReader::readHeader(
+    fileName
+  );
+  if (header.dimensions != Dimensions) {
+    logError(
+      "readPatchFile(...)",
+      "checkpoint file "
+        << fileName << " has not been written by a " << Dimensions << "d code"
+    );
+    std::abort();
+  }
 
-      // The patch covers the cell plus the halo. The cell spans the
-      // entriesPerAxis-2*haloWidth entries in the middle.
-      tarch::la::Vector<Dimensions, double> cellOffset;
-      tarch::la::Vector<Dimensions, double> cellH;
-      for (int d = 0; d < Dimensions; d++) {
-        const double entryWidth = size.at(d) / entriesPerAxis;
-        cellOffset(d)           = offset.at(d) + _haloWidth * entryWidth;
-        cellH(d) = (entriesPerAxis - 2 * _haloWidth) * entryWidth;
-      }
+  std::unique_ptr<tarch::reader::PeanoTextPatchFileReader> reader;
+  switch (header.format) {
+    case tarch::reader::PeanoTextPatchFileReader::Format::ASCII:
+      reader = std::make_unique<tarch::reader::PeanoTextPatchFileReader>();
+      break;
+    case tarch::reader::PeanoTextPatchFileReader::Format::Binary:
+      reader = std::make_unique<tarch::reader::PeanoBinaryPatchFileReader>();
+      break;
+  }
 
-      const Key key = toKey(cellOffset, cellH);
-      if (_patchIndex.count(key) == 0) {
-        _patchIndex[key] = _patchData.size();
-        _patchData.push_back(std::move(values));
-      }
+  auto content = reader->read(fileName);
+  if (_metaData.empty()) {
+    _metaData = content.metaData;
+  }
+
+  for (auto& patch : content.patches) {
+    // The patch covers the cell plus the halo. The cell spans the
+    // numberOfDoFsPerAxis-2*haloWidth entries in the middle.
+    tarch::la::Vector<Dimensions, double> cellOffset;
+    tarch::la::Vector<Dimensions, double> cellH;
+    for (int d = 0; d < Dimensions; d++) {
+      const double entryWidth = patch.size[d] / patch.numberOfDoFsPerAxis;
+      cellOffset(d)           = patch.offset[d] + _haloWidth * entryWidth;
+      cellH(d) = (patch.numberOfDoFsPerAxis - 2 * _haloWidth) * entryWidth;
+    }
+
+    const Key key = toKey(cellOffset, cellH);
+    if (_patchIndex.count(key) == 0) {
+      _patchIndex[key] = _patchData.size();
+      _patchData.push_back(std::move(patch.values));
     }
   }
 }

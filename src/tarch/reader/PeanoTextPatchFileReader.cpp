@@ -1,97 +1,148 @@
 #include "PeanoTextPatchFileReader.h"
-#include "tarch/mpi/Rank.h"
+
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 
-void tarch::reader::readInCheckpointFiles(
-  const std::vector<std::string>&  checkpointFilesOfSolver,
-  std::vector<double>&             domainDataFromFiles,
-  std::vector<double>&             offsetIndex,
-  int numberOfUnknowns,
-  int numberOfAuxiliaries,
-  int dimension,
-  int patchSize
-) {
-  domainDataFromFiles.clear();
-  offsetIndex.clear();
-
-  for (const auto& filename : checkpointFilesOfSolver) {
-    std::ifstream file(filename);
-    std::string line;
-    bool InAPatch=false;
-    while (std::getline(file, line)) {
-      if ( (not InAPatch) and line.find("  offset") == 0 ) { 
-        std::istringstream iss(line);
-        std::string token;
-
-        #if defined(__cpp_exceptions)
-        while (iss >> token) { try {offsetIndex.push_back(std::stod(token)); } catch (...){ } }
-        #else
-        while (iss >> token) {
-          offsetIndex.push_back(std::stod(token));
-        }
-        #endif
-        InAPatch=true;
-      }
-
-      if ( InAPatch and (line.find("     ") == 0) ){
-        std::istringstream iss(line);
-        std::string token;
-
-        while (iss >> token) { domainDataFromFiles.push_back(std::stod(token));}
-        InAPatch=false;
-      }
-    }
+namespace {
+  [[noreturn]] void fail(const std::string& message) {
+    std::cerr << "tarch::reader::PeanoTextPatchFileReader: " << message << std::endl;
+    std::abort();
   }
 
-  //for (int j=0; j<=(59 + 0)*27; j++){
-  //  if (domainDataFromFiles[j] > 0) 
-  //    std::cout<<domainDataFromFiles[j]<<std::endl;
-  //}
-  //std::cout<<offsetIndex[-999]<<std::endl;
+  std::string trim(const std::string& line) {
+    const auto first = line.find_first_not_of(" \t\r");
+    if (first == std::string::npos) {
+      return "";
+    }
+    const auto last = line.find_last_not_of(" \t\r");
+    return line.substr(first, last - first + 1);
+  }
+
+  bool startsWith(const std::string& line, const std::string& prefix) {
+    return line.rfind(prefix, 0) == 0;
+  }
+
+  /**
+   * The numbers behind the keyword of a line such as "offset 0.1 0.2"
+   */
+  std::vector<double> readNumbers(const std::string& line) {
+    std::istringstream  in(line);
+    std::string         keyword;
+    std::vector<double> result;
+    in >> keyword;
+    std::string token;
+    while (in >> token) {
+      result.push_back(std::strtod(token.c_str(), nullptr));
+    }
+    return result;
+  }
+} // namespace
+
+
+tarch::reader::PeanoTextPatchFileReader::Header tarch::reader::PeanoTextPatchFileReader::readHeader(
+  const std::string& fileName
+) {
+  std::ifstream in(fileName, std::ios::binary);
+  if (not in.good()) {
+    fail("cannot open file " + fileName);
+  }
+
+  Header      result;
+  std::string line;
+  while (std::getline(in, line)) {
+    line = trim(line);
+    if (startsWith(line, "format")) {
+      std::istringstream tokens(line);
+      std::string        keyword, value;
+      tokens >> keyword >> value;
+      if (value == "Binary") {
+        result.format = Format::Binary;
+      } else if (value == "ASCII") {
+        result.format = Format::ASCII;
+      } else {
+        fail("file " + fileName + " has unknown format " + value);
+      }
+    } else if (startsWith(line, "dimensions")) {
+      result.dimensions = static_cast<int>(readNumbers(line).at(0));
+      return result;
+    } else if (startsWith(line, "begin")) {
+      break;
+    }
+  }
+  return result;
 }
 
 
-//      calling example
-//      std::unordered_map<std::tuple<double, double, double>, std::string, tarch::reader::offsetHash, tarch::reader::offsetEqual> OffsetIndexMap;
-//      tarch::reader::readInCheckpointOffsetIndex(OffsetIndexMap, CheckpointFilesOfCCZ4);
-void tarch::reader::readInCheckpointOffsetIndex(
-      std::map< tarch::la::Vector<3,double> , std::string, tarch::la::VectorCompare<3> >& offsetIndexMap,
-      std::vector<std::string> checkpointFilesOfSolver){
-  //do nothing yet
-  //std::cout<<"print sth as it is called."<<std::endl;
-  for (const auto& filename : checkpointFilesOfSolver) {
-    std::ifstream file(filename);
-    std::string line;
+tarch::reader::PeanoTextPatchFileReader::Format tarch::reader::PeanoTextPatchFileReader::getFormat() const {
+  return Format::ASCII;
+}
 
-    while (std::getline(file, line)) {
-      if (line.find("  offset") == 0 ) { 
-        std::istringstream iss(line);
-        std::string token; 
-        int i=0;
 
-        tarch::la::Vector<3,double> tempOffset;
-        #if defined(__cpp_exceptions)
-        while (iss >> token) { try {tempOffset[i]=std::stod(token); i++; } catch (...){ } }
-        #else
-        while (iss >> token) {
-          tempOffset[i]=std::stod(token);
-          i++;
-        }
-        #endif
-        offsetIndexMap[tempOffset]=filename;
+void tarch::reader::PeanoTextPatchFileReader::readValues(
+  std::istream&        in,
+  [[maybe_unused]] int numberOfValues,
+  std::vector<double>& values
+) const {
+  std::string line;
+  std::getline(in, line);
+  values = readNumbers("values " + line);
+}
 
-      }
-    }
+
+tarch::reader::PeanoTextPatchFileReader::Content tarch::reader::PeanoTextPatchFileReader::read(
+  const std::string& fileName
+) const {
+  Content result;
+  result.header = readHeader(fileName);
+  if (result.header.format != getFormat()) {
+    fail("file " + fileName + " has a format which this reader does not support");
+  }
+  if (result.header.dimensions < 2 or result.header.dimensions > 3) {
+    fail("file " + fileName + " does not hold a valid dimensions entry");
   }
 
-//  std::tuple<double, double, double> test = {-0.5+1e-7, -5.000000e-01, -5.000000e-01};
-//  std::cout<<offsetIndexMap[test]<<std::endl;
-/*    std::tuple<double, double, double> query_coord = {-0.5+1e-7, -0.5, -0.5};
-    if (offsetIndexMap.find(query_coord) != offsetIndexMap.end()) {
-        std::cout << "Coordinate maps to: " << offsetIndexMap[query_coord] << std::endl;
-    } else {
-        std::cout << "Coordinate not found." << std::endl;
-    }*/
+  std::ifstream in(fileName, std::ios::binary);
 
+  int                 entriesPerAxis = 0;
+  int                 unknowns       = 0;
+  std::vector<double> offset;
+  std::vector<double> size;
+  std::string         line;
+  while (std::getline(in, line)) {
+    line = trim(line);
+    if (startsWith(line, "number-of-dofs-per-axis")) {
+      entriesPerAxis = static_cast<int>(readNumbers(line).at(0));
+    } else if (startsWith(line, "number-of-unknowns")) {
+      unknowns = static_cast<int>(readNumbers(line).at(0));
+    } else if (line == "begin meta-data") {
+      std::string metaData;
+      while (std::getline(in, line) and trim(line) != "end meta-data") {
+        metaData += (metaData.empty() ? "" : "\n") + trim(line);
+      }
+      if (result.metaData.empty()) {
+        result.metaData = metaData;
+      }
+    } else if (startsWith(line, "offset")) {
+      offset = readNumbers(line);
+    } else if (startsWith(line, "size")) {
+      size = readNumbers(line);
+    } else if (startsWith(line, "begin cell-values")) {
+      int numberOfValues = unknowns;
+      for (int d = 0; d < result.header.dimensions; d++) {
+        numberOfValues *= entriesPerAxis;
+      }
 
+      Patch patch;
+      patch.offset.assign(offset.begin(), offset.begin() + result.header.dimensions);
+      patch.size.assign(size.begin(), size.begin() + result.header.dimensions);
+      patch.numberOfDoFsPerAxis = entriesPerAxis;
+      patch.numberOfUnknowns    = unknowns;
+      readValues(in, numberOfValues, patch.values);
+      result.patches.push_back(std::move(patch));
+    }
+  }
+  return result;
 }

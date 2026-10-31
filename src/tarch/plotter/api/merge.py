@@ -1,34 +1,63 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+"""!
+
+Merge the partial patch files of a Peano simulation
+
+A parallel run writes one patch file per spacetree (and rank) and snapshot.
+The script merges the files of each snapshot into one file, and writes a new
+meta file merged_meta_file.peano-patch-file next to the original one which
+links to the merged files. It handles files with ASCII and with binary
+quantities. Call it with
+
+    python3 -m tarch.plotter.api.merge --meta-file solution-Euler.peano-patch-file
+
+@ref documentation_tarch_visualisation_merging-data
+
+"""
 import os
 import argparse
 
 
 def merge_partial_files(partial_files, merged_file_path):
+    """!
+
+    Merge the patches of several patch files into one file
+
+    The files are processed as bytes. A file with format Binary holds raw
+    doubles between its text lines, and we copy those verbatim. The header
+    of the merged file is the header of the first partial file, i.e. all
+    partial files have to have the same format. Everything from the first
+    "begin patch" in a file on is a patch, and everything before it is the
+    header: A header holds text only, so the first occurrence is the right
+    one, even in a binary file.
+
+    @param partial_files: [str]
+      Files to merge. Their patches end up in the merged file in this order.
+
+    @param merged_file_path: str
+      File to write.
+
+    """
     print("Start to merge file:", merged_file_path, end="...")
-    with open(merged_file_path, "w") as merged_patch_file:
+    patch_marker = b"begin patch"
+
+    with open(merged_file_path, "wb") as merged_patch_file:
         # First we need to write the header for our new patch
         # file. We can open any of the partial patch files
         # and pass this across
-        with open(partial_files[0], "r") as patch_file:
-            for line in patch_file.readlines():
-                if "begin patch" in line:
-                    break  # We don't want patches yet
-                else:
-                    merged_patch_file.write(line)
+        with open(partial_files[0], "rb") as patch_file:
+            content = patch_file.read()
+            first_patch = content.find(patch_marker)
+            merged_patch_file.write(content if first_patch < 0 else content[:first_patch])
 
-        count = 0
         for infile in partial_files:
-            reading_patches = False  # Allows us to skip headers
-            count += 1
-            # print(str(count)+"/"+str(len(partial_files)))
-            with open(infile, "r") as patch_file:
-                for line in patch_file:
-                    if "begin patch" in line and not reading_patches:
-                        reading_patches = True
-                        merged_patch_file.write("\n")
-                    if reading_patches:
-                        merged_patch_file.write(line)
+            with open(infile, "rb") as patch_file:
+                content = patch_file.read()
+            first_patch = content.find(patch_marker)
+            if first_patch >= 0:
+                merged_patch_file.write(b"\n")
+                merged_patch_file.write(content[first_patch:])
     print("Merged.")
 
 

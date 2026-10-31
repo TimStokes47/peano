@@ -1,0 +1,44 @@
+/**
+
+@page documentation_tarch_visualisation_merging-data Merging data files
+
+A parallel run writes one @ref tarch_patch_file_format "patch file" per
+spacetree (and rank) and snapshot. merge.py glues the files of each snapshot
+into one file. It yields few large files instead of many small ones, which is
+handy to archive or to transfer data, and which makes
+@ref documentation_tarch_visualisation_offline-conversion "render.py" and
+@ref documentation_tarch_visualisation_probing-data "probe.py" open fewer files.
+The script works with ASCII files and with files with binary quantities
+(see @ref tarch_patch_file_format), and it does not rely on ParaView/pvpython or
+vtk.
+
+~~~~~~~~~~~~~~~~~~~~~
+python3 -m tarch.plotter.api.merge --meta-file solution-Euler.peano-patch-file
+~~~~~~~~~~~~~~~~~~~~~
+
+The script takes the meta file of a simulation, i.e. the file which links to
+the snapshot files. For every snapshot, it writes a file
+`merged_patch_file_<snapshot>.peano-patch-file` into the directory of the
+meta file. It also writes `merged_meta_file.peano-patch-file`, which links to
+the merged files. The latter file is a meta file like any other, i.e. you hand
+it over to render.py or probe.py instead of the original meta file. The merged
+files keep the format of the input: If you merge files with binary quantities,
+you get files with binary quantities.
+
+The options are
+
+- **--meta-file** The meta file to merge (required).
+- **-start/-end** Restrict the merge to a range of snapshots. Snapshots
+  outside the range are skipped and do not show up in the new meta file.
+
+## What the script does
+
+The header of a merged file is the header of the first partial file. It
+holds the format, the dimensions and the description of the data sets. The
+script then appends all patches of all partial files of the snapshot. Patches
+are copied byte by byte, i.e. the script does not parse the values and a merge
+neither loses precision nor changes a file's format. All partial files of a
+snapshot therefore have to have the same format and the same data sets, which
+they do if they stem from one run.
+
+ */

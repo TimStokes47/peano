@@ -83,6 +83,7 @@ class PlotAsVTKFile(Solver.Plotter):
         filename="solution",
         name: str = None,
         quantities=None,
+        binary=True,
     ):
         """!
 
@@ -118,6 +119,14 @@ class PlotAsVTKFile(Solver.Plotter):
           (@ref exahype2.api.Quantities.resolve_quantities()). None writes
           all entries.
 
+        @param binary: bool
+          Write the values as raw doubles instead of text
+          (@ref tarch::plotter::griddata::blockstructured::PeanoBinaryPatchFileWriter).
+          The files are smaller and the values bit-exact, and the plotter's
+          precision then only affects the patch offsets and sizes. The
+          Python scripts of tarch.plotter.api read both formats. Pass False
+          to get human-readable files.
+
         """
         super().__init__(solver, name)
 
@@ -132,6 +141,7 @@ class PlotAsVTKFile(Solver.Plotter):
         self._output_path = output_path
         self._filename = filename
         self._quantities = quantities
+        self._binary = binary
 
     def output_file_prefix(self):
         return os.path.join(self._output_path, self._filename + "-" + self._solver.name)
@@ -209,6 +219,7 @@ class PlotAsVTKFile(Solver.Plotter):
 #include "../repositories/SolverRepository.h"
 """,
                 precision=self._plotter_precision,
+                binary=self._binary,
                 time_stamp_evaluation="0.5*(repositories::getMinTimeStamp()+repositories::getMaxTimeStamp())",
             )
         )
