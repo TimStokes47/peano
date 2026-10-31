@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 
 #include "tarch/Assertions.h"
 #include "tarch/mpi/Lock.h"
@@ -138,7 +139,8 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
   const std::string& fileName,
   const std::string& indexFileName,
   IndexFileMode      appendToIndexFile,
-  double             timeStamp
+  double             timeStamp,
+  int                precision
 ):
   _fileName(fileName),
   _indexFile(indexFileName),
@@ -246,7 +248,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
   }
   logDebug("PeanoTextPatchFileWriter(...)", "index file is ready");
 
-  _snapshotFileOut << std::scientific;
+  _snapshotFileOut << std::scientific << std::setprecision(precision);
 }
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::~PeanoTextPatchFileWriter() {}
