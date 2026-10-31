@@ -4,7 +4,14 @@
 
 
 This exercise runs us through a hypothetical workflow of a computational physicist who 
-wants to simulate the dynamics of a single black hole using the ExaGRyPE framework. 
+wants to simulate the dynamics of black holes. 
+
+
+
+a single black hole using the ExaGRyPE framework. 
+
+
+
 The goal is to set up a simulation that can efficiently utilize a cluster environment, allowing for parallel computations and scalability.
 
 

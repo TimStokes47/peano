@@ -89,7 +89,7 @@ Variants = {
         mode=peano4.api.output.CompileMode.STATS,
         domain_size=54.0,
         volume_size=1.2,
-        end_time=5.0,
+        end_time=1.0,
     ),
     "production": dict(
         mode=peano4.api.output.CompileMode.RELEASE,
