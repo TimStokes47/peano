@@ -442,5 +442,9 @@ grid_vertex.add_aspect(
     peano4.api.dastgen2.MPIAndStorageAspect(peano4.api.datamodel.DoFAssociation.Generic)
 )
 
+# The grid traversal queries the vertex state and adjacency in its innermost
+# loops, so all accessors have to be inlinable
+grid_vertex.expose_all_attributes_in_header_file()
+
 grid_vertex.write_header_file("../src/peano4/grid/GridVertex.h")
 grid_vertex.write_implementation_file("../src/peano4/grid/GridVertex.cpp")
