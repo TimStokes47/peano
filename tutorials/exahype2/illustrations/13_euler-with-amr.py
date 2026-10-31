@@ -11,11 +11,15 @@ resulting adaptive mesh, and draws the mesh, the solution, a comparison
 with the regular mesh, plus the setup's task graph. Finally, it runs the
 dynamically adaptive setup, which also erases cells while it runs time
 steps, and draws its mesh adaptation task graph, the number of patches
-over time and the mesh before and after it changes. The PDE
-terms are injected from Python, i.e. we do not need any hand-written C++
-file. Call it from anywhere:
+over time and the mesh before and after it changes. Finally, it runs the
+same dynamically adaptive setup with the gradient-based criterion and
+compares the density profiles, the meshes and the numbers of patches of
+the two criteria. The PDE terms are injected from Python, i.e. we do not
+need any hand-written C++ file. Call it from anywhere:
 
      python3 tutorials/exahype2/illustrations/13_euler-with-amr.py
+
+Pass --gradient-only to create only the pictures of the gradient section.
 
 All builds and outputs go into a temporary directory (or --work-directory).
 
@@ -95,6 +99,11 @@ DynamicRefineErasePointwisely = """
   if (Q[0] > 0.8) *refinementCommand = ::exahype2::RefinementCommand::Refine;
   else if (Q[0] < 0.1) *refinementCommand = ::exahype2::RefinementCommand::Erase;
 """
+GradientRefinement = """
+  const double densityGradient = std::abs(gradient[0]);
+  if (densityGradient > 5.0)      *refinementCommand = ::exahype2::RefinementCommand::Refine;
+  else if (densityGradient < 1.0) *refinementCommand = ::exahype2::RefinementCommand::Erase;
+"""
 EndTime = 0.2
 DynamicEndTime = 0.3
 TimeInBetweenPlots = 0.01
@@ -114,8 +123,17 @@ FD4InitPointWisely = """
 FD4PatchFile = "solution-EulerFD4.peano-patch-file"
 
 
-def create_solver(adaptive, dynamic=False):
-    """! The tutorial's solver over a regular, an adaptive or a dynamically adaptive mesh"""
+def create_solver(adaptive, dynamic=False, gradient=False):
+    """!
+
+    The tutorial's solver over a regular, an adaptive or a dynamically
+    adaptive mesh
+
+    With gradient, the solver refines and erases with the gradient-based
+    criterion instead of the point-wise one. The flag implies a dynamically
+    adaptive mesh.
+
+    """
     solver = exahype2.api.Solver("EulerFV", 4, 0)
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
@@ -125,7 +143,11 @@ def create_solver(adaptive, dynamic=False):
     solver.add_pde_term(
         exahype2.api.InitPointWisely(implementation=InitPointWisely, stateless=False)
     )
-    if adaptive:
+    if adaptive and gradient:
+        solver.add_pde_term(
+            exahype2.api.GradientRefinement(implementation=GradientRefinement)
+        )
+    elif adaptive:
         solver.add_pde_term(
             exahype2.api.RefineErasePointwisely(
                 implementation=DynamicRefineErasePointwisely
@@ -133,6 +155,7 @@ def create_solver(adaptive, dynamic=False):
                 else RefineErasePointwisely
             )
         )
+    if adaptive:
         solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(
             solver,
             9,
@@ -159,16 +182,16 @@ def create_solver(adaptive, dynamic=False):
     return solver
 
 
-def build_and_run(directory, adaptive=False, dynamic=False):
+def build_and_run(directory, adaptive=False, dynamic=False, gradient=False):
     """! Generate, compile and run the tutorial setup within directory"""
-    end_time = DynamicEndTime if dynamic else EndTime
+    end_time = DynamicEndTime if dynamic or gradient else EndTime
     project = exahype2.api.Project(
         namespace=["tutorials", "exahype2", "euler"],
         project_name="Euler",
         directory=directory,
         executable="euler",
     )
-    solver = create_solver(adaptive, dynamic)
+    solver = create_solver(adaptive, dynamic, gradient)
     project.add_solver(solver)
     project.set_global_simulation_parameters(
         dimensions=2,
@@ -583,7 +606,12 @@ def plot_dynamic_mesh_change(directory):
         for offset, size, values in patches:
             ax.add_patch(
                 matplotlib.patches.Rectangle(
-                    offset, size[0], size[1], fill=False, edgecolor="white", linewidth=0.3
+                    offset,
+                    size[0],
+                    size[1],
+                    fill=False,
+                    edgecolor="white",
+                    linewidth=0.3,
                 )
             )
         ax.set_xlim(-0.3, 0.3)
@@ -599,6 +627,146 @@ def plot_dynamic_mesh_change(directory):
         bbox_inches="tight",
     )
     plt.close(fig)
+
+
+def gradient_snapshots(directory):
+    """!
+
+    Snapshots for the comparison of the point-wise and the gradient-based
+    criterion: t=0.1, 0.2 and 0.25. We stop before t=0.3, as the shock
+    then reaches the periodic boundary.
+
+    """
+    times, _ = patch_counts(directory)
+    return [
+        min(range(len(times)), key=lambda i: abs(times[i] - t))
+        for t in [0.1, 0.2, 0.25]
+    ]
+
+
+def plot_gradient_profile_comparison(pointwise_directory, gradient_directory):
+    """! Density along the positive x-axis: point-wise against gradient-based criterion"""
+    fig, ax = plt.subplots(figsize=(7, 4))
+    for snapshot, colour in zip(
+        gradient_snapshots(gradient_directory), ["C1", "C2", "C3"]
+    ):
+        t, x, rho = density_along_x_axis(pointwise_directory, snapshot)
+        ax.plot(
+            x,
+            rho,
+            "-",
+            color=colour,
+            linewidth=1.0,
+            label="point-wise, t={:.2f}".format(t),
+        )
+        t, x, rho = density_along_x_axis(gradient_directory, snapshot)
+        ax.plot(
+            x,
+            rho,
+            "o",
+            color=colour,
+            markersize=1.5,
+            label="gradient, t={:.2f}".format(t),
+        )
+    ax.set_xlabel("distance r from the centre (along y=0)")
+    ax.set_ylabel("density")
+    ax.set_title("Point-wise criterion (lines) against gradient criterion (dots)")
+    ax.legend(fontsize=8)
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-gradient-profile.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
+def plot_gradient_patch_counts(pointwise_directory, gradient_directory):
+    """! Number of patches per snapshot of both dynamically adaptive runs"""
+    fig, ax = plt.subplots(figsize=(7, 3.5))
+    for directory, label in [
+        (pointwise_directory, "point-wise criterion"),
+        (gradient_directory, "gradient criterion"),
+    ]:
+        times, counts = patch_counts(directory)
+        ax.step(times, counts, where="post", marker="o", markersize=3, label=label)
+        print("{}: {}".format(label, list(zip([round(t, 3) for t in times], counts))))
+    ax.set_xlabel("time")
+    ax.set_ylabel("number of patches")
+    ax.set_title("Patches of the dynamically adaptive meshes")
+    ax.legend()
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-gradient-patch-count.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
+def plot_gradient_mesh(pointwise_directory, gradient_directory):
+    """!
+
+    Density and patch boundaries of both runs at t=0.2
+
+    We zoom into the upper right quadrant, as the boundaries of the fine
+    patches would otherwise hide the solution.
+
+    """
+    snapshot = gradient_snapshots(gradient_directory)[1]
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+    for ax, directory, label in zip(
+        axes,
+        [pointwise_directory, gradient_directory],
+        ["point-wise criterion", "gradient criterion"],
+    ):
+        tarch.plotter.api.notebook.plot_snapshot(
+            os.path.join(directory, PatchFile),
+            snapshot,
+            0,
+            label="density",
+            ax=ax,
+            clim=(0.0, 0.3),
+        )
+        t, patches = read_snapshot(directory, snapshot)
+        for offset, size, values in patches:
+            ax.add_patch(
+                matplotlib.patches.Rectangle(
+                    offset,
+                    size[0],
+                    size[1],
+                    fill=False,
+                    edgecolor="white",
+                    linewidth=0.4,
+                )
+            )
+        ax.set_xlim(0.0, 0.5)
+        ax.set_ylim(0.0, 0.5)
+        ax.set_title(
+            "{}, t={:.2f}: {} patches".format(label, t, len(patches)), fontsize=10
+        )
+    fig.tight_layout()
+    fig.savefig(
+        os.path.join(Here, "13_euler-with-amr-gradient-mesh.png"),
+        dpi=100,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
+def create_gradient_pictures(dynamic_directory, gradient_directory, skip_run):
+    """!
+
+    Run the gradient-based criterion and compare it to the point-wise one
+
+    Expects the point-wise dynamically adaptive run within dynamic_directory.
+
+    """
+    if not skip_run:
+        print("build and run with gradient criterion in {}".format(gradient_directory))
+        build_and_run(gradient_directory, adaptive=True, gradient=True)
+    plot_gradient_profile_comparison(dynamic_directory, gradient_directory)
+    plot_gradient_patch_counts(dynamic_directory, gradient_directory)
+    plot_gradient_mesh(dynamic_directory, gradient_directory)
+    print_conservation(gradient_directory)
 
 
 def plot_fd4_explosion_time_step_sizes(directory):
@@ -731,17 +899,42 @@ if __name__ == "__main__":
         action="store_true",
         help="Create only the pictures of the section on the fourth-order Finite Differences",
     )
+    parser.add_argument(
+        "--gradient-only",
+        action="store_true",
+        help="Create only the pictures of the section on the gradient-based refinement",
+    )
     args = parser.parse_args()
 
     work_directory = args.work_directory or tempfile.mkdtemp(
         prefix="13_euler-with-amr-"
     )
+    dynamic_directory = os.path.join(work_directory, "dynamic-mesh")
+    gradient_directory = os.path.join(work_directory, "gradient-mesh")
+    if args.gradient_only:
+        os.makedirs(dynamic_directory, exist_ok=True)
+        os.makedirs(gradient_directory, exist_ok=True)
+        if not args.skip_run:
+            print(
+                "build and run over dynamically adaptive mesh in {}".format(
+                    dynamic_directory
+                )
+            )
+            build_and_run(dynamic_directory, adaptive=True, dynamic=True)
+        create_gradient_pictures(dynamic_directory, gradient_directory, args.skip_run)
+        print("wrote PNGs into {}".format(Here))
+        sys.exit(0)
+
     fd4_explosion_directory = os.path.join(work_directory, "fd4-explosion")
     fd4_pulse_directory = os.path.join(work_directory, "fd4-pulse")
     os.makedirs(fd4_explosion_directory, exist_ok=True)
     os.makedirs(fd4_pulse_directory, exist_ok=True)
     if not args.skip_run:
-        print("build and run FD4 in {} and {}".format(fd4_explosion_directory, fd4_pulse_directory))
+        print(
+            "build and run FD4 in {} and {}".format(
+                fd4_explosion_directory, fd4_pulse_directory
+            )
+        )
         build_and_run_fd4(fd4_explosion_directory, InitPointWisely)
         build_and_run_fd4(fd4_pulse_directory, FD4InitPointWisely)
     plot_fd4_explosion_time_step_sizes(fd4_explosion_directory)
@@ -773,13 +966,19 @@ if __name__ == "__main__":
     print_conservation(adaptive_directory)
     plot_setup_task_graph()
 
-    dynamic_directory = os.path.join(work_directory, "dynamic-mesh")
     os.makedirs(dynamic_directory, exist_ok=True)
     if not args.skip_run:
-        print("build and run over dynamically adaptive mesh in {}".format(dynamic_directory))
+        print(
+            "build and run over dynamically adaptive mesh in {}".format(
+                dynamic_directory
+            )
+        )
         build_and_run(dynamic_directory, adaptive=True, dynamic=True)
     plot_dynamic_patch_count(dynamic_directory)
     plot_dynamic_mesh_change(dynamic_directory)
     print_conservation(dynamic_directory)
     plot_mesh_adaptation_task_graph()
+
+    os.makedirs(gradient_directory, exist_ok=True)
+    create_gradient_pictures(dynamic_directory, gradient_directory, args.skip_run)
     print("wrote PNGs into {}".format(Here))
