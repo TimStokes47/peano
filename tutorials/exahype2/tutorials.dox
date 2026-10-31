@@ -67,9 +67,6 @@ Jupyter.
     - Postprocessing on-the-fly
     - Particles as Probes and Tracers
     - Coupling Multiple Numerical Schemes (Solvers)
-  - Feature benchmarks
-    - \ref benchmarks_exahype2_ccz4_gauge_wave
-    - \ref benchmarks_exahype2_ccz4_single_black_hole
   - \subpage tutorials_exahype2_applications_exagrype_faq
 - \subpage tutorials_exahype2_applications_exaseis (seismology extension built on top of ExaHyPE)
   

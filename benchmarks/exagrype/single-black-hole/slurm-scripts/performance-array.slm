@@ -1,0 +1,36 @@
+#!/bin/bash
+# Performance study (see README.dox, section on performance): one array task
+# per thread count, so the runs do not compete for the node. Submit with
+#   sbatch performance-array.slm
+#SBATCH --job-name=sbh-performance
+#SBATCH -p shared
+#SBATCH --nodes=1
+#SBATCH -c 32
+#SBATCH --exclusive
+#SBATCH --time=12:00:00
+#SBATCH --array=1,2,4,8,16,32
+#SBATCH --output=sbh-performance-%A-%a.out
+
+source /etc/profile.d/modules.sh
+
+module purge
+module load oneapi/2024.2
+export FLAVOUR_NOCONFLICT=1
+module load gcc/13.2
+module load intelmpi
+module load gsl
+module load python/3.10.8
+
+export I_MPI_CXX=icpx
+
+# Adapt to your installation: the Peano checkout and its Python environment.
+PEANO=${PEANO:-$HOME/git/Peano}
+source $PEANO/.venv/bin/activate
+export PYTHONPATH=$PEANO/src:$PYTHONPATH
+BENCHMARK=$PEANO/benchmarks/exagrype/single-black-hole
+
+THREADS=$SLURM_ARRAY_TASK_ID
+
+python3 $BENCHMARK/studies-single-black-hole.py performance --variant profile \
+  --threads $THREADS --repetitions 3 \
+  --work-directory studies-performance-$SLURM_ARRAY_JOB_ID-$THREADS-threads

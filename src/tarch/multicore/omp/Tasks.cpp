@@ -185,6 +185,10 @@ void tarch::multicore::omp::internal::spawnTaskWithOpenMP5(
     bool isReady;
     do {
       isReady = hasTaskFinishedInOpenMP5(inDependencies);
+	  // without this taskyield, the thread will spin and block other threads from executing tasks
+	  if (not isReady){
+	    #pragma omp taskyield
+	  }
     } while (not isReady);
 
     auto& dest = dependencyTrackingMemory[ outDependency[0] ];
