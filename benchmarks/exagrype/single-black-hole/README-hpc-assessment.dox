@@ -5,6 +5,196 @@
 <!-- Add this one for href links to subitems -->
 @tableofcontents
 
+### Outcome on the profile mesh
+
+All numbers stem from an eight-core workstation, the profile variant (domain 54, h=1, t=5), eight OpenMP threads, and a
+Peano build as described above. "Sweeps" is the number of mesh traversals of the time stepping, i.e. the number of time steps
+(the time step size follows the CFL condition).
+
+| Scheme | Wall time [s] | Sweeps | Time step size dt |
+| ------ | ------------: | -----: | ----------------: |
+| fv-regular | 9.3 | 35 | 0.15 |
+| fv-amr-1 (radius 1) | 174 | 102 | 0.05 |
+| fd4-rk2 | 31 | 64 | 0.083 |
+| fd4-rk3 | 47 | 64 | 0.083 |
+| fd4-rk4 | 62 | 64 | 0.083 |
+| fd4-rk4-lopsided | 82 | 64 | 0.083 |
+| fd4-rk4-lopsided-ko | 82 | 62 | 0.083 |
+
+(fv-amr-1 and the two lop-sided runs use `--compiler sequential`, see the warning below. The other runs use the default
+compiler `fusion`.)
+
+What we learn from this:
+
+- None of the schemes blows up or produces NaNs within t=5. The study therefore does not separate stable from unstable schemes
+  yet. This is no evidence for long-time stability: the README asks for t=100 on the full domain, where reflections from the boundary
+  have time to come back. Without checkpoints, we also cannot say anything about the accuracy of the schemes, only about their cost.
+  Run the study with `--variant production --end-time 100` (and checkpoints) on a cluster for that.
+- Per time step, the Finite Differences are 2 to 5 times more expensive than the Finite Volumes
+  (fd4-rk2: 0.44 s, fd4-rk4: 0.92 s per sweep, fv-regular: 0.19 s per sweep; all with eight threads). The Runge-Kutta order drives the cost
+  almost linearly (2 stages: 31 s, 3: 47 s, 4: 62 s). The time step size of the Finite Differences is 0.083, i.e. almost half of the
+  Finite Volumes' one, so the Finite Differences need 64 instead of 35 sweeps. Whether an RK order below 4 suffices
+  for a stationary solution is a question of accuracy, which this study cannot answer.
+- The lop-sided advection costs roughly another 30% over plain fd4-rk4 (82 s vs. 62 s, however measured with different compilers). The Kreiss-Oliger dissipation is free in comparison (82 s in both cases).
+- One level of adaptive mesh refinement around the puncture makes the Finite Volumes about 14 times slower (172 s vs. 12.1 s with the
+  sequential compiler). Two effects multiply: three times smaller time steps (102 instead of 35 sweeps) and about 5.5 times more volumes
+  (see the AMR section above), i.e. a factor of 16 in the best case. Local time stepping would help here, as the vast majority of the volumes could use a three times larger time step.
+
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
+  The Finite Differences with lop-sided advection deadlock with the default task graph compiler `fusion` if more than one thread is used
+  (all threads of the runs with 2, 4 and 8 threads stood still without a single time step; with one thread the same
+  executable makes progress). The sequential compiler (`--compiler sequential`) runs fine. See the profiling section below for the
+  diagnosis. The first run of the scheme study consequently hit the timeout for these two schemes.
+</div>
+
+The runs do not write checkpoints. To compare solution profiles in addition (lapse over radius), pass
+`--extra-arguments "--checkpoint-interval 1"` and extract the profiles with probe-single-black-hole.py.
+
+Fourth-order Finite Differences with AMR will be added to this study once the corresponding
+branch is merged.
+
+
+## Performance study
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+python3 studies-single-black-hole.py performance --variant profile --threads 1 2 4 8 16 --repetitions 3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+runs the Finite Volumes on the regular mesh and with one AMR level (regular, amr-1; radius 1) for each task graph compiler
+(`sequential`, `fusion-only`, `producer-consumer-sequential`, `fusion`) and every thread count.
+The thread count is set via `OMP_NUM_THREADS` and therefore applies to OpenMP builds only.
+The profile variant uses Peano's stats build. The study measures the wall time of each run (`results-performance.csv`).
+
+Things to compare:
+
+### Outcome on the profile mesh
+
+Wall time of the whole run in seconds (setup, i.e. TwoPunctures and mesh construction, plus 35 time steps on the regular mesh
+or 102 on the adaptive mesh), eight-core workstation, Finite Volumes, profile variant. The regular mesh figures are the mean of two runs (they differ by less than 0.5 s), the
+adaptive mesh figures stem from one run.
+
+| Mesh | Compiler | 1 thread | 4 threads | 8 threads | Speedup 1 to 8 |
+| ---- | -------- | -------: | --------: | --------: | -------------: |
+| regular | sequential | 39.0 | 14.5 | 12.1 | 3.2 |
+| regular | fusion-only | 43.8 | 13.4 | 9.4 | 4.7 |
+| regular | producer-consumer-sequential | 39.4 | 14.5 | 12.4 | 3.2 |
+| regular | fusion | 45.3 | 12.2 | 9.5 | 4.8 |
+| adaptive (1 level, radius 1) | sequential | 511 | | 172 | 3.0 |
+| adaptive (1 level, radius 1) | fusion-only | 584 | | 130 | 4.5 |
+| adaptive (1 level, radius 1) | producer-consumer-sequential | 504 | | 147 | 3.4 |
+| adaptive (1 level, radius 1) | fusion | 592 | | 105 | 5.6 |
+
+- The assumption that the task-based variant is the fastest holds with a qualification. The variant that combines
+  fusion of the sweeps with tasks (`fusion`) is the fastest as soon as more than a handful of threads are used: 1.3 times faster than the
+  sequential compiler on the regular mesh and 1.6 times faster on the adaptive mesh with eight threads. It is, however, the slowest variant with
+  one thread (15% slower on both meshes), i.e. it pays an overhead that only parallelism recovers.
+- The task-based variant without fusion (`producer-consumer-sequential`) is no faster than the sequential
+  compiler on the regular mesh (12.4 s vs. 12.1 s) and only 17% faster on the adaptive mesh. The gain comes from fusing sweeps, not from tasking:
+  `fusion-only` (no tasks) matches `fusion` on the regular mesh (9.4 s vs. 9.5 s). Tasks gain another 24% on the adaptive mesh
+  (105 s vs. 130 s), where the patches are costlier and the tasks have more to overlap.
+- Scalability is poor on all variants. Even the best variants reach a parallel efficiency of only 60% (regular) to 70% (adaptive)
+  on eight threads. On the regular mesh the setup (TwoPunctures plus mesh construction) takes 2.8 s of the 9.5 s, and it does not benefit from the choice of the compiler.
+- The adaptive mesh costs 11 times more than the regular mesh at eight threads with `fusion`.
+
+For the compute-bound view of the kernels, see @ref benchmarks_exagrype_kernel_benchmarks.
+
+
+## Profile of the code and recommendations
+
+We profiled the profile variant with Intel VTune (2024.3, hotspot analysis with software sampling, i.e. no hardware counters are needed) on the
+eight-core workstation. The Peano build is the one described above, with `-g -O3`. A profile looks like
+
+~~~~~~~~~~~~~~~~~~~~~~~
+source /opt/intel/oneapi/vtune/2024.3/vtune-vars.sh
+cd studies-performance/regular-fusion          # a directory produced by studies-single-black-hole.py
+OMP_NUM_THREADS=8 vtune -collect hotspots -knob sampling-mode=sw -result-dir vtune-regular-fusion -- ./single-black-hole
+vtune -report summary  -result-dir vtune-regular-fusion
+vtune -report hotspots -result-dir vtune-regular-fusion -limit 25
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The percentages below refer to CPU time summed over all threads. We profiled five setups:
+
+| Setup | CPU time [s] | Remarks |
+| ----- | -----------: | ------- |
+| FV, regular mesh, `fusion`, 1 thread | 47 | cleanest view on the kernels |
+| FV, regular mesh, `fusion`, 8 threads | 66 | spin time 3.1 s, overhead 3.5 s |
+| FV, regular mesh, `sequential`, 8 threads | 86 | spin time 6.9 s, overhead 7.5 s |
+| FV, adaptive mesh (1 level), `fusion`, 8 threads | 837 | spin 40 s, overhead 47 s |
+| FD4 (RK4), regular mesh, `fusion`, 8 threads | 477 | spin 35 s, overhead 38 s |
+
+### Where the time goes
+
+**Finite Volumes, one thread.** The three CCZ4 routines plus the generated Rusanov kernel make up 63% of the time: `exagrype::ccz4::ncp`
+(24%), the generated kernel `CCZ4_timeStepWithRusanov` itself (23%, the `ncp` implementation is partially inlined into it),
+`exagrype::ccz4::source` (12%), `nonconservativeProduct` (3%). TwoPunctures (`PunctEvalAtArbitPositionFaster`, the initial data)
+takes 18% of this short run. Heap management takes 8%: `free` 4.3%, `operator new` 2.2%, `memset` 1.2%. `memcpy` takes 2.4%.
+Peano's mesh traversal (`peano4::grid`) is below 2%.
+
+**Finite Volumes, eight threads.** The compute kernels shrink to 39% (they scale), whereas everything that moves data does not:
+`memcpy` grows from 1.2 s to 5.1 s of CPU time (8%) and `peano4::grid` takes 3.1 s with `fusion` but 7.9 s (9%) with the sequential compiler.
+That is the effect that makes fusion fast: it cuts the traversal cost by 60%. The remaining 6 s of spinning at barriers
+(`__kmp_fork_barrier`) and the serial setup limit the speedup.
+
+**Adaptive mesh.** Compute kernels dominate even more (`CCZ4_timeStepWithRusanov` 17%, `source` 13%, `nonconservativeProduct` 4%),
+but `memcpy` (8%), TwoPunctures (5%, the new volumes need their initial data), `getVertexType` (4%) and allocation
+(`free`, `memset`, `new`, `memalign`: together 3%) still take a combined 20%. The setup takes 8.7 s of the 105 s.
+
+**Fourth-order Finite Differences.** `memcpy` is the biggest single item with 14% (65 s), followed by `ncp` (13%), `source` (10%),
+`peano4::grid::GridTraversalEventGenerator::getVertexType` (6%, an event generator which should cost nothing)
+and the right-hand side kernel itself (4%). Spin and overhead time account for another 15% (73 s).
+
+### Task-based deadlock (needs a fix before anything else)
+
+The Finite Differences with lop-sided advection (`--lopsided`) deadlock with the compilers that spawn tasks as soon as OpenMP
+uses more than one thread. We attached `gdb` to a hanging run with eight threads: all eight threads sit inside
+`tarch::multicore::omp::internal::hasTaskFinishedInOpenMP5()` (`src/tarch/multicore/omp/Tasks.cpp`), called from the
+body of a task created in `spawnTaskWithOpenMP5()`. That function polls the task's input dependencies in a busy loop *inside the task body*
+without ever yielding. If every thread executes a task that waits for a predecessor which still sits in the task queue,
+nobody is left to run the predecessor. The lop-sided advection adds an action set `AddLopsidedAdvection_WaitForTask` to the task graph (the plain FD4 scheme has none), which
+presumably creates the dependent chains that trigger this situation; we did not analyse the dependency structure further. With one thread, or with the sequential compiler, the
+same code runs through. We consider this a bug of the OpenMP 5 fallback (the compiler offers OpenMP 5, so the OpenMP 6 dependency path is not used).
+
+### Recommendations
+
+Sorted by expected benefit per effort; we did not change any code in Peano.
+
+1. **Fix the polling loop of the OpenMP 5 task fallback.** Add an `#pragma omp taskyield` to the loop that polls `hasTaskFinishedInOpenMP5()` in
+   `spawnTaskWithOpenMP5()` (the polling loop for the in/out dependency a few lines above it already has one) or defer the task until its predecessors have finished.
+   Until then, run the Finite Differences with lop-sided advection with `--compiler sequential`. We did not test the taskyield patch.
+2. **Use `fusion` for runs with at least four threads and `sequential` for a single thread** (see the table above). The default of the script
+   is `fusion`, which is the right choice for the production runs but not for debugging on a single core.
+3. **Remove the heap temporaries from the generated Finite Volume kernel.** The kernel generated from the DSL
+   (`kernels/CCZ4_rusanov3d.cpph`) allocates 30 temporary arrays per call, each as an array of pointers plus one `new double[...]` per cell of the batch, and
+   deletes them again. For CCZ4 with 59 unknowns, this costs 8% of the single-thread time (plus the `memset`s that initialise them). Reusing
+   thread-local scratch buffers, or fusing the loops so that the lambda and flux fields stay in registers, removes that. It lives in
+   `RusanovWithExplicitEuler.py` and the DSL back end, i.e. in the code generator and not in the benchmark.
+4. **Reduce what the kernels compute.** `ncp` (24%) and `source` (12%) are evaluated three times (once per face direction) on averaged states, and `maxEigenvalue` is evaluated six times per volume
+   (three times on the halo extent for the Rusanov flux and three times on the result for the next time step). The latter is a cheap
+   routine for CCZ4, but the former two are the most expensive in the profile. Check if their arithmetic vectorises (use the optimisation report as
+   described in @ref benchmarks_exahype2_ccz4_single_black_hole_implementation); we did not run a micro-architecture analysis.
+5. **Avoid the data copies.** `memcpy` takes 8% on eight threads for the Finite Volumes and 14% for the Finite Differences, and it is the one item
+   that scales worst with the number of threads (it is probably limited by memory bandwidth). The call stacks show that both for the Finite Volumes and for the
+   Finite Differences, the copies come from `toolbox::blockstructured::api::ReconstructPatchWithHalo` (its `touchCellFirstTime()`):
+   in every time step (every Runge-Kutta stage for FD4), each cell copies its patch and the halo of its neighbours
+   into a temporary array before the kernel runs. Reading the halo straight from the face data inside the kernel, or reusing the reconstructed patch between the stages, would save bandwidth.
+   We did not look into how the copy is implemented in detail.
+6. **Make the initial data cheaper.** TwoPunctures costs 8 to 9 CPU seconds even on the profile mesh and is evaluated for every volume,
+   including every volume that adaptive refinement creates. A single, non-spinning black hole is spherically symmetric, so a table of the metric along
+   the radius (computed once) and an interpolation is enough in principle. This matters for the profile variant and for AMR runs with frequent
+   re-initialisation; it is a one-off cost for the production run. We did not check that the interpolation retains the accuracy that the benchmark requires.
+7. **Investigate the size of the refined region and use local time stepping.** The refined region is much larger than the radius suggests (see above),
+   and all volumes then use the smallest time step. The adaptive run does 3 times more sweeps for 5.5 times more volumes, i.e. it spends
+   about 16 times the compute of the regular run on a problem where only the area close to the puncture needs the resolution.
+   Since we only profiled one AMR level, we expect the effect to be much worse for the two or three levels that the production setup will need.
+8. **Reduce the serial part.** The setup (TwoPunctures plus mesh construction, 2.8 s of 9.5 s on the regular mesh) is a fixed cost, as long as it
+   does not scale: it is the main reason for the 60% parallel efficiency. Part of it (TwoPunctures) is item 6.
+9. **Look at `getVertexType`** in the Finite Difference profile (6% of 477 CPU seconds for a function that classifies vertices): with eight threads it competes with the
+   kernels; presumably it is called once per vertex and per Runge-Kutta stage. A cached classification would remove it. We did not verify the call count.
+
+The VTune results are not part of the repository. The command lines above reproduce them.
+
+
+
 One difficulty in letting ExaGRyPE run is that there's a plethora of different
 setting that one can pick from. This is quite natural for a research code but
 quickly becomes challenging for people who just wanna have a go or start
