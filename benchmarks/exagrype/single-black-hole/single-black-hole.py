@@ -303,11 +303,17 @@ def create_numerical_scheme(solver, arguments):
                 )
             )
 
-    solver.grid_construction = package.SetupSimulationWithUserCodedRefinementCriterion(
-        solver,
-        volume_size=arguments.volume_size,
-        min_volume_size=min_volume_size(arguments),
-    )
+    if arguments.scheme == "fv":
+        solver.grid_construction = package.SetupSimulationWithUserCodedRefinementCriterion(
+            solver,
+            volume_size=arguments.volume_size,
+            min_volume_size=min_volume_size(arguments),
+        )
+    else:
+        # AMR is not available for fd4 yet
+        solver.grid_construction = package.SetupSimulationOverRegularGrid(
+            solver, volume_size=arguments.volume_size
+        )
     if arguments.checkpoint_interval > 0.0:
         solver.plotter = package.PlotAsVTKFile(
             solver,
@@ -334,9 +340,13 @@ def min_volume_size(arguments):
     size. Refining a cell yields volumes strictly smaller than the bound, so
     the bound is the volume size of the second-finest level, slightly
     reduced to be robust against rounding. Without AMR levels, the bound
-    exceeds the volume size of the regular mesh, i.e. the mesh stays regular.
+    would exceed the --volume-size. It is capped there, which is still above the
+    volume size of the regular mesh, i.e. the mesh stays regular.
     """
-    return actual_volume_size(arguments) / 3.0 ** (arguments.amr_levels - 1) * 0.99
+    return min(
+        actual_volume_size(arguments) / 3.0 ** (arguments.amr_levels - 1) * 0.99,
+        arguments.volume_size,
+    )
 
 
 def main():
@@ -362,18 +372,19 @@ def main():
             implementation="::exagrype::initialvalues::flat(Q, x, 0.0);"
         )
     )
-    # The criterion never asks for an erase. The mesh is a function of the
-    # position only, i.e. it is static, and it never coarsens below the
-    # regular mesh anyway. Without AMR levels, the volume size bound keeps
-    # the mesh regular.
-    solver.add_pde_term(
-        exahype2.api.RefineErasePointwisely(
-            implementation=f"""
+    if arguments.scheme == "fv":
+        # The criterion never asks for an erase. The mesh is a function of the
+        # position only, i.e. it is static, and it never coarsens below the
+        # regular mesh anyway. Without AMR levels, the volume size bound keeps
+        # the mesh regular.
+        solver.add_pde_term(
+            exahype2.api.RefineErasePointwisely(
+                implementation=f"""
   const double r2 = tarch::la::norm2Squared(x);
   if (r2 < {arguments.amr_radius ** 2}) *refinementCommand = ::exahype2::RefinementCommand::Refine;
 """
+            )
         )
-    )
     create_numerical_scheme(solver, arguments)
     project.add_solver(solver)
 
