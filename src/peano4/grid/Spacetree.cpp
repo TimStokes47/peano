@@ -1260,19 +1260,31 @@ void peano4::grid::Spacetree::descend(
     _spacetreeState == SpacetreeState::Running
   );
 
-  observer.loadCell(
-    _gridTraversalEventGenerator.createPrunedEnterCellTraversalEvent(_spacetreeState, enterCellTraversalEvent)
-  );
+  // We decide once per cell whether the observer sees it. The call stack
+  // pushes a block in loadCell() and pops it in storeCell(), i.e. we have to
+  // skip both or none.
+  const bool skipFullyRemoteCell = observer.canSkipFullyRemoteCells()
+                               and _spacetreeState == SpacetreeState::Running
+                               and GridTraversalEventGenerator::mayMaskDataOnIntermediateStacks(
+                                     _splitTriggered, _splitting, _joinTriggered, _joining, _hasSplit, true
+                                   )
+                               and GridTraversalEventGenerator::isFullyRemoteEnterEvent(enterCellTraversalEvent);
 
-  if (_spacetreeState != SpacetreeState::EmptyRun and _spacetreeState != SpacetreeState::NewFromSplit and _spacetreeState != SpacetreeState::Joined) {
-    receiveAndMergeUserData(
-      fineGridStates[peano4::utils::dLinearised(k, 3)], observer, enterCellTraversalEvent, fineGridVertices
+  if (not skipFullyRemoteCell) {
+    observer.loadCell(
+      _gridTraversalEventGenerator.createPrunedEnterCellTraversalEvent(_spacetreeState, enterCellTraversalEvent)
+    );
+
+    if (_spacetreeState != SpacetreeState::EmptyRun and _spacetreeState != SpacetreeState::NewFromSplit and _spacetreeState != SpacetreeState::Joined) {
+      receiveAndMergeUserData(
+        fineGridStates[peano4::utils::dLinearised(k, 3)], observer, enterCellTraversalEvent, fineGridVertices
+      );
+    }
+
+    observer.enterCell(
+      _gridTraversalEventGenerator.createPrunedEnterCellTraversalEvent(_spacetreeState, enterCellTraversalEvent)
     );
   }
-
-  observer.enterCell(
-    _gridTraversalEventGenerator.createPrunedEnterCellTraversalEvent(_spacetreeState, enterCellTraversalEvent)
-  );
 
   _statistics.setMinH(tarch::la::min(_statistics.getMinH(), 1.0 / 3.0 * state.getH()));
 
@@ -1298,30 +1310,55 @@ void peano4::grid::Spacetree::descend(
   //
   // Leave cell
   //
-  GridTraversalEvent leaveCellTraversalEvent = _gridTraversalEventGenerator.createLeaveCellTraversalEvent(
-    vertices,
-    fineGridVertices,
-    fineGridStates[peano4::utils::dLinearised(k, 3)],
-    _splitTriggered,
-    _splitting,
-    _joinTriggered,
-    _joining,
-    _hasSplit,
-    k,
-    _spacetreeState == SpacetreeState::Running
-  );
+  if (skipFullyRemoteCell) {
+#if PeanoDebug > 0
+    // The decision above is based on the enter event. Ensure that the cell
+    // does not start to move data on its way down.
+    assertion2(
+      GridTraversalEventGenerator::isFullyRemoteLeaveEvent(
+        _gridTraversalEventGenerator.createLeaveCellTraversalEvent(
+          vertices,
+          fineGridVertices,
+          fineGridStates[peano4::utils::dLinearised(k, 3)],
+          _splitTriggered,
+          _splitting,
+          _joinTriggered,
+          _joining,
+          _hasSplit,
+          k,
+          _spacetreeState == SpacetreeState::Running
+        )
+      ),
+      _id,
+      enterCellTraversalEvent.toString()
+    );
+#endif
+  } else {
+    GridTraversalEvent leaveCellTraversalEvent = _gridTraversalEventGenerator.createLeaveCellTraversalEvent(
+      vertices,
+      fineGridVertices,
+      fineGridStates[peano4::utils::dLinearised(k, 3)],
+      _splitTriggered,
+      _splitting,
+      _joinTriggered,
+      _joining,
+      _hasSplit,
+      k,
+      _spacetreeState == SpacetreeState::Running
+    );
 
-  observer.leaveCell(
-    _gridTraversalEventGenerator.createPrunedLeaveCellTraversalEvent(_spacetreeState, leaveCellTraversalEvent)
-  );
+    observer.leaveCell(
+      _gridTraversalEventGenerator.createPrunedLeaveCellTraversalEvent(_spacetreeState, leaveCellTraversalEvent)
+    );
 
-  if (_spacetreeState != SpacetreeState::EmptyRun and _spacetreeState != SpacetreeState::Joined) {
-    sendUserData(fineGridStates[peano4::utils::dLinearised(k, 3)], observer, leaveCellTraversalEvent, fineGridVertices);
+    if (_spacetreeState != SpacetreeState::EmptyRun and _spacetreeState != SpacetreeState::Joined) {
+      sendUserData(fineGridStates[peano4::utils::dLinearised(k, 3)], observer, leaveCellTraversalEvent, fineGridVertices);
+    }
+
+    observer.storeCell(
+      _gridTraversalEventGenerator.createPrunedLeaveCellTraversalEvent(_spacetreeState, leaveCellTraversalEvent)
+    );
   }
-
-  observer.storeCell(
-    _gridTraversalEventGenerator.createPrunedLeaveCellTraversalEvent(_spacetreeState, leaveCellTraversalEvent)
-  );
 
   splitOrJoinCellBottomUp(vertices, fineGridVertices);
 

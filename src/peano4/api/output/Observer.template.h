@@ -61,6 +61,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public peano4::grid::TraversalO
       const peano4::grid::GridTraversalEvent&  event
     ) override;
 
+    virtual bool canSkipFullyRemoteCells() const override { return true; }
+
     virtual TraversalObserver* clone(int spacetreeId) override;
 
     virtual std::vector< peano4::grid::GridControlEvent > createGridControlEventsForNextTraversal() const override;

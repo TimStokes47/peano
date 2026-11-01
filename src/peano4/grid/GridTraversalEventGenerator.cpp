@@ -219,6 +219,38 @@ namespace {
   }
 }
 
+bool peano4::grid::GridTraversalEventGenerator::isFullyRemoteEnterEvent(const GridTraversalEvent& event) {
+  if (event.getIsCellLocal() or event.getIsVertexLocal().any() or event.getIsFaceLocal().any()) {
+    return false;
+  }
+  if (event.getCellData()!=TraversalObserver::NoData) {
+    return false;
+  }
+  for (int i=0; i<TwoPowerD; i++) {
+    if (event.getVertexDataFrom(i)!=TraversalObserver::NoData) return false;
+  }
+  for (int i=0; i<TwoTimesD; i++) {
+    if (event.getFaceDataFrom(i)!=TraversalObserver::NoData) return false;
+  }
+  return true;
+}
+
+bool peano4::grid::GridTraversalEventGenerator::isFullyRemoteLeaveEvent(const GridTraversalEvent& event) {
+  if (event.getIsCellLocal() or event.getIsVertexLocal().any() or event.getIsFaceLocal().any()) {
+    return false;
+  }
+  if (event.getCellData()>=0) {
+    return false;
+  }
+  for (int i=0; i<TwoPowerD; i++) {
+    if (event.getVertexDataTo(i)>=0) return false;
+  }
+  for (int i=0; i<TwoTimesD; i++) {
+    if (event.getFaceDataTo(i)>=0) return false;
+  }
+  return true;
+}
+
 bool peano4::grid::GridTraversalEventGenerator::mayMaskDataOnIntermediateStacks(
   const SplitSpecification&  splitTriggered,
   const std::set<int>&       splitting,

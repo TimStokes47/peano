@@ -85,6 +85,28 @@ class peano4::grid::GridTraversalEventGenerator {
      */
     const int _id;
 
+  public:
+    /**
+     * Is a cell fully remote when we enter it?
+     *
+     * Fully remote means that neither the cell nor any of its vertices and
+     * faces is local, and that none of the entities reads data from a stack.
+     * Hanging and new entities (create events) are never regarded as
+     * remote. Spacetree::descend() uses this predicate together with
+     * mayMaskDataOnIntermediateStacks() to skip cells.
+     *
+     * @see isFullyRemoteLeaveEvent()
+     */
+    static bool isFullyRemoteEnterEvent(const GridTraversalEvent& event);
+
+    /**
+     * Counterpart of isFullyRemoteEnterEvent() for the leave event. It
+     * requires that no entity writes to a real stack. Destruction events do
+     * not count as stack accesses: they can happen for remote entities
+     * (the enter event has no data then), but nobody can observe them.
+     */
+    static bool isFullyRemoteLeaveEvent(const GridTraversalEvent& event);
+
     /**
      * May data of non-local entities be masked out on the stacks between cells?
      *
@@ -108,6 +130,8 @@ class peano4::grid::GridTraversalEventGenerator {
       const std::set< int >&     hasSplit,
       bool                       spacetreeStateIsRunning
     );
+
+  private:
 
     /**
      * <h2> Implementation details </h2>
