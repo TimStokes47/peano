@@ -117,8 +117,9 @@ class ComputeGlobalCFLCondition(AbstractFVActionSet):
         Once newTimeStepSize is known, it folds it into the solver's own
         time step bookkeeping (see this class' docstring for why a single
         updateCell() call, not one per cell, is correct for this solver).
-        newTimeStepSize is capped by MaxTerminalTime minus the new time
-        stamp, so the last time step ends exactly at the end time. The time
+        newTimeStepSize is not truncated by MaxTerminalTime: the last time
+        step may overshoot the end time, and the simulation stops afterwards,
+        i.e. MaxTerminalTime is a lower bound on the final time. The time
         stamp is advanced by the time step size the update used
         (getMaxTimeStepSize() before updateCell()), not by newTimeStepSize,
         which only the next update uses. The very first time step therefore
@@ -160,11 +161,8 @@ class ComputeGlobalCFLCondition(AbstractFVActionSet):
   // newTimeStepSize is the one the next update will use
   const double usedTimeStepSize = repositories::{self._solver.get_name_of_global_instance()}.getMaxTimeStepSize();
   const double newTimeStamp     = repositories::{self._solver.get_name_of_global_instance()}.getMaxTimeStamp() + usedTimeStepSize;
-  // The last time step is shortened such that the simulation ends exactly at MaxTerminalTime
-  const double newTimeStepSize  = std::min(
-    {self.cfl_constant} * globalMinVolumeH / globalMaxEigenvalue / Dimensions,
-    std::max(0.0, MaxTerminalTime - newTimeStamp)
-  );
+  // The last time step is not truncated, i.e. it may overshoot MaxTerminalTime
+  const double newTimeStepSize  = {self.cfl_constant} * globalMinVolumeH / globalMaxEigenvalue / Dimensions;
 
   repositories::{self._solver.get_name_of_global_instance()}.updateCell( newTimeStepSize, newTimeStamp );
   repositories::{self._solver.get_name_of_global_instance()}.finishTimeStep();

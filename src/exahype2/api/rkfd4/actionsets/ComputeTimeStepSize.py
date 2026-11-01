@@ -27,8 +27,9 @@ class ComputeTimeStepSize(AbstractRKFD4ActionSet):
     ::exahype2::Solver's own time step bookkeeping
     (updateCell()/finishTimeStep()/startTimeStep()). The time stamp
     advances by the time step size the Runge-Kutta step has just used. The
-    next time step size is capped such that the simulation ends exactly at
-    MaxTerminalTime. The solver starts with a time step size of zero, so
+    last time step is not truncated: it may overshoot MaxTerminalTime, and
+    the simulation stops afterwards, i.e. MaxTerminalTime is a lower bound
+    on the final time. The solver starts with a time step size of zero, so
     the very first Runge-Kutta step does not alter the solution: it only
     yields the first time step size.
 
@@ -113,11 +114,8 @@ class ComputeTimeStepSize(AbstractRKFD4ActionSet):
   // newTimeStepSize is the one the next update will use
   const double usedTimeStepSize = {instance}.getMaxTimeStepSize();
   const double newTimeStamp     = {instance}.getMaxTimeStamp() + usedTimeStepSize;
-  // The last time step is shortened such that the simulation ends exactly at MaxTerminalTime
-  const double newTimeStepSize  = std::min(
-    admissibleTimeStepSize,
-    std::max(0.0, MaxTerminalTime - newTimeStamp)
-  );
+  // The last time step is not truncated, i.e. it may overshoot MaxTerminalTime
+  const double newTimeStepSize  = admissibleTimeStepSize;
 
   {instance}.updateCell( newTimeStepSize, newTimeStamp );
   {instance}.finishTimeStep();
