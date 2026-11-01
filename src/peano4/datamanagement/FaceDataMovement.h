@@ -45,6 +45,18 @@ namespace peano4 {
      * @param faceMarker Marker of the cell's faces.
      * @param name Name of the data. Used for log messages only.
      * @param loadStoreComputeFlag See LoadStoreComputeFlag.
+     *
+     * ## Remote data
+     *
+     * If the traversal event tells us that the face's source stack is
+     * peano4::grid::TraversalObserver::NoData, the face is not adjacent to
+     * any local cell. The automaton hands out NoData for exactly these
+     * entities. No user code ever sees them, as the observer masks all
+     * events with isLocal(). We therefore do not construct a dummy data
+     * object for them even if the flag asks for computeOnData(): that would
+     * allocate and initialise (potentially large) data for nothing. The
+     * slot on the call stack stays in its NoData state, just as for
+     * entities whose flag is NoData.
      */
     template <typename Data, typename StackMap, typename LoadStoreComputeFlag>
     void loadFaceData(

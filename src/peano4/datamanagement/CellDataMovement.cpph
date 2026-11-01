@@ -37,7 +37,10 @@ void peano4::datamanagement::loadCellData(
       and inCellStack != peano4::grid::TraversalObserver::NoData
       and ::peano4::grid::loadPersistently(loadStoreComputeFlag(marker));
   bool initialiseStackContentForNewData
-    = ::peano4::grid::computeOnData(loadStoreComputeFlag(marker))
+    = (
+        inCellStack != peano4::grid::TraversalObserver::NoData
+        and ::peano4::grid::computeOnData(loadStoreComputeFlag(marker))
+      )
       or inCellStack
            == peano4::grid::TraversalObserver::
              CreateOrDestroyPersistentGridEntity;

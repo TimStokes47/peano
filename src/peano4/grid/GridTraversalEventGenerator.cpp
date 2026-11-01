@@ -207,6 +207,35 @@ std::bitset<TwoTimesD> peano4::grid::GridTraversalEventGenerator::areFacesAdjace
   return result;
 }
 
+namespace {
+  /**
+   * Stacks along which entities are passed from one cell to the next one
+   * within a sweep. This excludes the in/out stacks, the call stack and the
+   * stacks for periodic boundary conditions and parallel data exchange.
+   */
+  bool isStackBetweenCells(int number) {
+    return number >= peano4::grid::PeanoCurve::NumberOfBaseStacks
+       and number <  peano4::grid::PeanoCurve::NumberOfBaseStacks + 2*Dimensions;
+  }
+}
+
+bool peano4::grid::GridTraversalEventGenerator::mayMaskDataOnIntermediateStacks(
+  const SplitSpecification&  splitTriggered,
+  const std::set<int>&       splitting,
+  const std::set< int >&     joinTriggered,
+  const std::set< int >&     joining,
+  const std::set< int >&     hasSplit,
+  bool                       spacetreeStateIsRunning
+) {
+  return spacetreeStateIsRunning
+     and splitTriggered.empty()
+     and splitting.empty()
+     and joinTriggered.empty()
+     and joining.empty()
+     and hasSplit.empty();
+}
+
+
 peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::createGenericCellTraversalEvent(
   [[maybe_unused]] GridVertex                                coarseGridVertices[TwoPowerD],
   [[maybe_unused]] GridVertex                                fineGridVertices[TwoPowerD],
@@ -299,6 +328,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   event.setIsVertexAdjacentToParallelDomainBoundary( areVerticesAdjacentToParallelDomainBoundary(fineGridVertices, splitTriggered, splitting, joinTriggered, joining, true) );
   event.setIsFaceAdjacentToParallelDomainBoundary( areFacesAdjacentToParallelDomainBoundary(fineGridVertices, splitTriggered, splitting, joinTriggered, joining, true));
 
+  const bool mayMaskIntermediateStacks = mayMaskDataOnIntermediateStacks(splitTriggered, splitting, joinTriggered, joining, hasSplit, spacetreeStateIsRunning);
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
     const std::bitset<Dimensions>           vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
@@ -331,7 +361,11 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     }
 
     if (
-      PeanoCurve::isInOutStack(event.getVertexDataTo(i))
+      (
+        PeanoCurve::isInOutStack(event.getVertexDataTo(i))
+        or
+        (mayMaskIntermediateStacks and isStackBetweenCells(event.getVertexDataTo(i)))
+      )
       and
       not event.getIsVertexLocal(vertexIndex.to_ulong())
     ) {
@@ -370,7 +404,11 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     }
 
     if (
-      PeanoCurve::isInOutStack(event.getFaceDataTo(i))
+      (
+        PeanoCurve::isInOutStack(event.getFaceDataTo(i))
+        or
+        (mayMaskIntermediateStacks and isStackBetweenCells(event.getFaceDataTo(i)))
+      )
       and
       not event.getIsFaceLocal(faceIndex)
     ) {
@@ -503,6 +541,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     assertion1( event.getIsFaceLocal(i) or not event.getIsFaceAdjacentToParallelDomainBoundary(i), event.toString() );
   #endif
 
+  const bool mayMaskIntermediateStacks = mayMaskDataOnIntermediateStacks(splitTriggered, splitting, joinTriggered, joining, hasSplit, spacetreeStateIsRunning);
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
     const std::bitset<Dimensions>  vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
@@ -536,7 +575,11 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     event.setVertexDataTo(i,vertexIndex.to_ulong());
 
     bool mayResetToNoData =
-      PeanoCurve::isInOutStack(event.getVertexDataFrom(i))
+      (
+        PeanoCurve::isInOutStack(event.getVertexDataFrom(i))
+        or
+        (mayMaskIntermediateStacks and isStackBetweenCells(event.getVertexDataFrom(i)))
+      )
       and
       not event.getIsVertexLocal(vertexPosition);
 
@@ -591,7 +634,11 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     event.setFaceDataTo(i,faceIndex);
 
     bool mayResetToNoData =
-      PeanoCurve::isInOutStack(event.getFaceDataFrom(i))
+      (
+        PeanoCurve::isInOutStack(event.getFaceDataFrom(i))
+        or
+        (mayMaskIntermediateStacks and isStackBetweenCells(event.getFaceDataFrom(i)))
+      )
       and
       not event.getIsFaceLocal(faceIndex);
 

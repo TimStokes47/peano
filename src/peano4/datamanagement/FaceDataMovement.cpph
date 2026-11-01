@@ -49,7 +49,10 @@ void peano4::datamanagement::loadFaceData(
       = peano4::grid::PeanoCurve::isInOutStack(inFaceStack)
         and ::peano4::grid::loadPersistently(loadStoreComputeFlag(marker));
     bool initialiseStackContentForNewData
-      = ::peano4::grid::computeOnData(loadStoreComputeFlag(marker))
+      = (
+        inFaceStack != peano4::grid::TraversalObserver::NoData
+        and ::peano4::grid::computeOnData(loadStoreComputeFlag(marker))
+      )
         or inFaceStack
              == peano4::grid::TraversalObserver::
                CreateOrDestroyPersistentGridEntity

@@ -86,6 +86,30 @@ class peano4::grid::GridTraversalEventGenerator {
     const int _id;
 
     /**
+     * May data of non-local entities be masked out on the stacks between cells?
+     *
+     * The automaton resets the source or destination of entities that are not
+     * adjacent to any local cell to TraversalObserver::NoData. Nobody ever
+     * works with these entities. For the in/out stacks, this is safe as soon as
+     * we use the same local-flag when we write and read in the next sweep. For
+     * the stacks between cells, producer (leave of the first cell) and
+     * consumer (enter of the second cell) have to make the same decision within
+     * one sweep. Locality can change within a sweep if the tree is just
+     * splitting or joining, i.e. if the vertices' adjacency is rewritten
+     * between the leave and enter events. We therefore mask only if
+     * the tree is running and not involved in any dynamic load balancing.
+     * In all other cases, we keep the old behaviour.
+     */
+    static bool mayMaskDataOnIntermediateStacks(
+      const SplitSpecification&  splitTriggered,
+      const std::set<int>&       splitting,
+      const std::set< int >&     joinTriggered,
+      const std::set< int >&     joining,
+      const std::set< int >&     hasSplit,
+      bool                       spacetreeStateIsRunning
+    );
+
+    /**
      * <h2> Implementation details </h2>
      *
      * Don't use the result's toString() operation in the traceOut statement.
