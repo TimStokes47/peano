@@ -32,7 +32,8 @@ maximum volume size (--volume-size) is a hard bound, i.e. the mesh is never
 coarser than the regular mesh of this size. The refinement only ever
 subdivides cells around the black hole further, by --amr-levels levels of
 factor three each within --amr-radius of the puncture. It is available for
-the Finite Volumes only (--scheme fv) for the time being.
+both schemes. The fd4 scheme starts on the regular mesh and refines it while
+it time steps; it cannot combine AMR with the Kreiss-Oliger dissipation yet.
 
 It requires a Peano build with
 
@@ -49,20 +50,26 @@ around the black hole are
 
     python3 single-black-hole.py --scheme fv --amr-levels 2 --variant profile
 
-The script does not write checkpoints by default. If you ask for them
-(--checkpoint-interval), the plotter writes snapshots in Peano's patch file
-format, i.e. solution-CCZ4.peano-patch-file and its companion files in the
-output directory. They contain all unknowns. probe-single-black-hole.py
-extracts profiles from them. Note that the new exahype2.api does not support
-restarts from a checkpoint yet.
+The script writes two kinds of output into the output directory: binary
+checkpoints (--checkpoint-interval, every 10 time units by default) holding
+the whole solver state, and visualisation snapshots in Peano's patch file
+format (--plot-interval, every 1 time unit by default), i.e.
+solution-CCZ4.peano-patch-file and its companion files. The snapshots
+contain all unknowns. probe-single-black-hole.py extracts profiles from
+them. Pass 0 to switch either kind off.
 
 """
 
 import argparse
+import os
 
 import peano4.api
 import exahype2.api
 import exagrype.api
+import toolbox.loadbalancing.api.input.RegularGridGenerator as RegularGridGenerator
+import toolbox.loadbalancing.api.strategies.SplitTrees as SplitTrees
+import toolbox.loadbalancing.api.strategies.Decomposition as Decomposition
+import toolbox.loadbalancing.api.output.Hardcoded as Hardcoded
 
 
 Compilers = {
@@ -193,20 +200,40 @@ def parse_arguments():
     time.add_argument(
         "--checkpoint-interval",
         type=float,
-        default=0.0,
-        help="Time between two checkpoints. 0 switches checkpointing off.",
+        default=10.0,
+        help="Time between two binary checkpoints. 0 switches checkpointing off.",
+    )
+    time.add_argument(
+        "--plot-interval",
+        type=float,
+        default=1.0,
+        help="Time between two visualisation snapshots. 0 switches the snapshots off.",
     )
     time.add_argument(
         "--first-checkpoint",
         type=float,
         default=0.0,
-        help="Time stamp of the first checkpoint.",
+        help="Time stamp of the first checkpoint and of the first snapshot.",
     )
     time.add_argument(
         "--checkpoint-precision",
         type=int,
         default=10,
-        help="Significant digits per value in the checkpoints.",
+        help="Significant digits per value in the visualisation snapshots. Checkpoints are lossless.",
+    )
+
+    balancing = parser.add_argument_group("load balancing")
+    balancing.add_argument(
+        "--load-balancing",
+        choices=["hardcoded", "spread-out"],
+        default="hardcoded",
+        help="hardcoded: decomposition of the regular mesh, computed offline. spread-out: SpreadOutOnceGridStagnates decides at runtime.",
+    )
+    balancing.add_argument(
+        "--trees",
+        type=int,
+        default=os.cpu_count(),
+        help="Number of trees (subdomains) of the hardcoded load balancing. They all live on rank 0, i.e. one tree per thread.",
     )
 
     build = parser.add_argument_group("build")
@@ -260,10 +287,12 @@ def parse_arguments():
         parser.error("--ko-quantities requires --ko-sigma > 0")
     if arguments.amr_levels < 0:
         parser.error("--amr-levels must not be negative")
-    if arguments.amr_levels > 0 and arguments.scheme != "fv":
-        parser.error("--amr-levels requires --scheme fv, AMR for fd4 is not available yet")
-    if arguments.checkpoint_interval < 0.0:
-        parser.error("--checkpoint-interval must not be negative")
+    if arguments.amr_levels > 0 and arguments.scheme == "fd4" and arguments.ko_sigma > 0.0:
+        parser.error("--amr-levels with --scheme fd4 does not support --ko-sigma yet")
+    if arguments.load_balancing == "hardcoded" and arguments.trees < 2:
+        parser.error("--trees has to be at least 2 for the hardcoded load balancing")
+    if arguments.checkpoint_interval < 0.0 or arguments.plot_interval < 0.0:
+        parser.error("--checkpoint-interval and --plot-interval must not be negative")
     return arguments
 
 
@@ -299,7 +328,12 @@ def create_numerical_scheme(solver, arguments):
         else:
             solver.numerical_scheme = (
                 exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-                    solver, arguments.patch_size, rk_order=arguments.rk_order, **options
+                    solver,
+                    arguments.patch_size,
+                    rk_order=arguments.rk_order,
+                    min_volume_size=min_volume_size(arguments),
+                    max_volume_size=arguments.volume_size,
+                    **options,
                 )
             )
 
@@ -310,17 +344,29 @@ def create_numerical_scheme(solver, arguments):
             min_volume_size=min_volume_size(arguments),
         )
     else:
-        # AMR is not available for fd4 yet
+        # fd4 has no refinement in the setup: It starts on the regular mesh
+        # and the time stepping refines it
         solver.grid_construction = package.SetupSimulationOverRegularGrid(
             solver, volume_size=arguments.volume_size
         )
     if arguments.checkpoint_interval > 0.0:
-        solver.plotter = package.PlotAsVTKFile(
-            solver,
-            first_plot_time_stamp=arguments.first_checkpoint,
-            time_in_between_plots=arguments.checkpoint_interval,
-            plotter_precision=arguments.checkpoint_precision,
-            output_path=arguments.output_directory,
+        solver.add_plotter(
+            package.WriteCheckpoint(
+                solver,
+                first_plot_time_stamp=arguments.first_checkpoint,
+                time_in_between_plots=arguments.checkpoint_interval,
+                output_path=arguments.output_directory,
+            )
+        )
+    if arguments.plot_interval > 0.0:
+        solver.add_plotter(
+            package.PlotAsVTKFile(
+                solver,
+                first_plot_time_stamp=arguments.first_checkpoint,
+                time_in_between_plots=arguments.plot_interval,
+                plotter_precision=arguments.checkpoint_precision,
+                output_path=arguments.output_directory,
+            )
         )
 
 
@@ -349,6 +395,51 @@ def min_volume_size(arguments):
     )
 
 
+def regular_mesh_levels(arguments):
+    """! Number of refinement levels of the regular 3-adic mesh (see actual_volume_size())"""
+    levels = 0
+    cell_size = arguments.domain_size
+    while cell_size >= arguments.volume_size * arguments.patch_size:
+        cell_size /= 3.0
+        levels += 1
+    return levels
+
+
+def create_load_balancing(arguments):
+    """! Name and constructor arguments of the load balancing strategy
+
+    The hardcoded strategy splits the regular mesh into arguments.trees trees
+    of the same number of cells, i.e. the outcome SpreadOutOnceGridStagnates
+    aims for. The splits are computed offline on a synthetic regular tree
+    along the space-filling curve, and all trees live on rank 0. AMR levels
+    do not enter, as the splits fire once the mesh has reached the regular
+    mesh and are bottom-up.
+    """
+    if arguments.load_balancing == "spread-out":
+        return (
+            "toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates",
+            "new ::exahype2::LoadBalancingConfiguration()",
+        )
+
+    tree = RegularGridGenerator.RegularGridGenerator(
+        max_level=regular_mesh_levels(arguments), dimensions=3
+    )
+    SplitTrees.split_tree(
+        tree,
+        decomposition=Decomposition.equidistant_splitting(
+            peano_tree=tree, number_of_subtrees=arguments.trees
+        ),
+        periodic_BC=[False, False, False],
+    )
+    destination_ranks = Hardcoded.assign_trees_to_ranks_round_Robin(
+        number_of_subtrees=tree.number_of_subtrees, max_ranks=1
+    )
+    configuration, _ = Hardcoded.create_constructor_initialisation_string(
+        tree, destination_ranks, modes=Hardcoded.BottomUp
+    )
+    return "toolbox::loadbalancing::strategies::Hardcoded", configuration
+
+
 def main():
     arguments = parse_arguments()
 
@@ -372,19 +463,18 @@ def main():
             implementation="::exagrype::initialvalues::flat(Q, x, 0.0);"
         )
     )
-    if arguments.scheme == "fv":
-        # The criterion never asks for an erase. The mesh is a function of the
-        # position only, i.e. it is static, and it never coarsens below the
-        # regular mesh anyway. Without AMR levels, the volume size bound keeps
-        # the mesh regular.
-        solver.add_pde_term(
-            exahype2.api.RefineErasePointwisely(
-                implementation=f"""
+    # The criterion never asks for an erase. The mesh is a function of the
+    # position only, i.e. it is static, and it never coarsens below the
+    # regular mesh anyway. Without AMR levels, the volume size bound keeps
+    # the mesh regular.
+    solver.add_pde_term(
+        exahype2.api.RefineErasePointwisely(
+            implementation=f"""
   const double r2 = tarch::la::norm2Squared(x);
   if (r2 < {arguments.amr_radius ** 2}) *refinementCommand = ::exahype2::RefinementCommand::Refine;
 """
-            )
         )
+    )
     create_numerical_scheme(solver, arguments)
     project.add_solver(solver)
 
@@ -400,10 +490,7 @@ def main():
         periodic_BC=[False, False, False],
     )
 
-    project.set_load_balancing(
-        "toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates",
-        "new ::exahype2::LoadBalancingConfiguration()",
-    )
+    project.set_load_balancing(*create_load_balancing(arguments))
 
     project.set_Peano4_installation(
         arguments.peano_directory, Variants[arguments.variant]["mode"]

@@ -1,5 +1,7 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+import peano4.api
+
 from ..blockstructured.AdaptMeshAndBalanceLoad import (
     AdaptMeshAndBalanceLoad as BlockStructuredAdaptMeshAndBalanceLoad,
 )
@@ -21,6 +23,27 @@ class AdaptMeshAndBalanceLoad(BlockStructuredAdaptMeshAndBalanceLoad):
     Volumes, i.e. the scheme drops to low order wherever the mesh changes.
 
     """
+
+    def _add_further_adaptation_action_sets(self, adapt_task):
+        """!
+
+        Keep the right-hand side estimates in sync with the mesh
+
+        solver._rhs_estimates lives on the cell stack between the sweeps of
+        the time step. A sweep only creates and destroys the entries of the
+        cell data that it uses. The mesh adaptation creates and destroys
+        cells, so it has to use the estimates, too. Otherwise, the cells it
+        creates have no entry on the stack, and the next time step pops from
+        a stack which is too short.
+
+        @param adapt_task: peano4.api.taskgraph.Task
+          The task which adapts the mesh.
+
+        """
+        adapt_task.use_cell(
+            self._solver._rhs_estimates,
+            peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE,
+        )
 
     def _add_projection_action_sets(self, project_on_faces_task, exahype2_project):
         includes = (

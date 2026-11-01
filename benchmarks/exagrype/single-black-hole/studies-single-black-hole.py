@@ -31,10 +31,11 @@ The studies are:
   thread count is set through OMP_NUM_THREADS, i.e. it is meaningful for
   OpenMP builds of Peano. Use --repetitions to see the noise.
 
-The studies do not write checkpoints, so they only distinguish stable from
-unstable runs and fast from slow ones. Pass --extra-arguments
-"--checkpoint-interval 1" to single-black-hole.py to dump data and analyse
-it with probe-single-black-hole.py afterwards.
+The studies write binary checkpoints every 10 time units and visualisation
+snapshots every 1 time unit, as single-black-hole.py does by default. Analyse
+the snapshots with probe-single-black-hole.py afterwards. Pass
+--extra-arguments "--checkpoint-interval 0 --plot-interval 0" to switch the
+output off, e.g. for timings.
 
 Both studies need a Peano build with GSL, as the initial data comes from
 TwoPunctures. Use --dry-run to only list the configurations.
@@ -63,6 +64,7 @@ SchemeStudy = {
     "fd4-rk4": "--scheme fd4 --rk-order 4",
     "fd4-rk4-lopsided": "--scheme fd4 --rk-order 4 --lopsided",
     "fd4-rk4-lopsided-ko": "--scheme fd4 --rk-order 4 --lopsided --ko-sigma 8.0",
+    "fd4-rk4-amr-1": "--scheme fd4 --rk-order 4 --amr-levels 1 --amr-radius 1",
 }
 
 PerformanceStudy = {
