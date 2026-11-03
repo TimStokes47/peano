@@ -106,6 +106,12 @@ Variants = {
     ),
 }
 
+SplitModes = {
+    "bottom-up": Hardcoded.BottomUp,
+    "top-down": Hardcoded.TopDown,
+    "inferred": None,
+}
+
 Verbosities = {
     mode.name.lower(): mode for mode in peano4.api.LoggerVerbosity
 }
@@ -228,6 +234,18 @@ def parse_arguments():
         choices=["hardcoded", "spread-out"],
         default="hardcoded",
         help="hardcoded: decomposition of the regular mesh, computed offline. spread-out: SpreadOutOnceGridStagnates decides at runtime.",
+    )
+    balancing.add_argument(
+        "--decomposition",
+        choices=["equidistant", "quantised"],
+        default="equidistant",
+        help="Chunk sizes of the hardcoded load balancing. equidistant: every tree gets the same number of cells. quantised: chunk sizes are multiples of 3^(k*d) cells, i.e. trees hold (almost) complete subtrees and few virtual cells, but they might be imbalanced.",
+    )
+    balancing.add_argument(
+        "--split-mode",
+        choices=["bottom-up", "top-down", "inferred"],
+        default="bottom-up",
+        help="How Peano picks the cells of a split (hardcoded load balancing only).",
     )
     balancing.add_argument(
         "--trees",
@@ -424,18 +442,22 @@ def create_load_balancing(arguments):
     tree = RegularGridGenerator.RegularGridGenerator(
         max_level=regular_mesh_levels(arguments), dimensions=3
     )
-    SplitTrees.split_tree(
-        tree,
-        decomposition=Decomposition.equidistant_splitting(
+    if arguments.decomposition == "quantised":
+        decomposition = Decomposition.quantised_splitting(
+            peano_tree=tree, number_of_subtrees=arguments.trees, dimension=3
+        )
+    else:
+        decomposition = Decomposition.equidistant_splitting(
             peano_tree=tree, number_of_subtrees=arguments.trees
-        ),
-        periodic_BC=[False, False, False],
+        )
+    SplitTrees.split_tree(
+        tree, decomposition=decomposition, periodic_BC=[False, False, False]
     )
     destination_ranks = Hardcoded.assign_trees_to_ranks_round_Robin(
         number_of_subtrees=tree.number_of_subtrees, max_ranks=1
     )
     configuration, _ = Hardcoded.create_constructor_initialisation_string(
-        tree, destination_ranks, modes=Hardcoded.BottomUp
+        tree, destination_ranks, modes=SplitModes[arguments.split_mode]
     )
     return "toolbox::loadbalancing::strategies::Hardcoded", configuration
 
