@@ -1,0 +1,55 @@
+name: Doxygen documentation
+
+on:
+  push:
+    branches: [ p4 ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz pandoc
+          python3 -m pip install jupyter nbconvert
+
+      - name: Convert Jupyter notebooks
+        run: python3 documentation/convert-jupyter-notebooks.py
+
+      - name: Run Doxygen
+        run: doxygen documentation/Doxyfile
+
+      - name: Assemble public folder
+        run: |
+          rm -rf public
+          mkdir public
+          mv ./doxygen-html/html/* public/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

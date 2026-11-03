@@ -1,8 +1,6 @@
 # Define the stages we have overall.
-# Pages is where we generate the doxygen pages and publish them on the website.
 # BuildSystem is where we build and test the actual code.
 stages:
-  - Pages
   - BuildSystem
 
 workflow:
@@ -34,7 +32,3 @@ CMake:
     include:
       - .continuous_integration/gitlab-cmake.yml
     strategy: depend
-
-# This one contains everything to publish the online documentation
-include:
-  - .continuous_integration/gitlab-pages.yml
