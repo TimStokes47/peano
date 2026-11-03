@@ -43,7 +43,7 @@ A run of the fourth-order Finite Differences with lopsided advection and
 the Kreiss-Oliger dissipation looks like
 
     python3 single-black-hole.py --scheme fd4 --rk-order 4 --lopsided --ko-sigma 8.0 \
-      --compiler fusion --variant profile
+      --compiler producer-consumer-fusion --variant profile
 
 and Finite Volumes with two additional levels of adaptive mesh refinement
 around the black hole are
@@ -76,7 +76,7 @@ Compilers = {
     "sequential": peano4.api.taskgraph.compiler.Sequential.translate,
     "fusion-only": peano4.api.taskgraph.compiler.FuseSteps.translate,
     "producer-consumer-sequential": peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_sequential,
-    "fusion": peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion,
+    "producer-consumer-fusion": peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion,
 }
 
 EnforceModes = {
@@ -258,7 +258,7 @@ def parse_arguments():
     build.add_argument(
         "--compiler",
         choices=list(Compilers),
-        default="fusion",
+        default="producer-consumer-fusion",
         help="Task graph compiler, i.e. how time step tasks are mapped onto mesh traversals.",
     )
     build.add_argument(
