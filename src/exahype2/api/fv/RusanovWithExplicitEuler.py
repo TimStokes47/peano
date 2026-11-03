@@ -21,6 +21,7 @@ from .actionsets import ApplyDirichletBoundaryConditions
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFaceWithSommerfeldBoundaryConditions
 from .actionsets import UpdateCell
+from .actionsets import UpdateCellGPU
 from .actionsets import ComputeGlobalCFLCondition
 
 
@@ -261,12 +262,15 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         self.max_volume_size = max_volume_size
         self.interpolation = interpolation
         self.restriction = restriction
+        # patch_size and halo_size must be set for proper solver generation
         self.patch_size = patch_size
+        self.halo_size = overlap
         self.overlap = overlap
         # Set in construct_output(): the generated kernels live in the project
         # namespace, as their names are solver-specific
         self.kernel_namespace = None
         self.cfl_constant = cfl_constant
+        self._generator = RusanovWithExplicitEulerGenerator(solver, [(Target.Serial, True)])
         self.__create_data_structures()
 
     @property
@@ -458,10 +462,37 @@ Patch overlap data
         peano4.api.Logger().log("Create time stepping task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
         self.__add_data_to_repository(peano_project)
-
         self.kernel_namespace = peano_project.namespace
+        self._generator.construct_output(exahype2_project, peano_project, time_step)
+
+    def create_restriction_of_hanging_faces(self) -> "toolbox.blockstructured.api.RestrictHangingFaces":
+        """!
+
+        Action set which restricts the projected fine data from the hanging
+        faces onto the coarse faces
+
+        Every task which projects the solution onto the faces has to host
+        this action set, so the faces between coarse and fine patches hold
+        consistent data afterwards. Besides the time step, this is the
+        projection at the end of the setup
+        (@ref exahype2.api.fv.SetupSimulationOverRegularGrid). The task has
+        to write all of _patch_overlap_update, as averaging clears it first.
+
+        """
+        return toolbox.blockstructured.api.RestrictHangingFaces(
+            self._solver._patch_overlap_update,
+            scheme=self.restriction,
+            clear_guard=self._solver.grid_selector.createFaceGuard(),
+            additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+        )
+
+
+class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGenerator):
+    def construct_output(self, exahype2_project, peano_project, time_step):
         # Construct the call first, as it validates the PDE terms' variants
-        self._solver.compute_kernel_call = self.__construct_kernel_call(Target.Serial, False)
+        # Although we may generate multiple definitions for the purpose of benchmarking, we
+        # only need one kernel call
+        self._solver.compute_kernel_call = self.__construct_kernel_calls()[0]
         self.__create_time_step_functions(peano_project.directory)
         
         reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
@@ -496,10 +527,10 @@ Patch overlap data
         dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
             self._solver,
-            self.patch_size,
+            self._solver.numerical_scheme.patch_size,
             guard=self._solver.grid_selector.createCellGuard(),
-            min_volume_size=self.min_volume_size,
-            max_volume_size=self.max_volume_size,
+            min_volume_size=self._solver.numerical_scheme.min_volume_size,
+            max_volume_size=self._solver.numerical_scheme.max_volume_size,
         )
         if dynamic_mesh_refinement is not None:
             dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
@@ -534,7 +565,7 @@ Patch overlap data
         reconstruction_task.add_action_set(
             toolbox.blockstructured.api.InterpolateHangingFaces(
                 self._solver._patch_overlap_current_time_step,
-                scheme=self.interpolation,
+                scheme=self._solver.numerical_scheme.interpolation,
                 additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
@@ -548,12 +579,20 @@ Patch overlap data
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
         update_cell_task.use_cell(self._solver._max_eigenvalue,  peano4.api.taskgraph.Task.DataAccess.WRITE)
-        update_cell_task.add_action_set(
-            UpdateCell(
-                self._solver,
-                guard=self._solver.grid_selector.createCellGuard(),
+        if self._configurations[0][0] == dslhype.Target.Accelerator:
+            update_cell_task.add_action_set(
+                UpdateCellGPU(
+                    self._solver,
+                    guard=self._solver.grid_selector.createCellGuard(),
+                )
             )
-        )
+        else:
+            update_cell_task.add_action_set(
+                UpdateCell(
+                    self._solver,
+                    guard=self._solver.grid_selector.createCellGuard(),
+                )
+            )
         update_cell_task.tags.add(Solver.SolutionUpdateTaskTag)
 
         ## Reduce the cells' maximum eigenvalues into the next time step size.
@@ -563,8 +602,8 @@ Patch overlap data
         compute_cfl_condition_task.add_action_set(
             ComputeGlobalCFLCondition(
                 self._solver,
-                self.cfl_constant,
-                self.patch_size,
+                self._solver.numerical_scheme.cfl_constant,
+                self._solver.numerical_scheme.patch_size,
                 guard=self._solver.grid_selector.createCellGuard(),
             )
         )
@@ -587,7 +626,7 @@ Patch overlap data
         )
         ## On adaptive meshes, restrict the fine data from the hanging faces
         ## onto the coarse faces, before the roll over copies them
-        project_on_faces_task.add_action_set(self.create_restriction_of_hanging_faces())
+        project_on_faces_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
         ## Sommerfeld boundary conditions advance the ghost volumes within
         ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
         project_on_faces_task.add_action_set(
@@ -605,27 +644,6 @@ Patch overlap data
         if peano4.api.Logger().is_text:
             time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
 
-    def create_restriction_of_hanging_faces(self) -> "toolbox.blockstructured.api.RestrictHangingFaces":
-        """!
-
-        Action set which restricts the projected fine data from the hanging
-        faces onto the coarse faces
-
-        Every task which projects the solution onto the faces has to host
-        this action set, so the faces between coarse and fine patches hold
-        consistent data afterwards. Besides the time step, this is the
-        projection at the end of the setup
-        (@ref exahype2.api.fv.SetupSimulationOverRegularGrid). The task has
-        to write all of _patch_overlap_update, as averaging clears it first.
-
-        """
-        return toolbox.blockstructured.api.RestrictHangingFaces(
-            self._solver._patch_overlap_update,
-            scheme=self.restriction,
-            clear_guard=self._solver.grid_selector.createFaceGuard(),
-            additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
-        )
-
     def __create_time_step_functions(self, output_directory):
         """!
         
@@ -633,7 +651,7 @@ Patch overlap data
         In this way we can avoid generating code that will not be used. The following
         information is required to translate a Python function using DSLHyPE:
         - template_parameters: the variables that are used within the Python function
-          to represent external information
+            to represent external information
         - functor_parameters: the PDE terms that can be used by the solver
         - function: the Python function itself
 
@@ -658,30 +676,61 @@ Patch overlap data
 
         time_step_dsl_function_2d = timeStepWithRusanov2D
         time_step_dsl_function_3d = timeStepWithRusanov3D
-        dslhype.translate_dslhype_function(
-            function = time_step_dsl_function_2d,
-            function_namespace = self.kernel_namespace,
-            template_parameters=template_parameters,
-            functor_parameters=functor_parameters,
-            pde_terms=self._solver.pde_terms,
-            output_file_name=self._solver.name + "_rusanov2d",
-            target=dslhype.Target.Serial,
-            stateless=False,
-            function_name=self.kernel_function_name,
-            output_directory=output_directory,
-        )
-        dslhype.translate_dslhype_function(
-            function = time_step_dsl_function_3d,
-            function_namespace = self.kernel_namespace,
-            template_parameters=template_parameters,
-            functor_parameters=functor_parameters,
-            pde_terms=self._solver.pde_terms,
-            output_file_name=self._solver.name + "_rusanov3d",
-            target=dslhype.Target.Serial,
-            stateless=False,
-            function_name=self.kernel_function_name,
-            output_directory=output_directory,
-        )
+
+        required_includes = """
+#include "exahype2/Solver.h"
+#include "exahype2/CellData.h"
+#include "exahype2/VolumeIndex.h"
+#include "exahype2/fv/PatchUtils.h"
+#include "exahype2/fv/rusanov/Functors.h"
+#include "peano4/utils/Loop.h"
+#include "tarch/timing/Measurement.h"
+#include "tarch/timing/Watch.h"
+"""
+        kernels_directory = os.path.join(output_directory, "kernels")
+        os.makedirs(kernels_directory, exist_ok=True)
+        for file_name in [f"{self._solver.name}_rusanov2d.h", f"{self._solver.name}_rusanov3d.h"]:
+            file = open(os.path.join(kernels_directory, file_name), "w")
+            file.write(f"""#pragma once
+{required_includes}\n""")
+            file.close()
+        
+        for file_name in [f"{self._solver.name}_rusanov2d.cpph", f"{self._solver.name}_rusanov3d.cpph"]:
+        #                  f"{self._solver.name}_rusanov2d.cpp",  f"{self._solver.name}_rusanov3d.cpp"]:
+            file = open(os.path.join(kernels_directory, file_name), "w")
+            file.write(f"""#include "{file_name.split(".")[0]}.h"\n""")
+            file.close()
+
+        for (target, stateless) in self._configurations:
+            dslhype.translate_dslhype_function(
+                function = time_step_dsl_function_2d,
+                function_namespace = self._solver.numerical_scheme.kernel_namespace,
+                template_parameters=template_parameters,
+                functor_parameters=functor_parameters,
+                pde_terms=self._solver.pde_terms,
+                output_file_name=self._solver.name + "_rusanov2d",
+                target=target,
+                stateless=stateless,
+                function_name=self._solver.numerical_scheme.kernel_function_name,
+                output_directory=output_directory,
+            )
+            dslhype.translate_dslhype_function(
+                function = time_step_dsl_function_3d,
+                function_namespace = self._solver.numerical_scheme.kernel_namespace,
+                template_parameters=template_parameters,
+                functor_parameters=functor_parameters,
+                pde_terms=self._solver.pde_terms,
+                output_file_name=self._solver.name + "_rusanov3d",
+                target=target,
+                stateless=stateless,
+                function_name=self._solver.numerical_scheme.kernel_function_name,
+                output_directory=output_directory,
+            )
+        for file_name in [f"{self._solver.name}_rusanov2d.h", f"{self._solver.name}_rusanov3d.h"]:
+            file = open(os.path.join(kernels_directory, file_name), "a")
+            file.write(f"""#include "{file_name.split(".")[0]}.cpph" """)
+            file.close()
+
         file = open(os.path.join(output_directory, "kernels", f"{self._solver.name}_rusanov.h"), "w")
         file.write(f"""#if Dimensions == 2
     #include "{self._solver.name}_rusanov2d.h"
@@ -690,6 +739,12 @@ Patch overlap data
 #endif""")
         file.close()
 
+    def __construct_kernel_calls(self):
+        kernel_calls = []
+        for (target, stateless) in self._configurations:
+            kernel_calls.append(self.__construct_kernel_call(target, stateless))
+        return kernel_calls
+    
     def __construct_kernel_call(self, target: Target, stateless: bool):
         """!
 
@@ -700,14 +755,16 @@ Patch overlap data
         available_terms = ["flux", "nonconservativeProduct", "volumetricSource", "maxEigenvalue"]
 
         if stateless:
-            return f"""::{"::".join(self.kernel_namespace)}::{self.kernel_function_name}<
-        {self.patch_size},
-        {self.overlap},
+            # Stateless kernels require stateless functions, which are defined in the abstract solver
+            return f"""::{"::".join(self._solver.numerical_scheme.kernel_namespace)}::{self._solver.numerical_scheme.kernel_function_name}Stateless<
+        Abstract{self._solver.name},
+        {self._solver.numerical_scheme.patch_size},
+        {self._solver.numerical_scheme.overlap},
         {self._solver.unknowns},
         {self._solver.auxiliary_variables}
     >(
-        patchData,
-        {self._solver.name}
+        {"0," if target==Target.Accelerator else ""}
+        {"gpuPatchData" if target==Target.Accelerator else "patchData"}
     );"""
         else:
             # Variants per term the kernel takes: {name: {stateless: PDETerm}}
@@ -753,9 +810,9 @@ Patch overlap data
     )->void {{
         repositories::{self._solver.get_name_of_global_instance()}.{application_term.name}({", ".join(arguments)});
     }}""")
-                return f"""::{"::".join(self.kernel_namespace)}::{self.kernel_function_name}<
-    {self.patch_size},
-    {self.overlap},
+                return f"""::{"::".join(self._solver.numerical_scheme.kernel_namespace)}::{self._solver.numerical_scheme.kernel_function_name}<
+    {self._solver.numerical_scheme.patch_size},
+    {self._solver.numerical_scheme.overlap},
     {self._solver.unknowns},
     {self._solver.auxiliary_variables}
 >(

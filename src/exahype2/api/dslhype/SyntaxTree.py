@@ -4405,7 +4405,7 @@ class DataBlockConstructionFromFunction(Statement):
         
             functionCall.add_argument(Reference(self._dataBlock.multidimensional_index(index, 1)))
             if functionCall._is_offloadable:
-                functionCall.add_argument(String("Solver::Offloadable::Yes"))
+                functionCall.add_argument(String("::exahype2::Solver::Offloadable::Yes"))
         else:
             functionCall = Assignment(self._dataBlock.multidimensional_index(index), self._dataBlock._internal)
         

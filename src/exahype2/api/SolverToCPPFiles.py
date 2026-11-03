@@ -45,6 +45,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
 
     static constexpr int    NumberOfUnknowns           = {{NUMBER_OF_UNKNOWNS}};
     static constexpr int    NumberOfAuxiliaryVariables = {{NUMBER_OF_AUXILIARY_VARIABLES}};
+    static constexpr int    PatchSize                  = {{PATCH_SIZE}};
+    static constexpr int    HaloSize                   = {{HALO_SIZE}};
 
     {{VARIABLES}}
 
@@ -182,6 +184,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
         local_d = {
             "NUMBER_OF_UNKNOWNS": self._solver._unknowns,
             "NUMBER_OF_AUXILIARY_VARIABLES": self._solver._auxiliary_variables,
+            "PATCH_SIZE": self._solver.numerical_scheme.patch_size,
+            "HALO_SIZE": self._solver.numerical_scheme.halo_size,
             "USER_SOLVER_INCLUDES": self._solver.user_solver_includes,
             "VARIABLES": self._variables_declaration(),
             "PDE_TERM_DECLARATIONS": "\n".join(
