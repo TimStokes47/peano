@@ -13,7 +13,7 @@ i.e. it should include all the steps you need to run the example codes.
 # Get the code
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-git clone https://gitlab.lrz.de/hpcsoftware/Peano.git
+git clone https://github.com/tobiasweinzierl/peano.git
 cd Peano
 ~~~~~~~~~~~~~~~~~~~~~~~
 

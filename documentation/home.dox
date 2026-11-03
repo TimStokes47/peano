@@ -10,10 +10,10 @@
 <div align="center" style="background-color: #ccc ; padding: 10px; border: 1px solid green;">
  <b>
   <a href="http://www.peano-framework.org">Website</a> &bull;
-  <a href="https://hpcsoftware.pages.gitlab.lrz.de/Peano/">Documentation</a> &bull;
-  <a href="https://gitlab.lrz.de/hpcsoftware/Peano">Repository</a> &bull;
-  <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/tags">Tags</a> &bull;
-  <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/releases">Releases</a>
+  <a href="https://tobiasweinzierl.github.io/peano/">Documentation</a> &bull;
+  <a href="https://github.com/tobiasweinzierl/peano">Repository</a> &bull;
+  <a href="https://github.com/tobiasweinzierl/peano/tags">Tags</a> &bull;
+  <a href="https://github.com/tobiasweinzierl/peano/releases">Releases</a>
  </b>
 </div>
 
@@ -94,18 +94,18 @@ All components are integrated into one repository, one code base, and documented
 # Getting Peano
 
 Peano is hosted on the
-<a href="https://gitlab.lrz.de/hpcsoftware/Peano">LRZ GitLab</a>.
+<a href="https://github.com/tobiasweinzierl/peano">GitHub</a>.
 We do not provide regular snapshots.
 Instead, clone the repository and use the latest version of the default branch
 <tt>p4</tt>:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-git clone -b p4 https://gitlab.lrz.de/hpcsoftware/Peano.git
+git clone -b p4 https://github.com/tobiasweinzierl/peano.git
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tagged versions are listed under
-<a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/tags">Tags</a> and
-<a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/releases">Releases</a>.
+<a href="https://github.com/tobiasweinzierl/peano/tags">Tags</a> and
+<a href="https://github.com/tobiasweinzierl/peano/releases">Releases</a>.
 After that, follow the @ref page_installation_home "installation guide".
 For HPC systems and reproducible environments, we also maintain
 @ref page_installation_with_spack "Spack packages",
@@ -153,7 +153,7 @@ For HPC systems and reproducible environments, we also maintain
 
 This is the documentation of Peano, generated automatically through Doxygen.
 The latest version is published at
-<a href="https://hpcsoftware.pages.gitlab.lrz.de/Peano/">hpcsoftware.pages.gitlab.lrz.de/Peano</a>.
+<a href="https://tobiasweinzierl.github.io/peano/">tobiasweinzierl.github.io/peano</a>.
 To build it locally, run
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,8 +214,8 @@ Peano has been awarded the
 
 # Recent updates
 
-- <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/pipelines">Build status (pipelines)</a>
-- <a href="https://gitlab.lrz.de/hpcsoftware/Peano/-/network/p4?ref_type=heads">Latest commits (repository graph)</a>
+- <a href="https://github.com/tobiasweinzierl/peano/actions">Build status (actions)</a>
+- <a href="https://github.com/tobiasweinzierl/peano/commits/p4">Latest commits (repository graph)</a>
 
 
 # History

@@ -18,7 +18,7 @@ set(PEANO_VERSION_REVISION "${GIT_COMMIT_HASH}")
 set(PEANO_GIT_BRANCH "${GIT_BRANCH}")
 set(PEANO_GIT_HASH "${GIT_COMMIT_HASH}")
 set(PEANO_GIT_COMMIT_MESSAGE "${GIT_COMMIT_MESSAGE}")
-set(PEANO_GIT_URL "https://gitlab.lrz.de/hpcsoftware/Peano")
+set(PEANO_GIT_URL "https://github.com/tobiasweinzierl/peano")
 message(STATUS "Revision: ${GIT_BRANCH} -m \"${GIT_COMMIT_MESSAGE}\" (${GIT_COMMIT_HASH}) ${GIT_COMMIT_TIMESTAMP}")
 
 project(${PEANO_PROJECT_NAME}

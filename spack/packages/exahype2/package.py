@@ -22,8 +22,8 @@ class Exahype2(CMakePackage, CudaPackage):
     """
 
     homepage = "www.peano-framework.org"
-    url = "https://gitlab.lrz.de/hpcsoftware/Peano"
-    git = "https://gitlab.lrz.de/hpcsoftware/Peano.git"
+    url = "https://github.com/tobiasweinzierl/peano"
+    git = "https://github.com/tobiasweinzierl/peano.git"
 
     maintainers("hpcsoftware")
 

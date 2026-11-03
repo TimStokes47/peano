@@ -15,7 +15,7 @@ software and where it is actively used and developed. If you do not
 intend to modify the core code base, you can just clone the code
 anonymously.
 
-    git clone https://gitlab.lrz.de/hpcsoftware/Peano.git
+    git clone https://github.com/tobiasweinzierl/peano.git
 
 I still maintain the "old" Peano in the repository (version 3).
 However, we now work with the fourth generation of Peano (p4).
