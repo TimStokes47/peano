@@ -79,7 +79,7 @@ is implemented as a non-conservative product.
 # How to Build and Run
 
 For a general overview and all options on how to retrieve and configure the project, refer to @ref page_installation_home.
-We require the NetCDF library and Git LFS.
+We require the NetCDF library.
 
 ## Using CMake
 

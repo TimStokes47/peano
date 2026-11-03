@@ -20,11 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Only the gifs are needed for the documentation (as in the old GitLab
-      # job). Fetching all LFS objects (e.g. *.nc) is not necessary.
-      - name: Fetch LFS gifs
-        run: git lfs pull --include="*.gif"
-
       - name: Install dependencies
         run: |
           sudo apt-get update
