@@ -106,7 +106,7 @@ see the output of the generator scripts and executables while they run.
 Continuous integration
 ----------------------
 
-The GitLab pipeline runs pytest, too (see \ref page_continuous_integration):
+The continuous integration runs pytest, too (see \ref page_continuous_integration):
 
 - The job `Python_Unit_Tests` runs `python3 -m pytest`.
 - The ExaParty jobs run `python3 -m pytest -m integration tests/exaparty -k <case>`.

@@ -4,130 +4,89 @@
 
 \tableofcontents
 
-## Gitlab CI
+Peano uses [GitHub Actions](https://docs.github.com/en/actions) for continuous integration.
+A workflow is a `.yml` file in `.github/workflows/`; GitHub runs it on its own
+hosted runners whenever its trigger fires. You find the status of all runs on the
+[Actions page](https://github.com/tobiasweinzierl/peano/actions) of the repository.
 
-For a full overview of how continuous integration works in gitlab, please consult [their documentation](https://docs.gitlab.com/ee/ci/).
-We detail here some useful info about how we use it within Peano. A few basic things to note:
+\note The build and test pipelines used to run on the LRZ GitLab on our own
+      runners on COSMA. Their definitions (`.gitlab-ci.yml` and the files in
+      `.continuous_integration`) are still in the repository, but they are not
+      ported to GitHub Actions yet and are not executed there. The only
+      workflow that currently runs on GitHub is the documentation workflow below.
 
-\li When a developer pushes to any remote branch, the gitlab website "runs a pipeline". This consists of running any steps in the `.gitlab-ci.yml` file.
-\li Our ```.gitlab-ci.yml``` doesn't contain much actual stuff, but rather it redirects to further `.yml` files in the `.continuous_integration` directory.
-\li We use containers to make sure we have a dependable software environment.
-\li Most runner nodes have no internet access.
-\li Every job clones the Git LFS files as pointers only (`GIT_LFS_SKIP_SMUDGE` in `.continuous_integration/templates/variables.yml`). A job that reads Git LFS files pulls just those with `git lfs pull --include="<pattern>"`.
-\li Before a job fetches the sources, it deletes the Git configuration lock file that a cancelled job leaves in the reused build directory. GitLab repeats a job up to twice after an infrastructure failure and a failed fetch, artifact download or cache restore up to three times.
 
-## How do I run the pipeline?
+## Documentation workflow
 
-The pipeline runs automatically for all branches and all pushes.
-However, it only runs fully on the protected branches.
-For all other branches, the pipeline only executes the build and test (unit tests) stages.
+The file `.github/workflows/doxygen.yml` builds this website and publishes it at
+https://tobiasweinzierl.github.io/peano/. It runs
 
-At time of writing, ```gitlab-runner``` runs as Slurm jobs on COSMA: one permanent runner on the node ga004 of the partition `cosma8-shm2`
-and on-demand runners on the DINE nodes of the partition `bluefield1`, which the permanent runner submits when all of its job slots are busy.
-Every runner keeps its configuration, build directories and container images in one runner directory `<runner-dir>` on `/cosma/apps`, which every runner node mounts.
-Recurring Slurm jobs keep the runners alive. Peano developers should not need to do
-anything other than push to a branch, and [check the pipelines page on the gitlab](https://gitlab.lrz.de/hpcsoftware/Peano/-/pipelines)
-to check that their code has correctly built for each compiler toolchain.
+\li on every push to the branch `p4`, and
+\li on demand: open the *Actions* tab, pick *Doxygen documentation* and press *Run workflow*.
 
-One unfortunate consequence of this is that if the slurm job that manages a particular runner goes down during a pipeline run, it will cause the jobs to hang
-until they timeout, meaning that whoever pushed needs to press the restart button on the pipeline page.
+It consists of two jobs:
+
+\li `build` runs on `ubuntu-latest`. It checks out the sources, installs
+    `doxygen`, `graphviz` and `pandoc` through `apt` and `jupyter`/`nbconvert`
+    through `pip`, and then performs the same steps that you run locally to
+    build the documentation:
+    ```
+    python3 documentation/convert-jupyter-notebooks.py
+    doxygen documentation/Doxyfile
+    ```
+    The notebook conversion turns the tutorial notebooks into Doxygen pages (see
+    \ref page_tutorials_overview). Doxygen writes its output to `doxygen-html/html`,
+    which the job uploads as a GitHub Pages artifact.
+\li `deploy` publishes this artifact to GitHub Pages.
+
+\note The repository settings have to select *GitHub Actions* as the source under
+      *Settings > Pages* for the deploy job to work.
+
+If the website does not update, open the failed run in the Actions tab, and
+inspect the log of the step that failed. As the steps are plain shell commands,
+you can reproduce nearly every failure locally from the root of the repository.
+
 
 ## How do I write my own tests?
 
-Unfortunately, the use of the apptainer containers is not pretty, and
-so the best thing to do is describe your desired actions in a bash script and ask for help on the
-continuous-integration channel of the Slack.
-
-### Tests driven by pytest
-
 The preferred way to add a test is to write it as a pytest test in `tests/` (see
-\ref tarch_pytest) and to let the CI job call pytest. The container images ship pytest.
-A job then reads
+\ref tarch_pytest) and to let a workflow call pytest. A minimal workflow, e.g.
+`.github/workflows/pytest.yml`, reads
 
 ```
-.My_Test:
-  script:
-    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} python3 -m pytest -m integration tests/exaparty -k sod-1d
+name: Python unit tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install pytest
+      - run: python3 -m pytest
 ```
 
-The jobs `Python_Unit_Tests` (all fast tests, i.e. plain `pytest`) and
-`ExaParty_*` in `.continuous_integration/templates/exaparty.yml` follow this pattern.
-`Python_Unit_Tests` does not need the `Build` job, as the unit tests do not compile
-any code.
+Plain `pytest` runs all fast tests, which do not compile any code. Tests that
+build and run Peano applications are selected through markers, e.g.
+`python3 -m pytest -m integration tests/exaparty -k sod-1d`. These tests need a
+compiler toolchain, and it is best to copy the setup from the documentation
+workflow and to extend the `Install dependencies` step.
 
-### Anatomy of a test
+Some general tips:
 
-It's best to copy examples, such as the ones in `.continuous_integration/templates/exahype2.yml`. But here are some general tips:
-
-```
-.Test_Name:
-  stage: Test
-  needs:
-    - job: Build
-  script:
-    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} bash <<< "cd to/my/directory; ./run_my_executable"
-```
-
-Let's discuss this line-by-line.
-
-Start by giving your test a name. Syntax is crucial here. Start with a `.` to indicate it's a template, and finish the line with a colon `:`. Every
-subsequent line must be indented with two spaces, python style.
-
-Next, you need to give the job a stage. `Test` is a fine name.
-
-Next, you need to make sure that this job depends on the build job. That way, it will run strictly after the job that checks it still compiles, and only
-if that succeeded. What's more, you won't have to wait for the whole of Peano to recompile; it will just fetch the compiled libraries that were cooked up
-a short while beforehand.
-
-Finally, the script. This is very ugly. The first part `apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} bash` just transforms
-the standard bash terminal into one that runs under the container. The names of the environment variables are set for you. Then we need to pipe in our instructions
-(note the triple `<` sign). Conceptually, you need to imagine that the terminal begins at the top level of Peano. So you need to `cd` into whichever directory you
-need to be and run whichever scripts you need to run. Note the separation with semicolon between separate statements, like in a normal bash terminal.
-
-
-## How do I add new runners to project?
-
-Having more runners online at once means more jobs can be run at once. Only the project owner can do these steps:
-
-\li Heading to Settings > CI/CD > Runners
-\li Add a new project runner. Make sure the tag is set to `peano-dine-runner` (no other tags have been written into the repo yet), make sure the project is locked to the current project and click create.
-
-It will then show you a token. Write it down.
-
-Now we need to register this runner. Log into a node where `gitlab-runner` is available, and then type `gitlab-runner register`. Type in the url and
-token as prompted. Pick `shell` as an executor.
-
-This will then create a new config file in `$HOME/.gitlab-runner` directory. Move this to the `<runner-dir>/configs` directory,
-add the paths of the config template below and list the runner with its node, partition and mode in `runners.txt` there.
-
-You can then run the gitlab-runner and supply this config by calling `gitlab-runner run --config /path/to/config.toml`. This is what the slurm job is supposed to do.
-
-### Config template
-
-\verbatim
-
-concurrent = 4
-check_interval = 0
-shutdown_timeout = 0
-
-[session_server]
-  session_timeout = 1800
-
-[[runners]]
-  name = "b101Runner"
-  url = "https://gitlab.lrz.de"
-  id = 35483
-  token = "keep-this-token-private"
-  token_obtained_at = 2024-06-19T11:16:06Z
-  token_expires_at = 0001-01-01T00:00:00Z
-  executor = "shell"
-  builds_dir = "<runner-dir>/builds_dir"
-  cache_dir  = "<runner-dir>/cache_dir"
-  environment = ["APPTAINER_BINDDIR=<runner-dir>", "APPTAINER_IMAGEDIR=<runner-dir>/images"]
-
-\endverbatim
-
-concurrent denotes the number of concurrent builds that can run at once.
-environment sets the directory that Apptainer binds into the containers and the directory of the container images.
+\li A workflow is only executed if it is on the branch that triggers it, i.e. new
+    workflows have to be pushed before they show up in the Actions tab.
+\li Use `workflow_dispatch` as additional trigger while developing a workflow, so
+    you can start it by hand.
+\li Use `needs:` to make a job depend on another one, e.g. a test job on a build job.
+    Jobs run on fresh machines. Pass build results between them through
+    `actions/upload-artifact` and `actions/download-artifact`.
+\li Pin actions to a major version (`actions/checkout@v4`) as done in the existing workflow.
 
 */
