@@ -67,11 +67,7 @@ if args.cpu == True or args.gpu == False:
     function_calls += f"""
     assessKernel(wrapHostKernel<
         {solver_name}_timeStepWithRusanovStateless<
-            Abstract{solver_name},
-            Abstract{solver_name}::PatchSize,
-            Abstract{solver_name}::HaloSize,
-            Abstract{solver_name}::NumberOfUnknowns,
-            Abstract{solver_name}::NumberOfAuxiliaryVariables
+            Abstract{solver_name}
             >
         >,
         "host, AoS, serial, cpp, stateless",
@@ -82,12 +78,7 @@ if args.cpu == True or args.gpu == False:
     """
     function_calls += f"""
     assessKernel(wrapHostKernel<
-        {solver_name}_timeStepWithRusanov<
-            Abstract{solver_name}::PatchSize,
-            Abstract{solver_name}::HaloSize,
-            Abstract{solver_name}::NumberOfUnknowns,
-            Abstract{solver_name}::NumberOfAuxiliaryVariables
-            >
+        {solver_name}_timeStepWithRusanov
         >,
         "host, AoS, serial, cpp",
         launchingThreads,
@@ -101,11 +92,7 @@ if args.gpu:
     function_calls += f"""
     assessKernel(wrapDeviceKernel<
         {solver_name}_timeStepWithRusanovStateless<
-            Abstract{solver_name},
-            Abstract{solver_name}::PatchSize,
-            Abstract{solver_name}::HaloSize,
-            Abstract{solver_name}::NumberOfUnknowns,
-            Abstract{solver_name}::NumberOfAuxiliaryVariables
+            Abstract{solver_name}
             >
         >,
         "device, AoS, parallel, omp",
