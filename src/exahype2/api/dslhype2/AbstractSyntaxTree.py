@@ -284,7 +284,7 @@ class ArrayDeallocation(Statement):
     def __init__(self, array_allocation: ArrayAllocation):
         self.array = array_allocation.array
         if len(array_allocation.array.array_size) == 1 or array_allocation.array.flatten:
-            self.deallocation = MemoryDellocation(array_allocation.variable)
+            self.deallocation = MemoryDeallocation(array_allocation.variable)
         else:
             self.inner_deallocation = For(Index(0), self.array.array_size[0])
             self.inner_deallocation.add_statement(MemoryDeallocation(Subscript(array_allocation.variable, [self.inner_deallocation.get_iteration_variable()])))

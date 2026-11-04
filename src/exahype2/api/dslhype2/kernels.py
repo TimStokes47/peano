@@ -42,21 +42,42 @@ def translate_dslhype_function(
 
     # Name the type according to the C++ type, since MLIR uses !llvm.ptr for structs
     # Add fields in the order specified by the MLIR type since only MLIR needs this information
-    cell_data_type = dslhype.TStruct("::exahype2::CellData<double, double>&")
-    cell_data_type.add_field("QIn", dslhype.TDataBlock(2, dslhype.TFloat(), flatten_array=True))
-    cell_data_type.add_field("QOut", dslhype.TDataBlock(2, dslhype.TFloat(), flatten_array=True))
-    cell_data_type.add_field("cellCentre", dslhype.TDataBlock(1, dslhype.TVector(dslhype.TFloat(), dimensions)))
-    cell_data_type.add_field("cellSize", dslhype.TDataBlock(1, dslhype.TVector(dslhype.TFloat(), dimensions)))
-    cell_data_type.add_field("t", dslhype.TArray(dslhype.TFloat(), 1))
-    cell_data_type.add_field("dt", dslhype.TArray(dslhype.TFloat(), 1))
-    cell_data_type.add_field("id", dslhype.TArray(dslhype.TInteger(), 1))
-    cell_data_type.add_field("maxEigenvalue", dslhype.TArray(dslhype.TFloat(), 1))
-    cell_data_type.add_field("numberOfCells", dslhype.TInteger())
+    cpu_cell_data_type = dslhype.TStruct("::exahype2::CellData<double, double>&")
+    cpu_cell_data_type.add_field("QIn", dslhype.TDataBlock(2, dslhype.TFloat(), flatten_array=False))
+    cpu_cell_data_type.add_field("QOut", dslhype.TDataBlock(2, dslhype.TFloat(), flatten_array=False))
+    cpu_cell_data_type.add_field("cellCentre", dslhype.TDataBlock(1, dslhype.TVector(dslhype.TFloat(), dimensions), flatten_array=False))
+    cpu_cell_data_type.add_field("cellSize", dslhype.TDataBlock(1, dslhype.TVector(dslhype.TFloat(), dimensions), flatten_array=False))
+    cpu_cell_data_type.add_field("t", dslhype.TArray(dslhype.TFloat(), 1))
+    cpu_cell_data_type.add_field("dt", dslhype.TArray(dslhype.TFloat(), 1))
+    cpu_cell_data_type.add_field("id", dslhype.TArray(dslhype.TInteger(), 1))
+    cpu_cell_data_type.add_field("maxEigenvalue", dslhype.TArray(dslhype.TFloat(), 1))
+    cpu_cell_data_type.add_field("numberOfCells", dslhype.TInteger())
 
-    arguments = [
-        dslhype.Argument(dslhype.Name("patchData"), cell_data_type)
-    ]
+    gpu_cell_data_type = dslhype.TStruct("::exahype2::CopyCellDataGPU<double, double>&")
+    gpu_cell_data_type.add_field("QIn", dslhype.TDataBlock(2, dslhype.TFloat(), flatten_array=True))
+    gpu_cell_data_type.add_field("QOut", dslhype.TDataBlock(2, dslhype.TFloat(), flatten_array=True))
+    gpu_cell_data_type.add_field("cellCentre", dslhype.TDataBlock(1, dslhype.TVector(dslhype.TFloat(), dimensions), flatten_array=False))
+    gpu_cell_data_type.add_field("cellSize", dslhype.TDataBlock(1, dslhype.TVector(dslhype.TFloat(), dimensions), flatten_array=False))
+    gpu_cell_data_type.add_field("t", dslhype.TArray(dslhype.TFloat(), 1))
+    gpu_cell_data_type.add_field("dt", dslhype.TArray(dslhype.TFloat(), 1))
+    gpu_cell_data_type.add_field("id", dslhype.TArray(dslhype.TInteger(), 1))
+    gpu_cell_data_type.add_field("maxEigenvalue", dslhype.TArray(dslhype.TFloat(), 1))
+    gpu_cell_data_type.add_field("numberOfCells", dslhype.TInteger())
 
+    
+    if target == Target.Accelerator:
+        printer = dslhype.OMPTargetPrinter(4)
+        dslhype.TArray.always_flatten = True
+        arguments = [
+            dslhype.Argument(dslhype.Name("deviceNumber"), dslhype.TInteger()),
+            dslhype.Argument(dslhype.Name("patchData"), gpu_cell_data_type)
+        ]
+    else:
+        printer = dslhype.CPPPrinter(4)
+        dslhype.TArray.always_flatten = False
+        arguments = [
+            dslhype.Argument(dslhype.Name("patchData"), cpu_cell_data_type)
+        ]
     #if output_language == dslhype.DSLOutputLanguage.MLIR:
     #    mlir_cell_data_type = dslhype.TStruct("::exahype2::MLIRCellDataFlattened&")
     #    mlir_cell_data_type.add_field("QIn", dslhype.TDataBlock(2, dslhype.TFloat(), flatten_array=True))
@@ -75,12 +96,12 @@ def translate_dslhype_function(
 
     parser = dslhype.Parser()
     function = parser.parse(function, function_id=function_name + ("Stateless" if stateless else ""), function_namespace=function_namespace, function_arguments=arguments, function_map=function_map, external_variables=external_variables, enabled_pde_terms=pde_terms, stateless=stateless)
-    
-    cpp_printer = dslhype.CPPPrinter(4)
-    function_declaration = function.print_declaration(cpp_printer)
-    function_definition = function.print_definition(cpp_printer)
-    function_declaration_with_timer = function.print_declaration_with_timer(cpp_printer)
-    function_definition_with_timer = function.print_definition_with_timer(cpp_printer)
+
+
+    function_declaration = function.print_declaration(printer)
+    function_definition = function.print_definition(printer)
+    function_declaration_with_timer = function.print_declaration_with_timer(printer)
+    function_definition_with_timer = function.print_definition_with_timer(printer)
 
     kernels_directory = os.path.join(output_directory, "kernels")
     os.makedirs(kernels_directory, exist_ok=True)

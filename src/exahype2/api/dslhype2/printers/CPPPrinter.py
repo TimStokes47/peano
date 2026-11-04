@@ -94,6 +94,7 @@ class CPPPrinter(Printer):
         index_print = for_loop.iteration_variable.print(self)
         start_print = for_loop.iteration_start.print(self)
         end_print = for_loop.iteration_end.print(self)
+
         statement_prints = [statement.print(self, indent_level + 1) for statement in for_loop.statements]
 
         return f"""{self.get_indent(indent_level)}for (int {index_print} = {start_print}; {index_print} < {end_print}; {index_print}++) {{
@@ -217,7 +218,7 @@ class CPPPrinter(Printer):
     
     def print_array_type(self, array_type: TArray, indent_level: int = 0) -> str:
         element_type_print = array_type.element_type.print(self)
-        if array_type.number_of_dimensions == 1:
+        if array_type.number_of_dimensions == 1 or array_type.flatten:
             return f"""{self.get_indent(indent_level)}{element_type_print}*"""
         else:
             return f"""{self.get_indent(indent_level)}{element_type_print}**"""

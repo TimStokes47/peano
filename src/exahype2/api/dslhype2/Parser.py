@@ -57,8 +57,8 @@ class Parser:
         if not (isinstance(source, AST.Element) or isinstance(source, AST.ExternalStructField) or isinstance(source, AST.FunctionCall)):
             raise Exception(f"DataBlock source is not a supported: {type(source)}")
         flatten_array_representation = False
-        if isinstance(source, AST.ExternalStructField):
-            flatten_array_representation = True
+        #if isinstance(source, AST.ExternalStructField):
+        #    flatten_array_representation = True
         return AST.DataBlock(iteration_range, source, flatten=flatten_array_representation)
 
     def _parse_evaluation(self, call: ast.Call) -> AST.FunctionCall:

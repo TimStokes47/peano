@@ -83,7 +83,7 @@ class TVector(TElement):
 
 # Arrays
 class TDataBlock(TArray):
-    def __init__(self, number_of_dimensions: int, element_type: TElement, flatten_array = False):
+    def __init__(self, number_of_dimensions: int, element_type: TElement, flatten_array: bool):
         if number_of_dimensions == 1:
             TArray.__init__(self, element_type, number_of_dimensions=1, flatten=flatten_array)
         else:
