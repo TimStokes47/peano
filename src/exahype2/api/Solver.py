@@ -74,6 +74,7 @@ class Solver(abc.ABC):
 
             """
             self._solver = solver
+            self._generator: Solver.NumericalScheme.NumericalSchemeGenerator = None
 
         @abc.abstractmethod
         def construct_output(self, exahype2_project, peano_project, time_step):
@@ -98,6 +99,28 @@ class Solver(abc.ABC):
 
             """
             return None
+
+        class NumericalSchemeGenerator(abc.ABC):
+            """!
+            Specify which versions of a numerical scheme should be generated here.
+            Each configuration specifies the target architecture and whether the variant 
+            is stateless.
+            The multiple configurations can generate multiple verisons of a function for 
+            the purpose of microbenchmarking, but a kernel call is only generated for one 
+            at a time.
+            """
+            def __init__(self, solver: Solver, configurations: list[tuple[Target, bool]]):
+                self._solver = solver
+                self._configurations = configurations
+
+            def reset_configurations(self, target: Target, stateless: bool):
+                self._configurations.clear()
+            
+            def add_configuration(self, target: Target, stateless: bool):
+                self._configurations.append((target, stateless))
+
+            def construct_output(self, exahype2_project, peano_project, time_step):
+                pass
 
     class GridConstruction(abc.ABC):
         """!
