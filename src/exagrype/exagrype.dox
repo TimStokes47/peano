@@ -225,6 +225,15 @@ some analytical initial conditions that users can pick from.
 Obviously, there is still the opportunity to inject tailored initial
 conditions, as with any other ExaHyPE solver.
 
+There are two flavours of the CCZ4 solver. @ref exagrype.api.FOCCZ4Solver
+evolves all 59 unknowns of the first-order formulation.
+@ref exagrype.api.FOSOCCZ4Solver evolves the 25 primary unknowns only, and its
+partner @ref exagrype.api.FOSOCCZ4Reconstructor recomputes the 34 first
+derivatives from them in front of each Runge-Kutta stage. Both share all CCZ4
+kernels via @ref exagrype.api.CCZ4SolverBase. The design, status and lab notes
+of the second flavour are collected on
+@subpage page_exagrype_fo_so_project_plan "this page".
+
 Off-the-shelf numerical schemes sometimes struggle with numerical relativity.
 For example, the Finite Difference schemes have no artificial dissipation,
 which is often known to help keep a scheme stable.

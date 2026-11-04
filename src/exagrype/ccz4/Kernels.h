@@ -130,9 +130,25 @@ namespace exagrype {
        * area of the CCZ4 constraints. This is a local operation that we can
        * invoke after each time step per volume.
        *
-       * If works on the full set of unknowns of the first-order formulation
+       * It works on the full set of 59 unknowns of the first-order formulation.
+       * It first calls enforceCCZ4constraintsOfEvolvedVariables() and then
+       * additionally makes the derivatives of the conformal metric trace-free.
        */
       void enforceCCZ4constraints(double* __restrict__  newQ);
+
+      /**
+       * The part of enforceCCZ4constraints() which only touches the first 25
+       * unknowns
+       *
+       * These are the unknowns that the second-order formulation evolves
+       * (exagrype.api.FOSOCCZ4Solver). The routine gives the conformal
+       * metric the determinant one, makes the extrinsic curvature
+       * trace-free and bounds the lapse and phi from below. The derivatives
+       * of the metric, i.e. entries 37 to 54, are reconstructed from the
+       * metric in the second-order formulation and hence cannot violate
+       * any constraint on their own.
+       */
+      void enforceCCZ4constraintsOfEvolvedVariables(double* __restrict__  newQ);
 
       /**
        * Add the Kreiss-Oliger dissipation of a patch to its right-hand side

@@ -51,7 +51,7 @@ void exagrype::ccz4::addKreissOligerDissipation(
 #if defined(GPUOffloadingOMP)
 #pragma omp declare target
 #endif
-void exagrype::ccz4::enforceCCZ4constraints(double * luh)
+void exagrype::ccz4::enforceCCZ4constraintsOfEvolvedVariables(double * luh)
 {
     double g_cov[3][3] = { {luh[0], luh[1], luh[2]}, {luh[1], luh[3], luh[4]}, {luh[2], luh[4], luh[5]} };
     const double det = luh[0]*luh[3]*luh[5] - luh[0]*luh[4]*luh[4] - luh[1]*luh[1]*luh[5] + 2*luh[1]*luh[2]*luh[4] -luh[2]*luh[2]*luh[3];
@@ -98,6 +98,25 @@ void exagrype::ccz4::enforceCCZ4constraints(double * luh)
     //new constraints: a minimum for phi(chi) and alpha
     luh[16]=std::fmax(1e-16,luh[16]);
     luh[24]=std::fmax(1e-16,luh[24]);
+}
+
+
+void exagrype::ccz4::enforceCCZ4constraints(double * luh)
+{
+    enforceCCZ4constraintsOfEvolvedVariables(luh);
+
+    // The conformal metric now has determinant one
+    const double g_cov[3][3] = { {luh[0], luh[1], luh[2]}, {luh[1], luh[3], luh[4]}, {luh[2], luh[4], luh[5]} };
+    const double det2 = g_cov[0][0]*g_cov[1][1]*g_cov[2][2] -
+        g_cov[0][0]*g_cov[1][2]*g_cov[2][1] - g_cov[1][0]*g_cov[0][1]*g_cov[2][2] +
+        g_cov[1][0]*g_cov[0][2]*g_cov[2][1] + g_cov[2][0]*g_cov[0][1]*g_cov[1][2] -
+        g_cov[2][0]*g_cov[0][2]*g_cov[1][1];
+    const double invdet = 1./det2;
+    const double g_contr[3][3] = {
+        { ( g_cov[1][1]*g_cov[2][2]-g_cov[1][2]*g_cov[2][1])*invdet, -(g_cov[0][1]*g_cov[2][2]-g_cov[0][2]*g_cov[2][1])*invdet, -(-g_cov[0][1]*g_cov[1][2]+g_cov[0][2]*g_cov[1][1])*invdet},
+        {-( g_cov[1][0]*g_cov[2][2]-g_cov[1][2]*g_cov[2][0])*invdet,  (g_cov[0][0]*g_cov[2][2]-g_cov[0][2]*g_cov[2][0])*invdet, -( g_cov[0][0]*g_cov[1][2]-g_cov[0][2]*g_cov[1][0])*invdet},
+        {-(-g_cov[1][0]*g_cov[2][1]+g_cov[1][1]*g_cov[2][0])*invdet, -(g_cov[0][0]*g_cov[2][1]-g_cov[0][1]*g_cov[2][0])*invdet,  ( g_cov[0][0]*g_cov[1][1]-g_cov[0][1]*g_cov[1][0])*invdet}
+    };
 
     //
     // As suggested by our PRD referee, we also enforce the algebraic constraint that results from the first spatial derivative of the constraint

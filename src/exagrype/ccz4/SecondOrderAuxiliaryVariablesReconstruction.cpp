@@ -1,6 +1,8 @@
 #include "exagrype/ccz4/SecondOrderAuxiliaryVariablesReconstruction.h"
 #include "exahype2/fd/FD_Helper.cpph"
 
+#include <vector>
+
 
 namespace {
   /**
@@ -232,6 +234,64 @@ void exagrype::ccz4::recomputeAuxiliaryVariablesFD4_4thOrder(
             2 // normal
           );
         }
+    }
+  }
+}
+
+
+void exagrype::ccz4::reconstructFirstDerivativesFD4(
+  const double* __restrict__                  primaryVariablesWithHalo,
+  const tarch::la::Vector<Dimensions,double>& patchSize,
+  int                                         numberOfGridCellsPerPatchPerAxis,
+  int                                         haloSize,
+  double* __restrict__                        firstDerivatives
+) {
+  static_assert( Dimensions==3, "ExaGRyPE is three-dimensional only" );
+  assertion( haloSize==2 or haloSize==3 );
+
+  constexpr int NumberOfPrimaryVariables = 25;
+  constexpr int NumberOfDerivatives      = 34;
+  constexpr int NumberOfEntries          = NumberOfPrimaryVariables + NumberOfDerivatives;
+  constexpr int PaddedHaloSize           = 3;
+
+  const int n = numberOfGridCellsPerPatchPerAxis;
+
+  const ::exahype2::enumerator::AoSLexicographicEnumerator sourceEnumerator(1,n,haloSize,       NumberOfPrimaryVariables,0);
+  const ::exahype2::enumerator::AoSLexicographicEnumerator targetEnumerator(1,n,PaddedHaloSize,NumberOfPrimaryVariables,NumberOfDerivatives);
+
+  const int paddedVolumesPerAxis = n + 2*PaddedHaloSize;
+  std::vector<double> buffer( paddedVolumesPerAxis*paddedVolumesPerAxis*paddedVolumesPerAxis*NumberOfEntries, 0.0 );
+
+  // The routine below sweeps over the first layer outside the cell, where it
+  // reads up to three layers outside the cell. If our halo is smaller, this
+  // reads the zero padding. The outcome there is discarded.
+  for (int x=-haloSize; x<n+haloSize; x++)
+  for (int y=-haloSize; y<n+haloSize; y++)
+  for (int z=-haloSize; z<n+haloSize; z++) {
+    const tarch::la::Vector<Dimensions,int> volume = gridCellIndex3d(x,y,z);
+    for (int k=0; k<NumberOfPrimaryVariables; k++) {
+      buffer[ targetEnumerator(0,volume,k) ] = primaryVariablesWithHalo[ sourceEnumerator(0,volume,k) ];
+    }
+  }
+
+  ::exahype2::CellData<double,double> cellData(
+    buffer.data(),
+    tarch::la::Vector<Dimensions,double>(0.0),
+    patchSize,
+    0.0,
+    0.0,
+    nullptr
+  );
+  recomputeAuxiliaryVariablesFD4_4thOrder( cellData, n, PaddedHaloSize, NumberOfPrimaryVariables, NumberOfDerivatives );
+
+  // K0 (the last derivative) is not reconstructed
+  for (int x=0; x<n; x++)
+  for (int y=0; y<n; y++)
+  for (int z=0; z<n; z++) {
+    const tarch::la::Vector<Dimensions,int> volume = gridCellIndex3d(x,y,z);
+    const int serialisedVolume = x + n*y + n*n*z;
+    for (int k=0; k<NumberOfDerivatives-1; k++) {
+      firstDerivatives[ serialisedVolume*NumberOfDerivatives + k ] = buffer[ targetEnumerator(0,volume,NumberOfPrimaryVariables+k) ];
     }
   }
 }
