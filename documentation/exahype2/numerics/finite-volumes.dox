@@ -56,8 +56,8 @@ Here are some details about the data used within the kernels:
 - The volumes within @f$ Q_{in} @f$ and @f$ Q_{out} @f$ are ordered lexicographically.
 - The data are stores as array of structs (AoS).
 - If a PDE is described by @f$ K_{pde} @f$  real values subject to the wave equations and @f$ K_{aux} @f$ auxiliary variables
-  (material parameters), then the @f$ Q_{in} @f$ contains @f$ K_{pde} + K_{aux} @f$ values (degrees of freedom) per volume.
-  The @f$ Q_{out} @f$ however contains only the @f$ K_{pde} + K_{aux} @f$ values, too, but the @f$ K_{aux} @f$ material parameters do not evolve in time and therefore are the same as in @f$ Q_{in} @f$.
+  (auxiliary variables), then the @f$ Q_{in} @f$ contains @f$ K_{pde} + K_{aux} @f$ values (degrees of freedom) per volume.
+  The @f$ Q_{out} @f$ however contains only the @f$ K_{pde} + K_{aux} @f$ values, too, but the @f$ K_{aux} @f$ auxiliary variables do not evolve in time and therefore are the same as in @f$ Q_{in} @f$.
 - Besides @f$ Q_{in} @f$ and @f$ Q_{out} @f$ a kernel is given the current time @f$ t @f$ and the time step size @f$ \Delta t @f$.
 - We never write a kernel for only one patch. We always write kernels that can advanced multiple patches in one go.
   So the "update one patch" is a special case.

@@ -90,7 +90,7 @@ project = exahype2.api.Project(
 )
 
 solver = exahype2.api.Solver(
-    "EulerFD4Smooth", {"rho": 1, "j": args.dimensions, "E": 1}, 0
+    "EulerFD4Smooth", {"rho": 1, "j": args.dimensions, "E": 1}
 )
 solver.add_user_solver_includes(
     """

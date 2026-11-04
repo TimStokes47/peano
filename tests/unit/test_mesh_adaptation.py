@@ -14,7 +14,7 @@ Cells = toolbox.blockstructured.api.InterpolateAndRestrictCells
 
 
 def _solver(scheme):
-    solver = exahype2.api.Solver("Probe", 2, 0)
+    solver = exahype2.api.Solver("Probe", 2)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation="*lambdaMax = 1.0;"))
     solver.add_pde_term(exahype2.api.InitPointWisely(implementation="Q[0] = 1.0;"))

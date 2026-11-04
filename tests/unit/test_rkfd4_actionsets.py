@@ -7,7 +7,7 @@ import exahype2.api
 
 
 def _solver():
-    solver = exahype2.api.Solver("Probe", 3, 1)
+    solver = exahype2.api.Solver("Probe", 3)
     solver.add_pde_term(exahype2.api.InitPointWisely(implementation="Q[0] = 0.0;"))
     solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
         solver, patch_size=7, rk_order=4
@@ -26,7 +26,7 @@ def test_initial_condition_loops_over_grid_cells():
         "::exahype2::fd::getGridCellCentre( marker.x(), marker.h(), 7, gridCell)"
         in body
     )
-    assert "* (3 + 1)" in body
+    assert "* 3;" in body
     assert '#include "exahype2/fd/PatchUtils.h"' in action_set.get_includes()
 
 
@@ -40,7 +40,7 @@ def test_dirichlet_boundary_conditions_fill_all_halo_layers():
     )
     assert "::exahype2::blockstructured::applyDirichletBoundaryConditions(" in body
     # 7 grid cells per axis, an overlap of 2, 3+1 doubles per grid cell
-    assert "    7,\n    2,\n    3 + 1,\n" in body
+    assert "    7,\n    2,\n    3 + 0,\n" in body
     assert "fineGridFaceProbeQCurrentTimeStep.value" in body
     assert (
         '#include "exahype2/blockstructured/DirichletBoundaryConditions.h"'
@@ -60,7 +60,7 @@ def test_roll_over_copies_both_halves_of_the_overlap():
         peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME
     )
     assert body.count("::exahype2::fv::copyHalfOfHalo(") == 2
-    assert "      4,\n      7,\n      2," in body
+    assert "      3,\n      7,\n      2," in body
 
 
 def test_rkfd4_does_not_import_the_finite_volume_package():

@@ -19,7 +19,7 @@ def _project(periodic_BC):
 
 
 def _solver(*boundary_terms, max_eigenvalue=True):
-    solver = exahype2.api.Solver("Probe", 2, 1)
+    solver = exahype2.api.Solver("Probe", 2)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))
     solver.add_pde_term(
         exahype2.api.InitPointWisely(

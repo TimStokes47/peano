@@ -118,9 +118,9 @@ Users have successfully implemented non-homogeneous Neumann boundary
 conditions where they extrapolate the derivatives onto the boundary and
 use those to inform the actual value. This requires work however:
 
--   Introduce a new material parameter that stores the directional
+-   Introduce a new auxiliary variable that stores the directional
     derivative. If you need the non-homogeneous Neumann conditions all
-    around the domain, you will need `Dimensions` material parameter per
+    around the domain, you will need `Dimensions` auxiliary variable per
     unknown:
 
 -   Compute the derivatives per volume after each time step in a Finite
@@ -129,7 +129,7 @@ use those to inform the actual value. This requires work however:
 -   With this information, we can finally set the boundary conditions:
     The routine `boundaryConditions` is given the data at the boundary.
     Due to our modifications, these data are augmented by additional
-    "material" parameters[^2] which store the derivatives from the
+    auxiliary variables[^2] which store the derivatives from the
     current time step. We can thus realise boundary conditions which use
     the (boundary-extrapolated) derivative besides the actual value.
 
@@ -138,7 +138,7 @@ use those to inform the actual value. This requires work however:
 's mesh is topologically Cartesian. That does not mean that you have to
 work in a Cartesian world. You can distort, squeeze, rotate the mesh
 locally as long as your mesh topology remains adaptive Cartesian. Codes
-like the ExaSeis simulation package introduce material parameters per
+like the ExaSeis simulation package introduce auxiliary variables per
 degree of freedom to encode mesh distortions. This allows them to
 represent a boundary exactly, i.e. to adopt the Cartesian mesh to the
 real domain boundaries. Obviously, the actual boundary condition
@@ -164,11 +164,11 @@ multiple ifs or a case distinction via a switch.
 If these case distinctions are something you want to avoid---as the
 geometry checks are too expensive or for other reasons---you can
 introduce a *boundary marker*.  does not have genuine markers, but it
-does have material parameters. Add an additional material parameter in
+does have auxiliary variables. Add an additional auxiliary variable in
 your solver setup, and initialise this parameter with an integer
 constant which represents your boundary type. When the actual boundary
 routine is invoked, the inner degree of freedom will contain this
-material parameter, i.e. you can read it out and make your boundary
+auxiliary variable, i.e. you can read it out and make your boundary
 realisation depend upon its value.
 
 ### A complete swap out of boundary conditions

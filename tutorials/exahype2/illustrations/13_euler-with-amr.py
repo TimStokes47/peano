@@ -134,7 +134,7 @@ def create_solver(adaptive, dynamic=False, gradient=False):
     adaptive mesh.
 
     """
-    solver = exahype2.api.Solver("EulerFV", 4, 0)
+    solver = exahype2.api.Solver("EulerFV", 4)
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
     solver.add_pde_term(
@@ -225,7 +225,7 @@ def build_and_run_fd4(directory, init_point_wisely):
         directory=directory,
         executable="euler",
     )
-    solver = exahype2.api.Solver("EulerFD4", 4, 0)
+    solver = exahype2.api.Solver("EulerFD4", 4)
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
     solver.add_pde_term(

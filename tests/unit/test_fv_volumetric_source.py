@@ -2,7 +2,7 @@ import exahype2.api
 
 
 def _scheme_with_volumetric_source():
-    solver = exahype2.api.Solver("Probe", 2, 0)
+    solver = exahype2.api.Solver("Probe", 2)
     solver.add_pde_term(exahype2.api.VolumetricSource(implementation="S[0] = t;"))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation="*lambdaMax = 1.0;"))
     solver.add_pde_term(exahype2.api.InitPointWisely(implementation="Q[0] = 0.0;"))
