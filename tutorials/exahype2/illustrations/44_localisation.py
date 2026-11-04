@@ -69,7 +69,7 @@ def build_and_run(directory):
         executable="euler",
     )
 
-    fine_solver = exahype2.api.Solver("EulerFV", 4, 0)
+    fine_solver = exahype2.api.Solver("EulerFV", 4)
     fine_solver.add_pde_term(exahype2.api.Flux(stateless=False))
     fine_solver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False))
     fine_solver.add_pde_term(exahype2.api.InitPointWisely(stateless=False))
@@ -81,7 +81,7 @@ def build_and_run(directory):
     )
     add_plotter(fine_solver)
 
-    coarse_solver = exahype2.api.Solver("CoarseEuler", 4, 0)
+    coarse_solver = exahype2.api.Solver("CoarseEuler", 4)
     coarse_solver.add_user_solver_includes(
         '#include "repositories/SolverRepository.h"\n'
     )

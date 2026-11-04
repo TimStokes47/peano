@@ -7,7 +7,7 @@ import exahype2.api
 
 
 def _scheme(patch_size=5, rk_order=3, time_step_size=None):
-    solver = exahype2.api.Solver("Probe", 4, 2)
+    solver = exahype2.api.Solver("Probe", 4)
     scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
         solver, patch_size=patch_size, rk_order=rk_order, time_step_size=time_step_size
     )
@@ -19,17 +19,17 @@ def test_patches_have_halo_of_two():
     solver, scheme = _scheme()
     assert scheme.overlap == 2
     assert solver._patch.dim == (5, 5, 5)
-    assert solver._patch.no_of_unknowns == 6
+    assert solver._patch.no_of_unknowns == 4
     assert solver._stage_input.dim == (5, 5, 5)
-    assert solver._stage_input.no_of_unknowns == 6
+    assert solver._stage_input.no_of_unknowns == 4
     assert solver._patch_with_halo.dim == (9, 9, 9)
-    assert solver._patch_with_halo.no_of_unknowns == 6
+    assert solver._patch_with_halo.no_of_unknowns == 4
     for overlap in (
         solver._patch_overlap_current_time_step,
         solver._patch_overlap_update,
     ):
         assert overlap.dim == (4, 5, 5)
-        assert overlap.no_of_unknowns == 6
+        assert overlap.no_of_unknowns == 4
 
 
 def test_rhs_estimates_hold_one_patch_of_unknowns_per_stage():
@@ -107,7 +107,7 @@ def test_unsupported_runge_kutta_order_is_rejected(rk_order):
     ],
 )
 def test_invalid_arguments_are_rejected(arguments):
-    solver = exahype2.api.Solver("Probe", 1, 0)
+    solver = exahype2.api.Solver("Probe", 1)
     with pytest.raises(ValueError):
         exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
             solver, patch_size=5, rk_order=2, **arguments

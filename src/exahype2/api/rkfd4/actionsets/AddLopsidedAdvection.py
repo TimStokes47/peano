@@ -75,7 +75,7 @@ class AddLopsidedAdvection(AbstractRKFD4ActionSet):
     {n},
     {scheme.overlap},
     {unknowns},
-    {self._solver.auxiliary_variables},
+    {0},
     advectionVelocity,
     advectedQuantities,
     {len(self.quantities)}

@@ -48,7 +48,11 @@ class AbstractRKFD4ActionSet(ActionSet):
 #include <algorithm>
 #include <functional>
 #include "exahype2/CellData.h"
+#include "exahype2/Solver.h"
+#include "exahype2/fv/rusanov/Functors.h"
 #include "exahype2/fd/PatchUtils.h"
+#include "tarch/timing/Measurement.h"
+#include "tarch/timing/Watch.h"
 #include "kernels/{self._solver.name}_fd4.h"
 #include "kernels/rungekutta_linear_combination.h"
 """

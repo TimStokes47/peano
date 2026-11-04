@@ -13,7 +13,7 @@ Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
 
 
 def _solver():
-    solver = exahype2.api.Solver("Probe", {"u": 2}, {"v": 3})
+    solver = exahype2.api.Solver("Probe", {"u": 2, "v": 3})
     solver.add_pde_term(exahype2.api.InitPointWisely(implementation="Q[0] = 0.0;"))
     return solver
 
@@ -61,7 +61,7 @@ def test_lopsided_advection_runs_after_central_differences(tmp_path):
     scheme = _lopsided(solver)
     assert scheme.overlap == 3
     assert solver._patch_with_halo.dim == (11, 11, 11)
-    # The velocity is an auxiliary variable, i.e. it follows the two unknowns
+    # The velocity is an unknown, i.e. it follows u
     assert scheme.advection_velocity == [2, 3, 4]
     assert scheme.advected_quantities == [0, 1]
     tasks = _tasks(solver, tmp_path)
@@ -77,8 +77,8 @@ def test_lopsided_advection_runs_after_central_differences(tmp_path):
         assert "::exahype2::fd::addLopsidedAdvection(" in body
         assert "constexpr int advectionVelocity[] = { 2, 3, 4 };" in body
         assert "constexpr int advectedQuantities[] = { 0, 1 };" in body
-        # Estimate slot of the stage: stage * 2 unknowns * 5^3 grid cells
-        assert f"fineGridCellProbeQRhsEstimates.value + {stage * 2 * 125};" in body
+        # Estimate slot of the stage: stage * 5 unknowns * 5^3 grid cells
+        assert f"fineGridCellProbeQRhsEstimates.value + {stage * 5 * 125};" in body
 
 
 def test_lopsided_advection_needs_velocity_and_quantities():
@@ -106,13 +106,13 @@ def test_kernel_has_to_be_an_enum():
         _scheme(_solver(), right_hand_side_kernel="lopsided")
 
 
-def test_advected_quantities_have_to_be_unknowns():
+def test_advected_quantities_have_to_exist():
     with pytest.raises(ValueError):
         _scheme(
             _solver(),
             right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
             advection_velocity="v",
-            advected_quantities=["v"],
+            advected_quantities=["w"],
         )
 
 
@@ -128,12 +128,12 @@ def test_velocity_needs_one_entry_per_dimension(tmp_path):
         _tasks(solver, tmp_path)
 
 
-def test_resolve_quantities_accepts_auxiliary_variables_on_request():
+def test_resolve_quantities_selects_names_and_indices():
     solver = _solver()
     resolve = exahype2.api.rkfd4.resolve_quantities
     assert resolve(solver, ["u", 1]) == [0, 1]
-    assert resolve(solver, ["v"], include_auxiliary_variables=True) == [2, 3, 4]
-    for quantities in (["v"], [2], [], [True], [1.5]):
+    assert resolve(solver, ["v"]) == [2, 3, 4]
+    for quantities in (["w"], [5], [], [True], [1.5]):
         with pytest.raises((ValueError, TypeError)):
             resolve(solver, quantities)
 

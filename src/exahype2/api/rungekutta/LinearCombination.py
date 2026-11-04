@@ -1,5 +1,7 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+import os
+
 import exahype2.api.dslhype as dslhype
 
 
@@ -104,6 +106,33 @@ def generate_linear_combination_kernel(namespace, output_directory):
         stateless=False,
         output_directory=output_directory,
     )
+    include_implementation_into_header(
+        os.path.join(output_directory, "kernels"), LINEAR_COMBINATION_KERNEL_FILE
+    )
+
+
+def include_implementation_into_header(directory: str, file_name: str):
+    """!
+
+    Make a generated kernel header pull in the template definitions
+
+    The translation of a DSLHyPE function yields the declaration in
+    file_name.h and the definition of the function template in
+    file_name.cpph, which itself includes the header. We therefore guard the
+    header and let it include the definitions at its end.
+
+    @param directory: str
+      Directory of the kernels.
+
+    @param file_name: str
+      Name of the kernel without suffix.
+
+    """
+    header = os.path.join(directory, file_name + ".h")
+    with open(header, "r") as file:
+        content = file.read()
+    with open(header, "w") as file:
+        file.write("#pragma once\n" + content + f'\n#include "{file_name}.cpph"\n')
 
 
 def create_linear_combination_call(

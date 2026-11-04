@@ -60,7 +60,7 @@ class InsertPatchInterior(AbstractFVActionSet):
     def get_body_of_operation(self, operation_name):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
-            unknowns = self._solver.unknowns + self._solver.auxiliary_variables
+            unknowns = self._solver.unknowns
             interior_size = self.patch_size - 2 * self.overlap
             max_eigenvalue = f"fineGridCell{self._solver._max_eigenvalue_and_time_step_sizes.name}"
             if self.task_number is not None:

@@ -169,7 +169,7 @@ class CCZ4Solver(exahype2.api.Solver):
           own exahype2.api.InitPointWisely.
 
         """
-        super().__init__(name, unknowns=self.Unknowns, auxiliary_variables=0)
+        super().__init__(name, unknowns=self.Unknowns)
 
         self._enforce_ccz4_constraint = CCZ4Solver.EnforceCCZ4Constraint.No
 
