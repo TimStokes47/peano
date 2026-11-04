@@ -186,7 +186,7 @@ def create_solver(name, rk_order, density_floor):
       Differences with the Runge-Kutta scheme of this order.
 
     """
-    solver = exahype2.api.Solver(name, 4, 0)
+    solver = exahype2.api.Solver(name, 4)
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
     solver.add_pde_term(

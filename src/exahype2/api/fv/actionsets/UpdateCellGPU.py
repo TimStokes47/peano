@@ -3,6 +3,11 @@
 from .AbstractFVActionSet import AbstractFVActionSet
 
 from exahype2.api.Solver import Solver
+from ...MaterialParameters import (
+    code_to_assemble_kernel_input,
+    code_to_allocate_kernel_output,
+    code_to_copy_back_kernel_output,
+)
 import peano4.api
 
 
@@ -53,12 +58,18 @@ class UpdateCellGPU(AbstractFVActionSet):
     def get_body_of_operation(self, operation_name):
         result = ""
 
-        stride_per_dof = self._solver.unknowns + self._solver.auxiliary_variables
+        stride_per_dof = self._solver.unknowns + self._solver.number_of_material_parameters
         input_dofs_per_axis = self._solver.numerical_scheme.patch_size + 2 * self._solver.numerical_scheme.halo_size
         output_dofs_per_axis = self._solver.numerical_scheme.patch_size
 
 
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            solver = self._solver
+            unknowns_in  = f"fineGridCell{solver._patch_with_halo.name}.value"
+            unknowns_out = f"fineGridCell{solver._patch.name}.value"
+            has_parameters = len(solver.material_parameters) > 0
+            kernel_in  = "kernelIn.data()" if has_parameters else unknowns_in
+            kernel_out = "kernelOut.data()" if has_parameters else unknowns_out
             result = f"""
   #if Dimensions == 2
     int inputStride = {stride_per_dof} * {input_dofs_per_axis} * {input_dofs_per_axis};
@@ -70,10 +81,13 @@ class UpdateCellGPU(AbstractFVActionSet):
 
   double timeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStamp();
   double timeStepSize = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize();
-  ::exahype2::CellData patchData(fineGridCell{self._solver._patch_with_halo.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch.name}.value);
+  {code_to_assemble_kernel_input(solver, "kernelIn", unknowns_in, solver.numerical_scheme.halo_size)}
+  {code_to_allocate_kernel_output(solver, "kernelOut")}
+  ::exahype2::CellData patchData({kernel_in}, marker.x(), marker.h(), timeStamp, timeStepSize, {kernel_out});
   ::exahype2::CopyCellDataGPU gpuPatchData(patchData, inputStride, outputStride);
   {self._solver.compute_kernel_call}
   gpuPatchData.copyBackAndDestroy();
+  {code_to_copy_back_kernel_output(solver, "kernelOut", unknowns_out)}
 
   fineGridCell{self._max_eigenvalue.name}.setMaxEigenvalue( 0, patchData.maxEigenvalue[0] );
 """

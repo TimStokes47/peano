@@ -106,8 +106,27 @@ class PDETerm:
 
         """
 
-        def __init__(self, term: "PDETerm"):
+        def __init__(self, term: "PDETerm", solver=None):
+            """!
+            @param term: PDETerm
+            @param solver: exahype2.api.Solver
+              If the solver has material parameters, the generated signature
+              contains pointers to them (@ref exahype2.api.MaterialParameters).
+            """
             self.term = term
+            self.solver = solver
+
+        @property
+        def _has_material_parameters(self) -> bool:
+            return self.solver is not None and len(self.solver.material_parameters) > 0
+
+        @property
+        def kernel_signature(self) -> str:
+            """!
+            The signature without the material parameters. This is the
+            signature which the compute kernels call.
+            """
+            return getattr(self.term, "SIGNATURE")
 
         @property
         def signature(self) -> str:
@@ -123,7 +142,66 @@ class PDETerm:
                     "either subclass PDETerm and provide one (see Flux), or set "
                     "term.SIGNATURE explicitly."
                 )
+            if self._has_material_parameters:
+                from .MaterialParameters import extend_signature
+
+                return extend_signature(signature, self.solver)
             return signature
+
+        def _needs_kernel_adapter(self) -> bool:
+            """!
+            The compute kernels know nothing about material parameters. They
+            call the stateless terms with the original signature. If the
+            solver has material parameters, we thus add static overloads with
+            the original signature that forward to the term with parameters.
+            """
+            from .MaterialParameters import split_signature
+
+            return (
+                self.term.stateless
+                and self._has_material_parameters
+                and any(
+                    p.split()[-1] in ("Q", "deltaQ")
+                    for p in split_signature(self.kernel_signature)
+                )
+            )
+
+        def _kernel_adapter_arguments(self) -> str:
+            from .MaterialParameters import forwarding_arguments
+
+            return ", ".join(forwarding_arguments(self.kernel_signature, self.solver))
+
+        def _generate_kernel_adapter_declaration(self) -> str:
+            if not self._needs_kernel_adapter():
+                return ""
+            return (
+                "#if defined(GPUOffloadingOMP)\n"
+                "#pragma omp declare target\n"
+                "#endif\n"
+                f"static GPUCallableMethod void {self.term.name}(\n"
+                f"  {self.kernel_signature},\n"
+                "  Offloadable\n"
+                ");\n"
+                "#if defined(GPUOffloadingOMP)\n"
+                "#pragma omp end declare target\n"
+                "#endif\n"
+            )
+
+        def _generate_kernel_adapter_definition(self, qualified_class_name: str) -> str:
+            if not self._needs_kernel_adapter():
+                return ""
+            return (
+                "#if defined(GPUOffloadingOMP)\n"
+                "#pragma omp declare target\n"
+                "#endif\n"
+                f"GPUCallableMethod void {qualified_class_name}::{self.term.name}(\n"
+                f"  {self.kernel_signature},\n"
+                "  Offloadable\n"
+                f") {{\n  {self.term.name}({self._kernel_adapter_arguments()}, Offloadable::Yes);\n}}\n"
+                "#if defined(GPUOffloadingOMP)\n"
+                "#pragma omp end declare target\n"
+                "#endif\n"
+            )
 
         def _generate_static_offloadable_declaration(self) -> str:
             """!
@@ -162,7 +240,10 @@ class PDETerm:
             user to implement by hand instead.
             """
             if self.term.stateless:
-                return self._generate_static_offloadable_declaration()
+                return (
+                    self._generate_static_offloadable_declaration()
+                    + self._generate_kernel_adapter_declaration()
+                )
             body_suffix = " = 0" if self.term.implementation is None else " final"
             return (
                 f"virtual void {self.term.name}(\n"
@@ -210,7 +291,7 @@ class PDETerm:
                     "#if defined(GPUOffloadingOMP)\n"
                     "#pragma omp end declare target\n"
                     "#endif\n"
-                )
+                ) + self._generate_kernel_adapter_definition(qualified_class_name)
             return (
                 f"void {qualified_class_name}::{self.term.name}(\n"
                 f"  {self.signature}\n"
@@ -265,6 +346,13 @@ class PDETerm:
                 f'  logTraceOut("{method_name}");\n'
                 f"}}\n"
             )
+
+    def generator_for(self, solver) -> "PDETerm.Generator":
+        """!
+        Code generator for this term within a solver, i.e. one that respects
+        the solver's material parameters.
+        """
+        return self.__class__.Generator(self, solver)
 
     @property
     def generator(self) -> "PDETerm.Generator":

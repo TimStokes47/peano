@@ -1,5 +1,6 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
+from ...MaterialParameters import code_to_assemble_kernel_input
 import peano4.api
 
 from .AbstractRKFD4ActionSet import AbstractRKFD4ActionSet
@@ -40,9 +41,11 @@ class ComputeMaxEigenvalue(AbstractRKFD4ActionSet):
         ):
             return ""
         instance = self._solver.get_name_of_global_instance()
+        unknowns = f"fineGridCell{self._solver._patch.name}.value"
         return f"""
+  {code_to_assemble_kernel_input(self._solver, "kernelIn", unknowns, 0, lambda material: f"fineGridCell{material.patch.name}.value")}
   ::exahype2::CellData patchData(
-    fineGridCell{self._solver._patch.name}.value,
+    {"kernelIn.data()" if self._solver.material_parameters else unknowns},
     marker.x(),
     marker.h(),
     repositories::{instance}.getMinTimeStamp(),

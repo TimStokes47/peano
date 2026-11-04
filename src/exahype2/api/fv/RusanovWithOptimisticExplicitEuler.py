@@ -1059,7 +1059,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           need to be re-checked at runtime the same way.
 
         """
-        total_unknowns = self._solver.unknowns + self._solver.auxiliary_variables
+        total_unknowns = self._solver.unknowns
         identifier = self._solver._unknown_identifier()
 
         self._solver._patch = peano4.api.datamodel.Patch(
@@ -1201,6 +1201,11 @@ Patch overlap data
         """!
 
         """
+        if self._solver.material_parameters:
+            raise NotImplementedError(
+                f"Solver {self._solver.name}: RusanovWithOptimisticExplicitEuler does not support "
+                "material parameters yet. Use RusanovWithExplicitEuler."
+            )
         peano4.api.Logger().log("Create time stepping task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
         self.__add_data_to_repository(peano_project)
@@ -1574,7 +1579,7 @@ Patch overlap data
         {self.patch_size},
         {self.overlap},
         {self._solver.unknowns},
-        {self._solver.auxiliary_variables}
+        {self._solver.number_of_material_parameters}
     >(
         patchData,
         {self._solver.name}
@@ -1627,7 +1632,7 @@ Patch overlap data
     {self.patch_size},
     {self.overlap},
     {self._solver.unknowns},
-    {self._solver.auxiliary_variables}
+    {self._solver.number_of_material_parameters}
 >(
     patchData,
 {",\n".join(pde_term_calls)}

@@ -2,6 +2,11 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .AbstractFVActionSet import AbstractFVActionSet
 
+from ...MaterialParameters import (
+    code_to_assemble_kernel_input,
+    code_to_allocate_kernel_output,
+    code_to_copy_back_kernel_output,
+)
 import peano4.api
 
 
@@ -52,11 +57,20 @@ class UpdateCell(AbstractFVActionSet):
     def get_body_of_operation(self, operation_name):
         result = ""
         if operation_name == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+            solver = self._solver
+            unknowns_in  = f"fineGridCell{solver._patch_with_halo.name}.value"
+            unknowns_out = f"fineGridCell{solver._patch.name}.value"
+            has_parameters = len(solver.material_parameters) > 0
+            kernel_in  = "kernelIn.data()" if has_parameters else unknowns_in
+            kernel_out = "kernelOut.data()" if has_parameters else unknowns_out
             result = f"""
-  double timeStamp    = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStamp();
-  double timeStepSize = repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize();
-  ::exahype2::CellData patchData(fineGridCell{self._solver._patch_with_halo.name}.value, marker.x(), marker.h(), timeStamp, timeStepSize, fineGridCell{self._solver._patch.name}.value);
-  {self._solver.compute_kernel_call}
+  double timeStamp    = repositories::{solver.get_name_of_global_instance()}.getMinTimeStamp();
+  double timeStepSize = repositories::{solver.get_name_of_global_instance()}.getMinTimeStepSize();
+  {code_to_assemble_kernel_input(solver, "kernelIn", unknowns_in, solver.numerical_scheme.halo_size)}
+  {code_to_allocate_kernel_output(solver, "kernelOut")}
+  ::exahype2::CellData patchData({kernel_in}, marker.x(), marker.h(), timeStamp, timeStepSize, {kernel_out});
+  {solver.compute_kernel_call}
+  {code_to_copy_back_kernel_output(solver, "kernelOut", unknowns_out)}
 
   fineGridCell{self._max_eigenvalue.name}.setMaxEigenvalue( 0, patchData.maxEigenvalue[0] );
 """

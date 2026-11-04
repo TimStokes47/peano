@@ -25,8 +25,8 @@ class Solver(abc.ABC):
     questions: what data does it need on the mesh, which action sets realise
     its algorithmic steps, and how does it plug into the code generation. This
     class holds exactly that common contract plus the bits of bookkeeping
-    (name, includes, solver constants, the unknowns/auxiliary_variables
-    variable-shortcut logic) that every concrete solver has historically
+    (name, includes, solver constants, the unknowns and the
+    material parameters) that every concrete solver has historically
     reimplemented identically. It does not know anything about a concrete
     discretisation - it neither creates the actual mesh data structures nor
     the actual action sets, as this remains solver-specific and thus has to be
@@ -399,7 +399,6 @@ class Solver(abc.ABC):
         self,
         name: str,
         unknowns: VariableSpecification,
-        auxiliary_variables: VariableSpecification,
     ):
         """!
 
@@ -412,10 +411,7 @@ class Solver(abc.ABC):
 
         unknowns: int or dict
           Number of unknowns per mesh entry (Finite Volume voxel, DG degree of
-          freedom, ...). Eventually, unknowns and auxiliary_variables are
-          merged into one big vector, but the solver still has to be able to
-          distinguish them, as only the unknowns are subject to the actual PDE
-          formulation. Can be specified either as a plain int, or as a dict
+          freedom, ...). Can be specified either as a plain int, or as a dict
           mapping variable name onto multiplicity (e.g.
           `{"rho": 1, "j": 3}` for a scalar density plus a 3d momentum). If
           dicts are used, the generated Abstract<SolverName> class hosts a
@@ -423,46 +419,24 @@ class Solver(abc.ABC):
           can write Q[Variables::j+1] instead of having to remember the
           offset into the unknowns array by hand.
 
-        auxiliary_variables: int or dict
-          Same semantics as unknowns, but for variables that may be
-          space-dependent yet do not change over time. Their names follow
-          the unknowns' names, as the auxiliary variables follow the
-          unknowns in Q.
+        Quantities which are space-dependent yet do not change over time are
+        not unknowns. Attach them to the solver as material parameters via
+        add_material_parameters().
 
-        If names are used at all, they have to cover all unknowns and all
-        auxiliary variables, i.e. you cannot pass a dict for one and a
-        non-zero int for the other.
-
-        The variables cannot be changed after construction: the numerical
+        The unknowns cannot be changed after construction: the numerical
         scheme sizes its data structures from them as soon as it is assigned
         to the solver.
 
         """
         self._name = name
 
-        # Offset of each named variable within Q. Empty if no names are used.
+        # Offset of each named unknown within Q. Empty if no names are used.
         self._variable_positions: Dict[str, int] = {}
 
         self._unknowns = self._register_variables(unknowns, 0)
-        self._auxiliary_variables = self._register_variables(
-            auxiliary_variables, self._unknowns
-        )
 
-        named_entries = sum(
-            sum(variables.values())
-            for variables in (unknowns, auxiliary_variables)
-            if isinstance(variables, dict)
-        )
-        if self._variable_positions and named_entries != (
-            self._unknowns + self._auxiliary_variables
-        ):
-            raise ValueError(
-                f"Solver {name}: the variable names {list(self._variable_positions)} "
-                f"cover only {named_entries} of the {self._unknowns} unknowns and "
-                f"{self._auxiliary_variables} auxiliary variables. If you name "
-                f"variables, name all unknowns and all auxiliary variables, i.e. "
-                f"pass dicts for both (or 0 for the one that is empty)."
-            )
+        # All sets of material parameters in the order of their attachment
+        self._material_parameters: List["MaterialParameters"] = []
 
         self._user_solver_includes = ""
         self._solver_constants = ""
@@ -529,8 +503,7 @@ class Solver(abc.ABC):
         Translate a plain int or a name-to-multiplicity dict into a total
         variable count, and - for the dict case - add each name's position
         within Q to _variable_positions. Called once for unknowns (offset 0)
-        and once for auxiliary_variables (offset = number of unknowns), so
-        the two end up in one contiguous name/offset table.
+        so the names end up in one name/offset table.
 
         """
         if isinstance(variables, dict):
@@ -546,7 +519,7 @@ class Solver(abc.ABC):
             return variables
         else:
             raise TypeError(
-                "unknowns/auxiliary_variables have to be an int or a dict "
+                "unknowns have to be an int or a dict "
                 "mapping variable name onto multiplicity, but got "
                 f"{type(variables)}"
             )
@@ -556,7 +529,7 @@ class Solver(abc.ABC):
             "Name:              " + self._name + "\n"
             "Type:              " + self.__class__.__module__ + "\n"
             "Unknowns:          " + str(self._unknowns) + "\n"
-            "Auxiliary vars:    " + str(self._auxiliary_variables)
+            "Material params:   " + ", ".join(str(m) for m in self._material_parameters)
         )
 
     @property
@@ -661,8 +634,68 @@ class Solver(abc.ABC):
         return self._unknowns
 
     @property
-    def auxiliary_variables(self) -> int:
-        return self._auxiliary_variables
+    def material_parameters(self) -> List["MaterialParameters"]:
+        """! All sets of material parameters in the order they have been attached """
+        return list(self._material_parameters)
+
+    @property
+    def number_of_material_parameters(self) -> int:
+        """! Total number of entries of all sets of material parameters """
+        return sum(material.size for material in self._material_parameters)
+
+    def material_parameter_offset(self, material: "MaterialParameters") -> int:
+        """!
+        Offset of the first entry of a set within the buffer the compute
+        kernels work on, i.e. the unknowns are followed by the sets in the
+        order of their attachment.
+        """
+        offset = self._unknowns
+        for candidate in self._material_parameters:
+            if candidate is material:
+                return offset
+            offset += candidate.size
+        raise ValueError(f"{material.name} is not attached to solver {self._name}")
+
+    def add_material_parameters(self, material: "MaterialParameters"):
+        """!
+
+        Attach a set of material parameters to the solver
+
+        Any number of sets can be attached. They have to be attached before
+        the code is generated. Each set is held by its own cell data object.
+        The first solver which a set is attached to owns it and initialises
+        it. Further solvers can attach the same set object and thereby share
+        the data. @ref exahype2.api.MaterialParameters explains the impact
+        on the C++ signatures.
+
+        @param material: exahype2.api.MaterialParameters
+
+        """
+        from .MaterialParameters import MaterialParameters
+
+        if not isinstance(material, MaterialParameters):
+            raise TypeError(
+                f"material has to be a MaterialParameters, but got {type(material)}"
+            )
+        if any(m is material for m in self._material_parameters):
+            raise ValueError(
+                f"Solver {self._name} has the material parameters {material.name} already"
+            )
+        if any(m.name == material.name for m in self._material_parameters):
+            raise ValueError(
+                f"Solver {self._name} has other material parameters of name {material.name} already"
+            )
+        if material.argument_name == material.name:
+            raise ValueError(f"Material parameters {material.name} are not distinguishable from their argument")
+        if material.owner is None:
+            material._owner = self
+        self._material_parameters.append(material)
+
+    def signature_of(self, term: PDETerm) -> str:
+        """! The signature of a PDE term including the pointers to the material parameters """
+        from .MaterialParameters import extend_signature
+
+        return extend_signature(term.SIGNATURE, self)
 
     @property
     def user_solver_includes(self) -> str:
@@ -707,21 +740,20 @@ class Solver(abc.ABC):
     def variable_names_per_entry(self) -> List[str]:
         """!
 
-        One name per entry of Q, i.e. for the unknowns followed by the
-        auxiliary variables, or the empty list if the variables carry no
-        names. A variable with multiplicity one keeps its name, whereas a
-        variable v with multiplicity k yields the names v[0], ..., v[k-1],
-        i.e. the entries Q[Variables::v+0], ..., Q[Variables::v+k-1].
-        Plotters use these names to label the entries in their output.
+        One name per entry of Q, i.e. for the unknowns, or the empty list if
+        the unknowns carry no names. A variable with multiplicity one keeps
+        its name, whereas a variable v with multiplicity k yields the names
+        v[0], ..., v[k-1], i.e. the entries Q[Variables::v+0], ...,
+        Q[Variables::v+k-1]. Plotters use these names to label the entries in
+        their output. The names of the material parameters are available
+        from the sets.
 
         """
         positions = list(self._variable_positions.items())
         names = []
         for i, (variable_name, position) in enumerate(positions):
             next_position = (
-                positions[i + 1][1]
-                if i + 1 < len(positions)
-                else self._unknowns + self._auxiliary_variables
+                positions[i + 1][1] if i + 1 < len(positions) else self._unknowns
             )
             multiplicity = next_position - position
             if multiplicity == 1:

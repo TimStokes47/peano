@@ -114,8 +114,8 @@ class PlotAsVTKFile(Solver.Plotter):
         @param quantities: List[str or int] or None
           The entries of Q which are written per volume. A string is the
           name of a variable as passed to the solver and selects all of its
-          entries, an int is the index of one entry of Q. Auxiliary
-          variables can be selected, too
+          entries, an int is the index of one entry of Q. The
+          material parameters are written into files of their own
           (@ref exahype2.api.Quantities.resolve_quantities()). None writes
           all entries.
 
@@ -244,9 +244,7 @@ class PlotAsVTKFile(Solver.Plotter):
         """
         if self._quantities is None:
             return None
-        return resolve_quantities(
-            self._solver, self._quantities, include_auxiliary_variables=True
-        )
+        return resolve_quantities(self._solver, self._quantities)
 
     def _create_description(self):
         """!

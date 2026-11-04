@@ -59,6 +59,10 @@ def create_dynamic_mesh_refinement_action_set(
     criterion = get_adaptivity_criterion(solver)
     if criterion is None:
         return None
+    if solver.material_parameters:
+        raise NotImplementedError(
+            f"Solver {solver.name}: dynamic mesh refinement is not supported for solvers with material parameters yet."
+        )
     if isinstance(criterion, RefineErasePointwisely):
         action_set_type = DynamicMeshRefinement
     elif isinstance(criterion, GradientRefinement):

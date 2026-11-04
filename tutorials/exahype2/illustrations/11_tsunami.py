@@ -61,7 +61,6 @@ InitPointWisely = """
   Q[Variables::h]  = 1.0 + 0.1 * std::exp(-100.0 * (x[0] * x[0] + x[1] * x[1]));
   Q[Variables::hu] = 0.0;
   Q[Variables::hv] = 0.0;
-  Q[Variables::b]  = 0.0;
 """
 
 InitPointWiselyWithLogo = """
@@ -72,12 +71,12 @@ InitPointWiselyWithLogo = """
   Q[Variables::h]  = depth + 0.1 * std::exp(-100.0 * (x[0] * x[0] + x[1] * x[1]));
   Q[Variables::hu] = 0.0;
   Q[Variables::hv] = 0.0;
-  Q[Variables::b]  = -depth;
+  bathymetry[Bathymetry::b] = -depth;
 """
 
 FluxEta = """
   constexpr double g = 9.81;
-  const double h  = Q[Variables::eta] - Q[Variables::b];
+  const double h  = Q[Variables::eta] - bathymetry[Bathymetry::b];
   const double un = Q[Variables::hu + normal] / h;
   F[Variables::eta]         = Q[Variables::hu + normal];
   F[Variables::hu]          = Q[Variables::hu] * un;
@@ -87,18 +86,18 @@ FluxEta = """
 
 MaxEigenvalueEta = """
   constexpr double g = 9.81;
-  const double h  = Q[Variables::eta] - Q[Variables::b];
+  const double h  = Q[Variables::eta] - bathymetry[Bathymetry::b];
   const double un = Q[Variables::hu + normal] / h;
   lambdaMax[0] = std::abs(un) + std::sqrt(g * h);
 """
 
 NonconservativeProductEta = """
   constexpr double g = 9.81;
-  const double h = Q[Variables::eta] - Q[Variables::b];
+  const double h = Q[Variables::eta] - bathymetry[Bathymetry::b];
   BTimesDeltaQ[Variables::eta]         = 0.0;
   BTimesDeltaQ[Variables::hu]          = 0.0;
   BTimesDeltaQ[Variables::hv]          = 0.0;
-  BTimesDeltaQ[Variables::hu + normal] = g * h * deltaQ[Variables::b];
+  BTimesDeltaQ[Variables::hu + normal] = g * h * deltaBathymetry[Bathymetry::b];
 """
 
 InitPointWiselyEta = """
@@ -109,7 +108,7 @@ InitPointWiselyEta = """
   Q[Variables::eta] = 0.1 * std::exp(-100.0 * (x[0] * x[0] + x[1] * x[1]));
   Q[Variables::hu]  = 0.0;
   Q[Variables::hv]  = 0.0;
-  Q[Variables::b]   = -depth;
+  bathymetry[Bathymetry::b] = -depth;
 """
 
 Bathymetry = os.path.join(Here, "..", "bathymetry")
@@ -140,20 +139,22 @@ def build_and_run(
         directory=directory,
         executable="tsunami",
     )
-    solver = exahype2.api.Solver(
-        "SWE", {first_unknown: 1, "hu": 1, "hv": 1}, {"b": 1}
-    )
+    solver = exahype2.api.Solver("SWE", {first_unknown: 1, "hu": 1, "hv": 1})
+    if with_logo:
+        solver.add_material_parameters(
+            exahype2.api.MaterialParameters("Bathymetry", {"b": 1})
+        )
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     if with_logo:
         solver.add_user_solver_includes('#include "DurhamLogo.h"\n')
-    solver.add_pde_term(exahype2.api.Flux(implementation=flux, stateless=False))
+    solver.add_pde_term(exahype2.api.Flux(implementation=flux, stateless=True))
     solver.add_pde_term(
-        exahype2.api.MaxEigenvalue(implementation=max_eigenvalue, stateless=False)
+        exahype2.api.MaxEigenvalue(implementation=max_eigenvalue, stateless=True)
     )
     if nonconservative_product is not None:
         solver.add_pde_term(
             exahype2.api.NonconservativeProduct(
-                implementation=nonconservative_product, stateless=False
+                implementation=nonconservative_product, stateless=True
             )
         )
     solver.add_pde_term(
@@ -221,7 +222,7 @@ def plot_sea_floor(directory, prefix):
     """! Sea floor b, which does not change over time"""
     fig, ax = plt.subplots(figsize=(6, 5))
     tarch.plotter.api.notebook.plot_snapshot(
-        os.path.join(directory, PatchFile), 0, 3, ax=ax, cmap="Purples_r", label="sea floor b"
+        os.path.join(directory, "solution-SWE-Bathymetry.peano-patch-file"), 0, 0, ax=ax, cmap="Purples_r", label="sea floor b"
     )
     fig.savefig(os.path.join(Here, prefix + "b.png"), dpi=100, bbox_inches="tight")
     plt.close(fig)
