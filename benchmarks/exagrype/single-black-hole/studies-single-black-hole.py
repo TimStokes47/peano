@@ -53,7 +53,7 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-Compilers = ["sequential", "fusion-only", "producer-consumer-sequential", "fusion"]
+Compilers = ["sequential", "fusion-only", "producer-consumer-sequential", "producer-consumer-fusion"]
 
 # Name and arguments of single-black-hole.py for each configuration
 SchemeStudy = {

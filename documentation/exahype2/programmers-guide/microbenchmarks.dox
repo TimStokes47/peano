@@ -1,0 +1,62 @@
+/**
+
+@page page_exahype_programmers_microbenchmarks Microbenchmarks (kernel performance)
+
+
+<img src="https://miro.medium.com/v2/resize:fit:1192/format:webp/1*QPToCpZWI8erpb64jhzsBQ.png" width="400px" />
+<br />
+Illustration from <a href="https://medium.com/adservio/what-is-microbenchmarking-8e6ea189da2d">Adservio's description of the term microbenchmark</a>.
+
+Microbenchmarks in the sense as Rust uses it for example are small applications which 
+measure the throughput of individual routines as opposed to the whole application in 
+one go. In the context of ExaHyPE, this typically means that we measure the throughput
+of one kernel update (update one cell), which explains why a lot of our papers and 
+docu use the term kernel benchmark rather than microbenchmark. At the end of the day,
+a kernel benchmark is a special type of a microbenchmark.
+
+
+## Historical remarks and updated design patterns
+
+In the first two generations of ExaHyPE, kernel benchmarks came along as stand-alone
+C++ codes, which we could call a driver: They set up the whole Peano/ExaHyPE environment.
+Instead of a time stepping loop, they then however measure the time spent in one 
+routine (often for various parameters) and then dumps this output. This leads to the 
+scenario that we had many different C++ main functions for bespoke microbenchmarks.
+
+As a lot of these main main functions host repeating content, it makes sense to 
+consolidate them in one C++ "template" or utility collection to avoid redundant
+code. From here, it is only a small step to extend these utilities with a command line
+interface to make it easy to test and benchmark various configurations over a microkernel.
+
+This breaks another design pattern of Peano/ExaHyPE which is the idea that we keep 
+all user interaction and configurability within the Python API. Therefore, the
+latest ExaHyPE rewrite advocates for an altered approach to ship microbenchmarks. 
+
+
+## Modelling a microbenchmark in Python
+
+The key idea behind a microbenchmark is that an ExaHyPE project uses a dedicated generator
+to create its main. This generator defaults to a time stepping sequence. However, 
+ExaHyPE also provides various microbenchmark generators. For example
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+instantiates a microbenchmark for a Finite Volume kernel.
+ 
+
+## Incremental builds
+
+Microbenchmarks are configured through Python. This means, every time we alter a benchmark
+(e.g. test a different patch size), we have to regenerate the Python code and recompile.
+A complete ExaHyPE recompile can be expensive. Fortunately, the API offers a make call on
+the Peano project, which only builds the files that have actually changed and then links 
+it all together:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+ */
+ 
