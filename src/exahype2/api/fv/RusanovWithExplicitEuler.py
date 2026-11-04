@@ -10,7 +10,10 @@ import toolbox.blockstructured.api
 import toolbox.loadbalancing.api.actionsets
 import exahype2.api
 from exahype2.api import Target
-import exahype2.api.dslhype as dslhype
+from collections import OrderedDict
+
+# This solver is using the rewritten version
+import exahype2.api.dslhype2 as dslhype
  
 from ..Solver import Solver
 from ..AuxiliaryVariables import (
@@ -500,7 +503,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         # Although we may generate multiple definitions for the purpose of benchmarking, we
         # only need one kernel call
         self._solver.compute_kernel_call = self.__construct_kernel_calls()[0]
-        self.__create_time_step_functions(peano_project.directory)
+        self.__create_time_step_functions(exahype2_project, peano_project)
         
         reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         update_cell_task            = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
@@ -655,7 +658,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         if peano4.api.Logger().is_text:
             time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
 
-    def __create_time_step_functions(self, output_directory):
+    def __create_time_step_functions(self, exahype2_project, peano4_project):
         """!
         
         Calling this function is delayed until all PDE term information is provided.
@@ -671,22 +674,26 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
 
         """
 
-        template_parameters = [
-            dslhype.SyntaxTree.Argument("NV", dslhype.SyntaxTree.TInteger()),
-            dslhype.SyntaxTree.Argument("H", dslhype.SyntaxTree.TInteger()),
-            dslhype.SyntaxTree.Argument("NumberOfUnknowns", dslhype.SyntaxTree.TInteger()),
-            dslhype.SyntaxTree.Argument("NumberOfAuxiliaryVariables", dslhype.SyntaxTree.TInteger())
-        ]
-    
-        functor_parameters = [
-            dslhype.SyntaxTree.Argument("flux", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("nonconservativeProduct", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("volumetricSource", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::VolumetricSourceFunctor&"), "(!llvm.ptr, !llvm.ptr, f64, !llvm.ptr) -> ()"),
-            dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
-        ]
-
-        time_step_dsl_function_2d = timeStepWithRusanov2D
-        time_step_dsl_function_3d = timeStepWithRusanov3D
+        #template_parameters = [
+        #    dslhype.SyntaxTree.Argument("NV", dslhype.SyntaxTree.TInteger()),
+        #    dslhype.SyntaxTree.Argument("H", dslhype.SyntaxTree.TInteger()),
+        #    dslhype.SyntaxTree.Argument("NumberOfUnknowns", dslhype.SyntaxTree.TInteger()),
+        #    dslhype.SyntaxTree.Argument("NumberOfAuxiliaryVariables", dslhype.SyntaxTree.TInteger())
+        #]
+        #
+        #functor_parameters = [
+        #    dslhype.SyntaxTree.Argument("flux", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
+        #    dslhype.SyntaxTree.Argument("nonconservativeProduct", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
+        #    dslhype.SyntaxTree.Argument("volumetricSource", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::VolumetricSourceFunctor&"), "(!llvm.ptr, !llvm.ptr, f64, !llvm.ptr) -> ()"),
+        #    dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
+        #]
+        dimensions = exahype2_project._dimensions
+        if dimensions == 2:
+            time_step_dsl_function = timeStepWithRusanov2D
+        else:
+            time_step_dsl_function = timeStepWithRusanov3D
+        
+        output_directory = peano4_project.directory
 
         required_includes = """
 #include "exahype2/Solver.h"
@@ -698,56 +705,83 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
 #include "tarch/timing/Measurement.h"
 #include "tarch/timing/Watch.h"
 """
+        stateless_kernel_generated=False
+        non_stateless_kernel_generated=False
+        for (_, stateless) in self._configurations:
+            if stateless:
+                stateless_kernel_generated = True
+            else:
+                non_stateless_kernel_generated = True
+        
         kernels_directory = os.path.join(output_directory, "kernels")
         os.makedirs(kernels_directory, exist_ok=True)
-        for file_name in [f"{self._solver.name}_rusanov2d.h", f"{self._solver.name}_rusanov3d.h"]:
-            file = open(os.path.join(kernels_directory, file_name), "w")
-            file.write(f"""#pragma once
+        #file_name = 
+        #for file_name in [f"{self._solver.name}_rusanov2d.h", f"{self._solver.name}_rusanov3d.h"]:
+        file = open(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.h"), "w")
+        file.write(f"""#pragma once
 {required_includes}\n""")
+        file.close()
+        
+        if stateless_kernel_generated:
+            #for file_name in [f"{self._solver.name}_rusanov2d.cpph", f"{self._solver.name}_rusanov3d.cpph"]:
+            file = open(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpph"), "w")
+            file.write(f"""#include "{self._solver.name}_rusanov{dimensions}d.h"\n""")
             file.close()
         
-        for file_name in [f"{self._solver.name}_rusanov2d.cpph", f"{self._solver.name}_rusanov3d.cpph"]:
-        #                  f"{self._solver.name}_rusanov2d.cpp",  f"{self._solver.name}_rusanov3d.cpp"]:
-            file = open(os.path.join(kernels_directory, file_name), "w")
-            file.write(f"""#include "{file_name.split(".")[0]}.h"\n""")
+        if non_stateless_kernel_generated:
+            #for file_name in [f"{self._solver.name}_rusanov2d.cpp", f"{self._solver.name}_rusanov3d.cpp"]:
+            file = open(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpp"), "w")
+            file.write(f"""#include "{self._solver.name}_rusanov{dimensions}d.h"\n""")
             file.close()
+
+        external_variables = {
+            dslhype.Argument(dslhype.Name("NV"), dslhype.TInteger()): self._solver.numerical_scheme.patch_size,
+            dslhype.Argument(dslhype.Name("H"), dslhype.TInteger()): self._solver.numerical_scheme.overlap,
+            dslhype.Argument(dslhype.Name("NumberOfUnknowns"), dslhype.TInteger()): self._solver.unknowns,
+            dslhype.Argument(dslhype.Name("NumberOfAuxiliaryVariables"), dslhype.TInteger()): self._solver.number_of_auxiliary_variables
+        }
+
+        function_map = {
+            dslhype.Name("flux"): dslhype.TFunction("const ::exahype2::fv::rusanov::FluxFunctor&", OrderedDict({
+                dslhype.Name("Q"): dslhype.TArray(dslhype.TFloat(), 1), 
+                dslhype.Name("x"): dslhype.TVector(dslhype.TFloat(), dimensions), 
+                dslhype.Name("normal"): dslhype.TInteger(), 
+                dslhype.Name("F"): dslhype.TArray(dslhype.TFloat(), 1)})),
+            dslhype.Name("maxEigenvalue"): dslhype.TFunction("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&", OrderedDict({
+                dslhype.Name("Q"): dslhype.TArray(dslhype.TFloat(), 1), 
+                dslhype.Name("x"): dslhype.TVector(dslhype.TFloat(), dimensions), 
+                dslhype.Name("normal"): dslhype.TInteger(), 
+                dslhype.Name("E"): dslhype.TArray(dslhype.TFloat(), 1)}))
+        }
 
         for (target, stateless) in self._configurations:
             dslhype.translate_dslhype_function(
-                function = time_step_dsl_function_2d,
+                function = time_step_dsl_function,
+                dimensions=dimensions,
                 function_namespace = self._solver.numerical_scheme.kernel_namespace,
-                template_parameters=template_parameters,
-                functor_parameters=functor_parameters,
+                function_map=function_map,
+                external_variables=external_variables,
                 pde_terms=self._solver.pde_terms,
-                output_file_name=self._solver.name + "_rusanov2d",
+                output_file_name=f"{self._solver.name}_rusanov{dimensions}d",
                 target=target,
                 stateless=stateless,
                 function_name=self._solver.numerical_scheme.kernel_function_name,
                 output_directory=output_directory,
             )
-            dslhype.translate_dslhype_function(
-                function = time_step_dsl_function_3d,
-                function_namespace = self._solver.numerical_scheme.kernel_namespace,
-                template_parameters=template_parameters,
-                functor_parameters=functor_parameters,
-                pde_terms=self._solver.pde_terms,
-                output_file_name=self._solver.name + "_rusanov3d",
-                target=target,
-                stateless=stateless,
-                function_name=self._solver.numerical_scheme.kernel_function_name,
-                output_directory=output_directory,
-            )
-        for file_name in [f"{self._solver.name}_rusanov2d.h", f"{self._solver.name}_rusanov3d.h"]:
-            file = open(os.path.join(kernels_directory, file_name), "a")
-            file.write(f"""#include "{file_name.split(".")[0]}.cpph" """)
-            file.close()
+        
+        #for file_prefix in [f"{self._solver.name}_rusanov2d"]:#, f"{self._solver.name}_rusanov3d"]:
+        file = open(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.h"), "a")
+        file.write(f"""#include "{self._solver.name}_rusanov{dimensions}d.cpph" """)
+        file.close()
+
+        peano4_project.output.makefile.add_h_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.h"))
+        if stateless_kernel_generated:
+            peano4_project.output.makefile.add_h_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpph"))
+        if non_stateless_kernel_generated:
+            peano4_project.output.makefile.add_cpp_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpp"))
 
         file = open(os.path.join(output_directory, "kernels", f"{self._solver.name}_rusanov.h"), "w")
-        file.write(f"""#if Dimensions == 2
-    #include "{self._solver.name}_rusanov2d.h"
-#else
-    #include "{self._solver.name}_rusanov3d.h"
-#endif""")
+        file.write(f"""#include "{self._solver.name}_rusanov{dimensions}d.h" """)
         file.close()
 
     def __construct_kernel_calls(self):
@@ -768,11 +802,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         if stateless:
             # Stateless kernels require stateless functions, which are defined in the abstract solver
             return f"""::{"::".join(self._solver.numerical_scheme.kernel_namespace)}::{self._solver.numerical_scheme.kernel_function_name}Stateless<
-        Abstract{self._solver.name},
-        {self._solver.numerical_scheme.patch_size},
-        {self._solver.numerical_scheme.overlap},
-        {self._solver.unknowns},
-        {self._solver.number_of_auxiliary_variables}
+        Abstract{self._solver.name}
     >(
         {"0," if target==Target.Accelerator else ""}
         {"gpuPatchData" if target==Target.Accelerator else "patchData"}
@@ -818,12 +848,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
     )->void {{
         repositories::{self._solver.get_name_of_global_instance()}.{application_term.name}({", ".join(arguments)});
     }}""")
-                return f"""::{"::".join(self._solver.numerical_scheme.kernel_namespace)}::{self._solver.numerical_scheme.kernel_function_name}<
-    {self._solver.numerical_scheme.patch_size},
-    {self._solver.numerical_scheme.overlap},
-    {self._solver.unknowns},
-    {self._solver.number_of_auxiliary_variables}
->(
+                return f"""::{"::".join(self._solver.numerical_scheme.kernel_namespace)}::{self._solver.numerical_scheme.kernel_function_name}(
     patchData,
 {",\n".join(pde_term_calls)}
 );"""
