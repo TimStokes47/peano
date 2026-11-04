@@ -17,6 +17,7 @@ jobs:
       - name: Create pull request
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           # Don't create another PR if one already exists
           EXISTING=$(gh pr list \
@@ -28,7 +29,7 @@ jobs:
           if [ -z "$EXISTING" ]; then
             gh pr create \
               --head p4 \
-              --base main \
+              --base exahype \
               --title "Merge p4 into exahype" \
               --body "Automatically created after changes were merged into p4."
           else
