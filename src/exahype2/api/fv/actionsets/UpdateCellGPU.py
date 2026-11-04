@@ -3,7 +3,7 @@
 from .AbstractFVActionSet import AbstractFVActionSet
 
 from exahype2.api.Solver import Solver
-from ...MaterialParameters import (
+from ...AuxiliaryVariables import (
     code_to_assemble_kernel_input,
     code_to_allocate_kernel_output,
     code_to_copy_back_kernel_output,
@@ -58,7 +58,7 @@ class UpdateCellGPU(AbstractFVActionSet):
     def get_body_of_operation(self, operation_name):
         result = ""
 
-        stride_per_dof = self._solver.unknowns + self._solver.number_of_material_parameters
+        stride_per_dof = self._solver.unknowns + self._solver.number_of_auxiliary_variables
         input_dofs_per_axis = self._solver.numerical_scheme.patch_size + 2 * self._solver.numerical_scheme.halo_size
         output_dofs_per_axis = self._solver.numerical_scheme.patch_size
 
@@ -67,7 +67,7 @@ class UpdateCellGPU(AbstractFVActionSet):
             solver = self._solver
             unknowns_in  = f"fineGridCell{solver._patch_with_halo.name}.value"
             unknowns_out = f"fineGridCell{solver._patch.name}.value"
-            has_parameters = len(solver.material_parameters) > 0
+            has_parameters = len(solver.auxiliary_variables) > 0
             kernel_in  = "kernelIn.data()" if has_parameters else unknowns_in
             kernel_out = "kernelOut.data()" if has_parameters else unknowns_out
             result = f"""

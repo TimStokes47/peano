@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from .AbstractFVActionSet import AbstractFVActionSet
 
-from ...MaterialParameters import (
+from ...AuxiliaryVariables import (
     code_to_assemble_kernel_input,
     code_to_allocate_kernel_output,
     code_to_copy_back_kernel_output,
@@ -60,7 +60,7 @@ class UpdateCell(AbstractFVActionSet):
             solver = self._solver
             unknowns_in  = f"fineGridCell{solver._patch_with_halo.name}.value"
             unknowns_out = f"fineGridCell{solver._patch.name}.value"
-            has_parameters = len(solver.material_parameters) > 0
+            has_parameters = len(solver.auxiliary_variables) > 0
             kernel_in  = "kernelIn.data()" if has_parameters else unknowns_in
             kernel_out = "kernelOut.data()" if has_parameters else unknowns_out
             result = f"""

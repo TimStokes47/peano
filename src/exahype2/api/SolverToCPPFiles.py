@@ -157,8 +157,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
                 "     */\n"
                 "    struct Variables {\n" + constants + "\n    };"
             )
-        for material in self._solver.material_parameters:
-            declarations.append(material.variables_declaration())
+        for auxiliary in self._solver.auxiliary_variables:
+            declarations.append(auxiliary.variables_declaration())
         return "\n".join(declarations)
 
     def construct_output(
@@ -186,7 +186,7 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
 
         local_d = {
             "NUMBER_OF_UNKNOWNS": self._solver._unknowns,
-            "NUMBER_OF_AUXILIARY_VARIABLES": self._solver.number_of_material_parameters,
+            "NUMBER_OF_AUXILIARY_VARIABLES": self._solver.number_of_auxiliary_variables,
             "PATCH_SIZE": self._solver.numerical_scheme.patch_size,
             "HALO_SIZE": self._solver.numerical_scheme.halo_size,
             "USER_SOLVER_INCLUDES": self._solver.user_solver_includes,

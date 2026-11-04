@@ -17,7 +17,7 @@ from .blockstructured import DirichletBoundaryConditions
 from .blockstructured import SommerfeldBoundaryConditions
 from .KernelVariants import Target
 from .Solver import Solver
-from .MaterialParameters import MaterialParameters
+from .AuxiliaryVariables import AuxiliaryVariables
 from .SolverToCPPFiles import SolverToCPPFiles
 from . import fv
 from . import rungekutta

@@ -3,7 +3,7 @@
 """!
 
 Create the PNG illustrations of the tutorial
-45_coupling-sharing-material-parameters.ipynb
+45_coupling-sharing-auxiliary-variables.ipynb
 
 The script builds the two tsunamis which share their sea floor, runs them and
 writes the initial conditions and the difference of their arrival times into
@@ -90,13 +90,13 @@ def build_and_run(directory):
         directory=directory,
         executable="coupling",
     )
-    bathymetry = exahype2.api.MaterialParameters("Bathymetry", {"b": 1})
+    bathymetry = exahype2.api.AuxiliaryVariables("Bathymetry", {"b": 1})
     for name, centre, owns_sea_floor in [
         ("TsunamiA", CentreOfFirstTsunami, True),
         ("TsunamiB", CentreOfSecondTsunami, False),
     ]:
         solver = exahype2.api.Solver(name, {"eta": 1, "hu": 1, "hv": 1})
-        solver.add_material_parameters(bathymetry)
+        solver.add_auxiliary_variables(bathymetry)
         solver.add_user_solver_includes(
             '#include <cmath>\n#include <algorithm>\n#include "DurhamLogo.h"\n'
         )
@@ -228,7 +228,7 @@ def plot_arrival_difference(first_file, second_file, prefix, threshold=0.002):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Create the PNGs of the tutorial 45_coupling-sharing-material-parameters.ipynb"
+        description="Create the PNGs of the tutorial 45_coupling-sharing-auxiliary-variables.ipynb"
     )
     parser.add_argument(
         "--work-directory",

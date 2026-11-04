@@ -6,7 +6,7 @@ import toolbox.loadbalancing.api.actionsets
 
 from ..InitPointWisely import InitPointWisely
 from ..Solver import Solver
-from ..MaterialParameters import add_material_parameters_to_setup
+from ..AuxiliaryVariables import add_auxiliary_variables_to_setup
 from .actionsets import InitialCondition
 from .actionsets import ProjectPatchOntoFaces
 from .actionsets import RollOverUpdatedFace
@@ -201,7 +201,7 @@ class SetupSimulationOverRegularGrid(Solver.GridConstruction):
             )
         )
 
-        add_material_parameters_to_setup(
+        add_auxiliary_variables_to_setup(
             self._solver, initial_condition_task, project_on_faces_task, ProjectPatchOntoFaces, RollOverUpdatedFace
         )
 

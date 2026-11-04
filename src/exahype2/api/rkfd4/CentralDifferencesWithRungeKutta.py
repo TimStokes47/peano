@@ -14,10 +14,10 @@ import exahype2.api.dslhype as dslhype
 
 from ..MaxEigenvalue import MaxEigenvalue
 from ..Solver import Solver
-from ..MaterialParameters import (
-    register_material_parameters,
-    add_reconstruction_of_material_parameters,
-    use_halos_of_material_parameters,
+from ..AuxiliaryVariables import (
+    register_auxiliary_variables,
+    add_reconstruction_of_auxiliary_variables,
+    use_halos_of_auxiliary_variables,
     forwarding_arguments,
 )
 from ..rungekutta import ButcherTableau
@@ -562,7 +562,7 @@ Patch overlap data
         peano_project.datamodel.add_cell(self._solver._rhs_estimates)
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
-        register_material_parameters(
+        register_auxiliary_variables(
             self._solver, peano_project, self.patch_size, self.HALO_SIZE
         )
 
@@ -818,7 +818,7 @@ Patch overlap data
     {self.patch_size},
     {self.HALO_SIZE},
     {self._solver.unknowns},
-    {self._solver.number_of_material_parameters}
+    {self._solver.number_of_auxiliary_variables}
 >(
     {",".join(arguments)}
 );"""
@@ -1040,7 +1040,7 @@ Patch overlap data
                     self._solver, exahype2_project, Access.READ_AND_DISCARD
                 ),
             )
-            add_reconstruction_of_material_parameters(
+            add_reconstruction_of_auxiliary_variables(
                 reconstruction_task, self._solver
             )
             reconstruction_task.add_action_set(
@@ -1087,7 +1087,7 @@ Patch overlap data
             right_hand_side_task.use_cell(
                 self._solver._rhs_estimates, Access.READ_AND_WRITE
             )
-            use_halos_of_material_parameters(right_hand_side_task, self._solver)
+            use_halos_of_auxiliary_variables(right_hand_side_task, self._solver)
             for action_set in self._right_hand_side_action_sets(stage, cell_guard):
                 right_hand_side_task.add_action_set(action_set)
 
@@ -1136,8 +1136,8 @@ Patch overlap data
             )
             if is_last_stage and self.has_adaptive_time_step_size:
                 projection_task.use_cell(self._solver._max_eigenvalue, Access.WRITE)
-                for material in self._solver.material_parameters:
-                    projection_task.use_cell(material.patch, Access.READ_AND_WRITE)
+                for auxiliary in self._solver.auxiliary_variables:
+                    projection_task.use_cell(auxiliary.patch, Access.READ_AND_WRITE)
                 projection_task.add_action_set(
                     ComputeMaxEigenvalue(self._solver, guard=cell_guard)
                 )

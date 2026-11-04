@@ -13,10 +13,10 @@ from exahype2.api import Target
 import exahype2.api.dslhype as dslhype
  
 from ..Solver import Solver
-from ..MaterialParameters import (
-    register_material_parameters,
-    add_reconstruction_of_material_parameters,
-    use_halos_of_material_parameters,
+from ..AuxiliaryVariables import (
+    register_auxiliary_variables,
+    add_reconstruction_of_auxiliary_variables,
+    use_halos_of_auxiliary_variables,
     forwarding_arguments,
 )
 from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
@@ -405,7 +405,7 @@ Patch overlap data
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
         peano_project.datamodel.add_cell(self._solver._max_eigenvalue)
-        register_material_parameters(self._solver, peano_project, self.patch_size, self.overlap)
+        register_auxiliary_variables(self._solver, peano_project, self.patch_size, self.overlap)
 
         # The task graph compiler only uses, loads and stores data where the
         # solver's grid selector holds, too (@see peano4.api.datamodel.DoF).
@@ -581,12 +581,12 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         ## conditions, which advance the ghost volumes within the roll over
         ApplyDirichletBoundaryConditions.add_task_to_time_step(self._solver, exahype2_project, time_step, reconstruction_task)
 
-        ## The halos of the material parameters
-        add_reconstruction_of_material_parameters(reconstruction_task, self._solver)
+        ## The halos of the auxiliary variables
+        add_reconstruction_of_auxiliary_variables(reconstruction_task, self._solver)
 
         ## Do the actual time step update
         update_cell_task.add_dependency(reconstruction_task)
-        use_halos_of_material_parameters(update_cell_task, self._solver)
+        use_halos_of_auxiliary_variables(update_cell_task, self._solver)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
         update_cell_task.use_cell(self._solver._max_eigenvalue,  peano4.api.taskgraph.Task.DataAccess.WRITE)
@@ -772,7 +772,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         {self._solver.numerical_scheme.patch_size},
         {self._solver.numerical_scheme.overlap},
         {self._solver.unknowns},
-        {self._solver.number_of_material_parameters}
+        {self._solver.number_of_auxiliary_variables}
     >(
         {"0," if target==Target.Accelerator else ""}
         {"gpuPatchData" if target==Target.Accelerator else "patchData"}
@@ -822,7 +822,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
     {self._solver.numerical_scheme.patch_size},
     {self._solver.numerical_scheme.overlap},
     {self._solver.unknowns},
-    {self._solver.number_of_material_parameters}
+    {self._solver.number_of_auxiliary_variables}
 >(
     patchData,
 {",\n".join(pde_term_calls)}

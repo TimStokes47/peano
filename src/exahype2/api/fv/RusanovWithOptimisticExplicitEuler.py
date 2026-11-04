@@ -1201,10 +1201,10 @@ Patch overlap data
         """!
 
         """
-        if self._solver.material_parameters:
+        if self._solver.auxiliary_variables:
             raise NotImplementedError(
                 f"Solver {self._solver.name}: RusanovWithOptimisticExplicitEuler does not support "
-                "material parameters yet. Use RusanovWithExplicitEuler."
+                "auxiliary variables yet. Use RusanovWithExplicitEuler."
             )
         peano4.api.Logger().log("Create time stepping task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
@@ -1579,7 +1579,7 @@ Patch overlap data
         {self.patch_size},
         {self.overlap},
         {self._solver.unknowns},
-        {self._solver.number_of_material_parameters}
+        {self._solver.number_of_auxiliary_variables}
     >(
         patchData,
         {self._solver.name}
@@ -1632,7 +1632,7 @@ Patch overlap data
     {self.patch_size},
     {self.overlap},
     {self._solver.unknowns},
-    {self._solver.number_of_material_parameters}
+    {self._solver.number_of_auxiliary_variables}
 >(
     patchData,
 {",\n".join(pde_term_calls)}

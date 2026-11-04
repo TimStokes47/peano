@@ -26,7 +26,7 @@ class Solver(abc.ABC):
     its algorithmic steps, and how does it plug into the code generation. This
     class holds exactly that common contract plus the bits of bookkeeping
     (name, includes, solver constants, the unknowns and the
-    material parameters) that every concrete solver has historically
+    auxiliary variables) that every concrete solver has historically
     reimplemented identically. It does not know anything about a concrete
     discretisation - it neither creates the actual mesh data structures nor
     the actual action sets, as this remains solver-specific and thus has to be
@@ -420,8 +420,8 @@ class Solver(abc.ABC):
           offset into the unknowns array by hand.
 
         Quantities which are space-dependent yet do not change over time are
-        not unknowns. Attach them to the solver as material parameters via
-        add_material_parameters().
+        not unknowns. Attach them to the solver as auxiliary variables via
+        add_auxiliary_variables().
 
         The unknowns cannot be changed after construction: the numerical
         scheme sizes its data structures from them as soon as it is assigned
@@ -435,8 +435,8 @@ class Solver(abc.ABC):
 
         self._unknowns = self._register_variables(unknowns, 0)
 
-        # All sets of material parameters in the order of their attachment
-        self._material_parameters: List["MaterialParameters"] = []
+        # All sets of auxiliary variables in the order of their attachment
+        self._auxiliary_variables: List["AuxiliaryVariables"] = []
 
         self._user_solver_includes = ""
         self._solver_constants = ""
@@ -529,7 +529,7 @@ class Solver(abc.ABC):
             "Name:              " + self._name + "\n"
             "Type:              " + self.__class__.__module__ + "\n"
             "Unknowns:          " + str(self._unknowns) + "\n"
-            "Material params:   " + ", ".join(str(m) for m in self._material_parameters)
+            "Auxiliary vars:    " + ", ".join(str(m) for m in self._auxiliary_variables)
         )
 
     @property
@@ -634,66 +634,66 @@ class Solver(abc.ABC):
         return self._unknowns
 
     @property
-    def material_parameters(self) -> List["MaterialParameters"]:
-        """! All sets of material parameters in the order they have been attached """
-        return list(self._material_parameters)
+    def auxiliary_variables(self) -> List["AuxiliaryVariables"]:
+        """! All sets of auxiliary variables in the order they have been attached """
+        return list(self._auxiliary_variables)
 
     @property
-    def number_of_material_parameters(self) -> int:
-        """! Total number of entries of all sets of material parameters """
-        return sum(material.size for material in self._material_parameters)
+    def number_of_auxiliary_variables(self) -> int:
+        """! Total number of entries of all sets of auxiliary variables """
+        return sum(auxiliary.size for auxiliary in self._auxiliary_variables)
 
-    def material_parameter_offset(self, material: "MaterialParameters") -> int:
+    def auxiliary_variable_offset(self, auxiliary: "AuxiliaryVariables") -> int:
         """!
         Offset of the first entry of a set within the buffer the compute
         kernels work on, i.e. the unknowns are followed by the sets in the
         order of their attachment.
         """
         offset = self._unknowns
-        for candidate in self._material_parameters:
-            if candidate is material:
+        for candidate in self._auxiliary_variables:
+            if candidate is auxiliary:
                 return offset
             offset += candidate.size
-        raise ValueError(f"{material.name} is not attached to solver {self._name}")
+        raise ValueError(f"{auxiliary.name} is not attached to solver {self._name}")
 
-    def add_material_parameters(self, material: "MaterialParameters"):
+    def add_auxiliary_variables(self, auxiliary: "AuxiliaryVariables"):
         """!
 
-        Attach a set of material parameters to the solver
+        Attach a set of auxiliary variables to the solver
 
         Any number of sets can be attached. They have to be attached before
         the code is generated. Each set is held by its own cell data object.
         The first solver which a set is attached to owns it and initialises
         it. Further solvers can attach the same set object and thereby share
-        the data. @ref exahype2.api.MaterialParameters explains the impact
+        the data. @ref exahype2.api.AuxiliaryVariables explains the impact
         on the C++ signatures.
 
-        @param material: exahype2.api.MaterialParameters
+        @param auxiliary: exahype2.api.AuxiliaryVariables
 
         """
-        from .MaterialParameters import MaterialParameters
+        from .AuxiliaryVariables import AuxiliaryVariables
 
-        if not isinstance(material, MaterialParameters):
+        if not isinstance(auxiliary, AuxiliaryVariables):
             raise TypeError(
-                f"material has to be a MaterialParameters, but got {type(material)}"
+                f"auxiliary has to be a AuxiliaryVariables, but got {type(auxiliary)}"
             )
-        if any(m is material for m in self._material_parameters):
+        if any(m is auxiliary for m in self._auxiliary_variables):
             raise ValueError(
-                f"Solver {self._name} has the material parameters {material.name} already"
+                f"Solver {self._name} has the auxiliary variables {auxiliary.name} already"
             )
-        if any(m.name == material.name for m in self._material_parameters):
+        if any(m.name == auxiliary.name for m in self._auxiliary_variables):
             raise ValueError(
-                f"Solver {self._name} has other material parameters of name {material.name} already"
+                f"Solver {self._name} has other auxiliary variables of name {auxiliary.name} already"
             )
-        if material.argument_name == material.name:
-            raise ValueError(f"Material parameters {material.name} are not distinguishable from their argument")
-        if material.owner is None:
-            material._owner = self
-        self._material_parameters.append(material)
+        if auxiliary.argument_name == auxiliary.name:
+            raise ValueError(f"Auxiliary variables {auxiliary.name} are not distinguishable from their argument")
+        if auxiliary.owner is None:
+            auxiliary._owner = self
+        self._auxiliary_variables.append(auxiliary)
 
     def signature_of(self, term: PDETerm) -> str:
-        """! The signature of a PDE term including the pointers to the material parameters """
-        from .MaterialParameters import extend_signature
+        """! The signature of a PDE term including the pointers to the auxiliary variables """
+        from .AuxiliaryVariables import extend_signature
 
         return extend_signature(term.SIGNATURE, self)
 
@@ -745,7 +745,7 @@ class Solver(abc.ABC):
         its name, whereas a variable v with multiplicity k yields the names
         v[0], ..., v[k-1], i.e. the entries Q[Variables::v+0], ...,
         Q[Variables::v+k-1]. Plotters use these names to label the entries in
-        their output. The names of the material parameters are available
+        their output. The names of the auxiliary variables are available
         from the sets.
 
         """

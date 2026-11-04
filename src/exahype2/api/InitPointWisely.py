@@ -24,8 +24,8 @@ class InitPointWisely(PDETerm):
     );
     @endcode
 
-    Q holds the unknowns. If the solver has material parameters, a pointer to
-    each set follows right behind Q (@ref exahype2.api.MaterialParameters).
+    Q holds the unknowns. If the solver has auxiliary variables, a pointer to
+    each set follows right behind Q (@ref exahype2.api.AuxiliaryVariables).
     The solver that owns a set receives a non-const pointer and initialises the set
     here, as this term has to set up everything a fresh degree of freedom
     needs. Solvers which share a set receive a const pointer.

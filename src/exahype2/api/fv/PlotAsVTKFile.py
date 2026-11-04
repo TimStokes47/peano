@@ -110,7 +110,7 @@ class PlotAsVTKFile(Solver.Plotter):
           The entries of Q which are written per volume. A string is the
           name of a variable as passed to the solver and selects all of its
           entries, an int is the index of one entry of Q. The
-          material parameters are written into files of their own
+          auxiliary variables are written into files of their own
           (@ref exahype2.api.Quantities.resolve_quantities()). None writes
           all entries.
 
@@ -222,20 +222,20 @@ class PlotAsVTKFile(Solver.Plotter):
             self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE
         )
 
-        ## Each set of material parameters goes into a file of its own. Only
+        ## Each set of auxiliary variables goes into a file of its own. Only
         ## its owner writes it, as shared sets would be written twice
-        for material in self._solver.material_parameters:
-            if material.owner is not self._solver:
+        for auxiliary in self._solver.auxiliary_variables:
+            if auxiliary.owner is not self._solver:
                 continue
             write_vtk_file_task.add_action_set(
                 _PlotPatchesIfPlotterIsActive(
                     is_active_predicate=self.create_is_active_predicate(),
                     finish_call="",
-                    filename=self.output_file_prefix() + "-" + material.name,
-                    patch=material.patch,
-                    dataset_name=material.patch.name,
+                    filename=self.output_file_prefix() + "-" + auxiliary.name,
+                    patch=auxiliary.patch,
+                    dataset_name=auxiliary.patch.name,
                     description=", ".join(
-                        n.split(".", 1)[1] for n in material.variable_names_per_entry()
+                        n.split(".", 1)[1] for n in auxiliary.variable_names_per_entry()
                     ),
                     guard=self._create_guard(),
                     select_dofs=None,
@@ -248,7 +248,7 @@ class PlotAsVTKFile(Solver.Plotter):
                 )
             )
             write_vtk_file_task.use_cell(
-                material.patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE
+                auxiliary.patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE
             )
 
         self._log_plot_graph(plot)

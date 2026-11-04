@@ -110,20 +110,20 @@ class PDETerm:
             """!
             @param term: PDETerm
             @param solver: exahype2.api.Solver
-              If the solver has material parameters, the generated signature
-              contains pointers to them (@ref exahype2.api.MaterialParameters).
+              If the solver has auxiliary variables, the generated signature
+              contains pointers to them (@ref exahype2.api.AuxiliaryVariables).
             """
             self.term = term
             self.solver = solver
 
         @property
-        def _has_material_parameters(self) -> bool:
-            return self.solver is not None and len(self.solver.material_parameters) > 0
+        def _has_auxiliary_variables(self) -> bool:
+            return self.solver is not None and len(self.solver.auxiliary_variables) > 0
 
         @property
         def kernel_signature(self) -> str:
             """!
-            The signature without the material parameters. This is the
+            The signature without the auxiliary variables. This is the
             signature which the compute kernels call.
             """
             return getattr(self.term, "SIGNATURE")
@@ -142,24 +142,24 @@ class PDETerm:
                     "either subclass PDETerm and provide one (see Flux), or set "
                     "term.SIGNATURE explicitly."
                 )
-            if self._has_material_parameters:
-                from .MaterialParameters import extend_signature
+            if self._has_auxiliary_variables:
+                from .AuxiliaryVariables import extend_signature
 
                 return extend_signature(signature, self.solver)
             return signature
 
         def _needs_kernel_adapter(self) -> bool:
             """!
-            The compute kernels know nothing about material parameters. They
+            The compute kernels know nothing about auxiliary variables. They
             call the stateless terms with the original signature. If the
-            solver has material parameters, we thus add static overloads with
+            solver has auxiliary variables, we thus add static overloads with
             the original signature that forward to the term with parameters.
             """
-            from .MaterialParameters import split_signature
+            from .AuxiliaryVariables import split_signature
 
             return (
                 self.term.stateless
-                and self._has_material_parameters
+                and self._has_auxiliary_variables
                 and any(
                     p.split()[-1] in ("Q", "deltaQ")
                     for p in split_signature(self.kernel_signature)
@@ -167,7 +167,7 @@ class PDETerm:
             )
 
         def _kernel_adapter_arguments(self) -> str:
-            from .MaterialParameters import forwarding_arguments
+            from .AuxiliaryVariables import forwarding_arguments
 
             return ", ".join(forwarding_arguments(self.kernel_signature, self.solver))
 
@@ -350,7 +350,7 @@ class PDETerm:
     def generator_for(self, solver) -> "PDETerm.Generator":
         """!
         Code generator for this term within a solver, i.e. one that respects
-        the solver's material parameters.
+        the solver's auxiliary variables.
         """
         return self.__class__.Generator(self, solver)
 

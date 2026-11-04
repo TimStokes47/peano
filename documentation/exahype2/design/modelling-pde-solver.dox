@@ -22,7 +22,7 @@ and users model an instance of this equation by creating an exahype2.api.Solver
 configuring two things on it: the unknowns and the individual PDE terms.
 
 
-# Unknowns and material parameters
+# Unknowns and auxiliary variables
 
 Every solver is constructed with a name and an unknowns specification. The
 latter can be given either as a plain integer (just the multiplicity) or as a
@@ -41,14 +41,14 @@ dictionary is used, the generated abstract solver hosts a struct Variables, so
 user code can address Q's entries by name instead of by raw offset.
 
 Quantities which may vary in space but are not evolved by the PDE terms are
-material parameters. A solver can have an arbitrary number of sets of material parameters
-(@ref exahype2.api.MaterialParameters), each of them holding an arbitrary number of
+auxiliary variables. A solver can have an arbitrary number of sets of auxiliary variables
+(@ref exahype2.api.AuxiliaryVariables), each of them holding an arbitrary number of
 (vector-valued) variables in a cell data object of its own. A set is attached via
-exahype2.api.Solver.add_material_parameters(), and the first solver which a set
+exahype2.api.Solver.add_auxiliary_variables(), and the first solver which a set
 is attached to owns it, i.e. initialises it. Further solvers can attach the same set
 and share it. Behind each Q (and deltaQ), the signature of every PDE term of a
-solver with material parameters hosts one pointer per attached set. Solvers without
-material parameters keep their signatures.
+solver with auxiliary variables hosts one pointer per attached set. Solvers without
+auxiliary variables keep their signatures.
 
 
 # PDE terms

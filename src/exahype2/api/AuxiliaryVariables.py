@@ -10,12 +10,12 @@ import peano4.api.taskgraph
 import toolbox.blockstructured.api
 
 
-class MaterialParameters:
+class AuxiliaryVariables:
     """!
 
-    A set of material parameters of a solver
+    A set of auxiliary variables of a solver
 
-    Material parameters are quantities such as the sea floor, a mesh
+    Auxiliary variables are quantities such as the sea floor, a mesh
     distortion or a density which live in every Finite Volume (or Finite
     Difference point) next to the unknowns, but which are not evolved by the
     PDE. A solver can have an arbitrary number of such sets, each of them
@@ -26,15 +26,15 @@ class MaterialParameters:
     Create a set with a name and a dictionary which maps the names of the
     parameters onto their multiplicities,
 
-        bathymetry = exahype2.api.MaterialParameters("Bathymetry", {"b": 1})
+        bathymetry = exahype2.api.AuxiliaryVariables("Bathymetry", {"b": 1})
 
-    and attach it to a solver via exahype2.api.Solver.add_material_parameters().
+    and attach it to a solver via exahype2.api.Solver.add_auxiliary_variables().
     The name is also the name of a struct within the generated abstract
     solver, so you can write bathymetry[Bathymetry::b] in your C++ code.
 
     ## Impact on the C++ signatures
 
-    Every PDE term of a solver with material parameters receives, directly
+    Every PDE term of a solver with auxiliary variables receives, directly
     behind each Q (and each deltaQ), one pointer per attached set. The
     pointers come in the order in which the sets have been attached. The
     pointer is named after the set (first letter in lower case), the pointers
@@ -47,7 +47,7 @@ class MaterialParameters:
 
         nonconservativeProduct(Q, bathymetry, deltaQ, deltaBathymetry, x, ...)
 
-    Solvers without material parameters keep their original signatures.
+    Solvers without auxiliary variables keep their original signatures.
 
     ## Ownership and sharing
 
@@ -57,9 +57,18 @@ class MaterialParameters:
     i.e. they do not hold an additional copy, and initPointWisely() sees the
     set as const.
 
-    Material parameters are constant in time. They are written once during the
-    setup. Besides periodic boundaries, the halo layer of the volumes at the
-    domain boundary is not available for material parameters.
+    @remark Naming
+      These quantities used to be called material parameters. "Material"
+      suggests that they are invariant, but they do not have to be: an
+      auxiliary variable is any quantity that lives next to the unknowns and
+      is not evolved by the PDE terms of the solver. It may well change over
+      time if some other mechanism updates it. The current implementation
+      writes the variables once during the setup, i.e. they are constant in
+      time, but this is a restriction of the implementation, not part of the
+      concept.
+
+    Besides periodic boundaries, the halo layer of the volumes at the
+    domain boundary is not available for auxiliary variables.
 
     """
 
@@ -79,7 +88,7 @@ class MaterialParameters:
         """
         if not re.fullmatch(r"[A-Z][A-Za-z0-9_]*", name):
             raise ValueError(
-                f"The name of a set of material parameters has to be a valid C++ identifier starting with a capital letter, but got {name!r}"
+                f"The name of a set of auxiliary variables has to be a valid C++ identifier starting with a capital letter, but got {name!r}"
             )
         if not isinstance(variables, dict) or not variables:
             raise TypeError(
@@ -92,7 +101,7 @@ class MaterialParameters:
         for variable_name, multiplicity in self._variables.items():
             if multiplicity < 1:
                 raise ValueError(
-                    f"Material parameter {variable_name} of {name} has multiplicity {multiplicity}"
+                    f"Auxiliary variable {variable_name} of {name} has multiplicity {multiplicity}"
                 )
             self._positions[variable_name] = offset
             offset += multiplicity
@@ -160,7 +169,7 @@ class MaterialParameters:
             for variable_name, position in self._positions.items()
         )
         return (
-            f"    /**\n     * Positions of the variables of the material parameters {self._name}\n     */\n"
+            f"    /**\n     * Positions of the variables of the auxiliary variables {self._name}\n     */\n"
             f"    struct {self._name} {{\n{constants}\n    }};"
         )
 
@@ -186,13 +195,13 @@ class MaterialParameters:
         if self.patch is not None:
             if self._patch_size != patch_size or self._overlap != overlap:
                 raise ValueError(
-                    f"The material parameters {self._name} are shared by solvers with different patch sizes or halos: "
+                    f"The auxiliary variables {self._name} are shared by solvers with different patch sizes or halos: "
                     f"{self._patch_size}/{self._overlap} vs {patch_size}/{overlap}"
                 )
             return
         self._patch_size = patch_size
         self._overlap = overlap
-        identifier = self._name + "MaterialParameters"
+        identifier = self._name + "AuxiliaryVariables"
         self.patch = peano4.api.datamodel.Patch(
             (patch_size, patch_size, patch_size), self._size, identifier
         )
@@ -249,7 +258,7 @@ def split_signature(signature: str) -> List[str]:
 def extend_signature(signature: str, solver) -> str:
     """!
 
-    Add the pointers to the material parameters of a solver to a PDE term's
+    Add the pointers to the auxiliary variables of a solver to a PDE term's
     signature
 
     Each argument named Q is followed by one pointer per set, each argument
@@ -258,12 +267,12 @@ def extend_signature(signature: str, solver) -> str:
     solver owns the set.
 
     @param signature: str
-      The signature without material parameters
+      The signature without auxiliary variables
 
     @param solver: exahype2.api.Solver
 
     """
-    sets = solver.material_parameters
+    sets = solver.auxiliary_variables
     if not sets:
         return signature
     result = []
@@ -272,24 +281,24 @@ def extend_signature(signature: str, solver) -> str:
         name = parameter.split()[-1]
         if name == "Q":
             writable = not parameter.startswith("const")
-            for material in sets:
-                qualifier = "" if writable and material.owner is solver else "const "
-                result.append(f"{qualifier}double* __restrict__ {material.argument_name}")
+            for auxiliary in sets:
+                qualifier = "" if writable and auxiliary.owner is solver else "const "
+                result.append(f"{qualifier}double* __restrict__ {auxiliary.argument_name}")
         elif name == "deltaQ":
-            for material in sets:
-                result.append(f"const double* __restrict__ {material.delta_argument_name}")
+            for auxiliary in sets:
+                result.append(f"const double* __restrict__ {auxiliary.delta_argument_name}")
     return ", ".join(result)
 
 
 def forwarding_arguments(signature: str, solver) -> List[str]:
     """!
 
-    Arguments to call the version of a PDE term with material parameters
+    Arguments to call the version of a PDE term with auxiliary variables
     from a caller that holds the original signature
 
     The caller's Q (and deltaQ) points to a volume in a buffer which hosts
-    the unknowns followed by the entries of all material parameters (the
-    layout the compute kernels work on). The material parameters are slices
+    the unknowns followed by the entries of all auxiliary variables (the
+    layout the compute kernels work on). The auxiliary variables are slices
     of this buffer.
 
     """
@@ -298,58 +307,58 @@ def forwarding_arguments(signature: str, solver) -> List[str]:
         name = parameter.split()[-1]
         arguments.append(name)
         if name in ("Q", "deltaQ"):
-            for material in solver.material_parameters:
-                arguments.append(f"{name} + {solver.material_parameter_offset(material)}")
+            for auxiliary in solver.auxiliary_variables:
+                arguments.append(f"{name} + {solver.auxiliary_variable_offset(auxiliary)}")
     return arguments
 
 
-def register_material_parameters(solver, peano_project, patch_size: int, overlap: int):
+def register_auxiliary_variables(solver, peano_project, patch_size: int, overlap: int):
     """!
 
-    Create and register the data of all material parameters of a solver
+    Create and register the data of all auxiliary variables of a solver
 
     The persistent data of a set (its patch and the face overlaps) exists only
     once, even if several solvers share it. Each solver gets its own
-    temporary patch with halo per set (solver._material_parameter_halos, a
+    temporary patch with halo per set (solver._auxiliary_variable_halos, a
     dict from the name of the set to the patch), so concurrently running
     solvers do not overwrite each other's halos.
 
     """
-    solver._material_parameter_halos = {}
-    for material in solver.material_parameters:
-        material.create_data_structures(patch_size, overlap, solver.grid_selector)
-        material.add_to_datamodel(peano_project)
+    solver._auxiliary_variable_halos = {}
+    for auxiliary in solver.auxiliary_variables:
+        auxiliary.create_data_structures(patch_size, overlap, solver.grid_selector)
+        auxiliary.add_to_datamodel(peano_project)
         halo = peano4.api.datamodel.Patch(
             (patch_size + 2 * overlap, patch_size + 2 * overlap, patch_size + 2 * overlap),
-            material.size,
-            material.name + "MaterialParametersWithHaloOf" + solver.name,
+            auxiliary.size,
+            auxiliary.name + "AuxiliaryVariablesWithHaloOf" + solver.name,
         )
         halo.grid_selector = solver.grid_selector
         halo.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(halo, "double")
         peano_project.datamodel.add_cell(halo)
-        solver._material_parameter_halos[material.name] = halo
+        solver._auxiliary_variable_halos[auxiliary.name] = halo
 
 
-def add_reconstruction_of_material_parameters(task, solver):
+def add_reconstruction_of_auxiliary_variables(task, solver):
     """!
 
     Make a reconstruction task of a solver fill the halos of the solver's
-    material parameters
+    auxiliary variables
 
     @param task: peano4.api.taskgraph.Task
       The task which also reconstructs the unknowns.
 
     """
     Access = peano4.api.taskgraph.Task.DataAccess
-    for material in solver.material_parameters:
-        halo = solver._material_parameter_halos[material.name]
-        task.use_cell(material.patch, Access.READ_AND_WRITE)
+    for auxiliary in solver.auxiliary_variables:
+        halo = solver._auxiliary_variable_halos[auxiliary.name]
+        task.use_cell(auxiliary.patch, Access.READ_AND_WRITE)
         task.use_cell(halo, Access.WRITE)
-        task.use_face(material.patch_overlap_current_time_step, Access.READ_AND_WRITE)
+        task.use_face(auxiliary.patch_overlap_current_time_step, Access.READ_AND_WRITE)
         task.add_action_set(
             toolbox.blockstructured.api.ReconstructPatchWithHalo(
-                patch=material.patch,
-                patch_overlap=material.patch_overlap_current_time_step,
+                patch=auxiliary.patch,
+                patch_overlap=auxiliary.patch_overlap_current_time_step,
                 reconstructed_patch=halo,
                 guard=solver.grid_selector.createCellGuard(),
                 add_assertions_to_halo_exchange=False,
@@ -358,11 +367,11 @@ def add_reconstruction_of_material_parameters(task, solver):
         )
 
 
-def use_halos_of_material_parameters(task, solver):
-    """! Let a task (typically the update of the cells) read the halos of the material parameters """
-    for material in solver.material_parameters:
+def use_halos_of_auxiliary_variables(task, solver):
+    """! Let a task (typically the update of the cells) read the halos of the auxiliary variables """
+    for auxiliary in solver.auxiliary_variables:
         task.use_cell(
-            solver._material_parameter_halos[material.name],
+            solver._auxiliary_variable_halos[auxiliary.name],
             peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD,
         )
 
@@ -379,9 +388,9 @@ def code_to_assemble_kernel_input(solver, buffer: str, unknowns: str, halo_size:
     C++ code which assembles the input buffer of the compute kernels
 
     The kernels work on one buffer that holds the unknowns of a volume
-    followed by the entries of all sets of material parameters. The code
+    followed by the entries of all sets of auxiliary variables. The code
     defines a std::vector<double> named buffer. It is empty if the solver has
-    no material parameters.
+    no auxiliary variables.
 
     @param unknowns: str
       C++ expression for the unknowns of the patch with halo.
@@ -391,18 +400,18 @@ def code_to_assemble_kernel_input(solver, buffer: str, unknowns: str, halo_size:
       the halo patches of the solver.
 
     """
-    if not solver.material_parameters:
+    if not solver.auxiliary_variables:
         return ""
     if parameters_of is None:
-        parameters_of = lambda material: f"fineGridCell{solver._material_parameter_halos[material.name].name}.value"
+        parameters_of = lambda auxiliary: f"fineGridCell{solver._auxiliary_variable_halos[auxiliary.name].name}.value"
     volumes = volumes_expression(solver.numerical_scheme.patch_size, halo_size)
-    stride = solver.unknowns + solver.number_of_material_parameters
+    stride = solver.unknowns + solver.number_of_auxiliary_variables
     copies = "".join(
         f"""
-    for (int k=0; k<{material.size}; k++) {{
-      {buffer}[volume*{stride} + {solver.material_parameter_offset(material)} + k] = {parameters_of(material)}[volume*{material.size} + k];
+    for (int k=0; k<{auxiliary.size}; k++) {{
+      {buffer}[volume*{stride} + {solver.auxiliary_variable_offset(auxiliary)} + k] = {parameters_of(auxiliary)}[volume*{auxiliary.size} + k];
     }}"""
-        for material in solver.material_parameters
+        for auxiliary in solver.auxiliary_variables
     )
     return f"""
   const int {buffer}Volumes = {volumes};
@@ -417,10 +426,10 @@ def code_to_assemble_kernel_input(solver, buffer: str, unknowns: str, halo_size:
 
 def code_to_allocate_kernel_output(solver, buffer: str) -> str:
     """! C++ code which defines the output buffer (a std::vector<double>) of the compute kernels """
-    if not solver.material_parameters:
+    if not solver.auxiliary_variables:
         return ""
     volumes = volumes_expression(solver.numerical_scheme.patch_size, 0)
-    stride = solver.unknowns + solver.number_of_material_parameters
+    stride = solver.unknowns + solver.number_of_auxiliary_variables
     return f"""
   const int {buffer}Volumes = {volumes};
   std::vector<double> {buffer}( {buffer}Volumes * {stride}, 0.0 );
@@ -429,9 +438,9 @@ def code_to_allocate_kernel_output(solver, buffer: str) -> str:
 
 def code_to_copy_back_kernel_output(solver, buffer: str, unknowns: str) -> str:
     """! C++ code which copies the unknowns of the output buffer back into the patch """
-    if not solver.material_parameters:
+    if not solver.auxiliary_variables:
         return ""
-    stride = solver.unknowns + solver.number_of_material_parameters
+    stride = solver.unknowns + solver.number_of_auxiliary_variables
     return f"""
   for (int volume=0; volume<{buffer}Volumes; volume++) {{
     for (int k=0; k<{solver.unknowns}; k++) {{
@@ -441,14 +450,14 @@ def code_to_copy_back_kernel_output(solver, buffer: str, unknowns: str) -> str:
 """
 
 
-def add_material_parameters_to_setup(
+def add_auxiliary_variables_to_setup(
     solver, initial_condition_task, project_on_faces_task, project_patch_onto_faces, roll_over_updated_face
 ):
     """!
 
-    Let the setup of a solver write its material parameters
+    Let the setup of a solver write its auxiliary variables
 
-    Material parameters are written once, by their owner: the owner
+    Auxiliary variables are written once, by their owner: the owner
     initialises them in its initial condition task and projects them onto the
     faces, so the halos can be reconstructed later on. A solver that merely
     shares a set reads it after the owner has written it.
@@ -464,43 +473,43 @@ def add_material_parameters_to_setup(
     """
     Access = peano4.api.taskgraph.Task.DataAccess
     includes = solver._get_default_includes() + solver.user_solver_includes
-    for material in solver.material_parameters:
+    for auxiliary in solver.auxiliary_variables:
         # The setup is created before the numerical scheme adds the data to the project
-        material.create_data_structures(
+        auxiliary.create_data_structures(
             solver.numerical_scheme.patch_size,
             solver.numerical_scheme.halo_size,
             solver.grid_selector,
         )
-        if material.owner is solver:
-            initial_condition_task.use_cell(material.patch, Access.WRITE)
-            project_on_faces_task.use_cell(material.patch, Access.READ_AND_WRITE)
-            project_on_faces_task.use_face(material.patch_overlap_update, Access.TEMPORARY)
-            project_on_faces_task.use_face(material.patch_overlap_current_time_step, Access.WRITE)
+        if auxiliary.owner is solver:
+            initial_condition_task.use_cell(auxiliary.patch, Access.WRITE)
+            project_on_faces_task.use_cell(auxiliary.patch, Access.READ_AND_WRITE)
+            project_on_faces_task.use_face(auxiliary.patch_overlap_update, Access.TEMPORARY)
+            project_on_faces_task.use_face(auxiliary.patch_overlap_current_time_step, Access.WRITE)
             project_on_faces_task.add_action_set(
                 project_patch_onto_faces(
-                    material.patch,
-                    material.patch_overlap_update,
+                    auxiliary.patch,
+                    auxiliary.patch_overlap_update,
                     guard=solver.grid_selector.createCellGuard(),
                     includes=includes,
                 )
             )
             project_on_faces_task.add_action_set(
                 roll_over_updated_face(
-                    material.patch_overlap_current_time_step,
-                    material.patch_overlap_update,
+                    auxiliary.patch_overlap_current_time_step,
+                    auxiliary.patch_overlap_update,
                     guard=solver.grid_selector.createFaceGuard(),
                     includes=includes,
                 )
             )
-            material._setup_initial_condition_task = initial_condition_task
+            auxiliary._setup_initial_condition_task = initial_condition_task
         else:
-            owners_task = getattr(material, "_setup_initial_condition_task", None)
+            owners_task = getattr(auxiliary, "_setup_initial_condition_task", None)
             if owners_task is None:
                 raise ValueError(
-                    f"Solver {solver.name} shares the material parameters {material.name} with "
-                    f"{material.owner.name}, but the setup of {material.owner.name} has not been created yet. "
-                    f"Add {material.owner.name} to the project before {solver.name}."
+                    f"Solver {solver.name} shares the auxiliary variables {auxiliary.name} with "
+                    f"{auxiliary.owner.name}, but the setup of {auxiliary.owner.name} has not been created yet. "
+                    f"Add {auxiliary.owner.name} to the project before {solver.name}."
                 )
             initial_condition_task.add_dependency(owners_task)
-            initial_condition_task.use_cell(material.patch, Access.READ_AND_DISCARD)
-            project_on_faces_task.use_cell(material.patch, Access.READ_AND_WRITE)
+            initial_condition_task.use_cell(auxiliary.patch, Access.READ_AND_DISCARD)
+            project_on_faces_task.use_cell(auxiliary.patch, Access.READ_AND_WRITE)

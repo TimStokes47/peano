@@ -62,9 +62,9 @@ class InitialCondition(AbstractFVActionSet):
                 "NUMBER_OF_VOLUMES_PER_AXIS": self._solver.numerical_scheme.patch_size,
                 "NUMBER_OF_UNKNOWNS": self._solver.unknowns,
                 "PARAMETERS": "".join(
-                    f",\n      fineGridCell{material.patch.name}.value + "
-                    f"peano4::utils::dLinearised(volume,{self._solver.numerical_scheme.patch_size}) * {material.size}"
-                    for material in self._solver.material_parameters
+                    f",\n      fineGridCell{auxiliary.patch.name}.value + "
+                    f"peano4::utils::dLinearised(volume,{self._solver.numerical_scheme.patch_size}) * {auxiliary.size}"
+                    for auxiliary in self._solver.auxiliary_variables
                 ),
                 "UNKNOWN_IDENTIFIER": self._solver._unknown_identifier(),
                 "SOLVER_INSTANCE": self._solver.get_name_of_global_instance(),

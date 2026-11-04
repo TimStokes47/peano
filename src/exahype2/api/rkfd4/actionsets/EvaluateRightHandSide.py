@@ -1,6 +1,6 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from ...MaterialParameters import code_to_assemble_kernel_input
+from ...AuxiliaryVariables import code_to_assemble_kernel_input
 import peano4.api
 
 from .AbstractRKFD4ActionSet import AbstractRKFD4ActionSet
@@ -64,7 +64,7 @@ class EvaluateRightHandSide(AbstractRKFD4ActionSet):
   double* estimate = fineGridCell{self._solver._rhs_estimates.name}.value + {self.stage * unknowns * n * n * n};
   #endif
   {code_to_assemble_kernel_input(self._solver, "kernelIn", f"fineGridCell{self._solver._patch_with_halo.name}.value", scheme.HALO_SIZE)}
-  ::exahype2::CellData patchData({"kernelIn.data()" if self._solver.material_parameters else f"fineGridCell{self._solver._patch_with_halo.name}.value"}, marker.x(), marker.h(), timeStamp, timeStepSize, estimate);
+  ::exahype2::CellData patchData({"kernelIn.data()" if self._solver.auxiliary_variables else f"fineGridCell{self._solver._patch_with_halo.name}.value"}, marker.x(), marker.h(), timeStamp, timeStepSize, estimate);
   {self._solver.compute_kernel_call}
 """
 

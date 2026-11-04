@@ -29,7 +29,7 @@ class RefineErasePointwisely(AdaptivityCriterion):
     handed the mesh size. Bounds on the mesh size are the job of the grid
     construction, not of the physics.
 
-    Q holds the unknowns, followed by the material parameters of the solver.
+    Q holds the unknowns, followed by the auxiliary variables of the solver.
 
     """
 
