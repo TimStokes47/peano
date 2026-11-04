@@ -128,7 +128,7 @@ def time_step_task_graph():
 
     with tempfile.TemporaryDirectory() as directory:
         peano_project = peano4.api.Project(["illustration"], "illustration", directory=directory)
-        solver = exahype2.api.Solver("Euler", 4, 0)
+        solver = exahype2.api.Solver("Euler", 4)
         solver.add_pde_term(exahype2.api.Flux(stateless=False))
         solver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False))
         solver.add_pde_term(exahype2.api.DirichletBoundaryConditions(stateless=False))

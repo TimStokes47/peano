@@ -51,7 +51,11 @@ class InitialCondition(AbstractRKFD4ActionSet):
             d = {
                 "NUMBER_OF_GRID_CELLS_PER_AXIS": self._solver.numerical_scheme.patch_size,
                 "NUMBER_OF_UNKNOWNS": self._solver.unknowns,
-                "NUMBER_OF_AUXILIARY_VARIABLES": self._solver.auxiliary_variables,
+                "PARAMETERS": "".join(
+                    f",\n      fineGridCell{auxiliary.patch.name}.value + "
+                    f"peano4::utils::dLinearised(gridCell,{self._solver.numerical_scheme.patch_size}) * {auxiliary.size}"
+                    for auxiliary in self._solver.auxiliary_variables
+                ),
                 "UNKNOWN_IDENTIFIER": self._solver._unknown_identifier(),
                 "SOLVER_INSTANCE": self._solver.get_name_of_global_instance(),
             }
@@ -73,10 +77,10 @@ class InitialCondition(AbstractRKFD4ActionSet):
     TemplateInitialCondition = """
   logTraceIn( "touchCellFirstTime(...)---InitialCondition" );
   parallelDfor( gridCell, {{NUMBER_OF_GRID_CELLS_PER_AXIS}} ) {
-    int index = peano4::utils::dLinearised(gridCell,{{NUMBER_OF_GRID_CELLS_PER_AXIS}}) * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}});
+    int index = peano4::utils::dLinearised(gridCell,{{NUMBER_OF_GRID_CELLS_PER_AXIS}}) * {{NUMBER_OF_UNKNOWNS}};
     repositories::{{SOLVER_INSTANCE}}.initPointWisely(
       ::exahype2::fd::getGridCellCentre( marker.x(), marker.h(), {{NUMBER_OF_GRID_CELLS_PER_AXIS}}, gridCell),
-      fineGridCell{{UNKNOWN_IDENTIFIER}}.value + index
+      fineGridCell{{UNKNOWN_IDENTIFIER}}.value + index{{PARAMETERS}}
     );
   } endParallelDfor
 

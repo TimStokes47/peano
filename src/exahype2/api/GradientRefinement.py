@@ -31,7 +31,7 @@ class GradientRefinement(AdaptivityCriterion):
     the difference quotient towards the patch's interior is passed in both
     calls (@ref exahype2::fv::computeOneSidedGradient()).
 
-    gradient holds unknowns+auxiliary_variables entries. The output
+    gradient holds the gradient of the unknowns. The output
     semantics are those of every adaptivity criterion
     (@ref exahype2.api.AdaptivityCriterion).
 

@@ -112,7 +112,7 @@ def build_and_run(
         executable="euler",
     )
 
-    solver = exahype2.api.Solver("EulerFV", 4, 0)
+    solver = exahype2.api.Solver("EulerFV", 4)
     solver.add_pde_term(exahype2.api.Flux(stateless=False))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(stateless=False))
     solver.add_pde_term(exahype2.api.InitPointWisely(stateless=False))

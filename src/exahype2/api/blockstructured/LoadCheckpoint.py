@@ -284,6 +284,10 @@ class LoadCheckpoint(Solver.GridConstruction):
         task graph
 
         """
+        if self._solver.auxiliary_variables:
+            raise NotImplementedError(
+                f"Solver {self._solver.name}: checkpoints do not cover auxiliary variables yet."
+            )
         peano4.api.Logger().log(
             "Create setup task graph which loads a checkpoint into a block-structured mesh"
         )

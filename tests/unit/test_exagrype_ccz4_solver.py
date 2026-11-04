@@ -7,7 +7,7 @@ import exagrype.api
 def test_solver_has_59_named_unknowns():
     solver = exagrype.api.CCZ4Solver("CCZ4")
     assert solver.unknowns == 59
-    assert solver.auxiliary_variables == 0
+    assert solver.number_of_auxiliary_variables == 0
     assert solver.variable_names_per_entry()[16] == "lapse"
     assert solver.variable_names_per_entry()[54] == "phi"
 

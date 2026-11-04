@@ -13,7 +13,7 @@ SetupWithCriterion = exahype2.api.fv.SetupSimulationWithUserCodedRefinementCrite
 
 
 def _solver(with_criterion):
-    solver = exahype2.api.Solver("Probe", 4, 0)
+    solver = exahype2.api.Solver("Probe", 4)
     solver.add_pde_term(exahype2.api.Flux(implementation=""))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation=""))
     solver.add_pde_term(exahype2.api.InitPointWisely(implementation=""))
@@ -111,7 +111,7 @@ def test_min_volume_size_must_not_exceed_volume_size():
 
 
 def test_adapt_mesh_task_evaluates_gradient_criterion(tmp_path):
-    solver = exahype2.api.Solver("Probe", 4, 0)
+    solver = exahype2.api.Solver("Probe", 4)
     solver.add_pde_term(exahype2.api.Flux(implementation=""))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation=""))
     solver.add_pde_term(exahype2.api.InitPointWisely(implementation=""))
