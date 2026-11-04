@@ -17,7 +17,7 @@ def _solver(time_step_size=None, rk_order=3, boundary="dirichlet"):
       condition term, i.e. for a domain that is periodic along all axes.
 
     """
-    solver = exahype2.api.Solver("Probe", 2, 1)
+    solver = exahype2.api.Solver("Probe", 2)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation="*lambdaMax = 1.0;"))
     if boundary == "dirichlet":
@@ -278,13 +278,13 @@ def test_right_hand_side_uses_stage_time_stamp_and_estimate_slot(tmp_path):
     assert "fineGridCellProbeQRhsEstimates.value + 64;" in body
     assert "fineGridCellProbeQRhsEstimates.value + 256;" in body
     assert (
-        "Probe_rightHandSideWithFD4<\n    4,\n    2,\n    2,\n    1\n>(\n    patchData,\n    [&]("
+        "Probe_rightHandSideWithFD4<\n    4,\n    2,\n    2,\n    0\n>(\n    patchData,\n    [&]("
         in body
     )
 
 
 def test_adaptive_time_stepping_requires_max_eigenvalue(tmp_path):
-    solver = exahype2.api.Solver("Probe", 1, 0)
+    solver = exahype2.api.Solver("Probe", 1)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0];"))
     solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
         solver, patch_size=4, rk_order=2

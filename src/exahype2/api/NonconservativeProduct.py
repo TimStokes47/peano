@@ -30,7 +30,7 @@ class NonconservativeProduct(PDETerm):
     The kernels evaluate the term on each face of a volume: Q is the average
     of the two adjacent volumes, deltaQ the difference right minus left (or
     top minus bottom, ...) along normal. Both include the auxiliary
-    variables, so a term can use the jump of a material parameter, e.g. of
+    variables, so a term can use the jump of an auxiliary variable, e.g. of
     a bathymetry. The output only holds unknowns entries.
 
     The size of the volume is called volumeSize rather than h - as it is in

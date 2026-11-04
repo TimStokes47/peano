@@ -42,7 +42,7 @@ def test_stub_for_user_solver():
 
 
 def test_solver_accepts_term():
-    solver = exahype2.api.Solver("Probe", 4, 0)
+    solver = exahype2.api.Solver("Probe", 4)
     solver.add_pde_term(exahype2.api.RefineErasePointwisely(implementation=""))
     assert any(
         isinstance(term, exahype2.api.RefineErasePointwisely)

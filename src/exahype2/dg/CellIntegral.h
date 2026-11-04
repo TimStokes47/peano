@@ -149,7 +149,7 @@ namespace exahype2 {
      * @param unknowns Mumber of unknowns whose values must be updated. If you
      *   solve a PDE with n eqations over a function Q with n+m entries, then n
      *   is the number of unknonws that evolve according to the hyperbolic system
-     *   of PDEs, and m are auxiliary (material) parameters. They do not change due
+     *   of PDEs, and m are auxiliary variables. They do not change due
      *   to the PDE (though any user function might want to alter them).
      *
      * @param auxiliaryVariables. Auxiliary variables. See description of unknowns.

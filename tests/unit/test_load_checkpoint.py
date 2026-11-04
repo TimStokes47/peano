@@ -11,7 +11,7 @@ import pytest
 
 
 def _solver(scheme):
-    solver = exahype2.api.Solver("Probe", 4, 0)
+    solver = exahype2.api.Solver("Probe", 4)
     solver.add_pde_term(exahype2.api.Flux(implementation=""))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation=""))
     if scheme == "fv":

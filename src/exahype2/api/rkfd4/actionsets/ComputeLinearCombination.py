@@ -64,7 +64,7 @@ class ComputeLinearCombination(AbstractRKFD4ActionSet):
                 namespace=scheme.kernel_namespace,
                 number_of_dofs=number_of_dofs,
                 unknowns=self._solver.unknowns,
-                auxiliary_variables=self._solver.auxiliary_variables,
+                auxiliary_variables=0,
                 weights=self.weights,
                 solution=f"fineGridCell{self._solver._patch.name}.value",
                 estimates=f"fineGridCell{self._solver._rhs_estimates.name}.value",

@@ -258,7 +258,7 @@ namespace exahype2 {
      * @param QuadratureNodes1d  Arrangement of the quadrature points on the 1d
      *   unit interval, i.e. from 0 to 1.
      * @param unknownsPerDoF Total number of unknowns within a degree of
-     *   freedom. Shoudl incorporate the number of material parameters.
+     *   freedom. Shoudl incorporate the number of auxiliary variables.
      * @param Q              Pointer to data stored as AoS. The size of this
      *   data field is @f$ (order+1)^d \cdot unknownsPerDoF @f$.
      * @param x              Point of interest where the overall polynomial

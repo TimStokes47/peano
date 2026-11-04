@@ -105,14 +105,12 @@ if args.gpu:
 project.mainfile_generator = KernelMicrobenchmarkMain(project, function_calls, addition_includes)
 
 unknowns = 4
-auxiliary_variables = 0
 dimensions = 2
 verbosity = peano4.api.LoggerVerbosity.OFF
 
 thesolver = exahype2.api.Solver(
     solver_name,
     unknowns,
-    auxiliary_variables,
 )
 
 thesolver.add_user_solver_includes("#include <cmath>\n" "#include <algorithm>\n")

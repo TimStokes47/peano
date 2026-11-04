@@ -61,7 +61,11 @@ class InitialCondition(AbstractFVActionSet):
             d = {
                 "NUMBER_OF_VOLUMES_PER_AXIS": self._solver.numerical_scheme.patch_size,
                 "NUMBER_OF_UNKNOWNS": self._solver.unknowns,
-                "NUMBER_OF_AUXILIARY_VARIABLES": self._solver.auxiliary_variables,
+                "PARAMETERS": "".join(
+                    f",\n      fineGridCell{auxiliary.patch.name}.value + "
+                    f"peano4::utils::dLinearised(volume,{self._solver.numerical_scheme.patch_size}) * {auxiliary.size}"
+                    for auxiliary in self._solver.auxiliary_variables
+                ),
                 "UNKNOWN_IDENTIFIER": self._solver._unknown_identifier(),
                 "SOLVER_INSTANCE": self._solver.get_name_of_global_instance(),
             }
@@ -82,10 +86,10 @@ class InitialCondition(AbstractFVActionSet):
   // @todo Tim does it make sense to retire these loops and replace them with your compiler?
   //           It is only a minor thing, but maybe we can get rid of all of these dfor macros?
   parallelDfor( volume, {{NUMBER_OF_VOLUMES_PER_AXIS}} ) {
-    int index = peano4::utils::dLinearised(volume,{{NUMBER_OF_VOLUMES_PER_AXIS}}) * ({{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}});
+    int index = peano4::utils::dLinearised(volume,{{NUMBER_OF_VOLUMES_PER_AXIS}}) * {{NUMBER_OF_UNKNOWNS}};
     repositories::{{SOLVER_INSTANCE}}.initPointWisely(
       ::exahype2::fv::getVolumeCentre( marker.x(), marker.h(), {{NUMBER_OF_VOLUMES_PER_AXIS}}, volume),
-      fineGridCell{{UNKNOWN_IDENTIFIER}}.value + index
+      fineGridCell{{UNKNOWN_IDENTIFIER}}.value + index{{PARAMETERS}}
     );
   } endParallelDfor
 

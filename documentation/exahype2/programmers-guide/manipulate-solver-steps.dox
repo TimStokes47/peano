@@ -219,7 +219,7 @@ documentation/exahype2/programmers-guide/manipulate-solver-steps-illustrations.p
 
 toolbox.blockstructured.api.ApplyPointWiselyToPatch runs a C++ snippet for each
 volume, or grid point, of a patch. The snippet may read and write Q, i.e. all
-unknowns and auxiliary variables of one volume, and read the volume's
+unknowns of one volume, and read the volume's
 position x. Your step can use any other action set as well, e.g. one which
 needs a halo or works on faces or vertices.
 

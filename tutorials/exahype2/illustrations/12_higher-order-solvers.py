@@ -147,7 +147,7 @@ def build_and_run(
         directory=directory,
         executable="higher-order",
     )
-    solver = exahype2.api.Solver(solver_name(rk_order), 4, 0)
+    solver = exahype2.api.Solver(solver_name(rk_order), 4)
     solver.add_user_solver_includes("#include <cmath>\n#include <algorithm>\n")
     solver.add_pde_term(exahype2.api.Flux(implementation=Flux, stateless=False))
     solver.add_pde_term(

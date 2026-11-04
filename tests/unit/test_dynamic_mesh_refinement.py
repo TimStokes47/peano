@@ -26,7 +26,7 @@ SCHEMES = {
 
 
 def _solver(scheme, criterion=True, **bounds):
-    solver = exahype2.api.Solver("Probe", 2, 0)
+    solver = exahype2.api.Solver("Probe", 2)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation="*lambdaMax = 1.0;"))
     if criterion:

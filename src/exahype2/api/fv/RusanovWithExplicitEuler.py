@@ -16,6 +16,12 @@ from collections import OrderedDict
 import exahype2.api.dslhype2 as dslhype
  
 from ..Solver import Solver
+from ..AuxiliaryVariables import (
+    register_auxiliary_variables,
+    add_reconstruction_of_auxiliary_variables,
+    use_halos_of_auxiliary_variables,
+    forwarding_arguments,
+)
 from ..blockstructured.BoundaryConditions import get_access_to_persistent_face_data
 from ..blockstructured.create_dynamic_mesh_refinement_action_set import (
     create_dynamic_mesh_refinement_action_set,
@@ -351,7 +357,7 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
           need to be re-checked at runtime the same way.
 
         """
-        total_unknowns = self._solver.unknowns + self._solver.auxiliary_variables
+        total_unknowns = self._solver.unknowns
         identifier = self._solver._unknown_identifier()
 
         self._solver._patch = peano4.api.datamodel.Patch(
@@ -402,6 +408,7 @@ Patch overlap data
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
         peano_project.datamodel.add_cell(self._solver._max_eigenvalue)
+        register_auxiliary_variables(self._solver, peano_project, self.patch_size, self.overlap)
 
         # The task graph compiler only uses, loads and stores data where the
         # solver's grid selector holds, too (@see peano4.api.datamodel.DoF).
@@ -577,8 +584,12 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         ## conditions, which advance the ghost volumes within the roll over
         ApplyDirichletBoundaryConditions.add_task_to_time_step(self._solver, exahype2_project, time_step, reconstruction_task)
 
+        ## The halos of the auxiliary variables
+        add_reconstruction_of_auxiliary_variables(reconstruction_task, self._solver)
+
         ## Do the actual time step update
         update_cell_task.add_dependency(reconstruction_task)
+        use_halos_of_auxiliary_variables(update_cell_task, self._solver)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
         update_cell_task.use_cell(self._solver._max_eigenvalue,  peano4.api.taskgraph.Task.DataAccess.WRITE)
@@ -727,7 +738,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
             dslhype.Argument(dslhype.Name("NV"), dslhype.TInteger()): self._solver.numerical_scheme.patch_size,
             dslhype.Argument(dslhype.Name("H"), dslhype.TInteger()): self._solver.numerical_scheme.overlap,
             dslhype.Argument(dslhype.Name("NumberOfUnknowns"), dslhype.TInteger()): self._solver.unknowns,
-            dslhype.Argument(dslhype.Name("NumberOfAuxiliaryVariables"), dslhype.TInteger()): self._solver.auxiliary_variables
+            dslhype.Argument(dslhype.Name("NumberOfAuxiliaryVariables"), dslhype.TInteger()): self._solver.number_of_auxiliary_variables
         }
 
         function_map = {
@@ -827,10 +838,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
                     application_term = variants[term].get(stateless, next(iter(variants[term].values())))
                     # Commas inside template brackets, e.g. Vector<Dimensions, double>,
                     # do not separate parameters
-                    arguments = [
-                        parameter.split()[-1]
-                        for parameter in re.split(r",(?![^<]*>)", application_term.SIGNATURE)
-                    ]
+                    arguments = forwarding_arguments(application_term.SIGNATURE, self._solver)
                     # Stateless terms are static and take a dummy tag (@see PDETerm)
                     if application_term.stateless:
                         arguments.append("::exahype2::Solver::Offloadable::Yes")

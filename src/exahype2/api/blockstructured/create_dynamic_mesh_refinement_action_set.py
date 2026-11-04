@@ -59,6 +59,10 @@ def create_dynamic_mesh_refinement_action_set(
     criterion = get_adaptivity_criterion(solver)
     if criterion is None:
         return None
+    if solver.auxiliary_variables:
+        raise NotImplementedError(
+            f"Solver {solver.name}: dynamic mesh refinement is not supported for solvers with auxiliary variables yet."
+        )
     if isinstance(criterion, RefineErasePointwisely):
         action_set_type = DynamicMeshRefinement
     elif isinstance(criterion, GradientRefinement):
