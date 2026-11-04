@@ -19,7 +19,7 @@ The build variants are
 
 - debug: Peano's debug build with a tiny setup to check that the code works,
 - profile: Peano's build with statistics counters and a reduced setup
-  (domain 54, volumes of size 1) which is small enough to profile on one
+  (domain 172, volumes of size 1) which is small enough to profile on one
   node, and
 - production: the release build with the setup of README.dox (domain 486,
   volumes of size 0.4, t=100). This one is far too big for a workstation.
@@ -94,7 +94,7 @@ Variants = {
     ),
     "profile": dict(
         mode=peano4.api.output.CompileMode.STATS,
-        domain_size=54.0,
+        domain_size=172.0,
         volume_size=1.2,
         end_time=1.0,
     ),
