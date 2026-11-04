@@ -53,7 +53,7 @@ namespace exahype2 {
      * This routine assumes that the particle hosts exactly the same number
      * of unknown as you store within the solution, i.e. within each entry
      * of Q. The count refers to the unknowns plus auxiliary variables within
-     * ExaHyPE. If you host a PDE with 10 unknowns and 3 material parameters,
+     * ExaHyPE. If you host a PDE with 10 unknowns and 3 auxiliary variables,
      * then this routine works if and only if the particle carries 13 unknowns.
      *
      * The solution assumes that the Q represents a piecewise constant solution

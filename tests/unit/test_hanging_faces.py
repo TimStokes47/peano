@@ -63,7 +63,7 @@ def test_injection_does_not_clear_faces():
 
 
 def _graphs(tmp_path, **scheme_arguments):
-    solver = exahype2.api.Solver("Probe", 4, 0)
+    solver = exahype2.api.Solver("Probe", 4)
     solver.add_pde_term(exahype2.api.Flux(implementation=""))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation=""))
     solver.add_pde_term(exahype2.api.InitPointWisely(implementation=""))

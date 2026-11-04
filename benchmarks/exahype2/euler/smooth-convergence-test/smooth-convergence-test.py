@@ -27,14 +27,12 @@ project = exahype2.api.Project(
 
 solver_name = "EulerFVSmooth"
 unknowns = 4
-auxiliary_variables = 0
 patch_size = 9
 dimensions = 2
 
 thesolver = exahype2.api.Solver(
     solver_name,
     unknowns,
-    auxiliary_variables,
 )
 
 thesolver.add_pde_term( exahype2.api.Flux(stateless=False,))

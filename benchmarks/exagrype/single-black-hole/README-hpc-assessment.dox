@@ -22,7 +22,7 @@ Peano build as described above. "Sweeps" is the number of mesh traversals of the
 | fd4-rk4-lopsided-ko | 82 | 62 | 0.083 |
 
 (fv-amr-1 and the two lop-sided runs use `--compiler sequential`, see the warning below. The other runs use the default
-compiler `fusion`.)
+compiler `producer-consumer-fusion`.)
 
 What we learn from this:
 
@@ -41,7 +41,7 @@ What we learn from this:
   (see the AMR section above), i.e. a factor of 16 in the best case. Local time stepping would help here, as the vast majority of the volumes could use a three times larger time step.
 
 <div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
-  The Finite Differences with lop-sided advection deadlock with the default task graph compiler `fusion` if more than one thread is used
+  The Finite Differences with lop-sided advection deadlock with the default task graph compiler `producer-consumer-fusion` if more than one thread is used
   (all threads of the runs with 2, 4 and 8 threads stood still without a single time step; with one thread the same
   executable makes progress). The sequential compiler (`--compiler sequential`) runs fine. See the profiling section below for the
   diagnosis. The first run of the scheme study consequently hit the timeout for these two schemes.
@@ -61,7 +61,7 @@ python3 studies-single-black-hole.py performance --variant profile --threads 1 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 runs the Finite Volumes on the regular mesh and with one AMR level (regular, amr-1; radius 1) for each task graph compiler
-(`sequential`, `fusion-only`, `producer-consumer-sequential`, `fusion`) and every thread count.
+(`sequential`, `fusion-only`, `producer-consumer-sequential`, `producer-consumer-fusion`) and every thread count.
 The thread count is set via `OMP_NUM_THREADS` and therefore applies to OpenMP builds only.
 The profile variant uses Peano's stats build. The study measures the wall time of each run (`results-performance.csv`).
 
@@ -78,23 +78,23 @@ adaptive mesh figures stem from one run.
 | regular | sequential | 39.0 | 14.5 | 12.1 | 3.2 |
 | regular | fusion-only | 43.8 | 13.4 | 9.4 | 4.7 |
 | regular | producer-consumer-sequential | 39.4 | 14.5 | 12.4 | 3.2 |
-| regular | fusion | 45.3 | 12.2 | 9.5 | 4.8 |
+| regular | producer-consumer-fusion | 45.3 | 12.2 | 9.5 | 4.8 |
 | adaptive (1 level, radius 1) | sequential | 511 | | 172 | 3.0 |
 | adaptive (1 level, radius 1) | fusion-only | 584 | | 130 | 4.5 |
 | adaptive (1 level, radius 1) | producer-consumer-sequential | 504 | | 147 | 3.4 |
-| adaptive (1 level, radius 1) | fusion | 592 | | 105 | 5.6 |
+| adaptive (1 level, radius 1) | producer-consumer-fusion | 592 | | 105 | 5.6 |
 
 - The assumption that the task-based variant is the fastest holds with a qualification. The variant that combines
-  fusion of the sweeps with tasks (`fusion`) is the fastest as soon as more than a handful of threads are used: 1.3 times faster than the
+  fusion of the sweeps with tasks (`producer-consumer-fusion`) is the fastest as soon as more than a handful of threads are used: 1.3 times faster than the
   sequential compiler on the regular mesh and 1.6 times faster on the adaptive mesh with eight threads. It is, however, the slowest variant with
   one thread (15% slower on both meshes), i.e. it pays an overhead that only parallelism recovers.
 - The task-based variant without fusion (`producer-consumer-sequential`) is no faster than the sequential
   compiler on the regular mesh (12.4 s vs. 12.1 s) and only 17% faster on the adaptive mesh. The gain comes from fusing sweeps, not from tasking:
-  `fusion-only` (no tasks) matches `fusion` on the regular mesh (9.4 s vs. 9.5 s). Tasks gain another 24% on the adaptive mesh
+  `fusion-only` (no tasks) matches `producer-consumer-fusion` on the regular mesh (9.4 s vs. 9.5 s). Tasks gain another 24% on the adaptive mesh
   (105 s vs. 130 s), where the patches are costlier and the tasks have more to overlap.
 - Scalability is poor on all variants. Even the best variants reach a parallel efficiency of only 60% (regular) to 70% (adaptive)
   on eight threads. On the regular mesh the setup (TwoPunctures plus mesh construction) takes 2.8 s of the 9.5 s, and it does not benefit from the choice of the compiler.
-- The adaptive mesh costs 11 times more than the regular mesh at eight threads with `fusion`.
+- The adaptive mesh costs 11 times more than the regular mesh at eight threads with `producer-consumer-fusion`.
 
 For the compute-bound view of the kernels, see @ref benchmarks_exagrype_kernel_benchmarks.
 
@@ -106,21 +106,21 @@ eight-core workstation. The Peano build is the one described above, with `-g -O3
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 source /opt/intel/oneapi/vtune/2024.3/vtune-vars.sh
-cd studies-performance/regular-fusion          # a directory produced by studies-single-black-hole.py
-OMP_NUM_THREADS=8 vtune -collect hotspots -knob sampling-mode=sw -result-dir vtune-regular-fusion -- ./single-black-hole
-vtune -report summary  -result-dir vtune-regular-fusion
-vtune -report hotspots -result-dir vtune-regular-fusion -limit 25
+cd studies-performance/regular-producer-consumer-fusion          # a directory produced by studies-single-black-hole.py
+OMP_NUM_THREADS=8 vtune -collect hotspots -knob sampling-mode=sw -result-dir vtune-regular-producer-consumer-fusion -- ./single-black-hole
+vtune -report summary  -result-dir vtune-regular-producer-consumer-fusion
+vtune -report hotspots -result-dir vtune-regular-producer-consumer-fusion -limit 25
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The percentages below refer to CPU time summed over all threads. We profiled five setups:
 
 | Setup | CPU time [s] | Remarks |
 | ----- | -----------: | ------- |
-| FV, regular mesh, `fusion`, 1 thread | 47 | cleanest view on the kernels |
-| FV, regular mesh, `fusion`, 8 threads | 66 | spin time 3.1 s, overhead 3.5 s |
+| FV, regular mesh, `producer-consumer-fusion`, 1 thread | 47 | cleanest view on the kernels |
+| FV, regular mesh, `producer-consumer-fusion`, 8 threads | 66 | spin time 3.1 s, overhead 3.5 s |
 | FV, regular mesh, `sequential`, 8 threads | 86 | spin time 6.9 s, overhead 7.5 s |
-| FV, adaptive mesh (1 level), `fusion`, 8 threads | 837 | spin 40 s, overhead 47 s |
-| FD4 (RK4), regular mesh, `fusion`, 8 threads | 477 | spin 35 s, overhead 38 s |
+| FV, adaptive mesh (1 level), `producer-consumer-fusion`, 8 threads | 837 | spin 40 s, overhead 47 s |
+| FD4 (RK4), regular mesh, `producer-consumer-fusion`, 8 threads | 477 | spin 35 s, overhead 38 s |
 
 ### Where the time goes
 
@@ -131,7 +131,7 @@ takes 18% of this short run. Heap management takes 8%: `free` 4.3%, `operator ne
 Peano's mesh traversal (`peano4::grid`) is below 2%.
 
 **Finite Volumes, eight threads.** The compute kernels shrink to 39% (they scale), whereas everything that moves data does not:
-`memcpy` grows from 1.2 s to 5.1 s of CPU time (8%) and `peano4::grid` takes 3.1 s with `fusion` but 7.9 s (9%) with the sequential compiler.
+`memcpy` grows from 1.2 s to 5.1 s of CPU time (8%) and `peano4::grid` takes 3.1 s with `producer-consumer-fusion` but 7.9 s (9%) with the sequential compiler.
 That is the effect that makes fusion fast: it cuts the traversal cost by 60%. The remaining 6 s of spinning at barriers
 (`__kmp_fork_barrier`) and the serial setup limit the speedup.
 
@@ -161,8 +161,8 @@ Sorted by expected benefit per effort; we did not change any code in Peano.
 1. **Fix the polling loop of the OpenMP 5 task fallback.** Add an `#pragma omp taskyield` to the loop that polls `hasTaskFinishedInOpenMP5()` in
    `spawnTaskWithOpenMP5()` (the polling loop for the in/out dependency a few lines above it already has one) or defer the task until its predecessors have finished.
    Until then, run the Finite Differences with lop-sided advection with `--compiler sequential`. We did not test the taskyield patch.
-2. **Use `fusion` for runs with at least four threads and `sequential` for a single thread** (see the table above). The default of the script
-   is `fusion`, which is the right choice for the production runs but not for debugging on a single core.
+2. **Use `producer-consumer-fusion` for runs with at least four threads and `sequential` for a single thread** (see the table above). The default of the script
+   is `producer-consumer-fusion`, which is the right choice for the production runs but not for debugging on a single core.
 3. **Remove the heap temporaries from the generated Finite Volume kernel.** The kernel generated from the DSL
    (`kernels/CCZ4_rusanov3d.cpph`) allocates 30 temporary arrays per call, each as an array of pointers plus one `new double[...]` per cell of the batch, and
    deletes them again. For CCZ4 with 59 unknowns, this costs 8% of the single-thread time (plus the `memset`s that initialise them). Reusing

@@ -123,7 +123,7 @@ class ApplyDirichletBoundaryConditions(ActionSet):
             "NUMBER_OF_GRID_CELLS_PER_AXIS": str(patch_overlap.dim[1]),
             "OVERLAP": str(int(patch_overlap.dim[0] / 2)),
             "NUMBER_OF_UNKNOWNS": str(solver.unknowns),
-            "NUMBER_OF_AUXILIARY_VARIABLES": str(solver.auxiliary_variables),
+            "NUMBER_OF_AUXILIARY_VARIABLES": "0",
             "FACE_ACCESSOR": "fineGridFace" + patch_overlap.name,
         }
 

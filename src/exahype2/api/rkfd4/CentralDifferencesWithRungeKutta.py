@@ -14,8 +14,15 @@ import exahype2.api.dslhype as dslhype
 
 from ..MaxEigenvalue import MaxEigenvalue
 from ..Solver import Solver
+from ..AuxiliaryVariables import (
+    register_auxiliary_variables,
+    add_reconstruction_of_auxiliary_variables,
+    use_halos_of_auxiliary_variables,
+    forwarding_arguments,
+)
 from ..rungekutta import ButcherTableau
 from ..rungekutta.LinearCombination import generate_linear_combination_kernel
+from ..rungekutta.LinearCombination import include_implementation_into_header
 from . import FD4Kernels
 from .Quantities import resolve_quantities
 from .actionsets import AddLopsidedAdvection
@@ -161,6 +168,11 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     ## Width of the halo. Subclasses with wider stencils override it.
     HALO_SIZE = 2
 
+    @property
+    def halo_size(self) -> int:
+        """! Width of the halo. Alias of HALO_SIZE, as the generic parts of exahype2.api expect this name. """
+        return self.HALO_SIZE
+
     class RightHandSideKernel(enum.Enum):
         """!
         The kernels which evaluate the right-hand side, @see the class documentation
@@ -302,9 +314,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
                 )
             if isinstance(advection_velocity, (str, int)):
                 advection_velocity = [advection_velocity]
-            self.advection_velocity = resolve_quantities(
-                solver, advection_velocity, include_auxiliary_variables=True
-            )
+            self.advection_velocity = resolve_quantities(solver, advection_velocity)
             self.advected_quantities = resolve_quantities(solver, advected_quantities)
             # The lopsided stencils reach three grid cells into the neighbours
             self.HALO_SIZE = max(self.HALO_SIZE, 3)
@@ -456,7 +466,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
         it.
 
         """
-        total_unknowns = self._solver.unknowns + self._solver.auxiliary_variables
+        total_unknowns = self._solver.unknowns
         identifier = self._solver._unknown_identifier()
         n = self.patch_size
         h = self.HALO_SIZE
@@ -552,6 +562,9 @@ Patch overlap data
         peano_project.datamodel.add_cell(self._solver._rhs_estimates)
         peano_project.datamodel.add_face(self._solver._patch_overlap_current_time_step)
         peano_project.datamodel.add_face(self._solver._patch_overlap_update)
+        register_auxiliary_variables(
+            self._solver, peano_project, self.patch_size, self.HALO_SIZE
+        )
 
         data = self._patches()
         if self.has_adaptive_time_step_size:
@@ -687,6 +700,12 @@ Patch overlap data
                 output_directory=output_directory,
             )
 
+        for _, file_suffix, _ in kernels:
+            include_implementation_into_header(
+                os.path.join(output_directory, "kernels"),
+                f"{self._solver.name}{file_suffix}",
+            )
+
         includes_2d = "\n".join(
             f'    #include "{self._solver.name}{file_suffix}.h"'
             for _, file_suffix, _ in kernels
@@ -781,12 +800,9 @@ Patch overlap data
                 )
                 # Commas inside template brackets, e.g. Vector<Dimensions, double>,
                 # do not separate parameters
-                term_arguments = [
-                    parameter.split()[-1]
-                    for parameter in re.split(
-                        r",(?![^<]*>)", application_term.SIGNATURE
-                    )
-                ]
+                term_arguments = forwarding_arguments(
+                    application_term.SIGNATURE, self._solver
+                )
                 # Stateless terms are static and take a dummy tag (@see PDETerm)
                 if application_term.stateless:
                     term_arguments.append("::exahype2::Solver::Offloadable::Yes")
@@ -802,7 +818,7 @@ Patch overlap data
     {self.patch_size},
     {self.HALO_SIZE},
     {self._solver.unknowns},
-    {self._solver.auxiliary_variables}
+    {self._solver.number_of_auxiliary_variables}
 >(
     {",".join(arguments)}
 );"""
@@ -1024,6 +1040,9 @@ Patch overlap data
                     self._solver, exahype2_project, Access.READ_AND_DISCARD
                 ),
             )
+            add_reconstruction_of_auxiliary_variables(
+                reconstruction_task, self._solver
+            )
             reconstruction_task.add_action_set(
                 toolbox.blockstructured.api.ReconstructPatchWithHalo(
                     patch=stage_input,
@@ -1068,6 +1087,7 @@ Patch overlap data
             right_hand_side_task.use_cell(
                 self._solver._rhs_estimates, Access.READ_AND_WRITE
             )
+            use_halos_of_auxiliary_variables(right_hand_side_task, self._solver)
             for action_set in self._right_hand_side_action_sets(stage, cell_guard):
                 right_hand_side_task.add_action_set(action_set)
 
@@ -1116,6 +1136,8 @@ Patch overlap data
             )
             if is_last_stage and self.has_adaptive_time_step_size:
                 projection_task.use_cell(self._solver._max_eigenvalue, Access.WRITE)
+                for auxiliary in self._solver.auxiliary_variables:
+                    projection_task.use_cell(auxiliary.patch, Access.READ_AND_WRITE)
                 projection_task.add_action_set(
                     ComputeMaxEigenvalue(self._solver, guard=cell_guard)
                 )

@@ -45,6 +45,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
 
     static constexpr int    NumberOfUnknowns           = {{NUMBER_OF_UNKNOWNS}};
     static constexpr int    NumberOfAuxiliaryVariables = {{NUMBER_OF_AUXILIARY_VARIABLES}};
+    static constexpr int    PatchSize                  = {{PATCH_SIZE}};
+    static constexpr int    HaloSize                   = {{HALO_SIZE}};
 
     {{VARIABLES}}
 
@@ -143,18 +145,21 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
         Q[Variables::rho] instead of Q[0].
 
         """
-        if not self._solver._variable_positions:
-            return ""
-        constants = "\n".join(
-            f"      static constexpr int {variable_name} = {position};"
-            for variable_name, position in self._solver._variable_positions.items()
-        )
-        return (
-            "/**\n"
-            "     * Positions of the named unknowns and auxiliary variables within Q\n"
-            "     */\n"
-            "    struct Variables {\n" + constants + "\n    };"
-        )
+        declarations = []
+        if self._solver._variable_positions:
+            constants = "\n".join(
+                f"      static constexpr int {variable_name} = {position};"
+                for variable_name, position in self._solver._variable_positions.items()
+            )
+            declarations.append(
+                "/**\n"
+                "     * Positions of the named unknowns within Q\n"
+                "     */\n"
+                "    struct Variables {\n" + constants + "\n    };"
+            )
+        for auxiliary in self._solver.auxiliary_variables:
+            declarations.append(auxiliary.variables_declaration())
+        return "\n".join(declarations)
 
     def construct_output(
         self,
@@ -181,14 +186,16 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
 
         local_d = {
             "NUMBER_OF_UNKNOWNS": self._solver._unknowns,
-            "NUMBER_OF_AUXILIARY_VARIABLES": self._solver._auxiliary_variables,
+            "NUMBER_OF_AUXILIARY_VARIABLES": self._solver.number_of_auxiliary_variables,
+            "PATCH_SIZE": self._solver.numerical_scheme.patch_size,
+            "HALO_SIZE": self._solver.numerical_scheme.halo_size,
             "USER_SOLVER_INCLUDES": self._solver.user_solver_includes,
             "VARIABLES": self._variables_declaration(),
             "PDE_TERM_DECLARATIONS": "\n".join(
-                term.generator.generate_declaration() for term in self._solver.pde_terms
+                term.generator_for(self._solver).generate_declaration() for term in self._solver.pde_terms
             ),
             "PDE_TERM_DEFINITIONS": "\n".join(
-                term.generator.generate_out_of_class_definitions(qualified_class_name)
+                term.generator_for(self._solver).generate_out_of_class_definitions(qualified_class_name)
                 for term in self._solver.pde_terms
             ),
             "ADDITIONAL_ATTRIBUTES": "\n".join(
@@ -231,11 +238,11 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public {{NAMESPACE | join("::")
 
         solver_local_d = {
             "PDE_TERM_STUB_DECLARATIONS": "\n".join(
-                term.generator.generate_stub_declaration()
+                term.generator_for(self._solver).generate_stub_declaration()
                 for term in self._solver.pde_terms
             ),
             "PDE_TERM_STUB_DEFINITIONS": "\n".join(
-                term.generator.generate_stub_definition(qualified_solver_class_name)
+                term.generator_for(self._solver).generate_stub_definition(qualified_solver_class_name)
                 for term in self._solver.pde_terms
             ),
         }

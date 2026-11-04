@@ -939,6 +939,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
         self.min_volume_size = min_volume_size
         self.max_volume_size = max_volume_size
         self.patch_size = patch_size
+        self.halo_size = overlap
         self.overlap = overlap
         # Set in construct_output(): the generated kernels live in the project
         # namespace, as their names are solver-specific
@@ -1058,7 +1059,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
           need to be re-checked at runtime the same way.
 
         """
-        total_unknowns = self._solver.unknowns + self._solver.auxiliary_variables
+        total_unknowns = self._solver.unknowns
         identifier = self._solver._unknown_identifier()
 
         self._solver._patch = peano4.api.datamodel.Patch(
@@ -1200,6 +1201,11 @@ Patch overlap data
         """!
 
         """
+        if self._solver.auxiliary_variables:
+            raise NotImplementedError(
+                f"Solver {self._solver.name}: RusanovWithOptimisticExplicitEuler does not support "
+                "auxiliary variables yet. Use RusanovWithExplicitEuler."
+            )
         peano4.api.Logger().log("Create time stepping task graph for Finite Volume scheme over block-structured meshes with Rusanov flux")
 
         self.__add_data_to_repository(peano_project)
@@ -1573,7 +1579,7 @@ Patch overlap data
         {self.patch_size},
         {self.overlap},
         {self._solver.unknowns},
-        {self._solver.auxiliary_variables}
+        {self._solver.number_of_auxiliary_variables}
     >(
         patchData,
         {self._solver.name}
@@ -1626,7 +1632,7 @@ Patch overlap data
     {self.patch_size},
     {self.overlap},
     {self._solver.unknowns},
-    {self._solver.auxiliary_variables}
+    {self._solver.number_of_auxiliary_variables}
 >(
     patchData,
 {",\n".join(pde_term_calls)}

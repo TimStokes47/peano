@@ -82,7 +82,7 @@ namespace exahype2 {
          * We reiterate that Q holds two types of entries: The actual data subject
          * to the PDE (and algebraic and differential source terms) and arbitrary
          * auxiliary variables per volume that the user has specified. Auxiliary
-         * parameters are coupling terms, material parameters, helper
+         * parameters are coupling terms, auxiliary variables, helper
          * variables that you use to compute some metrics, ... They are not
          * evolved as part of the PDE. As the source term affects only the PDE
          * variables, we copy these entries in Q over and add the source term 

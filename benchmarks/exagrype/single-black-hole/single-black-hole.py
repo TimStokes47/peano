@@ -19,7 +19,7 @@ The build variants are
 
 - debug: Peano's debug build with a tiny setup to check that the code works,
 - profile: Peano's build with statistics counters and a reduced setup
-  (domain 54, volumes of size 1) which is small enough to profile on one
+  (domain 172, volumes of size 1) which is small enough to profile on one
   node, and
 - production: the release build with the setup of README.dox (domain 486,
   volumes of size 0.4, t=100). This one is far too big for a workstation.
@@ -43,7 +43,7 @@ A run of the fourth-order Finite Differences with lopsided advection and
 the Kreiss-Oliger dissipation looks like
 
     python3 single-black-hole.py --scheme fd4 --rk-order 4 --lopsided --ko-sigma 8.0 \
-      --compiler fusion --variant profile
+      --compiler producer-consumer-fusion --variant profile
 
 and Finite Volumes with two additional levels of adaptive mesh refinement
 around the black hole are
@@ -76,7 +76,7 @@ Compilers = {
     "sequential": peano4.api.taskgraph.compiler.Sequential.translate,
     "fusion-only": peano4.api.taskgraph.compiler.FuseSteps.translate,
     "producer-consumer-sequential": peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_sequential,
-    "fusion": peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion,
+    "producer-consumer-fusion": peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion,
 }
 
 EnforceModes = {
@@ -94,7 +94,7 @@ Variants = {
     ),
     "profile": dict(
         mode=peano4.api.output.CompileMode.STATS,
-        domain_size=54.0,
+        domain_size=172.0,
         volume_size=1.2,
         end_time=1.0,
     ),
@@ -258,7 +258,7 @@ def parse_arguments():
     build.add_argument(
         "--compiler",
         choices=list(Compilers),
-        default="fusion",
+        default="producer-consumer-fusion",
         help="Task graph compiler, i.e. how time step tasks are mapped onto mesh traversals.",
     )
     build.add_argument(

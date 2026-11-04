@@ -10,7 +10,7 @@ import pytest
 
 
 def _solver(scheme="fv", dirichlet=False):
-    solver = exahype2.api.Solver("Probe", {"rho": 1, "j": 2, "E": 1}, {"c": 1})
+    solver = exahype2.api.Solver("Probe", {"rho": 1, "j": 2, "E": 1})
     solver.add_pde_term(exahype2.api.Flux(implementation=""))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation=""))
     solver.add_pde_term(exahype2.api.InitPointWisely(implementation=""))
@@ -132,14 +132,14 @@ def test_checkpoint_meta_data_lists_added_attributes(tmp_path):
 
 def test_vtk_plotter_selects_quantities(tmp_path):
     solver = _solver()
-    plotter = exahype2.api.fv.PlotAsVTKFile(solver, quantities=["j", 4])
+    plotter = exahype2.api.fv.PlotAsVTKFile(solver, quantities=["j", 3])
     plotter.add_plot_filter((0.0, 0.0), (0.5, 0.5))
     solver.add_plotter(plotter)
     graph = _plot_graph(solver, tmp_path)
     (action_set,) = graph.tasks[0].action_sets
-    assert action_set.d["SELECT_DOFS"] == [1, 2, 4]
+    assert action_set.d["SELECT_DOFS"] == [1, 2, 3]
     assert action_set.d["PLOTTED_UNKNOWNS"] == "3"
-    assert action_set.d["DESCRIPTION"] == "j[0], j[1], c"
+    assert action_set.d["DESCRIPTION"] == "j[0], j[1], E"
     assert "marker.overlaps" in action_set.d["GUARD_PREDICATE"]
     assert action_set.get_guard_of_operation("touchCellFirstTime").startswith(
         "repositories::instanceOfProbe.isPlotAsVTKFileActive()"
@@ -183,7 +183,7 @@ def test_checkpoint_reconstructs_and_writes_patch_with_halo(tmp_path, scheme, ha
     (write,) = [t for t in graph.tasks if t.name.endswith("Write checkpoint")]
     (action_set,) = write.action_sets
     assert action_set.d["DOFS_PER_AXIS"] == str(9 + 2 * halo)
-    assert action_set.d["UNKNOWNS"] == "5"
+    assert action_set.d["UNKNOWNS"] == "4"
     assert action_set.d["SELECT_DOFS"] is None
     assert action_set.d["PATCH_SCALING"] == (9 + 2 * halo) / 9
     assert action_set.d["PRECISION"] == 17

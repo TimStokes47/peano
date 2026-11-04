@@ -70,7 +70,7 @@ class AddKreissOligerDissipation(exahype2.api.rkfd4.actionsets.AbstractRKFD4Acti
     {n},
     {scheme.overlap},
     {unknowns},
-    {self._solver.auxiliary_variables},
+    {0},
     {self.sigma!r},
     dissipativeQuantities,
     {len(self.quantities)}

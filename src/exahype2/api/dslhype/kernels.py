@@ -51,30 +51,21 @@ def translate_dslhype_function(
     )
 
     function_declaration = tree.print_declaration()
-    function_definition = tree.print_cpp()
+    if target == Target.Accelerator:
+        function_definition = tree.print_omp()
+    else:
+        function_definition = tree.print_cpp()
     function_declaration_with_timer = tree.print_declaration_with_timer()
     function_definition_with_timer = tree.print_definition_with_timer()
 
     kernels_directory = os.path.join(output_directory, "kernels")
     os.makedirs(kernels_directory, exist_ok=True)
-    file = open(os.path.join(kernels_directory, f"{output_file_name}.h"), "w")
-    file.write("""#pragma once
-#include "exahype2/Solver.h"
-#include "exahype2/CellData.h"
-#include "exahype2/VolumeIndex.h"
-#include "exahype2/fv/PatchUtils.h"
-#include "exahype2/fv/rusanov/Functors.h"
-#include "peano4/utils/Loop.h"
-#include "tarch/timing/Measurement.h"
-#include "tarch/timing/Watch.h"
-""")
+    file = open(os.path.join(kernels_directory, f"{output_file_name}.h"), "a")
     file.write(function_declaration)
     file.write(function_declaration_with_timer)
-    file.write(f"""#include "{output_file_name}.cpph"\n""")
     file.close()
 
-    file = open(os.path.join(kernels_directory, f"{output_file_name}.cpph"), "w")
-    file.write(f"""#include "{output_file_name}.h"\n""")
+    file = open(os.path.join(kernels_directory, f"{output_file_name}.cpph"), "a")
     file.write(function_definition)
     file.write(function_definition_with_timer)
     file.close()

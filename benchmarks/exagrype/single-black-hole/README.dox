@@ -206,7 +206,7 @@ distinguishes three variants through `--variant`:
 | Variant    | Compile mode        | Domain | Volume size | End time | Purpose |
 | ---------- | ------------------- | ------ | ----------- | -------- | ------- |
 | debug      | Peano debug build   | 18     | 1.2         | 0.5      | Does the code work at all? |
-| profile    | Peano stats build   | 54     | 1.2         | 5        | Small enough to profile and to run parameter studies on one node. |
+| profile    | Peano stats build   | 172    | 1.2         | 5        | Small enough to profile and to run parameter studies on one node. |
 | production | Peano release build | 486    | 0.4         | 100      | The setup from above. |
 
 The variant fixes the defaults of `--domain-size`, `--volume-size` and `--end-time`. You can

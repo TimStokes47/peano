@@ -185,7 +185,7 @@ class DynamicMeshRefinement(ActionSet):
             d = {
                 "NUMBER_OF_VOLUMES_PER_AXIS": self.patch_size,
                 "NUMBER_OF_UNKNOWNS": self._solver.unknowns,
-                "NUMBER_OF_AUXILIARY_VARIABLES": self._solver.auxiliary_variables,
+                "NUMBER_OF_AUXILIARY_VARIABLES": 0,
                 "UNKNOWN_IDENTIFIER": self._solver._unknown_identifier(),
                 "SOLVER_INSTANCE": self._solver.get_name_of_global_instance(),
                 "REFINE_BOUND": refine_bound,

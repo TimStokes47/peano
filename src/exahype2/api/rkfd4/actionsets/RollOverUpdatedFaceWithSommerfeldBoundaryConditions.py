@@ -141,7 +141,7 @@ class RollOverUpdatedFaceWithSommerfeldBoundaryConditions(RollOverUpdatedFace):
         self._time_step_size = time_step_size
         self.d["SOLVER_INSTANCE"] = solver.get_name_of_global_instance()
         self.d["NUMBER_OF_UNKNOWNS"] = str(solver.unknowns)
-        self.d["NUMBER_OF_AUXILIARY_VARIABLES"] = str(solver.auxiliary_variables)
+        self.d["NUMBER_OF_AUXILIARY_VARIABLES"] = "0"
         self.d["ORIGIN"] = "{" + ", ".join(repr(float(x)) for x in origin) + "}"
         self.d["TIME_STEP_SIZE"] = time_step_size
 
