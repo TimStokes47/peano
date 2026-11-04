@@ -213,3 +213,47 @@ def test_optimistic_scheme_rejects_material_parameters(tmp_path):
             peano4.api.Project(["probe"], "probe", str(tmp_path)),
             peano4.api.taskgraph.Graph(),
         )
+
+
+def test_gpu_update_assembles_buffers_before_copying_to_the_device():
+    solver = _solver()
+    for material in _two_sets():
+        solver.add_material_parameters(material)
+    solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 6)
+    solver._material_parameter_halos = {
+        "Bathymetry": types.SimpleNamespace(name="BathymetryHalo"),
+        "Distortion": types.SimpleNamespace(name="DistortionHalo"),
+    }
+    solver.compute_kernel_call = "kernel();"
+    body = exahype2.api.fv.actionsets.UpdateCellGPU(solver, "true").get_body_of_operation(
+        peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+    )
+    # Stride of the kernels: three unknowns plus six material parameters
+    assert "int inputStride = 9 *" in body
+    assert body.index("std::vector<double> kernelIn") < body.index("CopyCellDataGPU")
+    assert "fineGridCellBathymetryHalo.value[volume*1 + k]" in body
+    assert "fineGridCellDistortionHalo.value[volume*5 + k]" in body
+    assert body.index("copyBackAndDestroy") < body.rindex("kernelOut[volume*9 + k]")
+
+
+def test_fd4_reconstructs_the_halos_of_material_parameters(tmp_path):
+    solver = _solver()
+    solver.add_material_parameters(_two_sets()[0])
+    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        solver, patch_size=6, rk_order=2, time_step_size=0.1
+    )
+    exahype2_project = types.SimpleNamespace(periodic_BC=[True] * 3)
+    peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
+    time_step = peano4.api.taskgraph.Graph()
+    solver.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
+    tasks = {task.name: task for task in time_step.tasks}
+    reconstruction = tasks["Probe_Reconstruct stage 0"]
+    patches = [type(a).__name__ for a in reconstruction.action_sets]
+    assert patches.count("ReconstructPatchWithHalo") == 2
+    update = tasks["Probe_Evaluate right hand side stage 0"]
+    body = update.action_sets[0].get_body_of_operation(
+        peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+    )
+    assert "std::vector<double> kernelIn" in body
+    # The kernels see the unknowns plus the material parameters
+    assert "Probe_rightHandSideWithFD4<\n    6,\n    2,\n    3,\n    1\n>" in solver.compute_kernel_call

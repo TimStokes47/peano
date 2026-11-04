@@ -22,6 +22,7 @@ from ..MaterialParameters import (
 )
 from ..rungekutta import ButcherTableau
 from ..rungekutta.LinearCombination import generate_linear_combination_kernel
+from ..rungekutta.LinearCombination import include_implementation_into_header
 from . import FD4Kernels
 from .Quantities import resolve_quantities
 from .actionsets import AddLopsidedAdvection
@@ -697,6 +698,12 @@ Patch overlap data
                 stateless=False,
                 function_name=function_name,
                 output_directory=output_directory,
+            )
+
+        for _, file_suffix, _ in kernels:
+            include_implementation_into_header(
+                os.path.join(output_directory, "kernels"),
+                f"{self._solver.name}{file_suffix}",
             )
 
         includes_2d = "\n".join(
