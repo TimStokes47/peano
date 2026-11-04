@@ -939,6 +939,7 @@ class RusanovWithOptimisticExplicitEuler(Solver.NumericalScheme):
         self.min_volume_size = min_volume_size
         self.max_volume_size = max_volume_size
         self.patch_size = patch_size
+        self.halo_size = overlap
         self.overlap = overlap
         # Set in construct_output(): the generated kernels live in the project
         # namespace, as their names are solver-specific
