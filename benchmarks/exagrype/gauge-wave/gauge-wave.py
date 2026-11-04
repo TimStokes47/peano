@@ -47,7 +47,7 @@ project = exahype2.api.Project(
     executable="gauge-wave",
 )
 
-solver = exagrype.api.CCZ4Solver(
+solver = exagrype.api.FOCCZ4Solver(
     "CCZ4",
     initial_condition=exagrype.api.initialvalues.gauge_wave(),
 )

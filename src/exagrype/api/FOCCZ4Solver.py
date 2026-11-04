@@ -13,7 +13,7 @@ import toolbox.blockstructured.api
 from . import initialvalues
 
 
-class CCZ4Solver(exahype2.api.Solver):
+class FOCCZ4Solver(exahype2.api.Solver):
     """!
 
     Solver for the Einstein equations in the first-order CCZ4 formulation
@@ -74,7 +74,7 @@ class CCZ4Solver(exahype2.api.Solver):
           i.e. after each Runge-Kutta stage. For single-step schemes such as
           the Finite Volumes, this is the same as OnlyFinalSolution.
 
-        @ref exagrype.api.CCZ4Solver.CCZ4Solver.enforce_ccz4_constraint()
+        @ref exagrype.api.FOCCZ4Solver.FOCCZ4Solver.enforce_ccz4_constraint()
 
         """
 
@@ -90,6 +90,8 @@ class CCZ4Solver(exahype2.api.Solver):
         "lapse": 1,
         "shift": 3,
         "b": 3,
+        "traceK": 1,
+        "phi": 1,
         "dLapse": 3,
         "dxShift": 3,
         "dyShift": 3,
@@ -97,8 +99,6 @@ class CCZ4Solver(exahype2.api.Solver):
         "dxG": 6,
         "dyG": 6,
         "dzG": 6,
-        "traceK": 1,
-        "phi": 1,
         "P": 3,
         "K0": 1,
     }
@@ -171,7 +171,7 @@ class CCZ4Solver(exahype2.api.Solver):
         """
         super().__init__(name, unknowns=self.Unknowns)
 
-        self._enforce_ccz4_constraint = CCZ4Solver.EnforceCCZ4Constraint.No
+        self._enforce_ccz4_constraint = FOCCZ4Solver.EnforceCCZ4Constraint.No
 
         self._parameters = dict(self.DefaultParameters)
         for key, value in (parameters or {}).items():
@@ -234,7 +234,7 @@ class CCZ4Solver(exahype2.api.Solver):
         exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
           solver, patch_size, rk_order=4,
           right_hand_side_kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel.CentralDifferencesWithLopsidedAdvection,
-          advection_velocity     = exagrype.api.CCZ4Solver.ADVECTION_VELOCITY,
+          advection_velocity     = exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
           advected_quantities    = solver.lopsided_advection_quantities(),
         )
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -266,7 +266,7 @@ class CCZ4Solver(exahype2.api.Solver):
             excluded |= {"b", "dxShift", "dyShift", "dzShift"}
         return [name for name in self.Unknowns if name not in excluded]
 
-    def enforce_ccz4_constraint(self, value: "CCZ4Solver.EnforceCCZ4Constraint"):
+    def enforce_ccz4_constraint(self, value: "FOCCZ4Solver.EnforceCCZ4Constraint"):
         """!
 
         Set when the solver pushes the solution back onto the CCZ4 constraints
@@ -277,14 +277,14 @@ class CCZ4Solver(exahype2.api.Solver):
         volume or grid point after each tagged solution update of the
         numerical scheme.
 
-        @param value: CCZ4Solver.EnforceCCZ4Constraint
+        @param value: FOCCZ4Solver.EnforceCCZ4Constraint
           No, OnlyFinalSolution or IntermediateSteps.
 
         """
-        if not isinstance(value, CCZ4Solver.EnforceCCZ4Constraint):
+        if not isinstance(value, FOCCZ4Solver.EnforceCCZ4Constraint):
             raise TypeError(
                 f"Solver {self.name}: enforce_ccz4_constraint() expects a "
-                f"CCZ4Solver.EnforceCCZ4Constraint, but got {value!r}"
+                f"FOCCZ4Solver.EnforceCCZ4Constraint, but got {value!r}"
             )
         self._enforce_ccz4_constraint = value
 
@@ -338,7 +338,7 @@ class CCZ4Solver(exahype2.api.Solver):
             plot,
             mesh_adaptation,
         )
-        Enforce = CCZ4Solver.EnforceCCZ4Constraint
+        Enforce = FOCCZ4Solver.EnforceCCZ4Constraint
         if self._enforce_ccz4_constraint == Enforce.No:
             return
 

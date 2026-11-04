@@ -33,9 +33,9 @@ namespace TP_bindding {
 			Q[i+6]=	phisq*(Q[i+6]-1./3. * traceK * Q[i]/phisq); //\tilde{A}_ij
 		}
 		
-		//Q[53]=traceK; Q[54]=std::log(phi); Q[16]=std::log(Q[16]);
+		//Q[23]=traceK; Q[24]=std::log(phi); Q[16]=std::log(Q[16]);
 		const double np = 1.0;
-		Q[53]=traceK; Q[54]=std::pow(phi,np); //Q[16]=phi;
+		Q[23]=traceK; Q[24]=std::pow(phi,np); //Q[16]=phi;
 	}
 
 	//use this to calculate the gradient
@@ -79,24 +79,24 @@ namespace TP_bindding {
 		};
   		
   		//A[i]=A_i=\partial_i ln\alpha
-  		for (int i=0;i<3;i++) Q[23+i]=gradQ[i][16];
+  		for (int i=0;i<3;i++) Q[25+i]=gradQ[i][16];
   		
   		//B[i][j]=B_i^j=\partial_i \beta^j //the component order of this variable is different between fortran and C++!
   		for (int i=0;i<3;i++)
-  		for (int j=0;j<3;j++) Q[26+i*3+j]=gradQ[i][17+j];
+  		for (int j=0;j<3;j++) Q[28+i*3+j]=gradQ[i][17+j];
   		
   		//D[k][i][j]=D_ijk= 0.5 * \partial_k \tilde{\gamma}_ij
   		for (int i=0;i<3;i++)
-  		for (int j=0;j<6;j++) Q[35+i*6+j]=0.5*gradQ[i][0+j];
+  		for (int j=0;j<6;j++) Q[37+i*6+j]=0.5*gradQ[i][0+j];
   		
   		//P[i]=P_i=\partial_i ln\phi
-  		for (int i=0;i<3;i++) Q[55+i]=gradQ[i][54];
+  		for (int i=0;i<3;i++) Q[55+i]=gradQ[i][24];
   		
     	double Christoffel_tilde[3][3][3] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     	double DD[3][3][3] = {
-        {{Q[35], Q[36], Q[37]}, {Q[36], Q[38], Q[39]}, {Q[37], Q[39], Q[40]}},
-        {{Q[41], Q[42], Q[43]}, {Q[42], Q[44], Q[45]}, {Q[43], Q[45], Q[46]}},
-        {{Q[47], Q[48], Q[49]}, {Q[48], Q[50], Q[51]}, {Q[49], Q[51], Q[52]}}};
+        {{Q[37], Q[38], Q[39]}, {Q[38], Q[40], Q[41]}, {Q[39], Q[41], Q[42]}},
+        {{Q[43], Q[44], Q[45]}, {Q[44], Q[46], Q[47]}, {Q[45], Q[47], Q[48]}},
+        {{Q[49], Q[50], Q[51]}, {Q[50], Q[52], Q[53]}, {Q[51], Q[53], Q[54]}}};
 		for (int j = 0; j < 3; j++)
 		for (int i = 0; i < 3; i++)
 		for (int k = 0; k < 3; k++)

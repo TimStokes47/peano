@@ -97,7 +97,7 @@ void exagrype::ccz4::enforceCCZ4constraints(double * luh)
 
     //new constraints: a minimum for phi(chi) and alpha
     luh[16]=std::fmax(1e-16,luh[16]);
-    luh[54]=std::fmax(1e-16,luh[54]);
+    luh[24]=std::fmax(1e-16,luh[24]);
 
     //
     // As suggested by our PRD referee, we also enforce the algebraic constraint that results from the first spatial derivative of the constraint
@@ -109,9 +109,9 @@ void exagrype::ccz4::enforceCCZ4constraints(double * luh)
     //
 
     double DD[3][3][3] = {
-        {{luh[35], luh[36], luh[37]}, {luh[36], luh[38], luh[39]}, {luh[37], luh[39], luh[40]}},
-        {{luh[41], luh[42], luh[43]}, {luh[42], luh[44], luh[45]}, {luh[43], luh[45], luh[46]}},
-        {{luh[47], luh[48], luh[49]}, {luh[48], luh[50], luh[51]}, {luh[49], luh[51], luh[52]}}
+        {{luh[37], luh[38], luh[39]}, {luh[38], luh[40], luh[41]}, {luh[39], luh[41], luh[42]}},
+        {{luh[43], luh[44], luh[45]}, {luh[44], luh[46], luh[47]}, {luh[45], luh[47], luh[48]}},
+        {{luh[49], luh[50], luh[51]}, {luh[50], luh[52], luh[53]}, {luh[51], luh[53], luh[54]}}
     };
 
     for (int l=0;l<3;l++)
@@ -124,26 +124,26 @@ void exagrype::ccz4::enforceCCZ4constraints(double * luh)
         for (int j=0;j<3;j++) DD[l][i][j] -= 1./3 * g_cov[i][j]*traceDk;
     }
 
-    luh[35] = DD[0][0][0];
-    luh[36] = DD[0][0][1];
-    luh[37] = DD[0][0][2];
-    luh[38] = DD[0][1][1];
-    luh[39] = DD[0][1][2];
-    luh[40] = DD[0][2][2];
+    luh[37] = DD[0][0][0];
+    luh[38] = DD[0][0][1];
+    luh[39] = DD[0][0][2];
+    luh[40] = DD[0][1][1];
+    luh[41] = DD[0][1][2];
+    luh[42] = DD[0][2][2];
 
-    luh[41] = DD[1][0][0];
-    luh[42] = DD[1][0][1];
-    luh[43] = DD[1][0][2];
-    luh[44] = DD[1][1][1];
-    luh[45] = DD[1][1][2];
-    luh[46] = DD[1][2][2];
+    luh[43] = DD[1][0][0];
+    luh[44] = DD[1][0][1];
+    luh[45] = DD[1][0][2];
+    luh[46] = DD[1][1][1];
+    luh[47] = DD[1][1][2];
+    luh[48] = DD[1][2][2];
 
-    luh[47] = DD[2][0][0];
-    luh[48] = DD[2][0][1];
-    luh[49] = DD[2][0][2];
-    luh[50] = DD[2][1][1];
-    luh[51] = DD[2][1][2];
-    luh[52] = DD[2][2][2];
+    luh[49] = DD[2][0][0];
+    luh[50] = DD[2][0][1];
+    luh[51] = DD[2][0][2];
+    luh[52] = DD[2][1][1];
+    luh[53] = DD[2][1][2];
+    luh[54] = DD[2][2][2];
 }
 #if defined(GPUOffloadingOMP)
 #pragma omp end declare target
@@ -188,10 +188,10 @@ void exagrype::ccz4::admconstraints(double* constraints, const double* const Q, 
         {{gradQin[6][2],gradQin[7][2],gradQin[8][2]}, {gradQin[7][2], gradQin[9][2], gradQin[10][2]},  {gradQin[8][2], gradQin[10][2], gradQin[11][2]}}
     };
 
-    const double traceK = Q[53];
-    const double dtraceK[3] = {gradQin[53][0], gradQin[53][1], gradQin[53][2]};
+    const double traceK = Q[23];
+    const double dtraceK[3] = {gradQin[23][0], gradQin[23][1], gradQin[23][2]};
 
-    const double phi = std::fmax(1e-2,Q[54]); 
+    const double phi = std::fmax(1e-2,Q[24]); 
     const double phi2 = phi*phi;
     const double PP[3] = {Q[55], Q[56], Q[57]};
 
@@ -202,42 +202,42 @@ void exagrype::ccz4::admconstraints(double* constraints, const double* const Q, 
     };
 
     const double DD[3][3][3] = {
-        {{Q[35], Q[36], Q[37]}, {Q[36], Q[38], Q[39]}, {Q[37], Q[39], Q[40]}},
-        {{Q[41], Q[42], Q[43]}, {Q[42], Q[44], Q[45]}, {Q[43], Q[45], Q[46]}},
-        {{Q[47], Q[48], Q[49]}, {Q[48], Q[50], Q[51]}, {Q[49], Q[51], Q[52]}}
+        {{Q[37], Q[38], Q[39]}, {Q[38], Q[40], Q[41]}, {Q[39], Q[41], Q[42]}},
+        {{Q[43], Q[44], Q[45]}, {Q[44], Q[46], Q[47]}, {Q[45], Q[47], Q[48]}},
+        {{Q[49], Q[50], Q[51]}, {Q[50], Q[52], Q[53]}, {Q[51], Q[53], Q[54]}}
     };
     const double dDD[3][3][3][3] = {
         {
                 {
-                        {gradQin[35][0],gradQin[36][0],gradQin[37][0]}, {gradQin[36][0],gradQin[38][0],gradQin[39][0]}, {gradQin[37][0],gradQin[39][0],gradQin[40][0]},
+                        {gradQin[37][0],gradQin[38][0],gradQin[39][0]}, {gradQin[38][0],gradQin[40][0],gradQin[41][0]}, {gradQin[39][0],gradQin[41][0],gradQin[42][0]},
                 },
                 {
-                        {gradQin[41][0],gradQin[42][0],gradQin[43][0]}, {gradQin[42][0],gradQin[44][0],gradQin[45][0]}, {gradQin[43][0],gradQin[45][0],gradQin[46][0]},
+                        {gradQin[43][0],gradQin[44][0],gradQin[45][0]}, {gradQin[44][0],gradQin[46][0],gradQin[47][0]}, {gradQin[45][0],gradQin[47][0],gradQin[48][0]},
                 },
                 {
-                        {gradQin[47][0],gradQin[48][0],gradQin[49][0]}, {gradQin[48][0],gradQin[50][0],gradQin[51][0]}, {gradQin[49][0],gradQin[51][0],gradQin[52][0]}
+                        {gradQin[49][0],gradQin[50][0],gradQin[51][0]}, {gradQin[50][0],gradQin[52][0],gradQin[53][0]}, {gradQin[51][0],gradQin[53][0],gradQin[54][0]}
                 }
         },
         {
                 {
-                        {gradQin[35][1],gradQin[36][1],gradQin[37][1]}, {gradQin[36][1],gradQin[38][1],gradQin[39][1]}, {gradQin[37][1],gradQin[39][1],gradQin[40][1]},
+                        {gradQin[37][1],gradQin[38][1],gradQin[39][1]}, {gradQin[38][1],gradQin[40][1],gradQin[41][1]}, {gradQin[39][1],gradQin[41][1],gradQin[42][1]},
                 },
                 {
-                        {gradQin[41][1],gradQin[42][1],gradQin[43][1]}, {gradQin[42][1],gradQin[44][1],gradQin[45][1]}, {gradQin[43][1],gradQin[45][1],gradQin[46][1]},
+                        {gradQin[43][1],gradQin[44][1],gradQin[45][1]}, {gradQin[44][1],gradQin[46][1],gradQin[47][1]}, {gradQin[45][1],gradQin[47][1],gradQin[48][1]},
                 },
                 {
-                        {gradQin[47][1],gradQin[48][1],gradQin[49][1]}, {gradQin[48][1],gradQin[50][1],gradQin[51][1]}, {gradQin[49][1],gradQin[51][1],gradQin[52][1]}
+                        {gradQin[49][1],gradQin[50][1],gradQin[51][1]}, {gradQin[50][1],gradQin[52][1],gradQin[53][1]}, {gradQin[51][1],gradQin[53][1],gradQin[54][1]}
                 }
         },
         {
                 {
-                        {gradQin[35][2],gradQin[36][2],gradQin[37][2]}, {gradQin[36][2],gradQin[38][2],gradQin[39][2]}, {gradQin[37][2],gradQin[39][2],gradQin[40][2]},
+                        {gradQin[37][2],gradQin[38][2],gradQin[39][2]}, {gradQin[38][2],gradQin[40][2],gradQin[41][2]}, {gradQin[39][2],gradQin[41][2],gradQin[42][2]},
                 },
                 {
-                        {gradQin[41][2],gradQin[42][2],gradQin[43][2]}, {gradQin[42][2],gradQin[44][2],gradQin[45][2]}, {gradQin[43][2],gradQin[45][2],gradQin[46][2]},
+                        {gradQin[43][2],gradQin[44][2],gradQin[45][2]}, {gradQin[44][2],gradQin[46][2],gradQin[47][2]}, {gradQin[45][2],gradQin[47][2],gradQin[48][2]},
                 },
                 {
-                        {gradQin[47][2],gradQin[48][2],gradQin[49][2]}, {gradQin[48][2],gradQin[50][2],gradQin[51][2]}, {gradQin[49][2],gradQin[51][2],gradQin[52][2]}
+                        {gradQin[49][2],gradQin[50][2],gradQin[51][2]}, {gradQin[50][2],gradQin[52][2],gradQin[53][2]}, {gradQin[51][2],gradQin[53][2],gradQin[54][2]}
                 }
         }
     };
@@ -432,10 +432,10 @@ void exagrype::ccz4::Psi4Calc(double* Psi4, const double* const Q, const double*
         {{gradQin[6][2],gradQin[7][2],gradQin[8][2]}, {gradQin[7][2], gradQin[9][2], gradQin[10][2]},  {gradQin[8][2], gradQin[10][2], gradQin[11][2]}}
     };
 
-    const double traceK = Q[53];
-    const double dtraceK[3] = {gradQin[53][0], gradQin[53][1], gradQin[53][2]};
+    const double traceK = Q[23];
+    const double dtraceK[3] = {gradQin[23][0], gradQin[23][1], gradQin[23][2]};
 
-    const double phi = std::fmax(1e-2,Q[54]); ;
+    const double phi = std::fmax(1e-2,Q[24]); ;
     const double phi2 = phi*phi;
     const double PP[3] = {Q[55], Q[56], Q[57]};
 
@@ -446,42 +446,42 @@ void exagrype::ccz4::Psi4Calc(double* Psi4, const double* const Q, const double*
     };
 
     const double DD[3][3][3] = {
-        {{Q[35], Q[36], Q[37]}, {Q[36], Q[38], Q[39]}, {Q[37], Q[39], Q[40]}},
-        {{Q[41], Q[42], Q[43]}, {Q[42], Q[44], Q[45]}, {Q[43], Q[45], Q[46]}},
-        {{Q[47], Q[48], Q[49]}, {Q[48], Q[50], Q[51]}, {Q[49], Q[51], Q[52]}}
+        {{Q[37], Q[38], Q[39]}, {Q[38], Q[40], Q[41]}, {Q[39], Q[41], Q[42]}},
+        {{Q[43], Q[44], Q[45]}, {Q[44], Q[46], Q[47]}, {Q[45], Q[47], Q[48]}},
+        {{Q[49], Q[50], Q[51]}, {Q[50], Q[52], Q[53]}, {Q[51], Q[53], Q[54]}}
     };
     const double dDD[3][3][3][3] = {
         {
                 {
-                        {gradQin[35][0],gradQin[36][0],gradQin[37][0]}, {gradQin[36][0],gradQin[38][0],gradQin[39][0]}, {gradQin[37][0],gradQin[39][0],gradQin[40][0]},
+                        {gradQin[37][0],gradQin[38][0],gradQin[39][0]}, {gradQin[38][0],gradQin[40][0],gradQin[41][0]}, {gradQin[39][0],gradQin[41][0],gradQin[42][0]},
                 },
                 {
-                        {gradQin[41][0],gradQin[42][0],gradQin[43][0]}, {gradQin[42][0],gradQin[44][0],gradQin[45][0]}, {gradQin[43][0],gradQin[45][0],gradQin[46][0]},
+                        {gradQin[43][0],gradQin[44][0],gradQin[45][0]}, {gradQin[44][0],gradQin[46][0],gradQin[47][0]}, {gradQin[45][0],gradQin[47][0],gradQin[48][0]},
                 },
                 {
-                        {gradQin[47][0],gradQin[48][0],gradQin[49][0]}, {gradQin[48][0],gradQin[50][0],gradQin[51][0]}, {gradQin[49][0],gradQin[51][0],gradQin[52][0]}
+                        {gradQin[49][0],gradQin[50][0],gradQin[51][0]}, {gradQin[50][0],gradQin[52][0],gradQin[53][0]}, {gradQin[51][0],gradQin[53][0],gradQin[54][0]}
                 }
         },
         {
                 {
-                        {gradQin[35][1],gradQin[36][1],gradQin[37][1]}, {gradQin[36][1],gradQin[38][1],gradQin[39][1]}, {gradQin[37][1],gradQin[39][1],gradQin[40][1]},
+                        {gradQin[37][1],gradQin[38][1],gradQin[39][1]}, {gradQin[38][1],gradQin[40][1],gradQin[41][1]}, {gradQin[39][1],gradQin[41][1],gradQin[42][1]},
                 },
                 {
-                        {gradQin[41][1],gradQin[42][1],gradQin[43][1]}, {gradQin[42][1],gradQin[44][1],gradQin[45][1]}, {gradQin[43][1],gradQin[45][1],gradQin[46][1]},
+                        {gradQin[43][1],gradQin[44][1],gradQin[45][1]}, {gradQin[44][1],gradQin[46][1],gradQin[47][1]}, {gradQin[45][1],gradQin[47][1],gradQin[48][1]},
                 },
                 {
-                        {gradQin[47][1],gradQin[48][1],gradQin[49][1]}, {gradQin[48][1],gradQin[50][1],gradQin[51][1]}, {gradQin[49][1],gradQin[51][1],gradQin[52][1]}
+                        {gradQin[49][1],gradQin[50][1],gradQin[51][1]}, {gradQin[50][1],gradQin[52][1],gradQin[53][1]}, {gradQin[51][1],gradQin[53][1],gradQin[54][1]}
                 }
         },
         {
                 {
-                        {gradQin[35][2],gradQin[36][2],gradQin[37][2]}, {gradQin[36][2],gradQin[38][2],gradQin[39][2]}, {gradQin[37][2],gradQin[39][2],gradQin[40][2]},
+                        {gradQin[37][2],gradQin[38][2],gradQin[39][2]}, {gradQin[38][2],gradQin[40][2],gradQin[41][2]}, {gradQin[39][2],gradQin[41][2],gradQin[42][2]},
                 },
                 {
-                        {gradQin[41][2],gradQin[42][2],gradQin[43][2]}, {gradQin[42][2],gradQin[44][2],gradQin[45][2]}, {gradQin[43][2],gradQin[45][2],gradQin[46][2]},
+                        {gradQin[43][2],gradQin[44][2],gradQin[45][2]}, {gradQin[44][2],gradQin[46][2],gradQin[47][2]}, {gradQin[45][2],gradQin[47][2],gradQin[48][2]},
                 },
                 {
-                        {gradQin[47][2],gradQin[48][2],gradQin[49][2]}, {gradQin[48][2],gradQin[50][2],gradQin[51][2]}, {gradQin[49][2],gradQin[51][2],gradQin[52][2]}
+                        {gradQin[49][2],gradQin[50][2],gradQin[51][2]}, {gradQin[50][2],gradQin[52][2],gradQin[53][2]}, {gradQin[51][2],gradQin[53][2],gradQin[54][2]}
                 }
         }
     };
@@ -734,10 +734,10 @@ void exagrype::ccz4::TestingOutput(double* terms, const double* const Q, const d
         {{gradQin[6][2],gradQin[7][2],gradQin[8][2]}, {gradQin[7][2], gradQin[9][2], gradQin[10][2]},  {gradQin[8][2], gradQin[10][2], gradQin[11][2]}}
     };
 
-    const double traceK = Q[53];
-    const double dtraceK[3] = {gradQin[53][0], gradQin[53][1], gradQin[53][2]};
+    const double traceK = Q[23];
+    const double dtraceK[3] = {gradQin[23][0], gradQin[23][1], gradQin[23][2]};
 
-    const double phi = std::fmax(1e-2,Q[54]); 
+    const double phi = std::fmax(1e-2,Q[24]); 
     const double phi2 = phi*phi;
     const double PP[3] = {Q[55], Q[56], Q[57]};
 
@@ -748,42 +748,42 @@ void exagrype::ccz4::TestingOutput(double* terms, const double* const Q, const d
     };
 
     const double DD[3][3][3] = {
-        {{Q[35], Q[36], Q[37]}, {Q[36], Q[38], Q[39]}, {Q[37], Q[39], Q[40]}},
-        {{Q[41], Q[42], Q[43]}, {Q[42], Q[44], Q[45]}, {Q[43], Q[45], Q[46]}},
-        {{Q[47], Q[48], Q[49]}, {Q[48], Q[50], Q[51]}, {Q[49], Q[51], Q[52]}}
+        {{Q[37], Q[38], Q[39]}, {Q[38], Q[40], Q[41]}, {Q[39], Q[41], Q[42]}},
+        {{Q[43], Q[44], Q[45]}, {Q[44], Q[46], Q[47]}, {Q[45], Q[47], Q[48]}},
+        {{Q[49], Q[50], Q[51]}, {Q[50], Q[52], Q[53]}, {Q[51], Q[53], Q[54]}}
     };
     const double dDD[3][3][3][3] = {
         {
                 {
-                        {gradQin[35][0],gradQin[36][0],gradQin[37][0]}, {gradQin[36][0],gradQin[38][0],gradQin[39][0]}, {gradQin[37][0],gradQin[39][0],gradQin[40][0]},
+                        {gradQin[37][0],gradQin[38][0],gradQin[39][0]}, {gradQin[38][0],gradQin[40][0],gradQin[41][0]}, {gradQin[39][0],gradQin[41][0],gradQin[42][0]},
                 },
                 {
-                        {gradQin[41][0],gradQin[42][0],gradQin[43][0]}, {gradQin[42][0],gradQin[44][0],gradQin[45][0]}, {gradQin[43][0],gradQin[45][0],gradQin[46][0]},
+                        {gradQin[43][0],gradQin[44][0],gradQin[45][0]}, {gradQin[44][0],gradQin[46][0],gradQin[47][0]}, {gradQin[45][0],gradQin[47][0],gradQin[48][0]},
                 },
                 {
-                        {gradQin[47][0],gradQin[48][0],gradQin[49][0]}, {gradQin[48][0],gradQin[50][0],gradQin[51][0]}, {gradQin[49][0],gradQin[51][0],gradQin[52][0]}
+                        {gradQin[49][0],gradQin[50][0],gradQin[51][0]}, {gradQin[50][0],gradQin[52][0],gradQin[53][0]}, {gradQin[51][0],gradQin[53][0],gradQin[54][0]}
                 }
         },
         {
                 {
-                        {gradQin[35][1],gradQin[36][1],gradQin[37][1]}, {gradQin[36][1],gradQin[38][1],gradQin[39][1]}, {gradQin[37][1],gradQin[39][1],gradQin[40][1]},
+                        {gradQin[37][1],gradQin[38][1],gradQin[39][1]}, {gradQin[38][1],gradQin[40][1],gradQin[41][1]}, {gradQin[39][1],gradQin[41][1],gradQin[42][1]},
                 },
                 {
-                        {gradQin[41][1],gradQin[42][1],gradQin[43][1]}, {gradQin[42][1],gradQin[44][1],gradQin[45][1]}, {gradQin[43][1],gradQin[45][1],gradQin[46][1]},
+                        {gradQin[43][1],gradQin[44][1],gradQin[45][1]}, {gradQin[44][1],gradQin[46][1],gradQin[47][1]}, {gradQin[45][1],gradQin[47][1],gradQin[48][1]},
                 },
                 {
-                        {gradQin[47][1],gradQin[48][1],gradQin[49][1]}, {gradQin[48][1],gradQin[50][1],gradQin[51][1]}, {gradQin[49][1],gradQin[51][1],gradQin[52][1]}
+                        {gradQin[49][1],gradQin[50][1],gradQin[51][1]}, {gradQin[50][1],gradQin[52][1],gradQin[53][1]}, {gradQin[51][1],gradQin[53][1],gradQin[54][1]}
                 }
         },
         {
                 {
-                        {gradQin[35][2],gradQin[36][2],gradQin[37][2]}, {gradQin[36][2],gradQin[38][2],gradQin[39][2]}, {gradQin[37][2],gradQin[39][2],gradQin[40][2]},
+                        {gradQin[37][2],gradQin[38][2],gradQin[39][2]}, {gradQin[38][2],gradQin[40][2],gradQin[41][2]}, {gradQin[39][2],gradQin[41][2],gradQin[42][2]},
                 },
                 {
-                        {gradQin[41][2],gradQin[42][2],gradQin[43][2]}, {gradQin[42][2],gradQin[44][2],gradQin[45][2]}, {gradQin[43][2],gradQin[45][2],gradQin[46][2]},
+                        {gradQin[43][2],gradQin[44][2],gradQin[45][2]}, {gradQin[44][2],gradQin[46][2],gradQin[47][2]}, {gradQin[45][2],gradQin[47][2],gradQin[48][2]},
                 },
                 {
-                        {gradQin[47][2],gradQin[48][2],gradQin[49][2]}, {gradQin[48][2],gradQin[50][2],gradQin[51][2]}, {gradQin[49][2],gradQin[51][2],gradQin[52][2]}
+                        {gradQin[49][2],gradQin[50][2],gradQin[51][2]}, {gradQin[50][2],gradQin[52][2],gradQin[53][2]}, {gradQin[51][2],gradQin[53][2],gradQin[54][2]}
                 }
         }
     };
@@ -935,20 +935,20 @@ void exagrype::ccz4::TestingOutput(double* terms, const double* const Q, const d
     const double alpha = std::fmax(1e-4,Q[16]);
     const double dBB[3][3][3] = {
         {
-            { gradQin[26][0], gradQin[27][0], gradQin[28][0]}, { gradQin[29][0], gradQin[30][0], gradQin[31][0]}, { gradQin[32][0], gradQin[33][0], gradQin[34][0]}
+            { gradQin[28][0], gradQin[29][0], gradQin[30][0]}, { gradQin[31][0], gradQin[32][0], gradQin[33][0]}, { gradQin[34][0], gradQin[35][0], gradQin[36][0]}
         },
         {
-            { gradQin[26][1], gradQin[27][1], gradQin[28][1]}, { gradQin[29][1], gradQin[30][1], gradQin[31][1]}, { gradQin[32][1], gradQin[33][1], gradQin[34][1]}
+            { gradQin[28][1], gradQin[29][1], gradQin[30][1]}, { gradQin[31][1], gradQin[32][1], gradQin[33][1]}, { gradQin[34][1], gradQin[35][1], gradQin[36][1]}
         },
         {
-            { gradQin[26][2], gradQin[27][2], gradQin[28][2]}, { gradQin[29][2], gradQin[30][2], gradQin[31][2]}, { gradQin[32][2], gradQin[33][2], gradQin[34][2]}
+            { gradQin[28][2], gradQin[29][2], gradQin[30][2]}, { gradQin[31][2], gradQin[32][2], gradQin[33][2]}, { gradQin[34][2], gradQin[35][2], gradQin[36][2]}
         }
     };
     const double BB[3][3] = {
-        {Q[26], Q[27], Q[28]}, {Q[29], Q[30], Q[31]}, {Q[32], Q[33], Q[34]}
+        {Q[28], Q[29], Q[30]}, {Q[31], Q[32], Q[33]}, {Q[34], Q[35], Q[36]}
     };
     double traceB = BB[0][0] + BB[1][1] + BB[2][2];
-    const double AA[3] = {Q[23], Q[24], Q[25]};
+    const double AA[3] = {Q[25], Q[26], Q[27]};
 
     for (int l = 0; l < 3; l++) terms[7]+=BB[0][l]*PP[l]; //66
     terms[8] = (1.0/3.0)*alpha*traceK*PP[0]; //67
@@ -984,7 +984,7 @@ void exagrype::ccz4::ThetaOutputNCP(double* NCPterm, const double* const Q, cons
     double faa = 0.0;
     fa  =  2./alpha;
     faa = -fa/alpha;
-    const double traceK = Q[53];
+    const double traceK = Q[23];
 
     constexpr int nVar(59);
 
@@ -1032,9 +1032,9 @@ void exagrype::ccz4::ThetaOutputNCP(double* NCPterm, const double* const Q, cons
     for (int u = 0; u < 3; u++) Aup[i][j] += g_contr[i][u] * Amix[j][u]; // Note the transposition is in the indices
 
     const double DD[3][3][3] = {
-        {{Q[35], Q[36], Q[37]}, {Q[36], Q[38], Q[39]}, {Q[37], Q[39], Q[40]}},
-        {{Q[41], Q[42], Q[43]}, {Q[42], Q[44], Q[45]}, {Q[43], Q[45], Q[46]}},
-        {{Q[47], Q[48], Q[49]}, {Q[48], Q[50], Q[51]}, {Q[49], Q[51], Q[52]}}
+        {{Q[37], Q[38], Q[39]}, {Q[38], Q[40], Q[41]}, {Q[39], Q[41], Q[42]}},
+        {{Q[43], Q[44], Q[45]}, {Q[44], Q[46], Q[47]}, {Q[45], Q[47], Q[48]}},
+        {{Q[49], Q[50], Q[51]}, {Q[50], Q[52], Q[53]}, {Q[51], Q[53], Q[54]}}
     };
     double dgup[3][3][3] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     for (int k = 0; k < 3; k++)
@@ -1068,7 +1068,7 @@ void exagrype::ccz4::ThetaOutputNCP(double* NCPterm, const double* const Q, cons
 
     const double Ghat[3] = {Q[13], Q[14], Q[15]};
 
-    const double phi = std::exp(std::fmax(-20., std::fmin(20.,Q[54])));
+    const double phi = std::exp(std::fmax(-20., std::fmin(20.,Q[24])));
     const double phi2 = phi*phi;
 
     double Z[3] = {0,0,0};
@@ -1082,35 +1082,35 @@ void exagrype::ccz4::ThetaOutputNCP(double* NCPterm, const double* const Q, cons
     const double dDD[3][3][3][3] = {
         {
             {
-                {gradQin[35][0],gradQin[36][0],gradQin[37][0]}, {gradQin[36][0],gradQin[38][0],gradQin[39][0]}, {gradQin[37][0],gradQin[39][0],gradQin[40][0]},
+                {gradQin[37][0],gradQin[38][0],gradQin[39][0]}, {gradQin[38][0],gradQin[40][0],gradQin[41][0]}, {gradQin[39][0],gradQin[41][0],gradQin[42][0]},
             },
             {
-                {gradQin[41][0],gradQin[42][0],gradQin[43][0]}, {gradQin[42][0],gradQin[44][0],gradQin[45][0]}, {gradQin[43][0],gradQin[45][0],gradQin[46][0]},
+                {gradQin[43][0],gradQin[44][0],gradQin[45][0]}, {gradQin[44][0],gradQin[46][0],gradQin[47][0]}, {gradQin[45][0],gradQin[47][0],gradQin[48][0]},
             },
             {
-                {gradQin[47][0],gradQin[48][0],gradQin[49][0]}, {gradQin[48][0],gradQin[50][0],gradQin[51][0]}, {gradQin[49][0],gradQin[51][0],gradQin[52][0]}
+                {gradQin[49][0],gradQin[50][0],gradQin[51][0]}, {gradQin[50][0],gradQin[52][0],gradQin[53][0]}, {gradQin[51][0],gradQin[53][0],gradQin[54][0]}
             }
         },
         {
             {
-                {gradQin[35][1],gradQin[36][1],gradQin[37][1]}, {gradQin[36][1],gradQin[38][1],gradQin[39][1]}, {gradQin[37][1],gradQin[39][1],gradQin[40][1]},
+                {gradQin[37][1],gradQin[38][1],gradQin[39][1]}, {gradQin[38][1],gradQin[40][1],gradQin[41][1]}, {gradQin[39][1],gradQin[41][1],gradQin[42][1]},
             },
             {
-                {gradQin[41][1],gradQin[42][1],gradQin[43][1]}, {gradQin[42][1],gradQin[44][1],gradQin[45][1]}, {gradQin[43][1],gradQin[45][1],gradQin[46][1]},
+                {gradQin[43][1],gradQin[44][1],gradQin[45][1]}, {gradQin[44][1],gradQin[46][1],gradQin[47][1]}, {gradQin[45][1],gradQin[47][1],gradQin[48][1]},
             },
             {
-                {gradQin[47][1],gradQin[48][1],gradQin[49][1]}, {gradQin[48][1],gradQin[50][1],gradQin[51][1]}, {gradQin[49][1],gradQin[51][1],gradQin[52][1]}
+                {gradQin[49][1],gradQin[50][1],gradQin[51][1]}, {gradQin[50][1],gradQin[52][1],gradQin[53][1]}, {gradQin[51][1],gradQin[53][1],gradQin[54][1]}
             }
         },
         {
             {
-                {gradQin[35][2],gradQin[36][2],gradQin[37][2]}, {gradQin[36][2],gradQin[38][2],gradQin[39][2]}, {gradQin[37][2],gradQin[39][2],gradQin[40][2]},
+                {gradQin[37][2],gradQin[38][2],gradQin[39][2]}, {gradQin[38][2],gradQin[40][2],gradQin[41][2]}, {gradQin[39][2],gradQin[41][2],gradQin[42][2]},
             },
             {
-                {gradQin[41][2],gradQin[42][2],gradQin[43][2]}, {gradQin[42][2],gradQin[44][2],gradQin[45][2]}, {gradQin[43][2],gradQin[45][2],gradQin[46][2]},
+                {gradQin[43][2],gradQin[44][2],gradQin[45][2]}, {gradQin[44][2],gradQin[46][2],gradQin[47][2]}, {gradQin[45][2],gradQin[47][2],gradQin[48][2]},
             },
             {
-                {gradQin[47][2],gradQin[48][2],gradQin[49][2]}, {gradQin[48][2],gradQin[50][2],gradQin[51][2]}, {gradQin[49][2],gradQin[51][2],gradQin[52][2]}
+                {gradQin[49][2],gradQin[50][2],gradQin[51][2]}, {gradQin[50][2],gradQin[52][2],gradQin[53][2]}, {gradQin[51][2],gradQin[53][2],gradQin[54][2]}
             }
         }
     };
@@ -1196,7 +1196,7 @@ void exagrype::ccz4::maxEigenvalue(
 ) {
   const double np = 1.0;
   const double qmin = std::min({Q[0],Q[3],Q[5]});
-  const double alpha = std::max({1.0, Q[16]}) * std::max({1.0, pow(Q[54],1.0/np)})/std::sqrt(qmin);
+  const double alpha = std::max({1.0, Q[16]}) * std::max({1.0, pow(Q[24],1.0/np)})/std::sqrt(qmin);
 
   constexpr double sqrtwo = 1.4142135623730951;
   const double tempA = alpha * std::max({sqrtwo, CCZ4e, CCZ4ds, CCZ4GLMc/alpha, CCZ4GLMd/alpha});
@@ -1291,15 +1291,15 @@ void exagrype::ccz4::source(double* S, const double* const Q,
 
     const double Theta = Q[12];
 
-    const double DD[3][3][3] = {{ {Q[35], Q[36], Q[37]},
-                                  {Q[36], Q[38], Q[39]},
-                                  {Q[37], Q[39], Q[40]} },
-                                { {Q[41], Q[42], Q[43]},
-                                  {Q[42], Q[44], Q[45]},
-                                  {Q[43], Q[45], Q[46]} },
-                                { {Q[47], Q[48], Q[49]},
-                                  {Q[48], Q[50], Q[51]},
-                                  {Q[49], Q[51], Q[52]} }};
+    const double DD[3][3][3] = {{ {Q[37], Q[38], Q[39]},
+                                  {Q[38], Q[40], Q[41]},
+                                  {Q[39], Q[41], Q[42]} },
+                                { {Q[43], Q[44], Q[45]},
+                                  {Q[44], Q[46], Q[47]},
+                                  {Q[45], Q[47], Q[48]} },
+                                { {Q[49], Q[50], Q[51]},
+                                  {Q[50], Q[52], Q[53]},
+                                  {Q[51], Q[53], Q[54]} }};
 
     double DDup[3][3][3] = {0};
     for (int k = 0; k < 3; k++)
@@ -1311,7 +1311,7 @@ void exagrype::ccz4::source(double* S, const double* const Q,
 
     }
 
-    const double phi = std::fmax(1e-2,pow(Q[54],(1.0/np)));
+    const double phi = std::fmax(1e-2,pow(Q[24],(1.0/np)));
     const double phi2 = phi*phi;
     const double chi = pow(phi,np);
 
@@ -1365,7 +1365,7 @@ void exagrype::ccz4::source(double* S, const double* const Q,
     double PPdotGtilde = 0;
     for (int k = 0; k < 3; k++) PPdotGtilde += PP[k] * Gtilde[k];
 
-    const double AA[3] = {Q[23], Q[24], Q[25]};
+    const double AA[3] = {Q[25], Q[26], Q[27]};
 
     double AAdotPP = 0;
     for (int k = 0; k < 3; k++)
@@ -1455,9 +1455,9 @@ void exagrype::ccz4::source(double* S, const double* const Q,
         SecondOrderTerms[j][i] = SecondOrderTerms[i][j];
     }
 
-    const double BB[3][3] = { {Q[26], Q[27], Q[28]},
-                              {Q[29], Q[30], Q[31]},
-                              {Q[32], Q[33], Q[34]} };
+    const double BB[3][3] = { {Q[28], Q[29], Q[30]},
+                              {Q[31], Q[32], Q[33]},
+                              {Q[34], Q[35], Q[36]} };
 
     double traceBB = BB[0][0] + BB[1][1] + BB[2][2];
     const double beta[3] = {Q[17], Q[18], Q[19]};
@@ -1478,7 +1478,7 @@ void exagrype::ccz4::source(double* S, const double* const Q,
         dtgamma[i][j] += (1 - CCZ4SO) * 2.0 * temp;
     }
 
-    const double Kex = Q[53];
+    const double Kex = Q[23];
 
     double dtAex[3][3];
     for (int i = 0; i < 3; i++)
@@ -1650,42 +1650,42 @@ void exagrype::ccz4::source(double* S, const double* const Q,
     S[16] = dtalpha;
     for (int i = 0; i < 3; i++) S[17+i] = dtbeta[i];
     for (int i = 0; i < 3; i++) S[20+i] = dtmyb[i];
-    for (int i = 0; i < 3; i++) S[23+i] = dtAA[i];
-    S[26] = dtBB[0][0];
-    S[27] = dtBB[0][1];
-    S[28] = dtBB[0][2];
-    S[29] = dtBB[1][0];
-    S[30] = dtBB[1][1];
-    S[31] = dtBB[1][2];
-    S[32] = dtBB[2][0];
-    S[33] = dtBB[2][1];
-    S[34] = dtBB[2][2];
-    S[35] = dtDD[0][0][0];
-    S[36] = dtDD[0][0][1];
-    S[37] = dtDD[0][0][2];
-    S[38] = dtDD[0][1][1];
-    S[39] = dtDD[0][1][2];
-    S[40] = dtDD[0][2][2];
-    S[41] = dtDD[1][0][0];
-    S[42] = dtDD[1][0][1];
-    S[43] = dtDD[1][0][2];
-    S[44] = dtDD[1][1][1];
-    S[45] = dtDD[1][1][2];
-    S[46] = dtDD[1][2][2];
-    S[47] = dtDD[2][0][0];
-    S[48] = dtDD[2][0][1];
-    S[49] = dtDD[2][0][2];
-    S[50] = dtDD[2][1][1];
-    S[51] = dtDD[2][1][2];
-    S[52] = dtDD[2][2][2];
-    S[53] = dtKex;
-    S[54] = dtchi;
+    for (int i = 0; i < 3; i++) S[25+i] = dtAA[i];
+    S[28] = dtBB[0][0];
+    S[29] = dtBB[0][1];
+    S[30] = dtBB[0][2];
+    S[31] = dtBB[1][0];
+    S[32] = dtBB[1][1];
+    S[33] = dtBB[1][2];
+    S[34] = dtBB[2][0];
+    S[35] = dtBB[2][1];
+    S[36] = dtBB[2][2];
+    S[37] = dtDD[0][0][0];
+    S[38] = dtDD[0][0][1];
+    S[39] = dtDD[0][0][2];
+    S[40] = dtDD[0][1][1];
+    S[41] = dtDD[0][1][2];
+    S[42] = dtDD[0][2][2];
+    S[43] = dtDD[1][0][0];
+    S[44] = dtDD[1][0][1];
+    S[45] = dtDD[1][0][2];
+    S[46] = dtDD[1][1][1];
+    S[47] = dtDD[1][1][2];
+    S[48] = dtDD[1][2][2];
+    S[49] = dtDD[2][0][0];
+    S[50] = dtDD[2][0][1];
+    S[51] = dtDD[2][0][2];
+    S[52] = dtDD[2][1][1];
+    S[53] = dtDD[2][1][2];
+    S[54] = dtDD[2][2][2];
+    S[23] = dtKex;
+    S[24] = dtchi;
     for (int i = 0; i < 3; i++) S[55+i] = dtPP[i];
     S[58] = 0;
 
     // Reconstructed auxiliary variables are not evolved in SO mode.
     if (CCZ4SO==1){
-        for (int i = 23; i < 53; i++) S[i] = 0.0;
+        for (int i = 25; i < 55; i++) S[i] = 0.0;
         for (int i = 0; i < 3; i++) S[55+i] = 0.0;
     }
 
@@ -1749,7 +1749,7 @@ void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* co
                                   {g_contr_12, (Q[0]*Q[5]-Q[2]*Q[2])*invdet, g_contr_23},
                                   {g_contr_13, g_contr_23, (Q[0]*Q[3]-Q[1]*Q[1])*invdet}};
 
-    const double phi = std::fmax(1e-2,pow(Q[54],1.0/np));
+    const double phi = std::fmax(1e-2,pow(Q[24],1.0/np));
     const double chi  = pow(phi,np);
     const double phi2 = phi*phi;
 
@@ -1757,42 +1757,42 @@ void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* co
                          {gradQin[55][1],gradQin[56][1],gradQin[57][1]},
                          {gradQin[55][2],gradQin[56][2],gradQin[57][2]} };
 
-    double dAA[3][3] = { {gradQin[23][0],gradQin[24][0],gradQin[25][0]},
-                         {gradQin[23][1],gradQin[24][1],gradQin[25][1]},
-                         {gradQin[23][2],gradQin[24][2],gradQin[25][2]} };
+    double dAA[3][3] = { {gradQin[25][0],gradQin[26][0],gradQin[27][0]},
+                         {gradQin[25][1],gradQin[26][1],gradQin[27][1]},
+                         {gradQin[25][2],gradQin[26][2],gradQin[27][2]} };
 
     const double dDD[3][3][3][3] = {
         {
             {
-                {gradQin[35][0],gradQin[36][0],gradQin[37][0]}, {gradQin[36][0],gradQin[38][0],gradQin[39][0]}, {gradQin[37][0],gradQin[39][0],gradQin[40][0]},
+                {gradQin[37][0],gradQin[38][0],gradQin[39][0]}, {gradQin[38][0],gradQin[40][0],gradQin[41][0]}, {gradQin[39][0],gradQin[41][0],gradQin[42][0]},
             },
             {
-                {gradQin[41][0],gradQin[42][0],gradQin[43][0]}, {gradQin[42][0],gradQin[44][0],gradQin[45][0]}, {gradQin[43][0],gradQin[45][0],gradQin[46][0]},
+                {gradQin[43][0],gradQin[44][0],gradQin[45][0]}, {gradQin[44][0],gradQin[46][0],gradQin[47][0]}, {gradQin[45][0],gradQin[47][0],gradQin[48][0]},
             },
             {
-                {gradQin[47][0],gradQin[48][0],gradQin[49][0]}, {gradQin[48][0],gradQin[50][0],gradQin[51][0]}, {gradQin[49][0],gradQin[51][0],gradQin[52][0]}
+                {gradQin[49][0],gradQin[50][0],gradQin[51][0]}, {gradQin[50][0],gradQin[52][0],gradQin[53][0]}, {gradQin[51][0],gradQin[53][0],gradQin[54][0]}
             }
         },
         {
             {
-                {gradQin[35][1],gradQin[36][1],gradQin[37][1]}, {gradQin[36][1],gradQin[38][1],gradQin[39][1]}, {gradQin[37][1],gradQin[39][1],gradQin[40][1]},
+                {gradQin[37][1],gradQin[38][1],gradQin[39][1]}, {gradQin[38][1],gradQin[40][1],gradQin[41][1]}, {gradQin[39][1],gradQin[41][1],gradQin[42][1]},
             },
             {
-                {gradQin[41][1],gradQin[42][1],gradQin[43][1]}, {gradQin[42][1],gradQin[44][1],gradQin[45][1]}, {gradQin[43][1],gradQin[45][1],gradQin[46][1]},
+                {gradQin[43][1],gradQin[44][1],gradQin[45][1]}, {gradQin[44][1],gradQin[46][1],gradQin[47][1]}, {gradQin[45][1],gradQin[47][1],gradQin[48][1]},
             },
             {
-                {gradQin[47][1],gradQin[48][1],gradQin[49][1]}, {gradQin[48][1],gradQin[50][1],gradQin[51][1]}, {gradQin[49][1],gradQin[51][1],gradQin[52][1]}
+                {gradQin[49][1],gradQin[50][1],gradQin[51][1]}, {gradQin[50][1],gradQin[52][1],gradQin[53][1]}, {gradQin[51][1],gradQin[53][1],gradQin[54][1]}
             }
         },
         {
             {
-                {gradQin[35][2],gradQin[36][2],gradQin[37][2]}, {gradQin[36][2],gradQin[38][2],gradQin[39][2]}, {gradQin[37][2],gradQin[39][2],gradQin[40][2]},
+                {gradQin[37][2],gradQin[38][2],gradQin[39][2]}, {gradQin[38][2],gradQin[40][2],gradQin[41][2]}, {gradQin[39][2],gradQin[41][2],gradQin[42][2]},
             },
             {
-                {gradQin[41][2],gradQin[42][2],gradQin[43][2]}, {gradQin[42][2],gradQin[44][2],gradQin[45][2]}, {gradQin[43][2],gradQin[45][2],gradQin[46][2]},
+                {gradQin[43][2],gradQin[44][2],gradQin[45][2]}, {gradQin[44][2],gradQin[46][2],gradQin[47][2]}, {gradQin[45][2],gradQin[47][2],gradQin[48][2]},
             },
             {
-                {gradQin[47][2],gradQin[48][2],gradQin[49][2]}, {gradQin[48][2],gradQin[50][2],gradQin[51][2]}, {gradQin[49][2],gradQin[51][2],gradQin[52][2]}
+                {gradQin[49][2],gradQin[50][2],gradQin[51][2]}, {gradQin[50][2],gradQin[52][2],gradQin[53][2]}, {gradQin[51][2],gradQin[53][2],gradQin[54][2]}
             }
         }
     };
@@ -1886,7 +1886,7 @@ void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* co
     for (int j = i; j < 3; j++)  dtAex[i][j] = phi2 * SecondOrderTerms[i][j]
                                               + advec * (beta[0]*dAex[0][i][j]+beta[1]*dAex[1][i][j]+beta[2]*dAex[2][i][j]);
 
-    const double dKex[3] = {gradQin[53][0], gradQin[53][1], gradQin[53][2]};
+    const double dKex[3] = {gradQin[23][0], gradQin[23][1], gradQin[23][2]};
 
     double dtKex = - TrDDalpha + alpha * TrRiccihat + advec * (beta[0]*dKex[0]+beta[1]*dKex[1]+beta[2]*dKex[2]);
 
@@ -1895,13 +1895,13 @@ void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* co
 
     const double dBB[3][3][3] = {
         {
-            {CCZ4sk*gradQin[26][0],CCZ4sk*gradQin[27][0],CCZ4sk*gradQin[28][0]}, {CCZ4sk*gradQin[29][0],CCZ4sk*gradQin[30][0],CCZ4sk*gradQin[31][0]}, {CCZ4sk*gradQin[32][0],CCZ4sk*gradQin[33][0],CCZ4sk*gradQin[34][0]}
+            {CCZ4sk*gradQin[28][0],CCZ4sk*gradQin[29][0],CCZ4sk*gradQin[30][0]}, {CCZ4sk*gradQin[31][0],CCZ4sk*gradQin[32][0],CCZ4sk*gradQin[33][0]}, {CCZ4sk*gradQin[34][0],CCZ4sk*gradQin[35][0],CCZ4sk*gradQin[36][0]}
         },
         {
-            {CCZ4sk*gradQin[26][1],CCZ4sk*gradQin[27][1],CCZ4sk*gradQin[28][1]}, {CCZ4sk*gradQin[29][1],CCZ4sk*gradQin[30][1],CCZ4sk*gradQin[31][1]}, {CCZ4sk*gradQin[32][1],CCZ4sk*gradQin[33][1],CCZ4sk*gradQin[34][1]}
+            {CCZ4sk*gradQin[28][1],CCZ4sk*gradQin[29][1],CCZ4sk*gradQin[30][1]}, {CCZ4sk*gradQin[31][1],CCZ4sk*gradQin[32][1],CCZ4sk*gradQin[33][1]}, {CCZ4sk*gradQin[34][1],CCZ4sk*gradQin[35][1],CCZ4sk*gradQin[36][1]}
         },
         {
-            {CCZ4sk*gradQin[26][2],CCZ4sk*gradQin[27][2],CCZ4sk*gradQin[28][2]}, {CCZ4sk*gradQin[29][2],CCZ4sk*gradQin[30][2],CCZ4sk*gradQin[31][2]}, {CCZ4sk*gradQin[32][2],CCZ4sk*gradQin[33][2],CCZ4sk*gradQin[34][2]}
+            {CCZ4sk*gradQin[28][2],CCZ4sk*gradQin[29][2],CCZ4sk*gradQin[30][2]}, {CCZ4sk*gradQin[31][2],CCZ4sk*gradQin[32][2],CCZ4sk*gradQin[33][2]}, {CCZ4sk*gradQin[34][2],CCZ4sk*gradQin[35][2],CCZ4sk*gradQin[36][2]}
         }
     };
 
@@ -2016,45 +2016,45 @@ void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* co
     BgradQ[16] = 0.0;
     for (int i = 0; i < 3; i++) BgradQ[17+i] = 0.0;
     for (int i = 0; i < 3; i++) BgradQ[20+i] = -dtmyb[i];
-    for (int i = 0; i < 3; i++) BgradQ[23+i] = -dtAA[i];
-    BgradQ[26] = -dtBB[0][0];
-    BgradQ[27] = -dtBB[0][1];
-    BgradQ[28] = -dtBB[0][2];
-    BgradQ[29] = -dtBB[1][0];
-    BgradQ[30] = -dtBB[1][1];
-    BgradQ[31] = -dtBB[1][2];
-    BgradQ[32] = -dtBB[2][0];
-    BgradQ[33] = -dtBB[2][1];
-    BgradQ[34] = -dtBB[2][2];
+    for (int i = 0; i < 3; i++) BgradQ[25+i] = -dtAA[i];
+    BgradQ[28] = -dtBB[0][0];
+    BgradQ[29] = -dtBB[0][1];
+    BgradQ[30] = -dtBB[0][2];
+    BgradQ[31] = -dtBB[1][0];
+    BgradQ[32] = -dtBB[1][1];
+    BgradQ[33] = -dtBB[1][2];
+    BgradQ[34] = -dtBB[2][0];
+    BgradQ[35] = -dtBB[2][1];
+    BgradQ[36] = -dtBB[2][2];
 
-    BgradQ[35] = -dtDD[0][0][0];
-    BgradQ[36] = -dtDD[0][0][1];
-    BgradQ[37] = -dtDD[0][0][2];
-    BgradQ[38] = -dtDD[0][1][1];
-    BgradQ[39] = -dtDD[0][1][2];
-    BgradQ[40] = -dtDD[0][2][2];
+    BgradQ[37] = -dtDD[0][0][0];
+    BgradQ[38] = -dtDD[0][0][1];
+    BgradQ[39] = -dtDD[0][0][2];
+    BgradQ[40] = -dtDD[0][1][1];
+    BgradQ[41] = -dtDD[0][1][2];
+    BgradQ[42] = -dtDD[0][2][2];
 
-    BgradQ[41] = -dtDD[1][0][0];
-    BgradQ[42] = -dtDD[1][0][1];
-    BgradQ[43] = -dtDD[1][0][2];
-    BgradQ[44] = -dtDD[1][1][1];
-    BgradQ[45] = -dtDD[1][1][2];
-    BgradQ[46] = -dtDD[1][2][2];
+    BgradQ[43] = -dtDD[1][0][0];
+    BgradQ[44] = -dtDD[1][0][1];
+    BgradQ[45] = -dtDD[1][0][2];
+    BgradQ[46] = -dtDD[1][1][1];
+    BgradQ[47] = -dtDD[1][1][2];
+    BgradQ[48] = -dtDD[1][2][2];
 
-    BgradQ[47] = -dtDD[2][0][0];
-    BgradQ[48] = -dtDD[2][0][1];
-    BgradQ[49] = -dtDD[2][0][2];
-    BgradQ[50] = -dtDD[2][1][1];
-    BgradQ[51] = -dtDD[2][1][2];
-    BgradQ[52] = -dtDD[2][2][2];
-    BgradQ[53] = -dtKex;
-    BgradQ[54] = 0.0;
+    BgradQ[49] = -dtDD[2][0][0];
+    BgradQ[50] = -dtDD[2][0][1];
+    BgradQ[51] = -dtDD[2][0][2];
+    BgradQ[52] = -dtDD[2][1][1];
+    BgradQ[53] = -dtDD[2][1][2];
+    BgradQ[54] = -dtDD[2][2][2];
+    BgradQ[23] = -dtKex;
+    BgradQ[24] = 0.0;
     for (int i = 0; i < 3; i++) BgradQ[55+i] = -dtPP[i];
     BgradQ[58] = 0;
 
     // Reconstructed auxiliary variables are not evolved in SO mode.
     if (CCZ4SO==1) {
-        for (int i = 23; i < 53; i++) BgradQ[i] = 0.0;
+        for (int i = 25; i < 55; i++) BgradQ[i] = 0.0;
         for (int i = 0; i < 3; i++) BgradQ[55+i] = 0.0;
     }
 }
