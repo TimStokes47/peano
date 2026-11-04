@@ -1,4 +1,4 @@
-name: Create PR from p4
+name: Create PRs from p4
 
 on:
   push:
@@ -12,27 +12,31 @@ permissions:
 jobs:
   create-pull-request:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        base: [exahype, exagrype, peano]
 
     steps:
-      - name: Create pull request
+      - name: Create pull request into ${{ matrix.base }}
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          BASE: ${{ matrix.base }}
         run: |
           # Don't create another PR if one already exists
           EXISTING=$(gh pr list \
             --head p4 \
-            --base exahype \
+            --base "$BASE" \
             --json number \
             --jq '.[0].number')
 
           if [ -z "$EXISTING" ]; then
             gh pr create \
               --head p4 \
-              --base exahype \
-              --title "Merge p4 into exahype" \
+              --base "$BASE" \
+              --title "Merge p4 into $BASE" \
               --body "Automatically created after changes were merged into p4."
           else
-            echo "PR #${EXISTING} from p4 into exahype already exists."
+            echo "PR #${EXISTING} from p4 into $BASE already exists."
           fi
-
