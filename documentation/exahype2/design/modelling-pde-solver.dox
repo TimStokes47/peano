@@ -22,27 +22,33 @@ and users model an instance of this equation by creating an exahype2.api.Solver
 configuring two things on it: the unknowns and the individual PDE terms.
 
 
-# Unknowns and auxiliary variables
+# Unknowns and material parameters
 
-Every solver is constructed with an unknowns and an auxiliary_variables
-specification. Both can be given either as a plain integer (just the
-multiplicity) or as a dictionary mapping a variable name onto its
-multiplicity, e.g.
+Every solver is constructed with a name and an unknowns specification. The
+latter can be given either as a plain integer (just the multiplicity) or as a
+dictionary mapping a variable name onto its multiplicity, e.g.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-solver = exahype2.api.fv.SomeFiniteVolumeSolver(
-  name                 = "MyEulerSolver",
-  unknowns             = {"rho": 1, "j": 3, "E": 1},
-  auxiliary_variables  = 0,
+solver = exahype2.api.Solver(
+  name     = "MyEulerSolver",
+  unknowns = {"rho": 1, "j": 3, "E": 1},
 )
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Both groups end up merged into one data vector Q per mesh entry (Finite Volume
-voxel, DG degree of freedom, ...), but only the unknowns are subject to the
-actual PDE formulation above - auxiliary variables may vary in space but are
-not evolved by the PDE terms. If a dictionary is used, the code generator
-additionally emits a `VariableShortcuts` file so user code can address Q's
-entries by name instead of by raw offset.
+The unknowns form the data vector Q per mesh entry (Finite Volume voxel, DG
+degree of freedom, ...) and are subject to the actual PDE formulation above. If a
+dictionary is used, the generated abstract solver hosts a struct Variables, so
+user code can address Q's entries by name instead of by raw offset.
+
+Quantities which may vary in space but are not evolved by the PDE terms are
+material parameters. A solver can have an arbitrary number of sets of material parameters
+(@ref exahype2.api.MaterialParameters), each of them holding an arbitrary number of
+(vector-valued) variables in a cell data object of its own. A set is attached via
+exahype2.api.Solver.add_material_parameters(), and the first solver which a set
+is attached to owns it, i.e. initialises it. Further solvers can attach the same set
+and share it. Behind each Q (and deltaQ), the signature of every PDE term of a
+solver with material parameters hosts one pointer per attached set. Solvers without
+material parameters keep their signatures.
 
 
 # PDE terms

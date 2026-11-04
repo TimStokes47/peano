@@ -27,9 +27,9 @@ class Flux(PDETerm):
     proper signatures; until then every term merely gets position, normal
     (where physically meaningful) and its input/output.
 
-    Q holds unknowns+auxiliary_variables entries, whereas the output F only
-    holds unknowns entries: only the actual unknowns are subject to the
-    hyperbolic formulation, auxiliary variables are not.
+    Q holds the unknowns, and so does the output F. Material parameters are
+    not subject to the hyperbolic formulation. If the solver has any, a pointer to
+    each set follows right behind Q (@ref exahype2.api.MaterialParameters).
 
     """
 

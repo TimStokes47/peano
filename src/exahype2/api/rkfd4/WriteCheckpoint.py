@@ -130,6 +130,10 @@ class WriteCheckpoint(Solver.Plotter):
         next time stamp.
 
         """
+        if self._solver.material_parameters:
+            raise NotImplementedError(
+                f"Solver {self._solver.name}: checkpoints do not cover material parameters yet."
+            )
         peano4.api.Logger().log(
             "Create checkpoint task graph for fourth-order Finite Differences with Runge-Kutta over block-structured meshes"
         )

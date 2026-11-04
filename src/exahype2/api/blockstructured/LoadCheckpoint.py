@@ -284,6 +284,10 @@ class LoadCheckpoint(Solver.GridConstruction):
         task graph
 
         """
+        if self._solver.material_parameters:
+            raise NotImplementedError(
+                f"Solver {self._solver.name}: checkpoints do not cover material parameters yet."
+            )
         peano4.api.Logger().log(
             "Create setup task graph which loads a checkpoint into a block-structured mesh"
         )

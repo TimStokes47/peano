@@ -52,7 +52,7 @@ Jupyter.
 - Coupling
   - \subpage tutorials_exahype2_41_postprocessing
   - \subpage tutorials_exahype2_44_localisation
-  - \subpage tutorials_exahype2_45_coupling
+  - \subpage tutorials_exahype2_45_coupling-sharing-material-parameters
 - ExaGRyPE (numerical relativity extension built on top of ExaHyPE)
   - \subpage tutorials_exahype2_applications_exagrype_configure
   - ExaGRyPE standard benchmarks
