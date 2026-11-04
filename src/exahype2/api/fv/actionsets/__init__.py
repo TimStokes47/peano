@@ -10,6 +10,7 @@ from .InitialCondition import InitialCondition
 from .InitialiseNewCells import InitialiseNewCells
 from .ProjectPatchOntoFaces import ProjectPatchOntoFaces
 from .UpdateCell import UpdateCell
+from .UpdateCellGPU import UpdateCellGPU
 from .ComputeGlobalCFLCondition import ComputeGlobalCFLCondition
 from .UpdateCellInterior import UpdateCellInterior
 from .UpdateCellShell import UpdateCellShell
