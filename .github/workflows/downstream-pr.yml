@@ -1,0 +1,37 @@
+name: Create PR from p4
+
+on:
+  push:
+    branches:
+      - p4
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Don't create another PR if one already exists
+          EXISTING=$(gh pr list \
+            --head p4 \
+            --base exahype \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -z "$EXISTING" ]; then
+            gh pr create \
+              --head p4 \
+              --base main \
+              --title "Merge p4 into exahype" \
+              --body "Automatically created after changes were merged into p4."
+          else
+            echo "PR #${EXISTING} from p4 into exahype already exists."
+          fi
+
