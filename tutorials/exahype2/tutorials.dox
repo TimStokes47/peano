@@ -58,7 +58,7 @@ Jupyter.
   - \subpage tutorials_exahype2_45_coupling-sharing-auxiliary-variables
 - ExaGRyPE (numerical relativity extension built on top of ExaHyPE)
   - \subpage tutorials_exahype2_applications_exagrype_configure
-  - ExaGRyPE standard benchmarks
+  - ExaGRyPE tutorial notebooks
     - \subpage tutorials_exahype2_exagrype_521_gauge-wave
     - \subpage tutorials_exahype2_exagrype_522_single-black-hole
     - \subpage tutorials_exahype2_exagrype_523_higher-order-fd
