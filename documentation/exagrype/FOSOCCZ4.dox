@@ -1,22 +1,35 @@
 /**
-@page page_exagrype_fo_so_project_plan ExaGRyPE: first-/second-order ping-pong CCZ4 (project plan and lab notes)
+@page page_exagrype_fo_so_ccz4 First-order second-order CCZ4 (project plan and lab notes)
 
 \tableofcontents
 
-This page is the project plan for the "ping-pong" second-order CCZ4 solver
-exagrype.api.FOSOCCZ4Solver and its partner exagrype.api.FOSOCCZ4Reconstructor,
-plus the lab notes of the implementation: what worked, what did not, and what
-is still open.
-It is a subpage of @ref page_exagrype.
+The first-order CCZ4 solver (exagrype.api.FOCCZ4Solver) evolves 59 unknowns.
+This is the original Dumbser/Zanotti formulation introduced with ExaHyPE 2 and 
+is a "clean" first-order formulation of the CCZ4 problem. A first-order 
+formulation is not what you find in most codes in the field. Most codes start
+to discretise the genuine second-order formulation of the field equations 
+straightaway. The reformulation into first order was driven, in parts, by 
+ExaHyPE's need to phrase all equations in first order, such that a generic
+first-order mathematical toolset can be thrown at the problem.
 
 
-# Goal
+In this first-order formulation, 
+34 out of the 59 unknowns are first derivatives of the other 25 (lapse, shift, conformal
+metric, phi), plus K0. So they are helper variables which now evolve in time.
+In princple however, they can always be reconstructed from the 25 dominant 
+variables. To the best of our knowledge, it is neither clear if this first-order
+formulation is faster nor if it is as stable as a second order approach. 
+While ExaHyPE does not support second-order formulations, ExaGRyPE provides 
+a third variant, which is kind of a hybrid fo first- and second-order
+formulation: A FOSO CCZ4 implementation! It is a reconstructed first-order/second-order
+scheme.
 
-The first-order CCZ4 solver (exagrype.api.FOCCZ4Solver) evolves all 59 unknowns.
-34 of them are first derivatives of the other 25 (lapse, shift, conformal
-metric, phi), plus K0. In the second-order reconstructed formulation we only
+
+In the reconstructed formulation, we only
 evolve the 25 primary unknowns and recompute the derivatives from them
-whenever we need them.
+explicitly after each time step: The evolution and ocmpute kernels of 
+CCZ4 still feed only from first order derivatives, but these derivatives
+are constructed explicitly from the solution prior to the kernel application. 
 
 We realise this with two partners which take turns in the time stepping task
 graph:
@@ -29,8 +42,8 @@ graph:
 Both see the same 59 entries, but with swapped roles.
 
 - The reconstructor runs first. A task of it invokes the reconstruction of the
-  legacy code (exagrype::ccz4::recomputeAuxiliaryVariablesFD4_4thOrder()) which
-  computes the derivatives from the primary variables with halo. The derivatives
+  quantities that the first-order CCZ4 solver requires (exagrype::ccz4::recomputeAuxiliaryVariablesFD4_4thOrder()).
+  It computes these derivatives from the primary variables with halo. The derivatives
   are then projected onto the faces.
 - The solver finds the derivatives with a halo, reconstructs its own 25
   unknowns with a halo, and calls the very same CCZ4 kernels as
@@ -44,6 +57,8 @@ Both see the same 59 entries, but with swapped roles.
 - Both solvers should exist for Finite Volumes (FV) and fourth-order Finite
   Differences (FD4). We start with FD4.
 
+
+@todo Is CCZ4SO a compile constant, and is there a more elegant way to do things?
 
 # Design
 
