@@ -46,6 +46,7 @@ void exagrype::ccz4::tests::FlatSpacetimeTest::run() {
   testMethod(testNonconservativeProductVanishes);
   testMethod(testSourceVanishes);
   testMethod(testMaxEigenvalueOfFlatSpacetime);
+  testMethod(testSecondaryEntriesInSeparateMemory);
   testMethod(testGaugeWaveLapse);
   testMethod(testFirstDerivativeReconstructionIsExactForCubics);
   testMethod(testConstraintEnforcementOfEvolvedVariablesMatchesFullEnforcement);
@@ -54,12 +55,12 @@ void exagrype::ccz4::tests::FlatSpacetimeTest::run() {
 
 void exagrype::ccz4::tests::FlatSpacetimeTest::testNonconservativeProductVanishes() {
   double Q[Unknowns];
-  double gradQ[3 * Unknowns] = {0.0};
+  double gradQ[Unknowns] = {0.0};
   initFlatSpacetime(Q);
 
   for (int normal = 0; normal < 3; normal++) {
     double BgradQ[Unknowns];
-    exagrype::ccz4::ncp(BgradQ, Q, gradQ, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
+    exagrype::ccz4::ncp(BgradQ, BgradQ + 25, Q, Q + 25, gradQ, gradQ + 25, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
     for (int i = 0; i < Unknowns; i++) {
       validateNumericalEqualsWithParams2(BgradQ[i], 0.0, normal, i);
     }
@@ -72,9 +73,51 @@ void exagrype::ccz4::tests::FlatSpacetimeTest::testSourceVanishes() {
   double S[Unknowns];
   initFlatSpacetime(Q);
 
-  exagrype::ccz4::source(S, Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
+  exagrype::ccz4::source(S, S + 25, Q, Q + 25, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
   for (int i = 0; i < Unknowns; i++) {
     validateNumericalEqualsWithParams1(S[i], 0.0, i);
+  }
+}
+
+
+void exagrype::ccz4::tests::FlatSpacetimeTest::testSecondaryEntriesInSeparateMemory() {
+  // A disturbed state with non-zero derivatives, so the kernels have something to do
+  double Q[Unknowns];
+  double gradQ[Unknowns];
+  initFlatSpacetime(Q);
+  for (int i = 0; i < Unknowns; i++) {
+    Q[i]     += 1e-3 * (i % 7 + 1);
+    gradQ[i]  = 1e-2 * (i % 5 + 1);
+  }
+
+  // The same entries, but the secondary ones live in memory of their own
+  double primaryQ[25], secondaryQ[34], primaryGradient[25], secondaryGradient[34];
+  for (int i = 0; i < 25; i++) {
+    primaryQ[i]        = Q[i];
+    primaryGradient[i] = gradQ[i];
+  }
+  for (int i = 0; i < 34; i++) {
+    secondaryQ[i]        = Q[25 + i];
+    secondaryGradient[i] = gradQ[25 + i];
+  }
+
+  double S[Unknowns], primaryS[25], secondaryS[34];
+  exagrype::ccz4::source(S, S + 25, Q, Q + 25, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
+  exagrype::ccz4::source(primaryS, secondaryS, primaryQ, secondaryQ, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
+  for (int i = 0; i < 25; i++) validateEqualsWithParams1(primaryS[i], S[i], i);
+  for (int i = 0; i < 34; i++) validateEqualsWithParams1(secondaryS[i], S[25 + i], i);
+
+  for (int normal = 0; normal < 3; normal++) {
+    double BgradQ[Unknowns], primaryBgradQ[25], secondaryBgradQ[34];
+    exagrype::ccz4::ncp(BgradQ, BgradQ + 25, Q, Q + 25, gradQ, gradQ + 25, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
+    exagrype::ccz4::ncp(primaryBgradQ, secondaryBgradQ, primaryQ, secondaryQ, primaryGradient, secondaryGradient, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
+    for (int i = 0; i < 25; i++) validateEqualsWithParams2(primaryBgradQ[i], BgradQ[i], normal, i);
+    for (int i = 0; i < 34; i++) validateEqualsWithParams2(secondaryBgradQ[i], BgradQ[25 + i], normal, i);
+
+    // Second-order formulation: no storage for the secondary result
+    double soBgradQ[25];
+    exagrype::ccz4::ncp(soBgradQ, nullptr, primaryQ, secondaryQ, primaryGradient, secondaryGradient, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
+    for (int i = 0; i < 25; i++) validateEqualsWithParams2(soBgradQ[i], BgradQ[i], normal, i);
   }
 }
 

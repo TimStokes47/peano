@@ -1224,7 +1224,7 @@ void exagrype::ccz4::maxEigenvalue(
 }
 
 //this version use alpha and phi
-void exagrype::ccz4::source(double* S, const double* const Q,
+void exagrype::ccz4::source(double* S, double* Saux, const double* const Q, const double* const Qaux,
       const int CCZ4LapseType,
       const double CCZ4ds,
       const double CCZ4c,
@@ -1310,15 +1310,15 @@ void exagrype::ccz4::source(double* S, const double* const Q,
 
     const double Theta = Q[12];
 
-    const double DD[3][3][3] = {{ {Q[37], Q[38], Q[39]},
-                                  {Q[38], Q[40], Q[41]},
-                                  {Q[39], Q[41], Q[42]} },
-                                { {Q[43], Q[44], Q[45]},
-                                  {Q[44], Q[46], Q[47]},
-                                  {Q[45], Q[47], Q[48]} },
-                                { {Q[49], Q[50], Q[51]},
-                                  {Q[50], Q[52], Q[53]},
-                                  {Q[51], Q[53], Q[54]} }};
+    const double DD[3][3][3] = {{ {Qaux[12], Qaux[13], Qaux[14]},
+                                  {Qaux[13], Qaux[15], Qaux[16]},
+                                  {Qaux[14], Qaux[16], Qaux[17]} },
+                                { {Qaux[18], Qaux[19], Qaux[20]},
+                                  {Qaux[19], Qaux[21], Qaux[22]},
+                                  {Qaux[20], Qaux[22], Qaux[23]} },
+                                { {Qaux[24], Qaux[25], Qaux[26]},
+                                  {Qaux[25], Qaux[27], Qaux[28]},
+                                  {Qaux[26], Qaux[28], Qaux[29]} }};
 
     double DDup[3][3][3] = {0};
     for (int k = 0; k < 3; k++)
@@ -1334,7 +1334,7 @@ void exagrype::ccz4::source(double* S, const double* const Q,
     const double phi2 = phi*phi;
     const double chi = pow(phi,np);
 
-    const double PP[3] = {Q[55], Q[56], Q[57]};
+    const double PP[3] = {Qaux[30], Qaux[31], Qaux[32]};
 
     double Christoffel_tilde_down[3][3][3] = {0};
     double Christoffel_tilde[3][3][3] = {0};
@@ -1384,7 +1384,7 @@ void exagrype::ccz4::source(double* S, const double* const Q,
     double PPdotGtilde = 0;
     for (int k = 0; k < 3; k++) PPdotGtilde += PP[k] * Gtilde[k];
 
-    const double AA[3] = {Q[25], Q[26], Q[27]};
+    const double AA[3] = {Qaux[0], Qaux[1], Qaux[2]};
 
     double AAdotPP = 0;
     for (int k = 0; k < 3; k++)
@@ -1474,9 +1474,9 @@ void exagrype::ccz4::source(double* S, const double* const Q,
         SecondOrderTerms[j][i] = SecondOrderTerms[i][j];
     }
 
-    const double BB[3][3] = { {Q[28], Q[29], Q[30]},
-                              {Q[31], Q[32], Q[33]},
-                              {Q[34], Q[35], Q[36]} };
+    const double BB[3][3] = { {Qaux[3], Qaux[4], Qaux[5]},
+                              {Qaux[6], Qaux[7], Qaux[8]},
+                              {Qaux[9], Qaux[10], Qaux[11]} };
 
     double traceBB = BB[0][0] + BB[1][1] + BB[2][2];
     const double beta[3] = {Q[17], Q[18], Q[19]};
@@ -1514,7 +1514,7 @@ void exagrype::ccz4::source(double* S, const double* const Q,
         }
     }
 
-    const double K0 = Q[58];
+    const double K0 = Qaux[33];
 
     // k1 is already lapse-rescaled: retain k1, not alpha*k1, in damping.
     double dtKex = -TrDDalpha
@@ -1669,48 +1669,49 @@ void exagrype::ccz4::source(double* S, const double* const Q,
     S[16] = dtalpha;
     for (int i = 0; i < 3; i++) S[17+i] = dtbeta[i];
     for (int i = 0; i < 3; i++) S[20+i] = dtmyb[i];
-    for (int i = 0; i < 3; i++) S[25+i] = dtAA[i];
-    S[28] = dtBB[0][0];
-    S[29] = dtBB[0][1];
-    S[30] = dtBB[0][2];
-    S[31] = dtBB[1][0];
-    S[32] = dtBB[1][1];
-    S[33] = dtBB[1][2];
-    S[34] = dtBB[2][0];
-    S[35] = dtBB[2][1];
-    S[36] = dtBB[2][2];
-    S[37] = dtDD[0][0][0];
-    S[38] = dtDD[0][0][1];
-    S[39] = dtDD[0][0][2];
-    S[40] = dtDD[0][1][1];
-    S[41] = dtDD[0][1][2];
-    S[42] = dtDD[0][2][2];
-    S[43] = dtDD[1][0][0];
-    S[44] = dtDD[1][0][1];
-    S[45] = dtDD[1][0][2];
-    S[46] = dtDD[1][1][1];
-    S[47] = dtDD[1][1][2];
-    S[48] = dtDD[1][2][2];
-    S[49] = dtDD[2][0][0];
-    S[50] = dtDD[2][0][1];
-    S[51] = dtDD[2][0][2];
-    S[52] = dtDD[2][1][1];
-    S[53] = dtDD[2][1][2];
-    S[54] = dtDD[2][2][2];
     S[23] = dtKex;
     S[24] = dtchi;
-    for (int i = 0; i < 3; i++) S[55+i] = dtPP[i];
-    S[58] = 0;
 
-    // Reconstructed auxiliary variables are not evolved in SO mode.
-    if (CCZ4SO==1){
-        for (int i = 25; i < 55; i++) S[i] = 0.0;
-        for (int i = 0; i < 3; i++) S[55+i] = 0.0;
+    // The secondary entries. In the second-order formulation, they are not
+    // evolved, and the caller may omit the pointer.
+    if (Saux != nullptr) {
+        for (int i = 0; i < 3; i++) Saux[i] = dtAA[i];
+        Saux[3] = dtBB[0][0];
+        Saux[4] = dtBB[0][1];
+        Saux[5] = dtBB[0][2];
+        Saux[6] = dtBB[1][0];
+        Saux[7] = dtBB[1][1];
+        Saux[8] = dtBB[1][2];
+        Saux[9] = dtBB[2][0];
+        Saux[10] = dtBB[2][1];
+        Saux[11] = dtBB[2][2];
+        Saux[12] = dtDD[0][0][0];
+        Saux[13] = dtDD[0][0][1];
+        Saux[14] = dtDD[0][0][2];
+        Saux[15] = dtDD[0][1][1];
+        Saux[16] = dtDD[0][1][2];
+        Saux[17] = dtDD[0][2][2];
+        Saux[18] = dtDD[1][0][0];
+        Saux[19] = dtDD[1][0][1];
+        Saux[20] = dtDD[1][0][2];
+        Saux[21] = dtDD[1][1][1];
+        Saux[22] = dtDD[1][1][2];
+        Saux[23] = dtDD[1][2][2];
+        Saux[24] = dtDD[2][0][0];
+        Saux[25] = dtDD[2][0][1];
+        Saux[26] = dtDD[2][0][2];
+        Saux[27] = dtDD[2][1][1];
+        Saux[28] = dtDD[2][1][2];
+        Saux[29] = dtDD[2][2][2];
+        for (int i = 0; i < 3; i++) Saux[30+i] = dtPP[i];
+        Saux[33] = 0;
+        if (CCZ4SO == 1) {
+            for (int i = 0; i < 34; i++) Saux[i] = 0.0;
+        }
     }
-
 }
 
-void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
+void exagrype::ccz4::ncp(double* BgradQ, double* BgradQaux, const double* const Q, const double* const Qaux, const double* const gradQ, const double* const gradQaux, const int normal,
       const int CCZ4LapseType,
       const double CCZ4ds,
       const double CCZ4c,
@@ -1749,12 +1750,11 @@ void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* co
     const int CCZ4Sa = 0;
     const int CCZ4Sp = 0;
 
-    constexpr int nVar(59);
-
     double gradQin[59][3] = {0};
 
-    // Direction-major input: [normal * 59 + variable].
-    for (int i = 0; i < nVar; i++) gradQin[i][normal] = gradQSerialised[i+normal*nVar];
+    // Only the derivative along the normal is given.
+    for (int i = 0; i < 25; i++) gradQin[i][normal]    = gradQ[i];
+    for (int i = 0; i < 34; i++) gradQin[25+i][normal] = gradQaux[i];
 
     const double g_cov[3][3] = { {Q[0], Q[1], Q[2]},
                                  {Q[1], Q[3], Q[4]},
@@ -2035,46 +2035,48 @@ void exagrype::ccz4::ncp(double* BgradQ, const double* const Q, const double* co
     BgradQ[16] = 0.0;
     for (int i = 0; i < 3; i++) BgradQ[17+i] = 0.0;
     for (int i = 0; i < 3; i++) BgradQ[20+i] = -dtmyb[i];
-    for (int i = 0; i < 3; i++) BgradQ[25+i] = -dtAA[i];
-    BgradQ[28] = -dtBB[0][0];
-    BgradQ[29] = -dtBB[0][1];
-    BgradQ[30] = -dtBB[0][2];
-    BgradQ[31] = -dtBB[1][0];
-    BgradQ[32] = -dtBB[1][1];
-    BgradQ[33] = -dtBB[1][2];
-    BgradQ[34] = -dtBB[2][0];
-    BgradQ[35] = -dtBB[2][1];
-    BgradQ[36] = -dtBB[2][2];
 
-    BgradQ[37] = -dtDD[0][0][0];
-    BgradQ[38] = -dtDD[0][0][1];
-    BgradQ[39] = -dtDD[0][0][2];
-    BgradQ[40] = -dtDD[0][1][1];
-    BgradQ[41] = -dtDD[0][1][2];
-    BgradQ[42] = -dtDD[0][2][2];
 
-    BgradQ[43] = -dtDD[1][0][0];
-    BgradQ[44] = -dtDD[1][0][1];
-    BgradQ[45] = -dtDD[1][0][2];
-    BgradQ[46] = -dtDD[1][1][1];
-    BgradQ[47] = -dtDD[1][1][2];
-    BgradQ[48] = -dtDD[1][2][2];
 
-    BgradQ[49] = -dtDD[2][0][0];
-    BgradQ[50] = -dtDD[2][0][1];
-    BgradQ[51] = -dtDD[2][0][2];
-    BgradQ[52] = -dtDD[2][1][1];
-    BgradQ[53] = -dtDD[2][1][2];
-    BgradQ[54] = -dtDD[2][2][2];
     BgradQ[23] = -dtKex;
     BgradQ[24] = 0.0;
-    for (int i = 0; i < 3; i++) BgradQ[55+i] = -dtPP[i];
-    BgradQ[58] = 0;
 
-    // Reconstructed auxiliary variables are not evolved in SO mode.
-    if (CCZ4SO==1) {
-        for (int i = 25; i < 55; i++) BgradQ[i] = 0.0;
-        for (int i = 0; i < 3; i++) BgradQ[55+i] = 0.0;
+    // The secondary entries. In the second-order formulation, they are not
+    // evolved, and the caller may omit the pointer.
+    if (BgradQaux != nullptr) {
+        for (int i = 0; i < 3; i++) BgradQaux[i] = -dtAA[i];
+        BgradQaux[3] = -dtBB[0][0];
+        BgradQaux[4] = -dtBB[0][1];
+        BgradQaux[5] = -dtBB[0][2];
+        BgradQaux[6] = -dtBB[1][0];
+        BgradQaux[7] = -dtBB[1][1];
+        BgradQaux[8] = -dtBB[1][2];
+        BgradQaux[9] = -dtBB[2][0];
+        BgradQaux[10] = -dtBB[2][1];
+        BgradQaux[11] = -dtBB[2][2];
+        BgradQaux[12] = -dtDD[0][0][0];
+        BgradQaux[13] = -dtDD[0][0][1];
+        BgradQaux[14] = -dtDD[0][0][2];
+        BgradQaux[15] = -dtDD[0][1][1];
+        BgradQaux[16] = -dtDD[0][1][2];
+        BgradQaux[17] = -dtDD[0][2][2];
+        BgradQaux[18] = -dtDD[1][0][0];
+        BgradQaux[19] = -dtDD[1][0][1];
+        BgradQaux[20] = -dtDD[1][0][2];
+        BgradQaux[21] = -dtDD[1][1][1];
+        BgradQaux[22] = -dtDD[1][1][2];
+        BgradQaux[23] = -dtDD[1][2][2];
+        BgradQaux[24] = -dtDD[2][0][0];
+        BgradQaux[25] = -dtDD[2][0][1];
+        BgradQaux[26] = -dtDD[2][0][2];
+        BgradQaux[27] = -dtDD[2][1][1];
+        BgradQaux[28] = -dtDD[2][1][2];
+        BgradQaux[29] = -dtDD[2][2][2];
+        for (int i = 0; i < 3; i++) BgradQaux[30+i] = -dtPP[i];
+        BgradQaux[33] = 0;
+        if (CCZ4SO == 1) {
+            for (int i = 0; i < 34; i++) BgradQaux[i] = 0.0;
+        }
     }
 }
 #if defined(GPUOffloadingOMP)

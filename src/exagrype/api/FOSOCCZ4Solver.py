@@ -21,10 +21,10 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
     (DerivativeUnknowns) are the first derivatives of the lapse, the shift,
     the conformal metric and phi, plus K0. They are not evolved but held as
     auxiliary variables (@ref exahype2.api.AuxiliaryVariables) named
-    "Derivatives". The PDE terms gather the 25 unknowns and the 34 auxiliary
-    variables and hand them to the very same kernels as the first-order
-    solver exagrype.api.FOCCZ4Solver. With CCZ4SO=1, the kernels set the
-    time derivative of the 34 derivatives to zero.
+    "Derivatives". The PDE terms hand the 25 unknowns and, as a second
+    pointer, the 34 auxiliary variables to the very same kernels as the
+    first-order solver exagrype.api.FOCCZ4Solver. With CCZ4SO=1, the kernels set the time derivative of the 34
+    derivatives to zero, and the solver does not even ask for it.
 
     ## Ping-pong with a reconstructor
 
@@ -225,25 +225,17 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
     def _number_of_derivatives(cls) -> int:
         return sum(cls.DerivativeUnknowns.values())
 
-    @staticmethod
-    def _auxiliary_argument(argument: str) -> str:
-        """! Name of the pointer to the derivatives behind a PDE term's argument"""
-        return {"Q": "derivatives", "deltaQ": "deltaDerivatives"}[argument]
-
-    def _load_ccz4_entries(self, argument: str, full: str) -> str:
-        evolved = self._number_of_evolved_entries()
-        derivatives = self._number_of_derivatives()
-        return f"""  double {full}Storage[{self.NUMBER_OF_CCZ4_ENTRIES}];
-  for (int i = 0; i < {evolved}; i++) {full}Storage[i] = {argument}[i];
-  for (int i = 0; i < {derivatives}; i++) {full}Storage[{evolved} + i] = {self._auxiliary_argument(argument)}[i];
-  const double* const {full} = {full}Storage;"""
-
-    def _declare_ccz4_result(self, argument: str, full: str) -> str:
-        return f"""  double {full}Storage[{self.NUMBER_OF_CCZ4_ENTRIES}];
-  double* const {full} = {full}Storage;"""
-
-    def _store_ccz4_result(self, argument: str, full: str) -> str:
-        return f"  for (int i = 0; i < {self._number_of_evolved_entries()}; i++) {argument}[i] = {full}Storage[i];"
+    def _secondary_pointer(self, argument: str) -> str:
+        """!
+        The secondary entries are the auxiliary variables. The kernels do not
+        need to write a result for them, as it is zero.
+        """
+        return {
+            "Q": "derivatives",
+            "deltaQ": "deltaDerivatives",
+            "BTimesDeltaQ": "nullptr",
+            "S": "nullptr",
+        }[argument]
 
     def _adapt_initial_condition(
         self, initial_condition: exahype2.api.InitPointWisely

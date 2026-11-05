@@ -21,19 +21,17 @@ class CCZ4SolverBase(exahype2.api.Solver):
     The base class hosts the CCZ4 parameters, the PDE terms (which delegate
     to the kernels in exagrype::ccz4), the initial conditions and the
     optional enforcement of the CCZ4 constraints. The kernels always work on
-    the 59 entries of CCZ4, see exagrype.api.FOCCZ4Solver.Unknowns. The two
-    subclasses differ only in how these 59 entries are distributed over the
-    solver's unknowns and auxiliary variables:
+    the 59 entries of CCZ4, see exagrype.api.FOCCZ4Solver.Unknowns, which
+    they take as two pointers: one to the 25 primary and one to the 34
+    secondary entries. The two subclasses differ only in where the secondary
+    entries live:
 
-    - exagrype.api.FOCCZ4Solver evolves all 59 as unknowns. The PDE terms
-      hand the pointers they receive straight to the kernels.
+    - exagrype.api.FOCCZ4Solver evolves all 59 as unknowns. The secondary
+      entries follow the primary ones, i.e. the pointers are Q and Q+25.
     - exagrype.api.FOSOCCZ4Solver evolves 25 unknowns, and the other 34
-      entries are auxiliary variables. The PDE terms gather the 59 entries
-      in a local array before they call the kernels, and scatter the
-      kernels' result back onto the 25 unknowns.
+      entries are auxiliary variables, i.e. they live in separate memory.
 
-    The subclasses therefore only override the hooks _load_ccz4_entries(),
-    _declare_ccz4_result() and _store_ccz4_result().
+    The subclasses therefore only override the hook _secondary_pointer().
 
     @ref exagrype.api.FOCCZ4Solver, @ref exagrype.api.FOSOCCZ4Solver
 
@@ -424,36 +422,24 @@ class CCZ4SolverBase(exahype2.api.Solver):
         """
         return dict(self._parameters)
 
-    def _load_ccz4_entries(self, argument: str, full: str) -> str:
+    def _secondary_pointer(self, argument: str) -> str:
         """!
 
-        C++ which defines a const pointer to the 59 CCZ4 entries behind an argument
+        C++ expression for the pointer to the 34 secondary CCZ4 entries of an argument
 
-        Hook for the subclasses. The PDE terms receive the unknowns Q (and the
-        jumps deltaQ of the unknowns) and, if the subclass has auxiliary
-        variables, one further pointer behind each.
+        Hook for the subclasses. The PDE terms receive the 25 or 59 entries of
+        the unknowns Q, the jumps deltaQ of the unknowns, and the result
+        arguments (BTimesDeltaQ and S). The kernels take a second pointer
+        next to each of them for the entries 25 to 58.
 
         @param argument: str
-          Name of the argument of the PDE term: "Q" or "deltaQ".
+          Name of the argument of the PDE term: "Q", "deltaQ", "BTimesDeltaQ"
+          or "S".
 
-        @param full: str
-          Name of the const double* which the code defines. It points to 59
-          entries in the order of exagrype.api.FOCCZ4Solver.Unknowns.
+        @return str
+          C++ expression of type double*. For the result arguments, it may be
+          nullptr if the solver does not evolve the secondary entries.
 
-        """
-        raise NotImplementedError
-
-    def _declare_ccz4_result(self, argument: str, full: str) -> str:
-        """!
-        C++ which defines a double* named full that points to 59 writable entries,
-        which the kernels fill. Companion of _store_ccz4_result().
-        """
-        raise NotImplementedError
-
-    def _store_ccz4_result(self, argument: str, full: str) -> str:
-        """!
-        C++ which hands the result which the kernels wrote into full back to the
-        argument of the PDE term, i.e. to the unknowns that the solver evolves.
         """
         raise NotImplementedError
 
@@ -472,39 +458,30 @@ class CCZ4SolverBase(exahype2.api.Solver):
 
         The Finite Volume kernels hand over the jump deltaQ along one normal,
         the fourth-order Finite Differences of exahype2.api.rkfd4 the
-        derivative along one normal times the mesh width,
-        whereas exagrype::ccz4::ncp() expects the gradient along all three
-        directions. We hence embed the jump into an otherwise empty gradient.
+        derivative along one normal times the mesh width. This is what
+        exagrype::ccz4::ncp() expects.
 
         """
-        n = self.NUMBER_OF_CCZ4_ENTRIES
         return f"""
-{self._load_ccz4_entries("Q", "QFull")}
-{self._load_ccz4_entries("deltaQ", "deltaQFull")}
-{self._declare_ccz4_result("BTimesDeltaQ", "BTimesDeltaQFull")}
-  double deltaQSerialised[{n} * 3];
-  for (int i = 0; i < {n}; i++) {{
-    deltaQSerialised[i + 0 * {n}] = 0.0;
-    deltaQSerialised[i + 1 * {n}] = 0.0;
-    deltaQSerialised[i + 2 * {n}] = 0.0;
-
-    deltaQSerialised[i + normal * {n}] = deltaQFull[i];
-  }}
-  ::exagrype::ccz4::ncp(BTimesDeltaQFull, QFull, deltaQSerialised, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
-{self._store_ccz4_result("BTimesDeltaQ", "BTimesDeltaQFull")}
+  ::exagrype::ccz4::ncp(
+    BTimesDeltaQ, {self._secondary_pointer("BTimesDeltaQ")},
+    Q, {self._secondary_pointer("Q")},
+    deltaQ, {self._secondary_pointer("deltaQ")},
+    normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO
+  );
 """
 
     def _source_implementation(self) -> str:
         return f"""
-{self._load_ccz4_entries("Q", "QFull")}
-{self._declare_ccz4_result("S", "SFull")}
-  tarch::memset(SFull, 0, {self.NUMBER_OF_CCZ4_ENTRIES} * sizeof(double));
-  ::exagrype::ccz4::source(SFull, QFull, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
-{self._store_ccz4_result("S", "SFull")}
+  tarch::memset(S, 0, {sum(self.Unknowns.values())} * sizeof(double));
+  ::exagrype::ccz4::source(
+    S, {self._secondary_pointer("S")},
+    Q, {self._secondary_pointer("Q")},
+    CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO
+  );
 """
 
     def _max_eigenvalue_implementation(self) -> str:
-        return f"""
-{self._load_ccz4_entries("Q", "QFull")}
-  ::exagrype::ccz4::maxEigenvalue(QFull, normal, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd, lambdaMax);
+        return """
+  ::exagrype::ccz4::maxEigenvalue(Q, normal, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd, lambdaMax);
 """

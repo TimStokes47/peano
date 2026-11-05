@@ -110,11 +110,6 @@ class FOCCZ4Solver(CCZ4SolverBase):
         """
         super().__init__(name, self.Unknowns, parameters, initial_condition)
 
-    def _load_ccz4_entries(self, argument: str, full: str) -> str:
-        return f"  const double* const {full} = {argument};"
-
-    def _declare_ccz4_result(self, argument: str, full: str) -> str:
-        return f"  double* const {full} = {argument};"
-
-    def _store_ccz4_result(self, argument: str, full: str) -> str:
-        return ""
+    def _secondary_pointer(self, argument: str) -> str:
+        """! The secondary entries follow the 25 primary ones """
+        return f"{argument} + 25"

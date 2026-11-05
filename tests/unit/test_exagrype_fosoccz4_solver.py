@@ -76,15 +76,19 @@ def test_so_solver_calls_the_same_kernels_as_the_fo_solver():
         assert kernel in first_order.get_pde_term(term).implementation
         implementation = second_order.get_pde_term(term).implementation
         assert kernel in implementation
-        # The kernels see 59 entries, assembled from the unknowns and the derivatives
-        assert "[59]" in implementation
-        assert "derivatives[i]" in implementation
-    assert (
-        "deltaDerivatives[i]"
-        in second_order.get_pde_term("nonconservativeProduct").implementation
-    )
-    # Only the evolved unknowns are written back
-    assert "i < 25" in second_order.get_pde_term("volumetricSource").implementation
+    # The kernels get the primary entries and, as a second pointer, the
+    # derivatives, i.e. the auxiliary variables, without any copy
+    ncp = second_order.get_pde_term("nonconservativeProduct").implementation
+    assert "Q, derivatives," in ncp
+    assert "deltaQ, deltaDerivatives," in ncp
+    source = second_order.get_pde_term("volumetricSource").implementation
+    assert "Q, derivatives," in source
+    # The first-order solver passes the secondary entries behind the primary ones
+    assert "Q, Q + 25," in first_order.get_pde_term("volumetricSource").implementation
+    assert "deltaQ, deltaQ + 25," in first_order.get_pde_term("nonconservativeProduct").implementation
+    # The second-order solver has no storage for the secondary result
+    assert "S, nullptr," in source
+    assert "[59]" not in ncp + source
 
 
 def test_so_solver_splits_the_initial_condition():

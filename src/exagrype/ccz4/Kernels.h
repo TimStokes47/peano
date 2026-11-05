@@ -20,6 +20,27 @@ namespace exagrype {
       /**
        * Non-conservative product of the first-order CCZ4 formulation.
        *
+       * The 59 entries of CCZ4 (see @ref page_exagrype_foccz4) are handed
+       * over as two pointers: one to the 25 primary entries (indices 0 to
+       * 24) and one to the 34 secondary entries (indices 25 to 58, i.e. the
+       * derivatives of the lapse, the shift, the metric and phi, plus K0).
+       * The first-order formulation stores them contiguously and passes Q
+       * and Q+25. The second-order formulation (exagrype.api.FOSOCCZ4Solver)
+       * reconstructs the secondary entries from the primary ones and hence
+       * stores them in separate memory, namely in its auxiliary variables.
+       * The same split applies to all other arguments below which hold CCZ4
+       * entries.
+       *
+       * @param BgradQ The 25 primary entries of the result.
+       * @param BgradQaux The 34 secondary entries of the result. In the
+       *   second-order formulation (CCZ4SO=1), they are zero, and the
+       *   routine tolerates a nullptr, i.e. it then does not write them.
+       * @param Q The 25 primary entries of the solution.
+       * @param Qaux The 34 secondary entries of the solution.
+       * @param gradQ The derivative of the 25 primary entries along normal.
+       * @param gradQaux The derivative of the 34 secondary entries along normal.
+       * @param normal Axis along which the derivatives are given.
+       *
        * ncp(), source() and maxEigenvalue() have one implementation in
        * Kernels.cpp which serves both the CPU and OpenMP offloading. With
        * GPUOffloadingOMP, they are device functions (omp declare target),
@@ -36,7 +57,7 @@ namespace exagrype {
       #if defined(SharedOMP)
       #pragma omp declare simd
       #endif
-      void ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
+      void ncp(double* BgradQ, double* BgradQaux, const double* const Q, const double* const Qaux, const double* const gradQ, const double* const gradQaux, const int normal,
         const int CCZ4LapseType,
         const double CCZ4ds,
         const double CCZ4c,
@@ -63,12 +84,17 @@ namespace exagrype {
        * simd statement ensures that the compiler doesn't prematurely
        * vectorise.
        *
-       * @see ncp()
+       * Q and Qaux are the primary and the secondary entries as documented
+       * for @ref ncp(). S and Saux are the right-hand side for the two
+       * groups. Saux may be a nullptr in the second-order formulation
+       * (CCZ4SO=1), where it would be zero anyway.
+       *
+       * @ref ncp()
        */
       #if defined(SharedOMP)
       #pragma omp declare simd
       #endif
-      void source(double* S, const double* const Q,
+      void source(double* S, double* Saux, const double* const Q, const double* const Qaux,
         const int CCZ4LapseType,
         const double CCZ4ds,
         const double CCZ4c,

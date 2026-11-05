@@ -1,5 +1,5 @@
 /**
-@page page_exagrype_fo_so_ccz4 First-order second-order CCZ4 (project plan and lab notes)
+@page page_exagrype_fo_so_ccz4 First-order second-order CCZ4
 
 \tableofcontents
 
@@ -68,21 +68,23 @@ Both see the same 59 entries, but with swapped roles.
 exahype2.api.Solver
   └── exagrype.api.CCZ4SolverBase     parameters, PDE terms (via hooks), initial
         │                              condition, constraint enforcement
-        ├── exagrype.api.FOCCZ4Solver     59 unknowns, hooks are the identity
+        ├── exagrype.api.FOCCZ4Solver     59 unknowns, secondary pointer is Q+25
         └── exagrype.api.FOSOCCZ4Solver   25 unknowns + auxiliary variables "Derivatives" (34),
-                                           hooks gather/scatter the 59 entries
+                                           secondary pointer is "derivatives"
                   └── .reconstructor : exagrype.api.FOSOCCZ4Reconstructor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The kernels in exagrype::ccz4 always work on 59 entries. The base class
-generates the PDE term implementations once. The only things that differ
-are three tiny hooks which tell the generated code how to obtain the 59 entries
-from the PDE term's arguments (and how to hand the result back):
+The kernels in exagrype::ccz4 always work on 59 entries, which they take as two
+pointers: one to the 25 primary entries and one to the 34 secondary entries. The
+base class generates the PDE term implementations once. The only thing that
+differs is a tiny hook, which tells the generated code where the secondary
+entries live:
 
-- FOCCZ4Solver: the argument is the 59 entries. Nothing to do.
-- FOSOCCZ4Solver: copy the 25 entries of Q and the 34 entries of the auxiliary
-  variables "derivatives" into a local array, call the kernel, copy back the
-  first 25 results.
+- FOCCZ4Solver: behind the primary ones, i.e. the pointers are Q and Q+25.
+- FOSOCCZ4Solver: in the auxiliary variables, i.e. the pointers are Q and
+  "derivatives". Nothing is copied. As the solver does not evolve the secondary
+  entries, it passes a nullptr for the secondary part of the result, and the
+  kernels skip it.
 
 The same holds for the initial condition: any routine from
 exagrype.api.initialvalues fills 59 entries; the SO solver wraps it, runs it on a
@@ -276,8 +278,9 @@ jobs, so treat with care), one reported TimeStep phase took about 0.15 s for the
 first-order solver and about 0.21 s for the second-order solver on this mesh,
 i.e. SO is about 40% slower per step. This is expected: SO reconstructs the
 derivatives in an extra mesh sweep per Runge-Kutta stage, exchanges an extra
-halo of 34 values per stage, and gathers/scatters the 59 entries in every PDE term
-evaluation. We did not profile it. SO stores fewer values per stage (25 instead of
+halo of 34 values per stage, and gathered/scattered the 59 entries in every PDE term
+evaluation (it does not anymore, the kernels take the primary and the secondary
+entries as two pointers). We did not profile it. SO stores fewer values per stage (25 instead of
 59 for the stage input, the right-hand-side estimates and the halo patch). A
 first, finer run (729 patches of 9^3 points) was killed by the operating system
 for the first-order solver (out of memory, 15 GB machine shared with other

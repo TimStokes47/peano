@@ -35,6 +35,7 @@ class exagrype::ccz4::tests::FlatSpacetimeTest: public tarch::tests::TestCase {
 private:
   void testNonconservativeProductVanishes();
   void testSourceVanishes();
+  void testSecondaryEntriesInSeparateMemory();
   void testMaxEigenvalueOfFlatSpacetime();
   void testGaugeWaveLapse();
   void testFirstDerivativeReconstructionIsExactForCubics();
