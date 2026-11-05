@@ -21,8 +21,10 @@ solvers on top.
 
 The ExaGRyPE release paper is provided below for interested users. The code is
 completely open source and can be found in the Peano repositories.
-The @ref page_exahype2_tutorials "ExaHyPE 2 tutorials" include a tutorial series
-on how to install and run the code on a cluster or your laptop.
+To install and run the code, start with
+\ref tutorials_exahype2_applications_exagrype_configure. It leads on to the
+ExaGRyPE tutorial notebooks, which are part of the
+@ref page_exahype2_tutorials "ExaHyPE 2 tutorials".
 As it is under active development, we cannot offer any support or guarantee
 that all variants always work properly.
 However, there is an active Slack community around the code, and interested
@@ -56,7 +58,7 @@ Notably, we transfer them into a first-order formulation following
 @f$
 
 Collecting all derived quantities from the CCZ4 decomposition, the gauge
-quantities, and helper variables yields an evolving system of over 24 variables
+quantities, and helper variables yields an evolving system of 25 variables
 
 @f$
   Q(t) = 
@@ -76,14 +78,18 @@ are calculated on the fly. In this case, we have the second-order formulation
 of the code.
 Adding the auxiliary variables to the system and treating them as further
 evolving variables makes the code completely first-order, yielding a system of
-58 independent variables with
+58 evolved variables with
 
 @f$
-  Q(t) = 
+  Q(t) =
   \left(
    \tilde{\gamma}_{ij}, \alpha, \beta^i, \phi, \tilde{A}_{ij},K, \Theta,
    \hat{\Gamma}^i, b^i, A_k, B^i_k, D_{kij}, P_k \right).
 @f$
+
+The code stores one more unknown, the constant reference value @f$ K_0 @f$
+of @f$ K @f$ which enters the slicing condition, i.e. it works with 59
+unknowns in total.
 
 Both formulations are now available in the code for different scenarios.
 Users are referred to Appendix B of the paper below for more details on the
@@ -217,7 +223,7 @@ You still have to pick a well-suited numerical scheme, however:
 ~~~~~~~~~~~~~~~~~~~~~~~
 solver = exagrype.api.CCZ4Solver("CCZ4", initial_condition=exagrype.api.initialvalues.gauge_wave())
 solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, patch_size)
-solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(solver, volume_size=0.04)
+solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(solver, volume_size=0.04)
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The example highlights that the module \c exagrype.api.initialvalues provides
@@ -265,9 +271,9 @@ the build stops with an error message telling you to reconfigure.
 - <a href="https://arxiv.org/html/2406.11626v3">ExaGRyPE release paper</a>
 - @ref page_exahype2_tutorials "Tutorials"
 - ExaGRyPE benchmarks (cf. @ref page_exahype_benchmarks "overview of all ExaHyPE benchmarks")
-  - \ref benchmarks_exahype2_ccz4_kernel_benchmarks
-  - \ref benchmarks_exahype2_ccz4_gauge_wave
-  - \ref benchmarks_exahype2_ccz4_single_black_hole
+  - \ref benchmarks_exagrype_kernel_benchmarks
+  - \ref benchmarks_exagrype_gauge_wave
+  - \ref benchmarks_exagrype_single_black_hole
 
 
 # Reference papers
