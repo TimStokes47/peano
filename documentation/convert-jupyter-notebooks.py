@@ -67,6 +67,11 @@ def postprocess_markdown_line(line):
             segments[i] = segments[i].replace( "$", "@f$ ")
             segments[i] = segments[i].replace( "\0", "\n @f$ ")
         line = "`".join(segments)
+        # Doxygen strips leading asterisks from the lines of a comment block,
+        # so **Exercise:** at the start of a line would lose its opening
+        # markup. We hand Doxygen an asterisk of its own to strip.
+        if line.lstrip(" ").startswith("*"):
+            line = " * " + line
     return line
 
 
