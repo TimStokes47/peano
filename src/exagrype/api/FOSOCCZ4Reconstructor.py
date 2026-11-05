@@ -64,7 +64,8 @@ class FOSOCCZ4Reconstructor:
       are applied. The reconstructor takes the same dependencies as the
       solver's reconstruction, which makes it work in principle, but this has
       not been tested.
-    - Only exahype2.api.rkfd4.CentralDifferencesWithRungeKutta is supported.
+    - Only exahype2.api.rkfd4.CentralDifferencesWithRungeKutta is supported,
+      and its halo has to be at least three grid cells wide.
 
     """
 
@@ -143,10 +144,14 @@ class FOSOCCZ4Reconstructor:
                 "exahype2.api.rkfd4.CentralDifferencesWithRungeKutta (or a subclass) "
                 f"as numerical scheme, but uses {type(scheme).__name__}"
             )
-        if scheme.HALO_SIZE not in (2, 3):
+        if scheme.HALO_SIZE < 3:
             raise ValueError(
                 f"Reconstructor {self._name}: the halo of the scheme of {solver.name} has to be "
-                f"two or three, but is {scheme.HALO_SIZE}"
+                f"at least three, but is {scheme.HALO_SIZE}. The solver evaluates fluxes and "
+                "non-conservative products on the faces of the cell, i.e. it needs the "
+                "derivatives one layer outside of the cell, and the fourth-order stencil reaches "
+                "two further layers. Use a scheme with lopsided advection or "
+                "exagrype.api.FD4WithKODissipation."
             )
         derivatives = solver.derivatives
         if derivatives.patch is None:

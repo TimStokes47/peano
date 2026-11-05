@@ -160,7 +160,7 @@ void exagrype::ccz4::tests::FlatSpacetimeTest::testFirstDerivativeReconstruction
   auto shift0 = [](double x, double y, double z) { return x * x * z; };
   auto g0     = [](double x, double y, double z) { return y * y * y; };
 
-  for (int haloSize = 2; haloSize <= 3; haloSize++) {
+  for (int haloSize = 3; haloSize <= 4; haloSize++) {
     const int volumesPerAxis = N + 2 * haloSize;
     std::vector<double> primaryVariables(volumesPerAxis * volumesPerAxis * volumesPerAxis * PrimaryVariables, 0.0);
     for (int z = 0; z < volumesPerAxis; z++)

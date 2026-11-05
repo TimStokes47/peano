@@ -58,8 +58,6 @@ Both see the same 59 entries, but with swapped roles.
   Differences (FD4). We start with FD4.
 
 
-@todo Is CCZ4SO a compile constant, and is there a more elegant way to do things?
-
 # Design
 
 ## Class structure
@@ -128,12 +126,18 @@ sweeps.
 
 ## FD4 specifics
 
-The legacy routine recomputeAuxiliaryVariablesFD4_4thOrder() uses the stencil
-\f$ [1\ -8\ 0\ 8\ -1]/(12h) \f$ and wants a halo of three, while the FD4 scheme of
-ExaHyPE only has a halo of two (three with Kreiss-Oliger dissipation). We only
-need the derivatives within the cell, which require a halo of two. The wrapper
-exagrype::ccz4::reconstructFirstDerivativesFD4() hence pads the halo with zeroes
-to the width of three and discards the (invalid) layer outside the cell.
+The routine recomputeAuxiliaryVariablesFD4_4thOrder() uses the stencil
+\f$ [1\ -8\ 0\ 8\ -1]/(12h) \f$ and needs a halo of three. The solver evaluates
+the fluxes and non-conservative products on the faces of a cell, i.e. it needs
+the derivatives left and right of each face. The derivatives are thus required
+one layer outside of the cell, and the stencil reaches two layers further out.
+The plain FD4 scheme of ExaHyPE only has a halo of two. exagrype.api.FOSOCCZ4Solver therefore
+requires a halo of at least three: exagrype.api.FOSOCCZ4Reconstructor rejects
+numerical schemes with a smaller halo. A halo of three is given by
+exagrype.api.FD4WithKODissipation and by exahype2.api.rkfd4.CentralDifferencesWithRungeKutta
+with lopsided advection (as used by the benchmark). The wrapper
+exagrype::ccz4::reconstructFirstDerivativesFD4() hands the halo straight on to
+the routine.
 
 
 # Work packages and status

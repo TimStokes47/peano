@@ -27,7 +27,10 @@ namespace exagrype {
        *
        * scaled with @f$ \frac{1}{12h} @f$. There is a fundamental problem with
        * this variant which is worth mentioning: To evaluate this stencil, we
-       * need a halo layer of at least two. For a given haloSize, we can never
+       * need two further layers around every grid cell whose derivatives we
+       * want. As we also need the derivatives one layer outside of the patch
+       * (the fluxes and ncps on the patch's faces need them on both sides),
+       * the halo has to be at least three. For a given haloSize, we can never
        * update the outermost two layers of the code.
        *
        *
@@ -113,11 +116,13 @@ namespace exagrype {
        * stencil @f$ [1\ -8\ 0\ 8\ -1]/(12h) @f$. That routine expects the
        * 59 entries per grid cell interleaved, and a halo of at least three.
        * The wrapper assembles such a buffer, calls the routine and copies
-       * the derivatives of the cell's own grid cells back. The legacy
-       * routine also evaluates the stencil one layer outside the cell, where
-       * it would need a halo of three; we pad our buffer with zeroes there
-       * and discard these values. The derivatives within the cell
-       * only need a halo of two and are exact.
+       * the derivatives of the cell's own grid cells back.
+       *
+       * The halo of three is required, as the routine also evaluates the
+       * derivatives one layer outside of the cell: To evaluate the flux and
+       * the non-conservative product on a face of the cell, we need the
+       * derivatives left and right of the face, and the stencil reaches two
+       * further layers out.
        *
        * @param primaryVariablesWithHalo The 25 evolved unknowns per grid
        *   cell of the cell with its halo, i.e.
@@ -126,7 +131,7 @@ namespace exagrype {
        * @param patchSize Extent of the cell (without halo).
        * @param numberOfGridCellsPerPatchPerAxis Grid cells per axis within
        *   the cell.
-       * @param haloSize Has to be two or three.
+       * @param haloSize Has to be at least three.
        * @param firstDerivatives Output, 34 entries per grid cell of the cell
        *   (without halo) in the layout of a patch. Entry k corresponds to
        *   entry 25+k of the 59 CCZ4 unknowns. Entry 33 (K0) is left alone.
@@ -146,7 +151,9 @@ namespace exagrype {
          * This function calculates the auxiliary variables as gradietns of the primary
          * variables. The graident is calculated using a 5-point stencil in 1D which has
          * 2 neighbouring cells on each side of the central one. The computation requires
-          * us to have access to 2 halo layers on each side of a given patch.
+         * us to have access to 2 layers around each grid cell. The caller
+         * (recomputeAuxiliaryVariablesFD4_4thOrder()) evaluates it one layer
+         * outside of the patch, i.e. it needs a halo of three.
          *
          */
         void recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody(

@@ -8,8 +8,15 @@ import exagrype.api
 
 def _realise(solver, tmp_path, enforce=None):
     """! Realise solver (and thus its reconstructor) and return the time step graph"""
+    Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
+    # Lopsided advection widens the halo to the three that the reconstructor needs
     solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-        solver, 9, rk_order=4
+        solver,
+        9,
+        rk_order=4,
+        right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
+        advection_velocity=exagrype.api.FOSOCCZ4Solver.ADVECTION_VELOCITY,
+        advected_quantities=solver.lopsided_advection_quantities(),
     )
     solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
         solver, volume_size=1.0 / 27.0
@@ -211,6 +218,18 @@ def test_reconstructor_rejects_unsupported_schemes(tmp_path):
     solver = exagrype.api.FOSOCCZ4Solver("SO")
     solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
     with pytest.raises(Exception):
+        solver.reconstructor.generate_solver_realisation(
+            None, None, *[peano4.api.taskgraph.Graph() for _ in range(4)]
+        )
+
+
+def test_reconstructor_rejects_a_halo_of_two(tmp_path):
+    solver = exagrype.api.FOSOCCZ4Solver("SO")
+    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        solver, 9, rk_order=4
+    )
+    assert solver.numerical_scheme.HALO_SIZE == 2
+    with pytest.raises(ValueError, match="at least three"):
         solver.reconstructor.generate_solver_realisation(
             None, None, *[peano4.api.taskgraph.Graph() for _ in range(4)]
         )

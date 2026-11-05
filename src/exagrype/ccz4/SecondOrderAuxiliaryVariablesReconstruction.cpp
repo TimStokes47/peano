@@ -247,24 +247,20 @@ void exagrype::ccz4::reconstructFirstDerivativesFD4(
   double* __restrict__                        firstDerivatives
 ) {
   static_assert( Dimensions==3, "ExaGRyPE is three-dimensional only" );
-  assertion( haloSize==2 or haloSize==3 );
+  assertion( haloSize>=3 );
 
   constexpr int NumberOfPrimaryVariables = 25;
   constexpr int NumberOfDerivatives      = 34;
   constexpr int NumberOfEntries          = NumberOfPrimaryVariables + NumberOfDerivatives;
-  constexpr int PaddedHaloSize           = 3;
 
   const int n = numberOfGridCellsPerPatchPerAxis;
 
-  const ::exahype2::enumerator::AoSLexicographicEnumerator sourceEnumerator(1,n,haloSize,       NumberOfPrimaryVariables,0);
-  const ::exahype2::enumerator::AoSLexicographicEnumerator targetEnumerator(1,n,PaddedHaloSize,NumberOfPrimaryVariables,NumberOfDerivatives);
+  const ::exahype2::enumerator::AoSLexicographicEnumerator sourceEnumerator(1,n,haloSize,NumberOfPrimaryVariables,0);
+  const ::exahype2::enumerator::AoSLexicographicEnumerator targetEnumerator(1,n,haloSize,NumberOfPrimaryVariables,NumberOfDerivatives);
 
-  const int paddedVolumesPerAxis = n + 2*PaddedHaloSize;
-  std::vector<double> buffer( paddedVolumesPerAxis*paddedVolumesPerAxis*paddedVolumesPerAxis*NumberOfEntries, 0.0 );
+  const int volumesPerAxis = n + 2*haloSize;
+  std::vector<double> buffer( volumesPerAxis*volumesPerAxis*volumesPerAxis*NumberOfEntries, 0.0 );
 
-  // The routine below sweeps over the first layer outside the cell, where it
-  // reads up to three layers outside the cell. If our halo is smaller, this
-  // reads the zero padding. The outcome there is discarded.
   for (int x=-haloSize; x<n+haloSize; x++)
   for (int y=-haloSize; y<n+haloSize; y++)
   for (int z=-haloSize; z<n+haloSize; z++) {
@@ -282,7 +278,7 @@ void exagrype::ccz4::reconstructFirstDerivativesFD4(
     0.0,
     nullptr
   );
-  recomputeAuxiliaryVariablesFD4_4thOrder( cellData, n, PaddedHaloSize, NumberOfPrimaryVariables, NumberOfDerivatives );
+  recomputeAuxiliaryVariablesFD4_4thOrder( cellData, n, haloSize, NumberOfPrimaryVariables, NumberOfDerivatives );
 
   // K0 (the last derivative) is not reconstructed
   for (int x=0; x<n; x++)

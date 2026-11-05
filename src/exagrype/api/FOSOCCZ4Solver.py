@@ -43,6 +43,14 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
     exagrype.api.FD4WithKODissipation). The Finite Volume variant is not
     available yet.
 
+    The numerical scheme has to have a halo of at least three grid cells:
+    The solver needs the derivatives one layer outside of its cell (the
+    fluxes and non-conservative products on the cell's faces use the values
+    left and right of the face), and the stencil of the reconstruction
+    reaches two layers further out. The plain scheme has a halo of two;
+    lopsided advection or exagrype.api.FD4WithKODissipation widen it to
+    three. The reconstructor rejects a smaller halo.
+
     @ref page_exagrype_fo_so_project_plan for the design and its status.
 
     ## Shortcomings
