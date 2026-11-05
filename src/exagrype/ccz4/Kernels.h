@@ -14,29 +14,40 @@
 namespace exagrype {
   namespace ccz4 {
 
-      #if defined(GPUOffloadingOMP)
-      #pragma omp declare target
-      #endif
       /**
        * Non-conservative product of the first-order CCZ4 formulation.
        *
-       * ncp(), source() and maxEigenvalue() have one implementation in
-       * Kernels.cpp which serves both the CPU and OpenMP offloading. With
-       * GPUOffloadingOMP, they are device functions (omp declare target),
-       * declared here and defined in Kernels.cpp, i.e. they are not inlined
-       * into the GPU kernels.
+       * The 59 entries of CCZ4 (see @ref page_exagrype_foccz4) are handed
+       * over as two pointers: one to the 25 primary entries (indices 0 to
+       * 24) and one to the 34 secondary entries (indices 25 to 58, i.e. the
+       * derivatives of the lapse, the shift, the metric and phi, plus K0).
+       * The first-order formulation stores them contiguously and passes Q
+       * and Q+25. The second-order formulation (exagrype.api.FOSOCCZ4Solver)
+       * reconstructs the secondary entries from the primary ones and hence
+       * stores them in separate memory, namely in its auxiliary variables.
+       * The same split applies to all other arguments below which hold CCZ4
+       * entries.
        *
-       * Older LLVM OpenMP implementations failed on local arrays in target
-       * functions, so Peano used to ship a separate array-free GPU variant
-       * of these three functions (KernelsOpenMP.cpph). That copy had drifted
-       * from the CPU version and has been removed.
+       * The first-order and the second-order variant share one
+       * implementation in Kernels.cpp (a template over the formulation), so
+       * the physics is identical. The second-order variant omits the
+       * advection terms and the terms of the secondary entries which the
+       * first-order formulation needs, and it only writes the 25 primary
+       * entries of its result.
        *
-       * @ref source() discusses the remaining annotations.
+       * @param BgradQ The 25 primary entries of the result.
+       * @param BgradQaux The 34 secondary entries of the result (first-order
+       *   variant only).
+       * @param Q The 25 primary entries of the solution.
+       * @param Qaux The 34 secondary entries of the solution.
+       * @param gradQ The derivative of the 25 primary entries along normal.
+       * @param gradQaux The derivative of the 34 secondary entries along normal.
+       * @param normal Axis along which the derivatives are given.
        */
       #if defined(SharedOMP)
       #pragma omp declare simd
       #endif
-      void ncp(double* BgradQ, const double* const Q, const double* const gradQSerialised, const int normal,
+      void ncpFirstOrder(double* BgradQ, double* BgradQaux, const double* const Q, const double* const Qaux, const double* const gradQ, const double* const gradQaux, const int normal,
         const int CCZ4LapseType,
         const double CCZ4ds,
         const double CCZ4c,
@@ -45,30 +56,40 @@ namespace exagrype {
         const double CCZ4bs,
         const double CCZ4sk,
         const double CCZ4xi,
-        const double CCZ4mu,
-        const double CCZ4SO
+        const double CCZ4mu
       );
 
       /**
-       * The source term is one out of two terms that we use in our CCZ4
-       * formulation. As it is used within the compute kernel, we also
-       * want to use it on the GPU, and we want to vectorise over it
-       * aggressively. To make this work, we have to inline the function
-       * plus ensure that the interna of the function are not vectorised
-       * before we inline the routine.
-       *
-       * So we first declare it as simd and then we also say explicitly
-       * that it should be inlined. In my opinion, the inlining should
-       * imply that we wanna use it as SIMD, but my guess is that the
-       * simd statement ensures that the compiler doesn't prematurely
-       * vectorise.
-       *
-       * @see ncp()
+       * Second-order variant of ncpFirstOrder(): updates the 25 primary entries only.
        */
       #if defined(SharedOMP)
       #pragma omp declare simd
       #endif
-      void source(double* S, const double* const Q,
+      void ncpSecondOrder(double* BgradQ, const double* const Q, const double* const Qaux, const double* const gradQ, const double* const gradQaux, const int normal,
+        const int CCZ4LapseType,
+        const double CCZ4ds,
+        const double CCZ4c,
+        const double CCZ4e,
+        const double CCZ4f,
+        const double CCZ4bs,
+        const double CCZ4sk,
+        const double CCZ4xi,
+        const double CCZ4mu
+      );
+
+      /**
+       * The source term is one out of two terms that we use in our CCZ4
+       * formulation. As it is used within the compute kernel, we want to
+       * vectorise over it aggressively, hence the simd annotation.
+       *
+       * Q and Qaux are the primary and the secondary entries as documented
+       * for @ref ncpFirstOrder(). S and Saux are the right-hand side for the
+       * two groups.
+       */
+      #if defined(SharedOMP)
+      #pragma omp declare simd
+      #endif
+      void sourceFirstOrder(double* S, double* Saux, const double* const Q, const double* const Qaux,
         const int CCZ4LapseType,
         const double CCZ4ds,
         const double CCZ4c,
@@ -81,8 +102,29 @@ namespace exagrype {
         const double CCZ4eta,
         const double CCZ4k1,
         const double CCZ4k2,
-        const double CCZ4k3,
-        const double CCZ4SO
+        const double CCZ4k3
+      );
+
+      /**
+       * Second-order variant of sourceFirstOrder(): updates the 25 primary entries only.
+       */
+      #if defined(SharedOMP)
+      #pragma omp declare simd
+      #endif
+      void sourceSecondOrder(double* S, const double* const Q, const double* const Qaux,
+        const int CCZ4LapseType,
+        const double CCZ4ds,
+        const double CCZ4c,
+        const double CCZ4e,
+        const double CCZ4f,
+        const double CCZ4bs,
+        const double CCZ4sk,
+        const double CCZ4xi,
+        const double CCZ4itau,
+        const double CCZ4eta,
+        const double CCZ4k1,
+        const double CCZ4k2,
+        const double CCZ4k3
       );
 
       #if defined(SharedOMP)
@@ -97,9 +139,6 @@ namespace exagrype {
         const double        CCZ4GLMd,
         double*             maxEigenvalue
       );
-      #if defined(GPUOffloadingOMP)
-      #pragma omp end declare target
-      #endif
 
       /**
        * This is a postprocessing routine to monitor if the physical constraints
@@ -130,9 +169,25 @@ namespace exagrype {
        * area of the CCZ4 constraints. This is a local operation that we can
        * invoke after each time step per volume.
        *
-       * If works on the full set of unknowns of the first-order formulation
+       * It works on the full set of 59 unknowns of the first-order formulation.
+       * It first calls enforceCCZ4constraintsOfEvolvedVariables() and then
+       * additionally makes the derivatives of the conformal metric trace-free.
        */
       void enforceCCZ4constraints(double* __restrict__  newQ);
+
+      /**
+       * The part of enforceCCZ4constraints() which only touches the first 25
+       * unknowns
+       *
+       * These are the unknowns that the second-order formulation evolves
+       * (exagrype.api.FOSOCCZ4Solver). The routine gives the conformal
+       * metric the determinant one, makes the extrinsic curvature
+       * trace-free and bounds the lapse and phi from below. The derivatives
+       * of the metric, i.e. entries 37 to 54, are reconstructed from the
+       * metric in the second-order formulation and hence cannot violate
+       * any constraint on their own.
+       */
+      void enforceCCZ4constraintsOfEvolvedVariables(double* __restrict__  newQ);
 
       /**
        * Add the Kreiss-Oliger dissipation of a patch to its right-hand side

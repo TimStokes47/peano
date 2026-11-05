@@ -11,7 +11,7 @@ import exagrype.api
 
 
 def _solver(quantities=None, sigma=8.0, rk_order=2):
-    solver = exagrype.api.CCZ4Solver("CCZ4")
+    solver = exagrype.api.FOCCZ4Solver("CCZ4")
     solver.numerical_scheme = exagrype.api.FD4WithKODissipation(
         solver,
         patch_size=5,
@@ -44,7 +44,7 @@ def test_scheme_widens_halo_to_three():
 
 
 def test_plain_fd4_keeps_halo_of_two():
-    solver = exagrype.api.CCZ4Solver("CCZ4")
+    solver = exagrype.api.FOCCZ4Solver("CCZ4")
     scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
         solver, patch_size=5, rk_order=2
     )
@@ -84,7 +84,7 @@ def test_dissipation_runs_after_right_hand_side_in_each_stage(tmp_path):
         ]
         body = _body(action_sets[1])
         assert "::exagrype::ccz4::addKreissOligerDissipation(" in body
-        assert "constexpr int dissipativeQuantities[] = { 16, 54 };" in body
+        assert "constexpr int dissipativeQuantities[] = { 16, 24 };" in body
         # Estimate slot of the stage: stage * 59 unknowns * 5^3 grid cells
         assert f"fineGridCellCCZ4QRhsEstimates.value + {stage * 59 * 125}," in body
         assert "    3,\n" in body
