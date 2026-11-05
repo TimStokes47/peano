@@ -41,9 +41,34 @@ ExaHyPE also provides various microbenchmark generators. For example
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd src/exahype2/api/fv/microbenchmarks
+python rusanov-with-explicit-euler-kernel-microbenchmark.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-instantiates a microbenchmark for a Finite Volume kernel.
+instantiates a microbenchmark for a Finite Volume kernel. Use the --help flags to 
+see details about the parameters that can be controlled. Of particular note, is the 
+enabling of GPU kernels with the flag -gpu. This turns off CPU kernels if -cpu is not
+also provided.
+
+When implementing a new microbenchmark the exahype project's mainfile generator must be set
+to the microbenchmarking one, while providing strings for the additional includes required, and 
+for the functions that should be compared. The microbenchmark expects a consistent function signature
+so the various wrappers within the generator's main file should be used.
+In order to compare various versions of a kernel, a generator must be set that contains multiple
+configurations. Together this looks something like 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function_calls = """
+assessKernel(wrapHostKernel<functionName>,
+    "host, id",
+    launchingThreads,
+    ::tarch::accelerator::Device::HostDevice,
+    localPatches
+);
+"""
+project.mainfile_generator = KernelMicrobenchmarkMain(project, function_calls, addition_includes)
+thesolver.numerical_scheme._generator = exahype2.api....Generator(thesolver, solver_variants)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
 
 ## Incremental builds
