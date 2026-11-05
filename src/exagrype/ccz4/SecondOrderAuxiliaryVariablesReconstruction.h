@@ -27,7 +27,10 @@ namespace exagrype {
        *
        * scaled with @f$ \frac{1}{12h} @f$. There is a fundamental problem with
        * this variant which is worth mentioning: To evaluate this stencil, we
-       * need a halo layer of at least two. For a given haloSize, we can never
+       * need two further layers around every grid cell whose derivatives we
+       * want. As we also need the derivatives one layer outside of the patch
+       * (the fluxes and ncps on the patch's faces need them on both sides),
+       * the halo has to be at least three. For a given haloSize, we can never
        * update the outermost two layers of the code.
        *
        *
@@ -97,6 +100,50 @@ namespace exagrype {
         int                                     auxiliaryVariables
       );
 
+      /**
+       * Reconstruct the 34 first derivatives of the 25 evolved CCZ4 unknowns
+       *
+       * This is the entry point of exagrype.api.FOSOCCZ4Reconstructor. The
+       * second-order solver evolves the first 25 of the 59 CCZ4 entries
+       * (conformal metric, extrinsic curvature, ..., phi); the remaining 34
+       * entries are the first derivatives of the lapse, shift, metric and phi
+       * plus K0. This routine computes the derivatives (entries 25 to 57) of
+       * one cell from the 25 evolved unknowns with their halo. K0 (entry 58)
+       * is not touched.
+       *
+       * The routine is a thin wrapper around
+       * recomputeAuxiliaryVariablesFD4_4thOrder(), i.e. the fourth-order
+       * stencil @f$ [1\ -8\ 0\ 8\ -1]/(12h) @f$. That routine expects the
+       * 59 entries per grid cell interleaved, and a halo of at least three.
+       * The wrapper assembles such a buffer, calls the routine and copies
+       * the derivatives of the cell's own grid cells back.
+       *
+       * The halo of three is required, as the routine also evaluates the
+       * derivatives one layer outside of the cell: To evaluate the flux and
+       * the non-conservative product on a face of the cell, we need the
+       * derivatives left and right of the face, and the stencil reaches two
+       * further layers out.
+       *
+       * @param primaryVariablesWithHalo The 25 evolved unknowns per grid
+       *   cell of the cell with its halo, i.e.
+       *   (numberOfGridCellsPerPatchPerAxis+2*haloSize)^3 grid cells in the
+       *   layout of a reconstructed patch (peano4::utils::dLinearised()).
+       * @param patchSize Extent of the cell (without halo).
+       * @param numberOfGridCellsPerPatchPerAxis Grid cells per axis within
+       *   the cell.
+       * @param haloSize Has to be at least three.
+       * @param firstDerivatives Output, 34 entries per grid cell of the cell
+       *   (without halo) in the layout of a patch. Entry k corresponds to
+       *   entry 25+k of the 59 CCZ4 unknowns. Entry 33 (K0) is left alone.
+       */
+      void reconstructFirstDerivativesFD4(
+        const double* __restrict__                  primaryVariablesWithHalo,
+        const tarch::la::Vector<Dimensions,double>& patchSize,
+        int                                         numberOfGridCellsPerPatchPerAxis,
+        int                                         haloSize,
+        double* __restrict__                        firstDerivatives
+      );
+
       namespace internal {
         /**
          * Recompute auxiliary variables
@@ -104,7 +151,9 @@ namespace exagrype {
          * This function calculates the auxiliary variables as gradietns of the primary
          * variables. The graident is calculated using a 5-point stencil in 1D which has
          * 2 neighbouring cells on each side of the central one. The computation requires
-          * us to have access to 2 halo layers on each side of a given patch.
+         * us to have access to 2 layers around each grid cell. The caller
+         * (recomputeAuxiliaryVariablesFD4_4thOrder()) evaluates it one layer
+         * outside of the patch, i.e. it needs a halo of three.
          *
          */
         void recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody(

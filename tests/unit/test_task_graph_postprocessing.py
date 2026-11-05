@@ -103,7 +103,7 @@ def _postprocessed_time_step(
     """! Time step graph of a CCZ4 solver with the given constraint enforcement"""
     import exagrype.api
 
-    solver = exagrype.api.CCZ4Solver("Probe")
+    solver = exagrype.api.FOCCZ4Solver("Probe")
     solver.numerical_scheme = scheme_factory(solver)
     solver.grid_construction = grid_construction_factory(solver)
     solver.enforce_ccz4_constraint(enforce)
@@ -148,7 +148,7 @@ def test_no_constraint_enforcement_by_default(tmp_path):
     solver, tasks = _postprocessed_time_step(
         _runge_kutta,
         _runge_kutta_grid,
-        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.No,
+        exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint.No,
         tmp_path,
     )
     assert _enforcements(tasks) == []
@@ -160,7 +160,7 @@ def test_constraint_enforcement_after_each_runge_kutta_stage(tmp_path):
     solver, tasks = _postprocessed_time_step(
         _runge_kutta,
         _runge_kutta_grid,
-        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.IntermediateSteps,
+        exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint.IntermediateSteps,
         tmp_path,
     )
     assert len(_enforcements(tasks)) == 3
@@ -189,7 +189,7 @@ def test_constraint_enforcement_after_final_runge_kutta_solution_only(tmp_path):
     solver, tasks = _postprocessed_time_step(
         _runge_kutta,
         _runge_kutta_grid,
-        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
+        exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
         tmp_path,
     )
     assert _enforcements(tasks) == [
@@ -205,7 +205,7 @@ def test_constraint_enforcement_after_both_writers_of_optimistic_finite_volumes(
     solver, tasks = _postprocessed_time_step(
         lambda solver: exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, 4),
         _fv_grid,
-        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
+        exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
         tmp_path,
     )
     [name] = _enforcements(tasks)
@@ -235,7 +235,7 @@ def test_constraint_enforcement_after_plain_finite_volumes(tmp_path):
     solver, tasks = _postprocessed_time_step(
         lambda solver: exahype2.api.fv.RusanovWithExplicitEuler(solver, 4),
         _fv_grid,
-        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.IntermediateSteps,
+        exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint.IntermediateSteps,
         tmp_path,
     )
     clip = tasks["Probe_Enforce CCZ4 constraints after Update cell"]
@@ -258,6 +258,6 @@ def test_constraint_enforcement_rejects_unknown_scheme(tmp_path):
         _postprocessed_time_step(
             UnknownScheme,
             NoGridConstruction,
-            exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
+            exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
             tmp_path,
         )

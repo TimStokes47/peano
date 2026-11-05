@@ -13,52 +13,33 @@ import toolbox.blockstructured.api
 from . import initialvalues
 
 
-class CCZ4Solver(exahype2.api.Solver):
+class CCZ4SolverBase(exahype2.api.Solver):
     """!
 
-    Solver for the Einstein equations in the first-order CCZ4 formulation
+    Everything the first-order and the second-order CCZ4 solvers share
 
-    The solver is a plain exahype2.api.Solver with the 59 CCZ4 unknowns and
-    the PDE terms of CCZ4 pre-registered. All terms delegate to the
-    ExaGRyPE library (configure Peano with --enable-exagrype):
+    The base class hosts the CCZ4 parameters, the PDE terms (which delegate
+    to the kernels in exagrype::ccz4), the initial conditions and the
+    optional enforcement of the CCZ4 constraints. The kernels always work on
+    the 59 entries of CCZ4, see exagrype.api.FOCCZ4Solver.Unknowns, which
+    they take as two pointers: one to the 25 primary and one to the 34
+    secondary entries. The two subclasses differ only in where the secondary
+    entries live:
 
-    - the non-conservative product to exagrype::ccz4::ncp(),
-    - the volumetric source to exagrype::ccz4::source(),
-    - the maximum eigenvalue to exagrype::ccz4::maxEigenvalue(),
-    - the initial condition to one of the routines from
-      exagrype::initialvalues, @see exagrype.api.initialvalues.
+    - exagrype.api.FOCCZ4Solver evolves all 59 as unknowns. The secondary
+      entries follow the primary ones, i.e. the pointers are Q and Q+25.
+    - exagrype.api.FOSOCCZ4Solver evolves 25 unknowns, and the other 34
+      entries are auxiliary variables, i.e. they live in separate memory.
 
-    CCZ4 has no conservative flux. You still have to assign a numerical
-    scheme, a grid construction and (optionally) a plotter, exactly as for
-    any other exahype2.api.Solver, and to add the solver to an
-    exahype2.api.Project. The project has to be three-dimensional: the
-    generated solver class refuses to compile otherwise.
+    The subclasses therefore override the hooks _ncp_implementation() and
+    _source_implementation(), which call the kernel of their formulation.
 
-    ## Shortcomings
-
-    - The fourth-order Finite Differences of the production runs are
-      available through exahype2.api.rkfd4, i.e. pass a
-      CentralDifferencesWithRungeKutta as numerical scheme. They have no
-      artificial dissipation. exagrype.api.FD4WithKODissipation is the same
-      scheme with a Kreiss-Oliger dissipation on top. Unlike the legacy
-      ExaGRyPE, neither supports adaptive mesh refinement yet.
-    - The solution is pushed back onto the CCZ4 constraints
-      (exagrype::ccz4::enforceCCZ4constraints()) only if you switch it on
-      via enforce_ccz4_constraint(). Without it, long runs drift away from
-      the constraint surface.
-    - exagrype::ccz4::ncp() omits the advection terms
-      @f$ \\beta^k \\partial _k Q @f$ of all unknowns besides the metric,
-      the lapse, the shift and phi (whose advection is part of the
-      algebraic source) and K0. It expects the numerical scheme to add them
-      with lopsided stencils. The fourth-order Finite Differences do so if
-      you select the kernel CentralDifferencesWithLopsidedAdvection with
-      ADVECTION_VELOCITY and lopsided_advection_quantities(). The Finite
-      Volumes of exahype2.api.fv do not add them, i.e. they evolve CCZ4
-      without these advection terms.
-    - The second-order formulation, black holes (TwoPunctures), tracers and
-      the ADM/Psi4 postprocessing are not available yet.
+    @ref exagrype.api.FOCCZ4Solver, @ref exagrype.api.FOSOCCZ4Solver
 
     """
+
+    NUMBER_OF_CCZ4_ENTRIES = 59
+    """! Number of entries which the kernels in exagrype::ccz4 work on """
 
     class EnforceCCZ4Constraint(enum.Enum):
         """!
@@ -74,7 +55,7 @@ class CCZ4Solver(exahype2.api.Solver):
           i.e. after each Runge-Kutta stage. For single-step schemes such as
           the Finite Volumes, this is the same as OnlyFinalSolution.
 
-        @ref exagrype.api.CCZ4Solver.CCZ4Solver.enforce_ccz4_constraint()
+        @ref exagrype.api.CCZ4SolverBase.CCZ4SolverBase.enforce_ccz4_constraint()
 
         """
 
@@ -82,37 +63,8 @@ class CCZ4Solver(exahype2.api.Solver):
         OnlyFinalSolution = 1
         IntermediateSteps = 2
 
-    Unknowns = {
-        "G": 6,
-        "K": 6,
-        "theta": 1,
-        "Z": 3,
-        "lapse": 1,
-        "shift": 3,
-        "b": 3,
-        "dLapse": 3,
-        "dxShift": 3,
-        "dyShift": 3,
-        "dzShift": 3,
-        "dxG": 6,
-        "dyG": 6,
-        "dzG": 6,
-        "traceK": 1,
-        "phi": 1,
-        "P": 3,
-        "K0": 1,
-    }
-    """!
-
-    The unknowns of the first-order CCZ4 formulation in the order the
-    kernels in exagrype::ccz4 expect them. The names match the legacy
-    ExaGRyPE solvers.
-
-    """
-
     DefaultParameters = {
         "CCZ4LapseType": 0,
-        "CCZ4SO": 0,
         "CCZ4ds": 1.0,
         "CCZ4c": 1.0,
         "CCZ4e": 1.0,
@@ -148,6 +100,7 @@ class CCZ4Solver(exahype2.api.Solver):
     def __init__(
         self,
         name: str,
+        unknowns: Dict[str, int],
         parameters: Dict[str, Union[int, float]] = None,
         initial_condition: exahype2.api.InitPointWisely = None,
     ):
@@ -157,6 +110,11 @@ class CCZ4Solver(exahype2.api.Solver):
 
         @param name: str
           Name of the solver, @see exahype2.api.Solver.
+
+        @param unknowns: Dict[str, int]
+          The evolved unknowns of the subclass, @see exahype2.api.Solver. The
+          subclass has to add all entries of CCZ4 that it does not evolve as
+          auxiliary variables, so the entries add up to 59.
 
         @param parameters: Dict[str, Union[int, float]]
           CCZ4 parameters that differ from DefaultParameters, e.g.
@@ -169,9 +127,9 @@ class CCZ4Solver(exahype2.api.Solver):
           own exahype2.api.InitPointWisely.
 
         """
-        super().__init__(name, unknowns=self.Unknowns)
+        super().__init__(name, unknowns=unknowns)
 
-        self._enforce_ccz4_constraint = CCZ4Solver.EnforceCCZ4Constraint.No
+        self._enforce_ccz4_constraint = CCZ4SolverBase.EnforceCCZ4Constraint.No
 
         self._parameters = dict(self.DefaultParameters)
         for key, value in (parameters or {}).items():
@@ -215,17 +173,19 @@ class CCZ4Solver(exahype2.api.Solver):
             )
         )
         self.add_pde_term(
-            initial_condition
-            if initial_condition is not None
-            else initialvalues.gauge_wave()
+            self._adapt_initial_condition(
+                initial_condition
+                if initial_condition is not None
+                else initialvalues.gauge_wave()
+            )
         )
 
     def lopsided_advection_quantities(self) -> List[str]:
         """!
 
-        The unknowns whose advection terms exagrype::ccz4::ncp() omits
+        The unknowns whose advection terms exagrype::ccz4::ncpFirstOrder() and ncpSecondOrder() omits
 
-        exagrype::ccz4::ncp() is invoked with its advection switched off.
+        exagrype::ccz4::ncpFirstOrder() and ncpSecondOrder() is invoked with its advection switched off.
         The unknowns returned are those whose advection terms
         @f$ \\beta^k \\partial _k Q @f$ hence have to be added by the
         numerical scheme, e.g. via
@@ -234,7 +194,7 @@ class CCZ4Solver(exahype2.api.Solver):
         exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
           solver, patch_size, rk_order=4,
           right_hand_side_kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel.CentralDifferencesWithLopsidedAdvection,
-          advection_velocity     = exagrype.api.CCZ4Solver.ADVECTION_VELOCITY,
+          advection_velocity     = exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
           advected_quantities    = solver.lopsided_advection_quantities(),
         )
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -242,7 +202,7 @@ class CCZ4Solver(exahype2.api.Solver):
         These are all unknowns besides the conformal metric G, the lapse,
         the shift, phi and K0: The advection terms of the metric, the lapse,
         the shift and phi are part of the algebraic source
-        (exagrype::ccz4::source()), which expresses them through the
+        (exagrype::ccz4::sourceFirstOrder() and sourceSecondOrder()), which expresses them through the
         auxiliary unknowns, i.e. the first derivatives. K0 does not evolve.
 
         The advection of b and of the derivatives of the shift (dxShift,
@@ -266,7 +226,7 @@ class CCZ4Solver(exahype2.api.Solver):
             excluded |= {"b", "dxShift", "dyShift", "dzShift"}
         return [name for name in self.Unknowns if name not in excluded]
 
-    def enforce_ccz4_constraint(self, value: "CCZ4Solver.EnforceCCZ4Constraint"):
+    def enforce_ccz4_constraint(self, value: "CCZ4SolverBase.EnforceCCZ4Constraint"):
         """!
 
         Set when the solver pushes the solution back onto the CCZ4 constraints
@@ -277,14 +237,14 @@ class CCZ4Solver(exahype2.api.Solver):
         volume or grid point after each tagged solution update of the
         numerical scheme.
 
-        @param value: CCZ4Solver.EnforceCCZ4Constraint
+        @param value: CCZ4SolverBase.EnforceCCZ4Constraint
           No, OnlyFinalSolution or IntermediateSteps.
 
         """
-        if not isinstance(value, CCZ4Solver.EnforceCCZ4Constraint):
+        if not isinstance(value, CCZ4SolverBase.EnforceCCZ4Constraint):
             raise TypeError(
                 f"Solver {self.name}: enforce_ccz4_constraint() expects a "
-                f"CCZ4Solver.EnforceCCZ4Constraint, but got {value!r}"
+                f"CCZ4SolverBase.EnforceCCZ4Constraint, but got {value!r}"
             )
         self._enforce_ccz4_constraint = value
 
@@ -338,7 +298,7 @@ class CCZ4Solver(exahype2.api.Solver):
             plot,
             mesh_adaptation,
         )
-        Enforce = CCZ4Solver.EnforceCCZ4Constraint
+        Enforce = CCZ4SolverBase.EnforceCCZ4Constraint
         if self._enforce_ccz4_constraint == Enforce.No:
             return
 
@@ -440,13 +400,20 @@ class CCZ4Solver(exahype2.api.Solver):
         task.add_action_set(
             toolbox.blockstructured.api.ApplyPointWiselyToPatch(
                 patch=patch,
-                implementation="::exagrype::ccz4::enforceCCZ4constraints(Q);",
+                implementation=self._enforcement_implementation(),
                 guard=self.grid_selector.createCellGuard(),
                 additional_includes=self._get_default_includes()
                 + self.user_solver_includes,
             )
         )
         time_step.insert_after(anchors, task)
+
+    def _enforcement_implementation(self) -> str:
+        """!
+        C++ which pushes the unknowns Q of one volume back onto the constraints.
+        Hook for the subclasses, as the unknowns they evolve differ.
+        """
+        return "::exagrype::ccz4::enforceCCZ4constraints(Q);"
 
     @property
     def parameters(self) -> Dict[str, Union[int, float]]:
@@ -455,38 +422,37 @@ class CCZ4Solver(exahype2.api.Solver):
         """
         return dict(self._parameters)
 
-    @staticmethod
-    def _ncp_implementation() -> str:
+    def _adapt_initial_condition(
+        self, initial_condition: exahype2.api.InitPointWisely
+    ) -> exahype2.api.InitPointWisely:
         """!
+        Hook which lets the subclass adapt the initial condition, which fills
+        59 entries, to the unknowns and auxiliary variables it holds. The default
+        passes the initial condition on.
+        """
+        return initial_condition
+
+    def _ncp_implementation(self) -> str:
+        """!
+
+        C++ which calls the non-conservative product kernel
 
         The Finite Volume kernels hand over the jump deltaQ along one normal,
         the fourth-order Finite Differences of exahype2.api.rkfd4 the
-        derivative along one normal times the mesh width,
-        whereas exagrype::ccz4::ncp() expects the gradient along all three
-        directions. We hence embed the jump into an otherwise empty gradient.
+        derivative along one normal times the mesh width. This is what
+        exagrype::ccz4::ncpFirstOrder() and ncpSecondOrder() expect.
+        Hook for the subclasses, as they select the formulation.
 
         """
-        return """
-  double deltaQSerialised[NumberOfUnknowns * 3];
-  for (int i = 0; i < NumberOfUnknowns; i++) {
-    deltaQSerialised[i + 0 * NumberOfUnknowns] = 0.0;
-    deltaQSerialised[i + 1 * NumberOfUnknowns] = 0.0;
-    deltaQSerialised[i + 2 * NumberOfUnknowns] = 0.0;
+        raise NotImplementedError
 
-    deltaQSerialised[i + normal * NumberOfUnknowns] = deltaQ[i];
-  }
-  ::exagrype::ccz4::ncp(BTimesDeltaQ, Q, deltaQSerialised, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO);
-"""
+    def _source_implementation(self) -> str:
+        """!
+        C++ which calls the source term kernel. Hook for the subclasses.
+        """
+        raise NotImplementedError
 
-    @staticmethod
-    def _source_implementation() -> str:
-        return """
-  tarch::memset(S, 0, NumberOfUnknowns * sizeof(double));
-  ::exagrype::ccz4::source(S, Q, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO);
-"""
-
-    @staticmethod
-    def _max_eigenvalue_implementation() -> str:
+    def _max_eigenvalue_implementation(self) -> str:
         return """
   ::exagrype::ccz4::maxEigenvalue(Q, normal, CCZ4e, CCZ4ds, CCZ4GLMc, CCZ4GLMd, lambdaMax);
 """

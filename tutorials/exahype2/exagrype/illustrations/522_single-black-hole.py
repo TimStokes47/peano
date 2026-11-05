@@ -83,20 +83,20 @@ DecomposedThreads = 4
 
 ## The runs: name, patch size, load balancing, threads, constraint enforcement
 Runs = [
-    ("plain", PatchSize, False, None, exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.No),
+    ("plain", PatchSize, False, None, exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint.No),
     (
         "decomposed",
         DecomposedPatchSize,
         True,
         DecomposedThreads,
-        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.No,
+        exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint.No,
     ),
     (
         "decomposed-constrained",
         DecomposedPatchSize,
         True,
         DecomposedThreads,
-        exagrype.api.CCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
+        exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint.OnlyFinalSolution,
     ),
 ]
 
@@ -129,7 +129,7 @@ def build_and_run(
     @param scheme: type
       Numerical scheme, i.e. a Finite Volume class from exahype2.api.fv.
 
-    @param enforce: exagrype.api.CCZ4Solver.EnforceCCZ4Constraint
+    @param enforce: exagrype.api.FOCCZ4Solver.EnforceCCZ4Constraint
       Constraint enforcement.
 
     Returns the runtime of the executable in seconds. If the directory holds
@@ -152,7 +152,7 @@ def build_and_run(
         directory=directory,
         executable="single-black-hole",
     )
-    solver = exagrype.api.CCZ4Solver(
+    solver = exagrype.api.FOCCZ4Solver(
         "CCZ4",
         parameters={"CCZ4bs": 1.0, "CCZ4sk": 1.0},
         initial_condition=exagrype.api.initialvalues.single_black_hole(mass=Mass),
