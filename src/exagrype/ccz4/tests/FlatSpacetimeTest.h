@@ -23,13 +23,23 @@ namespace exagrype {
  * therefore have to vanish. The test furthermore checks the maximum
  * eigenvalue estimate for flat spacetime, and that the gauge wave initial
  * data yields the analytically known lapse.
+ *
+ * We also test two helpers of the second-order formulation here, as they do
+ * not warrant a test case of their own: that
+ * reconstructFirstDerivativesFD4() differentiates cubic polynomials exactly
+ * (for a halo of three and four), and that
+ * enforceCCZ4constraintsOfEvolvedVariables() does the same to the first 25
+ * entries as enforceCCZ4constraints().
  */
 class exagrype::ccz4::tests::FlatSpacetimeTest: public tarch::tests::TestCase {
 private:
   void testNonconservativeProductVanishes();
   void testSourceVanishes();
+  void testSecondaryEntriesInSeparateMemory();
   void testMaxEigenvalueOfFlatSpacetime();
   void testGaugeWaveLapse();
+  void testFirstDerivativeReconstructionIsExactForCubics();
+  void testConstraintEnforcementOfEvolvedVariablesMatchesFullEnforcement();
 
 public:
   FlatSpacetimeTest();

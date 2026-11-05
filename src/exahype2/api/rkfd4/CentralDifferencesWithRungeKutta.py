@@ -237,7 +237,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
           Only for CentralDifferencesWithLopsidedAdvection: the entries of Q
           which hold the advection velocity, one per dimension. Pass the name
           of a variable with one entry per dimension (e.g. "shift" for
-          exagrype.api.CCZ4Solver), or a list of names or indices. The
+          exagrype.api.FOCCZ4Solver), or a list of names or indices. The
           velocity may be an auxiliary variable.
 
         @param advected_quantities: List[str or int] or None

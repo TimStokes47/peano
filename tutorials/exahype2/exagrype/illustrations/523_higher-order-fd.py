@@ -22,8 +22,7 @@ the final setup of 522_single-black-hole.ipynb, over 9x9x9 mesh cells with
   which exagrype::ccz4::ncp() omits;
 - fd4-lop-ko-8.0: the same with the Kreiss-Oliger dissipation (sigma=8) on
   all unknowns;
-- fd4-lop-ko-8.0-subset: the same with the dissipation on Q0-Q22 and
-  Q53-Q54 only (DissipationSubset).
+- fd4-lop-ko-8.0-subset: the same with the dissipation on Q0-Q24 only (DissipationSubset).
 
 The dictionary Runs holds the configurations.
 
@@ -76,9 +75,9 @@ H = DomainSize / VolumesPerAxis
 Threads = 4
 TimeInBetweenPlots = 0.5
 
-## Unknowns which the restricted Kreiss-Oliger dissipation damps: Q0-Q22
-## (G, K, theta, Z, lapse, shift, b) and Q53-Q54 (traceK, phi)
-DissipationSubset = list(range(0, 23)) + [53, 54]
+## Unknowns which the restricted Kreiss-Oliger dissipation damps: Q0-Q24
+## (G, K, theta, Z, lapse, shift, b, traceK, phi)
+DissipationSubset = list(range(0, 25))
 
 ## The runs: name -> (Kreiss-Oliger sigma or None, lopsided advection,
 ## quantities of the dissipation or None for all). The fv run is special.
@@ -105,7 +104,7 @@ Style = {
     "fd4-lop-ko-8.0-subset": (
         "tab:olive",
         "*",
-        r"FD4, lopsided, KO $\sigma=8$ (Q0-Q22, Q53-Q54)",
+        r"FD4, lopsided, KO $\sigma=8$ (Q0-Q24)",
     ),
 }
 
@@ -125,7 +124,7 @@ def create_scheme(name, solver):
         if lopsided:
             arguments = dict(
                 right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
-                advection_velocity=exagrype.api.CCZ4Solver.ADVECTION_VELOCITY,
+                advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
                 advected_quantities=solver.lopsided_advection_quantities(),
             )
         if sigma is None:
@@ -181,7 +180,7 @@ def build_and_run(name, directory, peano_installation, end_time):
         directory=directory,
         executable="single-black-hole",
     )
-    solver = exagrype.api.CCZ4Solver(
+    solver = exagrype.api.FOCCZ4Solver(
         "CCZ4",
         parameters={"CCZ4bs": 1.0, "CCZ4sk": 1.0},
         initial_condition=exagrype.api.initialvalues.single_black_hole(mass=Mass),

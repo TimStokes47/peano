@@ -239,7 +239,7 @@ branch. Pass all tagged tasks of your solver to insert_after() instead:
 insert_after([update_cell, insert_patch_interior], task) makes task depend
 on both and rewires the successors of both to task. task then runs once per
 cell, after whichever of the two has completed the time step of this cell.
-exagrype.api.CCZ4Solver inserts its constraint enforcement this way.
+exagrype.api.FOCCZ4Solver inserts its constraint enforcement this way.
 
 The numerical scheme's construct_output() receives the time stepping graph
 only. The tags are only used within this graph, too. If you want to alter
