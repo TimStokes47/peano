@@ -16,7 +16,7 @@ def resolve_quantities(
 
     @param quantities: List[str or int]
       A string is the name of a variable as passed to the solver (e.g.
-      "lapse" or "G" for exagrype.api.CCZ4Solver) and selects all of its
+      "lapse" or "G" for exagrype.api.FOCCZ4Solver) and selects all of its
       entries. An int is the index of one entry of Q. The list must not be
       empty.
 

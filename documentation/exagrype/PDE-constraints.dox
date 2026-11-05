@@ -1,0 +1,20 @@
+/**
+@page page_exagrype_PDE-constraints PDE constraints
+
+Off-the-shelf numerical schemes sometimes struggle with numerical relativity.
+For example, the Finite Difference schemes have no artificial dissipation,
+which is often known to help keep a scheme stable.
+Therefore, ExaGRyPE adds bespoke compute kernels, and most of their additional
+features can be turned on or off on demand.
+For example, the snippet below adds Kreiss-Oliger dissipation:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+solver.numerical_scheme = exagrype.api.FD4WithKODissipation(solver, patch_size, rk_order=4, kreiss_oliger_sigma=8.0)
+solver.numerical_scheme = exagrype.api.FD4WithKODissipation(solver, patch_size, rk_order=4, kreiss_oliger_sigma=8.0, quantities=["lapse", "shift"])
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The tutorials provide worked-out examples.
+
+
+ */
+ 

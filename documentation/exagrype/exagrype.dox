@@ -99,7 +99,7 @@ d+1-dimensional space (the +1 is time), and we slice through it every time
 we take a snapshot.
 The illustration below shows this for a d=2 setup:
 
-@image html src/exagrype/flat-space-time.png width=400px
+@image html documentation/exagrype/flat-space-time.png width=400px
 
 We start at time t=0 with a mesh (aka grid).
 Each time step then performs another simulation step, possibly on a changed
@@ -131,7 +131,7 @@ d+1-dimensional (infinitely large) domain.
 This curved submanifold represents something that we could consider to be a
 time step, even though the use of this term is itself somewhat flawed.
 
-@image html src/exagrype/distorted-mesh.png width=400px
+@image html documentation/exagrype/distorted-mesh.png width=400px
 
 There are different ways to break this down into a simulation.
 In ExaGRyPE, we follow the standard shift-lapse technique, which we can
@@ -187,35 +187,21 @@ Makefiles.
 Its unit tests run as part of \c UnitTests3d.
 
 
-## Source files
-
-- exagrype::ccz4 holds the CCZ4 compute kernels (non-conservative product,
-  source, eigenvalues, constraint enforcement, and diagnostics) plus the
-  reconstruction of the auxiliary variables for the fourth-order finite
-  differences.
-- exagrype::initialvalues holds analytical initial conditions such as the
-  gauge wave or flat spacetime, plus
-  exagrype::initialvalues::ApplyTwoPunctures() for black holes.
-- \c src/exagrype/twopunctures hosts the TwoPunctures code from the
-  Einstein Toolkit (namespaces TP and TP_bindding), which computes initial
-  data for single and binary black holes.
-
-
 ## Python API
 
 The package \c exagrype.api (in \c src/exagrype/api) is layered on top of
 \c exahype2.api.
 It hosts the ExaGRyPE core solvers, such as
-@ref exagrype.api.CCZ4Solver, which are in turn subclasses of
+@ref exagrype.api.FOCCZ4Solver, which are in turn subclasses of
 @ref exahype2.api.Solver.
 These ExaGRyPE-specific solvers configure the base class with the correct
-number of unknowns and PDEs (59 unknowns are used by CCZ4, for example), the
+number of unknowns and PDEs (59 unknowns are used by FOCCZ4, for example), the
 CCZ4 parameters, and all PDE terms of the particular system.
 Users no longer have to add PDE terms themselves.
 You still have to pick a well-suited numerical scheme, however:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-solver = exagrype.api.CCZ4Solver("CCZ4", initial_condition=exagrype.api.initialvalues.gauge_wave())
+solver = exagrype.api.FOCCZ4Solver("CCZ4", initial_condition=exagrype.api.initialvalues.gauge_wave())
 solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, patch_size)
 solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(solver, volume_size=0.04)
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -224,20 +210,6 @@ The example highlights that the module \c exagrype.api.initialvalues provides
 some analytical initial conditions that users can pick from.
 Obviously, there is still the opportunity to inject tailored initial
 conditions, as with any other ExaHyPE solver.
-
-Off-the-shelf numerical schemes sometimes struggle with numerical relativity.
-For example, the Finite Difference schemes have no artificial dissipation,
-which is often known to help keep a scheme stable.
-Therefore, ExaGRyPE adds bespoke compute kernels, and most of their additional
-features can be turned on or off on demand.
-For example, the snippet below adds Kreiss-Oliger dissipation:
-
-~~~~~~~~~~~~~~~~~~~~~~~
-solver.numerical_scheme = exagrype.api.FD4WithKODissipation(solver, patch_size, rk_order=4, kreiss_oliger_sigma=8.0)
-solver.numerical_scheme = exagrype.api.FD4WithKODissipation(solver, patch_size, rk_order=4, kreiss_oliger_sigma=8.0, quantities=["lapse", "shift"])
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The tutorials provide worked-out examples.
 
 
 ## Black holes and GSL
@@ -263,6 +235,10 @@ the build stops with an error message telling you to reconfigure.
 # Further links
 
 - <a href="https://arxiv.org/html/2406.11626v3">ExaGRyPE release paper</a>
+- Solver variants
+  - @subpage page_exagrype_foccz4
+  - @subpage page_exagrype_PDE-constraints
+  - @subpage page_exagrype_fo_so_ccz4
 - @ref page_exahype2_tutorials "Tutorials"
 - ExaGRyPE benchmarks (cf. @ref page_exahype_benchmarks "overview of all ExaHyPE benchmarks")
   - \ref benchmarks_exahype2_ccz4_kernel_benchmarks

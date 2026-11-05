@@ -139,30 +139,28 @@ def test_resolve_quantities_selects_names_and_indices():
 
 
 def test_ccz4_lopsided_advection_quantities():
-    solver = exagrype.api.CCZ4Solver("CCZ4", parameters={"CCZ4bs": 1.0, "CCZ4sk": 1.0})
+    solver = exagrype.api.FOCCZ4Solver("CCZ4", parameters={"CCZ4bs": 1.0, "CCZ4sk": 1.0})
     scheme = exagrype.api.FD4WithKODissipation(
         solver,
         10,
         4,
         kreiss_oliger_sigma=1.0,
         right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
-        advection_velocity=exagrype.api.CCZ4Solver.ADVECTION_VELOCITY,
+        advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
         advected_quantities=solver.lopsided_advection_quantities(),
     )
     assert scheme.advection_velocity == [17, 18, 19]
-    # Everything but G (0-5), lapse (16), shift (17-19), phi (54) and K0 (58)
-    assert scheme.advected_quantities == list(range(6, 16)) + list(range(20, 54)) + [
-        55,
-        56,
-        57,
-    ]
+    # Everything but G (0-5), lapse (16), shift (17-19), phi (24) and K0 (58)
+    assert scheme.advected_quantities == (
+        list(range(6, 16)) + list(range(20, 24)) + list(range(25, 58))
+    )
     # Without the advection of the shift, b and the derivatives of the shift
     # are not advected
-    assert "b" not in exagrype.api.CCZ4Solver("CCZ4").lopsided_advection_quantities()
+    assert "b" not in exagrype.api.FOCCZ4Solver("CCZ4").lopsided_advection_quantities()
 
 
 def test_dissipation_runs_after_lopsided_advection(tmp_path):
-    solver = exagrype.api.CCZ4Solver("CCZ4", parameters={"CCZ4bs": 1.0, "CCZ4sk": 1.0})
+    solver = exagrype.api.FOCCZ4Solver("CCZ4", parameters={"CCZ4bs": 1.0, "CCZ4sk": 1.0})
     solver.numerical_scheme = exagrype.api.FD4WithKODissipation(
         solver,
         5,

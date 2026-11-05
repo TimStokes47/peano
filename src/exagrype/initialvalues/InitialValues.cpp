@@ -32,12 +32,12 @@ void exagrype::initialvalues::gaugeWave(
   Q[11] = phi*phi*(0.0 - 1.0/3.0*traceK*1.0) ;		//\tilde(A)_zz
   Q[16] = sqrt(HH);				        //\alpha
   Q[13] = 2.0/(3.0*pow(HH,(5.0/3.0)))*dxH        ;	//\hat(\Gamma)^x
-  Q[23] = 1.0/(2.0)*dxH*pow(HH,(-1.0/2.0))       ;		//A_x
-  Q[35] = pow(HH,(-1.0/3.0))*dxH/3.0         ;		//D_xxx
-  Q[38] = phi*dxphi                     ;		//D_xyy
-  Q[40] = phi*dxphi                    ;		//D_xzz
-  Q[53] = traceK;					//K
-  Q[54] = phi;					//\phi
+  Q[25] = 1.0/(2.0)*dxH*pow(HH,(-1.0/2.0))       ;		//A_x
+  Q[37] = pow(HH,(-1.0/3.0))*dxH/3.0         ;		//D_xxx
+  Q[40] = phi*dxphi                     ;		//D_xyy
+  Q[42] = phi*dxphi                    ;		//D_xzz
+  Q[23] = traceK;					//K
+  Q[24] = phi;					//\phi
   Q[55] = dxphi;					//P_x
 }
 
@@ -64,18 +64,18 @@ void exagrype::initialvalues::diagonal_gaugeWave(
   Q[13] = pow(H,(-5.0/3.0))*(4.0*peak_number*pi*ICA/3.0)*cos(phase);	//\hat(\Gamma)^x
   Q[14] = -pow(H,(-5.0/3.0))*(4.0*peak_number*pi*ICA/3.0)*cos(phase);	//\hat(\Gamma)^y
   Q[16] = 0.5*log(H);							//ln(\alpha)
-  Q[23] = pow(H,-1.0)*(peak_number*pi*ICA)*cos(phase);			//A_x					
-  Q[24] = -pow(H,-1.0)*(peak_number*pi*ICA)*cos(phase);			//A_y	
-  Q[35] = pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(1.0 + 4.0 * ICA*sin(phase) );		//D_xxx
-  Q[36] = -pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(3.0 + 4.0 * ICA*sin(phase) );		//D_xxy
-  Q[38] = pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(1.0 + 4.0 * ICA*sin(phase) );		//D_xyy
-  Q[40] = -pow(H,(-4.0/3.0))*(peak_number*pi*ICA/3.0)*cos(phase);					//D_xzz
-  Q[41] = -pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(1.0 + 4.0 * ICA*sin(phase) );		//D_yxx
-  Q[42] = pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(3.0 + 4.0 * ICA*sin(phase) );		//D_yxy
-  Q[41] = -pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(1.0 + 4.0 * ICA*sin(phase) );		//D_yyy
-  Q[46] = pow(H,(-4.0/3.0))*(peak_number*pi*ICA/3.0)*cos(phase);					//D_yzz
-  Q[53] = pow(H,(-3.0/2.0))*(peak_number*pi*ICA)*cos(phase);		//K
-  Q[54] = -(1.0/6.0)*log(H);						//ln(\phi)
+  Q[25] = pow(H,-1.0)*(peak_number*pi*ICA)*cos(phase);			//A_x					
+  Q[26] = -pow(H,-1.0)*(peak_number*pi*ICA)*cos(phase);			//A_y	
+  Q[37] = pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(1.0 + 4.0 * ICA*sin(phase) );		//D_xxx
+  Q[38] = -pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(3.0 + 4.0 * ICA*sin(phase) );		//D_xxy
+  Q[40] = pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(1.0 + 4.0 * ICA*sin(phase) );		//D_xyy
+  Q[42] = -pow(H,(-4.0/3.0))*(peak_number*pi*ICA/3.0)*cos(phase);					//D_xzz
+  Q[43] = -pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(1.0 + 4.0 * ICA*sin(phase) );		//D_yxx
+  Q[44] = pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(3.0 + 4.0 * ICA*sin(phase) );		//D_yxy
+  Q[43] = -pow(H,(-4.0/3.0))*(peak_number*pi*ICA/6.0)*cos(phase)*(1.0 + 4.0 * ICA*sin(phase) );		//D_yyy
+  Q[48] = pow(H,(-4.0/3.0))*(peak_number*pi*ICA/3.0)*cos(phase);					//D_yzz
+  Q[23] = pow(H,(-3.0/2.0))*(peak_number*pi*ICA)*cos(phase);		//K
+  Q[24] = -(1.0/6.0)*log(H);						//ln(\phi)
   Q[55] = -pow(H,-1.0)*(peak_number*pi*ICA/3.0)*cos(phase);		//P_x
   Q[56] = pow(H,-1.0)*(peak_number*pi*ICA/3.0)*cos(phase);		//P_x
 }
@@ -100,10 +100,10 @@ void exagrype::initialvalues::linearWave(
   Q[9]  = -0.5*dtHH ;		//\tilde(A)_yy
   Q[11] = 0.5*dtHH  ;		//\tilde(A)_zz
   Q[16] = log(1.0) ;		//ln(\alpha)
-  Q[35] = 0.0       ;		//D_xxx
-  Q[38] = 0.5*dxHH  ;		//D_xyy
-  Q[40] = -0.5*dxHH ;		//D_xzz
-  Q[54] = log(1.0) ;		//ln(\phi)
+  Q[37] = 0.0       ;		//D_xxx
+  Q[40] = 0.5*dxHH  ;		//D_xyy
+  Q[42] = -0.5*dxHH ;		//D_xzz
+  Q[24] = log(1.0) ;		//ln(\phi)
 }
 
 void exagrype::initialvalues::flat(
@@ -116,5 +116,5 @@ void exagrype::initialvalues::flat(
   Q[3]  = 1.0  ;          //\tilde(\gamma)_yy
   Q[5]  = 1.0                            ;    //\tilde(\gamma)_zz
   Q[16] = 1.0;
-  Q[54] = 1.0;          //\phi
+  Q[24] = 1.0;          //\phi
 }

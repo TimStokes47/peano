@@ -106,7 +106,7 @@ def build_and_run(volumes_per_axis, patch_size, directory, peano_installation):
         directory=directory,
         executable="gauge-wave",
     )
-    solver = exagrype.api.CCZ4Solver(
+    solver = exagrype.api.FOCCZ4Solver(
         "CCZ4", initial_condition=exagrype.api.initialvalues.gauge_wave()
     )
     solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(
