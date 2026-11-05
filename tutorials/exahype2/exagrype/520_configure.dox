@@ -94,7 +94,7 @@ The flags have the following roles:
 - \c --enable-particles builds the particle toolbox, which ExaGRyPE uses for
   its tracers.
 - \c --enable-exagrype builds the ExaGRyPE library, which hosts the CCZ4
-  kernels and the initial conditions (see \ref page_exagrype_library). It
+  kernels and the initial conditions (in \c src/exagrype). It
   requires ExaHyPE 2 and is built for 3d only. Without it, the generated
   ExaGRyPE Makefiles do not link.
 - \c --with-gsl compiles the TwoPunctures black hole initial data into the
@@ -201,7 +201,7 @@ ExaGRyPE currently offers two entry points:
     black hole with fourth-order Finite Differences.
 
   \ref benchmarks_exagrype_gauge_wave, \ref benchmarks_exagrype_single_black_hole
-  and \ref page_exagrype_library provide further details.
+  and \ref page_exagrype provide further details.
 - \c applications/exahype2/ccz4 hosts the main script \c ccz4.py, which
   provides all scenarios (gauge wave, single and binary black holes), tracers
   and the different numerical schemes. The remaining ExaGRyPE tutorials work

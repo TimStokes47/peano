@@ -84,7 +84,7 @@ Jupyter.
   - \subpage tutorials_exahype2_dsl_implementing_kernels
 - Adding features
   - Adding your own compute kernels <!-- (Harrison's work) -->
-  - \subpage tutorials_exahype2_additional_mesh_sweeps
+  - Additional mesh sweeps
 
 
 ## How to add your own tutorial
