@@ -1,0 +1,134 @@
+""" This file is part of the ExaGRyPE project. For conditions of distribution and
+ use, please see the copyright notice at www.peano-framework.org
+"""
+
+from typing import Dict, Union
+
+import exahype2.api
+
+from .CCZ4SolverBase import CCZ4SolverBase
+
+
+class FOCCZ4Solver(CCZ4SolverBase):
+    """!
+
+    Solver for the Einstein equations in the first-order CCZ4 formulation
+
+    The solver is a plain exahype2.api.Solver with the 59 CCZ4 unknowns and
+    the PDE terms of CCZ4 pre-registered. All terms delegate to the
+    ExaGRyPE library (configure Peano with --enable-exagrype):
+
+    - the non-conservative product to exagrype::ccz4::ncpFirstOrder(),
+    - the volumetric source to exagrype::ccz4::sourceFirstOrder(),
+    - the maximum eigenvalue to exagrype::ccz4::maxEigenvalue(),
+    - the initial condition to one of the routines from
+      exagrype::initialvalues, @see exagrype.api.initialvalues.
+
+    CCZ4 has no conservative flux. You still have to assign a numerical
+    scheme, a grid construction and (optionally) a plotter, exactly as for
+    any other exahype2.api.Solver, and to add the solver to an
+    exahype2.api.Project. The project has to be three-dimensional: the
+    generated solver class refuses to compile otherwise.
+
+    ## Shortcomings
+
+    - The fourth-order Finite Differences of the production runs are
+      available through exahype2.api.rkfd4, i.e. pass a
+      CentralDifferencesWithRungeKutta as numerical scheme. They have no
+      artificial dissipation. exagrype.api.FD4WithKODissipation is the same
+      scheme with a Kreiss-Oliger dissipation on top. Unlike the legacy
+      ExaGRyPE, neither supports adaptive mesh refinement yet.
+    - The solution is pushed back onto the CCZ4 constraints
+      (exagrype::ccz4::enforceCCZ4constraints()) only if you switch it on
+      via enforce_ccz4_constraint(). Without it, long runs drift away from
+      the constraint surface.
+    - exagrype::ccz4::ncpFirstOrder() omits the advection terms
+      @f$ \\beta^k \\partial _k Q @f$ of all unknowns besides the metric,
+      the lapse, the shift and phi (whose advection is part of the
+      algebraic source) and K0. It expects the numerical scheme to add them
+      with lopsided stencils. The fourth-order Finite Differences do so if
+      you select the kernel CentralDifferencesWithLopsidedAdvection with
+      ADVECTION_VELOCITY and lopsided_advection_quantities(). The Finite
+      Volumes of exahype2.api.fv do not add them, i.e. they evolve CCZ4
+      without these advection terms.
+    - Black holes are limited to a single one
+      (exagrype.api.initialvalues.single_black_hole()). Tracers and the
+      ADM/Psi4 postprocessing are not available yet. The second-order
+      formulation is exagrype.api.FOSOCCZ4Solver.
+
+    """
+
+    Unknowns = {
+        "G": 6,
+        "K": 6,
+        "theta": 1,
+        "Z": 3,
+        "lapse": 1,
+        "shift": 3,
+        "b": 3,
+        "traceK": 1,
+        "phi": 1,
+        "dLapse": 3,
+        "dxShift": 3,
+        "dyShift": 3,
+        "dzShift": 3,
+        "dxG": 6,
+        "dyG": 6,
+        "dzG": 6,
+        "P": 3,
+        "K0": 1,
+    }
+    """!
+
+    The unknowns of the first-order CCZ4 formulation in the order the
+    kernels in exagrype::ccz4 expect them. The names match the legacy
+    ExaGRyPE solvers.
+
+    """
+
+    def __init__(
+        self,
+        name: str,
+        parameters: Dict[str, Union[int, float]] = None,
+        initial_condition: exahype2.api.InitPointWisely = None,
+    ):
+        """!
+
+        Create a first-order CCZ4 solver
+
+        @param name: str
+          Name of the solver, @see exahype2.api.Solver.
+
+        @param parameters: Dict[str, Union[int, float]]
+          CCZ4 parameters that differ from DefaultParameters, e.g.
+          {"CCZ4k1": 0.0}. Keys which are not in DefaultParameters are
+          rejected, as they most likely are typos.
+
+        @param initial_condition: exahype2.api.InitPointWisely
+          Initial condition. Defaults to exagrype.api.initialvalues.gauge_wave().
+          Pass any other routine from exagrype.api.initialvalues, or your
+          own exahype2.api.InitPointWisely.
+
+        """
+        super().__init__(name, self.Unknowns, parameters, initial_condition)
+
+    def _ncp_implementation(self) -> str:
+        """! The secondary entries follow the 25 primary ones """
+        return """
+  ::exagrype::ccz4::ncpFirstOrder(
+    BTimesDeltaQ, BTimesDeltaQ + 25,
+    Q, Q + 25,
+    deltaQ, deltaQ + 25,
+    normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu
+  );
+"""
+
+    def _source_implementation(self) -> str:
+        return f"""
+  tarch::memset(S, 0, {sum(self.Unknowns.values())} * sizeof(double));
+  ::exagrype::ccz4::sourceFirstOrder(
+    S, S + 25,
+    Q, Q + 25,
+    CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3
+  );
+"""

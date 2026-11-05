@@ -77,7 +77,7 @@ class FD4WithKODissipation(exahype2.api.rkfd4.CentralDifferencesWithRungeKutta):
         @param quantities: List[str or int] or None
           The unknowns which are subject to the dissipation. None, the
           default, selects all unknowns. A string is the name of an unknown
-          as passed to the solver (e.g. "lapse" or "G" for exagrype.api.CCZ4Solver)
+          as passed to the solver (e.g. "lapse" or "G" for exagrype.api.FOCCZ4Solver)
           and selects all of its entries. An int is the index of one entry
           of the unknowns. Auxiliary variables do not evolve in time and
           hence cannot be selected.

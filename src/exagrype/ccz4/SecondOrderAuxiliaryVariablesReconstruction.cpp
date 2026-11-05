@@ -1,6 +1,8 @@
 #include "exagrype/ccz4/SecondOrderAuxiliaryVariablesReconstruction.h"
 #include "exahype2/fd/FD_Helper.cpph"
 
+#include <vector>
+
 
 namespace {
   /**
@@ -237,6 +239,60 @@ void exagrype::ccz4::recomputeAuxiliaryVariablesFD4_4thOrder(
 }
 
 
+void exagrype::ccz4::reconstructFirstDerivativesFD4(
+  const double* __restrict__                  primaryVariablesWithHalo,
+  const tarch::la::Vector<Dimensions,double>& patchSize,
+  int                                         numberOfGridCellsPerPatchPerAxis,
+  int                                         haloSize,
+  double* __restrict__                        firstDerivatives
+) {
+  static_assert( Dimensions==3, "ExaGRyPE is three-dimensional only" );
+  assertion( haloSize>=3 );
+
+  constexpr int NumberOfPrimaryVariables = 25;
+  constexpr int NumberOfDerivatives      = 34;
+  constexpr int NumberOfEntries          = NumberOfPrimaryVariables + NumberOfDerivatives;
+
+  const int n = numberOfGridCellsPerPatchPerAxis;
+
+  const ::exahype2::enumerator::AoSLexicographicEnumerator sourceEnumerator(1,n,haloSize,NumberOfPrimaryVariables,0);
+  const ::exahype2::enumerator::AoSLexicographicEnumerator targetEnumerator(1,n,haloSize,NumberOfPrimaryVariables,NumberOfDerivatives);
+
+  const int volumesPerAxis = n + 2*haloSize;
+  std::vector<double> buffer( volumesPerAxis*volumesPerAxis*volumesPerAxis*NumberOfEntries, 0.0 );
+
+  for (int x=-haloSize; x<n+haloSize; x++)
+  for (int y=-haloSize; y<n+haloSize; y++)
+  for (int z=-haloSize; z<n+haloSize; z++) {
+    const tarch::la::Vector<Dimensions,int> volume = gridCellIndex3d(x,y,z);
+    for (int k=0; k<NumberOfPrimaryVariables; k++) {
+      buffer[ targetEnumerator(0,volume,k) ] = primaryVariablesWithHalo[ sourceEnumerator(0,volume,k) ];
+    }
+  }
+
+  ::exahype2::CellData<double,double> cellData(
+    buffer.data(),
+    tarch::la::Vector<Dimensions,double>(0.0),
+    patchSize,
+    0.0,
+    0.0,
+    nullptr
+  );
+  recomputeAuxiliaryVariablesFD4_4thOrder( cellData, n, haloSize, NumberOfPrimaryVariables, NumberOfDerivatives );
+
+  // K0 (the last derivative) is not reconstructed
+  for (int x=0; x<n; x++)
+  for (int y=0; y<n; y++)
+  for (int z=0; z<n; z++) {
+    const tarch::la::Vector<Dimensions,int> volume = gridCellIndex3d(x,y,z);
+    const int serialisedVolume = x + n*y + n*n*z;
+    for (int k=0; k<NumberOfDerivatives-1; k++) {
+      firstDerivatives[ serialisedVolume*NumberOfDerivatives + k ] = buffer[ targetEnumerator(0,volume,NumberOfPrimaryVariables+k) ];
+    }
+  }
+}
+
+
 void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_centralDifferences_LoopBody(
   double* __restrict__                                       QIn,
   const ::exahype2::enumerator::AoSLexicographicEnumerator& QInEnumerator,
@@ -261,17 +317,17 @@ void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_centralDifferences
      QIn[ QInEnumerator(patchIndex,centralVolume,target) ] = dx / 2.0 / cellSize;
   };
 
-  finiteDifferences(16,23+normal);
-  finiteDifferences(54,55+normal);
+  finiteDifferences(16,25+normal);
+  finiteDifferences(24,55+normal);
 
   for (int i=0; i<3; i++) {
-    finiteDifferences(17+i,26+3*normal+i);
+    finiteDifferences(17+i,28+3*normal+i);
   }
 
   for (int i=0; i<3; i++)
   for (int j=i; j<3; j++) {
     int k = (i==0?j:i+j+1);
-    finiteDifferences(k,35+6*normal+k);
+    finiteDifferences(k,37+6*normal+k);
   }
 }
 
@@ -300,17 +356,17 @@ void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_leftDifferences_Lo
      QIn[ QInEnumerator(patchIndex,centralVolume,target) ] = dx / cellSize;
   };
 
-  finiteDifferences(16,23+normal);
-  finiteDifferences(54,55+normal);
+  finiteDifferences(16,25+normal);
+  finiteDifferences(24,55+normal);
 
   for (int i=0; i<3; i++) {
-    finiteDifferences(17+i,26+3*normal+i);
+    finiteDifferences(17+i,28+3*normal+i);
   }
 
   for (int i=0; i<3; i++)
   for (int j=i; j<3; j++) {
     int k = (i==0?j:i+j+1);
-    finiteDifferences(k,35+6*normal+k);
+    finiteDifferences(k,37+6*normal+k);
   }
 }
 
@@ -339,17 +395,17 @@ void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_rightDifferences_L
      QIn[ QInEnumerator(patchIndex,centralVolume,target) ] = dx / cellSize;
   };
 
-  finiteDifferences(16,23+normal);
-  finiteDifferences(54,55+normal);
+  finiteDifferences(16,25+normal);
+  finiteDifferences(24,55+normal);
 
   for (int i=0; i<3; i++) {
-    finiteDifferences(17+i,26+3*normal+i);
+    finiteDifferences(17+i,28+3*normal+i);
   }
 
   for (int i=0; i<3; i++)
   for (int j=i; j<3; j++) {
     int k = (i==0?j:i+j+1);
-    finiteDifferences(k,35+6*normal+k);
+    finiteDifferences(k,37+6*normal+k);
   }
 }
 
@@ -379,19 +435,19 @@ void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody(
   double cellsize = patchSize(normal) / QInEnumerator._numberOfDoFsPerAxisInCell;
   double gradcoef = 1.0/(12.0*cellsize);
 
-  QIn[ QInEnumerator(patchIndex,centralVolume,23+normal) ] =     gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume2,16) ] -
+  QIn[ QInEnumerator(patchIndex,centralVolume,25+normal) ] =     gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume2,16) ] -
                                                              8.0*gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume1,16) ] +
                                                              8.0*gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume1,16) ] -
                                                                  gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume2,16) ];
 
   // I'm afraid I misunderstood the enumeration
-  QIn[ QInEnumerator(patchIndex,centralVolume,55+normal) ] =     gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume2,54) ] -
-                                                             8.0*gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume1,54) ] +
-                                                             8.0*gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume1,54) ] -
-                                                                 gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume2,54) ];
+  QIn[ QInEnumerator(patchIndex,centralVolume,55+normal) ] =     gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume2,24) ] -
+                                                             8.0*gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume1,24) ] +
+                                                             8.0*gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume1,24) ] -
+                                                                 gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume2,24) ];
 
   for (int i=0; i<3; i++) {
-    QIn[ QInEnumerator(patchIndex,centralVolume,26+3*normal+i) ] =     gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume2,17+i) ] -
+    QIn[ QInEnumerator(patchIndex,centralVolume,28+3*normal+i) ] =     gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume2,17+i) ] -
                                                                    8.0*gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume1,17+i) ] +
                                                                    8.0*gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume1,17+i) ] -
                                                                        gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume2,17+i) ];
@@ -400,7 +456,7 @@ void exagrype::ccz4::internal::recomputeAuxiliaryVariablesFD4_4thOrder_LoopBody(
   for (int i=0; i<3; i++)
   for (int j=i; j<3; j++) {
     int k = (i==0?j:i+j+1);
-    QIn[ QInEnumerator(patchIndex,centralVolume,35+6*normal+k) ] = 0.5*gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume2,k) ] -
+    QIn[ QInEnumerator(patchIndex,centralVolume,37+6*normal+k) ] = 0.5*gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume2,k) ] -
                                                                    4.0*gradcoef * QIn[ QInEnumerator(patchIndex, leftAdjacentVolume1,k) ] +
                                                                    4.0*gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume1,k) ] -
                                                                    0.5*gradcoef * QIn[ QInEnumerator(patchIndex,rightAdjacentVolume2,k) ];
