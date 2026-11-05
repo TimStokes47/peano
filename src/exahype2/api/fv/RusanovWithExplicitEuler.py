@@ -33,7 +33,10 @@ from .actionsets import UpdateCell
 from .actionsets import UpdateCellGPU
 from .actionsets import ComputeGlobalCFLCondition
 
-
+from ..VolumetricSource import VolumetricSource
+from ..Flux import Flux
+from ..NonconservativeProduct import NonconservativeProduct
+from ..MaxEigenvalue import MaxEigenvalue
 ## DSLHyPE time step kernels
 #
 # The two functions below are never executed as Python. DSLHyPE parses their
@@ -84,7 +87,7 @@ def timeStepWithRusanov2D(patchData: "::exahype2::CellData<double, double>&") ->
     fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns, 0:NV, 1:NV+1] - input[0:NumberOfUnknowns, 0:NV, 0:NV])
     output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
 
-    if flux:
+    if Flux:
       flux_x = DataBlock([[0, NumberOfUnknowns], [-H, NV + H], [0, NV], [0, N]], eval("flux", input[:, -1:NV+1, 0:NV], x, 0))
       flux_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [-H, NV + H], [0, N]], eval("flux", input[:, 0:NV, -1:NV+1], x, 1))
       
@@ -102,12 +105,11 @@ def timeStepWithRusanov2D(patchData: "::exahype2::CellData<double, double>&") ->
        nonconservative_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV + H], [0, N]], eval("nonconservativeProduct", average_y, delta_y, x, h, t, dt, 1))
        output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(1) * (-nonconservative_y[:, 0:NV, 0:NV] - nonconservative_y[:, 0:NV, 1:NV+1])
 
-    if maxEigenvalue:
+    if MaxEigenvalue:
       maxEigenvaluesX2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 0))
       maxEigenvaluesY2 = DataBlock([[0, 1], [0, NV], [0, NV], [0, N]], eval("maxEigenvalue", output, x, 1))
       maxEigenvaluesPerVolume = max(maxEigenvaluesX2, maxEigenvaluesY2)
       maxEigenvalues = max(maxEigenvaluesPerVolume)
-
 
 ## Explicit Euler time step with a Rusanov flux over a 3d patch.
 def timeStepWithRusanov3D(patchData: "::exahype2::CellData<double, double>&") -> "void":

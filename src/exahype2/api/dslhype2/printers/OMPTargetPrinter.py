@@ -23,8 +23,7 @@ class OMPTargetPrinter(CPPPrinter):
         outer_loop_end_print = data_block_unary_max.loops[0].iteration_end.print(self)
 
         return f"""{self.get_indent(indent_level)}for (int {outer_loop_index_print} = {outer_loop_start_print}; {outer_loop_index_print} < {outer_loop_end_print}; {outer_loop_index_print}++) {{
-{data_block_unary_max.loops[0].statements[0].print(self, indent_level + 1)}
-#pragma omp target teams loop collapse(Dimensions) reduction(max:{data_block_unary_max.lhs.index_at([data_block_unary_max.loops[0].get_iteration_variable()])})
+#pragma omp target teams loop collapse(Dimensions + 1) reduction(max:{data_block_unary_max.lhs.index_at([data_block_unary_max.loops[0].get_iteration_variable()]).print(self)})
 {data_block_unary_max.loops[1].print(self, indent_level + 1)}
 {self.get_indent(indent_level)}}}"""
 

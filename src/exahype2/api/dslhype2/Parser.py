@@ -164,7 +164,7 @@ class Parser:
             slice_start = slice_start.convert_integers_to_indices()
 
         if slice.upper is None:
-            slice_end = original_iteration_range[0]
+            slice_end = original_iteration_range[1]
         else:
             slice_end = self._parse_expression(slice.upper)
             assert(isinstance(slice_end, AST.Element) or isinstance(slice_end, AST.Variable))
