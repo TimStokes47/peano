@@ -14,7 +14,7 @@ i.e. it should include all the steps you need to run the example codes.
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 git clone https://github.com/tobiasweinzierl/peano.git
-cd Peano
+cd peano
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -63,7 +63,19 @@ support \c -fopenmp. Install GCC via Homebrew and pass it to configure, e.g.
 \c CC=gcc-16 \c CXX=g++-16 (use the version number of your GCC). Do not
 configure with \c CPPFLAGS or \c LDFLAGS pointing to Homebrew's \c libomp:
 Peano's libraries then pick up its \c omp.h, while the generated
-applications use GCC's, and the executables crash at start-up.
+applications use GCC's, and the executables crash at start-up. If your shell
+sets these variables, unset them first (\c unset \c CPPFLAGS \c LDFLAGS).
+With Homebrew, the whole sequence reads
+
+~~~~~~~~~~~~~~~~~~~~~~~
+brew install gcc autoconf automake libtool pkg-config gsl
+glibtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing
+./configure CC=gcc-16 CXX=g++-16 \
+            --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-particles \
+            --enable-exagrype --with-gsl --with-multithreading=omp \
+            CXXFLAGS="-std=c++20 -O3 -fopenmp -Wno-attributes" LDFLAGS="-fopenmp"
+make -j4
+~~~~~~~~~~~~~~~~~~~~~~~
 
 On a cluster with the Intel toolchain and MPI, the call becomes
 
@@ -146,6 +158,24 @@ pip install --upgrade pip
 pip install -e .
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+The install needs a Python version for which VTK provides packages, i.e.
+Python 3.14 or older at the time of writing. If your \c python3 is newer, as
+Homebrew's 3.15 is, create the environment with an older one, e.g.
+\c python3.13 \c -m \c venv \c .venv. Otherwise \c pip stops with
+<tt>No matching distribution found for vtk</tt> (see
+\ref tutorials_exahype2_applications_exagrype_faq).
+
+The editable install also brings Jupyter along. Start it from the tutorial
+folder within the activated environment:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+cd tutorials/exahype2/exagrype
+jupyter lab 521_gauge-wave.ipynb
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The notebooks find Peano relative to their own folder, so open them where
+they are and do not copy them elsewhere.
+
 
 # Where to go next
 
@@ -157,7 +187,12 @@ ExaGRyPE currently offers two entry points:
   lopsided advection) on regular meshes, the gauge wave, and a single black
   hole with TwoPunctures initial data. Binary black holes, adaptive mesh
   refinement for the Finite Differences and tracers are not available yet.
-  Its tutorials are Jupyter notebooks in \c tutorials/exahype2/exagrype:
+  Its tutorials are Jupyter notebooks in \c tutorials/exahype2/exagrype. They
+  assume that you have worked through
+  \ref tutorials_exahype2_00_getting-started and
+  \ref tutorials_exahype2_10_euler. For the single black hole,
+  \ref tutorials_exahype2_20_additional-solver-steps and
+  \ref tutorials_exahype2_30_domain-decomposition help as well:
   - \ref tutorials_exahype2_exagrype_521_gauge-wave runs the gauge wave with
     Finite Volumes and studies their convergence;
   - \ref tutorials_exahype2_exagrype_522_single-black-hole evolves a single
