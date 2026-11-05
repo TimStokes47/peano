@@ -48,9 +48,6 @@ void exagrype::ccz4::addKreissOligerDissipation(
   }
 }
 
-#if defined(GPUOffloadingOMP)
-#pragma omp declare target
-#endif
 void exagrype::ccz4::enforceCCZ4constraintsOfEvolvedVariables(double * luh)
 {
     double g_cov[3][3] = { {luh[0], luh[1], luh[2]}, {luh[1], luh[3], luh[4]}, {luh[2], luh[4], luh[5]} };
@@ -164,13 +161,6 @@ void exagrype::ccz4::enforceCCZ4constraints(double * luh)
     luh[53] = DD[2][1][2];
     luh[54] = DD[2][2][2];
 }
-#if defined(GPUOffloadingOMP)
-#pragma omp end declare target
-#endif
-
-#if defined(GPUOffloadingOMP)
-#pragma omp declare target
-#endif
 void exagrype::ccz4::admconstraints(double* constraints, const double* const Q, const double* const gradQSerialised)
 {
     constexpr int nVar(59);
@@ -408,13 +398,6 @@ void exagrype::ccz4::admconstraints(double* constraints, const double* const Q, 
     //constraints[4]  =   1.0/invdet-1.0;
     //constraints[5]  =   traceA;
 }
-#if defined(GPUOffloadingOMP)
-#pragma omp end declare target
-#endif
-
-#if defined(GPUOffloadingOMP)
-#pragma omp declare target
-#endif
 void exagrype::ccz4::Psi4Calc(double* Psi4, const double* const Q, const double* const gradQSerialised, double* coor)
 {
     constexpr int nVar(59);
@@ -710,13 +693,6 @@ void exagrype::ccz4::Psi4Calc(double* Psi4, const double* const Q, const double*
 	}
 	
 }
-#if defined(GPUOffloadingOMP)
-#pragma omp end declare target
-#endif
-
-#if defined(GPUOffloadingOMP)
-#pragma omp declare target
-#endif
 void exagrype::ccz4::TestingOutput(double* terms, const double* const Q, const double* const gradQSerialised)
 {
     constexpr int nVar(59);
@@ -987,13 +963,6 @@ void exagrype::ccz4::TestingOutput(double* terms, const double* const Q, const d
     //constraints[4]  =   1.0/invdet-1.0;
     //constraints[5]  =   traceA;
 }
-#if defined(GPUOffloadingOMP)
-#pragma omp end declare target
-#endif
-
-#if defined(GPUOffloadingOMP)
-#pragma omp declare target
-#endif
 void exagrype::ccz4::ThetaOutputNCP(double* NCPterm, const double* const Q, const double* const gradQSerialised, int normal)
 {
     const double alpha = std::exp(std::fmax(-20., std::fmin(20.,Q[16])));
@@ -1196,14 +1165,7 @@ void exagrype::ccz4::ThetaOutputNCP(double* NCPterm, const double* const Q, cons
     NCPterm[0]  =   RPlusTwoNablaZNCP;
     //if (NCPterm>0.0) std::cout<< NCPterm << std::endl; 
 }
-#if defined(GPUOffloadingOMP)
-#pragma omp end declare target
-#endif
 
-
-#if defined(GPUOffloadingOMP)
-#pragma omp declare target
-#endif
 void exagrype::ccz4::maxEigenvalue(
         const double* const Q,
         int                 normal,
@@ -1224,7 +1186,8 @@ void exagrype::ccz4::maxEigenvalue(
 }
 
 //this version use alpha and phi
-void exagrype::ccz4::source(double* S, double* Saux, const double* const Q, const double* const Qaux,
+template <bool SecondOrder>
+static void sourceImplementation(double* S, double* Saux, const double* const Q, const double* const Qaux,
       const int CCZ4LapseType,
       const double CCZ4ds,
       const double CCZ4c,
@@ -1237,12 +1200,12 @@ void exagrype::ccz4::source(double* S, double* Saux, const double* const Q, cons
       const double CCZ4eta,
       const double CCZ4k1,
       const double CCZ4k2,
-      const double CCZ4k3,
-      const double CCZ4SO
+      const double CCZ4k3
       )
 {
     // Vacuum CCZ4: 59 entries, with symmetric tensor contractions.
-    const double CCZ4helper = (CCZ4SO == 1) ? 0.0 : 1.0;
+    constexpr double CCZ4advection = SecondOrder ? 0.0 : 1.0;
+    constexpr double CCZ4helper = SecondOrder ? 0.0 : 1.0;
 
     // Preserve the upstream lapse floor and alpha (not log(alpha)) variables.
     const double alpha = std::fmax(1e-4,Q[16]);
@@ -1494,7 +1457,7 @@ void exagrype::ccz4::source(double* S, double* Saux, const double* const Q, cons
             dtgamma[i][j] += g_cov[k][i] * BB[j][k] + g_cov[k][j] * BB[i][k];
             temp += beta[k] * DD[k][i][j];
         }
-        dtgamma[i][j] += (1 - CCZ4SO) * 2.0 * temp;
+        dtgamma[i][j] += CCZ4advection * 2.0 * temp;
     }
 
     const double Kex = Q[23];
@@ -1521,11 +1484,11 @@ void exagrype::ccz4::source(double* S, double* Saux, const double* const Q, cons
                  + alpha * (TrRiccihat + Kex * Kex - 2.0 * CCZ4c * Theta * Kex)
                  - 3.0 * CCZ4k1 * (1.0 + CCZ4k2) * Theta;
 
-    double dtchi = (1 - CCZ4SO) * ((CCZ4Sp == 0) ? 1.0 : phi) * (beta[0]*PP[0]+beta[1]*PP[1]+beta[2]*PP[2])
+    double dtchi = CCZ4advection * ((CCZ4Sp == 0) ? 1.0 : phi) * (beta[0]*PP[0]+beta[1]*PP[1]+beta[2]*PP[2])
                  + np / 3. * (alpha * Kex - traceBB) * chi;
 
     double dtalpha = - alpha * alpha * fa * (Kex - K0 - 2. * CCZ4c * Theta)
-                   + (1 - CCZ4SO) * Va * (beta[0]*AA[0]+beta[1]*AA[1]+beta[2]*AA[2]);
+                   + CCZ4advection * Va * (beta[0]*AA[0]+beta[1]*AA[1]+beta[2]*AA[2]);
 
     const double AupAdown = Aex[0][0] * Aup[0][0]
                           + Aex[1][1] * Aup[1][1]
@@ -1594,7 +1557,7 @@ void exagrype::ccz4::source(double* S, double* Saux, const double* const Q, cons
     for (int i = 0; i < 3; i++)
     {
         dtbeta[i] = CCZ4f * myb[i]
-                   + CCZ4bs * (1 - CCZ4SO) * (beta[0]*BB[0][i]+beta[1]*BB[1][i]+beta[2]*BB[2][i]);
+                   + CCZ4bs * CCZ4advection * (beta[0]*BB[0][i]+beta[1]*BB[1][i]+beta[2]*BB[2][i]);
 
         dtbeta[i] *= CCZ4sk;
     }
@@ -1674,7 +1637,7 @@ void exagrype::ccz4::source(double* S, double* Saux, const double* const Q, cons
 
     // The secondary entries. In the second-order formulation, they are not
     // evolved, and the caller may omit the pointer.
-    if (Saux != nullptr) {
+    if constexpr (!SecondOrder) {
         for (int i = 0; i < 3; i++) Saux[i] = dtAA[i];
         Saux[3] = dtBB[0][0];
         Saux[4] = dtBB[0][1];
@@ -1705,13 +1668,11 @@ void exagrype::ccz4::source(double* S, double* Saux, const double* const Q, cons
         Saux[29] = dtDD[2][2][2];
         for (int i = 0; i < 3; i++) Saux[30+i] = dtPP[i];
         Saux[33] = 0;
-        if (CCZ4SO == 1) {
-            for (int i = 0; i < 34; i++) Saux[i] = 0.0;
-        }
     }
 }
 
-void exagrype::ccz4::ncp(double* BgradQ, double* BgradQaux, const double* const Q, const double* const Qaux, const double* const gradQ, const double* const gradQaux, const int normal,
+template <bool SecondOrder>
+static void ncpImplementation(double* BgradQ, double* BgradQaux, const double* const Q, const double* const Qaux, const double* const gradQ, const double* const gradQaux, const int normal,
       const int CCZ4LapseType,
       const double CCZ4ds,
       const double CCZ4c,
@@ -1720,13 +1681,13 @@ void exagrype::ccz4::ncp(double* BgradQ, double* BgradQaux, const double* const 
       const double CCZ4bs,
       const double CCZ4sk,
       const double CCZ4xi,
-      const double CCZ4mu,
-      const double CCZ4SO
+      const double CCZ4mu
       )
 {
     // Kept in the public interface; upstream has no ds-dependent NCP term.
     (void)CCZ4ds;
-    const double CCZ4helper = (CCZ4SO==1) ? 0.0 : 1.0;
+    constexpr double CCZ4advection = SecondOrder ? 0.0 : 1.0;
+    constexpr double CCZ4helper = SecondOrder ? 0.0 : 1.0;
 
     // Advection is supplied by the solver separately; avoid double counting.
     const double advec = 0.0;
@@ -2043,7 +2004,7 @@ void exagrype::ccz4::ncp(double* BgradQ, double* BgradQaux, const double* const 
 
     // The secondary entries. In the second-order formulation, they are not
     // evolved, and the caller may omit the pointer.
-    if (BgradQaux != nullptr) {
+    if constexpr (!SecondOrder) {
         for (int i = 0; i < 3; i++) BgradQaux[i] = -dtAA[i];
         BgradQaux[3] = -dtBB[0][0];
         BgradQaux[4] = -dtBB[0][1];
@@ -2074,11 +2035,33 @@ void exagrype::ccz4::ncp(double* BgradQ, double* BgradQaux, const double* const 
         BgradQaux[29] = -dtDD[2][2][2];
         for (int i = 0; i < 3; i++) BgradQaux[30+i] = -dtPP[i];
         BgradQaux[33] = 0;
-        if (CCZ4SO == 1) {
-            for (int i = 0; i < 34; i++) BgradQaux[i] = 0.0;
-        }
     }
 }
-#if defined(GPUOffloadingOMP)
-#pragma omp end declare target
-#endif
+
+
+void exagrype::ccz4::ncpFirstOrder(double* BgradQ, double* BgradQaux, const double* const Q, const double* const Qaux, const double* const gradQ, const double* const gradQaux, const int normal,
+  const int CCZ4LapseType, const double CCZ4ds, const double CCZ4c, const double CCZ4e, const double CCZ4f, const double CCZ4bs, const double CCZ4sk, const double CCZ4xi, const double CCZ4mu
+) {
+  ncpImplementation<false>(BgradQ, BgradQaux, Q, Qaux, gradQ, gradQaux, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu);
+}
+
+
+void exagrype::ccz4::ncpSecondOrder(double* BgradQ, const double* const Q, const double* const Qaux, const double* const gradQ, const double* const gradQaux, const int normal,
+  const int CCZ4LapseType, const double CCZ4ds, const double CCZ4c, const double CCZ4e, const double CCZ4f, const double CCZ4bs, const double CCZ4sk, const double CCZ4xi, const double CCZ4mu
+) {
+  ncpImplementation<true>(BgradQ, nullptr, Q, Qaux, gradQ, gradQaux, normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu);
+}
+
+
+void exagrype::ccz4::sourceFirstOrder(double* S, double* Saux, const double* const Q, const double* const Qaux,
+  const int CCZ4LapseType, const double CCZ4ds, const double CCZ4c, const double CCZ4e, const double CCZ4f, const double CCZ4bs, const double CCZ4sk, const double CCZ4xi, const double CCZ4itau, const double CCZ4eta, const double CCZ4k1, const double CCZ4k2, const double CCZ4k3
+) {
+  sourceImplementation<false>(S, Saux, Q, Qaux, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3);
+}
+
+
+void exagrype::ccz4::sourceSecondOrder(double* S, const double* const Q, const double* const Qaux,
+  const int CCZ4LapseType, const double CCZ4ds, const double CCZ4c, const double CCZ4e, const double CCZ4f, const double CCZ4bs, const double CCZ4sk, const double CCZ4xi, const double CCZ4itau, const double CCZ4eta, const double CCZ4k1, const double CCZ4k2, const double CCZ4k3
+) {
+  sourceImplementation<true>(S, nullptr, Q, Qaux, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3);
+}

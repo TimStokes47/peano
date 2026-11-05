@@ -31,7 +31,8 @@ class CCZ4SolverBase(exahype2.api.Solver):
     - exagrype.api.FOSOCCZ4Solver evolves 25 unknowns, and the other 34
       entries are auxiliary variables, i.e. they live in separate memory.
 
-    The subclasses therefore only override the hook _secondary_pointer().
+    The subclasses therefore override the hooks _ncp_implementation() and
+    _source_implementation(), which call the kernel of their formulation.
 
     @ref exagrype.api.FOCCZ4Solver, @ref exagrype.api.FOSOCCZ4Solver
 
@@ -64,7 +65,6 @@ class CCZ4SolverBase(exahype2.api.Solver):
 
     DefaultParameters = {
         "CCZ4LapseType": 0,
-        "CCZ4SO": 0,
         "CCZ4ds": 1.0,
         "CCZ4c": 1.0,
         "CCZ4e": 1.0,
@@ -183,9 +183,9 @@ class CCZ4SolverBase(exahype2.api.Solver):
     def lopsided_advection_quantities(self) -> List[str]:
         """!
 
-        The unknowns whose advection terms exagrype::ccz4::ncp() omits
+        The unknowns whose advection terms exagrype::ccz4::ncpFirstOrder() and ncpSecondOrder() omits
 
-        exagrype::ccz4::ncp() is invoked with its advection switched off.
+        exagrype::ccz4::ncpFirstOrder() and ncpSecondOrder() is invoked with its advection switched off.
         The unknowns returned are those whose advection terms
         @f$ \\beta^k \\partial _k Q @f$ hence have to be added by the
         numerical scheme, e.g. via
@@ -202,7 +202,7 @@ class CCZ4SolverBase(exahype2.api.Solver):
         These are all unknowns besides the conformal metric G, the lapse,
         the shift, phi and K0: The advection terms of the metric, the lapse,
         the shift and phi are part of the algebraic source
-        (exagrype::ccz4::source()), which expresses them through the
+        (exagrype::ccz4::sourceFirstOrder() and sourceSecondOrder()), which expresses them through the
         auxiliary unknowns, i.e. the first derivatives. K0 does not evolve.
 
         The advection of b and of the derivatives of the shift (dxShift,
@@ -422,27 +422,6 @@ class CCZ4SolverBase(exahype2.api.Solver):
         """
         return dict(self._parameters)
 
-    def _secondary_pointer(self, argument: str) -> str:
-        """!
-
-        C++ expression for the pointer to the 34 secondary CCZ4 entries of an argument
-
-        Hook for the subclasses. The PDE terms receive the 25 or 59 entries of
-        the unknowns Q, the jumps deltaQ of the unknowns, and the result
-        arguments (BTimesDeltaQ and S). The kernels take a second pointer
-        next to each of them for the entries 25 to 58.
-
-        @param argument: str
-          Name of the argument of the PDE term: "Q", "deltaQ", "BTimesDeltaQ"
-          or "S".
-
-        @return str
-          C++ expression of type double*. For the result arguments, it may be
-          nullptr if the solver does not evolve the secondary entries.
-
-        """
-        raise NotImplementedError
-
     def _adapt_initial_condition(
         self, initial_condition: exahype2.api.InitPointWisely
     ) -> exahype2.api.InitPointWisely:
@@ -456,30 +435,22 @@ class CCZ4SolverBase(exahype2.api.Solver):
     def _ncp_implementation(self) -> str:
         """!
 
+        C++ which calls the non-conservative product kernel
+
         The Finite Volume kernels hand over the jump deltaQ along one normal,
         the fourth-order Finite Differences of exahype2.api.rkfd4 the
         derivative along one normal times the mesh width. This is what
-        exagrype::ccz4::ncp() expects.
+        exagrype::ccz4::ncpFirstOrder() and ncpSecondOrder() expect.
+        Hook for the subclasses, as they select the formulation.
 
         """
-        return f"""
-  ::exagrype::ccz4::ncp(
-    BTimesDeltaQ, {self._secondary_pointer("BTimesDeltaQ")},
-    Q, {self._secondary_pointer("Q")},
-    deltaQ, {self._secondary_pointer("deltaQ")},
-    normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu, CCZ4SO
-  );
-"""
+        raise NotImplementedError
 
     def _source_implementation(self) -> str:
-        return f"""
-  tarch::memset(S, 0, {sum(self.Unknowns.values())} * sizeof(double));
-  ::exagrype::ccz4::source(
-    S, {self._secondary_pointer("S")},
-    Q, {self._secondary_pointer("Q")},
-    CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3, CCZ4SO
-  );
-"""
+        """!
+        C++ which calls the source term kernel. Hook for the subclasses.
+        """
+        raise NotImplementedError
 
     def _max_eigenvalue_implementation(self) -> str:
         return """

@@ -64,25 +64,27 @@ def test_so_solver_splits_the_59_entries_into_25_unknowns_and_34_derivatives():
     )
 
 
-def test_so_solver_runs_the_kernels_in_second_order_mode():
-    second_order = exagrype.api.FOSOCCZ4Solver("SO")
-    assert second_order.parameters["CCZ4SO"] == 1
-    assert exagrype.api.FOCCZ4Solver("FO").parameters["CCZ4SO"] == 0
-    with pytest.raises(ValueError):
+def test_so_solver_has_no_formulation_switch_parameter():
+    assert "CCZ4SO" not in exagrype.api.FOSOCCZ4Solver("SO").parameters
+    assert "CCZ4SO" not in exagrype.api.FOCCZ4Solver("FO").parameters
+    with pytest.raises(KeyError):
         exagrype.api.FOSOCCZ4Solver("SO", parameters={"CCZ4SO": 0})
 
 
-def test_so_solver_calls_the_same_kernels_as_the_fo_solver():
+def test_so_solver_calls_the_second_order_kernels():
     first_order = exagrype.api.FOCCZ4Solver("FO")
     second_order = exagrype.api.FOSOCCZ4Solver("SO")
     for term, kernel in [
-        ("nonconservativeProduct", "::exagrype::ccz4::ncp("),
-        ("volumetricSource", "::exagrype::ccz4::source("),
-        ("maxEigenvalue", "::exagrype::ccz4::maxEigenvalue("),
+        ("nonconservativeProduct", "::exagrype::ccz4::ncp%s("),
+        ("volumetricSource", "::exagrype::ccz4::source%s("),
     ]:
-        assert kernel in first_order.get_pde_term(term).implementation
-        implementation = second_order.get_pde_term(term).implementation
-        assert kernel in implementation
+        assert kernel % "FirstOrder" in first_order.get_pde_term(term).implementation
+        assert kernel % "SecondOrder" in second_order.get_pde_term(term).implementation
+    for solver in (first_order, second_order):
+        assert (
+            "::exagrype::ccz4::maxEigenvalue("
+            in solver.get_pde_term("maxEigenvalue").implementation
+        )
     # The kernels get the primary entries and, as a second pointer, the
     # derivatives, i.e. the auxiliary variables, without any copy
     ncp = second_order.get_pde_term("nonconservativeProduct").implementation
@@ -94,7 +96,7 @@ def test_so_solver_calls_the_same_kernels_as_the_fo_solver():
     assert "Q, Q + 25," in first_order.get_pde_term("volumetricSource").implementation
     assert "deltaQ, deltaQ + 25," in first_order.get_pde_term("nonconservativeProduct").implementation
     # The second-order solver has no storage for the secondary result
-    assert "S, nullptr," in source
+    assert "S,\n    Q, derivatives," in source
     assert "[59]" not in ncp + source
 
 
@@ -109,7 +111,7 @@ def test_so_solver_splits_the_initial_condition():
 
 
 def test_so_solver_advects_all_evolved_unknowns_with_lopsided_stencils():
-    # CCZ4SO=1 removes the advection of all evolved unknowns from the kernels
+    # The second-order kernels remove the advection of all evolved unknowns from the kernels
     moving_puncture = exagrype.api.FOSOCCZ4Solver(
         "SO", parameters={"CCZ4bs": 1.0, "CCZ4sk": 1.0}
     )

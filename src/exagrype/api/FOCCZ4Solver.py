@@ -18,8 +18,8 @@ class FOCCZ4Solver(CCZ4SolverBase):
     the PDE terms of CCZ4 pre-registered. All terms delegate to the
     ExaGRyPE library (configure Peano with --enable-exagrype):
 
-    - the non-conservative product to exagrype::ccz4::ncp(),
-    - the volumetric source to exagrype::ccz4::source(),
+    - the non-conservative product to exagrype::ccz4::ncpFirstOrder(),
+    - the volumetric source to exagrype::ccz4::sourceFirstOrder(),
     - the maximum eigenvalue to exagrype::ccz4::maxEigenvalue(),
     - the initial condition to one of the routines from
       exagrype::initialvalues, @see exagrype.api.initialvalues.
@@ -42,7 +42,7 @@ class FOCCZ4Solver(CCZ4SolverBase):
       (exagrype::ccz4::enforceCCZ4constraints()) only if you switch it on
       via enforce_ccz4_constraint(). Without it, long runs drift away from
       the constraint surface.
-    - exagrype::ccz4::ncp() omits the advection terms
+    - exagrype::ccz4::ncpFirstOrder() omits the advection terms
       @f$ \\beta^k \\partial _k Q @f$ of all unknowns besides the metric,
       the lapse, the shift and phi (whose advection is part of the
       algebraic source) and K0. It expects the numerical scheme to add them
@@ -110,6 +110,23 @@ class FOCCZ4Solver(CCZ4SolverBase):
         """
         super().__init__(name, self.Unknowns, parameters, initial_condition)
 
-    def _secondary_pointer(self, argument: str) -> str:
+    def _ncp_implementation(self) -> str:
         """! The secondary entries follow the 25 primary ones """
-        return f"{argument} + 25"
+        return """
+  ::exagrype::ccz4::ncpFirstOrder(
+    BTimesDeltaQ, BTimesDeltaQ + 25,
+    Q, Q + 25,
+    deltaQ, deltaQ + 25,
+    normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu
+  );
+"""
+
+    def _source_implementation(self) -> str:
+        return f"""
+  tarch::memset(S, 0, {sum(self.Unknowns.values())} * sizeof(double));
+  ::exagrype::ccz4::sourceFirstOrder(
+    S, S + 25,
+    Q, Q + 25,
+    CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3
+  );
+"""

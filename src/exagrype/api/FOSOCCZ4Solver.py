@@ -23,7 +23,7 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
     auxiliary variables (@ref exahype2.api.AuxiliaryVariables) named
     "Derivatives". The PDE terms hand the 25 unknowns and, as a second
     pointer, the 34 auxiliary variables to the very same kernels as the
-    first-order solver exagrype.api.FOCCZ4Solver. With CCZ4SO=1, the kernels set the time derivative of the 34
+    first-order solver exagrype.api.FOCCZ4Solver. The second-order kernels set the time derivative of the 34
     derivatives to zero, and the solver does not even ask for it.
 
     ## Ping-pong with a reconstructor
@@ -55,7 +55,7 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
 
     ## Shortcomings
 
-    - The kernels with CCZ4SO=1 do not advect the evolved unknowns. The
+    - The second-order kernels do not advect the evolved unknowns. The
       numerical scheme has to do it, @ref lopsided_advection_quantities().
     - The solver works with a single scheme only, see above.
     - Black holes (TwoPunctures), tracers and the ADM/Psi4 postprocessing are
@@ -103,12 +103,6 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
 
     """
 
-    DefaultParameters = dict(CCZ4SolverBase.DefaultParameters, CCZ4SO=1)
-    """!
-    Default values of the CCZ4 parameters, @see CCZ4SolverBase.DefaultParameters.
-    The kernels run in their second-order mode, i.e. CCZ4SO=1.
-    """
-
     def __init__(
         self,
         name: str,
@@ -136,11 +130,6 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
 
         """
         super().__init__(name, self.Unknowns, parameters, initial_condition)
-        if self._parameters["CCZ4SO"] != 1:
-            raise ValueError(
-                f"Solver {name}: the second-order solver needs CCZ4SO=1, but got "
-                f"{self._parameters['CCZ4SO']}"
-            )
         self.derivatives = exahype2.api.AuxiliaryVariables(
             "Derivatives", self.DerivativeUnknowns
         )
@@ -193,7 +182,7 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
 
         The unknowns whose advection terms the kernels omit
 
-        With CCZ4SO=1, exagrype::ccz4::source() and exagrype::ccz4::ncp() omit
+        exagrype::ccz4::sourceSecondOrder() and exagrype::ccz4::ncpSecondOrder() omit
         the advection @f$ \\beta^k \\partial _k Q @f$ of all 25 evolved
         unknowns, so the numerical scheme has to add it for all of them, e.g.
         via
@@ -233,17 +222,26 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
     def _number_of_derivatives(cls) -> int:
         return sum(cls.DerivativeUnknowns.values())
 
-    def _secondary_pointer(self, argument: str) -> str:
-        """!
-        The secondary entries are the auxiliary variables. The kernels do not
-        need to write a result for them, as it is zero.
-        """
-        return {
-            "Q": "derivatives",
-            "deltaQ": "deltaDerivatives",
-            "BTimesDeltaQ": "nullptr",
-            "S": "nullptr",
-        }[argument]
+    def _ncp_implementation(self) -> str:
+        """! The secondary entries are the auxiliary variables """
+        return """
+  ::exagrype::ccz4::ncpSecondOrder(
+    BTimesDeltaQ,
+    Q, derivatives,
+    deltaQ, deltaDerivatives,
+    normal, CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4mu
+  );
+"""
+
+    def _source_implementation(self) -> str:
+        return f"""
+  tarch::memset(S, 0, {sum(self.Unknowns.values())} * sizeof(double));
+  ::exagrype::ccz4::sourceSecondOrder(
+    S,
+    Q, derivatives,
+    CCZ4LapseType, CCZ4ds, CCZ4c, CCZ4e, CCZ4f, CCZ4bs, CCZ4sk, CCZ4xi, CCZ4itau, CCZ4eta, CCZ4k1, CCZ4k2, CCZ4k3
+  );
+"""
 
     def _adapt_initial_condition(
         self, initial_condition: exahype2.api.InitPointWisely

@@ -22,11 +22,11 @@ def test_solver_registers_ccz4_pde_terms():
         "initPointWisely",
     }
     assert (
-        "::exagrype::ccz4::ncp("
+        "::exagrype::ccz4::ncpFirstOrder("
         in solver.get_pde_term("nonconservativeProduct").implementation
     )
     assert (
-        "::exagrype::ccz4::source("
+        "::exagrype::ccz4::sourceFirstOrder("
         in solver.get_pde_term("volumetricSource").implementation
     )
     assert (

@@ -47,7 +47,7 @@ Both see the same 59 entries, but with swapped roles.
   are then projected onto the faces.
 - The solver finds the derivatives with a halo, reconstructs its own 25
   unknowns with a halo, and calls the very same CCZ4 kernels as
-  the first-order solver. As the kernels run with CCZ4SO=1, they only
+  the first-order solver. As the kernels are the second-order variants, they only
   evolve the first 25 unknowns.
 - CCZ4 code must not be duplicated. All CCZ4 kernels, parameters, initial
   conditions and the constraint enforcement are shared between the first-order
@@ -145,7 +145,7 @@ the routine.
 | # | Work package | Status |
 |---|---|---|
 | 1 | Refactor: shared base class exagrype.api.CCZ4SolverBase; FOCCZ4Solver becomes a thin subclass (identical generated code) | done |
-| 2 | exagrype.api.FOSOCCZ4Solver: 25 unknowns + auxiliary variables, hooks, initial condition wrapper, constraint enforcement of the evolved unknowns, lopsided advection quantities (all 25 evolved unknowns, as CCZ4SO=1 drops the advection from the kernels) | done |
+| 2 | exagrype.api.FOSOCCZ4Solver: 25 unknowns + auxiliary variables, hooks, initial condition wrapper, constraint enforcement of the evolved unknowns, lopsided advection quantities (all 25 evolved unknowns, as the second-order kernels drop the advection) | done |
 | 3 | C++: exagrype::ccz4::reconstructFirstDerivativesFD4() | done |
 | 4 | C++: split exagrype::ccz4::enforceCCZ4constraints() into evolved part + derivative part | done |
 | 5 | exagrype.api.FOSOCCZ4Reconstructor for FD4 (task per RK stage) | done |
