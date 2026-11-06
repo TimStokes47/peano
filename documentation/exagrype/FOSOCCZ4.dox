@@ -3,6 +3,8 @@
 
 \tableofcontents
 
+This is a brief sketch of the first-order second-order hybrid CCZ4 implementation in ExaGRyPE.
+
 The first-order CCZ4 solver (exagrype.api.FOCCZ4Solver) evolves 59 unknowns.
 This is the original Dumbser/Zanotti formulation introduced with ExaHyPE 2 and 
 is a "clean" first-order formulation of the CCZ4 problem. A first-order 
@@ -53,9 +55,11 @@ Both see the same 59 entries, but with swapped roles.
   conditions and the constraint enforcement are shared between the first-order
   and the second-order solver.
 - Eventually, SO has to give results very similar to the first-order solver. The
-  difference is to be quantified by benchmarks (benchmarks/exagrype/fo_vs_so).
-- Both solvers should exist for Finite Volumes (FV) and fourth-order Finite
-  Differences (FD4). We start with FD4.
+  difference is to be quantified by benchmarks (@ref benchmarks_exagrype_fo_vs_so).
+- Both solvers exist for Finite Volumes (FV) and fourth-order Finite
+  Differences (FD4). They differ in their  reconstruction: FD4 uses a fourth-order stencil
+  in each Runge-Kutta stage, FV uses second-order central differences once per
+  time step (see below).
 
 
 # Design
@@ -140,20 +144,51 @@ exagrype::ccz4::reconstructFirstDerivativesFD4() hands the halo straight on to
 the routine.
 
 
-# Work packages and status
+## FV specifics
 
-| # | Work package | Status |
-|---|---|---|
-| 1 | Refactor: shared base class exagrype.api.CCZ4SolverBase; FOCCZ4Solver becomes a thin subclass (identical generated code) | done |
-| 2 | exagrype.api.FOSOCCZ4Solver: 25 unknowns + auxiliary variables, hooks, initial condition wrapper, constraint enforcement of the evolved unknowns, lopsided advection quantities (all 25 evolved unknowns, as the second-order kernels drop the advection) | done |
-| 3 | C++: exagrype::ccz4::reconstructFirstDerivativesFD4() | done |
-| 4 | C++: split exagrype::ccz4::enforceCCZ4constraints() into evolved part + derivative part | done |
-| 5 | exagrype.api.FOSOCCZ4Reconstructor for FD4 (task per RK stage) | done |
-| 6 | Benchmark benchmarks/exagrype/fo_vs_so: FO vs SO with FD4 and lopsided advection | done, results below |
-| 7 | Tests: Python (generated code, task graph; tests/unit/test_exagrype_fosoccz4_solver.py) and C++ (derivative reconstruction exact for cubics, constraint enforcement; ccz4/tests/FlatSpacetimeTest.cpp) | done |
-| 8 | FV variants of the solver and the reconstructor | open |
-| 9 | Compare to the legacy second-order solver (applications/exahype2/ccz4) | open |
-| 10 | Black hole initial data (TwoPunctures), Dirichlet/Sommerfeld boundaries, AMR, checkpoints | open |
+The Finite Volume variant (exahype2.api.fv.RusanovWithExplicitEuler, overlap one) reuses the
+reconstructor with three differences:
+
+- Stencil: exagrype::ccz4::reconstructFirstDerivativesCentralDifferences() applies
+  \f$ [-1\ 0\ 1]/(2h) \f$. It reaches one layer out, i.e. the overlap of one is
+  enough. The derivatives one layer outside of the cell (needed for the
+  Rusanov flux and the non-conservative product on the faces) are not computed from a
+  wider halo but by the neighbour cell and exchanged via the faces. The scheme
+  is second-order accurate in the derivatives.
+- One task: there is a single stage, so the reconstructor inserts a single task
+  "Reconstruct derivatives" in front of the solver's "Reconstruct" task, and
+  uses the Finite Volume action sets for the projection onto the faces.
+- Stateless PDE terms: the Finite Volume kernels call the PDE terms as static
+  functions. exagrype.api.CCZ4SolverBase therefore registers stateless
+  non-conservative product, source and eigenvalue terms. The kernels only use
+  compile-time constants, so this loses nothing. The Finite Differences
+  (exahype2.api.rkfd4) call stateless terms, too (they forward a dummy
+  exahype2::Solver::Offloadable tag to the static method), i.e. there is no case
+  distinction between the schemes. Sommerfeld boundary conditions would
+  need a stateful eigenvalue term (exahype2.api.blockstructured.BoundaryConditions),
+  but the CCZ4 solvers have not been used with them yet.
+
+
+## Explanation of the need of an "additional" boundary layer and the modelling of the reconstruction as real solver
+
+Add the heart of the FOSO CCZ4 formalism is still a first-order update of the primary 
+unknowns with standard first-order techniques. For finite volumes, we want, for example,
+to reconstruct the ncp (non-conservative product) on a face to feed into the numerical 
+scheme (step 1). For this reconstruction, we need the ncp value in the left and right 
+adjacent cell. Within these cells, we can calculate this value, as we know the solution 
+- which is piecewise constant for our simple FV scheme.
+
+@image html documentation/exagrype/so-reconstruction-overlaps.png
+
+For this "final" compute step, we need a halo of one, and we have to exchange face data
+prior to the time step. Into the ncp calculation in the left neighbour feed the 
+auxiliary variables, which are effectively placeholders for the derivatives of 
+the solution. If we want to reconstruct these guys, we again need a left and right 
+neighbour, and these neighbour accesses again exceed the local patch.
+
+Therefore, employing a FOSO scheme over FV requires a halo size of at least 2, and there
+has to be an additional data exchange step. Otherwise, the reconstruction would fail. 
+For FD4, the halo has to be at least 3. 
 
 
 # Lab notes
@@ -218,77 +253,5 @@ the routine.
   (several hundred thousand lines per second). A benchmark that runs for a
   few time steps then takes forever. For tests use LoggerVerbosity.OFF and the
   release build.
-
-## Known limitations
-
-- Only FD4 (exahype2.api.rkfd4.CentralDifferencesWithRungeKutta and
-  exagrype.api.FD4WithKODissipation) works yet. The FV variants are open.
-- The derivatives are recomputed in front of every Runge-Kutta stage, from the
-  stage's input. The maximum eigenvalue of the new solution (needed for the next
-  time step size) is computed from the derivatives of the last stage, i.e.
-  not from the final solution.
-- The reconstruction of the derivatives in the first layer of the halo is
-  the one of the neighbour cell (exchanged via the faces). It is therefore
-  consistent across cell boundaries, unlike the legacy approach, which computed
-  the derivatives of the halo from the (incomplete) halo of the primary
-  variables.
-- Boundary conditions other than periodic ones, adaptive meshes, checkpoints
-  and tracers have not been tested with the SO solver.
-
-
-# Benchmarks
-
-See the benchmark benchmarks/exagrype/fo_vs_so. It runs the gauge wave
-with both solvers and prints the maximum and relative L2 difference of the 25
-evolved unknowns at the end of the run.
-
-Setup (`python3 fo_vs_so.py`, but with a release build and end time 0.1 instead of the debug defaults): gauge wave on the
-periodic unit cube, 27 grid points per axis (patch size 9, 3 patches per axis), fourth-order
-Finite Differences with classic Runge-Kutta 4 and lopsided advection, no dissipation,
-adaptive time step size (CFL), end time 0.1 (about 100 time steps). Both solvers
-use the same numerical scheme. We compare the 25 evolved unknowns at the end of the
-run. The last column shows how far the first-order solution moved away from its
-initial condition, i.e. the scale of the dynamics.
-
-| unknown | max abs. difference SO vs. FO | relative L2 difference | max abs. change of FO in the run |
-|---|---|---|---|
-| G (xx, yy, zz) | 7.6e-6 / 4.1e-6 / 4.1e-6 | 3.4e-6 / 1.8e-6 / 1.8e-6 | 4.2e-2 / 2.1e-2 / 2.1e-2 |
-| K (xx, yy, zz) | 7.7e-5 / 4.1e-5 / 4.1e-5 | 2.3e-4 | 1.4e-1 / 7.9e-2 / 7.9e-2 |
-| lapse | 2.5e-6 | 1.0e-6 | 3.1e-2 |
-| phi | 2.0e-6 | 8.7e-7 | 1.1e-2 |
-| traceK | 1.3e-4 | 2.4e-4 | 2.3e-1 |
-| Z (x) | 5.0e-5 | 7.7e-5 | 3.1e-1 |
-| theta | 3.6e-5 | (not meaningful) | 1.9e-5 |
-| all others (off-diagonals, shift, b, Z_y, Z_z) | 0 | 0 | 0 |
-
-**Reading the table.** The two solvers agree to 1e-6 to 1e-4 in absolute terms,
-which is two to four orders of magnitude below the change of the solution within
-the run. The metric, the lapse and phi agree best (relative 1e-6), the extrinsic
-curvature and its trace worst (relative 2e-4). The remaining entries are
-identically zero for both (the gauge wave does not excite them). Theta (a measure of the
-Hamilton constraint violation) is tiny in the first-order run (it changes by 1.9e-5
-at most), and the two solvers differ by 3.6e-5, i.e. by more than the first-order
-solver's theta moves. The relative difference is therefore not meaningful. We have
-no reference solution for theta yet, so we cannot say which solver is closer to the
-truth.
-
-**Caveats.** One resolution, one end time, one test case. The comparison measures
-how close SO is to FO, not how accurate either of them is. A convergence study
-against the analytical gauge wave (@ref benchmarks_exagrype_gauge_wave), a
-longer run, and a black hole run are still missing.
-
-**Cost.** In the release build with 8 OpenMP threads (machine shared with other
-jobs, so treat with care), one reported TimeStep phase took about 0.15 s for the
-first-order solver and about 0.21 s for the second-order solver on this mesh,
-i.e. SO is about 40% slower per step. This is expected: SO reconstructs the
-derivatives in an extra mesh sweep per Runge-Kutta stage, exchanges an extra
-halo of 34 values per stage, and gathered/scattered the 59 entries in every PDE term
-evaluation (it does not anymore, the kernels take the primary and the secondary
-entries as two pointers). We did not profile it. SO stores fewer values per stage (25 instead of
-59 for the stage input, the right-hand-side estimates and the halo patch). A
-first, finer run (729 patches of 9^3 points) was killed by the operating system
-for the first-order solver (out of memory, 15 GB machine shared with other
-processes), while the second-order solver ran through with a resident set of
-about 3.5 GB. This is an observation, not a measurement.
 
 */

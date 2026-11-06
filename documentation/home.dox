@@ -10,7 +10,7 @@
 <div align="center" style="background-color: #ccc ; padding: 10px; border: 1px solid green;">
  <b>
   <a href="http://www.peano-framework.org">Website</a> &bull;
-  <a href="https://tobiasweinzierl.github.io/peano/">Documentation</a> &bull;
+  <a href="https://peano-framework.github.io/peano/">Documentation</a> &bull;
   <a href="https://github.com/tobiasweinzierl/peano">Repository</a> &bull;
   <a href="https://github.com/tobiasweinzierl/peano/tags">Tags</a> &bull;
   <a href="https://github.com/tobiasweinzierl/peano/releases">Releases</a>
@@ -153,7 +153,7 @@ For HPC systems and reproducible environments, we also maintain
 
 This is the documentation of Peano, generated automatically through Doxygen.
 The latest version is published at
-<a href="https://tobiasweinzierl.github.io/peano/">tobiasweinzierl.github.io/peano</a>.
+<a href="https://peano-framework.github.io/peano/">peano-framework.github.io/peano</a>.
 To build it locally, run
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

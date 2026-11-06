@@ -143,6 +143,10 @@ class Project (object):
     self.is_generated = True
     self.is_built = False
 
+    # The constants and the output below write straight into self.directory,
+    # which only exists already if a solver has created it.
+    os.makedirs(self.directory, exist_ok=True)
+
     self.output.readme.add_package_description( self.constants.readme_entry() )
 
     self.datamodel.construct_output(self.output)

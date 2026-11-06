@@ -1,5 +1,5 @@
 <center>
- <img src="https://tobiasweinzierl.github.io/peano/Peano-logo.png" />
+ <img src="https://peano-framework.github.io/peano/Peano-logo.png" />
 </center>
 
 Peano is an open-source framework for solvers on dynamically adaptive
@@ -8,7 +8,7 @@ ExaHyPE 2, MGHyPE, ExaParty and applications such as ExaGRyPE and ExaSeis.
 
 All the code and all meta information (installation, Spack/Docker/Apptainer, tutorials, how to cite
 Peano) lives in the
-[documentation](https://tobiasweinzierl.github.io/peano/), whose main
+[documentation](https://peano-framework.github.io/peano/), whose main
 page is generated from [`documentation/home.dox`](documentation/home.dox).
 Build it locally with `doxygen documentation/Doxyfile`.
 

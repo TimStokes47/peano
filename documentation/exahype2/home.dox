@@ -33,7 +33,6 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
     - \subpage applications_exahype2_acoustic
     - \subpage applications_exahype2_elastic
     - \subpage applications_exahype2_euler
-  - \subpage page_exahype_benchmarks
 - Code architecture, usage and extension
   - \subpage page_exahype_design_philosophy
   - \subpage page_exahype_modelling_pde_solver
@@ -79,7 +78,16 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
   - @ref page_tarch_home
 - \subpage page_exahype_faq
 
-
+- Kernel benchmarks (assessing kernel core performance)
+  - \subpage benchmarks_exahype2_euler_kernel_benchmarks
+  - \subpage benchmarks_exahype2_acoustic_kernel_benchmarks
+  - \subpage benchmarks_exahype2_elastic_kernel_benchmarks
+  - \subpage benchmarks_exahype2_shallow_water_kernel_benchmarks
+- Euler benchmarks
+  - \subpage benchmarks_exahype2_euler_smooth_setup
+  - \subpage benchmarks_exahype2_euler_smooth_fd4
+- Shallow water benchmarks
+  - \subpage benchmarks_exahype2_shallow_water_artificial_tsunami
 
 # Building the ExaHyPE 2 extension
 
@@ -90,7 +98,7 @@ Hereby, it is important that you add the ExaHyPE-specific toolboxes:
 
      ./configure ... --enable-exahype --enable-loadbalancing --enable-blockstructured
 
-We recommend that you run a few of the @ref page_exahype_benchmarks benchmarks
+We recommend that you run a few of the benchmarks
 to ensure that all is properly set up before you start developing your own
 codes.
 

@@ -24,36 +24,41 @@ Depending on your system, you might have to load the GSL module separately
 for running ExaGRyPE. It is required by the external library for
 initial conditions for black holes (not needed for the gauge wave scenario). 
 
-In principle the library is already implemented in ExaHyPE and no external 
-inclusion is needed, but the entry below is kept just in case. The GSL module is available
-on most cluster systems.
+Configure Peano with \c --with-gsl, as described in
+\ref tutorials_exahype2_applications_exagrype_configure. Configure finds GSL
+via \c pkg-config. The GSL module is available on most cluster systems:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 module load gsl
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-and include the installation in the CXX flags in the configuration
+If configure does not find GSL, pass its location in the compiler and linker
+flags:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-CXXFLAGS="...... -Ipath/to/gsl/version/include ......"
+./configure ... --with-gsl CXXFLAGS="... -I/path/to/gsl/include" LDFLAGS="... -L/path/to/gsl/lib"
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 ### Python Related Issue
 
-Remember to add the Python directory of Peano into the \c PYTHONPATH of your system, or your script would crash immediately with no module issue. We recommend to use absolute path in long term usuage:
+If your script stops with \c No \c module \c named \c peano4 (or
+\c exagrype, \c jinja2, ...), the Python environment of
+\ref tutorials_exahype2_applications_exagrype_configure is not active.
+Activate it with \c source \c .venv/bin/activate in the Peano root
+directory, or start Jupyter from within it. The editable install
+(\c pip \c install \c -e \c .) sets the path to Peano's Python modules and
+installs all dependencies, so you do not need to set \c PYTHONPATH. It also
+works on clusters where you cannot install packages system-wide.
+
+If \c pip \c install \c -e \c . stops with
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-export PYTHONPATH=/path/to/your/Peano/python
-export PYTHONPATH=$PYTHONPATH:/path/to/your/Peano/applications/exahype2/ccz4
+ERROR: No matching distribution found for vtk
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-If you see Python report the missing of \c ast_comments or \c jinja2 when running the ExaGRyPE API script, that indicate 
-you forget to install them. On clusters where you may not have authorization of module installation, use \c --user arguement
-
-~~~~~~~~~~~~~~~~~~~~~~~
-pip3 install jinja2 --user
-pip3 install ast_comments --user
-~~~~~~~~~~~~~~~~~~~~~~~
+your Python version is newer than the newest one for which VTK provides
+packages. Create the environment with an older Python, e.g.
+\c python3.13 \c -m \c venv \c .venv.
 
 If you see 
 
@@ -61,19 +66,11 @@ If you see
 "vtk is not available. Cannot process VTU/VTK files"
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When you call the \c render.py script of Peano, that means you miss the vtk library in your Python installation. Use
+When you call the \c render.py script of Peano, that means the vtk library is missing in the Python installation you run the script with. The editable install brings vtk along, so run \c render.py within the activated environment. Otherwise, install it there:
 
 ~~~~~~~~~~~~~~~~~~~~~~~
-pip3 install vtk --user
+python3 -m pip install vtk
 ~~~~~~~~~~~~~~~~~~~~~~~
-
-also try
-
-~~~~~~~~~~~~~~~~~~~~~~~
-python3 -m pip install --user vtk --no-cache-dir
-~~~~~~~~~~~~~~~~~~~~~~~
-
-if \c pip3 does not work properly.
 
 ### To be continued...
 

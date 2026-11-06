@@ -78,23 +78,23 @@ def test_so_solver_calls_the_second_order_kernels():
         ("nonconservativeProduct", "::exagrype::ccz4::ncp%s("),
         ("volumetricSource", "::exagrype::ccz4::source%s("),
     ]:
-        assert kernel % "FirstOrder" in first_order.get_pde_term(term).implementation
-        assert kernel % "SecondOrder" in second_order.get_pde_term(term).implementation
+        assert kernel % "FirstOrder" in first_order.get_pde_term(term, stateless=True).implementation
+        assert kernel % "SecondOrder" in second_order.get_pde_term(term, stateless=True).implementation
     for solver in (first_order, second_order):
         assert (
             "::exagrype::ccz4::maxEigenvalue("
-            in solver.get_pde_term("maxEigenvalue").implementation
+            in solver.get_pde_term("maxEigenvalue", stateless=True).implementation
         )
     # The kernels get the primary entries and, as a second pointer, the
     # derivatives, i.e. the auxiliary variables, without any copy
-    ncp = second_order.get_pde_term("nonconservativeProduct").implementation
+    ncp = second_order.get_pde_term("nonconservativeProduct", stateless=True).implementation
     assert "Q, derivatives," in ncp
     assert "deltaQ, deltaDerivatives," in ncp
-    source = second_order.get_pde_term("volumetricSource").implementation
+    source = second_order.get_pde_term("volumetricSource", stateless=True).implementation
     assert "Q, derivatives," in source
     # The first-order solver passes the secondary entries behind the primary ones
-    assert "Q, Q + 25," in first_order.get_pde_term("volumetricSource").implementation
-    assert "deltaQ, deltaQ + 25," in first_order.get_pde_term("nonconservativeProduct").implementation
+    assert "Q, Q + 25," in first_order.get_pde_term("volumetricSource", stateless=True).implementation
+    assert "deltaQ, deltaQ + 25," in first_order.get_pde_term("nonconservativeProduct", stateless=True).implementation
     # The second-order solver has no storage for the secondary result
     assert "S,\n    Q, derivatives," in source
     assert "[59]" not in ncp + source
@@ -216,9 +216,40 @@ def test_reconstructor_works_together_with_the_constraint_enforcement(tmp_path):
     assert sum("Reconstruct derivatives" in name for name in names) == 4
 
 
-def test_reconstructor_rejects_unsupported_schemes(tmp_path):
+def test_reconstructor_runs_in_front_of_the_finite_volume_update(tmp_path):
     solver = exagrype.api.FOSOCCZ4Solver("SO")
     solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
+    solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
+        solver, volume_size=1.0 / 27.0
+    )
+    exahype2_project = exahype2.api.Project(
+        ["probe"], "probe", "probe", directory=str(tmp_path)
+    )
+    exahype2_project.set_global_simulation_parameters(
+        dimensions=3,
+        offset=[0.0, 0.0, 0.0],
+        size=[1.0, 1.0, 1.0],
+        min_end_time=1.0,
+        periodic_BC=[True, True, True],
+    )
+    peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
+    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
+    solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
+    order = graphs[1].ordered_tasks()
+    reconstruct = next(task for task in order if task.name == "SO_Reconstruct")
+    derivatives = next(
+        task
+        for task in order
+        if task.name == "SOReconstructor_Reconstruct derivatives"
+    )
+    assert derivatives in reconstruct.dependencies
+    assert order.index(derivatives) < order.index(reconstruct)
+    assert sum("Reconstruct derivatives" in task.name for task in order) == 1
+
+
+def test_reconstructor_rejects_unsupported_schemes(tmp_path):
+    solver = exagrype.api.FOSOCCZ4Solver("SO")
+    solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, 9)
     with pytest.raises(Exception):
         solver.reconstructor.generate_solver_realisation(
             None, None, *[peano4.api.taskgraph.Graph() for _ in range(4)]
@@ -259,3 +290,15 @@ def test_reconstructor_adapts_to_the_larger_halo_of_the_dissipation_scheme(tmp_p
     graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
     solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
     assert sum("Reconstruct derivatives" in task.name for task in graphs[1].tasks) == 4
+
+
+@pytest.mark.parametrize(
+    "solver_class", [exagrype.api.FOCCZ4Solver, exagrype.api.FOSOCCZ4Solver]
+)
+def test_pde_terms_are_stateless(solver_class):
+    """! Finite Volumes and Finite Differences both call the static terms """
+    solver = solver_class("S")
+    for name in ["nonconservativeProduct", "volumetricSource", "maxEigenvalue"]:
+        assert solver.get_pde_term(name, stateless=True).stateless
+        with pytest.raises(KeyError):
+            solver.get_pde_term(name)

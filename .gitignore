@@ -358,3 +358,4 @@ scorep*/
 # documentation/ folder because it looks untracked or "extra", decline it -
 # that almost certainly means new documentation source files or images
 # haven't been git-added yet, not that the folder should be ignored.
+/Release/
