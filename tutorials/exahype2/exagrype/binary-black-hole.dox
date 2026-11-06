@@ -1,6 +1,12 @@
 /**
 @page tutorials_exahype2_applications_exagrype_binary_black_hole Binary Black Hole Merger
 
+@note This page describes the legacy script \c applications/exahype2/ccz4/ccz4.py
+and its API. The script builds on the legacy Finite Differences
+\c exahype2.solvers.rkfd, which have been removed, so it does not run until
+it is ported to \c exagrype.api (see
+\ref tutorials_exahype2_applications_exagrype_configure).
+
 The build and running of ExaGRyPE is wrapped by a Python API for convenience. By calling
 the Python script in a command terminal, one can easily generate an executable that can run on any
 computational platform, from a student's laptop to supercomputer clusters. Different scenarios can be

@@ -51,8 +51,10 @@ class FOCCZ4Solver(CCZ4SolverBase):
       ADVECTION_VELOCITY and lopsided_advection_quantities(). The Finite
       Volumes of exahype2.api.fv do not add them, i.e. they evolve CCZ4
       without these advection terms.
-    - The second-order formulation, black holes (TwoPunctures), tracers and
-      the ADM/Psi4 postprocessing are not available yet.
+    - Black holes are limited to a single one
+      (exagrype.api.initialvalues.single_black_hole()). Tracers and the
+      ADM/Psi4 postprocessing are not available yet. The second-order
+      formulation is exagrype.api.FOSOCCZ4Solver.
 
     """
 

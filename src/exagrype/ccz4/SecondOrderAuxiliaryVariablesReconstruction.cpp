@@ -24,7 +24,7 @@ namespace {
     int                                     unknowns,
     int                                     auxiliaryVariables
   ) {
-    assertion( haloSize >= 3 );
+    assertion( haloSize >= 1 );
     ::exahype2::enumerator::AoSLexicographicEnumerator QInEnumerator (1,numberOfGridCellsPerPatchPerAxis,haloSize,unknowns,auxiliaryVariables);
 
     for (int patchIndex=0; patchIndex<patchData.numberOfCells; patchIndex++) {
@@ -239,6 +239,67 @@ void exagrype::ccz4::recomputeAuxiliaryVariablesFD4_4thOrder(
 }
 
 
+namespace {
+  /**
+   * Shared by the reconstruction routines: copy the 25 primary variables into
+   * a 59-entry buffer, let recompute fill the derivatives and copy them back.
+   */
+  template <typename Recompute>
+  void reconstructFirstDerivatives(
+    const double* __restrict__                  primaryVariablesWithHalo,
+    const tarch::la::Vector<Dimensions,double>& patchSize,
+    int                                         numberOfGridCellsPerPatchPerAxis,
+    int                                         haloSize,
+    double* __restrict__                        firstDerivatives,
+    Recompute                                   recompute
+  ) {
+    static_assert( Dimensions==3, "ExaGRyPE is three-dimensional only" );
+
+    constexpr int NumberOfPrimaryVariables = 25;
+    constexpr int NumberOfDerivatives      = 34;
+    constexpr int NumberOfEntries          = NumberOfPrimaryVariables + NumberOfDerivatives;
+
+    const int n = numberOfGridCellsPerPatchPerAxis;
+
+    const ::exahype2::enumerator::AoSLexicographicEnumerator sourceEnumerator(1,n,haloSize,NumberOfPrimaryVariables,0);
+    const ::exahype2::enumerator::AoSLexicographicEnumerator targetEnumerator(1,n,haloSize,NumberOfPrimaryVariables,NumberOfDerivatives);
+
+    const int volumesPerAxis = n + 2*haloSize;
+    std::vector<double> buffer( volumesPerAxis*volumesPerAxis*volumesPerAxis*NumberOfEntries, 0.0 );
+
+    for (int x=-haloSize; x<n+haloSize; x++)
+    for (int y=-haloSize; y<n+haloSize; y++)
+    for (int z=-haloSize; z<n+haloSize; z++) {
+      const tarch::la::Vector<Dimensions,int> volume = gridCellIndex3d(x,y,z);
+      for (int k=0; k<NumberOfPrimaryVariables; k++) {
+        buffer[ targetEnumerator(0,volume,k) ] = primaryVariablesWithHalo[ sourceEnumerator(0,volume,k) ];
+      }
+    }
+
+    ::exahype2::CellData<double,double> cellData(
+      buffer.data(),
+      tarch::la::Vector<Dimensions,double>(0.0),
+      patchSize,
+      0.0,
+      0.0,
+      nullptr
+    );
+    recompute( cellData, n, haloSize, NumberOfPrimaryVariables, NumberOfDerivatives );
+
+    // K0 (the last derivative) is not reconstructed
+    for (int x=0; x<n; x++)
+    for (int y=0; y<n; y++)
+    for (int z=0; z<n; z++) {
+      const tarch::la::Vector<Dimensions,int> volume = gridCellIndex3d(x,y,z);
+      const int serialisedVolume = x + n*y + n*n*z;
+      for (int k=0; k<NumberOfDerivatives-1; k++) {
+        firstDerivatives[ serialisedVolume*NumberOfDerivatives + k ] = buffer[ targetEnumerator(0,volume,NumberOfPrimaryVariables+k) ];
+      }
+    }
+  }
+}
+
+
 void exagrype::ccz4::reconstructFirstDerivativesFD4(
   const double* __restrict__                  primaryVariablesWithHalo,
   const tarch::la::Vector<Dimensions,double>& patchSize,
@@ -246,50 +307,26 @@ void exagrype::ccz4::reconstructFirstDerivativesFD4(
   int                                         haloSize,
   double* __restrict__                        firstDerivatives
 ) {
-  static_assert( Dimensions==3, "ExaGRyPE is three-dimensional only" );
   assertion( haloSize>=3 );
-
-  constexpr int NumberOfPrimaryVariables = 25;
-  constexpr int NumberOfDerivatives      = 34;
-  constexpr int NumberOfEntries          = NumberOfPrimaryVariables + NumberOfDerivatives;
-
-  const int n = numberOfGridCellsPerPatchPerAxis;
-
-  const ::exahype2::enumerator::AoSLexicographicEnumerator sourceEnumerator(1,n,haloSize,NumberOfPrimaryVariables,0);
-  const ::exahype2::enumerator::AoSLexicographicEnumerator targetEnumerator(1,n,haloSize,NumberOfPrimaryVariables,NumberOfDerivatives);
-
-  const int volumesPerAxis = n + 2*haloSize;
-  std::vector<double> buffer( volumesPerAxis*volumesPerAxis*volumesPerAxis*NumberOfEntries, 0.0 );
-
-  for (int x=-haloSize; x<n+haloSize; x++)
-  for (int y=-haloSize; y<n+haloSize; y++)
-  for (int z=-haloSize; z<n+haloSize; z++) {
-    const tarch::la::Vector<Dimensions,int> volume = gridCellIndex3d(x,y,z);
-    for (int k=0; k<NumberOfPrimaryVariables; k++) {
-      buffer[ targetEnumerator(0,volume,k) ] = primaryVariablesWithHalo[ sourceEnumerator(0,volume,k) ];
-    }
-  }
-
-  ::exahype2::CellData<double,double> cellData(
-    buffer.data(),
-    tarch::la::Vector<Dimensions,double>(0.0),
-    patchSize,
-    0.0,
-    0.0,
-    nullptr
+  reconstructFirstDerivatives(
+    primaryVariablesWithHalo, patchSize, numberOfGridCellsPerPatchPerAxis, haloSize, firstDerivatives,
+    recomputeAuxiliaryVariablesFD4_4thOrder
   );
-  recomputeAuxiliaryVariablesFD4_4thOrder( cellData, n, haloSize, NumberOfPrimaryVariables, NumberOfDerivatives );
+}
 
-  // K0 (the last derivative) is not reconstructed
-  for (int x=0; x<n; x++)
-  for (int y=0; y<n; y++)
-  for (int z=0; z<n; z++) {
-    const tarch::la::Vector<Dimensions,int> volume = gridCellIndex3d(x,y,z);
-    const int serialisedVolume = x + n*y + n*n*z;
-    for (int k=0; k<NumberOfDerivatives-1; k++) {
-      firstDerivatives[ serialisedVolume*NumberOfDerivatives + k ] = buffer[ targetEnumerator(0,volume,NumberOfPrimaryVariables+k) ];
-    }
-  }
+
+void exagrype::ccz4::reconstructFirstDerivativesCentralDifferences(
+  const double* __restrict__                  primaryVariablesWithHalo,
+  const tarch::la::Vector<Dimensions,double>& patchSize,
+  int                                         numberOfGridCellsPerPatchPerAxis,
+  int                                         haloSize,
+  double* __restrict__                        firstDerivatives
+) {
+  assertion( haloSize>=1 );
+  reconstructFirstDerivatives(
+    primaryVariablesWithHalo, patchSize, numberOfGridCellsPerPatchPerAxis, haloSize, firstDerivatives,
+    recomputeAuxiliaryVariablesFD4_centralDifferences
+  );
 }
 
 
