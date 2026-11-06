@@ -54,8 +54,10 @@ Both see the same 59 entries, but with swapped roles.
   and the second-order solver.
 - Eventually, SO has to give results very similar to the first-order solver. The
   difference is to be quantified by benchmarks (benchmarks/exagrype/fo_vs_so).
-- Both solvers should exist for Finite Volumes (FV) and fourth-order Finite
-  Differences (FD4). We start with FD4.
+- Both solvers exist for Finite Volumes (FV) and fourth-order Finite
+  Differences (FD4). The FV variant is implemented but could not be validated yet (see below). The reconstruction differs: FD4 uses the fourth-order stencil
+  in each Runge-Kutta stage, FV uses second-order central differences once per
+  time step (see below).
 
 
 # Design
@@ -140,6 +142,31 @@ exagrype::ccz4::reconstructFirstDerivativesFD4() hands the halo straight on to
 the routine.
 
 
+## FV specifics
+
+The Finite Volume variant (exahype2.api.fv.RusanovWithExplicitEuler, overlap one) reuses the
+reconstructor with three differences:
+
+- Stencil: exagrype::ccz4::reconstructFirstDerivativesCentralDifferences() applies
+  \f$ [-1\ 0\ 1]/(2h) \f$. It reaches one layer out, i.e. the overlap of one is
+  enough. The derivatives one layer outside of the cell (needed for the
+  Rusanov flux and the non-conservative product on the faces) are not computed from a
+  wider halo but by the neighbour cell and exchanged via the faces. The scheme
+  is second-order accurate in the derivatives.
+- One task: there is a single stage, so the reconstructor inserts a single task
+  "Reconstruct derivatives" in front of the solver's "Reconstruct" task, and
+  uses the Finite Volume action sets for the projection onto the faces.
+- Stateless PDE terms: the Finite Volume kernels call the PDE terms as static
+  functions. exagrype.api.CCZ4SolverBase therefore registers stateless
+  non-conservative product, source and eigenvalue terms. The kernels only use
+  compile-time constants, so this loses nothing. The Finite Differences
+  (exahype2.api.rkfd4) call stateless terms, too (they forward a dummy
+  exahype2::Solver::Offloadable tag to the static method), i.e. there is no case
+  distinction between the schemes. Sommerfeld boundary conditions would
+  need a stateful eigenvalue term (exahype2.api.blockstructured.BoundaryConditions),
+  but the CCZ4 solvers have not been used with them yet.
+
+
 # Work packages and status
 
 | # | Work package | Status |
@@ -151,7 +178,7 @@ the routine.
 | 5 | exagrype.api.FOSOCCZ4Reconstructor for FD4 (task per RK stage) | done |
 | 6 | Benchmark benchmarks/exagrype/fo_vs_so: FO vs SO with FD4 and lopsided advection | done, results below |
 | 7 | Tests: Python (generated code, task graph; tests/unit/test_exagrype_fosoccz4_solver.py) and C++ (derivative reconstruction exact for cubics, constraint enforcement; ccz4/tests/FlatSpacetimeTest.cpp) | done |
-| 8 | FV variants of the solver and the reconstructor | open |
+| 8 | FV variants of the solver and the reconstructor (exahype2.api.fv.RusanovWithExplicitEuler; no advection, no dissipation) | implemented and unit-tested; benchmark blocked, see "Finite Volumes" below |
 | 9 | Compare to the legacy second-order solver (applications/exahype2/ccz4) | open |
 | 10 | Black hole initial data (TwoPunctures), Dirichlet/Sommerfeld boundaries, AMR, checkpoints | open |
 
@@ -221,8 +248,18 @@ the routine.
 
 ## Known limitations
 
-- Only FD4 (exahype2.api.rkfd4.CentralDifferencesWithRungeKutta and
-  exagrype.api.FD4WithKODissipation) works yet. The FV variants are open.
+- Supported are FD4 (exahype2.api.rkfd4.CentralDifferencesWithRungeKutta and
+  exagrype.api.FD4WithKODissipation) and the Finite Volumes
+  exahype2.api.fv.RusanovWithExplicitEuler. The optimistic Finite Volumes
+  (exahype2.api.fv.RusanovWithOptimisticExplicitEuler) are not supported by the reconstructor.
+- The Finite Volume variant has neither advection nor Kreiss-Oliger dissipation.
+  The second-order kernels omit the advection terms \f$ \beta^k \partial_k Q \f$ of the evolved
+  unknowns, and the Finite Volumes have no lopsided stencil that could add them
+  (FD4 does, see exagrype.api.FOSOCCZ4Solver.lopsided_advection_quantities()). The
+  FV solver is therefore only correct for a vanishing shift, such as the gauge wave.
+  The first-order solver's non-conservative product omits the advection of
+  most unknowns, too (it expects the scheme to supply it), so this is not a regression
+  of the second-order variant.
 - The derivatives are recomputed in front of every Runge-Kutta stage, from the
   stage's input. The maximum eigenvalue of the new solution (needed for the next
   time step size) is computed from the derivatives of the last stage, i.e.
@@ -245,7 +282,7 @@ evolved unknowns at the end of the run.
 Setup (`python3 fo_vs_so.py`, but with a release build and end time 0.1 instead of the debug defaults): gauge wave on the
 periodic unit cube, 27 grid points per axis (patch size 9, 3 patches per axis), fourth-order
 Finite Differences with classic Runge-Kutta 4 and lopsided advection, no dissipation,
-adaptive time step size (CFL), end time 0.1 (about 100 time steps). Both solvers
+adaptive time step size (CFL), end time 0.1 (about 33 time steps). Both solvers
 use the same numerical scheme. We compare the 25 evolved unknowns at the end of the
 run. The last column shows how far the first-order solution moved away from its
 initial condition, i.e. the scale of the dynamics.
@@ -290,5 +327,45 @@ first, finer run (729 patches of 9^3 points) was killed by the operating system
 for the first-order solver (out of memory, 15 GB machine shared with other
 processes), while the second-order solver ran through with a resident set of
 about 3.5 GB. This is an observation, not a measurement.
+
+
+## Grid sizes and Finite Volumes
+
+The benchmark script now takes the scheme (FD4 or FV), the formulation (FO or SO) and the grid
+size (`python3 fo_vs_so.py`, with `FO_VS_SO_RELEASE=1` for release builds). Peano refines to at least three patches
+per axis and then in powers of three, and a patch has 9 points per axis, i.e. valid grids are 27^3 and 81^3
+points (a first attempt with 9, 18 and 45 points silently ran on the next larger grid). Setup otherwise as above: gauge wave, periodic unit cube,
+RK4 with lopsided advection, end time 0.1 (the last step overshoots, the time stamp is given). We also compare the lapse of
+both solvers against the analytical lapse
+\f$ \sqrt{1-0.1\sin(4\pi(x-t))} \f$. The wall time is the one of the whole run (setup, plots and about 33 (27^3) or
+100 (81^3) time steps; machine shared with other jobs, 8 threads, treat with care).
+
+| scheme | grid | t | max abs. diff. SO vs. FO (25 unknowns) | max abs. diff. of the lapse | rel. L2 lapse error FO | rel. L2 lapse error SO | wall time FO | wall time SO |
+|---|---|---|---|---|---|---|---|---|
+| FD4 | 27^3 | 0.102 | 1.3e-4 | 2.5e-6 | 1.1e-6 | 1.6e-6 | 4.8 s | 5.6 s |
+| FD4 | 81^3 | 0.101 | 1.6e-6 | 3.1e-8 | 1.4e-8 | 2.2e-8 | 300 s | 377 s |
+
+**Reading the table.** The 27^3 row reproduces the numbers of the first table
+(the largest difference is the one of traceK). Refining the grid by a factor of three reduces the
+difference between the two solvers by a factor of about 80, and the error of each solver against the analytical lapse
+by about 80 (FO) and 75 (SO), i.e. \f$ 3^4 \f$: both formulations converge with fourth order, and the SO solver stays within a factor of
+1.5 of the first-order solver's error. On the finer grid, SO is about 25% slower than FO per run (about 15% on the 27^3 grid, where setup and plots matter more).
+
+### Finite Volumes
+
+The FV variant (second-order central differences, one reconstruction task per step) builds,
+generates and runs, but we could **not** obtain a meaningful FV comparison. The reason is not
+the reconstructor: the Finite Volume time step kernel in 3d that exahype2.api.fv.RusanovWithExplicitEuler generates
+contains neither the non-conservative product, the source, nor the maximum eigenvalue. The kernel template guards these blocks with
+`if nonconservativeProduct:`, `if volumetricSource:`, `if maxEigenvalue:` (and `if flux:`), but
+the DSL parser compares the guard with the class names of the PDE terms
+(NonconservativeProduct, VolumetricSource, MaxEigenvalue, Flux, see exahype2.api.dslhype2.Parser._parse_if()), so the blocks are dropped. The generated kernel
+then only applies the Rusanov diffusion to the unknowns, and it never writes the maximum eigenvalue of the cell,
+so the global time step size is derived from uninitialised memory (time step sizes of 1e-280 or infinity after a few steps,
+for the first-order solver as well). This is a generic Finite Volume issue, independent of CCZ4, and it
+is why the FV runs of both formulations "worked" with an error of about 2e-2 against the analytical lapse (diffusion only) or
+broke down after a few steps. The fix is a rename in the kernel template (2d and 3d); it has not been applied, as it is outside
+of the files of this project. Once done, rerun `FO_VS_SO_RELEASE=1 python3 fo_vs_so.py` and add the FV rows
+here.
 
 */

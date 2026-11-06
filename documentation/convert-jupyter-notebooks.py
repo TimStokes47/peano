@@ -8,6 +8,7 @@
 import sys
 import os
 import os.path
+import json
 import subprocess
 
 from concurrent.futures import ProcessPoolExecutor
@@ -66,7 +67,40 @@ def postprocess_markdown_line(line):
             segments[i] = segments[i].replace( "$", "@f$ ")
             segments[i] = segments[i].replace( "\0", "\n @f$ ")
         line = "`".join(segments)
+        # Doxygen strips leading asterisks from the lines of a comment block,
+        # so **Exercise:** at the start of a line would lose its opening
+        # markup. We hand Doxygen an asterisk of its own to strip.
+        if line.lstrip(" ").startswith("*"):
+            line = " * " + line
     return line
+
+
+def separate_raw_cells(notebook_filename: str, markdown: str):
+    """!
+
+    nbconvert writes a raw cell's source without blank lines around it. The
+    indented lines then continue the preceding paragraph instead of forming a
+    code block, and the following heading or paragraph sticks to them. So we
+    put a blank line before and after each raw cell. We search from the end of
+    the previous raw cell onwards, as the same text might also appear in other
+    cells.
+
+    """
+    with open(notebook_filename) as file:
+        notebook = json.load(file)
+
+    position = 0
+    for cell in notebook["cells"]:
+        if cell["cell_type"] != "raw":
+            continue
+        source = "".join(cell["source"])
+        start = markdown.find(source, position)
+        if not source.strip() or start < 0:
+            continue
+        end = start + len(source)
+        markdown = markdown[:start] + "\n" + source + "\n" + markdown[end:]
+        position = end + 2
+    return markdown
 
 
 def postprocess_notebook_markdown(filename: str):
@@ -87,7 +121,8 @@ def postprocess_notebook_markdown(filename: str):
 
     have_created_header = False
     with open(filename + ".md") as file:
-        for line in file:
+        markdown = separate_raw_cells(filename + ".ipynb", file.read())
+        for line in markdown.splitlines(keepends=True):
             if line.startswith("#") and not have_created_header:
                 line = line.replace("#", "")
                 path = filename.replace( "./", "" ).replace( "/", "_" ).replace( ".", "_" )
