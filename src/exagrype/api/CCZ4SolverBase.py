@@ -159,19 +159,7 @@ class CCZ4SolverBase(exahype2.api.Solver):
 """
         )
 
-        self.add_pde_term(
-            exahype2.api.NonconservativeProduct(
-                implementation=self._ncp_implementation()
-            )
-        )
-        self.add_pde_term(
-            exahype2.api.VolumetricSource(implementation=self._source_implementation())
-        )
-        self.add_pde_term(
-            exahype2.api.MaxEigenvalue(
-                implementation=self._max_eigenvalue_implementation()
-            )
-        )
+        self._register_pde_terms()
         self.add_pde_term(
             self._adapt_initial_condition(
                 initial_condition
@@ -421,6 +409,33 @@ class CCZ4SolverBase(exahype2.api.Solver):
         The CCZ4 parameters the solver is generated with (read-only copy).
         """
         return dict(self._parameters)
+
+    def _register_pde_terms(self):
+        """!
+
+        Register the non-conservative product, the source and the maximum eigenvalue
+
+        The terms are stateless, i.e. static functions: they only use the
+        compile-time constants of the solver and the kernels of
+        exagrype::ccz4. Both the Finite Volumes (exahype2.api.fv) and the
+        Finite Differences (exahype2.api.rkfd4) call stateless terms.
+
+        """
+        self.add_pde_term(
+            exahype2.api.NonconservativeProduct(
+                implementation=self._ncp_implementation(), stateless=True
+            )
+        )
+        self.add_pde_term(
+            exahype2.api.VolumetricSource(
+                implementation=self._source_implementation(), stateless=True
+            )
+        )
+        self.add_pde_term(
+            exahype2.api.MaxEigenvalue(
+                implementation=self._max_eigenvalue_implementation(), stateless=True
+            )
+        )
 
     def _adapt_initial_condition(
         self, initial_condition: exahype2.api.InitPointWisely

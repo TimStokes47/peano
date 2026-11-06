@@ -48,6 +48,7 @@ void exagrype::ccz4::tests::FlatSpacetimeTest::run() {
   testMethod(testSecondaryEntriesInSeparateMemory);
   testMethod(testGaugeWaveLapse);
   testMethod(testFirstDerivativeReconstructionIsExactForCubics);
+  testMethod(testCentralDifferenceReconstructionIsExactForQuadratics);
   testMethod(testConstraintEnforcementOfEvolvedVariablesMatchesFullEnforcement);
 }
 
@@ -200,6 +201,53 @@ void exagrype::ccz4::tests::FlatSpacetimeTest::testFirstDerivativeReconstruction
       // dy G_xx = 43 - 25. The reconstruction yields D_kij = 1/2 d_k G_ij
       validateNumericalEqualsWithParams4(d[18], 1.5 * py * py, haloSize, x, y, z);
       // K0 is not touched
+      validateNumericalEqualsWithParams4(d[33], -1.0, haloSize, x, y, z);
+    }
+  }
+}
+
+
+void exagrype::ccz4::tests::FlatSpacetimeTest::testCentralDifferenceReconstructionIsExactForQuadratics() {
+  constexpr int PrimaryVariables = 25;
+  constexpr int Derivatives      = 34;
+  constexpr int N                = 5;
+  const tarch::la::Vector<Dimensions, double> patchSize(0.5);
+  const double h = 0.5 / N;
+
+  // lapse = x^2 + 2y + 3z^2, phi = xy + z^2
+  auto lapse = [](double x, double y, double z) { return x * x + 2.0 * y + 3.0 * z * z; };
+  auto phi   = [](double x, double y, double z) { return x * y + z * z; };
+
+  for (int haloSize = 1; haloSize <= 2; haloSize++) {
+    const int volumesPerAxis = N + 2 * haloSize;
+    std::vector<double> primaryVariables(volumesPerAxis * volumesPerAxis * volumesPerAxis * PrimaryVariables, 0.0);
+    for (int z = 0; z < volumesPerAxis; z++)
+    for (int y = 0; y < volumesPerAxis; y++)
+    for (int x = 0; x < volumesPerAxis; x++) {
+      const double px = (x - haloSize + 0.5) * h;
+      const double py = (y - haloSize + 0.5) * h;
+      const double pz = (z - haloSize + 0.5) * h;
+      double* Q = &primaryVariables[(x + volumesPerAxis * (y + volumesPerAxis * z)) * PrimaryVariables];
+      Q[16] = lapse(px, py, pz);
+      Q[24] = phi(px, py, pz);
+    }
+
+    std::vector<double> derivatives(N * N * N * Derivatives, -1.0);
+    exagrype::ccz4::reconstructFirstDerivativesCentralDifferences(primaryVariables.data(), patchSize, N, haloSize, derivatives.data());
+
+    for (int z = 0; z < N; z++)
+    for (int y = 0; y < N; y++)
+    for (int x = 0; x < N; x++) {
+      const double px = (x + 0.5) * h;
+      const double py = (y + 0.5) * h;
+      const double pz = (z + 0.5) * h;
+      const double* d = &derivatives[(x + N * (y + N * z)) * Derivatives];
+      validateNumericalEqualsWithParams4(d[0], 2.0 * px, haloSize, x, y, z);
+      validateNumericalEqualsWithParams4(d[1], 2.0, haloSize, x, y, z);
+      validateNumericalEqualsWithParams4(d[2], 6.0 * pz, haloSize, x, y, z);
+      validateNumericalEqualsWithParams4(d[30], py, haloSize, x, y, z);
+      validateNumericalEqualsWithParams4(d[31], px, haloSize, x, y, z);
+      validateNumericalEqualsWithParams4(d[32], 2.0 * pz, haloSize, x, y, z);
       validateNumericalEqualsWithParams4(d[33], -1.0, haloSize, x, y, z);
     }
   }
