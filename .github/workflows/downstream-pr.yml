@@ -35,7 +35,7 @@ jobs:
             gh pr create \
               --head p4 \
               --base "$BASE" \
-              --title "Merge p4 into $BASE" \
+              --title "Downstream" \
               --body "Automatically created after changes were merged into p4."
           else
             echo "PR #${EXISTING} from p4 into $BASE already exists."
