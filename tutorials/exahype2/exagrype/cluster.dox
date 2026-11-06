@@ -9,7 +9,7 @@ sharing their setups if they have successfully run ExaGRyPE on their clusters.
 
 # Compiling on COSMA
 
-the suggest loading module and setup (before compiling the Peano kernel) when you use COSMA or DINE are
+The suggested modules and setup (before compiling the Peano kernel) on COSMA or DINE are
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 module purge
@@ -24,7 +24,7 @@ export I_MPI_CXX=icpx
 
 # Compiling on Hamilton
 
-the suggest loading module when you use Hamilton are
+The suggested modules on Hamilton are
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 module purge
@@ -36,7 +36,7 @@ export I_MPI_CXX=icpx
 
 # SLURM script
 
-The following script gives an exmaple for submitting ExaGRyPE job to the cluster via SLURM system.
+The following script gives an example for submitting ExaGRyPE job to the cluster via SLURM system.
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 #!/bin/bash -l

@@ -84,7 +84,10 @@ class CCZ4SolverBase(exahype2.api.Solver):
     """!
 
     Default values of the CCZ4 parameters, taken from the legacy ExaGRyPE
-    solvers. Integer values become int constants of the generated solver
+    gauge wave setup: harmonic slicing (CCZ4LapseType=0) and a shift which
+    does not evolve (CCZ4sk=0, CCZ4bs=0). The legacy black hole runs use
+    1+log slicing (CCZ4LapseType=1) and the Gamma driver (CCZ4sk=1,
+    CCZ4bs=1). Integer values become int constants of the generated solver
     class, all others double constants.
 
     """

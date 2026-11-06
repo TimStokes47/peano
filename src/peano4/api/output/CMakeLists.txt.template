@@ -98,6 +98,11 @@ if(TARGET Peano::ToolboxCurvi_${mode_lower})
   target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ToolboxCurvi_${mode_lower})
 endif()
 
+# ExaGRyPE builds on ExaHyPE 2, so it comes first in the link order.
+if(TARGET Peano::ExaGRyPECore{{DIM}}d_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ExaGRyPECore{{DIM}}d_${mode_lower})
+endif()
+
 if(TARGET Peano::ExaHyPE2Core{{DIM}}d_${mode_lower})
   target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ExaHyPE2Core{{DIM}}d_${mode_lower})
 endif()
