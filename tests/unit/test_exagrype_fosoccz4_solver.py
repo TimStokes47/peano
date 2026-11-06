@@ -216,9 +216,40 @@ def test_reconstructor_works_together_with_the_constraint_enforcement(tmp_path):
     assert sum("Reconstruct derivatives" in name for name in names) == 4
 
 
-def test_reconstructor_rejects_unsupported_schemes(tmp_path):
+def test_reconstructor_runs_in_front_of_the_finite_volume_update(tmp_path):
     solver = exagrype.api.FOSOCCZ4Solver("SO")
     solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
+    solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
+        solver, volume_size=1.0 / 27.0
+    )
+    exahype2_project = exahype2.api.Project(
+        ["probe"], "probe", "probe", directory=str(tmp_path)
+    )
+    exahype2_project.set_global_simulation_parameters(
+        dimensions=3,
+        offset=[0.0, 0.0, 0.0],
+        size=[1.0, 1.0, 1.0],
+        min_end_time=1.0,
+        periodic_BC=[True, True, True],
+    )
+    peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
+    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
+    solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
+    order = graphs[1].ordered_tasks()
+    reconstruct = next(task for task in order if task.name == "SO_Reconstruct")
+    derivatives = next(
+        task
+        for task in order
+        if task.name == "SOReconstructor_Reconstruct derivatives"
+    )
+    assert derivatives in reconstruct.dependencies
+    assert order.index(derivatives) < order.index(reconstruct)
+    assert sum("Reconstruct derivatives" in task.name for task in order) == 1
+
+
+def test_reconstructor_rejects_unsupported_schemes(tmp_path):
+    solver = exagrype.api.FOSOCCZ4Solver("SO")
+    solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, 9)
     with pytest.raises(Exception):
         solver.reconstructor.generate_solver_realisation(
             None, None, *[peano4.api.taskgraph.Graph() for _ in range(4)]
@@ -259,3 +290,23 @@ def test_reconstructor_adapts_to_the_larger_halo_of_the_dissipation_scheme(tmp_p
     graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
     solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
     assert sum("Reconstruct derivatives" in task.name for task in graphs[1].tasks) == 4
+
+
+@pytest.mark.parametrize(
+    "solver_class", [exagrype.api.FOCCZ4Solver, exagrype.api.FOSOCCZ4Solver]
+)
+def test_pde_terms_are_stateless_for_finite_volumes_only(solver_class):
+    solver = solver_class("S")
+    names = ["nonconservativeProduct", "volumetricSource", "maxEigenvalue"]
+    for name in names:
+        assert solver.get_pde_term(name).stateless is False
+    solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
+    for name in names:
+        assert solver.get_pde_term(name, stateless=True).stateless
+        with pytest.raises(KeyError):
+            solver.get_pde_term(name)
+    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        solver, 9, rk_order=4
+    )
+    for name in names:
+        assert solver.get_pde_term(name).stateless is False
