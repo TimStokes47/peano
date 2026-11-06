@@ -247,9 +247,10 @@ the build stops with an error message telling you to reconfigure.
   - @subpage page_exagrype_fo_so_ccz4
 - @ref page_exahype2_tutorials "Tutorials"
 - ExaGRyPE benchmarks (cf. @ref page_exahype_benchmarks "overview of all ExaHyPE benchmarks")
-  - \ref benchmarks_exagrype_kernel_benchmarks
-  - \ref benchmarks_exagrype_gauge_wave
-  - \ref benchmarks_exagrype_single_black_hole
+  - @subpage benchmarks_exagrype_kernel_benchmarks
+  - @subpage benchmarks_exagrype_gauge_wave
+  - @subpage benchmarks_exagrype_single_black_hole
+  - @subpage benchmarks_exagrype_fo_vs_so
 
 
 # Reference papers

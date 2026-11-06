@@ -4,7 +4,10 @@ import jinja2
 import peano4.api
 
 from .RollOverUpdatedFace import RollOverUpdatedFace
-from ...blockstructured.BoundaryConditions import get_boundary_conditions
+from ...blockstructured.BoundaryConditions import (
+    get_boundary_conditions,
+    get_max_eigenvalue_term_for_sommerfeld,
+)
 from ...blockstructured.SommerfeldBoundaryConditions import SommerfeldBoundaryConditions
 
 
@@ -56,7 +59,7 @@ class RollOverUpdatedFaceWithSommerfeldBoundaryConditions(RollOverUpdatedFace):
         int                                          normal
       ) -> double {
         double lambdaMax;
-        repositories::{{SOLVER_INSTANCE}}.maxEigenvalue(Q, x, normal, &lambdaMax);
+        repositories::{{SOLVER_INSTANCE}}.maxEigenvalue(Q, x, normal, &lambdaMax{{STATELESS_TAG}});
         return lambdaMax;
       },
       [](const tarch::la::Vector<Dimensions, double>& x, double* Q) -> void {
@@ -142,6 +145,12 @@ class RollOverUpdatedFaceWithSommerfeldBoundaryConditions(RollOverUpdatedFace):
         self.d["SOLVER_INSTANCE"] = solver.get_name_of_global_instance()
         self.d["NUMBER_OF_UNKNOWNS"] = str(solver.unknowns)
         self.d["NUMBER_OF_AUXILIARY_VARIABLES"] = "0"
+        # The stateless eigenvalue variant is static and takes a dummy tag (@see PDETerm)
+        self.d["STATELESS_TAG"] = (
+            ", ::exahype2::Solver::Offloadable::Yes"
+            if get_max_eigenvalue_term_for_sommerfeld(solver).stateless
+            else ""
+        )
         self.d["ORIGIN"] = "{" + ", ".join(repr(float(x)) for x in origin) + "}"
         self.d["TIME_STEP_SIZE"] = time_step_size
 

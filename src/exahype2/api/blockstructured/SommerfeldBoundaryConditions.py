@@ -31,8 +31,11 @@ class SommerfeldBoundaryConditions(PDETerm):
     implementation does not have to set the auxiliary variables.
 
     The wave speed is the solver's maximum eigenvalue along the face normal,
-    i.e. the solver has to hold a non-stateless exahype2.api.MaxEigenvalue
-    term. The ghost cells are initialised with the initial condition
+    i.e. the solver has to hold an exahype2.api.MaxEigenvalue term. The wave
+    speed does not need any solver state, so the boundary conditions use the
+    stateless variant of the term if the solver holds one, and the variant
+    with state otherwise (@see
+    exahype2.api.blockstructured.BoundaryConditions.get_max_eigenvalue_term_for_sommerfeld()). The ghost cells are initialised with the initial condition
     (exahype2.api.InitPointWisely) before the first time step.
 
     Different to Dirichlet conditions, there is no separate boundary task

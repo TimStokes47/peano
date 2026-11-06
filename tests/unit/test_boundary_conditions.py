@@ -80,7 +80,7 @@ def test_get_boundary_conditions_returns_the_one_term():
         (
             lambda: _solver(_sommerfeld(), max_eigenvalue=False),
             [False] * 3,
-            "no non-stateless MaxEigenvalue",
+            "has no MaxEigenvalue",
         ),
         (
             lambda: _solver(_sommerfeld(origin=[0.0, 0.0])),
@@ -277,3 +277,14 @@ def test_periodic_domain_rejects_boundary_condition_term(scheme, tmp_path):
             [True, True, True],
             tmp_path,
         )
+
+
+def test_sommerfeld_prefers_stateless_max_eigenvalue():
+    get_term = exahype2.api.blockstructured.BoundaryConditions.get_max_eigenvalue_term_for_sommerfeld
+    solver = _solver(_sommerfeld())
+    assert not get_term(solver).stateless
+    stateless = exahype2.api.MaxEigenvalue(
+        implementation="*lambdaMax = 1.0;", stateless=True
+    )
+    solver.add_pde_term(stateless)
+    assert get_term(solver) is stateless
