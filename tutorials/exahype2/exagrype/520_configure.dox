@@ -2,7 +2,7 @@
 
 @page tutorials_exahype2_applications_exagrype_configure Configure ExaGRyPE
 
-@image html tutorials/exahype2/exagrype/arty.png
+@image html tutorials/exahype2/exagrype/illustrations/arty.png
 
 ExaGRyPE is Peano's extension for numerical relativity and is built as part of
 Peano. For general remarks on how to install Peano, please see
@@ -14,7 +14,7 @@ i.e. it should include all the steps you need to run the example codes.
 
 ~~~~~~~~~~~~~~~~~~~~~~~
 git clone https://github.com/tobiasweinzierl/peano.git
-cd Peano
+cd peano
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -51,7 +51,30 @@ libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-
 ./configure --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-particles \
             --enable-exagrype --with-gsl --with-multithreading=omp \
             CXXFLAGS="-std=c++20 -O3 -fopenmp -Wno-attributes" LDFLAGS="-fopenmp"
-make -j
+make -j4
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Give make an explicit number of parallel jobs. A plain \c make \c -j starts
+as many compiler processes as there are files to compile, which exhausts the
+memory of a workstation.
+
+On macOS, \c libtoolize is called \c glibtoolize, and Apple's clang does not
+support \c -fopenmp. Install GCC via Homebrew and pass it to configure, e.g.
+\c CC=gcc-16 \c CXX=g++-16 (use the version number of your GCC). Do not
+configure with \c CPPFLAGS or \c LDFLAGS pointing to Homebrew's \c libomp:
+Peano's libraries then pick up its \c omp.h, while the generated
+applications use GCC's, and the executables crash at start-up. If your shell
+sets these variables, unset them first (\c unset \c CPPFLAGS \c LDFLAGS).
+With Homebrew, the whole sequence reads
+
+~~~~~~~~~~~~~~~~~~~~~~~
+brew install gcc autoconf automake libtool pkg-config gsl
+glibtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing
+./configure CC=gcc-16 CXX=g++-16 \
+            --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-particles \
+            --enable-exagrype --with-gsl --with-multithreading=omp \
+            CXXFLAGS="-std=c++20 -O3 -fopenmp -Wno-attributes" LDFLAGS="-fopenmp"
+make -j4
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 On a cluster with the Intel toolchain and MPI, the call becomes
@@ -71,7 +94,7 @@ The flags have the following roles:
 - \c --enable-particles builds the particle toolbox, which ExaGRyPE uses for
   its tracers.
 - \c --enable-exagrype builds the ExaGRyPE library, which hosts the CCZ4
-  kernels and the initial conditions (see \ref page_exagrype_library). It
+  kernels and the initial conditions (in \c src/exagrype). It
   requires ExaHyPE 2 and is built for 3d only. Without it, the generated
   ExaGRyPE Makefiles do not link.
 - \c --with-gsl compiles the TwoPunctures black hole initial data into the
@@ -95,7 +118,7 @@ If you prefer CMake, build out-of-tree with the equivalent options:
 mkdir build && cd build
 cmake .. -DENABLE_EXAHYPE=ON -DENABLE_BLOCKSTRUCTURED=ON -DENABLE_LOADBALANCING=ON -DENABLE_PARTICLES=ON \
          -DENABLE_EXAGRYPE=ON -DWITH_GSL=ON -DWITH_MULTITHREADING=omp
-make -j
+make -j4
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 CMake locates GSL via its \c FindGSL module. For a non-standard installation,
@@ -135,6 +158,24 @@ pip install --upgrade pip
 pip install -e .
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+The install needs a Python version for which VTK provides packages, i.e.
+Python 3.14 or older at the time of writing. If your \c python3 is newer, as
+Homebrew's 3.15 is, create the environment with an older one, e.g.
+\c python3.13 \c -m \c venv \c .venv. Otherwise \c pip stops with
+<tt>No matching distribution found for vtk</tt> (see
+\ref tutorials_exahype2_applications_exagrype_faq).
+
+The editable install also brings Jupyter along. Start it from the tutorial
+folder within the activated environment:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+cd tutorials/exahype2/exagrype
+jupyter lab 521_gauge-wave.ipynb
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The notebooks find Peano relative to their own folder, so open them where
+they are and do not copy them elsewhere.
+
 
 # Where to go next
 
@@ -142,11 +183,25 @@ ExaGRyPE currently offers two entry points:
 
 - The new Python API \c exagrype.api layers on top of \c exahype2.api. It
   offers Finite Volumes and the fourth-order Finite Differences
-  (\c exahype2.api.rkfd4), but no black holes yet. Start with
-  the Jupyter notebook \c tutorials/exahype2/exagrype/521_gauge-wave.ipynb
-  (\ref tutorials_exahype2_exagrype_521_gauge-wave), which runs the gauge wave
-  with this API. \ref benchmarks_exagrype_gauge_wave and
-  \ref page_exagrype_library provide further details.
+  (\c exahype2.api.rkfd4, optionally with Kreiss-Oliger dissipation and
+  lopsided advection) on regular meshes, the gauge wave, and a single black
+  hole with TwoPunctures initial data. Binary black holes, adaptive mesh
+  refinement for the Finite Differences and tracers are not available yet.
+  Its tutorials are Jupyter notebooks in \c tutorials/exahype2/exagrype. They
+  assume that you have worked through
+  \ref tutorials_exahype2_00_getting-started and
+  \ref tutorials_exahype2_10_euler. For the single black hole,
+  \ref tutorials_exahype2_20_additional-solver-steps and
+  \ref tutorials_exahype2_30_domain-decomposition help as well:
+  - \ref tutorials_exahype2_exagrype_521_gauge-wave runs the gauge wave with
+    Finite Volumes and studies their convergence;
+  - \ref tutorials_exahype2_exagrype_522_single-black-hole evolves a single
+    black hole with Finite Volumes;
+  - \ref tutorials_exahype2_exagrype_523_higher-order-fd evolves the same
+    black hole with fourth-order Finite Differences.
+
+  \ref benchmarks_exagrype_gauge_wave, \ref benchmarks_exagrype_single_black_hole
+  and \ref page_exagrype provide further details.
 - \c applications/exahype2/ccz4 hosts the main script \c ccz4.py, which
   provides all scenarios (gauge wave, single and binary black holes), tracers
   and the different numerical schemes. The remaining ExaGRyPE tutorials work

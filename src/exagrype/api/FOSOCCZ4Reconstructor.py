@@ -64,8 +64,12 @@ class FOSOCCZ4Reconstructor:
       are applied. The reconstructor takes the same dependencies as the
       solver's reconstruction, which makes it work in principle, but this has
       not been tested.
-    - Only exahype2.api.rkfd4.CentralDifferencesWithRungeKutta is supported,
-      and its halo has to be at least three grid cells wide.
+    - Supported are exahype2.api.rkfd4.CentralDifferencesWithRungeKutta
+      (fourth-order stencil, halo of at least three grid cells, one task per
+      Runge-Kutta stage) and exahype2.api.fv.RusanovWithExplicitEuler
+      (second-order central differences, overlap of one is enough, a single
+      task as there is a single stage). The optimistic Finite Volume scheme is
+      not supported.
 
     """
 
@@ -138,21 +142,35 @@ class FOSOCCZ4Reconstructor:
         peano4.api.Logger().new_section("Reconstructor " + self._name)
         solver = self._solver
         scheme = solver.numerical_scheme
-        if not isinstance(scheme, exahype2.api.rkfd4.CentralDifferencesWithRungeKutta):
-            raise TypeError(
-                f"Reconstructor {self._name}: solver {solver.name} has to use "
-                "exahype2.api.rkfd4.CentralDifferencesWithRungeKutta (or a subclass) "
-                f"as numerical scheme, but uses {type(scheme).__name__}"
-            )
-        if scheme.HALO_SIZE < 3:
-            raise ValueError(
-                f"Reconstructor {self._name}: the halo of the scheme of {solver.name} has to be "
-                f"at least three, but is {scheme.HALO_SIZE}. The solver evaluates fluxes and "
-                "non-conservative products on the faces of the cell, i.e. it needs the "
-                "derivatives one layer outside of the cell, and the fourth-order stencil reaches "
-                "two further layers. Use a scheme with lopsided advection or "
-                "exagrype.api.FD4WithKODissipation."
-            )
+        match scheme:
+            case exahype2.api.rkfd4.CentralDifferencesWithRungeKutta():
+                if scheme.HALO_SIZE < 3:
+                    raise ValueError(
+                        f"Reconstructor {self._name}: the halo of the scheme of {solver.name} has to be "
+                        f"at least three, but is {scheme.HALO_SIZE}. The solver evaluates fluxes and "
+                        "non-conservative products on the faces of the cell, i.e. it needs the "
+                        "derivatives one layer outside of the cell, and the fourth-order stencil reaches "
+                        "two further layers. Use a scheme with lopsided advection or "
+                        "exagrype.api.FD4WithKODissipation."
+                    )
+                actionsets = exahype2.api.rkfd4.actionsets
+                reconstruction_function = "reconstructFirstDerivativesFD4"
+                stages = scheme.rk_order
+                per_stage = True
+            case exahype2.api.fv.RusanovWithExplicitEuler():
+                # Second-order central differences reach one layer out, and the
+                # derivatives of the halo come from the neighbour via the faces
+                actionsets = exahype2.api.fv.actionsets
+                reconstruction_function = "reconstructFirstDerivativesCentralDifferences"
+                stages = 1
+                per_stage = False
+            case _:
+                raise TypeError(
+                    f"Reconstructor {self._name}: solver {solver.name} has to use "
+                    "exahype2.api.rkfd4.CentralDifferencesWithRungeKutta (or a subclass) or "
+                    "exahype2.api.fv.RusanovWithExplicitEuler as numerical scheme, "
+                    f"but uses {type(scheme).__name__}"
+                )
         derivatives = solver.derivatives
         if derivatives.patch is None:
             raise ValueError(
@@ -163,7 +181,7 @@ class FOSOCCZ4Reconstructor:
         Access = peano4.api.taskgraph.Task.DataAccess
         Entity = peano4.api.taskgraph.Task.GridEntity
         n = scheme.patch_size
-        h = scheme.HALO_SIZE
+        h = scheme.HALO_SIZE if per_stage else scheme.overlap
         cell_guard = solver.grid_selector.createCellGuard()
         face_guard = solver.grid_selector.createFaceGuard()
         includes = (
@@ -186,27 +204,27 @@ class FOSOCCZ4Reconstructor:
         peano_project.datamodel.add_cell(halo)
 
         functor = (
-            "::exagrype::ccz4::reconstructFirstDerivativesFD4("
+            f"::exagrype::ccz4::{reconstruction_function}("
             f"oldQWithHalo, marker.h(), {n}, {h}, "
             f"fineGridCell{derivatives.patch.name}.value);"
         )
 
-        for stage in range(scheme.rk_order):
+        for stage in range(stages):
             stage_input = solver._patch if stage == 0 else solver._stage_input
+            suffix = f" stage {stage}" if per_stage else ""
             solver_reconstruction = [
                 task
                 for task in time_step.tasks
-                if task.name == f"{solver.name}_Reconstruct stage {stage}"
+                if task.name == f"{solver.name}_Reconstruct{suffix}"
             ]
             if len(solver_reconstruction) != 1:
                 raise ValueError(
-                    f"Reconstructor {self._name}: cannot find the reconstruction of stage "
-                    f"{stage} of solver {solver.name} in the time stepping task graph"
+                    f"Reconstructor {self._name}: cannot find the reconstruction{suffix} of solver {solver.name} in the time stepping task graph"
                 )
             solver_reconstruction = solver_reconstruction[0]
 
             task = peano4.api.taskgraph.Task(
-                name=f"{self._name}_Reconstruct derivatives for stage {stage}",
+                name=f"{self._name}_Reconstruct derivatives" + (f" for stage {stage}" if per_stage else ""),
                 entity=Entity.CELL,
             )
             # The solver's reconstruction reads the same data, so it has to survive.
@@ -234,7 +252,7 @@ class FOSOCCZ4Reconstructor:
                 )
             )
             task.add_action_set(
-                exahype2.api.rkfd4.actionsets.ProjectPatchOntoFaces(
+                actionsets.ProjectPatchOntoFaces(
                     derivatives.patch,
                     derivatives.patch_overlap_update,
                     guard=cell_guard,
@@ -242,7 +260,7 @@ class FOSOCCZ4Reconstructor:
                 )
             )
             task.add_action_set(
-                exahype2.api.rkfd4.actionsets.RollOverUpdatedFace(
+                actionsets.RollOverUpdatedFace(
                     derivatives.patch_overlap_current_time_step,
                     derivatives.patch_overlap_update,
                     guard=face_guard,

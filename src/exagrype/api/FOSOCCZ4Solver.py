@@ -38,12 +38,12 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
     reconstructor, the solver sees the derivatives of the initial
     condition forever.
 
-    The solver therefore only works with
-    exahype2.api.rkfd4.CentralDifferencesWithRungeKutta (and its subclass
-    exagrype.api.FD4WithKODissipation). The Finite Volume variant is not
-    available yet.
+    The solver works with exahype2.api.rkfd4.CentralDifferencesWithRungeKutta
+    (and its subclass exagrype.api.FD4WithKODissipation) and with
+    exahype2.api.fv.RusanovWithExplicitEuler. The latter reconstructs the
+    derivatives with second-order central differences.
 
-    The numerical scheme has to have a halo of at least three grid cells:
+    For Finite Differences, the numerical scheme has to have a halo of at least three grid cells:
     The solver needs the derivatives one layer outside of its cell (the
     fluxes and non-conservative products on the cell's faces use the values
     left and right of the face), and the stencil of the reconstruction
@@ -57,7 +57,7 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
 
     - The second-order kernels do not advect the evolved unknowns. The
       numerical scheme has to do it, @ref lopsided_advection_quantities().
-    - The solver works with a single scheme only, see above.
+    - Only the two schemes above are supported.
     - Black holes (TwoPunctures), tracers and the ADM/Psi4 postprocessing are
       not available yet.
     - Checkpoints do not cover auxiliary variables, i.e. the solver cannot

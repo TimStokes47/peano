@@ -144,6 +144,31 @@ namespace exagrype {
         double* __restrict__                        firstDerivatives
       );
 
+      /**
+       * Reconstruct the 34 first derivatives with second-order central differences
+       *
+       * Same contract as reconstructFirstDerivativesFD4(), but the stencil is
+       * @f$ [-1\ 0\ 1]/(2h) @f$ (recomputeAuxiliaryVariablesFD4_centralDifferences()).
+       * It reaches one layer out only, so a halo of one grid cell suffices.
+       * This is what the Finite Volumes (overlap one) of
+       * exagrype.api.FOSOCCZ4Solver use: the derivatives of the halo layer are
+       * not computed here but exchanged via the faces, as they are computed by the
+       * neighbouring cell.
+       *
+       * @param primaryVariablesWithHalo See reconstructFirstDerivativesFD4().
+       * @param patchSize See reconstructFirstDerivativesFD4().
+       * @param numberOfGridCellsPerPatchPerAxis See reconstructFirstDerivativesFD4().
+       * @param haloSize Has to be at least one.
+       * @param firstDerivatives See reconstructFirstDerivativesFD4().
+       */
+      void reconstructFirstDerivativesCentralDifferences(
+        const double* __restrict__                  primaryVariablesWithHalo,
+        const tarch::la::Vector<Dimensions,double>& patchSize,
+        int                                         numberOfGridCellsPerPatchPerAxis,
+        int                                         haloSize,
+        double* __restrict__                        firstDerivatives
+      );
+
       namespace internal {
         /**
          * Recompute auxiliary variables

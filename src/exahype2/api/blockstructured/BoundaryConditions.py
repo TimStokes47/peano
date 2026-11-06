@@ -78,6 +78,38 @@ def get_access_to_persistent_face_data(solver, exahype2_project, default):
     return default
 
 
+def get_max_eigenvalue_term_for_sommerfeld(solver):
+    """!
+
+    The MaxEigenvalue term Sommerfeld boundary conditions take their wave speed from
+
+    The wave speed does not depend on any solver state. We therefore prefer
+    the stateless variant of the eigenvalue computation if the solver holds
+    one, and fall back to the variant with state otherwise.
+
+    @param solver: exahype2.api.Solver
+
+    @return exahype2.api.MaxEigenvalue
+      The stateless term if there is one, otherwise the term with state.
+      Check its stateless attribute to see which variant is used.
+
+    @exception ValueError
+      If the solver holds no MaxEigenvalue term.
+
+    """
+    candidates = [term for term in solver.pde_terms if isinstance(term, MaxEigenvalue)]
+    for term in candidates:
+        if term.stateless:
+            return term
+    if candidates:
+        return candidates[0]
+    raise ValueError(
+        f"Solver {solver.name} uses Sommerfeld boundary conditions, which take "
+        "their wave speed from the maximum eigenvalue, but has no MaxEigenvalue "
+        "PDE term. Add one via solver.add_pde_term(exahype2.api.MaxEigenvalue(...))."
+    )
+
+
 def get_boundary_conditions(solver, exahype2_project):
     """!
 
@@ -98,7 +130,7 @@ def get_boundary_conditions(solver, exahype2_project):
       term, if at least one axis is not periodic and the solver holds no or
       more than one boundary condition term, if the term is stateless, or if
       the solver holds a SommerfeldBoundaryConditions term but no
-      non-stateless MaxEigenvalue term.
+      MaxEigenvalue term.
 
     """
     terms = [
@@ -137,17 +169,9 @@ def get_boundary_conditions(solver, exahype2_project):
             f"Solver {solver.name} holds a stateless {type(term).__name__} term, "
             "but only the non-stateless variant is supported. Add it with stateless=False."
         )
-    if isinstance(term, SommerfeldBoundaryConditions) and not any(
-        isinstance(other, MaxEigenvalue) and not other.stateless
-        for other in solver.pde_terms
-    ):
-        raise ValueError(
-            f"Solver {solver.name} uses Sommerfeld boundary conditions, which take "
-            "their wave speed from the maximum eigenvalue, but has no non-stateless "
-            "MaxEigenvalue PDE term. Add one via "
-            "solver.add_pde_term(exahype2.api.MaxEigenvalue(...))."
-        )
     if isinstance(term, SommerfeldBoundaryConditions):
+        # Validates that there is an eigenvalue term
+        get_max_eigenvalue_term_for_sommerfeld(solver)
         # Validates the number of entries of the origin
         term.get_origin(len(periodic_BC))
     return term
