@@ -159,7 +159,7 @@ class CCZ4SolverBase(exahype2.api.Solver):
 """
         )
 
-        self._register_pde_terms(stateless=False)
+        self._register_pde_terms()
         self.add_pde_term(
             self._adapt_initial_condition(
                 initial_condition
@@ -410,68 +410,32 @@ class CCZ4SolverBase(exahype2.api.Solver):
         """
         return dict(self._parameters)
 
-    def _register_pde_terms(self, stateless: bool):
+    def _register_pde_terms(self):
         """!
 
         Register the non-conservative product, the source and the maximum eigenvalue
 
-        The terms always call the same kernels. Whether they are stateless
-        depends on the numerical scheme: The Finite Volume kernels of
-        exahype2.api.fv call the terms as static functions (the CCZ4 kernels
-        only use compile-time constants, so this is fine), whereas the
-        Finite Differences of exahype2.api.rkfd4 call the virtual ones. See
-        numerical_scheme().
-
-        @param stateless: bool
-          Create the static, offloadable variants of the terms.
+        The terms are stateless, i.e. static functions: they only use the
+        compile-time constants of the solver and the kernels of
+        exagrype::ccz4. Both the Finite Volumes (exahype2.api.fv) and the
+        Finite Differences (exahype2.api.rkfd4) call stateless terms.
 
         """
-        for name in ["nonconservativeProduct", "volumetricSource", "maxEigenvalue"]:
-            try:
-                self.remove_pde_term(name, stateless=not stateless)
-            except KeyError:
-                pass
         self.add_pde_term(
             exahype2.api.NonconservativeProduct(
-                implementation=self._ncp_implementation(), stateless=stateless
+                implementation=self._ncp_implementation(), stateless=True
             )
         )
         self.add_pde_term(
             exahype2.api.VolumetricSource(
-                implementation=self._source_implementation(), stateless=stateless
+                implementation=self._source_implementation(), stateless=True
             )
         )
         self.add_pde_term(
             exahype2.api.MaxEigenvalue(
-                implementation=self._max_eigenvalue_implementation(),
-                stateless=stateless,
+                implementation=self._max_eigenvalue_implementation(), stateless=True
             )
         )
-
-    @property
-    def numerical_scheme(self) -> exahype2.api.Solver.NumericalScheme:
-        return super().numerical_scheme
-
-    @numerical_scheme.setter
-    def numerical_scheme(self, value: exahype2.api.Solver.NumericalScheme):
-        """!
-
-        Set the scheme and make the PDE terms fit to it
-
-        The Finite Volumes (exahype2.api.fv.RusanovWithExplicitEuler and
-        exahype2.api.fv.RusanovWithOptimisticExplicitEuler) need stateless
-        PDE terms, all other schemes work with the stateful ones.
-
-        """
-        exahype2.api.Solver.numerical_scheme.fset(self, value)
-        match value:
-            case (
-                exahype2.api.fv.RusanovWithExplicitEuler()
-                | exahype2.api.fv.RusanovWithOptimisticExplicitEuler()
-            ):
-                self._register_pde_terms(stateless=True)
-            case _:
-                self._register_pde_terms(stateless=False)
 
     def _adapt_initial_condition(
         self, initial_condition: exahype2.api.InitPointWisely

@@ -161,7 +161,7 @@ class CentralDifferencesWithRungeKutta(Solver.NumericalScheme):
     Otherwise, it derives the time step size from the maximum eigenvalue of
     the solution after each time step through the CFL condition with
     cfl_constant (@ref exahype2.api.rkfd4.actionsets.ComputeTimeStepSize).
-    This requires a non-stateless MaxEigenvalue PDE term.
+    This requires a MaxEigenvalue PDE term, with or without state.
 
     """
 
@@ -924,11 +924,10 @@ Patch overlap data
 
         if self.has_adaptive_time_step_size:
             assert any(
-                isinstance(term, MaxEigenvalue) and not term.stateless
-                for term in self._solver.pde_terms
+                isinstance(term, MaxEigenvalue) for term in self._solver.pde_terms
             ), (
                 f"Solver {self._solver.name} uses adaptive time step sizes, but has no "
-                "non-stateless MaxEigenvalue PDE term. Add one via "
+                "MaxEigenvalue PDE term. Add one via "
                 "solver.add_pde_term(exahype2.api.MaxEigenvalue(...)), or pass a "
                 "time_step_size to CentralDifferencesWithRungeKutta."
             )

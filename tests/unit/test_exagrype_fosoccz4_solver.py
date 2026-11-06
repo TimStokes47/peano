@@ -78,23 +78,23 @@ def test_so_solver_calls_the_second_order_kernels():
         ("nonconservativeProduct", "::exagrype::ccz4::ncp%s("),
         ("volumetricSource", "::exagrype::ccz4::source%s("),
     ]:
-        assert kernel % "FirstOrder" in first_order.get_pde_term(term).implementation
-        assert kernel % "SecondOrder" in second_order.get_pde_term(term).implementation
+        assert kernel % "FirstOrder" in first_order.get_pde_term(term, stateless=True).implementation
+        assert kernel % "SecondOrder" in second_order.get_pde_term(term, stateless=True).implementation
     for solver in (first_order, second_order):
         assert (
             "::exagrype::ccz4::maxEigenvalue("
-            in solver.get_pde_term("maxEigenvalue").implementation
+            in solver.get_pde_term("maxEigenvalue", stateless=True).implementation
         )
     # The kernels get the primary entries and, as a second pointer, the
     # derivatives, i.e. the auxiliary variables, without any copy
-    ncp = second_order.get_pde_term("nonconservativeProduct").implementation
+    ncp = second_order.get_pde_term("nonconservativeProduct", stateless=True).implementation
     assert "Q, derivatives," in ncp
     assert "deltaQ, deltaDerivatives," in ncp
-    source = second_order.get_pde_term("volumetricSource").implementation
+    source = second_order.get_pde_term("volumetricSource", stateless=True).implementation
     assert "Q, derivatives," in source
     # The first-order solver passes the secondary entries behind the primary ones
-    assert "Q, Q + 25," in first_order.get_pde_term("volumetricSource").implementation
-    assert "deltaQ, deltaQ + 25," in first_order.get_pde_term("nonconservativeProduct").implementation
+    assert "Q, Q + 25," in first_order.get_pde_term("volumetricSource", stateless=True).implementation
+    assert "deltaQ, deltaQ + 25," in first_order.get_pde_term("nonconservativeProduct", stateless=True).implementation
     # The second-order solver has no storage for the secondary result
     assert "S,\n    Q, derivatives," in source
     assert "[59]" not in ncp + source
@@ -295,18 +295,10 @@ def test_reconstructor_adapts_to_the_larger_halo_of_the_dissipation_scheme(tmp_p
 @pytest.mark.parametrize(
     "solver_class", [exagrype.api.FOCCZ4Solver, exagrype.api.FOSOCCZ4Solver]
 )
-def test_pde_terms_are_stateless_for_finite_volumes_only(solver_class):
+def test_pde_terms_are_stateless(solver_class):
+    """! Finite Volumes and Finite Differences both call the static terms """
     solver = solver_class("S")
-    names = ["nonconservativeProduct", "volumetricSource", "maxEigenvalue"]
-    for name in names:
-        assert solver.get_pde_term(name).stateless is False
-    solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
-    for name in names:
+    for name in ["nonconservativeProduct", "volumetricSource", "maxEigenvalue"]:
         assert solver.get_pde_term(name, stateless=True).stateless
         with pytest.raises(KeyError):
             solver.get_pde_term(name)
-    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-        solver, 9, rk_order=4
-    )
-    for name in names:
-        assert solver.get_pde_term(name).stateless is False

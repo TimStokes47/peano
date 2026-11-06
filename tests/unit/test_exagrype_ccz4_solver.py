@@ -23,15 +23,15 @@ def test_solver_registers_ccz4_pde_terms():
     }
     assert (
         "::exagrype::ccz4::ncpFirstOrder("
-        in solver.get_pde_term("nonconservativeProduct").implementation
+        in solver.get_pde_term("nonconservativeProduct", stateless=True).implementation
     )
     assert (
         "::exagrype::ccz4::sourceFirstOrder("
-        in solver.get_pde_term("volumetricSource").implementation
+        in solver.get_pde_term("volumetricSource", stateless=True).implementation
     )
     assert (
         "::exagrype::ccz4::maxEigenvalue("
-        in solver.get_pde_term("maxEigenvalue").implementation
+        in solver.get_pde_term("maxEigenvalue", stateless=True).implementation
     )
     # All terms are generated, so no user class is required
     assert not solver.requires_user_class

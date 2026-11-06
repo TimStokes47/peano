@@ -158,9 +158,13 @@ reconstructor with three differences:
   uses the Finite Volume action sets for the projection onto the faces.
 - Stateless PDE terms: the Finite Volume kernels call the PDE terms as static
   functions. exagrype.api.CCZ4SolverBase therefore registers stateless
-  non-conservative product, source and eigenvalue terms if the numerical scheme is a Finite
-  Volume scheme, and the stateful ones otherwise (a match in the setter of
-  numerical_scheme). The kernels only use compile-time constants, so nothing else changes.
+  non-conservative product, source and eigenvalue terms. The kernels only use
+  compile-time constants, so this loses nothing. The Finite Differences
+  (exahype2.api.rkfd4) call stateless terms, too (they forward a dummy
+  exahype2::Solver::Offloadable tag to the static method), i.e. there is no case
+  distinction between the schemes. Sommerfeld boundary conditions would
+  need a stateful eigenvalue term (exahype2.api.blockstructured.BoundaryConditions),
+  but the CCZ4 solvers have not been used with them yet.
 
 
 # Work packages and status
