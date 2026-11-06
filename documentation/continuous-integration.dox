@@ -19,7 +19,7 @@ hosted runners whenever its trigger fires. You find the status of all runs on th
 ## Documentation workflow
 
 The file `.github/workflows/doxygen.yml` builds this website and publishes it at
-https://tobiasweinzierl.github.io/peano/. It runs
+https://peano-framework.github.io/peano/. It runs
 
 \li on every push to the branch `p4`, and
 \li on demand: open the *Actions* tab, pick *Doxygen documentation* and press *Run workflow*.
