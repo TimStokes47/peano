@@ -69,8 +69,6 @@ and innovation programme under grant agreement No 671698 (ExaHyPE).
 - Programmer's guide
   - \subpage page_exahype_programmers_guide_new_solver
   - \subpage page_exahype_programmers_guide_action_sets
-- How-tos
-  - \subpage page_exahype2_howtos_design-patterns
 - Utilities
   - \subpage exahype2_enumerator
 - Related pages
