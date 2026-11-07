@@ -35,7 +35,9 @@ lines when you work with Claude code once per session:
 Search all the directories of this project for SKILL.md files. If a directory holds a SKILL.md file, create a symlink to this directory in your local .claude/skills/.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If this does not work, exit Claude and invoke the script documentation/load-skills.h. 
+If this does not work, exit Claude and invoke the script documentation/load-skills.sh. It is safe to rerun. Afterwards, restart Claude (or open
+a new session) so that the skill list is reloaded. Type ```/skills``` to verify that the skills
+are visible; the conventions skill has to show up as ```peano:format-conventions```. 
 
 
 ## Installing all the default skills
@@ -59,6 +61,28 @@ Peano employs very few default skills, but there are a few that we'd recommend t
 
 
 ## Skill usage
+
+### Keeping peano:format-conventions alive
+
+The skill `peano:format-conventions` (held in `documentation/conventions/SKILL.md`) encodes
+the rules from @ref page_conventions_home "the conventions page" plus a few code quality
+checks (layering, inheritance depth, C++ documentation in headers, ...). It only helps if
+the agent really applies it, so treat it as a mandatory habit:
+
+1. **Make sure it is linked.** It is picked up by `documentation/load-skills.sh` like every
+   other skill. If `/skills` does not list it, rerun the script and restart the session.
+   A new skill folder is not visible to a session that started before the link was created.
+2. **Invoke it at the end of every work package.** Before you commit, run
+   `/peano:format-conventions`. The skill itself only touches files with significant text
+   changes, so it is cheap to run frequently.
+3. **Make it a rule rather than a memory.** Put a line into the project's `CLAUDE.md` (or your
+   personal memory), such as "After any non-trivial change to C++, Python or .dox files, run
+   /peano:format-conventions before reporting the task as complete."
+4. **Read its findings.** The skill reports flaws instead of silently fixing design issues. Review
+   them, and either fix them or consciously decide to deviate.
+5. **Keep it current.** Whenever the conventions change, edit `conventions.dox` and the skill
+   together. The skill points to `conventions.dox` as the single source of truth for formatting rules.
+   Whenever you add a skill, document it on this page and rerun the loader script.
 
 
 
