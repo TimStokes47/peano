@@ -86,6 +86,23 @@ the agent really applies it, so treat it as a mandatory habit:
 
 
 
+## Architecture decision records (ADRs)
+
+Design decisions that shape a subsystem and that code alone does not explain are written
+down as architecture decision records. An ADR lives next to the code it concerns in a folder
+called `adrs`, e.g. `src/exahype2/api/fv/adrs/`. To add one:
+
+1. Create the folder `adrs` in the directory of the affected component if it does not exist yet.
+2. Add a Markdown file `NNNN-short-title.md` with the next free number. State the status and
+   date, the context (what problem, what was there before), the decision and its
+   consequences. Focus on why, not only on what. Never rewrite an accepted ADR: supersede it by a new one
+   that references it.
+3. Reference the ADR from the documentation of the affected classes or pages.
+4. Run `documentation/load-skills.sh`. Besides the skills, it links every `adrs` folder into
+   `.claude/rules/` (as `adr-<path>`), so Claude reads the decisions at the start of the next session.
+   Restart Claude afterwards. As all ADRs are loaded into the context, keep them short.
+
+
 ## Create your own skills
 
 With Claude code, we predominantly load the skill-creator which is loaded via
@@ -111,17 +128,11 @@ knowledge.
 In the age of LLMs, we notably wanted to create a piece of software which is
 easy to use with a language model. For this purpose, Python is hard to beat.
 
+When it comes to certain design flaws/patterns, we decided to hold them within
+a skill rather than to write them down here, as this allows agent-based programming
+to remain consistent with the existing code base:
 
-## Patterns and idioms
-
-- In the original ExaHyPE 2 rewrite, we did rely a lot on Jinja 2 templates to
-  generate all kind of files. As the code evolved, we decided that we want to
-  move away from Jinja 2 templates as they are hard to maintain and to debug.
-  Notably, they imply that knowledge is scattered between the template and the Python code,
-  while we saw more and more logic migrate from the Python files into the templates.
-- A Python layer only writes into the Python layer below it. Notably, no ExaHyPE 2 api generator writes directly into the Peano 4 layer. This is a design choice to avoid that knowledge is scattered across layers.
-- @todo Avoid references via naming conventions. Insead use Python query.
-
+@include{doc} documentation/conventions/SKILL.md
 
 # Hunting bugs
 

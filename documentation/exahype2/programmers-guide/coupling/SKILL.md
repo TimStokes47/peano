@@ -14,6 +14,7 @@ Start by understanding the user's intent.
 3. What will the solver be called and where to place the resulting files?
 4. Will the solvers exchange data only via volumetric coupling, or will they also globally synchronise with each other?
 
+There is no preferred version of additive vs multiplicative.
 
 ## Preparatory steps
 
@@ -71,4 +72,25 @@ peano.api.taskgraph routine for that.
 The WrapUp tasks only does a global action in unprepare. The Abstract solver base
 class that's generated get a new functor the says synchronise, and the user is told
 to supply the missing information. 
+
+
+### Support for Runge-Kutta time stepping
+
+As we always want to support multi-step time stepping, too, we have to reread all
+of the descriptions above re time steps as "subgraph per time step". This is only 
+relevant for the additive scheme. It implies that WrapUp and KickOff might have to 
+be inserted multiple times at the corresponding markers.
+
+
+## Wrap up question
+
+Analyse if both solvers use some input data from the other solver. If not, we work
+with uni-directional coupling. Ask the user if they want to insert or append certain
+coupling tasks which introduce bi-directional coupling between fields, or if some
+key operations need alteration.
+
+Often, the outcome (primary variables) of one task feed into the right-hand sides 
+of coupled solvers. If this is the case and if we employ additive coupling, then
+we might need to rerun the dependency analysis and introduce temporary copies.
+
 
