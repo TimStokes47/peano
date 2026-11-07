@@ -1,90 +1,127 @@
 /**
 
-@page page_exahype_programmers_guide_action_sets How to define what a numerical scheme (or plotter or grid setup) does
+@page page_exahype_programmers_guide_coupling Coupling different solvers
 
 \tableofcontents
 
-The @ref page_exahype_programmers_guide_new_solver "introduce a new numerical scheme"
-page shows how a Solver.NumericalScheme (or Solver.GridConstruction, or
-Solver.Plotter) adds data to a solver and ensures that these data are also 
-tied to the mesh properly.
-This is all about static setups.
-On this page, we discuss how to add dynamic behaviour.
+A brief discussion of how to couple differerent solvers.
 
+ExaHyPE offers the opportunity to host multiple solver files within one mesh, and to run them in parallel.
+This is extremely useful for applications such as UQ, where you run multiple solves for various inputs.
+It makes sense to host them in one mesh, as you pay the cost for load balancing et al only once.
+You can even make these different solvers run on different mesh levels.
 
-ExaHyPE's current rewrite uses task graphs to model all behaviour.
-You find the prototype of such a task graph in 
-@ref exahype.api.fv.RusanovWithExplicitEuler.construct_output().
-In general, any construct_output() from a numerical scheme, plot strategy
-or mesh setup is responsible for returning a task graph
-which describes what is to be done in this step.
+Obviously, this feature is also extremely interesting if we want to couple different solvers - for 
+example in a multiphysics sense or to extend a solver or to switch numerics.
+An all-time classic is the use of different numerics and PDEs in different areas of the domain.
+This page discusses various coupling aspects.
 
+## Auxiliary variables
 
+All volumetric coupling coupling is realised through auxiliary variables.
+This is a fundamental design pattern. 
+So if a solver A wants to exchange information with B, then A's information ends up as auxiliar data in B.
 
-## Construct the task graph
+Historically, we used to name auxiliary data ***material parameters***. 
+We switched to auxiliary, as material suggests that data are invariant.
+They are not.
+In the example above, A might alter its unknowns, which implies that they are seen in B as changing auxiliary values. 
 
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        reconstruction_task        = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct and apply BCs",    entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        update_cell_task           = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Update cell",                  entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        project_on_faces_task      = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Project on faces",             entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        compute_cfl_condition_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Compute global CFL condition", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-
-        update_cell_task.add_dependency(reconstruction_task)
-        project_on_faces_task.add_dependency(update_cell_task)
-        compute_cfl_condition_task.add_dependency(update_cell_task)
-
-        time_step.add_task(reconstruction_task)
-        time_step.add_task(update_cell_task)
-        time_step.add_task(project_on_faces_task)
-        time_step.add_task(compute_cfl_condition_task)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The CFL condition has a task of its own: The update task's action set
-(exahype2.api.fv.actionsets.UpdateCell) stores the maximum eigenvalue of
-every patch it updates in the cell. The task "Compute global CFL condition"
-(exahype2.api.fv.actionsets.ComputeGlobalCFLCondition) then reduces these
-values and derives the next global time step size from them. It only
-depends on the update, i.e. it can run in parallel to the projection onto
-the faces.
-
-
-@todo Needs cross references where ot read about these steps
+As of the summer 2026, ExaHyPE allows users to attach an arbitrary number of auxiliary variables to each solver,
+and indeed an auxiliary variable of one solver can be the real variable of another one.
+This is both to simplify coupling, but also to avoid that users have to copy around data all the time, which only stresses the memory bandwidth.
 
 
 
-## Add action sets
+## Multiplicative coupling
+
+Multiplicative coupling means that the state of the simulation evolves according to 
+
+@f$
+  Q(t+\delta t) = Q(t) + \left( \mathcal{U}_1 \circ \mathcal{U}_2 \right) Q(t).
+@f$
+
+In the context of a solver, this means that solver 2 updates some variables as well as some auxiliary data.
+Both these variables (and potentially auxiliary data) then feed into solver 1 (as auxiliary values) and then induce some updates.
+Overall, solver 2 feeds into 1.
+One comes after the other.
+
+ExaHyPE internally works with the notion of a task graph, which simplies the modelling of this type of coupling dramatically.
+We simply take the task graph of solver 1 and append the one of solver 2, respectively.
+All the remainder (notably finding the right number of required mesh sweeps) is done by ExaHyPE and Peano under the hood.
+
+<br /><br />
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;">
+  The idea that one step follows the other logically still means that calculations can run in parallel.
+  ExaHyPE takes the task sequence and hands it over to an @ref peano4.api.taskgraph.compiler "task graph compiler", which then distills
+  which steps can be run in parallel.
+  So the sequence is logically sequential, but the compiler might find out that some steps from solver 2 can be overlapped with activities from solver 1.
+</div>
+
+### Case study
+
+A prime case study for the coupling is the first-order second-order CCZ4 solver.
+We benchmark it in @ref benchmarks_exagrype_fo_vs_so and explain the details on 
+@ref page_exagrype_fo_so_ccz4.
+Here, two solvers, @ref exagrype.api.FOSOCCZ4Solver and @ref exagrype.api.FOSOCCZ4Reconstructor
+take turns.
+Each one takes the primary evoluation variables of the other one as auxiliary variables.
+
+Below, we use the scheme FD4 from @ref benchmarks_exagrype_fo_vs_so and otherwise defaults only.
+The task graph of this setup looks like
+
+@image html documentation/exahype2/programmers-guide/coupling-additive-task-graph.png
+
+and we see clearly the tasks starting with the "stage 1" label coming first, and then tasks with
+the "stage 2 label" follow. 
+
+
+Peano's @ref graph compiler will take this and depending on its realisation map this
+task graph onto different number of sweeps.
+Below is an example of a pure fusion:
+
+@image html documentation/exahype2/programmers-guide/coupling-additive-mesh-sweeps.png
+
+The whole task graph is now mappped onto mesh sweeps and some of them host data from 
+stage/solver 1 and some host data from stage/solver 2. So overall, we have fewer mesh
+sweeps than tasks in the task graph sequence.
+
+
+### sKILLS AI - Pattern
+
+
+## Additive coupling
+
+Additive coupling means that the state of the simulation evolved according to 
+
+@f$
+  Q(t+\delta t) = Q(t) + \mathcal{U}_1 Q(t) + \mathcal{U}_2 Q(t) = (id + \mathcal{U}_1 + \mathcal{U}_2 ) Q(t).
+@f$
+
+
+In ExaHyPE, we do not provide a special mechanism for additive coupling. Instead, we 
+model the additive coupling via data dependencies. Let A1->A2->A3->A4 be the task graph of 
+solver A. B1->B2->B3 is the graph of B. We simply let the two chains run in parallel. For
+this, we introduce an empty meta task C->A1|B1 and drop the arising task graph down into 
+a task compiler.
+
+If A and B work on completely different data, this is kind of trivial. If they 
+share read-only
+
+
+How to copy
 
 
 
-## Ensure that action sets get all the data they are working on
+## Synchronise solvers
+
+How time step sizes
 
 
+## AI Skills
 
-## Minimise data movements
-
-
-
-## Branching of the task graph
-
-If you need branching, you have to model tasks as parallel. See OPtimistic time stepping for Euler.
-And then you add guards that ensure that always only one branch works.
-SO we have to work with masking, as real branching is not supported by the task graph.
-
-
-Why exclusivity doesn't fix the abort
-
-Peano decides per sweep, not per cell, whether a sweep loads and stores a data object. The "Update cell" sweep declares QWithHalo as READ_AND_DISCARD. So it takes the patch off the stack for every cell and doesn't put it back, even for cells where UpdateCell doesn't fire. The run proves this. It aborts in time step 0, where every cell takes the traditional branch and UpdateCellShell fires nowhere. Still, the shell sweep tries to load QWithHalo and finds nothing.
-
-Fix
-
-At the task level your declarations are right: both siblings read the halo patch and are done with it. With the sequential compiler the two become consecutive sweeps, so only the second may discard. I'd let propagate_use_statements() handle this. Whenever a step declares READ_AND_DISCARD and a later step reads the same data before anything writes it, the compiler would upgrade the discard to READ_AND_WRITE. That would keep your declarations, work for any compiler that puts sibling tasks one after the other, and fit next to the pass I just added. Shall I implement that?
-
-
-So we need a read-write. If these are smart pointers, it should not harm.
-
-
-@todo Needs some more explanations and then should likely be moved down into the graph compiler.
+There is a dedicated AI skill to couple solvers written down as recipe in 
+@ref documentation/exahype2/programmers-guide/coupling.
 
 
 */
