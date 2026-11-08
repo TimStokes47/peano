@@ -225,6 +225,12 @@ parser.add_argument(
     default=["FO", "SO"],
     help="Comma-separated formulations to build, run and compare (FO, SO)",
 )
+parser.add_argument(
+    "--compiler",
+    choices=["sequential", "fusion"],
+    default="fusion",
+    help="Task graph compiler: one mesh traversal per task (sequential) or fused traversals (fusion)",
+)
 parser.add_argument("--end-time", type=float, default=0.1, help="Simulation end time")
 parser.add_argument(
     "--cfl", type=float, default=0.9, help="CFL constant of the FV scheme"
@@ -286,10 +292,12 @@ def build(scheme, formulation, cells):
     initial_condition = exagrype.api.initialvalues.gauge_wave()
     if formulation == "FO":
         solver = exagrype.api.FOCCZ4Solver(name, initial_condition=initial_condition)
+        scheme_owner = solver
     else:
-        # The pair of CCZ4 and reconstruction solver. We configure the former.
+        # The pair of CCZ4 and reconstruction solver. The pair holds the scheme.
         pair = exagrype.api.FOSOSolver(name, initial_condition=initial_condition)
         solver = pair.ccz4
+        scheme_owner = pair
     # The grid cells have to be strictly smaller than volume_size times the patch size
     volume_size = 1.01 / cells
     match scheme:
@@ -297,7 +305,7 @@ def build(scheme, formulation, cells):
             Kernel = (
                 exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
             )
-            solver.numerical_scheme = (
+            scheme_owner.numerical_scheme = (
                 exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
                     solver,
                     patch_size,
@@ -317,7 +325,7 @@ def build(scheme, formulation, cells):
             )
         case "FV":
             # No advection, no dissipation: the shift of the gauge wave is zero
-            solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(
+            scheme_owner.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(
                 solver, patch_size, cfl_constant=arguments.cfl
             )
             solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
@@ -334,8 +342,9 @@ def build(scheme, formulation, cells):
         project.add_solver(pair)
 
     project.compiler = (
-        #peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion
-        peano4.api.taskgraph.compiler.FuseSteps.translate
+        peano4.api.taskgraph.compiler.Sequential.translate
+        if arguments.compiler == "sequential"
+        else peano4.api.taskgraph.compiler.FuseSteps.translate
     )
     project.set_global_simulation_parameters(
         dimensions=3,

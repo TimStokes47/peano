@@ -24,15 +24,32 @@ SCHEMES = {
 }
 
 
-def _solver(scheme, name="Probe"):
-    solver = exahype2.api.Solver(name, 2)
+class _Hosted(exahype2.api.Solver):
+    """! Solver which can be hosted: it returns one task per stage """
+
+    def create_task_graph(self, exahype2_project, peano_project, stage, number_of_stages):
+        graph = peano4.api.taskgraph.Graph()
+        graph.add_task(
+            Task(name=f"{self.name}_Reconstruct stage {stage}", entity=Task.GridEntity.CELL)
+        )
+        return graph
+
+
+class _NoGridConstruction(exahype2.api.Solver.GridConstruction):
+    def construct_output(self, exahype2_project, peano_project, setup_simulation):
+        pass
+
+
+def _solver(scheme, name="Probe", solver_class=exahype2.api.Solver):
+    solver = solver_class(name, 2)
     solver.add_pde_term(exahype2.api.Flux(implementation="F[0] = Q[0]; F[1] = Q[1];"))
     solver.add_pde_term(exahype2.api.MaxEigenvalue(implementation="*lambdaMax = 1.0;"))
     solver.add_pde_term(exahype2.api.RefineErasePointwisely(implementation=""))
     solver.add_pde_term(
         exahype2.api.InitPointWisely(implementation="Q[0] = 0.0; Q[1] = 0.0;")
     )
-    solver.numerical_scheme = SCHEMES[scheme](solver)
+    if scheme is not None:
+        solver.numerical_scheme = SCHEMES[scheme](solver)
     return solver
 
 
@@ -152,20 +169,24 @@ class _Chain(exahype2.api.SolverHost):
     def couple(self, exahype2_project, peano_project, own_graphs, host_graphs):
         first, second = self.solvers
         last = own_graphs[first].time_step.sink_tasks()
-        for task in own_graphs[second].time_step.tasks:
-            if not task.dependencies:
+        for graph in second.numerical_scheme.stage_graphs:
+            for task in graph.source_tasks():
                 for predecessor in last:
                     task.add_dependency(predecessor)
 
 
 def test_host_realises_each_solver_into_graphs_of_its_own_and_concatenates(tmp_path):
-    first, second = _solver("fv", "First"), _solver("fv", "Second")
+    first, second = _solver(None, "First"), _solver(None, "Second", _Hosted)
     host = _Chain("Pair", [first, second])
+    host.numerical_scheme = SCHEMES["fv"](first)
     assert host.global_tasks_solver is first
-    for solver in (first, second):
-        solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
-            solver, volume_size=0.1
-        )
+    assert first.numerical_scheme is host.numerical_scheme
+    assert isinstance(second.numerical_scheme, exahype2.api.SolverHost.HostedScheme)
+    assert second.numerical_scheme.patch_size == host.numerical_scheme.patch_size
+    first.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
+        first, volume_size=0.1
+    )
+    second.grid_construction = _NoGridConstruction(second)
     exahype2_project = exahype2.api.Project(
         ["probe"], "probe", "probe", directory=str(tmp_path)
     )
@@ -190,13 +211,13 @@ def test_host_realises_each_solver_into_graphs_of_its_own_and_concatenates(tmp_p
     ]
     # The coupling of the host connects the otherwise independent chains
     second_reconstruct = next(
-        t for t in graphs[1].tasks if t.name == "Second_Reconstruct"
+        t for t in graphs[1].tasks if t.name == "Second_Reconstruct stage 0"
     )
     assert second_reconstruct.dependencies
 
 
 def test_project_registers_the_solvers_of_a_host_but_realises_the_host(tmp_path):
-    first, second = _solver("fv", "First"), _solver("fv", "Second")
+    first, second = _solver(None, "First"), _solver(None, "Second", _Hosted)
     third = _solver("fv", "Third")
     host = _Chain("Pair", [first, second])
     project = exahype2.api.Project(["probe"], "probe", "probe", directory=str(tmp_path))
@@ -209,3 +230,54 @@ def test_project_registers_the_solvers_of_a_host_but_realises_the_host(tmp_path)
 def test_a_host_needs_solvers():
     with pytest.raises(ValueError):
         _Chain("Empty", [])
+
+
+def test_hosted_solvers_must_not_have_a_numerical_scheme_of_their_own(tmp_path):
+    with pytest.raises(ValueError, match="numerical scheme of its own"):
+        _Chain("Pair", [_solver("fv", "First"), _solver(None, "Second", _Hosted)])
+    first, second = _solver(None, "First"), _solver(None, "Second", _Hosted)
+    host = _Chain("Pair", [first, second])
+    host.numerical_scheme = SCHEMES["fv"](first)
+    # Assigned behind the back of the host
+    second.numerical_scheme = SCHEMES["fv"](second)
+    with pytest.raises(ValueError, match="numerical scheme of its own"):
+        host.numerical_scheme = SCHEMES["fv"](first)
+    exahype2_project = types.SimpleNamespace(periodic_BC=[True, True, True])
+    peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
+    with pytest.raises(ValueError, match="numerical scheme of its own"):
+        host.generate_solver_realisation(
+            exahype2_project, peano_project, *(peano4.api.taskgraph.Graph() for _ in range(4))
+        )
+
+
+def test_a_host_without_a_numerical_scheme_cannot_be_realised(tmp_path):
+    host = _Chain("Pair", [_solver(None, "First"), _solver(None, "Second", _Hosted)])
+    with pytest.raises(ValueError, match="no numerical_scheme"):
+        host.generate_solver_realisation(None, None, *(peano4.api.taskgraph.Graph() for _ in range(4)))
+
+
+def test_graph_source_tasks_are_the_counterpart_of_the_sink_tasks():
+    graph = peano4.api.taskgraph.Graph()
+    a, b, c = (Task(name=n, entity=Task.GridEntity.CELL) for n in "abc")
+    b.add_dependency(a)
+    for task in (a, b, c):
+        graph.add_task(task)
+    assert graph.source_tasks() == [a, c]
+    assert graph.sink_tasks() == [b, c]
+
+
+def test_run_in_parallel_starts_all_branches_with_a_kick_off_task():
+    branches = []
+    for name in "xy":
+        branch = peano4.api.taskgraph.Graph()
+        first, second = (Task(name=name + n, entity=Task.GridEntity.CELL) for n in "12")
+        second.add_dependency(first)
+        branch.add_task(first)
+        branch.add_task(second)
+        branches.append(branch)
+    graph = peano4.api.taskgraph.Graph()
+    kick_off = exahype2.api.SolverHost.run_in_parallel(graph, branches)
+    assert kick_off in graph.tasks and len(graph.tasks) == 5
+    assert graph.source_tasks() == [kick_off]
+    assert sorted(t.name for t in graph.sink_tasks()) == ["x2", "y2"]
+    assert all(kick_off in b.source_tasks()[0].dependencies for b in branches)

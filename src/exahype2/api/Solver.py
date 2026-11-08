@@ -665,6 +665,42 @@ class Solver(abc.ABC):
         """
         return ""
 
+    def create_task_graph(
+        self, exahype2_project, peano_project, stage: int, number_of_stages: int
+    ):
+        """!
+
+        Return the tasks of this solver for one stage of its host's time stepping
+
+        A solver which is hosted (@ref exahype2.api.SolverHost) has no numerical
+        scheme of its own. Instead, the host's scheme asks it for its task graph
+        once per stage of the Runge-Kutta scheme (once if there is no stage), and
+        composes the graphs it receives: The graphs are returned as they are, i.e.
+        without any dependency on tasks of other solvers. The host adds those
+        through dependencies. Solvers which are not hosted do not implement
+        the routine.
+
+        @param exahype2_project: exahype2.api.Project
+          The project that hosts the solvers.
+
+        @param peano_project: peano4.api.Project
+          The Peano project that the exahype2 project assembles. The solver
+          adds the data it needs to it.
+
+        @param stage: int
+          Stage for which the graph is built, starting with 0.
+
+        @param number_of_stages: int
+          Number of stages of the host's time stepping scheme.
+
+        @return peano4.api.taskgraph.Graph
+          Fresh graph with tasks that belong to this stage only.
+
+        """
+        raise NotImplementedError(
+            f"Solver {self._name} cannot be hosted, as it does not provide a task graph"
+        )
+
     @property
     def numerical_scheme(self) -> "Solver.NumericalScheme":
         return self._numerical_scheme

@@ -138,8 +138,9 @@ class CCZ4WithEuler(exahype2.api.SolverHost):
     CCZ4 and Euler as one coupled system
 
     The object hosts one exagrype.api.FOCCZ4Solver (ccz4) and one
-    EulerOnSpacetime (euler). Configure both (numerical scheme, grid
-    construction, plotter), and then add the host to the project with
+    EulerOnSpacetime (euler). The host holds both numerical schemes
+    (numerical_scheme for ccz4, set_numerical_scheme() for euler); configure
+    grid construction and plotter of the solvers, and then add the host to the project with
     exahype2.api.Project.add_solver(). Both solvers have
     to use exahype2.api.rkfd4.CentralDifferencesWithRungeKutta with the same
     patch size and Runge-Kutta order. The halos may differ.

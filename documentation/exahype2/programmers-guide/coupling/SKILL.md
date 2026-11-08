@@ -25,8 +25,41 @@ to the superclass in the order in which they are realised. A solver can rely on 
 of its predecessors. Do **not** let the solvers call each other's realisation, and do not
 add the individual solvers to the project yourself.
 
-The host does not override `generate_solver_realisation()`. The superclass already does the
-following, and the host only implements `couple()`:
+### Who holds the numerical scheme?
+
+The host holds the generator of the numerical scheme (`host.numerical_scheme`, a 
+`Solver.NumericalScheme` built for `host.global_tasks_solver`). The hosted solvers have
+**none** of their own: `SolverHost` raises a `ValueError` in its constructor, when the scheme
+is assigned and when it realises the solvers, if a solver has a `numerical_scheme`. Users 
+therefore write `host.numerical_scheme = Scheme(host.solver, ...)`, never
+`host.solver.numerical_scheme = ...`. A solver that runs a complete scheme of its own next to the
+others (additive coupling of two full solvers) gets it via `host.set_numerical_scheme(solver, scheme)`;
+the host stays the one that holds and hands out every scheme. The mapping of each solver to C++ (`SolverToCPPFiles`,
+grid construction, plotters) remains solver-specific. Solvers query patch size and halo
+through `solver.numerical_scheme`, which the host fills with the scheme itself (for 
+`global_tasks_solver`) or with a `SolverHost.HostedScheme` that forwards to it (all others).
+
+### Where the task graphs are composed
+
+Composition happens in the host, nowhere else:
+
+1. The host's scheme builds the task graph of `global_tasks_solver` as it would for a
+   non-hosted solver.
+2. Every other solver implements `Solver.create_task_graph(exahype2_project, peano_project,
+   stage, number_of_stages)` and returns a fresh `peano4.api.taskgraph.Graph` with the tasks of
+   one stage. It must not depend on the other solvers' tasks. `SolverHost.HostedScheme` calls it 
+   once per stage (`SolverHost.number_of_stages` is the Runge-Kutta order of the scheme, or one),
+   merges the graphs into the solver's own graph and keeps them in `stage_graphs`. If a solver's 
+   graph occurs in several stages, `create_task_graph()` is simply called several times; 
+   share data (scratch patches) between the calls through the solver, create tasks per call.
+3. The host's `couple()` composes the graphs through **dependencies**. It does not copy tasks.
+   Use `Graph.source_tasks()` / `Graph.sink_tasks()` of a stage graph to find where to hook in, 
+   `Graph.append()` to run a whole graph after another one, `Graph.merge()` to put graphs next to each other, and
+   `SolverHost.run_in_parallel()` for the additive scheme.
+4. The superclass wraps the outcome into load balancing and AMR tasks.
+
+The host does not override `generate_solver_realisation()`. The superclass does the following, 
+and the host only implements `couple()`:
 
 1. Each solver is realised into task graphs of its own (`exahype2.api.PhaseGraphs`), and 
    each solver reports its own time stepping graph (text or visualisation, depending on the logger).
@@ -63,7 +96,8 @@ variables accordingly. After that, change the data association accordingly.
 ### Multiplicative solver coupling
 
 `couple()` makes tasks of one solver wait for tasks of the other one. The graphs are already
-concatenated, so there is nothing to append: look up the tasks to be tied together (ideally 
+concatenated (or `Graph.append()` them yourself if a solver's stage graph simply follows the
+stage of another one), so there is nothing to copy: look up the tasks to be tied together (ideally 
 through tags that the solver's scheme puts on them - names only as a fallback, and then ask 
 the solver's scheme for the names rather than hard-coding them), take over the dependencies 
 of the consuming task, and make the consuming task depend on the producer. The first task of 
@@ -77,9 +111,13 @@ If possible, display a rendering of the arising task graph to the user.
 
 ### Additive solver coupling
 
-The solvers' graphs run in parallel. In `couple()`, introduce a new KickOff task as the very 
-first one, i.e. the first task of each solver's task graph depends on KickOff to have terminated.
-`CCZ4WithEuler` in `benchmarks/exagrype/gauge-wave-with-Euler` is a worked example.
+The solvers' graphs run in parallel. The host's scheme asks each solver for its graph per Runge-Kutta
+stage (`create_task_graph()`), i.e. there is one instance of each graph per stage. In `couple()`,
+call `SolverHost.run_in_parallel(host_graph, [graph_of_solver_a, graph_of_solver_b])` per stage: it
+adds a KickOff task which the first task of each solver's stage graph depends on. Make the 
+KickOff of stage `k+1` depend on the sinks of stage `k`.
+`CCZ4WithEuler` in `benchmarks/exagrype/gauge-wave-with-Euler` is a worked example 
+(it predates `SolverHost`).
 
 If possible, display a rendering of the arising task graph to the user.
 
@@ -106,9 +144,11 @@ to supply the missing information.
 ### Support for Runge-Kutta time stepping
 
 As we always want to support multi-step time stepping, too, we have to reread all
-of the descriptions above re time steps as "subgraph per time step". This is only 
-relevant for the additive scheme. It implies that WrapUp and KickOff might have to 
-be inserted multiple times at the corresponding markers. Tasks at the stages are 
+of the descriptions above re time steps as "subgraph per time step". The host
+instantiates the subgraph of each hosted solver once per stage (`create_task_graph(..., stage, ...)`), 
+so the same task chain exists several times, once per stage, and the multiplicative scheme ties each instance to the 
+matching stage of the consumer (`FOSOSolver.couple()`). For the additive scheme, WrapUp and KickOff 
+might have to be inserted multiple times at the corresponding markers. Tasks at the stages are 
 looked up in the concatenated graph in `couple()`.
 
 

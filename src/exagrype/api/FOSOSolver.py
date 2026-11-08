@@ -29,22 +29,26 @@ class FOSOSolver(exahype2.api.SolverHost):
       derivatives, i.e. it recomputes them from the primary unknowns in
       front of each Runge-Kutta stage of ccz4.
 
-    Configure ccz4 exactly as any other solver (numerical scheme, grid
+    The host holds the numerical scheme (@ref exahype2.api.SolverHost):
+    Build it for ccz4 and assign it to the host. Neither solver has a scheme
+    of its own. Configure ccz4 otherwise as any other solver (grid
     construction, plotter, constraint enforcement, ...), and then add the
     host to the project with exahype2.api.Project.add_solver(). The
     reconstruction needs no configuration: it takes patch size and halo from
-    ccz4.
+    the scheme.
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     solver = exagrype.api.FOSOSolver("SO")
-    solver.ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(solver.ccz4, patch_size, rk_order=4, ...)
+    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(solver.ccz4, patch_size, rk_order=4, ...)
     ...
     project.add_solver(solver)
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     ## Task graph
 
-    Both solvers build a task graph of their own, and report it. The reconstruction
+    Both solvers build a task graph of their own, and report it: the scheme of the host
+    builds the graph of ccz4, and asks the reconstruction solver for its graph
+    once per stage (exagrype.api.FOSOReconstructionSolver.create_task_graph()). The reconstruction
     solver's graph is a chain per stage (see @ref exagrype.api.FOSOReconstructionSolver),
     and the chains of different stages are not connected.
     The host concatenates the graphs and wires them (couple()): The first tasks of
@@ -123,7 +127,6 @@ class FOSOSolver(exahype2.api.SolverHost):
           The concatenated graphs. The time step graph receives the dependencies.
 
         """
-        scheme = self.reconstruction.numerical_scheme
         time_step = host_graphs.time_step
 
         def find(task_name, stage):
@@ -135,21 +138,17 @@ class FOSOSolver(exahype2.api.SolverHost):
                 )
             return found[0]
 
-        for stage, (
-            first_tasks,
-            last_task,
-            unknowns_name,
-            derivatives_name,
-            reconstruction_name,
-        ) in enumerate(
-            zip(
-                scheme.stage_first_tasks,
-                scheme.stage_last_tasks,
-                scheme.names_of_partner_interpolation_tasks,
-                scheme.names_of_derivative_interpolation_tasks,
-                scheme.names_of_partner_reconstruction_tasks,
-            )
+        ## The reconstruction solver returned one graph per stage (HostedScheme)
+        for stage, graph in enumerate(
+            self.reconstruction.numerical_scheme.stage_graphs
         ):
+            first_tasks = graph.source_tasks()
+            (last_task,) = graph.sink_tasks()
+            (
+                unknowns_name,
+                derivatives_name,
+                reconstruction_name,
+            ) = self.reconstruction.partner_task_names(stage)
             unknowns_interpolation = find(unknowns_name, stage)
             derivatives_interpolation = find(derivatives_name, stage)
             for dependency in derivatives_interpolation.dependencies:

@@ -33,7 +33,7 @@ def _configure(pair, enforce=None):
     solver = pair.ccz4
     Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
     # Lopsided advection widens the halo to the three that the reconstruction needs
-    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+    pair.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
         solver,
         9,
         rk_order=4,
@@ -356,7 +356,7 @@ def test_reconstruction_works_together_with_the_constraint_enforcement(tmp_path)
 def test_reconstruction_runs_in_front_of_the_finite_volume_update(tmp_path):
     pair = exagrype.api.FOSOSolver("SO")
     solver = pair.ccz4
-    solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
+    pair.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
     solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
         solver, volume_size=1.0 / 27.0
     )
@@ -378,29 +378,25 @@ def test_reconstruction_runs_in_front_of_the_finite_volume_update(tmp_path):
 
 def test_reconstruction_rejects_unsupported_schemes(tmp_path):
     pair = exagrype.api.FOSOSolver("SO")
-    pair.ccz4.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(pair.ccz4, 9)
+    pair.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(pair.ccz4, 9)
     with pytest.raises(Exception):
-        pair.reconstruction.numerical_scheme.construct_output(
-            None, None, peano4.api.taskgraph.Graph()
-        )
+        pair.reconstruction.create_task_graph(None, None, 0, 1)
 
 
 def test_reconstruction_rejects_a_halo_of_two(tmp_path):
     pair = exagrype.api.FOSOSolver("SO")
-    pair.ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+    pair.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
         pair.ccz4, 9, rk_order=4
     )
     assert pair.ccz4.numerical_scheme.HALO_SIZE == 2
     with pytest.raises(ValueError, match="at least three"):
-        pair.reconstruction.numerical_scheme.construct_output(
-            None, None, peano4.api.taskgraph.Graph()
-        )
+        pair.reconstruction.create_task_graph(None, None, 0, 1)
 
 
 def test_reconstruction_adapts_to_the_larger_halo_of_the_dissipation_scheme(tmp_path):
     pair = exagrype.api.FOSOSolver("SO")
     solver = pair.ccz4
-    solver.numerical_scheme = exagrype.api.FD4WithKODissipation(
+    pair.numerical_scheme = exagrype.api.FD4WithKODissipation(
         solver, 9, rk_order=4, kreiss_oliger_sigma=1.0
     )
     solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(

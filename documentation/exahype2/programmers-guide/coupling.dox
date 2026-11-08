@@ -54,8 +54,14 @@ digraph host {
 }
 \enddot
 
+The host, not the solvers, holds the generator of the numerical scheme 
+(exahype2.api.SolverHost.numerical_scheme): hosted solvers have no scheme of their own, and the 
+host raises an exception if they have. The mapping of the solvers to C++ remains solver-specific.
+
 1. Each solver builds the task graphs of the four phases (setup, time step, plot, mesh
-   adaptation) in graphs of its own and reports the time stepping graph. The user thus
+   adaptation) in graphs of its own and reports the time stepping graph. The host's scheme builds
+   the graph of the global-tasks solver, and asks every other solver for its graph once per 
+   Runge-Kutta stage (exahype2.api.Solver.Solver.create_task_graph()). The user thus
    sees what each solver contributes.
 2. The host concatenates the graphs (peano4.api.taskgraph.Graph.merge()). The result
    consists of the chains of the solvers next to each other.

@@ -95,6 +95,23 @@ class Graph:
         """
         return [task for task in self.tasks if any(tag in task.tags for tag in tags)]
 
+    def source_tasks(self) -> List[Task]:
+        """!
+
+        Return all tasks which depend on no other task of this graph
+
+        These are the first tasks of the graph, i.e. the counterpart of
+        sink_tasks(). Dependencies on tasks outside of the graph are ignored.
+        The tasks are returned in the order in which they have been added to
+        the graph.
+
+        """
+        return [
+            task
+            for task in self.tasks
+            if not any(dependency in self.tasks for dependency in task.dependencies)
+        ]
+
     def sink_tasks(self) -> List[Task]:
         """!
 
