@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="multiplicative-coupling.svg"
+   inkscape:export-filename="multiplicative-coupling.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.84096521"
+     inkscape:cx="394.78447"
+     inkscape:cy="470.8875"
+     inkscape:window-width="1854"
+     inkscape:window-height="1131"
+     inkscape:window-x="66"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <marker
+       style="overflow:visible"
+       id="TriangleStart"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="TriangleStart"
+       markerWidth="5.3244081"
+       markerHeight="6.155385"
+       viewBox="0 0 5.3244081 6.1553851"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path135" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="TriangleStart-5"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="TriangleStart"
+       markerWidth="5.3244081"
+       markerHeight="6.155385"
+       viewBox="0 0 5.3244081 6.1553851"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path135-6" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#00ffff;stroke:#000000;stroke-width:0.665001;stroke-miterlimit:4.9;stroke-dasharray:none"
+       id="rect234"
+       width="23.988981"
+       height="20.830639"
+       x="17.854109"
+       y="25.889616" />
+    <rect
+       style="fill:#00ffff;stroke:#000000;stroke-width:0.665001;stroke-miterlimit:4.9;stroke-dasharray:none"
+       id="rect234-6"
+       width="23.988981"
+       height="20.830639"
+       x="70.120979"
+       y="25.765825" />
+    <rect
+       style="fill:#ff0000;stroke:#000000;stroke-width:0.665001;stroke-miterlimit:4.9;stroke-dasharray:none"
+       id="rect234-6-7"
+       width="23.988981"
+       height="20.830639"
+       x="99.429985"
+       y="25.765825" />
+    <rect
+       style="fill:#ff0000;stroke:#000000;stroke-width:0.843645;stroke-miterlimit:4.9;stroke-dasharray:none"
+       id="rect234-3"
+       width="23.810337"
+       height="33.777222"
+       x="17.943432"
+       y="52.673485" />
+    <rect
+       style="fill:#00ffff;stroke:#000000;stroke-width:0.843645;stroke-miterlimit:4.9;stroke-dasharray:none"
+       id="rect234-3-5"
+       width="23.810337"
+       height="33.777222"
+       x="99.51931"
+       y="52.673485" />
+    <rect
+       style="fill:#00ffff;stroke:#000000;stroke-width:0.843645;stroke-miterlimit:4.9;stroke-dasharray:none"
+       id="rect234-3-5-3"
+       width="23.810337"
+       height="33.777222"
+       x="152.02156"
+       y="52.666771" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.865;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#TriangleStart);stroke-dasharray:none"
+       d="M 41.843089,36.304934 70.120977,36.181146"
+       id="path1067" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.865;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart-5)"
+       d="m 123.74368,69.679169 28.27788,-0.123788"
+       id="path1067-2" />
+  </g>
+</svg>

@@ -58,6 +58,13 @@ All the remainder (notably finding the right number of required mesh sweeps) is 
   So the sequence is logically sequential, but the compiler might find out that some steps from solver 2 can be overlapped with activities from solver 1.
 </div>
 
+@image html documentation/exahype2/programmers-guide/multiplicative-coupling.png
+
+The image above shows multiplicative coupling for two solvers: The first one advanced their
+data (blue) feeding from the auxiliary variables (which might change but most of the time 
+are invariant).
+
+ 
 ### Case study
 
 A prime case study for the coupling is the first-order second-order CCZ4 solver.
