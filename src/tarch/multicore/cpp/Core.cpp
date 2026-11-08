@@ -1,6 +1,8 @@
 #include "tarch/multicore/Core.h"
-#include "tarch/multicore/Tasks.h"
+
+#include "tarch/multicore/Task.h"
 #include "tarch/multicore/multicore.h"
+#include "tarch/multicore/taskfusion/taskfusion.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 #ifdef CompilerHasSysinfo
@@ -15,10 +17,7 @@
 tarch::logging::Log tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 tarch::multicore::Core::Core():
-  _numberOfThreads(std::thread::hardware_concurrency()) {
-
-  internal::configureInternalTaskQueues(_numberOfThreads);
-}
+  _numberOfThreads(std::thread::hardware_concurrency()) {}
 
 tarch::multicore::Core::~Core() {}
 
@@ -44,7 +43,9 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
   // control the number of threads in C++
 }
 
-void tarch::multicore::Core::shutdown() {}
+void tarch::multicore::Core::shutdown() {
+  tarch::multicore::waitForAllTasks();
+}
 
 bool tarch::multicore::Core::isInitialised() const {
   return true;
@@ -69,6 +70,7 @@ int tarch::multicore::Core::getThreadNumber() const {
 
 
 void tarch::multicore::Core::yield() {
+  tarch::multicore::taskfusion::processAllReadyTasks();
   std::this_thread::yield();
 }
 #endif

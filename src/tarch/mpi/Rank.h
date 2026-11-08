@@ -16,16 +16,6 @@
 namespace tarch {
   namespace mpi {
     class Rank;
-
-    #ifdef Parallel
-    /**
-     * Returns a string representation of the mpi status. For a detailed
-     * description of the mpi status itself see the file mpi.h.
-     */
-    std::string MPIStatusToString( const MPI_Status& status );
-
-    std::string MPIReturnValueToString( int result );
-    #endif
   }
 }
 
@@ -81,6 +71,8 @@ class tarch::mpi::Rank {
      * Number of processors available.
      */
     int _numberOfProcessors;
+
+    int _providedThreadLevelSupport;
 
     #ifdef Parallel
     /**
@@ -237,11 +229,9 @@ class tarch::mpi::Rank {
     /**
      * Wrapper around allreduce
      *
-     * Use this wrapper in Peano to reduce a value to all ranks. We recommend
-     * not to use plain MPI within Peano applications, as Peano relies on MPI+X
-     * and is strongly dynamic, i.e. you never know how many threads a rank
-     * currently employs and if one of the ranks maybe just has started to send
-     * around point to point load balancing messages.
+     * Use this wrapper in Peano to reduce a value to all ranks. Logically,
+     * this is a blocking routine. On the implementation side, we however
+     * implement it in a non-blocking way.
      *
      *
      * ## Rationale
@@ -261,7 +251,7 @@ class tarch::mpi::Rank {
      * we should be able to do something else such as answering to further
      * request messages.
      *
-     * This allreduce allows us to do so. The default waitor is a receive of
+     * Peano's allreduce allows us to do so. The default waitor is a receive of
      * pending messages. So most codes use the allReduce as follows:
      *
      * <pre>
@@ -284,7 +274,9 @@ class tarch::mpi::Rank {
      * ## Multithreading
      *
      * This reduction is completely agnostic of any multithreading. Therefore,
-     * I do recommend not to use this routine within any action set.
+     * I do recommend not to use this routine within any action set or
+     * literally any multithreaded environment: it is the responsibility of the
+     * user to ensure that only one thread per rank calls this routine.
      *
      *
      * ## Attribute semantics
@@ -306,7 +298,9 @@ class tarch::mpi::Rank {
 
 
     /**
-     * @see allReduce
+     * Blocking reduction
+     *
+     * @see allReduce As routine follows same implementation rationale.
      */
     void reduce(
       const void *sendbuf, void *recvbuf, int count,
@@ -527,6 +521,13 @@ class tarch::mpi::Rank {
      * Set after how much time a node waiting for an MPI message shall quit
      * and shutdown the whole application with an error report. If you pass 0,
      * that switches off this feature.
+     *
+     * By default, timeouts are disabled when we instantiate the Rank object,
+     * but if you set up your system through peano4::initParallelEnvironment(),
+     * then you'll have a default timeout.
+     *
+     * @param valueInSeconds Timeout duration in seconds, i.e. how long we wait
+     *   at most for an incoming message.
      */
     void setDeadlockTimeOut( int valueInSeconds );
 
@@ -546,5 +547,19 @@ class tarch::mpi::Rank {
      * tidy up. I don't want any tidying up. I want termination.
      */
     static void abort(int errorCode);
+
+    /**
+     * Information on supported thread-level support
+     *
+     * Peano will complain bitterly if your MPI version doesn't support
+     * MPI_THREAD_MULTIPLE, but it will not stop executing. Instead, it
+     * will store the thread support-level and continue. You can always
+     * query it if you need to.
+     *
+     * @see peano4::parallel::tests::PingPongTest::run() for an example where
+     *   the thread level is queries explicitly.
+     */
+    int getProvidedThreadLevelSupport() const;
+
 };
 

@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 
 
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 
 

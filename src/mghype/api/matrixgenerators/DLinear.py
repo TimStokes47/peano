@@ -1,7 +1,7 @@
 # This file is part of the Peano multigrid project. For conditions of 
 # distribution and use, please see the copyright notice at www.peano-framework.org
 import numpy as np
-import peano4
+import peano4.api
 import mghype
 
 from .MatrixGenerator import MatrixGenerator
@@ -22,16 +22,16 @@ class DLinear(MatrixGenerator):
   '''
   def __init__(self,
                dimensions,
-               poly_degree,
-               unknowns_per_vertex_dof,
+               unknowns_per_node,
                ):
 
     super( DLinear, self ).__init__(dimensions,
-                                    poly_degree,
+                                    poly_degree = 1,
                                    )
-    self.unknowns_per_vertex_dof = unknowns_per_vertex_dof
+
+    self.unknowns_per_node = unknowns_per_node
     
-    # Use matrices for DG Interior Penalty for Poisson equation as we only need the cell-cell and mass matrices, which are identical fro CG
+    # Use matrices for DG Interior Penalty for Poisson equation as we only need the cell-cell and mass matrices, which are identical from CG
     self.block_matrix = mghype.api.matrixgenerators.blockmatrix.DGPoisson2dPenaltyBlockMatrix(self.poly_degree)
     
   @property
@@ -39,7 +39,7 @@ class DLinear(MatrixGenerator):
     """!
     @todo should this be 2**D or (p+1)**D? suppose it's not relevant, given this is a linear solver
     """
-    return 2**(self.Dimensions)
+    return 2**(self.dimensions)
  
     
   def get_cell_identity_matrix(self):
@@ -51,7 +51,7 @@ class DLinear(MatrixGenerator):
     """
     dim    = self._cell_dofs * self.unknowns_per_vertex_dof
     #           identity matrix.
-    output = np.eye(dim,dim) * 2**(-self.Dimensions)
+    output = np.eye(dim,dim) * 2**(-self.dimensions)
     return output, 0
 
     
@@ -85,12 +85,7 @@ class DLinear(MatrixGenerator):
 
     '''
     output = self.block_matrix._RHS_CC[(1,1)]
-    
-    #pad the output
-    if self.unknowns_per_vertex_dof > 1:
-      output = self.pad_matrix(output)
-
-    return [output], [self.Dimensions]
+    return [output], [self.dimensions]
         
 
   def get_cell_system_matrix_for_laplacian(self):
@@ -106,27 +101,4 @@ class DLinear(MatrixGenerator):
     '''
     
     output = self.block_matrix._A_CC[(0,0)][(0,0)]
-    
-    #pad the output
-    if self.unknowns_per_vertex_dof > 1:
-      output = self.pad_matrix(output)
-
-    return [output], [self.Dimensions - 2]
-          
-
-  def pad_matrix(self, matrix):
-    """!
-    This method pads a matrix by concatenating one copy of itself to the end
-    for each unknown_per_vertex dof.
-
-    @todo - Currently this just pads the same matrix out to each of the multiple dofs per node. Maybe provide option to not do this, eg just leave some of them empty
-    """
-    shape  = matrix.shape
-    # make it bigger 
-    output_shape  = [ self.unknowns_per_vertex_dof * s for s in shape ]
-    output        = np.zeros( output_shape )
-
-    for u in range( self.unknowns_per_vertex_dof ):
-      output[ shape[0]*u: shape[0]*(1+u), shape[1]*u:shape[1]*(1+u) ] = matrix
-    
-    return output
+    return [output], [self.dimensions - 2]

@@ -107,7 +107,7 @@ sophisticated calls such as
    make PETSC_DIR=/path/to/petsc PETSC_ARCH=system_architecture all
   ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-\but most of the time, I don't need these. 
+but most of the time, I don't need these. 
 
 
 From hereon, we will use a variable PETSC_DIR which is the prefix directory.
@@ -182,7 +182,7 @@ The following is an example call to the configure script that works on cosma
  3. Initialise the mesh, i.e. assign each vertex/face/cell a value if the value
     is fixed and otherwise a right-hand side and material parameters.
     Depending on the discretisation, the steps are realised by different 
-    action sets such as petsc.actionsets.InitVertexDoFs.
+    @ref glossary_events_and_action_sets "action sets" such as petsc.actionsets.InitVertexDoFs.
     
  4. Initialise PETSc. Inform the library on the size of the required matrices
     and vectors. This step does not require a mesh traversal of its own.
@@ -200,7 +200,7 @@ The following is an example call to the configure script that works on cosma
  8. Visualise the outcome.
  
 Details on these steps are given in the class description of petsc.Project. It
-maps each step on to an observer, despite the fact that two steps do not 
+maps each step on to an @ref glossary_observer "observer", despite the fact that two steps do not
 require a mesh traversal. 
 
 
@@ -208,7 +208,7 @@ require a mesh traversal.
  ## Code structure
  
  - petsc.Project  Base class behind any PETSc project. This class
-   holds one observer per algorithm step, it holds some global properties
+   holds one @ref glossary_observer "observer" per algorithm step, it holds some global properties
    (such as the domain size), and it administers a peano4.Project.
    It also holds an instance of petsc.PETScMain.
  - petsc.PETScMain represents the main C++ file. It is responsible to pick
@@ -217,18 +217,18 @@ require a mesh traversal.
   
 When we add a solver to the PETSc project via petsc.Project.add_solver(),
 the project memorises this solver, but also asks the solver to add its
-actions to each observer.
+actions to each @ref glossary_observer "observer".
 So the project holds for example an observer for the plotting. 
 Its main will invoke this plotting as very last step.
 However, the project cannot know what to plot actually.
 When you add a solver, the project takes this solver object and asks it
 "hey, can you please add whatever you want to do to this observer so 
 we get a meaningful output".
-This means that the solver adds its action set to the observer.
+This means that the solver adds its @ref glossary_events_and_action_sets "action set" to the observer.
 
 
 When we invoke petsc.Project.generate_Peano4_project(), we obtain one Peano 
-4 project which hosts all of these observers and action sets, and the main, 
+4 project which hosts all of these @ref glossary_observer "observers" and @ref glossary_events_and_action_sets "action sets", and the main,
 and so forth. The original hierarchical information on the number of solvers
 and so forth are lost. This is a realisation representation, not a logical 
 representation of our project.

@@ -1,4 +1,8 @@
-import peano4
+""" 
+ This file is part of the MGHyPE project within Peano 4. For conditions of distribution and 
+ use, please see the copyright notice at www.peano-framework.org
+"""
+import peano4.api
 import dastgen2
 from abc import abstractmethod
 
@@ -6,6 +10,11 @@ class Solver:
   """!
 
   Abstract base class for matrix free solvers.
+  
+  ## Data associated with mesh entities
+  
+  We always assign data to vertices, cells and faces, even though your 
+  particular solver subclass might not require those guys. 
 
   """
 
@@ -17,11 +26,11 @@ class Solver:
     self.min_h = min_h
     self.max_h = max_h
     
-    self._vertex_data = peano4.datamodel.DaStGen2( name )
-    self._face_data   = peano4.datamodel.DaStGen2( name )
-    self._cell_data   = peano4.datamodel.DaStGen2( name )
+    self._vertex_data = peano4.api.datamodel.DaStGen2( name )
+    self._face_data   = peano4.api.datamodel.DaStGen2( name )
+    self._cell_data   = peano4.api.datamodel.DaStGen2( name )
 
-    self._vertex_data.data.add_attribute( dastgen2.attributes.Enumeration( name="type", variants=["Boundary", "Interior", "Corner", "Coarse", "Outside", "Undefined"] ) )
+    self._vertex_data.data.add_attribute( dastgen2.attributes.Enumeration( name="type", variants=["Boundary", "Interior", "Coarse", "Outside", "Undefined"] ) )
     self._face_data.data.add_attribute(   dastgen2.attributes.Enumeration( name="type", variants=["Boundary", "Interior", "Coarse", "Outside", "Undefined"] ) )
     self._cell_data.data.add_attribute(   dastgen2.attributes.Enumeration( name="type", variants=["Interior", "Coarse", "Outside", "Undefined"] ) )
 
@@ -30,6 +39,7 @@ class Solver:
     self._abstract_solver_implementation_extras = """ """
 
 
+  #! [mghype_matrixfree_solvers_api_Solver_add_to_mesh]
   def add_to_Peano4_datamodel( self, datamodel, verbose ):
     datamodel.add_vertex(self._vertex_data)
     datamodel.add_face(self._face_data)
@@ -45,9 +55,10 @@ class Solver:
     observer.use_vertex(self._vertex_data)
     observer.use_face(  self._face_data)
     observer.use_cell(  self._cell_data)
+  #! [mghype_matrixfree_solvers_api_Solver_add_to_mesh]
   
   def typename(self):
-    return self._name;
+    return self._name
 
   def instance_name(self):
     """!
@@ -69,20 +80,32 @@ Return the name of the object that will be created for this solver.
     """!
     Add in extra attributes on the fly
     """
-    self._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( name, size ) )
+    self._vertex_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( name, size ) )
 
   def add_to_cell_data(self, name, size):
     """!
     Add in extra attributes on the fly
     """
-    self._cell_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( name, size ) )
+    self._cell_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( name, size ) )
 
   def add_to_face_data(self, name, size):
     """!
     Add in extra attributes on the fly
     """
-    self._face_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( name, size ) )
+    self._face_data.data.add_attribute( peano4.api.dastgen2.Peano4DoubleArray( name, size ) )
 
   @property
   def name(self):
-      return self._name
+    return self._name
+
+  def __str__(self):
+    return """
+Name:                  {}
+h_min:                 {}
+h_max:                 {}
+""".format(
+      self._name,
+      self.min_h,
+      self.max_h,
+    )
+          

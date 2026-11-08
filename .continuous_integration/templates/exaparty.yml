@@ -1,0 +1,13 @@
+# All ExaParty tests are driven by tests/exaparty/test_exaparty.py, which runs
+# the run scripts of the individual test cases. Use -k to pick a test case.
+.ExaParty_Dastgen:
+  script:
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} python3 -m pytest -m integration tests/exaparty -k dastgen-test
+
+.ExaParty_Sod1D:
+  script:
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} python3 -m pytest -m integration tests/exaparty -k sod-1d
+
+.ExaParty_Noh2D:
+  script:
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} python3 -m pytest -m integration tests/exaparty -k noh-2d

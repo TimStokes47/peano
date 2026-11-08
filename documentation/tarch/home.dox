@@ -2,16 +2,27 @@
 
 @page page_tarch_home Technical Architecture (tarch)
 
+
+@image html documentation/tarch/tarch-logo.png
+
+
 \tableofcontents
 
-\li \subpage tarch_logging
-\li \subpage tarch_plotting
-\li \subpage tarch_tests
-\li \subpage documentation_tarch_visualisation
-\li \subpage tarch_services
-\li \subpage page_tarch_multicore 
-\li \subpage tarch_accelerator_SYCL
-\li \subpage tarch_NoncriticalAssertions
-\li \ref tarch::multicore Multicore layer
+
+- \subpage tarch_NoncriticalAssertions
+- \subpage tarch_logging
+- \subpage tarch_tests
+- \subpage tarch_pytest
+- \subpage tarch_services
+- Input/output
+  - \subpage tarch_plotting
+  - \subpage documentation_tarch_visualisation
+- HPC
+  - \subpage page_tarch_multicore 
+  - \ref tarch::multicore "Multithreading architecture and implementation"
+  - \subpage page_tarch_mpi 
+  - \subpage tarch_accelerator_SYCL
+  - \subpage documentation_tarch_task_fusion_strategies
+  
 
 */

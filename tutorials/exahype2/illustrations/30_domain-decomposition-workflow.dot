@@ -1,0 +1,49 @@
+// Setup phase with load balancing and subsequent time stepping, as discussed
+// in the tutorial 30_domain-decomposition.ipynb. The steps mirror the task
+// graphs of exahype2.api.fv.SetupSimulationOverRegularGrid and of the
+// Rusanov time stepping. Regenerate the PNG via
+//
+//   dot -Tpng -Gdpi=100 30_domain-decomposition-workflow.dot -o 30_domain-decomposition-workflow.png
+//
+// or through 30_domain-decomposition.py.
+digraph DomainDecompositionWorkflow {
+  rankdir=TB;
+  nodesep=0.5;
+  ranksep=0.4;
+  fontname="Helvetica";
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=12, width=3.6, margin="0.2,0.1"];
+  edge [fontname="Helvetica", fontsize=10, color="#555555"];
+
+  subgraph cluster_setup {
+    label=<<b>Setup</b>>;
+    fontsize=13;
+    style="rounded";
+    color="#999999";
+
+    refine [fillcolor="#d6e9f8", label=<<b>Refine mesh</b><br/><font point-size="10">refine towards the regular mesh,<br/>but not right after a split</font>>];
+    balance [fillcolor="#fdf0c8", label=<<b>Load balancing step</b><br/><font point-size="10">analyse the mesh, trigger splits:<br/>SpreadOutOnceGridStagnates splits once<br/>the mesh has stagnated</font>>];
+    consolidate [fillcolor="#d6e9f8", label=<<b>Consolidate mesh</b><br/><font point-size="10">load balancing switched off,<br/>finish all pending splits</font>>];
+    initial [fillcolor="#dcefd8", label=<<b>Initial condition</b><br/><font point-size="10">and projection onto faces,<br/>per tree</font>>];
+
+    refine -> balance [label="  after each sweep"];
+    balance -> refine [label="  mesh changes, not stagnated,\n  or split ongoing", constraint=false];
+    balance -> consolidate [label="  mesh complete"];
+    consolidate -> consolidate [label="  splits pending"];
+    consolidate -> initial;
+  }
+
+  subgraph cluster_time_stepping {
+    label=<<b>Time stepping</b>>;
+    fontsize=13;
+    style="rounded";
+    color="#999999";
+
+    time_step [fillcolor="#dcefd8", label=<<b>Time step</b><br/><font point-size="10">all trees in parallel</font>>];
+    trigger [fillcolor="#fdf0c8", label=<<b>Load balancing step</b><br/><font point-size="10">dynamic strategies may rebalance</font>>];
+
+    time_step -> trigger;
+    trigger -> time_step [label="  next time step", constraint=false];
+  }
+
+  initial -> time_step;
+}

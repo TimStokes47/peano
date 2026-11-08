@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 from copy import deepcopy
 
-import peano4.output
+import peano4.api.output
 
 from exahype2.solvers.MathUtils import MathUtils
 from exahype2.solvers.aderdg.Architectures import Architectures
@@ -149,7 +149,7 @@ class Quadrature(object):
         )
         self.d["quadrature_seq"] = range(self.d["NUMBER_OF_DOF"])
 
-        generated_kernels = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+        generated_kernels = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
             headfile_template=template_prefix + "Quadrature.template.h",
             cppfile_template=template_prefix + "Quadrature.template.cpp",
             classname=output_path + "/Quadrature",

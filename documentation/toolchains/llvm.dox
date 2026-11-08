@@ -1,0 +1,136 @@
+/**
+
+ @page documentation_toolchains_llvm Native LLVM
+
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
+You will find examples how this toolchain is used on particular machines on the page @ref page_machines.
+</div>
+
+### General Compiler Flag Remarks
+
+Should you use ```-ffast-math``` this leads to inaccuracies in some applications,
+such as ccz4. If this flag is desired, also use ```-frounding-math``` to avoid rounding
+errors.
+Clang enables fused multiply add operations via ```-ffp-contract=on``` instead of ```-fma```.
+
+
+### OpenMP
+
+For NVIDIA GPUs:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~
+export MARCH=sm_XX
+CC=clang CXX=clang++ ./configure --with-multithreading=omp --with-gpu=omp CXXFLAGS="-std=c++17 -O3 -W -Wall -Wno-attributes -fopenmp -fopenmp-targets=nvptx64-nvidia-cuda -Xopenmp-target=nvptx64-nvidia-cuda -march=$MARCH" LDFLAGS="-march=native -mtune=native -fopenmp -fopenmp-targets=nvptx64-nvidia-cuda -Xopenmp-target=nvptx64-nvidia-cuda -march=$MARCH"
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+where XX has to be replaced by the actual compute capability of the device.
+
+Note: We set the C++ compiler standard to 17. This is due to an issue with LLVM Clang itself. See https://github.com/llvm/llvm-project/issues/61327.
+
+### Using MLIR
+
+Building a benchmark that uses MLIR requires our dslhype-opt executable, which must first be built.
+Navigate to src/exahype2/mlir and enter the commands
+~~~~~~~~~~~~~
+mkdir build && cd build
+cmake ..
+cmake --build .
+~~~~~~~~~~~~~
+The output bin directory should then be added to your PATH.
+
+When using GPU offloading with MLIR we require that the GPU vendor and architecture is set more explicitly when configuring Peano.
+This is done with --with-gpu-vendor=amd|nvidia and --with-gpu-architecture=gfxXXX|sm_XX.
+With these options set you do not need to the relevant flags in CXXFLAGS and LDFLAGS.
+
+### Building MLIR
+
+MLIR is not necessarily included in an LLVM install, so it may be necessary to build from source.
+First, clone llvm from GitHub.
+
+~~~~~~~~~~~~~~~~~
+git clone --depth 1 https://github.com/llvm/llvm-project.git
+~~~~~~~~~~~~~~~~~
+
+In general, building MLIR just involves adding "mlir" to the LLVM_ENABLE_PROJECTS CMake option.
+See https://mlir.llvm.org/getting_started/ for information. However, we generally want to build with
+offloading support. To do so follow the following steps. Note that it assumes the existence of some clang version,
+but we will build a new version of it.
+
+It is simplest to build separately for AMD and NVIDIA offloading so that AMD libraries don't end up with
+CUDA dependencies and vice-versa.
+
+#### Setup for NVIDIA GPUS
+The easiest way to build for offloading is to use the premade CMake cache file (llvm-project/offload/cmake/caches/Offload.cmake).
+Some modifications are required though.
+";mlir" should be added to LLVM_ENABLE_PROJECTS, "amdgcn-amd-amdhsa" should be removed from LLVM_RUNTIME_TARGETS,
+and any lines that set AMD variables only should be removed. The resulting file should look something like
+~~~~~~~~~~~~~~~~~~~~
+set(LLVM_ENABLE_PROJECTS "clang;clang-tools-extra;lld;mlir" CACHE STRING "")
+set(LLVM_ENABLE_RUNTIMES "compiler-rt;libunwind;libcxx;libcxxabi;openmp;offload" CACHE STRING "")
+set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR ON CACHE BOOL "")
+
+set(LLVM_RUNTIME_TARGETS default;nvptx64-nvidia-cuda CACHE STRING "")
+#set(RUNTIMES_nvptx64-nvidia-cuda_CACHE_FILES "${CMAKE_SOURCE_DIR}/../libcxx/cmake/caches/NVPTX.cmake" CACHE STRING "")
+#set(RUNTIMES_nvptx64-nvidia-cuda_LLVM_ENABLE_RUNTIMES "compiler-rt;libc;openmp;libcxx;libcxxabi" CACHE STRING "")
+~~~~~~~~~~~~~~~~~~~~
+
+PATH, LIBRARY_PATH and LD_LIBRARY_PATH should be set to include CUDA. On COSMA this is
+~~~~~~~~~~~~~~~~~~~~
+export PATH=/cosma/local/Nvidia-hpc-sdk/2025_253/Linux_x86_64/25.3/cuda/12.8/bin/:$PATH
+export LIBRARY_PATH=/cosma/local/Nvidia-hpc-sdk/2025_253/Linux_x86_64/25.3/cuda/12.8/lib64:$LIBRARY_PATH
+export LIBRARY_PATH=/cosma/local/Nvidia-hpc-sdk/2025_253/Linux_x86_64/25.3/cuda/12.8/compat/:$LIBRARY_PATH
+export LD_LIBRARY_PATH=/cosma/local/Nvidia-hpc-sdk/2025_253/Linux_x86_64/25.3/cuda/12.8/lib64:$LD_LIBRARY_PATH
+~~~~~~~~~~~~~~~~~~~~
+The version must be less than 13.0, which is not supported as of LLVM 22.1.8.
+
+#### Setup for AMD GPUS
+The easiest way to build for offloading is to use the premade CMake cache file (llvm-project/offload/cmake/caches/Offload.cmake).
+Some modifications are required though.
+";mlir" should be added to LLVM_ENABLE_PROJECTS, "nvptx64-nvidia-cuda" should be removed from LLVM_RUNTIME_TARGETS,
+and any lines that set NVIDIA variables only should be removed. The resulting file should look something like
+~~~~~~~~~~~~~~~~~~~~
+set(LLVM_ENABLE_PROJECTS "clang;clang-tools-extra;lld;mlir" CACHE STRING "")
+set(LLVM_ENABLE_RUNTIMES "compiler-rt;libunwind;libcxx;libcxxabi;openmp;offload" CACHE STRING "")
+set(LLVM_ENABLE_PER_TARGET_RUNTIME_DIR ON CACHE BOOL "")
+
+set(LLVM_RUNTIME_TARGETS default;amdgcn-amd-amdhsa CACHE STRING "")
+set(RUNTIMES_amdgcn-amd-amdhsa_CACHE_FILES "${CMAKE_SOURCE_DIR}/../libcxx/cmake/caches/AMDGPU.cmake" CACHE STRING "")
+set(RUNTIMES_amdgcn-amd-amdhsa_LLVM_ENABLE_RUNTIMES "compiler-rt;libc;openmp;libcxx;libcxxabi" CACHE STRING "")
+~~~~~~~~~~~~~~~~~~~~
+
+PATH, LIBRARY_PATH and LD_LIBRARY_PATH should be set to include ROCm. On COSMA this is
+~~~~~~~~~~~~~~~~~~~~
+export PATH=/cosma/local/rocm/7.2/bin/:$PATH
+export LIBRARY_PATH=/cosma/local/rocm/7.2/lib/:$LIBRARY_PATH
+export LD_LIBRARY_PATH=/cosma/local/rocm/7.2/lib/:$LD_LIBRARY_PATH
+~~~~~~~~~~~~~~~~~~~~
+
+#### Building 
+Finally run the following commands
+~~~~~~~~~~~~~~~~~~~~
+cd llvm-project
+mkdir build
+CC=clang CXX=clang++ cmake -S llvm -B build -C $(pwd)/offload/cmake/caches/Offload.cmake \
+      -DLLVM_TARGETS_TO_BUILD="host;NVPTX" \   # Replace NVPTX with AMDGPU to build for AMD GPUs
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$(pwd)/../llvm-nvidia \ # Choose an appropriate name/location for the install location
+      -G "Ninja" \
+      -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES="80,90" \ # Remove this line if building for AMD GPUs
+      -DLIBOMP_ARCH="x86_64" \
+      -DOMPTARGET_ENABLE_DEBUG=ON \
+      -DLIBOMPTARGET_DLOPEN_PLUGINS=""
+cd build
+ninja
+ninja install
+~~~~~~~~~~~~~~~~~~~~
+
+To use the built compiler remember to set environment variables appropriately. Here we show
+the settings when using an NVIDIA GPU, where ${LLVM_INSTALL_DIRECTORY} is llvm-project/install-x86.
+~~~~~~~~~~~~~~~~~~~~
+export PATH=${LLVM_INSTALL_DIRECTORY}/bin/:$PATH
+export LD_LIBRARY_PATH=${LLVM_INSTALL_DIRECTORY}/lib/x86_64-unknown-linux-gnu/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=${LLVM_INSTALL_DIRECTORY}/lib/amdgcn-amd-amdhsa:$LD_LIBRARY_PATH
+~~~~~~~~~~~~~~~~~~~~
+
+ */
+ 

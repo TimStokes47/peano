@@ -8,14 +8,13 @@
 #include "stacks.h"
 
 #include "peano4/parallel/Node.h"
+#include "peano4/grid/GridVertex.h"
+#include "peano4/grid/TraversalObserver.h"
 
 #include "tarch/logging/Log.h"
 #include "tarch/Assertions.h"
 #include "tarch/mpi/Rank.h"
-#include "tarch/multicore/Tasks.h"
-
-#include "peano4/grid/GridVertex.h"
-#include "peano4/grid/TraversalObserver.h"
+#include "tarch/multicore/Task.h"
 
 namespace peano4 {
   namespace stacks {

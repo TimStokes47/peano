@@ -1,7 +1,7 @@
 import numpy as np
 from   numpy.polynomial.legendre  import leggauss
 from   scipy.interpolate import lagrange
-import peano4, petsc
+import peano4.api, petsc
 from   petsc.matrixgenerators import MatrixGeneratorBase
 
 

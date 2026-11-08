@@ -127,6 +127,12 @@ private:
   tarch::la::Vector<Dimensions, int> _relativePositionOfCellWithinFatherCell;
 
   /**
+   * Number of adjacent trees per vertex. Obviously only relevant/valid
+   * if the vertex is local.
+   */
+  tarch::la::Vector<TwoPowerD,int>   _numberOfAdjacentTrees;
+
+  /**
    * Some unit tests prefer to construct a marker manually, so I offer a
    * dummy default constructor. The normal code should and does not use a
    * default constructor.
@@ -135,6 +141,11 @@ private:
 
 public:
   VertexMarker(const ::peano4::grid::GridTraversalEvent& event, int select = 0);
+
+  /**
+   * Copy over another marker, but select a different vertex.
+   */
+  VertexMarker(const VertexMarker& marker, int select);
 
   /**
    * Picks a vertex within a cell. After that, the routine returns.
@@ -198,6 +209,16 @@ public:
   bool willBeRefined(int i) const;
 
   /**
+   * Number of adjacent trees of current vertex
+   *
+   * This routine is valid if and only if you call it for a local,
+   * non-hanging vertex. Otherwise, its behaviour is undefined (and
+   * will actually trigger an assertion).
+   */
+  int   getNumberOfAdjacentTrees() const;
+  int   getNumberOfAdjacentTrees(int i) const;
+
+  /**
    * @see isLocal(int) for currently selected/represented vertex
    */
   bool isLocal() const;
@@ -248,7 +269,7 @@ public:
    * touchVertexFirstTime() or touchVertexLastTime() event, the Peano
    * core has actually entered a cell and recognised "whoops, I haven't
    * used that vertex yet" or "this will be the last time this vertex
-   * is available". See the @ref peano_action_sets "generic event description" on
+   * is available". See the @ref page_peano_action_sets "generic event description" on
    * an overview of all of these events.
    *
    * @image html VertexMarker_isParentVertexLocal.png
@@ -340,6 +361,25 @@ public:
    */
   bool isContainedInAdjacentCells(
     const tarch::la::Vector<Dimensions, double>& x,
+    double                                       scaleAdjacentCells = 1.0,
+    double                                       tolerance          = tarch::la::NUMERICAL_ZERO_DIFFERENCE
+  ) const;
+
+
+  /**
+   * One-dimensional version of isContainedInAdjacentCells()
+   *
+   * Same as isContainedInAdjacentCells(), but only checks along
+   * a single dimension provided by `int dim`. This variant is
+   * sometimes way faster, as it only checks the direction of
+   * interest.
+   *
+   * @param dim Positive integer with 0 <= dim < Dimensions which
+   *   indicates the search direction.
+   */
+  bool isContainedInAdjacentCellsByDimension(
+    const tarch::la::Vector<Dimensions, double>& x,
+    const int                                    dim,
     double                                       scaleAdjacentCells = 1.0,
     double                                       tolerance          = tarch::la::NUMERICAL_ZERO_DIFFERENCE
   ) const;

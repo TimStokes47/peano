@@ -8,16 +8,29 @@
 import sys
 import os
 import os.path
+import json
 import subprocess
+
+from concurrent.futures import ProcessPoolExecutor
 
 
 from enum import Enum
 
 
+#
+# This script is by definition not compatible with Doxygen, as it takes
+# bespoke Doxygen syntax and inserts it step by step. This means: the script
+# itself contains snippets of Doxygen which make sense once inserted into the
+# Jupyter notebooks, but are in themselves not valid Doxygen markup. Therefore,
+# I manually exclude this file from the documentation generation.
+#
+
+
 class Mode(Enum):
     Text = 1,
     RawData = 2 ,
-    EquationSystem = 3
+    EquationSystem = 3,
+    Code = 4
 
 
 current_mode = Mode.Text
@@ -40,23 +53,54 @@ def postprocess_markdown_line(line):
         current_mode = Mode.Text
         line = """ @f}
         """
-#    elif line.startswith( "    " ) and current_mode==Mode.Text:
-#        current_mode = Mode.RawData
-#        line = """
-#        
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#""" + line        
-#    elif not line.startswith( "    " ) and current_mode==Mode.RawData:
-#        current_mode = Mode.Text
-#        line = """
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#""" + line        
-    elif current_mode == Mode.Text:
-        line = line.replace( "$$", "\n @f$ ")
-        # This replacement messes up any dollar sign in raw data cells (which I cannot detect atm)
-        # line = line.replace( "$", "@f$ ")
+    elif line.startswith("```"):
+        # Code cells are exported as fenced blocks. Dollar signs therein
+        # are shell or Python syntax, not maths.
+        current_mode = Mode.Code if current_mode == Mode.Text else Mode.Text
+    elif current_mode == Mode.Text and not line.startswith( ("    ", "\t") ):
+        # Lines indented by four or more spaces are raw data cells (see
+        # above) and are not touched either. Neither are inline code spans
+        # (between backticks), i.e. every second segment of the line.
+        segments = line.split("`")
+        for i in range(0, len(segments), 2):
+            segments[i] = segments[i].replace( "$$", "\0" )
+            segments[i] = segments[i].replace( "$", "@f$ ")
+            segments[i] = segments[i].replace( "\0", "\n @f$ ")
+        line = "`".join(segments)
+        # Doxygen strips leading asterisks from the lines of a comment block,
+        # so **Exercise:** at the start of a line would lose its opening
+        # markup. We hand Doxygen an asterisk of its own to strip.
+        if line.lstrip(" ").startswith("*"):
+            line = " * " + line
     return line
+
+
+def separate_raw_cells(notebook_filename: str, markdown: str):
+    """!
+
+    nbconvert writes a raw cell's source without blank lines around it. The
+    indented lines then continue the preceding paragraph instead of forming a
+    code block, and the following heading or paragraph sticks to them. So we
+    put a blank line before and after each raw cell. We search from the end of
+    the previous raw cell onwards, as the same text might also appear in other
+    cells.
+
+    """
+    with open(notebook_filename) as file:
+        notebook = json.load(file)
+
+    position = 0
+    for cell in notebook["cells"]:
+        if cell["cell_type"] != "raw":
+            continue
+        source = "".join(cell["source"])
+        start = markdown.find(source, position)
+        if not source.strip() or start < 0:
+            continue
+        end = start + len(source)
+        markdown = markdown[:start] + "\n" + source + "\n" + markdown[end:]
+        position = end + 2
+    return markdown
 
 
 def postprocess_notebook_markdown(filename: str):
@@ -77,7 +121,8 @@ def postprocess_notebook_markdown(filename: str):
 
     have_created_header = False
     with open(filename + ".md") as file:
-        for line in file:
+        markdown = separate_raw_cells(filename + ".ipynb", file.read())
+        for line in markdown.splitlines(keepends=True):
             if line.startswith("#") and not have_created_header:
                 line = line.replace("#", "")
                 path = filename.replace( "./", "" ).replace( "/", "_" ).replace( ".", "_" )
@@ -115,17 +160,38 @@ Peano's @ref page_tutorials_overview "generic description how to generate web do
 
 
 
-for dirpath, dirnames, filenames in os.walk("."):
-    for filename in [f for f in filenames if f.endswith(".ipynb")]:
-        notebook_filename = os.path.join(dirpath, filename)
-        if ".ipynb" in dirpath:
-            print( "ignore {}".format(notebook_filename) )
-        else:
-            print( "convert {} into markdown".format(notebook_filename) )
-            subprocess.run( ["jupyter", "nbconvert", "--to", "markdown", notebook_filename] )
-            name_without_extension = notebook_filename.replace( ".ipynb", "" )
-            print( "postprocess markdown file {}.md".format(name_without_extension) )
-            postprocess_notebook_markdown( name_without_extension )
-            print( "delete markdown file" )
-            subprocess.run( ["rm", name_without_extension + ".md"] )
-        
+def convert_notebook(notebook_filename: str):
+    """!
+
+    Convert one notebook into its .dox file. Runs as an independent process,
+    so all notebooks can be converted in parallel.
+
+    """
+    global current_mode
+    current_mode = Mode.Text
+
+    print( "convert {} into markdown".format(notebook_filename) )
+    subprocess.run( ["jupyter", "nbconvert", "--to", "markdown", notebook_filename] )
+    name_without_extension = notebook_filename.replace( ".ipynb", "" )
+    print( "postprocess markdown file {}.md".format(name_without_extension) )
+    postprocess_notebook_markdown( name_without_extension )
+    print( "delete markdown file" )
+    subprocess.run( ["rm", name_without_extension + ".md"] )
+
+
+if __name__ == "__main__":
+    notebooks = []
+    for dirpath, dirnames, filenames in os.walk("."):
+        # Skip hidden directories such as .git or .claude (holding worktrees
+        # with their own copies of all notebooks)
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        for filename in [f for f in filenames if f.endswith(".ipynb")]:
+            notebook_filename = os.path.join(dirpath, filename)
+            if ".ipynb" in dirpath:
+                print( "ignore {}".format(notebook_filename) )
+            else:
+                notebooks.append( notebook_filename )
+
+    # One process per core (default of ProcessPoolExecutor)
+    with ProcessPoolExecutor() as executor:
+        list( executor.map( convert_notebook, notebooks ) )

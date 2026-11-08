@@ -8,9 +8,9 @@ We use u_exact(x,y) = sin(2*pi*x) * sin(2*pi*y),
        b_exact(x,y) = 8*pi^2 * sin(2*pi*x) * sin(2*pi*y)
 """
 
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -46,7 +46,7 @@ class InitDofsTest8(ActionSet):
 
   logTraceInWith3Arguments("InitDofs::touchVertexFirstTime", marker.toString(), isOnBoundary(marker.x()), fineGridVertex{{SOLVER_NAME}}.toString());
 
-  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexDoFType(marker.x(),marker.h());
+  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -65,7 +65,7 @@ class InitDofsTest8(ActionSet):
         // store 
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
-          fineGridVertex{{SOLVER_NAME}}.setValue( dof, sinValue);
+          fineGridVertex{{SOLVER_NAME}}.setU( dof, sinValue);
           fineGridVertex{{SOLVER_NAME}}.setRhs(   dof, sinRhs);
         }
       }
@@ -91,7 +91,7 @@ class InitDofsTest8(ActionSet):
         // store 
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
-          fineGridVertex{{SOLVER_NAME}}.setValue(dof, sinValue);
+          fineGridVertex{{SOLVER_NAME}}.setU(dof, sinValue);
           fineGridVertex{{SOLVER_NAME}}.setRhs(  dof, sinRhs);
         }
       }
@@ -114,7 +114,7 @@ class InitDofsTest8(ActionSet):
   templateTouchCellFirstTime = """
   logTraceInWith2Arguments("InitDofs::touchCellFirstTime", marker.toString(), fineGridCell{{SOLVER_NAME}}.toString());
 
-  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -148,14 +148,14 @@ class InitDofsTest8(ActionSet):
 
         // collect
         for (int i=0; i<TwoPowerD; i++){
-          vu_values[i] = fineGridVertices{{SOLVER_NAME}}(i).getValue(0);
+          vu_values[i] = fineGridVertices{{SOLVER_NAME}}(i).getU(0);
           vb_values[i] = fineGridVertices{{SOLVER_NAME}}(i).getRhs(0);
         }
 
         // multiply vu by A_cg
         vu_values = repositories::{{SOLVER_INSTANCE}}.getLocalAssemblyMatrix(marker.x(), marker.h()) * vu_values;
         // multiply vb by M
-        vb_values = repositories::{{SOLVER_INSTANCE}}.getMassMatrix(marker.x(), marker.h()) * vb_values;
+        vb_values = repositories::{{SOLVER_INSTANCE}}.getRhsMatrix(marker.x(), marker.h()) * vb_values;
 
         // place this into rhs
         for (int i=0; i<TwoPowerD; i++){
@@ -194,17 +194,17 @@ class InitDofsTest8(ActionSet):
     self.d = {}
     self.d["SOLVER_INSTANCE"]    = solver.instance_name()
     self.d["SOLVER_NAME"]        = solver.typename()
-    self.d["VERTEX_CARDINALITY"] = solver._unknowns_per_vertex
+    self.d["VERTEX_CARDINALITY"] = solver._unknowns_per_vertex_node
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
       result = jinja2.Template(self.templateTouchVertexFirstTime).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
       pass
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME:
       result = jinja2.Template(self.templateTouchVertexLastTime).render(**self.d)
     return result
 

@@ -1,9 +1,9 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import peano4.solversteps
+import peano4.api.solversteps
 
 
-class AbstractADERDGActionSet(peano4.solversteps.ActionSet):
+class AbstractADERDGActionSet(peano4.api.solversteps.ActionSet):
     def __init__(self, solver):
         super(AbstractADERDGActionSet, self).__init__(
             descend_invocation_order=1, parallel=False

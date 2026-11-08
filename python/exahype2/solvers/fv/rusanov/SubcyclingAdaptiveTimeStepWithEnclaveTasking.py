@@ -5,11 +5,12 @@ from exahype2.solvers.fv.EnclaveTasking import EnclaveTasking
 
 import jinja2
 
-from .kernels import create_compute_Riemann_kernel_for_Rusanov
 from .kernels import create_abstract_solver_declarations
 from .kernels import create_abstract_solver_definitions
 from .kernels import create_solver_declarations
 from .kernels import create_solver_definitions
+from .kernels import create_rusanov_kernel_definitions
+from .kernels import create_compute_Riemann_kernel_for_Rusanov_dsl
 from .kernels import create_compute_time_step_size_kernel_for_adaptive_time_stepping_with_subcycling
 
 from .kernels import create_compute_new_time_step_size_kernel_for_adaptive_time_stepping
@@ -109,7 +110,16 @@ class SubcyclingAdaptiveTimeStepWithEnclaveTasking(EnclaveTasking):
     if eigenvalues          is not None:  self._eigenvalues_implementation                = eigenvalues
     if source_term          is not None:  self._source_term_implementation                = source_term
 
-    self._compute_kernel_call = create_compute_Riemann_kernel_for_Rusanov(
+    create_rusanov_kernel_definitions(self._patch_size,
+      self._unknowns,
+      self._auxiliary_variables,
+      self._flux_implementation,
+      self._ncp_implementation,
+      self._source_term_implementation,
+      compute_max_eigenvalue_of_next_time_step = True
+    )
+
+    self._compute_kernel_call = create_compute_Riemann_kernel_for_Rusanov_dsl(
       self._flux_implementation,
       self._ncp_implementation,
       self._source_term_implementation,
@@ -118,7 +128,7 @@ class SubcyclingAdaptiveTimeStepWithEnclaveTasking(EnclaveTasking):
       kernel_variant = KernelVariant.PatchWiseAoS
     )
 
-    self._compute_kernel_call_stateless = create_compute_Riemann_kernel_for_Rusanov(
+    self._compute_kernel_call_stateless = create_compute_Riemann_kernel_for_Rusanov_dsl(
       self._flux_implementation,
       self._ncp_implementation,
       self._source_term_implementation,
@@ -127,7 +137,7 @@ class SubcyclingAdaptiveTimeStepWithEnclaveTasking(EnclaveTasking):
       kernel_variant = KernelVariant.PatchWiseAoS
     )
 
-    self._fused_compute_kernel_call_stateless_cpu = create_compute_Riemann_kernel_for_Rusanov(
+    self._fused_compute_kernel_call_stateless_cpu = create_compute_Riemann_kernel_for_Rusanov_dsl(
       self._flux_implementation,
       self._ncp_implementation,
       self._source_term_implementation,
@@ -136,7 +146,7 @@ class SubcyclingAdaptiveTimeStepWithEnclaveTasking(EnclaveTasking):
       kernel_variant = KernelVariant.PatchWiseAoS
     )
 
-    self._fused_compute_kernel_call_stateless_gpu = create_compute_Riemann_kernel_for_Rusanov(
+    self._fused_compute_kernel_call_stateless_gpu = create_compute_Riemann_kernel_for_Rusanov_dsl(
       self._flux_implementation,
       self._ncp_implementation,
       self._source_term_implementation,
@@ -188,7 +198,7 @@ class SubcyclingAdaptiveTimeStepWithEnclaveTasking(EnclaveTasking):
   def user_action_set_includes(self):
     return super(SubcyclingAdaptiveTimeStepWithEnclaveTasking, self).user_action_set_includes + """
 #include "exahype2/TimeStepping.h"
-#include "exahype2/fv/rusanov/rusanov.h"
+#include "kernels/rusanov.h"
 """
 
 

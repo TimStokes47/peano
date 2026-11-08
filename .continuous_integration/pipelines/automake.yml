@@ -1,0 +1,294 @@
+include:
+  - .continuous_integration/templates/tags.yml
+  - .continuous_integration/templates/variables.yml
+  - .continuous_integration/templates/before-script.yml
+  - .continuous_integration/templates/run-only-on.yml
+  - .continuous_integration/templates/mghype.yml
+  - .continuous_integration/templates/exahype2.yml
+  - .continuous_integration/templates/exaparty.yml
+  - .continuous_integration/templates/python-tests.yml
+
+stages:
+  - Build
+  - Test
+  - Tutorials
+  - Applications
+  - Benchmarks
+
+default:
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - scheduler_failure
+      - api_failure
+      - stuck_or_timeout_failure
+  hooks:
+    pre_get_sources_script:
+      - rm -f "${CI_PROJECT_DIR}.tmp/.gitlab-runner.ext.conf.lock" 2>/dev/null || true
+
+.BeforeScriptWithAutomakeSanitiser:
+  before_script:
+    - !reference [".BeforeScript", "before_script"]
+    - python3 .continuous_integration/sanitise_path.py Makefile src/Makefile config.log
+
+.Build:
+  script:
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} python3 -m compileall -f ./
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} bash <<< "libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing;"
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} bash <<< "CFLAGS=\"${CFLAGS}\" CC=${CC} CXXFLAGS=\"${CXXFLAGS}\" CXX=${CXX} LDFLAGS=\"${LDFLAGS}\" LIBS=\"${LIBS}\" ./configure ${CONFIGURATION_OPTIONS}"
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} make -j $(nproc --all)
+  artifacts:
+    paths:
+      - ./*
+    exclude:
+      - ".git*"
+      - ".git/**/*"
+    expire_in: 24 hours
+
+.Unit_Tests:
+  script:
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} make check
+
+Build:
+  stage: Build
+  allow_failure: false
+  extends:
+    - .Tags
+    - .Variables
+    - .BeforeScript
+    - .Build
+
+Unit_Tests:
+  stage: Test
+  allow_failure: false
+  extends:
+    - .Tags
+    - .Variables
+    - .BeforeScriptWithAutomakeSanitiser
+    - .Unit_Tests
+  needs:
+    - job: Build
+  dependencies:
+    - Build
+
+Python_Unit_Tests:
+  stage: Test
+  allow_failure: false
+  extends:
+    - .Tags
+    - .Variables
+    - .BeforeScript
+    - .Python_Unit_Tests
+  needs: []
+
+#ExaHyPE2_ADERDG_Tests:
+#  stage: Test
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_ADERDG_Tests
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#ExaHyPE2_ADERDG_AMR_Tests:
+#  stage: Test
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_ADERDG_AMR_Tests
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#ExaHyPE2_ADERDG_Limiting_Tests:
+#  stage: Test
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_ADERDG_Limiting_Tests
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#MGHyPE_MatrixFree_Tests:
+#  stage: Test
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .MGHyPE_MatrixFree_Tests
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+# ExaParty_Dastgen:
+#   stage: Test
+#   allow_failure: false
+#   extends:
+#     - .Tags
+#     - .Variables
+#     - .RunOnlyOn
+#     - .BeforeScriptWithAutomakeSanitiser
+#     - .ExaParty_Dastgen
+#   needs:
+#     - job: Build
+#   dependencies:
+#     - Build
+
+#ExaParty_Sod1D:
+#  stage: Test
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaParty_Sod1D
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+ExaParty_Noh2D:
+  stage: Test
+  allow_failure: false
+  extends:
+    - .Tags
+    - .Variables
+    - .RunOnlyOn
+    - .BeforeScriptWithAutomakeSanitiser
+    - .ExaParty_Noh2D
+  needs:
+    - job: Build
+  dependencies:
+    - Build
+
+#ExaHyPE2_Euler:
+#  stage: Applications
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_Euler
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#ExaHyPE2_Acoustic:
+#  stage: Applications
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_Acoustic
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#ExaHyPE2_Elastic:
+#  stage: Applications
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_Elastic
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#ExaHyPE2_ShallowWater:
+#  stage: Applications
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_ShallowWater
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#ExaHyPE2_Kernels:
+#  stage: Benchmarks
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_Kernels
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#ExaHyPE2_SBH:
+#  stage: Benchmarks
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_SBH
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#ExaHyPE2_SBH_Enclave:
+#  stage: Benchmarks
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_SBH_Enclave
+#  needs:
+#    - job: Build
+#  dependencies:
+#    - Build
+
+#ExaHyPE2_SBH_Coupled:
+#  stage: Benchmarks
+#  allow_failure: false
+#  extends:
+#    - .Tags
+#    - .Variables
+#    - .RunOnlyOn
+#    - .BeforeScriptWithAutomakeSanitiser
+#    - .ExaHyPE2_SBH_Coupled
+# needs:
+#   - job: Build
+#  dependencies:
+#    - Build

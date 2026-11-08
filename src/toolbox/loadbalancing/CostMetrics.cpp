@@ -1,6 +1,12 @@
 #include "CostMetrics.h"
 
 #include "peano4/parallel/SpacetreeSet.h"
+#include "tarch/Assertions.h"
+#include "tarch/mpi/Rank.h"
+#include "tarch/services/ServiceRepository.h"
+
+#include <set>
+#include <sstream>
 
 
 tarch::logging::Log toolbox::loadbalancing::CostMetrics::_log( "toolbox::loadbalancing::CostMetrics" );
@@ -9,17 +15,8 @@ tarch::logging::Log toolbox::loadbalancing::CostMetrics::_log( "toolbox::loadbal
 toolbox::loadbalancing::CostMetrics::CostMetrics():
   _localRankWeight(0.0),
   _globalWeight(0.0),
-  _minimumOfMaximumOfRankWeights(0.0),
-  _globalWeightIn(0.0),
-  _globalWeightOut(0.0),
-  _minimumOfMaximumOfRankWeightsIn(0.0),
-  _minimumOfMaximumOfRankWeightsOut(0.0) {
-  #ifdef Parallel
-  _globalWeightRequest                  = nullptr;
-  _lightestRankRequest                  = nullptr;
-  _minimumOfMaximumOfRankWeightsRequest = nullptr;
-  #endif
-}
+  _lightestRank{0.0, 0},
+  _minimumOfMaximumOfRankWeights(0.0) {}
 
 
 std::string toolbox::loadbalancing::CostMetrics::toString(const std::string& metricName) const {
@@ -46,89 +43,32 @@ double toolbox::loadbalancing::CostMetrics::getCostOfLocalRank() const {
 }
 
 
-void toolbox::loadbalancing::CostMetrics::waitForGlobalDataExchange() {
+void toolbox::loadbalancing::CostMetrics::updateGlobalView() {
+  _globalWeight                  = _localRankWeight;
+  _lightestRank._weight          = _localRankWeight;
+  _lightestRank._rank            = tarch::mpi::Rank::getInstance().getRank();
+  _minimumOfMaximumOfRankWeights = getCostOfLocalRank();
+
   #ifdef Parallel
-  if (_globalWeightRequest != nullptr ) {
-    MPI_Wait( _globalWeightRequest, MPI_STATUS_IGNORE );
-    MPI_Wait( _lightestRankRequest, MPI_STATUS_IGNORE );
-    MPI_Wait( _minimumOfMaximumOfRankWeightsRequest, MPI_STATUS_IGNORE );
+  const double          localWeight                   = _globalWeight;
+  const ReductionBuffer localLightestRank             = _lightestRank;
+  const double          localMaximumOfRankWeights     = _minimumOfMaximumOfRankWeights;
 
-    delete _globalWeightRequest;
-    delete _lightestRankRequest;
-    delete _minimumOfMaximumOfRankWeightsRequest;
-
-    _globalWeightRequest                  = nullptr;
-    _lightestRankRequest                  = nullptr;
-    _minimumOfMaximumOfRankWeightsRequest = nullptr;
-  }
+  tarch::mpi::Rank::getInstance().allReduce(
+    &localWeight, &_globalWeight, 1, MPI_DOUBLE, MPI_SUM,
+    [&]() -> void { tarch::services::ServiceRepository::getInstance().receiveDanglingMessages(); }
+  );
+  tarch::mpi::Rank::getInstance().allReduce(
+    &localLightestRank, &_lightestRank, 1, MPI_DOUBLE_INT, MPI_MINLOC,
+    [&]() -> void { tarch::services::ServiceRepository::getInstance().receiveDanglingMessages(); }
+  );
+  tarch::mpi::Rank::getInstance().allReduce(
+    &localMaximumOfRankWeights, &_minimumOfMaximumOfRankWeights, 1, MPI_DOUBLE, MPI_MIN,
+    [&]() -> void { tarch::services::ServiceRepository::getInstance().receiveDanglingMessages(); }
+  );
   #endif
 }
 
-
-void toolbox::loadbalancing::CostMetrics::updateGlobalView() {
-  if (tarch::mpi::Rank::getInstance().getNumberOfRanks()<=1) {
-    _globalWeight                   = _localRankWeight;
-    _lightestRank._rank             = 0;
-    _lightestRank._weight           = getCostOfLocalRank();
-    _minimumOfMaximumOfRankWeights  = getCostOfLocalRank();
-  }
-  else {
-    #ifdef Parallel
-    waitForGlobalDataExchange();
-
-    _globalWeight                      = _globalWeightIn;
-    _lightestRank._rank                = _lightestRankIn._weight < _localRankWeight ? _lightestRankIn._rank : tarch::mpi::Rank::getInstance().getRank();
-    _lightestRank._weight              = _lightestRankIn._weight;
-    _minimumOfMaximumOfRankWeights     = _minimumOfMaximumOfRankWeightsIn;
-
-    if ( _globalWeight < _localRankWeight ) {
-      logInfo(
-        "updateGlobalView()",
-        "local number of cells (" << _localRankWeight << ") is bigger than global cell count (" << _globalWeight <<
-        "). This usually happens if a forking tree has some pending refinement events and cannot refine anymore, as it has already spawned cells. Statistics might have inconsistent view of world"
-      );
-      _globalWeight       = _localRankWeight;
-      _lightestRank._rank = tarch::mpi::Rank::getInstance().getRank();
-    }
-
-    _globalWeightRequest                  = new MPI_Request();
-    _lightestRankRequest                  = new MPI_Request();
-    _minimumOfMaximumOfRankWeightsRequest = new MPI_Request();
-
-    _globalWeightOut               = _localRankWeight;
-    _lightestRankOut._weight       = _localRankWeight;
-    _lightestRankOut._rank         = tarch::mpi::Rank::getInstance().getRank();
-
-    MPI_Iallreduce(
-      &_globalWeightOut,  // send
-      &_globalWeightIn,   // receive
-      1,             // count
-      MPI_DOUBLE,
-      MPI_SUM,
-      tarch::mpi::Rank::getInstance().getCommunicator(),
-      _globalWeightRequest
-    );
-    MPI_Iallreduce(
-      &_lightestRankOut,   // send
-      &_lightestRankIn,    // receive
-      1,                         // count
-      MPI_DOUBLE_INT,
-      MPI_MINLOC,
-      tarch::mpi::Rank::getInstance().getCommunicator(),
-      _lightestRankRequest
-    );
-    MPI_Iallreduce(
-      &_minimumOfMaximumOfRankWeightsOut,     // send
-      &_minimumOfMaximumOfRankWeightsIn,      // receive
-      1,             // count
-      MPI_DOUBLE,
-      MPI_MIN,
-      tarch::mpi::Rank::getInstance().getCommunicator(),
-      _minimumOfMaximumOfRankWeightsRequest
-    );
-    #endif
-  }
-}
 
 double toolbox::loadbalancing::CostMetrics::getGlobalCost() const {
   return _globalWeight;

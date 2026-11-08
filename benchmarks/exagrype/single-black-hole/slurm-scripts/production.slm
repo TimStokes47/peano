@@ -1,0 +1,37 @@
+#!/bin/bash
+# Production setup of README.dox (domain 486, volume size 0.4, t=100) on
+# several nodes with MPI. Build once on the login node, then submit:
+#   python3 $BENCHMARK/single-black-hole.py --scheme fv --amr-levels 2 \
+#     --variant production --output-directory production --no-clean
+#   sbatch production.slm
+#SBATCH --job-name=sbh-production
+#SBATCH -p multi
+#SBATCH --nodes=8
+#SBATCH --ntasks-per-node=1
+#SBATCH -c 128
+#SBATCH --exclusive
+#SBATCH --time=72:00:00
+#SBATCH --output=sbh-production-%j.out
+
+source /etc/profile.d/modules.sh
+
+module purge
+module load oneapi/2024.2
+export FLAVOUR_NOCONFLICT=1
+module load gcc/13.2
+module load intelmpi
+module load gsl
+module load python/3.10.8
+
+export I_MPI_CXX=icpx
+
+# Adapt to your installation: the Peano checkout and its Python environment.
+PEANO=${PEANO:-$HOME/git/Peano}
+source $PEANO/.venv/bin/activate
+export PYTHONPATH=$PEANO/src:$PYTHONPATH
+BENCHMARK=$PEANO/benchmarks/exagrype/single-black-hole
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+cd production
+mpirun -np $SLURM_NTASKS ./single-black-hole

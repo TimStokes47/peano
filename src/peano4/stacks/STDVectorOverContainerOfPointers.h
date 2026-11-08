@@ -2,7 +2,6 @@
 // use, please see the copyright notice at www.peano-framework.org
 #pragma once
 
-
 #include <algorithm>
 #include <vector>
 
@@ -15,8 +14,7 @@
 #include "tarch/logging/Log.h"
 #include "tarch/mpi/IntegerMessage.h"
 #include "tarch/mpi/Rank.h"
-#include "tarch/multicore/Tasks.h"
-
+#include "tarch/multicore/Task.h"
 
 namespace peano4 {
   namespace stacks {

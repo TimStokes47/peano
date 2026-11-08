@@ -1,0 +1,257 @@
+/**
+@page page_exagrype_fo_so_ccz4 First-order second-order CCZ4
+
+\tableofcontents
+
+This is a brief sketch of the first-order second-order hybrid CCZ4 implementation in ExaGRyPE.
+
+The first-order CCZ4 solver (exagrype.api.FOCCZ4Solver) evolves 59 unknowns.
+This is the original Dumbser/Zanotti formulation introduced with ExaHyPE 2 and 
+is a "clean" first-order formulation of the CCZ4 problem. A first-order 
+formulation is not what you find in most codes in the field. Most codes start
+to discretise the genuine second-order formulation of the field equations 
+straightaway. The reformulation into first order was driven, in parts, by 
+ExaHyPE's need to phrase all equations in first order, such that a generic
+first-order mathematical toolset can be thrown at the problem.
+
+
+In this first-order formulation, 
+34 out of the 59 unknowns are first derivatives of the other 25 (lapse, shift, conformal
+metric, phi), plus K0. So they are helper variables which now evolve in time.
+In princple however, they can always be reconstructed from the 25 dominant 
+variables. To the best of our knowledge, it is neither clear if this first-order
+formulation is faster nor if it is as stable as a second order approach. 
+While ExaHyPE does not support second-order formulations, ExaGRyPE provides 
+a third variant, which is kind of a hybrid fo first- and second-order
+formulation: A FOSO CCZ4 implementation! It is a reconstructed first-order/second-order
+scheme.
+
+
+In the reconstructed formulation, we only
+evolve the 25 primary unknowns and recompute the derivatives from them
+explicitly after each time step: The evolution and ocmpute kernels of 
+CCZ4 still feed only from first order derivatives, but these derivatives
+are constructed explicitly from the solution prior to the kernel application. 
+
+We realise this with two partners which take turns in the time stepping task
+graph:
+
+| | Evolved ("real") unknowns | Auxiliary variables |
+|---|---|---|
+| exagrype.api.FOSOCCZ4Solver (SO) | 25 primary variables | 34 derivatives |
+| exagrype.api.FOSOCCZ4Reconstructor | 34 derivatives | 25 primary variables |
+
+Both see the same 59 entries, but with swapped roles.
+
+- The reconstructor runs first. A task of it invokes the reconstruction of the
+  quantities that the first-order CCZ4 solver requires (exagrype::ccz4::recomputeAuxiliaryVariablesFD4_4thOrder()).
+  It computes these derivatives from the primary variables with halo. The derivatives
+  are then projected onto the faces.
+- The solver finds the derivatives with a halo, reconstructs its own 25
+  unknowns with a halo, and calls the very same CCZ4 kernels as
+  the first-order solver. As the kernels are the second-order variants, they only
+  evolve the first 25 unknowns.
+- CCZ4 code must not be duplicated. All CCZ4 kernels, parameters, initial
+  conditions and the constraint enforcement are shared between the first-order
+  and the second-order solver.
+- Eventually, SO has to give results very similar to the first-order solver. The
+  difference is to be quantified by benchmarks (@ref benchmarks_exagrype_fo_vs_so).
+- Both solvers exist for Finite Volumes (FV) and fourth-order Finite
+  Differences (FD4). They differ in their  reconstruction: FD4 uses a fourth-order stencil
+  in each Runge-Kutta stage, FV uses second-order central differences once per
+  time step (see below).
+
+
+# Design
+
+## Class structure
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+exahype2.api.Solver
+  └── exagrype.api.CCZ4SolverBase     parameters, PDE terms (via hooks), initial
+        │                              condition, constraint enforcement
+        ├── exagrype.api.FOCCZ4Solver     59 unknowns, secondary pointer is Q+25
+        └── exagrype.api.FOSOCCZ4Solver   25 unknowns + auxiliary variables "Derivatives" (34),
+                                           secondary pointer is "derivatives"
+                  └── .reconstructor : exagrype.api.FOSOCCZ4Reconstructor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The kernels in exagrype::ccz4 always work on 59 entries, which they take as two
+pointers: one to the 25 primary entries and one to the 34 secondary entries. The
+base class generates the PDE term implementations once. The only thing that
+differs is a tiny hook, which tells the generated code where the secondary
+entries live:
+
+- FOCCZ4Solver: behind the primary ones, i.e. the pointers are Q and Q+25.
+- FOSOCCZ4Solver: in the auxiliary variables, i.e. the pointers are Q and
+  "derivatives". Nothing is copied. As the solver does not evolve the secondary
+  entries, it passes a nullptr for the secondary part of the result, and the
+  kernels skip it.
+
+The same holds for the initial condition: any routine from
+exagrype.api.initialvalues fills 59 entries; the SO solver wraps it, runs it on a
+local array and splits the outcome over Q and the derivatives. Therefore, the
+initial conditions are not duplicated either.
+The constraint enforcement of the SO solver uses
+exagrype::ccz4::enforceCCZ4constraintsOfEvolvedVariables(), which is the first
+part of exagrype::ccz4::enforceCCZ4constraints() (it is called by the latter, i.e.
+the code is shared).
+
+## Data
+
+The derivatives are an instance of exahype2.api.AuxiliaryVariables (named
+"Derivatives"), owned by the SO solver. This re-uses all the existing machinery:
+a cell patch, face overlaps, halo reconstruction in the solver's task graph.
+Before this project, auxiliary variables were written once at the setup. The
+reconstructor is the first component which updates them in every time step.
+
+## Task graph
+
+For each Runge-Kutta stage \f$ s \f$ the reconstructor inserts one task
+in front of the reconstruction task of the solver:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Project stage s onto faces (SO)
+     │
+     ▼
+Reconstruct derivatives for stage s (SOReconstructor)
+     │   1. build input of stage s with halo       (toolbox ReconstructPatchAndApplyFunctor)
+     │   2. exagrype::ccz4::reconstructFirstDerivativesFD4()  (wraps the legacy reconstruction)
+     │   3. project derivatives onto faces          (ProjectPatchOntoFaces + RollOverUpdatedFace)
+     ▼
+Reconstruct stage s (SO)  ->  Evaluate right-hand side s (SO)  ->  Prepare stage s+1 (SO)  ->  ...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The reconstructor is realised by the solver right after the solver itself
+(FOSOCCZ4Solver::generate_solver_realisation()). The task graph compiler fuses
+the tasks as usual, i.e. the reconstruction of the derivatives and the solver's
+own reconstruction typically end up in neighbouring (producer/consumer) mesh
+sweeps.
+
+## FD4 specifics
+
+The routine recomputeAuxiliaryVariablesFD4_4thOrder() uses the stencil
+\f$ [1\ -8\ 0\ 8\ -1]/(12h) \f$ and needs a halo of three. The solver evaluates
+the fluxes and non-conservative products on the faces of a cell, i.e. it needs
+the derivatives left and right of each face. The derivatives are thus required
+one layer outside of the cell, and the stencil reaches two layers further out.
+The plain FD4 scheme of ExaHyPE only has a halo of two. exagrype.api.FOSOCCZ4Solver therefore
+requires a halo of at least three: exagrype.api.FOSOCCZ4Reconstructor rejects
+numerical schemes with a smaller halo. A halo of three is given by
+exagrype.api.FD4WithKODissipation and by exahype2.api.rkfd4.CentralDifferencesWithRungeKutta
+with lopsided advection (as used by the benchmark). The wrapper
+exagrype::ccz4::reconstructFirstDerivativesFD4() hands the halo straight on to
+the routine.
+
+
+## FV specifics
+
+The Finite Volume variant (exahype2.api.fv.RusanovWithExplicitEuler, overlap one) reuses the
+reconstructor with three differences:
+
+- Stencil: exagrype::ccz4::reconstructFirstDerivativesCentralDifferences() applies
+  \f$ [-1\ 0\ 1]/(2h) \f$. It reaches one layer out, i.e. the overlap of one is
+  enough. The derivatives one layer outside of the cell (needed for the
+  Rusanov flux and the non-conservative product on the faces) are not computed from a
+  wider halo but by the neighbour cell and exchanged via the faces. The scheme
+  is second-order accurate in the derivatives.
+- One task: there is a single stage, so the reconstructor inserts a single task
+  "Reconstruct derivatives" in front of the solver's "Reconstruct" task, and
+  uses the Finite Volume action sets for the projection onto the faces.
+- Stateless PDE terms: the Finite Volume kernels call the PDE terms as static
+  functions. exagrype.api.CCZ4SolverBase therefore registers stateless
+  non-conservative product, source and eigenvalue terms. The kernels only use
+  compile-time constants, so this loses nothing. The Finite Differences
+  (exahype2.api.rkfd4) call stateless terms, too (they forward a dummy
+  exahype2::Solver::Offloadable tag to the static method), i.e. there is no case
+  distinction between the schemes. Sommerfeld boundary conditions would
+  need a stateful eigenvalue term (exahype2.api.blockstructured.BoundaryConditions),
+  but the CCZ4 solvers have not been used with them yet.
+
+
+## Explanation of the need of an "additional" boundary layer and the modelling of the reconstruction as real solver
+
+Add the heart of the FOSO CCZ4 formalism is still a first-order update of the primary 
+unknowns with standard first-order techniques. For finite volumes, we want, for example,
+to reconstruct the ncp (non-conservative product) on a face to feed into the numerical 
+scheme (step 1). For this reconstruction, we need the ncp value in the left and right 
+adjacent cell. Within these cells, we can calculate this value, as we know the solution 
+- which is piecewise constant for our simple FV scheme.
+
+@image html documentation/exagrype/so-reconstruction-overlaps.png
+
+For this "final" compute step, we need a halo of one, and we have to exchange face data
+prior to the time step. Into the ncp calculation in the left neighbour feed the 
+auxiliary variables, which are effectively placeholders for the derivatives of 
+the solution. If we want to reconstruct these guys, we again need a left and right 
+neighbour, and these neighbour accesses again exceed the local patch.
+
+Therefore, employing a FOSO scheme over FV requires a halo size of at least 2, and there
+has to be an additional data exchange step. Otherwise, the reconstruction would fail. 
+For FD4, the halo has to be at least 3. 
+
+
+# Lab notes
+
+## What worked
+
+- **Auxiliary variables as the data model.** The derivatives could be modelled
+  as exahype2.api.AuxiliaryVariables without any change to ExaHyPE. The rkfd4 scheme
+  already hands the solver's auxiliary variables to the kernels in the same
+  array as the unknowns (unknowns first, then the auxiliary variables), which
+  is exactly the layout of the 59 CCZ4 entries. Evolving only 25 of them needs
+  nothing besides the existing "copy only the unknowns back" logic.
+- **One shared time stepping graph.** The Project owns one time stepping graph
+  into which all solvers insert their tasks. The reconstructor looks up the
+  solver's tasks by name ("<solver>_Reconstruct stage <s>") and adds itself as
+  an additional dependency. No change of the generic exahype2.api was required.
+- **Reusing ReconstructPatchAndApplyFunctor.** The toolbox action set builds the
+  halo patch and then runs a user-supplied snippet. The snippet is one call
+  into the C++ library, i.e. the generated code stays tiny.
+- **Refactoring FOCCZ4Solver.** After moving the logic into the base class,
+  the unit tests of the first-order solver (tests/unit/test_exagrype_ccz4_solver.py,
+  test_exagrype_fd4_with_ko_dissipation.py) passed unchanged.
+
+## What did not work (initially), and how we fixed it
+
+- **The reconstructor as a second exahype2.api.Solver / project member.**
+  The original idea was to add the reconstructor to the project like a solver.
+  The project's repository generator expects every solver to have a C++ solver
+  class and a global instance (get_name_of_solver_class() etc.). The
+  reconstructor evolves nothing and has no such class. Giving it one would have
+  meant a dummy numerical scheme, dummy time stepping and an unnecessary C++
+  class. Instead, the SO solver creates its reconstructor in the constructor
+  and realises it right after itself. Users only add the SO solver to the
+  project. Conceptually, the pair is still two partners (the reconstructor has
+  its own tasks, data and name prefix).
+- **Peano's stacks and the face data.** The first implementation declared the
+  faces of the derivatives as WRITE in the reconstructor's task. In a debug
+  build, Peano aborted in the first time step in
+  SpacetreeSet::exchangeAllPeriodicBoundaryDataStacks() with
+  "stackContainer.getForPush(...)->empty()" (a stack of 81 entries was not
+  empty). Rule of thumb: every face (or cell) datum that has been written
+  once has to be loaded (read) by the next task that touches it, as otherwise
+  the entries pile up on Peano's stacks. The setup writes the derivatives'
+  faces, therefore the reconstructor has to declare them READ_AND_WRITE
+  (it loads the old value, the roll-over overwrites it). The stage input
+  needs READ_AND_WRITE for the same reason, as the solver's reconstruction
+  reads it afterwards.
+- **Two rkfd4 solvers in one project.** Both solvers write the solver-independent
+  kernel kernels/rungekutta_linear_combination.cpph, and the generator appends to
+  the file. The second solver therefore duplicates the function
+  (redefinition error). The same happens if you re-run a generator in an
+  already populated directory (also the solver-specific kernels are duplicated
+  then). The benchmark works around it by building FO and SO in separate
+  directories, and deleting the directory first. A proper fix, i.e.
+  making exahype2.api.rungekutta.generate_linear_combination_kernel()
+  idempotent, is outside of this project's scope and left to a decision of the
+  maintainers.
+- **enforceCCZ4constraints() on 25 unknowns.** The routine touches entries up to
+  index 54 and would read/write beyond the 25 unknowns of the SO patch. We
+  split it (see above). The first-order solver's behaviour is bit-identical.
+- **Logging.** With LoggerVerbosity.TEXT, debug builds log every data movement
+  (several hundred thousand lines per second). A benchmark that runs for a
+  few time steps then takes forever. For tests use LoggerVerbosity.OFF and the
+  release build.
+
+*/

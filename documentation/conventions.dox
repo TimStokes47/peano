@@ -2,42 +2,31 @@
 
  \page page_conventions_home Coding Conventions and IDEs
 
-\tableofcontents
-
- We follow the convention that the header files only hold the declarations, while
- the cpp files hold the actual implementations. We kind of gave up on this convention
- in few particular places for speed, i.e. whenever a compiler should do inlining,
- i.e. remove function calls, but doesn't. If we found such places and suffered
- significantly in terms of performance, then we moved the implementation into the
- headers. We also use header-based implementations for template (the header
- implementation files then have the extension .cpph), but as soon as compilers do
- widely support templates that are not headers or we have moved functions over to
- the new C++ auto keyword, we'll move all into the implementation files.
+ \tableofcontents
+ 
+ The page below enlists some recommendations on how to use particular IDEs, and it
+ also provides coding and formatting guidelines. The
+ @ref page_documentation_home "documentation guidlines however are hosted on a separate page".
 
 
- I decided a while ago that all documentation should be in the headers if
- possible. Most documentation focuses on what a function does not how it does
- it. Therefore, the docu belongs to the declaration. If an implementation is so
- complicated or long that you need documentation within the source code to
- understand it, then the function needs to be simplified or split up.
+# Repository organisation
 
- Further to that, I try to make any source code, documentation, ... stick to a
- "80 characters per line" policy. Such files can be easily read with vi or less
- on the terminal on any computer.
+Peano's core is a collection of static libraries.
+A Peano application consists of C++ glue code which combines all of these
+libraries.  This glue code is generated through the Python API.
 
-
- Syntax Conventions
- ==================
-
- We mainly follow mainstream Java syntax conventions in Peano for historic reasons and
- as this is a real OO/C++ project. Some important principles are:
-
- - One file per class
- - Consistent naming conventions
- - Long, self-explaining names (no acronyms)
- - One subdirectory per namespace
-
-
+- **documentation** Hosts the sources of the document that you hold
+  in your hands.
+  large-scale Peano applications.
+- **src** Holds the C++ Peano sources of the Peano core and all the
+  toolboxes.
+- **src/.../api** Holds the Python API scripts of the underlying C++ code part.
+- **tests** Collection of small test cases that can be automised.
+- **benchmarks** Collection of benchmark scripts.
+- **tutorials** Holds all the tutorials.
+- **applications** Proper, real-world applications, i.e. bigger pieces of
+  code built on top of Peano or one of its extensions. Often, these features
+  are used in return by benchmarks and tutorials.
 
 
 Configuring Peano in Eclipse
@@ -102,24 +91,71 @@ class MyClassForStoringData:
   # code goes here
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+Python routines are documented with Doxygen docstrings, i.e. docstrings
+whose opening triple quotes are followed by an exclamation mark (see the
+example below). Every parameter description starts with a `@param`
+statement, followed by the parameter's name, a colon and its type. The
+description itself follows on the subsequent, indented lines:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+def translate(graph, identifier):
+  """!
+
+  Translate a task graph into a sequence of mesh traversals
+
+  @param graph: peano4.api.taskgraph.Graph
+    The task graph to compile.
+
+  @param identifier: str
+    Prefix of every generated observer's name.
+
+  """
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Please do not write `graph: peano4.api.taskgraph.Graph` without the
+`@param`: Doxygen then does not recognise the parameter description.
+
+Cross-references to other parts of the code are written with `@ref`, never
+with `@see`, and use the fully qualified name of the target, so Doxygen can
+resolve them into links:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+  Such tasks are never fused
+  (@ref peano4.api.taskgraph.compiler.FuseSteps._have_conflicting_data()).
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Short names such as `_have_conflicting_data()` or `translate()` typically
+can not be resolved and yield a Doxygen warning.
+
 More info can be found in the FAQs below.
 
 # C++ conventions / Style Guide
 
-We use fairly standard conventions when writing C++. This includes, but isn't limited to:
+ We mainly follow <a href="https://www.oracle.com/java/technologies/javase/codeconventions-namingconventions.html">Oracle Java naming conventions</a> in Peano,
+ which we translate one-to-one into the C++ world.
+ C++-specific principles are:
 
-- CamelCase for methods, variables and classes
-- Indentation with tabs (two spaces wide)
-- Opening brace for ```if``` statements or ```for``` loops should be on same line, eg:
-~~~~~~~~~~~~~~~~~~~~~~~
-for (int i=0; i<10; i++){
-  // code goes here
-}
-~~~~~~~~~~~~~~~~~~~~~~~
+ - At most 80 characters per line.
+ - One file per class.
+ - No tabs, but two spaces.
+ - Each class is represented by one header and one implementation file:
+   We follow the convention that the header files only hold the declarations, while
+   the cpp files hold the actual implementations. We kind of gave up on this convention
+   in few particular places for speed, i.e. whenever a compiler should do inlining,
+   i.e. remove function calls, but doesn't. If we found such places and suffered
+   significantly in terms of performance, then we moved the implementation into the
+   headers. These cases however have to be documented explicitly!
+ - The header files have the extension .h and the implementation have the extension .cpp
+ - Templates are also split into declaration (in header) and implementation. 
+   The implementation file is included by the header, as templates have to be all in header, and their extension is .cpph.
+ - Long, self-explaining names (no acronyms)
+ - One subdirectory per namespace
+ 
+ The @ref page_documentation_home "documentation guidlines are hosted on a separate page". 
 
-If in doubt, you can use the automatic formatting tool described below, but it is crucial
-that you only format files which you had modified already, i.e. no formatting random files
-in the repo.
+  If in doubt, you can use the automatic formatting tool described below, but it is crucial
+  that you only format files which you had modified already, i.e. no formatting random files
+  in the repo.
 
 
 
@@ -204,9 +240,24 @@ formatter on generated files.
 
 
 
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
+Our formatting scripts works only within a virtual environment. To create such 
+an environment, follow the following steps:
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+sudo apt install python-venv
+rm -rf .formatting_python_env
+python3 -m venv .formatting_python_env
+source .formatting_python_env/bin/activate
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+We install the Python environments, remove old formatting tools, create a new 
+environment within the Peano directory and finally activate this environment.
+From hereon, future steps should only require the very last step. 
+</div>
 
+As with other parts of the code, the @ref page_faq_home might contain further 
+helpful instructions.
 
 
 

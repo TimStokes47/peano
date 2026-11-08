@@ -39,24 +39,27 @@ namespace toolbox {
  * splitting variants and constraints in peano4::grid::Spacetree::isCellTopDownSplitCandidate()
  * and  peano4::grid::Spacetree::isCellBottomUpSplitCandidate(),
  * peano4::grid::Spacetree::splitOrJoinCell() and notably the general
- * @ref peano_domain_decomposition "domain decomposition overview" for the
+ * @ref page_peano_domain_decomposition "domain decomposition overview" for the
  * rationale.
  */
 class toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates: public toolbox::loadbalancing::AbstractLoadBalancing {
   public:
     SpreadOutOnceGridStagnates(Configuration* configuration = new DefaultConfiguration(), CostMetrics*   costMetrics = new toolbox::loadbalancing::metrics::CellCount() );
-    virtual ~SpreadOutOnceGridStagnates();
+    virtual ~SpreadOutOnceGridStagnates() override = default;
 
     virtual void finishStep() override;
   private:
     static tarch::logging::Log  _log;
 
-    int _previousNumberOfCells;
-    int _numberOfStableGridIterations;
-
     /**
      * Return 0 if the load balancing should not split (yet) and otherwise
      * return number of splits required.
+     *
+     * The strategy only splits once the grid has stagnated, i.e. once the
+     * grid statistics of peano4::parallel::SpacetreeSet::getGridStatistics()
+     * report that no vertex has been refined and no refinement has been
+     * triggered in the most recent traversal. As these statistics are
+     * reduced over all ranks, all ranks agree on this criterion.
      */
     int getNumberOfTreesPerRank() const;
 

@@ -3,7 +3,7 @@
 from .AbstractADERDGActionSet import AbstractADERDGActionSet
 
 import jinja2
-import peano4.solversteps
+import peano4.api.solversteps
 
 
 class DynamicAMR(AbstractADERDGActionSet):
@@ -90,6 +90,36 @@ class DynamicAMR(AbstractADERDGActionSet):
   }
 """
 
+        self._Template_CreateCell = """    
+  logTraceIn( "createCell(...)" );
+
+  kernels::{{SOLVER_NAME}}::cellUnknownsProlongation(
+    fineGridCell{{SOLVER_NAME}}Q.value,
+    coarseGridCell{{SOLVER_NAME}}Q.value,
+    marker.getRelativePositionWithinFatherCell()
+  );
+
+  fineGridCell""" + solver._cell_label.name + """.setTimeStamp( coarseGridCell""" + solver._cell_label.name + """.getTimeStamp() );
+  fineGridCell""" + solver._cell_label.name + """.setTimeStepSize( coarseGridCell""" + solver._cell_label.name + """.getTimeStepSize() );
+
+  logTraceOut( "createCell(...)" );
+"""
+
+        self._Template_DestroyCell = """
+  logTraceInWith1Argument( "destroyCell(...)", marker.toString() );
+
+  kernels::{{SOLVER_NAME}}::cellUnknownsRestriction(
+    fineGridCell{{SOLVER_NAME}}Q.value,
+    coarseGridCell{{SOLVER_NAME}}Q.value,
+    marker.getRelativePositionWithinFatherCell()
+  );
+
+  coarseGridCell""" + solver._cell_label.name + """.setTimeStamp( fineGridCell""" + solver._cell_label.name + """.getTimeStamp() );
+  coarseGridCell""" + solver._cell_label.name + """.setTimeStepSize( fineGridCell""" + solver._cell_label.name + """.getTimeStepSize() );
+  
+  logTraceOut( "destroyCell(...)" );
+"""
+
     def get_action_set_name(self):
         return __name__.replace(".py", "").replace(".", "_")
 
@@ -99,18 +129,24 @@ class DynamicAMR(AbstractADERDGActionSet):
         self._solver._init_dictionary_with_default_parameters(d)
         self._solver.add_entries_to_text_replacement_dictionary(d)
 
-        if operation_name == peano4.solversteps.ActionSet.OPERATION_CREATE_HANGING_FACE:
+        if operation_name == peano4.api.solversteps.ActionSet.OPERATION_CREATE_HANGING_FACE:
             d["INTERPOLATE_GUARD"] = self._interpolate_guard
             result = jinja2.Template(self._Template_CreateHangingFace).render(**d)
             pass
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_DESTROY_HANGING_FACE
+            == peano4.api.solversteps.ActionSet.OPERATION_DESTROY_HANGING_FACE
         ):
             d["DELETE_GUARD"] = self._delete_guard
             d["RESTRICT_GUARD"] = self._restrict_guard
             result = jinja2.Template(self._Template_DestroyHangingFace).render(**d)
             pass
+        if operation_name==peano4.api.solversteps.ActionSet.OPERATION_CREATE_CELL:
+          result  = jinja2.Template(self._Template_CreateCell).render(**d)
+          pass
+        if operation_name==peano4.api.solversteps.ActionSet.OPERATION_DESTROY_CELL:
+          result  = jinja2.Template(self._Template_DestroyCell).render(**d)
+          pass
         return result
 
     def get_includes(self):

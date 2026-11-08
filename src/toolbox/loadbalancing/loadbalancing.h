@@ -47,8 +47,8 @@
  * determines the load balancing strategy, while the configuration object
  * tailors this strategy to your experimental setup and machine.
  *
- * - See more on how to @ref page_exahype_multicore "configure load balancing within ExaHyPE 2".
- * - There's a dedicated page on @ref swift_parallelisation "the parallelisation aspects within Swift 2".
+ * - See more on how to @ref page_exahype_domain-decomposition "configure load balancing within ExaHyPE 2".
+ * - There's a dedicated page on @ref exaparty_parallelisation "the parallelisation aspects within ExaParty".
  *
  *
  * ## Overview over some pre-manufactured load balancing strategies
@@ -58,6 +58,20 @@
  *   partitioning instructions following a rulebook. This version allows you
  *   to create a reproducible load balancing scheme or to manually determine
  *   the splitting.
+ *   \n
+ *   Offline helpers (see @ref page_toolbox_loadbalancing_api) yield an
+ *   enumerated list of splits, i.e. four lists splittingTrees, numberOfCells,
+ *   subTrees (subtree ids) and bottomUpFlags, where entry k describes the kth
+ *   split. The strategy itself decides when to issue the kth split.
+ *   Interpretation:
+ *   - splittingTrees = unique parent subtree id for all introduced cells of the split,
+ *     or 0 if ambiguous.
+ *   - numberOfCells = number of cells that switch ownership across a parent–child
+ *     edge (child is target subtree, parent exists and has a different subtree id). For level 0,
+ *     it is the number of cells on level 0 that already belong to the target subtree.
+ *   - subTrees = subtree identifiers (not MPI ranks); you must map them to destinationRanks for
+ *     the Hardcoded constructor.
+ *   - bottomUpFlags = whether the split is a bottom-up or top-down split.
  * - toolbox::loadbalancing::strategies::SpreadOut Ensure that, if the problem is large
  *   enough, each thread on each rank gets one partition.
  * - toolbox::loadbalancing::strategies::SpreadOutHierarchically This strategy is very
@@ -163,7 +177,7 @@
  * The invocation is close to trivial
  *
  * ~~~~~~~~~~~~~~~~~~~~~
- * python3 ~/git/Peano/python/peano4/toolbox/loadbalancing/plot_load_distribution.py mpi/ccz4-backfill-fv-0.05-4-ranks.results
+ * python3 ~/git/Peano/src/toolbox/loadbalancing/api/postprocessing/plot_load_distribution.py mpi/ccz4-backfill-fv-0.05-4-ranks.results
  * ~~~~~~~~~~~~~~~~~~~~~
  *
  * though you might want to study the help dumped if you pass --help.
@@ -173,8 +187,8 @@
  * over the load distribution and tells you also how many trees aka subpartitions
  * you employ per rank.
  *
- * @image html runtime_analysis_loadbalancing_example00.png
- * @image html runtime_analysis_loadbalancing_example01.png
+ * @image html src/toolbox/loadbalancing/runtime_analysis_loadbalancing_example00.png
+ * @image html src/toolbox/loadbalancing/runtime_analysis_loadbalancing_example01.png
  *
  *
  * ## Displaying the domain decomposition in Paraview
@@ -191,19 +205,47 @@
  * example. In Paraview you can switch to the last variable of the grid which represents which tree
  * the volumes belong to:
  *
- * @image html visualise_domain_decomposition0.png
+ * @image html src/toolbox/loadbalancing/visualise_domain_decomposition0.png
  *
  * You can further look into individual trees by adding Filters - Calculator to extract the field
  * information
  *
- * @image html visualise_domain_decomposition1.png
+ * @image html src/toolbox/loadbalancing/visualise_domain_decomposition1.png
  *
  * and then apply Filters - Threshold where you can alter the minimum and maximum to visualise the
  * certain partition:
  *
- * @image html visualise_domain_decomposition2.png
+ * @image html src/toolbox/loadbalancing/visualise_domain_decomposition2.png
  *
  *
+ * ## Visualising Tree structure with spliting
+ * 
+ * For information of the whole structure, you need to first enable the grid plot property of
+ * your solver:
+ * 
+ * ~~~~~~~~~~~~~~~~~~~~~~~
+ * MySolver.__init__(
+ *   ...,
+ *   plot_grid_properties=True
+ * )
+ * ~~~~~~~~~~~~~~~~~~~~~~~
+ * 
+ * And launch a new simulation with only one snapshot output for your interested timestamp (to aviod
+ * duplicate domain info from multiple snapshot, you can use parameter of ploting start time and simulation
+ * ending time to achieve this. Obviously for static AMR the initial timesnapshot will do the work)
+ * 
+ * Then use the python script for postprocessing
+ * 
+ * ~~~~~~~~~~~~~~~~~~~~~~~
+ * pvpython ~/git/Peano/python/exahype2/postprocessing/treeReaderWithSplit.py -file-path your-grid-file-folder
+ * ~~~~~~~~~~~~~~~~~~~~~~~
+ * 
+ * it will then provide the visuilasation of the whole trees structure, with different color squres representing 
+ * nodes from different subtrees. The whole tree will be illustrated so the first matrix will always be 3^d, then 
+ * 9^d, 27^d,...etc.
+ * 
+ * @image html src/toolbox/loadbalancing/visualise_tree_split.png
+ * 
  * ## Performance flaws
  *
  * Inappropriate or problematic domain decomposition decisions will always
@@ -211,7 +253,7 @@
  * discuss generic details which are not tied to this toolbox. However, they
  * are very useful to get the most out of this toolbox:
  *
- * - Peano has a @ref page_peano_runtime_analysis "dedicated runtime analysis discussion" which
+ * - Peano has a @ref page_peano_domain_decomposition "dedicated runtime analysis discussion" which
  *   can help to understand the runtime behaviour shaped by the domain
  *   decomposition.
  * - Peano has a dedicated page on @ref page_peano_performance_optimisation "performance optimisation".
@@ -225,7 +267,7 @@
  * decisions:
  *
  * - Peano's @ref page_exahype_runtime_analysis "runtime analysis discussion" and its @ref page_exahype_performance_optimisation "performance optimisation recipes".
- * - Swift's @ref page_swift_performance_optimisation "performance optimisation discussion".
+ * - ExaParty's @ref page_exaparty_performance_optimisation "performance optimisation discussion".
  *
  *
  * # Tuning and Tailoring the domain decomposition
@@ -305,6 +347,19 @@
  * most load balancing flavours also have a variant which uses top-down
  * splitting. Please consult all classes within toolbox::loadbalancing::strategies.
  *
+ *
+ * # Formalisation of load balancing
+ *
+ * There is a dedicated subpage
+ * @subpage page_toolbox_loadbalancing_strategies which describes load
+ * balancing with graph theoretic glasses on.
+ *
+ * For offline decomposition and analysis of adaptive mesh trees, there is
+ * a dedicated subpage:
+ * @subpage page_toolbox_loadbalancing_api
+ *
+ * @subpage page_toolbox_loadbalancing_api_api_postprocessing is a dedicated
+ * page only discussing scripts that we ship to visualise the outcomes.
  */
 namespace toolbox {
   /**

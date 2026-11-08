@@ -12,7 +12,7 @@ peano4::grid::GridTraversalEventGenerator::GridTraversalEventGenerator(int id):
   _id(id) {}
 
 std::bitset<TwoPowerD> peano4::grid::GridTraversalEventGenerator::areVerticesLocal(
-  [[maybe_unused]] GridVertex  vertices[TwoPowerD],
+  [[maybe_unused]] GridVertex                                vertices[TwoPowerD],
   [[maybe_unused]] const SplitSpecification&                 splitTriggered,
   [[maybe_unused]] const std::set<int>&                      splitting,
   [[maybe_unused]] const std::set< int >&                    joinTriggered,
@@ -207,6 +207,67 @@ std::bitset<TwoTimesD> peano4::grid::GridTraversalEventGenerator::areFacesAdjace
   return result;
 }
 
+namespace {
+  /**
+   * Stacks along which entities are passed from one cell to the next one
+   * within a sweep. This excludes the in/out stacks, the call stack and the
+   * stacks for periodic boundary conditions and parallel data exchange.
+   */
+  bool isStackBetweenCells(int number) {
+    return number >= peano4::grid::PeanoCurve::NumberOfBaseStacks
+       and number <  peano4::grid::PeanoCurve::NumberOfBaseStacks + 2*Dimensions;
+  }
+}
+
+bool peano4::grid::GridTraversalEventGenerator::isFullyRemoteEnterEvent(const GridTraversalEvent& event) {
+  if (event.getIsCellLocal() or event.getIsVertexLocal().any() or event.getIsFaceLocal().any()) {
+    return false;
+  }
+  if (event.getCellData()!=TraversalObserver::NoData) {
+    return false;
+  }
+  for (int i=0; i<TwoPowerD; i++) {
+    if (event.getVertexDataFrom(i)!=TraversalObserver::NoData) return false;
+  }
+  for (int i=0; i<TwoTimesD; i++) {
+    if (event.getFaceDataFrom(i)!=TraversalObserver::NoData) return false;
+  }
+  return true;
+}
+
+bool peano4::grid::GridTraversalEventGenerator::isFullyRemoteLeaveEvent(const GridTraversalEvent& event) {
+  if (event.getIsCellLocal() or event.getIsVertexLocal().any() or event.getIsFaceLocal().any()) {
+    return false;
+  }
+  if (event.getCellData()>=0) {
+    return false;
+  }
+  for (int i=0; i<TwoPowerD; i++) {
+    if (event.getVertexDataTo(i)>=0) return false;
+  }
+  for (int i=0; i<TwoTimesD; i++) {
+    if (event.getFaceDataTo(i)>=0) return false;
+  }
+  return true;
+}
+
+bool peano4::grid::GridTraversalEventGenerator::mayMaskDataOnIntermediateStacks(
+  const SplitSpecification&  splitTriggered,
+  const std::set<int>&       splitting,
+  const std::set< int >&     joinTriggered,
+  const std::set< int >&     joining,
+  const std::set< int >&     hasSplit,
+  bool                       spacetreeStateIsRunning
+) {
+  return spacetreeStateIsRunning
+     and splitTriggered.empty()
+     and splitting.empty()
+     and joinTriggered.empty()
+     and joining.empty()
+     and hasSplit.empty();
+}
+
+
 peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::createGenericCellTraversalEvent(
   [[maybe_unused]] GridVertex                                coarseGridVertices[TwoPowerD],
   [[maybe_unused]] GridVertex                                fineGridVertices[TwoPowerD],
@@ -262,6 +323,18 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     }
   } enddforx
 
+  dfor2(k) {
+    std::set<int> neighbourIds;
+
+    for (int i = 0; i < TwoPowerD; i++) {
+      if (fineGridVertices[kScalar].getAdjacentRanks(i)>=0) {
+        neighbourIds.insert(fineGridVertices[kScalar].getAdjacentRanks(i));
+      }
+    }
+
+    event.setNumberOfAdjacentTreesPerVertex(kScalar,neighbourIds.size());
+  } enddforx
+
   logTraceOutWith2Arguments( "createGenericCellTraversalEvent(...)", event.toString(), _id );
   return event;
 }
@@ -279,11 +352,15 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   [[maybe_unused]] bool                                      spacetreeStateIsRunning
 ) const {
   logTraceInWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather );
+  VertexType vertexTypes[TwoPowerD];
+  getVertexTypes(coarseGridVertices, relativePositionToFather, vertexTypes);
+
   GridTraversalEvent  event = createGenericCellTraversalEvent(coarseGridVertices, fineGridVertices, state, splitTriggered, splitting, joinTriggered, joining, relativePositionToFather, spacetreeStateIsRunning);
 
   event.setIsVertexAdjacentToParallelDomainBoundary( areVerticesAdjacentToParallelDomainBoundary(fineGridVertices, splitTriggered, splitting, joinTriggered, joining, true) );
   event.setIsFaceAdjacentToParallelDomainBoundary( areFacesAdjacentToParallelDomainBoundary(fineGridVertices, splitTriggered, splitting, joinTriggered, joining, true));
 
+  const bool mayMaskIntermediateStacks = mayMaskDataOnIntermediateStacks(splitTriggered, splitting, joinTriggered, joining, hasSplit, spacetreeStateIsRunning);
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
     const std::bitset<Dimensions>           vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
@@ -316,7 +393,11 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     }
 
     if (
-      PeanoCurve::isInOutStack(event.getVertexDataTo(i))
+      (
+        PeanoCurve::isInOutStack(event.getVertexDataTo(i))
+        or
+        (mayMaskIntermediateStacks and isStackBetweenCells(event.getVertexDataTo(i)))
+      )
       and
       not event.getIsVertexLocal(vertexIndex.to_ulong())
     ) {
@@ -331,7 +412,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
 
   for (int i=0; i<2*Dimensions; i++) {
     int        faceIndex   = PeanoCurve::getFaceNumberAlongCurve(state,i);
-    FaceType   type        = getFaceType(coarseGridVertices,relativePositionToFather,faceIndex);
+    FaceType   type        = getFaceType(vertexTypes,faceIndex);
     const int  stackNumber = PeanoCurve::getFaceWriteStackNumber(state,faceIndex);
 
     event.setFaceDataFrom(i,faceIndex);
@@ -355,7 +436,11 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     }
 
     if (
-      PeanoCurve::isInOutStack(event.getFaceDataTo(i))
+      (
+        PeanoCurve::isInOutStack(event.getFaceDataTo(i))
+        or
+        (mayMaskIntermediateStacks and isStackBetweenCells(event.getFaceDataTo(i)))
+      )
       and
       not event.getIsFaceLocal(faceIndex)
     ) {
@@ -364,7 +449,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   }
 
   {
-    CellType type = getCellType(coarseGridVertices,relativePositionToFather);
+    CellType type = getCellType(vertexTypes);
     const int  stackNumber = PeanoCurve::getCellWriteStackNumber(state);
 
     switch (type) {
@@ -399,6 +484,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   logTraceOutWith3Arguments( "createLeaveCellTraversalEvent(...)", state.toString(), event.toString(), _id );
   return event;
 }
+
 
 peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::createPrunedEnterCellTraversalEvent( SpacetreeState spacetreeState, const GridTraversalEvent& event ) const {
   GridTraversalEvent result = event;
@@ -458,6 +544,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   return result;
 }
 
+
 peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::createEnterCellTraversalEvent(
   [[maybe_unused]] GridVertex                                coarseGridVertices[TwoPowerD],
   [[maybe_unused]] GridVertex                                fineGridVertices[TwoPowerD],
@@ -471,6 +558,9 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   [[maybe_unused]] bool                                      spacetreeStateIsRunning
 ) const {
   logTraceInWith7Arguments( "createEnterCellTraversalEvent(...)", state.toString(), _id, relativePositionToFather, coarseGridVertices[0].toString(), coarseGridVertices[1].toString(), coarseGridVertices[2].toString(), coarseGridVertices[3].toString() );
+  VertexType vertexTypes[TwoPowerD];
+  getVertexTypes(coarseGridVertices, relativePositionToFather, vertexTypes);
+
   GridTraversalEvent  event = createGenericCellTraversalEvent(coarseGridVertices, fineGridVertices, state, splitTriggered, splitting, joinTriggered, joining, relativePositionToFather, spacetreeStateIsRunning);
 
   event.setIsVertexAdjacentToParallelDomainBoundary( areVerticesAdjacentToParallelDomainBoundary(fineGridVertices, splitTriggered, splitting, joinTriggered, joining, false) );
@@ -483,6 +573,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     assertion1( event.getIsFaceLocal(i) or not event.getIsFaceAdjacentToParallelDomainBoundary(i), event.toString() );
   #endif
 
+  const bool mayMaskIntermediateStacks = mayMaskDataOnIntermediateStacks(splitTriggered, splitting, joinTriggered, joining, hasSplit, spacetreeStateIsRunning);
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
     const std::bitset<Dimensions>  vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
@@ -516,7 +607,11 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     event.setVertexDataTo(i,vertexIndex.to_ulong());
 
     bool mayResetToNoData =
-      PeanoCurve::isInOutStack(event.getVertexDataFrom(i))
+      (
+        PeanoCurve::isInOutStack(event.getVertexDataFrom(i))
+        or
+        (mayMaskIntermediateStacks and isStackBetweenCells(event.getVertexDataFrom(i)))
+      )
       and
       not event.getIsVertexLocal(vertexPosition);
 
@@ -546,7 +641,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
 
   for (int i=0; i<2*Dimensions; i++) {
     int        faceIndex   = PeanoCurve::getFaceNumberAlongCurve(state,i);
-    FaceType   type        = getFaceType(coarseGridVertices,relativePositionToFather,faceIndex);
+    FaceType   type        = getFaceType(vertexTypes,faceIndex);
     const int  stackNumber = PeanoCurve::getFaceReadStackNumber(state,faceIndex);
 
     switch (type) {
@@ -571,7 +666,11 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
     event.setFaceDataTo(i,faceIndex);
 
     bool mayResetToNoData =
-      PeanoCurve::isInOutStack(event.getFaceDataFrom(i))
+      (
+        PeanoCurve::isInOutStack(event.getFaceDataFrom(i))
+        or
+        (mayMaskIntermediateStacks and isStackBetweenCells(event.getFaceDataFrom(i)))
+      )
       and
       not event.getIsFaceLocal(faceIndex);
 
@@ -585,7 +684,7 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   }
 
   {
-    CellType type = getCellType(coarseGridVertices,relativePositionToFather);
+    CellType type = getCellType(vertexTypes);
     const int  stackNumber = PeanoCurve::getCellReadStackNumber(state);
     switch (type) {
       case CellType::New:
@@ -625,10 +724,21 @@ peano4::grid::GridTraversalEvent peano4::grid::GridTraversalEventGenerator::crea
   return event;
 }
 
+
 peano4::grid::FaceType peano4::grid::GridTraversalEventGenerator::getFaceType(
   [[maybe_unused]] GridVertex                         coarseGridVertices[TwoPowerD],
   [[maybe_unused]] tarch::la::Vector<Dimensions,int>  positionOfCell,
   [[maybe_unused]] int                                faceNumber
+) {
+  VertexType vertexTypes[TwoPowerD];
+  getVertexTypes(coarseGridVertices, positionOfCell, vertexTypes);
+  return getFaceType(vertexTypes, faceNumber);
+}
+
+
+peano4::grid::FaceType peano4::grid::GridTraversalEventGenerator::getFaceType(
+  [[maybe_unused]] const VertexType  vertexTypes[TwoPowerD],
+  [[maybe_unused]] int               faceNumber
 ) {
   logTraceInWith1Argument( "getFaceType(...)", faceNumber );
 
@@ -640,7 +750,7 @@ peano4::grid::FaceType peano4::grid::GridTraversalEventGenerator::getFaceType(
   for (int i=0; i<TwoPowerD; i++) {
     std::bitset<Dimensions> studiedVertex = i;
     studiedVertex.set(normal,faceNumber>=Dimensions);
-    switch ( getVertexType( coarseGridVertices, positionOfCell + tarch::la::Vector<Dimensions,int>(studiedVertex) ) ) {
+    switch ( vertexTypes[studiedVertex.to_ulong()] ) {
       case VertexType::Hanging:
         break;
       case VertexType::New:
@@ -674,16 +784,25 @@ peano4::grid::FaceType peano4::grid::GridTraversalEventGenerator::getFaceType(
   return result;
 }
 
+
 peano4::grid::CellType peano4::grid::GridTraversalEventGenerator::getCellType(
   [[maybe_unused]] GridVertex                         coarseGridVertices[TwoPowerD],
   [[maybe_unused]] tarch::la::Vector<Dimensions,int>  positionOfCell
+) {
+  VertexType vertexTypes[TwoPowerD];
+  getVertexTypes(coarseGridVertices, positionOfCell, vertexTypes);
+  return getCellType(vertexTypes);
+}
+
+
+peano4::grid::CellType peano4::grid::GridTraversalEventGenerator::getCellType(
+  [[maybe_unused]] const VertexType  vertexTypes[TwoPowerD]
 ) {
   bool allVerticesAreDelete = true;
   bool allVerticesAreNew    = true;
 
   for (int i=0; i<TwoPowerD; i++) {
-        std::bitset<Dimensions> vectorPosition = i;
-    switch ( getVertexType( coarseGridVertices, positionOfCell + tarch::la::Vector<Dimensions,int>(vectorPosition) )) {
+    switch ( vertexTypes[i] ) {
       case VertexType::Hanging:
         break;
       case VertexType::Persistent:
@@ -715,86 +834,97 @@ peano4::grid::CellType peano4::grid::GridTraversalEventGenerator::getCellType(
   }
 }
 
+
+void peano4::grid::GridTraversalEventGenerator::getVertexTypes(
+  [[maybe_unused]] GridVertex                                coarseGridVertices[TwoPowerD],
+  [[maybe_unused]] const tarch::la::Vector<Dimensions,int>&  positionOfCell,
+  [[maybe_unused]] VertexType                                vertexTypes[TwoPowerD]
+) {
+  for (int i=0; i<TwoPowerD; i++) {
+    std::bitset<Dimensions> vertexPosition = i;
+    vertexTypes[i] = getVertexType( coarseGridVertices, positionOfCell + tarch::la::Vector<Dimensions,int>(vertexPosition) );
+  }
+}
+
+
+namespace {
+  /**
+   * Vertex type which a parent vertex in a given state contributes to its
+   * children. Indexed with the integer value of GridVertex::State.
+   */
+  constexpr peano4::grid::VertexType ParentStateToVertexType[] = {
+    peano4::grid::VertexType::Hanging,    // HangingVertex
+    peano4::grid::VertexType::Hanging,    // New
+    peano4::grid::VertexType::Hanging,    // Unrefined
+    peano4::grid::VertexType::Persistent, // Refined
+    peano4::grid::VertexType::Hanging,    // RefinementTriggered
+    peano4::grid::VertexType::New,        // Refining
+    peano4::grid::VertexType::Persistent, // EraseTriggered
+    peano4::grid::VertexType::Delete,     // Erasing
+    peano4::grid::VertexType::Hanging     // Delete
+  };
+
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::HangingVertex)==0 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::Refined)==3 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::Refining)==5 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::EraseTriggered)==6 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::Erasing)==7 );
+  static_assert( static_cast<int>(peano4::grid::GridVertex::State::Delete)==8 );
+
+  constexpr unsigned int toBit(peano4::grid::VertexType type) {
+    return 1u << static_cast<int>(type);
+  }
+}
+
+
 peano4::grid::VertexType peano4::grid::GridTraversalEventGenerator::getVertexType(
   [[maybe_unused]] GridVertex                         coarseGridVertices[TwoPowerD],
-  [[maybe_unused]] tarch::la::Vector<Dimensions,int>  position,
-  [[maybe_unused]] int                                dimension
+  [[maybe_unused]] tarch::la::Vector<Dimensions,int>  position
 ) {
-  if (dimension<0) {
-    switch (coarseGridVertices[ peano4::utils::dLinearised(position,2) ].getState()) {
-      case GridVertex::State::HangingVertex:
-        return VertexType::Hanging;
-      case GridVertex::State::Delete:
-      case GridVertex::State::New:
-      case GridVertex::State::Unrefined:
-        return VertexType::Hanging;
-      case GridVertex::State::Refined:
-        return VertexType::Persistent;
-      case GridVertex::State::RefinementTriggered:
-        return VertexType::Hanging;
-      case GridVertex::State::Refining:
-        return VertexType::New;
-      case GridVertex::State::EraseTriggered:
-        return VertexType::Persistent;
-      case GridVertex::State::Erasing:
-        return VertexType::Delete;
+  // Dimensions along which only one parent vertex is adjacent, and which one
+  int fixedDimensions = 0;
+  int fixedParent     = 0;
+  for (int d=0; d<Dimensions; d++) {
+    assertion2( position(d)>=0 and position(d)<=3, position, d );
+    if (position(d)==0) {
+      fixedDimensions |= (1 << d);
     }
-    assertion3(false, peano4::utils::dLinearised(position,2), position, coarseGridVertices[ peano4::utils::dLinearised(position,2) ].toString() );
-  }
-  else if ( position(dimension)==0 ) {
-    position(dimension)=0;
-    return getVertexType(coarseGridVertices,position,dimension-1);
-  }
-  else if ( position(dimension)==3 ) {
-    position(dimension)=1;
-    return getVertexType(coarseGridVertices,position,dimension-1);
+    else if (position(d)==3) {
+      fixedDimensions |= (1 << d);
+      fixedParent     |= (1 << d);
+    }
   }
 
-  logTraceInWith2Arguments( "getVertexType(...)", position, dimension );
-  position(dimension)=0;
-  peano4::grid::VertexType lhs = getVertexType(coarseGridVertices,position,dimension-1);
+  unsigned int typesOfParents = 0;
+  for (int i=0; i<TwoPowerD; i++) {
+    if ( (i & fixedDimensions)==fixedParent ) {
+      const int state = static_cast<int>(coarseGridVertices[i].getState());
+      assertion2( state>=0 and state<9, state, coarseGridVertices[i].toString() );
+      typesOfParents |= toBit( ParentStateToVertexType[state] );
+    }
+  }
 
-  position(dimension)=1;
-  peano4::grid::VertexType rhs = getVertexType(coarseGridVertices,position,dimension-1);
-
-  VertexType result = lhs;
+  VertexType result = VertexType::Hanging;
   if (
-    (lhs==VertexType::New and rhs==VertexType::Hanging) or (lhs==VertexType::Hanging and rhs==VertexType::New)
+    (typesOfParents & toBit(VertexType::Persistent))
+    or
+    ( (typesOfParents & toBit(VertexType::New)) and (typesOfParents & toBit(VertexType::Delete)) )
   ) {
+    result = VertexType::Persistent;
+  }
+  else if (typesOfParents & toBit(VertexType::New)) {
     result = VertexType::New;
   }
-  if (
-    (lhs==VertexType::New and rhs==VertexType::Persistent) or (lhs==VertexType::Persistent and rhs==VertexType::New)
-  ) {
-    result = VertexType::Persistent;
-  }
-  if (
-    (lhs==VertexType::New and rhs==VertexType::Delete) or (lhs==VertexType::Delete and rhs==VertexType::New)
-  ) {
-    result = VertexType::Persistent;
-  }
-  if (
-    (lhs==VertexType::Hanging and rhs==VertexType::Persistent) or (lhs==VertexType::Persistent and rhs==VertexType::Hanging)
-  ) {
-    result = VertexType::Persistent;
-  }
-  if (
-    (lhs==VertexType::Hanging and rhs==VertexType::Delete) or (lhs==VertexType::Delete and rhs==VertexType::Hanging)
-  ) {
+  else if (typesOfParents & toBit(VertexType::Delete)) {
     result = VertexType::Delete;
   }
-  if (
-    (lhs==VertexType::Persistent and rhs==VertexType::Delete) or (lhs==VertexType::Delete and rhs==VertexType::Persistent)
-  ) {
-    result = VertexType::Persistent;
-  }
 
-  logTraceOutWith1Argument( "getVertexType(...)", toString(result) );
   return result;
 }
 
+
 int peano4::grid::GridTraversalEventGenerator::getTreeOwningSpacetreeNode(
-  [[maybe_unused]] GridVertex            vertices[TwoPowerD],
+  [[maybe_unused]] GridVertex                                vertices[TwoPowerD],
   [[maybe_unused]] const SplitSpecification&                 splitTriggered,
   [[maybe_unused]] const std::set<int>&                      splitting,
   [[maybe_unused]] const std::set< int >&                    joinTriggered,
@@ -836,6 +966,7 @@ int peano4::grid::GridTraversalEventGenerator::getTreeOwningSpacetreeNode(
 
   return id;
 }
+
 
 tarch::la::Vector< TwoPowerD, int >  peano4::grid::GridTraversalEventGenerator::getAdjacentRanksOfFace( GridVertex fineGridVertices[TwoPowerD], int faceNumber, bool calledByReceivingProcess ) const {
   tarch::la::Vector< TwoPowerD, int >  adjacentRanksOfFace(InvalidRank);

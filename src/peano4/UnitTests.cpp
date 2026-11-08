@@ -1,10 +1,16 @@
 #include "UnitTests.h"
 
+#include "peano4/datamanagement/tests/DataMovementTest.h"
+
 #include "peano4/grid/tests/SpacetreeTest.h"
 #include "peano4/grid/tests/GridControlEventTest.h"
 #include "peano4/grid/tests/GridTraversalEventGeneratorTest.h"
+
 #include "peano4/parallel/tests/NodeTest.h"
 #include "peano4/parallel/tests/PingPongTest.h"
+
+#include "peano4/stacks/tests/STDVectorStackOverObjectsWithSmartPointersTest.h"
+
 #include "peano4/utils/tests/ParallelDForTest.h"
 
 #include "tarch/tests/TreeTestCaseCollection.h"
@@ -12,14 +18,18 @@
 tarch::tests::TestCase* peano4::getUnitTests() {
   tarch::tests::TreeTestCaseCollection* result = new tarch::tests::TreeTestCaseCollection();
 
-  result->addTestCase( new peano4::grid::tests::SpacetreeTest() );
-  result->addTestCase( new peano4::grid::tests::GridControlEventTest() );
-  result->addTestCase( new peano4::grid::tests::GridTraversalEventGeneratorTest() );
+  result->addTestCase( new peano4::utils::tests::ParallelDForTest() );
+
+  result->addTestCase( new peano4::datamanagement::tests::DataMovementTest() );
+
+  result->addTestCase( new peano4::stacks::tests::STDVectorStackOverObjectsWithSmartPointersTest() );
 
   result->addTestCase( new peano4::parallel::tests::NodeTest() );
   result->addTestCase( new peano4::parallel::tests::PingPongTest() );
 
-  result->addTestCase( new peano4::utils::tests::ParallelDForTest() );
+  result->addTestCase( new peano4::grid::tests::SpacetreeTest() );
+  result->addTestCase( new peano4::grid::tests::GridControlEventTest() );
+  result->addTestCase( new peano4::grid::tests::GridTraversalEventGeneratorTest() );
 
   return result;
 }

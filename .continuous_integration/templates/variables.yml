@@ -1,0 +1,17 @@
+.Variables:
+  variables:
+    CI_DEBUG_TRACE: "false"
+    # https://docs.gitlab.com/ee/user/project/repository/monorepos/
+    # https://docs.gitlab.com/ee/ci/runners/configure_runners.html#git-fetch-extra-flags
+    GIT_DEPTH: 1
+    GIT_STRATEGY: clone # fetch
+    GIT_FETCH_EXTRA_FLAGS: "--no-tags"
+    GET_SOURCES_ATTEMPTS: "3"
+    ARTIFACT_DOWNLOAD_ATTEMPTS: "3"
+    RESTORE_CACHE_ATTEMPTS: "3"
+    IMAGE_BASE: "base.sif"
+    IMAGE_GCC: "gcc.sif"
+    IMAGE_INTEL: "intel.sif"
+    IMAGE_LLVM: "llvm.sif"
+    IMAGE_NVIDIA: "nvidia.sif"
+    IMAGE_AMD: "amd.sif"

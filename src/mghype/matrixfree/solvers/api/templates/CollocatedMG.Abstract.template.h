@@ -39,20 +39,21 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public mghype::matrixfree::solv
     static constexpr int        PreSmoothingSteps  = {{PRE_SMOOTHING_STEPS}};
     static constexpr int        PostSmoothingSteps = {{POST_SMOOTHING_STEPS}};
 
+    static constexpr int        CoarsestLevel      = {{COARSEST_LEVEL}};
+
     enum class State {
       Solve,
       Suspend
     };
 
     enum class SmoothingState {
-      // FirstFineGridSmoothing,
       PreSmoothing,
-      Restrict,
-      PostSmoothing
+      RestrictToNextLevel,
+      PostSmoothing,
+      Prolongation
     };
 
-    SmoothingState getSmoothingState();
-
+    //! Only necessary to ensure that we can overload toString
     using mghype::matrixfree::solvers::Solver::toString;
 
     std::string toString(SmoothingState state) const;
@@ -76,12 +77,12 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public mghype::matrixfree::solv
       tarch::la::Vector< {{VERTEX_CARDINALITY}}, double >&  value
     ) = 0;
 
-    virtual vertexdata::{{SOLVER_NAME}}::Type getVertexDoFType(
+    virtual vertexdata::{{SOLVER_NAME}}::Type getVertexType(
       const tarch::la::Vector<Dimensions, double>&  x,
       const tarch::la::Vector<Dimensions, double>&  h
     ) const final;
 
-    virtual celldata::{{SOLVER_NAME}}::Type getCellDoFType(
+    virtual celldata::{{SOLVER_NAME}}::Type getCellType(
       const tarch::la::Vector<Dimensions, double>&  x,
       const tarch::la::Vector<Dimensions, double>&  h
     ) const;
@@ -92,7 +93,7 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public mghype::matrixfree::solv
     ) const {% if LOCAL_ASSEMBLY_MATRIX is not defined %} = 0 {% endif %};
 
 
-    virtual tarch::la::Matrix< {{VERTEX_CARDINALITY}}*TwoPowerD, {{VERTEX_CARDINALITY}}*TwoPowerD, double > getMassMatrix(
+    virtual tarch::la::Matrix< {{VERTEX_CARDINALITY}}*TwoPowerD, {{VERTEX_CARDINALITY}}*TwoPowerD, double > getRhsMatrix(
       const tarch::la::Vector<Dimensions, double>&  cellCentre,
       const tarch::la::Vector<Dimensions, double>&  cellSize,
       const int level
@@ -116,25 +117,55 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public mghype::matrixfree::solv
      */
     void suspend();
 
-    bool update(int level) const;
+    State          getState() const;
+    SmoothingState getSmoothingState() const;
+    bool updateResidual(int level) const;
+    bool updateSolution(int level) const;
+    bool reportSolutionUpdates(int level) const;
+    bool consolidateResidualAndDiag(int level) const;
 
     int  getActiveLevel() const;
     void setActiveLevel(int);
     int  getFinestLevel() const;
     void setFinestLevel(int);
 
+    int  getVCycleCounter() const { return _vCycleCounter; }
+    void incrementVCycleCounter() { _vCycleCounter++; }
+
+    /**
+     * Call this once after initialisation phase is over.
+     * This will call std::abort if the finest level isn't
+     * at least one larger than the coarsest level.
+     * 
+     * The coarsest level (default 0) is set in the python, and the finest level
+     * is set by the meshsize.
+     * 
+     */
+    void validateRefinementLevel();
+
     /**
      * For now, don't check the level in the function
      * since we expect to do something on the level above
      * the active level as well as the active level.
     */
-    bool restrict() const;
+    bool restrictToNextLevel() const;
     bool prolongate() const;
 
   protected:
     static tarch::logging::Log  _log;
 
+    /**
+     * This determines whether this solver is currently active (being used
+     * as a correction solver in the two-grid setup) or suspended
+     * (currently dormant and waiting to be restarted by the coupler).
+     */
     State           _state;
+
+    /**
+     * Internal state which determines whether we are pre-smoothing, prolongating
+     * or post-smoothing.
+     * 
+     */
     SmoothingState  _smoothingState;
 
     int _activeLevel;
@@ -142,5 +173,7 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public mghype::matrixfree::solv
 
     int _preSmoothingStepsCounter;
     int _postSmoothingStepsCounter;
+
+    int _vCycleCounter;
 
 }; // {{CLASSNAME}}

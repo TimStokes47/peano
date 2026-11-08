@@ -3,23 +3,15 @@
 import jinja2
 
 from enum import Enum
-
+import os
+import exahype2
+import exahype2.dslhype as DSL
 
 class SolverVariant(Enum):
   WithVirtualFunctions = 0
   Stateless            = 1
   Multicore            = 2
   Accelerator          = 3
-
-# TODO: Multicore, WithVirtualFunctions and Stateless
-# are in conflict.
-# We might want to have something like this:
-# class ExecutionVariant(Enum):
-#   None = 0
-#   ParallelFor = 1
-#   Subtasks = 2
-#   Accelerator = 3
-#
 
 class KernelVariant(Enum):
   PatchWiseAoS    = 10
@@ -35,8 +27,153 @@ class KernelVariant(Enum):
   VolumeWiseAoSoA = 41
   VolumeWiseSoA   = 42
 
+def create_rusanov_kernel_definitions(patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step):
+  if not os.path.exists("kernels"):
+      os.makedirs("kernels")
+  
+  file = open("kernels/rusanov.h", "w")
+  file.write("""#if Dimensions == 2
+#include "rusanov2d.h"
+#elif Dimensions == 3
+#include "rusanov3d.h"
+#endif
+""")
+  
+  create_rusanov_kernel_definitions_for_function(exahype2.solvers.fv.rusanov.timeStepWithRusanov2d, "rusanov2d", patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
+  create_rusanov_kernel_definitions_for_function(exahype2.solvers.fv.rusanov.timeStepWithRusanov3d, "rusanov3d", patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step)
 
-def create_compute_Riemann_kernel_for_Rusanov(flux_implementation,
+def create_rusanov_kernel_definitions_for_function(function, filename, patch_size, unknowns, auxiliary_variables, flux_implementation, ncp_implementation, source_term_implementation, compute_max_eigenvalue_of_next_time_step):
+  template_parameters = [DSL.SyntaxTree.Argument("NumberOfVolumesPerAxisInPatch", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
+                         DSL.SyntaxTree.Argument("HaloSize", DSL.SyntaxTree.TInteger(), "applications::exahype2"),
+                         DSL.SyntaxTree.Argument("NumberOfUnknowns", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
+                         DSL.SyntaxTree.Argument("NumberOfAuxiliaryVariables", DSL.SyntaxTree.TInteger(), "applications::exahype2::ccz4::AbstractCCZ4"),
+                         DSL.SyntaxTree.Argument("EvaluateFlux", DSL.SyntaxTree.TBoolean(), "applications::exahype2::ccz4"),
+                         DSL.SyntaxTree.Argument("EvaluateNonconservativeProduct", DSL.SyntaxTree.TBoolean(), "applications::exahype2::ccz4"),
+                         DSL.SyntaxTree.Argument("EvaluateSource", DSL.SyntaxTree.TBoolean(), "applications::exahype2::ccz4"),
+                         DSL.SyntaxTree.Argument("EvaluateMaximumEigenvalueAfterTimeStep", DSL.SyntaxTree.TBoolean(), "applications::exahype2::ccz4")]
+
+
+  functor_arguments = [DSL.SyntaxTree.Argument("flux", DSL.SyntaxTree.TCustom("const FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()", is_function=True),
+                       DSL.SyntaxTree.Argument("nonconservativeProduct", DSL.SyntaxTree.TCustom("const NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()", is_function=True),
+                       DSL.SyntaxTree.Argument("sourceTerm", DSL.SyntaxTree.TCustom("const SourceFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, !llvm.ptr) -> ()", is_function=True),
+                       DSL.SyntaxTree.Argument("maxEigenvalue", DSL.SyntaxTree.TCustom("const MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()", is_function=True)]
+
+  solver_includes = """#include "exahype2/CellData.h"
+#include "exahype2/VolumeIndex.h"
+#include "exahype2/fv/PatchUtils.h"
+#include "exahype2/fv/rusanov/Functors.h"
+#include "peano4/utils/Loop.h"
+#include "tarch/timing/Measurement.h"
+#include "tarch/timing/Watch.h"
+"""
+  
+  d = {}
+  d["KERNEL_NAMESPACE"] = "exahype2::fv::rusanov"
+  d["SOLVER"] = "Rusanov"
+  d["SOLVER_CLASS"] = "FVRusanov"
+  d["KERNEL_NAME"] = "timeStepWithRusanov"
+  d["SOLVER_INCLUDES"] = solver_includes
+  d["SOLVER_CLASS_NAMESPACE"] = "benchmarks::exahype2::kernelbenchmarks"
+
+  d["PATCH_SIZE"] = patch_size
+  d["NUMBER_OF_UNKNOWNS"] = unknowns
+  d["NUMBER_OF_AUXILIARY_VARIABLES"] = auxiliary_variables
+  d["FLUX_IMPLEMENTATION"] = flux_implementation
+  d["NCP_IMPLEMENTATION"] = ncp_implementation
+  d["SOURCE_IMPLEMENTATION"] = source_term_implementation
+  d["COMPUTE_MAX_EIGENVALUE"] = compute_max_eigenvalue_of_next_time_step
+  d["HALO_SIZE"] = 1
+
+
+  template_call_jinja = """
+      {{SOLVER_CLASS_NAMESPACE}}::{{SOLVER_CLASS}},
+      {{PATCH_SIZE}},
+      {{HALO_SIZE}},
+      {{NUMBER_OF_UNKNOWNS}},
+      {{NUMBER_OF_AUXILIARY_VARIABLES}},
+      {% if FLUX_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
+      {% if NCP_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
+      {% if SOURCE_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
+      {% if COMPUTE_MAX_EIGENVALUE==False %} false {% else %} true {% endif %}
+    """
+  d["TEMPLATE_CALL"] = jinja2.Template(template_call_jinja).render(**d)
+
+  template_value_definitions_jinja = """
+    int NumberOfVolumesPerAxisInPatch = {{PATCH_SIZE}};
+    int NumberOfUnknowns = {{NUMBER_OF_UNKNOWNS}};
+    int NumberOfAuxiliaryVariables = {{NUMBER_OF_AUXILIARY_VARIABLES}};
+    int HaloSize = {{HALO_SIZE}};
+    bool EvaluateFlux = {% if FLUX_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %};
+    bool EvaluateNonconservativeProduct = {% if NCP_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %};
+    bool EvaluateSource = {% if SOURCE_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %};
+    bool EvaluateMaximumEigenvalueAfterTimeStep = {% if COMPUTE_MAX_EIGENVALUE==False %} false {% else %} true {% endif %};
+  """
+  d["TEMPLATE_VALUE_DEFINITIONS"] = jinja2.Template(template_value_definitions_jinja).render(**d)
+
+  bridge_functions_jinja = """
+    void flux_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* F_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* F = static_cast<double*>(F_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::flux(Q, *x, *h, t, dt, normal, F, OffloadableType::Yes);
+    }
+    
+    void nonconservativeProduct_bridge(void* Q_ptr, void* deltaQ_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        double* deltaQ = static_cast<double*>(deltaQ_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* result = static_cast<double*>(result_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::nonconservativeProduct(Q, deltaQ, *x, *h, t, dt, normal, result, OffloadableType::Yes);
+    }
+    
+    void sourceTerm_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, void* S_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* S = static_cast<double*>(S_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::sourceTerm(Q, *x, *h, t, dt, S, OffloadableType::Yes);
+    }
+    
+    void maxEigenvalue_bridge(void* Q_ptr, void* x_ptr, void* h_ptr, double t, double dt, int normal, void* result_ptr) {
+        double* Q = static_cast<double*>(Q_ptr);
+        tarch::la::Vector<Dimensions, double>* x = static_cast<tarch::la::Vector<Dimensions, double>*>(x_ptr);
+        tarch::la::Vector<Dimensions, double>* h = static_cast<tarch::la::Vector<Dimensions, double>*>(h_ptr);
+        double* result = static_cast<double*>(result_ptr);
+        {{SOLVER_CLASS_NAMESPACE}}::Abstract{{SOLVER_CLASS}}::maxEigenvalue(Q, *x, *h, t, dt, normal, result, OffloadableType::Yes);
+    }
+"""
+  d["BRIDGE_FUNCTIONS"] = jinja2.Template(bridge_functions_jinja).render(**d)
+
+  d["EXTERN_FUNCTION_ARGUMENT_DEFINITIONS"] = """
+    void (*flux_fn)(void*, void*, void*, double, double, int, void*),
+    void (*ncp_fn)(void*, void*, void*, void*, double, double, int, void*),
+    void (*source_fn)(void*, void*, void*, double, double, void*),
+    void (*maxeig_fn)(void*, void*, void*, double, double, int, void*)
+"""
+  enabled_pde_terms = []
+  if flux_implementation is not None and flux_implementation != exahype2.solvers.PDETerms.None_Implementation:
+    enabled_pde_terms.append("EvaluateFlux")
+  if source_term_implementation is not None and source_term_implementation != exahype2.solvers.PDETerms.None_Implementation:
+    enabled_pde_terms.append("EvaluateSource")
+  if ncp_implementation is not None and ncp_implementation != exahype2.solvers.PDETerms.None_Implementation:
+    enabled_pde_terms.append("EvaluateNonconservativeProduct")
+  if compute_max_eigenvalue_of_next_time_step:
+    enabled_pde_terms.append("EvaluateMaximumEigenvalueAfterTimeStep")
+
+  DSL.create_kernel_definitions(
+    function,
+    template_parameters,
+    functor_arguments,
+    filename,
+    solver_includes,
+    ["exahype2", "fv", "rusanov"],
+    d,
+    enabled_pde_terms
+  )
+
+def create_compute_Riemann_kernel_for_Rusanov_dsl(flux_implementation,
                                               ncp_implementation,
                                               source_implementation,
                                               compute_max_eigenvalue_of_next_time_step,
@@ -47,40 +184,11 @@ def create_compute_Riemann_kernel_for_Rusanov(flux_implementation,
   So by setting the right namespace as prefix, you can direct it to particular
   implementations.
   """
-  KernelCalls = {
-    KernelVariant.PatchWiseAoS:     "timeStepWithRusanovPatchwiseHeap",
-    KernelVariant.PatchWiseAoSoA:   "timeStepWithRusanovPatchwiseHeap",
-    KernelVariant.PatchWiseSoA:     "timeStepWithRusanovPatchwiseHeap",
-    KernelVariant.BatchedAoS:       "timeStepWithRusanovBatchedHeap",
-    KernelVariant.BatchedAoSoA:     "timeStepWithRusanovBatchedHeap",
-    KernelVariant.BatchedSoA:       "timeStepWithRusanovBatchedHeap",
-    KernelVariant.TaskGraphAoS:     "timeStepWithRusanovTaskgraphHeap",
-    KernelVariant.TaskGraphAoSoA:   "timeStepWithRusanovTaskgraphHeap",
-    KernelVariant.TaskGraphSoA:     "timeStepWithRusanovTaskgraphHeap",
-    KernelVariant.VolumeWiseAoS:    "timeStepWithRusanovVolumewise",
-    KernelVariant.VolumeWiseAoSoA:  "timeStepWithRusanovVolumewise",
-    KernelVariant.VolumeWiseSoA:    "timeStepWithRusanovVolumewise",
-  }
 
-  EnumeratorTemplateTypes = {
-    KernelVariant.PatchWiseAoS:     "::exahype2::enumerator::AoSLexicographicEnumerator",
-    KernelVariant.PatchWiseAoSoA:   "::exahype2::enumerator::AoSoALexicographicEnumerator",
-    KernelVariant.PatchWiseSoA:     "::exahype2::enumerator::SoALexicographicEnumerator",
-    KernelVariant.BatchedAoS:       "::exahype2::enumerator::AoSLexicographicEnumerator",
-    KernelVariant.BatchedAoSoA:     "::exahype2::enumerator::AoSoALexicographicEnumerator",
-    KernelVariant.BatchedSoA:       "::exahype2::enumerator::SoALexicographicEnumerator",
-    KernelVariant.TaskGraphAoS:     "::exahype2::enumerator::AoSLexicographicEnumerator",
-    KernelVariant.TaskGraphAoSoA:   "::exahype2::enumerator::AoSoALexicographicEnumerator",
-    KernelVariant.TaskGraphSoA:     "::exahype2::enumerator::SoALexicographicEnumerator",
-    KernelVariant.VolumeWiseAoS:    "::exahype2::enumerator::AoSLexicographicEnumerator",
-    KernelVariant.VolumeWiseAoSoA:  "::exahype2::enumerator::AoSoALexicographicEnumerator",
-    KernelVariant.VolumeWiseSoA:    "::exahype2::enumerator::SoALexicographicEnumerator",
-  }
-
-  template = KernelCalls[kernel_variant]
+  template = "timeStepWithRusanov"
 
   if solver_variant == SolverVariant.WithVirtualFunctions:
-   template += """Functors<
+   template += """<
       {{NUMBER_OF_VOLUMES_PER_AXIS}},
       {{HALO_SIZE}},
       {{NUMBER_OF_UNKNOWNS}},
@@ -88,8 +196,7 @@ def create_compute_Riemann_kernel_for_Rusanov(flux_implementation,
       {% if FLUX_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
       {% if NCP_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
       {% if SOURCE_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
-      {% if COMPUTE_MAX_EIGENVALUE==False %} false {% else %} true {% endif %},
-      {{TEMP_DATA_ENUMERATOR}}
+      {% if COMPUTE_MAX_EIGENVALUE==False %} false {% else %} true {% endif %}
     >(patchData,
   [&](
     [[maybe_unused]] const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
@@ -136,14 +243,15 @@ def create_compute_Riemann_kernel_for_Rusanov(flux_implementation,
     [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& volumeH,
     [[maybe_unused]] double                                       t,
     [[maybe_unused]] double                                       dt,
-    [[maybe_unused]] int                                          normal
-  )->double {
-    return repositories::{{SOLVER_INSTANCE}}.maxEigenvalue(Q, faceCentre, volumeH, t, dt, normal);
+    [[maybe_unused]] int                                          normal,
+    [[maybe_unused]] double* __restrict__                         maxEigenvalue
+  )->void {
+    repositories::{{SOLVER_INSTANCE}}.maxEigenvalue(Q, faceCentre, volumeH, t, dt, normal, maxEigenvalue);
   }
 );
   """
   elif solver_variant == SolverVariant.Stateless:
-   template += """Stateless<
+     template += """Stateless<
       {{SOLVER_NAME}},
       {{NUMBER_OF_VOLUMES_PER_AXIS}},
       {{HALO_SIZE}},
@@ -152,38 +260,22 @@ def create_compute_Riemann_kernel_for_Rusanov(flux_implementation,
       {% if FLUX_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
       {% if NCP_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
       {% if SOURCE_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
-      {% if COMPUTE_MAX_EIGENVALUE==False %} false {% else %} true {% endif %},
-      {{TEMP_DATA_ENUMERATOR}}
+      {% if COMPUTE_MAX_EIGENVALUE==False %} false {% else %} true {% endif %}
       >(patchData);
   """
-  elif solver_variant == SolverVariant.Multicore:
-   template += """Stateless<
-      {{SOLVER_NAME}},
-      {{NUMBER_OF_VOLUMES_PER_AXIS}},
-      {{HALO_SIZE}},
-      {{NUMBER_OF_UNKNOWNS}},
-      {{NUMBER_OF_AUXILIARY_VARIABLES}},
-      {% if FLUX_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
-      {% if NCP_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
-      {% if SOURCE_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
-      {% if COMPUTE_MAX_EIGENVALUE==False %} false {% else %} true {% endif %},
-      {{TEMP_DATA_ENUMERATOR}}
-      >(patchData, peano4::utils::LoopPlacement::SpreadOut);
-  """
   elif solver_variant == SolverVariant.Accelerator:
-   template += """Stateless<
-      {{SOLVER_NAME}},
-      {{NUMBER_OF_VOLUMES_PER_AXIS}},
-      {{HALO_SIZE}},
-      {{NUMBER_OF_UNKNOWNS}},
-      {{NUMBER_OF_AUXILIARY_VARIABLES}},
-      {% if FLUX_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
-      {% if NCP_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
-      {% if SOURCE_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
-      {% if COMPUTE_MAX_EIGENVALUE==False %} false {% else %} true {% endif %},
-      {{TEMP_DATA_ENUMERATOR}}
-      >(targetDevice, patchData);
-  """
+    template += """Stateless<
+    {{SOLVER_NAME}},
+    {{NUMBER_OF_VOLUMES_PER_AXIS}},
+    {{HALO_SIZE}},
+    {{NUMBER_OF_UNKNOWNS}},
+    {{NUMBER_OF_AUXILIARY_VARIABLES}},
+    {% if FLUX_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
+    {% if NCP_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
+    {% if SOURCE_IMPLEMENTATION=="<none>" %} false {% else %} true {% endif %},
+    {% if COMPUTE_MAX_EIGENVALUE==False %} false {% else %} true {% endif %}
+    >(gpuPatchData.targetDevice, gpuPatchData);
+"""
   else:
     assert False, "Not supported combination: {} x {}".format(solver_variant, kernel_variant)
 
@@ -193,8 +285,8 @@ def create_compute_Riemann_kernel_for_Rusanov(flux_implementation,
   d["NCP_IMPLEMENTATION"]          = ncp_implementation
   d["SOURCE_IMPLEMENTATION"]       = source_implementation
   d["COMPUTE_MAX_EIGENVALUE"]      = compute_max_eigenvalue_of_next_time_step
-  d["TEMP_DATA_ENUMERATOR"]        = EnumeratorTemplateTypes[kernel_variant]
   return result.render(**d)
+
 
 def create_abstract_solver_declarations(flux_implementation,
                                         ncp_implementation,
@@ -222,13 +314,14 @@ def create_abstract_solver_declarations(flux_implementation,
     #if defined(GPUOffloadingOMP)
     #pragma omp declare target
     #endif
-    static GPUCallableMethod double maxEigenvalue(
+    static GPUCallableMethod void maxEigenvalue(
       [[maybe_unused]] const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
       [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& faceCentre,
       [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& volumeH,
       [[maybe_unused]] double                                       t,
       [[maybe_unused]] double                                       dt,
       [[maybe_unused]] int                                          normal,
+      [[maybe_unused]] double* __restrict__                         maxEigenvalue,
       Offloadable
     )
     //#if defined(GPUOffloadingSYCL)
@@ -248,13 +341,14 @@ def create_abstract_solver_declarations(flux_implementation,
      * @return Max eigenvalue. Result has to be positive, so we are actually speaking
      *   about the maximum absolute eigenvalue.
      */
-    virtual double maxEigenvalue(
+    virtual void maxEigenvalue(
       [[maybe_unused]] const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
       [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& faceCentre,
       [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& volumeH,
       [[maybe_unused]] double                                       t,
       [[maybe_unused]] double                                       dt,
-      [[maybe_unused]] int                                          normal
+      [[maybe_unused]] int                                          normal,
+      [[maybe_unused]] double* __restrict__                         maxEigenvalue
     ) {% if EIGENVALUES_IMPLEMENTATION=="<user-defined>" %}= 0{% else %} final{% endif %};
 
     {% if FLUX_IMPLEMENTATION!="<user-defined>" and STATELESS_PDE_TERMS %}
@@ -395,13 +489,14 @@ def create_abstract_solver_declarations(flux_implementation,
 def create_abstract_solver_definitions(flux_implementation, ncp_implementation, eigenvalues_implementation, source_term_implementation, pde_terms_without_state):
   Template = jinja2.Template( """
 {% if EIGENVALUES_IMPLEMENTATION!="<user-defined>" and EIGENVALUES_IMPLEMENTATION!="<none>" %}
-double {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::maxEigenvalue(
+void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::maxEigenvalue(
   [[maybe_unused]] const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
   [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& faceCentre,
   [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& volumeH,
   [[maybe_unused]] double                                       t,
   [[maybe_unused]] double                                       dt,
-  [[maybe_unused]] int                                          normal
+  [[maybe_unused]] int                                          normal,
+  [[maybe_unused]] double* __restrict__                         maxEigenvalue
 ) {
   {{EIGENVALUES_IMPLEMENTATION}}
 }
@@ -460,13 +555,14 @@ void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::sourceTerm(
 #pragma omp declare target
 #endif
 //#if !defined(GPUOffloadingSYCL)
-GPUCallableMethod double {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::maxEigenvalue(
+GPUCallableMethod void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::maxEigenvalue(
   [[maybe_unused]] const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
   [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& faceCentre,
   [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& volumeH,
   [[maybe_unused]] double                                       t,
   [[maybe_unused]] double                                       dt,
   [[maybe_unused]] int                                          normal,
+  [[maybe_unused]] double* __restrict__                         maxEigenvalue,
   Offloadable
 ) {
   {{EIGENVALUES_IMPLEMENTATION}};
@@ -476,6 +572,7 @@ GPUCallableMethod double {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::maxEigenva
 #pragma omp end declare target
 #endif
 {% endif %}
+
 
 {% if FLUX_IMPLEMENTATION!="<user-defined>" and STATELESS_PDE_TERMS %}
 #if defined(GPUOffloadingOMP)
@@ -585,13 +682,14 @@ def create_solver_declarations(flux_implementation, ncp_implementation, eigenval
      * @return Max eigenvalue. Result has to be positive, so we are actually speaking
      *   about the maximum absolute eigenvalue.
      */
-    virtual double maxEigenvalue(
+    virtual void maxEigenvalue(
       [[maybe_unused]] const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
       [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& faceCentre,
       [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& volumeH,
       [[maybe_unused]] double                                       t,
       [[maybe_unused]] double                                       dt,
-      [[maybe_unused]] int                                          normal
+      [[maybe_unused]] int                                          normal,
+      [[maybe_unused]] double* __restrict__                         maxEigenvalue
     ) override;
     {% endif %}
 
@@ -653,30 +751,17 @@ def create_solver_declarations(flux_implementation, ncp_implementation, eigenval
     {% endif %}
 
     {% if EIGENVALUES_IMPLEMENTATION=="<user-defined>" and STATELESS_PDE_TERMS %}
-    /**
-     * To obtain the best performance, I recommend to man inline command to
-     * this signature and to copy the implementation into the header. So it would
-     * read
-     *
-     * static inline double maxEigenvalue( ... ) {
-     *  code here
-     * }
-     *
-     * The GPU offloading requires static functions. As we cannot overload the
-     * original (virtual) function with a static alternative, we do the
-     * TBB trick and overload by adding an additional enum. It has no semantics
-     * but helps the compiler to distinguish the different function variants.
-     */
     #if defined(GPUOffloadingOMP)
     #pragma omp declare target
     #endif
-    static GPUCallableMethod double maxEigenvalue(
+    static GPUCallableMethod void maxEigenvalue(
       [[maybe_unused]] const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
       [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& faceCentre,
       [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& volumeH,
       [[maybe_unused]] double                                       t,
       [[maybe_unused]] double                                       dt,
       [[maybe_unused]] int                                          normal,
+      [[maybe_unused]] double* __restrict__                         maxEigenvalue,
       [[maybe_unused]] Offloadable
     );
     #if defined(GPUOffloadingOMP)
@@ -762,13 +847,14 @@ def create_solver_declarations(flux_implementation, ncp_implementation, eigenval
 def create_solver_definitions(flux_implementation, ncp_implementation, eigenvalues_implementation, source_term_implementation, pde_terms_without_state):
   Template = jinja2.Template( """
 {% if EIGENVALUES_IMPLEMENTATION=="<user-defined>" %}
-double {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::maxEigenvalue(
+void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::maxEigenvalue(
   [[maybe_unused]] const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
   [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& faceCentre,
   [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& volumeH,
   [[maybe_unused]] double                                       t,
   [[maybe_unused]] double                                       dt,
-  [[maybe_unused]] int                                          normal
+  [[maybe_unused]] int                                          normal,
+  [[maybe_unused]] double* __restrict__                         maxEigenvalue
 ) {
   logTraceInWith4Arguments( "maxEigenvalue(...)", faceCentre, volumeH, t, normal );
   // @todo implement
@@ -786,9 +872,9 @@ void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::flux(
   [[maybe_unused]] int                                          normal,
   [[maybe_unused]] double* __restrict__                         F // F[{{NUMBER_OF_UNKNOWNS}}]
 ) {
-  logTraceInWith4Arguments( "flux(...)", faceCentre, volumeH, t, normal );
-  // @todo implement
-  logTraceOut( "flux(...)" );
+  logTraceInWith4Arguments("flux(...)", faceCentre, volumeH, t, normal);
+  // @todo Implement
+  logTraceOut("flux(...)");
 }
 {% endif %}
 
@@ -803,9 +889,9 @@ void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::nonconservativeProduct(
   [[maybe_unused]] int                                          normal,
   [[maybe_unused]] double* __restrict__                         BTimesDeltaQ // BTimesDeltaQQ[{{NUMBER_OF_UNKNOWNS}}]
 ) {
-  logTraceInWith4Arguments( "nonconservativeProduct(...)", faceCentre, volumeH, t, normal );
-  // @todo implement
-  logTraceOut( "nonconservativeProduct(...)" );
+  logTraceInWith4Arguments("nonconservativeProduct(...)", faceCentre, volumeH, t, normal);
+  // @todo Implement
+  logTraceOut("nonconservativeProduct(...)");
 }
 {% endif %}
 
@@ -818,28 +904,30 @@ void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::sourceTerm(
   [[maybe_unused]] double                                       dt,
   [[maybe_unused]] double* __restrict__                         S // S[{{NUMBER_OF_UNKNOWNS}}]
 ) {
-  logTraceInWith4Arguments( "sourceTerm(...)", volumeX, volumeH, t, dt );
+  logTraceInWith4Arguments("sourceTerm(...)", volumeX, volumeH, t, dt);
 
-  // @todo implement and ensure that all entries of S are properly set
-  for (int i=0; i<NumberOfUnknowns; i++) {
+  // @todo Implement and ensure that all entries of S are properly set
+  for (int i = 0; i < NumberOfUnknowns; i++) {
     S[i] = 0.0;
   }
 
-  logTraceOut( "sourceTerm(...)" );
+  logTraceOut("sourceTerm(...)");
 }
 {% endif %}
+
 
 {% if EIGENVALUES_IMPLEMENTATION=="<user-defined>" and STATELESS_PDE_TERMS %}
 #if defined(GPUOffloadingOMP)
 #pragma omp declare target
 #endif
-GPUCallableMethod double {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::maxEigenvalue(
+GPUCallableMethod void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::maxEigenvalue(
   [[maybe_unused]] const double* __restrict__                   Q, // Q[{{NUMBER_OF_UNKNOWNS}}+{{NUMBER_OF_AUXILIARY_VARIABLES}}]
   [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& faceCentre,
   [[maybe_unused]] const tarch::la::Vector<Dimensions, double>& volumeH,
   [[maybe_unused]] double                                       t,
   [[maybe_unused]] double                                       dt,
   [[maybe_unused]] int                                          normal,
+  [[maybe_unused]] double* __restrict__                         maxEigenvalue,
   Offloadable
 ) {
   // @todo implement
@@ -863,7 +951,7 @@ GPUCallableMethod void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::flux(
   [[maybe_unused]] double* __restrict__                         F, // F[{{NUMBER_OF_UNKNOWNS}}]
   Offloadable
 ) {
-  // @todo implement
+  // @todo Implement
 }
 #if defined(GPUOffloadingOMP)
 #pragma omp end declare target
@@ -885,7 +973,7 @@ GPUCallableMethod void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::nonconservat
   [[maybe_unused]] double* __restrict__                         BTimesDeltaQ, // BTimesDeltaQ[{{NUMBER_OF_UNKNOWNS}}]
   [[maybe_unused]] Offloadable
 ) {
-  // @todo implement
+  // @todo Implement
 }
 #if defined(GPUOffloadingOMP)
 #pragma omp end declare target
@@ -905,8 +993,8 @@ GPUCallableMethod void {{FULL_QUALIFIED_NAMESPACE}}::{{CLASSNAME}}::sourceTerm(
   [[maybe_unused]] double* __restrict__                         S, // S[{{NUMBER_OF_UNKNOWNS}}]
   [[maybe_unused]] Offloadable
 ) {
-  // @todo implement but ensure that all entries of S are properly set
-  for (int i=0; i<NumberOfUnknowns; i++) {
+  // @todo Implement but ensure that all entries of S are properly set
+  for (int i = 0; i < NumberOfUnknowns; i++) {
     S[i] = 0.0;
   }
 }

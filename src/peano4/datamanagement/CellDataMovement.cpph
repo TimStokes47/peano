@@ -1,0 +1,287 @@
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
+#include "peano4/grid/LoadStoreComputeFlag.h"
+#include "peano4/grid/PeanoCurve.h"
+#include "peano4/utils/Globals.h"
+#include "tarch/Assertions.h"
+#include "tarch/la/VectorVectorOperations.h"
+#include "tarch/logging/Log.h"
+
+#include <utility>
+
+
+template <typename Data, typename StackMap, typename LoadStoreComputeFlag>
+void peano4::datamanagement::loadCellData(
+  StackMap&                               stackMap,
+  int                                     spacetreeId,
+  const peano4::grid::GridTraversalEvent& event,
+  const CellMarker&                       cellMarker,
+  [[maybe_unused]] const char*            name,
+  LoadStoreComputeFlag                    loadStoreComputeFlag
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::CellDataMovement"
+  );
+
+  auto view = stackMap
+                .getForPush(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                ->pushBlock(1);
+
+  const CellMarker& marker = cellMarker;
+
+  const int inCellStack = event.getCellData();
+
+  bool dataResidesOnInputStack
+    = inCellStack
+        != peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity
+      and inCellStack != peano4::grid::TraversalObserver::NoData
+      and ::peano4::grid::loadPersistently(loadStoreComputeFlag(marker));
+  bool initialiseStackContentForNewData
+    = (
+        inCellStack != peano4::grid::TraversalObserver::NoData
+        and ::peano4::grid::computeOnData(loadStoreComputeFlag(marker))
+      )
+      or inCellStack
+           == peano4::grid::TraversalObserver::
+             CreateOrDestroyPersistentGridEntity;
+
+  if (dataResidesOnInputStack) {
+    logDebug(
+      "loadCell(...)",
+      "load data of cell "
+        << name << " with " << marker.toString() << ": "
+        << ::peano4::grid::toString(loadStoreComputeFlag(marker))
+    );
+    assertion3(
+      not stackMap.getForPop(spacetreeId, inCellStack)->empty(),
+      event.toString(),
+      spacetreeId,
+      inCellStack
+    );
+    Data data = std::move(stackMap.getForPop(spacetreeId, inCellStack)->pop());
+
+#if PeanoDebug > 0
+    assertionVectorNumericalEquals4(
+      data.getDebugX(),
+      marker.x(),
+      data.getDebugX(),
+      data.getDebugH(),
+      marker.toString(),
+      spacetreeId
+    );
+    assertionVectorNumericalEquals4(
+      data.getDebugH(),
+      marker.h(),
+      data.getDebugX(),
+      data.getDebugH(),
+      marker.toString(),
+      spacetreeId
+    );
+#endif
+
+    view.set(0, data);
+  } else if (initialiseStackContentForNewData) {
+    Data data;
+
+#if PeanoDebug > 0
+    logDebug(
+      "loadCell(...)",
+      "initialise meta data of new cell "
+        << name << " with " << marker.toString() << ": "
+        << ::peano4::grid::toString(loadStoreComputeFlag(marker))
+    );
+    data.setDebugX(marker.x());
+    data.setDebugH(marker.h());
+#endif
+    view.set(0, data);
+  } else {
+#if PeanoDebug > 0
+    logDebug(
+      "loadCell(...)",
+      "initialise meta data of unused cell "
+        << name << " with " << marker.toString() << ": "
+        << ::peano4::grid::toString(loadStoreComputeFlag(marker))
+    );
+    view.get(0).setDebugX(marker.x());
+    view.get(0).setDebugH(marker.h());
+#endif
+  }
+}
+
+
+template <typename Data, typename StackMap, typename LoadStoreComputeFlag>
+void peano4::datamanagement::storeCellData(
+  StackMap&                               stackMap,
+  int                                     spacetreeId,
+  const peano4::grid::GridTraversalEvent& event,
+  const CellMarker&                       cellMarker,
+  [[maybe_unused]] const char*            name,
+  LoadStoreComputeFlag                    loadStoreComputeFlag
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::CellDataMovement"
+  );
+
+  [[maybe_unused]] const int inCellStack  = peano4::grid::PeanoCurve::CallStack;
+  const int                  outCellStack = event.getCellData();
+  logDebug(
+    "storeCell(...)",
+    "cell stack " << inCellStack << "->pos-" << outCellStack
+  );
+
+  const CellMarker& marker = cellMarker;
+
+  auto view = stackMap
+                .getForPop(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                ->popBlock(1);
+
+  bool dataShallBePushedOntoIntermediateStack
+    = not peano4::grid::PeanoCurve::isInOutStack(outCellStack)
+      and outCellStack
+            != peano4::grid::TraversalObserver::
+              CreateOrDestroyPersistentGridEntity
+      and outCellStack != peano4::grid::TraversalObserver::NoData;
+  bool dataShallBePushedOntoOutputStack
+    = peano4::grid::PeanoCurve::isInOutStack(outCellStack)
+      and ::peano4::grid::storePersistently(loadStoreComputeFlag(marker));
+
+  if (dataShallBePushedOntoIntermediateStack or dataShallBePushedOntoOutputStack) {
+    stackMap.getForPush(spacetreeId, outCellStack)->push(view.get(0));
+  } else {
+    logDebug(
+      "storeCell(...)",
+      "do not store cell "
+        << name << " with " << marker.x() << " x " << marker.h() << ":"
+        << "  destroy="
+        << (outCellStack
+            == peano4::grid::TraversalObserver::
+              CreateOrDestroyPersistentGridEntity)
+        << ", no-data="
+        << (outCellStack == peano4::grid::TraversalObserver::NoData)
+        << ", is-in/out="
+        << peano4::grid::PeanoCurve::isInOutStack(outCellStack)
+    );
+  }
+}
+
+
+template <
+  typename Data,
+  typename StackMap,
+  typename LoadStoreComputeFlag,
+  typename Send>
+void peano4::datamanagement::sendCellData(
+  StackMap&                                           stackMap,
+  int                                                 spacetreeId,
+  int                                                 toStack,
+  peano4::grid::TraversalObserver::SendReceiveContext context,
+  const CellMarker&                                   cellMarker,
+  LoadStoreComputeFlag                                loadStoreComputeFlag,
+  Send                                                send
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::CellDataMovement"
+  );
+
+  const CellMarker& marker = cellMarker;
+
+  const Data& data = stackMap
+                       .getForPop(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                       ->top();
+  if (::peano4::grid::storePersistently(loadStoreComputeFlag(marker)) and (send(data, marker) or context == peano4::grid::TraversalObserver::SendReceiveContext::ForkDomain or context == peano4::grid::TraversalObserver::SendReceiveContext::JoinDomain)) {
+    logDebug(
+      "sendCell(...)",
+      "send out "
+        << data.toString() << " to stack " << toStack << " on tree "
+        << spacetreeId
+    );
+
+    stackMap.getForPush(spacetreeId, toStack)->push(data);
+  }
+}
+
+
+template <
+  typename Data,
+  typename StackMap,
+  typename LoadStoreComputeFlag,
+  typename ReceiveAndMerge>
+void peano4::datamanagement::receiveAndMergeCellData(
+  StackMap&                                                stackMap,
+  int                                                      spacetreeId,
+  int                                                      fromStack,
+  peano4::grid::TraversalObserver::SendReceiveContext      context,
+  [[maybe_unused]] const peano4::grid::GridTraversalEvent& event,
+  const CellMarker&                                        cellMarker,
+  LoadStoreComputeFlag                                     loadStoreComputeFlag,
+  ReceiveAndMerge                                          receiveAndMerge
+) {
+  [[maybe_unused]] static tarch::logging::Log _log(
+    "peano4::datamanagement::CellDataMovement"
+  );
+
+  const CellMarker& marker = cellMarker;
+
+  Data& data = stackMap
+                 .getForPush(spacetreeId, peano4::grid::PeanoCurve::CallStack)
+                 ->top();
+
+  if (::peano4::grid::loadPersistently(loadStoreComputeFlag(marker)) and receiveAndMerge(data, marker)) {
+    auto incomingData = std::move(
+      stackMap.getForPop(spacetreeId, fromStack)->pop()
+    );
+
+    logDebug(
+      "receiveAndMergeCell(...)",
+      "merge " << incomingData.toString() << " into " << data.toString()
+    );
+
+    if (context == ::peano4::grid::TraversalObserver::SendReceiveContext::PeriodicBoundaryDataSwap) {
+      assertion8(
+        tarch::la::countEqualEntries(data.getDebugX(), incomingData.getDebugX())
+          == Dimensions - 1,
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+      assertionVectorNumericalEquals6(
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+    } else {
+      assertionVectorNumericalEquals6(
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+      assertionVectorNumericalEquals6(
+        data.getDebugH(),
+        incomingData.getDebugH(),
+        data.getDebugX(),
+        incomingData.getDebugX(),
+        fromStack,
+        event.toString(),
+        marker.toString(),
+        spacetreeId
+      );
+    }
+
+    data.merge(context, incomingData, marker, spacetreeId);
+  }
+}

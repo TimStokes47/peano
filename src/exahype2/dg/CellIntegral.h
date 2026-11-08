@@ -16,6 +16,8 @@
 #include "peano4/utils/Globals.h"
 
 #include "exahype2/CellData.h"
+#include "tarch/timing/Measurement.h"
+#include "tarch/timing/Watch.h"
 
 
 namespace exahype2 {
@@ -147,7 +149,7 @@ namespace exahype2 {
      * @param unknowns Mumber of unknowns whose values must be updated. If you
      *   solve a PDE with n eqations over a function Q with n+m entries, then n
      *   is the number of unknonws that evolve according to the hyperbolic system
-     *   of PDEs, and m are auxiliary (material) parameters. They do not change due
+     *   of PDEs, and m are auxiliary variables. They do not change due
      *   to the PDE (though any user function might want to alter them).
      *
      * @param auxiliaryVariables. Auxiliary variables. See description of unknowns.
@@ -196,6 +198,20 @@ namespace exahype2 {
       bool                                           evaluatePointSources
     );
 
+    template <
+      typename Solver,
+      int      order,
+      int      unknowns,
+      int      auxiliaryVariables
+    >
+    void cellIntegral_patchwise_in_situ_GaussLegendre(
+      ::exahype2::CellData<double, double>&          cellData,
+      bool                                           evaluateFlux,
+      bool                                           evaluateNonconservativeProduct,
+      bool                                           evaluateSource,
+      bool                                           evaluatePointSources,
+      tarch::timing::Measurement&                    measurement
+    );
 
     /**
      * Final step of DG algorithm

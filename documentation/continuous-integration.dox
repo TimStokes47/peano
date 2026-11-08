@@ -4,41 +4,89 @@
 
 \tableofcontents
 
-On this page, we detail the current function of the CI pipeline.
-Much of the following is subject to change.
+Peano uses [GitHub Actions](https://docs.github.com/en/actions) for continuous integration.
+A workflow is a `.yml` file in `.github/workflows/`; GitHub runs it on its own
+hosted runners whenever its trigger fires. You find the status of all runs on the
+[Actions page](https://github.com/tobiasweinzierl/peano/actions) of the repository.
+
+\note The build and test pipelines used to run on the LRZ GitLab on our own
+      runners on COSMA. Their definitions (`.gitlab-ci.yml` and the files in
+      `.continuous_integration`) are still in the repository, but they are not
+      ported to GitHub Actions yet and are not executed there. The only
+      workflow that currently runs on GitHub is the documentation workflow below.
 
 
-## How do I run the pipeline?
+## Documentation workflow
 
-The pipeline runs automatically for all branches and all pushes.
-However, it only runs fully on the `p4` branch.
-For all other branches, the pipeline only executes the build and test (unit tests) stages.
+The file `.github/workflows/doxygen.yml` builds this website and publishes it at
+https://peano-framework.github.io/peano/. It runs
 
-At time of writing, ```gitlab-runner``` is installed as a service on multiple nodes of DINE.
-The workers are kept alive by recurring slurm jobs. Peano developers should not need to do
-anything other than push to a branch, and [check the pipelines page on the gitlab](https://gitlab.lrz.de/hpcsoftware/Peano/-/pipelines)
-to check that their code has correctly built for each compiler toolchain. Of course,
-this will only check that the core of Peano has been built correctly. See below for info
-on how to write custom tests.
+\li on every push to the branch `p4`, and
+\li on demand: open the *Actions* tab, pick *Doxygen documentation* and press *Run workflow*.
 
+It consists of two jobs:
 
-## How does the pipeline work?
+\li `build` runs on `ubuntu-latest`. It checks out the sources, installs
+    `doxygen`, `graphviz` and `pandoc` through `apt` and `jupyter`/`nbconvert`
+    through `pip`, and then performs the same steps that you run locally to
+    build the documentation:
+    ```
+    python3 documentation/convert-jupyter-notebooks.py
+    doxygen documentation/Doxyfile
+    ```
+    The notebook conversion turns the tutorial notebooks into Doxygen pages (see
+    \ref page_tutorials_overview). Doxygen writes its output to `doxygen-html/html`,
+    which the job uploads as a GitHub Pages artifact.
+\li `deploy` publishes this artifact to GitHub Pages.
 
-Within the repo, we have various scripts to build the code. ```configure.py``` in the top-level
-of Peano will ```configure``` and ```make``` the code according to whatever requirements are
-needed. The only difference here is we use ```apptainer exec``` to make sure that these
-commands are run inside these apptainer images, so that specific compilers can be used
-automatically.
+\note The repository settings have to select *GitHub Actions* as the source under
+      *Settings > Pages* for the deploy job to work.
 
-This is planned to change, however, as this isn't so clean. In the future, we either plan
-to mirror the repo to GitHub and use GitHub actions, or make an executor for gitlab-runner
-that can handle apptainer images directly.
+If the website does not update, open the failed run in the Actions tab, and
+inspect the log of the step that failed. As the steps are plain shell commands,
+you can reproduce nearly every failure locally from the root of the repository.
+
 
 ## How do I write my own tests?
 
-Unfortunately, the use of the apptainer containers is not pretty, and
-so the best thing to do is describe your desired actions in a bash script and ask for help on the
-continuous-integration channel of the Slack. This is due to change in the near future.
+The preferred way to add a test is to write it as a pytest test in `tests/` (see
+\ref tarch_pytest) and to let a workflow call pytest. A minimal workflow, e.g.
+`.github/workflows/pytest.yml`, reads
 
+```
+name: Python unit tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install pytest
+      - run: python3 -m pytest
+```
+
+Plain `pytest` runs all fast tests, which do not compile any code. Tests that
+build and run Peano applications are selected through markers, e.g.
+`python3 -m pytest -m integration tests/exaparty -k sod-1d`. These tests need a
+compiler toolchain, and it is best to copy the setup from the documentation
+workflow and to extend the `Install dependencies` step.
+
+Some general tips:
+
+\li A workflow is only executed if it is on the branch that triggers it, i.e. new
+    workflows have to be pushed before they show up in the Actions tab.
+\li Use `workflow_dispatch` as additional trigger while developing a workflow, so
+    you can start it by hand.
+\li Use `needs:` to make a job depend on another one, e.g. a test job on a build job.
+    Jobs run on fresh machines. Pass build results between them through
+    `actions/upload-artifact` and `actions/download-artifact`.
+\li Pin actions to a major version (`actions/checkout@v4`) as done in the existing workflow.
 
 */

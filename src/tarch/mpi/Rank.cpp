@@ -206,64 +206,11 @@ void tarch::mpi::Rank::suspendTimeouts( bool timeoutsDisabled ) {
 
 
 #ifdef Parallel
-std::string tarch::mpi::MPIReturnValueToString( int result ) {
-  std::ostringstream out;
-
-  int   resultlen;
-  char* string = new char[MPI_MAX_ERROR_STRING];  // (char *)malloc(MPI_MAX_ERROR_STRING * sizeof(char));
-  MPI_Error_string(result, string, &resultlen);
-
-  int   errorclass;
-  MPI_Error_class(result, &errorclass);
-
-  out << "mpi error class: " << errorclass << "="
-      << ", mpi error text: " << string;
-
-  switch ( errorclass ) {
-    case MPI_SUCCESS:      out << "MPI_SUCCESS [no error]"; break;
-    case MPI_ERR_BUFFER:   out << "MPI_ERR_BUFFER [invalid buffer pointer]"; break;
-    case MPI_ERR_COUNT:    out << "MPI_ERR_COUNT [invalid count argument]"; break;
-    case MPI_ERR_TYPE:     out << "MPI_ERR_TYPE [invalid datatype]"; break;
-    case MPI_ERR_TAG:      out << "MPI_ERR_TAG [invalid tag]"; break;
-    case MPI_ERR_COMM:     out << "MPI_ERR_COMM [invalid communicator]"; break;
-    case MPI_ERR_RANK:     out << "MPI_ERR_RANK [invalid rank]"; break;
-    case MPI_ERR_REQUEST:  out << "MPI_ERR_REQUEST [invalid request handle]"; break;
-    case MPI_ERR_ROOT:     out << "MPI_ERR_ROOT [invalid root argument]"; break;
-    case MPI_ERR_GROUP:    out << "MPI_ERR_GROUP [invalid group]"; break;
-    case MPI_ERR_OP:       out << "MPI_ERR_OP [invalid operation]"; break;
-    case MPI_ERR_TOPOLOGY: out << "MPI_ERR_TOPOLOGY [invalid topology]"; break;
-    case MPI_ERR_DIMS:     out << "MPI_ERR_DIMS [invalid dimensions]"; break;
-    case MPI_ERR_ARG:      out << "MPI_ERR_ARG [invalid argument]"; break;
-    case MPI_ERR_UNKNOWN:  out << "MPI_ERR_UNKNOWN [unknown error]"; break;
-    case MPI_ERR_TRUNCATE: out << "MPI_ERR_TRUNCATE [message has been truncated by receiver]"; break;
-    case MPI_ERR_OTHER:    out << "MPI_ERR_OTHER [other unknown error]"; break;
-    case MPI_ERR_INTERN:   out << "MPI_ERR_INTERN [internal mpi error]"; break;
-    default: out << "unknown"; break;
-  }
-
-  delete[] string;
-
-  return out.str();
-}
-
-
-std::string tarch::mpi::MPIStatusToString( const MPI_Status& status ) {
-  std::ostringstream out;
-  out << "status flag:"
-      << " MPI_ERROR=" << status.MPI_ERROR
-      << " (" << MPIReturnValueToString(status.MPI_ERROR)
-      << ") ,MPI_SOURCE=" << status.MPI_SOURCE
-      << ",MPI_TAG=" << status.MPI_TAG;
-  return out.str();
-}
-#endif
-
-
-#ifdef Parallel
 tarch::mpi::Rank::Rank():
   _initIsCalled(false),
   _rank(-1),
   _numberOfProcessors(-1),
+  _providedThreadLevelSupport(-1),
   _communicator( MPI_COMM_WORLD),
   _timeOutWarning(0),
   _deadlockTimeOut(0),
@@ -399,10 +346,6 @@ void tarch::mpi::Rank::shutdown() {
 
   IntegerMessage::shutdownDatatype();
 
-#ifdef UseTargetDART
-  finalizeTargetDART();
-#endif
-
   int errorCode = MPI_Finalize();
   if (errorCode) {
     logError( "shutdown()", MPIReturnValueToString(errorCode) );
@@ -470,19 +413,24 @@ bool tarch::mpi::Rank::validateMaxTagIsSupported() {
 }
 
 #ifdef UseTargetDART
-static void targetDartTextPointer() {}
+static void tdTextPointer() {}
 #endif
+
+
+int tarch::mpi::Rank::getProvidedThreadLevelSupport() const {
+  return _providedThreadLevelSupport;
+}
+
 
 bool tarch::mpi::Rank::init([[maybe_unused]] int* argc, [[maybe_unused]] char*** argv) {
   #ifdef Parallel
   int result = MPI_SUCCESS;
 
   #if defined( SharedMemoryParallelisation )
-  int initThreadProvidedThreadLevelSupport;
-  result = MPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &initThreadProvidedThreadLevelSupport );
-  if (initThreadProvidedThreadLevelSupport!=MPI_THREAD_MULTIPLE ) {
+  result = MPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &_providedThreadLevelSupport );
+  if (_providedThreadLevelSupport!=MPI_THREAD_MULTIPLE ) {
     std::cerr << "warning: MPI implementation does not support MPI_THREAD_MULTIPLE. Support multithreading level is "
-              << initThreadProvidedThreadLevelSupport << " instead of " << MPI_THREAD_MULTIPLE
+              << _providedThreadLevelSupport << " instead of " << MPI_THREAD_MULTIPLE
               << ". Disable MultipleThreadsMayTriggerMPICalls in the compiler-specific settings or via -DnoMultipleThreadsMayTriggerMPICalls."<< std::endl;
   }
   #else
@@ -490,7 +438,7 @@ bool tarch::mpi::Rank::init([[maybe_unused]] int* argc, [[maybe_unused]] char***
   #endif
 
 #ifdef UseTargetDART
-  initTargetDART(reinterpret_cast<void*>(&targetDartTextPointer));
+  td_init(reinterpret_cast<void*>(&tdTextPointer));
 #endif
 
   if (result!=MPI_SUCCESS) {
@@ -531,11 +479,6 @@ bool tarch::mpi::Rank::init([[maybe_unused]] int* argc, [[maybe_unused]] char***
 
 
 int tarch::mpi::Rank::getRank() const {
-/*
-  #ifdef Parallel
-  assertion(_initIsCalled);
-  #endif
-*/
   return _rank;
 }
 
@@ -584,11 +527,14 @@ void tarch::mpi::Rank::setCommunicator( MPI_Comm communicator, [[maybe_unused]] 
   if (result!=MPI_SUCCESS) {
     logError( "setCommunicator(...)", "initialisation failed: " + MPIReturnValueToString(result) );
   }
+  assertion1(_numberOfProcessors>0, _numberOfProcessors);
 
   result = MPI_Comm_rank( _communicator, &_rank );
   if (result!=MPI_SUCCESS) {
     logError( "setCommunicator(...)", "initialisation failed: " + MPIReturnValueToString(result) );
   }
+  assertion2(_rank>=0, _numberOfProcessors, _rank);
+  assertion2(_rank<_numberOfProcessors, _numberOfProcessors, _rank);
 }
 #endif
 

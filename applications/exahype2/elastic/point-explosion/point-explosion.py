@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-from elastic import Elastic
+from Elastic import Elastic
 
 if __name__ == "__main__":
     elastic = Elastic()
@@ -13,8 +13,8 @@ if __name__ == "__main__":
         solver="RusanovGlobalAdaptiveADERDG",
         dimensions=2,
         end_time=3.0,
-        width="[20.0, 20.0, 20.0]",
-        offset="[-5.0, 0.0, 0.0]",
+        width=[20.0, 20.0, 20.0],
+        offset=[-5.0, 0.0, 0.0],
         min_depth=4,
         amr_levels=0,
         patch_size=16,

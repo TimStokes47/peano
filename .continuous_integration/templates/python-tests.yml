@@ -1,0 +1,5 @@
+# Python unit tests from tests/. pytest.ini restricts plain pytest runs to the
+# fast tests, i.e. tests marked as integration or slow are not executed here.
+.Python_Unit_Tests:
+  script:
+    - apptainer exec -e --bind "$APPTAINER_BINDDIR" $APPTAINER_IMAGEDIR/${IMAGE_TAG} python3 -m pytest

@@ -49,6 +49,31 @@ parameter tarch::la::DynamicMatrix::vectorToString(fineGridFaceEulerQUpdate.valu
      */
     void testInterpolateCellDataAssociatedToVolumesIntoOverlappingCell_linear();
 
+    /**
+     * Interpolate onto hanging faces and restrict from them for overlaps of
+     * one, two and three
+     *
+     * - Both interpolation schemes have to reproduce a constant coarse face
+     *   on both halves of the hanging face.
+     * - The linear interpolation has to reproduce a field which is linear
+     *   along the face, except next to the ends of the face, where it
+     *   extrapolates constantly.
+     * - Restricting a constant fine face over all 3^(d-1) subfaces has to
+     *   yield this constant on the fine half of the coarse face and leave
+     *   the other half untouched.
+     */
+    void testHangingFacesForAnyOverlap();
+
+    /**
+     * Interpolate a coarse patch into its 3^d children
+     *
+     * The piecewise constant interpolation has to copy the value of the
+     * coarse volume which contains a fine volume's centre. The d-linear
+     * interpolation has to reproduce a linear field, except next to the
+     * boundary of the coarse patch, where it extrapolates constantly.
+     */
+    void testCellInterpolation();
+
   public:
 
     /**

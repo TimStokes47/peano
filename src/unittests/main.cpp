@@ -2,17 +2,23 @@
 // use, please see the copyright notice at www.peano-framework.org
 #include "config.h"
 
-#include "tarch/logging/Log.h"
-#include "tarch/logging/CommandLineLogger.h"
-#include "tarch/logging/ChromeTraceFileLogger.h"
-#include "tarch/logging/LogFilter.h"
-#include "tarch/multicore/Core.h"
-#include "tarch/mpi/Rank.h"
+/*
+#include <fenv.h>
+#pragma float_control(precise, on)
+#pragma STDC FENV_ACCESS ON
+*/
+
 #include "tarch/UnitTests.h"
+#include "tarch/logging/ChromeTraceFileLogger.h"
+#include "tarch/logging/CommandLineLogger.h"
+#include "tarch/logging/Log.h"
+#include "tarch/logging/LogFilter.h"
+#include "tarch/mpi/Rank.h"
+#include "tarch/multicore/Core.h"
 
 #include "peano4/peano.h"
-#include "peano4/parallel/Node.h"
 #include "peano4/UnitTests.h"
+#include "peano4/parallel/Node.h"
 
 #ifdef UseToolboxBlockstructured
 #include "toolbox/blockstructured/UnitTests.h"
@@ -27,6 +33,7 @@
 #endif
 
 #ifdef UseToolboxParticles
+#include "toolbox/particles/assignmentchecks/UnitTests.h"
 #include "toolbox/particles/UnitTests.h"
 #endif
 
@@ -34,15 +41,19 @@
 #include "exahype2/UnitTests.h"
 #endif
 
-#ifdef UseSWIFT
-#include "swift2/UnitTests.h"
+#ifdef UseExaParty
+#include "exaparty/UnitTests.h"
+#endif
+
+#if defined(UseExaGRyPE) and Dimensions == 3
+#include "exagrype/UnitTests.h"
 #endif
 
 tarch::logging::Log _log("unittests");
 
 void runTests() {
-  int unitTestsErrors = 0;
-  tarch::tests::TestCase* tests = nullptr;
+  int                     unitTestsErrors = 0;
+  tarch::tests::TestCase* tests           = nullptr;
 
   tests = tarch::getUnitTests();
   tests->run();
@@ -54,47 +65,60 @@ void runTests() {
   unitTestsErrors += tests->getNumberOfErrors();
   delete tests;
 
-  #ifdef UseToolboxBlockstructured
+#ifdef UseToolboxBlockstructured
   tests = toolbox::blockstructured::getUnitTests();
   tests->run();
   unitTestsErrors += tests->getNumberOfErrors();
   delete tests;
-  #endif
+#endif
 
-  #ifdef UseToolboxFiniteElements
+#ifdef UseToolboxFiniteElements
   tests = toolbox::finiteelements::getUnitTests();
   tests->run();
   unitTestsErrors += tests->getNumberOfErrors();
   delete tests;
-  #endif
+#endif
 
-  #ifdef UseToolboxMultiprecision
+#ifdef UseToolboxMultiprecision
   tests = toolbox::multiprecision::getUnitTests();
   tests->run();
   unitTestsErrors += tests->getNumberOfErrors();
   delete tests;
-  #endif
+#endif
 
-  #ifdef UseToolboxParticles
+#ifdef UseToolboxParticles
   tests = toolbox::particles::getUnitTests();
   tests->run();
   unitTestsErrors += tests->getNumberOfErrors();
   delete tests;
-  #endif
 
-  #ifdef UseExaHyPE
+  tests = toolbox::particles::assignmentchecks::getUnitTests();
+  tests->run();
+  unitTestsErrors += tests->getNumberOfErrors();
+  delete tests;
+#endif
+
+#ifdef UseExaHyPE
   tests = exahype2::getUnitTests();
   tests->run();
   unitTestsErrors += tests->getNumberOfErrors();
   delete tests;
-  #endif
+#endif
 
-  #ifdef UseSWIFT
-  tests = swift2::getUnitTests();
+#ifdef UseExaParty
+  tests = exaparty::getUnitTests();
   tests->run();
   unitTestsErrors += tests->getNumberOfErrors();
   delete tests;
-  #endif
+#endif
+
+#if defined(UseExaGRyPE) and Dimensions == 3
+  tests = exagrype::getUnitTests();
+  tests->run();
+  unitTestsErrors += tests->getNumberOfErrors();
+  delete tests;
+#endif
+
 
   if (unitTestsErrors != 0) {
     logError("main()", "unit tests failed. Quit.");
@@ -103,68 +127,185 @@ void runTests() {
 }
 
 int main(int argc, char** argv) {
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "exahype2", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "exahype2", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetDebug, tarch::logging::LogFilter::FilterListEntry::AnyRank, "toolbox", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetTrace, tarch::logging::LogFilter::FilterListEntry::AnyRank, "toolbox", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetDebug,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "peano4",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetTrace,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "peano4",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetDebug,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "tarch",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetTrace,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "tarch",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetDebug,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "exahype2",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetTrace,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "exahype2",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetDebug,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "toolbox",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
 
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "tarch", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "peano4", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetInfo, tarch::logging::LogFilter::FilterListEntry::AnyRank, "exahype2", tarch::logging::LogFilter::FilterListEntry::BlackListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetInfo, 0, "tarch", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetInfo, 0, "peano4", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
-  tarch::logging::LogFilter::getInstance().addFilterListEntry( tarch::logging::LogFilter::FilterListEntry(
-    tarch::logging::LogFilter::FilterListEntry::TargetInfo, 0, "exahype2", tarch::logging::LogFilter::FilterListEntry::WhiteListEntry, tarch::logging::LogFilter::FilterListEntry::AlwaysOn
-  ));
+  // White- or blacklist assignment checks traces
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetTrace,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "toolbox::particles::assignmentchecks",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetDebug,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "toolbox::particles::assignmentchecks",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
 
-  peano4::initParallelEnvironment(&argc,&argv);
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetTrace,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "toolbox",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "tarch",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "peano4",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+      tarch::logging::LogFilter::FilterListEntry::AnyRank,
+      "exahype2",
+      tarch::logging::LogFilter::FilterListEntry::BlackListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+      0,
+      "tarch",
+      tarch::logging::LogFilter::FilterListEntry::WhiteListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+      0,
+      "peano4",
+      tarch::logging::LogFilter::FilterListEntry::WhiteListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+  tarch::logging::LogFilter::getInstance().addFilterListEntry(
+    tarch::logging::LogFilter::FilterListEntry(
+      tarch::logging::LogFilter::FilterListEntry::TargetInfo,
+      0,
+      "exahype2",
+      tarch::logging::LogFilter::FilterListEntry::WhiteListEntry,
+      tarch::logging::LogFilter::FilterListEntry::AlwaysOn
+    )
+  );
+
+  peano4::initParallelEnvironment(&argc, &argv);
   peano4::fillLookupTables();
 
-  #ifdef Parallel
+#ifdef Parallel
   if (tarch::mpi::Rank::getInstance().getNumberOfRanks() <= 1) {
-    logWarning("main()", "it is recommended that you run the unit tests with more than one MPI rank, too");
+    logWarning(
+      "main()",
+      "it is recommended that you run the unit tests with more than one MPI rank, too"
+    );
   }
-  #endif
+#endif
 
   int cores = tarch::multicore::Core::UseDefaultNumberOfThreads;
   if (argc != 2 and tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    logWarning("main()", "usage: ./" + std::string(argv[0]) + " core-count (use default core count=1 now)");
-  }
-  else if (argc==2) {
-    cores = std::atoi( argv[1] );
+    logInfo(
+      "main()",
+      "usage: ./" + std::string(argv[0])
+        + " core-count"
+    );
+    logInfo(
+      "main()",
+      "no core count provided, using default number"
+    );
+  } else if (argc == 2) {
+    cores = std::atoi(argv[1]);
   }
 
   tarch::multicore::Core::getInstance().configure(cores);
+
+  peano4::parallel::Node::getInstance().init();
 
   runTests();
 
@@ -174,6 +315,8 @@ int main(int argc, char** argv) {
       // and is properly installed.
     }
   }
+
+  peano4::parallel::Node::getInstance().shutdown();
 
   peano4::shutdownParallelEnvironment();
 

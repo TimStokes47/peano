@@ -219,9 +219,9 @@ smartmpi::Task* {{NAMESPACE | join("::")}}::{{CLASSNAME}}::receiveTask(int rank,
   peano4::grid::GridTraversalEvent dummyEvent;
   const int NumberOfInputValues =
     #if Dimensions==2
-    {{NUMBER_OF_DOUBLE_VALUES_IN_PATCH_PLUS_HALO_2D}};
+    {{NUMBER_OF_DOUBLE_VALUES_IN_cell_PLUS_HALO_2D}};
     #else
-    {{NUMBER_OF_DOUBLE_VALUES_IN_PATCH_PLUS_HALO_3D}};
+    {{NUMBER_OF_DOUBLE_VALUES_IN_cell_PLUS_HALO_3D}};
     #endif
 
   ::tarch::mpi::DoubleMessage tMessage;
@@ -308,9 +308,9 @@ smartmpi::Task* {{NAMESPACE | join("::")}}::{{CLASSNAME}}::receiveOutcome(int ra
   peano4::grid::GridTraversalEvent dummyEvent;
   const int NumberOfResultValues =
     #if Dimensions==2
-    {{NUMBER_OF_DOUBLE_VALUES_IN_PATCH_2D}};
+    {{NUMBER_OF_DOUBLE_VALUES_IN_cell_2D}};
     #else
-    {{NUMBER_OF_DOUBLE_VALUES_IN_PATCH_3D}};
+    {{NUMBER_OF_DOUBLE_VALUES_IN_cell_3D}};
     #endif
 
   ::tarch::mpi::DoubleMessage tMessage;
@@ -381,7 +381,7 @@ bool {{NAMESPACE | join("::")}}::{{CLASSNAME}}::canFuse() const {
 /**
  * Also merge the current task
  */
-bool {{NAMESPACE | join("::")}}::{{CLASSNAME}}::fuse( const std::list<Task*>& otherTasks, int targetDevice ) {
+void {{NAMESPACE | join("::")}}::{{CLASSNAME}}::fuse( const std::vector<Task*>& otherTasks, int targetDevice ) {
   logDebug("fuse(...)", "rank " << tarch::mpi::Rank::getInstance().getRank()
     << " asked to fuse " << (otherTasks.size() + 1) << " tasks into one large GPU task on device " << targetDevice);
 
@@ -395,7 +395,6 @@ bool {{NAMESPACE | join("::")}}::{{CLASSNAME}}::fuse( const std::list<Task*>& ot
     cellData.dt[currentTask]          = static_cast<{{NAMESPACE | join("::")}}::{{CLASSNAME}}*>(p)->_dt;
     cellData.id[currentTask]          = static_cast<{{NAMESPACE | join("::")}}::{{CLASSNAME}}*>(p)->_taskNumber;
     cellData.QOut[currentTask]        = tarch::allocateMemory(_numberOfResultValues, tarch::MemoryLocation::ManagedSharedAcceleratorDeviceMemory, targetDevice);
-    delete p;
     currentTask++;
   }
   cellData.QIn[currentTask]         = _inputValues;
@@ -445,13 +444,19 @@ bool {{NAMESPACE | join("::")}}::{{CLASSNAME}}::fuse( const std::list<Task*>& ot
   // Bring back results
   // ==================
   //
-  for (int i=0; i<cellData.numberOfCells; i++) {
-    //tarch::freeMemory(cellData.QIn[i], tarch::MemoryLocation::ManagedSharedAcceleratorDeviceMemory, targetDevice);
-    ::exahype2::EnclaveBookkeeping::getInstance().finishedTask(cellData.id[i], _numberOfResultValues, cellData.QOut[i], cellData.maxEigenvalue[i]);
-  }
 
-  // Don't rerun, so return false.
-  return false;
+  for (int i = 0; i < cellData.numberOfCells; i++) {
+    // Delete reconstructed data which has been allocated before spawning the tasks.
+    tarch::freeMemory(cellData.QIn[i], tarch::MemoryLocation::ManagedSharedAcceleratorDeviceMemory, targetDevice);
+    ::exahype2::EnclaveBookkeeping::getInstance().finishedTask(
+      cellData.id[i],
+      _numberOfResultValues,
+      cellData.QOut[i],
+      cellData.maxEigenvalue[i],
+      cellData.cellCentre[i],
+      cellData.cellSize[i]
+    );
+  }
 }
 
 {% endif %}

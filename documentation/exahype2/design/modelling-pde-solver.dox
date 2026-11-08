@@ -1,0 +1,81 @@
+/**
+
+@page page_exahype_modelling_pde_solver Modelling the PDE solver
+
+\tableofcontents
+
+This page discusses how a user describes *what* their solver should compute,
+i.e. the mathematical model, as opposed to *how* it is eventually computed
+(discussed on the @ref page_exahype_numerical_scheme "adding a numerical scheme" page).
+Modelling is entirely done through exahype2.api.Solver and stays purely
+descriptive, in line with the @ref page_exahype_design_philosophy "design philosophy"
+that keeps the *what* free of any *how*.
+
+ExaHyPE 2 solves partial differential equations of the form
+
+@f$
+\frac{\partial Q}{\partial t} + \nabla . F(Q, \nabla Q) + B(Q) . \nabla Q= S(Q) + \sum_{i = 1}^{n_{ps}} \delta_i
+@f$
+
+and users model an instance of this equation by creating an exahype2.api.Solver
+(or a concrete subclass thereof, such as a Finite Volume or ADER-DG solver) and
+configuring two things on it: the unknowns and the individual PDE terms.
+
+
+# Unknowns and auxiliary variables
+
+Every solver is constructed with a name and an unknowns specification. The
+latter can be given either as a plain integer (just the multiplicity) or as a
+dictionary mapping a variable name onto its multiplicity, e.g.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+solver = exahype2.api.Solver(
+  name     = "MyEulerSolver",
+  unknowns = {"rho": 1, "j": 3, "E": 1},
+)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The unknowns form the data vector Q per mesh entry (Finite Volume voxel, DG
+degree of freedom, ...) and are subject to the actual PDE formulation above. If a
+dictionary is used, the generated abstract solver hosts a struct Variables, so
+user code can address Q's entries by name instead of by raw offset.
+
+Quantities which may vary in space but are not evolved by the PDE terms are
+auxiliary variables. A solver can have an arbitrary number of sets of auxiliary variables
+(@ref exahype2.api.AuxiliaryVariables), each of them holding an arbitrary number of
+(vector-valued) variables in a cell data object of its own. A set is attached via
+exahype2.api.Solver.add_auxiliary_variables(), and the first solver which a set
+is attached to owns it, i.e. initialises it. Further solvers can attach the same set
+and share it. Behind each Q (and deltaQ), the signature of every PDE term of a
+solver with auxiliary variables hosts one pointer per attached set. Solvers without
+auxiliary variables keep their signatures.
+
+
+# PDE terms
+
+Q, F, B, S and the point sources @f$ \delta_i @f$ from the equation above each
+correspond to one exahype2.api.PDETerm registered with the solver via
+Solver.add_pde_term(). Well-known terms - the flux (exahype2.api.Flux),
+eigenvalues, the non-conservative product, algebraic/point sources, boundary
+conditions, ... - ship as their own PDETerm subclasses that pin down the
+C++ method name and signature; solver-specific terms can be added with the
+plain PDETerm constructor.
+
+A term's implementation is one of
+
+- `PDETerm.USER_DEFINED`: the generated C++ method is left pure virtual for
+  the user to implement by hand,
+- `PDETerm.NONE` (the default): the term is switched off, i.e. this
+  contribution is absent from the PDE, or
+- `PDETerm.EMPTY`: the method is generated but does nothing,
+
+or an actual C++ code snippet that becomes the method body verbatim, e.g. for
+small, closed-form terms that do not warrant a hand-written implementation.
+
+A term is thus itself a small, purely descriptive object (name, signature,
+implementation), and it is only the corresponding generator
+(term.generator, @see PDETerm.Generator) that later lowers it into an actual
+generated C++ method - the same descriptive-class-plus-generator pattern used
+throughout ExaHyPE 2 (@see @ref page_exahype_design_philosophy).
+
+*/

@@ -10,17 +10,24 @@
 #include "tarch/accelerator/accelerator.h"
 #include "tarch/la/Vector.h"
 
-#if defined(SharedTBB)
-#include <oneapi/tbb/blocked_range.h>
-#include <oneapi/tbb/blocked_range2d.h>
-#include <oneapi/tbb/blocked_range3d.h>
-#include <oneapi/tbb/parallel_for.h>
 
-  #if defined(TBBExtensionAddRanges)
+#if defined(SharedTBB)
+  #if defined(SharedTBBExtension) and !defined(TBB_PREVIEW_BLOCKED_RANGE_ND)
     #include "tbb/blocked_rangeNd.h"
   #else
-    #define TBB_PREVIEW_BLOCKED_RANGE_ND 1
-    #include <oneapi/tbb/blocked_rangeNd.h>
+    #include <oneapi/tbb/blocked_range.h>
+  #endif
+
+  #include <oneapi/tbb/blocked_range2d.h>
+  #include <oneapi/tbb/blocked_range3d.h>
+  #include <oneapi/tbb/parallel_for.h>
+
+  #ifdef TBB_OLD_BLOCKED_RANGE_ND
+  namespace tbb {
+  namespace detail {
+  namespace d1 {
+    using blocked_nd_range = blocked_rangeNd;
+  }}}
   #endif
 #endif
 
@@ -360,7 +367,7 @@ std::string toString(peano4::utils::LoopPlacement);
  *
  * ## Generic realisation remarks
  *
- * - I convert the max argument always into counter##Max and then work against
+ * - I convert the max argument always into counter\#\#Max and then work against
  *   the vector. This way, I can support both vectors and scalars. In the
  *   former case, the copy constructor is used. In the latter case the
  *   constructor accepting a scalar.
@@ -386,7 +393,7 @@ std::string toString(peano4::utils::LoopPlacement);
  *
  * which is, to the best of my knowledge, a C99 instruction and not C++17. So I
  * simply assume and hope that this works. Note that the _Pragma statement
- * yields a #pragma, i.e. you are not allowed to write
+ * yields a pragma, i.e. you are not allowed to write
  *
  *              _Pragma( "#pragma my embedded pragma" )
  *

@@ -7,16 +7,21 @@ endif
 
 ExaHyPE2Sources = \
   CellAccess.cpp \
-  EnclaveBookkeeping.cpp \
-  EnclaveTask.cpp \
+  CheckpointReader.cpp \
   LoadBalancingConfiguration.cpp \
   PlotFilter.cpp \
   RefinementControl.cpp \
   PrecisionControl.cpp \
   RefinementControlService.cpp \
+  Simulation.cpp \
+  Solver.cpp \
   TimeStepping.cpp \
   UserInterface.cpp \
   UnitTests.cpp \
+  blockstructured/DirichletBoundaryConditions.cpp \
+  blockstructured/tests/DirichletBoundaryConditionsTest.cpp \
+  blockstructured/SommerfeldBoundaryConditions.cpp \
+  blockstructured/tests/SommerfeldBoundaryConditionsTest.cpp \
   dg/BoundaryConditions.cpp \
   dg/DGUtils.cpp \
   dg/CellIntegral.cpp \
@@ -31,20 +36,15 @@ ExaHyPE2Sources = \
   enumerator/SingleDoFEnumerator.cpp \
   enumerator/AoSoALexicographicEnumerator.cpp \
   enumerator/FaceAoSLexicographicEnumerator.cpp \
-  fd/BoundaryConditions.cpp \
   fd/PatchUtils.cpp \
+  fd/LopsidedAdvection.cpp \
   fd/LoopBody.cpp \
   fv/BoundaryConditions.cpp \
   fv/PatchUtils.cpp \
   fv/PostprocessingKernels.cpp \
   fv/Tracer.cpp \
-  fd/tests/SommerfeldBCTest.cpp\
-  fd/tests/CCZ4KernelTest.cpp\
   fv/tests/InterpolationRestrictionTest.cpp \
-  fd/fd4/LoopBody.cpp \
-  fd/fd4/FD4_patchwise_functors.cpp \
   fv/riemann/Riemann.cpp \
-  fv/rusanov/rusanov.cpp \
   dg/rusanov/tests/RiemannTest.cpp \
   fv/rusanov/tests/CopyPatchTest.cpp \
   fv/rusanov/tests/ApplySplit1DRiemannToPatchTest.cpp

@@ -6,7 +6,7 @@ with some random u_{random}.
 
 import os, sys
 import argparse
-import peano4
+import peano4.api
 import mghype
 import numpy as np
 from time import sleep
@@ -37,7 +37,7 @@ from actionsets.InitDG import InitDofsDGTest6, InitDofsIntermediatePhaseTest6
 
 parser = argparse.ArgumentParser(description='Multigrid - Poisson solver')
 parser.add_argument("-j",   "--parallel-builds",      dest="j",              type=int, default=-1, help="Parallel builds" )
-parser.add_argument("-pt",   "--plot-timestep",     dest="plot_each_timestep", action="store_true", default=False, help="Plot after each timestep. By default (False) we plot after initialisation and at the end" )
+parser.add_argument("-pt",   "--plot-timestep",     dest="plot_after_each_mesh_sweep", action="store_true", default=False, help="Plot after each timestep. By default (False) we plot after initialisation and at the end" )
 parser.add_argument("-pd",  "--peano-dir",            dest="peanodir",       default="../../../../", help="Peano4 directory" )
 parser.add_argument("-v",   "--verbose",              dest="verbose",        action="store_true", default=False, help="Verbose")
 parser.add_argument("-d",   "--dimensions",           dest="dimensions",     type=int, default=2, help="Dimensions")
@@ -115,13 +115,13 @@ project.add_solver(solver)
 # Configure build
 #
 if args.mode=="release":
-  build_mode = peano4.output.CompileMode.Release
+  build_mode = peano4.api.output.CompileMode.RELEASE
 if args.mode=="stats":
-  build_mode = peano4.output.CompileMode.Stats
+  build_mode = peano4.api.output.CompileMode.STATS
 if args.mode=="asserts":
-  build_mode = peano4.output.CompileMode.Asserts
+  build_mode = peano4.api.output.CompileMode.ASSERTS
 if args.mode=="trace":
-  build_mode = peano4.output.CompileMode.Trace
+  build_mode = peano4.api.output.CompileMode.TRACE
 
 
 cube_size = 1.0
@@ -129,7 +129,7 @@ project.set_global_simulation_parameters(
   dimensions            = args.dimensions,
   offset                = [ 0.0       for _ in range(args.dimensions) ],
   domain_size           = [ cube_size for _ in range(args.dimensions) ],
-  plot_each_timestep    = args.plot_each_timestep,
+  plot_after_each_mesh_sweep    = args.plot_after_each_mesh_sweep,
   max_iterations        = 1000
 )
 

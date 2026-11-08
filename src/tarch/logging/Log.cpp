@@ -8,6 +8,10 @@
 #include "tarch/logging/LogFilter.h"
 #include "tarch/logging/CommandLineLogger.h"
 
+#if UseLogService==NoLogger
+#include "NoLogger.h"
+#endif
+
 #if UseLogService==ChromeTraceFileLogger
 #include "ChromeTraceFileLogger.h"
 #endif
@@ -42,10 +46,11 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
+std::chrono::system_clock::time_point tarch::logging::Log::_startupTime{ std::chrono::system_clock::now() };
+
+
 tarch::logging::Log::Log(const std::string& className):
   _className( className ) {
-
-  _startupTime = std::chrono::system_clock::now();
 }
 
 tarch::logging::Log::~Log() {}
@@ -92,8 +97,8 @@ void tarch::logging::Log::traceIn(const std::string&, Message) {}
 void tarch::logging::Log::traceOut(const std::string&, Message) {}
 #endif
 
-void tarch::logging::Log::indent( bool indent, const std::string& trace, Message message ) const {
-  UseLogService::getInstance().indent( indent, trace, message() );
+void tarch::logging::Log::indent( bool indent, const std::string& trace ) const {
+  UseLogService::getInstance().indent( indent, trace );
 }
 
 std::string tarch::logging::Log::getMachineInformation() {
@@ -139,4 +144,9 @@ long int tarch::logging::Log::getTimeStamp() const {
 
 std::string tarch::logging::Log::getTraceInformation( const std::string& methodName ) const {
   return _className + "::" + methodName;
+}
+
+
+std::string tarch::logging::Log::getClassName() const {
+  return _className;
 }

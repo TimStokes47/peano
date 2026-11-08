@@ -22,54 +22,36 @@ class Exahype2(CMakePackage, CudaPackage):
     """
 
     homepage = "www.peano-framework.org"
-    url = "https://gitlab.lrz.de/hpcsoftware/Peano"
-    git = "https://gitlab.lrz.de/hpcsoftware/Peano.git"
+    url = "https://github.com/tobiasweinzierl/peano"
+    git = "https://github.com/tobiasweinzierl/peano.git"
 
     maintainers("hpcsoftware")
 
     version("p4", branch="p4")
 
-    # Config options
-    variant(
-        "dimensions",
-        default="2,3",
-        values=("2", "3"),
-        multi=True,
-        description="Dimensionality",
-    )
-    variant(
-        "build_type",
-        default="Debug;Release;Asserts;Trace;Stats",
-        values=("Debug", "Release", "Asserts", "Trace", "Stats", "Debug;Release;Asserts;Trace;Stats"),
-        multi=False,
-        description="Build type",
-    )
+    variant("mpi", default=True, description="Build with MPI support")
+    variant("tracer", default=True, description="Build with particle tracer support")
+    variant("hdf5", default=True, description="Build with HDF5 support")
+    variant("netcdf", default=True, description="Build with NetCDF support")
 
-    variant("mpi", default=False, description="Build with MPI support")
-    variant("tracer", default=False, description="Build with particle tracer support")
-    variant("hdf5", default=False, description="Build with HDF5 support")
-    variant("netcdf", default=False, description="Build with NetCDF support")
-
-    depends_on("cmake", type="build")
-    depends_on('libxsmm+generator')
+    depends_on("cmake@3.31.2")
 
     depends_on("mpi", when="+mpi")
 
-    depends_on("hdf5 +shared +threadsafe ~mpi", when="~mpi +hdf5")
-    depends_on("hdf5 +shared +threadsafe +mpi", when="+mpi +hdf5")
+    depends_on("python@3.13.0")
+    depends_on("py-pip@24.3.1")
 
-    depends_on("netcdf-c +shared ~mpi", when="~mpi +netcdf")
-    depends_on("netcdf-c +shared +mpi", when="+mpi +netcdf")
+    depends_on("hdf5@1.14.5 -fortran -java +threadsafe ~mpi +shared +cxx +hl", when="~mpi +hdf5")
+    depends_on("hdf5@1.14.5 -fortran -java +threadsafe +mpi +shared +cxx +hl", when="+mpi +hdf5")
 
-    depends_on('py-pip')
-    depends_on('py-numpy')
-    depends_on('py-scipy')
-    depends_on('py-matplotlib')
-    depends_on('py-sympy')
-    depends_on('py-mpmath')
-    depends_on('py-jinja2')
+    depends_on("netcdf-c@4.9.2 +shared ~mpi", when="~mpi +netcdf")
+    depends_on("netcdf-c@4.9.2 +shared +mpi", when="+mpi +netcdf")
+    depends_on("netcdf-cxx4@4.3.1 +shared +pic", when="+netcdf")
 
-    variant("omp", default=False, description="Build with OpenMP multithreading support")
+    depends_on('gsl@2.8')
+    depends_on('libxsmm@1.17 +generator')
+
+    variant("omp", default=True, description="Build with OpenMP multithreading support")
     variant("sycl", default=False, description="Build with SYCL multithreading support")
     variant("cpp", default=False, description="Build with std::par multithreading support")
     variant("tbb", default=False, description="Build with TBB multithreading support")
@@ -103,10 +85,10 @@ class Exahype2(CMakePackage, CudaPackage):
             "-DENABLE_LOADBALANCING=ON",
             "-DENABLE_BLOCKSTRUCTURED=ON",
             "-DENABLE_EXAHYPE=ON",
-            "-DWITH_LIBXSMM=ON",
-            self.define_from_variant("WITH_DIMENSIONS", "dimensions"),
-            self.define_from_variant("CMAKE_BUILD_TYPE", "build_type"),
+            "-DWITH_LIBXSMM=OFF",
             self.define_from_variant("WITH_MPI", "mpi"),
+            self.define_from_variant("WITH_HDF5", "hdf5"),
+            self.define_from_variant("WITH_NETCDF", "netcdf"),
             self.define_from_variant("ENABLE_PARTICLES", "tracer"),
         ]
 
@@ -128,8 +110,17 @@ class Exahype2(CMakePackage, CudaPackage):
         return args
 
 
+    def install(self, spec, prefix):
+        super(Exahype2, self).install(spec, prefix)
+
+        python_exe = Executable(spec['python'].command.path)
+
+        requirements_path = join_path(self.stage.source_path, 'requirements.txt')
+        if os.path.exists(requirements_path):
+            python_exe('-m', 'pip', 'install', '--prefix=' + prefix, '-r', requirements_path)
+
+
     def setup_run_environment(self, env):
-        env.prepend_path("PEANO_ROOT", self.spec.prefix)
-        env.prepend_path("EXAHYPE_ROOT", self.spec.prefix)
-        env.prepend_path("EXAHYPE2_ROOT", self.spec.prefix)
+        env.prepend_path("PEANO_SRC_ROOT_DIR", self.spec.prefix)
+        env.prepend_path("PEANO_CMAKE_BUILD_DIR", self.spec.prefix)
         env.prepend_path("PYTHONPATH", self.spec.prefix + "/python")

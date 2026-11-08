@@ -42,15 +42,54 @@ namespace tarch {
    * We use the exact version of KiloByte with 1024 bytes.
    *
    * The implementation is based on C-version of Michael Moltenbrey.
+   *
+   * The quantity depends on the platform:
+   *
+   * - Systems with /proc (CompilerHasProcStat, i.e. Linux) report the virtual
+   *   memory size, field vsize of /proc/<pid>/stat.
+   * - Systems without /proc (e.g. macOS) report the peak resident set size
+   *   from getrusage(). On macOS, ru_maxrss is given in bytes, which is the
+   *   unit the conversion expects.
+   *
+   * Callers such as the load-balancing strategies divide by this value, so
+   * it should not be zero. It is 0 only if the underlying query fails.
    */
   int getMemoryUsage(MemoryUsageFormat format);
+
+  /**
+   * Total physical memory of the node
+   *
+   * Uses sysinfo() where available (CompilerHasSysinfo, i.e. Linux), and the
+   * hw.memsize sysctl otherwise (macOS).
+   */
   int getTotalMemory(MemoryUsageFormat format);
+
+  /**
+   * Free physical memory of the node
+   *
+   * Uses the freeram field of sysinfo() where available (CompilerHasSysinfo,
+   * i.e. Linux). Systems without sysinfo (e.g. macOS) ask the VM subsystem
+   * for its number of free pages, vm.page_free_count, and multiply it by the
+   * page size. Both count only genuinely free memory and exclude the page
+   * cache, so the two branches report the same quantity.
+   *
+   * Returns 0 if the query fails, for example on a system without the
+   * vm.page_free_count sysctl.
+   */
   int getFreeMemory(MemoryUsageFormat format);
 }
 
 /**
+ * Generic identifier for inlined functions
+ *
  * This is the marker that is to be used after the argument list of a
- * function declaration.
+ * function declaration. Peano defines its own marker, so it is fairly
+ * easy to disable it if we use a compiler that doesn't support it
+ * aka non-Clang. The remark above is true for declarations (where
+ * the marker is usually to be used), but it seems to fail for
+ * static functions where the implementation is in the header. See
+ * the documentation of tarch::la::smaller() for a discussion of flags
+ * that cause compiler warnings and what to do about them.
  */
 #if defined(UseManualInlining)
 #define InlineMethod __attribute__((always_inline))

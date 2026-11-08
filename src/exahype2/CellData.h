@@ -5,6 +5,7 @@
 #include "tarch/la/Vector.h"
 #include "peano4/utils/Globals.h"
 #include "config.h"
+#include "peano4/datamanagement/CellMarker.h"
 
 #include <functional>
 #include <string>
@@ -120,6 +121,7 @@ namespace exahype2 {
      */
     double*    maxEigenvalue;
 
+
     /**
      * Construct patch data object for one single cell.
      *
@@ -152,9 +154,80 @@ namespace exahype2 {
     ~CellData();
 
     std::string toString() const;
+
+    static int in(int index[Dimensions+2]);
+    static int out(int index[Dimensions+2]);
   };
 
 //  using CellData = CellData<double, double>;
+
+  /**
+   * Cousing to CellData which administers copies on the accelerator
+   *
+   *
+   * This is a variant of CellData which also present GPU data. However, this
+   * flavour copies all data manually onto the GPU, whereas its parent is a
+   * proxy around data. As we copy data over, we can also rearrange all data.
+   * From a user point of view, the big difference is that we have to invoke
+   * copyBackAndDestroy() manually to eliminate the data on the device:
+   *
+   * Copies to the device occur automatically on
+   * construction, but copies back must be triggered manually using
+   * copyBackAndDestroy().
+   * 
+   * The OpenMP implementation offers two versions, one using allocations
+   * on the device, and another that keeps data on the host. This second 
+   * version requires explicit maps in the kernel, which do not currently
+   * exist. For this reason it is currently not in use.
+   *
+   * @todo Shall we retire the second version then if it is not used
+   *       at all?
+   */
+  template<typename inType=double, typename outType=double>
+  struct CopyCellDataGPU{
+    /* 
+    See CellData for meaning of member variables. 
+    The only change is changing QIn and QOut from 2D arrays to 1D.
+    */
+
+    inType*                                 QIn;
+    tarch::la::Vector<Dimensions,double>*   cellCentre;
+    tarch::la::Vector<Dimensions,double>*   cellSize;
+    double*    t;
+    double*    dt;
+    int*       id;
+    const int  numberOfCells;
+    const tarch::MemoryLocation memoryLocation;
+    const int  targetDevice;
+    outType*  QOut;
+    double*    maxEigenvalue;
+
+    inType** QInHost;
+    outType** QOutHost;
+    double* maxEigenvalueHost;
+
+    /**
+     * Construct a copy object
+     *
+     * @param device Valid device by handling in value greater or equal to
+     *   0 or otherwise tarch::accelerator::Device::HostDevice.
+     */
+    CopyCellDataGPU(
+      const CellData<inType, outType>&   cellData,
+      int                                inputPatchSize,
+      int                                outputPatchSize,
+      int                                device = tarch::accelerator::Device::HostDevice,
+      int                                currentPatchDevice = tarch::accelerator::Device::HostDevice
+    );
+    void destroyWithoutCopy();
+    void copyBackAndDestroy();
+    
+    std::string toString() const;
+
+    int QInStride;
+    int QOutStride;
+  };
+
 }
 
 #include "CellData.cpph"

@@ -1,0 +1,180 @@
+/**
+
+@page page_machines Reference Configurations for some machines
+
+<!-- Add this one for href links to subitems -->
+\tableofcontents
+
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
+This page contains information on particular machines that we use heavily.
+The page is not supposed to provide general information about certain software stacks.
+For such information, please consult the toolchain discussions on the parent page @ref page_compiler_specific_settings_home. 
+</div>
+
+
+
+
+# NCC
+
+I recommend atm to use `gpu10`, `gpu11` or `gpu12`, i.e. the A100
+machines. By default, I usually work with NVC++ on this cluster, but the
+OneAPI software stack should work, too.
+
+~~~~~~~~~~~~~~~~~~~~~~~
+module load nsight-systems cuda llvm
+module load mvapich2/2.3.5-2
+
+./configure --enable-exahype --enable-loadbalancing-toolbox --with-multithreading=omp --with-mpi=mpicxx --with-gpu=omp CXX=clang++ CXXFLAGS="-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda"
+~~~~~~~~~~~~~~~~~~~~~~~
+
+## OpenMP with NVC++
+
+I use the setup
+
+~~~~~~~~~~~~~~~~~~~~~~~
+./configure CXX=nvc++ CC=nvc++ CXXFLAGS="-O4 --std=c++17 -mp=gpu -gpu=cc80" LDFLAGS="-mp=gpu -gpu=cc80" --with-multithreading=omp --with-gpu=omp --enable-exahype --enable-blockstructured --enable-loadbalancing CPP=cpp FC=/apps/nvidia-hpc-sdk/Linux_x86_64/22.3/compilers/bin/nvfortran
+~~~~~~~~~~~~~~~~~~~~~~~
+
+on the A100 nodes.
+
+We had some issues (compiler crashes) with NVC++ 2022.5. Those are filed
+with NVIDIA. For the time being, please revert to another compiler
+generation. Version 2022.3 works for example.
+
+Some nodes (e.g. gpu3) have Titan XP which doesn't support OpenMP
+offloading; only GPUs with compute capability >=70 can offload with
+OpenMP. You can check the GPU model with `nvidia-smi -L`.
+
+Note that there is a bug in the NVIDIA software stack at the moment.
+Many runs will crash with a complaint about a lack of visible devices.
+Ensure hence that you set the following environment before you start
+your experiments:
+
+
+~~~~~~~~~~~~~~~~~~~~~~~
+export CUDA_VISIBLE_DEVICES=0
+~~~~~~~~~~~~~~~~~~~~~~~
+
+## SYCL offloading with oneAPI
+
+I used this to configure Peano with Intel's TBB enabled
+
+~~~~~~~~~~~~~~~~~~~~~~~
+source /opt/intel/oneapi/setvars.sh
+module load cuda
+
+./configure CC=icx CXX=icpx LIBS="-ltbb" LDFLAGS="-fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -Xsycl-target-backend=nvptx64-nvidia-cuda --cuda-gpu-arch=sm_80" CXXFLAGS="-O3 -std=c++20 -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -Xsycl-target-backend=nvptx64-nvidia-cuda --cuda-gpu-arch=sm_80" --with-multithreading=tbb --enable-exahype --enable-blockstructured --enable-loadbalancing --with-gpu=sycl
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Codeplay's website has some useful information on compiler flags. Here's
+a short explaination of the above SYCL related flags:
+
+- `-fsycl` tells the compiler to link SYCL libraries and makes it aware of
+  SYCL code. It seems that Clang behaves slightly different to icpx, where you
+  need `-lsycl` in the linker flags.
+- `-fsycl-targets=` allows the compiler to generate code for different devices,
+  e.g., different vendors, host or device.
+- `-Xsycl-target-backend=` is required if you want to select a specific device 
+  architecture. For example, I put `--cuda-gpu-arch=sm_80` after it to compile for
+  A100 with compute capability 8.0.
+
+It also needs at least 2023.0.0 version of oneAPI with Codeplay's nvidia
+GPU plugin which is not installed on NCC. Intel encourages the use of their own
+compiler, `icpx`. However, they use a lower precision by default in favour of 
+performance, use `-fp-model` to change this behaviour.
+
+I had linker errors about undefined referennces when building Peano with
+TBB. Just add the path to any relevant library if you experienced this.
+
+When running the executable on the GPU, include `SYCL_DEVICE_FILTER=gpu`
+before the terminal command to explicitly tell SYCL to run the code on GPU.
+In the case of a runtime error, it is also useful to add `SYCL_PI_TRACE=2`
+to check where the error was raised.
+
+
+# SuperMUC-NG Phase 2
+
+<img src="https://www.lrz.de/bilder/logos/lrz-logos/lrz_logo_en.png" />
+
+On SuperMUC-NG Phase 2, we can basically rely on the standard Intel toolchain:
+
+~~~~~~~~~~~~~~~~~~~~~~
+module load intel
+module load gcc
+./configure CC=icpx CXX=icpx CXXFLAGS="-Ofast -g -std=c++20 -mtune=native -march=native -fma -fomit-frame-pointer -fiopenmp -Wno-unknown-attributes --gcc-toolchain=/dss/lrzsys/sys/spack/release/24.1.0/opt/x86_64/gcc/13.2.0-gcc-itoa7pi/" LDFLAGS="--gcc-toolchain=/dss/lrzsys/sys/spack/release/24.1.0/opt/x86_64/gcc/13.2.0-gcc-itoa7pi/ -fiopenmp -g" --with-multithreading=omp --enable-exahype --enable-loadbalancing --enable-blockstructured --enable-particles
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+Some remark on this setup:
+
+- The Intel module is at least 2024. 
+- The default Intel module is built against an older GCC version. In this 
+  version, some filesystem routines and classes are still contained within
+  std::experimental. Peano expects STL classes within std however. Therefore,
+  we swap the STL manually. This might become obsolete with future compiler
+  modules.
+- The toolchain also has to be known to the linker explicitly, so have to 
+  specify the path in the LDFLAGS, too. 
+- Surprisingly, the code runs, once built also with system-level GCC versions.
+  However, you have to load a recent GCC (13.0.0 here) manually before you 
+  launch any Peano application.
+
+# AMD cloud machine
+
+<img size="50%" src="https://download.amd.com/OneTrust/202401.1.0a/consent/17a54836-920d-4fc2-a8f6-3f4c299371d1/0e234106-67d9-4371-9d2e-fba9f77b42f1/logos/522af4e3-8eb6-419a-ab34-33424f162acd/b5753b26-66ca-48b2-9cf8-f49f6f86d4fc/8ea1ec5d-9e72-477e-af81-45810eb32c32/AMD-Logo-700x394.png" />
+
+This is a guideline for AMD Cloud machines that we use in hackathons, e.g. 
+Login here works with standards ssh
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ssh username@aac1.amd.com -p myport
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+where you have to pick an active port (7000 or 7010). We only need one module
+for the core GPU tests:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+moduel load aomp/amdclang
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(and older version is ```module load amdclang/17.0-6.0.0```) and then use the following configuration:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./configure CFLAGS="-D__AMDGPU__  -O3 -march=native -fopenmp -lstdc++fs --offload-arch=gfx90a" CC="amdclang" CXXFLAGS="-std=c++17 -w -O3 -march=native -fopenmp -lstdc++fs --offload-arch=gfx90a" CXX="amdclang++" LDFLAGS="-march=native -fopenmp -lstdc++fs --offload-arch=gfx90a" ./configure --with-multithreading=omp --with-gpu=omp --enable-exahype --enable-loadbalancing --enable-blockstructured
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A good starting point for the GPU work is benchmarks/exahype2/ccz4/performance-testbed.
+
+# Example: Local WSL Ubuntu 22.04
+
+This configuration is meant to be a minimal build configuration when working with TBB locally. It is important
+to use an up-to-date c++ compiler such as icpx (e.g. g++-12 will not work with the c++-20 features used
+in Peano's tbb code).
+
+First, the oneapi environment has to be set up:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+load module intel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+or
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+source [path to oneapi installation]/setvars.sh
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Configuration:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./configure CC=icx CXX=icpx LIBS="-ltbb" CXXFLAGS="-std=c++20" --with-multithreading=tbb
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With exahype2:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+./configure CC=icx CXX=icpx LIBS="-ltbb" CXXFLAGS="-std=c++20" --with-multithreading=tbb --enable-exahype --enable-blockstructured --enable-loadbalancing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*/
+

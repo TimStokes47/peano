@@ -4,7 +4,7 @@ from .AbstractADERDGActionSet import AbstractADERDGActionSet
 from exahype2.solvers.PDETerms import PDETerms
 
 import jinja2
-import peano4.solversteps
+import peano4.api.solversteps
 
 
 class Correction(AbstractADERDGActionSet):
@@ -75,10 +75,8 @@ class Correction(AbstractADERDGActionSet):
 
       // Negative face
       if (!fineGridFaces{{SOLVER_NAME}}FaceLabel(d).getIsHanging()) {
-
-        // If above a hanging face, the riemann fluxes have been received from the other side and are therefore
-        //   on that side.
-        {{CORRECTOR_COMPUTATION_PRECISION}}* FIn = fineGridFaces{{UNKNOWN_IDENTIFIER}}FluxEstimates(d).value + 
+        // If above hanging face, the Riemann fluxes have been received from the other side and are therefore on that side.
+        {{CORRECTOR_COMPUTATION_PRECISION}}* FIn = fineGridFaces{{UNKNOWN_IDENTIFIER}}FluxEstimates(d).value +
           (fineGridFaces{{SOLVER_NAME}}FaceLabel(d).getAboveHanging() ? 0 : fluxElementsPerFace);
 
         const int orientation = 0;
@@ -88,9 +86,7 @@ class Correction(AbstractADERDGActionSet):
 
       // Positive face
       if (!fineGridFaces{{SOLVER_NAME}}FaceLabel(d + Dimensions).getIsHanging()) {
-
-        // If above a hanging face, the riemann fluxes have been received from the other side and are therefore
-        //   on that side.
+        // If above hanging face, the Riemann fluxes have been received from the other side and are therefore on that side.
         {{CORRECTOR_COMPUTATION_PRECISION}}* FIn = fineGridFaces{{UNKNOWN_IDENTIFIER}}FluxEstimates(d + Dimensions).value +
           (fineGridFaces{{SOLVER_NAME}}FaceLabel(d+Dimensions).getAboveHanging() ? fluxElementsPerFace : 0);
 
@@ -184,7 +180,7 @@ class Correction(AbstractADERDGActionSet):
         self._solver.add_entries_to_text_replacement_dictionary(d)
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME
         ):
             d["PREDICATE"] = self.riemann_guard
             if self._use_custom_riemann_solver:
@@ -198,7 +194,7 @@ class Correction(AbstractADERDGActionSet):
             result = jinja2.Template(self._Template_TouchFaceFirstTime).render(**d)
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
         ):
             d["PREDICATE"] = self.guard
             d["CORRECTOR_ALLOCATIONS"] = jinja2.Template(

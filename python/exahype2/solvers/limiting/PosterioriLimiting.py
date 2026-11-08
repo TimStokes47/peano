@@ -6,7 +6,7 @@ from abc import abstractmethod
 import jinja2
 
 import dastgen2
-import peano4.output
+import peano4.api.output
 import exahype2.grid
 import exahype2.solvers.limiting.kernels
 
@@ -120,13 +120,13 @@ class PosterioriLimiting(object):
 
 
         # This will contain the projection of the face-local minima and maxima
-        self._min_and_max_projection = peano4.datamodel.Patch(
+        self._min_and_max_projection = peano4.api.datamodel.Patch(
             (2, 2, 1),
             self._number_of_dmp_observables,
             self._unknown_identifier() + "_min_and_max"
         )
         # if self._hold_face_data_on_heap_with_smart_pointer:
-        #   self._min_and_max_projection.generator  = peano4.datamodel.PatchToDoubleArrayWithSmartPointer(
+        #   self._min_and_max_projection.generator  = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
         #       self._min_and_max_projection,
         #       self._corrector_computation_precision
         # )
@@ -442,7 +442,7 @@ Type:                   """
 
         This routine is typically not invoked by a user.
 
-        output: peano4.output.Output
+        output: peano4.api.output.Output
         """
 
         if(subdirectory):
@@ -452,7 +452,7 @@ Type:                   """
         self._init_dictionary_with_default_parameters(HeaderDictionary)
 
         generated_abstract_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 os.path.dirname(os.path.realpath(__file__)) + "/PosterioriLimitingAbstract.template.h",
                 os.path.dirname(os.path.realpath(__file__)) + "/PosterioriLimitingAbstract.template.cpp",
                 "Abstract" + self._name,
@@ -465,7 +465,7 @@ Type:                   """
         )
 
         generated_solver_files = (
-            peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+            peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
                 os.path.dirname(os.path.realpath(__file__)) + "/PosterioriLimiting.template.h",
                 os.path.dirname(os.path.realpath(__file__)) + "/PosterioriLimiting.template.cpp",
                 self._name,

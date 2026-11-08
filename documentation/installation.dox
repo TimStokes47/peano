@@ -15,7 +15,7 @@ software and where it is actively used and developed. If you do not
 intend to modify the core code base, you can just clone the code
 anonymously.
 
-    git clone https://gitlab.lrz.de/hpcsoftware/Peano.git
+    git clone https://github.com/tobiasweinzierl/peano.git
 
 I still maintain the "old" Peano in the repository (version 3).
 However, we now work with the fourth generation of Peano (p4).
@@ -53,7 +53,7 @@ Unless you work exclusively with the Peano core in C++, you will have to ensure 
 We test and maintain Peano for Linux only.
 If you prefer Windows or MacOS, it should work as long as you provide the
 mandatory tools from above, but we won't be able to help.
-Peano is well-integrated with a number of @ref page_third_party_home "third party tools",
+Peano is well-integrated with a number of third party tools,
 but these are all optional.
 
 # Configure Peano
@@ -72,33 +72,33 @@ such as ExaHyPE or our PETSc multigrid environment.
   `libtool`.
 - Set up the configure environment:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~
-libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .
-automake --add-missing
-~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .
+  automake --add-missing
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   These steps should only be required once, unless you push major
   revisions to the development branch.
 - Next, type in
 
-~~~~~~~~~~~~~~~~~~~~~~~~~
-./configure --help
-~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ./configure --help
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   The `--help` option should give you some information about the available
   variants of Peano, its extensions and toolboxes.
 
-I recommend that you start a first test without any additional flavours
+It is recommended that you start a first test without any additional flavours
 of Peano, i.e. to work with a plain `./configure` call. Once the tests pass,
-I recommend that you add further options (IO) and/or parallelisation.
+you may add further options (IO) and/or parallelisation.
 Please note that the baseline configure is not sufficient for most
 applications, as it builds merely Peano's core libraries.
 
-<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;">
 This might be the right time to look ahead and study the tutorials of the codes you wanna use.
 All of them need different toolboxes and extensions. ExaHyPE, for example, requires
 you to activate --enable-blockstructured and --enable-exahype at least (--enable-loadbalancing is recommended),
-while the SPH code Swift needs at least --enable-particles and --enable-swift.
+while the SPH code ExaParty needs at least --enable-particles and --enable-exaparty.
 </div>
 
 Besides Peano's toolboxes and extensions,
@@ -119,15 +119,9 @@ specify a proper installation directory via `--prefix`.
 
 ## CMake
 
-<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;">
 CMake's functionality mirrors the capabilities of the Autotools.
-While it has some advantages (out-of-source builds), it increases the memory footprint, 
-and some people run into issues with CMake. 
-This is - most of the time - for one reason:
-If you use CMake, follow the instructions below and then continue to work 
-from your build/installation directory rather than Peano's sources!
 </div>
-
 
 Using CMake is again relatively simple.
 First, we create a new directory.
@@ -149,24 +143,24 @@ cmake Peano-src
 
 where Peano-src points to the checkout.
 
-Next, you might want to type in `cmake help` but this might be a little bit 
+Next, you might want to type in `cmake help` but this might be a little bit
 overwhelmning. Try
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ccmake Peano-dir
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-instead, where you replace Peano-dir with the directory of Peano's sources. 
+instead, where you replace Peano-dir with the directory of Peano's sources.
 Handing in .. does the job for most of the setups.
 
-<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;">
 This might be the right time to look ahead and study the tutorials of the codes you wanna use.
 All of them need different toolboxes and extensions. ExaHyPE, for example, requires
 you to activate BLOCKSTRUCTURED and EXAHYPE at least (LOADBALANCING is recommended),
-while the SPH code Swift needs at least PARTICLES and SWIFT.
+while the SPH code ExaParty needs at least PARTICLES and EXAPARTY.
 </div>
 
-Configure by pressing c and then q to finish the configuration. Next, continue 
+Configure by pressing c and then q to finish the configuration. Next, continue
 with building the code.
 
 
@@ -218,11 +212,19 @@ if you have compiled with MPI. The executables contain both node
 correctness tests and MPI ping-pong tests, i.e. you can both assess a
 valid build plus a working MPI environment.
 
+The tests of the Python API and the generated test experiments in `tests/` are
+driven by `pytest`, which is installed with Peano's Python dependencies (see
+below). Run the fast ones from Peano's root directory via
 
-<div style="background-color: #ccf ; padding: 10px; border: 1px solid green;"> 
-Good time to stop. Jump straight into one of the tutorials if you want to. 
-If things don't work (Python complains for example), return to this page and 
-read through the text below. But maybe it is the right time just to play around 
+    python3 -m pytest
+
+and consult \ref tarch_pytest for the integration tests.
+
+
+<div style="background-color: #ccf ; padding: 10px; border: 1px solid green;">
+Good time to stop. Jump straight into one of the tutorials if you want to.
+If things don't work (Python complains for example), return to this page and
+read through the text below. But maybe it is the right time just to play around
 with code.
 </div>
 
@@ -239,7 +241,7 @@ cmake Peano-src -DCMAKE_INSTALL_PREFIX=<install_path>
 make install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The autotools allow you to do the same by passing in --prefix=mydir into the ./configure command and then you call 
+The autotools allow you to do the same by passing in --prefix=mydir into the ./configure command and then you call
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ./configure --prefix=mydir -- all the other parameters
@@ -247,12 +249,60 @@ make
 make install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
-Peano is ***not*** a piece of software that you use as a black box. 
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;">
+Peano is ***not*** a piece of software that you use as a black box.
 It is an engine that you use to write your own code.
 You can install Peano and its extensions.
 That means basically that you move its static libraries to a separate directory.
-But there is no such thing as a Peano application.  
+But there is no such thing as a Peano application.
+</div>
+
+
+\anchor sec_installation_build_variants
+# Build variants
+
+Peano currently is delivered as a set of archives, i.e. static libraries.
+By default, the code builds various versions of each library:
+
+- Each archive variant is available as a release version, as a debug
+  version, as a version with tracing and assertions and as a
+  tracing-only version.
+- Each archive variant is available as 2d build and as 3d build. If
+  you need higher dimensions, you have to build the required libraries
+  manually.
+
+The version terminology is as follows:
+
+-  **debug** The debug versions of the archives all have the postfix
+   ```_debug```. If you link against these versions, the full set of
+   assertions, of all tracing and all debug messages is available;
+   though you can always filter on the application-level which
+   information you want to see.
+-  **asserts** These versions of the archives all have the postfix
+   ```_asserts```. If you link against these versions, all assertions are
+   on. The code also contains tracing macros (see below).
+-  **tracing** The release versions of the archives all have the
+   postfix ```_trace```. If you link against these versions, all assertions
+   and debug messages are removed, but some tracing is active. You can
+   switch on/off the tracing per class, and different tracing backends allow
+   you to connect to different (profiling) tools.
+-  **stats** Stats builds are a release flavour of all libraries, where the
+   libraries track some statistics besides the core core performance.
+   Please note that statistics are ***not*** included in any other build
+   type by default.
+-  **release** The release versions of the archives have no particular
+   postfix. They disable tracing, any debugging and all assertions.
+   These archives should be used by production runs.
+
+Peano's release components still write info messages (they suppress
+debug, tracing and logging, but not essential information). If you want
+to filter out these messages, too, you have to apply a log filter.
+
+<br /><br />
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;">
+The tracing backend includes, by default, the assertions. If you want to use
+the tracing for profiling, the assertions might spoil the outcomes. Please
+consult the discussion on
 </div>
 
 
@@ -263,25 +313,24 @@ Python 2 is not supported.
 
 ## Package Installation
 
-Our code base relies on several Python packages. There's a requirements
-specification file which you can use to ensure that all requirements are
-met:
+Our code base relies on several Python packages.
+Best practice is to install these into a virtual environment.
+The recommended way is an editable install: navigate to `myPeanoDirectory/` first
+(you're in the right place if you see the `pyproject.toml` file),
+then create a virtual environment and install by running:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -e .
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-where the requirements.txt file resides within Peano's root directory.
-Depending on your system, you might have to use pip3 or install the
-packages in your user space by adding ```--user```.
-
-The easiest way to install the Peano Python packages and to set the Python path directly
-is to navigate to `myPeanoDirectory/` first (you're in the right place if you see the
-`pyproject.toml` file), and then run
-
-    pip3 install -e .
-
-to install the packages.
+This installs both the third-party dependencies (declared in
+`pyproject.toml`, which imports `requirements.txt` from Peano's root directory)
+and Peano's own Python packages, and it sets the Python path automatically.
+There is no need to run `pip install -r requirements.txt` separately on this
+path. Depending on your system, you might have to use `pip3` instead of `pip`.
 
 Note:
 - The Python path is set automatically to the respective Peano modules.
@@ -295,21 +344,29 @@ Note:
 Manually Adding the Python Path
 -------------------
 
-As an alternative to installing the packages, you can modify your Python path manually.
+As an alternative to the editable install above, you can modify your Python path manually.
 There are multiple ways to do so.
 The standard way is to set the `PYTHONPATH`, e.g.:
 
     export PYTHONPATH=$PYTHONPATH:myPeanoDirectory/python
 
 This can even be done in the `.bashrc`. If you "install" the Peano Python
-packages this way, you will also need to manually install additional
-dependencies, as noted below.
+packages this way, you skip `pip install -e .`, so you must install the
+third-party dependencies yourself from the requirements file in Peano's root
+directory:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Python Dependencies
 
 Peano currently relies on the following Python packages/projects:
 
-@include ../requirements.txt
+@verbinclude requirements.txt
 
 
 # Fortran
@@ -342,11 +399,11 @@ OpenMP for the multithreading support. We also include some flags to suppress wa
 # Cleanup the Peano directory if files from previous builds are present (comment-in to use)
 #make clean && make distclean
 
-# Standard operations
+# Prepare environment
 libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing;
 
 # Configure Peano with whatever we need
-CC=gcc CXX=g++ ./configure --enable-exahype --enable-loadbalancing --enable-blockstructured --with-multithreading=omp CXXFLAGS="-std=c++20 -fopenmp -Wno-unknown-attributes" LDFLAGS="-fopenmp"
+CC=gcc CXX=g++ ./configure --enable-exahype --enable-loadbalancing --enable-blockstructured --with-multithreading=omp CXXFLAGS="-std=c++20 -O3 -fopenmp -Wno-attributes" LDFLAGS="-fopenmp"
 
 # Compile and check build. You might want to add -jX to build on X cores in parallel
 echo "Starting compilation"
@@ -372,7 +429,7 @@ OpenMP for the multithreading support. All required flags are automatically adde
 # Cleanup the Peano directory if files from previous builds are present (comment-in to use)
 #rm -rf build
 
-# Standard operations
+# Prepare environment
 mkdir build && cd build
 
 # Configure Peano with whatever we need

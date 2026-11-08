@@ -1,0 +1,136 @@
+/**
+
+\page tarch_pytest Pytest-based tests for Peano's Python scripts
+
+\tableofcontents
+
+All tests in [tests/](../../tests) are driven by `pytest`. They are kept
+_separate_ from Peano's C++ unit tests in [src/unittests/](../../src/unittests),
+which `make check` or `ctest` execute (see \ref tarch_tests). The pytest
+workflow does not replace these C++ tests. It covers the Python layer that
+constructs Peano applications, and it runs whole generated experiments.
+
+
+Kinds of tests
+--------------
+
+We distinguish three kinds of tests via pytest markers:
+
+- **Unit tests** have no marker. They are fast, test importable Python
+  logic, never compile anything, and run by default.
+- **Integration tests** carry `@pytest.mark.integration`. They are slow or
+  need a configured and built Peano, as they typically generate a project,
+  compile it and run the executable.
+- **Slow tests** carry `@pytest.mark.slow`, either alone or in combination
+  with `integration`. Examples are physics test cases which run for minutes.
+
+Both markers are registered in [pytest.ini](../../pytest.ini). Plain pytest
+runs skip all tests that carry either marker.
+
+
+Folder layout
+-------------
+
+- `tests/unit/` holds the fast unit tests of the Python API.
+- `tests/integration/` holds integration tests of the Python API which do not
+  compile code, such as the load balancing tests. Shared helpers live in
+  plain Python modules next to the tests, e.g.
+  [tree_builders.py](../../tests/integration/tree_builders.py).
+- `tests/exaparty/` holds the ExaParty test cases. Every case directory has a
+  run script which generates, compiles and runs the experiment.
+  [tests/exaparty/test_exaparty.py](../../tests/exaparty/test_exaparty.py)
+  invokes these run scripts one by one, i.e. each run script becomes one pytest
+  test. A test passes if its run script returns exit code zero. See
+  \ref exaparty_tests.
+
+Some ExaParty generator scripts are named `test_*.py` but are command-line
+scripts rather than pytest modules. [tests/conftest.py](../../tests/conftest.py)
+excludes them from collection. Do not use the `test_` prefix for new scripts
+which are not pytest modules.
+
+The test cases in `tests/exahype2/` and `tests/multigrid/` still use the legacy
+Python API in `python/` and the MGHyPE API, respectively. They are not driven
+by pytest yet. Run their scripts manually.
+
+
+Pytest configuration
+--------------------
+
+[pytest.ini](../../pytest.ini) configures pytest centrally:
+
+- pytest searches all of `tests/` for files matching `test_*.py`.
+- `src/` is added to the Python path, so the tests find `peano4.api`,
+  `exaparty.api`, `toolbox`, ... without an editable install.
+- `addopts` deselects all tests marked as `integration` or `slow`. A `-m`
+  argument on the command line overrides this default.
+
+[tests/conftest.py](../../tests/conftest.py) furthermore redirects the log
+file of `peano4.api.Logger` into a temporary directory, so test runs do not
+leave `log-<timestamp>.md` files in the repository.
+
+
+Local execution
+---------------
+
+pytest is part of [requirements.txt](../../requirements.txt), i.e. it is
+installed alongside all other Python dependencies (see \ref page_installation_home).
+Run all commands from Peano's root directory.
+
+Run the unit tests:
+
+\code{.sh}
+python3 -m pytest
+\endcode
+
+Run the integration tests of the Python API:
+
+\code{.sh}
+python3 -m pytest -m integration tests/integration
+\endcode
+
+Run the ExaParty test cases. They need a Peano build with
+`--enable-particles --enable-exaparty` and are skipped otherwise:
+
+\code{.sh}
+python3 -m pytest -m "integration and not slow" tests/exaparty   # functional tests only
+python3 -m pytest -m integration tests/exaparty                  # including physics tests
+python3 -m pytest -m integration tests/exaparty -k sod-1d        # one test case
+\endcode
+
+The ExaParty tests build against the Peano installation which the generated
+Makefiles use: `PEANO_SRC_ROOT_DIR` and `PEANO_CMAKE_BUILD_DIR` are honoured
+if set, otherwise the tests use the repository they belong to. Add `-s` to
+see the output of the generator scripts and executables while they run.
+
+
+Continuous integration
+----------------------
+
+The continuous integration runs pytest, too (see \ref page_continuous_integration):
+
+- The job `Python_Unit_Tests` runs `python3 -m pytest`.
+- The ExaParty jobs run `python3 -m pytest -m integration tests/exaparty -k <case>`.
+
+Both are defined in `.continuous_integration/templates/python-tests.yml` and
+`.continuous_integration/templates/exaparty.yml`.
+
+
+Writing new tests
+-----------------
+
+- Put fast tests of Python logic into `tests/unit/test_<topic>.py`. Test
+  argument parsing, small helpers, configuration builders and pure-Python
+  transformations such as template or string generation.
+- Mark everything that generates and compiles code, needs MPI, PETSc or
+  other third-party libraries, or takes more than a few seconds with
+  `@pytest.mark.integration` and, if it takes minutes, also with
+  `@pytest.mark.slow`.
+- For a new ExaParty test case, add a run script that returns a non-zero exit
+  code if the test fails, i.e. use `set -e` and end with a comparison script
+  which calls `sys.exit` with the number of errors. Then add the run script
+  to `FUNCTIONAL_TESTS` or `PHYSICS_TESTS` in
+  [tests/exaparty/test_exaparty.py](../../tests/exaparty/test_exaparty.py).
+- Pytest test files need unique base names across `tests/`, as pytest imports
+  them as top-level modules.
+
+*/

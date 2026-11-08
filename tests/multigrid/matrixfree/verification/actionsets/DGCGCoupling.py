@@ -1,7 +1,7 @@
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import dastgen2
-import peano4
+import peano4.api
 import jinja2
 import mghype
 
@@ -30,7 +30,7 @@ class Test4Coupling(ActionSet):
 
     // gather vertex values to interpolate upwards:
     tarch::la::Vector< Cols, double > vertexValues;
-    for (int i=0; i<TwoPowerD; i++) vertexValues[i] = fineGridVertices{{CG_SOLVER_NAME}}(i).getValue( 0 );
+    for (int i=0; i<TwoPowerD; i++) vertexValues[i] = fineGridVertices{{CG_SOLVER_NAME}}(i).getU( 0 );
 
     static std::vector< tarch::la::Matrix< Rows, Cols, double > > matrices = {
       {% for MATRIX in PROLONGATION_MATRIX %}
@@ -129,9 +129,9 @@ class Test4Coupling(ActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       return jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       return jinja2.Template(self.templateEndTraversal).render(**self.d)
     return result
   
@@ -296,7 +296,7 @@ class Test5Coupling(Test4Coupling):
     fineGridVertices{{CG_SOLVER_NAME}}(v).setVrestrictADG( fineGridVertices{{CG_SOLVER_NAME}}(v).getVrestrictADG(0) + v_restrict_ADG(v) );
 
   // finally, steps 9 and 10
-  auto mdg_p = repositories::{{DG_SOLVER_INSTANCE}}.getMassMatrix(marker.x(), marker.h()) * fineGridCell{{DG_SOLVER_NAME}}.getVcell();
+  auto mdg_p = repositories::{{DG_SOLVER_INSTANCE}}.getRhsMatrix(marker.x(), marker.h()) * fineGridCell{{DG_SOLVER_NAME}}.getVcell();
 
   fineGridCell{{DG_SOLVER_NAME}}.setMdgp(
     mdg_p
@@ -316,7 +316,7 @@ class Test5Coupling(Test4Coupling):
     and
     Counter == 0
   ) {
-    // project the u^\pm into a temporary vector
+    // project the left/right projections into a temporary vector
     tarch::la::Vector< repositories::{{DG_SOLVER_INSTANCE}}.FaceUnknownsSolution, double > projection = 
       repositories::{{DG_SOLVER_INSTANCE}}.getRiemannMatrix() * fineGridFace{{DG_SOLVER_NAME}}.getProjectionTest();
 
@@ -403,11 +403,11 @@ class Test5Coupling(Test4Coupling):
     
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       return jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
       return jinja2.Template(self.templateTouchFaceLastTime).render(**self.d)
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       return jinja2.Template(self.templateEndTraversal).render(**self.d)
     return result
   
@@ -465,7 +465,7 @@ class Test7Coupling(mghype.matrixfree.solvers.api.actionsets.MultiplicativeDGCGC
 int {full_qualified_classname}::firstCycleCounter = 0;
 """
   def get_body_of_operation(self,operation_name):
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       return jinja2.Template(self.templateEndTraversal).render(**self.d)
     else:
       return super().get_body_of_operation(operation_name)

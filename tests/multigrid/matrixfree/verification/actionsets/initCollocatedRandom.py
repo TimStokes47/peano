@@ -1,6 +1,6 @@
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -44,7 +44,7 @@ class InitDofsCollocatedRandomRhs(ActionSet):
 
   logTraceInWith3Arguments("InitDofs::touchVertexFirstTime", marker.toString(), isOnBoundary(marker.x()), fineGridVertex{{SOLVER_NAME}}.toString());
 
-  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexDoFType(marker.x(),marker.h());
+  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -58,15 +58,13 @@ class InitDofsCollocatedRandomRhs(ActionSet):
       else
       {
         // we have boundary vertex
-        if ( isCorner( marker.x() ) )
-          fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Corner );
-        else
+        if ( isOnBoundary( marker.x() ) )
           fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Boundary );
 
         // store 
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
-          fineGridVertex{{SOLVER_NAME}}.setValue( dof, 0.0);
+          fineGridVertex{{SOLVER_NAME}}.setU( dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setRhs(   dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setRand(  dof, 0.0); // vector v_random is set to 0 on the boundary
         }
@@ -93,7 +91,7 @@ class InitDofsCollocatedRandomRhs(ActionSet):
         // store 
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
-          fineGridVertex{{SOLVER_NAME}}.setValue(dof, 0.0);
+          fineGridVertex{{SOLVER_NAME}}.setU(dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setRhs(  dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setRand( dof, dis(rng)); // vector v_random receives random values in the interior vertices
 
@@ -118,7 +116,7 @@ class InitDofsCollocatedRandomRhs(ActionSet):
   templateTouchCellFirstTime = """
   logTraceInWith2Arguments("InitDofs::touchCellFirstTime", marker.toString(), fineGridCell{{SOLVER_NAME}}.toString());
 
-  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -181,17 +179,17 @@ class InitDofsCollocatedRandomRhs(ActionSet):
     self.d = {}
     self.d["SOLVER_INSTANCE"]    = solver.instance_name()
     self.d["SOLVER_NAME"]        = solver.typename()
-    self.d["VERTEX_CARDINALITY"] = solver._unknowns_per_vertex
+    self.d["VERTEX_CARDINALITY"] = solver._unknowns_per_vertex_node
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
       result = jinja2.Template(self.templateTouchVertexFirstTime).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
       pass
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_LAST_TIME:
       result = jinja2.Template(self.templateTouchVertexLastTime).render(**self.d)
     return result
 
@@ -275,7 +273,7 @@ class InitDofsCollocatedRandomTest2(InitDofsCollocatedRandomRhs):
 
   logTraceInWith3Arguments("InitDofs::touchVertexFirstTime", marker.toString(), isOnBoundary(marker.x()), fineGridVertex{{SOLVER_NAME}}.toString());
 
-  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexDoFType(marker.x(),marker.h());
+  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -289,15 +287,13 @@ class InitDofsCollocatedRandomTest2(InitDofsCollocatedRandomRhs):
       else
       {
         // we have boundary vertex
-        if ( isCorner( marker.x() ) )
-          fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Corner );
-        else
+        if ( isOnBoundary( marker.x() ) )
           fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Boundary );
 
         // store 
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
-          fineGridVertex{{SOLVER_NAME}}.setValue( dof, 0.0); // vector v_random is set to 0 on the boundary as the initial guess
+          fineGridVertex{{SOLVER_NAME}}.setU( dof, 0.0); // vector v_random is set to 0 on the boundary as the initial guess
           fineGridVertex{{SOLVER_NAME}}.setRhs(   dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setRand(  dof, 0.0); // vector v_random is set to 0 on the boundary
         }
@@ -325,7 +321,7 @@ class InitDofsCollocatedRandomTest2(InitDofsCollocatedRandomRhs):
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
           double randVal = dis(rng);
-          fineGridVertex{{SOLVER_NAME}}.setValue(dof, randVal); // vector v_random receives random values in the interior vertices 
+          fineGridVertex{{SOLVER_NAME}}.setU(dof, randVal); // vector v_random receives random values in the interior vertices 
                                                                 // and used as the initial guess for the CG solver
           fineGridVertex{{SOLVER_NAME}}.setRhs(  dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setRand( dof, randVal); // the same vector v_random will be used to compute rhs = A_CG * v_random, 
@@ -380,7 +376,7 @@ class InitCollocatedTest4(InitDofsCollocatedRandomRhs):
     return isCorner;
   };
 
-  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexDoFType(marker.x(),marker.h());
+  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -394,15 +390,13 @@ class InitCollocatedTest4(InitDofsCollocatedRandomRhs):
       else
       {
         // we have boundary vertex
-        if ( isCorner( marker.x() ) )
-          fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Corner );
-        else
+        if ( isOnBoundary( marker.x() ) )
           fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Boundary );
 
         // store 
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
-          fineGridVertex{{SOLVER_NAME}}.setValue( dof, dis(rng)); // vector v_random is set to 0 on the boundary as the initial guess
+          fineGridVertex{{SOLVER_NAME}}.setU( dof, dis(rng)); // vector v_random is set to 0 on the boundary as the initial guess
           fineGridVertex{{SOLVER_NAME}}.setRhs(   dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setVector2(  dof, 0.0); // vector v_random is set to 0 on the boundary
         }
@@ -430,7 +424,7 @@ class InitCollocatedTest4(InitDofsCollocatedRandomRhs):
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
           // give it a random number
-          fineGridVertex{{SOLVER_NAME}}.setValue(dof, dis(rng)); // vector v_random receives random values in the interior vertices 
+          fineGridVertex{{SOLVER_NAME}}.setU(dof, dis(rng)); // vector v_random receives random values in the interior vertices 
                                                                 // and used as the initial guess for the CG solver
           fineGridVertex{{SOLVER_NAME}}.setRhs(  dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setVector2( dof, 0.0); 
@@ -452,7 +446,7 @@ class InitCollocatedTest4(InitDofsCollocatedRandomRhs):
   templateTouchCellFirstTime="""
   logTraceInWith2Arguments("InitDofs::touchCellFirstTime", marker.toString(), fineGridCell{{SOLVER_NAME}}.toString());
 
-  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -493,7 +487,7 @@ class InitCollocatedTest4(InitDofsCollocatedRandomRhs):
     self.d = {}
     self.d["SOLVER_INSTANCE"]    = solver.instance_name()
     self.d["SOLVER_NAME"]        = solver.typename()
-    self.d["VERTEX_CARDINALITY"] = solver._unknowns_per_vertex
+    self.d["VERTEX_CARDINALITY"] = solver._unknowns_per_vertex_node
 
 class InitCollocatedTest5(InitDofsCollocatedRandomRhs):
   templateTouchVertexFirstTime="""
@@ -523,7 +517,7 @@ class InitCollocatedTest5(InitDofsCollocatedRandomRhs):
     return isCorner;
   };
 
-  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexDoFType(marker.x(),marker.h());
+  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -537,9 +531,7 @@ class InitCollocatedTest5(InitDofsCollocatedRandomRhs):
       else
       {
         // we have boundary vertex
-        if ( isCorner( marker.x() ) )
-          fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Corner );
-        else
+        if ( isOnBoundary( marker.x() ) )
           fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Boundary );
 
         // store 
@@ -592,7 +584,7 @@ class InitCollocatedTest5(InitDofsCollocatedRandomRhs):
 
   templateTouchCellFirstTime="""
 
-  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -625,7 +617,7 @@ class InitCollocatedTest5(InitDofsCollocatedRandomRhs):
         for (int i=0; i<TwoPowerD; i++) randoms(i) = fineGridVertices{{SOLVER_NAME}}(i).getRand(0);
 
         auto ACGValues = repositories::{{SOLVER_INSTANCE}}.getLocalAssemblyMatrix( marker.x(), marker.h() ) * randoms;
-        auto MCGValues = repositories::{{SOLVER_INSTANCE}}.getMassMatrix( marker.x(), marker.h() )          * randoms;
+        auto MCGValues = repositories::{{SOLVER_INSTANCE}}.getRhsMatrix( marker.x(), marker.h() )          * randoms;
 
         for (int i=0; i<TwoPowerD; i++) {
           fineGridVertices{{SOLVER_NAME}}(i).setAcg( 0, ACGValues(i) + fineGridVertices{{SOLVER_NAME}}(i).getAcg(0) );
@@ -645,7 +637,7 @@ class InitCollocatedTest5(InitDofsCollocatedRandomRhs):
     self.d = {}
     self.d["SOLVER_INSTANCE"]    = solver.instance_name()
     self.d["SOLVER_NAME"]        = solver.typename()
-    self.d["VERTEX_CARDINALITY"] = solver._unknowns_per_vertex
+    self.d["VERTEX_CARDINALITY"] = solver._unknowns_per_vertex_node
 
 class InitCollocatedTest7(InitDofsCollocatedRandomRhs):
   """!
@@ -682,7 +674,7 @@ class InitCollocatedTest7(InitDofsCollocatedRandomRhs):
 
   logTraceInWith3Arguments("InitDofs::touchVertexFirstTime", marker.toString(), isOnBoundary(marker.x()), fineGridVertex{{SOLVER_NAME}}.toString());
 
-  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexDoFType(marker.x(),marker.h());
+  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -696,15 +688,13 @@ class InitCollocatedTest7(InitDofsCollocatedRandomRhs):
       else
       {
         // we have boundary vertex
-        if ( isCorner( marker.x() ) )
-          fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Corner );
-        else
+        if ( isOnBoundary( marker.x() ) )
           fineGridVertex{{SOLVER_NAME}}.setType( vertexdata::{{SOLVER_NAME}}::Type::Boundary );
 
         // store 
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
-          fineGridVertex{{SOLVER_NAME}}.setValue( dof, 0.0);
+          fineGridVertex{{SOLVER_NAME}}.setU( dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setRhs(   dof, 0.0);
 
           fineGridVertex{{SOLVER_NAME}}.setRand( dof,  0.0); // vector v_random is set to 0 on the boundary
@@ -732,7 +722,7 @@ class InitCollocatedTest7(InitDofsCollocatedRandomRhs):
         // store 
         for (int dof=0; dof<{{VERTEX_CARDINALITY}}; dof++)
         {
-          fineGridVertex{{SOLVER_NAME}}.setValue(dof, 0.0);
+          fineGridVertex{{SOLVER_NAME}}.setU(dof, 0.0);
           fineGridVertex{{SOLVER_NAME}}.setRhs(  dof, 0.0);
 
           // set random values
@@ -763,7 +753,7 @@ class InitCollocatedTest7(InitDofsCollocatedRandomRhs):
   templateTouchCellFirstTime="""
   logTraceInWith2Arguments("InitDofs::touchCellFirstTime", marker.toString(), fineGridCell{{SOLVER_NAME}}.toString());
 
-  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
 
   switch(dofType)
   {

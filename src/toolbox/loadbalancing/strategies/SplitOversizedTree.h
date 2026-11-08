@@ -41,7 +41,7 @@ namespace toolbox {
  * splitting variants and constraints in peano4::grid::Spacetree::isCellTopDownSplitCandidate()
  * and  peano4::grid::Spacetree::isCellBottomUpSplitCandidate(),
  * peano4::grid::Spacetree::splitOrJoinCell() and the general
- * @ref peano_domain_decomposition "domain decomposition overview".
+ * @ref page_peano_domain_decomposition "domain decomposition overview".
  *
  * While forking off trees once they exceed a certain threshold is not as
  * elegant as iterative, recursive splits, this strategy avoids very deep
@@ -147,12 +147,12 @@ class toolbox::loadbalancing::strategies::SplitOversizedTree: public toolbox::lo
      *
      * I test my load balancing typically first with a rather regular grid.
      * What happens here is that the grid is decomposed and one or two ranks
-     * are slightly ``too light''. All the others identify a rank to which
+     * are slightly "too light". All the others identify a rank to which
      * they could outsource cells and then all outsource to the same ranks
      * at the same time. To avoid this, I introduce a round-robin token such
      * that only one rank at a time does balance in-between ranks (the other
      * types of lb are not affected). This way, it cannot happen that a high
-     * number of ranks all outsource cells to the same ''victim'' in one
+     * number of ranks all outsource cells to the same "victim" in one
      * rush.
      *
      * <h2> Stagnation </h2>

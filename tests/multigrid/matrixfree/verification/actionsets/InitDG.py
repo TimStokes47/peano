@@ -1,6 +1,6 @@
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
-import peano4
+import peano4.api
 import jinja2
 import mghype
 
@@ -15,7 +15,7 @@ class InitDofsDGTest1(ActionSet):
 
   //logTraceInWith3Arguments("InitDofsDG::touchVertexFirstTime", marker.toString(), isOnBoundary(marker.x()), fineGridVertex{{SOLVER_NAME}}.toString());
 
-  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexDoFType(marker.x(),marker.h());
+  vertexdata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -85,7 +85,7 @@ class InitDofsDGTest1(ActionSet):
 
   auto indexIsOnBoundary = [&indicesOnBoundary](int i) -> bool { return not( indicesOnBoundary.empty() ) and std::find( indicesOnBoundary.begin(), indicesOnBoundary.end(), i ) != indicesOnBoundary.end() ; };
 
-  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
   
   /*
   extremely hacky static random number generator
@@ -176,7 +176,7 @@ class InitDofsDGTest1(ActionSet):
   templateTouchFaceFirstTime = """
   logTraceInWith2Arguments("InitDofs::touchFaceFirstTime", marker.toString(), fineGridFace{{SOLVER_NAME}}.toString());
 
-  facedata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getFaceDoFType(marker.x(),marker.h());
+  facedata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getFaceType(marker.x(),marker.h());
 
   switch(dofType)
   {
@@ -264,13 +264,13 @@ class InitDofsDGTest1(ActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
       result = jinja2.Template(self.templateTouchVertexFirstTime).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
       pass
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
       result = jinja2.Template(self.templateTouchFaceFirstTime).render(**self.d)
       pass
     return result
@@ -338,7 +338,7 @@ class InitDofsIntermediatePhaseTest1(ActionSet):
   ) {
     logTraceInWith2Arguments( "updateFaceSolution::Interior", fineGridFace{{SOLVER_NAME}}.getSolution(), marker.toString() );
 
-    // project the u^\pm into a temporary vector
+    // project the left/right projection into a temporary vector
     tarch::la::Vector< repositories::{{SOLVER_INSTANCE}}.FaceUnknownsSolution, double > projection = 
       repositories::{{SOLVER_INSTANCE}}.getRiemannMatrix() * fineGridFace{{SOLVER_NAME}}.getProjection();
 
@@ -427,11 +427,11 @@ class InitDofsIntermediatePhaseTest1(ActionSet):
     """
   
   def get_body_of_operation(self, operation_name):
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       return jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
       return jinja2.Template(self.templateTouchFaceFirstTime).render(**self.d)
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       return jinja2.Template(self.templateEndTraversal).render(**self.d)
     return ""
   
@@ -510,7 +510,7 @@ class InitDofsDGTest6(InitDofsDGTest1):
 
   auto indexIsOnBoundary = [&indicesOnBoundary](int i) -> bool { return not( indicesOnBoundary.empty() ) and std::find( indicesOnBoundary.begin(), indicesOnBoundary.end(), i ) != indicesOnBoundary.end() ; };
 
-  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
   
   /*
   extremely hacky static random number generator
@@ -631,7 +631,7 @@ class InitDofsIntermediatePhaseTest6(InitDofsIntermediatePhaseTest1):
     Counter==0
   ) {
 
-    // project the u^\pm into a temporary vector
+    // project the left/right projection into a temporary vector
     tarch::la::Vector< repositories::{{SOLVER_INSTANCE}}.FaceUnknownsSolution, double > projection = 
       repositories::{{SOLVER_INSTANCE}}.getRiemannMatrix() * fineGridFace{{SOLVER_NAME}}.getRandProjection();
 
@@ -686,7 +686,7 @@ class InitDofsDGTest4(InitDofsDGTest1):
 
     
   templateTouchCellFirstTime="""
-  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
   
   /*
   extremely hacky static random number generator
@@ -751,7 +751,7 @@ class InitDofsDGTest4(InitDofsDGTest1):
 class InitDofsDGTest5(InitDofsDGTest1):
 
   templateTouchCellFirstTime="""
-  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
   
   switch(dofType)
   {
@@ -803,7 +803,7 @@ class InitDofsDGTest7(InitDofsDGTest1):
         {% endfor %}
     };
 
-  celldata::{{DG_SOLVER_NAME}}::Type dofType = repositories::{{DG_SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{DG_SOLVER_NAME}}::Type dofType = repositories::{{DG_SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
   
   switch(dofType)
   {
@@ -874,7 +874,7 @@ class InitDofsDGTest7(InitDofsDGTest1):
   if (
     fineGridFace{{DG_SOLVER_NAME}}.getType() == facedata::{{DG_SOLVER_NAME}}::Type::Interior
   ) {
-    // project the u^\pm into a temporary vector
+    // project the left/right projection into a temporary vector
     tarch::la::Vector< repositories::{{DG_SOLVER_INSTANCE}}.FaceUnknownsSolution, double > projection = 
       repositories::{{DG_SOLVER_INSTANCE}}.getRiemannMatrix() * fineGridFace{{DG_SOLVER_NAME}}.getRandProjections();
 
@@ -940,7 +940,7 @@ class InitDofsDGTest7(InitDofsDGTest1):
     self.d["PROLONGATION_MATRIX"]   = self.get_prolongation_matrix()
 
   def get_body_of_operation(self,operation_name):
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME:
       return jinja2.Template(self.templateTouchFaceLastTime).render(**self.d)
     else:
       return super().get_body_of_operation(operation_name)

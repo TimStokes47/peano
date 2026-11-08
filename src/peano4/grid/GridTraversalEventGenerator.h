@@ -85,6 +85,54 @@ class peano4::grid::GridTraversalEventGenerator {
      */
     const int _id;
 
+  public:
+    /**
+     * Is a cell fully remote when we enter it?
+     *
+     * Fully remote means that neither the cell nor any of its vertices and
+     * faces is local, and that none of the entities reads data from a stack.
+     * Hanging and new entities (create events) are never regarded as
+     * remote. Spacetree::descend() uses this predicate together with
+     * mayMaskDataOnIntermediateStacks() to skip cells.
+     *
+     * @see isFullyRemoteLeaveEvent()
+     */
+    static bool isFullyRemoteEnterEvent(const GridTraversalEvent& event);
+
+    /**
+     * Counterpart of isFullyRemoteEnterEvent() for the leave event. It
+     * requires that no entity writes to a real stack. Destruction events do
+     * not count as stack accesses: they can happen for remote entities
+     * (the enter event has no data then), but nobody can observe them.
+     */
+    static bool isFullyRemoteLeaveEvent(const GridTraversalEvent& event);
+
+    /**
+     * May data of non-local entities be masked out on the stacks between cells?
+     *
+     * The automaton resets the source or destination of entities that are not
+     * adjacent to any local cell to TraversalObserver::NoData. Nobody ever
+     * works with these entities. For the in/out stacks, this is safe as soon as
+     * we use the same local-flag when we write and read in the next sweep. For
+     * the stacks between cells, producer (leave of the first cell) and
+     * consumer (enter of the second cell) have to make the same decision within
+     * one sweep. Locality can change within a sweep if the tree is just
+     * splitting or joining, i.e. if the vertices' adjacency is rewritten
+     * between the leave and enter events. We therefore mask only if
+     * the tree is running and not involved in any dynamic load balancing.
+     * In all other cases, we keep the old behaviour.
+     */
+    static bool mayMaskDataOnIntermediateStacks(
+      const SplitSpecification&  splitTriggered,
+      const std::set<int>&       splitting,
+      const std::set< int >&     joinTriggered,
+      const std::set< int >&     joining,
+      const std::set< int >&     hasSplit,
+      bool                       spacetreeStateIsRunning
+    );
+
+  private:
+
     /**
      * <h2> Implementation details </h2>
      *
@@ -141,12 +189,32 @@ class peano4::grid::GridTraversalEventGenerator {
      * So while I use the vertex states, I cannot directly use the vertices.
      * They have already gone through the vertex lifecycle, i.e. new vertices
      * might already have the new flag. Instead, I have to go through
-     * getVertexType(). This might be inefficient and leave room for improvements,
-     * but is does the job for the time being.
+     * getVertexType().
+     *
+     * This variant computes the types of the cell's vertices via
+     * getVertexTypes() and then delegates to the variant below. Event
+     * creation calls getVertexTypes() once per cell and uses the variant
+     * below for all faces plus getCellType() for the cell itself.
      */
     static FaceType getFaceType(
       GridVertex                         coarseGridVertices[TwoPowerD],
       tarch::la::Vector<Dimensions,int>  positionOfCell,
+      int                                faceNumber
+    );
+
+    /**
+     * Identify type of face from the precomputed types of the cell's vertices
+     *
+     * @param vertexTypes: const VertexType[TwoPowerD]
+     *   Types of the cell's @f$ 2^d @f$ vertices as returned by
+     *   getVertexTypes(). Entry i belongs to the vertex whose bitset
+     *   representation of i holds its position within the cell.
+     *
+     * @param faceNumber: int
+     *   Number of the face within the cell.
+     */
+    static FaceType getFaceType(
+      const VertexType                   vertexTypes[TwoPowerD],
       int                                faceNumber
     );
 
@@ -397,7 +465,8 @@ class peano4::grid::GridTraversalEventGenerator {
      * You pass in the vertices and it gives you back the cell type.
      * This routine translates the 2^d vertices of a cell into a cell type.
      *
-     * @see getFaceType()
+     * @ref getFaceType() for a discussion of the variant which works on
+     * the precomputed vertex types.
      */
     static CellType getCellType(
       GridVertex                         coarseGridVertices[TwoPowerD],
@@ -405,18 +474,80 @@ class peano4::grid::GridTraversalEventGenerator {
     );
 
     /**
-     * Simple recursive type analysis
+     * Identify type of cell from the precomputed types of its vertices
+     *
+     * @param vertexTypes: const VertexType[TwoPowerD]
+     *   Types of the cell's @f$ 2^d @f$ vertices as returned by
+     *   getVertexTypes().
+     */
+    static CellType getCellType(
+      const VertexType                   vertexTypes[TwoPowerD]
+    );
+
+    /**
+     * Determine the types of all @f$ 2^d @f$ vertices of one cell
+     *
+     * createEnterCellTraversalEvent() and createLeaveCellTraversalEvent()
+     * need the type of every face and of the cell itself. All of them derive
+     * from the types of the cell's @f$ 2^d @f$ vertices. Computing the face
+     * and cell types vertex by vertex costs @f$ 2d \cdot 2^d + 2^d @f$
+     * evaluations of getVertexType() per cell and event (56 in 3d) though
+     * there are only @f$ 2^d @f$ different results. We therefore compute
+     * them once per event and pass the result into getFaceType() and
+     * getCellType().
+     *
+     * @param coarseGridVertices: GridVertex[TwoPowerD]
+     *   Vertices of the parent cell.
+     *
+     * @param positionOfCell: tarch::la::Vector<Dimensions,int>
+     *   Position of the cell within the @f$ 3^d @f$ patch of its parent.
+     *
+     * @param vertexTypes: VertexType[TwoPowerD]
+     *   Output. Entry i holds the type of the vertex whose bitset
+     *   representation of i holds its position within the cell.
+     */
+    static void getVertexTypes(
+      GridVertex                         coarseGridVertices[TwoPowerD],
+      const tarch::la::Vector<Dimensions,int>&  positionOfCell,
+      VertexType                         vertexTypes[TwoPowerD]
+    );
+
+    /**
+     * Identify type of a vertex within the @f$ 3^d @f$ patch of a parent cell
+     *
+     * The type of a vertex at position @f$ p \in \{0,1,2,3\}^d @f$ within the
+     * parent's patch results from the parent's vertices which are adjacent to
+     * it: For each dimension d, we take parent vertex 0 if @f$ p_d=0 @f$,
+     * parent vertex 1 if @f$ p_d=3 @f$ and both otherwise. Each of these
+     * parent vertices yields a vertex type from its state (see
+     * the table in the implementation). Afterwards, we merge them.
      *
      * \section  Merge semantics
      *
-     * We run over the parent vertices and merge along the faces (per
-     * dimension). The priority of flags should be taken from the code
-     * directly.
+     * The merge is the join on the lattice Hanging < New, Delete < Persistent,
+     * where New and Delete are not comparable and their join is Persistent:
+     *
+     * - The vertex is persistent if one parent vertex yields persistent or if
+     *   there are both a new and a delete one.
+     * - Otherwise, it is new if one parent vertex yields new.
+     * - Otherwise, it is delete if one parent vertex yields delete.
+     * - Otherwise, it is hanging.
+     *
+     * Earlier versions merged recursively dimension by dimension. As the join
+     * is associative and commutative, it is sufficient to collect the types
+     * of all adjacent parent vertices in a bitmask and to evaluate the rules
+     * above once. This avoids the recursion and the linearisation of the
+     * parent vertex positions. In particular, there is no need for a special
+     * case where all parent vertices are refined: such a parent yields
+     * persistent anyway.
+     *
+     * The routine can become a bottleneck for parallel execution, where we
+     * spend too much time in administration of (empty) trees. See the section
+     * on "Redundant (administrative) work" in our SHAREing write-up.
      */
     static VertexType getVertexType(
       GridVertex                         coarseGridVertices[TwoPowerD],
-      tarch::la::Vector<Dimensions,int>  position,
-      int                                dimension = Dimensions-1
+      tarch::la::Vector<Dimensions,int>  position
     );
 
     /**

@@ -9,12 +9,12 @@ from .ProjectLinearCombinationOfEstimatesOntoFaces import (
 
 from exahype2.solvers.ButcherTableau import ButcherTableau
 
-import peano4
+import peano4.api
 import jinja2
 
 
 class ComputeFinalLinearCombination(AbstractRungeKuttaDGActionSet):
-    """!
+    r"""!
 
     Action set determining the final solution using a linear combination of previous Runge-Kutta guesses
 
@@ -88,9 +88,10 @@ class ComputeFinalLinearCombination(AbstractRungeKuttaDGActionSet):
         const tarch::la::Vector<Dimensions,double>&  x,
         double                                       t,
         double                                       dt,
-        int                                          normal
-      )->double {
-        return repositories::{{SOLVER_INSTANCE}}.maxEigenvalue( Q, x, t, dt, normal );
+        int                                          normal,
+        double*                                      maxEigenvalue
+      )->void {
+        repositories::{{SOLVER_INSTANCE}}.maxEigenvalue( Q, x, t, dt, normal, maxEigenvalue );
       },
       repositories::{{SOLVER_INSTANCE}}.QuadraturePoints1d
     );
@@ -191,13 +192,13 @@ class ComputeFinalLinearCombination(AbstractRungeKuttaDGActionSet):
         )
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
         ):
             result = jinja2.Template(self.TemplateProject).render(**d)
             pass
         if (
             operation_name
-            == peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME
+            == peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_LAST_TIME
         ):
             result = jinja2.Template(self.TemplateUpdateFace).render(**d)
             pass

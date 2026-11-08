@@ -1,0 +1,22 @@
+// Peano's two Python source roots and how "import exahype2" is resolved.
+// Regenerate the PNG with
+//
+//   dot -Tpng -Gdpi=110 getting-prepared-python-roots.dot -o getting-prepared-python-roots.png
+//
+digraph roots {
+  rankdir=LR;
+  bgcolor="white";
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, fillcolor="#eef3fb", color="#4a6fa5", penwidth=1.2];
+  edge [color="#4a6fa5", penwidth=1.2, arrowsize=0.8];
+
+  imp [label="import peano4.api, exahype2", shape=note, fillcolor="#fff8dc", color="#b8860b"];
+
+  subgraph cluster_path {
+    label="sys.path (searched top to bottom)"; fontname="Helvetica"; fontsize=11; style="rounded,dashed"; color="#999999";
+    src [label="1.  Peano/src\npeano4.api, exahype2 (exahype2.api),\ntoolbox, tarch, dastgen2, ...", fillcolor="#e3f4e1", color="#3d8b37"];
+    py  [label="2.  Peano/python\nlegacy exahype2 (being migrated)", fillcolor="#f2f2f2", color="#999999", fontcolor="#666666"];
+  }
+
+  imp -> src [label=" first match wins", fontname="Helvetica", fontsize=10];
+  imp -> py  [style=dashed, color="#999999", label=" only if not found above", fontname="Helvetica", fontsize=10, fontcolor="#666666"];
+}

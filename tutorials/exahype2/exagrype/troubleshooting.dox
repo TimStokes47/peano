@@ -1,0 +1,78 @@
+/**
+@page tutorials_exahype2_applications_exagrype_faq Troubleshooting
+
+This page is a collection of errors and bugs you may encounter while using ExaGRyPE, along with some
+potential solutions. Obviously there will always be new issues beyond this list; if so,
+please do not hesitate to contact us directly via email, Slack, office knock, etc.
+
+### Peano Compilation
+
+If you encounter issues at this stage, it is very likely due to an old compiler or supporting library. Please
+install or load an as-new-as-possible Intel compiler (the currently working one for me is 2025.2.1) and MPI module. 
+Also please make sure you set the compiler correctly:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+export I_MPI_CXX=icpx
+./configure CC=icx CXX=icpx --with-mpi=mpiicpx --with-multithreading=omp CXXFLAGS="......
+~~~~~~~~~~~~~~~~~~~~~~~
+
+We provide a list of the modules you need to load on COSMA/DINE as an example in \ref tutorials_exahype2_applications_exagrype_clusters. For more information on dependencies and prerequisites, please check the page \ref page_installation_home.
+
+### GSL Library
+
+Depending on your system, you might have to load the GSL module separately
+for running ExaGRyPE. It is required by the external library for
+initial conditions for black holes (not needed for the gauge wave scenario). 
+
+Configure Peano with \c --with-gsl, as described in
+\ref tutorials_exahype2_applications_exagrype_configure. Configure finds GSL
+via \c pkg-config. The GSL module is available on most cluster systems:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+module load gsl
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If configure does not find GSL, pass its location in the compiler and linker
+flags:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+./configure ... --with-gsl CXXFLAGS="... -I/path/to/gsl/include" LDFLAGS="... -L/path/to/gsl/lib"
+~~~~~~~~~~~~~~~~~~~~~~~
+
+### Python Related Issue
+
+If your script stops with \c No \c module \c named \c peano4 (or
+\c exagrype, \c jinja2, ...), the Python environment of
+\ref tutorials_exahype2_applications_exagrype_configure is not active.
+Activate it with \c source \c .venv/bin/activate in the Peano root
+directory, or start Jupyter from within it. The editable install
+(\c pip \c install \c -e \c .) sets the path to Peano's Python modules and
+installs all dependencies, so you do not need to set \c PYTHONPATH. It also
+works on clusters where you cannot install packages system-wide.
+
+If \c pip \c install \c -e \c . stops with
+
+~~~~~~~~~~~~~~~~~~~~~~~
+ERROR: No matching distribution found for vtk
+~~~~~~~~~~~~~~~~~~~~~~~
+
+your Python version is newer than the newest one for which VTK provides
+packages. Create the environment with an older Python, e.g.
+\c python3.13 \c -m \c venv \c .venv.
+
+If you see 
+
+~~~~~~~~~~~~~~~~~~~~~~~
+"vtk is not available. Cannot process VTU/VTK files"
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When you call the \c render.py script of Peano, that means the vtk library is missing in the Python installation you run the script with. The editable install brings vtk along, so run \c render.py within the activated environment. Otherwise, install it there:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+python3 -m pip install vtk
+~~~~~~~~~~~~~~~~~~~~~~~
+
+### To be continued...
+
+*/
+

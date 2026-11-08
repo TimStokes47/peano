@@ -1,5 +1,5 @@
-import peano4
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 
 import dastgen2
 
@@ -25,6 +25,9 @@ class Project:
   have a second array for solvers which participate, but are
   not asked if their stopping criteria have been reached.
 
+  @todo I think all projects should share certain commonalities 
+  @todo I want to have some feature to set the MPI timeout
+  
   """
 
   """
@@ -49,7 +52,7 @@ class Project:
     Create a matrix project
     
     """
-    self._project = peano4.Project(namespace, project_name, directory, subdirectory)
+    self._project = peano4.api.Project(namespace, project_name, directory, subdirectory)
     
     # what to do about this line?
     # self._project.output.makefile.add_cmake_core_library("petsc")
@@ -66,7 +69,7 @@ class Project:
     self._Peano_src_directory = "."
 
     # does this get overwritten later?
-    self._build_mode          = peano4.output.CompileMode.Asserts
+    self._build_mode          = peano4.api.output.CompileMode.ASSERTS
     self._executable_name = executable
     self._output_path   = "./" 
 
@@ -74,18 +77,19 @@ class Project:
 # @todo remove
     self._aux_solvers = []
 
-    self.algorithm_step_create_grid    = peano4.solversteps.Step( "CreateGrid", False )
-    self.algorithm_step_init_solution  = peano4.solversteps.Step( "InitSolution", False )
-    self.algorithm_step_solve          = peano4.solversteps.Step( "Solve", False )
+    self.algorithm_step_create_grid    = peano4.api.solversteps.Step( "CreateGrid", False )
+    self.algorithm_step_init_solution  = peano4.api.solversteps.Step( "InitSolution", False )
+    self.algorithm_step_solve          = peano4.api.solversteps.Step( "Solve", False )
 
-    self.algorithm_step_plot            = peano4.solversteps.Step( "Plot", False )
+    self.algorithm_step_plot            = peano4.api.solversteps.Step( "Plot", False )
     
     self.set_global_simulation_parameters( dimensions  = 2,
                                            offset      = [0.0, 0.0],
                                            domain_size = [1.0, 1.0],
-                                           plot_each_timestep = False,
+                                           plot_after_each_mesh_sweep = False,
                                            )
 
+    self._multicore_orchestration = "::tarch::multicore::orchestration::createDefaultStrategy()"
 
   def  set_load_balancing(self, load_balancer_name, load_balancer_arguments):
     """!
@@ -107,7 +111,7 @@ class Project:
     self._load_balancer_name      = load_balancer_name
     self._load_balancer_arguments = load_balancer_arguments
 
-  def set_Peano4_installation(self, src_path, mode=peano4.output.CompileMode.Release ):
+  def set_Peano4_installation(self, src_path, mode=peano4.api.output.CompileMode.RELEASE ):
     """!
     
     Tell the project where to find Peano
@@ -121,7 +125,7 @@ class Project:
       should hold both the headers (in subdirectories) and all the static
       libraries.
         
-    @param mode: peano4.output.CompileMode
+    @param mode: peano4.api.output.CompileMode
 
     """
     self._Peano_src_directory = src_path
@@ -149,8 +153,8 @@ class Project:
                                        dimensions,
                                        offset,
                                        domain_size,
-                                       plot_each_timestep,
-                                       max_iterations=5000,
+                                       plot_after_each_mesh_sweep,
+                                       max_iterations=100,
                                        plotter_precision = 5,
                                        ):
     """
@@ -166,7 +170,7 @@ class Project:
     self._domain_offset      = offset
     self._domain_size        = domain_size
     self._dimensions         = dimensions
-    self._plot_each_timestep = plot_each_timestep
+    self._plot_after_each_mesh_sweep = plot_after_each_mesh_sweep
     self._max_iterations     = max_iterations
     self._plotter_precision  = plotter_precision
     if plotter_precision<=0:
@@ -190,7 +194,7 @@ class Project:
     self._project.main = MatrixFreeMain(self._project,
                                 self._domain_offset,
                                 self._domain_size,
-                                self._plot_each_timestep,
+                                self._plot_after_each_mesh_sweep,
                                 self._max_iterations
                                 )
 
@@ -211,9 +215,13 @@ class Project:
 
 
   def __set_solver_repository_dict(self):
-      self.dictionary = {}
-      self.dictionary[ "SOLVER_INSTANCES"] = [(x.typename(), x.instance_name()) for x in self._solvers ]
-      self.dictionary[ "AUX_SOLVER_INSTANCES"] = [(x.typename(), x.instance_name()) for x in self._aux_solvers ]
+    self.dictionary = {
+      "SOLVER_INSTANCES":         [(x.typename(), x.instance_name()) for x in self._solvers ],
+      "AUX_SOLVER_INSTANCES":     [(x.typename(), x.instance_name()) for x in self._aux_solvers ],
+      "LOAD_BALANCER":            self._load_balancer_name,
+      "LOAD_BALANCER_ARGUMENTS":  self._load_balancer_arguments,
+      "MULTICORE_ORCHESTRATION":  self._multicore_orchestration,
+    }
 
   def __generate_solver_repository(self):
     # make sure solver repository dict is set    
@@ -221,7 +229,7 @@ class Project:
 
     templatefile_prefix = os.path.realpath(__file__).replace( ".pyc", "" ).replace( ".py", "" )
     template_name       = templatefile_prefix + ".SolverRepository.template"
-    generated_repository_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_repository_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       template_name + ".h",
       template_name + ".cpp",
       "SolverRepository", 
@@ -252,6 +260,7 @@ class Project:
     print( "---------------------------------------")
     print( "Create data for solver " +solver._name  )
     print( "---------------------------------------")
+    print( solver )
 
     solver.add_to_Peano4_datamodel( self._project.datamodel, verbose=False )
 
@@ -272,7 +281,10 @@ class Project:
     else:
       solver.add_implementation_files_to_project( self._project.namespace, self._project.output, self._subdirectory )
     
-    # @todo das muss raus
+    '''
+    This is for two-grid setup - we mark the correction solver as "auxiliary", so that we 
+    don't exit early before the main solver has reached tolerance.
+    '''
     if auxiliary:
       self._aux_solvers.append( solver )
     else:
@@ -355,3 +367,26 @@ This is yet to be written, and we need to have a paper on our work.
   @property
   def subdirectory(self):
     return self._subdirectory
+
+
+# @todo timtout
+  def set_mpi_timeout(self,value):
+      pass
+  
+
+  def set_multicore_orchestration(self, value):
+      """! Set orchestration
+      
+      value has to be a string which creates an orchestration object,
+      i.e., an object of the type tarch::multicore::orchestration::Orchestration.
+      You can either create it directly (in this case you need to add a new),
+      or you can use a factory method such as
+      "tarch::multicore::orchestration::StrategyFactory::createDefaultStrategy()".
+      
+      A typical usage looks similar to 
+      
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+project.set_multicore_orchestration( "new ::tarch::multicore::orchestration::Hardcoded(8,256,tarch::multicore::Task::Host,::tarch::multicore::orchestration::Hardcoded::NoNestedParallelism,::tarch::multicore::orchestration::FusionImplementation::LazyEvaluation)" )
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      """
+      self._multicore_orchestration = value

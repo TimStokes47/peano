@@ -31,13 +31,6 @@
 AC_INIT([Peano], [4.0])
 AC_CONFIG_MACRO_DIR([m4])
 
-# Automake sets C++ flags to "-O2 -g" for GNU compilers (and also for other compilers).
-# These flags are appended to every target (Debug, Release, Trace, Asserts, Stats).
-# To override these defaults, they need to be set between AC_INIT and AC_PROG_CXX for C++
-# and AC_PROG_CC for C.
-# If the flags are empty at this stage (user has not given flags), then we set the flags to none
-# (empty string), so that "-g -O2" is not appended to every target.
-# See Automake documentation and the Stack Overflow post:
 # https://stackoverflow.com/questions/3116645/default-compiler-flags-with-autotools
 if test -z "$CXXFLAGS"; then
   CXXFLAGS=' '
@@ -89,7 +82,19 @@ AC_LANG(C++)
 #AX_COMPILER_VENDOR
 
 AR="ar"
-ARFLAGS="rcD"
+# The "D" modifier requests deterministic archives. It is a GNU ar extension;
+# BSD ar (the default on macOS) rejects it with "illegal option -- D". Probe for
+# support and fall back to plain "rc" so the build works with either archiver.
+AC_MSG_CHECKING([whether $AR accepts the D (deterministic) modifier])
+: > conftest_ar.$$
+if $AR rcD conftest_ar_$$.a conftest_ar.$$ >/dev/null 2>&1; then
+  ARFLAGS="rcD"
+  AC_MSG_RESULT([yes])
+else
+  ARFLAGS="rc"
+  AC_MSG_RESULT([no])
+fi
+rm -f conftest_ar.$$ conftest_ar_$$.a
 AC_SUBST(AR)
 AC_SUBST(ARFLAGS)
 
@@ -148,16 +153,17 @@ LDADD_PEANO_3D_DEBUG="   -lPeano4Core3d_debug   -lTarch_debug"
 #
 AC_ARG_WITH(
   multithreading,
-  AS_HELP_STRING([--with-multithreading],[switch on multithreading [default=no,cpp,omp,tbb,sycl]]),
+  AS_HELP_STRING([--with-multithreading],[switch on multithreading [default=no,omp,tbb,tbb_extension,sycl,cpp]]),
   [
     AC_MSG_CHECKING(for multithreading)
     case "${withval}" in
       no)     AC_MSG_RESULT([no multithreading]);                    multithreading=false ;;
-      cpp)    AC_MSG_RESULT([build with C++11 threading support]);   multithreading=cpp ;;
+      omp)    AC_MSG_RESULT([build with OpenMP]);                    multithreading=omp ;;
       tbb)    AC_MSG_RESULT([build with TBB]);                       multithreading=tbb ;;
-      omp)    AC_MSG_RESULT([build with OpenMP - please ensure you pass -fopenmp/-qopenmp/-openmp or similar to your CXX flags]); multithreading=omp ;;
+      tbb_extension)    AC_MSG_RESULT([build with TBB]);             multithreading=tbb_extension ;;
       sycl)   AC_MSG_RESULT([build with SYCL tasking on host]);      multithreading=sycl ;;
-      *)      AC_MSG_FAILURE([default=no (no multithreading). Use omp, cpp or sycl to define target]);            multithreading=false ;;
+      cpp)    AC_MSG_RESULT([build with C++11 threading support]);   multithreading=cpp ;;
+      *)      AC_MSG_FAILURE([default=no (no multithreading). Use one of the available targets]); multithreading=false ;;
     esac
   ],
   [
@@ -173,7 +179,14 @@ fi
 
 if test "$multithreading" == tbb; then
   AC_DEFINE([SharedTBB], [1], [SharedTBB])
-  
+  AC_DEFINE([SharedTBB], [1], [SharedTBB])
+  AC_DEFINE([SharedTBB], [1], [SharedTBB])
+fi
+
+if test "$multithreading" == tbb_extension; then
+  AC_DEFINE([SharedTBB], [1], [SharedTBB])
+  AC_DEFINE([SharedTBBExtension], [1], [SharedTBBExtension])
+
   CXXFLAGS_PEANO_2D_STATS="   $CXXFLAGS_PEANO_2D_STATS   -Isrc/tbb"
   CXXFLAGS_PEANO_2D_RELEASE=" $CXXFLAGS_PEANO_2D_RELEASE -Isrc/tbb"
   CXXFLAGS_PEANO_2D_ASSERTS=" $CXXFLAGS_PEANO_2D_ASSERTS -DTBB_USE_ASSERT -Isrc/tbb"
@@ -185,7 +198,7 @@ if test "$multithreading" == tbb; then
   CXXFLAGS_PEANO_3D_ASSERTS=" $CXXFLAGS_PEANO_3D_ASSERTS -DTBB_USE_ASSERT -Isrc/tbb"
   CXXFLAGS_PEANO_3D_TRACE="   $CXXFLAGS_PEANO_3D_TRACE   -DTBB_USE_ASSERT -Isrc/tbb"
   CXXFLAGS_PEANO_3D_DEBUG="   $CXXFLAGS_PEANO_3D_DEBUG   -DTBB_USE_ASSERT -Isrc/tbb"
-  
+
   LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/tbb "
   LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/tbb "
   LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/tbb "
@@ -203,10 +216,8 @@ if test "$multithreading" == tbb; then
   LDADD_PEANO_3D_ASSERTS+=" -ltbb_extension_debug"
   LDADD_PEANO_3D_TRACE+="   -ltbb_extension_trace"
   LDADD_PEANO_3D_DEBUG+="   -ltbb_extension_debug"
-
 fi
-AM_CONDITIONAL([UseTBB], [test "x$multithreading" = xtbb])
-
+AM_CONDITIONAL([UseTBBExtension], [test "x$multithreading" = xtbb_extension])
 
 if test "$multithreading" == omp; then
   AC_CHECK_HEADERS([omp.h],[],[AC_MSG_WARN([header <omp.h> not found])])
@@ -257,11 +268,11 @@ AC_ARG_WITH(
   [
     AC_MSG_CHECKING(for gpu)
     case "${withval}" in
-      no)    AC_MSG_RESULT(no);                                                   gpu=false ;;
-      omp)   AC_MSG_RESULT(build with OpenMP offloading to GPUs);                 gpu=omp ;;
-      sycl)  AC_MSG_RESULT(build with SYCL GPU support);                          gpu=sycl ;;
-      cpp)   AC_MSG_RESULT(build with C++ GPU support);                           gpu=cpp ;;
-      hip)   AC_MSG_RESULT(build with HIP GPU support);                           gpu=hip ;;
+      no)    AC_MSG_RESULT(no);                                             gpu=false ;;
+      omp)   AC_MSG_RESULT(build with OpenMP offloading to GPUs);           gpu=omp ;;
+      sycl)  AC_MSG_RESULT(build with SYCL GPU support);                    gpu=sycl ;;
+      cpp)   AC_MSG_RESULT(build with C++ GPU support);                     gpu=cpp ;;
+      hip)   AC_MSG_RESULT(build with HIP GPU support);                     gpu=hip ;;
       *)     AC_MSG_FAILURE([use omp, sycl, cpp or hip to define target]);  gpu=false ;;
     esac
   ],
@@ -270,11 +281,88 @@ AC_ARG_WITH(
     AC_MSG_RESULT(no); gpu=false
   ]
 )
+AC_ARG_WITH(
+  gpu_vendor,
+  AS_HELP_STRING([--with-gpu-vendor],[select which GPU vendor is being used [default=unset,amd,intel,nvidia]]),
+  [
+    AC_MSG_CHECKING(for gpu_vendor)
+    case "${withval}" in
+      unset)    AC_MSG_RESULT(Do not set GPU vendor);                                             gpu_vendor=unset ;;
+      amd)    AC_MSG_RESULT(build with AMD GPU support);                                             gpu_vendor=amd ;;
+      intel)   AC_MSG_RESULT(build with Intel GPU support);           gpu_vendor=intel ;;
+      nvidia)  AC_MSG_RESULT(build with NVIDIA GPU support);                    gpu_vendor=nvidia ;;
+      *)     AC_MSG_FAILURE([use amd, intel or nvidia to define target]);  gpu_vendor=unset ;;
+    esac
+  ],
+  [
+    AC_MSG_CHECKING(for gpu_vendor);
+    AC_MSG_RESULT(unset); gpu_vendor=unset
+  ]
+)
 
-AM_CONDITIONAL([GPUOffloadingOMP],    [test "$gpu" == omp])
-AM_CONDITIONAL([GPUOffloadingSYCL],   [test "$gpu" == sycl])
-AM_CONDITIONAL([GPUOffloadingCPP],    [test "$gpu" == cpp])
-AM_CONDITIONAL([GPUOffloadingHIP],    [test "$gpu" == hip])
+GPU_VENDOR=""
+if test "$gpu_vendor" == amd; then
+  GPU_VENDOR="AMD"
+  
+  if test "$gpu" == omp; then
+    CXXFLAGS="$CXXFLAGS -fopenmp-targets=amdgcn-amd-amdhsa"
+    LDFLAGS="$LDFLAGS -fopenmp-targets=amdgcn-amd-amdhsa"
+  fi
+  if test "$gpu" == sycl; then
+    CXXFLAGS="$CXXFLAGS -fsycl-targets=amdgcn-amd-amdhsa"
+    LDFLAGS="$LDFLAGS -fsycl-targets=amdgcn-amd-amdhsa"
+  fi
+fi
+
+if test "$gpu_vendor" == intel; then
+  GPU_VENDOR="INTEL"
+  if test "$gpu" == omp; then
+    CXXFLAGS="$CXXFLAGS -fopenmp-targets=spir64"
+    LDFLAGS="$LDFLAGS -fopenmp-targets=spir64"
+  fi
+  if test "$gpu" == sycl; then
+    CXXFLAGS="$CXXFLAGS -fsycl-targets=spir64"
+    LDFLAGS="$LDFLAGS -fsycl-targets=spir64"
+  fi
+fi
+
+if test "$gpu_vendor" == nvidia; then
+  GPU_VENDOR="NVIDIA"
+  if test "$gpu" == omp; then
+    CXXFLAGS="$CXXFLAGS -fopenmp-targets=nvptx64-nvidia-cuda"
+    LDFLAGS="$LDFLAGS -fopenmp-targets=nvptx64-nvidia-cuda"
+  fi
+  if test "$gpu" == sycl; then
+    CXXFLAGS="$CXXFLAGS -fsycl-targets=nvptx64-nvidia-cuda"
+    LDFLAGS="$LDFLAGS -fsycl-targets=nvptx64-nvidia-cuda"
+  fi
+fi
+
+AC_ARG_WITH(
+  gpu_arch,
+  AS_HELP_STRING([--with-gpu-arch],[select which GPU architecture is being used, default=unset]),
+  [
+    AC_MSG_CHECKING(for gpu_arch)
+    case "${withval}" in
+      unset)    AC_MSG_RESULT(Do not set GPU architecture);                                             gpu_arch=unset ;;
+      *)     AC_MSG_RESULT(GPU architecture set to ${withval});  gpu_arch=${withval} ;;
+    esac
+  ],
+  [
+    AC_MSG_CHECKING(for gpu_arch);
+    AC_MSG_RESULT(unset); gpu_arch=unset
+  ]
+)
+
+GPU_ARCH=""
+if test "$gpu_arch" != unset; then
+  CXXFLAGS="$CXXFLAGS --offload-arch=${gpu_arch}"
+  LDFLAGS="$LDFLAGS --offload-arch=${gpu_arch}"
+  GPU_ARCH=${gpu_arch}
+fi
+
+AC_SUBST(GPU_VENDOR)
+AC_SUBST(GPU_ARCH)
 
 if test "$gpu" == omp; then
   AC_CHECK_HEADERS([omp.h],[],[AC_MSG_WARN([header <omp.h> not found])])
@@ -400,21 +488,36 @@ AM_CONDITIONAL([VTK_LIBRARY_VERSION_9],[test "$vtk_version" = "9"])
 #
 # HDF5
 #
-# This macro defines the variable with_hdf5
-#
-#AX_LIB_HDF5
-
 AC_ARG_WITH(hdf5,
   AS_HELP_STRING([--with-hdf5],[enable HDF5 support [default=no]]),
   [ AC_MSG_CHECKING(for hdf5)
     case "${withval}" in
-      no)    AC_MSG_RESULT(no);                       use_hdf5=false ;;
-      *)     AC_MSG_RESULT(build with HDF5 support);  use_hdf5=true  ;;
+      no)    AC_MSG_RESULT(no);   use_hdf5=false ;;
+      *)     AC_MSG_RESULT(yes);  use_hdf5=true  ;;
     esac ],
   [ AC_MSG_CHECKING(for hdf5); AC_MSG_RESULT(no); use_hdf5=false ])
+AM_CONDITIONAL([UseHDF5],[test "x$use_hdf5" = xtrue])
 
 if test "$use_hdf5" == true; then
-  AC_DEFINE([UseHDF5], [1], [UseHDF5])
+  AC_DEFINE([UseHDF5], [UseHDF5], [UseHDF5])
+fi
+
+
+#
+# GSL (GNU Scientific Library), e.g. for ExaGRyPE's TwoPunctures initial data
+#
+AC_ARG_WITH(gsl,
+  AS_HELP_STRING([--with-gsl],[enable GSL support [default=no]]),
+  [ AC_MSG_CHECKING(for gsl)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);   use_gsl=false ;;
+      *)     AC_MSG_RESULT(yes);  use_gsl=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for gsl); AC_MSG_RESULT(no); use_gsl=false ])
+AM_CONDITIONAL([UseGSL],[test "x$use_gsl" = xtrue])
+
+if test "$use_gsl" == true; then
+  AC_DEFINE([UseGSL], [UseGSL], [UseGSL])
 fi
 
 
@@ -428,7 +531,7 @@ AC_ARG_WITH(netcdf,
       no)    AC_MSG_RESULT(no);    use_netcdf=false ;;
       *)     AC_MSG_RESULT(yes);   use_netcdf=true  ;;
     esac ],
-  [ AC_MSG_CHECKING(for openblas); AC_MSG_RESULT(no); use_netcdf=false ])
+  [ AC_MSG_CHECKING(for netcdf); AC_MSG_RESULT(no); use_netcdf=false ])
 AM_CONDITIONAL([UseNetCDF],[test "x$use_netcdf" = xtrue])
 
 if test "$use_netcdf" == true; then
@@ -473,6 +576,151 @@ AM_CONDITIONAL([UseOpenblas],[test "x$use_openblas" = xtrue])
 
 if test "$use_openblas" == true; then
   AC_DEFINE([UseOpenblas], [UseOpenblas], [UseOpenblas])
+fi
+
+
+#
+# GSL
+#
+# We use pkg-config if it knows GSL and fall back to the libraries' default
+# names otherwise. GSL is appended to the link line, i.e. it comes after all
+# Peano libraries (which are prepended) that might use it.
+#
+if test "$use_gsl" != false; then
+  AC_PATH_PROG([PKG_CONFIG], [pkg-config])
+  if test -n "$PKG_CONFIG" && $PKG_CONFIG --exists gsl; then
+    GSL_INCLUDE_DIR=`$PKG_CONFIG --cflags gsl`
+    GSL_LIBS=`$PKG_CONFIG --libs gsl`
+  else
+    GSL_INCLUDE_DIR=""
+    GSL_LIBS="-lgsl -lgslcblas -lm"
+  fi
+  AC_MSG_NOTICE([GSL_INCLUDE_DIR: ${GSL_INCLUDE_DIR}])
+  AC_MSG_NOTICE([GSL_LIBS: ${GSL_LIBS}])
+
+  CXXFLAGS_PEANO_2D_RELEASE=" $CXXFLAGS_PEANO_2D_RELEASE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_STATS="   $CXXFLAGS_PEANO_2D_STATS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_ASSERTS=" $CXXFLAGS_PEANO_2D_ASSERTS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_TRACE="   $CXXFLAGS_PEANO_2D_TRACE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_DEBUG="   $CXXFLAGS_PEANO_2D_DEBUG ${GSL_INCLUDE_DIR} "
+
+  CXXFLAGS_PEANO_3D_RELEASE=" $CXXFLAGS_PEANO_3D_RELEASE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_STATS="   $CXXFLAGS_PEANO_3D_STATS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_ASSERTS=" $CXXFLAGS_PEANO_3D_ASSERTS ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_TRACE="   $CXXFLAGS_PEANO_3D_TRACE ${GSL_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_DEBUG="   $CXXFLAGS_PEANO_3D_DEBUG ${GSL_INCLUDE_DIR} "
+
+  LDADD_PEANO_2D_RELEASE=" $LDADD_PEANO_2D_RELEASE ${GSL_LIBS} "
+  LDADD_PEANO_2D_STATS="   $LDADD_PEANO_2D_STATS ${GSL_LIBS} "
+  LDADD_PEANO_2D_ASSERTS=" $LDADD_PEANO_2D_ASSERTS ${GSL_LIBS} "
+  LDADD_PEANO_2D_TRACE="   $LDADD_PEANO_2D_TRACE ${GSL_LIBS} "
+  LDADD_PEANO_2D_DEBUG="   $LDADD_PEANO_2D_DEBUG ${GSL_LIBS} "
+
+  LDADD_PEANO_3D_RELEASE=" $LDADD_PEANO_3D_RELEASE ${GSL_LIBS} "
+  LDADD_PEANO_3D_STATS="   $LDADD_PEANO_3D_STATS ${GSL_LIBS} "
+  LDADD_PEANO_3D_ASSERTS=" $LDADD_PEANO_3D_ASSERTS ${GSL_LIBS} "
+  LDADD_PEANO_3D_TRACE="   $LDADD_PEANO_3D_TRACE ${GSL_LIBS} "
+  LDADD_PEANO_3D_DEBUG="   $LDADD_PEANO_3D_DEBUG ${GSL_LIBS} "
+fi
+
+
+#
+# HDF5 (parallel version requires --with-mpi)
+#
+if test "$use_hdf5" != false; then
+  AC_PATH_PROG([PKG_CONFIG], [pkg-config])
+
+  HDF5_INCLUDE_DIR=`$PKG_CONFIG --cflags hdf5_cpp`
+  HDF5_LIBS_DIR=`$PKG_CONFIG --libs-only-L hdf5_cpp`
+  HDF5_LIBS=`$PKG_CONFIG --libs-only-l hdf5_cpp`
+
+  CXXFLAGS_PEANO_2D_RELEASE=" $CXXFLAGS_PEANO_2D_RELEASE ${HDF5_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_STATS="   $CXXFLAGS_PEANO_2D_STATS ${HDF5_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_ASSERTS=" $CXXFLAGS_PEANO_2D_ASSERTS ${HDF5_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_TRACE="   $CXXFLAGS_PEANO_2D_TRACE ${HDF5_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_DEBUG="   $CXXFLAGS_PEANO_2D_DEBUG ${HDF5_INCLUDE_DIR} "
+
+  CXXFLAGS_PEANO_3D_RELEASE=" $CXXFLAGS_PEANO_3D_RELEASE ${HDF5_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_STATS="   $CXXFLAGS_PEANO_3D_STATS ${HDF5_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_ASSERTS=" $CXXFLAGS_PEANO_3D_ASSERTS ${HDF5_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_TRACE="   $CXXFLAGS_PEANO_3D_TRACE ${HDF5_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_DEBUG="   $CXXFLAGS_PEANO_3D_DEBUG ${HDF5_INCLUDE_DIR} "
+
+  LDADD_PEANO_2D_RELEASE=" $LDADD_PEANO_2D_RELEASE ${HDF5_LIBS} "
+  LDADD_PEANO_2D_STATS="   $LDADD_PEANO_2D_STATS ${HDF5_LIBS} "
+  LDADD_PEANO_2D_ASSERTS=" $LDADD_PEANO_2D_ASSERTS ${HDF5_LIBS} "
+  LDADD_PEANO_2D_TRACE="   $LDADD_PEANO_2D_TRACE ${HDF5_LIBS} "
+  LDADD_PEANO_2D_DEBUG="   $LDADD_PEANO_2D_DEBUG ${HDF5_LIBS} "
+
+  LDADD_PEANO_3D_RELEASE=" $LDADD_PEANO_3D_RELEASE ${HDF5_LIBS} "
+  LDADD_PEANO_3D_STATS="   $LDADD_PEANO_3D_STATS ${HDF5_LIBS} "
+  LDADD_PEANO_3D_ASSERTS=" $LDADD_PEANO_3D_ASSERTS ${HDF5_LIBS} "
+  LDADD_PEANO_3D_TRACE="   $LDADD_PEANO_3D_TRACE ${HDF5_LIBS} "
+  LDADD_PEANO_3D_DEBUG="   $LDADD_PEANO_3D_DEBUG ${HDF5_LIBS} "
+
+  LDFLAGS_PEANO_RELEASE+=" ${HDF5_LIBS_DIR} "
+  LDFLAGS_PEANO_STATS+="   ${HDF5_LIBS_DIR} "
+  LDFLAGS_PEANO_ASSERTS+=" ${HDF5_LIBS_DIR} "
+  LDFLAGS_PEANO_TRACE+="   ${HDF5_LIBS_DIR} "
+  LDFLAGS_PEANO_DEBUG+="   ${HDF5_LIBS_DIR} "
+
+  AC_MSG_NOTICE([HDF5_INCLUDE_DIR: ${HDF5_INCLUDE_DIR}])
+  AC_MSG_NOTICE([HDF5_LIBS_DIR: ${HDF5_LIBS_DIR}])
+  AC_MSG_NOTICE([HDF5_LIBS: ${HDF5_LIBS}])
+
+  AC_SUBST([HDF5_INCLUDE_DIR])
+  AC_SUBST([HDF5_LIBS_DIR])
+  AC_SUBST([HDF5_LIBS])
+fi
+
+
+#
+# NetCDF
+#
+if test "$use_netcdf" != false; then
+  AC_PATH_PROG([PKG_CONFIG], [pkg-config])
+
+  NETCDF_INCLUDE_DIR=`$PKG_CONFIG --cflags netcdf`
+  NETCDF_LIBS_DIR=`$PKG_CONFIG --libs-only-L netcdf`
+  NETCDF_LIBS=`$PKG_CONFIG --libs-only-l netcdf`
+
+  CXXFLAGS_PEANO_2D_RELEASE=" $CXXFLAGS_PEANO_2D_RELEASE ${NETCDF_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_STATS="   $CXXFLAGS_PEANO_2D_STATS ${NETCDF_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_ASSERTS=" $CXXFLAGS_PEANO_2D_ASSERTS ${NETCDF_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_TRACE="   $CXXFLAGS_PEANO_2D_TRACE ${NETCDF_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_2D_DEBUG="   $CXXFLAGS_PEANO_2D_DEBUG ${NETCDF_INCLUDE_DIR} "
+
+  CXXFLAGS_PEANO_3D_RELEASE=" $CXXFLAGS_PEANO_3D_RELEASE ${NETCDF_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_STATS="   $CXXFLAGS_PEANO_3D_STATS ${NETCDF_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_ASSERTS=" $CXXFLAGS_PEANO_3D_ASSERTS ${NETCDF_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_TRACE="   $CXXFLAGS_PEANO_3D_TRACE ${NETCDF_INCLUDE_DIR} "
+  CXXFLAGS_PEANO_3D_DEBUG="   $CXXFLAGS_PEANO_3D_DEBUG ${NETCDF_INCLUDE_DIR} "
+
+  LDADD_PEANO_2D_RELEASE=" $LDADD_PEANO_2D_RELEASE ${NETCDF_LIBS} "
+  LDADD_PEANO_2D_STATS="   $LDADD_PEANO_2D_STATS ${NETCDF_LIBS} "
+  LDADD_PEANO_2D_ASSERTS=" $LDADD_PEANO_2D_ASSERTS ${NETCDF_LIBS} "
+  LDADD_PEANO_2D_TRACE="   $LDADD_PEANO_2D_TRACE ${NETCDF_LIBS} "
+  LDADD_PEANO_2D_DEBUG="   $LDADD_PEANO_2D_DEBUG ${NETCDF_LIBS} "
+
+  LDADD_PEANO_3D_RELEASE=" $LDADD_PEANO_3D_RELEASE ${NETCDF_LIBS} "
+  LDADD_PEANO_3D_STATS="   $LDADD_PEANO_3D_STATS ${NETCDF_LIBS} "
+  LDADD_PEANO_3D_ASSERTS=" $LDADD_PEANO_3D_ASSERTS ${NETCDF_LIBS} "
+  LDADD_PEANO_3D_TRACE="   $LDADD_PEANO_3D_TRACE ${NETCDF_LIBS} "
+  LDADD_PEANO_3D_DEBUG="   $LDADD_PEANO_3D_DEBUG ${NETCDF_LIBS} "
+
+  LDFLAGS_PEANO_RELEASE+=" ${NETCDF_LIBS_DIR} "
+  LDFLAGS_PEANO_STATS+="   ${NETCDF_LIBS_DIR} "
+  LDFLAGS_PEANO_ASSERTS+=" ${NETCDF_LIBS_DIR} "
+  LDFLAGS_PEANO_TRACE+="   ${NETCDF_LIBS_DIR} "
+  LDFLAGS_PEANO_DEBUG+="   ${NETCDF_LIBS_DIR} "
+
+  AC_MSG_NOTICE([NETCDF_INCLUDE_DIR: ${NETCDF_INCLUDE_DIR}])
+  AC_MSG_NOTICE([NETCDF_LIBS_DIR: ${NETCDF_LIBS_DIR}])
+  AC_MSG_NOTICE([NETCDF_LIBS: ${NETCDF_LIBS}])
+
+  AC_SUBST([NETCDF_INCLUDE_DIR])
+  AC_SUBST([NETCDF_LIBS_DIR])
+  AC_SUBST([NETCDF_LIBS])
 fi
 
 
@@ -750,17 +998,45 @@ AM_CONDITIONAL([UseExaHyPE],[test "x$toolbox_exahype" = xtrue])
 
 
 #
-# SWIFT 2
+# ExaGRyPE
 #
-AC_ARG_ENABLE(swift,
-  AS_HELP_STRING([--enable-swift],[enable SWIFT2 [default=false]]),
-  [ AC_MSG_CHECKING(for swift)
+AC_ARG_ENABLE(exagrype,
+  AS_HELP_STRING([--enable-exagrype],[enable ExaGRyPE (3d only, requires ExaHyPE 2) [default=false]]),
+  [ AC_MSG_CHECKING(for exagrype)
     case "${withval}" in
-      no)    AC_MSG_RESULT(no);    toolbox_swift=false ;;
-      *)     AC_MSG_RESULT(yes);   toolbox_swift=true  ;;
+      no)    AC_MSG_RESULT(no);    toolbox_exagrype=false ;;
+      *)     AC_MSG_RESULT(yes);   toolbox_exagrype=true  ;;
     esac ],
-  [ AC_MSG_CHECKING(for swift); AC_MSG_RESULT(no); toolbox_swift=false ])
-AM_CONDITIONAL([UseSWIFT],[test "x$toolbox_swift" = xtrue])
+  [ AC_MSG_CHECKING(for exagrype); AC_MSG_RESULT(no); toolbox_exagrype=false ])
+AM_CONDITIONAL([UseExaGRyPE],[test "x$toolbox_exagrype" = xtrue])
+
+
+#
+# Curvi
+#
+AC_ARG_ENABLE(curvi,
+  AS_HELP_STRING([--enable-curvi],[enable Curvi [default=false]]),
+  [ AC_MSG_CHECKING(for curvi)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);    toolbox_curvi=false ;;
+      *)     AC_MSG_RESULT(yes);   toolbox_curvi=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for curvi); AC_MSG_RESULT(no); toolbox_curvi=false ])
+AM_CONDITIONAL([UseToolboxCurvi],[test "x$toolbox_curvi" = xtrue])
+
+
+#
+# ExaParty
+#
+AC_ARG_ENABLE(exaparty,
+  AS_HELP_STRING([--enable-exaparty],[enable ExaParty [default=false]]),
+  [ AC_MSG_CHECKING(for exaparty)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);    toolbox_exaparty=false ;;
+      *)     AC_MSG_RESULT(yes);   toolbox_exaparty=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for exaparty); AC_MSG_RESULT(no); toolbox_exaparty=false ])
+AM_CONDITIONAL([UseExaParty],[test "x$toolbox_exaparty" = xtrue])
 
 
 #
@@ -1021,6 +1297,59 @@ fi
 
 
 #
+# ExaGRyPE
+#
+# ExaGRyPE is built for 3d only, so we only extend the 3d link lines. As
+# ExaGRyPE builds on top of ExaHyPE 2, this block has to come after the
+# ExaHyPE 2 block: we prepend the libraries, so ExaGRyPE ends up in front of
+# ExaHyPE 2 on the link line.
+#
+if test "$toolbox_exagrype" != false; then
+  AC_DEFINE([UseExaGRyPE], [1], [UseExaGRyPE])
+  if test "$toolbox_exahype" == false; then
+    AC_MSG_ERROR([ExaGRyPE requires ExaHyPE 2 (run with --help to see the correct enable statement)])
+  fi
+  LDADD_PEANO_3D_RELEASE=" -lExaGRyPECore3d         $LDADD_PEANO_3D_RELEASE "
+  LDADD_PEANO_3D_STATS="   -lExaGRyPECore3d_stats   $LDADD_PEANO_3D_STATS "
+  LDADD_PEANO_3D_ASSERTS=" -lExaGRyPECore3d_asserts $LDADD_PEANO_3D_ASSERTS "
+  LDADD_PEANO_3D_TRACE="   -lExaGRyPECore3d_trace   $LDADD_PEANO_3D_TRACE "
+  LDADD_PEANO_3D_DEBUG="   -lExaGRyPECore3d_debug   $LDADD_PEANO_3D_DEBUG "
+
+  LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/exagrype "
+  LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/exagrype "
+fi
+
+
+#
+# Curvi
+#
+if test "$toolbox_curvi" != false; then
+  AC_DEFINE([UseToolboxCurvi], [1], [UseToolboxCurvi])
+
+  LDADD_PEANO_2D_RELEASE=" -lToolboxCurvi         $LDADD_PEANO_2D_RELEASE "
+  LDADD_PEANO_2D_STATS="   -lToolboxCurvi_stats   $LDADD_PEANO_2D_STATS "
+  LDADD_PEANO_2D_ASSERTS=" -lToolboxCurvi_asserts $LDADD_PEANO_2D_ASSERTS "
+  LDADD_PEANO_2D_TRACE="   -lToolboxCurvi_trace   $LDADD_PEANO_2D_TRACE "
+  LDADD_PEANO_2D_DEBUG="   -lToolboxCurvi_debug   $LDADD_PEANO_2D_DEBUG "
+
+  LDADD_PEANO_3D_RELEASE=" -lToolboxCurvi         $LDADD_PEANO_3D_RELEASE "
+  LDADD_PEANO_3D_STATS="   -lToolboxCurvi_stats   $LDADD_PEANO_3D_STATS "
+  LDADD_PEANO_3D_ASSERTS=" -lToolboxCurvi_asserts $LDADD_PEANO_3D_ASSERTS "
+  LDADD_PEANO_3D_TRACE="   -lToolboxCurvi_trace   $LDADD_PEANO_3D_TRACE "
+  LDADD_PEANO_3D_DEBUG="   -lToolboxCurvi_debug   $LDADD_PEANO_3D_DEBUG "
+
+  LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/toolbox/curvi "
+  LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/toolbox/curvi "
+  LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/toolbox/curvi "
+  LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/toolbox/curvi "
+  LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/toolbox/curvi "
+fi
+
+
+#
 # Multigrid
 #
 if test "$toolbox_mghype" != false; then
@@ -1059,8 +1388,8 @@ if test "$use_openblas" != false; then
     AC_MSG_ERROR([OpenBLAS headers not found])
   ])
   # Check for libraries
-  AC_CHECK_LIB([openblas], [cblas_daxpby], [
-    OPENBLAS_LIBS="ac_cv_search_cblas_daxpby"
+  AC_CHECK_LIB([openblas], [cblas_daxpy], [
+    OPENBLAS_LIBS="ac_cv_search_cblas_daxpy"
   ], [
     AC_MSG_ERROR([OpenBLAS library not found. Did you forget to include -lopenblas to LDFLAGS?])
   ])
@@ -1246,33 +1575,33 @@ fi
 
 
 #
-# SWIFT 2
+# ExaParty
 #
-if test "$toolbox_swift" != false; then
-  AC_DEFINE([UseSWIFT], [1], [UseSWIFT])
+if test "$toolbox_exaparty" != false; then
+  AC_DEFINE([UseExaParty], [1], [UseExaParty])
   if test "$toolbox_loadbalancing" == false; then
-    AC_MSG_ERROR([SWIFT2 requires the load balancing toolbox (run with --help to see the correct enable statement)])
+    AC_MSG_ERROR([ExaParty requires the load balancing toolbox (run with --help to see the correct enable statement)])
   fi
   if test "$toolbox_particles" == false; then
-    AC_MSG_ERROR([SWIFT2 requires the particles toolbox (run with --help to see the correct enable statement)])
+    AC_MSG_ERROR([ExaParty requires the particles toolbox (run with --help to see the correct enable statement)])
   fi
-  LDADD_PEANO_2D_RELEASE=" -lSWIFT2Core2d         $LDADD_PEANO_2D_RELEASE "
-  LDADD_PEANO_2D_STATS="   -lSWIFT2Core2d_stats   $LDADD_PEANO_2D_STATS "
-  LDADD_PEANO_2D_ASSERTS=" -lSWIFT2Core2d_asserts $LDADD_PEANO_2D_ASSERTS "
-  LDADD_PEANO_2D_TRACE="   -lSWIFT2Core2d_trace   $LDADD_PEANO_2D_TRACE "
-  LDADD_PEANO_2D_DEBUG="   -lSWIFT2Core2d_debug   $LDADD_PEANO_2D_DEBUG "
+  LDADD_PEANO_2D_RELEASE=" -lExaPartyCore2d         $LDADD_PEANO_2D_RELEASE "
+  LDADD_PEANO_2D_STATS="   -lExaPartyCore2d_stats   $LDADD_PEANO_2D_STATS "
+  LDADD_PEANO_2D_ASSERTS=" -lExaPartyCore2d_asserts $LDADD_PEANO_2D_ASSERTS "
+  LDADD_PEANO_2D_TRACE="   -lExaPartyCore2d_trace   $LDADD_PEANO_2D_TRACE "
+  LDADD_PEANO_2D_DEBUG="   -lExaPartyCore2d_debug   $LDADD_PEANO_2D_DEBUG "
 
-  LDADD_PEANO_3D_RELEASE=" -lSWIFT2Core3d         $LDADD_PEANO_3D_RELEASE "
-  LDADD_PEANO_3D_STATS="   -lSWIFT2Core3d_stats   $LDADD_PEANO_3D_STATS "
-  LDADD_PEANO_3D_ASSERTS=" -lSWIFT2Core3d_asserts $LDADD_PEANO_3D_ASSERTS "
-  LDADD_PEANO_3D_TRACE="   -lSWIFT2Core3d_trace   $LDADD_PEANO_3D_TRACE "
-  LDADD_PEANO_3D_DEBUG="   -lSWIFT2Core3d_debug   $LDADD_PEANO_3D_DEBUG "
+  LDADD_PEANO_3D_RELEASE=" -lExaPartyCore3d         $LDADD_PEANO_3D_RELEASE "
+  LDADD_PEANO_3D_STATS="   -lExaPartyCore3d_stats   $LDADD_PEANO_3D_STATS "
+  LDADD_PEANO_3D_ASSERTS=" -lExaPartyCore3d_asserts $LDADD_PEANO_3D_ASSERTS "
+  LDADD_PEANO_3D_TRACE="   -lExaPartyCore3d_trace   $LDADD_PEANO_3D_TRACE "
+  LDADD_PEANO_3D_DEBUG="   -lExaPartyCore3d_debug   $LDADD_PEANO_3D_DEBUG "
 
-  LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/swift2 "
-  LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/swift2 "
-  LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/swift2 "
-  LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/swift2 "
-  LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/swift2 "
+  LDFLAGS_PEANO_RELEASE+=" -L$srcdir_full_path/src/exaparty "
+  LDFLAGS_PEANO_STATS+="   -L$srcdir_full_path/src/exaparty "
+  LDFLAGS_PEANO_ASSERTS+=" -L$srcdir_full_path/src/exaparty "
+  LDFLAGS_PEANO_TRACE+="   -L$srcdir_full_path/src/exaparty "
+  LDFLAGS_PEANO_DEBUG+="   -L$srcdir_full_path/src/exaparty "
 fi
 
 
@@ -1357,12 +1686,14 @@ AC_CONFIG_FILES([Makefile
   src/toolbox/finiteelements/Makefile
   src/toolbox/loadbalancing/Makefile
   src/toolbox/particles/Makefile
+  src/toolbox/curvi/Makefile
   src/tbb/Makefile
   src/convert/Makefile
   src/exahype2/Makefile
+  src/exagrype/Makefile
   src/mghype/Makefile
   src/petsc/Makefile
-  src/swift2/Makefile
+  src/exaparty/Makefile
   src/unittests/Makefile
 ])
 AC_OUTPUT

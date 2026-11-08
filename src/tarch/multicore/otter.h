@@ -12,7 +12,7 @@
  * impact of task parallelism on the performance and hence provide valuable
  * insight.
  * It is able to guide the development of core components of Peano.
- * For applications built on top of Peano such as ExaHyPE or Swift, it provides
+ * For applications built on top of Peano such as ExaHyPE or ExaParty, it provides
  * information how to schedule tasks efficiently, i.e. how to map various tasks
  * onto various scheduling policies.
  * Otter is hosted at https://github.com/Otter-Taskification/otter/wiki.
@@ -102,18 +102,18 @@
  */
 namespace otter {
   namespace label {
-    static const char* step                     = "[STEP TASK]";
+    // If Otter is not used these constants are unused and therefore the compiler warns
+    [[maybe_unused]] static const char* step                  = "[STEP TASK]";
   } // namespace label
 
   namespace phase {
-    static const char* init                  = "init";
-    static const char* plot                  = "plot";
-    static const char* timestep              = "time-step";
-    static const char* create_grid           = "create-grid";
-    static const char* create_grid_no_refine = "create-grid-but-postpone-refinement";
-    static const char* create_grid_converge  = "create-grid-and-converge-load-balancing";
+    [[maybe_unused]] static const char* init                  = "init";
+    [[maybe_unused]] static const char* plot                  = "plot";
+    [[maybe_unused]] static const char* timestep              = "time-step";
+    [[maybe_unused]] static const char* create_grid           = "create-grid";
+    [[maybe_unused]] static const char* create_grid_no_refine = "create-grid-but-postpone-refinement";
+    [[maybe_unused]] static const char* create_grid_converge  = "create-grid-and-converge-load-balancing";
   } // namespace phase
-
 } // namespace otter
 
 #if defined(UseOtter)

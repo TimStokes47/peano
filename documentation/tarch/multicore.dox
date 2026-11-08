@@ -1,8 +1,11 @@
 /**
 
-\page page_tarch_multicore Multicore abstraction
+\page page_tarch_multicore Multicore programming
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/E6750bs8.jpg/500px-E6750bs8.jpg" />
 
 \tableofcontents
+
 
  To compile with multicore support, you have to invoke the configure script with
  the option 
@@ -13,15 +16,17 @@
 
 where value is
 
- - cpp. This adds support through C++14 threads.
- - tbb. This adds support through Intel's Threading Building Blocks. If you use
+ - ```cpp```. This adds support through C++14 threads.
+ - ```tbb```. This adds support through Intel's Threading Building Blocks. If you use
    this option, you first have to ensure that your CXXFLAGS and LDFLAGS point to
    the right include or library, respectively, directories. LDFLAGS also has to
    compromise either -ltbb or -tbb_debug.
- - openmp. This adds OpenMP support. We currently develop against OpenMP 4.x
+ - ```tbb_extension```. Is an alternative TBB version that does not require the 
+   very latest TBB extensions. 
+ - ```openmp```. This adds OpenMP support. We currently develop against OpenMP 4.x
    though some of our routines use OpenMP target and thus are developed against
    OpenMP 5.
- - sycl. We have a SYCL support for the multithreading, through, within the Intel
+ - ```sycl```. We have a SYCL support for the multithreading, through, within the Intel
    toolchain, it might be more appropriate to combine sycl on the GPU with the
    tbb backend for multithreading.
 
@@ -31,10 +36,38 @@ where value is
  multithreading library calls. It solely relies on the classes and functions from
  tarch::multicore.
 
+<br /><br />
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
+As of today (2025-03-29), TBB's dynamic task graphs are only available as preview
+in UXL's internal repositories. So you either have to install those extensions, 
+or you pick ```tbb_extension```.
+</div>
 
-## Administering the multithreaded environment
 
- The central instance managing the threads on a system is tarch::multicore::Core.
+# Adding multithreading features
+
+   If you wanna distinguish in your code between multicore and no-multicore variants,
+   please use
+
+  ~~~~~~~~~~~~~~~~~~~~~~~~
+  #include "tarch/multicore/multicore.h"
+  ~~~~~~~~~~~~~~~~~~~~~~~~
+
+  and
+
+  ~~~~~~~~~~~~~~~~~~~~~~~~
+  #if defined(SharedMemoryParallelisation)
+  ~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+With the symbol SharedMemoryParallelisation, you make your code independent of
+OpenMP, TBB or C++ threading.
+
+
+
+# Administering the multithreaded environment
+
+ The central instance managing the threads on a system is @ref tarch::multicore::Core.
  This is a singleton and the name thus is slightly wrong. It does not really represent
  one core but rather represents the landscape of cores. You can setup the
  multithreading environment through Core's configure() routine, but this is optional.
@@ -43,7 +76,9 @@ where value is
  Core class.
 
 
-## Avoid race conditions
+# Avoid race conditions
+
+## Semaphores
 
  For multithreaded code, it is important that the code can lock (protect) code
  regions and free them. For this, the multithreading layer offers different
@@ -69,28 +104,160 @@ static tarch::multicore::BooleanSemaphore myFancySemaphore;
 } // end of scope destroys lock object and therefore frees semaphore  
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- The class tarch::multicore::BooleanSemaphore should be studied for a more detailed
+ The class @ref tarch::multicore::BooleanSemaphore should be studied for a more detailed
  documentation of the thread locks.
+ 
+ 
+ The plain semaphore does not work recursively, i.e. if a thread locks a 
+ semaphore and then locks again, it deadlocks itself. You can avoid this
+ by switching to a recursive semaphore. They are more expensive yet allow
+ that a thread locks the same semaphore repeatedly.
+ 
+ Each semaphore also supports a try_lock() operation, so you can do busy
+ polling. try_lock's are not supported by the tarch::multicore::Lock object.
+ You have to access the semaphore directly and manually free it later, 
+ whereas the Lock object automatically frees the semaphore in its 
+ destructor (unless you do so before that manually).
 
 
-## Write bespoke multithreaded variants
+## Atomics
 
-The namespace tarch::multicore provides a set of preprocessor macros and 
-further information how to write bespoke code for codes that have to 
-distinguish single-threaded realisation from bespoke variants.
+At the moment, the tarch does ***not*** provide a backend-independent 
+abstraction of atomics. We hope that such a thing would be obsolete 
+anyway, as C++'s std::atomic works with all backends.
 
 
-## Work with tasks
+## Special semaphores
 
-All the tasking is modelld through the class tarch::multicore::Task.
+If you have a piece of code that locks a sempahore recursively, the second
+call to lock will deadlock.
+You will have to use the @ref tarch::multicore::RecursiveLock.
+
+Sometimes, it is fine for many threads to access a code block concurrently
+as they only read data.
+At the same time, if one thread writes some data, noone else should read or
+write concurrently.
+In this case, you have to use @ref tarch::multicore::MultiReadSingleWriteSemaphore.
+
+
+# BSP
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Fork_join.svg/2560px-Fork_join.svg.png" />
+
+Classic fork-join (or BSP) parallelism is available through 
+@ref tarch::multicore::spawnAndWait(). This routine accepts a set of tasks (see below)
+and waits for each of the tasks passed to finish before it returns.
+
+
+# Tasks
+
+All the tasking is modelled through the class @ref tarch::multicore::Task.
 That is, Peano expects each task to be a subclass of this guy.
+However, there's already a specialisation of the class accepting a functor
+if you prefer to work with lambdas.
+
+All in Peano is by default dynamic tasking, i.e. once you submit a task,
+the task is immediately handled by the runtime and might be executed
+(if all of its dependencies are fulfilled as explained below). We do not
+support static task graph assembly in any way, where the code builds up 
+a complete task graph and then submits it en bloc.
+
+
+## Submission and waits
+
 The actually task submission, dependency tracking, and synchronisation
 then is all realised through functions within the namespace
-tarch::multicore.
+@ref tarch::multicore. There are very few key key functions that are 
+relevant to the user:
 
-The namespace's documentation also explains how we are using the tasks in 
-codes such as ExaHyPE and what typical task execution patterns look like.
-It also provides an overview of different task characteristics.
+
+- @ref tarch::multicore::spawnTask() is used to hand a task over to the runtime.
+- @ref tarch::multicore::waitForTasks() lets the calling function wait for this particular task to
+  terminate.
+- @ref tarch::multicore::waitForAllTasks() passes over to the tasking runtime
+  which returns once all tasks submitted so far have completed.
+
+
+
+## Task graphs
+
+All task graphs in Peano are dynamic tasks graphs. 
+A key concept for Peano's task API is that each task can be equipped with a
+number, i.e. a plain integer. This integer can be used to wait for a specific
+task but it is also integers that we use to construct dependencies.
+It is convenient to use an instance of @ref tarch::multicore::TaskEnumerator
+to administer task numbers.
+
+As each task has a unique number, we can only model multiple in-dependencies.
+Multiple out-dependencies are not (directly) supported. 
+
+In Peano, task DAGs are built up along the task workflow. That is, each task
+that is not used within a fork-join region or is totally free is assigned a
+unique number when we spawn it.
+
+Whenever we define a task, we can also define its dependencies. This is a sole
+completion dependency: you tell the task system which task has to be completed
+before the currently submitted one is allowed to start. A DAG thus can be built
+up layer by layer. We start with the first task. This task might be
+immediately executed - we do not care - and then we continue to work our way
+down through the graph adding node by node.
+
+In line with OpenMP and TBB - where we significantly influenced the development
+of the dynamic task API - outgoing dependencies should be declared before we
+use them.
+
+
+## Task fusion
+
+The core idea behind task fusion is that there's no right, generic, global task 
+granularity on modern HPC systems. Instead, we may assume that
+   
+   - too small tasks are bad as they induce too much of an overhead. Nevertheless,
+     they might be the right modelling tool/language;
+   - smallish tasks perform good on CPUs;
+   - GPUs require rather huge tasks.
+   
+   In Peano, we try to use as small tasks as possible, but equip the runtime to 
+   bundle (fuse) these tasks later on at runtime. This is different to other 
+   codes which require codes to come up with the large, fused tasks a priori - 
+   for example by working with larger patches.
+   
+   Tasks that can be fused have to implement the canFuse() predicate, and they 
+   have to provide a function which can handle a set of tasks of the same type.
+   Details on how the fusion is implemented are provided in the documentation
+   of the namespace tarch::multicore::taskfusion.
+   
+   There is a separate @ref documentation_tarch_task_fusion_strategies "page on task fusion strategies"
+   and things to consider if you want to tune and tailor how tasks are bundled
+   (both on the CPU and the GPU).
+   
+
+## Orchestration and (auto-)tuning
+
+   The task orchestration is controlled via an implementation of
+   tarch::multicore::orchestration::Strategy that you set via
+   tarch::multicore::setOrchestration().
+   With the strategy you can control the fusion of tasks and its shipping onto
+   GPUs, but also how fork-join sections in the code should be handled.
+   
+   Various subclasses of tarch::multicore::orchestration::Strategy show
+   examples how you 
+   
+   - ship every single free task to the GPU that's GPU-ready;
+   - use solely domain decomposition;
+   - realise a combination of these paradigms;
+   - tailor which task types go to which GPU.
+
+
+
+
+# Implementation
+
+The present page it written user-focused. 
+Implementation details can be found in the \ref tarch::multicore "namespace documentation".
+
+
+
 
 
  */

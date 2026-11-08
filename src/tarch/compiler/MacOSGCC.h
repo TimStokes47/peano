@@ -2,19 +2,7 @@
 // For a detailed description of the semantics of the settings, please
 // consult LinuxIntel.h which is the most elaborate documentation.
 
-/**
- * Switch off Optimisation
- *
- * Some compilers (icc 10.x, e.g.) run into problems compiling the test cases
- * as they run out of memory. In this case, one can use these two defined
- * within the implementation files. Unfortunately, the corresponding pragmas
- * are not supported by all compilers (gcc 4.x.x, e.g.). Therefore, I
- * encapsulated them within my own defines.
- *
- * To make define work, see the documentation of the test super class.
- */
 //#define UseTestSpecificCompilerSettings
-
 //#define CompilerCLANG
 //#define CompilerICC
 //#define CompilerHasProcStat
@@ -26,8 +14,7 @@
 #define MPISupportsSingleSidedCommunication
 #endif
 
-#if !defined(UseManualInlining) &&  !defined(noUseManualInlining)
-#define UseManualInlining
+#if !defined(UseManualInlining) && !defined(noUseManualInlining)
 #endif
 
 #define LittleEndian
@@ -44,7 +31,3 @@
 #define KeywordToAvoidDuplicateSymbolsForInlinedFunctions static inline
 
 #define OpenMPTaskGroup
-
-#define PragmaPush _Pragma("GCC diagnostic push")
-#define SilenceUnknownAttribute _Pragma("GCC diagnostic ignored \"-Wattributes\"")
-#define PragmaPop _Pragma("GCC diagnostic pop")

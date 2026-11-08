@@ -6,14 +6,15 @@
 // **********************************************************************************************
 #pragma once
 
-#include "peano4/datamanagement/CellMarker.h"
-#include "tarch/multicore/Tasks.h"
-#include "tarch/NonCriticalAssertions.h"
+#include "repositories/SolverRepository.h"
 
-#include "exahype2/fv/rusanov/rusanov.h"
+#include "tarch/NonCriticalAssertions.h"
+#include "tarch/multicore/Task.h"
+
+#include "peano4/datamanagement/CellMarker.h"
+
 #include "exahype2/EnclaveBookkeeping.h"
 #include "exahype2/EnclaveTask.h"
-#include "repositories/SolverRepository.h"
 
 #include <vector>
 #include <memory>
@@ -187,7 +188,7 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::EnclaveTask
 #endif
 
     {% if STATELESS_PDE_TERMS %}
-    virtual bool fuse( const std::list<Task*>& otherTasks, int targetDevice=Host ) override;
+    virtual void fuse( const std::vector<Task*>& otherTasks, int targetDevice=Host ) override;
     virtual bool canFuse() const override;
     {% endif %}
 };

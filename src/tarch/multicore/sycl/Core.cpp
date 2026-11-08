@@ -1,8 +1,10 @@
 #include "tarch/Assertions.h"
 #include "Core.h"
 #include "tarch/multicore/Core.h"
-#include "tarch/multicore/Tasks.h"
+
+#include "tarch/multicore/Task.h"
 #include "tarch/multicore/multicore.h"
+#include "tarch/multicore/taskfusion/taskfusion.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 #ifdef CompilerHasSysinfo
@@ -27,7 +29,8 @@ tarch::logging::Log tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 namespace {
   /**
-   * See the documentation in tarch/accelerator/sycl/Device.h.
+   * See the documentation in tarch/accelerator/sycl/Device.h on
+   * @ref tarch_accelerator_SYCL.
    */
   sycl::queue  hostSyclQueue( sycl::cpu_selector_v );
 }
@@ -62,8 +65,6 @@ tarch::multicore::Core::Core():
   std::cout << "host (CPU) device queue:" << hostSyclQueue.get_device().get_info<sycl::info::device::name>()
             << " with " << _numberOfThreads << " threads" << std::endl;
   #endif
-
-  internal::configureInternalTaskQueues(_numberOfThreads);
 }
 
 
@@ -87,7 +88,9 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
 }
 
 
-void tarch::multicore::Core::shutdown() {}
+void tarch::multicore::Core::shutdown() {
+  tarch::multicore::waitForAllTasks();
+}
 
 
 bool tarch::multicore::Core::isInitialised() const {
@@ -118,6 +121,7 @@ int tarch::multicore::Core::getThreadNumber() const {
 
 
 void tarch::multicore::Core::yield() {
+  tarch::multicore::taskfusion::processAllReadyTasks();
   // @todo It would be nice to have the opportunity to tell the queue to do
   //       only a few tasks and then to return.
   hostSyclQueue.wait();

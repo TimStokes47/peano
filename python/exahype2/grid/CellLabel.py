@@ -1,9 +1,9 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import dastgen2
-import peano4.datamodel.DaStGen2
+import peano4.api.datamodel.DaStGen2
 
 
 class UpdateCellLabel(ActionSet):
@@ -46,7 +46,7 @@ class UpdateCellLabel(ActionSet):
     return ""
 
 
-  #def get_body_of_getGridControlEvents(self):
+  #def get_body_of_createGridControlEventsForNextTraversal(self):
   #  return self.__Template_GridControlEvents.format(**self.d)
 
 
@@ -106,19 +106,25 @@ def create_cell_label(solver_name):
      some postprocessing (particles, e.g.) rely on the field.
    - TimeStepSize (similar to arguments around TimeStamp).
    - AMDCriterionEvaluatedThroughoutGridConstruction
+   - DeviceNumber is the number of the GPU that the device memory of this cell is allocated on.
+   - DeviceMemoryAddress is the pointer to the device memory of this cell. The device
+     memory is used to store the reconstructed patch of the cell when enclave tasking is used.
+   - DeviceMemoryStatus is the status of the device memory of this cell
      
    solver_name: string
      Name of the solver
      
   """
-  result = peano4.datamodel.DaStGen2( UpdateCellLabel.get_attribute_name( solver_name ) )
+  result = peano4.api.datamodel.DaStGen2( UpdateCellLabel.get_attribute_name( solver_name ) )
   
   result.data.add_attribute( dastgen2.attributes.Integer("SemaphoreNumber") )
   result.data.add_attribute( dastgen2.attributes.Double("TimeStamp") )
   result.data.add_attribute( dastgen2.attributes.Double("TimeStepSize") )
   result.data.add_attribute( dastgen2.attributes.Boolean("HasUpdated") )
   result.data.add_attribute( dastgen2.attributes.Boolean("AMDCriterionEvaluatedThroughoutGridConstruction") )
-    
+  result.data.add_attribute( dastgen2.attributes.Integer("DeviceNumber") )
+  result.data.add_attribute( dastgen2.attributes.DoublePointer("DeviceMemoryAddress") )
+  result.data.add_attribute( dastgen2.attributes.Enumeration("DeviceMemoryStatus", ["Unallocated", "OutOfDate", "UpToDate"]) )
   result.peano4_mpi_and_storage_aspect.merge_implementation = """
   switch (context) {
     case ::peano4::grid::TraversalObserver::SendReceiveContext::BoundaryExchange:

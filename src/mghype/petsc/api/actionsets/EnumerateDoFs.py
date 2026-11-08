@@ -1,8 +1,8 @@
 # This file is part of the Peano's PETSc extension. For conditions of distribution and 
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
-import peano4
+import peano4.api
 import jinja2
  
 
@@ -38,7 +38,7 @@ class EnumerateDoFs(ActionSet):
   fineGridVertex{{SOLVER_NAME}}PETScData.setUnknownBaseNumber( ::petsc::LocalToGlobalMap::NoDegreeOfFreedom );
   fineGridVertex{{SOLVER_NAME}}PETScData.setType( vertexdata::{{SOLVER_NAME}}PETScData::Type::Undefined );
   
-  vertexdata::{{SOLVER_NAME}}PETScData::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexDoFType(marker.x(),marker.h());
+  vertexdata::{{SOLVER_NAME}}PETScData::Type dofType = repositories::{{SOLVER_INSTANCE}}.getVertexType(marker.x(),marker.h());
   
   switch (dofType) {
     case vertexdata::{{SOLVER_NAME}}PETScData::Type::Boundary:
@@ -96,7 +96,7 @@ class EnumerateDoFs(ActionSet):
   fineGridFace{{SOLVER_NAME}}PETScData.setUnknownBaseNumber( ::petsc::LocalToGlobalMap::NoDegreeOfFreedom );
   fineGridFace{{SOLVER_NAME}}PETScData.setType( facedata::{{SOLVER_NAME}}PETScData::Type::Undefined );
   
-  facedata::{{SOLVER_NAME}}PETScData::Type dofType = repositories::{{SOLVER_INSTANCE}}.getFaceDoFType(marker.x(),marker.h());
+  facedata::{{SOLVER_NAME}}PETScData::Type dofType = repositories::{{SOLVER_INSTANCE}}.getFaceType(marker.x(),marker.h());
   
   switch (dofType) {
     case facedata::{{SOLVER_NAME}}PETScData::Type::Boundary:
@@ -145,7 +145,7 @@ class EnumerateDoFs(ActionSet):
   fineGridCell{{SOLVER_NAME}}PETScData.setUnknownBaseNumber( ::petsc::LocalToGlobalMap::NoDegreeOfFreedom );
   fineGridCell{{SOLVER_NAME}}PETScData.setType( celldata::{{SOLVER_NAME}}PETScData::Type::Undefined );
   
-  celldata::{{SOLVER_NAME}}PETScData::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellDoFType(marker.x(),marker.h());
+  celldata::{{SOLVER_NAME}}PETScData::Type dofType = repositories::{{SOLVER_INSTANCE}}.getCellType(marker.x(),marker.h());
   
   switch (dofType) {
     case celldata::{{SOLVER_NAME}}PETScData::Type::Interior:
@@ -219,7 +219,7 @@ solver: petsc.solvers.CollocatedLowOrderDiscretisation or similar solver where
   def get_body_of_operation(self,operation_name):
     """!
 
-Provide C++ code snippet for peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME  
+Provide C++ code snippet for peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME  
   
 Only touchVertexFirstTime is an event where this action set actually
 does something: It inserts the template TemplateInitVertex and 
@@ -228,16 +228,16 @@ in init().
     
     """
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
       result = jinja2.Template(self.TemplateEnumerateVertex).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.TemplateEnumerateCell).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
       result = jinja2.Template(self.TemplateEnumerateFace).render(**self.d)
       pass 
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_END_TRAVERSAL:
       result = jinja2.Template(self.TemplateEndTraversal).render(**self.d)
       pass 
     return result

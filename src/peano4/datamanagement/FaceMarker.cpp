@@ -14,11 +14,13 @@ peano4::datamanagement::FaceMarker::FaceMarker(
   _cellCentre(event.getX()),
   _h(event.getH()),
   _cellIsLocal(event.getIsCellLocal()),
-  _select(select) {
+  _select(select),
+  _isLocal( event.getIsFaceLocal() ),
+  _isAdjacentToParallelBoundary(event.getIsFaceAdjacentToParallelDomainBoundary()),
+  _relativePositionOfCellWithinFatherCell(event.getRelativePositionToFather()) {
   for (int faceNumber=0; faceNumber<2*Dimensions; faceNumber++) {
     _hasBeenRefined[faceNumber] = false;
     _willBeRefined[faceNumber]  = false;
-    _isLocal[faceNumber]        = event.getIsFaceLocal(faceNumber);
 
     const int normal = faceNumber % Dimensions;
     for (int i=0; i<TwoPowerD; i++) {
@@ -28,7 +30,15 @@ peano4::datamanagement::FaceMarker::FaceMarker(
       _willBeRefined.set(  faceNumber, _willBeRefined[faceNumber]  or event.getWillBeRefined(studiedVertex.to_ulong()) );
     }
   }
-  _relativePositionOfCellWithinFatherCell = event.getRelativePositionToFather();
+}
+
+
+peano4::datamanagement::FaceMarker::FaceMarker(
+  const FaceMarker&  marker,
+  int                selectFace
+):
+  FaceMarker(marker) {
+  select(selectFace);
 }
 
 
@@ -131,6 +141,14 @@ bool peano4::datamanagement::FaceMarker::isLocal(int i) const {
 
 bool peano4::datamanagement::FaceMarker::isLocal() const {
   return isLocal(_select);
+}
+
+bool peano4::datamanagement::FaceMarker::isAdjacentToParallelBoundary() const {
+  return isAdjacentToParallelBoundary(_select);
+}
+
+bool peano4::datamanagement::FaceMarker::isAdjacentToParallelBoundary(int i) const {
+  return _isAdjacentToParallelBoundary[i];
 }
 
 

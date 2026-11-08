@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 
 #include "tarch/Assertions.h"
 #include "tarch/mpi/Lock.h"
@@ -47,6 +48,7 @@ double tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::getL
   for (auto line : lines) {
     if (line.find(Token_TimeStamp) != std::string::npos) {
       std::string timeStampToken = line.substr(line.find(Token_TimeStamp) + Token_TimeStamp.length());
+      #if defined(__cpp_exceptions)
       try {
         double timeStamp = std::stod(timeStampToken);
         result           = std::max(result, timeStamp);
@@ -56,6 +58,10 @@ double tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::getL
         );
         result = std::numeric_limits<double>::max();
       }
+      #else
+      double timeStamp = std::stod(timeStampToken);
+      result           = std::max(result, timeStamp);
+      #endif
     }
   }
 
@@ -133,7 +139,8 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
   const std::string& fileName,
   const std::string& indexFileName,
   IndexFileMode      appendToIndexFile,
-  double             timeStamp
+  double             timeStamp,
+  int                precision
 ):
   _fileName(fileName),
   _indexFile(indexFileName),
@@ -149,9 +156,11 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
       "filename should not end with .peano-patch-file as routine adds extension automatically. Chosen filename prefix="
         << fileName
     );
-  } else {
+  }
+  else {
     _fileName += ".peano-patch-file";
   }
+
   if (indexFileName.rfind(".peano-patch-file") != std::string::npos) {
     logWarning(
       "writeToFile()",
@@ -159,7 +168,8 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
       "prefix="
         << indexFileName
     );
-  } else {
+  }
+  else {
     _indexFile += ".peano-patch-file";
   }
 
@@ -168,50 +178,165 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
   const double DefaultTimeStampPrecision = 1e-5;
 
   switch (appendToIndexFile) {
-  case IndexFileMode::CreateNew:
-    createEmptyIndexFile();
-    addNewFileToCurrentDataSetInIndexFile(_fileName);
-    break;
-  case IndexFileMode::NoIndexFile:
-    break;
-  case IndexFileMode::AppendNewData:
-    if (not std::filesystem::exists(_indexFile)) {
-      logInfo("PeanoTextPatchFileWriter(...)", "no index file " << _indexFile << " found. Create new one");
+    case IndexFileMode::CreateNew:
       createEmptyIndexFile();
-    } else if (tarch::la::smaller(
-                 timeStamp,
-                 getLatestTimeStepInIndexFile(),
-                 tarch::la::relativeEpsNormaledAgainstValueGreaterOne(
-                   timeStamp, getLatestTimeStepInIndexFile(), DefaultTimeStampPrecision
-                 )
-               )) {
-      logWarning(
-        "PeanoTextPatchFileWriter(...)",
-        "there is an index file "
-          << _indexFile << " with data for time stamp " << getLatestTimeStepInIndexFile()
-          << ". Will be overwritten as we dump data for time " << timeStamp
-      );
-      createEmptyIndexFile();
-    }
+      addNewFileToCurrentDataSetInIndexFile(_fileName);
+      break;
+    case IndexFileMode::NoIndexFile:
+      break;
+    case IndexFileMode::AppendNewData:
+      {
+        // Only ever used to decide whether a *pre-existing* index file is
+        // stale (see the "else if" below) - deliberately not reused for the
+        // newDatasetBelongsToSnapshotBiggerThanLatestWrite decision further
+        // down; see the comment there for why.
+        const bool newDatasetBelongsToSnapshotSmallerThanLatestWrite =
+          tarch::la::smaller(
+            timeStamp,
+            getLatestTimeStepInIndexFile(),
+            tarch::la::relativeEpsNormalisedAgainstValueGreaterOne(
+              timeStamp, getLatestTimeStepInIndexFile(), DefaultTimeStampPrecision
+            )
+          );
 
-    createBackupOfMetaFile();
-    if (tarch::la::smaller(getLatestTimeStepInIndexFile(), timeStamp, DefaultTimeStampPrecision)) {
-      logDebug(
-        "PeanoTextPatchFileWriter(...)",
-        "create new dataset for time stamp "
-          << timeStamp << " linking to " << _fileName << " as last time stamp had been " << getLatestTimeStepInIndexFile()
-      );
-      addNewDatasetToIndexFile(timeStamp);
-    }
-    addNewFileToCurrentDataSetInIndexFile(_fileName);
-    break;
+        if (not std::filesystem::exists(_indexFile)) {
+          logInfo("PeanoTextPatchFileWriter(...)", "no index file " << _indexFile << " found. Create new one");
+          createEmptyIndexFile();
+        }
+        else if (newDatasetBelongsToSnapshotSmallerThanLatestWrite) {
+          logWarning(
+            "PeanoTextPatchFileWriter(...)",
+            "there is an index file "
+              << _indexFile << " with data for time stamp " << getLatestTimeStepInIndexFile()
+              << ". Will be overwritten as we dump data for time " << timeStamp
+          );
+          createEmptyIndexFile();
+        }
+
+        createBackupOfMetaFile();
+
+        // Evaluated only now, after the index file has potentially just been
+        // (re)created above: createEmptyIndexFile() itself already adds a
+        // first dataset entry for timeStamp 0.0, so querying
+        // getLatestTimeStepInIndexFile() here (rather than before the block
+        // above ran) correctly picks that entry up. Evaluating this earlier,
+        // alongside newDatasetBelongsToSnapshotSmallerThanLatestWrite above,
+        // used to compare timeStamp against a stale "no data yet" sentinel
+        // whenever the index file did not exist before this call, which made
+        // this condition spuriously true on the very first writer of a run
+        // and opened a second, empty dataset section as a result.
+        const bool newDatasetBelongsToSnapshotBiggerThanLatestWrite =
+          tarch::la::greater(
+            timeStamp,
+            getLatestTimeStepInIndexFile(),
+            tarch::la::relativeEpsNormalisedAgainstValueGreaterOne(
+              timeStamp, getLatestTimeStepInIndexFile(), DefaultTimeStampPrecision
+            )
+          );
+
+        if (newDatasetBelongsToSnapshotBiggerThanLatestWrite) {
+          logDebug(
+            "PeanoTextPatchFileWriter(...)",
+            "create new dataset for time stamp "
+              << timeStamp << " linking to " << _fileName << " as last time stamp had been " << getLatestTimeStepInIndexFile()
+          );
+          addNewDatasetToIndexFile(timeStamp);
+        }
+        addNewFileToCurrentDataSetInIndexFile(_fileName);
+      }
+      break;
   }
   logDebug("PeanoTextPatchFileWriter(...)", "index file is ready");
 
-  _snapshotFileOut << std::scientific;
+  _snapshotFileOut << std::scientific << std::setprecision(precision);
 }
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::~PeanoTextPatchFileWriter() {}
+
+int tarch::plotter::griddata::blockstructured::restartPreprocess(const std::string fileName, double restartTime){
+  //todo, remove the snapshot recording at and after the restart time, also return the counter
+  std::ifstream infile(fileName+".peano-patch-file");
+  std::string line;
+  int targetLine = -1;
+  int currentLine = 0;
+  std::string tempNumber="0";
+  int maxFileCount=0;
+
+  while (std::getline(infile, line)){
+    std::istringstream iss(line);
+    std::string token;
+
+    //step1: find the counter for this line if it is a data include entry
+    if (line.find("  include") == 0) { 
+
+      iss>>token; iss>>token; //take the data string
+      bool inNumber=false;
+      tempNumber="";
+
+      //std::cout<<token<<std::endl;
+      int pos=token.find(fileName);
+      token.erase(pos, fileName.length());
+      for (char ch:token){
+        if (std::isdigit(ch)){tempNumber+=ch; inNumber=true;}
+        else if (inNumber){break;}
+      }
+      maxFileCount=std::max(maxFileCount,std::stoi(tempNumber));
+    }
+
+    //step2: check if the this line corresponding the restart time, if so record its line number
+    bool isCurrentTime=false;
+    std::istringstream iss2(line);
+    while (iss2>>token){
+      double tempTime;
+      #if defined(__cpp_exceptions)
+      try {
+        tempTime=std::stod(token);
+        if ( (tarch::la::equals(tempTime,restartTime,1e-5) or (tempTime>restartTime)) and currentLine>5){
+          //std::cout<<"target time is "<<restartTime <<" and current time is " << tempTime << std::endl;
+          isCurrentTime=true; break;
+        }
+      } catch (...){}
+      #else
+      tempTime=std::stod(token);
+      if ( (tarch::la::equals(tempTime,restartTime,1e-5) or (tempTime>restartTime)) and currentLine>5) {
+        isCurrentTime=true;
+        break;
+      }
+      #endif
+    }
+
+    //find the target timestamp, break from the loop
+    if (isCurrentTime){
+      targetLine=currentLine; break;
+    }
+    currentLine++;
+  }
+  //std::cout<<"target line is "<<targetLine<<std::endl;
+  //step3: create a new file and copy the snapshot before the target timestamp, then replace the original one
+  //std::cout<<targetLine<<std::endl;
+  if (targetLine != -1){
+    std::ifstream infile2(fileName+".peano-patch-file");
+    //std::filesystem::path filePath(fileName);
+    std::ofstream tempFile(fileName+"-temp.txt");
+    currentLine=0;
+
+    while (std::getline(infile2, line)){
+      if (currentLine >= targetLine-2){break;}
+      tempFile << line << "\n";
+      currentLine++;
+    }
+
+    infile2.close();
+    tempFile.close();
+    std::remove((fileName+".peano-patch-file").c_str());
+    std::rename((fileName+"-temp.txt").c_str(), (fileName+".peano-patch-file").c_str());
+  }
+
+  return maxFileCount+1;
+}
+
+
+
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeMapping(
   int totalEntries, double* values

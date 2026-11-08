@@ -1,0 +1,116 @@
+# This file is part of the Peano project. For conditions of distribution and
+# use, please see the copyright notice at www.peano-framework.org
+cmake_minimum_required(VERSION 3.21)
+
+{% if CXX is defined and CXX != "" -%}
+set(CMAKE_CXX_COMPILER {{CXX}})
+{% endif -%}
+
+{% if FC is defined and FC != "" -%}
+set(CMAKE_Fortran_COMPILER {{FC}})
+{% endif -%}
+
+project({{EXECUTABLENAME}}
+  LANGUAGES
+    C
+    CXX
+{% if FC is defined and FC != "" -%}
+    Fortran
+{% endif -%}
+)
+
+file(WRITE "${PROJECT_BINARY_DIR}/.gitignore" "*")
+
+list(APPEND CMAKE_PREFIX_PATH {{CMAKE_BUILD_DIR}})
+find_package(Peano CONFIG REQUIRED)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+list(APPEND H_HEADERS {% for item in H_HEADERS -%} {{item+" "}} {%- endfor %})
+list(APPEND CXX_SOURCES {% for item in CXX_SOURCES -%} {{item+" "}} {%- endfor %})
+list(APPEND FORTRAN_SOURCES {% for item in FORTRAN_SOURCES -%} {{item+" "}} {%- endfor %})
+
+list(APPEND GENERATED_H_HEADERS {% for item in GENERATED_H_HEADERS -%} {{item+" "}} {%- endfor %})
+list(APPEND GENERATED_CXX_SOURCES {% for item in GENERATED_CXX_SOURCES -%} {{item+" "}} {%- endfor %})
+list(APPEND GENERATED_FORTRAN_SOURCES {% for item in GENERATED_FORTRAN_SOURCES -%} {{item+" "}} {%- endfor %})
+
+list(APPEND GENERATED_LDFLAGS
+{% for flag in LDFLAGS.split() if flag.startswith('-l') or flag.startswith('-L') %}
+  {{ flag }}
+{% endfor %}
+)
+
+list(APPEND GENERATED_CXXFLAGS
+{% for flag in CXXFLAGS.split() if flag.startswith('-D') %}
+  {{ flag }}
+{% endfor %}
+)
+
+list(APPEND GENERATED_INCLUDE_DIRS
+{% for flag in CXXFLAGS.split() if flag.startswith('-I') %}
+  ${CMAKE_CURRENT_SOURCE_DIR}/{{ flag[2:] }}
+{% endfor %}
+)
+
+list(APPEND SOURCES
+  ${H_HEADERS}
+  ${GENERATED_H_HEADERS}
+  ${CXX_SOURCES}
+  ${GENERATED_CXX_SOURCES}
+  ${FORTRAN_SOURCES}
+  ${GENERATED_FORTRAN_SOURCES}
+)
+
+string(TOLOWER "{{MODE}}" mode_lower)
+
+add_executable({{EXECUTABLENAME}})
+target_sources({{EXECUTABLENAME}} PRIVATE ${SOURCES})
+target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::PeanoOptions ${GENERATED_LDFLAGS})
+target_include_directories({{EXECUTABLENAME}} PRIVATE ${CMAKE_SOURCE_DIR} ${GENERATED_INCLUDE_DIRS})
+target_compile_definitions({{EXECUTABLENAME}} PRIVATE ${GENERATED_CXXFLAGS})
+
+{% for lib in LIBS.split() if lib.startswith('-L') %}
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE {{ lib[2:] }})
+{% endfor %}
+
+target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::Peano4Core{{DIM}}d_${mode_lower})
+
+# Link against additional extension targets, if they exist.
+if(TARGET Peano::ToolboxLoadBalancing{{DIM}}d_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ToolboxLoadBalancing{{DIM}}d_${mode_lower})
+endif()
+
+if(TARGET Peano::ToolboxBlockStructured{{DIM}}d_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ToolboxBlockStructured{{DIM}}d_${mode_lower})
+endif()
+
+if(TARGET Peano::ToolboxParticles{{DIM}}d_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ToolboxParticles{{DIM}}d_${mode_lower})
+endif()
+
+if(TARGET Peano::ToolboxFiniteElements{{DIM}}d_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ToolboxFiniteElements{{DIM}}d_${mode_lower})
+endif()
+
+if(TARGET Peano::ToolboxCurvi_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ToolboxCurvi_${mode_lower})
+endif()
+
+# ExaGRyPE builds on ExaHyPE 2, so it comes first in the link order.
+if(TARGET Peano::ExaGRyPECore{{DIM}}d_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ExaGRyPECore{{DIM}}d_${mode_lower})
+endif()
+
+if(TARGET Peano::ExaHyPE2Core{{DIM}}d_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ExaHyPE2Core{{DIM}}d_${mode_lower})
+endif()
+
+if(TARGET Peano::Multigrid{{DIM}}d_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::Multigrid{{DIM}}d_${mode_lower})
+endif()
+
+if(TARGET Peano::ExaPartyCore{{DIM}}d_${mode_lower})
+  target_link_libraries({{EXECUTABLENAME}} PRIVATE Peano::ExaPartyCore{{DIM}}d_${mode_lower})
+endif()

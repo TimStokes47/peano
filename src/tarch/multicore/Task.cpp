@@ -1,0 +1,100 @@
+#include "Task.h"
+
+#include <queue>
+#include <set>
+#include <thread>
+
+#include "BooleanSemaphore.h"
+#include "config.h"
+#include "Core.h"
+#include "Lock.h"
+#include "multicore.h"
+#include "tarch/Assertions.h"
+#include "tarch/services/ServiceRepository.h"
+
+#ifdef UseSmartMPI
+#include "smartmpi.h"
+#endif
+
+bool operator<(const tarch::multicore::Task& lhs, const tarch::multicore::Task& rhs) { return lhs.getPriority() < rhs.getPriority(); }
+
+bool tarch::multicore::TaskComparison::operator()(const Task& lhs, const Task& rhs) const { return lhs < rhs; }
+
+bool tarch::multicore::TaskComparison::operator()(Task* lhs, Task* rhs) const { return *lhs < *rhs; }
+
+tarch::multicore::Task::Task(int taskType, int priority):
+  _taskType(taskType),
+  _priority(priority) {
+  assertion2(priority >= 0, taskType, priority);
+}
+
+bool tarch::multicore::Task::canFuse() const { return _taskType != DontFuse; }
+
+int tarch::multicore::Task::getPriority() const { return _priority; }
+
+void tarch::multicore::Task::setPriority(int priority) {
+  assertion3(priority >= 0, _taskType, _priority, priority);
+  _priority = priority;
+}
+
+int tarch::multicore::Task::getTaskType() const { return _taskType; }
+
+void tarch::multicore::Task::fuse(const std::vector<Task*>& otherTasks, int /*device*/) {
+  assertion(canFuse());
+  for (auto pp : otherTasks) {
+    tarch::multicore::Task* currentTask = pp;
+    currentTask->run();
+  }
+  run();
+}
+
+std::string tarch::multicore::Task::toString() const {
+  return "<no-description-available>";
+}
+
+tarch::multicore::TaskWithCopyOfFunctor::TaskWithCopyOfFunctor(
+    int taskType,
+    int priority,
+    const std::function<void()>& taskFunctor
+    #if PeanoDebug>0
+    , const std::string&           taskDescription
+    #endif
+  ):
+  Task(taskType, priority),
+  _taskFunctor(taskFunctor)
+  #if PeanoDebug>0
+  , _taskDescription(taskDescription)
+  #endif
+{}
+
+void tarch::multicore::TaskWithCopyOfFunctor::run() {
+  _taskFunctor();
+}
+
+std::string tarch::multicore::TaskWithCopyOfFunctor::toString() const {
+  #if PeanoDebug>0
+  return _taskDescription;
+  #else
+  return "";
+  #endif
+}
+
+tarch::multicore::TaskWithoutCopyOfFunctor::TaskWithoutCopyOfFunctor(int taskType, int priority, std::function<void()>& taskFunctor):
+  Task(taskType, priority),
+  _taskFunctor(taskFunctor) {
+}
+
+void tarch::multicore::TaskWithoutCopyOfFunctor::run() {
+  _taskFunctor();
+}
+
+tarch::multicore::EmptyTask::EmptyTask(int priority):
+  Task(Task::DontFuse, priority) {}
+
+void tarch::multicore::EmptyTask::run() {
+  return;
+}
+
+std::string tarch::multicore::EmptyTask::toString() const {
+  return "empty";
+}

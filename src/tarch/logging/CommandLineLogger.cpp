@@ -194,6 +194,8 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
 
 
 void tarch::logging::CommandLineLogger::debug(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
+  tarch::multicore::Lock lockCout( _semaphore );
+
   #if !defined(PeanoDebug) || PeanoDebug<1
   assertion(false);
   #endif
@@ -203,19 +205,19 @@ void tarch::logging::CommandLineLogger::debug(long int timestampNanoseconds, int
     timestampNanoseconds, rank, threadId, trace, message
   );
 
-  tarch::multicore::Lock lockCout( _semaphore );
   out() << outputMessage;
   out().flush();
 }
 
 
 void tarch::logging::CommandLineLogger::info(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
+  tarch::multicore::Lock lockCout( _semaphore );
+
   std::string outputMessage = constructMessageString(
     LogFilter::FilterListEntry::TargetInfo,
     timestampNanoseconds, rank, threadId, trace, message
   );
 
-  tarch::multicore::Lock lockCout( _semaphore );
   out() << outputMessage;
   if (_outputStream!=nullptr) {
     std::cout << outputMessage;
@@ -224,34 +226,36 @@ void tarch::logging::CommandLineLogger::info(long int timestampNanoseconds, int 
 
 
 void tarch::logging::CommandLineLogger::warning(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
-    std::string outputMessage = constructMessageString(
-      LogFilter::FilterListEntry::TargetWarning,
-      timestampNanoseconds, rank, threadId, trace, message
-    );
+  tarch::multicore::Lock lockCout( _semaphore );
 
-    tarch::multicore::Lock lockCout( _semaphore );
-    if (_outputStream!=nullptr) {
-      out() << outputMessage;
-      out().flush();
-    }
-    std::cerr << outputMessage;
-    std::cerr.flush();
+  std::string outputMessage = constructMessageString(
+    LogFilter::FilterListEntry::TargetWarning,
+    timestampNanoseconds, rank, threadId, trace, message
+  );
+
+  if (_outputStream!=nullptr) {
+    out() << outputMessage;
+    out().flush();
+  }
+  std::cerr << outputMessage;
+  std::cerr.flush();
 }
 
 
 void tarch::logging::CommandLineLogger::error(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
-    std::string outputMessage = constructMessageString(
-      "error",
-	  timestampNanoseconds, rank, threadId, trace, message
-    );
+  tarch::multicore::Lock lockCout( _semaphore );
 
-    tarch::multicore::Lock lockCout( _semaphore );
-    if (_outputStream!=nullptr) {
-      out() << outputMessage;
-      out().flush();
-    }
-    std::cerr << outputMessage;
-    std::cerr.flush();
+  std::string outputMessage = constructMessageString(
+    "error",
+    timestampNanoseconds, rank, threadId, trace, message
+  );
+
+  if (_outputStream!=nullptr) {
+    out() << outputMessage;
+    out().flush();
+  }
+  std::cerr << outputMessage;
+  std::cerr.flush();
 
   if (_quitOnError) {
     tarch::mpi::Rank::abort(-1);
@@ -260,30 +264,32 @@ void tarch::logging::CommandLineLogger::error(long int timestampNanoseconds, int
 
 
 void tarch::logging::CommandLineLogger::traceIn(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
-    std::string outputMessage = constructMessageString(
-      "trace",
-	  timestampNanoseconds, rank, threadId, trace, message
-    );
+  tarch::multicore::Lock lockCout( _semaphore );
 
-    tarch::multicore::Lock lockCout( _semaphore );
-    out() << outputMessage;
-    out().flush();
+  std::string outputMessage = constructMessageString(
+    "trace",
+    timestampNanoseconds, rank, threadId, trace, message
+  );
+
+  out() << outputMessage;
+  out().flush();
 }
 
 
 void tarch::logging::CommandLineLogger::traceOut(long int timestampNanoseconds, int rank, int threadId, const std::string& trace, const std::string& message) {
-    std::string outputMessage = constructMessageString(
-      "trace",
-      timestampNanoseconds, rank, threadId, trace, message
-    );
+  tarch::multicore::Lock lockCout( _semaphore );
 
-    tarch::multicore::Lock lockCout( _semaphore );
-    out() << outputMessage;
-    out().flush();
+  std::string outputMessage = constructMessageString(
+    "trace",
+    timestampNanoseconds, rank, threadId, trace, message
+  );
+
+  out() << outputMessage;
+  out().flush();
 }
 
 
-void tarch::logging::CommandLineLogger::indent( [[maybe_unused]] bool indent, [[maybe_unused]] const std::string& trace, [[maybe_unused]] const std::string& message ) {
+void tarch::logging::CommandLineLogger::indent( [[maybe_unused]] bool indent, const std::string& trace ) {
   #if PeanoDebug>=1
   tarch::multicore::Lock lockCout( _semaphore );
   if (indent) {
@@ -293,24 +299,22 @@ void tarch::logging::CommandLineLogger::indent( [[maybe_unused]] bool indent, [[
     }
   } else {
     if ( tarch::multicore::Core::getInstance().getNumberOfThreads()<=1 ) {
-      assertion3(
+      assertion2(
         not _indentTraces.empty(),
         trace,
-        message,
         indent
       );
-      assertionEquals2(
+      assertionEquals1(
         _indentTraces.top(),
         trace,
-        message,
         indent
       );
       _indentTraces.pop();
-      assertion5(
+      assertion4(
         _indent >= NumberOfIndentSpaces,
         _indent, NumberOfIndentSpaces,
         "more logTraceOut calls than logTraceIn calls invoked before",
-        trace, message
+        trace
       );
     }
     _indent-=NumberOfIndentSpaces;

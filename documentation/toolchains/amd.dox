@@ -1,0 +1,30 @@
+/**
+
+ @page documentation_toolchains_amd AMD's ROCm stack
+
+<div style="background-color: #cfc ; padding: 10px; border: 1px solid green;"> 
+You will find examples how this toolchain is used on particular machines on the page @ref page_machines.
+</div>
+
+
+For the AMD toolchain we need to load either ROCm or AOMP. Both modules
+should have AMD's version of Clang. With the AMD toolchain we use AMD's
+modified Clang. We again need to point `CXX` and `CC` to the AMDClang
+compiler.
+
+### OpenMP and OpenMP offloading
+
+For the configuration with OpenMP GPU offloading, we again specify
+`--with-gpu=omp` to make Peano GPU aware. Furthermore, we need to add AMD
+specific offloading instructions:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CC=amdclang CXX=amdclang++ ./configure --with-multithreading=omp --with-gpu=omp CFLAGS="-O3 -W -Wall -Wno-attributes -fopenmp --offload-arch=gfxXXX -D__AMDGPU__" CXXFLAGS="-std=c++17 -O3 -W -Wall -Wno-attributes -fopenmp -lstdc++fs --offload-arch=gfxXXX -D__AMDGPU__" LDFLAGS="-march=native -mtune=native -lstdc++fs -fopenmp --offload-arch=gfxXXX"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+where XXX has to be replaced by the actual compute capability of the device.
+
+Note: We define the preprocessor flag __AMDGPU__ to allow Peano for compiling patches that are needed only for the AMD toolchain.
+
+ */
+ 

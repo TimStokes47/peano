@@ -38,7 +38,7 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
       GridConstruction,
       GridInitialisation,
       LimiterStatusSpreadingToNeighbours,
-      TimeStepping,
+      TimeStep,
       Plotting,
       PlottingAfterGridInitialisation,
       Suspended
@@ -51,8 +51,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
 
     SolverState  getSolverState() const;
 
-    double getMinTimeStamp(bool ofCurrentlyRunningGridSweep=false) const final;
-    double getMaxTimeStamp(bool ofCurrentlyRunningGridSweep=false) const final;
+    double getMinTimeStamp() const final;
+    double getMaxTimeStamp() const final;
     double getMinTimeStepSize() const final;
     double getMaxTimeStepSize() const final;
 

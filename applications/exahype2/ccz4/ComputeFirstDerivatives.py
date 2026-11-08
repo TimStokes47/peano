@@ -1,14 +1,19 @@
 #
 # New action set for second order CCZ4 formualtion
 #
-import peano4
+import peano4.api
 import jinja2
 
 from exahype2.solvers.ButcherTableau import ButcherTableau
 from exahype2.solvers.rkfd.OneSweepPerRungeKuttaStep import ReconstructLinearCombination
 
 
-class ComputeFirstDerivativesFV(peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor):
+#
+# Doxygen struggles to parse Python files with C++ code snippets. Therefore, 
+# this file is explicitly excluded from documentation in the Doxyfile.
+#
+
+class ComputeFirstDerivativesFV(toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor):
     """!
     
     Explicit reconstruction of derivatives for Finite Volumes
@@ -52,8 +57,8 @@ class ComputeFirstDerivativesFV(peano4.toolbox.blockstructured.ReconstructPatchA
 
         
 
-class ComputeFirstDerivativesFD4RK(peano4.toolbox.blockstructured.ReconstructPatchAndApplyFunctor):
-    """!
+class ComputeFirstDerivativesFD4RK(toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor):
+    r"""!
     
     Explicit reconstruction of first derivatives for FD4 discretisation
     

@@ -6,12 +6,13 @@
 
 #include "tarch/services/Service.h"
 
-#include "tarch/multicore/Tasks.h"
+#include "tarch/multicore/Task.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 
 #include "peano4/maps/maps.h"
 #include "peano4/grid/grid.h"
+#include "peano4/grid/GridStatistics.h"
 
 #include "TreeManagementMessage.h"
 
@@ -66,7 +67,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
          * I create the copy of the observer, run the traversal on my local
          * tree _spacetree and finally destroy the local observer copy.
          */
-        virtual bool run() override;
+        virtual void run() override;
     };
 
   public:
@@ -281,6 +282,14 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * not relevant for inter-rank communication as we know that the buffer won't
      * be deleted before the data has not been sent out - which is only once for the
      * whole cycle.
+     *
+     * @param master: Integer >=0
+     *   This is the master tree involved in this split, i.e. the tree that wants to
+     *   deploy a subgrid to a worker. The number is a tree number and not a rank
+     *   number.
+     *
+     * @param worker: Integer >=0
+     *   This is the target tree number.
      */
     template <class Container>
     static void streamDataFromSplittingTreeToNewTree( Container& stackContainer, int master, int worker );
@@ -326,6 +335,23 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * These are the local spacetrees.
      */
     std::list< peano4::grid::Spacetree >  _spacetrees;
+
+    /**
+     * Grid statistics over all trees on all ranks
+     *
+     * Set by traverse() at the very end of each traversal. See
+     * getGridStatistics().
+     */
+    peano4::grid::GridStatistics          _gridStatistics;
+
+    /**
+     * Sum up the statistics of all local trees
+     *
+     * Trees in the state NewFromSplit are skipped, as their master still
+     * holds the cells. Without any local tree, the result holds no cells and
+     * the maximal mesh size.
+     */
+    peano4::grid::GridStatistics  sumUpLocalGridStatistics() const;
 
     /**
      * The state identifies what the set is doing right now. The flag is for example
@@ -479,8 +505,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     /**
      * Whenever we join two partitions, we have to stream data from the worker
-     * to the master. In principle, I could omit this, as I realise a ``only
-     * degenerated trees may join'' policy. However, it can happen that a tree
+     * to the master. In principle, I could omit this, as I realise a "only
+     * degenerated trees may join" policy. However, it can happen that a tree
      * joins while other trees split or have split or join as well. While we
      * run through the joining phase, these other ranks have sent their updated
      * info to the worker that is about to join. The master that will hold the
@@ -503,7 +529,10 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     );
 
     /**
-     * <h2> Merge process </h2>
+     * Clean up empty trees
+     *
+     *
+     * ## Merge process
      *
      * We make the worker first of all decide whether to merge or not. A
      * worker has the control/knowledge whether to join or not. When a rank
@@ -654,7 +683,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     /**
      * Invoke traverse on all spacetrees in parallel.
      *
-     * <h2> Sequence </h2>
+     * ## Sequence and barriers
      *
      * It is important that I don't answer to spacetree request messages while I am
      * running through the spacetree set. Some of these request messages add further
@@ -685,10 +714,31 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     void traverse(peano4::grid::TraversalObserver& observer);
 
     /**
-     * Return statistics object for primary spacetree.
+     * Return the grid statistics of the whole mesh
+     *
+     * The statistics combine all trees on all ranks, i.e. every rank gets the
+     * same, global view. At the end of each traverse(), the set sums up the
+     * statistics of its local trees and then all-reduces the outcome over all
+     * ranks via tarch::mpi::Rank::allReduce(), using
+     * peano4::grid::GridStatistics' operator+() as reduction operator. The
+     * result therefore always refers to the most recent traversal. Before the
+     * first traversal, the routine returns the statistics of the local trees
+     * as set up by init().
+     *
+     * As every rank runs traverse() at the same time, the reduction is safe,
+     * and predicates such as peano4::grid::isGridStationary() yield the same
+     * result on all ranks.
+     *
+     * @see getGridStatistics(int) for the statistics of one local tree.
      */
     peano4::grid::GridStatistics  getGridStatistics() const;
 
+    /**
+     * Return the statistics of one local tree
+     *
+     * Different to getGridStatistics(), these statistics are not reduced:
+     * they describe the tree's own cells and vertices only.
+     */
     peano4::grid::GridStatistics  getGridStatistics(int treeId) const;
 
     /**
@@ -705,6 +755,17 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * discussed in @ref peano_domain_decomposition "Peano's generic domain decomposition" discussion.
      *
      *
+     * ## Reasons for unsuccessful splits
+     *
+     * Calling split() is an instruction that Peano might want to ignore. It
+     * notably ignores the split instruction if maySplit() on the underlying
+     * tree returns false.
+     *
+     * It also fails to split (and consequently returns false) if the routine
+     * peano4::parallel::Node::getInstance().reserveId() is unable to create
+     * a new spacetree id.
+     *
+     *
      * @param treeId  Id of tree that should split, i.e. give away cells to a
      *   new tree
      * @param cells   Number of cells to deploy to a new tree. This count refers
@@ -712,6 +773,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      *   of the tree unfold in the next step, the new @f$ 3^d @f$ children do
      *   count only with one towards this quota.
      * @param targetRank  Rank which should host the new tree.
+     *
+     * @return Split had been successful
      */
     bool split(int treeId, const peano4::SplitInstruction& instruction, int targetRank);
 

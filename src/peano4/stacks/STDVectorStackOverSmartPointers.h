@@ -14,7 +14,7 @@
 #include "tarch/logging/Log.h"
 #include "tarch/mpi/IntegerMessage.h"
 #include "tarch/mpi/Rank.h"
-#include "tarch/multicore/Tasks.h"
+#include "tarch/multicore/Task.h"
 
 namespace peano4 {
   namespace stacks {

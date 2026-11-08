@@ -23,7 +23,7 @@ from numpy import number
 
 
 class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
-  """
+  r"""
 
   Lagrange Basis with a diagonal mass matrix
   
@@ -69,6 +69,8 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
   
   def __init__(self,polynomial_order):
     super(LagrangeBasisWithDiagonalMassMatrix,self).__init__(polynomial_order)
+    self.stiffness_matrix = None
+    self.mass_matrix = None
       
       
   def __str__(self):
@@ -80,7 +82,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
   __repr__ = __str__
   
 
-  QuadraturePoints1dDocumentation = """
+  QuadraturePoints1dDocumentation = r"""
   The quadrature points are an array of size [p+1] if p is the order of the 
   chosen polyomial. The double array defines the spacing of the quadrature points 
   over the unit interval. See the helper routine exahype2::dg::getQuadraturePoint()
@@ -92,7 +94,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
 """
   
 
-  QuadratureWeights1dDocumentation = """
+  QuadratureWeights1dDocumentation = r"""
   The quadrature weights are an array of size [p+1] if p is the order of the 
   chosen polyomial. The double array defines the integral over the polynomial
   over the unit interval. We use Lagrangian bases here, i.e. only one polynomial
@@ -106,7 +108,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
 """
 
 
-  MassMatrix1dDocumentation = """
+  MassMatrix1dDocumentation = r"""
   Computes the (reference) element mass matrix' diagonal. The mass matrix is defined
   via
 
@@ -137,7 +139,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
 """
     
      
-  StiffnessOperator1dDocumentation = """
+  StiffnessOperator1dDocumentation = r"""
   The stiffness operator is a [p+1]x[p+1] matrix which is constructed in
   __compute_stiffness_operator().
 
@@ -167,7 +169,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
 """
 
     
-  BasisFunctionValuesLeft1dDocumentation = """
+  BasisFunctionValuesLeft1dDocumentation = r"""
   This is a vector of p+1 entries which tells you for a 1d interval
   what the function on the left side is. Assume all Lagrange polynomials
   are defined over the unit interval. The first entry in this matrix 
@@ -184,7 +186,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
   involved. We take the real 1d polyomial from the shape function.
 """
     
-  DerivativeOperator1dDocumentation = """
+  DerivativeOperator1dDocumentation = r"""
     Matrix which is given the p+1 weights of the shape function
     along a 1d line. It then returns the p+1 gradients at the integration 
     points.
@@ -195,14 +197,14 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
     polynomial. 
 """    
 
-  InterpolationMatrix1dDocumentation = """
+  InterpolationMatrix1dDocumentation = r"""
     This is essentially a @f$ 3 \cdot (order+1)^d-1 @f$ matrix split up 
     into a three-dimensional tensor. The documentation/content of this
     tensor can be found on the page about DG AMR which is held in exahype
     within the file exahype2/dg/Riemann.h.
 """      
 
-  RestrictionMatrix1dDocumentation = """
+  RestrictionMatrix1dDocumentation = r"""
     This is essentially a @f$ 3 \cdot (order+1)^d-1 @f$ matrix split up 
     into a three-dimensional tensor. The documentation/content of this
     tensor can be found on the page about DG AMR which is held in exahype
@@ -210,7 +212,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
 """      
     
   def __compute_barycentric_weights(self):
-    """
+    r"""
     
     See Eq. 3.2 in
     https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
@@ -227,24 +229,26 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
      
      
   def __compute_mass_matrix_diagonal(self):
-    """
+    r"""
     
     Reference mass matrix. See class documentation. I moved the docu there,
     as doxygen does not extract documentation from private routines in Python.
          
     """
-    mass_matrix = [ [0.0 for _ in range(0,self.dofs_per_axis)] for _ in range(0,self.dofs_per_axis) ]
-    
-    for row in range(0,self.dofs_per_axis):
-      for col in range(0,self.dofs_per_axis):
-        ans,err = quad(lambda x: self.value1d(x,row) * self.value1d(x,col),0,1)
-        mass_matrix[row][col] = ans
+    if self.mass_matrix is None:
+      self.mass_matrix = [ [0.0 for _ in range(0,self.dofs_per_axis)] for _ in range(0,self.dofs_per_axis) ]
+      
+      for row in range(0,self.dofs_per_axis):
+        for col in range(0,self.dofs_per_axis):
+          ans,err = quad(lambda x: self.value1d(x,row) * self.value1d(x,col),0,1)
+          self.mass_matrix[row][col] = ans
 
-    return [ mass_matrix[i][i] for i in range(0,self.dofs_per_axis) ]
+    return [ self.mass_matrix[i][i] for i in range(0,self.dofs_per_axis) ]
 
 
+  stiffness_matrix = None
   def __compute_stiffness_operator(self):
-    """
+    r"""
     
     Computes the (reference) element stiffness matrix for an approximation of order self.__max_poly_order.
     
@@ -252,18 +256,19 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
       into generated C++ code.
     
     """
-    stiffness_matrix = [ [0.0 for _ in range(0,self.dofs_per_axis)] for _ in range(0,self.dofs_per_axis) ]
-    
-    for row in range(0,self.dofs_per_axis):
-      for col in range(0,self.dofs_per_axis):
-        ans,err = quad(lambda x: self.derivative1d(x,row) * self.value1d(x,col),0,1)
-        stiffness_matrix[row][col] = ans
+    if self.stiffness_matrix is None:
+      self.stiffness_matrix = [ [0.0 for _ in range(0,self.dofs_per_axis)] for _ in range(0,self.dofs_per_axis) ]
+      
+      for row in range(0,self.dofs_per_axis):
+        for col in range(0,self.dofs_per_axis):
+          ans,err = quad(lambda x: self.derivative1d(x,row) * self.value1d(x,col),0,1)
+          self.stiffness_matrix[row][col] = ans
 
-    return stiffness_matrix
+    return self.stiffness_matrix
   
 
   def __compute_interpolation_matrix(self):
-    """
+    r"""
 
     compute the interpolation matrix, which used to prepare halo layer data for fine grid points at the refinement boundary.
 
@@ -297,7 +302,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
 
 
   def __compute_restriction_matrix(self):
-    """
+    r"""
 
     compute the restriction matrix, which used to prepare halo layer data for coarse cells at the refinement boundary.
     the matrix formulation depends on the interpolation scheme.
@@ -326,7 +331,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
 
 
   def __compute_K1(self):
-    """
+    r"""
     
     @todo Not yet updated atm but seems also not to be used anywhere
     
@@ -355,7 +360,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
       
       
   def __compute_derivative_operator(self):
-    """
+    r"""
 
     @see DerivativeOperator1dDocumentation which is also used to dump documentation
       into generated C++ code.
@@ -371,7 +376,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
   
 
   def __compute_fine_grid_projector(self, j):
-    """
+    r"""
     
     @todo Definitely useful, but not used atm
     
@@ -402,7 +407,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
   
   
   def __compute_basis_function_values_left(self):
-    """
+    r"""
     
     Compute per basis function what the very left value of the polynomial would be
     
@@ -456,8 +461,9 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
     dictionary["BASIS_DECLARATIONS"] += "*/\n"
     #dictionary["BASIS_DECLARATIONS"] += "static const double QuadraturePoints1d[DGOrder+1];\n\n"
     #dictionary["BASIS_INITIALIZERS"] += "             QuadraturePoints1d{},\n".format( render_tensor_1(self.quadrature_points) )
+    dictionary["BASIS_DECLARATIONS"] += "#pragma omp declare target\n"
     dictionary["BASIS_DECLARATIONS"] += "static constexpr double QuadraturePoints1d[] = {};\n\n".format( render_tensor_1(self.quadrature_points) )
-    
+    dictionary["BASIS_DECLARATIONS"] += "#pragma omp end declare target\n"
     dictionary["BASIS_DECLARATIONS"] += "/**\n"
     dictionary["BASIS_DECLARATIONS"] += self.QuadratureWeights1dDocumentation
     dictionary["BASIS_DECLARATIONS"] += "*/\n"
@@ -527,7 +533,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
 
 
   def value1d(self,x,number):
-    """
+    r"""
     
     Return the numberth shape function's value at x
     
@@ -551,7 +557,7 @@ class LagrangeBasisWithDiagonalMassMatrix(LagrangeBasis):
 
 
   def derivative1d(self,x,number):
-    """
+    r"""
     
     Return the numberth shape function's derivative at x
     
@@ -607,7 +613,7 @@ from scipy.special import legendre
 from scipy.special import roots_sh_legendre
 
 class GaussLegendreBasis(LagrangeBasisWithDiagonalMassMatrix):
-  """
+  r"""
   
   The Gauss-Legendre Basis is by construction the only basis which 
   yields diagonal mass matrices. I rely solely on SciPy here to 
@@ -626,7 +632,7 @@ class GaussLegendreBasis(LagrangeBasisWithDiagonalMassMatrix):
   
   @property
   def quadrature_points(self):
-    """
+    r"""
     
     It seems to be a little bit weird that I have to use the polynomial
     order plus one here, but you have to read the docu to understand 
@@ -654,7 +660,7 @@ class GaussLegendreBasis(LagrangeBasisWithDiagonalMassMatrix):
   
   @property
   def quadrature_weights(self):
-    """
+    r"""
     
     It seems to be a little bit weird that I have to use the polynomial
     order plus one here, but you have to read the docu to understand 
@@ -682,7 +688,7 @@ class GaussLegendreBasis(LagrangeBasisWithDiagonalMassMatrix):
 
 
 class GaussLobattoBasisWithLumpedDiagonalBasis(LagrangeBasisWithDiagonalMassMatrix):
-  """
+  r"""
 
   The Gauss-Lobatto quadrature points do not yield a diagonal mass
   matrix. They yield a full matrix. However, there are codes which 

@@ -40,7 +40,7 @@ namespace cgmultigrid{
    *  whole marker.
    */
   template<class CGSolver>
-  void restrict(
+  void restrictToNextLevel(
     const tarch::la::Matrix< TwoPowerD, FourPowerD, double >& restrictionMatrix,
     auto& coarseGridVertices,
     auto& fineGridVertex,
@@ -83,7 +83,7 @@ namespace cgmultigrid{
   extern tarch::logging::Log  _log;
 
 } // namespace cgmultigrid
- }// namespace solvers
+} // namespace solvers
 } // namespace matrixfree
 } // namespace mghype
 

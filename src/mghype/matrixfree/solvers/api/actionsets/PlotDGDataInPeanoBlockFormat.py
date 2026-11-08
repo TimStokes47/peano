@@ -1,6 +1,6 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import jinja2
 
@@ -11,7 +11,7 @@ class PlotDGDataInPeanoBlockFormat(ActionSet):
                solver,
                variable_name,
                getter,
-               predicate_plot = "true"
+               plot_predicate = "true"
                ):
     """
     
@@ -25,7 +25,7 @@ class PlotDGDataInPeanoBlockFormat(ActionSet):
     self.d["SOLVER_NAME"]            = solver.typename()
     self.d[ "VARIABLE" ]             = variable_name
     self.d[ "GETTER" ]               = getter
-    self.d["PREDICATE_PLOT"]         = predicate_plot
+    self.d["PLOT_PREDICATE"]         = plot_predicate
 
   __Template_Constructor = """
   _writer          = nullptr;
@@ -43,7 +43,7 @@ class PlotDGDataInPeanoBlockFormat(ActionSet):
 
 
   __Template_EndTraversal = """
-  if ( {{PREDICATE_PLOT}} ) {
+  if ( {{PLOT_PREDICATE}} ) {
     assertion(_dataWriter!=nullptr);
     assertion1(_dataWriter!=nullptr,_treeNumber);
     
@@ -62,7 +62,7 @@ class PlotDGDataInPeanoBlockFormat(ActionSet):
     return ""
 
 
-  def get_body_of_getGridControlEvents(self):
+  def get_body_of_createGridControlEventsForNextTraversal(self):
     return "  return std::vector< peano4::grid::GridControlEvent >();\n" 
 
 
@@ -78,10 +78,11 @@ class PlotDGDataInPeanoBlockFormat(ActionSet):
 if (
   fineGridCell{{SOLVER_NAME}}.getType() == celldata::{{SOLVER_NAME}}::Type::Interior
   and
-  {{PREDICATE_PLOT}}
+  {{PLOT_PREDICATE}}
 ) {
+  tarch::mpi::Lock lock( _semaphore );
 
-  logTraceInWith1Argument("Plot::touchCellFirstTime", fineGridCell{{SOLVER_NAME}}.{{GETTER}}());
+  logTraceInWith1Argument("touchCellFirstTime(...)", fineGridCell{{SOLVER_NAME}}.{{GETTER}}());
   
   int patchIndex = _writer->plotPatch(
     marker.x()-0.5 * marker.h(),
@@ -100,22 +101,13 @@ if (
     currentDoF++;
   }
 
-
-
-  logTraceOut("Plot::touchCellFirstTime");
+  logTraceOut("touchCellFirstTime(...)");
 }
 """
 
-  templateTouchFaceFirstTime="""
-  if (fineGridFace{{SOLVER_NAME}}.getType()!=facedata::{{SOLVER_NAME}}::Type::Coarse)
-  {
-    logTraceInWith3Arguments("touchFaceFirstTimeOutput", marker.x(), fineGridFace{{SOLVER_NAME}}.getSolution(),fineGridFace{{SOLVER_NAME}}.getProjection());
-    logTraceOut("touchFaceFirstTimeOutput");
-  }
-"""
 
   __Template_BeginTraversal = """
-  if ({{PREDICATE_PLOT}}) {
+  if ({{PLOT_PREDICATE}}) {
     tarch::mpi::Lock lock( _semaphore );
 
     static int counter = -1;
@@ -133,14 +125,27 @@ if (
       tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::IndexFileMode::AppendNewData,
       counter
     );
-      
+
+    double spatialArrangementOfIntegrationPoints[repositories::{{SOLVER_INSTANCE}}.NodesPerCell*Dimensions];
+    int k=0;
+    dfor(i,repositories::{{SOLVER_INSTANCE}}.PolyDegree+1) {
+      for (int d=0; d<Dimensions; d++) {
+        spatialArrangementOfIntegrationPoints[k] = repositories::{{SOLVER_INSTANCE}}.getIntegrationPoint(i)(d);
+        k++;
+        assertion(k<=repositories::{{SOLVER_INSTANCE}}.NodesPerCell*repositories::{{SOLVER_INSTANCE}}.NodesPerCell*Dimensions);
+      }
+    }
+
     _dataWriter = _writer->createVertexDataWriter( 
       "{{VARIABLE}}", 
       repositories::{{SOLVER_INSTANCE}}.PolyDegree+1,  // nodes per axis                                          
       repositories::{{SOLVER_INSTANCE}}.UnknownsPerCellNode,
-      "Solution",
-      "Solution as delivered through MF Solver"
+      "Solution of {{SOLVER_NAME}}",
+      "",
+      spatialArrangementOfIntegrationPoints
     );
+
+    _dataWriter->setPrecision(16);
   }
 """
 
@@ -153,8 +158,6 @@ if (
       result = jinja2.Template( self.__Template_BeginTraversal).render(**self.d)             
     if operation_name==ActionSet.OPERATION_END_TRAVERSAL:
       result = jinja2.Template( self.__Template_EndTraversal).render(**self.d)             
-    if operation_name==ActionSet.OPERATION_TOUCH_FACE_FIRST_TIME:
-      result = jinja2.Template( self.templateTouchFaceFirstTime).render(**self.d) 
     return result
 
 

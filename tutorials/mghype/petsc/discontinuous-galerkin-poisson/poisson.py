@@ -9,7 +9,7 @@ THE NUMBER OF GAUSSIAN POINTS
 
 import os, sys
 import argparse
-import peano4
+import peano4.api
 import petsc
 from matrices import DgGenerator
 
@@ -60,11 +60,11 @@ project.add_solver( solver )
 # Configure build
 #
 if args.mode=="release":
-  build_mode = peano4.output.CompileMode.Release
+  build_mode = peano4.api.output.CompileMode.RELEASE
 if args.mode=="stats":
-  build_mode = peano4.output.CompileMode.Stats
+  build_mode = peano4.api.output.CompileMode.STATS
 if args.mode=="asserts":
-  build_mode = peano4.output.CompileMode.Asserts
+  build_mode = peano4.api.output.CompileMode.ASSERTS
 
 cube_size = 1.0
 project.set_global_simulation_parameters(

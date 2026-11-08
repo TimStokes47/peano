@@ -57,7 +57,7 @@ std::string toString( exahype2::RefinementCommand value );
  * events are called new events. After the sweep, we roll over the refinement
  * requests. We commit them. These committed events then are delivered to the
  * grid traversal automaton. finishStep() does the roll-over, the delivery
- * happens once you call getGridControlEvents() through the AMR observer.
+ * happens once you call createGridControlEventsForNextTraversal() through the AMR observer.
  *
  * Hence, the overall refinement spawns three grid traversals:
  *
@@ -98,6 +98,28 @@ class exahype2::RefinementControl {
   public:
     typedef std::list< std::pair<peano4::grid::GridControlEvent,int> >  NewEvents;
 
+    /**
+     * Erase request of one cell which knows its parent
+     *
+     * Peano erases the children of a cell only if they all ask for it.
+     * Erase requests which know their parent are therefore collected
+     * separately. The service keeps them only if all 3^d children of a
+     * parent have asked to be erased within the same mesh sweep
+     * (@see RefinementControlService::finishStep()).
+     */
+    struct SiblingEraseEvent {
+      peano4::grid::GridControlEvent        event;
+      int                                   lifetime;
+      tarch::la::Vector<Dimensions,double>  parentCentre;
+      tarch::la::Vector<Dimensions,double>  parentH;
+      /**
+       * Position of the requesting cell within its parent, linearised
+       */
+      int                                   positionWithinParent;
+    };
+
+    typedef std::list< SiblingEraseEvent >  NewSiblingEraseEvents;
+
     friend class RefinementControlService;
 
     /**
@@ -109,7 +131,7 @@ class exahype2::RefinementControl {
     virtual ~RefinementControl();
 
     /**
-     * Clears the new events
+     * Clears the new events, including the sibling erase events
      *
      * Has no affect for the committed events. This routine should only ever be
      * called by the action sets on their local refinement control assembly.
@@ -147,6 +169,29 @@ class exahype2::RefinementControl {
       int                                          lifetime
     );
 
+    /**
+     * Add a new command of a cell which knows its position within its parent
+     *
+     * Refine and keep commands are handled the same way as by the other
+     * addCommand(). An erase command is collected as SiblingEraseEvent
+     * instead: The refinement service keeps it only if all 3^d children of
+     * the cell's parent have asked to be erased within the same mesh sweep,
+     * and drops it otherwise. Peano could not realise an incomplete set of
+     * erase requests anyway, and such requests would only trigger mesh
+     * sweeps which do not change the mesh.
+     *
+     * @param relativePositionWithinFatherCell Position of the cell within its
+     *   parent, typically marker.getRelativePositionWithinFatherCell(). Each
+     *   entry is 0, 1 or 2.
+     */
+    void addCommand(
+      const tarch::la::Vector<Dimensions,double>&  x,
+      const tarch::la::Vector<Dimensions,double>&  h,
+      exahype2::RefinementCommand                  command,
+      int                                          lifetime,
+      const tarch::la::Vector<Dimensions,int>&     relativePositionWithinFatherCell
+    );
+
     std::string toString() const;
 
   private:
@@ -164,6 +209,20 @@ class exahype2::RefinementControl {
      * that a lot of inserts are done per iteration.
      */
     NewEvents    _newEvents;
+
+    /**
+     * Erase requests of cells which know their parent, @see SiblingEraseEvent
+     */
+    NewSiblingEraseEvents _newSiblingEraseEvents;
+
+    /**
+     * Construct the grid control event which erases the cell with centre x
+     * and size h
+     */
+    peano4::grid::GridControlEvent createEraseEvent(
+      const tarch::la::Vector<Dimensions,double>&  x,
+      const tarch::la::Vector<Dimensions,double>&  h
+    ) const;
 
 };
 

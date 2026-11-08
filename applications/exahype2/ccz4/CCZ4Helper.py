@@ -12,7 +12,7 @@ def get_body_of_enforceCCZ4constraint():
     int index = 0;
     for (int i=0;i<itmax;i++)
     {
-      applications::exahype2::ccz4::enforceCCZ4constraints( newQ+index );
+      exagrype::ccz4::enforceCCZ4constraints( newQ+index );
       index += {{NUMBER_OF_UNKNOWNS}} + {{NUMBER_OF_AUXILIARY_VARIABLES}};
     }
   }
@@ -23,13 +23,8 @@ def get_body_of_adm_constraints(patch_size, number_of_output_variable, so_flag):
     extra_derivative_assign="""
         ::exahype2::enumerator::AoSLexicographicEnumerator enumeratorWithAuxiliaryVariablesOnReconstructedPatch( 1, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}}, {{HALO_SIZE}}, {{NUMBER_OF_UNKNOWNS}}, {{NUMBER_OF_AUXILIARY_VARIABLES}});
         ::exahype2::enumerator::AoSLexicographicEnumerator enumeratorWithoutAuxiliaryVariables( {{RK_STEPS}}, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}}, 0, {{NUMBER_OF_UNKNOWNS}}, 0 );
-        int primaryVarsIndices[25]={ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                                      10,11,12,13,14,15,16,17,18,19,
-                                      20,21,22,53,54};
-        int auxiliaryVarsIndices[34]={23,24,25,26,27,28,29,30,31,32,
-                                        33,34,35,36,37,38,39,40,41,42,
-                                        43,44,45,46,47,48,49,50,51,52,
-                                        55,56,57,58}; 
+        {{PRIMARY_VARS_INDICES}}
+        {{AUXILIARY_VARS_INDICES}}
         
         dfor( dof, 3 ) {
           for (int unknown : auxiliaryVarsIndices) {
@@ -54,18 +49,6 @@ def get_body_of_adm_constraints(patch_size, number_of_output_variable, so_flag):
 
         double gradQ[3*59]={ 0 };
 
-        /*for (int d=0; d<3; d++) {
-          tarch::la::Vector<Dimensions,int> leftCell  = currentCell;
-          tarch::la::Vector<Dimensions,int> rightCell = currentCell;
-          leftCell(d)  -= 1;
-          rightCell(d) += 1;
-          const int leftCellSerialised  = peano4::utils::dLinearised(leftCell, patchSize + 2*overlap);
-          const int rightCellSerialised = peano4::utils::dLinearised(rightCell,patchSize + 2*overlap);
-          for(int i=0; i<59; i++) {
-            gradQ[d*59+i] = ( oldQWithHalo[rightCellSerialised*(59+n_a_v)+i] - oldQWithHalo[leftCellSerialised*(59+n_a_v)+i] ) / 2.0 / volumeH;
-          }
-        }*/
-
         for (int d=0; d<3; d++) {
           tarch::la::Vector<Dimensions,int> leftCell  = currentCell;
           tarch::la::Vector<Dimensions,int> rightCell = currentCell;
@@ -85,7 +68,7 @@ def get_body_of_adm_constraints(patch_size, number_of_output_variable, so_flag):
         const int cellSerialised  = peano4::utils::dLinearised(currentCell, patchSize + 2*overlap);
         
         double constraints[n_a_v]={0};
-        admconstraints(constraints, oldQWithHalo+cellSerialised*(59+n_a_v), gradQ);
+        ::exagrype::ccz4::admconstraints(constraints, oldQWithHalo+cellSerialised*(59+n_a_v), gradQ);
         ::exahype2::enumerator::AoSLexicographicEnumerator enumeratorWithAuxiliaryVariables ( 1, patchSize, 0, 59, n_a_v);
         for (int i=0;i<n_a_v;i++){
           fineGridCellCCZ4Q.value[ enumeratorWithAuxiliaryVariables(0,cell,59+i) ] = constraints[i]; 
@@ -99,13 +82,8 @@ def get_body_of_Psi_Calc(patch_size, number_of_output_variable, so_flag):
     extra_derivative_assign="""
         ::exahype2::enumerator::AoSLexicographicEnumerator enumeratorWithAuxiliaryVariablesOnReconstructedPatch( 1, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}}, {{HALO_SIZE}}, {{NUMBER_OF_UNKNOWNS}}, {{NUMBER_OF_AUXILIARY_VARIABLES}});
         ::exahype2::enumerator::AoSLexicographicEnumerator enumeratorWithoutAuxiliaryVariables( {{RK_STEPS}}, {{NUMBER_OF_GRID_CELLS_PER_PATCH_PER_AXIS}}, 0, {{NUMBER_OF_UNKNOWNS}}, 0 );
-        int primaryVarsIndices[25]={ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                                      10,11,12,13,14,15,16,17,18,19,
-                                      20,21,22,53,54};
-        int auxiliaryVarsIndices[34]={23,24,25,26,27,28,29,30,31,32,
-                                        33,34,35,36,37,38,39,40,41,42,
-                                        43,44,45,46,47,48,49,50,51,52,
-                                        55,56,57,58}; 
+        {{PRIMARY_VARS_INDICES}}
+        {{AUXILIARY_VARS_INDICES}}
         
         dfor( dof, 3 ) {
           for (int unknown : auxiliaryVarsIndices) {
@@ -163,7 +141,7 @@ def get_body_of_Psi_Calc(patch_size, number_of_output_variable, so_flag):
         double Psi4[n_a_v]={0};
         double currentPosition[3]; 
         for (int d=0; d<3; d++) currentPosition[d]=marker.getOffset()(d)+(cell(d)+0.5)*volumeH;
-        Psi4Calc(Psi4, oldQWithHalo+cellSerialised*(59+n_a_v), gradQ, currentPosition);
+        ::exagrype::ccz4::Psi4Calc(Psi4, oldQWithHalo+cellSerialised*(59+n_a_v), gradQ, currentPosition);
         ::exahype2::enumerator::AoSLexicographicEnumerator enumeratorWithAuxiliaryVariables   ( 1, patchSize, 0, 59, n_a_v);
         fineGridCellCCZ4Q.value[ enumeratorWithAuxiliaryVariables(0,cell,59+0) ] = Psi4[0]; 
         fineGridCellCCZ4Q.value[ enumeratorWithAuxiliaryVariables(0,cell,59+1) ] = Psi4[1];
@@ -171,9 +149,14 @@ def get_body_of_Psi_Calc(patch_size, number_of_output_variable, so_flag):
     } 
 """
 
-def get_body_of_SommerfeldCondition(scenario, unknowns, auxiliary_variables):
-	if scenario=="single-puncture":
-		return """
+def get_body_of_SommerfeldCondition(scenario, unknowns, auxiliary_variables, restart_time=-1):
+  if restart_time>0:
+    timeStamp="CheckpointTimeStamp"
+  else:
+    timeStamp="-1.0"
+
+  if scenario=="single-puncture":
+    return """
       ::exahype2::fd::applySommerfeldConditions(
         [&](
           const double * __restrict__                  Q,
@@ -183,7 +166,9 @@ def get_body_of_SommerfeldCondition(scenario, unknowns, auxiliary_variables):
           double                                       dt,
           int                                          normal
         ) -> double {
-          return repositories::{{SOLVER_INSTANCE}}.maxEigenvalue( Q, faceCentre, gridCellH, t, dt, normal );
+          double tem=1.0;
+          repositories::{{SOLVER_INSTANCE}}.maxEigenvalue( Q, faceCentre, gridCellH, t, dt, normal, &tem );
+          return tem;
         },
         [&](
           double * __restrict__                        Q,
@@ -210,11 +195,12 @@ def get_body_of_SommerfeldCondition(scenario, unknowns, auxiliary_variables):
         marker.getSelectedFaceNumber(),
         {0.0, 0.0, 0.0},
         fineGridFace{{UNKNOWN_IDENTIFIER}}Old.value,
-        fineGridFace{{UNKNOWN_IDENTIFIER}}New.value
+        fineGridFace{{UNKNOWN_IDENTIFIER}}New.value,
+        """+timeStamp+"""
       );
 """
-	else:
-		return """
+  else:
+    return """
       ::exahype2::fd::applySommerfeldConditions(
         [&](
           const double * __restrict__                  Q,
@@ -224,7 +210,9 @@ def get_body_of_SommerfeldCondition(scenario, unknowns, auxiliary_variables):
           double                                       dt,
           int                                          normal
         ) -> double {
-          return repositories::{{SOLVER_INSTANCE}}.maxEigenvalue( Q, faceCentre, gridCellH, t, dt, normal );
+          double tem=1.0;
+          repositories::{{SOLVER_INSTANCE}}.maxEigenvalue( Q, faceCentre, gridCellH, t, dt, normal, &tem );
+          return tem;
         },
         [&](
           double * __restrict__                        Q,
@@ -248,6 +236,7 @@ def get_body_of_SommerfeldCondition(scenario, unknowns, auxiliary_variables):
         marker.getSelectedFaceNumber(),
         {0.0, 0.0, 0.0},
         fineGridFace{{UNKNOWN_IDENTIFIER}}Old.value,
-        fineGridFace{{UNKNOWN_IDENTIFIER}}New.value
+        fineGridFace{{UNKNOWN_IDENTIFIER}}New.value,
+        """+timeStamp+"""
       );
 """

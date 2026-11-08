@@ -1,12 +1,8 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-import os
-import re
-import sys
 import argparse
-import subprocess
 
-import peano4
+import peano4.api
 import exahype2
 
 
@@ -20,6 +16,8 @@ class Euler:
 
         "RusanovGlobalFixedADERDG": exahype2.solvers.aderdg.GlobalFixedTimeStep,
         "RusanovGlobalAdaptiveADERDG": exahype2.solvers.aderdg.GlobalAdaptiveTimeStep,
+
+        "MUSCLGlobalFixedFV": exahype2.solvers.fv.musclhancock.GlobalFixedTimeStep,
     }
 
     def setup_parser(self):
@@ -102,13 +100,12 @@ class Euler:
             help="Use periodic boundary conditions in the z-axis.",
         )
 
-        available_build_modes = ["Release", "Trace", "Asserts", "Stats", "Debug"]
         parser.add_argument(
             "-m",
             "--build-mode",
-            choices=available_build_modes,
-            default="Release",
-            help="|".join(available_build_modes),
+            choices=peano4.api.output.CompileModes,
+            default=peano4.api.output.CompileModes[0], # Release
+            help="|".join(peano4.api.output.CompileModes),
         )
 
         parser.add_argument(
@@ -161,11 +158,11 @@ class Euler:
         )
 
         parser.add_argument(
-            "-vis",
-            "--visualise",
-            action="store_true",
-            default=False,
-            help="Visualise the output data using the postprocessor.",
+            "--storage",
+            type=str,
+            choices=[e.name for e in exahype2.solvers.Storage],
+            default="Heap",
+            help="The storage scheme to use."
         )
 
         available_load_balancing_strategies = [
@@ -193,22 +190,9 @@ class Euler:
             help="The quality of the load balancing.",
         )
         parser.add_argument(
-            "-lb-min",
-            "--lb-min-size",
-            type=int,
-            default=0,
-            help="If a tree (partition) is smaller than the given number of cells, we do not split it up further.",
-        )
-        parser.add_argument(
-            "--lb-trees-init",
+            "--trees",
             type=int,
             default=-1,
-            help="Number of trees (partitions) per rank during initial decomposition.",
-        )
-        parser.add_argument(
-            "--lb-trees",
-            type=int,
-            default=-2,
             help="Number of trees (partitions) per rank after initial decomposition.",
         )
         parser.add_argument(
@@ -297,7 +281,7 @@ class Euler:
                 "boundary_conditions": exahype2.solvers.PDETerms.User_Defined_Implementation,
                 "refinement_criterion": exahype2.solvers.PDETerms.User_Defined_Implementation,
                 "flux": "applications::exahype2::euler::flux(Q, faceCentre, volumeH, t, dt, normal, F);",
-                "eigenvalues": "return applications::exahype2::euler::maxEigenvalue(Q, faceCentre, volumeH, t, dt, normal);",
+                "eigenvalues": "applications::exahype2::euler::maxEigenvalue(Q, faceCentre, volumeH, t, dt, normal, maxEigenvalue);",
             }
         elif "RKDG" in args.solver:
             solver_params.update(
@@ -328,7 +312,11 @@ class Euler:
                 "boundary_conditions": exahype2.solvers.PDETerms.User_Defined_Implementation,
                 "refinement_criterion": exahype2.solvers.PDETerms.User_Defined_Implementation,
                 "flux": "applications::exahype2::euler::flux(Q, x, h, t, dt, normal, F);",
-                "eigenvalues": "return applications::exahype2::euler::maxEigenvalue(Q, x, h, t, dt, normal);",
+                "eigenvalues": """
+                double lambda[NumberOfUnknowns] = {0.};
+                applications::exahype2::euler::maxEigenvalue(Q, x, h, t, dt, normal, lambda);
+                return *std::max_element(lambda, lambda+NumberOfUnknowns);
+                """,
             }
 
         solver = self._available_solvers[args.solver](**solver_params)
@@ -336,9 +324,10 @@ class Euler:
         if solver_params["auxiliary_variables"] != 0:
             solver.plot_description += ", ".join(solver_params["auxiliary_variables"].keys())
         solver.set_implementation(**implementation_params)
+        solver.switch_storage_scheme(exahype2.solvers.Storage[args.storage], exahype2.solvers.Storage[args.storage])
 
         if "ADERDG" in args.solver:
-            solver.add_kernel_optimisations(is_linear = False,)
+            solver.add_kernel_optimisations(is_linear = False, polynomials=exahype2.solvers.aderdg.Polynomials.Gauss_Lobatto)
 
         return solver
 
@@ -373,36 +362,34 @@ class Euler:
             ],
         )
 
-        if args.visualise:
-            output_patch_file = f"{args.output}/solution-Euler.peano-patch-file"
-            if os.path.isfile(output_patch_file):
-                subprocess.call(
-                    [
-                        "python3",
-                        f"{args.peano_dir}/python/peano4/visualisation/render.py",
-                        str(output_patch_file),
-                    ]
-                )
-            sys.exit(0)
-
         if args.load_balancing_strategy != "None":
-            project.set_load_balancing(
-                f"toolbox::loadbalancing::strategies::{args.load_balancing_strategy}",
-                f"new ::exahype2::LoadBalancingConfiguration({args.load_balancing_quality}, {args.lb_min_size}, {args.lb_trees_init}, {args.lb_trees})",
+            strategy = f"toolbox::loadbalancing::strategies::{args.load_balancing_strategy}"
+            assume_periodic_boundary_conditions = any([
+                args.periodic_boundary_conditions_x,
+                args.periodic_boundary_conditions_y,
+                args.periodic_boundary_conditions_z,
+            ])
+            configuration = (
+                f"new ::exahype2::LoadBalancingConfiguration("
+                f"{args.load_balancing_quality},"
+                f"0,"
+                f"{'true' if assume_periodic_boundary_conditions else 'false'},"
+                f"{args.trees},"
+                f"{args.trees})"
             )
+            project.set_load_balancing(strategy, configuration)
 
         project.set_number_of_threads(args.threads)
 
         project.set_multicore_orchestration(
-            "tarch::multicore::orchestration::Hardcoded::createFuseAll(%s, true, true, 0)"
+            "tarch::multicore::orchestration::Hardcoded::createFuseAll(%s, 0)"
             % str(args.fuse_tasks)
         )
+        project.additional_includes.append("tarch/multicore/orchestration/Hardcoded.h")
 
         project.set_timeout(args.timeout)
 
-        build_mode_class = getattr(getattr(peano4, "output"), "CompileMode")
-        build_mode = getattr(build_mode_class, args.build_mode)
-        project.set_Peano4_installation(args.peano_dir, mode=build_mode)
+        project.set_Peano4_installation(args.peano_dir, mode=peano4.api.output.string_to_mode(args.build_mode))
         project = project.generate_Peano4_project(verbose=True)
 
         if args.fpe:

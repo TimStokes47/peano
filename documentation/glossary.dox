@@ -1,0 +1,144 @@
+/**
+
+@page page_glossary_home Glossary
+
+@tableofcontents
+
+This page collects short, precise definitions of terms that recur throughout
+Peano's documentation. Where a term originates from a particular publication,
+the entry says so and points to the source.
+
+
+
+
+# Events and action sets {#glossary_events_and_action_sets}
+
+As a traversal runs through the mesh and reports on the steps that it makes
+to the @ref glossary_observer "observer", the observer creates
+events : touchVertexFirstTime, touchVertexLastTime, touchFaceFirstTime, touchFaceLastTime,
+and so forth. Events are a logical concepts.
+
+Behaviour can now be injected into the traversal by actually doing something
+whenever an event arises. Technically, this means that we write a function 
+which does something whenever the event touchFaceFirstTime for example pops
+up. Unsurprisingly, we call this function touchFaceFirstTime() and we sometimes
+refer to it as **action** tied to an **event**.
+
+All the actions, i.e. functions, are collected in an action set. An action set
+is simply a collection of functions for the events that can arise if we run
+through a mesh. Each action set class is tied to an observer. The observer
+creates the events, i.e. triggers the functions (actions) from the action set.
+Observers can hold multiple action sets and trigger their functions one by 
+one or in parallel - depending on the action set spec.
+
+These concepts are all mapped 1:1 onto C++, but there are also Python abstractions:
+The Python class peano4.solversteps.ActionSet consdequently is where a user or
+extension implements what should actually happen for some of these events.
+
+@ref page_peano_action_sets "Action sets and events" for the full
+discussion of all possible actions, including the order in which multiple action sets'
+events are triggered for the same mesh entity and how to control their order
+and parallel execution.
+
+The object diagram below illustrates the collaboration for a single event: a
+@ref glossary_spacetree "spacetree" calls traverse() with a TraversalObserver
+instance, which - while it runs through the mesh - dispatches the resulting
+event function calls onto the action set instances it holds.
+
+\dot
+digraph EventsAndActionSets {
+  rankdir=LR
+  fontname="Helvetica"
+  node [shape=box, style="rounded,filled", fillcolor=white, fontname="Helvetica", fontsize=10]
+  edge [fontname="Helvetica", fontsize=9]
+
+  Spacetree  [label=<<U>aSpacetree : Spacetree</U>>]
+  Observer   [label=<<U>anObserver : TraversalObserver</U>>, fillcolor=lightyellow]
+  ActionSetA [label=<<U>reconstructPatch : ActionSet</U>>]
+  ActionSetB [label=<<U>plotSolution : ActionSet</U>>]
+
+  Spacetree  -> Observer   [label="traverse(anObserver)"]
+  Observer   -> ActionSetA [label="touchCellFirstTime()\ntouchVertexLastTime()\n..."]
+  Observer   -> ActionSetB [label="touchCellFirstTime()\ntouchVertexLastTime()\n..."]
+}
+\enddot
+
+The example above illustrates the core concepts:
+
+- There is a spacetree. When we say traverse, we tell the spacetree which observer to use.
+- The spacetree's traverse() informs this observer object of state transitions (e.g. going from one cell to another or ascending/descending in the tree).
+- The observer manages some data movements and then triggers events (e.g. "now I touch a face for the very first time").
+- The observer is tied to action sets. In the example there are two of them, one called reconstructPatch and the other one plotSolution.
+- Per event, it calls the actions (functions) in each action sets, which now actually do what the user intends the traversal to do.
+
+
+# Observer (algorithmic step) {#glossary_observer}
+
+Peano's fundamental idea is that there are @ref glossary_spacetree "spacetrees" and the user calls Peano
+to run through these spacetrees. Whenever Peano starts traversing a spacetree,
+it employs an **observer**. Logically, an **Observer** can also be called an 
+**algorithmic step** - it is tied to one full, parallel traversal
+of the mesh ().
+
+
+As Peano runs through the mesh, it "tells" the observer what mesh transitions
+is performs. The observer then can move around the data as it sees fit, i.e.
+load face or cell data from input streams, write data into MPI buffers, and so 
+forth. The observer can also trigger events.
+
+
+Each observer holds a set of action sets. If the observer identifies an event,
+these events are forwarded to the action sets, which then map them onto actions.
+This terminology can be simplified dramatically.
+
+
+
+# Spacetree {#glossary_spacetree}
+
+A **spacetree** is the tree-based adaptive Cartesian mesh data structure
+underlying Peano. The term is used as a generalisation of the classical
+quadtree (2D) and octree (3D) data structures to arbitrary dimension @f$
+d \geq 2 @f$ and to partitionings other than bipartitioning.
+
+The computational domain is scaled and dilated to fit into a unit hypercube
+of dimension @f$ d @f$. This hypercube is cut into @f$ k @f$ equidistant
+slices along each coordinate axis, yielding @f$ k^d @f$ small cubes that form
+a regular Cartesian grid; the cut also defines a parent-child relation
+between the newly created cubes and the cube they were cut from. This cutting
+is continued recursively and independently for each new cube. The process
+terminates in a set of cubes @f$ \mathcal{T} @f$ whose leaves, i.e. the cubes
+that are not refined any further, span an adaptive Cartesian grid, while the
+parent-child relation (or its inverse) imposes a hierarchy, i.e. a tree, on
+@f$ \mathcal{T} @f$.
+
+Equivalently, if the level @f$ \ell @f$ of a tree node is defined as the
+length of the path from the root (the original bounding box) to that node,
+the nodes of one level span a regular grid @f$ \Omega_{h,\ell} @f$, and the
+adaptive grid as a whole is @f$ \Omega_h = \bigcup_\ell \Omega_{h,\ell} @f$.
+Tree language and grid language for spacetrees are therefore equivalent, once
+an adaptive Cartesian grid is read as a composite of disconnected regular
+Cartesian grids of different resolution, embedded into each other.
+
+Peano tripartitions, i.e. it uses @f$ k = 3 @f$, and enumerates/linearises
+the cells of a spacetree along a Peano space-filling curve rather than via
+plain depth-first or breadth-first search, since a space-filling-curve-based
+enumeration turns the tree's parent-child partial order into a total order
+and yields, among other properties, face-connected traversal steps.
+
+@image html documentation/glossary-spacetree-figure1.png "Figure 1 from Weinzierl (2019): construction of a spacetree from repeated regular refinement of a square, and the resulting Peano space-filling curve traversal."
+
+<i>Figure reproduced from: T. Weinzierl, "The Peano Software&mdash;Parallel,
+Automaton-based, Dynamically Adaptive Grid Traversals," ACM Transactions on
+Mathematical Software, 45(2), Article 14, 2019,
+<a href="https://doi.org/10.1145/3319797">doi:10.1145/3319797</a>
+(<a href="https://arxiv.org/abs/1506.04496">arXiv:1506.04496</a>).</i>
+
+The four panels of the figure, left to right, show: the computational domain
+embedded into a square; the Peano space-filling curve motif inducing an
+ordering on the @f$ 3 \times 3 @f$ Cartesian grid obtained from one
+refinement step of that square; the same construction after a further
+refinement step, still following the Peano curve; and, on top, an adaptively
+refined Cartesian grid with, below it, the corresponding spacetree.
+
+
+*/

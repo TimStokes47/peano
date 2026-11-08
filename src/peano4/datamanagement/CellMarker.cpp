@@ -124,7 +124,7 @@ tarch::la::Vector<Dimensions, double> peano4::datamanagement::CellMarker::getOff
 std::string peano4::datamanagement::CellMarker::toString() const {
   std::ostringstream msg;
   msg
-    << "(x=" << _centre << ",h=" << _h << ",has-been-refined=" << _hasBeenRefined << ",will-be-refined="
+    << "(centre=" << _centre << ",h=" << _h << ",has-been-refined=" << _hasBeenRefined << ",will-be-refined="
     << _willBeRefined << ",is-local=" << _isLocal << ",one-vertex-hanging=" << _isOneVertexHanging
     << ",one-vertex-destroyed/created=" << _isOneVertexCreatedOrDestroyed << ",all-vertices-inside-domain="
     << _areAllVerticesInsideDomain << ",no-lb=" << _invokingSpacetreeIsNotInvolvedInAnyDynamicLoadBalancing
@@ -201,9 +201,9 @@ void peano4::datamanagement::CellMarker::initDatatype() {
   MPI_Datatype subtypes[] = {
     MPI_DOUBLE, MPI_DOUBLE, MPI_BYTE, MPI_BYTE, MPI_BYTE, MPI_BYTE, MPI_BYTE, MPI_BYTE, MPI_BYTE, MPI_INT};
 
-  int blocklen[] = {Dimensions, Dimensions, 1, 1, 1, 1, 1, 1, Dimensions};
+  int blocklen[] = {Dimensions, Dimensions, 1, 1, 1, 1, 1, 1, 1, Dimensions};
 
-  const int NumberOfAttributes = 9;
+  const int NumberOfAttributes = 10;
 
   MPI_Aint baseFirstInstance;
   MPI_Aint baseSecondInstance;

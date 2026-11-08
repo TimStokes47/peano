@@ -1,7 +1,7 @@
-from peano4.solversteps.ActionSet import ActionSet
+from peano4.api.solversteps.ActionSet import ActionSet
 
 import dastgen2
-import peano4
+import peano4.api
 import jinja2
 
 
@@ -26,12 +26,16 @@ def prepare_CG_correction_solvers( dg_solver,
     @see AbstractDGCGCoupling for a description of where the individual values are used.
     
     """
-    assert cg_solver._unknowns_per_vertex==dg_solver._unknowns_per_cell_node
-    cg_solver._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "sumOfInjectedValues", str(cg_solver._unknowns_per_vertex) ) )
-    cg_solver._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "oldValue", str(cg_solver._unknowns_per_vertex) ) )
-    cg_solver._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "newRestrictedRhs", str(cg_solver._unknowns_per_vertex) ) )
-    cg_solver._vertex_data.data.add_attribute( peano4.dastgen2.Peano4DoubleArray( "delta", str(cg_solver._unknowns_per_vertex) ) )
-    cg_solver._vertex_data.data.add_attribute( dastgen2.attributes.Integer( "numberOfRestrictions" ) )
+    assert cg_solver._unknowns_per_vertex_node==dg_solver._unknowns_per_cell_node
+    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.api.dastgen2.Peano4DoubleArray( "sumOfInjectedValues", str(cg_solver._unknowns_per_vertex_node) ) )
+    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.api.dastgen2.Peano4DoubleArray( "oldU", str(cg_solver._unknowns_per_vertex_node) ) )
+    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.api.dastgen2.Peano4DoubleArray( "newRestrictedRhs", str(cg_solver._unknowns_per_vertex_node) ) )
+    cg_solver._vertex_data.data.add_or_replace_attribute( peano4.api.dastgen2.Peano4DoubleArray( "delta", str(cg_solver._unknowns_per_vertex_node) ) )
+    cg_solver._vertex_data.data.add_or_replace_attribute( dastgen2.attributes.Integer( "numberOfRestrictions" ) )
+
+    ## add cross-boundary data sharing in
+    ## make sure we agree on a rhs after restricting
+    cg_solver._vertex_data.peano4_mpi_and_storage_aspect.merge_implementation += """\n  setNewRestrictedRhs( getNewRestrictedRhs() + neighbour.getNewRestrictedRhs() ); \n"""
 
 
 class AbstractDGCGCoupling(ActionSet):
@@ -226,7 +230,7 @@ class AbstractDGCGCoupling(ActionSet):
       mghype::matrixfree::solvers::dgcgcoupling::computeAndRestrictHierarchicalResidual<{{DG_SOLVER_NAME}}, {{CG_SOLVER_NAME}}>( 
         composedProlongationMatrix,
         composedRestrictionMatrix,
-        repositories::{{DG_SOLVER_INSTANCE}}.getMassMatrix( marker.x(), marker.h() ),
+        repositories::{{DG_SOLVER_INSTANCE}}.getRhsMatrix( marker.x(), marker.h() ),
         repositories::{{DG_SOLVER_INSTANCE}}.getLocalAssemblyMatrix(marker.x(), marker.h()),
         fineGridCell{{DG_SOLVER_NAME}}.getSolution(),
         fineGridCell{{DG_SOLVER_NAME}}.getRhs(),
@@ -328,36 +332,13 @@ class AbstractDGCGCoupling(ActionSet):
       tarch::la::Vector< repositories::{{DG_SOLVER_INSTANCE}}.FaceUnknownsSolution*TwoTimesD, double > faceSolutions;
 
       for (int f=0; f<TwoPowerD; f++) {
-        tarch::la::Vector< repositories::{{DG_SOLVER_INSTANCE}}.FaceUnknownsSolution, double > solutionOnFace;
-        if ( fineGridFaces{{DG_SOLVER_NAME}}(f).getType() == facedata::{{DG_SOLVER_NAME}}::Type::Interior ) {
-          solutionOnFace = repositories::{{DG_SOLVER_INSTANCE}}.getRiemannMatrix() * fineGridFaces{{DG_SOLVER_NAME}}(f).getProjection();
-        }
-
-        else if ( fineGridFaces{{DG_SOLVER_NAME}}(f).getType() == facedata::{{DG_SOLVER_NAME}}::Type::Boundary ) {
-          int startIndex = f < Dimensions ? 
-                           repositories::{{DG_SOLVER_INSTANCE}}.NodesPerFace * repositories::{{DG_SOLVER_INSTANCE}}.ProjectionsPerFaceNode :
-                           0;
-          const auto boundaryMatrix = repositories::{{DG_SOLVER_INSTANCE}}.getBoundaryConditionMatrix();
-          for (int row=0; row<boundaryMatrix.rows(); row++)
-          {
-            double rowSolution = 0;
-            for (int col=0; col<boundaryMatrix.cols(); col++)
-            {
-              rowSolution += boundaryMatrix( row, col ) * fineGridFaces{{DG_SOLVER_NAME}}(f).getProjection( col + startIndex );
-            }
-            // place this solution into the face
-            solutionOnFace(row) = rowSolution;
-          }
-        }
-
-        // place this into the faceSolutions vector
-        for (int s=0; s<repositories::{{DG_SOLVER_INSTANCE}}.FaceUnknownsSolution; s++)
-          faceSolutions( f*repositories::{{DG_SOLVER_INSTANCE}}.FaceUnknownsSolution + s ) = solutionOnFace(s);
+      for (int s=0; s<repositories::{{DG_SOLVER_INSTANCE}}.FaceUnknownsSolution; s++)
+        faceSolutions( f*repositories::{{DG_SOLVER_INSTANCE}}.FaceUnknownsSolution + s ) = fineGridFaces{{DG_SOLVER_NAME}}(f).getSolution(s);
       }
 
       mghype::matrixfree::solvers::dgcgcoupling::computeAndRestrictResidual<{{DG_SOLVER_NAME}}, {{CG_SOLVER_NAME}}>( 
         composedRestrictionMatrix,
-        repositories::{{DG_SOLVER_INSTANCE}}.getMassMatrix( marker.x(), marker.h() ),
+        repositories::{{DG_SOLVER_INSTANCE}}.getRhsMatrix( marker.x(), marker.h() ),
         repositories::{{DG_SOLVER_INSTANCE}}.getLocalAssemblyMatrix(marker.x(), marker.h()),
         fineGridCell{{DG_SOLVER_NAME}}.getSolution(),
         fineGridCell{{DG_SOLVER_NAME}}.getRhs(),
@@ -424,7 +405,7 @@ class AbstractDGCGCoupling(ActionSet):
                injection_matrix_scaling,
                use_fas
                ):
-    """!
+    r"""!
     
     Construct action set
     
@@ -492,16 +473,16 @@ class AbstractDGCGCoupling(ActionSet):
 
   def get_body_of_operation(self,operation_name):
     result = ""
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_VERTEX_FIRST_TIME:
       result = jinja2.Template(self.__TemplateTouchVertexFirstTime).render(**self.d)
       pass
-    if operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
+    if operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME:
       result = jinja2.Template(self.templateTouchCellFirstTime).render(**self.d)
       pass
-    if self._use_fas and operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
+    if self._use_fas and operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
       result = jinja2.Template(self.__TemplateTouchCellLastTime_FAS).render(**self.d)
       pass
-    if not self._use_fas and operation_name==peano4.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
+    if not self._use_fas and operation_name==peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_LAST_TIME:
       result = jinja2.Template(self.__TemplateTouchCellLastTime_CorrectionScheme).render(**self.d)
       pass
     return result
@@ -538,7 +519,7 @@ class AbstractDGCGCoupling(ActionSet):
          
     """    
     return """
-#include "repositories/SolverRepository.h"
+#include "../repositories/SolverRepository.h"
 #include "peano4/utils/Loop.h"
 #include "mghype/mghype.h"
 #include "mghype/matrixfree/solvers/DGCGCoupling.h"
@@ -709,6 +690,7 @@ class MultiplicativeDGCGCoupling(AbstractDGCGCoupling):
                  use_fas,
                  smoothing_steps_DG = 4,
                  smoothing_steps_CG = -1,
+                 vcycles=1, #toto: move vcycles to the solver input
                  ):        
         """!
 
@@ -719,6 +701,13 @@ class MultiplicativeDGCGCoupling(AbstractDGCGCoupling):
         @param smoothing_steps_CG: positive integer or -1
           The -1 indicates that we wait for full convergence on the coarse 
           mesh.
+
+        @param vcycles: positive integer or -1. 
+          Terminate after the given number of full V-cycles.
+          The -1 indicates that we wait for full convergence on the coarse mesh.
+          If a positive integer is set, the correction solver tolerance needs to be set to a small value 
+          to ensure the given number of cycles is completed before the tolerance is reached.
+          @todo: Implement ignoring the tolerance when the number of cycles is set as a stopping criterion.
                  
         """
         super( MultiplicativeDGCGCoupling, self ).__init__(
@@ -757,8 +746,12 @@ class MultiplicativeDGCGCoupling(AbstractDGCGCoupling):
         assert smoothing_steps_DG>=1, "at least one smoothing step required"
         assert smoothing_steps_CG>=1 or smoothing_steps_CG==-1, "at least one smoothing step required"
         
-        self.smoothing_steps_DG = smoothing_steps_DG
+        # Logically speaking, the only thing we do on the "final" sweep is send the face solutions down to
+        # the coupler to calculate the residual, which we restrict. So we add on another sweep here so that
+        # we perform the exact number of sweeps that the caller asked for.
+        self.smoothing_steps_DG = smoothing_steps_DG + 1
         self.smoothing_steps_CG = smoothing_steps_CG
+        self.vcycles = vcycles
 
         self.cg_solver = cg_solver
           
@@ -769,6 +762,10 @@ class MultiplicativeDGCGCoupling(AbstractDGCGCoupling):
           Add a new static attribute to the class.
       
         """
+        if self.vcycles==-1:
+          vcycles_string = "std::numeric_limits<int>::max()"
+        else:
+          vcycles_string = self.vcycles
 
         if self.smoothing_steps_CG==-1:
           smoothing_steps_CG_string = "std::numeric_limits<int>::max()"
@@ -781,9 +778,11 @@ class MultiplicativeDGCGCoupling(AbstractDGCGCoupling):
     static constexpr int DGSmoothingSteps = {};
     static constexpr int CGSmoothingSteps = {};
     static constexpr double CGSolverTolerance = {};
+    static constexpr int VCycles = {};
     static int DGCycleCounter;
     static int CGCycleCounter;
-""".format(self.smoothing_steps_DG, smoothing_steps_CG_string, CG_solver_tolerance)
+    static double initialGlobalResidualMaxNorm;
+""".format(self.smoothing_steps_DG, smoothing_steps_CG_string, CG_solver_tolerance, vcycles_string)
 
       
     def get_static_initialisations(self, full_qualified_classname):
@@ -795,6 +794,7 @@ class MultiplicativeDGCGCoupling(AbstractDGCGCoupling):
         return """
 int """ + full_qualified_classname + """::DGCycleCounter = 0;
 int """ + full_qualified_classname + """::CGCycleCounter = 0;
+double """ + full_qualified_classname + """::initialGlobalResidualMaxNorm = 0;
 """    
 
     def get_body_of_prepareTraversal(self):
@@ -818,17 +818,20 @@ int """ + full_qualified_classname + """::CGCycleCounter = 0;
     else if (
       DGCycleCounter>DGSmoothingSteps 
       and 
-      CGCycleCounter<CGSmoothingSteps
+      repositories::instanceOf{{CG_SOLVER_NAME}}.getVCycleCounter()<VCycles
       and not
       (
         repositories::instanceOf{{CG_SOLVER_NAME}}.getGlobalResidualMaxNorm() > 0.0
         and
-        repositories::instanceOf{{CG_SOLVER_NAME}}.getGlobalResidualMaxNorm() <= CGSolverTolerance
+        repositories::instanceOf{{CG_SOLVER_NAME}}.getGlobalResidualMaxNorm() <= std::max(1E-14,initialGlobalResidualMaxNorm*CGSolverTolerance)
       ) 
     ) {
       /*
       We haven't reached our termination condition for CG solver yet
       */
+      if (CGCycleCounter==1) {
+        initialGlobalResidualMaxNorm = repositories::instanceOf{{CG_SOLVER_NAME}}.getGlobalResidualMaxNorm();
+      }
       repositories::instanceOf{{DG_SOLVER_NAME}}.suspend(false, false);
       CGCycleCounter++;
       logInfo( "prepareTraversal(...)", "run CG smoother step, disable DG solver. CG residual="<< repositories::instanceOf{{CG_SOLVER_NAME}}.getGlobalResidualMaxNorm());

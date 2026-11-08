@@ -3,18 +3,18 @@ import sys
 import argparse
 
 sys.path.insert(0, os.path.abspath('../../../../python'))
-import peano4
+import peano4.api
 import exahype2
 
 import numpy as np
 import mghype
 
 modes = {
-  "release": peano4.output.CompileMode.Release,
-  "trace":   peano4.output.CompileMode.Trace,
-  "assert":  peano4.output.CompileMode.Asserts,
-  "stats":   peano4.output.CompileMode.Stats,
-  "debug":   peano4.output.CompileMode.Debug,
+  "release": peano4.api.output.CompileMode.RELEASE,
+  "trace":   peano4.api.output.CompileMode.TRACE,
+  "assert":  peano4.api.output.CompileMode.ASSERTS,
+  "stats":   peano4.api.output.CompileMode.STATS,
+  "debug":   peano4.api.output.CompileMode.DEBUG,
 }
 
 # parser = argparse.ArgumentParser(description='ExaHyPE 2 - Euler benchmarking script')
@@ -65,10 +65,17 @@ euler_solver   = None
 poisson_solver = None
 
 #! [Construct matrices]
+
+# matrices = mghype.api.matrixgenerators.DLinear(
+#   dimensions = args.dimensions,
+#   poly_degree = 1,
+#   unknowns_per_vertex_dof = 1
+# )
+
 matrices = mghype.api.matrixgenerators.GLMatrixFree(
   args.dimensions,
   args.poly_degree,
-  1,  # Unknowns per cell dof. Scalar PDE here
+  1, #args.upv,  # Unknowns per cell dof. Scalar PDE here
   2,  # We use the penalty formulation (see docu in tutorials)
   2
 )
@@ -80,6 +87,7 @@ cell_from_face_projection, \
 cell_from_face_projection_scaling        = matrices.get_cell_from_face_matrix()
 approximate_system_matrix, \
 approximate_system_matrix_scaling        = matrices.get_A_tilde()
+
 #! [Construct matrices]
 
 #! [Instantiate solvers]
@@ -115,6 +123,18 @@ if args.type=="global-adaptive":
   )
 
 ## Poisson solver
+
+# poisson_solver = mghype.matrixfree.solvers.api.CollocatedLowOrderDiscretisation("Poisson",
+#                                                               args.upv, #1, # unknowns
+#                                                               args.dimensions,
+#                                                               args.meshsize,
+#                                                               args.meshsize,
+#                                                               local_assembly_matrix = assembly_matrix,
+#                                                               local_assembly_matrix_scaling=assembly_matrix_scaling,
+#                                                               mass_matrix = mass_matrix,
+#                                                               mass_matrix_scaling = mass_matrix_scaling,
+#                                                               solver_tolerance=0.01
+#                                                             )
 
 poisson_solver = mghype.matrixfree.solvers.api.DiscontinuousGalerkinDiscretisationPointWiseRiemannSolver(
   name = "Poisson",
@@ -166,11 +186,11 @@ poisson_solver = mghype.matrixfree.solvers.api.DiscontinuousGalerkinDiscretisati
 #                                                             )
 #! [Instantiate solvers]
 
-# assert (
-#     poisson_solver.name != euler_solver.name
-# ), "names the solvers should not be the same"
+assert (
+    poisson_solver.name != euler_solver.name
+), "names the solvers should not be the same"
 
-# euler_solver.set_implementation(refinement_criterion=exahype2.solvers.PDETerms.User_Defined_Implementation)
+euler_solver.set_implementation(refinement_criterion=exahype2.solvers.PDETerms.User_Defined_Implementation)
 
 #
 # Create a project and configure it to end up in a subnamespace (and thus subdirectory).
@@ -198,8 +218,8 @@ poisson_project = mghype.matrixfree.api.Project(
   project_name = "Poisson", 
   directory     = ".",
   subdirectory  = "poisson",
-  executable    = "selfgravitation-poisson",
-  abstract_overwrite = False,
+  executable    = "selfgravitation-poisson"
+  # abstract_overwrite = False,
 )
 #! [Create project]
 
@@ -321,18 +341,17 @@ poisson_project.set_Peano4_installation(args.peanodir, modes[args.mode])
 # peano4_project = euler_project.generate_Peano4_project(args.verbose)
 # peano4_project = poisson_project.generate_Peano4_project(args.verbose)
 
-peano4_project = peano4.Project(
+peano4_project = peano4.api.Project(
   namespace     = [], # "applications", "exahype2", "euler", "selfgravitation"
   project_name  = "EulerPoisson", #"EulerPoisson",
   directory     = ".",
   executable    = "selfgravitation-new",
 )
 peano4_project.add_subproject(
-  poisson_project.generate_Peano4_project(args.verbose),
+  euler_project.generate_Peano4_project(args.verbose),
 )
 peano4_project.add_subproject(
-  euler_project.generate_Peano4_project(args.verbose),
-  True
+  poisson_project.generate_Peano4_project(args.verbose),
 )
 
 # peano4_project.add_subproject(

@@ -2,12 +2,14 @@
 
 \page tarch_logging Logging, tracing, statistics, profiling and assertions
 
+\tableofcontents
+
 
 Logging, tracing and assertion architecture
 -------------------------------------------
 
 Peano is built upon a technical architecture (`tarch`) which provides
-logging, tracing and assertions. This is also the layer which decides
+logging, tracing and assertions. This is also the layer which decides 
 which information is pre-prepared for the supported profiling tools. The
 two directory of relevance here is therefore `tarch/logging` plus the
 file `Assertions.h`. The latter file holds all the assertion macros,
@@ -165,39 +167,122 @@ It is automatically enabled once you configure with
 ./configure --with-toolchain=nvidia
 ~~~~~~~~~~~~~~~~~~~~~
 
+More detail on this logger is also provided on the page @ref documentation_toolchains_nvidia.
+It links your code against an instance of @ref tarch::logging::NVTXLogger for all outputs.
+
+Picking this logger implies that all tracing information is 
+piped into a format that is of use for NSight. 
+Note that comprehensive trace 
+information is only available in trace mode or higher
+(@ref page_architecture_home "see comments on Peano's build modi").
+Trace filters can be used to narrow down the information tracked.
+All info log output as well as warning and error message are still
+shown on the terminal.
+
+
+### ITT logger (Intel's OneAPI toolbox for VTune)
+
+To select this logger, compile with `-DUseLogService=ITTLogger`.
+It is automatically enabled once you configure with
+~~~~~~~~~~~~~~~~~~~~~
+./configure --with-toolchain=itt
+~~~~~~~~~~~~~~~~~~~~~
+
+More detail on this logger is also provided on the page @ref documentation_toolchains_intel.
+It links your code against an instance of @ref tarch::logging::ITTLogger for all outputs.
+
+Picking this flag implies that all trace information is piped into
+<a href="https://intel.github.io/ittapi/">The Instrumentation and Tracing Technology API (ITT API)</a>.
+Note that comprehensive trace 
+information is only available in trace mode or higher
+(@ref page_architecture_home "see comments on Peano's build modi").
+Trace filters can be used to narrow down the information tracked.
+All info log output as well as warning and error message are still
+shown on the terminal.
+
+
+If this logger is picked, you have to ensure that ```ittnotify.h```
+is in your path and that all linker data is set properly.
+Intel <a href="https://intel.github.io/ittapi/src/compile-and-link-with-itt-api.html">maintains a dedicated site for this</a>, 
+as the library seems not to be in the standard paths of OneAPI.
+On my system, the tracing library is now fully integrated into VTune
+and therefore found within the VTune directories. 
+That means,
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CXX="-I${VTUNE_PROFILER_DIR}/include ..." LDFLAGS="-L${VTUNE_PROFILER_DIR}/lib64 ..." LIBS="... -littnotify"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sets the correct path, as the 
+
+            source .../intel/oneapi/setvars.sh
+
+script (or corresponding module file) exports ```VTUNE_PROFILER_DIR```.
+
+
+To use ITT, you might also have to set the ```INTEL_LIBITTNOTIFY64``` environment
+variable before you start your application.
 
 ### ITAC logger
 
-To select this logger, configure with
+To select this logger, compile with `-DUseLogService=ITACLogger`.
+It is automatically enabled once you configure with
 ~~~~~~~~~~~~~~~~~~~~~
-./configure --with-toolchain=intel
+./configure --with-toolchain=itac
 ~~~~~~~~~~~~~~~~~~~~~
 
-This switch
-sets, automatically, the compile flag `-DUseLogService=ITACLogger`.
-You can however also set the logger via the CXXFLAGS.
+<div style="background-color: #fcc ; padding: 10px; border: 1px solid green;"> 
+ITAC is there for legacy reasons, but is deprecated by Intel.
+</div>
+
+
+More detail on this logger is also provided on the page @ref documentation_toolchains_intel.
 
 The ITAC logger forwards all trace commands to Intel's profiling/tracing
-library. You can now compile 's tracing backend, and will continue to
-plot all `info` statements to the terminal. The trace statements however
-are piped directly into ITAC, i.e. if you analyse the code with Intel's
-`traceanalyzer` or VTune, you should see the -specific annotations and
-traces. You can also use 's log filter to filter which events are
-actually handed over to ITAC.
+library. 
+Picking this flag implies that all trace information is piped into
+The Instrumentation and Tracing Technology API (ITT API).
+Note that comprehensive trace 
+information is only available in trace mode or higher
+(@ref page_architecture_home "see comments on Peano's build modi").
+Trace filters can be used to narrow down the information tracked.
+All info log output as well as warning and error message are still
+shown on the terminal.
 
-I've recognised that the Intel scripts often do not include the ITAC
-headers that requires in their search path. In this case, you will have
-to augment your configure call:
-
-The class tarch::logging::ITACLogger provides further detail on the usage of the
-logging back-end. The punch line is that you have to translate in trace
-mode to get proper ITAC data. As the trace information of quickly
-becomes vast, I recommend to create a log filter, and start a run where
-you disable all but the top-level tracing information.
+ITAC output can be analysed with Intel's
+`traceanalyzer` as well as VTune.
 
 
-Log filter
-----------
+### Score-P logger
+
+To select this logger, compile with `-DUseLogService=ScorePLogger`.
+It is automatically enabled once you configure with
+~~~~~~~~~~~~~~~~~~~~~
+./configure --with-toolchain=scorep
+~~~~~~~~~~~~~~~~~~~~~
+
+Score-P is the tool feeding into Scalasca and other software.
+Picking this logger implies that all trace information is piped into
+the Score-P library, as it
+links your code against an instance of @ref tarch::logging::ScorePLogger for all outputs.
+
+Note that comprehensive trace 
+information is only available in trace mode or higher
+(@ref page_architecture_home "see comments on Peano's build modi").
+All info log output as well as warning and error message are still
+shown on the terminal.
+
+More information on Score-P support can be found at @ref page_third-party_performance_analysis_tools.
+
+### No logger
+
+For performance measurements, it might make sense to use no logger at
+all. In this case, only errors and warnings are written. This degenerated
+log device is selected through `-DUseLogService=NoLogger`.
+
+
+
+## Log filter
 
 The amount of log information often becomes hard to track; notably if
 you run in debug mode. Often, you are interested only in a subset of all
@@ -325,8 +410,42 @@ If you activate the statistics, automatically writes some runtime
 statistics into the stats file. These statistics give you, for example,
 and overview how many tasks are in flight at any time, or how long 's
 MPI routines had to wait for incoming data. The output format is plain
-csv and thus straightforward to parse. Peano's directory
-`python/peano4/postprocessing` also holds some pre-manufactured scripts
-to visualise some standard metrics.
+csv and thus straightforward to parse. 
 
+
+However, the directory `python/peano4/postprocessing` also holds some scripts
+to postprocess and visualise the outcome. The starting point is the inspect 
+command, which really only tells you which column holds which data.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+python3 ~/git/Peano/python/peano4/postprocessing/inspect-statistics.py statistics-rank-0.csv 
+Column 	| Counter
+--------|----------------
+0	|  time (always used to plot)
+1	|  exahype2::EnclaveBookkeeping::memory-allocations
+2	|  mpi wait times
+3	|  tarch::multicore::bsp-concurrency-level
+4	|  tarch::multicore::spawned-tasks
+5	|  tarch::multicore::taskfusion::process-fused-tasks
+6	|  tarch::multicore::taskfusion::submit-fused-tasks
+7	|  grid-control-events
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You could see this with a simple less or cat, or you could load the csv file
+into Excel and see exactly the same. But sometimes I find the Python script
+easier. From hereon, you can visualise the outcome:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+python3 ~/git/Peano/python/peano4/postprocessing/plot-statistics.py -c 4,5,6 -pt scatter -o pdf statistics-rank-0.csv 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+@image html documentation/tarch/logging-statistics.png
+
+I provide different visualisation types. The statistics file contains 
+exclusively deltas and it samples. Hence, it might somtimes look as if almost
+no data were in the database. Yet, this could also be due to the fact that the
+code logs the same value all the time. Use --help to find out more about
+visualisation types.
+
+	
 */

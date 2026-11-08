@@ -1,0 +1,272 @@
+/**
+@page page_exagrype ExaGRyPE
+
+@image html tutorials/exahype2/exagrype/illustrations/exagrype_logo.png
+
+<!-- Add this one for href links to subitems -->
+\tableofcontents
+
+ExaGRyPE is a numerical relativity application built on top of the ExaHyPE2 engine.
+At its heart, it simulates spacetimes by solving the Einstein field equations
+in the CCZ4 formulation under a 3+1 foliation.
+The code offers a variety of numerical schemes and ingredients.
+For example, we offer a first-order CCZ4 (FO-CCZ4) and a first-/second-order
+reconstructed CCZ4 formalism, and for both provide Finite Volume, higher-order
+Finite Difference, and Discontinuous Galerkin schemes.
+Some of these schemes can then be modified, e.g. by adding Kreiss-Oliger
+dissipation or lop-sided advection.
+As all of the code is built on top of ExaHyPE, which is a generic PDE solver
+engine, we can couple the resulting solution of the field equations with other
+solvers on top.
+
+The ExaGRyPE release paper is provided below for interested users. The code is
+completely open source and can be found in the Peano repositories.
+To install and run the code, start with
+\ref tutorials_exahype2_applications_exagrype_configure. It leads on to the
+ExaGRyPE tutorial notebooks, which are part of the
+@ref page_exahype2_tutorials "ExaHyPE 2 tutorials".
+As it is under active development, we cannot offer any support or guarantee
+that all variants always work properly.
+However, there is an active Slack community around the code, and interested
+colleagues are invited to join by dropping us an email.
+
+<div style="background-color: #ccf ; padding: 10px; border: 1px solid green;"> 
+  As applications like ExaGRyPE are built on top of ExaHyPE, we decided to embed 
+  all application-specific content directly into ExaHyPE, which in turn is now 
+  integrated into Peano. Consequently, you get the whole package once you download
+  Peano. Another consequence is that a lot of "how to use ExaGRyPE" content is 
+  delivered as tutorials that are part of a larger set of tutorials on ExaHyPE and
+  Peano. We might refer to generic tutorials in some places, but this is only 
+  because the features discussed apply 1:1 to ExaGRyPE, too.
+</div>
+
+
+# Physics notes on the vacuum spacetime
+
+The ExaGRyPE code solves the Einstein equations in the Z4 formulation
+
+@f$
+    R_{ab}-\frac{1}{2} g_{ab}R+\nabla_{a} Z_{b}+\nabla_{b} Z_{a}-g_{ab}\nabla^c
+    Z_c -\kappa_{1}[n_{a} Z_{b}+n_{b} Z_{a}+\kappa_{2} g_{ab} n_{c}
+    Z^{c}]  =  8\pi T_{ab}
+@f$
+
+Notably, we transfer them into a first-order formulation following
+
+@f$
+  \partial_t Q +\nabla_i F_i(Q) +B_i (Q) \nabla_i Q = S(Q).
+@f$
+
+Collecting all derived quantities from the CCZ4 decomposition, the gauge
+quantities, and helper variables yields an evolving system of 25 variables
+
+@f$
+  Q(t) = 
+  \left( \tilde{\gamma}_{ij}, \alpha, \beta^i, \phi, \tilde{A}_{ij},K, \Theta,
+  \hat{\Gamma}^i, b^i \right)(t),
+@f$
+
+if the auxiliary variables representing the first-order derivatives
+
+@f$
+   A_{i}:=\partial_{i} \alpha, \ B_{k}^{i}:=\partial_{k} \beta^{i}, \ D_{k i
+   j}:=\frac{1}{2} \partial_{k} \tilde{\gamma}_{i j}, \
+   P_{i}:=\partial_{i} \phi
+@f$
+
+are calculated on the fly. In this case, we have the second-order formulation
+of the code.
+Adding the auxiliary variables to the system and treating them as further
+evolving variables makes the code completely first-order, yielding a system of
+58 evolved variables with
+
+@f$
+  Q(t) =
+  \left(
+   \tilde{\gamma}_{ij}, \alpha, \beta^i, \phi, \tilde{A}_{ij},K, \Theta,
+   \hat{\Gamma}^i, b^i, A_k, B^i_k, D_{kij}, P_k \right).
+@f$
+
+The code stores one more unknown, the constant reference value @f$ K_0 @f$
+of @f$ K @f$ which enters the slicing condition, i.e. it works with 59
+unknowns in total.
+
+Both formulations are now available in the code for different scenarios.
+Users are referred to Appendix B of the paper below for more details on the
+equations and formulations used in ExaGRyPE.
+
+
+# A hands-on, unphysical explanation
+
+When we simulate time-dependent partial differential equations, we typically
+time-step through the solution.
+To illustrate this, we could say that the solution itself exists in a
+d+1-dimensional space (the +1 is time), and we slice through it every time
+we take a snapshot.
+The illustration below shows this for a d=2 setup:
+
+@image html documentation/exagrype/flat-space-time.png width=400px
+
+We start at time t=0 with a mesh (aka grid).
+Each time step then performs another simulation step, possibly on a changed
+grid, and yields a new snapshot, as illustrated by the coloured plane.
+Effectively, we reduce the d+1-dimensional problem to a sequence of
+d-dimensional problems through time marching.
+
+Even with rudimentary A-level physics, we know that Einstein had the
+breakthrough idea that space and time are distorted once we add mass to a
+system.
+In the extreme case of a black hole, spacetime experiences significant
+distortions, which lead to a situation where not even light can escape from a
+certain region around the black hole.
+The boundary of this region is called the event horizon - if you move beyond it, no event gets out of region anymore.
+There are many good, accessible pages providing further details, but for our
+purposes the image below is sufficient to explain the next steps:
+
+<center>
+<img src="https://cdn.britannica.com/64/91964-050-4FDB21E8/vicinity-mass-distance-distortion-continuum-amount-relativity.jpg" width="400px" /> 
+<br />
+From <a href="https://www.britannica.com/science/relativity/Curved-space-time-and-geometric-gravitation">Britannica</a>.
+</center>
+
+This model of curved spacetime means that our original concept of time slices
+breaks down:
+The Einstein equations describing spacetime actually form a wave equation, and
+instead of a time slice, we now end up with a so-called foliation of the
+d+1-dimensional (infinitely large) domain.
+This curved submanifold represents something that we could consider to be a
+time step, even though the use of this term is itself somewhat flawed.
+
+@image html documentation/exagrype/distorted-mesh.png width=400px
+
+There are different ways to break this down into a simulation.
+In ExaGRyPE, we follow the standard shift-lapse technique, which we can
+illustrate as follows:
+We still cut through the domain in a particular way, but then store a vector
+per degree of freedom, e.g. per mesh point if we employ Finite Differences.
+This vector tells us how spacetime at this reference point is distorted.
+Thus, when we write a snapshot, this is no longer really a time step.
+Different points might be at different positions in time, and they are also
+displaced in space.
+The whole mesh wobbles.
+
+The relation between the individual snapshots and their sample points is now
+given by a partial differential equation that describes the mesh.
+We solve exactly this equation.
+Unlike PDEs that we see in other fields, the PDE in the baseline ExaHyPE code
+does not describe a quantity such as temperature sitting on the mesh, but the
+deformation of the mesh itself.
+
+<img src="https://arxiv.org/html/2406.11626v3/images/lapse_shift.png" width="400px" />
+
+We can then place actual matter on top of this solution.
+Obviously, any PDE we put on top may not use the standard flat-spacetime notion
+of geometry.
+Instead, it has to take into account that the underlying spacetime is
+distorted.
+In return, it feeds back into the spacetime PDE by injecting a right-hand-side
+term.
+
+
+# Building ExaGRyPE
+
+ExaGRyPE sits on top of ExaHyPE 2 and hosts the C++ code that all ExaGRyPE
+applications share.
+ExaGRyPE is enabled like any other Peano extension or toolbox:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+./configure --enable-exahype --enable-blockstructured --enable-loadbalancing --enable-exagrype ...
+~~~~~~~~~~~~~~~~~~~~~~~
+
+or, with CMake,
+
+~~~~~~~~~~~~~~~~~~~~~~~
+cmake .. -DENABLE_EXAHYPE=ON -DENABLE_BLOCKSTRUCTURED=ON -DENABLE_LOADBALANCING=ON -DENABLE_EXAGRYPE=ON
+~~~~~~~~~~~~~~~~~~~~~~~
+
+As the Einstein equations are 3+1-dimensional and we use a foliation,
+the library is built for 3d only, i.e. there is a \c libExaGRyPECore3d.a plus
+its \c _debug, \c _asserts, \c _trace and \c _stats variants, but no 2d
+counterpart.
+If enabled, configure adds the library to the 3d link line of all generated
+Makefiles.
+Its unit tests run as part of \c UnitTests3d.
+
+
+## Python API
+
+The package \c exagrype.api (in \c src/exagrype/api) is layered on top of
+\c exahype2.api.
+It hosts the ExaGRyPE core solvers, such as
+@ref exagrype.api.FOCCZ4Solver, which are in turn subclasses of
+@ref exahype2.api.Solver.
+These ExaGRyPE-specific solvers configure the base class with the correct
+number of unknowns and PDEs (59 unknowns are used by FOCCZ4, for example), the
+CCZ4 parameters, and all PDE terms of the particular system.
+Users no longer have to add PDE terms themselves.
+You still have to pick a well-suited numerical scheme, however:
+
+~~~~~~~~~~~~~~~~~~~~~~~
+solver = exagrype.api.FOCCZ4Solver("CCZ4", initial_condition=exagrype.api.initialvalues.gauge_wave())
+solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, patch_size)
+solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(solver, volume_size=0.04)
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The example highlights that the module \c exagrype.api.initialvalues provides
+some analytical initial conditions that users can pick from.
+Obviously, there is still the opportunity to inject tailored initial
+conditions, as with any other ExaHyPE solver.
+
+
+## Black holes and GSL
+
+Setting up proper initial conditions is not trivial.
+ExaGRyPE relies on standard tools from the field to obtain physically
+meaningful conditions.
+The most popular initial-condition generator is likely TwoPunctures for binary
+(and single) black holes.
+
+TwoPunctures requires the GNU Scientific Library (GSL). It is therefore only
+compiled into the library if you configure Peano with \c --with-gsl
+(\c -DWITH_GSL=ON for CMake).
+This defines \c UseGSL and adds GSL to the link line of all generated
+Makefiles.
+
+Applications switch black-hole initial data on per build through
+\c -DIncludeTwoPunctures.
+If an application sets this flag but Peano has been configured without GSL,
+the build stops with an error message telling you to reconfigure.
+
+
+# Further links
+
+- <a href="https://arxiv.org/html/2406.11626v3">ExaGRyPE release paper</a>
+- Solver variants
+  - @subpage page_exagrype_foccz4
+  - @subpage page_exagrype_PDE-constraints
+  - @subpage page_exagrype_fo_so_ccz4
+- @ref page_exahype2_tutorials "Tutorials"
+- ExaGRyPE benchmarks (cf. @ref page_exahype_benchmarks "overview of all ExaHyPE benchmarks")
+  - @subpage benchmarks_exagrype_kernel_benchmarks
+  - @subpage benchmarks_exagrype_gauge_wave
+  - @subpage benchmarks_exagrype_single_black_hole
+  - @subpage benchmarks_exagrype_fo_vs_so
+
+
+# Reference papers
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@article{Zhang:2024:ExaGRyPE,
+title = {ExaGRyPE: Numerical general relativity solvers based upon the hyperbolic PDEs solver engine ExaHyPE},
+journal = {Computer Physics Communications},
+volume = {307},
+pages = {109435},
+year = {2025},
+issn = {0010-4655},
+doi = {https://doi.org/10.1016/j.cpc.2024.109435},
+url = {https://www.sciencedirect.com/science/article/pii/S0010465524003588},
+author = {Han Zhang and Baojiu Li and Tobias Weinzierl and Cristian Barrera-Hinojosa},
+keywords = {Software design, Numerical relativity, Hyperbolic partial differential equations, Finite Differences, Adaptive mesh refinement, Domain decomposition, Task parallelism},
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/

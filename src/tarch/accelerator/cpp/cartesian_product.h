@@ -1,4 +1,12 @@
 #pragma once
+
+
+/// @cond false
+///
+/// This template pattern leads to confused Doxygen
+
+
+
 //#define DISABLE_CART_PROD_IOTA_SPEC
 /* 
 Adapted from TartanLlama/ranges: https://github.com/TartanLlama/ranges
@@ -1427,7 +1435,7 @@ namespace tl  {
         void advance(difference_type n) {
      	    auto idx = linear() + n;
             x_i = idx / (nz * ny) + x_0;
-            y_i = (idx / ny) % nz + y_0;
+            y_i = (idx / nz) % ny + y_0;
 	    z_i = idx % nz + z_0;
 	}
          void next() {
@@ -2016,7 +2024,6 @@ namespace std::ranges {
 ////////////////////////////////////////////////////////////////////////////////
 // std::ranges::views re-export:
 
-#if __cplusplus <= 202002L
 namespace std {
   namespace ranges {
     using tl::cartesian_product_view;
@@ -2026,4 +2033,6 @@ namespace std {
     } // namespace views
   } // namespace ranges
 } // namespace std
-#endif
+
+/// @endcond
+

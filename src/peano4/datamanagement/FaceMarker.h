@@ -44,6 +44,10 @@ struct peano4::datamanagement::FaceMarker {
      */
     tarch::la::Vector<Dimensions,double>  _h;
 
+    bool                                  _cellIsLocal;
+
+    int                                   _select;
+
     /**
      * @see hasBeenRefined()
      */
@@ -56,21 +60,24 @@ struct peano4::datamanagement::FaceMarker {
 
     std::bitset<2*Dimensions>             _isLocal;
 
-    bool                                  _cellIsLocal;
-
-    int _select;
-
+    std::bitset<2*Dimensions>             _isAdjacentToParallelBoundary;
 
     /**
      * Entries from (0,1,2). (0,0) or (0,0,0) is the left, bottom cell.
      */
-    tarch::la::Vector<Dimensions,int>  _relativePositionOfCellWithinFatherCell;
+    tarch::la::Vector<Dimensions,int>     _relativePositionOfCellWithinFatherCell;
+
   public:
     /**
      * The derivation of _isLocal and _isRefined is very similar to
      * peano4::grid::Spacetree::getFaceType().
      */
     FaceMarker(const peano4::grid::GridTraversalEvent& event, int select=0);
+
+    /**
+     * Copy over another marker, but select a different face.
+     */
+    FaceMarker(const FaceMarker& marker, int select);
 
     /**
      * Selects a face within a cell, i.e. now the marker knows to which
@@ -161,6 +168,9 @@ struct peano4::datamanagement::FaceMarker {
 
     bool isLocal() const;
     bool isLocal(int i) const;
+
+    bool isAdjacentToParallelBoundary() const;
+    bool isAdjacentToParallelBoundary(int i) const;
 
     /**
      * Return relative position within father cell. The result is from

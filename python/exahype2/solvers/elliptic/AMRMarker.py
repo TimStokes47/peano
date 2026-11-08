@@ -2,14 +2,14 @@
 # use, please see the copyright notice at www.peano-framework.org
 import os
 
-import peano4
-import peano4.datamodel
-import peano4.output.TemplatedHeaderFile
-import peano4.output.TemplatedHeaderImplementationFilePair
-import peano4.output.Jinja2TemplatedHeaderFile
-import peano4.output.Jinja2TemplatedHeaderImplementationFilePair
+import peano4.api
+import peano4.api.datamodel
+import peano4.api.output.TemplatedHeaderFile
+import peano4.api.output.TemplatedHeaderImplementationFilePair
+import peano4.api.output.Jinja2TemplatedHeaderFile
+import peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair
 
-import peano4.toolbox.multigrid.vertexbased.ScalarJacobiWithRediscretisation
+import peano4.api.toolbox.multigrid.vertexbased.ScalarJacobiWithRediscretisation
 
 import jinja2
 
@@ -18,11 +18,11 @@ from abc import abstractmethod
 import exahype2
 
 import dastgen2
-import peano4.datamodel.DaStGen2
+import peano4.api.datamodel.DaStGen2
 
 
 class AMRMarker(object):
-  """!
+  r"""!
   
     A very simple Poisson equation system solver to identify AMR transitions
     
@@ -168,7 +168,7 @@ Relaxation coefficient: {}
     
        
     """
-    self._data_model = peano4.datamodel.DaStGen2( self._unknown_identifier() )
+    self._data_model = peano4.api.datamodel.DaStGen2( self._unknown_identifier() )
     self._data_model.data.add_attribute( dastgen2.attributes.Double("u") )
     self._data_model.data.add_attribute( dastgen2.attributes.Double("residual") )
     
@@ -204,7 +204,7 @@ Relaxation coefficient: {}
      within the inheritance tree.
      
     """
-    self._action_set_smoother = peano4.toolbox.multigrid.vertexbased.ScalarJacobiWithRediscretisation( 
+    self._action_set_smoother = peano4.api.toolbox.multigrid.vertexbased.ScalarJacobiWithRediscretisation( 
       self._data_model, 
       self._relaxation_coefficient, 
       "{}".format(self._right_hand_side) 
@@ -351,7 +351,7 @@ const double boundaryValue = 0.0;
     ## get the hanging nodes right this way
     step.add_action_set( self._action_set_smoother )
     if self._plot:
-      step.add_action_set( peano4.toolbox.PlotVertexDataInPeanoBlockFormat( 
+      step.add_action_set( peano4.api.toolbox.PlotVertexDataInPeanoBlockFormat( 
         filename=output_path + "amr-marker-" + self._name, 
         vertex_unknown=self._data_model,
         getter="getU()", 
@@ -388,7 +388,7 @@ const double boundaryValue = 0.0;
      
      This routine is typically not invoked by a user.
 
-     output: peano4.output.Output
+     output: peano4.api.output.Output
      
     """
     templatefile_prefix = os.path.dirname( os.path.realpath(__file__) ) + "/AMRMarker"
@@ -403,7 +403,7 @@ const double boundaryValue = 0.0;
     self.add_entries_to_text_replacement_dictionary(headerDictionary)
     self.add_entries_to_text_replacement_dictionary(implementationDictionary)
 
-    generated_solver_files = peano4.output.Jinja2TemplatedHeaderImplementationFilePair(
+    generated_solver_files = peano4.api.output.Jinja2TemplatedHeaderImplementationFilePair(
       templatefile_prefix + ".template.h",
       templatefile_prefix + ".template.cpp",
       self._name, 

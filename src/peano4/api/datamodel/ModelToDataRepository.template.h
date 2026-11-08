@@ -1,0 +1,36 @@
+#pragma once
+
+{DATA_CONTAINER_INCLUDES}
+
+#include <utility>
+#include "peano4/datamanagement/FaceEnumerator.h"
+#include "peano4/datamanagement/VertexEnumerator.h"
+#include "peano4/maps/HierarchicalStackMap.h"
+#include "peano4/maps/STDStackMap.h"
+
+{OPEN_NAMESPACE}
+  class {CLASSNAME};
+{CLOSE_NAMESPACE}
+
+class {FULL_QUALIFIED_CLASSNAME} {{
+  public:
+	/**
+	 * To look up the right stack, we use a combination of tree number (id) and
+	 * stack number.
+	 */
+	typedef std::pair<int,int>  DataKey;
+	
+	{DATA_CONTAINER_TYPE_DEFS}
+
+    {DATA_CONTAINER_DECLARATION}
+    
+    /**
+     * Init all the MPI datatypes
+     */
+    static void initDatatypes();
+    
+    /**
+     * Shutdown the MPI datatypes and free the local data containers.
+     */
+    static void shutdownDatatypes();
+}};

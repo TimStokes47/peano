@@ -80,8 +80,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
      */
     static std::bitset<Dimensions> PeriodicBC;
 
-    double getMinTimeStamp(bool ofCurrentlyRunningGridSweep=false) const final;
-    double getMaxTimeStamp(bool ofCurrentlyRunningGridSweep=false) const final;
+    double getMinTimeStamp() const final;
+    double getMaxTimeStamp() const final;
     double getMinTimeStepSize() const final;
     double getMaxTimeStepSize() const final;
 
@@ -211,8 +211,8 @@ class {{NAMESPACE | join("::")}}::{{CLASSNAME}}: public ::exahype2::Solver {
      *
      * @return Actually observed sizes, not the admissible quantities
      */
-    double getMaxCellSize(bool currentTimeStep = true) const;
-    double getMinCellSize(bool currentTimeStep = true) const;
+    double getMaxCellSize() const;
+    double getMinCellSize() const;
 
     /**
      * Within the DG context, mesh is an alias for cell.

@@ -99,6 +99,10 @@ public:
 
   /**
    * Shutdown parallel environment.
+   *
+   * Waits for all tasks first (@see tarch::multicore::waitForAllTasks()),
+   * as there might still be tasks around which nobody waits for, e.g. tasks
+   * that a simulation's very last mesh traversal has spawned.
    */
   void shutdown();
 
@@ -132,6 +136,8 @@ public:
    * For most backends, this should not really be a yield(). It should
    * interrupt the current task, not the current thread, and tell the
    * runtime to continue with another task.
+   *
+   * Besides the yield, we should process pending fused tasks.
    */
   void yield();
 };

@@ -1,5 +1,4 @@
-#include "tarch/multicore/Tasks.h"
-
+#include "tarch/multicore/Task.h"
 #include "config.h"
 #include "tarch/Assertions.h"
 #include "tarch/logging/Statistics.h"
@@ -124,19 +123,6 @@ void tarch::multicore::native::spawnTask(
     assertion1(spawnedTasks.count(taskNumber) == 0, taskNumber);
     spawnedTasks[taskNumber] = new std::shared_future<void>(submittedTask);
   }
-}
-
-
-void tarch::multicore::native::processFusedTask(Task* myTask, const std::list<tarch::multicore::Task*>& tasksOfSameType, int device) {
-  std::list<tarch::multicore::Task*> copyOfTasksOfSameType = tasksOfSameType;
-  std::future<void>                  dontWait              = std::async(std::launch::async, [myTask, copyOfTasksOfSameType, device]() -> void {
-    bool stillExecuteLocally = myTask->fuse(copyOfTasksOfSameType, device);
-    if (stillExecuteLocally) {
-      tarch::multicore::native::spawnTask(myTask, std::set<TaskNumber>(), NoOutDependencies);
-    } else {
-      delete myTask;
-    }
-  });
 }
 
 

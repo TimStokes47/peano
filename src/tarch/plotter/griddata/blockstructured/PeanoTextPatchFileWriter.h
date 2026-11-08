@@ -8,16 +8,23 @@
 #include <fstream>
 #include <vector>
 
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <cctype>
+#include <filesystem>
+
 namespace tarch {
   namespace plotter {
     namespace griddata {
       namespace blockstructured {
         class PeanoTextPatchFileWriter;
+
+        int restartPreprocess(const std::string  fileName, double restarTime);
       }
     }
   }
 }
-
 
 /**
  * Plot Peano's mesh data in Peano's text file format
@@ -226,6 +233,26 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      * An instance of this class has to be owned by each action set that wants
      * to dump data.
      *
+     * ## AppendNewData and the order of operations
+     *
+     * If appendToIndexFile is IndexFileMode::AppendNewData and no index file
+     * exists yet, the constructor has to both create that index file (which,
+     * via createEmptyIndexFile(), already writes one dataset section for
+     * timeStamp) and decide whether the current writer's own timeStamp is
+     * "newer" than whatever is already in the index file, to decide if a
+     * further, separate dataset section is required. That decision has to be
+     * made by calling getLatestTimeStepInIndexFile() *after* the index file
+     * has been (re)created if it had to be - not before. Comparing against
+     * the "no data yet" state that getLatestTimeStepInIndexFile() reports for
+     * a file that does not exist yet would make the writer for the very first
+     * data set of a run believe it also has to open a second, empty dataset
+     * section for its own (freshly written) time stamp, and every later
+     * writer for that same time stamp would then register its data in that
+     * spurious second section rather than the first, correct one. If you
+     * touch the ordering of operations in the AppendNewData branch of the
+     * implementation, preserve this "decide only after creating/recreating"
+     * order.
+     *
      * @param dimension     I make this a free parameter, even though most
      *   codes will pass in the compile time parameter Dimensions. However,
      *   there are codes which plot submanifolds for example or want to write
@@ -234,8 +261,17 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      *   dump.
      * @param indexFileName Name of the index file. Can we empty if you select
      *   NoIndexFile.
+     * @param precision     Number of significant digits of all floating point
+     *   numbers in the file: patch offsets and sizes, mappings and data. The
+     *   cell and vertex data writers start with this precision and can lower
+     *   or raise it via CellDataWriter::setPrecision(). The writer does not
+     *   round or truncate any value beyond this precision. Small values are
+     *   written as they are (no flush to zero), so a file written with 17
+     *   digits (std::numeric_limits<double>::max_digits10) holds the doubles
+     *   bit-exact, e.g. for a checkpoint. Keep at least six digits on deep
+     *   adaptive meshes, as the patch offsets otherwise become imprecise.
      */
-    PeanoTextPatchFileWriter(int dimension, const std::string&  fileName, const std::string&  indexFileName, IndexFileMode appendToIndexFile, double timeStamp);
+    PeanoTextPatchFileWriter(int dimension, const std::string&  fileName, const std::string&  indexFileName, IndexFileMode appendToIndexFile, double timeStamp, int precision = 6);
 
     /**
      * Destructor
@@ -259,6 +295,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description ) override;
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description, const std::string& metaData  ) override;
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& description, const std::string& metaData, double* mapping ) override;
+
 
     virtual int plotPatch(
       const tarch::la::Vector<2,double>& offset,

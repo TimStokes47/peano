@@ -1,12 +1,18 @@
-// This file is part of the Peano's PETSc extension. For conditions of
+// This file is part of the Peano's multigrid extension. For conditions of
 // distribution and use, please see the copyright notice at
 // www.peano-framework.org
 #pragma once
 
 
 #include <string>
+
+#include "tarch/la/Vector.h"
 #include "tarch/logging/Log.h"
 #include "tarch/multicore/BooleanSemaphore.h"
+
+#include "peano4/utils/Globals.h"
+
+#include "SolverStatistics.h"
 
 
 namespace mghype {
@@ -21,7 +27,7 @@ namespace mghype {
 /**
  * Abstract base class for all solvers
  */
-class mghype::matrixfree::solvers::Solver {
+class mghype::matrixfree::solvers::Solver: public mghype::matrixfree::solvers::SolverStatistics {
   public:
     /**
      * Construct the solver
@@ -33,20 +39,21 @@ class mghype::matrixfree::solvers::Solver {
      */
     Solver(const std::string&  name, double tolerance);
 
-    virtual bool terminationCriterionHolds();
-
-    void updateGlobalResidual(
-      double residualMaxNorm,
-      double residualEukledianNormSquared,
-      double residualHNormSquared,
-      double h
-    );
-
-    double getGlobalResidualMaxNorm() const;
-
     virtual std::string toString() const;
 
+    /**
+     * End the traversal
+     *
+     * Has to be implemented in subclass. Most solvers synchronise the
+     * global statistics, and then print some output.
+     */
     virtual void beginMeshSweep() = 0;
+
+    /**
+     * Begin the traversal
+     *
+     * Most solvers invoke clearGlobalResidualAndSolutionUpdate().
+     */
     virtual void endMeshSweep() = 0;
   protected:
 
@@ -58,42 +65,5 @@ class mghype::matrixfree::solvers::Solver {
      * Usually only used for debuggin purposes
      */
     std::string _name;
-
-    /**
-     * @see terminationCriterionHolds()
-     */
-    const double _tolerance;
-
-    /**
-     * Observed mesh width
-     */
-    double     _minH;
-
-    /**
-     * Observed mesh width
-     */
-    double     _maxH;
-
-    double     _globalResidualMaxNorm;
-    double     _globalResidualEukledianNormSquared;
-    double     _globalResidualHNormSquared;
-
-    double _initialGlobalResidualMaxNorm;
-    double _initialGlobalResidualEukledianNormSquared;
-    double _initialGlobalResidualHNormSquared;
-
-    double _previousGlobalResidualMaxNorm;
-    double _previousGlobalResidualEukledianNormSquared;
-    double _previousGlobalResidualHNormSquared;
-
-    /**
-     * Semaphore for global residual values
-     */
-    tarch::multicore::BooleanSemaphore  _semaphore;
-
-    /**
-     * Most solvers call this one in beginMeshSweep().
-     */
-    void clearGlobalResidual();
 };
 

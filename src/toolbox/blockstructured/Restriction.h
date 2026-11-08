@@ -18,22 +18,23 @@ namespace toolbox {
      * one at the bottom, it is the lower layer of volumes within the face data
      * which has to be cleared.
      *
-     * Clearing the halo layer is something that we have to do whenever we create
-     * a new face. In theory, we could skip this, as a proper interpolation will
-     * eventually set meaningful values, but I found it useful to have non-garbage
-     * within the faces.
+     * Clearing the halo layer is something that we have to do whenever we
+     * create a new face. In theory, we could skip this, as a proper
+     * interpolation will eventually set meaningful values, but I found it
+     * useful to have non-garbage within the faces.
      *
      * We also have to clear the layer prior to any restriction, as restrictions
      * typically accumulate a result (while an interpolation just writes the
-     * interpolated value to a cell). The reason is as follows: When you interpolate,
-     * you have the coarse data and you can interpolate the whole value in one rush.
-     * When you restrict, you typically assemble the final restricted value step by
-     * step as you run through the finer cells. But there's no point where you have
-     * all the fine grid data on the table at the same time. So we have to accumulate.
-     * Clearing is something most codes do in touchFaceFirstTime(). Most codes also
-     * work with two types of face data: There's a backup of the face data into which
-     * they write the current data. This is then used for interpolation, while the
-     * actual data is cleared and used to accumulate the restricted values.
+     * interpolated value to a cell). The reason is as follows: When you
+     * interpolate, you have the coarse data and you can interpolate the whole
+     * value in one rush. When you restrict, you typically assemble the final
+     * restricted value step by step as you run through the finer cells. But
+     * there's no point where you have all the fine grid data on the table at
+     * the same time. So we have to accumulate. Clearing is something most codes
+     * do in touchFaceFirstTime(). Most codes also work with two types of face
+     * data: There's a backup of the face data into which they write the current
+     * data. This is then used for interpolation, while the actual data is
+     * cleared and used to accumulate the restricted values.
      */
     void clearHaloLayerAoS(
       const peano4::datamanagement::FaceMarker& marker,
@@ -44,7 +45,10 @@ namespace toolbox {
     );
 
     void clearCell(
-      const peano4::datamanagement::CellMarker& marker, int numberOfDoFsPerAxisInPatch, int unknowns, double* values
+      const peano4::datamanagement::CellMarker& marker,
+      int                                       numberOfDoFsPerAxisInPatch,
+      int                                       unknowns,
+      double*                                   values
     );
 
     /**
@@ -133,7 +137,8 @@ namespace toolbox {
      * scheme or data which is hold within the centre of a subgrid
      * (totally staggered dof layout).
      *
-     * The description above assumes that numberOfDoFsPerAxisInDestinationPatch<=numberOfDoFsPerAxisInSourcePatch.
+     * The description above assumes that
+     * numberOfDoFsPerAxisInDestinationPatch<=numberOfDoFsPerAxisInSourcePatch.
      * While the routine also works if this is not the case, injecting
      * from a coarser mesh into a finer one introduces a huge numerical
      * inaccuracy (it is basically piece-wise constant) and you hence
@@ -157,9 +162,9 @@ namespace toolbox {
      * injection.
      *
      * @param weightOfInjectedValue If this value is 0.5, we take the average.
-     *   If it equals 1.0, we end up exactly with restrictCellIntoOverlappingCell_inject(),
-     *   i.e. overwrite the value in destinationValues. A value of 0.0 switches
-     *   the injection off.
+     *   If it equals 1.0, we end up exactly with
+     * restrictCellIntoOverlappingCell_inject(), i.e. overwrite the value in
+     * destinationValues. A value of 0.0 switches the injection off.
      */
     void restrictCellIntoOverlappingCell_inject_and_average(
       int     numberOfDoFsPerAxisInSourcePatch,
@@ -199,18 +204,22 @@ namespace toolbox {
     /**
      * Restrict with averaging
      *
-     * This routine works for overlaps of 1 and multiples of 3. However, it
-     * does only set values for the overlap/3 adjacent cells. So if you work
-     * with an overlap of 1, then the overlap just works fine, but it is not
-     * really the average. It is the average of the one layer adjacent to the
-     * fine grid transition. In 2d, it is the sum scaled with 1/3.
+     * The routine maps the half of the fine face overlap which belongs to
+     * the fine cell (or the other half if swapInsideOutside is set) onto
+     * the same half of the coarse face. It accumulates, i.e. the caller has
+     * to clear the coarse half beforehand, and the 3^(d-1) subfaces of a
+     * coarse face together set each coarse volume once.
      *
      * @image html Restriction_averaging.png
      *
-     * If you have an overlap of 3, the routine computes a meaningful average,
-     * but as it has only three overlap cells on the fine grid, it can
-     * only set the overlap cell 1 on the next coarser mesh.
-     *
+     * Each coarse volume of this half receives the average of the
+     * 3^(d-1) fine volumes next to it along the face times all overlap fine
+     * layers. The fine layers span overlap fine volumes along the normal,
+     * i.e. they cover the coarse layer next to the face for overlap<=3, but
+     * not the coarse layers further away. The routine sets these further
+     * layers to the same average, i.e. it extrapolates constantly along the
+     * normal. For an overlap of one, it is the average of the one fine
+     * layer next to the face. The routine works for any overlap.
      */
     void restrictInnerHalfOfHaloLayer_AoS_averaging(
       const peano4::datamanagement::FaceMarker& marker,
@@ -246,8 +255,16 @@ namespace toolbox {
       const peano4::datamanagement::CellMarker& marker,
       int                                       numberOfDoFsPerAxisInPatch,
       int                                       unknowns,
-      double* fineGridValues,
-      double* coarseGridValues
+      double*                                   fineGridValues,
+      double*                                   coarseGridValues
+    );
+
+    void restrictCell_AoS_third_order(
+      const peano4::datamanagement::CellMarker& marker,
+      int                                       numberOfDoFsPerAxisInPatch,
+      int                                       unknowns,
+      double*                                   fineGridValues,
+      double*                                   coarseGridValues
     );
 
 
@@ -276,26 +293,35 @@ namespace toolbox {
     );
 
     void restrictHaloLayer_AoS_matrix(
-	const peano4::datamanagement::FaceMarker& marker,
-	int					  numberOfDoFsPerAxisInPatch,
-	int					  overlap,
-	int					  unknowns,
-	const double* __restrict__ 		  restrictionData,
-	const int* __restrict__		  columnIndices,
-	const int* __restrict__		  rowIndices,
-	int				  	  dataOffset,
-	int					  rowIndicesOffset,
-	double* fineGridValues,
-	double* coarseGridValues
+      const peano4::datamanagement::FaceMarker& marker,
+      int                                       numberOfDoFsPerAxisInPatch,
+      int                                       overlap,
+      int                                       unknowns,
+      const double* __restrict__ restrictionData,
+      const int* __restrict__ columnIndices,
+      const int* __restrict__ rowIndices,
+      int     dataOffset,
+      int     rowIndicesOffset,
+      double* fineGridValues,
+      double* coarseGridValues
     );
 
     void restrictHaloLayer_AoS_second_order(
-	const peano4::datamanagement::FaceMarker& marker,
-	int					  numberOfDoFsPerAxisInPatch,
-	int					  overlap,
-	int					  unknowns,
-	double* fineGridValues,
-	double* coarseGridValues
+      const peano4::datamanagement::FaceMarker& marker,
+      int                                       numberOfDoFsPerAxisInPatch,
+      int                                       overlap,
+      int                                       unknowns,
+      double*                                   fineGridValues,
+      double*                                   coarseGridValues
+    );
+
+    void restrictHaloLayer_AoS_third_order(
+      const peano4::datamanagement::FaceMarker& marker,
+      int                                       numberOfDoFsPerAxisInPatch,
+      int                                       overlap,
+      int                                       unknowns,
+      double*                                   fineGridValues,
+      double*                                   coarseGridValues
     );
 
     /**
@@ -370,8 +396,8 @@ namespace toolbox {
      * property by means of the injection (see
      * restrictInnerHalfOfHaloLayer_AoS_inject()). From the example above
      * where we illustrate an overlap of two, it becomes clear that we now
-     * cannot set all halo data on the coarser mesh directly, i.e. using fine grid
-     * data. The fine grid would hold all required data, but the routine
+     * cannot set all halo data on the coarser mesh directly, i.e. using fine
+     * grid data. The fine grid would hold all required data, but the routine
      * accepts the fine grid face data only. This data is not sufficient to set
      * all coarse entries.
      *
@@ -478,11 +504,11 @@ namespace toolbox {
       int                                       numberOfDoFsPerAxisInPatch,
       int                                       overlap,
       int                                       unknowns,
-      const double* __restrict__ 		normalRestrictionMatrix1d,
-      const double* __restrict__ 		tangentialRestrictionMatrix1d,
-      double* 					fineGridValues,
-      double* 					coarseGridValues,
-      bool    					swapInsideOutside = false
+      const double* __restrict__ normalRestrictionMatrix1d,
+      const double* __restrict__ tangentialRestrictionMatrix1d,
+      double* fineGridValues,
+      double* coarseGridValues,
+      bool    swapInsideOutside = false
     );
 
     void restrictInnerHalfOfHaloLayer_AoS_matrix(
@@ -490,14 +516,14 @@ namespace toolbox {
       int                                       numberOfDoFsPerAxisInPatch,
       int                                       overlap,
       int                                       unknowns,
-      const double* __restrict__   		restrictionMatrixData,
-      const int* __restrict__ 			columnIndices,
-      const int* __restrict__ 			rowIndices,
-      int				  	dataOffset,
-      int					rowIndicesOffset,
-      double* 					fineGridValues,
-      double* 					coarseGridValues,
-      bool    					swapInsideOutside = false
+      const double* __restrict__ restrictionMatrixData,
+      const int* __restrict__ columnIndices,
+      const int* __restrict__ rowIndices,
+      int     dataOffset,
+      int     rowIndicesOffset,
+      double* fineGridValues,
+      double* coarseGridValues,
+      bool    swapInsideOutside = false
     );
 
     void restrictInnerHalfOfHaloLayer_AoS_second_order(
@@ -509,6 +535,17 @@ namespace toolbox {
       double*                                   coarseGridValues,
       bool                                      swapInsideOutside = false
     );
+
+    void restrictInnerHalfOfHaloLayer_AoS_third_order(
+      const peano4::datamanagement::FaceMarker& marker,
+      int                                       numberOfDoFsPerAxisInPatch,
+      int                                       overlap,
+      int                                       unknowns,
+      double*                                   fineGridValues,
+      double*                                   coarseGridValues,
+      bool                                      swapInsideOutside = false
+    );
+
 
     namespace internal {
 
@@ -525,9 +562,9 @@ namespace toolbox {
        * erase hanging layers before you interpolate or restrict into them.
        * This is what this routine does.
        *
-       * @param marker    This marker identifies a face. See the class documentation
-       *   in particular for details about the enumeration (selected faces) of the
-       *   faces from a cell's point of view.
+       * @param marker    This marker identifies a face. See the class
+       * documentation in particular for details about the enumeration (selected
+       * faces) of the faces from a cell's point of view.
        * @param numberOfDoFsPerAxisInPatch The N in the description above
        * @param overlap   Equals M/2 in the description above, i.e. if you each
        *   patch is surrounded by one halo layer, then the total overlap equals
@@ -548,11 +585,12 @@ namespace toolbox {
       /**
        * Helper function
        *
-       * This function runs through all fine grid/coarse grid cell combinations which
-       * are identified via fineGridCellMarker. So we call the functor once per fine
-       * grid cell, but @f$ 3^d @f$ times or not at all for any coarse grid cell. This
-       * routine is used as a helper function for piece-wise constant interpolation.
-       * It is not that useful for d-linear interpolation.
+       * This function runs through all fine grid/coarse grid cell combinations
+       * which are identified via fineGridCellMarker. So we call the functor
+       * once per fine grid cell, but @f$ 3^d @f$ times or not at all for any
+       * coarse grid cell. This routine is used as a helper function for
+       * piece-wise constant interpolation. It is not that useful for d-linear
+       * interpolation.
        */
       void projectCells_AoS(
         const peano4::datamanagement::CellMarker& fineGridCellMarker,

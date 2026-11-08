@@ -13,11 +13,13 @@ SUBDIRS = . \
 	toolbox/loadbalancing \
 	toolbox/multiprecision \
 	toolbox/particles \
+	toolbox/curvi \
 	convert \
 	exahype2 \
+	exagrype \
 	mghype \
 	petsc \
-	swift2 \
+	exaparty \
 	tbb \
 	unittests
 
@@ -63,12 +65,13 @@ Tarch_SOURCES = tarch/tarch.cpp \
 	tarch/multicore/multicore.cpp \
 	tarch/multicore/Core.cpp \
 	tarch/multicore/Lock.cpp \
+	tarch/multicore/TaskEnumerator.cpp \
 	tarch/multicore/MultiReadSingleWriteSemaphore.cpp \
 	tarch/multicore/MultiReadSingleWriteLock.cpp \
 	tarch/multicore/RecursiveLock.cpp \
 	tarch/multicore/RecursiveSemaphore.cpp \
 	tarch/multicore/smartScheduling.cpp \
-	tarch/multicore/Tasks.cpp \
+	tarch/multicore/Task.cpp \
 	tarch/multicore/cpp/multicore.cpp \
 	tarch/multicore/cpp/BooleanSemaphore.cpp \
 	tarch/multicore/cpp/Core.cpp \
@@ -79,20 +82,26 @@ Tarch_SOURCES = tarch/tarch.cpp \
 	tarch/multicore/omp/Core.cpp \
 	tarch/multicore/omp/RecursiveSemaphore.cpp \
 	tarch/multicore/omp/Tasks.cpp \
+	tarch/multicore/taskfusion/taskfusion.cpp \
+	tarch/multicore/taskfusion/FusableTasksQueue.cpp \
+	tarch/multicore/taskfusion/LogReadyTask.cpp \
+	tarch/multicore/taskfusion/ProcessOneReadyTask.cpp \
+	tarch/multicore/taskfusion/ProcessSetOfReadyTasks.cpp \
 	tarch/multicore/tbb/multicore.cpp \
 	tarch/multicore/tbb/BooleanSemaphore.cpp \
 	tarch/multicore/tbb/Core.cpp \
+	tarch/multicore/tbb/MultiReadSingleWriteSemaphore.cpp \
 	tarch/multicore/tbb/RecursiveSemaphore.cpp \
 	tarch/multicore/tbb/Tasks.cpp \
+	tarch/multicore/tbb/TaskHandleRepository.cpp \
 	tarch/multicore/sycl/multicore.cpp \
 	tarch/multicore/sycl/BooleanSemaphore.cpp \
 	tarch/multicore/sycl/Core.cpp \
 	tarch/multicore/sycl/RecursiveSemaphore.cpp \
 	tarch/multicore/sycl/Tasks.cpp \
 	tarch/multicore/orchestration/AllOnGPU.cpp \
-	tarch/multicore/orchestration/BackfillAndDeployRoundRobin.cpp \
 	tarch/multicore/orchestration/Hardcoded.cpp \
-	tarch/multicore/orchestration/StrategyFactory.cpp \
+	tarch/multicore/orchestration/Strategy.cpp \
 	tarch/tests/TestCaseCollection.cpp \
 	tarch/tests/TreeTestCaseCollection.cpp \
 	tarch/tests/TestCase.cpp \
@@ -119,7 +128,14 @@ Tarch_SOURCES = tarch/tarch.cpp \
 	tarch/plotter/griddata/blockstructured/PeanoHDF5PatchFileWriter_CellDataWriter.cpp \
 	tarch/plotter/griddata/blockstructured/PeanoHDF5PatchFileWriter_VertexDataWriter.cpp \
 	tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter_CellDataWriter.cpp \
+	tarch/plotter/griddata/blockstructured/PeanoBinaryPatchFileWriter.cpp \
+	tarch/plotter/griddata/blockstructured/PeanoBinaryPatchFileWriter_VertexDataWriter.cpp \
+	tarch/plotter/griddata/blockstructured/PeanoBinaryPatchFileWriter_CellDataWriter.cpp \
 	tarch/plotter/pointdata/vtk/VTKWriter.cpp \
+	tarch/reader/NetCDFFileReader.cpp \
+	tarch/reader/NetCDFFieldParser.cpp \
+	tarch/reader/PeanoTextPatchFileReader.cpp \
+	tarch/reader/PeanoBinaryPatchFileReader.cpp \
 	tarch/mpi/BooleanSemaphore.cpp \
 	tarch/mpi/Lock.cpp \
 	tarch/mpi/Rank.cpp \
@@ -134,6 +150,7 @@ Tarch_SOURCES = tarch/tarch.cpp \
 	tarch/logging/ITTLogger.cpp \
 	tarch/logging/Log.cpp \
 	tarch/logging/LogFilterFileReader.cpp \
+	tarch/logging/NoLogger.cpp \
 	tarch/logging/NVTXLogger.cpp \
 	tarch/logging/ScorePLogger.cpp \
 	tarch/logging/LogFilter.cpp \
@@ -160,7 +177,10 @@ Peano4Core_SOURCES = \
 	peano4/datamanagement/CellMarker.cpp \
 	peano4/datamanagement/FaceMarker.cpp \
 	peano4/datamanagement/VertexMarker.cpp \
+	peano4/datamanagement/tests/DataMovementTest.cpp \
 	peano4/peano.cpp \
+	peano4/RunMultipleSteps.cpp \
+	peano4/DefaultStepReport.cpp \
 	peano4/UnitTests.cpp \
 	peano4/grid/AutomatonState.cpp \
 	peano4/grid/EmptyTraversalObserver.cpp \
@@ -188,6 +208,9 @@ Peano4Core_SOURCES = \
 	peano4/parallel/tests/NodeTest.cpp \
 	peano4/stacks/stacks.cpp \
 	peano4/stacks/STDVectorStack.cpp \
+	peano4/stacks/tests/GeneratedTestObject.cpp \
+	peano4/stacks/tests/GeneratedTestObject_Flattened.cpp \
+	peano4/stacks/tests/STDVectorStackOverObjectsWithSmartPointersTest.cpp \
 	peano4/utils/Loop.cpp \
 	peano4/utils/tests/ParallelDForTest.cpp
 	

@@ -42,14 +42,14 @@ namespace tarch {
  * temporary and we only write entries if there are entries updated.
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * t   exahype2::EnclaveBookkeeping::memory-allocations  mpi wait times  tarch::multicore::bsp-concurrency-level   tarch::multicore::fuse-tasks  tarch::multicore::global-pending-tasks  tarch::multicore::thread-local-pending-tasks  grid-control-events
- * t, exahype2::EnclaveBookkeeping::memory-allocations, mpi wait times, tarch::multicore::bsp-concurrency-level, tarch::multicore::fuse-tasks, tarch::multicore::global-pending-tasks, tarch::multicore::thread-local-pending-tasks, grid-control-events
- * 0.00130565, , (0.150548/0/0.157291/#10), (1/0/1/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
- * 0.00131057, , , (2/1/2/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
- * 0.00134099, , , (3/2/3/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
- * 0.00135324, , , (4/3/4/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
- * 0.00135806, , , (5/4/5/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
- * 0.00137025, , , (6/5/6/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
+ * t   mpi wait times  tarch::multicore::bsp-concurrency-level   tarch::multicore::fuse-tasks  tarch::multicore::global-pending-tasks  tarch::multicore::thread-local-pending-tasks  grid-control-events
+ * t, mpi wait times, tarch::multicore::bsp-concurrency-level, tarch::multicore::fuse-tasks, tarch::multicore::global-pending-tasks, tarch::multicore::thread-local-pending-tasks, grid-control-events
+ * 0.00130565, (0.150548/0/0.157291/#10), (1/0/1/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
+ * 0.00131057, , (2/1/2/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
+ * 0.00134099, , (3/2/3/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
+ * 0.00135324, , (4/3/4/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
+ * 0.00135806, , (5/4/5/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
+ * 0.00137025, , (6/5/6/#1), , , , "((refinementControl=Refine,offset=[-9.03,-9.03,-9.03],width=[18.06,18.06,18.06],h=[2.02,2.02,2.02]))" ,
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  * Each entry follows a format of its own. The time stamps are given in
@@ -77,19 +77,34 @@ class tarch::logging::Statistics {
      */
     static Statistics& getInstance();
 
-    /**
-     * Log one particular value
-     *
-     * @param identifier Unique name (string) for this event
-     */
     #ifdef TrackStatistics
+      /**
+       * Log one particular value
+       *
+       * A log means that you basically report a snapshot. The value is
+       * memorised. It is up to the database logic to decide if to store this
+       * value or not.
+       *
+       * @param identifier Unique name (string) for this event
+       * @see updateDataSnapshot() for the data base logic.
+       */
       void log( const std::string& identifier, double value, bool disableSampling = false );
+
+      /**
+       * Log an event
+       */
       void log( const std::string& identifier, const std::string& value );
-      void inc( const std::string& identifier, double value = 1.0, bool disableSampling = false );
+
+      /**
+       * Increment an internal stats counter
+       *
+       * There is no decrement, as you can always pass in a negative value as well.
+       */
+      void inc( const std::string& identifier, double value = 1.0, bool disableSampling = false, bool clearAfterDatabaseDump = false );
     #else
       inline void log( [[maybe_unused]] const std::string& identifier, [[maybe_unused]] double value, [[maybe_unused]] bool disableSampling = false ) {}
       inline void log( [[maybe_unused]] const std::string& identifier, [[maybe_unused]] const std::string& value ) {}
-      inline void inc( [[maybe_unused]] const std::string& identifier, [[maybe_unused]] double value = 1.0, [[maybe_unused]] bool disableSampling = false ) {}
+      inline void inc( [[maybe_unused]] const std::string& identifier, [[maybe_unused]] double value = 1.0, [[maybe_unused]] bool disableSampling = false, [[maybe_unused]] bool clearAfterDatabaseDump = false ) {}
     #endif
 
     /**
@@ -163,7 +178,9 @@ class tarch::logging::Statistics {
        */
       DataSet();
       DataSet(double time);
-      void createNewSnapshot(double t);
+      void createNewSnapshot(double t, bool clearAfterDatabaseDump);
+
+      std::string toString() const;
     };
 
     struct LogMessage {
@@ -192,9 +209,11 @@ class tarch::logging::Statistics {
      * If the data has not changed since the last snapshot, I don't write
      * anything.
      *
+     * If data has changed by more than 10%, I always write.
+     *
      * @return Write a new snapshot.
      */
-    bool acceptNewData(const std::string& identifier, bool disableSampling);
+    bool acceptNewData(const std::string& identifier, bool disableSampling, bool clearAfterDatabaseDump);
 
     /**
      * Ensures that dataset is there. If not, it creates a new entry.
