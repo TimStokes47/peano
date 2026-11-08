@@ -168,7 +168,13 @@ class SolverHost(abc.ABC):
             host_graphs.append(graphs)
         self.couple(exahype2_project, peano_project, own_graphs, host_graphs)
 
-        title = "Time stepping task graph for host " + self._name
+        title = (
+            "Time stepping task graph for host "
+            + self._name
+            + " (concatenation of the graphs of "
+            + ", ".join(solver.name for solver in self._solvers)
+            + ")"
+        )
         if peano4.api.Logger().is_visualisation:
             host_graphs.time_step.visualise(title=title)
         if peano4.api.Logger().is_text:
