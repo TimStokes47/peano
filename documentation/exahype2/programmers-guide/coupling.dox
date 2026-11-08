@@ -83,7 +83,7 @@ solver.
 A prime case study for the coupling is the first-order second-order CCZ4 solver.
 We benchmark it in @ref benchmarks_exagrype_fo_vs_so and explain the details on 
 @ref page_exagrype_fo_so_ccz4.
-Here, two solvers, @ref exagrype.api.FOSOCCZ4Solver and @ref exagrype.api.FOSOCCZ4Reconstructor
+Here, two solvers, @ref exagrype.api.FOSOCCZ4Solver and @ref exagrype.api.FOSOReconstructionSolver (hosted by @ref exagrype.api.FOSOSolver)
 take turns.
 Each one takes the primary evoluation variables of the other one as auxiliary variables.
 

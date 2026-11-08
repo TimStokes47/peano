@@ -6,7 +6,8 @@ This is the gauge wave benchmark (@ref benchmarks_exagrype_gauge_wave) with the
 fourth-order Finite Differences (exahype2.api.rkfd4), but we instantiate two
 solvers in one setup: exagrype.api.FOCCZ4Solver, which evolves all 59 CCZ4
 unknowns, and exagrype.api.FOSOCCZ4Solver, which evolves 25 of them and obtains
-the 34 first derivatives from its exagrype.api.FOSOCCZ4Reconstructor. Both solvers
+the 34 first derivatives from the exagrype.api.FOSOReconstructionSolver next to it
+(both are hosted by an exagrype.api.FOSOSolver). Both solvers
 use the same Runge-Kutta scheme, the same lopsided advection and no
 dissipation. The two do not yield identical results: The first-order solver
 evolves the derivatives as unknowns, whereas the second-order solver
@@ -161,7 +162,7 @@ by about 80 (FO) and 75 (SO), i.e. \f$ 3^4 \f$: both formulations converge with 
 
 The FV variant (second-order central differences, one reconstruction task per step) builds,
 generates and runs, but we could **not** obtain a meaningful FV comparison. The reason is not
-the reconstructor: the Finite Volume time step kernel in 3d that exahype2.api.fv.RusanovWithExplicitEuler generates
+the reconstruction: the Finite Volume time step kernel in 3d that exahype2.api.fv.RusanovWithExplicitEuler generates
 contains neither the non-conservative product, the source, nor the maximum eigenvalue. The kernel template guards these blocks with
 `if nonconservativeProduct:`, `if volumetricSource:`, `if maxEigenvalue:` (and `if flux:`), but
 the DSL parser compares the guard with the class names of the PDE terms
@@ -282,14 +283,13 @@ def build(scheme, formulation, cells):
         directory=directory,
         executable=executable,
     )
-    solver_class = (
-        exagrype.api.FOCCZ4Solver
-        if formulation == "FO"
-        else exagrype.api.FOSOCCZ4Solver
-    )
-    solver = solver_class(
-        name, initial_condition=exagrype.api.initialvalues.gauge_wave()
-    )
+    initial_condition = exagrype.api.initialvalues.gauge_wave()
+    if formulation == "FO":
+        solver = exagrype.api.FOCCZ4Solver(name, initial_condition=initial_condition)
+    else:
+        # The pair of CCZ4 and reconstruction solver. We configure the former.
+        pair = exagrype.api.FOSOSolver(name, initial_condition=initial_condition)
+        solver = pair.ccz4
     # The grid cells have to be strictly smaller than volume_size times the patch size
     volume_size = 1.01 / cells
     match scheme:
@@ -328,8 +328,10 @@ def build(scheme, formulation, cells):
                 first_plot_time_stamp=0.0,
                 time_in_between_plots=time_in_between_plots,
             )
-    project.add_solver(solver)
-    # The reconstructor of the second-order solver is part of the solver
+    if formulation == "FO":
+        project.add_solver(solver)
+    else:
+        pair.add_to_project(project)
 
     project.compiler = (
         #peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion

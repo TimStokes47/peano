@@ -6,10 +6,34 @@ import exahype2.api
 import exagrype.api
 
 
-def _realise(solver, tmp_path, enforce=None):
-    """! Realise solver (and thus its reconstructor) and return the time step graph"""
+def _project(tmp_path):
+    exahype2_project = exahype2.api.Project(
+        ["probe"], "probe", "probe", directory=str(tmp_path)
+    )
+    exahype2_project.set_global_simulation_parameters(
+        dimensions=3,
+        offset=[0.0, 0.0, 0.0],
+        size=[1.0, 1.0, 1.0],
+        min_end_time=1.0,
+        periodic_BC=[True, True, True],
+    )
+    return exahype2_project, peano4.api.Project(["probe"], "probe", str(tmp_path))
+
+
+def _realise_pair(pair, tmp_path):
+    """! Realise both solvers in the order of the project and return the time step graph """
+    exahype2_project, peano_project = _project(tmp_path)
+    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
+    for solver in (pair.ccz4, pair.reconstruction):
+        solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
+    return graphs[1]
+
+
+def _realise(pair, tmp_path, enforce=None):
+    """! Configure the pair with FD4, realise both solvers and return the time step graph """
+    solver = pair.ccz4
     Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
-    # Lopsided advection widens the halo to the three that the reconstructor needs
+    # Lopsided advection widens the halo to the three that the reconstruction needs
     solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
         solver,
         9,
@@ -23,20 +47,7 @@ def _realise(solver, tmp_path, enforce=None):
     )
     if enforce is not None:
         solver.enforce_ccz4_constraint(enforce)
-    exahype2_project = exahype2.api.Project(
-        ["probe"], "probe", "probe", directory=str(tmp_path)
-    )
-    exahype2_project.set_global_simulation_parameters(
-        dimensions=3,
-        offset=[0.0, 0.0, 0.0],
-        size=[1.0, 1.0, 1.0],
-        min_end_time=1.0,
-        periodic_BC=[True, True, True],
-    )
-    peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
-    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
-    solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
-    return graphs[1]
+    return _realise_pair(pair, tmp_path)
 
 
 def test_so_solver_splits_the_59_entries_into_25_unknowns_and_34_derivatives():
@@ -146,19 +157,46 @@ def test_solvers_share_the_base_class():
     )
 
 
-def test_reconstructor_belongs_to_the_solver():
-    solver = exagrype.api.FOSOCCZ4Solver("SO")
-    reconstructor = solver.reconstructor
-    assert isinstance(reconstructor, exagrype.api.FOSOCCZ4Reconstructor)
-    assert reconstructor.solver is solver
+def test_fososolver_hosts_the_ccz4_solver_and_the_reconstruction_solver():
+    pair = exagrype.api.FOSOSolver("SO")
+    assert isinstance(pair.ccz4, exagrype.api.FOSOCCZ4Solver)
+    assert isinstance(pair.reconstruction, exagrype.api.FOSOReconstructionSolver)
+    assert pair.ccz4.name == "SO"
+    assert pair.reconstruction.name == "SOReconstruction"
+    assert pair.reconstruction.ccz4 is pair.ccz4
     # Same data, swapped roles
-    assert reconstructor.unknowns == 34
-    assert reconstructor.number_of_auxiliary_variables == 25
+    assert pair.ccz4.unknowns == 25
+    assert pair.ccz4.number_of_auxiliary_variables == 34
+    assert pair.reconstruction.unknowns == 34
+    # The unknowns of the reconstruction are the auxiliary variables of the CCZ4 solver
+    assert pair.reconstruction.variable_names_per_entry() == [
+        name.removeprefix("Derivatives.")
+        for name in pair.ccz4.derivatives.variable_names_per_entry()
+    ]
+    assert pair.reconstruction.pde_terms == []
+    assert pair.reconstruction.plotters == []
 
 
-def test_reconstructor_takes_turns_with_each_stage_of_the_solver(tmp_path):
-    solver = exagrype.api.FOSOCCZ4Solver("SO")
-    time_step = _realise(solver, tmp_path)
+def test_fososolver_registers_ccz4_before_the_reconstruction(tmp_path):
+    pair = exagrype.api.FOSOSolver("SO", reconstruction_name="Recon")
+    project, _ = _project(tmp_path)
+    pair.add_to_project(project)
+    assert project._solvers == [pair.ccz4, pair.reconstruction]
+    assert pair.reconstruction.name == "Recon"
+
+
+def test_reconstruction_solver_forwards_the_time_step_data_of_the_ccz4_solver(tmp_path):
+    pair = exagrype.api.FOSOSolver("SO")
+    _realise(pair, tmp_path)
+    methods = dict(pair.reconstruction._abstract_solver_methods)
+    for getter in ["getMinTimeStamp", "getMaxTimeStamp", "getMinTimeStepSize", "getMaxTimeStepSize"]:
+        definition = methods[f"double {getter}() const override;"]("A")
+        assert f"repositories::instanceOfSO.{getter}()" in definition
+    assert "SolverRepository.h" in pair.reconstruction.user_solver_includes
+
+
+def test_reconstruction_solver_takes_turns_with_each_stage_of_the_solver(tmp_path):
+    time_step = _realise(exagrype.api.FOSOSolver("SO"), tmp_path)
     order = time_step.ordered_tasks()
     for stage in range(4):
         reconstruct = next(
@@ -167,12 +205,12 @@ def test_reconstructor_takes_turns_with_each_stage_of_the_solver(tmp_path):
         derivatives = next(
             task
             for task in order
-            if task.name == f"SOReconstructor_Reconstruct derivatives for stage {stage}"
+            if task.name == f"SOReconstruction_Reconstruct derivatives for stage {stage}"
         )
         assert derivatives in reconstruct.dependencies
         assert order.index(derivatives) < order.index(reconstruct)
         if stage > 0:
-            # The reconstructor follows what the solver's reconstruction followed
+            # The reconstruction follows what the solver's reconstruction followed
             assert any(
                 dependency.name.startswith("SO_Roll over stage")
                 or dependency.name.startswith("SO_Roll over solution")
@@ -183,14 +221,15 @@ def test_reconstructor_takes_turns_with_each_stage_of_the_solver(tmp_path):
             }
 
 
-def test_reconstructor_keeps_the_data_it_shares_with_the_solver_alive(tmp_path):
-    solver = exagrype.api.FOSOCCZ4Solver("SO")
-    time_step = _realise(solver, tmp_path)
+def test_reconstruction_keeps_the_data_it_shares_with_the_solver_alive(tmp_path):
+    pair = exagrype.api.FOSOSolver("SO")
+    solver = pair.ccz4
+    time_step = _realise(pair, tmp_path)
     Access = peano4.api.taskgraph.Task.DataAccess
     task = next(
         task
         for task in time_step.tasks
-        if task.name == "SOReconstructor_Reconstruct derivatives for stage 1"
+        if task.name == "SOReconstruction_Reconstruct derivatives for stage 1"
     )
     assert task.cell_data_access[solver._stage_input] == Access.READ_AND_WRITE
     assert (
@@ -204,10 +243,9 @@ def test_reconstructor_keeps_the_data_it_shares_with_the_solver_alive(tmp_path):
     )
 
 
-def test_reconstructor_works_together_with_the_constraint_enforcement(tmp_path):
-    solver = exagrype.api.FOSOCCZ4Solver("SO")
+def test_reconstruction_works_together_with_the_constraint_enforcement(tmp_path):
     time_step = _realise(
-        solver,
+        exagrype.api.FOSOSolver("SO"),
         tmp_path,
         enforce=exagrype.api.FOSOCCZ4Solver.EnforceCCZ4Constraint.IntermediateSteps,
     )
@@ -216,80 +254,58 @@ def test_reconstructor_works_together_with_the_constraint_enforcement(tmp_path):
     assert sum("Reconstruct derivatives" in name for name in names) == 4
 
 
-def test_reconstructor_runs_in_front_of_the_finite_volume_update(tmp_path):
-    solver = exagrype.api.FOSOCCZ4Solver("SO")
+def test_reconstruction_runs_in_front_of_the_finite_volume_update(tmp_path):
+    pair = exagrype.api.FOSOSolver("SO")
+    solver = pair.ccz4
     solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(solver, 9)
     solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
         solver, volume_size=1.0 / 27.0
     )
-    exahype2_project = exahype2.api.Project(
-        ["probe"], "probe", "probe", directory=str(tmp_path)
-    )
-    exahype2_project.set_global_simulation_parameters(
-        dimensions=3,
-        offset=[0.0, 0.0, 0.0],
-        size=[1.0, 1.0, 1.0],
-        min_end_time=1.0,
-        periodic_BC=[True, True, True],
-    )
-    peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
-    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
-    solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
-    order = graphs[1].ordered_tasks()
+    order = _realise_pair(pair, tmp_path).ordered_tasks()
     reconstruct = next(task for task in order if task.name == "SO_Reconstruct")
     derivatives = next(
         task
         for task in order
-        if task.name == "SOReconstructor_Reconstruct derivatives"
+        if task.name == "SOReconstruction_Reconstruct derivatives"
     )
     assert derivatives in reconstruct.dependencies
     assert order.index(derivatives) < order.index(reconstruct)
     assert sum("Reconstruct derivatives" in task.name for task in order) == 1
 
 
-def test_reconstructor_rejects_unsupported_schemes(tmp_path):
-    solver = exagrype.api.FOSOCCZ4Solver("SO")
-    solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, 9)
+def test_reconstruction_rejects_unsupported_schemes(tmp_path):
+    pair = exagrype.api.FOSOSolver("SO")
+    pair.ccz4.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(pair.ccz4, 9)
     with pytest.raises(Exception):
-        solver.reconstructor.generate_solver_realisation(
-            None, None, *[peano4.api.taskgraph.Graph() for _ in range(4)]
+        pair.reconstruction.numerical_scheme.construct_output(
+            None, None, peano4.api.taskgraph.Graph()
         )
 
 
-def test_reconstructor_rejects_a_halo_of_two(tmp_path):
-    solver = exagrype.api.FOSOCCZ4Solver("SO")
-    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-        solver, 9, rk_order=4
+def test_reconstruction_rejects_a_halo_of_two(tmp_path):
+    pair = exagrype.api.FOSOSolver("SO")
+    pair.ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        pair.ccz4, 9, rk_order=4
     )
-    assert solver.numerical_scheme.HALO_SIZE == 2
+    assert pair.ccz4.numerical_scheme.HALO_SIZE == 2
     with pytest.raises(ValueError, match="at least three"):
-        solver.reconstructor.generate_solver_realisation(
-            None, None, *[peano4.api.taskgraph.Graph() for _ in range(4)]
+        pair.reconstruction.numerical_scheme.construct_output(
+            None, None, peano4.api.taskgraph.Graph()
         )
 
 
-def test_reconstructor_adapts_to_the_larger_halo_of_the_dissipation_scheme(tmp_path):
-    solver = exagrype.api.FOSOCCZ4Solver("SO")
+def test_reconstruction_adapts_to_the_larger_halo_of_the_dissipation_scheme(tmp_path):
+    pair = exagrype.api.FOSOSolver("SO")
+    solver = pair.ccz4
     solver.numerical_scheme = exagrype.api.FD4WithKODissipation(
         solver, 9, rk_order=4, kreiss_oliger_sigma=1.0
     )
     solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
         solver, volume_size=1.0 / 27.0
     )
-    exahype2_project = exahype2.api.Project(
-        ["probe"], "probe", "probe", directory=str(tmp_path)
-    )
-    exahype2_project.set_global_simulation_parameters(
-        dimensions=3,
-        offset=[0.0, 0.0, 0.0],
-        size=[1.0, 1.0, 1.0],
-        min_end_time=1.0,
-        periodic_BC=[True, True, True],
-    )
-    peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
-    graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
-    solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
-    assert sum("Reconstruct derivatives" in task.name for task in graphs[1].tasks) == 4
+    time_step = _realise_pair(pair, tmp_path)
+    assert sum("Reconstruct derivatives" in task.name for task in time_step.tasks) == 4
+    assert pair.reconstruction.numerical_scheme.halo_size == 3
 
 
 @pytest.mark.parametrize(
