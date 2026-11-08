@@ -100,10 +100,15 @@ def test_time_step_interpolates_before_reconstruction_and_restricts_projection(
     (interpolation,) = _action_sets_of_type(
         time_step["Probe_Interpolate hanging faces"], Interpolate
     )
-    assert time_step["Probe_Interpolate hanging faces"] in time_step["Probe_Reconstruct"].dependencies
+    assert (
+        time_step["Probe_Interpolate hanging faces"]
+        in time_step["Probe_Reconstruct"].dependencies
+    )
     assert interpolation.scheme == Interpolate.Scheme.Linear
     assert interpolation.d["FACE_NAME"] == solver._patch_overlap_current_time_step.name
-    (restriction,) = _action_sets_of_type(time_step["Probe_Project on faces"], Restrict)
+    (restriction,) = _action_sets_of_type(
+        time_step["Probe_Restrict on hanging faces"], Restrict
+    )
     assert restriction.scheme == Restrict.Scheme.Averaging
     assert restriction.d["FACE_NAME"] == solver._patch_overlap_update.name
     (setup_restriction,) = _action_sets_of_type(
@@ -122,6 +127,22 @@ def test_schemes_are_configurable(tmp_path):
         time_step["Probe_Interpolate hanging faces"], Interpolate
     )
     assert interpolation.scheme == Interpolate.Scheme.PiecewiseConstant
-    for task in [time_step["Probe_Project on faces"], setup["Probe Project on faces"]]:
+    for task in [
+        time_step["Probe_Restrict on hanging faces"],
+        setup["Probe Project on faces"],
+    ]:
         (restriction,) = _action_sets_of_type(task, Restrict)
         assert restriction.scheme == Restrict.Scheme.Inject
+
+
+def test_projection_restriction_and_roll_over_are_tasks_following_each_other(tmp_path):
+    _, (_, time_step) = _graphs(tmp_path)
+    projection = time_step["Probe_Project on faces"]
+    restriction = time_step["Probe_Restrict on hanging faces"]
+    roll_over = time_step["Probe_Roll over faces"]
+    assert restriction.dependencies == [projection]
+    assert roll_over.dependencies == [restriction]
+    assert [type(a).__name__ for a in projection.action_sets] == [
+        "ProjectPatchOntoFaces"
+    ]
+    assert [type(a).__name__ for a in roll_over.action_sets] == ["RollOverUpdatedFace"]

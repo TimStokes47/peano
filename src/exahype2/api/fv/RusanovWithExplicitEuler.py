@@ -681,11 +681,25 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
             )
         )
         ## On adaptive meshes, restrict the fine data from the hanging faces
-        ## onto the coarse faces, before the roll over copies them
-        project_on_faces_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
+        ## onto the coarse faces, before the roll over copies them. The
+        ## projection, the restriction and the roll over are tasks of their own
+        ## which share the temporary update patch, i.e. they rely on the task
+        ## graph compiler to fuse them (@see RusanovWithExplicitEuler.construct_output()).
+        ## The projection declares the face data of the current time step, so
+        ## the compiler does not fuse it into the traversal of the reconstruction.
+        restriction_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Restrict on hanging faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        restriction_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
+        restriction_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
+        restriction_task.add_dependency(project_on_faces_task)
+        time_step.add_task(restriction_task)
         ## Sommerfeld boundary conditions advance the ghost volumes within
         ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
-        project_on_faces_task.add_action_set(
+        roll_over_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Roll over faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        roll_over_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
+        roll_over_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
+        roll_over_task.add_dependency(restriction_task)
+        time_step.add_task(roll_over_task)
+        roll_over_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
                 self._solver,
                 exahype2_project,
@@ -1064,11 +1078,25 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
             )
         )
         ## On adaptive meshes, restrict the fine data from the hanging faces
-        ## onto the coarse faces, before the roll over copies them
-        project_on_faces_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
+        ## onto the coarse faces, before the roll over copies them. The
+        ## projection, the restriction and the roll over are tasks of their own
+        ## which share the temporary update patch, i.e. they rely on the task
+        ## graph compiler to fuse them (@see RusanovWithExplicitEuler.construct_output()).
+        ## The projection declares the face data of the current time step, so
+        ## the compiler does not fuse it into the traversal of the reconstruction.
+        restriction_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Restrict on hanging faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        restriction_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
+        restriction_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
+        restriction_task.add_dependency(project_on_faces_task)
+        time_step.add_task(restriction_task)
         ## Sommerfeld boundary conditions advance the ghost volumes within
         ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
-        project_on_faces_task.add_action_set(
+        roll_over_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Roll over faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
+        roll_over_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
+        roll_over_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
+        roll_over_task.add_dependency(restriction_task)
+        time_step.add_task(roll_over_task)
+        roll_over_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
                 self._solver,
                 exahype2_project,
