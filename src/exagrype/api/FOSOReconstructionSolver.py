@@ -38,19 +38,20 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
       derivatives.
 
     Users do not create the solver themselves: exagrype.api.FOSOSolver
-    creates it and registers it with the project right after the CCZ4 solver.
-    The reconstruction has to be realised after the CCZ4 solver, as it looks
-    up the tasks and the data of the latter.
+    creates it and realises it right after the CCZ4 solver. The reconstruction
+    has to be realised after the CCZ4 solver, as it uses its data.
 
     ## Task graph
 
-    For each stage of the Runge-Kutta scheme of the CCZ4 solver, the solver
-    inserts one task. The task depends on whatever the CCZ4 solver's
-    reconstruction of the stage depends on, and the latter depends on the new
-    task. Within the task, we visit each cell once, build the stage's input
-    with its halo, reconstruct the derivatives of the cell and project them
-    onto the faces. In terms of @ref page_exahype_programmers_guide_coupling,
-    this is a multiplicative coupling, with the coupling repeated per stage.
+    For each stage of the Runge-Kutta scheme of the CCZ4 solver (once for FV),
+    the solver creates one task in a task graph of its own. Within the task,
+    we visit each cell once, build the stage's input with its halo,
+    reconstruct the derivatives of the cell and project them onto the faces.
+    The tasks have no dependencies. The host concatenates the graph with the
+    one of the CCZ4 solver and makes the stage's reconstruction task of the
+    CCZ4 solver wait for it (exagrype.api.FOSOSolver.couple()). In terms of
+    @ref page_exahype_programmers_guide_coupling, this is a multiplicative
+    coupling, with the coupling repeated per stage.
 
     ## Shortcomings
 
@@ -74,13 +75,23 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
 
         The numerical scheme of the reconstruction solver
 
-        It inserts the reconstruction tasks into the time stepping task graph.
-        Patch size and halo are the ones of the CCZ4 solver's scheme.
+        It builds the reconstruction tasks, one per stage of the CCZ4 solver's
+        scheme, in a task graph of its own. The tasks have no dependencies.
+        Where they belong in the graph of the CCZ4 solver is the business of
+        the host (exagrype.api.FOSOSolver): after construct_output(),
+        stage_tasks holds the task of each stage, and
+        names_of_partner_reconstruction_tasks holds the name of the task of
+        the CCZ4 solver which has to wait for it. Patch size and halo are the
+        ones of the CCZ4 solver's scheme.
 
         """
 
         def __init__(self, solver: "FOSOReconstructionSolver"):
             super().__init__(solver)
+            self.stage_tasks = []
+            """! The reconstruction task of each stage, filled by construct_output() """
+            self.names_of_partner_reconstruction_tasks = []
+            """! Name of the reconstruction task of the CCZ4 solver per stage, filled by construct_output() """
 
         @property
         def patch_size(self) -> int:
@@ -90,10 +101,17 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
         def halo_size(self) -> int:
             return self._solver.ccz4.numerical_scheme.halo_size
 
-        def construct_output(self, exahype2_project, peano_project, time_step):
+        def construct_output(
+            self, exahype2_project, peano_project, time_step, add_global_tasks=True
+        ):
             """!
 
-            Insert the reconstruction in front of each stage of the CCZ4 solver
+            Create the reconstruction tasks for each stage of the CCZ4 solver
+
+            The CCZ4 solver has to be realised before, as the routine
+            needs its data. The solver has no global tasks, i.e. it ignores
+            add_global_tasks: the derivatives follow the mesh that the CCZ4
+            solver refines.
 
             @param exahype2_project: exahype2.api.Project
               The project that hosts the solvers.
@@ -102,7 +120,10 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
               The Peano project that the exahype2 project assembles.
 
             @param time_step: peano4.api.taskgraph.Graph
-              Task graph of the time step. The CCZ4 solver has added its tasks.
+              Task graph of the reconstruction solver. It receives the tasks.
+
+            @param add_global_tasks: bool
+              Ignored.
 
             """
             reconstruction = self._solver
@@ -178,20 +199,15 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
                 f"fineGridCell{derivatives.patch.name}.value);"
             )
 
+            self.stage_tasks = []
+            self.names_of_partner_reconstruction_tasks = []
             ## Stages is the Runge-Kutta stages or 1 for FV
             for stage in range(stages):
                 stage_input = ccz4._patch if stage == 0 else ccz4._stage_input
                 suffix = f" stage {stage}" if per_stage else ""
-                ccz4_reconstruction = [
-                    task
-                    for task in time_step.tasks
-                    if task.name == f"{ccz4.name}_Reconstruct{suffix}"
-                ]
-                if len(ccz4_reconstruction) != 1:
-                    raise ValueError(
-                        f"Reconstruction {name}: cannot find the reconstruction{suffix} of solver {ccz4.name} in the time stepping task graph"
-                    )
-                ccz4_reconstruction = ccz4_reconstruction[0]
+                self.names_of_partner_reconstruction_tasks.append(
+                    f"{ccz4.name}_Reconstruct{suffix}"
+                )
 
                 task = peano4.api.taskgraph.Task(
                     name=f"{name}_Reconstruct derivatives"
@@ -240,19 +256,20 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
                     )
                 )
 
-                # Take over what the CCZ4 solver waits for, then let it wait for us
-                for dependency in ccz4_reconstruction.dependencies:
-                    task.add_dependency(dependency)
+                task.tags.add(self.stage_tag(stage))
                 time_step.add_task(task)
-                ccz4_reconstruction.add_dependency(task)
+                self.stage_tasks.append(task)
 
-            title = (
-                f"Time stepping task graph for {ccz4.name} with reconstruction {name}"
-            )
+            title = f"Time stepping task graph for {name}"
             if peano4.api.Logger().is_visualisation:
                 time_step.visualise(title=title)
             if peano4.api.Logger().is_text:
                 time_step.log_as_text(title=title)
+
+        @staticmethod
+        def stage_tag(stage: int) -> str:
+            """! Tag of the reconstruction task of a stage"""
+            return f"exagrype.api.FOSOReconstructionSolver.Stage{stage}"
 
     class NoGridConstruction(exahype2.api.Solver.GridConstruction):
         """!

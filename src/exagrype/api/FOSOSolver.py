@@ -10,7 +10,7 @@ from .FOSOCCZ4Solver import FOSOCCZ4Solver
 from .FOSOReconstructionSolver import FOSOReconstructionSolver
 
 
-class FOSOSolver:
+class FOSOSolver(exahype2.api.SolverHost):
     """!
 
     CCZ4 in the first-/second-order reconstructed formulation as a coupled pair
@@ -19,22 +19,34 @@ class FOSOSolver:
     graph (@ref page_exagrype_fo_so_ccz4, @ref page_exahype_programmers_guide_coupling):
 
     - ccz4 (exagrype.api.FOSOCCZ4Solver) evolves the 25 primary unknowns of
-      CCZ4. It holds the 34 derivatives as auxiliary variables.
+      CCZ4. It holds the 34 derivatives as auxiliary variables. It is the
+      solver that owns the global tasks, i.e. the load balancing and the
+      dynamic mesh refinement (global_tasks_solver, see @ref exahype2.api.SolverHost).
     - reconstruction (exagrype.api.FOSOReconstructionSolver) evolves the
       derivatives, i.e. it recomputes them from the primary unknowns in
       front of each Runge-Kutta stage of ccz4.
 
     Configure ccz4 exactly as any other solver (numerical scheme, grid
-    construction, plotter, constraint enforcement, ...), and then call
-    add_to_project(). The reconstruction needs no configuration: it takes
-    patch size and halo from ccz4.
+    construction, plotter, constraint enforcement, ...), and then add the
+    host to the project with exahype2.api.Project.add_solver(). The
+    reconstruction needs no configuration: it takes patch size and halo from
+    ccz4.
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     solver = exagrype.api.FOSOSolver("SO")
     solver.ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(solver.ccz4, patch_size, rk_order=4, ...)
     ...
-    solver.add_to_project(project)
+    project.add_solver(solver)
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ## Task graph
+
+    Both solvers build a task graph of their own, and report it. The reconstruction
+    solver's graph has one task per stage and no dependencies.
+    The host concatenates the graphs and wires them (couple()): The task of
+    each stage takes over the dependencies of the CCZ4 solver's reconstruction
+    of this stage, and the latter depends on the former. The host
+    reports the outcome.
 
     """
 
@@ -70,17 +82,43 @@ class FOSOSolver:
             self.ccz4,
         )
         """! The solver that reconstructs the derivatives """
+        # The CCZ4 solver is realised first, as the reconstruction needs its data
+        super().__init__(name, [self.ccz4, self.reconstruction])
 
-    def add_to_project(self, project: exahype2.api.Project):
+    def couple(self, exahype2_project, peano_project, own_graphs, host_graphs):
         """!
 
-        Register both solvers with the project
+        Let each stage of the CCZ4 solver wait for the reconstruction of this stage
 
-        The CCZ4 solver has to be realised first, so it is registered first.
+        The reconstruction task of a stage waits for whatever the CCZ4
+        solver's reconstruction of the stage waits for, and the latter waits
+        for the former.
 
-        @param project: exahype2.api.Project
-          The project that hosts the pair.
+        @param exahype2_project: exahype2.api.Project
+          The project that hosts the pair (unused).
+
+        @param peano_project: peano4.api.Project
+          The Peano project that the exahype2 project assembles (unused).
+
+        @param own_graphs: Dict[exahype2.api.Solver, exahype2.api.PhaseGraphs]
+          The graphs of the two solvers (unused).
+
+        @param host_graphs: exahype2.api.PhaseGraphs
+          The concatenated graphs. The time step graph receives the dependencies.
 
         """
-        project.add_solver(self.ccz4)
-        project.add_solver(self.reconstruction)
+        scheme = self.reconstruction.numerical_scheme
+        time_step = host_graphs.time_step
+        for stage, (task, partner_name) in enumerate(
+            zip(scheme.stage_tasks, scheme.names_of_partner_reconstruction_tasks)
+        ):
+            partner = [t for t in time_step.tasks if t.name == partner_name]
+            if len(partner) != 1:
+                raise ValueError(
+                    f"Host {self.name}: cannot find the reconstruction {partner_name} "
+                    f"of stage {stage} of solver {self.ccz4.name} in its time stepping task graph"
+                )
+            partner = partner[0]
+            for dependency in partner.dependencies:
+                task.add_dependency(dependency)
+            partner.add_dependency(task)

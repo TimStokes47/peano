@@ -21,16 +21,15 @@ def _project(tmp_path):
 
 
 def _realise_pair(pair, tmp_path):
-    """! Realise both solvers in the order of the project and return the time step graph """
+    """! Let the host realise the pair and return the time step graph of the project """
     exahype2_project, peano_project = _project(tmp_path)
     graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
-    for solver in (pair.ccz4, pair.reconstruction):
-        solver.generate_solver_realisation(exahype2_project, peano_project, *graphs)
+    pair.generate_solver_realisation(exahype2_project, peano_project, *graphs)
     return graphs[1]
 
 
-def _realise(pair, tmp_path, enforce=None):
-    """! Configure the pair with FD4, realise both solvers and return the time step graph """
+def _configure(pair, enforce=None):
+    """! Configure the CCZ4 solver of the pair with FD4 and lopsided advection """
     solver = pair.ccz4
     Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
     # Lopsided advection widens the halo to the three that the reconstruction needs
@@ -47,6 +46,11 @@ def _realise(pair, tmp_path, enforce=None):
     )
     if enforce is not None:
         solver.enforce_ccz4_constraint(enforce)
+
+
+def _realise(pair, tmp_path, enforce=None):
+    """! Configure the pair with FD4, realise both solvers and return the time step graph """
+    _configure(pair, enforce)
     return _realise_pair(pair, tmp_path)
 
 
@@ -177,12 +181,74 @@ def test_fososolver_hosts_the_ccz4_solver_and_the_reconstruction_solver():
     assert pair.reconstruction.plotters == []
 
 
-def test_fososolver_registers_ccz4_before_the_reconstruction(tmp_path):
+def test_project_registers_the_solvers_of_the_host_but_lets_the_host_realise_them(tmp_path):
     pair = exagrype.api.FOSOSolver("SO", reconstruction_name="Recon")
     project, _ = _project(tmp_path)
-    pair.add_to_project(project)
+    project.add_solver(pair)
     assert project._solvers == [pair.ccz4, pair.reconstruction]
+    assert project._realisations == [pair]
     assert pair.reconstruction.name == "Recon"
+
+
+def test_solvers_build_separate_graphs_which_the_host_concatenates(tmp_path):
+    """! Neither solver sees the tasks of the other one, only the host's graph holds both """
+    pair = exagrype.api.FOSOSolver("SO")
+    _configure(pair)
+    exahype2_project, peano_project = _project(tmp_path)
+    recorded = {}
+    for solver in (pair.ccz4, pair.reconstruction):
+        original = solver.generate_solver_realisation
+
+        def record(*args, _solver=solver, _original=original, **kwargs):
+            result = _original(*args, **kwargs)
+            # A snapshot, as the host adds dependencies to the shared tasks afterwards
+            recorded[_solver.name] = (
+                args[3],
+                [(t.name, len(t.dependencies)) for t in args[3].tasks],
+                kwargs,
+            )
+            return result
+
+        solver.generate_solver_realisation = record
+    project_graphs = [peano4.api.taskgraph.Graph() for _ in range(4)]
+    pair.generate_solver_realisation(exahype2_project, peano_project, *project_graphs)
+
+    ccz4_graph, ccz4_tasks, ccz4_kwargs = recorded["SO"]
+    recon_graph, recon_tasks, recon_kwargs = recorded["SOReconstruction"]
+    assert ccz4_graph is not recon_graph
+    assert ccz4_graph is not project_graphs[1]
+    assert not any("Reconstruct derivatives" in name for name, _ in ccz4_tasks)
+    assert recon_tasks == [
+        (f"SOReconstruction_Reconstruct derivatives for stage {stage}", 0)
+        for stage in range(4)
+    ]
+    # Concatenation: the project holds the tasks of both
+    assert len(project_graphs[1].tasks) == len(ccz4_tasks) + len(recon_tasks)
+    # Only the CCZ4 solver owns the global tasks
+    assert ccz4_kwargs == {"add_global_tasks": True}
+    assert recon_kwargs == {"add_global_tasks": False}
+
+
+def test_host_reports_the_concatenated_graph(tmp_path, monkeypatch):
+    titles = {}
+
+    def report(self, title="Task graph"):
+        titles[title] = [t.name for t in self.tasks]
+
+    monkeypatch.setattr(peano4.api.taskgraph.Graph, "log_as_text", report)
+    monkeypatch.setattr(peano4.api.taskgraph.Graph, "visualise", lambda self, title="": None)
+    previous = peano4.api.Logger().verbosity
+    peano4.api.Logger().verbosity = peano4.api.LoggerVerbosity.TEXT
+    try:
+        _realise(exagrype.api.FOSOSolver("SO"), tmp_path)
+    finally:
+        peano4.api.Logger().verbosity = previous
+    own_ccz4 = titles["Time stepping task graph for SO"]
+    own_reconstruction = titles["Time stepping task graph for SOReconstruction"]
+    host = titles["Time stepping task graph for host SO"]
+    assert not any("Reconstruct derivatives" in name for name in own_ccz4)
+    assert len(own_reconstruction) == 4
+    assert sorted(host) == sorted(own_ccz4 + own_reconstruction)
 
 
 def test_reconstruction_solver_forwards_the_time_step_data_of_the_ccz4_solver(tmp_path):

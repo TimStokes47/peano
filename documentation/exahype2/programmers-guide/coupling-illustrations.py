@@ -12,7 +12,7 @@ python3 documentation/exahype2/programmers-guide/coupling-illustrations.py
 
 The script writes coupling-additive-task-graph-coupled.png next to it: the
 time stepping task graph of CCZ4 coupled to Euler, as it looks after
-CCZ4WithEuler.realise_coupling() has inserted the KickOff and WrapUp tasks.
+CCZ4WithEuler.couple() has inserted the KickOff and WrapUp tasks.
 It is built from the benchmark benchmarks/exagrype/gauge-wave-with-Euler with
 the same solver setup. The generated files go into a temporary directory.
 
@@ -66,13 +66,13 @@ def plot_coupled_time_step(file_name):
 
     # Grab the time step graph once the coupling has completed it
     graphs = []
-    original = coupled.realise_coupling
+    original = coupled.couple
 
-    def realise_coupling(*args):
-        original(*args)
-        graphs.append(args[3])
+    def couple(exahype2_project, peano_project, own_graphs, host_graphs):
+        original(exahype2_project, peano_project, own_graphs, host_graphs)
+        graphs.append(host_graphs.time_step)
 
-    coupled.realise_coupling = realise_coupling
+    coupled.couple = couple
 
     with tempfile.TemporaryDirectory() as directory:
         project = exahype2.api.Project(
@@ -81,7 +81,7 @@ def plot_coupled_time_step(file_name):
             directory=directory,
             executable="illustration",
         )
-        coupled.add_to_project(project)
+        project.add_solver(coupled)
         project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
         project.set_global_simulation_parameters(
             dimensions=3,

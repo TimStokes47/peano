@@ -252,7 +252,7 @@ def test_constraint_enforcement_rejects_unknown_scheme(tmp_path):
         patch_size = 4
         halo_size = 1
 
-        def construct_output(self, exahype2_project, peano_project, time_step):
+        def construct_output(self, exahype2_project, peano_project, time_step, add_global_tasks=True):
             pass
 
     class NoGridConstruction(exahype2.api.Solver.GridConstruction):

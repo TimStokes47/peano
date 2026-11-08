@@ -972,11 +972,19 @@ Patch overlap data
             + self._solver.user_solver_includes,
         )
 
-    def construct_output(self, exahype2_project, peano_project, time_step):
+    def construct_output(
+        self, exahype2_project, peano_project, time_step, add_global_tasks=True
+    ):
         """!
 
         Add the data to the Peano 4 project, generate the kernels and add
         the tasks of one Runge-Kutta step to time_step
+
+        @param add_global_tasks: bool
+          If False, the scheme adds neither the task that switches the load
+          balancing off nor the last task that evaluates the adaptivity
+          criterion and switches the load balancing on again,
+          @see exahype2.api.Solver.Solver.NumericalScheme.construct_output().
 
         Per stage k, the time step holds the following tasks (see the class
         documentation for the data flow). Every task holds exactly one
@@ -1138,7 +1146,7 @@ Patch overlap data
             time_step.add_task(reconstruction_task)
             if previous_stage_task is not None:
                 reconstruction_task.add_dependency(previous_stage_task)
-            else:
+            elif add_global_tasks:
                 load_balancing_task = peano4.api.taskgraph.Task(
                     name=f"{name}_Disable load balancing", entity=Entity.CELL
                 )
@@ -1432,35 +1440,36 @@ Patch overlap data
         )
         time_step.add_task(time_step_size_task)
 
-        ## The very last task evaluates the adaptivity criterion if the
-        ## solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
-        ## collects refine and erase requests for the mesh adaptation phase,
-        ## and it switches the load balancing on again and informs it that
-        ## the time step has finished.
-        dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
-            name=f"{name}_{self.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
-            entity=Entity.CELL,
-            may_spawn_background_tasks=False,
-        )
-        dynamic_mesh_refinement_task.use_cell(
-            self._solver._patch, Access.READ_AND_WRITE
-        )
-        dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
-            self._solver,
-            self.patch_size,
-            guard=cell_guard,
-            min_volume_size=self.min_volume_size,
-            max_volume_size=self.max_volume_size,
-        )
-        if dynamic_mesh_refinement is not None:
-            dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
-        dynamic_mesh_refinement_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.LoadBalancing(
-                enable_load_balancing=True
+        if add_global_tasks:
+            ## The very last task evaluates the adaptivity criterion if the
+            ## solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
+            ## collects refine and erase requests for the mesh adaptation phase,
+            ## and it switches the load balancing on again and informs it that
+            ## the time step has finished.
+            dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
+                name=f"{name}_{self.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
+                entity=Entity.CELL,
+                may_spawn_background_tasks=False,
             )
-        )
-        dynamic_mesh_refinement_task.add_dependency(previous_stage_task)
-        time_step.add_task(dynamic_mesh_refinement_task)
+            dynamic_mesh_refinement_task.use_cell(
+                self._solver._patch, Access.READ_AND_WRITE
+            )
+            dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
+                self._solver,
+                self.patch_size,
+                guard=cell_guard,
+                min_volume_size=self.min_volume_size,
+                max_volume_size=self.max_volume_size,
+            )
+            if dynamic_mesh_refinement is not None:
+                dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
+            dynamic_mesh_refinement_task.add_action_set(
+                toolbox.loadbalancing.api.actionsets.LoadBalancing(
+                    enable_load_balancing=True
+                )
+            )
+            dynamic_mesh_refinement_task.add_dependency(previous_stage_task)
+            time_step.add_task(dynamic_mesh_refinement_task)
 
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title="Time stepping task graph for {}".format(name))

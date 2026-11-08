@@ -247,6 +247,7 @@ class CCZ4SolverBase(exahype2.api.Solver):
         time_step,
         plot,
         mesh_adaptation,
+        add_global_tasks=True,
     ):
         """!
 
@@ -288,6 +289,7 @@ class CCZ4SolverBase(exahype2.api.Solver):
             time_step,
             plot,
             mesh_adaptation,
+            add_global_tasks,
         )
         Enforce = CCZ4SolverBase.EnforceCCZ4Constraint
         if self._enforce_ccz4_constraint == Enforce.No:

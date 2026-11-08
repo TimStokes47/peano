@@ -129,8 +129,10 @@ and nothing is copied.
 
 ## Task graph
 
-For each Runge-Kutta stage \f$ s \f$ the reconstruction solver inserts one task
-in front of the reconstruction task of the solver:
+Both solvers build a task graph of their own (and report it), and the host
+(exagrype.api.FOSOSolver) concatenates them and reports the outcome.
+The graph of the reconstruction solver is a set of unconnected tasks, one per Runge-Kutta stage
+\f$ s \f$ (one for FV). The host inserts the task of each stage in front of the reconstruction task of the CCZ4 solver:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Project stage s onto faces (SO)
@@ -144,8 +146,9 @@ Reconstruct derivatives for stage s (SOReconstruction)
 Reconstruct stage s (SO)  ->  Evaluate right-hand side s (SO)  ->  Prepare stage s+1 (SO)  ->  ...
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The project realises the reconstruction solver right after the CCZ4 solver
-(exagrype.api.FOSOSolver.add_to_project() registers them in this order). The task graph compiler fuses
+The host realises the CCZ4 solver first, as the reconstruction solver needs its data. The CCZ4 solver
+owns the global tasks (load balancing switch, dynamic mesh refinement), see @ref page_exahype_programmers_guide_coupling.
+The task graph compiler fuses
 the tasks as usual, i.e. the reconstruction of the derivatives and the solver's
 own reconstruction typically end up in neighbouring (producer/consumer) mesh
 sweeps.
@@ -223,10 +226,14 @@ For FD4, the halo has to be at least 3.
   array as the unknowns (unknowns first, then the auxiliary variables), which
   is exactly the layout of the 59 CCZ4 entries. Evolving only 25 of them needs
   nothing besides the existing "copy only the unknowns back" logic.
-- **One shared time stepping graph.** The Project owns one time stepping graph
-  into which all solvers insert their tasks. The reconstruction solver looks up the
-  solver's tasks by name ("<solver>_Reconstruct stage <s>") and adds itself as
-  an additional dependency. No change of the generic exahype2.api was required.
+- **Separate graphs, concatenated by the host.** Initially, the reconstruction solver
+  looked up the tasks of the CCZ4 solver by name in the one time stepping graph that the
+  project shares among all solvers, and added itself as an additional dependency. That entangled the
+  two solvers, and the user saw only one half-finished graph after the other. Now, each
+  solver builds a graph of its own, and exahype2.api.SolverHost concatenates them and
+  lets exagrype.api.FOSOSolver.couple() add the dependencies. The price is a flag
+  (add_global_tasks) that all schemes honour, so the load balancing switch and the dynamic
+  mesh refinement exist once.
 - **Reusing ReconstructPatchAndApplyFunctor.** The toolbox action set builds the
   halo patch and then runs a user-supplied snippet. The snippet is one call
   into the C++ library, i.e. the generated code stays tiny.

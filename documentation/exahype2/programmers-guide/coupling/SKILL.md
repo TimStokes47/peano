@@ -18,8 +18,37 @@ There is no preferred version of additive vs multiplicative.
 
 ## Preparatory steps
 
-Create a new ExaHyPE solver with the given name. For each solver that it brings 
-together, it aggregates an instance of this solver in the constructor.
+Create a new host class which derives from `exahype2.api.SolverHost`. It is what the user
+adds to the project (`project.add_solver(host)`), and it brings its solvers along. 
+The constructor creates one solver instance per solver to be coupled, and hands them over
+to the superclass in the order in which they are realised. A solver can rely on the data
+of its predecessors. Do **not** let the solvers call each other's realisation, and do not
+add the individual solvers to the project yourself.
+
+The host does not override `generate_solver_realisation()`. The superclass already does the
+following, and the host only implements `couple()`:
+
+1. Each solver is realised into task graphs of its own (`exahype2.api.PhaseGraphs`), and 
+   each solver reports its own time stepping graph (text or visualisation, depending on the logger).
+2. The superclass concatenates the graphs of all solvers into graphs of the host 
+   (`peano4.api.taskgraph.Graph.append()`).
+3. `couple()` adds tasks and dependencies between the chains of the solvers. 
+4. The superclass reports the concatenated, coupled time stepping graph once more and 
+   appends it to the graphs of the project.
+
+If possible, display a rendering of each of these graphs to the user.
+
+### Global tasks
+
+Some tasks belong to the mesh rather than to a solver: the task that switches the load balancing
+off, the last task which evaluates the adaptivity criterion and switches the load balancing on again,
+and the mesh adaptation phase. They must exist once. Each solver's 
+`generate_solver_realisation()` takes a flag `add_global_tasks`; the superclass passes True to
+the solver in `global_tasks_solver` (default: the first one) and False to all others. 
+If your host needs a different solver to own them, override the property. 
+Ask the user which solver's adaptivity criterion should drive the mesh.
+If a solver uses a custom numerical scheme, check that its `construct_output()` accepts and 
+honours the flag.
 
 
 ## Volumetric coupling and data sets
@@ -33,24 +62,24 @@ variables accordingly. After that, change the data association accordingly.
 
 ### Multiplicative solver coupling
 
-generate_solver_realisation() now delegates this call to each aggregate. Ensure 
-that the second solver appends its tasks to the task graph of the first one and 
-does not replace the tasks. The first task of the second solver has to depend on 
-the last task of the first solver. We create a chain of subtasks.
-
-Ensure 
-that the second solver appends its tasks to the task graph of the first one and 
-does not replace the tasks. The first task of the second solver has to depend on 
-the last task of the first solver. We create a chain of subtasks.
+`couple()` makes tasks of one solver wait for tasks of the other one. The graphs are already
+concatenated, so there is nothing to append: look up the tasks to be tied together (ideally 
+through tags that the solver's scheme puts on them - names only as a fallback, and then ask 
+the solver's scheme for the names rather than hard-coding them), take over the dependencies 
+of the consuming task, and make the consuming task depend on the producer. The first task of 
+the second solver has to depend on the last task of the first solver, or, for 
+a coupling per time step stage, each stage of the consumer on the matching stage of the 
+producer. We create a chain of subtasks.
+`exagrype.api.FOSOSolver` is a worked example. 
 
 If possible, display a rendering of the arising task graph to the user.
 
 
 ### Additive solver coupling
 
-generate_solver_realisation() now delegates this call to each aggregate. Each one
-creates its own task graph. Introduce a new KickOff task as the very first one,
-i.e. the first task of each solver's task graph depends on KickOff to have terminated.
+The solvers' graphs run in parallel. In `couple()`, introduce a new KickOff task as the very 
+first one, i.e. the first task of each solver's task graph depends on KickOff to have terminated.
+`CCZ4WithEuler` in `benchmarks/exagrype/gauge-wave-with-Euler` is a worked example.
 
 If possible, display a rendering of the arising task graph to the user.
 
@@ -66,8 +95,8 @@ task graph has finished, the copy can be discarded, too.
 If two solvers furthermore have to synchronise each other globally, then we have 
 to insert a WrapUp task after the whole task graph which waits for the last tasks
 of all the created subtasks. Note that these might fork in their own right, i.e. we 
-have to find all tasks that are not predecessor of any other task. There should be a
-peano.api.taskgraph routine for that.
+have to find all tasks that are not predecessor of any other task. 
+`peano4.api.taskgraph.Graph.sink_tasks()` does that, for the host's concatenated graph.
 
 The WrapUp tasks only does a global action in unprepare. The Abstract solver base
 class that's generated get a new functor the says synchronise, and the user is told
@@ -79,7 +108,8 @@ to supply the missing information.
 As we always want to support multi-step time stepping, too, we have to reread all
 of the descriptions above re time steps as "subgraph per time step". This is only 
 relevant for the additive scheme. It implies that WrapUp and KickOff might have to 
-be inserted multiple times at the corresponding markers.
+be inserted multiple times at the corresponding markers. Tasks at the stages are 
+looked up in the concatenated graph in `couple()`.
 
 
 ## Optimise (additive coupling only)

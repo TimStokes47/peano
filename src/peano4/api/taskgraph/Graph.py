@@ -19,6 +19,29 @@ class Graph:
     def add_task(self, task: Task):
         self.tasks.append(task)
 
+    def append(self, other: "Graph"):
+        """!
+
+        Add all tasks of another graph to this graph
+
+        The tasks keep their dependencies, i.e. the graphs are concatenated
+        in the sense of a union: the result consists of the two graphs next
+        to each other, and the caller adds the dependencies that connect
+        them. The other graph remains untouched and shares its task objects
+        with this one. A task which both graphs hold is added only once.
+
+        This is how a host that couples several solvers
+        (@ref exahype2.api.SolverHost) merges the task graphs which the solvers have
+        built independently.
+
+        @param other: peano4.api.taskgraph.Graph
+          The graph whose tasks are added.
+
+        """
+        for task in other.tasks:
+            if not any(task is existing for existing in self.tasks):
+                self.tasks.append(task)
+
     def find_tasks(self, *tags) -> List[Task]:
         """!
 

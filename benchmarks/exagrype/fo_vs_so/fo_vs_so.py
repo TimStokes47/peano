@@ -331,7 +331,7 @@ def build(scheme, formulation, cells):
     if formulation == "FO":
         project.add_solver(solver)
     else:
-        pair.add_to_project(project)
+        project.add_solver(pair)
 
     project.compiler = (
         #peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion

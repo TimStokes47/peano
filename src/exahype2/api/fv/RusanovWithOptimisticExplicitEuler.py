@@ -1114,7 +1114,8 @@ Patch overlap data
     def construct_output(self,
                          exahype2_project,
                          peano_project,
-                         time_step):
+                         time_step,
+                         add_global_tasks=True):
         """!
 
         """
@@ -1160,42 +1161,44 @@ Patch overlap data
         # The load balancing is switched off throughout the time step, and
         # switched on again only at its very end, so it may then decide on
         # splits. Peano carries these splits out in the subsequent mesh sweep.
-        reconstruction_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
-                enable_load_balancing=False, plug_into_prepare_traversal=True
+        if add_global_tasks:
+            reconstruction_task.add_action_set(
+                toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                    enable_load_balancing=False, plug_into_prepare_traversal=True
+                )
             )
-        )
 
-        # The very last task evaluates the adaptivity criterion if the
-        # solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
-        # collects refine and erase requests for the mesh adaptation phase,
-        # and it switches the load balancing on again and informs it that
-        # the time step has finished.
-        dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
-            name=f"{self._solver.name}_{self.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
-            entity=peano4.api.taskgraph.Task.GridEntity.CELL,
-            may_spawn_background_tasks=False,
-        )
-        dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
-            self._solver,
-            self.patch_size,
-            guard=self._solver.grid_selector.createCellGuard(),
-            min_volume_size=self.min_volume_size,
-            max_volume_size=self.max_volume_size,
-        )
-        if dynamic_mesh_refinement is not None:
-            dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
-        dynamic_mesh_refinement_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
-        )
-        dynamic_mesh_refinement_task.add_dependency(reduce_eigenvalue_task)
-        dynamic_mesh_refinement_task.add_dependency(project_on_faces_task)
-        # No other task depends on the discard, so we have to make it a
-        # predecessor explicitly, as the dynamic mesh refinement has to be
-        # the very last task
-        dynamic_mesh_refinement_task.add_dependency(discard_patch_interior_task)
-        time_step.add_task(dynamic_mesh_refinement_task)
+        if add_global_tasks:
+            # The very last task evaluates the adaptivity criterion if the
+            # solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
+            # collects refine and erase requests for the mesh adaptation phase,
+            # and it switches the load balancing on again and informs it that
+            # the time step has finished.
+            dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
+                name=f"{self._solver.name}_{self.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
+                entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+                may_spawn_background_tasks=False,
+            )
+            dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+            dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
+                self._solver,
+                self.patch_size,
+                guard=self._solver.grid_selector.createCellGuard(),
+                min_volume_size=self.min_volume_size,
+                max_volume_size=self.max_volume_size,
+            )
+            if dynamic_mesh_refinement is not None:
+                dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
+            dynamic_mesh_refinement_task.add_action_set(
+                toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
+            )
+            dynamic_mesh_refinement_task.add_dependency(reduce_eigenvalue_task)
+            dynamic_mesh_refinement_task.add_dependency(project_on_faces_task)
+            # No other task depends on the discard, so we have to make it a
+            # predecessor explicitly, as the dynamic mesh refinement has to be
+            # the very last task
+            dynamic_mesh_refinement_task.add_dependency(discard_patch_interior_task)
+            time_step.add_task(dynamic_mesh_refinement_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)

@@ -101,7 +101,7 @@ for solver in [ccz4, euler]:
     solver.plotter = exahype2.api.rkfd4.PlotAsVTKFile(
         solver, first_plot_time_stamp=0.0, time_in_between_plots=time_in_between_plots
     )
-coupled.add_to_project(project)
+project.add_solver(coupled)
 
 project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
 

@@ -499,7 +499,8 @@ Patch overlap data
     def construct_output(self,
                          exahype2_project,
                          peano_project,
-                         time_step):
+                         time_step,
+                         add_global_tasks=True):
         """!
 
         """
@@ -507,7 +508,7 @@ Patch overlap data
 
         self.__add_data_to_repository(peano_project)
         self.kernel_namespace = peano_project.namespace
-        self._generator.construct_output(exahype2_project, peano_project, time_step)
+        self._generator.construct_output(exahype2_project, peano_project, time_step, add_global_tasks)
 
     def create_restriction_of_hanging_faces(self) -> "toolbox.blockstructured.api.RestrictHangingFaces":
         """!
@@ -531,7 +532,7 @@ Patch overlap data
         )
 
 class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGenerator):
-    def construct_output(self, exahype2_project, peano_project, time_step):
+    def construct_output(self, exahype2_project, peano_project, time_step, add_global_tasks=True):
         # Construct the call first, as it validates the PDE terms' variants
         # Although we may generate multiple definitions for the purpose of benchmarking, we
         # only need one kernel call
@@ -561,38 +562,40 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         # The load balancing is switched off throughout the time step, and
         # switched on again only at its very end, so it may then decide on
         # splits. Peano carries these splits out in the subsequent mesh sweep.
-        reconstruction_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
-                enable_load_balancing=False, plug_into_prepare_traversal=True
+        if add_global_tasks:
+            reconstruction_task.add_action_set(
+                toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                    enable_load_balancing=False, plug_into_prepare_traversal=True
+                )
             )
-        )
 
-        # The very last task evaluates the adaptivity criterion if the
-        # solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
-        # collects refine and erase requests for the mesh adaptation phase,
-        # and it switches the load balancing on again and informs it that
-        # the time step has finished.
-        dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
-            name=f"{self._solver.name}_{Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
-            entity=peano4.api.taskgraph.Task.GridEntity.CELL,
-            may_spawn_background_tasks=False,
-        )
-        dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
-            self._solver,
-            self._solver.numerical_scheme.patch_size,
-            guard=self._solver.grid_selector.createCellGuard(),
-            min_volume_size=self._solver.numerical_scheme.min_volume_size,
-            max_volume_size=self._solver.numerical_scheme.max_volume_size,
-        )
-        if dynamic_mesh_refinement is not None:
-            dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
-        dynamic_mesh_refinement_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
-        )
-        dynamic_mesh_refinement_task.add_dependency(reduce_eigenvalue_task)
-        dynamic_mesh_refinement_task.add_dependency(project_on_faces_task)
-        time_step.add_task(dynamic_mesh_refinement_task)
+        if add_global_tasks:
+            # The very last task evaluates the adaptivity criterion if the
+            # solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
+            # collects refine and erase requests for the mesh adaptation phase,
+            # and it switches the load balancing on again and informs it that
+            # the time step has finished.
+            dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
+                name=f"{self._solver.name}_{Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
+                entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+                may_spawn_background_tasks=False,
+            )
+            dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+            dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
+                self._solver,
+                self._solver.numerical_scheme.patch_size,
+                guard=self._solver.grid_selector.createCellGuard(),
+                min_volume_size=self._solver.numerical_scheme.min_volume_size,
+                max_volume_size=self._solver.numerical_scheme.max_volume_size,
+            )
+            if dynamic_mesh_refinement is not None:
+                dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
+            dynamic_mesh_refinement_task.add_action_set(
+                toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
+            )
+            dynamic_mesh_refinement_task.add_dependency(reduce_eigenvalue_task)
+            dynamic_mesh_refinement_task.add_dependency(project_on_faces_task)
+            time_step.add_task(dynamic_mesh_refinement_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
@@ -934,7 +937,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
 # This uses dslhype2, which when all bugs are dealt with will be renamed to dslhype and replace the old version
 # When this is done, this generator will be deleted
 class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeGenerator):
-    def construct_output(self, exahype2_project, peano_project, time_step):
+    def construct_output(self, exahype2_project, peano_project, time_step, add_global_tasks=True):
         # Construct the call first, as it validates the PDE terms' variants
         # Although we may generate multiple definitions for the purpose of benchmarking, we
         # only need one kernel call
@@ -964,38 +967,40 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
         # The load balancing is switched off throughout the time step, and
         # switched on again only at its very end, so it may then decide on
         # splits. Peano carries these splits out in the subsequent mesh sweep.
-        reconstruction_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
-                enable_load_balancing=False, plug_into_prepare_traversal=True
+        if add_global_tasks:
+            reconstruction_task.add_action_set(
+                toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
+                    enable_load_balancing=False, plug_into_prepare_traversal=True
+                )
             )
-        )
 
-        # The very last task evaluates the adaptivity criterion if the
-        # solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
-        # collects refine and erase requests for the mesh adaptation phase,
-        # and it switches the load balancing on again and informs it that
-        # the time step has finished.
-        dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
-            name=f"{self._solver.name}_{Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
-            entity=peano4.api.taskgraph.Task.GridEntity.CELL,
-            may_spawn_background_tasks=False,
-        )
-        dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
-            self._solver,
-            self._solver.numerical_scheme.patch_size,
-            guard=self._solver.grid_selector.createCellGuard(),
-            min_volume_size=self._solver.numerical_scheme.min_volume_size,
-            max_volume_size=self._solver.numerical_scheme.max_volume_size,
-        )
-        if dynamic_mesh_refinement is not None:
-            dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
-        dynamic_mesh_refinement_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
-        )
-        dynamic_mesh_refinement_task.add_dependency(reduce_eigenvalue_task)
-        dynamic_mesh_refinement_task.add_dependency(project_on_faces_task)
-        time_step.add_task(dynamic_mesh_refinement_task)
+        if add_global_tasks:
+            # The very last task evaluates the adaptivity criterion if the
+            # solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
+            # collects refine and erase requests for the mesh adaptation phase,
+            # and it switches the load balancing on again and informs it that
+            # the time step has finished.
+            dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
+                name=f"{self._solver.name}_{Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
+                entity=peano4.api.taskgraph.Task.GridEntity.CELL,
+                may_spawn_background_tasks=False,
+            )
+            dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
+            dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
+                self._solver,
+                self._solver.numerical_scheme.patch_size,
+                guard=self._solver.grid_selector.createCellGuard(),
+                min_volume_size=self._solver.numerical_scheme.min_volume_size,
+                max_volume_size=self._solver.numerical_scheme.max_volume_size,
+            )
+            if dynamic_mesh_refinement is not None:
+                dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
+            dynamic_mesh_refinement_task.add_action_set(
+                toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
+            )
+            dynamic_mesh_refinement_task.add_dependency(reduce_eigenvalue_task)
+            dynamic_mesh_refinement_task.add_dependency(project_on_faces_task)
+            time_step.add_task(dynamic_mesh_refinement_task)
 
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)

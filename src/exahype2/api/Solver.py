@@ -83,7 +83,9 @@ class Solver(abc.ABC):
             self._generator: Solver.NumericalScheme.NumericalSchemeGenerator = None
 
         @abc.abstractmethod
-        def construct_output(self, exahype2_project, peano_project, time_step):
+        def construct_output(
+            self, exahype2_project, peano_project, time_step, add_global_tasks=True
+        ):
             """!
             Has to be implemented by subclass
 
@@ -91,6 +93,15 @@ class Solver(abc.ABC):
               The task graph of the surrounding exahype2_project's time
               stepping phase, so the numerical scheme can add its own tasks
               into it.
+
+            @param add_global_tasks: bool
+              Whether the scheme adds the tasks that belong to the mesh as a
+              whole rather than to the solver: it switches the load
+              balancing off at the begin of the time step, and its last task
+              evaluates the adaptivity criterion and switches the load
+              balancing on again. A host that couples several solvers passes
+              False to all but one of them, so the global switch and the
+              mesh adaptation exist once.
             """
 
         def create_default_mesh_adaptation(self) -> "Solver.MeshAdaptation":
@@ -125,7 +136,9 @@ class Solver(abc.ABC):
             def add_configuration(self, target: Target, stateless: bool):
                 self._configurations.append((target, stateless))
 
-            def construct_output(self, exahype2_project, peano_project, time_step):
+            def construct_output(
+                self, exahype2_project, peano_project, time_step, add_global_tasks=True
+            ):
                 pass
 
     class GridConstruction(abc.ABC):
@@ -1024,6 +1037,7 @@ class Solver(abc.ABC):
         time_step,
         plot,
         mesh_adaptation,
+        add_global_tasks=True,
     ):
         """!
         Turn this solver specification into a task graph and create the required C++ kernels/stubs
@@ -1038,6 +1052,14 @@ class Solver(abc.ABC):
           exahype2_project. They are owned by exahype2_project.generate_Peano4_project()
           and merely passed through here, so this solver can add its own
           tasks into them.
+
+        @param add_global_tasks: bool
+          Passed on to the numerical scheme, @see Solver.NumericalScheme.construct_output().
+          A host that realises several solvers into graphs of their own and
+          concatenates them (@ref page_exahype_programmers_guide_coupling)
+          passes False to all but one of them.
+          Without the global tasks, the solver does not contribute to the
+          mesh adaptation phase either.
 
         @return peano4.api.taskgraph.Graph
         """
@@ -1064,12 +1086,12 @@ class Solver(abc.ABC):
             exahype2_project, peano_project, setup_simulation
         )
         self.numerical_scheme.construct_output(
-            exahype2_project, peano_project, time_step
+            exahype2_project, peano_project, time_step, add_global_tasks
         )
         for plotter in self._plotters:
             plotter.construct_output(exahype2_project, peano_project, plot)
         self._add_wants_to_plot_to_solver()
-        if self.mesh_adaptation is not None:
+        if self.mesh_adaptation is not None and add_global_tasks:
             self.mesh_adaptation.construct_output(
                 exahype2_project, peano_project, mesh_adaptation
             )
