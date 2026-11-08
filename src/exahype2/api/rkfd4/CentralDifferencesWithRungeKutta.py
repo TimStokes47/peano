@@ -1304,7 +1304,7 @@ Patch overlap data
 
             ## Project the outcome onto the faces, restrict it on hanging faces and
             ## roll the faces over. After the last stage, we determine the maximum
-            ## eigenvalue of the new solution first. All three tasks share the
+            ## eigenvalue of the new solution in parallel to the projection. All tasks share the
             ## update patch, which is temporary, i.e. they rely on the task graph
             ## compiler to fuse them into one mesh traversal.
             eigenvalue_task = None
@@ -1339,9 +1339,7 @@ Patch overlap data
                 else f"{name}_Project solution onto faces",
                 entity=Entity.CELL,
             )
-            projection_task.add_dependency(
-                eigenvalue_task if eigenvalue_task is not None else combination_task
-            )
+            projection_task.add_dependency(combination_task)
             projection_task.use_cell(output, Access.READ_AND_WRITE)
             projection_task.use_face(
                 self._solver._patch_overlap_update, Access.TEMPORARY
@@ -1413,6 +1411,10 @@ Patch overlap data
             entity=Entity.GLOBAL_END_OF_STEP,
             may_spawn_background_tasks=False,
         )
+        ## The task must not run before the final roll over of the time step:
+        ## Roll overs such as the Sommerfeld boundary treatment need the valid
+        ## current time step size, which this task replaces
+        ## (see adrs/0001-time-step-size-after-roll-over.md).
         time_step_size_task.add_dependency(previous_stage_task)
         if self.has_adaptive_time_step_size:
             time_step_size_task.add_dependency(reduction_task)

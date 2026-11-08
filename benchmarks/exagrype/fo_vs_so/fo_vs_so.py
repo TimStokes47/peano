@@ -41,10 +41,12 @@ and is run from this directory via
 
 The benchmark covers two numerical schemes:
 
-- FD4: fourth-order Finite Differences with classic Runge-Kutta 4 and lopsided
+- RK4FD4: fourth-order Finite Differences with classic Runge-Kutta 4 and lopsided
   advection (exahype2.api.rkfd4.CentralDifferencesWithRungeKutta). The
   second-order solver reconstructs the derivatives with the fourth-order
   stencil in each Runge-Kutta stage.
+- RK1FD4: the same spatial discretisation, but with first-order Runge-Kutta
+  (explicit Euler, rk_order=1), i.e. one stage per time step.
 - FV: Finite Volumes with a Rusanov flux and explicit Euler
   (exahype2.api.fv.RusanovWithExplicitEuler). The second-order solver
   reconstructs the derivatives with second-order central differences
@@ -67,7 +69,7 @@ The script loops sequentially, within one Python process, over all schemes,
 grid sizes and formulations.
 
 The option --build-mode=debug|release selects the build (default release; debug
-also enables the generator logging). --schemes (default FD4,FV), --sizes (default 27,81), --end-time (default
+also enables the generator logging). --schemes (default RK4FD4,RK1FD4,FV), --sizes (default 27,81), --end-time (default
 0.1) and --cfl (CFL constant of the Finite Volume scheme, default 0.9) override
 the remaining settings.
 
@@ -134,7 +136,7 @@ about 3.5 GB. This is an observation, not a measurement.
 
 ## Grid sizes and Finite Volumes
 
-The benchmark script now takes the scheme (FD4 or FV), the formulation (FO or SO) and the grid
+The benchmark script now takes the scheme (RK4FD4, RK1FD4 or FV), the formulation (FO or SO) and the grid
 size (`python3 fo_vs_so.py`, `--build-mode=debug` for debug builds). Peano refines to at least three patches
 per axis and then in powers of three, and a patch has 9 points per axis, i.e. valid grids are 27^3 and 81^3
 points (a first attempt with 9, 18 and 45 points silently ran on the next larger grid). Setup otherwise as above: gauge wave, periodic unit cube,
@@ -145,8 +147,8 @@ both solvers against the analytical lapse
 
 | scheme | grid | t | max abs. diff. SO vs. FO (25 unknowns) | max abs. diff. of the lapse | rel. L2 lapse error FO | rel. L2 lapse error SO | wall time FO | wall time SO |
 |---|---|---|---|---|---|---|---|---|
-| FD4 | 27^3 | 0.102 | 1.3e-4 | 2.5e-6 | 1.1e-6 | 1.6e-6 | 4.8 s | 5.6 s |
-| FD4 | 81^3 | 0.101 | 1.6e-6 | 3.1e-8 | 1.4e-8 | 2.2e-8 | 300 s | 377 s |
+| RK4FD4 | 27^3 | 0.102 | 1.3e-4 | 2.5e-6 | 1.1e-6 | 1.6e-6 | 4.8 s | 5.6 s |
+| RK4FD4 | 81^3 | 0.101 | 1.6e-6 | 3.1e-8 | 1.4e-8 | 2.2e-8 | 300 s | 377 s |
 
 **Reading the table.** The 27^3 row reproduces the numbers of the first table
 (the largest difference is the one of traceK). Refining the grid by a factor of three reduces the
@@ -212,8 +214,8 @@ parser.add_argument(
 parser.add_argument(
     "--schemes",
     type=lambda text: text.split(","),
-    default=["FD4", "FV"],
-    help="Comma-separated numerical schemes to build, run and compare (FD4, FV)",
+    default=["RK4FD4", "RK1FD4", "FV"],
+    help="Comma-separated numerical schemes to build, run and compare (RK4FD4, RK1FD4, FV)",
 )
 parser.add_argument("--end-time", type=float, default=0.1, help="Simulation end time")
 parser.add_argument(
@@ -222,8 +224,8 @@ parser.add_argument(
 arguments = parser.parse_args()
 schemes = arguments.schemes
 for scheme in schemes:
-    if scheme not in ["FD4", "FV"]:
-        parser.error(f"unknown scheme {scheme}, use FD4 and/or FV")
+    if scheme not in ["RK4FD4", "RK1FD4", "FV"]:
+        parser.error(f"unknown scheme {scheme}, use RK4FD4, RK1FD4 and/or FV")
 
 if arguments.build_mode == "release":
     build_mode = peano4.api.output.CompileMode.RELEASE
@@ -248,7 +250,7 @@ def build(scheme, formulation, cells):
     Generate and build one solver on one grid in its own directory
 
     @param scheme: str
-      FD4 or FV.
+      RK4FD4, RK1FD4 or FV.
 
     @param formulation: str
       FO or SO.
@@ -281,7 +283,7 @@ def build(scheme, formulation, cells):
     # The grid cells have to be strictly smaller than volume_size times the patch size
     volume_size = 1.01 / cells
     match scheme:
-        case "FD4":
+        case "RK4FD4" | "RK1FD4":
             Kernel = (
                 exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
             )
@@ -289,7 +291,7 @@ def build(scheme, formulation, cells):
                 exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
                     solver,
                     patch_size,
-                    rk_order=4,
+                    rk_order=4 if scheme == "RK4FD4" else 1,
                     right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
                     advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
                     advected_quantities=solver.lopsided_advection_quantities(),
@@ -347,7 +349,7 @@ def run(scheme, formulation, cells):
     Run the executable built by build() and store its wall time
 
     @param scheme: str
-      FD4 or FV.
+      RK4FD4, RK1FD4 or FV.
 
     @param formulation: str
       FO or SO.
@@ -372,7 +374,7 @@ def snapshot(scheme, formulation, cells, unknowns, snapshot_index=-1):
     Return the unknowns of one snapshot of one solver
 
     @param scheme: str
-      FD4 or FV.
+      RK4FD4, RK1FD4 or FV.
 
     @param formulation: str
       FO or SO.
@@ -481,12 +483,12 @@ def compare():
             if summary is not None:
                 rows.append((scheme, cells, summary))
     print(
-        f"\n{'scheme':>6} {'cells':>6} {'t':>7} {'max|SO-FO|':>11} {'max|SO-FO| lapse':>17} "
+        f"\n{'scheme':>7} {'cells':>6} {'t':>7} {'max|SO-FO|':>11} {'max|SO-FO| lapse':>17} "
         f"{'lapse err FO':>13} {'lapse err SO':>13} {'wall FO [s]':>12} {'wall SO [s]':>12}"
     )
     for scheme, cells, s in rows:
         print(
-            f"{scheme:>6} {cells:>6} {s['time']:7.3f} {s['max_difference']:11.2e} {s['lapse_difference']:17.2e} "
+            f"{scheme:>7} {cells:>6} {s['time']:7.3f} {s['max_difference']:11.2e} {s['lapse_difference']:17.2e} "
             f"{s['lapse_error_FO']:13.2e} {s['lapse_error_SO']:13.2e} "
             f"{s['wall_time_FO']:12.2f} {s['wall_time_SO']:12.2f}"
         )

@@ -1327,8 +1327,10 @@ Patch overlap data
         ## updated completely by the traditional update or, in the optimistic
         ## branch, once the patch interior is inserted. The pair runs in
         ## parallel to the spawn of the next time step's patch interior update.
-        ## The projection onto the faces follows it, so the update, the
-        ## eigenvalue and the reduction fold into one mesh traversal
+        ## The projection onto the faces depends on the patch update only,
+        ## i.e. it runs in parallel to the eigenvalue and its reduction. The
+        ## update, the eigenvalue, the reduction and the projection fold into
+        ## one mesh traversal
         compute_eigenvalue_task.add_dependency(update_cell_task)
         compute_eigenvalue_task.add_dependency(insert_patch_interior_task)
         compute_eigenvalue_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
@@ -1365,7 +1367,8 @@ Patch overlap data
         )
 
         ## Both branches: project the new data onto the faces. Also roll over the solution
-        project_on_faces_task.add_dependency(reduce_eigenvalue_task)
+        project_on_faces_task.add_dependency(update_cell_task)
+        project_on_faces_task.add_dependency(insert_patch_interior_task)
         project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         project_on_faces_task.use_face(

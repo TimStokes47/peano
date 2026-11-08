@@ -653,9 +653,11 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
 
         ## Determine the maximum eigenvalue of the updated patches, store it
         ## per cell and reduce it over all cells. The projection onto the faces
-        ## follows, as the update, the eigenvalue and the reduction fold into
-        ## one mesh traversal, whereas the projection writes the face data
-        ## which the reconstruction reads at the beginning of that traversal
+        ## depends on the update only, i.e. it runs in parallel to the
+        ## eigenvalue and its reduction. The update, the eigenvalue, the
+        ## reduction and the projection fold into one mesh traversal, whereas the
+        ## projection writes the face data which the reconstruction reads at the
+        ## beginning of that traversal
         compute_eigenvalue_task.add_dependency(update_cell_task)
         compute_eigenvalue_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         compute_eigenvalue_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.WRITE)
@@ -688,7 +690,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         )
         
         ## Next project the new data onto the faces. Also roll over the solution
-        project_on_faces_task.add_dependency(reduce_eigenvalue_task)
+        project_on_faces_task.add_dependency(update_cell_task)
         project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         project_on_faces_task.use_face(
@@ -1054,9 +1056,11 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
 
         ## Determine the maximum eigenvalue of the updated patches, store it
         ## per cell and reduce it over all cells. The projection onto the faces
-        ## follows, as the update, the eigenvalue and the reduction fold into
-        ## one mesh traversal, whereas the projection writes the face data
-        ## which the reconstruction reads at the beginning of that traversal
+        ## depends on the update only, i.e. it runs in parallel to the
+        ## eigenvalue and its reduction. The update, the eigenvalue, the
+        ## reduction and the projection fold into one mesh traversal, whereas the
+        ## projection writes the face data which the reconstruction reads at the
+        ## beginning of that traversal
         compute_eigenvalue_task.add_dependency(update_cell_task)
         compute_eigenvalue_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         compute_eigenvalue_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.WRITE)
@@ -1089,7 +1093,7 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
         )
         
         ## Next project the new data onto the faces. Also roll over the solution
-        project_on_faces_task.add_dependency(reduce_eigenvalue_task)
+        project_on_faces_task.add_dependency(update_cell_task)
         project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         project_on_faces_task.use_face(
