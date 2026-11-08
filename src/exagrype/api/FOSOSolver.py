@@ -42,10 +42,11 @@ class FOSOSolver(exahype2.api.SolverHost):
     ## Task graph
 
     Both solvers build a task graph of their own, and report it. The reconstruction
-    solver's graph has one task per stage and no dependencies.
-    The host concatenates the graphs and wires them (couple()): The task of
-    each stage takes over the dependencies of the CCZ4 solver's reconstruction
-    of this stage, and the latter depends on the former. The host
+    solver's graph is a chain per stage (see @ref exagrype.api.FOSOReconstructionSolver),
+    and the chains of different stages are not connected.
+    The host concatenates the graphs and wires them (couple()): The first tasks of
+    each stage's chain take over the dependencies of the CCZ4 solver's reconstruction
+    of this stage, and the latter depends on the last task of the chain. The host
     reports the outcome.
 
     """
@@ -90,9 +91,9 @@ class FOSOSolver(exahype2.api.SolverHost):
 
         Let each stage of the CCZ4 solver wait for the reconstruction of this stage
 
-        The reconstruction task of a stage waits for whatever the CCZ4
+        The first reconstruction tasks of a stage wait for whatever the CCZ4
         solver's reconstruction of the stage waits for, and the latter waits
-        for the former.
+        for the last reconstruction task of the stage.
 
         @param exahype2_project: exahype2.api.Project
           The project that hosts the pair (unused).
@@ -109,8 +110,12 @@ class FOSOSolver(exahype2.api.SolverHost):
         """
         scheme = self.reconstruction.numerical_scheme
         time_step = host_graphs.time_step
-        for stage, (task, partner_name) in enumerate(
-            zip(scheme.stage_tasks, scheme.names_of_partner_reconstruction_tasks)
+        for stage, (first_tasks, last_task, partner_name) in enumerate(
+            zip(
+                scheme.stage_first_tasks,
+                scheme.stage_last_tasks,
+                scheme.names_of_partner_reconstruction_tasks,
+            )
         ):
             partner = [t for t in time_step.tasks if t.name == partner_name]
             if len(partner) != 1:
@@ -120,5 +125,6 @@ class FOSOSolver(exahype2.api.SolverHost):
                 )
             partner = partner[0]
             for dependency in partner.dependencies:
-                task.add_dependency(dependency)
-            partner.add_dependency(task)
+                for first_task in first_tasks:
+                    first_task.add_dependency(dependency)
+            partner.add_dependency(last_task)

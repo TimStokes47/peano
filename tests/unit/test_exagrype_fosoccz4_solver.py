@@ -218,9 +218,20 @@ def test_solvers_build_separate_graphs_which_the_host_concatenates(tmp_path):
     assert ccz4_graph is not recon_graph
     assert ccz4_graph is not project_graphs[1]
     assert not any("Reconstruct derivatives" in name for name, _ in ccz4_tasks)
+    chain = [
+        ("Reconstruct primary variables", 0),
+        ("Reconstruct derivative variables", 0),
+        ("Interpolate primary variables on hanging faces", 1),
+        ("Interpolate derivative variables on hanging faces", 1),
+        ("Reconstruct derivatives", 2),
+        ("Project derivative variables onto faces", 1),
+        ("Restrict derivative variables on hanging faces", 1),
+        ("Roll over derivative variable faces", 1),
+    ]
     assert recon_tasks == [
-        (f"SOReconstruction_Reconstruct derivatives for stage {stage}", 0)
+        (f"SOReconstruction_{task_name} stage {stage}", dependencies)
         for stage in range(4)
+        for task_name, dependencies in chain
     ]
     # Concatenation: the project holds the tasks of both
     assert len(project_graphs[1].tasks) == len(ccz4_tasks) + len(recon_tasks)
@@ -243,11 +254,15 @@ def test_host_reports_the_concatenated_graph(tmp_path, monkeypatch):
         _realise(exagrype.api.FOSOSolver("SO"), tmp_path)
     finally:
         peano4.api.Logger().verbosity = previous
-    own_ccz4 = titles["Time stepping task graph for SO"]
-    own_reconstruction = titles["Time stepping task graph for SOReconstruction"]
-    host = titles["Time stepping task graph for host SO"]
+    own_ccz4 = titles["Time stepping task graph for SO (CCZ4 part)"]
+    own_reconstruction = titles[
+        "Time stepping task graph for SOReconstruction (reconstruction part of SO)"
+    ]
+    host = titles[
+        "Time stepping task graph for host SO (concatenation of the graphs of SO, SOReconstruction)"
+    ]
     assert not any("Reconstruct derivatives" in name for name in own_ccz4)
-    assert len(own_reconstruction) == 4
+    assert len(own_reconstruction) == 4 * 8
     assert sorted(host) == sorted(own_ccz4 + own_reconstruction)
 
 
@@ -268,23 +283,30 @@ def test_reconstruction_solver_takes_turns_with_each_stage_of_the_solver(tmp_pat
         reconstruct = next(
             task for task in order if task.name == f"SO_Reconstruct stage {stage}"
         )
-        derivatives = next(
-            task
+        chain = {
+            task.name: task
             for task in order
-            if task.name == f"SOReconstruction_Reconstruct derivatives for stage {stage}"
-        )
-        assert derivatives in reconstruct.dependencies
-        assert order.index(derivatives) < order.index(reconstruct)
+            if task.name.startswith("SOReconstruction_")
+            and task.name.endswith(f" stage {stage}")
+        }
+        first_tasks = [
+            chain[f"SOReconstruction_Reconstruct {what} variables stage {stage}"]
+            for what in ["primary", "derivative"]
+        ]
+        last = chain[f"SOReconstruction_Roll over derivative variable faces stage {stage}"]
+        assert last in reconstruct.dependencies
+        assert order.index(last) < order.index(reconstruct)
         if stage > 0:
             # The reconstruction follows what the solver's reconstruction followed
-            assert any(
-                dependency.name.startswith("SO_Roll over stage")
-                or dependency.name.startswith("SO_Roll over solution")
-                for dependency in derivatives.dependencies
-            )
-            assert f"SO_Prepare stage {stage}" in {
-                task.name for task in order[: order.index(derivatives)]
-            }
+            for first in first_tasks:
+                assert any(
+                    dependency.name.startswith("SO_Roll over stage")
+                    or dependency.name.startswith("SO_Roll over solution")
+                    for dependency in first.dependencies
+                )
+                assert f"SO_Prepare stage {stage}" in {
+                    task.name for task in order[: order.index(first)]
+                }
 
 
 def test_reconstruction_keeps_the_data_it_shares_with_the_solver_alive(tmp_path):
@@ -292,19 +314,17 @@ def test_reconstruction_keeps_the_data_it_shares_with_the_solver_alive(tmp_path)
     solver = pair.ccz4
     time_step = _realise(pair, tmp_path)
     Access = peano4.api.taskgraph.Task.DataAccess
-    task = next(
-        task
-        for task in time_step.tasks
-        if task.name == "SOReconstruction_Reconstruct derivatives for stage 1"
-    )
-    assert task.cell_data_access[solver._stage_input] == Access.READ_AND_WRITE
+    tasks = {task.name: task for task in time_step.tasks}
+    primary = tasks["SOReconstruction_Reconstruct primary variables stage 1"]
+    assert primary.cell_data_access[solver._stage_input] == Access.READ_AND_WRITE
     assert (
-        task.face_data_access[solver._patch_overlap_current_time_step]
+        primary.face_data_access[solver._patch_overlap_current_time_step]
         == Access.READ_AND_WRITE
     )
-    assert task.cell_data_access[solver.derivatives.patch] == Access.READ_AND_WRITE
+    derivatives = tasks["SOReconstruction_Reconstruct derivative variables stage 1"]
+    assert derivatives.cell_data_access[solver.derivatives.patch] == Access.READ_AND_WRITE
     assert (
-        task.face_data_access[solver.derivatives.patch_overlap_current_time_step]
+        derivatives.face_data_access[solver.derivatives.patch_overlap_current_time_step]
         == Access.READ_AND_WRITE
     )
 
@@ -329,13 +349,13 @@ def test_reconstruction_runs_in_front_of_the_finite_volume_update(tmp_path):
     )
     order = _realise_pair(pair, tmp_path).ordered_tasks()
     reconstruct = next(task for task in order if task.name == "SO_Reconstruct")
-    derivatives = next(
+    last = next(
         task
         for task in order
-        if task.name == "SOReconstruction_Reconstruct derivatives"
+        if task.name == "SOReconstruction_Roll over derivative variable faces"
     )
-    assert derivatives in reconstruct.dependencies
-    assert order.index(derivatives) < order.index(reconstruct)
+    assert last in reconstruct.dependencies
+    assert order.index(last) < order.index(reconstruct)
     assert sum("Reconstruct derivatives" in task.name for task in order) == 1
 
 

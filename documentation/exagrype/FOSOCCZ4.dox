@@ -120,7 +120,8 @@ the code is shared).
 ## Data
 
 The derivatives are an instance of exahype2.api.AuxiliaryVariables (named
-"Derivatives"), owned by the SO solver. This re-uses all the existing machinery:
+"Derivatives", the data is called "DerivativeVariables"), owned by the SO solver. It
+sits on the faces and can change. This re-uses all the existing machinery:
 a cell patch, face overlaps, halo reconstruction in the solver's task graph.
 Before this project, auxiliary variables were written once at the setup. The
 reconstruction solver is the first component which updates them in every time step.
@@ -131,20 +132,40 @@ and nothing is copied.
 
 Both solvers build a task graph of their own (and report it), and the host
 (exagrype.api.FOSOSolver) concatenates them and reports the outcome.
-The graph of the reconstruction solver is a set of unconnected tasks, one per Runge-Kutta stage
-\f$ s \f$ (one for FV). The host inserts the task of each stage in front of the reconstruction task of the CCZ4 solver:
+The graph of the reconstruction solver is one chain of tasks per Runge-Kutta stage
+\f$ s \f$ (one chain for FV). The chains are not connected to each other.
+The host makes the first tasks of each chain take over the dependencies of the reconstruction task of the CCZ4 solver,
+and lets the latter wait for the last task of the chain:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Project stage s onto faces (SO)
      │
-     ▼
-Reconstruct derivatives for stage s (SOReconstruction)
-     │   1. build input of stage s with halo       (toolbox ReconstructPatchAndApplyFunctor)
-     │   2. exagrype::ccz4::reconstructFirstDerivativesFD4()  (wraps the legacy reconstruction)
-     │   3. project derivatives onto faces          (ProjectPatchOntoFaces + RollOverUpdatedFace)
-     ▼
+     ├──────────────────────────────────────┐
+     ▼                                      ▼
+Reconstruct primary variables s      Reconstruct derivative variables s     (SOReconstruction)
+     ▼                                      ▼
+Interpolate primary variables s      Interpolate derivative variables s
+     └──────────────────┬───────────────────┘
+                        ▼
+              Reconstruct derivatives s       (exagrype::ccz4::reconstructFirstDerivativesFD4())
+                        ▼
+        Project derivative variables onto faces s
+                        ▼
+        Restrict derivative variables on hanging faces s   (only if can_change)
+                        ▼
+        Roll over derivative variable faces s
+                        ▼
 Reconstruct stage s (SO)  ->  Evaluate right-hand side s (SO)  ->  Prepare stage s+1 (SO)  ->  ...
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+From the point of view of the reconstruction solver, the 25 primary variables are auxiliary variables
+and the derivatives are its unknowns. Both sit on the faces, i.e. we reconstruct the halos of both and interpolate
+both onto hanging faces. Only the derivatives are projected, restricted and rolled over, as only they change.
+Restricting depends on the can_change flag of the derivatives (@ref exahype2.api.AuxiliaryVariables),
+which defaults to False for general auxiliary variables.
+The projection, the restriction and the roll over share the temporary update patch of the face data.
+They therefore have to end up in one mesh sweep. As the task graph compiler does not fuse tasks with
+conflicting face data, the projection declares that it writes the face data: it starts a new sweep that way.
 
 The host realises the CCZ4 solver first, as the reconstruction solver needs its data. The CCZ4 solver
 owns the global tasks (load balancing switch, dynamic mesh refinement), see @ref page_exahype_programmers_guide_coupling.
@@ -180,8 +201,8 @@ reconstruction solver with three differences:
   Rusanov flux and the non-conservative product on the faces) are not computed from a
   wider halo but by the neighbour cell and exchanged via the faces. The scheme
   is second-order accurate in the derivatives.
-- One task: there is a single stage, so the reconstruction solver inserts a single task
-  "Reconstruct derivatives" in front of the solver's "Reconstruct" task, and
+- One chain: there is a single stage, so the reconstruction solver inserts a single chain of tasks
+  in front of the solver's "Reconstruct" task, and
   uses the Finite Volume action sets for the projection onto the faces.
 - Stateless PDE terms: the Finite Volume kernels call the PDE terms as static
   functions. exagrype.api.CCZ4SolverBase therefore registers stateless
@@ -234,8 +255,8 @@ For FD4, the halo has to be at least 3.
   lets exagrype.api.FOSOSolver.couple() add the dependencies. The price is a flag
   (add_global_tasks) that all schemes honour, so the load balancing switch and the dynamic
   mesh refinement exist once.
-- **Reusing ReconstructPatchAndApplyFunctor.** The toolbox action set builds the
-  halo patch and then runs a user-supplied snippet. The snippet is one call
+- **Functor over the reconstructed halos.** exagrype.api.actionsets.ApplyReconstructionFunctor runs a
+  user-supplied snippet over the halos that the preceding tasks have filled. The snippet is one call
   into the C++ library, i.e. the generated code stays tiny.
 - **Refactoring FOCCZ4Solver.** After moving the logic into the base class,
   the unit tests of the first-order solver (tests/unit/test_exagrype_ccz4_solver.py,

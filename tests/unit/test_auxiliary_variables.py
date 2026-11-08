@@ -6,6 +6,8 @@ import peano4.api
 import peano4.api.taskgraph
 import pytest
 
+import unittest.mock
+
 import exahype2.api
 
 
@@ -265,3 +267,20 @@ def test_fd4_reconstructs_the_halos_of_auxiliary_variables(tmp_path):
     assert "std::vector<double> kernelIn" in body
     # The kernels see the unknowns plus the auxiliary variables
     assert "Probe_rightHandSideWithFD4<\n    6,\n    2,\n    3,\n    1\n>" in solver.compute_kernel_call
+
+
+def test_flags_default_to_on_faces_and_unchanging():
+    auxiliary = exahype2.api.AuxiliaryVariables("Bathymetry", {"b": 1})
+    assert auxiliary.on_faces
+    assert not auxiliary.can_change
+    assert auxiliary.data_name == "BathymetryAuxiliaryVariables"
+
+
+def test_data_name_feeds_into_the_generated_data():
+    auxiliary = exahype2.api.AuxiliaryVariables(
+        "Derivatives", {"d": 2}, can_change=True, data_name="DerivativeVariables"
+    )
+    auxiliary.create_data_structures(9, 3, unittest.mock.MagicMock())
+    assert auxiliary.patch.name == "DerivativeVariables"
+    assert auxiliary.patch_overlap_current_time_step.name == "DerivativeVariablesCurrentTimeStep"
+    assert auxiliary.patch_overlap_update.name == "DerivativeVariablesUpdate"

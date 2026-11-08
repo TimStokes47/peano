@@ -8,6 +8,8 @@ import peano4.api.datamodel
 import peano4.api.taskgraph
 import toolbox.blockstructured.api
 
+from .actionsets import ApplyReconstructionFunctor
+
 
 class FOSOReconstructionSolver(exahype2.api.Solver):
     """!
@@ -44,12 +46,24 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
     ## Task graph
 
     For each stage of the Runge-Kutta scheme of the CCZ4 solver (once for FV),
-    the solver creates one task in a task graph of its own. Within the task,
-    we visit each cell once, build the stage's input with its halo,
-    reconstruct the derivatives of the cell and project them onto the faces.
-    The tasks have no dependencies. The host concatenates the graph with the
+    the solver creates a chain of tasks in a task graph of its own:
+
+    1. Reconstruct the primary variables and the derivative variables
+       (halo from the cell and the faces). From the point of view of this
+       solver, the primary variables are auxiliary variables, and the
+       derivative variables are the unknowns. The two tasks run in parallel.
+    2. Interpolate the coarse face data of both onto hanging faces (again two
+       parallel tasks).
+    3. Apply the stencil, i.e. recompute the derivatives from the primary variables.
+    4. Project the derivatives onto the faces.
+    5. Restrict them on hanging faces, but only if the derivatives' can_change flag
+       (@ref exahype2.api.AuxiliaryVariables) is set, which it is.
+    6. Roll the face data over.
+
+    The graph has no dependencies between stages. The host concatenates the graph with the
     one of the CCZ4 solver and makes the stage's reconstruction task of the
-    CCZ4 solver wait for it (exagrype.api.FOSOSolver.couple()). In terms of
+    CCZ4 solver wait for the last task, while the first tasks wait for what the
+    latter waited for (exagrype.api.FOSOSolver.couple()). In terms of
     @ref page_exahype_programmers_guide_coupling, this is a multiplicative
     coupling, with the coupling repeated per stage.
 
@@ -79,7 +93,8 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
         scheme, in a task graph of its own. The tasks have no dependencies.
         Where they belong in the graph of the CCZ4 solver is the business of
         the host (exagrype.api.FOSOSolver): after construct_output(),
-        stage_tasks holds the task of each stage, and
+        stage_first_tasks and stage_last_tasks hold the tasks that start and end
+        the chain of each stage, and
         names_of_partner_reconstruction_tasks holds the name of the task of
         the CCZ4 solver which has to wait for it. Patch size and halo are the
         ones of the CCZ4 solver's scheme.
@@ -88,8 +103,10 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
 
         def __init__(self, solver: "FOSOReconstructionSolver"):
             super().__init__(solver)
-            self.stage_tasks = []
-            """! The reconstruction task of each stage, filled by construct_output() """
+            self.stage_first_tasks = []
+            """! The tasks which start the reconstruction of each stage (a list per stage), filled by construct_output() """
+            self.stage_last_tasks = []
+            """! The task which ends the reconstruction of each stage, filled by construct_output() """
             self.names_of_partner_reconstruction_tasks = []
             """! Name of the reconstruction task of the CCZ4 solver per stage, filled by construct_output() """
 
@@ -180,26 +197,36 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
                 + '\n#include "exagrype/ccz4/SecondOrderAuxiliaryVariablesReconstruction.h"\n'
             )
 
-            # The input of a stage with halo. Nobody besides the reconstruction
-            # task reads it, i.e. it is a scratch array.
-            halo = peano4.api.datamodel.Patch(
-                (n + 2 * h, n + 2 * h, n + 2 * h),
-                ccz4.unknowns,
-                name + "PrimaryVariablesWithHalo",
+            # The reconstructed primary variables and derivative variables.
+            # Nobody besides the tasks of the stage reads them, i.e. they are
+            # scratch arrays.
+            def create_scratch_halo(unknowns, halo_name):
+                halo = peano4.api.datamodel.Patch(
+                    (n + 2 * h, n + 2 * h, n + 2 * h), unknowns, halo_name
+                )
+                halo.grid_selector = ccz4.grid_selector
+                halo.generator = (
+                    peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
+                        halo, "double"
+                    )
+                )
+                peano_project.datamodel.add_cell(halo)
+                return halo
+
+            primary_halo = create_scratch_halo(
+                ccz4.unknowns, name + "PrimaryVariablesWithHalo"
             )
-            halo.grid_selector = ccz4.grid_selector
-            halo.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(
-                halo, "double"
+            derivative_halo = create_scratch_halo(
+                derivatives.size, name + derivatives.data_name + "WithHalo"
             )
-            peano_project.datamodel.add_cell(halo)
 
             functor = (
                 f"::exagrype::ccz4::{reconstruction_function}("
-                f"oldQWithHalo, marker.h(), {n}, {h}, "
-                f"fineGridCell{derivatives.patch.name}.value);"
+                f"oldQWithHalo, marker.h(), {n}, {h}, newQ);"
             )
 
-            self.stage_tasks = []
+            self.stage_first_tasks = []
+            self.stage_last_tasks = []
             self.names_of_partner_reconstruction_tasks = []
             ## Stages is the Runge-Kutta stages or 1 for FV
             for stage in range(stages):
@@ -209,37 +236,116 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
                     f"{ccz4.name}_Reconstruct{suffix}"
                 )
 
-                task = peano4.api.taskgraph.Task(
-                    name=f"{name}_Reconstruct derivatives"
-                    + (f" for stage {stage}" if per_stage else ""),
-                    entity=Entity.CELL,
-                )
-                # The CCZ4 solver's reconstruction reads the same data, so it has to survive.
-                task.use_cell(stage_input, Access.READ_AND_WRITE)
-                task.use_face(
+                def create_task(task_name):
+                    task = peano4.api.taskgraph.Task(
+                        name=f"{name}_{task_name}{suffix}", entity=Entity.CELL
+                    )
+                    time_step.add_task(task)
+                    return task
+
+                ## Reconstruct, both the primary variables (the auxiliary
+                ## variables of this solver) and the derivative variables (its
+                ## unknowns). The two are independent. The CCZ4 solver's
+                ## reconstruction reads the same data, so it has to survive.
+                reconstruct_primary = create_task("Reconstruct primary variables")
+                reconstruct_primary.use_cell(stage_input, Access.READ_AND_WRITE)
+                reconstruct_primary.use_cell(primary_halo, Access.WRITE)
+                reconstruct_primary.use_face(
                     ccz4._patch_overlap_current_time_step, Access.READ_AND_WRITE
                 )
-                task.use_cell(halo, Access.TEMPORARY)
-                task.use_cell(derivatives.patch, Access.READ_AND_WRITE)
-                task.use_face(derivatives.patch_overlap_update, Access.TEMPORARY)
-                # Loaded and stored, so Peano's stacks hold exactly one entry per face
-                # when the next task (the CCZ4 solver's reconstruction) loads it again
-                task.use_face(
-                    derivatives.patch_overlap_current_time_step,
-                    Access.READ_AND_WRITE,
-                )
-                task.add_action_set(
-                    toolbox.blockstructured.api.ReconstructPatchAndApplyFunctor(
+                reconstruct_primary.add_action_set(
+                    toolbox.blockstructured.api.ReconstructPatchWithHalo(
                         patch=stage_input,
                         patch_overlap=ccz4._patch_overlap_current_time_step,
-                        reconstructed_patch=halo,
-                        functor_implementation=functor,
+                        reconstructed_patch=primary_halo,
                         guard=cell_guard,
                         add_assertions_to_halo_exchange=False,
                         additional_includes=includes,
                     )
                 )
-                task.add_action_set(
+                reconstruct_derivatives = create_task(
+                    "Reconstruct derivative variables"
+                )
+                reconstruct_derivatives.use_cell(
+                    derivatives.patch, Access.READ_AND_WRITE
+                )
+                reconstruct_derivatives.use_cell(derivative_halo, Access.WRITE)
+                reconstruct_derivatives.use_face(
+                    derivatives.patch_overlap_current_time_step, Access.READ_AND_WRITE
+                )
+                reconstruct_derivatives.add_action_set(
+                    toolbox.blockstructured.api.ReconstructPatchWithHalo(
+                        patch=derivatives.patch,
+                        patch_overlap=derivatives.patch_overlap_current_time_step,
+                        reconstructed_patch=derivative_halo,
+                        guard=cell_guard,
+                        add_assertions_to_halo_exchange=False,
+                        additional_includes=includes,
+                    )
+                )
+
+                ## Interpolate the coarse face data onto hanging faces. As in the
+                ## CCZ4 solver, this takes effect before the reconstruction reads
+                ## the faces (Peano touches all faces before it enters the cell).
+                interpolate_primary = create_task(
+                    "Interpolate primary variables on hanging faces"
+                )
+                interpolate_primary.use_face(
+                    ccz4._patch_overlap_current_time_step, Access.READ_AND_WRITE
+                )
+                interpolate_primary.add_action_set(
+                    toolbox.blockstructured.api.InterpolateHangingFaces(
+                        ccz4._patch_overlap_current_time_step,
+                        scheme=scheme.interpolation,
+                        additional_includes=includes,
+                    )
+                )
+                interpolate_primary.add_dependency(reconstruct_primary)
+                interpolate_derivatives = create_task(
+                    "Interpolate derivative variables on hanging faces"
+                )
+                interpolate_derivatives.use_face(
+                    derivatives.patch_overlap_current_time_step, Access.READ_AND_WRITE
+                )
+                interpolate_derivatives.add_action_set(
+                    toolbox.blockstructured.api.InterpolateHangingFaces(
+                        derivatives.patch_overlap_current_time_step,
+                        scheme=scheme.interpolation,
+                        additional_includes=includes,
+                    )
+                )
+                interpolate_derivatives.add_dependency(reconstruct_derivatives)
+
+                ## The stencil
+                apply_stencil = create_task("Reconstruct derivatives")
+                apply_stencil.use_cell(primary_halo, Access.READ_AND_DISCARD)
+                apply_stencil.use_cell(derivative_halo, Access.READ_AND_DISCARD)
+                apply_stencil.use_cell(derivatives.patch, Access.READ_AND_WRITE)
+                apply_stencil.add_action_set(
+                    ApplyReconstructionFunctor(
+                        patch=derivatives.patch,
+                        primary_variables_with_halo=primary_halo,
+                        derivative_variables_with_halo=derivative_halo,
+                        functor_implementation=functor,
+                        guard=cell_guard,
+                        additional_includes=includes,
+                    )
+                )
+                apply_stencil.add_dependency(interpolate_primary)
+                apply_stencil.add_dependency(interpolate_derivatives)
+
+                ## Project the derivatives onto the faces
+                project = create_task("Project derivative variables onto faces")
+                project.use_cell(derivatives.patch, Access.READ_AND_WRITE)
+                project.use_face(derivatives.patch_overlap_update, Access.TEMPORARY)
+                ## Declared to make the compiler start a new mesh traversal here (it
+                ## does not fuse tasks with conflicting face data). The projection, the
+                ## restriction and the roll over share the temporary update patch,
+                ## i.e. they have to run in one traversal.
+                project.use_face(
+                    derivatives.patch_overlap_current_time_step, Access.WRITE
+                )
+                project.add_action_set(
                     actionsets.ProjectPatchOntoFaces(
                         derivatives.patch,
                         derivatives.patch_overlap_update,
@@ -247,7 +353,37 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
                         includes=includes,
                     )
                 )
-                task.add_action_set(
+                project.add_dependency(apply_stencil)
+                last_task = project
+
+                ## Restrict from the hanging faces onto the coarse faces, but only
+                ## if the derivatives are allowed to change, i.e. in the
+                ## sense of the auxiliary variables' can_change flag.
+                if derivatives.can_change:
+                    restrict = create_task(
+                        "Restrict derivative variables on hanging faces"
+                    )
+                    restrict.use_face(
+                        derivatives.patch_overlap_update, Access.TEMPORARY
+                    )
+                    restrict.add_action_set(
+                        toolbox.blockstructured.api.RestrictHangingFaces(
+                            derivatives.patch_overlap_update,
+                            scheme=scheme.restriction,
+                            clear_guard=face_guard,
+                            additional_includes=includes,
+                        )
+                    )
+                    restrict.add_dependency(last_task)
+                    last_task = restrict
+
+                ## Roll over
+                roll_over = create_task("Roll over derivative variable faces")
+                roll_over.use_face(derivatives.patch_overlap_update, Access.TEMPORARY)
+                roll_over.use_face(
+                    derivatives.patch_overlap_current_time_step, Access.TEMPORARY
+                )
+                roll_over.add_action_set(
                     actionsets.RollOverUpdatedFace(
                         derivatives.patch_overlap_current_time_step,
                         derivatives.patch_overlap_update,
@@ -255,21 +391,18 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
                         includes=includes,
                     )
                 )
+                roll_over.add_dependency(last_task)
 
-                task.tags.add(self.stage_tag(stage))
-                time_step.add_task(task)
-                self.stage_tasks.append(task)
+                self.stage_first_tasks.append(
+                    [reconstruct_primary, reconstruct_derivatives]
+                )
+                self.stage_last_tasks.append(roll_over)
 
             title = f"Time stepping task graph for {name}{reconstruction.task_graph_title_suffix}"
             if peano4.api.Logger().is_visualisation:
                 time_step.visualise(title=title)
             if peano4.api.Logger().is_text:
                 time_step.log_as_text(title=title)
-
-        @staticmethod
-        def stage_tag(stage: int) -> str:
-            """! Tag of the reconstruction task of a stage"""
-            return f"exagrype.api.FOSOReconstructionSolver.Stage{stage}"
 
     class NoGridConstruction(exahype2.api.Solver.GridConstruction):
         """!

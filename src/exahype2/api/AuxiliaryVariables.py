@@ -72,7 +72,14 @@ class AuxiliaryVariables:
 
     """
 
-    def __init__(self, name: str, variables: Dict[str, int]):
+    def __init__(
+        self,
+        name: str,
+        variables: Dict[str, int],
+        on_faces: bool = True,
+        can_change: bool = False,
+        data_name: str = None,
+    ):
         """!
 
         @param name: str
@@ -84,6 +91,26 @@ class AuxiliaryVariables:
 
         @param variables: dict
           Maps the name of each parameter onto its multiplicity.
+
+        @param on_faces: bool
+          Whether the values also sit on the faces, i.e. whether the faces
+          hold an overlap of the set. Reconstructing the halo of a cell,
+          interpolating onto hanging faces, projecting and rolling over
+          all work on this face data. Defaults to True. The solver schemes
+          read the halos of auxiliary variables, so they reject sets
+          without face data for the time being.
+
+        @param can_change: bool
+          Whether some solver updates the values after the setup. Defaults to
+          False. The solver that updates the set (such as
+          exagrype.api.FOSOReconstructionSolver) projects the new values
+          onto the faces, and restricts them on hanging faces if and only if
+          can_change holds. Without it, the coarse face data of the set are
+          never overwritten by fine data.
+
+        @param data_name: str
+          Name of the generated data (patch and face overlaps). Defaults to
+          the name of the set plus "AuxiliaryVariables".
 
         """
         if not re.fullmatch(r"[A-Z][A-Za-z0-9_]*", name):
@@ -107,6 +134,9 @@ class AuxiliaryVariables:
             offset += multiplicity
         self._size = offset
         self._owner = None
+        self._on_faces = on_faces
+        self._can_change = can_change
+        self._data_name = data_name if data_name is not None else name + "AuxiliaryVariables"
 
         # Created by create_data_structures()
         self.patch: peano4.api.datamodel.Patch = None
@@ -119,6 +149,21 @@ class AuxiliaryVariables:
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def on_faces(self) -> bool:
+        """! Whether the values also sit on the faces """
+        return self._on_faces
+
+    @property
+    def can_change(self) -> bool:
+        """! Whether some solver updates the values after the setup """
+        return self._can_change
+
+    @property
+    def data_name(self) -> str:
+        """! Name of the generated data """
+        return self._data_name
 
     @property
     def size(self) -> int:
@@ -201,7 +246,7 @@ class AuxiliaryVariables:
             return
         self._patch_size = patch_size
         self._overlap = overlap
-        identifier = self._name + "AuxiliaryVariables"
+        identifier = self._data_name
         self.patch = peano4.api.datamodel.Patch(
             (patch_size, patch_size, patch_size), self._size, identifier
         )
@@ -326,12 +371,17 @@ def register_auxiliary_variables(solver, peano_project, patch_size: int, overlap
     """
     solver._auxiliary_variable_halos = {}
     for auxiliary in solver.auxiliary_variables:
+        if not auxiliary.on_faces:
+            raise NotImplementedError(
+                f"Solver {solver.name}: the auxiliary variables {auxiliary.name} are not on the faces. "
+                "The numerical schemes reconstruct the halos of auxiliary variables from the face data."
+            )
         auxiliary.create_data_structures(patch_size, overlap, solver.grid_selector)
         auxiliary.add_to_datamodel(peano_project)
         halo = peano4.api.datamodel.Patch(
             (patch_size + 2 * overlap, patch_size + 2 * overlap, patch_size + 2 * overlap),
             auxiliary.size,
-            auxiliary.name + "AuxiliaryVariablesWithHaloOf" + solver.name,
+            auxiliary.data_name + "WithHaloOf" + solver.name,
         )
         halo.grid_selector = solver.grid_selector
         halo.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(halo, "double")

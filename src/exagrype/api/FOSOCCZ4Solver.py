@@ -132,7 +132,11 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
         """
         super().__init__(name, self.Unknowns, parameters, initial_condition)
         self.derivatives = exahype2.api.AuxiliaryVariables(
-            "Derivatives", self.DerivativeUnknowns
+            "Derivatives",
+            self.DerivativeUnknowns,
+            on_faces=True,
+            can_change=True,
+            data_name="DerivativeVariables",
         )
         self.add_auxiliary_variables(self.derivatives)
 
