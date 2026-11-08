@@ -54,7 +54,34 @@ def _toggles_load_balancing(task):
     )
 
 
-def test_graph_append_unites_graphs_and_keeps_the_dependencies():
+def test_graph_append_connects_the_end_of_one_graph_to_the_start_of_the_other():
+    first, second = (peano4.api.taskgraph.Graph() for _ in range(2))
+    a, b, c, d, e = (Task(name=n, entity=Task.GridEntity.CELL) for n in "abcde")
+    b.add_dependency(a)  # first: a -> b, and c alone (two sinks: b and c)
+    d.add_dependency(e)  # second: e -> d, i.e. the source is e
+    for task in (a, b, c):
+        first.add_task(task)
+    for task in (d, e):
+        second.add_task(task)
+    first.append(second)
+    assert first.tasks == [a, b, c, d, e]
+    # The source of the second graph waits for all sinks of the first graph
+    assert set(e.dependencies) == {b, c}
+    # Nothing else changes
+    assert d.dependencies == [e] and b.dependencies == [a] and a.dependencies == []
+    assert second.tasks == [d, e]
+
+
+def test_graph_append_rejects_shared_tasks():
+    first, second = (peano4.api.taskgraph.Graph() for _ in range(2))
+    a = Task(name="a", entity=Task.GridEntity.CELL)
+    first.add_task(a)
+    second.add_task(a)
+    with pytest.raises(ValueError):
+        first.append(second)
+
+
+def test_graph_merge_unites_graphs_and_keeps_the_dependencies():
     first, second, merged = (peano4.api.taskgraph.Graph() for _ in range(3))
     a = Task(name="a", entity=Task.GridEntity.CELL)
     b = Task(name="b", entity=Task.GridEntity.CELL)
@@ -63,9 +90,9 @@ def test_graph_append_unites_graphs_and_keeps_the_dependencies():
     for task in (a, b):
         first.add_task(task)
     second.add_task(c)
-    merged.append(first)
-    merged.append(second)
-    merged.append(first)
+    merged.merge(first)
+    merged.merge(second)
+    merged.merge(first)
     assert merged.tasks == [a, b, c]
     assert b.dependencies == [a]
     assert first.tasks == [a, b]

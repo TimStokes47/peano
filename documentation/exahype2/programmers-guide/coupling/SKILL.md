@@ -31,7 +31,7 @@ following, and the host only implements `couple()`:
 1. Each solver is realised into task graphs of its own (`exahype2.api.PhaseGraphs`), and 
    each solver reports its own time stepping graph (text or visualisation, depending on the logger).
 2. The superclass concatenates the graphs of all solvers into graphs of the host 
-   (`peano4.api.taskgraph.Graph.append()`).
+   (`peano4.api.taskgraph.Graph.merge()`).
 3. `couple()` adds tasks and dependencies between the chains of the solvers. 
 4. The superclass reports the concatenated, coupled time stepping graph once more and 
    appends it to the graphs of the project.

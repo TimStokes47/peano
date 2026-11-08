@@ -46,7 +46,7 @@ digraph host {
   node [shape=box, style=rounded, fontsize=10];
   A [label="solver A\nbuilds its own graph\n(reports it)"];
   B [label="solver B\nbuilds its own graph\n(reports it)"];
-  H [label="host concatenates\nGraph.append()"];
+  H [label="host concatenates\nGraph.merge()"];
   C [label="host couples\ncouple(): add tasks and\ndependencies between A and B"];
   R [label="host reports the\ncoupled graph"];
   P [label="project graphs\n(compiled into mesh sweeps)"];
@@ -57,7 +57,7 @@ digraph host {
 1. Each solver builds the task graphs of the four phases (setup, time step, plot, mesh
    adaptation) in graphs of its own and reports the time stepping graph. The user thus
    sees what each solver contributes.
-2. The host concatenates the graphs (peano4.api.taskgraph.Graph.append()). The result
+2. The host concatenates the graphs (peano4.api.taskgraph.Graph.merge()). The result
    consists of the chains of the solvers next to each other.
 3. The host's couple() routine adds the tasks and dependencies that tie the chains together: 
    a multiplicative coupling makes tasks of one solver wait for tasks of the other one, 
@@ -96,7 +96,7 @@ Overall, solver 2 feeds into 1.
 One comes after the other.
 
 ExaHyPE internally works with the notion of a task graph, which simplies the modelling of this type of coupling dramatically.
-We simply take the task graph of solver 1 and append the one of solver 2, respectively
+We simply take the task graph of solver 1 and merge the one of solver 2 into it, and then wire them,
 (@ref exagrype.api.FOSOSolver is a worked example: the reconstruction tasks are inserted per
 Runge-Kutta stage in front of the CCZ4 stage which consumes them).
 All the remainder (notably finding the right number of required mesh sweeps) is done by ExaHyPE and Peano under the hood.

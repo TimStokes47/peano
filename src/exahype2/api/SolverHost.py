@@ -35,10 +35,10 @@ class PhaseGraphs:
         """! The graphs in the order of the arguments of Solver.generate_solver_realisation()"""
         return [self.setup_simulation, self.time_step, self.plot, self.mesh_adaptation]
 
-    def append(self, other: "PhaseGraphs"):
-        """! Append each graph of other to the corresponding graph of this object"""
+    def merge(self, other: "PhaseGraphs"):
+        """! Merge each graph of other into the corresponding graph of this object, @see peano4.api.taskgraph.Graph.merge()"""
         for mine, theirs in zip(self.graphs(), other.graphs()):
-            mine.append(theirs)
+            mine.merge(theirs)
 
 
 class SolverHost(abc.ABC):
@@ -56,7 +56,7 @@ class SolverHost(abc.ABC):
        Each solver reports its own graph, so the user sees what each
        solver contributes.
     2. The host concatenates the graphs of all solvers into graphs of its own
-       (Graph.append()), and calls couple(), which adds the dependencies and
+       (Graph.merge()), and calls couple(), which adds the dependencies and
        tasks that tie the solvers together.
     3. The host reports the concatenated, coupled graphs once more, and then
        appends them to the graphs of the project.
@@ -168,7 +168,7 @@ class SolverHost(abc.ABC):
                 add_global_tasks=False,
             )
             own_graphs[solver] = graphs
-            host_graphs.append(graphs)
+            host_graphs.merge(graphs)
         self.couple(exahype2_project, peano_project, own_graphs, host_graphs)
 
         ## The global tasks wrap the coupled graph, i.e. they are added last
@@ -196,4 +196,4 @@ class SolverHost(abc.ABC):
             host_graphs.graphs(),
             [setup_simulation, time_step, plot, mesh_adaptation],
         ):
-            project_graph.append(graph)
+            project_graph.merge(graph)

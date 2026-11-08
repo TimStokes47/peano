@@ -22,17 +22,55 @@ class Graph:
     def append(self, other: "Graph"):
         """!
 
-        Add all tasks of another graph to this graph
+        Concatenate another graph behind this one
 
-        The tasks keep their dependencies, i.e. the graphs are concatenated
-        in the sense of a union: the result consists of the two graphs next
-        to each other, and the caller adds the dependencies that connect
-        them. The other graph remains untouched and shares its task objects
-        with this one. A task which both graphs hold is added only once.
+        The end of this graph is connected to the start of the other one:
+        Every task of the other graph that depends on nothing within the other
+        graph (its sources) additionally depends on every task of this graph
+        that no other task of this graph depends on (its sinks, @ref sink_tasks()).
+        All tasks of both graphs are kept, with their own dependencies, and
+        none is dropped or merged, even if the two graphs do the same work in
+        parts. Removing such redundancy is up to the caller. The other graph
+        remains untouched, but shares its task objects with this one.
+
+        Use merge() to put two graphs next to each other instead.
+
+        @param other: peano4.api.taskgraph.Graph
+          The graph that follows this one.
+
+        """
+        shared = [t for t in other.tasks if any(t is existing for existing in self.tasks)]
+        if shared:
+            raise ValueError(
+                "Cannot append a graph that shares tasks with this one: "
+                + ", ".join(t.name for t in shared)
+            )
+        sinks = self.sink_tasks()
+        sources = [
+            task
+            for task in other.tasks
+            if not any(dependency in other.tasks for dependency in task.dependencies)
+        ]
+        for source in sources:
+            for sink in sinks:
+                source.add_dependency(sink)
+        self.tasks.extend(other.tasks)
+
+    def merge(self, other: "Graph"):
+        """!
+
+        Add all tasks of another graph to this graph, next to the existing ones
+
+        The tasks keep their dependencies, i.e. the result is the union of the
+        two graphs: they run independently of each other unless the caller adds
+        the dependencies that connect them. The other graph remains untouched
+        and shares its task objects with this one. A task which both graphs
+        hold is added only once.
 
         This is how a host that couples several solvers
-        (@ref exahype2.api.SolverHost) merges the task graphs which the solvers have
-        built independently.
+        (@ref exahype2.api.SolverHost) puts the task graphs side by side which
+        the solvers have built independently, before it wires them. Use
+        append() to run one graph after the other.
 
         @param other: peano4.api.taskgraph.Graph
           The graph whose tasks are added.
