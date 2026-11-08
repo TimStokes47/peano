@@ -724,9 +724,9 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         )
         
         if peano4.api.Logger().is_visualisation:
-            time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))
+            time_step.visualise(title="Time stepping task graph for {}{}".format(self._solver.name, self._solver.task_graph_title_suffix))
         if peano4.api.Logger().is_text:
-            time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
+            time_step.log_as_text(title="Time stepping task graph for {}{}".format(self._solver.name, self._solver.task_graph_title_suffix))
 
     def __create_time_step_functions(self, output_directory):
         """!
@@ -1129,9 +1129,9 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
         )
         
         if peano4.api.Logger().is_visualisation:
-            time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))
+            time_step.visualise(title="Time stepping task graph for {}{}".format(self._solver.name, self._solver.task_graph_title_suffix))
         if peano4.api.Logger().is_text:
-            time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
+            time_step.log_as_text(title="Time stepping task graph for {}{}".format(self._solver.name, self._solver.task_graph_title_suffix))
 
     def __create_time_step_functions(self, exahype2_project, peano4_project):
         """!

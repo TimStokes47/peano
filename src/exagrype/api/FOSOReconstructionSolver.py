@@ -260,7 +260,7 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
                 time_step.add_task(task)
                 self.stage_tasks.append(task)
 
-            title = f"Time stepping task graph for {name} (reconstruction part of {ccz4.name})"
+            title = f"Time stepping task graph for {name}{reconstruction.task_graph_title_suffix}"
             if peano4.api.Logger().is_visualisation:
                 time_step.visualise(title=title)
             if peano4.api.Logger().is_text:
@@ -306,6 +306,10 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
         self.grid_construction = FOSOReconstructionSolver.NoGridConstruction(self)
         self.add_user_solver_includes('\n#include "repositories/SolverRepository.h"\n')
         self._forward_time_stamps_and_time_step_sizes()
+
+    @property
+    def task_graph_title_suffix(self) -> str:
+        return f" (reconstruction part of {self.ccz4.name})"
 
     def _forward_time_stamps_and_time_step_sizes(self):
         """!

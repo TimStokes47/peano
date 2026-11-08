@@ -1472,6 +1472,6 @@ Patch overlap data
             time_step.add_task(dynamic_mesh_refinement_task)
 
         if peano4.api.Logger().is_visualisation:
-            time_step.visualise(title="Time stepping task graph for {}".format(name))
+            time_step.visualise(title="Time stepping task graph for {}{}".format(name, self._solver.task_graph_title_suffix))
         if peano4.api.Logger().is_text:
-            time_step.log_as_text(title="Time stepping task graph for {}".format(name))
+            time_step.log_as_text(title="Time stepping task graph for {}{}".format(name, self._solver.task_graph_title_suffix))

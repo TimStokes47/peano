@@ -559,6 +559,15 @@ class Solver(abc.ABC):
         return self._name
 
     @property
+    def task_graph_title_suffix(self) -> str:
+        """!
+        Appended to the solver name in the title of the solver's task graphs.
+        Empty by default. Solvers which are one part of a host
+        (exahype2.api.SolverHost) use it to say which part they are.
+        """
+        return ""
+
+    @property
     def numerical_scheme(self) -> "Solver.NumericalScheme":
         return self._numerical_scheme
 
