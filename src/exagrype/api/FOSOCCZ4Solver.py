@@ -137,6 +137,7 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
             on_faces=True,
             can_change=True,
             data_name="DerivativeVariables",
+            to_be_interpolated=True,
         )
         self.add_auxiliary_variables(self.derivatives)
 

@@ -115,12 +115,8 @@ def test_finite_differences_handle_hanging_faces_in_every_stage(tmp_path):
         assert [type(a) for a in interpolation.action_sets] == [
             toolbox.blockstructured.api.InterpolateHangingFaces
         ]
-        # The interpolation follows the reconstruction and precedes the right-hand side
-        assert tasks[f"Probe_Reconstruct stage {stage}"] in interpolation.dependencies
-        assert (
-            interpolation
-            in tasks[f"Probe_Evaluate Runge-Kutta right hand side stage {stage}"].dependencies
-        )
+        # The reconstruction reads the faces, i.e. it waits for the interpolation
+        assert interpolation in tasks[f"Probe_Reconstruct stage {stage}"].dependencies
     # The projection, the restriction and the roll over form a chain of tasks,
     # as the roll over has to copy the restricted data
     for suffix in ["stage 1", "solution"]:

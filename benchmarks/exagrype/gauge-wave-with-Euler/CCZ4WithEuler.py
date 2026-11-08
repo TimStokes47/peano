@@ -10,8 +10,9 @@ tasks, and reports the outcome. The coupling is additive and
 volumetric, with a global synchronisation at the end of each Runge-Kutta
 stage (@ref page_exahype_programmers_guide_coupling):
 
-- Both solvers evolve in parallel, within the same mesh sweeps. Only the
-  CCZ4 solver adds the load balancing switch and the dynamic mesh refinement
+- Both solvers evolve in parallel, within the same mesh sweeps. The
+  host wraps the concatenated graph into the load balancing switch and the
+  dynamic mesh refinement through the CCZ4 solver
   (global_tasks_solver, see @ref exahype2.api.SolverHost), i.e. these exist once.
 - The Euler solver holds a snapshot of the lapse of CCZ4 as auxiliary
   variable "Spacetime". A KickOff task in front of each Runge-Kutta stage

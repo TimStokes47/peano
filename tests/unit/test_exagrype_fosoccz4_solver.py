@@ -219,10 +219,10 @@ def test_solvers_build_separate_graphs_which_the_host_concatenates(tmp_path):
     assert ccz4_graph is not project_graphs[1]
     assert not any("Reconstruct derivatives" in name for name, _ in ccz4_tasks)
     chain = [
-        ("Reconstruct primary variables", 0),
-        ("Reconstruct derivative variables", 0),
-        ("Interpolate primary variables on hanging faces", 1),
-        ("Interpolate derivative variables on hanging faces", 1),
+        ("Reconstruct primary variables", 1),
+        ("Interpolate primary variables on hanging faces", 0),
+        ("Interpolate derivative variables on hanging faces", 0),
+        ("Reconstruct derivative variables", 1),
         ("Reconstruct derivatives", 2),
         ("Project derivative variables onto faces", 1),
         ("Restrict derivative variables on hanging faces", 1),
@@ -233,10 +233,10 @@ def test_solvers_build_separate_graphs_which_the_host_concatenates(tmp_path):
         for stage in range(4)
         for task_name, dependencies in chain
     ]
-    # Concatenation: the project holds the tasks of both
-    assert len(project_graphs[1].tasks) == len(ccz4_tasks) + len(recon_tasks)
-    # Only the CCZ4 solver owns the global tasks
-    assert ccz4_kwargs == {"add_global_tasks": True}
+    # Concatenation: the project holds the tasks of both, wrapped into the global tasks
+    assert len(project_graphs[1].tasks) == len(ccz4_tasks) + len(recon_tasks) + 2
+    # Both are intermediate steps: The host adds the global tasks afterwards
+    assert ccz4_kwargs == {"add_global_tasks": False}
     assert recon_kwargs == {"add_global_tasks": False}
 
 
@@ -263,7 +263,16 @@ def test_host_reports_the_concatenated_graph(tmp_path, monkeypatch):
     ]
     assert not any("Reconstruct derivatives" in name for name in own_ccz4)
     assert len(own_reconstruction) == 4 * 8
-    assert sorted(host) == sorted(own_ccz4 + own_reconstruction)
+    # The host adds the global tasks after it has concatenated the graphs
+    assert sorted(host) == sorted(
+        own_ccz4
+        + own_reconstruction
+        + [
+            "SO_Disable load balancing",
+            "SO_Dynamic mesh refinement and load balancing",
+        ]
+    )
+    assert not any("Disable load balancing" in name for name in own_ccz4)
 
 
 def test_reconstruction_solver_forwards_the_time_step_data_of_the_ccz4_solver(tmp_path):
@@ -281,7 +290,9 @@ def test_reconstruction_solver_takes_turns_with_each_stage_of_the_solver(tmp_pat
     order = time_step.ordered_tasks()
     for stage in range(4):
         reconstruct = next(
-            task for task in order if task.name == f"SO_Reconstruct stage {stage}"
+            task
+            for task in order
+            if task.name == f"SO_Interpolate Derivatives on hanging faces stage {stage}"
         )
         chain = {
             task.name: task
@@ -290,8 +301,10 @@ def test_reconstruction_solver_takes_turns_with_each_stage_of_the_solver(tmp_pat
             and task.name.endswith(f" stage {stage}")
         }
         first_tasks = [
-            chain[f"SOReconstruction_Reconstruct {what} variables stage {stage}"]
-            for what in ["primary", "derivative"]
+            chain[f"SOReconstruction_Interpolate primary variables on hanging faces stage {stage}"],
+            chain[
+                f"SOReconstruction_Interpolate derivative variables on hanging faces stage {stage}"
+            ],
         ]
         last = chain[f"SOReconstruction_Roll over derivative variable faces stage {stage}"]
         assert last in reconstruct.dependencies
@@ -348,7 +361,11 @@ def test_reconstruction_runs_in_front_of_the_finite_volume_update(tmp_path):
         solver, volume_size=1.0 / 27.0
     )
     order = _realise_pair(pair, tmp_path).ordered_tasks()
-    reconstruct = next(task for task in order if task.name == "SO_Reconstruct")
+    reconstruct = next(
+        task
+        for task in order
+        if task.name == "SO_Interpolate Derivatives on hanging faces"
+    )
     last = next(
         task
         for task in order
@@ -404,3 +421,33 @@ def test_pde_terms_are_stateless(solver_class):
         assert solver.get_pde_term(name, stateless=True).stateless
         with pytest.raises(KeyError):
             solver.get_pde_term(name)
+
+
+def test_interpolations_and_reconstructions_of_the_ccz4_solver_run_in_parallel(tmp_path):
+    time_step = _realise(exagrype.api.FOSOSolver("SO"), tmp_path)
+    tasks = {task.name: task for task in time_step.tasks}
+    for stage in range(4):
+        unknowns = tasks[f"SO_Interpolate hanging faces stage {stage}"]
+        derivatives = tasks[f"SO_Interpolate Derivatives on hanging faces stage {stage}"]
+        reconstruct = tasks[f"SO_Reconstruct stage {stage}"]
+        reconstruct_derivatives = tasks[
+            f"SO_Reconstruct auxiliary variables Derivatives stage {stage}"
+        ]
+        chain_end = tasks[
+            f"SOReconstruction_Roll over derivative variable faces stage {stage}"
+        ]
+        # The unknowns do not wait for the derivatives and vice versa
+        assert unknowns not in derivatives.dependencies
+        assert derivatives not in unknowns.dependencies
+        assert unknowns in reconstruct.dependencies
+        assert derivatives in reconstruct_derivatives.dependencies
+        assert reconstruct_derivatives not in reconstruct.dependencies
+        assert reconstruct not in reconstruct_derivatives.dependencies
+        # The reconstruction chain is a block in front of both
+        assert chain_end in reconstruct.dependencies
+        # The derivatives are interpolated after they have been recomputed
+        assert chain_end in derivatives.dependencies
+        # The right-hand side waits for both reconstructions
+        rhs = tasks[f"SO_Evaluate Runge-Kutta right hand side stage {stage}"]
+        assert reconstruct in rhs.dependencies
+        assert reconstruct_derivatives in rhs.dependencies

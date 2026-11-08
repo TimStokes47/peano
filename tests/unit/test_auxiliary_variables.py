@@ -250,16 +250,17 @@ def test_fd4_reconstructs_the_halos_of_auxiliary_variables(tmp_path):
     solver.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
     tasks = {task.name: task for task in time_step.tasks}
     # The unknowns and each set of auxiliary variables are reconstructed by tasks
-    # of their own: the halos of the auxiliary variables follow the unknowns
+    # of their own, which run in parallel
     reconstruction = tasks["Probe_Reconstruct stage 0"]
-    auxiliary = tasks["Probe_Reconstruct auxiliary variables stage 0"]
+    auxiliary = tasks["Probe_Reconstruct auxiliary variables Bathymetry stage 0"]
     assert [type(a).__name__ for a in reconstruction.action_sets] == [
         "ReconstructPatchWithHalo"
     ]
     assert [type(a).__name__ for a in auxiliary.action_sets] == [
         "ReconstructPatchWithHalo"
     ]
-    assert auxiliary.dependencies == [reconstruction]
+    assert reconstruction not in auxiliary.dependencies
+    assert auxiliary not in tasks["Probe_Reconstruct stage 0"].dependencies
     update = tasks["Probe_Evaluate Runge-Kutta right hand side stage 0"]
     body = update.action_sets[0].get_body_of_operation(
         peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME

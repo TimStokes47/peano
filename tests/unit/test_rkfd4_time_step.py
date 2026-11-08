@@ -115,6 +115,11 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
         )
         assert (
             tasks[f"Probe_Roll over stage {stage} faces"]
+            in tasks[f"Probe_Interpolate hanging faces stage {stage}"].dependencies
+        )
+        # The reconstruction reads the faces, i.e. it needs the interpolated data
+        assert (
+            tasks[f"Probe_Interpolate hanging faces stage {stage}"]
             in tasks[f"Probe_Reconstruct stage {stage}"].dependencies
         )
     # The boundary values have to be set after the previous stage's roll-over
@@ -133,7 +138,7 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
     # The load balancing is switched off before the first stage only
     assert (
         tasks["Probe_Disable load balancing"]
-        in tasks["Probe_Reconstruct stage 0"].dependencies
+        in tasks["Probe_Interpolate hanging faces stage 0"].dependencies
     )
     # Each task of the scheme holds exactly one action set, so that the task
     # graph compiler can run the tasks of several solvers in parallel

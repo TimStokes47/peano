@@ -62,10 +62,13 @@ class SolverHost(abc.ABC):
        appends them to the graphs of the project.
 
     Whatever belongs to the mesh as a whole, i.e. the load balancing switch and the
-    dynamic mesh refinement, shall exist once: Only the solver in
-    global_tasks_solver adds these tasks (@ref
-    exahype2.api.Solver.Solver.generate_solver_realisation(), flag
-    add_global_tasks). All other solvers leave them to it.
+    dynamic mesh refinement, shall exist once: The host realises all solvers
+    with add_global_tasks=False (@ref
+    exahype2.api.Solver.Solver.generate_solver_realisation()), i.e. as
+    intermediate steps. After the coupling, it wraps the concatenated graph
+    through the numerical scheme of global_tasks_solver
+    (@ref exahype2.api.Solver.Solver.NumericalScheme.wrap_task_graph_in_load_balancing_and_amr_tasks()),
+    and lets this solver's mesh adaptation fill the mesh adaptation graph.
 
     """
 
@@ -162,11 +165,21 @@ class SolverHost(abc.ABC):
                 exahype2_project,
                 peano_project,
                 *graphs.graphs(),
-                add_global_tasks=solver is self.global_tasks_solver,
+                add_global_tasks=False,
             )
             own_graphs[solver] = graphs
             host_graphs.append(graphs)
         self.couple(exahype2_project, peano_project, own_graphs, host_graphs)
+
+        ## The global tasks wrap the coupled graph, i.e. they are added last
+        global_solver = self.global_tasks_solver
+        global_solver.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks(
+            host_graphs.time_step
+        )
+        if global_solver.mesh_adaptation is not None:
+            global_solver.mesh_adaptation.construct_output(
+                exahype2_project, peano_project, host_graphs.mesh_adaptation
+            )
 
         title = (
             "Time stepping task graph for host "

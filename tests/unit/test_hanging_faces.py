@@ -97,7 +97,10 @@ def test_time_step_interpolates_before_reconstruction_and_restricts_projection(
     tmp_path,
 ):
     solver, (setup, time_step) = _graphs(tmp_path)
-    (interpolation,) = _action_sets_of_type(time_step["Probe_Reconstruct"], Interpolate)
+    (interpolation,) = _action_sets_of_type(
+        time_step["Probe_Interpolate hanging faces"], Interpolate
+    )
+    assert time_step["Probe_Interpolate hanging faces"] in time_step["Probe_Reconstruct"].dependencies
     assert interpolation.scheme == Interpolate.Scheme.Linear
     assert interpolation.d["FACE_NAME"] == solver._patch_overlap_current_time_step.name
     (restriction,) = _action_sets_of_type(time_step["Probe_Project on faces"], Restrict)
@@ -115,7 +118,9 @@ def test_schemes_are_configurable(tmp_path):
         interpolation=Interpolate.Scheme.PiecewiseConstant,
         restriction=Restrict.Scheme.Inject,
     )
-    (interpolation,) = _action_sets_of_type(time_step["Probe_Reconstruct"], Interpolate)
+    (interpolation,) = _action_sets_of_type(
+        time_step["Probe_Interpolate hanging faces"], Interpolate
+    )
     assert interpolation.scheme == Interpolate.Scheme.PiecewiseConstant
     for task in [time_step["Probe_Project on faces"], setup["Probe Project on faces"]]:
         (restriction,) = _action_sets_of_type(task, Restrict)

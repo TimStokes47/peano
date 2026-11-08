@@ -20,8 +20,11 @@ class FOSOSolver(exahype2.api.SolverHost):
 
     - ccz4 (exagrype.api.FOSOCCZ4Solver) evolves the 25 primary unknowns of
       CCZ4. It holds the 34 derivatives as auxiliary variables. It is the
-      solver that owns the global tasks, i.e. the load balancing and the
-      dynamic mesh refinement (global_tasks_solver, see @ref exahype2.api.SolverHost).
+      global_tasks_solver (@ref exahype2.api.SolverHost): Both solvers are
+      realised as intermediate steps, and after concatenation and coupling, the
+      host wraps the whole graph into the load balancing and dynamic mesh
+      refinement tasks through the scheme of ccz4
+      (wrap_task_graph_in_load_balancing_and_amr_tasks()).
     - reconstruction (exagrype.api.FOSOReconstructionSolver) evolves the
       derivatives, i.e. it recomputes them from the primary unknowns in
       front of each Runge-Kutta stage of ccz4.
@@ -89,11 +92,23 @@ class FOSOSolver(exahype2.api.SolverHost):
     def couple(self, exahype2_project, peano_project, own_graphs, host_graphs):
         """!
 
-        Let each stage of the CCZ4 solver wait for the reconstruction of this stage
+        Let each stage of the CCZ4 solver use the freshly reconstructed derivatives
 
-        The first reconstruction tasks of a stage wait for whatever the CCZ4
-        solver's reconstruction of the stage waits for, and the latter waits
-        for the last reconstruction task of the stage.
+        In each stage, the CCZ4 solver interpolates the unknowns and the
+        derivatives onto the hanging faces, reconstructs their halos, and
+        evaluates the right-hand side. The reconstruction solver recomputes
+        the derivatives from the unknowns in between, i.e.
+
+        - the first reconstruction tasks of the stage wait for whatever the
+          CCZ4 solver's interpolation of the derivatives waits for,
+        - the interpolation of the primary variables also waits for the
+          CCZ4 solver's interpolation of the unknowns, as both write the same
+          faces, and
+        - the CCZ4 solver's interpolation of the derivatives and its
+          reconstruction of the unknowns wait for the last reconstruction task.
+
+        The chain is hence a block within the stage: The maximum concurrency of
+        the merged graph does not exceed the one of the two graphs.
 
         @param exahype2_project: exahype2.api.Project
           The project that hosts the pair (unused).
@@ -110,21 +125,36 @@ class FOSOSolver(exahype2.api.SolverHost):
         """
         scheme = self.reconstruction.numerical_scheme
         time_step = host_graphs.time_step
-        for stage, (first_tasks, last_task, partner_name) in enumerate(
+
+        def find(task_name, stage):
+            found = [t for t in time_step.tasks if t.name == task_name]
+            if len(found) != 1:
+                raise ValueError(
+                    f"Host {self.name}: cannot find the task {task_name} "
+                    f"of stage {stage} of solver {self.ccz4.name} in its time stepping task graph"
+                )
+            return found[0]
+
+        for stage, (
+            first_tasks,
+            last_task,
+            unknowns_name,
+            derivatives_name,
+            reconstruction_name,
+        ) in enumerate(
             zip(
                 scheme.stage_first_tasks,
                 scheme.stage_last_tasks,
+                scheme.names_of_partner_interpolation_tasks,
+                scheme.names_of_derivative_interpolation_tasks,
                 scheme.names_of_partner_reconstruction_tasks,
             )
         ):
-            partner = [t for t in time_step.tasks if t.name == partner_name]
-            if len(partner) != 1:
-                raise ValueError(
-                    f"Host {self.name}: cannot find the reconstruction {partner_name} "
-                    f"of stage {stage} of solver {self.ccz4.name} in its time stepping task graph"
-                )
-            partner = partner[0]
-            for dependency in partner.dependencies:
+            unknowns_interpolation = find(unknowns_name, stage)
+            derivatives_interpolation = find(derivatives_name, stage)
+            for dependency in derivatives_interpolation.dependencies:
                 for first_task in first_tasks:
                     first_task.add_dependency(dependency)
-            partner.add_dependency(last_task)
+            first_tasks[0].add_dependency(unknowns_interpolation)
+            derivatives_interpolation.add_dependency(last_task)
+            find(reconstruction_name, stage).add_dependency(last_task)

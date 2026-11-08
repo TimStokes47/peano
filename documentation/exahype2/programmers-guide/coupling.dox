@@ -72,12 +72,14 @@ and switches the load balancing on again (plus the mesh adaptation phase).
 If every solver added them, we would switch the load balancing off and on once per solver. 
 All routines which generate a solver realisation therefore accept a flag `add_global_tasks`
 (exahype2.api.Solver.generate_solver_realisation(), exahype2.api.Solver.NumericalScheme.construct_output()). 
-A host passes True to one solver - its global_tasks_solver, see @ref exahype2.api.SolverHost, by default the first - and 
-False to all others, which leave the global tasks to this one. Solvers without 
-global tasks do not contribute to the mesh adaptation phase either.
+If set, the scheme embeds its task graph into the global tasks as its very last step, by calling
+exahype2.api.Solver.NumericalScheme.wrap_task_graph_in_load_balancing_and_amr_tasks(). 
+A host realises all solvers as intermediate steps, i.e. with False. After it has concatenated and coupled the graphs, 
+it calls the wrapping routine on the concatenated graph of its global_tasks_solver (see @ref exahype2.api.SolverHost, 
+by default the first), and lets the mesh adaptation of this solver fill the mesh adaptation phase. 
 Consequently, only the global tasks solver can refine the mesh. 
 If you write your own scheme and want it to be used within a host, make construct_output() 
-honour the flag.
+honour the flag, and let a scheme that owns no mesh override the wrapping routine with an empty one.
 
 
 ## Multiplicative coupling
