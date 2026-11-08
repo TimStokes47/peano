@@ -69,7 +69,8 @@ The script loops sequentially, within one Python process, over all schemes,
 grid sizes and formulations.
 
 The option --build-mode=debug|release selects the build (default release; debug
-also enables the generator logging). --schemes (default RK4FD4,RK1FD4,FV), --sizes (default 27,81), --end-time (default
+also enables the generator logging). --schemes (default RK4FD4,RK1FD4,FV), --formulations (default FO,SO; with just one,
+the comparison table lists the lapse error and wall time of that formulation only), --sizes (default 27,81), --end-time (default
 0.1) and --cfl (CFL constant of the Finite Volume scheme, default 0.9) override
 the remaining settings.
 
@@ -217,12 +218,22 @@ parser.add_argument(
     default=["RK4FD4", "RK1FD4", "FV"],
     help="Comma-separated numerical schemes to build, run and compare (RK4FD4, RK1FD4, FV)",
 )
+parser.add_argument(
+    "--formulations",
+    type=lambda text: text.split(","),
+    default=["FO", "SO"],
+    help="Comma-separated formulations to build, run and compare (FO, SO)",
+)
 parser.add_argument("--end-time", type=float, default=0.1, help="Simulation end time")
 parser.add_argument(
     "--cfl", type=float, default=0.9, help="CFL constant of the FV scheme"
 )
 arguments = parser.parse_args()
 schemes = arguments.schemes
+formulations = arguments.formulations
+for formulation in formulations:
+    if formulation not in ["FO", "SO"]:
+        parser.error(f"unknown formulation {formulation}, use FO and/or SO")
 for scheme in schemes:
     if scheme not in ["RK4FD4", "RK1FD4", "FV"]:
         parser.error(f"unknown scheme {scheme}, use RK4FD4, RK1FD4 and/or FV")
@@ -237,7 +248,6 @@ grid_sizes = arguments.sizes
 end_time = arguments.end_time
 time_in_between_plots = end_time / 2.0
 patch_size = 9
-formulations = ["FO", "SO"]
 
 
 def directory_of(scheme, formulation, cells):
@@ -475,7 +485,48 @@ def compare_one(scheme, cells, verbose):
     return summary
 
 
+def compare_single(scheme, formulation, cells):
+    """!
+
+    Summarise one formulation on one grid against the analytical lapse. Used
+    if only one of FO and SO is built, i.e. there is nothing to compare it to.
+
+    @return dict
+      Summary numbers, or None if the run is missing.
+
+    """
+    evolved = sum(exagrype.api.FOSOCCZ4Solver.Unknowns.values())
+    try:
+        t, values, x, _ = snapshot(
+            scheme, formulation, cells, 59 if formulation == "FO" else evolved
+        )
+        with open(os.path.join(directory_of(scheme, formulation, cells), "wall-time.json")) as file:
+            wall_time = json.load(file)["wall_time"]
+    except (FileNotFoundError, IndexError):
+        return None
+    if values is None:
+        return None
+    exact = gauge_wave_lapse(x, t)
+    return {
+        "time": t,
+        "lapse_error": float(np.linalg.norm(values[:, 16] - exact) / np.linalg.norm(exact)),
+        "wall_time": wall_time,
+    }
+
+
 def compare():
+    if len(formulations) == 1:
+        formulation = formulations[0]
+        print(f"\n{'scheme':>7} {'cells':>6} {'form.':>6} {'t':>7} {'lapse err':>10} {'wall [s]':>9}")
+        for scheme in schemes:
+            for cells in grid_sizes:
+                s = compare_single(scheme, formulation, cells)
+                if s is not None:
+                    print(
+                        f"{scheme:>7} {cells:>6} {formulation:>6} {s['time']:7.3f} "
+                        f"{s['lapse_error']:10.2e} {s['wall_time']:9.2f}"
+                    )
+        return
     rows = []
     for scheme in schemes:
         for cells in grid_sizes:
