@@ -73,16 +73,21 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
         "Probe_Compute max eigenvalue",
         "Probe_Reduce max eigenvalue",
         "Probe_Compute time step size",
-        "Probe_Dynamic mesh refinement",
+        f"Probe_{exahype2.api.Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
     }
-    # The maximum eigenvalue of the new solution is determined before it is projected
+    # The maximum eigenvalue of the new solution is determined in parallel to its
+    # projection: both follow the linear combination, neither waits for the other
     assert (
         tasks["Probe_Complete time step"]
         in tasks["Probe_Compute max eigenvalue"].dependencies
     )
     assert (
-        tasks["Probe_Compute max eigenvalue"]
+        tasks["Probe_Complete time step"]
         in tasks["Probe_Project solution onto faces"].dependencies
+    )
+    assert (
+        tasks["Probe_Compute max eigenvalue"]
+        not in tasks["Probe_Project solution onto faces"].dependencies
     )
     # The eigenvalue is stored per cell, a task of its own reduces it, and the
     # time step size is computed from the outcome
@@ -389,4 +394,4 @@ def test_time_step_size_acts_at_the_end_of_the_time_step_and_needs_no_traversal(
         task in other.dependencies for other in tasks.values()
     )
     # The mesh refinement is independent of the time step size
-    assert task not in tasks["Probe_Dynamic mesh refinement"].dependencies
+    assert task not in tasks[f"Probe_{exahype2.api.Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}"].dependencies

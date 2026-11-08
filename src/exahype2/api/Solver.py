@@ -66,6 +66,12 @@ class Solver(abc.ABC):
 
         """
 
+        ## Name of the last task of each time step without the solver's name
+        ## as prefix, i.e. the task is called {SolverName}_ followed by this
+        ## string. It evaluates the adaptivity criterion and re-enables and
+        ## informs the load balancing.
+        DYNAMIC_MESH_REFINEMENT_TASK_NAME = "Dynamic mesh refinement and load balancing"
+
         def __init__(self, solver: "Solver"):
             """!
 

@@ -248,6 +248,10 @@ def test_constraint_enforcement_rejects_unknown_scheme(tmp_path):
     import exagrype.api
 
     class UnknownScheme(exahype2.api.Solver.NumericalScheme):
+        ## Required by the generation of the abstract solver
+        patch_size = 4
+        halo_size = 1
+
         def construct_output(self, exahype2_project, peano_project, time_step):
             pass
 

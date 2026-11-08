@@ -1038,7 +1038,7 @@ Patch overlap data
 
         After the last stage, {SolverName}_Compute time step size determines
         the time step size of the next time step and advances the solver's
-        time stamp. {SolverName}_Dynamic mesh refinement finally evaluates the
+        time stamp. {SolverName}_Dynamic mesh refinement and load balancing finally evaluates the
         adaptivity criterion if the solver has one
         (@ref exahype2.api.blockstructured.create_dynamic_mesh_refinement_action_set.create_dynamic_mesh_refinement_action_set()),
         switches the load balancing on again and informs it that the time
@@ -1438,7 +1438,7 @@ Patch overlap data
         ## and it switches the load balancing on again and informs it that
         ## the time step has finished.
         dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
-            name=f"{name}_Dynamic mesh refinement",
+            name=f"{name}_{self.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
             entity=Entity.CELL,
             may_spawn_background_tasks=False,
         )
