@@ -301,7 +301,7 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         self.kernel_namespace = None
         self.max_eigenvalue_kernel_call = None
         self.cfl_constant = cfl_constant
-        self._generator = RusanovWithExplicitEulerGenerator(solver, [(Target.Serial, False)])
+        self._generator = RusanovWithExplicitEulerGenerator2(solver, [(Target.Serial, True)])
         self.__create_data_structures()
 
     @property
@@ -1208,11 +1208,25 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
         }
 
         function_map = {
+            dslhype2.Name("volumetricSource"): dslhype2.TFunction("const ::exahype2::fv::rusanov::VolumetricSourceFunctor&", OrderedDict({
+                dslhype2.Name("Q"): dslhype2.TArray(dslhype2.TFloat(), 1), 
+                dslhype2.Name("x"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
+                dslhype2.Name("t"): dslhype2.TFloat(), 
+                dslhype2.Name("F"): dslhype2.TArray(dslhype2.TFloat(), 1)})),
             dslhype2.Name("flux"): dslhype2.TFunction("const ::exahype2::fv::rusanov::FluxFunctor&", OrderedDict({
                 dslhype2.Name("Q"): dslhype2.TArray(dslhype2.TFloat(), 1), 
                 dslhype2.Name("x"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
                 dslhype2.Name("normal"): dslhype2.TInteger(), 
                 dslhype2.Name("F"): dslhype2.TArray(dslhype2.TFloat(), 1)})),
+            dslhype2.Name("nonconservativeProduct"): dslhype2.TFunction("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&", OrderedDict({
+                dslhype2.Name("Q"): dslhype2.TArray(dslhype2.TFloat(), 1), 
+                dslhype2.Name("deltaQ"): dslhype2.TArray(dslhype2.TFloat(), 1), 
+                dslhype2.Name("x"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
+                dslhype2.Name("h"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
+                dslhype2.Name("t"): dslhype2.TFloat(), 
+                dslhype2.Name("dt"): dslhype2.TFloat(), 
+                dslhype2.Name("normal"): dslhype2.TInteger(), 
+                dslhype2.Name("BTimesDeltaQ"): dslhype2.TArray(dslhype2.TFloat(), 1)})),
             dslhype2.Name("maxEigenvalue"): dslhype2.TFunction("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&", OrderedDict({
                 dslhype2.Name("Q"): dslhype2.TArray(dslhype2.TFloat(), 1), 
                 dslhype2.Name("x"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
@@ -1221,7 +1235,7 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
         }
 
         for (target, stateless) in self._configurations:
-            dslhype2.translate_dslhype2_function(
+            dslhype2.translate_dslhype_function(
                 function = time_step_dsl_function,
                 dimensions=dimensions,
                 function_namespace = self._solver.numerical_scheme.kernel_namespace,
@@ -1236,7 +1250,7 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
             )
         # The maximum eigenvalue is a kernel of its own, which always runs on the host
         for stateless in sorted({stateless for (_, stateless) in self._configurations}):
-            dslhype2.translate_dslhype2_function(
+            dslhype2.translate_dslhype_function(
                 function = maxEigenvalueOverPatch2D if dimensions == 2 else maxEigenvalueOverPatch3D,
                 dimensions=dimensions,
                 function_namespace = self._solver.numerical_scheme.kernel_namespace,
@@ -1251,9 +1265,10 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
             )
         
         #for file_prefix in [f"{self._solver.name}_rusanov2d"]:#, f"{self._solver.name}_rusanov3d"]:
-        file = open(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.h"), "a")
-        file.write(f"""#include "{self._solver.name}_rusanov{dimensions}d.cpph" """)
-        file.close()
+        if stateless_kernel_generated:
+            file = open(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.h"), "a")
+            file.write(f"""#include "{self._solver.name}_rusanov{dimensions}d.cpph" """)
+            file.close()
 
         peano4_project.output.makefile.add_h_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.h"))
         if stateless_kernel_generated:
