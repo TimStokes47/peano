@@ -684,19 +684,15 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         ## The projection declares the face data of the current time step, so
         ## the compiler does not fuse it into the traversal of the reconstruction.
         project_on_faces_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
+        ## The roll over is part of the projection, too. The face data of the
+        ## projection (the update) is TEMPORARY, i.e. it lives within one mesh
+        ## traversal only, and the roll over copies it. A task of its own
+        ## would be fused into a later traversal by the producer-consumer
+        ## compiler, where it copies uninitialised memory
+        ## (see src/exahype2/api/fv/adrs/0003-roll-over-is-part-of-the-projection.md).
         ## Sommerfeld boundary conditions advance the ghost volumes within
         ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
-        roll_over_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Roll over faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        roll_over_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        roll_over_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        roll_over_task.add_dependency(project_on_faces_task)
-        time_step.add_task(roll_over_task)
-        ## The roll over of Sommerfeld boundary conditions reads the current
-        ## time step size, which the next task replaces. It therefore never
-        ## runs before the roll over has terminated
-        ## (see src/exahype2/api/fv/adrs/0002-time-step-size-after-roll-over.md)
-        compute_cfl_condition_task.add_dependency(roll_over_task)
-        roll_over_task.add_action_set(
+        project_on_faces_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
                 self._solver,
                 exahype2_project,
@@ -705,7 +701,12 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
                 time_step_size=f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()",
             )
         )
-        
+        ## The roll over of Sommerfeld boundary conditions reads the current
+        ## time step size, which the next task replaces. It therefore never
+        ## runs before the roll over has terminated
+        ## (see src/exahype2/api/fv/adrs/0002-time-step-size-after-roll-over.md)
+        compute_cfl_condition_task.add_dependency(project_on_faces_task)
+
         # The load balancing is switched off throughout the time step, and
         # switched on again only at its very end, so it may then decide on
         # splits. Peano carries these splits out in the subsequent mesh sweep.
@@ -1078,19 +1079,15 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
         ## The projection declares the face data of the current time step, so
         ## the compiler does not fuse it into the traversal of the reconstruction.
         project_on_faces_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
+        ## The roll over is part of the projection, too. The face data of the
+        ## projection (the update) is TEMPORARY, i.e. it lives within one mesh
+        ## traversal only, and the roll over copies it. A task of its own
+        ## would be fused into a later traversal by the producer-consumer
+        ## compiler, where it copies uninitialised memory
+        ## (see src/exahype2/api/fv/adrs/0003-roll-over-is-part-of-the-projection.md).
         ## Sommerfeld boundary conditions advance the ghost volumes within
         ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
-        roll_over_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Roll over faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        roll_over_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        roll_over_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        roll_over_task.add_dependency(project_on_faces_task)
-        time_step.add_task(roll_over_task)
-        ## The roll over of Sommerfeld boundary conditions reads the current
-        ## time step size, which the next task replaces. It therefore never
-        ## runs before the roll over has terminated
-        ## (see src/exahype2/api/fv/adrs/0002-time-step-size-after-roll-over.md)
-        compute_cfl_condition_task.add_dependency(roll_over_task)
-        roll_over_task.add_action_set(
+        project_on_faces_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
                 self._solver,
                 exahype2_project,
@@ -1099,7 +1096,12 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
                 time_step_size=f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()",
             )
         )
-        
+        ## The roll over of Sommerfeld boundary conditions reads the current
+        ## time step size, which the next task replaces. It therefore never
+        ## runs before the roll over has terminated
+        ## (see src/exahype2/api/fv/adrs/0002-time-step-size-after-roll-over.md)
+        compute_cfl_condition_task.add_dependency(project_on_faces_task)
+
         # The load balancing is switched off throughout the time step, and
         # switched on again only at its very end, so it may then decide on
         # splits. Peano carries these splits out in the subsequent mesh sweep.
