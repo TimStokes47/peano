@@ -1,6 +1,6 @@
 ---
 name: exahype2:integration-test
-description: Re-run the ExaHyPE 2 / ExaGRyPE integration test, i.e. the convergence study of the gauge wave benchmark (benchmarks/exagrype/gauge-wave) over the schemes fv, rk1fd4, rk2fd4, rk3fd4 and rk4fd4 and over several mesh sizes, plus the Euler entropy wave convergence study of the fourth-order Finite Differences with adaptive time stepping (benchmarks/exahype2/euler/smooth-convergence-test-fd4). Use when the user asks to run/re-run the integration test or the gauge wave convergence study, or to check that changes to the numerical schemes, task graph, kernels or code generation have not broken the numerical correctness. Runtimes are recorded, but they are not an acceptance criterion (that is the job of exahype2:performance-test).
+description: Re-run the ExaHyPE 2 / ExaGRyPE integration test, i.e. the convergence study of the gauge wave benchmark (benchmarks/exagrype/gauge-wave) over the schemes fv, rk1fd4, rk2fd4, rk3fd4 and rk4fd4 and over several mesh sizes, plus the Euler entropy wave convergence study of the fourth-order Finite Differences with adaptive time stepping (benchmarks/exahype2/euler/smooth-convergence-test-fd4), plus the AMR check of the Euler point source (benchmarks/exahype2/euler/point-source). Use when the user asks to run/re-run the integration test or the gauge wave convergence study, or to check that changes to the numerical schemes, task graph, kernels or code generation have not broken the numerical correctness. Runtimes are recorded, but they are not an acceptance criterion (that is the job of exahype2:performance-test).
 allowed-tools: [Bash, Read]
 ---
 
@@ -117,3 +117,40 @@ If it fails, look at the log of the run: `run.log` in the run directory. Typical
   Task names become C++ identifiers.
 - The same study with a fixed time step (`--time-step-size 0.0005`, one run) separates problems of
   the time step size computation from problems of the scheme.
+
+## Euler point source: AMR check
+
+`benchmarks/exahype2/euler/point-source/amr-study.py` generates, builds and runs the point source
+benchmark (2d, Finite Volumes) twice: on the regular grid of 81x81 mesh cells with 9x9 volumes
+each (`--amr-levels 0`), and from the same grid with the gradient-based refinement criterion
+switched on (`--amr-levels 1`). It checks that (a) the dynamic AMR works, i.e. the mesh coarsens,
+and (b) the quality does not suffer, i.e. the density and the energy of the last snapshot differ
+from the regular-grid run by at most 2% of their ranges. It prints the table of coarsened and
+refined volumes over time, and `PASSED` or `FAILED`; it exits non-zero on `FAILED`. It needs the
+same prerequisites as above and about ten minutes:
+
+```sh
+python3 benchmarks/exahype2/euler/point-source/amr-study.py --work-directory <work3>
+```
+
+Finished runs in the work directory are reused; delete `<work3>/levels-<l>` to rerun one.
+Expected (documented in the page on top of `point-source.py`): the mesh drops from 6561 to 1937
+cells in the first time steps, grows to 2801 cells at the end (43% of the regular grid), 374 544
+volumes are coarsened and 69 984 refined, the maximum differences are 1.4e-3 (density) and
+5.0e-3 (energy).
+
+If it fails:
+
+- `new dt=inf` and NaN: see the symptoms of the entropy wave study. The point source run found that
+  the roll over of the faces of the explicit Finite Volume scheme was a task of its own, which the
+  producer-consumer compiler fused into a later traversal than the projection (ADR 0003 in
+  `src/exahype2/api/fv/adrs`). The benchmark itself uses `FuseSteps` rather than the
+  producer-consumer compiler.
+- A run that makes no progress and burns CPU time on all threads: in `tarch::multicore::waitForTasks()`,
+  the producer-consumer compiler deadlocked on large meshes (all threads wait for the read lock of the
+  dependency tracking). Attach `gdb -p` to see it. Not an issue of the benchmark.
+- "The mesh never coarsened": check the thresholds `--refine-threshold` and `--erase-threshold`
+  of `point-source.py`, and that `min_volume_size` and `max_volume_size` of the scheme allow
+  coarsening.
+- `--amr-levels 2` currently yields the same mesh as `--amr-levels 1` (only four cells reach the
+  second level and are refined again), i.e. it is not a test of multi-level coarsening.
