@@ -1319,6 +1319,11 @@ Patch overlap data
         ## time step size before the CFL condition advances them
         compute_cfl_condition_task.add_dependency(reduce_eigenvalue_task)
         compute_cfl_condition_task.add_dependency(spawn_patch_interior_task)
+        ## The roll over of Sommerfeld boundary conditions is part of the
+        ## projection and reads the current time step size, which the next task
+        ## replaces. It therefore never runs before the roll over has terminated
+        ## (see src/exahype2/api/fv/adrs/0002-time-step-size-after-roll-over.md)
+        compute_cfl_condition_task.add_dependency(project_on_faces_task)
         compute_cfl_condition_task.add_action_set(
             ComputeGlobalCFLCondition(
                 self._solver,

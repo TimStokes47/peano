@@ -1241,7 +1241,15 @@ Patch overlap data
                     self._solver._patch_with_halo,
                     _access_within_chain(Access.READ_AND_DISCARD, position, length),
                 )
-                task.use_cell(self._solver._rhs_estimates, Access.READ_AND_WRITE)
+                ## The very first task of the time step assigns the first
+                ## estimate, i.e. it does not load anything. All other tasks
+                ## add to what is there.
+                task.use_cell(
+                    self._solver._rhs_estimates,
+                    Access.WRITE
+                    if stage == 0 and position == 0
+                    else Access.READ_AND_WRITE,
+                )
                 use_halos_of_auxiliary_variables(
                     task,
                     self._solver,
@@ -1272,8 +1280,10 @@ Patch overlap data
             time_step.add_task(combination_task)
             combination_task.add_dependency(right_hand_side_task)
             combination_task.use_cell(self._solver._patch, Access.READ_AND_WRITE)
+            ## Nobody reads the estimates after the final combination
             combination_task.use_cell(
-                self._solver._rhs_estimates, Access.READ_AND_WRITE
+                self._solver._rhs_estimates,
+                Access.READ_AND_DISCARD if is_last_stage else Access.READ_AND_WRITE,
             )
             if not is_last_stage:
                 combination_task.use_cell(self._solver._stage_input, Access.WRITE)

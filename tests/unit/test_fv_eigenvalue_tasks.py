@@ -46,6 +46,16 @@ def test_eigenvalue_is_computed_stored_and_reduced_before_the_time_step_size(
     assert tasks[f"Probe_{exahype2.api.Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}"].dependencies.count(reduce) == 1
 
 
+def test_time_step_size_is_computed_after_the_roll_over(tmp_path):
+    # Sommerfeld roll overs read the time step size, which the CFL task replaces
+    _, tasks, _ = _time_step("explicit", tmp_path)
+    cfl = tasks["Probe_Compute global CFL condition"]
+    assert tasks["Probe_Roll over faces"] in cfl.dependencies
+    _, tasks, _ = _time_step("optimistic", tmp_path)
+    cfl = tasks["Probe_Compute global CFL condition"]
+    assert tasks["Probe_Project on faces"] in cfl.dependencies
+
+
 def test_explicit_eigenvalue_follows_the_update_and_runs_beside_the_projection(
     tmp_path,
 ):

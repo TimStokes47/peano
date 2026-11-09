@@ -691,6 +691,11 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         roll_over_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         roll_over_task.add_dependency(project_on_faces_task)
         time_step.add_task(roll_over_task)
+        ## The roll over of Sommerfeld boundary conditions reads the current
+        ## time step size, which the next task replaces. It therefore never
+        ## runs before the roll over has terminated
+        ## (see src/exahype2/api/fv/adrs/0002-time-step-size-after-roll-over.md)
+        compute_cfl_condition_task.add_dependency(roll_over_task)
         roll_over_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
                 self._solver,
@@ -1080,6 +1085,11 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
         roll_over_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         roll_over_task.add_dependency(project_on_faces_task)
         time_step.add_task(roll_over_task)
+        ## The roll over of Sommerfeld boundary conditions reads the current
+        ## time step size, which the next task replaces. It therefore never
+        ## runs before the roll over has terminated
+        ## (see src/exahype2/api/fv/adrs/0002-time-step-size-after-roll-over.md)
+        compute_cfl_condition_task.add_dependency(roll_over_task)
         roll_over_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
                 self._solver,

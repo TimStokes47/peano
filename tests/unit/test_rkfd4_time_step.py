@@ -390,3 +390,22 @@ def test_time_step_size_acts_at_the_end_of_the_time_step_and_needs_no_traversal(
     )
     # The mesh refinement is independent of the time step size
     assert task not in tasks[f"Probe_{exahype2.api.Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}"].dependencies
+
+
+def test_estimates_are_written_first_and_discarded_last(tmp_path):
+    tasks = _construct_time_step(_solver(rk_order=3), tmp_path)
+    Access = peano4.api.taskgraph.Task.DataAccess
+
+    def access_to_estimates(name):
+        (qualifier,) = [
+            access
+            for data, access in tasks[name].cell_data_access.items()
+            if data.name.endswith("RhsEstimates")
+        ]
+        return qualifier
+
+    assert access_to_estimates("Probe_Evaluate Runge-Kutta right hand side stage 0") == Access.WRITE
+    assert access_to_estimates("Probe_Evaluate Runge-Kutta right hand side stage 1") == Access.READ_AND_WRITE
+    assert access_to_estimates("Probe_Prepare stage 1") == Access.READ_AND_WRITE
+    assert access_to_estimates("Probe_Prepare stage 2") == Access.READ_AND_WRITE
+    assert access_to_estimates("Probe_Complete time step") == Access.READ_AND_DISCARD
