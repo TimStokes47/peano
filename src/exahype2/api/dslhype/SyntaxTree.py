@@ -4401,13 +4401,15 @@ class DataBlockConstructionFromFunction(Statement):
                     # the patches. The loops start from 0, while the iteration range starts at
                     # the first volume that the source term is evaluated for.
                     spatial_dimensions = len(self._dataBlock._iteration_range) - 2
+                    # The kernels name the number of volumes per patch axis differently: NV (Finite Volumes) or NC (Finite Differences)
+                    volumes_per_axis = "NV" if "NV" in Name.variables else "NC"
                     volume_index = ", ".join(
                         f"({index[d].print_cpp()} + {self._dataBlock._iteration_range[d + 1][0].print_cpp()})"
                         for d in range(spatial_dimensions)
                     )
                     functionCall.add_argument(String(
                         f"::exahype2::fv::getVolumeCentre({argument.multidimensional_index(index, 1).print_cpp()}, "
-                        f"{Name.variables['h'].multidimensional_index(index, 1).print_cpp()}, NV, "
+                        f"{Name.variables['h'].multidimensional_index(index, 1).print_cpp()}, {volumes_per_axis}, "
                         f"tarch::la::Vector<{spatial_dimensions},int>({{{volume_index}}}))"
                     ))
                 elif type(argument.get_type()) is TDataBlock:
