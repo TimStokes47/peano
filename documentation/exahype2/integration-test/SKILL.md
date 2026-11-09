@@ -1,10 +1,15 @@
 ---
 name: exahype2:integration-test
-description: Re-run the ExaHyPE 2 / ExaGRyPE integration test, i.e. the convergence study of the gauge wave benchmark (benchmarks/exagrype/gauge-wave) over the schemes fv, rk1fd4, rk2fd4, rk3fd4 and rk4fd4 and over several mesh sizes. Use when the user asks to run/re-run the integration test or the gauge wave convergence study, or to check that changes to the numerical schemes, task graph, kernels or code generation have not broken the numerical correctness. Runtimes are recorded, but they are not an acceptance criterion (that is the job of exahype2:performance-test).
+description: Re-run the ExaHyPE 2 / ExaGRyPE integration test, i.e. the convergence study of the gauge wave benchmark (benchmarks/exagrype/gauge-wave) over the schemes fv, rk1fd4, rk2fd4, rk3fd4 and rk4fd4 and over several mesh sizes, plus the Euler entropy wave convergence study of the fourth-order Finite Differences with adaptive time stepping (benchmarks/exahype2/euler/smooth-convergence-test-fd4). Use when the user asks to run/re-run the integration test or the gauge wave convergence study, or to check that changes to the numerical schemes, task graph, kernels or code generation have not broken the numerical correctness. Runtimes are recorded, but they are not an acceptance criterion (that is the job of exahype2:performance-test).
 allowed-tools: [Bash, Read]
 ---
 
-# Integration test: gauge wave convergence study
+# Integration test: convergence studies
+
+The integration test consists of two studies: the gauge wave (ExaGRyPE, CCZ4) and the Euler
+entropy wave (ExaHyPE 2, see the last section). Run both.
+
+## Gauge wave convergence study
 
 The gauge wave has a known exact solution. `benchmarks/exagrype/gauge-wave/convergence-study.py`
 builds and runs `gauge-wave.py` for every scheme and mesh, measures the maximum error of the
@@ -82,3 +87,33 @@ last reference run are documented in the page on top of `gauge-wave.py`.
 The script records runtime, thread count and peak memory per run. They are part of the table
 but never decide on pass or fail. Performance regressions are to be checked with the
 `exahype2:performance-test` skill.
+
+## Euler entropy wave convergence study
+
+`benchmarks/exahype2/euler/smooth-convergence-test-fd4/convergence-study.py` generates, builds
+and runs the entropy wave of the Euler equations (2d, fourth-order Finite Differences with
+fourth-order Runge-Kutta and adaptive time stepping) on 27, 81 and 243 grid cells per axis. It
+compares the density of the last snapshot with the exact solution and exits non-zero if the order
+of the maximum error between the two finest meshes is below 3.5. It needs the same prerequisites
+as above (the Intel compiler on the `PATH`, `PYTHONPATH=<repo>/src`) and about ten minutes:
+
+```sh
+python3 benchmarks/exahype2/euler/smooth-convergence-test-fd4/convergence-study.py \
+    --work-directory <work2>
+```
+
+Finished runs in the work directory are reused; delete `<work2>/run-<size>` to rerun one.
+Expected: 64, 190 and 566 time steps, max errors 3.8e-05, 4.8e-07 and 5.9e-09, orders 3.99 and
+4.00 (documented in `README.dox` next to the script), and `PASSED`.
+
+If it fails, look at the log of the run: `run.log` in the run directory. Typical symptoms:
+
+- `new dt=inf` after a few steps and `nan` errors: the solution turned NaN. Once found because the
+  eigenvalue task, which the producer-consumer compiler splits, pushed the roll over of the
+  faces into the next mesh sweep, away from the temporary face data of the projection (see
+  `src/exahype2/api/rkfd4/adrs/0002-eigenvalue-follows-projection.md`). Check which traversal
+  holds the project and the roll over task in the compiled task graph (`generate` output).
+- The generated code does not compile: look at the compiler errors in the generator output.
+  Task names become C++ identifiers.
+- The same study with a fixed time step (`--time-step-size 0.0005`, one run) separates problems of
+  the time step size computation from problems of the scheme.
