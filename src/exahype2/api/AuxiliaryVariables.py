@@ -452,14 +452,13 @@ def add_reconstruction_tasks_of_auxiliary_variables(
 
     Add the tasks that interpolate and reconstruct the auxiliary variables
 
-    Each set of auxiliary variables gets a task of its own that reconstructs
-    its halo, and a task that interpolates its coarse face data onto the
-    hanging faces, which the reconstruction waits for
-    (register_auxiliary_variables() rejects sets without to_be_interpolated). All tasks depend on the predecessors only,
-    i.e. the interpolations of all sets (and of the unknowns, which the
-    caller creates) as well as the reconstructions run in parallel. Each task
-    holds one action set, so that the task graph compiler fuses them into one
-    mesh traversal.
+    Each set of auxiliary variables gets a task of its own that interpolates
+    its coarse face data onto the hanging faces and reconstructs its halo
+    (register_auxiliary_variables() rejects sets without to_be_interpolated).
+    Interpolation is no task of its own, see
+    src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md.
+    All tasks depend on the predecessors only, i.e. the reconstructions of all
+    sets (and of the unknowns, which the caller creates) run in parallel.
 
     @param solver: exahype2.api.Solver
       The solver whose sets are reconstructed.
@@ -488,18 +487,8 @@ def add_reconstruction_tasks_of_auxiliary_variables(
             name=f"{solver.name}_Reconstruct auxiliary variables {auxiliary.name}{name_suffix}",
             entity=Entity.CELL,
         )
-        add_reconstruction_of_auxiliary_variables(reconstruction, solver, [auxiliary])
-        for predecessor in predecessors:
-            reconstruction.add_dependency(predecessor)
-        task = peano4.api.taskgraph.Task(
-            name=f"{solver.name}_Interpolate {auxiliary.name} on hanging faces{name_suffix}",
-            entity=Entity.CELL,
-        )
-        task.use_face(
-            auxiliary.patch_overlap_current_time_step,
-            peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE,
-        )
-        task.add_action_set(
+        # The reconstruction interpolates the faces itself, before it acts on the cell
+        reconstruction.add_action_set(
             toolbox.blockstructured.api.InterpolateHangingFaces(
                 auxiliary.patch_overlap_current_time_step,
                 scheme=interpolation,
@@ -507,10 +496,9 @@ def add_reconstruction_tasks_of_auxiliary_variables(
                 + solver.user_solver_includes,
             )
         )
+        add_reconstruction_of_auxiliary_variables(reconstruction, solver, [auxiliary])
         for predecessor in predecessors:
-            task.add_dependency(predecessor)
-        time_step.add_task(task)
-        reconstruction.add_dependency(task)
+            reconstruction.add_dependency(predecessor)
         time_step.add_task(reconstruction)
         reconstructions.append(reconstruction)
     return reconstructions

@@ -559,21 +559,6 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_cfl_condition_task)
 
-        ## On adaptive meshes, interpolate the coarse face data onto the hanging
-        ## faces of fine cells. The reconstruction reads the faces, i.e. it
-        ## needs the interpolated data and has to wait for the interpolation.
-        interpolation_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Interpolate hanging faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        interpolation_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        interpolation_task.add_action_set(
-            toolbox.blockstructured.api.InterpolateHangingFaces(
-                self._solver._patch_overlap_current_time_step,
-                scheme=self._solver.numerical_scheme.interpolation,
-                additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
-            )
-        )
-        time_step.add_task(interpolation_task)
-        reconstruction_task.add_dependency(interpolation_task)
-
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         reconstruction_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.WRITE)
@@ -582,6 +567,16 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         reconstruction_task.use_face(
             self._solver._patch_overlap_current_time_step,
             get_access_to_persistent_face_data(self._solver, exahype2_project, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD),
+        )
+        ## On adaptive meshes, the reconstruction interpolates the coarse face
+        ## data onto the hanging faces of fine cells itself (see
+        ## src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md)
+        reconstruction_task.add_action_set(
+            toolbox.blockstructured.api.InterpolateHangingFaces(
+                self._solver._patch_overlap_current_time_step,
+                scheme=self._solver.numerical_scheme.interpolation,
+                additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
         )
         reconstruction_task.add_action_set(
             toolbox.blockstructured.api.ReconstructPatchWithHalo(
@@ -680,24 +675,21 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
-        ## On adaptive meshes, restrict the fine data from the hanging faces
-        ## onto the coarse faces, before the roll over copies them. The
-        ## projection, the restriction and the roll over are tasks of their own
-        ## which share the temporary update patch, i.e. they rely on the task
-        ## graph compiler to fuse them (@see RusanovWithExplicitEuler.construct_output()).
+        ## On adaptive meshes, the projection also restricts the fine data from
+        ## the hanging faces onto the coarse faces (see
+        ## src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md).
+        ## Peano destroys a hanging face right after the fine cell has
+        ## projected onto it, and touches the coarse face for the last time
+        ## after that, i.e. the coarse face is final when the roll over copies it.
         ## The projection declares the face data of the current time step, so
         ## the compiler does not fuse it into the traversal of the reconstruction.
-        restriction_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Restrict on hanging faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        restriction_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        restriction_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
-        restriction_task.add_dependency(project_on_faces_task)
-        time_step.add_task(restriction_task)
+        project_on_faces_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
         ## Sommerfeld boundary conditions advance the ghost volumes within
         ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
         roll_over_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Roll over faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         roll_over_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         roll_over_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        roll_over_task.add_dependency(restriction_task)
+        roll_over_task.add_dependency(project_on_faces_task)
         time_step.add_task(roll_over_task)
         roll_over_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(
@@ -956,21 +948,6 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_cfl_condition_task)
 
-        ## On adaptive meshes, interpolate the coarse face data onto the hanging
-        ## faces of fine cells. The reconstruction reads the faces, i.e. it
-        ## needs the interpolated data and has to wait for the interpolation.
-        interpolation_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Interpolate hanging faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        interpolation_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        interpolation_task.add_action_set(
-            toolbox.blockstructured.api.InterpolateHangingFaces(
-                self._solver._patch_overlap_current_time_step,
-                scheme=self._solver.numerical_scheme.interpolation,
-                additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
-            )
-        )
-        time_step.add_task(interpolation_task)
-        reconstruction_task.add_dependency(interpolation_task)
-
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         reconstruction_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.WRITE)
@@ -979,6 +956,16 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
         reconstruction_task.use_face(
             self._solver._patch_overlap_current_time_step,
             get_access_to_persistent_face_data(self._solver, exahype2_project, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD),
+        )
+        ## On adaptive meshes, the reconstruction interpolates the coarse face
+        ## data onto the hanging faces of fine cells itself (see
+        ## src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md)
+        reconstruction_task.add_action_set(
+            toolbox.blockstructured.api.InterpolateHangingFaces(
+                self._solver._patch_overlap_current_time_step,
+                scheme=self._solver.numerical_scheme.interpolation,
+                additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
         )
         reconstruction_task.add_action_set(
             toolbox.blockstructured.api.ReconstructPatchWithHalo(
@@ -1077,24 +1064,21 @@ class RusanovWithExplicitEulerGenerator2(Solver.NumericalScheme.NumericalSchemeG
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
-        ## On adaptive meshes, restrict the fine data from the hanging faces
-        ## onto the coarse faces, before the roll over copies them. The
-        ## projection, the restriction and the roll over are tasks of their own
-        ## which share the temporary update patch, i.e. they rely on the task
-        ## graph compiler to fuse them (@see RusanovWithExplicitEuler.construct_output()).
+        ## On adaptive meshes, the projection also restricts the fine data from
+        ## the hanging faces onto the coarse faces (see
+        ## src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md).
+        ## Peano destroys a hanging face right after the fine cell has
+        ## projected onto it, and touches the coarse face for the last time
+        ## after that, i.e. the coarse face is final when the roll over copies it.
         ## The projection declares the face data of the current time step, so
         ## the compiler does not fuse it into the traversal of the reconstruction.
-        restriction_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Restrict on hanging faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
-        restriction_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        restriction_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
-        restriction_task.add_dependency(project_on_faces_task)
-        time_step.add_task(restriction_task)
+        project_on_faces_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
         ## Sommerfeld boundary conditions advance the ghost volumes within
         ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
         roll_over_task = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Roll over faces", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
         roll_over_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         roll_over_task.use_face(self._solver._patch_overlap_current_time_step, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
-        roll_over_task.add_dependency(restriction_task)
+        roll_over_task.add_dependency(project_on_faces_task)
         time_step.add_task(roll_over_task)
         roll_over_task.add_action_set(
             RollOverUpdatedFaceWithSommerfeldBoundaryConditions.create_roll_over(

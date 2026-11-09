@@ -110,9 +110,9 @@ def test_update_eigenvalue_and_reduction_fold_into_one_traversal(scheme, tmp_pat
     # the reduction. The time step size acts in the last traversal
     assert "ProjectPatchOntoFaces" not in holders[0]
     assert "ReduceMaxEigenvalue" not in holders[0]
-    # The explicit scheme interpolates the hanging faces in a traversal of its
-    # own, as the reconstruction in the next one reads the faces
-    assert len(names) == (3 if scheme == "explicit" else 2), names
+    # The reconstruction interpolates the hanging faces itself, i.e. no
+    # traversal is spent on the interpolation
+    assert len(names) == 2, names
     assert "ProjectPatchOntoFaces" in names[-1]
     assert "ReduceMaxEigenvalue" in names[-1]
     assert "ComputeGlobalCFLCondition" in names[-1]

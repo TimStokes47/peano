@@ -253,11 +253,14 @@ def test_fd4_reconstructs_the_halos_of_auxiliary_variables(tmp_path):
     # of their own, which run in parallel
     reconstruction = tasks["Probe_Reconstruct stage 0"]
     auxiliary = tasks["Probe_Reconstruct auxiliary variables Bathymetry stage 0"]
+    # The reconstruction of the unknowns interpolates the faces itself
     assert [type(a).__name__ for a in reconstruction.action_sets] == [
-        "ReconstructPatchWithHalo"
+        "InterpolateHangingFaces",
+        "ReconstructPatchWithHalo",
     ]
     assert [type(a).__name__ for a in auxiliary.action_sets] == [
-        "ReconstructPatchWithHalo"
+        "InterpolateHangingFaces",
+        "ReconstructPatchWithHalo",
     ]
     assert reconstruction not in auxiliary.dependencies
     assert auxiliary not in tasks["Probe_Reconstruct stage 0"].dependencies

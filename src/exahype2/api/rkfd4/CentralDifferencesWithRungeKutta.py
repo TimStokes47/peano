@@ -988,8 +988,9 @@ Patch overlap data
 
         Per stage k, the time step holds the following tasks (see the class
         documentation for the data flow). Every task holds exactly one
-        action set, with the exception of the reconstruction of several sets
-        of auxiliary variables. This is deliberate: the task graph compiler
+        action set, with the exception of the reconstruction of the
+        unknowns, which also holds the interpolation onto the hanging faces,
+        and the reconstruction of several sets of auxiliary variables. This is deliberate: the task graph compiler
         runs the action sets of independent tasks in parallel only if each
         task holds one action set (@ref peano4.api.taskgraph.compiler.FuseSteps).
         Where the scheme needs several action sets in a row, it hence creates
@@ -1000,16 +1001,14 @@ Patch overlap data
           off throughout the time step. Added last by
           wrap_task_graph_in_load_balancing_and_amr_tasks(), which makes all
           tasks without predecessor wait for it.
-        - {SolverName}_Interpolate hanging faces stage k: interpolates the
-          coarse face data onto the hanging faces. The reconstruction reads
-          the faces and hence waits for the interpolation.
         - {SolverName}_Apply Dirichlet BCs stage k: sets the ghost grid
           cells along the domain boundary for Dirichlet boundary conditions.
           The task does not exist if all axes are periodic, or for Sommerfeld
           boundary conditions, which advance the ghost grid cells within the
           roll over of the projection onto the faces.
-        - {SolverName}_Reconstruct stage k: reconstructs the stage's input
-          with its halo.
+        - {SolverName}_Reconstruct stage k: interpolates the coarse face
+          data onto the hanging faces and reconstructs the stage's input with
+          its halo. Interpolation is no task of its own.
         - {SolverName}_Reconstruct auxiliary variables stage k: reconstructs
           the halos of the auxiliary variables. Exists only if the solver has
           auxiliary variables.
@@ -1030,17 +1029,15 @@ Patch overlap data
           adaptive time stepping only.
         - {SolverName}_Project stage k+1 onto faces, or {SolverName}_Project
           solution onto faces after the last stage: projects the outcome of
-          the linear combination onto the faces.
-        - {SolverName}_Restrict stage k+1 on hanging faces, or
-          {SolverName}_Restrict solution on hanging faces.
+          the linear combination onto the faces and restricts the hanging
+          faces onto the coarse faces.
         - {SolverName}_Roll over stage k+1 faces, or {SolverName}_Roll over
-          solution faces. The projection, the restriction and the roll over
+          solution faces. The projection (with the restriction) and the roll over
           share the update patch, which is temporary, i.e. they rely on the
           task graph compiler to fuse them into one mesh traversal. Only
           the roll over writes the face data of the current time step, but
           the projection declares it, and the roll over declares it as
-          temporary. If the roll over declared it, the projection and the
-          restriction would not conflict with the reconstruction, which reads
+          temporary. If the roll over declared it, the projection would not conflict with the reconstruction, which reads
           the faces. The compiler would then fuse them into the traversal of
           the previous stage, and only the roll over would start a new
           traversal. The update patch does not survive such a split, and the
@@ -1140,34 +1137,13 @@ Patch overlap data
                 self._solver, exahype2_project, Access.READ_AND_DISCARD
             )
 
-            ## On adaptive meshes, interpolate the coarse face data onto the
-            ## hanging faces of fine cells. The reconstruction reads the faces,
-            ## i.e. it needs the interpolated data and has to wait for the
-            ## interpolation.
-            interpolation_task = peano4.api.taskgraph.Task(
-                name=f"{name}_Interpolate hanging faces stage {stage}",
-                entity=Entity.CELL,
-            )
-            interpolation_task.use_face(
-                self._solver._patch_overlap_current_time_step, Access.READ_AND_WRITE
-            )
-            interpolation_task.add_action_set(
-                toolbox.blockstructured.api.InterpolateHangingFaces(
-                    self._solver._patch_overlap_current_time_step,
-                    scheme=self.interpolation,
-                    additional_includes=includes,
-                )
-            )
-            time_step.add_task(interpolation_task)
-            if previous_stage_task is not None:
-                interpolation_task.add_dependency(previous_stage_task)
-
             ## Reconstruct the stage's input with its halo
             reconstruction_task = peano4.api.taskgraph.Task(
                 name=f"{name}_Reconstruct stage {stage}", entity=Entity.CELL
             )
             time_step.add_task(reconstruction_task)
-            reconstruction_task.add_dependency(interpolation_task)
+            if previous_stage_task is not None:
+                reconstruction_task.add_dependency(previous_stage_task)
             ## The solution has to survive the reconstruction. The input of a
             ## later stage does not: The next stage's combination writes it
             ## from scratch. If we stored it here, nobody would load it again,
@@ -1181,6 +1157,18 @@ Patch overlap data
             # roll over, i.e. it has to survive the reconstruction
             reconstruction_task.use_face(
                 self._solver._patch_overlap_current_time_step, face_read
+            )
+            ## On adaptive meshes, the reconstruction interpolates the coarse
+            ## face data onto the hanging faces of fine cells itself (see
+            ## src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md). The
+            ## interpolation acts when the hanging faces are created, i.e.
+            ## before the reconstruction acts on the cell.
+            reconstruction_task.add_action_set(
+                toolbox.blockstructured.api.InterpolateHangingFaces(
+                    self._solver._patch_overlap_current_time_step,
+                    scheme=self.interpolation,
+                    additional_includes=includes,
+                )
             )
             reconstruction_task.add_action_set(
                 toolbox.blockstructured.api.ReconstructPatchWithHalo(
@@ -1357,19 +1345,14 @@ Patch overlap data
                     includes=includes,
                 )
             )
+            ## On adaptive meshes, the projection also restricts the fine data
+            ## from the hanging faces onto the coarse faces. Peano destroys a
+            ## hanging face after the fine cell has projected onto it, and
+            ## touches the coarse face for the last time after that, i.e. the
+            ## coarse face is final when the roll over copies it (see
+            ## src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md)
+            projection_task.add_action_set(self.create_restriction_of_hanging_faces())
             time_step.add_task(projection_task)
-
-            ## On adaptive meshes, restrict the fine data from the hanging
-            ## faces onto the coarse faces, before the roll over copies them
-            restriction_task = peano4.api.taskgraph.Task(
-                name=f"{name}_Restrict {suffix} on hanging faces", entity=Entity.CELL
-            )
-            restriction_task.use_face(
-                self._solver._patch_overlap_update, Access.TEMPORARY
-            )
-            restriction_task.add_action_set(self.create_restriction_of_hanging_faces())
-            restriction_task.add_dependency(projection_task)
-            time_step.add_task(restriction_task)
 
             # Sommerfeld boundary conditions advance the ghost grid cells
             # within the roll over, from the time stamp of this stage to the
@@ -1398,7 +1381,7 @@ Patch overlap data
                     ),
                 )
             )
-            roll_over_task.add_dependency(restriction_task)
+            roll_over_task.add_dependency(projection_task)
             time_step.add_task(roll_over_task)
             previous_stage_task = roll_over_task
 

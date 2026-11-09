@@ -52,9 +52,6 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
         "Probe_Reconstruct stage 1",
         "Probe_Reconstruct stage 2",
         "Probe_Disable load balancing",
-        "Probe_Interpolate hanging faces stage 0",
-        "Probe_Interpolate hanging faces stage 1",
-        "Probe_Interpolate hanging faces stage 2",
         "Probe_Evaluate Runge-Kutta right hand side stage 0",
         "Probe_Evaluate Runge-Kutta right hand side stage 1",
         "Probe_Evaluate Runge-Kutta right hand side stage 2",
@@ -64,9 +61,6 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
         "Probe_Project stage 1 onto faces",
         "Probe_Project stage 2 onto faces",
         "Probe_Project solution onto faces",
-        "Probe_Restrict stage 1 on hanging faces",
-        "Probe_Restrict stage 2 on hanging faces",
-        "Probe_Restrict solution on hanging faces",
         "Probe_Roll over stage 1 faces",
         "Probe_Roll over stage 2 faces",
         "Probe_Roll over solution faces",
@@ -104,22 +98,14 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
             tasks[f"Probe_Prepare stage {stage}"]
             in tasks[f"Probe_Project stage {stage} onto faces"].dependencies
         )
-        # Every step with several action sets is a chain of tasks
+        # The projection hosts the restriction, the roll over follows
         assert (
             tasks[f"Probe_Project stage {stage} onto faces"]
-            in tasks[f"Probe_Restrict stage {stage} on hanging faces"].dependencies
-        )
-        assert (
-            tasks[f"Probe_Restrict stage {stage} on hanging faces"]
             in tasks[f"Probe_Roll over stage {stage} faces"].dependencies
         )
+        # The reconstruction interpolates the faces itself, i.e. it waits for the roll over
         assert (
             tasks[f"Probe_Roll over stage {stage} faces"]
-            in tasks[f"Probe_Interpolate hanging faces stage {stage}"].dependencies
-        )
-        # The reconstruction reads the faces, i.e. it needs the interpolated data
-        assert (
-            tasks[f"Probe_Interpolate hanging faces stage {stage}"]
             in tasks[f"Probe_Reconstruct stage {stage}"].dependencies
         )
     # The boundary values have to be set after the previous stage's roll-over
@@ -138,16 +124,20 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
     # The load balancing is switched off before the first stage only
     assert (
         tasks["Probe_Disable load balancing"]
-        in tasks["Probe_Interpolate hanging faces stage 0"].dependencies
+        in tasks["Probe_Apply Dirichlet BCs stage 0"].dependencies
     )
-    # Each task of the scheme holds exactly one action set, so that the task
+    # The reconstruction holds the interpolation and the reconstruction
+    assert [type(a).__name__ for a in tasks["Probe_Reconstruct stage 1"].action_sets] == [
+        "InterpolateHangingFaces",
+        "ReconstructPatchWithHalo",
+    ]
+    assert [
+        type(a).__name__ for a in tasks["Probe_Project stage 1 onto faces"].action_sets
+    ] == ["ProjectPatchOntoFaces", "RestrictHangingFaces"]
+    # All other tasks of the scheme hold exactly one action set, so that the task
     # graph compiler can run the tasks of several solvers in parallel
     for name in [
-        "Probe_Reconstruct stage 1",
-        "Probe_Interpolate hanging faces stage 1",
         "Probe_Evaluate Runge-Kutta right hand side stage 1",
-        "Probe_Project stage 1 onto faces",
-        "Probe_Restrict stage 1 on hanging faces",
         "Probe_Roll over stage 1 faces",
     ]:
         assert len(tasks[name].action_sets) == 1, name
