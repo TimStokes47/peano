@@ -1,4 +1,4 @@
-r"""
+r"""!
 
 @page benchmarks_exagrype_gauge_wave Gauge wave
 
