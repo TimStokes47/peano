@@ -127,7 +127,9 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
         in tasks["Probe_Apply Dirichlet BCs stage 0"].dependencies
     )
     # The reconstruction holds the interpolation and the reconstruction
-    assert [type(a).__name__ for a in tasks["Probe_Reconstruct stage 1"].action_sets] == [
+    assert [
+        type(a).__name__ for a in tasks["Probe_Reconstruct stage 1"].action_sets
+    ] == [
         "InterpolateHangingFaces",
         "ReconstructPatchWithHalo",
     ]
@@ -325,7 +327,9 @@ def test_fixed_time_step_size_skips_eigenvalue(tmp_path):
 def test_right_hand_side_uses_stage_time_stamp_and_estimate_slot(tmp_path):
     solver = _solver(rk_order=4, boundary=None)
     tasks = _construct_time_step(solver, tmp_path, periodic_BC=(True, True, True))
-    [action_set] = tasks["Probe_Evaluate Runge-Kutta right hand side stage 2"].action_sets
+    [action_set] = tasks[
+        "Probe_Evaluate Runge-Kutta right hand side stage 2"
+    ].action_sets
     body = action_set.get_body_of_operation(
         peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
     )
@@ -385,14 +389,17 @@ def test_time_step_size_acts_at_the_end_of_the_time_step_and_needs_no_traversal(
     assert task.entity == peano4.api.taskgraph.Task.GridEntity.GLOBAL_END_OF_STEP
     assert not task.cell_data
     # Nothing, not even the refinement, waits for a task that runs at the very end
-    assert not any(
-        task in other.dependencies for other in tasks.values()
-    )
+    assert not any(task in other.dependencies for other in tasks.values())
     # The mesh refinement is independent of the time step size
-    assert task not in tasks[f"Probe_{exahype2.api.Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}"].dependencies
+    assert (
+        task
+        not in tasks[
+            f"Probe_{exahype2.api.Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}"
+        ].dependencies
+    )
 
 
-def test_estimates_are_written_first_and_discarded_last(tmp_path):
+def test_estimates_are_discarded_last_but_not_written_first(tmp_path):
     tasks = _construct_time_step(_solver(rk_order=3), tmp_path)
     Access = peano4.api.taskgraph.Task.DataAccess
 
@@ -404,8 +411,15 @@ def test_estimates_are_written_first_and_discarded_last(tmp_path):
         ]
         return qualifier
 
-    assert access_to_estimates("Probe_Evaluate Runge-Kutta right hand side stage 0") == Access.WRITE
-    assert access_to_estimates("Probe_Evaluate Runge-Kutta right hand side stage 1") == Access.READ_AND_WRITE
+    # Write-only first would leak one patch per cell and time step
+    assert (
+        access_to_estimates("Probe_Evaluate Runge-Kutta right hand side stage 0")
+        == Access.READ_AND_WRITE
+    )
+    assert (
+        access_to_estimates("Probe_Evaluate Runge-Kutta right hand side stage 1")
+        == Access.READ_AND_WRITE
+    )
     assert access_to_estimates("Probe_Prepare stage 1") == Access.READ_AND_WRITE
     assert access_to_estimates("Probe_Prepare stage 2") == Access.READ_AND_WRITE
     assert access_to_estimates("Probe_Complete time step") == Access.READ_AND_DISCARD

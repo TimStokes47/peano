@@ -1241,15 +1241,13 @@ Patch overlap data
                     self._solver._patch_with_halo,
                     _access_within_chain(Access.READ_AND_DISCARD, position, length),
                 )
-                ## The very first task of the time step assigns the first
-                ## estimate, i.e. it does not load anything. All other tasks
-                ## add to what is there.
-                task.use_cell(
-                    self._solver._rhs_estimates,
-                    Access.WRITE
-                    if stage == 0 and position == 0
-                    else Access.READ_AND_WRITE,
-                )
+                ## The first task of the time step must not be write-only: The
+                ## last traversal of the previous time step stores the estimates,
+                ## as it fuses read-and-write tasks. A write-only first task
+                ## would not load them again, and Peano's stacks accumulate
+                ## one patch per cell and time step (memory grows with the
+                ## simulated time).
+                task.use_cell(self._solver._rhs_estimates, Access.READ_AND_WRITE)
                 use_halos_of_auxiliary_variables(
                     task,
                     self._solver,
@@ -1430,6 +1428,14 @@ Patch overlap data
             self.wrap_task_graph_in_load_balancing_and_amr_tasks(time_step)
 
         if peano4.api.Logger().is_visualisation:
-            time_step.visualise(title="Time stepping task graph for {}{}".format(name, self._solver.task_graph_title_suffix))
+            time_step.visualise(
+                title="Time stepping task graph for {}{}".format(
+                    name, self._solver.task_graph_title_suffix
+                )
+            )
         if peano4.api.Logger().is_text:
-            time_step.log_as_text(title="Time stepping task graph for {}{}".format(name, self._solver.task_graph_title_suffix))
+            time_step.log_as_text(
+                title="Time stepping task graph for {}{}".format(
+                    name, self._solver.task_graph_title_suffix
+                )
+            )
