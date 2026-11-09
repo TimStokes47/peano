@@ -61,6 +61,33 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
        minimum of the time step sizes on both of them
        (@ref exagrype.api.actionsets.SynchroniseTimeStepSizes).
 
+    @dot
+    digraph G {
+      rankdir=LR;
+      node [shape=box, style=rounded, fontname=Helvetica];
+      prepCCZ4 [label="Prepare auxiliary variables\nfrom CCZ4\n(copy, project, restrict, roll over)"];
+      prepEuler [label="Prepare auxiliary variables\nfrom Euler\n(copy, project, restrict, roll over)"];
+      ccz4 [label="Task graph of CCZ4\n(RK4 with FD4)", shape=box3d];
+      euler [label="Task graph of Euler\n(Finite Volumes)", shape=box3d];
+      sync [label="Synchronise time step sizes\n(GLOBAL_END_OF_STEP)"];
+      prepCCZ4 -> ccz4; prepCCZ4 -> euler;
+      prepEuler -> ccz4; prepEuler -> euler;
+      ccz4 -> sync; euler -> sync;
+    }
+    @enddot
+
+    The two prep tasks run in parallel. Both solver graphs wait for both prep tasks, i.e.
+    the arrows into the solver graphs end at the first tasks of each graph, and the arrows
+    out of them start at their last tasks. Load balancing and dynamic mesh refinement wrap the whole picture.
+
+    The synchronisation takes the minimum of the two time step sizes, as this is the
+    conservative choice: the common step then respects the CFL condition of both solvers.
+
+    The restriction sits in the prep task although the mesh of the benchmark is regular. The
+    prep task is the one place that writes new face data, and restriction belongs to
+    the writer (@ref exahype2.api.adrs). It facilitates overlapping domain decomposition and
+    flux-preserving interpolation, which this class does not use.
+
     The coupling is bi-directional in the data, but a solver only sees the state
     of the other one at the begin of the time step. Neither the Einstein equations nor
     the Euler equations make use of the data yet: the PDE terms ignore the
