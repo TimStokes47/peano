@@ -27,13 +27,50 @@ parser.add_argument(
     help="Directory the code is generated and built in (default: .)",
 )
 parser.add_argument(
-    "--volume-size",
-    type=float,
-    default=0.02,
-    help="Maximum mesh cell size (default: 0.02)",
+    "--amr-levels",
+    type=int,
+    default=0,
+    help="Number of adaptive mesh refinement levels (default: 0). With 0, the "
+    "simulation runs on the regular grid of the smallest volume size. With "
+    "l>0, it starts from the same regular grid, but the gradient-based "
+    "refinement criterion is on and coarsens the mesh by up to l levels (a "
+    "factor of 3 each)",
 )
 parser.add_argument(
-    "--patch-size", type=int, default=9, help="Grid cells per mesh cell and axis (default: 9)"
+    "--volume-size",
+    type=float,
+    default=None,
+    help="Smallest volume size, i.e. the size on the regular start grid. By "
+    "default, the script picks the finest regular grid that fits into the "
+    "main memory (see --memory-fraction)",
+)
+parser.add_argument(
+    "--memory-fraction",
+    type=float,
+    default=0.8,
+    help="Fraction of the available main memory that the start grid may "
+    "occupy if --volume-size is not given (default: 0.8)",
+)
+parser.add_argument(
+    "--patch-size",
+    type=int,
+    default=None,
+    help="Volumes per mesh cell and axis. By default, the script picks the "
+    "patch size such that the regular start grid fills the memory best",
+)
+parser.add_argument(
+    "--refine-threshold",
+    type=float,
+    default=2.0,
+    help="Mesh cells ask for refinement if the one-sided gradient of density "
+    "plus energy exceeds this value (default: 2)",
+)
+parser.add_argument(
+    "--erase-threshold",
+    type=float,
+    default=0.2,
+    help="Mesh cells ask for coarsening if the one-sided gradient of density "
+    "plus energy falls below this value (default: 0.2)",
 )
 parser.add_argument(
     "--end-time", type=float, default=0.2, help="Simulated time (default: 0.2)"
@@ -81,6 +118,69 @@ parser.add_argument(
     help="Show the task graphs in a window or print them as text (default: visualisation)",
 )
 args = parser.parse_args()
+
+
+## Estimated memory footprint of one volume in bytes (per dimension count).
+#
+# Patch data with halo, the time step's copies, the face data, and the
+# bookkeeping of the spacetree. This is an estimate which is refined by
+# measurement (see the script header).
+BYTES_PER_VOLUME = {2: 600.0, 3: 900.0}
+
+
+def available_memory_in_bytes() -> float:
+    """!
+    Main memory that is available right now (MemAvailable in /proc/meminfo)
+    """
+    with open("/proc/meminfo") as meminfo:
+        for line in meminfo:
+            if line.startswith("MemAvailable:"):
+                return float(line.split()[1]) * 1024.0
+    raise RuntimeError("cannot read MemAvailable from /proc/meminfo")
+
+
+def pick_regular_grid(dimensions: int, budget_in_bytes: float, patch_sizes):
+    """!
+    Pick the finest regular start grid that fits into the budget
+
+    A regular grid over the unit cube consists of 3^k cells per axis, each
+    hosting a patch of p volumes per axis. This yields p*3^k volumes per
+    axis. The patch size p is free within a range, which makes the grid
+    granularity much finer than the factor 3^d between subsequent k.
+
+    @return (patch_size, k)
+    """
+    best = None
+    for patch_size in patch_sizes:
+        k = 0
+        while (patch_size * 3 ** (k + 1)) ** dimensions * BYTES_PER_VOLUME[
+            dimensions
+        ] <= budget_in_bytes:
+            k += 1
+        volumes = (patch_size * 3**k) ** dimensions
+        if volumes * BYTES_PER_VOLUME[dimensions] <= budget_in_bytes and (
+            best is None or volumes > best[0]
+        ):
+            best = (volumes, patch_size, k)
+    return best[1], best[2]
+
+
+if args.volume_size is None:
+    patch_size, k = pick_regular_grid(
+        args.dimensions,
+        args.memory_fraction * available_memory_in_bytes(),
+        [args.patch_size] if args.patch_size is not None else range(6, 33),
+    )
+    # The setup refines every cell whose size is not smaller than
+    # volume_size * patch_size. The factor makes the cell 3^-k the final one.
+    volume_size = 1.001 / (patch_size * 3**k)
+else:
+    patch_size = args.patch_size if args.patch_size is not None else 9
+    volume_size = args.volume_size
+print(
+    f"Start grid: {patch_size} volumes per cell and axis, volume size {volume_size}, "
+    f"AMR levels {args.amr_levels}"
+)
 
 
 project = exahype2.api.Project(
@@ -160,16 +260,38 @@ AMBIENT_STATE = """
 solver.add_pde_term(exahype2.api.InitPointWisely(implementation=AMBIENT_STATE))
 solver.add_pde_term(exahype2.api.DirichletBoundaryConditions(implementation=AMBIENT_STATE))
 
+# With AMR, the simulation starts from the finest regular grid, and the
+# gradient criterion is always on. It may only coarsen: the start grid
+# is the finest grid that we allow, and the coarsest volumes are those
+# amr_levels levels (factor 3 each) above the start volumes.
+if args.amr_levels > 0:
+    solver.add_pde_term(
+        exahype2.api.GradientRefinement(
+            implementation=f"""
+      const double indicator = std::abs(gradient[0]) + std::abs(gradient[Dimensions+1]);
+      if (indicator > {args.refine_threshold}) {{
+        *refinementCommand = ::exahype2::RefinementCommand::Refine;
+      }}
+      else if (indicator < {args.erase_threshold}) {{
+        *refinementCommand = ::exahype2::RefinementCommand::Erase;
+      }}
+"""
+        )
+    )
+amr_bounds = dict(
+    min_volume_size=volume_size,
+    max_volume_size=volume_size * 3**args.amr_levels,
+)
 if args.optimistic:
     solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(
-        solver, args.patch_size
+        solver, patch_size, **amr_bounds
     )
 else:
     solver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(
-        solver, args.patch_size
+        solver, patch_size, **amr_bounds
     )
 solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
-    solver, volume_size=args.volume_size
+    solver, volume_size=volume_size
 )
 solver.plotter = exahype2.api.fv.PlotAsVTKFile(
     solver,
