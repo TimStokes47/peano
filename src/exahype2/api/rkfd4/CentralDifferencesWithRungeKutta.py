@@ -1298,7 +1298,9 @@ Patch overlap data
 
             ## Project the outcome onto the faces, restrict it on hanging faces and
             ## roll the faces over. After the last stage, we determine the maximum
-            ## eigenvalue of the new solution in parallel to the projection. All tasks share the
+            ## eigenvalue of the new solution right after the projection, i.e. in
+            ## parallel to the roll over (see adrs/0002-eigenvalue-follows-projection.md
+            ## for why not in parallel to the projection). All tasks share the
             ## update patch, which is temporary, i.e. they rely on the task graph
             ## compiler to fuse them into one mesh traversal.
             eigenvalue_task = None
@@ -1361,6 +1363,8 @@ Patch overlap data
             ## src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md)
             projection_task.add_action_set(self.create_restriction_of_hanging_faces())
             time_step.add_task(projection_task)
+            if eigenvalue_task is not None:
+                eigenvalue_task.add_dependency(projection_task)
 
             # Sommerfeld boundary conditions advance the ghost grid cells
             # within the roll over, from the time stamp of this stage to the
