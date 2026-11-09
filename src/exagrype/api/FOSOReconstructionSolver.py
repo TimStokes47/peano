@@ -59,8 +59,8 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
        and each waits for its interpolation.
     3. Apply the stencil, i.e. recompute the derivatives from the primary variables.
     4. Project the derivatives onto the faces.
-    5. Restrict them on hanging faces, but only if the derivatives' can_change flag
-       (@ref exahype2.api.AuxiliaryVariables) is set, which it is.
+    5. Restrict them on hanging faces, but only if the derivatives' mode
+       (@ref exahype2.api.AuxiliaryVariables.Mode) is CHANGING_ON_FACES, which it is.
     6. Roll the face data over.
 
     The graph has no dependencies between stages. The host concatenates the graph with the
@@ -424,8 +424,8 @@ class FOSOReconstructionSolver(exahype2.api.Solver):
 
         ## Restrict from the hanging faces onto the coarse faces, but only
         ## if the derivatives are allowed to change, i.e. in the
-        ## sense of the auxiliary variables' can_change flag.
-        if derivatives.can_change:
+        ## sense of the auxiliary variables' mode CHANGING_ON_FACES.
+        if derivatives.mode == exahype2.api.AuxiliaryVariables.Mode.CHANGING_ON_FACES:
             restrict = create_task("Restrict derivative variables on hanging faces")
             restrict.use_face(derivatives.patch_overlap_update, Access.TEMPORARY)
             restrict.add_action_set(

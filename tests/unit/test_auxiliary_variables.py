@@ -30,7 +30,9 @@ def _two_sets():
 
 
 def test_set_knows_its_variables():
-    distortion = exahype2.api.AuxiliaryVariables("Distortion", {"jacobian": 4, "shift": 1})
+    distortion = exahype2.api.AuxiliaryVariables(
+        "Distortion", {"jacobian": 4, "shift": 1}
+    )
     assert distortion.size == 5
     assert distortion.variable_positions == {"jacobian": 0, "shift": 4}
     assert distortion.argument_name == "distortion"
@@ -63,7 +65,9 @@ def test_same_set_cannot_be_attached_twice():
     with pytest.raises(ValueError):
         solver.add_auxiliary_variables(bathymetry)
     with pytest.raises(ValueError):
-        solver.add_auxiliary_variables(exahype2.api.AuxiliaryVariables("Bathymetry", {"c": 1}))
+        solver.add_auxiliary_variables(
+            exahype2.api.AuxiliaryVariables("Bathymetry", {"c": 1})
+        )
 
 
 def test_first_solver_owns_set():
@@ -103,11 +107,13 @@ def test_only_the_owner_writes_the_set_in_the_initial_condition():
     bathymetry, _ = _two_sets()
     owner.add_auxiliary_variables(bathymetry)
     other.add_auxiliary_variables(bathymetry)
-    assert "double* __restrict__ Q, double* __restrict__ bathymetry" in owner.signature_of(
-        owner.get_pde_term("initPointWisely")
+    assert (
+        "double* __restrict__ Q, double* __restrict__ bathymetry"
+        in owner.signature_of(owner.get_pde_term("initPointWisely"))
     )
-    assert "double* __restrict__ Q, const double* __restrict__ bathymetry" in other.signature_of(
-        other.get_pde_term("initPointWisely")
+    assert (
+        "double* __restrict__ Q, const double* __restrict__ bathymetry"
+        in other.signature_of(other.get_pde_term("initPointWisely"))
     )
 
 
@@ -115,7 +121,9 @@ def test_abstract_solver_declares_structs_and_kernel_adapters(tmp_path):
     solver = _solver()
     for auxiliary in _two_sets():
         solver.add_auxiliary_variables(auxiliary)
-    declaration = solver.get_pde_term("flux", True).generator_for(solver).generate_declaration()
+    declaration = (
+        solver.get_pde_term("flux", True).generator_for(solver).generate_declaration()
+    )
     # The extended term and the adapter which the kernels call
     assert declaration.count("static GPUCallableMethod void flux(") == 2
     definition = (
@@ -138,7 +146,9 @@ def test_stateful_kernel_call_slices_the_kernel_buffer():
         solver.add_auxiliary_variables(auxiliary)
     from exahype2.api.AuxiliaryVariables import forwarding_arguments
 
-    assert forwarding_arguments(solver.get_pde_term("maxEigenvalue").SIGNATURE, solver) == [
+    assert forwarding_arguments(
+        solver.get_pde_term("maxEigenvalue").SIGNATURE, solver
+    ) == [
         "Q",
         "Q + 3",
         "Q + 4",
@@ -154,9 +164,15 @@ def _graphs(solvers, tmp_path):
     setup = peano4.api.taskgraph.Graph()
     time_step = peano4.api.taskgraph.Graph()
     for solver in solvers:
-        solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(solver, 0.1)
-        solver.grid_construction.construct_output(exahype2_project, peano_project, setup)
-        solver.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
+        solver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
+            solver, 0.1
+        )
+        solver.grid_construction.construct_output(
+            exahype2_project, peano_project, setup
+        )
+        solver.numerical_scheme.construct_output(
+            exahype2_project, peano_project, time_step
+        )
     return peano_project, setup, time_step
 
 
@@ -182,7 +198,8 @@ def test_shared_set_is_held_by_one_cell_data_object(tmp_path):
     # The second solver initialises after the owner
     tasks = {task.name: task for task in setup.tasks}
     assert (
-        tasks["First Initial condition"] in tasks["Second Initial condition"].dependencies
+        tasks["First Initial condition"]
+        in tasks["Second Initial condition"].dependencies
     )
 
 
@@ -208,7 +225,9 @@ def test_distinct_sets_get_distinct_cell_data(tmp_path):
 def test_optimistic_scheme_rejects_auxiliary_variables(tmp_path):
     solver = _solver()
     solver.add_auxiliary_variables(_two_sets()[0])
-    solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(solver, 6)
+    solver.numerical_scheme = exahype2.api.fv.RusanovWithOptimisticExplicitEuler(
+        solver, 6
+    )
     with pytest.raises(NotImplementedError):
         solver.numerical_scheme.construct_output(
             types.SimpleNamespace(periodic_BC=[True] * 3),
@@ -227,7 +246,9 @@ def test_gpu_update_assembles_buffers_before_copying_to_the_device():
         "Distortion": types.SimpleNamespace(name="DistortionHalo"),
     }
     solver.compute_kernel_call = "kernel();"
-    body = exahype2.api.fv.actionsets.UpdateCellGPU(solver, "true").get_body_of_operation(
+    body = exahype2.api.fv.actionsets.UpdateCellGPU(
+        solver, "true"
+    ).get_body_of_operation(
         peano4.api.solversteps.ActionSet.OPERATION_TOUCH_CELL_FIRST_TIME
     )
     # Stride of the kernels: three unknowns plus six auxiliary variables
@@ -270,21 +291,29 @@ def test_fd4_reconstructs_the_halos_of_auxiliary_variables(tmp_path):
     )
     assert "std::vector<double> kernelIn" in body
     # The kernels see the unknowns plus the auxiliary variables
-    assert "Probe_rightHandSideWithFD4<\n    6,\n    2,\n    3,\n    1\n>" in solver.compute_kernel_call
+    assert (
+        "Probe_rightHandSideWithFD4<\n    6,\n    2,\n    3,\n    1\n>"
+        in solver.compute_kernel_call
+    )
 
 
-def test_flags_default_to_on_faces_and_unchanging():
+def test_mode_defaults_to_stationary_on_faces():
     auxiliary = exahype2.api.AuxiliaryVariables("Bathymetry", {"b": 1})
-    assert auxiliary.on_faces
-    assert not auxiliary.can_change
+    assert auxiliary.mode == exahype2.api.AuxiliaryVariables.Mode.STATIONARY_ON_FACES
     assert auxiliary.data_name == "BathymetryAuxiliaryVariables"
 
 
 def test_data_name_feeds_into_the_generated_data():
     auxiliary = exahype2.api.AuxiliaryVariables(
-        "Derivatives", {"d": 2}, can_change=True, data_name="DerivativeVariables"
+        "Derivatives",
+        {"d": 2},
+        mode=exahype2.api.AuxiliaryVariables.Mode.CHANGING_ON_FACES,
+        data_name="DerivativeVariables",
     )
     auxiliary.create_data_structures(9, 3, unittest.mock.MagicMock())
     assert auxiliary.patch.name == "DerivativeVariables"
-    assert auxiliary.patch_overlap_current_time_step.name == "DerivativeVariablesCurrentTimeStep"
+    assert (
+        auxiliary.patch_overlap_current_time_step.name
+        == "DerivativeVariablesCurrentTimeStep"
+    )
     assert auxiliary.patch_overlap_update.name == "DerivativeVariablesUpdate"

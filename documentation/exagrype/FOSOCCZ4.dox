@@ -151,7 +151,7 @@ Interpolate primary variables s      Interpolate derivative variables s
                         ▼
         Project derivative variables onto faces s
                         ▼
-        Restrict derivative variables on hanging faces s   (only if can_change)
+        Restrict derivative variables on hanging faces s   (only if CHANGING_ON_FACES)
                         ▼
         Roll over derivative variable faces s
                         ▼
@@ -161,8 +161,8 @@ Reconstruct stage s (SO)  ->  Evaluate right-hand side s (SO)  ->  Prepare stage
 From the point of view of the reconstruction solver, the 25 primary variables are auxiliary variables
 and the derivatives are its unknowns. Both sit on the faces, i.e. we reconstruct the halos of both and interpolate
 both onto hanging faces. Only the derivatives are projected, restricted and rolled over, as only they change.
-Restricting depends on the can_change flag of the derivatives (@ref exahype2.api.AuxiliaryVariables),
-which defaults to False for general auxiliary variables.
+Restricting depends on the mode of the derivatives (@ref exahype2.api.AuxiliaryVariables.Mode), which is
+CHANGING_ON_FACES here, while general auxiliary variables default to STATIONARY_ON_FACES.
 The projection, the restriction and the roll over share the temporary update patch of the face data.
 They therefore have to end up in one mesh sweep. As the task graph compiler does not fuse tasks with
 conflicting face data, the projection declares that it writes the face data: it starts a new sweep that way.
