@@ -73,6 +73,12 @@ class AuxiliaryVariables:
 
     """
 
+    RECONSTRUCTION_TASK_NAME = "Reconstruct auxiliary variables {}"
+    """!
+    Name of the task that reconstructs the halo of a set, without solver prefix and
+    stage suffix. The argument is the name of the set.
+    """
+
     class Mode(enum.Enum):
         """!
 
@@ -94,11 +100,21 @@ class AuxiliaryVariables:
           exagrype.api.FOSOReconstructionSolver). That solver projects the new
           values onto the faces after each (intermediate) step, restricts them
           on hanging faces and rolls the face data over.
+        - STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES: The values sit on the
+          faces and change between time steps (some task, such as the
+          preamble of a coupling, projects new values onto the faces and
+          restricts them at the begin of each time step), but not within a
+          time step. A scheme with several stages per time step (Runge-Kutta)
+          reconstructs the halo of such a set in the first stage only,
+          holds it persistently through the later stages, and discards it
+          in the last stage. The halo thus does not survive a time step. For
+          the other modes, the schemes reconstruct the halo in every stage.
         """
 
         CELL_WISE = 0
         STATIONARY_ON_FACES = 1
         CHANGING_ON_FACES = 2
+        STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES = 3
 
     def __init__(
         self,
@@ -203,6 +219,20 @@ class AuxiliaryVariables:
     def argument_name(self) -> str:
         """! Name of the argument of the PDE terms"""
         return self._name[0].lower() + self._name[1:]
+
+    @property
+    def halo_is_held_through_stages(self) -> bool:
+        """!
+
+        Whether the halo has to be reconstructed in the first stage of a time step only
+
+        True for AuxiliaryVariables.Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES.
+
+        """
+        return (
+            self._mode
+            == AuxiliaryVariables.Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES
+        )
 
     @property
     def delta_argument_name(self) -> str:
@@ -459,7 +489,7 @@ def add_reconstruction_of_auxiliary_variables(task, solver, auxiliaries=None):
 
 
 def add_reconstruction_tasks_of_auxiliary_variables(
-    solver, time_step, interpolation, predecessors=(), name_suffix=""
+    solver, time_step, interpolation, predecessors=(), name_suffix="", auxiliaries=None
 ):
     """!
 
@@ -488,6 +518,11 @@ def add_reconstruction_tasks_of_auxiliary_variables(
     @param name_suffix: str
       Appended to the names of the tasks, e.g. " stage 1".
 
+    @param auxiliaries: List[AuxiliaryVariables]
+      The sets to reconstruct. Defaults to all sets of the solver. A scheme
+      with several stages passes only the sets whose halo has not been
+      held through the stages (AuxiliaryVariables.halo_is_held_through_stages).
+
     @return List[peano4.api.taskgraph.Task]
       The reconstruction tasks, one per set. The update of the cells has to
       wait for all of them.
@@ -495,9 +530,11 @@ def add_reconstruction_tasks_of_auxiliary_variables(
     """
     Entity = peano4.api.taskgraph.Task.GridEntity
     reconstructions = []
-    for auxiliary in solver.auxiliary_variables:
+    for auxiliary in (
+        solver.auxiliary_variables if auxiliaries is None else auxiliaries
+    ):
         reconstruction = peano4.api.taskgraph.Task(
-            name=f"{solver.name}_Reconstruct auxiliary variables {auxiliary.name}{name_suffix}",
+            name=f"{solver.name}_{AuxiliaryVariables.RECONSTRUCTION_TASK_NAME.format(auxiliary.name)}{name_suffix}",
             entity=Entity.CELL,
         )
         # The reconstruction interpolates the faces itself, before it acts on the cell
@@ -517,7 +554,7 @@ def add_reconstruction_tasks_of_auxiliary_variables(
     return reconstructions
 
 
-def use_halos_of_auxiliary_variables(task, solver, access=None):
+def use_halos_of_auxiliary_variables(task, solver, access=None, held_access=None):
     """!
 
     Let a task (typically the update of the cells) read the halos of the auxiliary variables
@@ -527,11 +564,23 @@ def use_halos_of_auxiliary_variables(task, solver, access=None):
       qualifier if the halos have to survive the task, e.g. because a later
       task of the same chain reads them, too.
 
+    @param held_access: peano4.api.taskgraph.Task.DataAccess
+      How the task uses the halos of the sets whose halo is held through
+      the stages of a time step
+      (AuxiliaryVariables.halo_is_held_through_stages). Defaults to access.
+      Schemes with several stages pass a qualifier that keeps the halo alive
+      unless the task belongs to the last stage.
+
     """
     if access is None:
         access = peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD
+    if held_access is None:
+        held_access = access
     for auxiliary in solver.auxiliary_variables:
-        task.use_cell(solver._auxiliary_variable_halos[auxiliary.name], access)
+        task.use_cell(
+            solver._auxiliary_variable_halos[auxiliary.name],
+            held_access if auxiliary.halo_is_held_through_stages else access,
+        )
 
 
 def volumes_expression(patch_size: int, halo: int) -> str:

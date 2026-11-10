@@ -40,7 +40,11 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
     The sets are read-only for the solvers, but they sit on the faces, and they
     change from time step to time step. The solvers hold no persistent copy of
     the fields of the other solver, i.e. the sets are temporary in the sense
-    that they are overwritten at the begin of each time step.
+    that they are overwritten at the begin of each time step. They do not
+    change within a time step
+    (exahype2.api.AuxiliaryVariables.Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES),
+    i.e. the Runge-Kutta scheme of CCZ4 reconstructs the halo of the Euler
+    fields in its first stage only and holds it through the later stages.
 
     ## Task graph
 
@@ -131,13 +135,13 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
         self.euler_fields = exahype2.api.AuxiliaryVariables(
             self.EULER_FIELDS_NAME,
             dict(Euler.Unknowns),
-            mode=Mode.CHANGING_ON_FACES,
+            mode=Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES,
             data_name="EulerFieldsForCCZ4",
         )
         self.ccz4_fields = exahype2.api.AuxiliaryVariables(
             self.CCZ4_FIELDS_NAME,
             dict(FOCCZ4Solver.Unknowns),
-            mode=Mode.CHANGING_ON_FACES,
+            mode=Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES,
             data_name="CCZ4FieldsForEuler",
         )
         self.ccz4.add_auxiliary_variables(self.euler_fields)

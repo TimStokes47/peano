@@ -1011,7 +1011,11 @@ Patch overlap data
           its halo. Interpolation is no task of its own.
         - {SolverName}_Reconstruct auxiliary variables stage k: reconstructs
           the halos of the auxiliary variables. Exists only if the solver has
-          auxiliary variables.
+          auxiliary variables. Sets which are stationary throughout the time
+          step (exahype2.api.AuxiliaryVariables.Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES)
+          have this task in the first stage only: The right-hand-side tasks
+          hold their halo as persistent cell data until the last stage
+          discards it.
         - {SolverName}_Evaluate Runge-Kutta right hand side stage k. Where
           the right-hand side has further terms
           (_right_hand_side_action_sets()), each term adds a task behind it,
@@ -1199,7 +1203,9 @@ Patch overlap data
 
             ## The halos of the auxiliary variables, if there are any. Their
             ## interpolations and reconstructions run in parallel to the ones
-            ## of the unknowns.
+            ## of the unknowns. Sets which do not change within the time step
+            ## are reconstructed in the first stage only; the later stages
+            ## find their halo as persistent cell data.
             reconstruction_tasks = [reconstruction_task] + (
                 add_reconstruction_tasks_of_auxiliary_variables(
                     self._solver,
@@ -1207,6 +1213,11 @@ Patch overlap data
                     self.interpolation,
                     [previous_stage_task] if previous_stage_task is not None else [],
                     name_suffix=f" stage {stage}",
+                    auxiliaries=[
+                        auxiliary
+                        for auxiliary in self._solver.auxiliary_variables
+                        if stage == 0 or not auxiliary.halo_is_held_through_stages
+                    ],
                 )
             )
 
@@ -1252,6 +1263,16 @@ Patch overlap data
                     task,
                     self._solver,
                     _access_within_chain(Access.READ_AND_DISCARD, position, length),
+                    # Halos that are held through the stages survive all but the last stage
+                    held_access=_access_within_chain(
+                        (
+                            Access.READ_AND_DISCARD
+                            if is_last_stage
+                            else Access.READ_AND_WRITE
+                        ),
+                        position,
+                        length,
+                    ),
                 )
             right_hand_side_task = right_hand_side_tasks[-1]
 

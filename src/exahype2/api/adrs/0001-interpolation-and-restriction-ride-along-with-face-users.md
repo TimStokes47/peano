@@ -45,7 +45,8 @@ nuance, as auxiliary variables are not necessarily held by the faces:
   not cell-wise have faces in the first place.)
 - Whenever a task **writes to a patch** of auxiliary variables, it uses
   `RestrictHangingFaces` for them, if and only if the auxiliary data are changing and held by
-  the faces (`AuxiliaryVariables.Mode.CHANGING_ON_FACES`). Auxiliary variables without face data need no restriction.
+  the faces (`AuxiliaryVariables.Mode.CHANGING_ON_FACES` and
+  `STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES`, whose writer acts between the time steps). Auxiliary variables without face data need no restriction.
 
 ## Consequences
 

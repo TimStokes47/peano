@@ -317,3 +317,75 @@ def test_data_name_feeds_into_the_generated_data():
         == "DerivativeVariablesCurrentTimeStep"
     )
     assert auxiliary.patch_overlap_update.name == "DerivativeVariablesUpdate"
+
+
+def _fd4_time_step(tmp_path, mode, rk_order=3):
+    solver = _solver()
+    auxiliary = exahype2.api.AuxiliaryVariables("Bathymetry", {"b": 1}, mode=mode)
+    solver.add_auxiliary_variables(auxiliary)
+    solver.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        solver, patch_size=6, rk_order=rk_order, time_step_size=0.1
+    )
+    exahype2_project = types.SimpleNamespace(periodic_BC=[True] * 3)
+    peano_project = peano4.api.Project(["probe"], "probe", str(tmp_path))
+    time_step = peano4.api.taskgraph.Graph()
+    solver.numerical_scheme.construct_output(exahype2_project, peano_project, time_step)
+    return solver, auxiliary, {task.name: task for task in time_step.tasks}
+
+
+def _reconstruction_name(auxiliary, stage):
+    name = exahype2.api.AuxiliaryVariables.RECONSTRUCTION_TASK_NAME.format(
+        auxiliary.name
+    )
+    return f"Probe_{name} stage {stage}"
+
+
+def test_fd4_reconstructs_changing_halos_in_every_stage(tmp_path):
+    Mode = exahype2.api.AuxiliaryVariables.Mode
+    solver, auxiliary, tasks = _fd4_time_step(tmp_path, Mode.CHANGING_ON_FACES)
+    Access = peano4.api.taskgraph.Task.DataAccess
+    halo = solver._auxiliary_variable_halos[auxiliary.name]
+    for stage in range(3):
+        assert _reconstruction_name(auxiliary, stage) in tasks
+        rhs = tasks[f"Probe_Evaluate Runge-Kutta right hand side stage {stage}"]
+        assert rhs.cell_data_access[halo] == Access.READ_AND_DISCARD
+
+
+def test_fd4_reconstructs_halos_that_are_stationary_through_the_time_step_once(
+    tmp_path,
+):
+    Mode = exahype2.api.AuxiliaryVariables.Mode
+    solver, auxiliary, tasks = _fd4_time_step(
+        tmp_path, Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES
+    )
+    Access = peano4.api.taskgraph.Task.DataAccess
+    halo = solver._auxiliary_variable_halos[auxiliary.name]
+    assert _reconstruction_name(auxiliary, 0) in tasks
+    assert _reconstruction_name(auxiliary, 1) not in tasks
+    assert _reconstruction_name(auxiliary, 2) not in tasks
+    assert (
+        tasks[_reconstruction_name(auxiliary, 0)].cell_data_access[halo]
+        == Access.WRITE
+    )
+    # The halo survives all stages but the last, which discards it
+    for stage, expected in [
+        (0, Access.READ_AND_WRITE),
+        (1, Access.READ_AND_WRITE),
+        (2, Access.READ_AND_DISCARD),
+    ]:
+        rhs = tasks[f"Probe_Evaluate Runge-Kutta right hand side stage {stage}"]
+        assert rhs.cell_data_access[halo] == expected
+    # The unknowns are still reconstructed in every stage
+    for stage in range(3):
+        assert f"Probe_Reconstruct stage {stage}" in tasks
+
+
+def test_fd4_with_one_stage_discards_the_held_halo_right_away(tmp_path):
+    Mode = exahype2.api.AuxiliaryVariables.Mode
+    solver, auxiliary, tasks = _fd4_time_step(
+        tmp_path, Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES, rk_order=1
+    )
+    Access = peano4.api.taskgraph.Task.DataAccess
+    halo = solver._auxiliary_variable_halos[auxiliary.name]
+    rhs = tasks["Probe_Evaluate Runge-Kutta right hand side stage 0"]
+    assert rhs.cell_data_access[halo] == Access.READ_AND_DISCARD
