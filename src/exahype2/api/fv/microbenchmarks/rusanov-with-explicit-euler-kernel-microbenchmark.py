@@ -167,7 +167,7 @@ if args.cpu == True or args.gpu == False:
 if args.gpu == True:
     solver_variants.append((exahype2.api.Target.Accelerator, True))
 
-thesolver.numerical_scheme._generator = exahype2.api.fv.RusanovWithExplicitEulerGenerator2(thesolver, solver_variants)
+thesolver.numerical_scheme._generator = exahype2.api.fv.RusanovWithExplicitEulerGenerator(thesolver, solver_variants)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
     thesolver, volume_size=0.001
 )

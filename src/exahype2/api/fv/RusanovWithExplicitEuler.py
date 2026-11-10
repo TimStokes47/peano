@@ -13,12 +13,12 @@ from exahype2.api import Target
 from collections import OrderedDict
 
 # This solver is using the rewritten version
-import exahype2.api.dslhype2 as dslhype2
+import exahype2.api.dslhype2 as dslhype
  
 from ..Solver import Solver
 from ..AuxiliaryVariables import (
     register_auxiliary_variables,
-    add_reconstruction_of_auxiliary_variables,
+    add_reconstruction_tasks_of_auxiliary_variables,
     use_halos_of_auxiliary_variables,
     forwarding_arguments,
 )
@@ -498,7 +498,8 @@ Patch overlap data
     def construct_output(self,
                          exahype2_project,
                          peano_project,
-                         time_step):
+                         time_step,
+                         add_global_tasks=True):
         """!
 
         """
@@ -506,7 +507,7 @@ Patch overlap data
 
         self.__add_data_to_repository(peano_project)
         self.kernel_namespace = peano_project.namespace
-        self._generator.construct_output(exahype2_project, peano_project, time_step)
+        self._generator.construct_output(exahype2_project, peano_project, time_step, add_global_tasks)
 
     def create_restriction_of_hanging_faces(self) -> "toolbox.blockstructured.api.RestrictHangingFaces":
         """!
@@ -531,7 +532,7 @@ Patch overlap data
 
 
 class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGenerator):
-    def construct_output(self, exahype2_project, peano_project, time_step):
+    def construct_output(self, exahype2_project, peano_project, time_step, add_global_tasks=True):
         # Construct the call first, as it validates the PDE terms' variants
         # Although we may generate multiple definitions for the purpose of benchmarking, we
         # only need one kernel call
@@ -542,6 +543,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
             self._configurations[0][1],
             self._solver.numerical_scheme.max_eigenvalue_kernel_function_name,
         )
+
         self.__create_time_step_functions(exahype2_project, peano_project)
         
         reconstruction_task         = peano4.api.taskgraph.Task(name=f"{self._solver.name}_Reconstruct", entity=peano4.api.taskgraph.Task.GridEntity.CELL)
@@ -558,42 +560,6 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         time_step.add_task(project_on_faces_task)
         time_step.add_task(compute_cfl_condition_task)
 
-        # The load balancing is switched off throughout the time step, and
-        # switched on again only at its very end, so it may then decide on
-        # splits. Peano carries these splits out in the subsequent mesh sweep.
-        reconstruction_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.ToggleLoadBalancing(
-                enable_load_balancing=False, plug_into_prepare_traversal=True
-            )
-        )
-
-        # The very last task evaluates the adaptivity criterion if the
-        # solver has one (create_dynamic_mesh_refinement_action_set()), i.e. it
-        # collects refine and erase requests for the mesh adaptation phase,
-        # and it switches the load balancing on again and informs it that
-        # the time step has finished.
-        dynamic_mesh_refinement_task = peano4.api.taskgraph.Task(
-            name=f"{self._solver.name}_Dynamic mesh refinement",
-            entity=peano4.api.taskgraph.Task.GridEntity.CELL,
-            may_spawn_background_tasks=False,
-        )
-        dynamic_mesh_refinement_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
-        dynamic_mesh_refinement = create_dynamic_mesh_refinement_action_set(
-            self._solver,
-            self._solver.numerical_scheme.patch_size,
-            guard=self._solver.grid_selector.createCellGuard(),
-            min_volume_size=self._solver.numerical_scheme.min_volume_size,
-            max_volume_size=self._solver.numerical_scheme.max_volume_size,
-        )
-        if dynamic_mesh_refinement is not None:
-            dynamic_mesh_refinement_task.add_action_set(dynamic_mesh_refinement)
-        dynamic_mesh_refinement_task.add_action_set(
-            toolbox.loadbalancing.api.actionsets.LoadBalancing(enable_load_balancing=True)
-        )
-        dynamic_mesh_refinement_task.add_dependency(reduce_eigenvalue_task)
-        dynamic_mesh_refinement_task.add_dependency(project_on_faces_task)
-        time_step.add_task(dynamic_mesh_refinement_task)
-
         ## Build the reconstruction tasks befilling the patch_with_halo, which is logically temporary
         reconstruction_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         reconstruction_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.WRITE)
@@ -602,6 +568,16 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         reconstruction_task.use_face(
             self._solver._patch_overlap_current_time_step,
             get_access_to_persistent_face_data(self._solver, exahype2_project, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD),
+        )
+        ## On adaptive meshes, the reconstruction interpolates the coarse face
+        ## data onto the hanging faces of fine cells itself (see
+        ## src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md)
+        reconstruction_task.add_action_set(
+            toolbox.blockstructured.api.InterpolateHangingFaces(
+                self._solver._patch_overlap_current_time_step,
+                scheme=self._solver.numerical_scheme.interpolation,
+                additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
+            )
         )
         reconstruction_task.add_action_set(
             toolbox.blockstructured.api.ReconstructPatchWithHalo(
@@ -613,29 +589,24 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
                 additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
-        ## On adaptive meshes, interpolate the coarse face data onto the hanging
-        ## faces of fine cells, before the reconstruction reads them
-        reconstruction_task.add_action_set(
-            toolbox.blockstructured.api.InterpolateHangingFaces(
-                self._solver._patch_overlap_current_time_step,
-                scheme=self._solver.numerical_scheme.interpolation,
-                additional_includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
-            )
-        )
         ## Set the ghost volumes along the domain boundary before the reconstruction reads them.
         ## No task is added if all axes are periodic or for Sommerfeld boundary
         ## conditions, which advance the ghost volumes within the roll over
         ApplyDirichletBoundaryConditions.add_task_to_time_step(self._solver, exahype2_project, time_step, reconstruction_task)
 
         ## The halos of the auxiliary variables
-        add_reconstruction_of_auxiliary_variables(reconstruction_task, self._solver)
+        auxiliary_reconstruction_tasks = add_reconstruction_tasks_of_auxiliary_variables(
+            self._solver, time_step, self._solver.numerical_scheme.interpolation
+        )
 
         ## Do the actual time step update
         update_cell_task.add_dependency(reconstruction_task)
+        for task in auxiliary_reconstruction_tasks:
+            update_cell_task.add_dependency(task)
         use_halos_of_auxiliary_variables(update_cell_task, self._solver)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
-        if self._configurations[0][0] == dslhype2.Target.Accelerator:
+        if self._configurations[0][0] == dslhype.Target.Accelerator:
             update_cell_task.add_action_set(
                 UpdateCellGPU(
                     self._solver,
@@ -653,9 +624,11 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
 
         ## Determine the maximum eigenvalue of the updated patches, store it
         ## per cell and reduce it over all cells. The projection onto the faces
-        ## follows, as the update, the eigenvalue and the reduction fold into
-        ## one mesh traversal, whereas the projection writes the face data
-        ## which the reconstruction reads at the beginning of that traversal
+        ## depends on the update only, i.e. it runs in parallel to the
+        ## eigenvalue and its reduction. The update, the eigenvalue, the
+        ## reduction and the projection fold into one mesh traversal, whereas the
+        ## projection writes the face data which the reconstruction reads at the
+        ## beginning of that traversal
         compute_eigenvalue_task.add_dependency(update_cell_task)
         compute_eigenvalue_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         compute_eigenvalue_task.use_cell(self._solver._max_eigenvalue, peano4.api.taskgraph.Task.DataAccess.WRITE)
@@ -688,7 +661,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         )
         
         ## Next project the new data onto the faces. Also roll over the solution
-        project_on_faces_task.add_dependency(reduce_eigenvalue_task)
+        project_on_faces_task.add_dependency(update_cell_task)
         project_on_faces_task.use_cell(self._solver._patch, peano4.api.taskgraph.Task.DataAccess.READ_AND_WRITE)
         project_on_faces_task.use_face(self._solver._patch_overlap_update, peano4.api.taskgraph.Task.DataAccess.TEMPORARY)
         project_on_faces_task.use_face(
@@ -703,9 +676,21 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
                 includes=self._solver._get_default_includes() + self._solver.user_solver_includes,
             )
         )
-        ## On adaptive meshes, restrict the fine data from the hanging faces
-        ## onto the coarse faces, before the roll over copies them
+        ## On adaptive meshes, the projection also restricts the fine data from
+        ## the hanging faces onto the coarse faces (see
+        ## src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md).
+        ## Peano destroys a hanging face right after the fine cell has
+        ## projected onto it, and touches the coarse face for the last time
+        ## after that, i.e. the coarse face is final when the roll over copies it.
+        ## The projection declares the face data of the current time step, so
+        ## the compiler does not fuse it into the traversal of the reconstruction.
         project_on_faces_task.add_action_set(self._solver.numerical_scheme.create_restriction_of_hanging_faces())
+        ## The roll over is part of the projection, too. The face data of the
+        ## projection (the update) is TEMPORARY, i.e. it lives within one mesh
+        ## traversal only, and the roll over copies it. A task of its own
+        ## would be fused into a later traversal by the producer-consumer
+        ## compiler, where it copies uninitialised memory
+        ## (see src/exahype2/api/fv/adrs/0003-roll-over-is-part-of-the-projection.md).
         ## Sommerfeld boundary conditions advance the ghost volumes within
         ## the roll over (@ref exahype2.api.blockstructured.BoundaryConditions)
         project_on_faces_task.add_action_set(
@@ -717,18 +702,29 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
                 time_step_size=f"repositories::{self._solver.get_name_of_global_instance()}.getMinTimeStepSize()",
             )
         )
-        
+        ## The roll over of Sommerfeld boundary conditions reads the current
+        ## time step size, which the next task replaces. It therefore never
+        ## runs before the roll over has terminated
+        ## (see src/exahype2/api/fv/adrs/0002-time-step-size-after-roll-over.md)
+        compute_cfl_condition_task.add_dependency(project_on_faces_task)
+
+        # The load balancing is switched off throughout the time step, and
+        # switched on again only at its very end, so it may then decide on
+        # splits. Peano carries these splits out in the subsequent mesh sweep.
+        if add_global_tasks:
+            self._solver.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks(time_step)
+
         if peano4.api.Logger().is_visualisation:
-            time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))
+            time_step.visualise(title="Time stepping task graph for {}{}".format(self._solver.name, self._solver.task_graph_title_suffix))
         if peano4.api.Logger().is_text:
-            time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
+            time_step.log_as_text(title="Time stepping task graph for {}{}".format(self._solver.name, self._solver.task_graph_title_suffix))
 
     def __create_time_step_functions(self, exahype2_project, peano4_project):
         """!
         
         Calling this function is delayed until all PDE term information is provided.
         In this way we can avoid generating code that will not be used. The following
-        information is required to translate a Python function using dslhype2:
+        information is required to translate a Python function using dslhype:
         - template_parameters: the variables that are used within the Python function
             to represent external information
         - functor_parameters: the PDE terms that can be used by the solver
@@ -740,17 +736,17 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         """
 
         #template_parameters = [
-        #    dslhype2.SyntaxTree.Argument("NV", dslhype2.SyntaxTree.TInteger()),
-        #    dslhype2.SyntaxTree.Argument("H", dslhype2.SyntaxTree.TInteger()),
-        #    dslhype2.SyntaxTree.Argument("NumberOfUnknowns", dslhype2.SyntaxTree.TInteger()),
-        #    dslhype2.SyntaxTree.Argument("NumberOfAuxiliaryVariables", dslhype2.SyntaxTree.TInteger())
+        #    dslhype.SyntaxTree.Argument("NV", dslhype.SyntaxTree.TInteger()),
+        #    dslhype.SyntaxTree.Argument("H", dslhype.SyntaxTree.TInteger()),
+        #    dslhype.SyntaxTree.Argument("NumberOfUnknowns", dslhype.SyntaxTree.TInteger()),
+        #    dslhype.SyntaxTree.Argument("NumberOfAuxiliaryVariables", dslhype.SyntaxTree.TInteger())
         #]
         #
         #functor_parameters = [
-        #    dslhype2.SyntaxTree.Argument("flux", dslhype2.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-        #    dslhype2.SyntaxTree.Argument("nonconservativeProduct", dslhype2.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
-        #    dslhype2.SyntaxTree.Argument("volumetricSource", dslhype2.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::VolumetricSourceFunctor&"), "(!llvm.ptr, !llvm.ptr, f64, !llvm.ptr) -> ()"),
-        #    dslhype2.SyntaxTree.Argument("maxEigenvalue", dslhype2.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
+        #    dslhype.SyntaxTree.Argument("flux", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::FluxFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
+        #    dslhype.SyntaxTree.Argument("nonconservativeProduct", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()"),
+        #    dslhype.SyntaxTree.Argument("volumetricSource", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::VolumetricSourceFunctor&"), "(!llvm.ptr, !llvm.ptr, f64, !llvm.ptr) -> ()"),
+        #    dslhype.SyntaxTree.Argument("maxEigenvalue", dslhype.SyntaxTree.TCustom("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&"), "(!llvm.ptr, !llvm.ptr, !llvm.ptr, f64, f64, i32, !llvm.ptr) -> ()")
         #]
         dimensions = exahype2_project._dimensions
         if dimensions == 2:
@@ -800,41 +796,41 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
             file.close()
 
         external_variables = {
-            dslhype2.Argument(dslhype2.Name("NV"), dslhype2.TInteger()): self._solver.numerical_scheme.patch_size,
-            dslhype2.Argument(dslhype2.Name("H"), dslhype2.TInteger()): self._solver.numerical_scheme.overlap,
-            dslhype2.Argument(dslhype2.Name("NumberOfUnknowns"), dslhype2.TInteger()): self._solver.unknowns,
-            dslhype2.Argument(dslhype2.Name("NumberOfAuxiliaryVariables"), dslhype2.TInteger()): self._solver.number_of_auxiliary_variables
+            dslhype.Argument(dslhype.Name("NV"), dslhype.TInteger()): self._solver.numerical_scheme.patch_size,
+            dslhype.Argument(dslhype.Name("H"), dslhype.TInteger()): self._solver.numerical_scheme.overlap,
+            dslhype.Argument(dslhype.Name("NumberOfUnknowns"), dslhype.TInteger()): self._solver.unknowns,
+            dslhype.Argument(dslhype.Name("NumberOfAuxiliaryVariables"), dslhype.TInteger()): self._solver.number_of_auxiliary_variables
         }
 
         function_map = {
-            dslhype2.Name("volumetricSource"): dslhype2.TFunction("const ::exahype2::fv::rusanov::VolumetricSourceFunctor&", OrderedDict({
-                dslhype2.Name("Q"): dslhype2.TArray(dslhype2.TFloat(), 1), 
-                dslhype2.Name("x"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
-                dslhype2.Name("t"): dslhype2.TFloat(), 
-                dslhype2.Name("F"): dslhype2.TArray(dslhype2.TFloat(), 1)})),
-            dslhype2.Name("flux"): dslhype2.TFunction("const ::exahype2::fv::rusanov::FluxFunctor&", OrderedDict({
-                dslhype2.Name("Q"): dslhype2.TArray(dslhype2.TFloat(), 1), 
-                dslhype2.Name("x"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
-                dslhype2.Name("normal"): dslhype2.TInteger(), 
-                dslhype2.Name("F"): dslhype2.TArray(dslhype2.TFloat(), 1)})),
-            dslhype2.Name("nonconservativeProduct"): dslhype2.TFunction("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&", OrderedDict({
-                dslhype2.Name("Q"): dslhype2.TArray(dslhype2.TFloat(), 1), 
-                dslhype2.Name("deltaQ"): dslhype2.TArray(dslhype2.TFloat(), 1), 
-                dslhype2.Name("x"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
-                dslhype2.Name("h"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
-                dslhype2.Name("t"): dslhype2.TFloat(), 
-                dslhype2.Name("dt"): dslhype2.TFloat(), 
-                dslhype2.Name("normal"): dslhype2.TInteger(), 
-                dslhype2.Name("BTimesDeltaQ"): dslhype2.TArray(dslhype2.TFloat(), 1)})),
-            dslhype2.Name("maxEigenvalue"): dslhype2.TFunction("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&", OrderedDict({
-                dslhype2.Name("Q"): dslhype2.TArray(dslhype2.TFloat(), 1), 
-                dslhype2.Name("x"): dslhype2.TVector(dslhype2.TFloat(), dimensions), 
-                dslhype2.Name("normal"): dslhype2.TInteger(), 
-                dslhype2.Name("E"): dslhype2.TArray(dslhype2.TFloat(), 1)}))
+            dslhype.Name("volumetricSource"): dslhype.TFunction("const ::exahype2::fv::rusanov::VolumetricSourceFunctor&", OrderedDict({
+                dslhype.Name("Q"): dslhype.TArray(dslhype.TFloat(), 1), 
+                dslhype.Name("x"): dslhype.TVector(dslhype.TFloat(), dimensions), 
+                dslhype.Name("t"): dslhype.TFloat(), 
+                dslhype.Name("F"): dslhype.TArray(dslhype.TFloat(), 1)})),
+            dslhype.Name("flux"): dslhype.TFunction("const ::exahype2::fv::rusanov::FluxFunctor&", OrderedDict({
+                dslhype.Name("Q"): dslhype.TArray(dslhype.TFloat(), 1), 
+                dslhype.Name("x"): dslhype.TVector(dslhype.TFloat(), dimensions), 
+                dslhype.Name("normal"): dslhype.TInteger(), 
+                dslhype.Name("F"): dslhype.TArray(dslhype.TFloat(), 1)})),
+            dslhype.Name("nonconservativeProduct"): dslhype.TFunction("const ::exahype2::fv::rusanov::NonconservativeProductFunctor&", OrderedDict({
+                dslhype.Name("Q"): dslhype.TArray(dslhype.TFloat(), 1), 
+                dslhype.Name("deltaQ"): dslhype.TArray(dslhype.TFloat(), 1), 
+                dslhype.Name("x"): dslhype.TVector(dslhype.TFloat(), dimensions), 
+                dslhype.Name("h"): dslhype.TVector(dslhype.TFloat(), dimensions), 
+                dslhype.Name("t"): dslhype.TFloat(), 
+                dslhype.Name("dt"): dslhype.TFloat(), 
+                dslhype.Name("normal"): dslhype.TInteger(), 
+                dslhype.Name("BTimesDeltaQ"): dslhype.TArray(dslhype.TFloat(), 1)})),
+            dslhype.Name("maxEigenvalue"): dslhype.TFunction("const ::exahype2::fv::rusanov::MaxEigenvalueFunctor&", OrderedDict({
+                dslhype.Name("Q"): dslhype.TArray(dslhype.TFloat(), 1), 
+                dslhype.Name("x"): dslhype.TVector(dslhype.TFloat(), dimensions), 
+                dslhype.Name("normal"): dslhype.TInteger(), 
+                dslhype.Name("E"): dslhype.TArray(dslhype.TFloat(), 1)}))
         }
 
         for (target, stateless) in self._configurations:
-            dslhype2.translate_dslhype_function(
+            dslhype.translate_dslhype_function(
                 function = time_step_dsl_function,
                 dimensions=dimensions,
                 function_namespace = self._solver.numerical_scheme.kernel_namespace,
@@ -849,7 +845,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
             )
         # The maximum eigenvalue is a kernel of its own, which always runs on the host
         for stateless in sorted({stateless for (_, stateless) in self._configurations}):
-            dslhype2.translate_dslhype_function(
+            dslhype.translate_dslhype_function(
                 function = maxEigenvalueOverPatch2D if dimensions == 2 else maxEigenvalueOverPatch3D,
                 dimensions=dimensions,
                 function_namespace = self._solver.numerical_scheme.kernel_namespace,
@@ -857,7 +853,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
                 external_variables=external_variables,
                 pde_terms=self._solver.pde_terms,
                 output_file_name=f"{self._solver.name}_rusanov{dimensions}d",
-                target=dslhype2.Target.Serial,
+                target=dslhype.Target.Serial,
                 stateless=stateless,
                 function_name=self._solver.numerical_scheme.max_eigenvalue_kernel_function_name,
                 output_directory=output_directory,
@@ -892,7 +888,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         application PDE terms and the version chosen.
 
         @param function_name: str
-          Unqualified name of the kernel. Defaults to the time step kernel.
+            Unqualified name of the kernel. Defaults to the time step kernel.
 
         """
         if function_name is None:
