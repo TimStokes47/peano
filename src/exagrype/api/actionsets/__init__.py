@@ -4,3 +4,5 @@
 
 from .AddKreissOligerDissipation import AddKreissOligerDissipation
 from .ApplyReconstructionFunctor import ApplyReconstructionFunctor
+from .CopyPatchWithLinearInterpolation import CopyPatchWithLinearInterpolation
+from .SynchroniseTimeStepSizes import SynchroniseTimeStepSizes

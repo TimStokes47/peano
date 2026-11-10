@@ -50,7 +50,8 @@ def test_time_step_size_is_computed_after_the_roll_over(tmp_path):
     # Sommerfeld roll overs read the time step size, which the CFL task replaces
     _, tasks, _ = _time_step("explicit", tmp_path)
     cfl = tasks["Probe_Compute global CFL condition"]
-    assert tasks["Probe_Roll over faces"] in cfl.dependencies
+    assert "Probe_Roll over faces" not in tasks
+    assert tasks["Probe_Project on faces"] in cfl.dependencies
     _, tasks, _ = _time_step("optimistic", tmp_path)
     cfl = tasks["Probe_Compute global CFL condition"]
     assert tasks["Probe_Project on faces"] in cfl.dependencies

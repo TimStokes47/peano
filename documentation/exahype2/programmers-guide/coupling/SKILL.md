@@ -111,7 +111,45 @@ If possible, display a rendering of the arising task graph to the user.
 
 ### Additive solver coupling
 
-The solvers' graphs run in parallel. The host's scheme asks each solver for its graph per Runge-Kutta
+The solvers' graphs run in parallel. There are two variants. Ask the user which one they want,
+and explain the difference:
+
+| | A. Coupling at the begin and the end of the time step | B. One numerical scheme over the compound |
+|---|---|---|
+| Inside the time step | solvers are independent | solvers run in lockstep, stage by stage |
+| Numerical schemes | any, one per solver (`host.set_numerical_scheme(solver, scheme)`); time stepping, patch size and halo may differ | one scheme, held by the host (`host.numerical_scheme`) |
+| Exchange | once per time step: copy, project, run, synchronise | once per stage (KickOff/WrapUp per Runge-Kutta stage) |
+| Typical use | different discretisations, e.g. FD4 with RK4 for CCZ4 next to Finite Volumes for a fluid | same scheme and patch size for all solvers |
+| Worked example | `exagrype.api.CCZ4WithEuler_AdditiveCoupling` | `CCZ4WithEuler` in `benchmarks/exagrype/gauge-wave-with-Euler` (predates `SolverHost`) |
+
+#### A. Coupling at the begin and the end of the time step
+
+The host creates the solvers and, for each solver, a set of `exahype2.api.AuxiliaryVariables`
+that holds the fields of the other solver (`Mode.CHANGING_ON_FACES`: read-only for the
+solver, on the faces, rewritten every time step). The set lives on the patch of the
+solver that reads it. Each solver realises its complete graph with its own scheme;
+`couple()` only adds tasks in front of and behind the concatenated graphs:
+
+1. **Copy tasks** (CELL, one per direction, running in parallel) copy the persistent patch of the
+   producer into the auxiliary variables of the consumer. If the patches have a different
+   number of volumes, the copy interpolates; `exagrype.api.actionsets.CopyPatchWithLinearInterpolation`
+   does it piecewise (tri)linearly. Ask the user which interpolation they want.
+2. **Face projection** of the new auxiliary variables (see the check below): project, restrict hanging
+   faces, roll over. Copy them from `FOSOReconstructionSolver` if in doubt.
+3. The first tasks of **both** solvers (`Graph.source_tasks()` of each solver's own graph) depend on the
+   projection tasks of both directions. As the copies are complete when any solver starts, there is no
+   data race, although the solvers read and write the same cells.
+4. The solvers run.
+5. A `GLOBAL_END_OF_STEP` task depends on all sinks of the concatenated graph (excluding
+   `GLOBAL` tasks) and synchronises the time step sizes
+   (`exagrype.api.actionsets.SynchroniseTimeStepSizes` enforces the minimum on all solvers).
+   Add further global exchange here (see the end-of-step section below).
+
+The global tasks (load balancing, AMR) wrap the whole outcome as usual.
+
+#### B. One numerical scheme over the compound
+
+The host's scheme asks each solver for its graph per Runge-Kutta
 stage (`create_task_graph()`), i.e. there is one instance of each graph per stage. In `couple()`,
 call `SolverHost.run_in_parallel(host_graph, [graph_of_solver_a, graph_of_solver_b])` per stage: it
 adds a KickOff task which the first task of each solver's stage graph depends on. Make the 
@@ -121,12 +159,32 @@ KickOff of stage `k+1` depend on the sinks of stage `k`.
 
 If possible, display a rendering of the arising task graph to the user.
 
+#### Data races (both variants)
+
 Ask from the user if any of the mesh data are read and written by two solvers.
 In this case, there could be a data race. If this is the case, add to KickOff
 a temporary copy of the respective data field and add an action set which befills
 this copy. One of the solvers has to redirect their access to the copy. After the
 task graph has finished, the copy can be discarded, too.
 
+#### Check: do the copied data have to be projected onto the faces?
+
+Whenever an exchange writes data into auxiliary variables, decide whether the faces hold stale
+values afterwards:
+
+- Auxiliary variables with `Mode.CELL_WISE` do not sit on the faces. No projection is needed, but the
+  schemes currently reject such sets.
+- Auxiliary variables with `Mode.STATIONARY_ON_FACES` are projected once in the setup. If the exchange
+  rewrites them, they are not stationary: switch to `CHANGING_ON_FACES`.
+- Auxiliary variables with `Mode.CHANGING_ON_FACES` **have to be projected onto the faces right after
+  each exchange**, before anybody reconstructs a halo from them: the reconstruction reads
+  the halo layers of neighbours from the faces, not from the cell. Add the chain
+  project -> restrict hanging faces -> roll over as tasks behind the copy, and make the consumers
+  wait for it. Interpolation onto hanging faces needs no task, as it rides along with the
+  reconstruction (`exahype2/api/adrs/0001-...`).
+
+Report to the user for each exchanged set which of the three cases applies and whether you added the
+projection. A missing projection does not fail: the halos silently contain the values of the previous exchange.
 
 ### End of time step coupling (global coupling)
 
@@ -153,6 +211,9 @@ looked up in the concatenated graph in `couple()`.
 
 
 ## Optimise (additive coupling only)
+
+This holds for both variants.
+
 
 If we do temporary copies, do a C++ source code analysis and try to find out which 
 unknowns of the copied data are actually read. In principle, the developer could now
