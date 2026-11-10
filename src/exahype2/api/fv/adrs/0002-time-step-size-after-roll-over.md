@@ -18,9 +18,9 @@ the same holds for Finite Volumes, but the FV task graphs did not model it.
 
 ## Decision
 
-In `RusanovWithExplicitEuler`, `Compute global CFL condition` depends on the
-`Roll over faces` task. In `RusanovWithOptimisticExplicitEuler`, where the roll over is
-part of `Project on faces`, it depends on that task. It never runs before the roll over has
+In both `RusanovWithExplicitEuler` and `RusanovWithOptimisticExplicitEuler`, the roll over
+is part of `Project on faces` (ADR 0003), and `Compute global CFL condition` depends on
+that task. It never runs before the roll over has
 terminated, in addition to its dependency on the eigenvalue reduction.
 
 ## Consequences

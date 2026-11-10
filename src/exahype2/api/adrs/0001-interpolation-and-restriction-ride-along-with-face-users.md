@@ -41,11 +41,12 @@ The rule holds for the unknowns and for the auxiliary variables, with a differen
 nuance, as auxiliary variables are not necessarily held by the faces:
 
 - Whenever a task **reconstructs a patch** from auxiliary variables, it uses
-  `InterpolateHangingFaces` for them. (Only sets that are flagged
-  `to_be_interpolated` have faces in the first place.)
+  `InterpolateHangingFaces` for them. (Only sets that are
+  not cell-wise have faces in the first place.)
 - Whenever a task **writes to a patch** of auxiliary variables, it uses
-  `RestrictHangingFaces` for them, if and only if the auxiliary data are also held by
-  the faces. Auxiliary variables without face data need no restriction.
+  `RestrictHangingFaces` for them, if and only if the auxiliary data are changing and held by
+  the faces (`AuxiliaryVariables.Mode.CHANGING_ON_FACES` and
+  `STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES`, whose writer acts between the time steps). Auxiliary variables without face data need no restriction.
 
 ## Consequences
 

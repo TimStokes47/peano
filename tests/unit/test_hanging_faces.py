@@ -138,14 +138,17 @@ def test_schemes_are_configurable(tmp_path):
         assert restriction.scheme == Restrict.Scheme.Inject
 
 
-def test_projection_hosts_the_restriction_and_the_roll_over_follows(tmp_path):
+def test_projection_hosts_the_restriction_and_the_roll_over(tmp_path):
+    # The roll over copies the update, which lives within one traversal only
+    # (src/exahype2/api/fv/adrs/0003-roll-over-is-part-of-the-projection.md).
+    # The restriction precedes the roll over, as the roll over has to copy the
+    # restricted data
     _, (_, time_step) = _graphs(tmp_path)
     projection = time_step["Probe_Project on faces"]
-    roll_over = time_step["Probe_Roll over faces"]
     assert "Probe_Restrict on hanging faces" not in time_step
-    assert roll_over.dependencies == [projection]
+    assert "Probe_Roll over faces" not in time_step
     assert [type(a).__name__ for a in projection.action_sets] == [
         "ProjectPatchOntoFaces",
         "RestrictHangingFaces",
+        "RollOverUpdatedFace",
     ]
-    assert [type(a).__name__ for a in roll_over.action_sets] == ["RollOverUpdatedFace"]

@@ -134,10 +134,8 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
         self.derivatives = exahype2.api.AuxiliaryVariables(
             "Derivatives",
             self.DerivativeUnknowns,
-            on_faces=True,
-            can_change=True,
+            mode=exahype2.api.AuxiliaryVariables.Mode.CHANGING_ON_FACES,
             data_name="DerivativeVariables",
-            to_be_interpolated=True,
         )
         self.add_auxiliary_variables(self.derivatives)
 
@@ -191,7 +189,7 @@ class FOSOCCZ4Solver(CCZ4SolverBase):
         return sum(cls.DerivativeUnknowns.values())
 
     def _ncp_implementation(self) -> str:
-        """! The secondary entries are the auxiliary variables """
+        """! The secondary entries are the auxiliary variables"""
         return """
   ::exagrype::ccz4::ncpSecondOrder(
     BTimesDeltaQ,
