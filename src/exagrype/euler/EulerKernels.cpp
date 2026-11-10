@@ -9,8 +9,7 @@ double exagrype::euler::pressure(const double* const Q, const double gamma) {
 
 void exagrype::euler::flux(
   const double* const        Q,
-  [[maybe_unused]] const double* const* const auxiliary,
-  [[maybe_unused]] const int numberOfAuxiliarySets,
+  [[maybe_unused]] const double* const ccz4Fields,
   const int                  normal,
   const double               gamma,
   double* const              F
@@ -29,8 +28,7 @@ void exagrype::euler::flux(
 
 double exagrype::euler::maxEigenvalue(
   const double* const        Q,
-  [[maybe_unused]] const double* const* const auxiliary,
-  [[maybe_unused]] const int numberOfAuxiliarySets,
+  [[maybe_unused]] const double* const ccz4Fields,
   const int                  normal,
   const double               gamma
 ) {
@@ -42,8 +40,7 @@ double exagrype::euler::maxEigenvalue(
 
 void exagrype::euler::source(
   [[maybe_unused]] const double* const        Q,
-  [[maybe_unused]] const double* const* const auxiliary,
-  [[maybe_unused]] const int                  numberOfAuxiliarySets,
+  [[maybe_unused]] const double* const        ccz4Fields,
   [[maybe_unused]] const double               gamma,
   double* const                               S
 ) {

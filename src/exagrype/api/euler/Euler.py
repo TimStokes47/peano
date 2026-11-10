@@ -24,8 +24,8 @@ class Euler(exahype2.api.Solver):
 
     in three dimensions. It has a flux, a maximum eigenvalue, a source term and an initial
     condition, all of them stateless. The source term is zero.
-    Flux, source and eigenvalue see all auxiliary variables of the solver,
-    even though they ignore them at the moment. The solver always holds a
+    Flux, source and eigenvalue see the CCZ4 fields, even though they ignore
+    them at the moment. The solver always holds a
     set of auxiliary variables with the 59 entries of first-order CCZ4,
     which the user attaches (add_auxiliary_variables()); generating the
     solver without it fails. By default, the
@@ -133,7 +133,7 @@ class Euler(exahype2.api.Solver):
 
         """
         size = sum(FOCCZ4Solver.Unknowns.values())
-        if not any(a.size == size for a in self.auxiliary_variables):
+        if self._ccz4_fields_set() is None:
             raise ValueError(
                 f"Solver {self.name}: the Euler solver needs a set of auxiliary variables "
                 f"with the {size} entries of first-order CCZ4, but has "
@@ -142,27 +142,50 @@ class Euler(exahype2.api.Solver):
         return super().generate_solver_realisation(*args, **kwargs)
 
     def _refresh_pde_terms(self):
-        """! Rebuild the implementations of flux, source and eigenvalue from the hooks """
+        """!
+
+        Rebuild the implementations of flux, source and eigenvalue from the hooks
+
+        Nothing happens before the set with the CCZ4 fields has been attached,
+        as the kernels need it.
+
+        """
+        if self._ccz4_fields_set() is None:
+            return
         self._flux.implementation = self._flux_implementation()
         self._source.implementation = self._source_implementation()
         self._max_eigenvalue.implementation = self._max_eigenvalue_implementation()
 
-    def _auxiliary_arguments(self) -> str:
+    def _ccz4_fields_set(self):
         """!
 
-        C++ which declares the array of pointers to all auxiliary variables
+        The set of auxiliary variables which holds the CCZ4 fields
 
-        The code declares the array auxiliary and the constant
-        numberOfAuxiliarySets in the scope of a PDE term. The kernels of
-        exagrype::euler take both. The solver always has auxiliary variables
-        (see generate_solver_realisation()), i.e. the array is never empty.
+        It is the set with as many entries as FOCCZ4Solver has unknowns. Other
+        sets (such as the lapse of a toy coupling) are not handed to the kernels.
+
+        @return exahype2.api.AuxiliaryVariables
+          The set, or None if it has not been attached yet.
 
         """
-        sets = self.auxiliary_variables
-        pointers = ", ".join(a.argument_name for a in sets)
-        return f"""
-  const double* const auxiliary[] = {{ {pointers} }};
-  const int numberOfAuxiliarySets = {len(sets)};"""
+        size = sum(FOCCZ4Solver.Unknowns.values())
+        candidates = [a for a in self.auxiliary_variables if a.size == size]
+        if len(candidates) > 1:
+            raise ValueError(
+                f"Solver {self.name}: more than one set of auxiliary variables has the {size} entries of CCZ4: "
+                f"{[a.name for a in candidates]}"
+            )
+        return candidates[0] if candidates else None
+
+    def _ccz4_fields(self) -> str:
+        """!
+
+        C++ expression of the pointer to the CCZ4 fields in a PDE term
+
+        The kernels of exagrype::euler take it as ccz4Fields.
+
+        """
+        return self._ccz4_fields_set().argument_name
 
     @property
     def gamma(self) -> float:
@@ -177,13 +200,12 @@ class Euler(exahype2.api.Solver):
         Hook for subclasses, which can scale or modify the flux, e.g. by the
         lapse of a spacetime they hold as auxiliary variables. The code has
         the variables Q, x, normal and F at hand, plus one pointer per set of
-        auxiliary variables, and auxiliary (array of all pointers) and
-        numberOfAuxiliarySets (see _auxiliary_arguments()). The default
+        auxiliary variables (the CCZ4 fields: _ccz4_fields()). The default
         calls exagrype::euler::flux().
 
         """
-        return self._auxiliary_arguments() + """
-  ::exagrype::euler::flux( Q, auxiliary, numberOfAuxiliarySets, normal, Gamma, F );
+        return f"""
+  ::exagrype::euler::flux( Q, {self._ccz4_fields()}, normal, Gamma, F );
 """
 
     def _source_implementation(self) -> str:
@@ -196,11 +218,11 @@ class Euler(exahype2.api.Solver):
         exagrype::euler::source(), which yields zero.
 
         """
-        return self._auxiliary_arguments() + """
-  ::exagrype::euler::source( Q, auxiliary, numberOfAuxiliarySets, Gamma, S );
+        return f"""
+  ::exagrype::euler::source( Q, {self._ccz4_fields()}, Gamma, S );
 """
 
     def _max_eigenvalue_implementation(self) -> str:
-        return self._auxiliary_arguments() + """
-  *lambdaMax = ::exagrype::euler::maxEigenvalue( Q, auxiliary, numberOfAuxiliarySets, normal, Gamma );
+        return f"""
+  *lambdaMax = ::exagrype::euler::maxEigenvalue( Q, {self._ccz4_fields()}, normal, Gamma );
 """

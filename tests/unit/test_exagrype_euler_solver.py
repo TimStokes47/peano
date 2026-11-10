@@ -31,18 +31,27 @@ def test_hooks_extend_the_solver():
     assert "volumetricSource" in names
 
 
-def test_flux_source_and_eigenvalue_see_all_auxiliary_variables():
+def test_flux_source_and_eigenvalue_see_the_ccz4_fields():
     solver = exagrype.api.euler.Euler("Euler")
-    sets = [
-        exahype2.api.AuxiliaryVariables("Spacetime", {"lapse": 1}),
-        exahype2.api.AuxiliaryVariables("Matter", {"m": 2}),
-    ]
-    for auxiliary in sets:
-        solver.add_auxiliary_variables(auxiliary)
+    solver.add_auxiliary_variables(
+        exahype2.api.AuxiliaryVariables("Spacetime", {"lapse": 1})
+    )
+    ccz4_fields = exahype2.api.AuxiliaryVariables(
+        "CCZ4Fields", dict(exagrype.api.FOCCZ4Solver.Unknowns)
+    )
+    solver.add_auxiliary_variables(ccz4_fields)
     terms = {term.name: term.implementation for term in solver.pde_terms}
     for name in ["flux", "volumetricSource", "maxEigenvalue"]:
-        assert "{ spacetime, matter }" in terms[name]
-        assert "numberOfAuxiliarySets = 2" in terms[name]
+        assert f"{ccz4_fields.argument_name}," in terms[name]
+        assert "spacetime" not in terms[name]
+
+
+def test_two_sets_with_the_ccz4_size_are_ambiguous():
+    solver = exagrype.api.euler.Euler("Euler")
+    unknowns = dict(exagrype.api.FOCCZ4Solver.Unknowns)
+    solver.add_auxiliary_variables(exahype2.api.AuxiliaryVariables("One", unknowns))
+    with pytest.raises(ValueError):
+        solver.add_auxiliary_variables(exahype2.api.AuxiliaryVariables("Two", unknowns))
 
 
 def test_solver_without_the_ccz4_fields_cannot_be_generated():

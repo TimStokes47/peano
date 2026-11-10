@@ -31,13 +31,10 @@ namespace exagrype {
      * afterwards, e.g. scale it by the lapse of a spacetime.
      *
      * @param Q The five conserved quantities.
-     * @param auxiliary One pointer per set of auxiliary variables of the solver,
-     *   in the order in which the sets were attached to it. Each pointer
-     *   points to the entries of the set in this volume. The Euler equations
-     *   do not use them yet; the argument is the hook through which
-     *   couplings (a spacetime, e.g.) enter the term. Array of at least one
-     *   element, as C++ has no empty arrays.
-     * @param numberOfAuxiliarySets Number of valid entries in auxiliary.
+     * @param ccz4Fields The 59 entries of first-order CCZ4 in this volume
+     *   (exagrype.api.FOCCZ4Solver.Unknowns), i.e. the auxiliary variables
+     *   through which the spacetime enters. The Euler equations do not use
+     *   them yet; the argument is the hook through which the coupling does.
      * @param normal Axis along which the flux is evaluated (0, 1 or 2).
      * @param gamma Adiabatic index.
      * @param F Flux, five entries.
@@ -47,8 +44,7 @@ namespace exagrype {
     #endif
     void flux(
       const double* const        Q,
-      const double* const* const auxiliary,
-      const int                  numberOfAuxiliarySets,
+      const double* const        ccz4Fields,
       const int                  normal,
       const double               gamma,
       double* const              F
@@ -61,13 +57,10 @@ namespace exagrype {
      * of sound.
      *
      * @param Q The five conserved quantities.
-     * @param auxiliary One pointer per set of auxiliary variables of the solver,
-     *   in the order in which the sets were attached to it. Each pointer
-     *   points to the entries of the set in this volume. The Euler equations
-     *   do not use them yet; the argument is the hook through which
-     *   couplings (a spacetime, e.g.) enter the term. Array of at least one
-     *   element, as C++ has no empty arrays.
-     * @param numberOfAuxiliarySets Number of valid entries in auxiliary.
+     * @param ccz4Fields The 59 entries of first-order CCZ4 in this volume
+     *   (exagrype.api.FOCCZ4Solver.Unknowns), i.e. the auxiliary variables
+     *   through which the spacetime enters. The Euler equations do not use
+     *   them yet; the argument is the hook through which the coupling does.
      * @param normal Axis along which the eigenvalue is evaluated (0, 1 or 2).
      * @param gamma Adiabatic index.
      * @return Maximum eigenvalue.
@@ -77,8 +70,7 @@ namespace exagrype {
     #endif
     double maxEigenvalue(
       const double* const        Q,
-      const double* const* const auxiliary,
-      const int                  numberOfAuxiliarySets,
+      const double* const        ccz4Fields,
       const int                  normal,
       const double               gamma
     );
@@ -91,13 +83,10 @@ namespace exagrype {
      * changing the interface.
      *
      * @param Q The five conserved quantities.
-     * @param auxiliary One pointer per set of auxiliary variables of the solver,
-     *   in the order in which the sets were attached to it. Each pointer
-     *   points to the entries of the set in this volume. The Euler equations
-     *   do not use them yet; the argument is the hook through which
-     *   couplings (a spacetime, e.g.) enter the term. Array of at least one
-     *   element, as C++ has no empty arrays.
-     * @param numberOfAuxiliarySets Number of valid entries in auxiliary.
+     * @param ccz4Fields The 59 entries of first-order CCZ4 in this volume
+     *   (exagrype.api.FOCCZ4Solver.Unknowns), i.e. the auxiliary variables
+     *   through which the spacetime enters. The Euler equations do not use
+     *   them yet; the argument is the hook through which the coupling does.
      * @param gamma Adiabatic index.
      * @param S Source, five entries (output).
      */
@@ -106,8 +95,7 @@ namespace exagrype {
     #endif
     void source(
       const double* const        Q,
-      const double* const* const auxiliary,
-      const int                  numberOfAuxiliarySets,
+      const double* const        ccz4Fields,
       const double               gamma,
       double* const              S
     );
