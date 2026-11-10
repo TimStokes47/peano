@@ -1,14 +1,103 @@
 # This file is part of the ExaHyPE2 project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
-"""!
+r"""!
 
-@page benchmarks_exahype2_euler_point_source Euler equations with a point source and dynamic AMR
+@page benchmarks_exahype2_euler_point_source Point source (Euler equations)
 
-Generates and builds the point source benchmark
-(@ref benchmarks_exahype2_euler_point_source). A gas at rest is heated by an
-energy source at the origin. The source is a narrow Gaussian injected through
-the volumetric source term. We have multiple levels of AMR which follow the 
-point source.
+\tableofcontents
+
+A gas at rest (density one, pressure one) over the unit square is heated by an energy
+source at the origin. The source is a narrow Gaussian that is injected through the
+volumetric source term (exahype2.api.VolumetricSource), as no numerical scheme
+evaluates exahype2.api.PointSource yet. A blast wave runs out of the origin. There is no
+exact solution, so the benchmark is a test of the mesh handling and of the AMR, not of the
+accuracy of the scheme.
+
+## Mesh and memory
+
+Unless --volume-size is given, the script picks the finest regular start grid that fits
+into the available main memory (--memory-fraction of MemAvailable). A regular grid has
+p*3^k volumes per axis (p volumes per patch, 3^k patches). As p is free between 6 and 32,
+the script fills the memory much more closely than 3^d steps in k would allow. The
+footprint of the Finite Volume scheme without AMR was measured as follows (2d, release
+build, peak resident set size):
+
+| volumes   | resident set size | per volume |
+|-----------|-------------------|------------|
+| 59 049    | 22 MB             |  375 B     |
+| 531 441   | 102 MB            |  191 B     |
+| 4 782 969 | 683 MB            |  143 B     |
+
+The offset of about 12 MB dominates for small meshes; the slope is 140 B per volume. The
+script assumes 160 B in 2d. For 3d, no measurement is available yet, and the script assumes
+240 B.
+
+## AMR
+
+--amr-levels l:
+
+- l=0: the whole simulation runs on the regular start grid, i.e. the smallest mesh size is
+  --volume-size everywhere.
+- l>0: the simulation starts from the very same regular grid, but the gradient-based
+  refinement criterion (exahype2.api.GradientRefinement) is on throughout. As the start grid
+  is the finest permitted grid, the mesh first coarsens wherever the solution is smooth
+  and refines around the blast wave afterwards. Cells may become l levels (factor 3 each)
+  coarser than the start grid. The criterion looks at the one-sided gradients of density
+  plus energy: it asks for a refinement above --refine-threshold, and for an erase below
+  --erase-threshold.
+
+Result of the runs below (2d, one 8-core workstation, --volume-size 0.001373 --patch-size 9
+--end-time 0.1, i.e. 729^2 volumes, 6561 mesh cells of 9x9 volumes, 343 time steps).
+
+### Volumes coarsened and refined over time
+
+A patch hosts 9x9=81 volumes; the table counts volumes of the leaf cells of the mesh.
+"Coarsened" is the number of volumes that the mesh loses in the interval, "refined" the
+number that it gains. The mesh changes in a few mesh adaptation phases only.
+
+| time interval | l=1 cells | l=1 coarsened | l=1 refined | l=2 cells | l=2 coarsened | l=2 refined |
+|---------------|-----------|---------------|-------------|-----------|---------------|-------------|
+| (0, 0.01]     | 6561 -> 1937 | 374 544    | 0           | 6561 -> 1905 | 377 136    | 0           |
+| (0.01, 0.02]  | 1937 -> 2385 | 0          | 36 288      | 1905 -> 2353 | 0          | 36 288      |
+| (0.02, 0.06]  | 2385 -> 2385 | 0          | 0           | 2353 -> 2353 | 0          | 0           |
+| (0.06, 0.08]  | 2385 -> 2801 | 0          | 33 696      | 2353 -> 2801 | 0          | 36 288      |
+| (0.08, 0.10]  | 2801 -> 2801 | 0          | 0           | 2801 -> 2801 | 0          | 0           |
+
+l=0 keeps 6561 cells (531 441 volumes) throughout. l=1 ends with 43% of the cells. The
+mesh sizes 0.0123 (start grid) and 0.037 (one level coarser) occur; l=2 allows 0.111 as
+well, but only four such cells exist at t=0.02, and none later. The second level of
+coarsening is hence not exploited yet, and l=2 yields the same final mesh and solution as l=1.
+
+### Quality
+
+Difference of the final solution (t=0.1) between the AMR runs and l=0, evaluated on the
+start grid (a coarse patch is injected piecewise constant into the fine volumes):
+
+| quantity | range of the l=0 solution | maximum difference | root mean square difference |
+|----------|---------------------------|--------------------|-----------------------------|
+| density  | 0.162 .. 1.114            | 1.4e-3             | 2.6e-5                      |
+| energy   | 2.500 .. 2.920            | 5.0e-3             | 9.2e-5                      |
+
+AMR hence changes the density by at most 0.15% and the energy by at most 1.2% of their ranges with 43% of the cells. amr-study.py runs this comparison (tolerance 2%) and checks that the mesh has coarsened.
+
+## Run
+
+Configure and build Peano with --enable-exahype --enable-blockstructured
+--enable-loadbalancing, set PYTHONPATH to the repository's src directory, and put the Intel
+compiler on the path. Then
+
+~~~~~~~~~~~~~~~~~~~~~~~
+python3 point-source.py --amr-levels 1 --verbosity text
+~~~~~~~~~~~~~~~~~~~~~~~
+
+generates, builds and compiles the code in the current directory; run ./point-source
+afterwards. The plots are written as Peano patch files. The default end time is short
+(0.01), as the memory-filling mesh takes minutes per time step.
+
+The script uses peano4.api.taskgraph.compiler.FuseSteps rather than the producer-consumer
+task compiler: On meshes of this size, the latter deadlocks in
+tarch::multicore::waitForTasks(), which waits for tasks while it holds the read lock of
+the dependency tracking.
 
 """
 import argparse
@@ -73,7 +162,7 @@ parser.add_argument(
     "plus energy falls below this value (default: 0.2)",
 )
 parser.add_argument(
-    "--end-time", type=float, default=0.2, help="Simulated time (default: 0.2)"
+    "--end-time", type=float, default=0.01, help="Simulated time (default: 0.01)"
 )
 parser.add_argument(
     "--plots", type=int, default=20, help="Number of snapshots (default: 20)"
@@ -122,10 +211,11 @@ args = parser.parse_args()
 
 ## Estimated memory footprint of one volume in bytes (per dimension count).
 #
-# Patch data with halo, the time step's copies, the face data, and the
-# bookkeeping of the spacetree. This is an estimate which is refined by
-# measurement (see the script header).
-BYTES_PER_VOLUME = {2: 600.0, 3: 900.0}
+# Measured peak resident set size of the 2d run without AMR: 22 MB for 59k
+# volumes, 102 MB for 0.53M volumes, 683 MB for 4.8M volumes, i.e. about
+# 140 bytes per volume (patch data with halo, face data, tree), plus a margin.
+# The 3d value is an estimate (five instead of four unknowns, larger halos).
+BYTES_PER_VOLUME = {2: 160.0, 3: 240.0}
 
 
 def available_memory_in_bytes() -> float:
@@ -190,7 +280,9 @@ project = exahype2.api.Project(
     executable="point-source",
 )
 
-solver = exahype2.api.Solver("EulerPointSource", {"rho": 1, "j": args.dimensions, "E": 1})
+solver = exahype2.api.Solver(
+    "EulerPointSource", {"rho": 1, "j": args.dimensions, "E": 1}
+)
 solver.add_user_solver_includes(
     """
 #include <algorithm>
@@ -258,7 +350,9 @@ AMBIENT_STATE = """
       Q[Dimensions+1] = 1.0 / (gamma - 1.0);
 """
 solver.add_pde_term(exahype2.api.InitPointWisely(implementation=AMBIENT_STATE))
-solver.add_pde_term(exahype2.api.DirichletBoundaryConditions(implementation=AMBIENT_STATE))
+solver.add_pde_term(
+    exahype2.api.DirichletBoundaryConditions(implementation=AMBIENT_STATE)
+)
 
 # With AMR, the simulation starts from the finest regular grid, and the
 # gradient criterion is always on. It may only coarsen: the start grid
@@ -312,9 +406,10 @@ project.set_load_balancing(
     "toolbox::loadbalancing::strategies::SpreadOutOnceGridStagnates",
     "new ::exahype2::LoadBalancingConfiguration()",
 )
-project.compiler = (
-    peano4.api.taskgraph.compiler.CellTaskProducerConsumer.translate_with_fusion
-)
+# No spawned background tasks: On meshes that fill the main memory, the
+# producer-consumer compiler deadlocks in tarch::multicore::waitForTasks(),
+# which waits for tasks while holding the read lock of the dependency tracking.
+project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
 
 project.set_Peano4_installation(
     args.peano_root,
