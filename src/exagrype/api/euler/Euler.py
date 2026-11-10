@@ -2,8 +2,6 @@
  use, please see the copyright notice at www.peano-framework.org
 """
 
-from typing import Dict, Union
-
 import exahype2.api
 
 
@@ -21,8 +19,10 @@ class Euler(exahype2.api.Solver):
       \\qquad p = (\\gamma-1) \\left(E - \\frac{|j|^2}{2\\rho}\\right),
     @f$
 
-    in three dimensions. It has a flux, a maximum eigenvalue and an initial
-    condition, all of them stateless, and no source term. By default, the
+    in three dimensions. It has a flux, a maximum eigenvalue, a source term and an initial
+    condition, all of them stateless. The source term is zero.
+    Flux, source and eigenvalue see all auxiliary variables of the solver,
+    even though they ignore them at the moment. By default, the
     initial condition is a density wave which the fluid advects with
     constant velocity (smooth_wave()).
 
@@ -74,6 +74,7 @@ class Euler(exahype2.api.Solver):
         super().__init__(name, unknowns=self.Unknowns)
         self._gamma = gamma
 
+        self.add_user_solver_includes('#include "exagrype/euler/EulerKernels.h"\n')
         self.add_abstract_solver_attribute(
             'static_assert(Dimensions == 3, "The Euler solver of ExaGRyPE is three-dimensional only");'
         )
@@ -81,24 +82,56 @@ class Euler(exahype2.api.Solver):
             f"static constexpr double Gamma = {gamma!r};"
         )
 
-        self.add_pde_term(
-            exahype2.api.Flux(
-                implementation=self._flux_implementation(), stateless=True
-            )
+        self._flux = exahype2.api.Flux(implementation="", stateless=True)
+        self._source = exahype2.api.VolumetricSource(implementation="", stateless=True)
+        self._max_eigenvalue = exahype2.api.MaxEigenvalue(
+            implementation="", stateless=True
         )
-        source = self._source_implementation()
-        if source is not None:
-            self.add_pde_term(
-                exahype2.api.VolumetricSource(implementation=source, stateless=True)
-            )
-        self.add_pde_term(
-            exahype2.api.MaxEigenvalue(
-                implementation=self._max_eigenvalue_implementation(), stateless=True
-            )
-        )
+        self._refresh_pde_terms()
+        self.add_pde_term(self._flux)
+        self.add_pde_term(self._source)
+        self.add_pde_term(self._max_eigenvalue)
         self.add_pde_term(
             initial_condition if initial_condition is not None else self.smooth_wave()
         )
+
+    def add_auxiliary_variables(self, auxiliary: exahype2.api.AuxiliaryVariables):
+        """!
+
+        Attach a set of auxiliary variables and hand it to flux, source and eigenvalue
+
+        The sets are not known when the constructor creates the PDE terms, so
+        the terms are rebuilt from the hooks whenever a set arrives.
+
+        @param auxiliary: exahype2.api.AuxiliaryVariables
+          The set, @ref exahype2.api.Solver.add_auxiliary_variables().
+
+        """
+        super().add_auxiliary_variables(auxiliary)
+        self._refresh_pde_terms()
+
+    def _refresh_pde_terms(self):
+        """! Rebuild the implementations of flux, source and eigenvalue from the hooks """
+        self._flux.implementation = self._flux_implementation()
+        self._source.implementation = self._source_implementation()
+        self._max_eigenvalue.implementation = self._max_eigenvalue_implementation()
+
+    def _auxiliary_arguments(self) -> str:
+        """!
+
+        C++ which declares the array of pointers to all auxiliary variables
+
+        The code declares the array auxiliary and the constant
+        numberOfAuxiliarySets in the scope of a PDE term. The kernels of
+        exagrype::euler take both. The array has one element if the solver has
+        no auxiliary variables, as C++ has no empty arrays.
+
+        """
+        sets = self.auxiliary_variables
+        pointers = ", ".join(a.argument_name for a in sets) if sets else "nullptr"
+        return f"""
+  const double* const auxiliary[] = {{ {pointers} }};
+  const int numberOfAuxiliarySets = {len(sets)};"""
 
     @property
     def gamma(self) -> float:
@@ -133,15 +166,9 @@ class Euler(exahype2.api.Solver):
         """
         if abs(amplitude) >= 1.0:
             raise ValueError("amplitude has to be smaller than one in modulus")
-# @todo These snippets should go into a C++ file called Kernels.h/Kernels.cpp but in a subdirectory euler parallel to ccz4        
         return exahype2.api.InitPointWisely(
             implementation=f"""
-  const double rho = 1.0 + {amplitude!r} * std::sin( 2.0 * M_PI * x(0) );
-  Q[0] = rho;
-  Q[1] = rho * {velocity!r};
-  Q[2] = 0.0;
-  Q[3] = 0.0;
-  Q[4] = {pressure!r} / (Gamma - 1.0) + 0.5 * rho * {velocity!r} * {velocity!r};
+  ::exagrype::euler::smoothWave( x(0), {amplitude!r}, {velocity!r}, {pressure!r}, Gamma, Q );
 """,
         )
 
@@ -152,38 +179,31 @@ class Euler(exahype2.api.Solver):
 
         Hook for subclasses, which can scale or modify the flux, e.g. by the
         lapse of a spacetime they hold as auxiliary variables. The code has
-        the variables Q, x, normal and F at hand, as well as the pressure.
+        the variables Q, x, normal and F at hand, plus one pointer per set of
+        auxiliary variables, and auxiliary (array of all pointers) and
+        numberOfAuxiliarySets (see _auxiliary_arguments()). The default
+        calls exagrype::euler::flux().
 
         """
-# @todo These snippets should go into a C++ file called Kernels.h/Kernels.cpp but in a subdirectory euler parallel to ccz4. This is a general idea that should be documented like this in the guidelines
-        return """
-  const double invRho = 1.0 / Q[0];
-  const double u      = Q[1 + normal] * invRho;
-  const double p      = (Gamma - 1.0) * (Q[4] - 0.5 * invRho * (Q[1]*Q[1] + Q[2]*Q[2] + Q[3]*Q[3]));
-
-  F[0] = Q[1 + normal];
-  F[1] = Q[1] * u;
-  F[2] = Q[2] * u;
-  F[3] = Q[3] * u;
-  F[1 + normal] += p;
-  F[4] = (Q[4] + p) * u;
+        return self._auxiliary_arguments() + """
+  ::exagrype::euler::flux( Q, auxiliary, numberOfAuxiliarySets, normal, Gamma, F );
 """
 
-    def _source_implementation(self) -> Union[str, None]:
+    def _source_implementation(self) -> str:
         """!
 
-        C++ of the volumetric source or None if the system has none
+        C++ of the volumetric source
 
-        Hook for subclasses.
+        Hook for subclasses. The code has Q, x, t and S at hand, plus the
+        arguments of _flux_implementation(). The default calls
+        exagrype::euler::source(), which yields zero.
 
         """
-        return None
+        return self._auxiliary_arguments() + """
+  ::exagrype::euler::source( Q, auxiliary, numberOfAuxiliarySets, Gamma, S );
+"""
 
     def _max_eigenvalue_implementation(self) -> str:
-# @todo These snippets should go into a C++ file called Kernels.h/Kernels.cpp but in a subdirectory euler parallel to ccz4. This is a general idea that should be documented like this in the guidelines
-        return """
-  const double invRho = 1.0 / Q[0];
-  const double p      = (Gamma - 1.0) * (Q[4] - 0.5 * invRho * (Q[1]*Q[1] + Q[2]*Q[2] + Q[3]*Q[3]));
-  const double c      = std::sqrt( Gamma * p * invRho );
-  *lambdaMax          = std::abs( Q[1 + normal] * invRho ) + c;
+        return self._auxiliary_arguments() + """
+  *lambdaMax = ::exagrype::euler::maxEigenvalue( Q, auxiliary, numberOfAuxiliarySets, normal, Gamma );
 """

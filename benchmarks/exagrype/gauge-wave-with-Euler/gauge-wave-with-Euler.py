@@ -10,7 +10,7 @@ discretised with fourth-order Finite Differences and classic Runge-Kutta 4
 (exahype2.api.rkfd4).
 
 Next to CCZ4, the compound hosts a compressible Euler solver
-(exagrype.api.Euler), discretised with Finite Volumes and explicit Euler time
+(exagrype.api.euler.Euler), discretised with Finite Volumes and explicit Euler time
 stepping (exahype2.api.fv.RusanovWithExplicitEuler). Both solvers are configured
 right here, and both run on the same mesh with periodic boundary
 conditions. They are hosted by exagrype.api.CCZ4WithEuler_AdditiveCoupling,

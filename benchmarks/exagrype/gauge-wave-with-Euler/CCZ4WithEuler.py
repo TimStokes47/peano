@@ -3,7 +3,7 @@
 Assembly of the CCZ4 solver and the Euler solver into one coupled system
 
 All ingredients live in exagrype.api (exagrype.api.FOCCZ4Solver and
-exagrype.api.Euler). This file assembles them in a host
+exagrype.api.euler.Euler). This file assembles them in a host
 (@ref exahype2.api.SolverHost): Each solver builds a task graph of its own and
 reports it, and the host concatenates the graphs, inserts the KickOff and WrapUp
 tasks, and reports the outcome. The coupling is additive and
@@ -40,7 +40,7 @@ import peano4.api.solversteps
 import toolbox.blockstructured.api
 
 
-class EulerOnSpacetime(exagrype.api.Euler):
+class EulerOnSpacetime(exagrype.api.euler.Euler):
     """!
 
     Euler solver on a spacetime which is given by a snapshot of the lapse
@@ -65,7 +65,7 @@ class EulerOnSpacetime(exagrype.api.Euler):
         """
         # Before the superclass, as its hooks refer to the set
         self.spacetime = exahype2.api.AuxiliaryVariables("Spacetime", {"lapse": 1})
-        wave = exagrype.api.Euler.smooth_wave()
+        wave = exagrype.api.euler.Euler.smooth_wave()
         super().__init__(
             name,
             gamma=gamma,

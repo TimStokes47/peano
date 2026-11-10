@@ -7,7 +7,7 @@ import peano4.api
 import peano4.api.taskgraph
 import toolbox.blockstructured.api
 
-from .Euler import Euler
+from .euler import Euler
 from .FOCCZ4Solver import FOCCZ4Solver
 from .actionsets import CopyPatchWithLinearInterpolation, SynchroniseTimeStepSizes
 
@@ -18,7 +18,7 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
     First-order CCZ4 and an Euler fluid, coupled only at the begin and the end of each time step
 
     The class hosts one exagrype.api.FOCCZ4Solver (ccz4) and one
-    exagrype.api.Euler (euler). Add the host, not its solvers, to the project.
+    exagrype.api.euler.Euler (euler). Add the host, not its solvers, to the project.
     The coupling is additive and affects the begin and the end of a time step
     only. In between, the solvers are independent, i.e. each solver brings its
     own numerical scheme and the schemes can differ in their time stepping, patch
