@@ -69,19 +69,22 @@ def test_one_reconstruction_per_stage_and_chain_of_stages(tmp_path):
         "Probe_Compute time step size",
         f"Probe_{exahype2.api.Solver.NumericalScheme.DYNAMIC_MESH_REFINEMENT_TASK_NAME}",
     }
-    # The maximum eigenvalue of the new solution is determined in parallel to its
-    # projection: both follow the linear combination, neither waits for the other
-    assert (
-        tasks["Probe_Complete time step"]
-        in tasks["Probe_Compute max eigenvalue"].dependencies
-    )
+    # The maximum eigenvalue of the new solution is determined right after the
+    # projection, i.e. in parallel to the roll over. If it ran in parallel to the
+    # projection, its producer-consumer split would push the roll over into the
+    # next mesh sweep, away from the temporary face data of the projection
+    # (adrs/0002-eigenvalue-follows-projection.md)
     assert (
         tasks["Probe_Complete time step"]
         in tasks["Probe_Project solution onto faces"].dependencies
     )
     assert (
+        tasks["Probe_Project solution onto faces"]
+        in tasks["Probe_Compute max eigenvalue"].dependencies
+    )
+    assert (
         tasks["Probe_Compute max eigenvalue"]
-        not in tasks["Probe_Project solution onto faces"].dependencies
+        not in tasks["Probe_Roll over solution faces"].dependencies
     )
     # The eigenvalue is stored per cell, a task of its own reduces it, and the
     # time step size is computed from the outcome
