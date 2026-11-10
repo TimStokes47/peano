@@ -112,30 +112,5 @@ namespace exagrype {
       double* const              S
     );
 
-    /**
-     * Density wave on constant pressure
-     *
-     * The density is 1 + amplitude * sin(2 pi x) and the fluid moves along
-     * the x-axis with constant velocity. Pressure and velocity are constant,
-     * i.e. the wave is an exact solution of the Euler equations which is
-     * advected. Writes the first five entries of Q only; entries behind them
-     * (auxiliary variables) are left untouched.
-     *
-     * @param x0 The x-coordinate of the point.
-     * @param amplitude Amplitude of the density wave, smaller than one in modulus.
-     * @param velocity Speed along the x-axis.
-     * @param pressure Constant pressure.
-     * @param gamma Adiabatic index.
-     * @param Q Five conserved quantities (output).
-     */
-    void smoothWave(
-      const double x0,
-      const double amplitude,
-      const double velocity,
-      const double pressure,
-      const double gamma,
-      double* const Q
-    );
-
   } // namespace euler
 } // namespace exagrype

@@ -51,19 +51,3 @@ void exagrype::euler::source(
     S[i] = 0.0;
   }
 }
-
-void exagrype::euler::smoothWave(
-  const double x0,
-  const double amplitude,
-  const double velocity,
-  const double pressure,
-  const double gamma,
-  double* const Q
-) {
-  const double rho = 1.0 + amplitude * std::sin(2.0 * M_PI * x0);
-  Q[0]             = rho;
-  Q[1]             = rho * velocity;
-  Q[2]             = 0.0;
-  Q[3]             = 0.0;
-  Q[4]             = pressure / (gamma - 1.0) + 0.5 * rho * velocity * velocity;
-}

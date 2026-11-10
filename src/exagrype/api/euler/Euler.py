@@ -5,6 +5,7 @@
 import exahype2.api
 
 from ..FOCCZ4Solver import FOCCZ4Solver
+from . import initialvalues
 
 
 class Euler(exahype2.api.Solver):
@@ -29,7 +30,7 @@ class Euler(exahype2.api.Solver):
     which the user attaches (add_auxiliary_variables()); generating the
     solver without it fails. By default, the
     initial condition is a density wave which the fluid advects with
-    constant velocity (smooth_wave()).
+    constant velocity (initialvalues.smooth_wave()).
 
     The solver is deliberately plain. Its purpose within ExaGRyPE is to be
     the matter ingredient which one couples to exagrype.api.FOCCZ4Solver. The
@@ -71,7 +72,7 @@ class Euler(exahype2.api.Solver):
           Adiabatic index of the ideal gas. Has to be greater than one.
 
         @param initial_condition: exahype2.api.InitPointWisely
-          Initial condition. Defaults to smooth_wave().
+          Initial condition. Defaults to exagrype.api.euler.initialvalues.smooth_wave().
 
         """
         if gamma <= 1.0:
@@ -79,7 +80,10 @@ class Euler(exahype2.api.Solver):
         super().__init__(name, unknowns=self.Unknowns)
         self._gamma = gamma
 
-        self.add_user_solver_includes('#include "exagrype/euler/EulerKernels.h"\n')
+        self.add_user_solver_includes(
+            '#include "exagrype/euler/EulerKernels.h"\n'
+            '#include "exagrype/euler/initialvalues/InitialValues.h"\n'
+        )
         self.add_abstract_solver_attribute(
             'static_assert(Dimensions == 3, "The Euler solver of ExaGRyPE is three-dimensional only");'
         )
@@ -96,7 +100,7 @@ class Euler(exahype2.api.Solver):
         self.add_pde_term(self._source)
         self.add_pde_term(self._max_eigenvalue)
         self.add_pde_term(
-            initial_condition if initial_condition is not None else self.smooth_wave()
+            initial_condition if initial_condition is not None else initialvalues.smooth_wave()
         )
 
     def add_auxiliary_variables(self, auxiliary: exahype2.api.AuxiliaryVariables):
@@ -164,40 +168,6 @@ class Euler(exahype2.api.Solver):
     def gamma(self) -> float:
         """! Adiabatic index of the gas"""
         return self._gamma
-
-    @staticmethod
-    def smooth_wave(
-        amplitude: float = 0.2, velocity: float = 1.0, pressure: float = 1.0
-    ) -> exahype2.api.InitPointWisely:
-        """!
-
-        Density wave on constant pressure
-
-        The density is 1 + amplitude * sin(2 pi x) and the fluid moves along
-        the x-axis with constant velocity. Pressure and velocity are
-        constant, i.e. this is an exact solution of the Euler equations
-        which merely advects the wave. Any additional entries behind the
-        five unknowns, i.e. auxiliary variables which the solver owns, are
-        not touched.
-
-        @param amplitude: float
-          Amplitude of the density wave. Has to be smaller than one to keep
-          the density positive.
-
-        @param velocity: float
-          Speed along the x-axis.
-
-        @param pressure: float
-          Constant pressure.
-
-        """
-        if abs(amplitude) >= 1.0:
-            raise ValueError("amplitude has to be smaller than one in modulus")
-        return exahype2.api.InitPointWisely(
-            implementation=f"""
-  ::exagrype::euler::smoothWave( x(0), {amplitude!r}, {velocity!r}, {pressure!r}, Gamma, Q );
-""",
-        )
 
     def _flux_implementation(self) -> str:
         """!
