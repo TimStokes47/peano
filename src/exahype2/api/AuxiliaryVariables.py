@@ -72,7 +72,15 @@ class AuxiliaryVariables:
 
     """
 
-    def __init__(self, name: str, variables: Dict[str, int]):
+    def __init__(
+        self,
+        name: str,
+        variables: Dict[str, int],
+        on_faces: bool = True,
+        can_change: bool = False,
+        data_name: str = None,
+        to_be_interpolated: bool = True,
+    ):
         """!
 
         @param name: str
@@ -85,6 +93,36 @@ class AuxiliaryVariables:
         @param variables: dict
           Maps the name of each parameter onto its multiplicity.
 
+        @param on_faces: bool
+          Whether the values also sit on the faces, i.e. whether the faces
+          hold an overlap of the set. Reconstructing the halo of a cell,
+          interpolating onto hanging faces, projecting and rolling over
+          all work on this face data. Defaults to True. The solver schemes
+          read the halos of auxiliary variables, so they reject sets
+          without face data for the time being.
+
+        @param can_change: bool
+          Whether some solver updates the values after the setup. Defaults to
+          False. The solver that updates the set (such as
+          exagrype.api.FOSOReconstructionSolver) projects the new values
+          onto the faces, and restricts them on hanging faces if and only if
+          can_change holds. Without it, the coarse face data of the set are
+          never overwritten by fine data.
+
+        @param data_name: str
+          Name of the generated data (patch and face overlaps). Defaults to
+          the name of the set plus "AuxiliaryVariables".
+
+        @param to_be_interpolated: bool
+          Whether the face data of the set is interpolated onto the hanging
+          faces before the halos are reconstructed. Defaults to True. The
+          halo of an unflagged set would hold data nobody knows, as the
+          hanging faces are not valid on adaptive meshes. The solver schemes
+          always read the halos, so they reject unflagged sets for the time
+          being. For a flagged set, the scheme inserts a task that interpolates
+          the faces and a task that reconstructs the halo, both in parallel to
+          the ones of the unknowns and the other sets
+          (add_reconstruction_tasks_of_auxiliary_variables()).
         """
         if not re.fullmatch(r"[A-Z][A-Za-z0-9_]*", name):
             raise ValueError(
@@ -107,6 +145,10 @@ class AuxiliaryVariables:
             offset += multiplicity
         self._size = offset
         self._owner = None
+        self._on_faces = on_faces
+        self._can_change = can_change
+        self._to_be_interpolated = to_be_interpolated
+        self._data_name = data_name if data_name is not None else name + "AuxiliaryVariables"
 
         # Created by create_data_structures()
         self.patch: peano4.api.datamodel.Patch = None
@@ -119,6 +161,26 @@ class AuxiliaryVariables:
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def on_faces(self) -> bool:
+        """! Whether the values also sit on the faces """
+        return self._on_faces
+
+    @property
+    def can_change(self) -> bool:
+        """! Whether some solver updates the values after the setup """
+        return self._can_change
+
+    @property
+    def to_be_interpolated(self) -> bool:
+        """! Whether the faces have to be interpolated onto hanging faces before the halos are reconstructed """
+        return self._to_be_interpolated
+
+    @property
+    def data_name(self) -> str:
+        """! Name of the generated data """
+        return self._data_name
 
     @property
     def size(self) -> int:
@@ -201,7 +263,7 @@ class AuxiliaryVariables:
             return
         self._patch_size = patch_size
         self._overlap = overlap
-        identifier = self._name + "AuxiliaryVariables"
+        identifier = self._data_name
         self.patch = peano4.api.datamodel.Patch(
             (patch_size, patch_size, patch_size), self._size, identifier
         )
@@ -326,12 +388,23 @@ def register_auxiliary_variables(solver, peano_project, patch_size: int, overlap
     """
     solver._auxiliary_variable_halos = {}
     for auxiliary in solver.auxiliary_variables:
+        if not auxiliary.on_faces:
+            raise NotImplementedError(
+                f"Solver {solver.name}: the auxiliary variables {auxiliary.name} are not on the faces. "
+                "The numerical schemes reconstruct the halos of auxiliary variables from the face data."
+            )
+        if not auxiliary.to_be_interpolated:
+            raise NotImplementedError(
+                f"Solver {solver.name}: the auxiliary variables {auxiliary.name} are not to be interpolated. "
+                "Their halo would hold unknown data on adaptive meshes, and the numerical schemes "
+                "always reconstruct the halos of auxiliary variables."
+            )
         auxiliary.create_data_structures(patch_size, overlap, solver.grid_selector)
         auxiliary.add_to_datamodel(peano_project)
         halo = peano4.api.datamodel.Patch(
             (patch_size + 2 * overlap, patch_size + 2 * overlap, patch_size + 2 * overlap),
             auxiliary.size,
-            auxiliary.name + "AuxiliaryVariablesWithHaloOf" + solver.name,
+            auxiliary.data_name + "WithHaloOf" + solver.name,
         )
         halo.grid_selector = solver.grid_selector
         halo.generator = peano4.api.datamodel.PatchToDoubleArrayWithSmartPointer(halo, "double")
@@ -339,18 +412,23 @@ def register_auxiliary_variables(solver, peano_project, patch_size: int, overlap
         solver._auxiliary_variable_halos[auxiliary.name] = halo
 
 
-def add_reconstruction_of_auxiliary_variables(task, solver):
+def add_reconstruction_of_auxiliary_variables(task, solver, auxiliaries=None):
     """!
 
     Make a reconstruction task of a solver fill the halos of the solver's
     auxiliary variables
 
     @param task: peano4.api.taskgraph.Task
-      The task which also reconstructs the unknowns.
+      The task which reconstructs the halos.
+
+    @param auxiliaries: List[AuxiliaryVariables]
+      The sets to reconstruct. Defaults to all sets of the solver.
 
     """
     Access = peano4.api.taskgraph.Task.DataAccess
-    for auxiliary in solver.auxiliary_variables:
+    if auxiliaries is None:
+        auxiliaries = solver.auxiliary_variables
+    for auxiliary in auxiliaries:
         halo = solver._auxiliary_variable_halos[auxiliary.name]
         task.use_cell(auxiliary.patch, Access.READ_AND_WRITE)
         task.use_cell(halo, Access.WRITE)
@@ -365,6 +443,65 @@ def add_reconstruction_of_auxiliary_variables(task, solver):
                 additional_includes=solver._get_default_includes() + solver.user_solver_includes,
             )
         )
+
+
+def add_reconstruction_tasks_of_auxiliary_variables(
+    solver, time_step, interpolation, predecessors=(), name_suffix=""
+):
+    """!
+
+    Add the tasks that interpolate and reconstruct the auxiliary variables
+
+    Each set of auxiliary variables gets a task of its own that interpolates
+    its coarse face data onto the hanging faces and reconstructs its halo
+    (register_auxiliary_variables() rejects sets without to_be_interpolated).
+    Interpolation is no task of its own, see
+    src/exahype2/api/adrs/0001-interpolation-and-restriction-ride-along-with-face-users.md.
+    All tasks depend on the predecessors only, i.e. the reconstructions of all
+    sets (and of the unknowns, which the caller creates) run in parallel.
+
+    @param solver: exahype2.api.Solver
+      The solver whose sets are reconstructed.
+
+    @param time_step: peano4.api.taskgraph.Graph
+      Receives the tasks.
+
+    @param interpolation: toolbox.blockstructured.api.InterpolateHangingFaces.Scheme
+      Interpolation scheme.
+
+    @param predecessors: List[peano4.api.taskgraph.Task]
+      Tasks which the new tasks wait for.
+
+    @param name_suffix: str
+      Appended to the names of the tasks, e.g. " stage 1".
+
+    @return List[peano4.api.taskgraph.Task]
+      The reconstruction tasks, one per set. The update of the cells has to
+      wait for all of them.
+
+    """
+    Entity = peano4.api.taskgraph.Task.GridEntity
+    reconstructions = []
+    for auxiliary in solver.auxiliary_variables:
+        reconstruction = peano4.api.taskgraph.Task(
+            name=f"{solver.name}_Reconstruct auxiliary variables {auxiliary.name}{name_suffix}",
+            entity=Entity.CELL,
+        )
+        # The reconstruction interpolates the faces itself, before it acts on the cell
+        reconstruction.add_action_set(
+            toolbox.blockstructured.api.InterpolateHangingFaces(
+                auxiliary.patch_overlap_current_time_step,
+                scheme=interpolation,
+                additional_includes=solver._get_default_includes()
+                + solver.user_solver_includes,
+            )
+        )
+        add_reconstruction_of_auxiliary_variables(reconstruction, solver, [auxiliary])
+        for predecessor in predecessors:
+            reconstruction.add_dependency(predecessor)
+        time_step.add_task(reconstruction)
+        reconstructions.append(reconstruction)
+    return reconstructions
 
 
 def use_halos_of_auxiliary_variables(task, solver, access=None):

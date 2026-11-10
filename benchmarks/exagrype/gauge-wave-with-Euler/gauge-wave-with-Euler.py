@@ -79,7 +79,7 @@ coupled = CCZ4WithEuler()
 ## CCZ4 with lopsided advection of the gauge
 ccz4 = coupled.ccz4
 Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
-ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+coupled.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
     ccz4,
     patch_size,
     rk_order=4,
@@ -90,8 +90,9 @@ ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
 
 ## The Euler solver runs on the same mesh, with the same Runge-Kutta scheme
 euler = coupled.euler
-euler.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-    euler, patch_size, rk_order=4
+coupled.set_numerical_scheme(
+    euler,
+    exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(euler, patch_size, rk_order=4),
 )
 
 for solver in [ccz4, euler]:
@@ -101,7 +102,7 @@ for solver in [ccz4, euler]:
     solver.plotter = exahype2.api.rkfd4.PlotAsVTKFile(
         solver, first_plot_time_stamp=0.0, time_in_between_plots=time_in_between_plots
     )
-coupled.add_to_project(project)
+project.add_solver(coupled)
 
 project.compiler = peano4.api.taskgraph.compiler.FuseSteps.translate
 
