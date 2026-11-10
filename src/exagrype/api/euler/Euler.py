@@ -4,6 +4,8 @@
 
 import exahype2.api
 
+from ..FOCCZ4Solver import FOCCZ4Solver
+
 
 class Euler(exahype2.api.Solver):
     """!
@@ -22,7 +24,10 @@ class Euler(exahype2.api.Solver):
     in three dimensions. It has a flux, a maximum eigenvalue, a source term and an initial
     condition, all of them stateless. The source term is zero.
     Flux, source and eigenvalue see all auxiliary variables of the solver,
-    even though they ignore them at the moment. By default, the
+    even though they ignore them at the moment. The solver always holds a
+    set of auxiliary variables with the 59 entries of first-order CCZ4,
+    which the user attaches (add_auxiliary_variables()); generating the
+    solver without it fails. By default, the
     initial condition is a density wave which the fluid advects with
     constant velocity (smooth_wave()).
 
@@ -87,7 +92,6 @@ class Euler(exahype2.api.Solver):
         self._max_eigenvalue = exahype2.api.MaxEigenvalue(
             implementation="", stateless=True
         )
-        self._refresh_pde_terms()
         self.add_pde_term(self._flux)
         self.add_pde_term(self._source)
         self.add_pde_term(self._max_eigenvalue)
@@ -101,7 +105,8 @@ class Euler(exahype2.api.Solver):
         Attach a set of auxiliary variables and hand it to flux, source and eigenvalue
 
         The sets are not known when the constructor creates the PDE terms, so
-        the terms are rebuilt from the hooks whenever a set arrives.
+        the terms are (re)built from the hooks whenever a set arrives. They
+        stay empty until the first set has been attached.
 
         @param auxiliary: exahype2.api.AuxiliaryVariables
           The set, @ref exahype2.api.Solver.add_auxiliary_variables().
@@ -109,6 +114,28 @@ class Euler(exahype2.api.Solver):
         """
         super().add_auxiliary_variables(auxiliary)
         self._refresh_pde_terms()
+
+    def generate_solver_realisation(self, *args, **kwargs):
+        """!
+
+        Reject solvers that do not see the CCZ4 fields
+
+        The Euler solver is the matter part of a coupled system with
+        first-order CCZ4. Hence, it always holds a set of auxiliary variables
+        with as many entries as FOCCZ4Solver has unknowns. Flux, source and
+        eigenvalue rely on this and do not handle solvers without
+        auxiliary variables. The check runs at generation time, as the sets
+        are attached after the constructor.
+
+        """
+        size = sum(FOCCZ4Solver.Unknowns.values())
+        if not any(a.size == size for a in self.auxiliary_variables):
+            raise ValueError(
+                f"Solver {self.name}: the Euler solver needs a set of auxiliary variables "
+                f"with the {size} entries of first-order CCZ4, but has "
+                f"{[(a.name, a.size) for a in self.auxiliary_variables]}"
+            )
+        return super().generate_solver_realisation(*args, **kwargs)
 
     def _refresh_pde_terms(self):
         """! Rebuild the implementations of flux, source and eigenvalue from the hooks """
@@ -123,12 +150,12 @@ class Euler(exahype2.api.Solver):
 
         The code declares the array auxiliary and the constant
         numberOfAuxiliarySets in the scope of a PDE term. The kernels of
-        exagrype::euler take both. The array has one element if the solver has
-        no auxiliary variables, as C++ has no empty arrays.
+        exagrype::euler take both. The solver always has auxiliary variables
+        (see generate_solver_realisation()), i.e. the array is never empty.
 
         """
         sets = self.auxiliary_variables
-        pointers = ", ".join(a.argument_name for a in sets) if sets else "nullptr"
+        pointers = ", ".join(a.argument_name for a in sets)
         return f"""
   const double* const auxiliary[] = {{ {pointers} }};
   const int numberOfAuxiliarySets = {len(sets)};"""

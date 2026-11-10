@@ -43,3 +43,25 @@ def test_flux_source_and_eigenvalue_see_all_auxiliary_variables():
     for name in ["flux", "volumetricSource", "maxEigenvalue"]:
         assert "{ spacetime, matter }" in terms[name]
         assert "numberOfAuxiliarySets = 2" in terms[name]
+
+
+def test_solver_without_the_ccz4_fields_cannot_be_generated():
+    solver = exagrype.api.euler.Euler("Euler")
+    solver.add_auxiliary_variables(
+        exahype2.api.AuxiliaryVariables("Spacetime", {"lapse": 1})
+    )
+    with pytest.raises(ValueError):
+        solver.generate_solver_realisation(None, None, None, None, None, None)
+
+
+def test_solver_with_the_ccz4_fields_passes_the_check(monkeypatch):
+    monkeypatch.setattr(
+        exahype2.api.Solver, "generate_solver_realisation", lambda self, *a, **k: "ok"
+    )
+    solver = exagrype.api.euler.Euler("Euler")
+    solver.add_auxiliary_variables(
+        exahype2.api.AuxiliaryVariables(
+            "CCZ4Fields", dict(exagrype.api.FOCCZ4Solver.Unknowns)
+        )
+    )
+    assert solver.generate_solver_realisation(None, None, None, None, None, None) == "ok"
