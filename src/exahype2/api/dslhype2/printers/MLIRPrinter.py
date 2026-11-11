@@ -403,38 +403,67 @@ namespace {"::".join(function.namespace)} {{
             return load_op.result
 
         if len(subscript.indices) == 2 and subscript.get_address:
-            print(subscript.base)
             assert(isinstance(subscript.base, Array))
-            memref_ssa_value = subscript.base.print(self)
-            assert(isinstance(memref_ssa_value, SSAValue))
-            assert(isinstance(memref_ssa_value.type, builtin.MemRefType))
-            self.affine_symbol_map = {}
-            outer_index_map = self.generate_affine_expression(subscript.indices[0])
-            inner_index_map = self.generate_affine_expression(subscript.indices[1])
+            if subscript.base.flatten:
+                memref_ssa_value = subscript.base.print(self)
+                assert(isinstance(memref_ssa_value, SSAValue))
+                assert(isinstance(memref_ssa_value.type, builtin.MemRefType))
+                self.affine_symbol_map = {}
+                outer_index_map = self.generate_affine_expression(subscript.indices[0])
+                inner_index_map = self.generate_affine_expression(subscript.indices[1])
 
-            dim_values = [self.symbol_map[name] for name in self.affine_dimension_map.keys()]
-            symbol_values = [self.symbol_map[name] for name in self.affine_symbol_map.keys()]
-            
-            
-            outer_map = AffineMap(num_dims=len(self.affine_dimension_map), num_symbols=len(self.affine_symbol_map), results=(outer_index_map,))
-            inner_map = AffineMap(num_dims=len(self.affine_dimension_map), num_symbols=len(self.affine_symbol_map), results=(inner_index_map,))
-            outer_apply_op = affine.ApplyOp(map_operands=dim_values, affine_map=builtin.AffineMapAttr(outer_map))
-            inner_apply_op = affine.ApplyOp(map_operands=dim_values, affine_map=builtin.AffineMapAttr(inner_map))
-            #map = AffineMap(num_dims=len(self.affine_dimension_map), num_symbols=len(self.affine_symbol_map), results=(outer_index_map, inner_index_map))
-            #map_attr = builtin.AffineMapAttr(map)
-            #apply_op = affine.ApplyOp(map_operands=dim_values, affine_map=map_attr)
-            #outer_index_ssa_value, inner_index_ssa_value = apply_op.results
-            subview_op = memref.SubviewOp.get(
-                source = memref_ssa_value,
-                offsets=[outer_apply_op.result, inner_apply_op.result],
-                sizes=[],
-                strides=[],
-                result_type=memref_ssa_value.type
-            )
-            self.builders[-1].insert(outer_apply_op)
-            self.builders[-1].insert(inner_apply_op)
-            self.builders[-1].insert(subview_op)
-            return subview_op.result
+                dim_values = [self.symbol_map[name] for name in self.affine_dimension_map.keys()]
+                symbol_values = [self.symbol_map[name] for name in self.affine_symbol_map.keys()]
+                
+                
+                outer_map = AffineMap(num_dims=len(self.affine_dimension_map), num_symbols=len(self.affine_symbol_map), results=(outer_index_map,))
+                inner_map = AffineMap(num_dims=len(self.affine_dimension_map), num_symbols=len(self.affine_symbol_map), results=(inner_index_map,))
+                outer_apply_op = affine.ApplyOp(map_operands=dim_values, affine_map=builtin.AffineMapAttr(outer_map))
+                inner_apply_op = affine.ApplyOp(map_operands=dim_values, affine_map=builtin.AffineMapAttr(inner_map))
+                #map = AffineMap(num_dims=len(self.affine_dimension_map), num_symbols=len(self.affine_symbol_map), results=(outer_index_map, inner_index_map))
+                #map_attr = builtin.AffineMapAttr(map)
+                #apply_op = affine.ApplyOp(map_operands=dim_values, affine_map=map_attr)
+                #outer_index_ssa_value, inner_index_ssa_value = apply_op.results
+                subview_op = memref.SubviewOp.get(
+                    source = memref_ssa_value,
+                    offsets=[outer_apply_op.result, inner_apply_op.result],
+                    sizes=[],
+                    strides=[],
+                    result_type=memref_ssa_value.type
+                )
+                self.builders[-1].insert(outer_apply_op)
+                self.builders[-1].insert(inner_apply_op)
+                self.builders[-1].insert(subview_op)
+                return subview_op.result
+
+            else:
+                # If an array is nested, we first load the inner memref
+                outer_memref_ssa_value = subscript.base.print(self)
+                assert(isinstance(outer_memref_ssa_value, SSAValue))
+                assert(isinstance(outer_memref_ssa_value.type, builtin.MemRefType))
+                self.affine_symbol_map = {}
+
+                outer_index_map = self.generate_affine_expression(subscript.indices[0])
+                inner_index_map = self.generate_affine_expression(subscript.indices[1])
+    
+                dim_values = [self.symbol_map[name] for name in self.affine_dimension_map.keys()]
+                symbol_values = [self.symbol_map[name] for name in self.affine_symbol_map.keys()]
+                outer_map = AffineMap(num_dims=len(self.affine_dimension_map), num_symbols=len(self.affine_symbol_map), results=(outer_index_map,))
+                inner_map = AffineMap(num_dims=len(self.affine_dimension_map), num_symbols=len(self.affine_symbol_map), results=(inner_index_map,))
+    
+                load_op = affine.LoadOp(outer_memref_ssa_value, indices=dim_values + symbol_values, map = builtin.AffineMapAttr(outer_map))
+                self.builders[-1].insert(load_op)
+                inner_memref_ssa_value = load_op.result
+
+                # We next get a subview of the memref
+                inner_apply_op = affine.ApplyOp(map_operands=dim_values, affine_map=builtin.AffineMapAttr(inner_map))
+                subview_op = memref.SubviewOp.get(
+                    source = inner_memref_ssa_value,
+                    offsets=[inner_apply_op.result],
+                    sizes=[],
+                    strides=[],
+                    result_type=inner_memref_ssa_value.type
+                )
 
         if len(subscript.indices) == 2 and not subscript.get_address:
             memref_ssa_value = subscript.base.print(self)
