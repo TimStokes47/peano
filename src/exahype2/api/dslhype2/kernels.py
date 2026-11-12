@@ -72,6 +72,10 @@ def translate_dslhype_function(
         if function_in_pde_terms:
             reduced_functor_parameters.append(dslhype.Argument(functor_name, functor_type))
 
+    if memory_layout == MemoryLayout.AoS_AllFlattened or memory_layout == MemoryLayout.AoS_CellDataNested_TemporariesFlattened:
+        dslhype.TArray.always_flatten = True
+    else:
+        dslhype.TArray.always_flatten = False
     # Name the type according to the C++ type, since MLIR uses !llvm.ptr for structs
     # Add fields in the order specified by the MLIR type since only MLIR needs this information
     if output_language == OutputLanguage.MLIR:
@@ -132,17 +136,18 @@ def translate_dslhype_function(
 
     cpp_printer = dslhype.CPPPrinter(4)
 
+
     if output_language == OutputLanguage.CPP:
         if target == Target.Accelerator:
             printer = dslhype.OMPTargetPrinter(4)
-            dslhype.TArray.always_flatten = True
+            #dslhype.TArray.always_flatten = True
             arguments = [
                 dslhype.Argument(dslhype.Name("deviceNumber"), dslhype.TInteger()),
                 dslhype.Argument(dslhype.Name("patchData"), cell_data_type)
             ]
         else:
             printer = dslhype.CPPPrinter(4)
-            dslhype.TArray.always_flatten = False
+            #dslhype.TArray.always_flatten = False
             arguments = [
                 dslhype.Argument(dslhype.Name("patchData"), cell_data_type)
             ]

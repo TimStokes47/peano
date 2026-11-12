@@ -329,6 +329,7 @@ class Parser:
         self.external_variables = external_variables
         self.function_map = function_map
         self.stateless = stateless
+        
         AST.Variable.symbol_map = {}
         AST.ArrayAllocation.array_allocations = []
         

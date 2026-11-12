@@ -188,8 +188,24 @@ namespace {"::".join(function.namespace)} {{
 """
 
     def print_array_allocation(self, array_allocation: ArrayAllocation, indent_level: int = 0) -> SSAValue:
-        if array_allocation.array.array_size == 1  or array_allocation.array.flatten:
+        if array_allocation.array.array_size == 1:
             return array_allocation.allocation.print(self, indent_level)
+        elif array_allocation.array.flatten:
+            outer_size_print = array_allocation.array.array_size[0].print(self)
+            inner_size_print = array_allocation.array.array_size[1].print(self)
+            if outer_size_print.type == builtin.IntegerType(64):
+                cast_op = arith.IndexCastOp(outer_size_print, builtin.IndexType())
+                self.builders[-1].insert(cast_op)
+                outer_size_print = cast_op.result
+            if inner_size_print.type == builtin.IntegerType(64):
+                cast_op = arith.IndexCastOp(inner_size_print, builtin.IndexType())
+                self.builders[-1].insert(cast_op)
+                inner_size_print = cast_op.result
+
+            memref_type = array_allocation.array.get_type().print(self)
+            allocation_op = memref.AllocOp(dynamic_sizes=[outer_size_print, inner_size_print], symbol_operands=[], result_type=memref_type)
+            self.builders[-1].insert(allocation_op)
+            return allocation_op.memref
         else:
             outer_allocation = array_allocation.outer_allocation.print(self, indent_level)
             self.symbol_map[array_allocation.variable.name] = outer_allocation
@@ -251,7 +267,6 @@ namespace {"::".join(function.namespace)} {{
     def print_function_call(self, function_call: FunctionCall, indent_level: int = 0):
         argument_ssa_values: list[SSAValue] = []
         for argument in function_call.arguments:
-            print (argument)
             argument_ssa_values.append(argument.print(self))
             assert(isinstance(argument_ssa_values[-1], SSAValue))
 
@@ -444,7 +459,7 @@ namespace {"::".join(function.namespace)} {{
                 self.builders[-1].insert(memref_cast_op)
 
     def print_data_block_construction_from_function_call(self, data_block_construction_from_function_call: DataBlockConstructionFromFunctionCall, indent_level: int = 0):
-        memref = self.print_array_allocation(data_block_construction_from_function_call.allocation)
+        memref = data_block_construction_from_function_call.allocation.print(self)
         self.symbol_map[data_block_construction_from_function_call.lhs.name] = memref
         self.print_for(data_block_construction_from_function_call.initialisation)
 
@@ -774,7 +789,6 @@ namespace {"::".join(function.namespace)} {{
         return arith_op.result
 
     def print_element_index(self, element_index: ElementIndex, indent_level: int = 0):
-        print (element_index.print(self.cpp_printer))
         base = element_index.element.print(self)
         assert(isinstance(base, SSAValue))
         assert(isinstance(base.type, builtin.MemRefType))
