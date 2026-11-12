@@ -9,7 +9,7 @@ import peano4.api.dastgen2
 import toolbox.blockstructured.api
 import toolbox.loadbalancing.api.actionsets
 import exahype2.api
-from exahype2.api import Target
+from exahype2.api import Target, OutputLanguage, MemoryLayout
 from collections import OrderedDict
 
 # This solver is using the rewritten version
@@ -56,56 +56,56 @@ from ..MaxEigenvalue import MaxEigenvalue
 ## Explicit Euler time step with a Rusanov flux over a 2d patch.
 def timeStepWithRusanov2D(patchData: "::exahype2::CellData<double, double>&") -> "void":
     N = Integer("patchData.numberOfCells")
-    t = DataBlock([[0, N]], "patchData.t", "double")
-    dt = DataBlock([[0, N]], "patchData.dt", "double")
-    h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<2, double>")
-    x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<2, double>")
+    #t = DataBlock([[0, N]], "patchData.t", "double")
+    #dt = DataBlock([[0, N]], "patchData.dt", "double")
+    #h = DataBlock([[0, N]], "patchData.cellSize", "tarch::la::Vector<2, double>")
+    #x = DataBlock([[0, N]], "patchData.cellCentre", "tarch::la::Vector<2, double>")
 
     input = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [-H, NV + H], [-H, NV + H], [0, N]], "patchData.QIn")
     output = DataBlock([[0, NumberOfUnknowns + NumberOfAuxiliaryVariables], [0, NV], [0, NV], [0, N]], "patchData.QOut")
     output = input[:, 0:NV, 0:NV]
 
-    if volumetricSource:
-       source = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, N]], eval("volumetricSource", input[:, 0:NV, 0:NV], x, t))
-       output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt * source
-
-    # The Rusanov flux at a face needs the eigenvalues of both adjacent
-    # volumes, i.e. the patch volumes plus the one halo layer across each
-    # face along the normal. We never evaluate the remaining halo (edges,
-    # corners), which holds no valid data.
-    maxEigenvaluesX = DataBlock([[0, 1], [-1, NV + 1], [0, NV], [0, N]], eval("maxEigenvalue", input[:, -1:NV+1, 0:NV], x, 0))
-    maxEigenvaluesY = DataBlock([[0, 1], [0, NV], [-1, NV + 1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, -1:NV+1], x, 1))
-
-    lambdaLeft = max(maxEigenvaluesX[0:1, -1:NV-1, 0:NV], maxEigenvaluesX[0:1, 0:NV, 0:NV])
-    lambdaRight = max(maxEigenvaluesX[0:1, 0:NV, 0:NV], maxEigenvaluesX[0:1, 1:NV + 1, 0:NV])
-    lambdaBottom = max(maxEigenvaluesY[0:1, 0:NV, -1:NV-1], maxEigenvaluesY[0:1, 0:NV, 0:NV])
-    lambdaTop = max(maxEigenvaluesY[0:1, 0:NV, 0:NV], maxEigenvaluesY[0:1, 0:NV, 1:NV + 1])
-
-    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns, 0:NV, 0:NV] - input[0:NumberOfUnknowns, -1:NV-1, 0:NV])
-    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns, 1:NV+1, 0:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV])
-    output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt / h(0) * (fluxLeft - fluxRight) * NV * 0.5
-
-    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns, 0:NV, 0:NV] - input[0:NumberOfUnknowns, 0:NV, -1:NV-1])
-    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns, 0:NV, 1:NV+1] - input[0:NumberOfUnknowns, 0:NV, 0:NV])
-    output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
-
-    if flux:
-      flux_x = DataBlock([[0, NumberOfUnknowns], [-H, NV + H], [0, NV], [0, N]], eval("flux", input[:, -1:NV+1, 0:NV], x, 0))
-      flux_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [-H, NV + H], [0, N]], eval("flux", input[:, 0:NV, -1:NV+1], x, 1))
-      
-      output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(0) *  (flux_x[:, -1:NV-1, 0:NV] - flux_x[:, 1:NV+1, 0:NV])
-      output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(1) * (flux_y[:, 0:NV, -1:NV-1] - flux_y[:, 0:NV, 1:NV+1])
-
-    if nonconservativeProduct:
-       average_x = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -1:NV, 0:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + 1, 0:NV])
-       delta_x = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + H, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -H:NV, 0:NV]
-       nonconservative_x = DataBlock([[0, NumberOfUnknowns], [0, NV + H], [0, NV], [0, N]], eval("nonconservativeProduct", average_x, delta_x, x, h, t, dt, 0))
-       output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(0) * (-nonconservative_x[:, 0:NV, 0:NV] - nonconservative_x[:, 1:NV+1, 0:NV])
-       
-       average_y = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -1:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV + 1])
-       delta_y = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV + H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -H:NV]
-       nonconservative_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV + H], [0, N]], eval("nonconservativeProduct", average_y, delta_y, x, h, t, dt, 1))
-       output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(1) * (-nonconservative_y[:, 0:NV, 0:NV] - nonconservative_y[:, 0:NV, 1:NV+1])
+#    if volumetricSource:
+#       source = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV], [0, N]], eval("volumetricSource", input[:, 0:NV, 0:NV], x, t))
+#       output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt * source
+#
+#    # The Rusanov flux at a face needs the eigenvalues of both adjacent
+#    # volumes, i.e. the patch volumes plus the one halo layer across each
+#    # face along the normal. We never evaluate the remaining halo (edges,
+#    # corners), which holds no valid data.
+#    maxEigenvaluesX = DataBlock([[0, 1], [-1, NV + 1], [0, NV], [0, N]], eval("maxEigenvalue", input[:, -1:NV+1, 0:NV], x, 0))
+#    maxEigenvaluesY = DataBlock([[0, 1], [0, NV], [-1, NV + 1], [0, N]], eval("maxEigenvalue", input[:, 0:NV, -1:NV+1], x, 1))
+#
+#    lambdaLeft = max(maxEigenvaluesX[0:1, -1:NV-1, 0:NV], maxEigenvaluesX[0:1, 0:NV, 0:NV])
+#    lambdaRight = max(maxEigenvaluesX[0:1, 0:NV, 0:NV], maxEigenvaluesX[0:1, 1:NV + 1, 0:NV])
+#    lambdaBottom = max(maxEigenvaluesY[0:1, 0:NV, -1:NV-1], maxEigenvaluesY[0:1, 0:NV, 0:NV])
+#    lambdaTop = max(maxEigenvaluesY[0:1, 0:NV, 0:NV], maxEigenvaluesY[0:1, 0:NV, 1:NV + 1])
+#
+#    fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns, 0:NV, 0:NV] - input[0:NumberOfUnknowns, -1:NV-1, 0:NV])
+#    fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns, 1:NV+1, 0:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV])
+#    output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt / h(0) * (fluxLeft - fluxRight) * NV * 0.5
+#
+#    fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns, 0:NV, 0:NV] - input[0:NumberOfUnknowns, 0:NV, -1:NV-1])
+#    fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns, 0:NV, 1:NV+1] - input[0:NumberOfUnknowns, 0:NV, 0:NV])
+#    output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
+#
+#    if flux:
+#      flux_x = DataBlock([[0, NumberOfUnknowns], [-H, NV + H], [0, NV], [0, N]], eval("flux", input[:, -1:NV+1, 0:NV], x, 0))
+#      flux_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [-H, NV + H], [0, N]], eval("flux", input[:, 0:NV, -1:NV+1], x, 1))
+#      
+#      output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(0) *  (flux_x[:, -1:NV-1, 0:NV] - flux_x[:, 1:NV+1, 0:NV])
+#      output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(1) * (flux_y[:, 0:NV, -1:NV-1] - flux_y[:, 0:NV, 1:NV+1])
+#
+#    if nonconservativeProduct:
+#       average_x = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -1:NV, 0:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + 1, 0:NV])
+#       delta_x = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV + H, 0:NV] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, -H:NV, 0:NV]
+#       nonconservative_x = DataBlock([[0, NumberOfUnknowns], [0, NV + H], [0, NV], [0, N]], eval("nonconservativeProduct", average_x, delta_x, x, h, t, dt, 0))
+#       output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(0) * (-nonconservative_x[:, 0:NV, 0:NV] - nonconservative_x[:, 1:NV+1, 0:NV])
+#       
+#       average_y = 0.5 * (input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -1:NV] + input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV + 1])
+#       delta_y = input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, 0:NV + H] - input[0:NumberOfUnknowns + NumberOfAuxiliaryVariables, 0:NV, -H:NV]
+#       nonconservative_y = DataBlock([[0, NumberOfUnknowns], [0, NV], [0, NV + H], [0, N]], eval("nonconservativeProduct", average_y, delta_y, x, h, t, dt, 1))
+#       output[0:NumberOfUnknowns, :, :] = output[0:NumberOfUnknowns, :, :] + 0.5 * NV * dt / h(1) * (-nonconservative_y[:, 0:NV, 0:NV] - nonconservative_y[:, 0:NV, 1:NV+1])
 
 
 ## Explicit Euler time step with a Rusanov flux over a 3d patch.
@@ -140,6 +140,7 @@ def timeStepWithRusanov3D(patchData: "::exahype2::CellData<double, double>&") ->
     fluxLeft = -1.0 * lambdaLeft * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV] - input[0:NumberOfUnknowns, -1:NV-1, 0:NV, 0:NV])
     fluxRight = -1.0 * lambdaRight * (input[0:NumberOfUnknowns, 1:NV+1, 0:NV, 0:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV])
     output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + dt / h(0) * (fluxLeft - fluxRight) * NV * 0.5
+
     fluxBottom = -1.0 * lambdaBottom * (input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV] - input[0:NumberOfUnknowns, 0:NV, -1:NV-1, 0:NV])
     fluxTop = -1.0 * lambdaTop * (input[0:NumberOfUnknowns, 0:NV, 1:NV+1, 0:NV] - input[0:NumberOfUnknowns, 0:NV, 0:NV, 0:NV])
     output[0:NumberOfUnknowns, :, :, :] = output[0:NumberOfUnknowns, :, :, :] + dt / h(1) * (fluxBottom - fluxTop) * NV * 0.5
@@ -300,7 +301,7 @@ class RusanovWithExplicitEuler(Solver.NumericalScheme):
         self.kernel_namespace = None
         self.max_eigenvalue_kernel_call = None
         self.cfl_constant = cfl_constant
-        self._generator = RusanovWithExplicitEulerGenerator(solver, [(Target.Serial, True)])
+        self._generator = RusanovWithExplicitEulerGenerator(solver, [(Target.Serial, True, OutputLanguage.CPP, MemoryLayout.AoS_AllNested)])
         self.__create_data_structures()
 
     @property
@@ -542,6 +543,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
             Target.Serial,
             self._configurations[0][1],
             self._solver.numerical_scheme.max_eigenvalue_kernel_function_name,
+            MemoryLayout.AoS_AllNested,
         )
 
         self.__create_time_step_functions(exahype2_project, peano_project)
@@ -606,7 +608,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         use_halos_of_auxiliary_variables(update_cell_task, self._solver)
         update_cell_task.use_cell(self._solver._patch_with_halo, peano4.api.taskgraph.Task.DataAccess.READ_AND_DISCARD)
         update_cell_task.use_cell(self._solver._patch,           peano4.api.taskgraph.Task.DataAccess.WRITE)
-        if self._configurations[0][0] == dslhype.Target.Accelerator:
+        if self._configurations[0][0] == Target.Accelerator:
             update_cell_task.add_action_set(
                 UpdateCellGPU(
                     self._solver,
@@ -756,7 +758,9 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         
         output_directory = peano4_project.directory
 
-        required_includes = """
+        required_includes = f"""
+#include "Abstract{self._solver.name}.h"
+#include "repositories/SolverRepository.h"
 #include "exahype2/Solver.h"
 #include "exahype2/CellData.h"
 #include "exahype2/VolumeIndex.h"
@@ -768,11 +772,14 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
 """
         stateless_kernel_generated=False
         non_stateless_kernel_generated=False
-        for (_, stateless) in self._configurations:
+        mlir_kernel_generated=False
+        for (_, stateless, language, _) in self._configurations:
             if stateless:
                 stateless_kernel_generated = True
             else:
                 non_stateless_kernel_generated = True
+            if language == OutputLanguage.MLIR:
+                mlir_kernel_generated = True
         
         kernels_directory = os.path.join(output_directory, "kernels")
         os.makedirs(kernels_directory, exist_ok=True)
@@ -789,7 +796,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
             file.write(f"""#include "{self._solver.name}_rusanov{dimensions}d.h"\n""")
             file.close()
         
-        if non_stateless_kernel_generated:
+        if non_stateless_kernel_generated or mlir_kernel_generated:
             #for file_name in [f"{self._solver.name}_rusanov2d.cpp", f"{self._solver.name}_rusanov3d.cpp"]:
             file = open(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpp"), "w")
             file.write(f"""#include "{self._solver.name}_rusanov{dimensions}d.h"\n""")
@@ -829,33 +836,54 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
                 dslhype.Name("E"): dslhype.TArray(dslhype.TFloat(), 1)}))
         }
 
-        for (target, stateless) in self._configurations:
+        if mlir_kernel_generated and stateless_kernel_generated:
+            dslhype.generate_mlir_function_call_bridges(
+                solver=self._solver,
+                function_map=function_map,
+                pde_terms=self._solver.pde_terms,
+                stateless=True,
+                output_file_name=f"{self._solver.name}_rusanov{dimensions}d",
+                output_directory=output_directory,)
+
+        if mlir_kernel_generated and non_stateless_kernel_generated:
+            dslhype.generate_mlir_function_call_bridges(
+                solver=self._solver,
+                function_map=function_map,
+                pde_terms=self._solver.pde_terms,
+                stateless=False,
+                output_file_name=f"{self._solver.name}_rusanov{dimensions}d",
+                output_directory=output_directory,)
+
+        for (target, stateless, language, memory_layout) in self._configurations:
             dslhype.translate_dslhype_function(
+                solver=self._solver,
                 function = time_step_dsl_function,
                 dimensions=dimensions,
-                function_namespace = self._solver.numerical_scheme.kernel_namespace,
                 function_map=function_map,
                 external_variables=external_variables,
                 pde_terms=self._solver.pde_terms,
                 output_file_name=f"{self._solver.name}_rusanov{dimensions}d",
                 target=target,
                 stateless=stateless,
+                memory_layout=memory_layout,
                 function_name=self._solver.numerical_scheme.kernel_function_name,
+                output_language=language,
                 output_directory=output_directory,
             )
         # The maximum eigenvalue is a kernel of its own, which always runs on the host
-        for stateless in sorted({stateless for (_, stateless) in self._configurations}):
+        for stateless in sorted({stateless for (_, stateless, _, _) in self._configurations}):
             dslhype.translate_dslhype_function(
+                solver=self._solver,
                 function = maxEigenvalueOverPatch2D if dimensions == 2 else maxEigenvalueOverPatch3D,
                 dimensions=dimensions,
-                function_namespace = self._solver.numerical_scheme.kernel_namespace,
                 function_map=function_map,
                 external_variables=external_variables,
                 pde_terms=self._solver.pde_terms,
                 output_file_name=f"{self._solver.name}_rusanov{dimensions}d",
-                target=dslhype.Target.Serial,
+                target=Target.Serial,
                 stateless=stateless,
                 function_name=self._solver.numerical_scheme.max_eigenvalue_kernel_function_name,
+                output_language=OutputLanguage.CPP,
                 output_directory=output_directory,
             )
         
@@ -868,8 +896,12 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         peano4_project.output.makefile.add_h_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.h"))
         if stateless_kernel_generated:
             peano4_project.output.makefile.add_h_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpph"))
-        if non_stateless_kernel_generated:
+        if non_stateless_kernel_generated or mlir_kernel_generated:
             peano4_project.output.makefile.add_cpp_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpp"))
+
+        for (_, stateless, language, memory_layout) in self._configurations:
+            if language == OutputLanguage.MLIR:
+                peano4_project.output.makefile.add_mlir_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d_{memory_layout.name.lower()}.mlir"), "mlir-opt --pass-pipeline=\"builtin.module(canonicalize,cse,loop-invariant-code-motion,canonicalize,cse,loop-invariant-code-motion,cse,canonicalize,expand-strided-metadata,fold-memref-alias-ops,lower-affine,finalize-memref-to-llvm,loop-invariant-code-motion,canonicalize,cse,finalize-memref-to-llvm,convert-scf-to-cf,convert-openmp-to-llvm,convert-math-to-llvm,convert-func-to-llvm,reconcile-unrealized-casts,canonicalize,cse)\"")
 
         file = open(os.path.join(output_directory, "kernels", f"{self._solver.name}_rusanov.h"), "w")
         file.write(f"""#include "{self._solver.name}_rusanov{dimensions}d.h" """)
@@ -877,11 +909,11 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
 
     def __construct_kernel_calls(self):
         kernel_calls = []
-        for (target, stateless) in self._configurations:
-            kernel_calls.append(self.__construct_kernel_call(target, stateless))
+        for (target, stateless, language, memory_layout) in self._configurations:
+            kernel_calls.append(self.__construct_kernel_call(target, stateless, language, memory_layout))
         return kernel_calls
-    
-    def __construct_kernel_call(self, target: Target, stateless: bool, function_name: str = None):
+
+    def __construct_kernel_call(self, target: Target, stateless: bool, language: OutputLanguage, memory_layout: MemoryLayout, function_name: str = None):
         """!
 
         This function constructs the calls to the compute kernels based on the
@@ -897,7 +929,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
 
         if stateless:
             # Stateless kernels require stateless functions, which are defined in the abstract solver
-            return f"""::{"::".join(self._solver.numerical_scheme.kernel_namespace)}::{function_name}Stateless<
+            return f"""::{"::".join(self._solver.numerical_scheme.kernel_namespace + dslhype.generate_namespace(language, target, memory_layout))}::{function_name}Stateless<
         Abstract{self._solver.name}
     >(
         {"0," if target==Target.Accelerator else ""}
@@ -944,7 +976,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
     )->void {{
         repositories::{self._solver.get_name_of_global_instance()}.{application_term.name}({", ".join(arguments)});
     }}""")
-                return f"""::{"::".join(self._solver.numerical_scheme.kernel_namespace)}::{function_name}(
+                return f"""::{"::".join(self._solver.numerical_scheme.kernel_namespace + dslhype.generate_namespace(language, target, memory_layout))}::{function_name}(
     patchData,
 {",\n".join(pde_term_calls)}
 );"""

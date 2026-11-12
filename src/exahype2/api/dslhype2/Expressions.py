@@ -198,7 +198,7 @@ class Variable(AssignableExpression):
 
         array = self.get_value()
         assert (isinstance(array, Array))
-        return Subscript(self, array.calculate_indices(indices), get_address)
+        return Subscript(self, array.calculate_indices(indices), flatten=array.flatten, get_address=get_address)
 
     def __add__(self, rhs: Element | Variable) -> Variable | Element:
         if isinstance(self.get_type(), TElement) and isinstance(rhs.get_type(), TElement):
@@ -406,7 +406,7 @@ class DataBlock(Array):
 
 
     def calculate_indices(self, indices: Sequence[Element | Variable]) -> list[Element|Variable]:
-        if len(self.iteration_range) == 1 or self.flatten:
+        if len(self.iteration_range) == 1:
             return [Array.linearise_index(indices, self.size_in_memory)]
         else:
             outer_index = indices[-1]
@@ -513,7 +513,7 @@ class DataBlockBinaryOperation(DataBlock):
                 rhs_iteration_range = self.rhs.iteration_range
             iteration_range = deepcopy(rhs_iteration_range)
 
-        super().__init__(iteration_range, None, flatten)
+        super().__init__(iteration_range, None, False)
 
     def index_at(self, indices: Sequence[Element | Variable], get_address = False) -> Expression:
         lhs = self.lhs.index_at(indices)
@@ -555,14 +555,19 @@ class DataBlockIndex(DataBlock):
         return ElementIndex(self.vector_data_block.index_at(indices), self.index)
     
 class Subscript(AssignableExpression):
-    def __init__(self, base: AssignableExpression, indices: list[Element | Variable], get_address = False):
+    def __init__(self, base: AssignableExpression, indices: list[Element | Variable], flatten = False, get_address = False):
         assert(len(indices) == 1 or len(indices) == 2)
         for index in indices:
             if not isinstance(index.get_type(), TIndex):
                 raise Exception("Index of subscript must be of index type")
+            
         self.base = base
+        self.flatten = flatten
         self.indices = indices
         self.get_address = get_address
+        if self.flatten and len(self.indices) == 2:
+            assert (isinstance(self.base, Variable) and isinstance(self.base.get_value(), Array))
+            self.flattened_index = self.indices[0] * self.base.get_value().array_size[-1] + self.indices[1]
 
     def get_type(self) -> Type:
         return self.base.get_type()
