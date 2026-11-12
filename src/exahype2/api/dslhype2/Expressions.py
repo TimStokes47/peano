@@ -98,7 +98,7 @@ class Array(Expression):
         self.array_size = size
         assert(len(self.array_size) == 1 or len(self.array_size) == 2)
         self.element_type = element_type
-        self.flatten = flatten | TArray.always_flatten
+        self.flatten = flatten
 
     @abstractmethod
     def get_type(self) -> TArray:
@@ -455,7 +455,6 @@ class DataBlockBinaryOperation(DataBlock):
         self.rhs = rhs
 
         if isinstance(self.lhs.get_type(), TDataBlock) and isinstance(self.rhs.get_type(), TDataBlock):
-            flatten = self.lhs.get_type().flatten or self.rhs.get_type().flatten
             if isinstance(self.lhs, Variable): 
                 lhs_value = self.lhs.get_value()
                 assert(isinstance(lhs_value, DataBlock))
@@ -493,7 +492,6 @@ class DataBlockBinaryOperation(DataBlock):
                     iteration_range[0][1] = rhs_iteration_range[0][1]
 
         elif type(self.lhs.get_type()) is TDataBlock:
-            flatten = self.lhs.get_type().flatten
             if isinstance(self.lhs, Variable): 
                 lhs_value = self.lhs.get_value()
                 assert(isinstance(lhs_value, DataBlock))
@@ -503,7 +501,6 @@ class DataBlockBinaryOperation(DataBlock):
                 lhs_iteration_range = self.lhs.iteration_range
             iteration_range = deepcopy(lhs_iteration_range)
         else:
-            flatten = self.rhs.get_type().flatten
             if isinstance(self.rhs, Variable): 
                 rhs_value = self.rhs.get_value()
                 assert(isinstance(rhs_value, DataBlock))
@@ -513,7 +510,7 @@ class DataBlockBinaryOperation(DataBlock):
                 rhs_iteration_range = self.rhs.iteration_range
             iteration_range = deepcopy(rhs_iteration_range)
 
-        super().__init__(iteration_range, None, False)
+        super().__init__(iteration_range, None, TArray.flatten_temporaries)
 
     def index_at(self, indices: Sequence[Element | Variable], get_address = False) -> Expression:
         lhs = self.lhs.index_at(indices)

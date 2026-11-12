@@ -106,6 +106,18 @@ if args.cpu == True or args.gpu == False:
     );
     """
     function_calls += f"""
+    assessKernel(wrapHostKernel<
+        cpp::cell_data_nested_temporaries_flattened::{solver_name}_timeStepWithRusanovStateless<
+            Abstract{solver_name}
+            >
+        >,
+        "host, AoS_CellDataNested_TemporariesFlattened, serial, cpp, stateless",
+        launchingThreads,
+        ::tarch::accelerator::Device::HostDevice,
+        localPatches
+    );
+    """
+    function_calls += f"""
     assessKernel(wrapFlattenedHostKernel<
         cpp::flattened::{solver_name}_timeStepWithRusanovStateless<
             Abstract{solver_name}
@@ -132,6 +144,16 @@ if args.cpu == True or args.gpu == False:
         mlir::cell_data_flattened_temporaries_nested::{solver_name}_timeStepWithRusanovStateless
         >,
         "host, AoS_CellDataFlattened_TemporariesNested, serial, mlir, stateless",
+        launchingThreads,
+        ::tarch::accelerator::Device::HostDevice,
+        localPatches
+    );
+    """
+    function_calls += f"""
+    assessKernel(wrapMLIRNestedHostKernel<
+        mlir::cell_data_nested_temporaries_flattened::{solver_name}_timeStepWithRusanovStateless
+        >,
+        "host, AoS_CellDataNested_TemporariesFlattened, serial, mlir, stateless",
         launchingThreads,
         ::tarch::accelerator::Device::HostDevice,
         localPatches
@@ -209,9 +231,12 @@ solver_variants = []
 if args.cpu == True or args.gpu == False:
     solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_AllNested))
     solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_CellDataFlattened_TemporariesNested))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_CellDataNested_TemporariesFlattened))
     solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_AllFlattened))
+
     solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_AllNested))
     solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_CellDataFlattened_TemporariesNested))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_CellDataNested_TemporariesFlattened))
     solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_AllFlattened))
 if args.gpu == True:
     solver_variants.append((exahype2.api.Target.Accelerator, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_AllFlattened))

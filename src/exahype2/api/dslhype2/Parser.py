@@ -60,9 +60,8 @@ class Parser:
         if isinstance(source, AST.ExternalStructField):
             flatten_array_representation = source.struct_type.fields[source.field_name].flatten
         else:
-            # The arrays will not be flattened in this case unless all arrays are flattened, which is controlled with TArray.always_flatten
-            flatten_array_representation = False
-        
+            flatten_array_representation = AST.TArray.flatten_temporaries
+
         return AST.DataBlock(iteration_range, source, flatten=flatten_array_representation)
 
     def _parse_evaluation(self, call: ast.Call) -> AST.FunctionCall:
