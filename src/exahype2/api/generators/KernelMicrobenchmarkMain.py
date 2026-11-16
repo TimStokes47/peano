@@ -300,6 +300,30 @@ void wrapDeviceKernel(int device, ::exahype2::CellData<double, double>& patchDat
   gpuCellData.copyBackAndDestroy();
 }
 
+template <void (*Kernel)(exahype2::CellDataFlattened<double, double>&, tarch::timing::Measurement&)>
+void wrapFlattenedHostKernel(int device, ::exahype2::CellData<double, double>& patchData) {
+  assertion(device == tarch::accelerator::Device::HostDevice);
+  exahype2::CellDataFlattened<double, double> cellData(patchData, NumberOfInputEntriesPerPatch, NumberOfOutputEntriesPerPatch);
+  Kernel(cellData, timingComputeKernel);
+  cellData.copyBackAndDestroy();
+}
+
+template <void (*Kernel)(exahype2::MLIRCellDataFlattened&, tarch::timing::Measurement&)>
+void wrapMLIRFlattenedHostKernel(int device, ::exahype2::CellData<double, double>& patchData) {
+  assertion(device == tarch::accelerator::Device::HostDevice);
+  exahype2::MLIRCellDataFlattened mlirCellData(patchData, NumberOfInputEntriesPerPatch, NumberOfOutputEntriesPerPatch);
+  Kernel(mlirCellData, timingComputeKernel);
+  mlirCellData.copyBackAndDestroy();
+}
+
+template <void (*Kernel)(exahype2::MLIRCellDataNested&, tarch::timing::Measurement&)>
+void wrapMLIRNestedHostKernel(int device, ::exahype2::CellData<double, double>& patchData) {
+  assertion(device == tarch::accelerator::Device::HostDevice);
+  exahype2::MLIRCellDataNested mlirCellData(patchData, NumberOfInputEntriesPerPatch, NumberOfOutputEntriesPerPatch);
+  Kernel(mlirCellData, timingComputeKernel);
+  mlirCellData.copyBackAndDestroy();
+}
+
 /**
  * Run the benchmark for one particular number of patches
  *
