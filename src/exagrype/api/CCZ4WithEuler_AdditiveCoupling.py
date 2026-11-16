@@ -170,7 +170,6 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
         peano4.api.Logger().new_section(
             "Coupling " + self.ccz4.name + " and " + self.euler.name
         )
-        Access = peano4.api.taskgraph.Task.DataAccess
         Entity = peano4.api.taskgraph.Task.GridEntity
 
         first_tasks = (
@@ -185,58 +184,10 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
         ## one solver, writes the auxiliary variables of the other one, and
         ## projects them onto the faces, where the reconstruction of the halo
         ## finds them.
-        actionsets = exahype2.api.rkfd4.actionsets
-        preps = []
-        for source_solver, target_solver, fields in (
-            (self.ccz4, self.euler, self.ccz4_fields),
-            (self.euler, self.ccz4, self.euler_fields),
-        ):
-            includes = (
-                target_solver._get_default_includes()
-                + target_solver.user_solver_includes
-            )
-            prep = peano4.api.taskgraph.Task(
-                name=self.PREP_TASK_NAME.format(source_solver.name),
-                entity=Entity.CELL,
-            )
-            prep.use_cell(source_solver._patch, Access.READ_AND_WRITE)
-            prep.use_cell(fields.patch, Access.READ_AND_WRITE)
-            prep.use_face(fields.patch_overlap_update, Access.TEMPORARY)
-            prep.use_face(fields.patch_overlap_current_time_step, Access.READ_AND_WRITE)
-            prep.add_action_set(
-                CopyPatchWithLinearInterpolation(
-                    source_patch=source_solver._patch,
-                    target_patch=fields.patch,
-                    guard=target_solver.grid_selector.createCellGuard(),
-                    additional_includes=includes,
-                )
-            )
-            prep.add_action_set(
-                actionsets.ProjectPatchOntoFaces(
-                    fields.patch,
-                    fields.patch_overlap_update,
-                    guard=target_solver.grid_selector.createCellGuard(),
-                    includes=includes,
-                )
-            )
-            prep.add_action_set(
-                toolbox.blockstructured.api.RestrictHangingFaces(
-                    fields.patch_overlap_update,
-                    scheme=target_solver.numerical_scheme.restriction,
-                    clear_guard=target_solver.grid_selector.createFaceGuard(),
-                    additional_includes=includes,
-                )
-            )
-            prep.add_action_set(
-                actionsets.RollOverUpdatedFace(
-                    fields.patch_overlap_current_time_step,
-                    fields.patch_overlap_update,
-                    guard=target_solver.grid_selector.createFaceGuard(),
-                    includes=includes,
-                )
-            )
-            time_step.add_task(prep)
-            preps.append(prep)
+        preps = [
+            self._create_prep_task(time_step, self.ccz4, self.euler, self.ccz4_fields),
+            self._create_prep_task(time_step, self.euler, self.ccz4, self.euler_fields),
+        ]
         ## The solvers start only once both prep tasks have finished
         for first_task in first_tasks:
             for prep in preps:
@@ -250,6 +201,85 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
             synchronise.add_dependency(task)
         synchronise.add_action_set(SynchroniseTimeStepSizes([self.ccz4, self.euler]))
         time_step.add_task(synchronise)
+
+
+    def _create_prep_task(self, time_step, source_solver, target_solver, fields):
+        """!
+
+        Create the task that fills the auxiliary variables of one solver with the solution of the other one
+
+        The task reads the persistent patch of the source solver, writes the
+        auxiliary variables fields of the target solver (copy, with
+        interpolation if the patches differ in size), projects them onto the
+        faces, restricts them on hanging faces, and rolls the faces over. It is
+        added to time_step, but no dependencies are set: the caller wires it.
+        It is the one place that writes new face data. Used by the additive and
+        the multiplicative coupling.
+
+        @param time_step: peano4.api.taskgraph.Graph
+          Receives the task.
+
+        @param source_solver: exahype2.api.Solver
+          Provides the data.
+
+        @param target_solver: exahype2.api.Solver
+          Holds the auxiliary variables.
+
+        @param fields: exahype2.api.AuxiliaryVariables
+          The auxiliary variables of the target solver.
+
+        @return peano4.api.taskgraph.Task
+          The new task.
+
+        """
+        Access = peano4.api.taskgraph.Task.DataAccess
+        Entity = peano4.api.taskgraph.Task.GridEntity
+        actionsets = exahype2.api.rkfd4.actionsets
+        includes = (
+            target_solver._get_default_includes() + target_solver.user_solver_includes
+        )
+        prep = peano4.api.taskgraph.Task(
+            name=self.PREP_TASK_NAME.format(source_solver.name),
+            entity=Entity.CELL,
+        )
+        prep.use_cell(source_solver._patch, Access.READ_AND_WRITE)
+        prep.use_cell(fields.patch, Access.READ_AND_WRITE)
+        prep.use_face(fields.patch_overlap_update, Access.TEMPORARY)
+        prep.use_face(fields.patch_overlap_current_time_step, Access.READ_AND_WRITE)
+        prep.add_action_set(
+            CopyPatchWithLinearInterpolation(
+                source_patch=source_solver._patch,
+                target_patch=fields.patch,
+                guard=target_solver.grid_selector.createCellGuard(),
+                additional_includes=includes,
+            )
+        )
+        prep.add_action_set(
+            actionsets.ProjectPatchOntoFaces(
+                fields.patch,
+                fields.patch_overlap_update,
+                guard=target_solver.grid_selector.createCellGuard(),
+                includes=includes,
+            )
+        )
+        prep.add_action_set(
+            toolbox.blockstructured.api.RestrictHangingFaces(
+                fields.patch_overlap_update,
+                scheme=target_solver.numerical_scheme.restriction,
+                clear_guard=target_solver.grid_selector.createFaceGuard(),
+                additional_includes=includes,
+            )
+        )
+        prep.add_action_set(
+            actionsets.RollOverUpdatedFace(
+                fields.patch_overlap_current_time_step,
+                fields.patch_overlap_update,
+                guard=target_solver.grid_selector.createFaceGuard(),
+                includes=includes,
+            )
+        )
+        time_step.add_task(prep)
+        return prep
 
 
 def _gauge_wave_initial_condition():

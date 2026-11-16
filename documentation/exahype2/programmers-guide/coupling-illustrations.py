@@ -2,7 +2,7 @@
 # use, please see the copyright notice at www.peano-framework.org
 """!
 
-Create the coupled task graph of the page "Coupling solvers"
+Create the task graphs of the page "Coupling solvers"
 
 Run from anywhere via
 
@@ -10,11 +10,17 @@ Run from anywhere via
 python3 documentation/exahype2/programmers-guide/coupling-illustrations.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The script writes coupling-additive-task-graph-coupled.png next to it: the
-time stepping task graph of CCZ4 coupled to Euler, as it looks after
-CCZ4WithEuler.couple() has inserted the KickOff and WrapUp tasks.
-It is built from the benchmark benchmarks/exagrype/gauge-wave-with-Euler with
-the same solver setup. The generated files go into a temporary directory.
+The script writes four pictures next to itself. They show the time stepping task graph of
+
+- Euler with Finite Volumes (coupling-graph-euler.png),
+- CCZ4 with fourth-order Finite Differences and Runge-Kutta 2, without any
+  additional step such as lopsided advection (coupling-graph-ccz4.png), and
+- the two solvers coupled in an outer additive way
+  (coupling-graph-outer-additive.png) or in an outer multiplicative way
+  (coupling-graph-outer-multiplicative.png).
+
+The generated project goes into a temporary directory. The script uses a
+matplotlib backend without windows, i.e. nothing pops up.
 
 """
 import os
@@ -24,7 +30,6 @@ import tempfile
 Here = os.path.dirname(os.path.abspath(__file__))
 Root = os.path.abspath(os.path.join(Here, "..", "..", ".."))
 sys.path.insert(0, os.path.join(Root, "src"))
-sys.path.insert(0, os.path.join(Root, "benchmarks", "exagrype", "gauge-wave-with-Euler"))
 
 import matplotlib
 
@@ -35,43 +40,68 @@ import peano4.api
 import exahype2.api
 import exagrype.api
 
-from CCZ4WithEuler import CCZ4WithEuler
+
+def plot_graph(graph, title, file_name):
+    plt.close("all")
+    graph.visualise(title=title)
+    output = os.path.join(Here, file_name)
+    plt.gcf().savefig(output, dpi=90)
+    plt.close("all")
+    print("Wrote", output)
 
 
-def plot_coupled_time_step(file_name):
-    peano4.api.Logger().file_name = os.path.join(
-        tempfile.gettempdir(), "coupling-illustrations-log.md"
-    )
-    coupled = CCZ4WithEuler()
+def create_host(host_class, ccz4_patch_size=8):
+    coupled = host_class()
     ccz4, euler = coupled.ccz4, coupled.euler
-    Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
-    coupled.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+    coupled.set_numerical_scheme(
         ccz4,
-        9,
-        rk_order=4,
-        right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
-        advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
-        advected_quantities=ccz4.lopsided_advection_quantities(),
+        exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+            ccz4, ccz4_patch_size, rk_order=2
+        ),
     )
     coupled.set_numerical_scheme(
         euler,
-        exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(euler, 9, rk_order=4),
+        exahype2.api.fv.RusanovWithExplicitEuler(euler, 2 * ccz4_patch_size + 1),
     )
-    for solver in [ccz4, euler]:
-        solver.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
-            solver, volume_size=1.01 / 27
-        )
-        solver.plotter = exahype2.api.rkfd4.PlotAsVTKFile(
-            solver, first_plot_time_stamp=0.0, time_in_between_plots=0.1
-        )
+    ccz4.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
+        ccz4, volume_size=1.01 / 3 / ccz4_patch_size
+    )
+    ccz4.plotter = exahype2.api.rkfd4.PlotAsVTKFile(
+        ccz4, first_plot_time_stamp=0.0, time_in_between_plots=0.1
+    )
+    euler.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
+        euler, volume_size=1.01 / 3 / (2 * ccz4_patch_size + 1)
+    )
+    euler.plotter = exahype2.api.fv.PlotAsVTKFile(
+        euler, first_plot_time_stamp=0.0, time_in_between_plots=0.1
+    )
+    return coupled
 
-    # Grab the time step graph once the coupling has completed it
-    graphs = []
+
+def plot_host(host_class, file_name, title, single_solver_graphs):
+    peano4.api.Logger().file_name = os.path.join(
+        tempfile.gettempdir(), "coupling-illustrations-log.md"
+    )
+    coupled = create_host(host_class)
     original = coupled.couple
 
     def couple(exahype2_project, peano_project, own_graphs, host_graphs):
+        # Before the coupling adds its dependencies
+        if single_solver_graphs:
+            plot_graph(
+                own_graphs[coupled.ccz4].time_step,
+                "Time stepping task graph of CCZ4 (Runge-Kutta 2)",
+                "coupling-graph-ccz4.png",
+            )
+            plot_graph(
+                own_graphs[coupled.euler].time_step,
+                "Time stepping task graph of Euler (Finite Volumes)",
+                "coupling-graph-euler.png",
+            )
         original(exahype2_project, peano_project, own_graphs, host_graphs)
-        graphs.append(host_graphs.time_step)
+        # The load balancing and AMR tasks are added after the coupling, but they
+        # wrap the graph, i.e. the picture shows the coupling itself
+        plot_graph(host_graphs.time_step, title, file_name)
 
     coupled.couple = couple
 
@@ -94,14 +124,18 @@ def plot_coupled_time_step(file_name):
         )
         project.set_Peano4_installation(Root, peano4.api.output.CompileMode.RELEASE)
         project.generate_Peano4_project(verbosity=peano4.api.LoggerVerbosity.TEXT)
-    plt.close("all")
-
-    graphs[-1].visualise(title="Time stepping task graph for CCZ4 coupled to Euler")
-    output = os.path.join(Here, file_name)
-    plt.gcf().savefig(output, dpi=90)
-    plt.close(plt.gcf())
-    print("Wrote", output)
 
 
 if __name__ == "__main__":
-    plot_coupled_time_step("coupling-additive-task-graph-coupled.png")
+    plot_host(
+        exagrype.api.CCZ4WithEuler_AdditiveCoupling,
+        "coupling-graph-outer-additive.png",
+        "Outer additive coupling of CCZ4 (RK2) and Euler (FV)",
+        single_solver_graphs=True,
+    )
+    plot_host(
+        exagrype.api.CCZ4WithEuler_MultiplicativeCoupling,
+        "coupling-graph-outer-multiplicative.png",
+        "Outer multiplicative coupling of CCZ4 (RK2) and Euler (FV)",
+        single_solver_graphs=False,
+    )
