@@ -121,8 +121,8 @@ class Solver(abc.ABC):
               erase requests for the mesh adaptation phase, and then
               switches the load balancing on again and informs it that the
               time step has finished. It waits for all tasks of the graph that
-              nothing else waits for. Global tasks do not count, as nothing
-              may depend on a GLOBAL_END_OF_STEP task.
+              nothing else waits for. Global tasks do not count: The
+              task runs last in the step, so no other task may wait for it.
 
             The tasks pick up whatever is in time_step when the routine is
             called. Consequently, construct_output() calls it last if its flag

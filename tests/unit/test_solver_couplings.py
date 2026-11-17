@@ -73,6 +73,21 @@ def test_graph_append_connects_the_end_of_one_graph_to_the_start_of_the_other():
     assert second.tasks == [d, e]
 
 
+def test_graph_append_makes_the_sources_wait_for_global_sinks_too():
+    first, second = (peano4.api.taskgraph.Graph() for _ in range(2))
+    a = Task(name="a", entity=Task.GridEntity.CELL)
+    end = Task(name="end", entity=Task.GridEntity.GLOBAL_END_OF_STEP)
+    b = Task(name="b", entity=Task.GridEntity.CELL)
+    end.add_dependency(a)
+    for task in (a, end):
+        first.add_task(task)
+    second.add_task(b)
+    first.append(second)
+    # The task compiler makes sure that b does not run in the sweep of the end-of-step task
+    assert b.dependencies == [end]
+    assert first.tasks == [a, end, b]
+
+
 def test_graph_append_rejects_shared_tasks():
     first, second = (peano4.api.taskgraph.Graph() for _ in range(2))
     a = Task(name="a", entity=Task.GridEntity.CELL)

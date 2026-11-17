@@ -12,7 +12,7 @@ from .FOCCZ4Solver import FOCCZ4Solver
 from .actionsets import CopyPatchWithLinearInterpolation, SynchroniseTimeStepSizes
 
 
-class CCZ4WithEuler_MultiplicativeCoupling:
+class CCZ4WithEuler_OuterMultiplicativeCoupling:
     """!
 
     First-order CCZ4 and an Euler fluid, run one after the other within each time step
@@ -30,10 +30,11 @@ class CCZ4WithEuler_MultiplicativeCoupling:
     assigned to the solvers. They do not exchange data within
     their Runge-Kutta stages.
 
-    The last tasks of each solver graph are not its sink tasks: each graph ends in a
-    GLOBAL_END_OF_STEP task that computes the next time step size, and no
-    ordinary task may depend on such a task. We therefore wire Euler to the last
-    cell tasks of CCZ4. The end-of-step tasks remain at the very end of the time step.
+    The graphs are chained with peano4.api.taskgraph.Graph.append(): Each graph waits for all sinks of the
+    graph built so far. Each solver graph ends in a GLOBAL_END_OF_STEP task that
+    computes the next time step size. The next graph depends on it, too, and
+    the task compiler therefore does not run it in the mesh sweep of that
+    task (@ref peano4.api.taskgraph.compiler.FuseSteps.translate()).
     A final GLOBAL_END_OF_STEP task enforces the minimum of both time step sizes.
 
     """
@@ -101,29 +102,61 @@ class CCZ4WithEuler_MultiplicativeCoupling:
     ):
         """!
 
-        Realise both solvers, couple their time stepping graphs, and add the outcome to the project's graphs
+        Realise both solvers, chain their time stepping graphs, and add the outcome to the project's graphs
 
         The arguments are those of exahype2.api.Solver.generate_solver_realisation().
         Both solvers are realised without global tasks. The load balancing and the dynamic
-        mesh refinement wrap the coupled time step graph afterwards, through the scheme of CCZ4.
+        mesh refinement wrap the chained time step graph afterwards, through the scheme of CCZ4.
 
         """
         peano4.api.Logger().new_section("Host " + self.name)
-        own_time_steps = {}
+        Entity = peano4.api.taskgraph.Task.GridEntity
+
+        ccz4_time_step = peano4.api.taskgraph.Graph()
+        self.ccz4.generate_solver_realisation(
+            exahype2_project,
+            peano_project,
+            setup_simulation,
+            ccz4_time_step,
+            plot,
+            mesh_adaptation,
+            add_global_tasks=False,
+        )
+        euler_time_step = peano4.api.taskgraph.Graph()
+        self.euler.generate_solver_realisation(
+            exahype2_project,
+            peano_project,
+            setup_simulation,
+            euler_time_step,
+            plot,
+            mesh_adaptation,
+            add_global_tasks=False,
+        )
+
+        euler_into_ccz4 = peano4.api.taskgraph.Graph()
+        self._create_prep_task(
+            euler_into_ccz4, self.euler, self.ccz4, self.euler_auxiliary_copies
+        )
+        ccz4_into_euler = peano4.api.taskgraph.Graph()
+        self._create_prep_task(
+            ccz4_into_euler, self.ccz4, self.euler, self.ccz4_auxiliary_copies
+        )
+
+        ## prep (from Euler) -> graph of CCZ4 -> prep (from CCZ4) -> graph of Euler
         coupled_time_step = peano4.api.taskgraph.Graph()
-        for solver in self.solvers:
-            own_time_steps[solver] = peano4.api.taskgraph.Graph()
-            solver.generate_solver_realisation(
-                exahype2_project,
-                peano_project,
-                setup_simulation,
-                own_time_steps[solver],
-                plot,
-                mesh_adaptation,
-                add_global_tasks=False,
-            )
-            coupled_time_step.merge(own_time_steps[solver])
-        self._couple(exahype2_project, peano_project, own_time_steps, coupled_time_step)
+        coupled_time_step.append(euler_into_ccz4)
+        coupled_time_step.append(ccz4_time_step)
+        coupled_time_step.append(ccz4_into_euler)
+        coupled_time_step.append(euler_time_step)
+
+        ## Both solvers have computed their next time step size by now
+        synchronise = peano4.api.taskgraph.Task(
+            name=self.SYNCHRONISE_TASK_NAME, entity=Entity.GLOBAL_END_OF_STEP
+        )
+        for task in coupled_time_step.sink_tasks():
+            synchronise.add_dependency(task)
+        synchronise.add_action_set(SynchroniseTimeStepSizes([self.ccz4, self.euler]))
+        coupled_time_step.add_task(synchronise)
 
         self.ccz4.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks(
             coupled_time_step
@@ -139,76 +172,6 @@ class CCZ4WithEuler_MultiplicativeCoupling:
         if peano4.api.Logger().is_text:
             coupled_time_step.log_as_text(title=title)
         time_step.merge(coupled_time_step)
-
-    @staticmethod
-    def _last_cell_tasks(graph):
-        """!
-
-        The tasks of the graph that no other cell or face task depends on,
-        i.e. the end of the graph if we ignore the global end-of-step tasks.
-
-        """
-        Entity = peano4.api.taskgraph.Task.GridEntity
-        ignore = (Entity.GLOBAL, Entity.GLOBAL_END_OF_STEP)
-        tasks = [task for task in graph.tasks if task.entity not in ignore]
-        return [
-            task
-            for task in tasks
-            if not any(task in other.dependencies for other in tasks)
-        ]
-
-    def _couple(self, exahype2_project, peano_project, own_time_steps, time_step):
-        """!
-
-        Chain the graph of CCZ4 and the graph of Euler through the prep tasks
-
-        @param exahype2_project: exahype2.api.Project
-          The project that hosts the system.
-
-        @param peano_project: peano4.api.Project
-          The Peano project that the exahype2 project assembles.
-
-        @param own_time_steps: Dict[exahype2.api.Solver, peano4.api.taskgraph.Graph]
-          The time step graphs of the two solvers.
-
-        @param time_step: peano4.api.taskgraph.Graph
-          The concatenation of both. It receives the new tasks.
-
-        """
-        peano4.api.Logger().new_section(
-            "Coupling " + self.ccz4.name + " and " + self.euler.name
-        )
-        Entity = peano4.api.taskgraph.Task.GridEntity
-
-        ccz4_graph = own_time_steps[self.ccz4]
-        euler_graph = own_time_steps[self.euler]
-        first_of_ccz4 = ccz4_graph.source_tasks()
-        first_of_euler = euler_graph.source_tasks()
-        last_of_ccz4 = self._last_cell_tasks(ccz4_graph)
-        last_tasks = [
-            task for task in time_step.sink_tasks() if task.entity != Entity.GLOBAL
-        ]
-
-        prep_from_euler = self._create_prep_task(
-            time_step, self.euler, self.ccz4, self.euler_auxiliary_copies
-        )
-        prep_from_ccz4 = self._create_prep_task(
-            time_step, self.ccz4, self.euler, self.ccz4_auxiliary_copies
-        )
-        for task in first_of_ccz4:
-            task.add_dependency(prep_from_euler)
-        for task in last_of_ccz4:
-            prep_from_ccz4.add_dependency(task)
-        for task in first_of_euler:
-            task.add_dependency(prep_from_ccz4)
-
-        synchronise = peano4.api.taskgraph.Task(
-            name=self.SYNCHRONISE_TASK_NAME, entity=Entity.GLOBAL_END_OF_STEP
-        )
-        for task in last_tasks:
-            synchronise.add_dependency(task)
-        synchronise.add_action_set(SynchroniseTimeStepSizes([self.ccz4, self.euler]))
-        time_step.add_task(synchronise)
 
     def _create_prep_task(
         self, time_step, source_solver, target_solver, auxiliary_copies

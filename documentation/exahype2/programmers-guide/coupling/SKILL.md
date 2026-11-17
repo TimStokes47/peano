@@ -37,17 +37,21 @@ to the project (`project.add_solver(coupled)`). It offers
   to the project yourself, and do not let the solvers call each other's realisation.
 - `name`,
 - `generate_solver_realisation(exahype2_project, peano_project, setup_simulation, time_step, plot, mesh_adaptation)`,
-  which is the same in every coupling (copy it from the additive coupling, ~25 lines): realise each solver with
-  `add_global_tasks=False` into a time step graph of its own, `Graph.merge()` these into one coupled graph,
-  call `_couple()`, wrap the coupled graph through the scheme of the solver which owns the global tasks
+  which is the same in every coupling except for how the graphs of the solvers are put together (copy it from an
+  existing coupling, ~40 lines): realise each solver with `add_global_tasks=False` into a time step graph of its own,
+  put these graphs together into one coupled graph (see below), wrap the coupled graph through the scheme of the solver which owns the global tasks
   (`solver.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks()`), let this solver's
   `mesh_adaptation` fill the mesh adaptation graph, report the coupled graph (visualise/log), and merge it into
-  the project's `time_step` graph, and
-- `_couple(exahype2_project, peano_project, time_step)`: the only part that differs between
-  couplings. It adds tasks and dependencies to the coupled `time_step` graph. If it has to tell the solvers apart
-  (multiplicative coupling: one runs after the other), `generate_solver_realisation()` also hands over the graph of each solver
-  (`own_time_steps`, a dict from solver to graph). The additive coupling needs no such thing: `time_step.source_tasks()` and
-  `time_step.sink_tasks()` of the merged graph are all it asks for.
+  the project's `time_step` graph.
+
+How the graphs are put together is the only part that differs between couplings. Write it out in
+`generate_solver_realisation()` (**spaghetti code is fine**: there are two solvers, so no loop, no helper hierarchy):
+
+- **Multiplicative:** build the graphs one after the other with `Graph.append()` (the sources of the new graph wait for all sinks of the graph so far).
+  There is no further routine: the coupling is the order of the `append()` calls.
+- **Additive:** `Graph.merge()` the solver graphs, then call a private routine `_couple(exahype2_project, peano_project, time_step)`
+  which adds tasks and dependencies to the merged graph. `time_step.source_tasks()` and `time_step.sink_tasks()` of the merged graph are all
+  it asks for. It does not need the graphs of the individual solvers.
 
 ### Numerical schemes
 
@@ -59,7 +63,7 @@ The mapping of each solver to C++ (`SolverToCPPFiles`, grid construction, plotte
 
 ### Where the task graphs are composed
 
-Composition happens in `_couple()` through **dependencies**. It does not copy tasks. Use
+Composition happens through **dependencies**. It does not copy tasks. Use
 `Graph.source_tasks()` / `Graph.sink_tasks()` to find where to hook in, `Graph.append()` to run a whole
 graph after another one, and `Graph.merge()` to put graphs next to each other.
 If possible, display a rendering of each of these graphs to the user.
@@ -99,10 +103,10 @@ Ask the user which flavour they want (Capture Intent) and then follow Steps 1 to
 | Wiring of the graphs | in sequence: A, copy, B | in parallel: copy, A and B together |
 | What B sees of A | A's **updated** state | A's state at the **begin** of the time step |
 | Prep tasks | two, one in front of A and one between A and B | two, both in front of A and B, run in parallel |
-| Host in the repository | `exagrype.api.CCZ4WithEuler_MultiplicativeCoupling` | `exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling` |
+| Host in the repository | `exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling` | `exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling` |
 | Benchmark | none yet (same driver as the additive one, other host class) | `benchmarks/exagrype/gauge-wave-with-Euler` |
 
-For Euler + CCZ4, the driver of the benchmark is the template for both. The two host classes are independent of each other and differ in `_couple()` only; everything else
+For Euler + CCZ4, the driver of the benchmark is the template for both. The two host classes are independent of each other and differ in how they wire the graphs only; everything else
 (constructor, `generate_solver_realisation()`, `_create_prep_task()`) is deliberately repeated, so that each class reads on its own. If the user wants exactly this pair,
 use the host class from `exagrype.api` directly and do not copy it. For other solver pairs, write a host along the same lines.
 `coupling.dox` (running example: Euler with Finite Volumes and CCZ4 with Runge-Kutta 2) shows the graphs that each flavour produces;
@@ -113,7 +117,7 @@ use the host class from `exagrype.api` directly and do not copy it. For other so
 Derive from nothing: one class per coupling, even if it repeats the constructor and the prep tasks of another one. The constructor does this, **in this order**:
 
 1. Create the solvers (CCZ4 first, as it owns the global tasks (load balancing, AMR) and Euler depends on its data). The order of `solvers`
-   is the order of realisation; it does not fix the order of execution, which `_couple()` does.
+   is the order of realisation; it does not fix the order of execution, which the wiring of the graphs does.
 2. For each solver, create one `exahype2.api.AuxiliaryVariables` set that holds **all** unknowns of the other solver
    (`dict(OtherSolver.Unknowns)`), and add it with `add_auxiliary_variables()` to the solver that reads it
    (`EulerFieldsForCCZ4` into CCZ4, `CCZ4FieldsForEuler` into Euler; name the data explicitly through `data_name`).
@@ -121,26 +125,15 @@ Derive from nothing: one class per coupling, even if it repeats the constructor 
    solver, so a Runge-Kutta scheme reconstructs the halo once, in its first stage. Not `CHANGING_ON_FACES`
    (reconstructs the halo in every stage for nothing), not `STATIONARY_ON_FACES` (the faces would never see the exchange).
    The Euler solver checks at generation time that it holds a set with the 58 entries of CCZ4.
-3. Store the name (`f"{a}With{b}"`) and provide `solvers`, `name`, `generate_solver_realisation()` and `_couple()` as described above.
+3. Store the name (`f"{a}With{b}"`) and provide `solvers`, `name` and `generate_solver_realisation()` (plus `_couple()` for the additive flavour) as described above.
 
-The multiplicative `_couple()` receives `own_time_steps[solver]`, which shows where a solver's graph begins and ends; its tasks are the same objects as in the coupled `time_step`. The additive one does not need it.
+#### Step 2: wiring the graphs
 
-#### Step 2: `_couple()`
+Each solver ends in a `GLOBAL_END_OF_STEP` task that computes the next time step size. Other tasks may depend on such a task, but the
+task graph compiler then does not fuse them into the mesh sweep of that task: they run in a sweep of their own.
 
-**Common to both flavours.** Before you add any task, collect
-
-- `first[s] = own_time_steps[s].source_tasks()` (additive: `time_step.source_tasks()` of the merged graph, **before** you add the prep tasks),
-- `end[s]`, the last cell/face tasks of solver `s`. Do **not** use `sink_tasks()` for this: each solver ends in a
-  `GLOBAL_END_OF_STEP` task that computes the next time step size. It has to stay at the end of the time step, and no ordinary
-  task may depend on it (the task graph compiler asserts). Drop the tasks with entity `GLOBAL` or `GLOBAL_END_OF_STEP` first, and then take those on which no remaining task depends:
-
-  ~~~~~~~~~~~~~~~~~~~~~~~~
-  done = (Entity.GLOBAL, Entity.GLOBAL_END_OF_STEP)
-  cell_tasks = [t for t in graph.tasks if t.entity not in done]
-  end = [t for t in cell_tasks if not any(t in o.dependencies for o in cell_tasks)]
-  ~~~~~~~~~~~~~~~~~~~~~~~~
-- `final = [t for t in time_step.sink_tasks() if t.entity != Entity.GLOBAL]` for the concatenated graph (for the additive host,
-  these are the solvers' end-of-step tasks).
+**Common to both flavours.** The final synchronisation depends on `final = [t for t in coupled.sink_tasks() if t.entity != Entity.GLOBAL]`,
+the sinks of the coupled graph.
 
 Create **two prep tasks** (`GridEntity.CELL`, `"Prepare auxiliary variables from <producer>"`), one per direction. A prep task is the one place that writes new face data:
 
@@ -165,11 +158,17 @@ Finally add one `GridEntity.GLOBAL_END_OF_STEP` task `"Synchronise time step siz
 `exagrype.api.actionsets.SynchroniseTimeStepSizes([A, B])`. It enforces the minimum of the time step sizes on all solvers, the conservative choice.
 If the user wants further global exchange, put it into this task (see the end-of-step section below).
 
-**Branch: outer multiplicative (A first, B second).** Wire the chain:
+**Branch: outer multiplicative (A first, B second).** Build the chain with `Graph.append()`, each graph after the one before:
 
-- every task of `first[A]` depends on `prep(from B)` (A sees B(t)),
-- `prep(from A)` depends on every task of `end[A]` (it copies the **updated** A),
-- every task of `first[B]` depends on `prep(from A)`.
+```
+coupled = Graph()
+coupled.append(prep_from_B_graph)   # A sees B(t)
+coupled.append(graph_of_A)
+coupled.append(prep_from_A_graph)   # copies the updated A, i.e. waits for A's time step size task, too
+coupled.append(graph_of_B)
+```
+
+(Each prep task sits in a graph of its own, created through `_create_prep_task(graph, producer, consumer, auxiliary_copies)`.)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~
  prep(from B) -> graph of A -> prep(from A) -> graph of B -> Synchronise (GLOBAL_END_OF_STEP)
@@ -196,6 +195,7 @@ The two prep tasks do not depend on each other and run in parallel. As both copi
 no solver writes a patch that a copy still reads: there is no data race, and no temporary copy is needed.
 The solvers only see the state of the other one at the begin of the time step.
 For the additive flavour, the end of `_couple()` is exactly `CCZ4WithEuler_OuterAdditiveCoupling._couple()`.
+Collect `first = time_step.source_tasks()` **before** you create the prep tasks, as those are sources, too.
 
 Show the graph of each solver alone, the concatenation and the coupled graph to the user: run the driver with the visualised logger
 (`peano4.api.LoggerVerbosity.VISUALISATION`, `--mode debug` in the benchmark), which renders each graph. The coupled graph has to show

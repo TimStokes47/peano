@@ -120,11 +120,12 @@ In an outer coupling, each solver has its numerical scheme of its own. The mappi
 
 1. Each solver builds its time stepping graph on its own and reports it. The user thus
    sees what each solver contributes.
-2. The host concatenates the graphs (peano4.api.taskgraph.Graph.merge()). The result
-   consists of the chains of the solvers next to each other.
-3. The host's _couple() routine adds the tasks and dependencies that tie the chains together: 
-   an outer multiplicative coupling chains the graphs (one solver waits for the other one),
-   an outer additive coupling lets them start together; both add tasks that copy data from one solver into the auxiliary
+2. The host puts the graphs together. An outer additive coupling concatenates them
+   (peano4.api.taskgraph.Graph.merge()), i.e. the chains of the solvers sit next to each other,
+   and then adds the tasks and dependencies that tie them together in its routine _couple().
+   An outer multiplicative coupling chains the graphs (one solver waits for the other one) with
+   peano4.api.taskgraph.Graph.append(), and has no _couple().
+   Both add tasks that copy data from one solver into the auxiliary
    variables of the other one, and a final task that synchronises the time step sizes. 
 4. The host reports the coupled graph, and appends it to the project's graphs.
 
@@ -185,7 +186,7 @@ In many cases, this reduces the overall convergence order, but there are solvers
 
 ExaHyPE internally works with the notion of a task graph, which simplies the modelling of this type of coupling dramatically.
 We simply take the task graph of solver 1 and merge the one of solver 2 into it, and then wire them,
-(@ref exagrype.api.CCZ4WithEuler_MultiplicativeCoupling is the worked example for Euler and CCZ4;
+(@ref exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling is the worked example for Euler and CCZ4;
 @ref exagrype.api.FOSOSolver is the example for the inner variant, where tasks are inserted per
 Runge-Kutta stage).
 All the remainder (notably finding the right number of required mesh sweeps) is done by ExaHyPE and Peano under the hood.
@@ -244,7 +245,7 @@ where the actual physics remains determined by
  
 ### Example: CCZ4 followed by Euler
 
-The host @ref exagrype.api.CCZ4WithEuler_MultiplicativeCoupling chains the graphs of the running example:
+The host @ref exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling chains the graphs of the running example:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 prepare (from Euler) -> graph of CCZ4 -> prepare (from CCZ4) -> graph of Euler -> synchronise
@@ -360,8 +361,8 @@ CCZ4 owns the global tasks (the load balancing switch and the dynamic mesh refin
 
 ### Outer multiplicative vs. outer additive in the source code
 
-Both outer couplings are realised by the same host pattern, and in practice they differ in the wiring inside `_couple()` only.
-Everything else is identical: the host is a plain class that offers the solvers, generate_solver_realisation() and _couple(), each solver receives a set of auxiliary variables that
+Both outer couplings are realised by the same host pattern, and in practice they differ in the wiring of the graphs only.
+Everything else is identical: the host is a plain class that offers the solvers and generate_solver_realisation(), each solver receives a set of auxiliary variables that
 holds the unknowns of the other solver, the numerical schemes are assigned to the solvers, and two "prepare auxiliary
 variables" tasks copy, project and restrict the data onto the faces. A final global task synchronises the time step sizes.
 
@@ -373,16 +374,20 @@ for first_task in first[A] + first[B]:
     for prep in preps:
         first_task.add_dependency(prep)
 
-# multiplicative: a chain. B waits for A, and copies A after A has finished
-for t in first[A]: t.add_dependency(prep_from_B)
-for t in end[A]:   prep_from_A.add_dependency(t)
-for t in first[B]: t.add_dependency(prep_from_A)
+# multiplicative: a chain. B waits for A, and copies A after A has finished.
+# Graph.append() makes the sources of a graph wait for all sinks of the graph before.
+chain = Graph()
+chain.append(prep_from_B)
+chain.append(graph_of_A)
+chain.append(prep_from_A)
+chain.append(graph_of_B)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Consequently, an additive solver B sees the state of A at the begin of the time step, while a multiplicative B sees the updated state of A.
 The additive tasks of A and B can overlap, whereas multiplicative steps are logically sequential. The final synchronisation
-task depends on the end of the whole graph in both cases. Take care not to wire anything behind the time step size tasks of the solvers:
-each solver's graph ends with a global end-of-step task, which no ordinary task may depend on, so `end[A]` has to exclude those.
+task depends on the end of the whole graph in both cases. Each solver's graph ends with a global end-of-step task, which
+computes the time step size. In the multiplicative coupling, the prep task of B waits for the one of A, too, and the task graph compiler does not
+fuse it into the mesh sweep of that task: it runs in a sweep of its own (one sweep more than if it only waited for the last cell tasks).
 The additive reference is `exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling`, driven by `benchmarks/exagrype/gauge-wave-with-Euler`. The AI skill
 (see below) generates both flavours from the same recipe.
 

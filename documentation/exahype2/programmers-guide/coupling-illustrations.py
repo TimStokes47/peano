@@ -80,38 +80,39 @@ def plot_host(host_class, file_name, title, single_solver_graphs):
         tempfile.gettempdir(), "coupling-illustrations-log.md"
     )
     coupled = create_host(host_class)
-    original = coupled._couple
+    single_solver_pictures = {
+        coupled.ccz4: (
+            "Time stepping task graph of CCZ4 (Runge-Kutta 2)",
+            "coupling-graph-ccz4.png",
+        ),
+        coupled.euler: (
+            "Time stepping task graph of Euler (Finite Volumes)",
+            "coupling-graph-euler.png",
+        ),
+    }
 
-    # Each solver builds its time step graph on its own. Remember them.
-    own_time_steps = {}
+    # Each solver builds its time step graph on its own. Draw it before the
+    # coupling adds its dependencies.
     for solver in coupled.solvers:
 
-        def record(*args, _solver=solver, _original=solver.generate_solver_realisation, **kwargs):
-            own_time_steps[_solver] = args[3]
-            return _original(*args, **kwargs)
+        def realise(*args, _solver=solver, _original=solver.generate_solver_realisation, **kwargs):
+            outcome = _original(*args, **kwargs)
+            if single_solver_graphs:
+                plot_graph(args[3], *single_solver_pictures[_solver])
+            return outcome
 
-        solver.generate_solver_realisation = record
+        solver.generate_solver_realisation = realise
 
-    def couple(exahype2_project, peano_project, *graphs):
-        time_step = graphs[-1]
-        # Before the coupling adds its dependencies
-        if single_solver_graphs:
-            plot_graph(
-                own_time_steps[coupled.ccz4],
-                "Time stepping task graph of CCZ4 (Runge-Kutta 2)",
-                "coupling-graph-ccz4.png",
-            )
-            plot_graph(
-                own_time_steps[coupled.euler],
-                "Time stepping task graph of Euler (Finite Volumes)",
-                "coupling-graph-euler.png",
-            )
-        original(exahype2_project, peano_project, *graphs)
-        # The load balancing and AMR tasks are added after the coupling, but they
-        # wrap the graph, i.e. the picture shows the coupling itself
-        plot_graph(time_step, title, file_name)
+    # The load balancing and AMR tasks are added after the coupling, but they
+    # wrap the graph, i.e. the picture shows the coupling itself
+    scheme = coupled.ccz4.numerical_scheme
+    original_wrap = scheme.wrap_task_graph_in_load_balancing_and_amr_tasks
 
-    coupled._couple = couple
+    def wrap(coupled_time_step):
+        plot_graph(coupled_time_step, title, file_name)
+        original_wrap(coupled_time_step)
+
+    scheme.wrap_task_graph_in_load_balancing_and_amr_tasks = wrap
 
     with tempfile.TemporaryDirectory() as directory:
         project = exahype2.api.Project(
@@ -142,7 +143,7 @@ if __name__ == "__main__":
         single_solver_graphs=True,
     )
     plot_host(
-        exagrype.api.CCZ4WithEuler_MultiplicativeCoupling,
+        exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling,
         "coupling-graph-outer-multiplicative.png",
         "Outer multiplicative coupling of CCZ4 (RK2) and Euler (FV)",
         single_solver_graphs=False,
