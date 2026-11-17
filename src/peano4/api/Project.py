@@ -190,6 +190,14 @@ class Project (object):
             os.makedirs(os.path.dirname(target_file_path), exist_ok=True)
             # Copy the temporary file to the target location
             shutil.copy(temporary_file_path, target_file_path)
+            #last_point_location = target_file_path.find('.')
+            #while target_file_path.find('.', last_point_location + 1) >= 0:
+            #  last_point_location = target_file_path.find('.', last_point_location + 1)
+            #file_prefix = target_file_path[0:target_file_path.find('.', last_point_location) - 1]
+            #if os.path.isfile(file_prefix + ".o"):
+            #  os.remove(file_prefix + ".o")
+            #  Logger().log(f"Deleted {file_prefix}.o")
+              
             Logger().log(f"Updated {target_file_path} from {temporary_file_path}")
     for root, dirs, files in os.walk(self.temporary_directory):
       for file in files:

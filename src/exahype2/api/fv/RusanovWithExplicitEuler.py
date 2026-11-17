@@ -897,7 +897,7 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         if stateless_kernel_generated:
             peano4_project.output.makefile.add_h_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpph"))
         if non_stateless_kernel_generated or mlir_kernel_generated:
-            peano4_project.output.makefile.add_cpp_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpp"))
+            peano4_project.output.makefile.add_cpp_file(os.path.join(kernels_directory, f"{self._solver.name}_rusanov{dimensions}d.cpp"), generated=True)
 
         for (_, stateless, language, memory_layout) in self._configurations:
             if language == OutputLanguage.MLIR:
