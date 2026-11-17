@@ -99,15 +99,15 @@ Ask the user which flavour they want (Capture Intent) and then follow Steps 1 to
 | Host in the repository | `exagrype.api.CCZ4WithEuler_MultiplicativeCoupling` | `exagrype.api.CCZ4WithEuler_AdditiveCoupling` |
 | Benchmark | none yet (same driver as the additive one, other host class) | `benchmarks/exagrype/gauge-wave-with-Euler` |
 
-For Euler + CCZ4, the driver of the benchmark is the template for both. The multiplicative host is a subclass of the additive one and differs
-in `_couple()` only; both create their prep tasks through `CCZ4WithEuler_AdditiveCoupling._create_prep_task()`. If the user wants exactly this pair,
+For Euler + CCZ4, the driver of the benchmark is the template for both. The two host classes are independent of each other and differ in `_couple()` only; everything else
+(constructor, `generate_solver_realisation()`, `_create_prep_task()`) is deliberately repeated, so that each class reads on its own. If the user wants exactly this pair,
 use the host class from `exagrype.api` directly and do not copy it. For other solver pairs, write a host along the same lines.
 `coupling.dox` (running example: Euler with Finite Volumes and CCZ4 with Runge-Kutta 2) shows the graphs that each flavour produces;
 `documentation/exahype2/programmers-guide/coupling-illustrations.py` regenerates those pictures.
 
 #### Step 1: the coupling class (both flavours)
 
-Derive from nothing (or, for the multiplicative flavour, from the additive class). The constructor does this, **in this order**:
+Derive from nothing: one class per coupling, even if it repeats the constructor and the prep tasks of another one. The constructor does this, **in this order**:
 
 1. Create the solvers (CCZ4 first, as it owns the global tasks (load balancing, AMR) and Euler depends on its data). The order of `solvers`
    is the order of realisation; it does not fix the order of execution, which `_couple()` does.

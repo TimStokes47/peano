@@ -276,8 +276,7 @@ class CCZ4WithEuler_AdditiveCoupling:
         interpolation if the patches differ in size), projects them onto the
         faces, restricts them on hanging faces, and rolls the faces over. It is
         added to time_step, but no dependencies are set: the caller wires it.
-        It is the one place that writes new face data. Used by the additive and
-        the multiplicative coupling.
+        It is the one place that writes new face data.
 
         @param time_step: peano4.api.taskgraph.Graph
           Receives the task.
