@@ -82,7 +82,18 @@ def plot_host(host_class, file_name, title, single_solver_graphs):
     coupled = create_host(host_class)
     original = coupled._couple
 
-    def couple(exahype2_project, peano_project, own_time_steps, time_step):
+    # Each solver builds its time step graph on its own. Remember them.
+    own_time_steps = {}
+    for solver in coupled.solvers:
+
+        def record(*args, _solver=solver, _original=solver.generate_solver_realisation, **kwargs):
+            own_time_steps[_solver] = args[3]
+            return _original(*args, **kwargs)
+
+        solver.generate_solver_realisation = record
+
+    def couple(exahype2_project, peano_project, *graphs):
+        time_step = graphs[-1]
         # Before the coupling adds its dependencies
         if single_solver_graphs:
             plot_graph(
@@ -95,7 +106,7 @@ def plot_host(host_class, file_name, title, single_solver_graphs):
                 "Time stepping task graph of Euler (Finite Volumes)",
                 "coupling-graph-euler.png",
             )
-        original(exahype2_project, peano_project, own_time_steps, time_step)
+        original(exahype2_project, peano_project, *graphs)
         # The load balancing and AMR tasks are added after the coupling, but they
         # wrap the graph, i.e. the picture shows the coupling itself
         plot_graph(time_step, title, file_name)

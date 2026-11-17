@@ -179,21 +179,20 @@ class CCZ4WithEuler_AdditiveCoupling:
 
         """
         peano4.api.Logger().new_section("Host " + self.name)
-        own_time_steps = {}
         coupled_time_step = peano4.api.taskgraph.Graph()
         for solver in self.solvers:
-            own_time_steps[solver] = peano4.api.taskgraph.Graph()
+            own_time_step = peano4.api.taskgraph.Graph()
             solver.generate_solver_realisation(
                 exahype2_project,
                 peano_project,
                 setup_simulation,
-                own_time_steps[solver],
+                own_time_step,
                 plot,
                 mesh_adaptation,
                 add_global_tasks=False,
             )
-            coupled_time_step.merge(own_time_steps[solver])
-        self._couple(exahype2_project, peano_project, own_time_steps, coupled_time_step)
+            coupled_time_step.merge(own_time_step)
+        self._couple(exahype2_project, peano_project, coupled_time_step)
 
         self.ccz4.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks(
             coupled_time_step
@@ -210,7 +209,7 @@ class CCZ4WithEuler_AdditiveCoupling:
             coupled_time_step.log_as_text(title=title)
         time_step.merge(coupled_time_step)
 
-    def _couple(self, exahype2_project, peano_project, own_time_steps, time_step):
+    def _couple(self, exahype2_project, peano_project, time_step):
         """!
 
         Add the preamble and the final task around the concatenated graphs
@@ -221,11 +220,11 @@ class CCZ4WithEuler_AdditiveCoupling:
         @param peano_project: peano4.api.Project
           The Peano project that the exahype2 project assembles.
 
-        @param own_time_steps: Dict[exahype2.api.Solver, peano4.api.taskgraph.Graph]
-          The time step graphs of the two solvers.
-
         @param time_step: peano4.api.taskgraph.Graph
-          The concatenation of both. It receives the new tasks.
+          The concatenation of the time step graphs of both solvers. It
+          receives the new tasks. All its source tasks are first tasks of a
+          solver, and all its sink tasks (but the global ones) are last tasks
+          of a solver.
 
         """
         peano4.api.Logger().new_section(
@@ -233,10 +232,8 @@ class CCZ4WithEuler_AdditiveCoupling:
         )
         Entity = peano4.api.taskgraph.Task.GridEntity
 
-        first_tasks = (
-            own_time_steps[self.ccz4].source_tasks()
-            + own_time_steps[self.euler].source_tasks()
-        )
+        ## Determine them before the prep tasks are added: those are sources, too
+        first_tasks = time_step.source_tasks()
         last_tasks = [
             task for task in time_step.sink_tasks() if task.entity != Entity.GLOBAL
         ]

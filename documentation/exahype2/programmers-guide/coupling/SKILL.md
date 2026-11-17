@@ -43,8 +43,11 @@ to the project (`project.add_solver(coupled)`). It offers
   (`solver.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks()`), let this solver's
   `mesh_adaptation` fill the mesh adaptation graph, report the coupled graph (visualise/log), and merge it into
   the project's `time_step` graph, and
-- `_couple(exahype2_project, peano_project, own_time_steps, time_step)`: the only part that differs between
-  couplings. It adds tasks and dependencies to the coupled `time_step` graph.
+- `_couple(exahype2_project, peano_project, time_step)`: the only part that differs between
+  couplings. It adds tasks and dependencies to the coupled `time_step` graph. If it has to tell the solvers apart
+  (multiplicative coupling: one runs after the other), `generate_solver_realisation()` also hands over the graph of each solver
+  (`own_time_steps`, a dict from solver to graph). The additive coupling needs no such thing: `time_step.source_tasks()` and
+  `time_step.sink_tasks()` of the merged graph are all it asks for.
 
 ### Numerical schemes
 
@@ -120,13 +123,13 @@ Derive from nothing: one class per coupling, even if it repeats the constructor 
    The Euler solver checks at generation time that it holds a set with the 58 entries of CCZ4.
 3. Store the name (`f"{a}With{b}"`) and provide `solvers`, `name`, `generate_solver_realisation()` and `_couple()` as described above.
 
-`_couple()` receives `own_time_steps[solver]`, which shows where a solver's graph begins and ends; its tasks are the same objects as in the coupled `time_step`.
+The multiplicative `_couple()` receives `own_time_steps[solver]`, which shows where a solver's graph begins and ends; its tasks are the same objects as in the coupled `time_step`. The additive one does not need it.
 
 #### Step 2: `_couple()`
 
 **Common to both flavours.** Before you add any task, collect
 
-- `first[s] = own_time_steps[s].source_tasks()`,
+- `first[s] = own_time_steps[s].source_tasks()` (additive: `time_step.source_tasks()` of the merged graph, **before** you add the prep tasks),
 - `end[s]`, the last cell/face tasks of solver `s`. Do **not** use `sink_tasks()` for this: each solver ends in a
   `GLOBAL_END_OF_STEP` task that computes the next time step size. It has to stay at the end of the time step, and no ordinary
   task may depend on it (the task graph compiler asserts). Drop the tasks with entity `GLOBAL` or `GLOBAL_END_OF_STEP` first, and then take those on which no remaining task depends:
