@@ -136,7 +136,7 @@ def plot_host(host_class, file_name, title, single_solver_graphs):
 
 if __name__ == "__main__":
     plot_host(
-        exagrype.api.CCZ4WithEuler_AdditiveCoupling,
+        exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling,
         "coupling-graph-outer-additive.png",
         "Outer additive coupling of CCZ4 (RK2) and Euler (FV)",
         single_solver_graphs=True,

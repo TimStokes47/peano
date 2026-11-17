@@ -98,7 +98,7 @@ and has the responsibility to inject the additional coupling logic and terms (re
 </div>
 
 
-A user adds one coupling object (a "host", e.g. exagrype.api.CCZ4WithEuler_AdditiveCoupling), which then brings its embedded solvers along. 
+A user adds one coupling object (a "host", e.g. exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling), which then brings its embedded solvers along. 
 These aggregated solvers then later will create their task graphs how to realise a feature independently,
 and it is then the host who has to merge these subgraphs properly:
 
@@ -331,7 +331,7 @@ They only are coupled in the outer time integration loop.
 
 ### Example: CCZ4 and Euler in parallel
 
-The host @ref exagrype.api.CCZ4WithEuler_AdditiveCoupling (driven by `benchmarks/exagrype/gauge-wave-with-Euler`) puts the graphs of the 
+The host @ref exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling (driven by `benchmarks/exagrype/gauge-wave-with-Euler`) puts the graphs of the 
 running example next to each other:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -383,7 +383,7 @@ Consequently, an additive solver B sees the state of A at the begin of the time 
 The additive tasks of A and B can overlap, whereas multiplicative steps are logically sequential. The final synchronisation
 task depends on the end of the whole graph in both cases. Take care not to wire anything behind the time step size tasks of the solvers:
 each solver's graph ends with a global end-of-step task, which no ordinary task may depend on, so `end[A]` has to exclude those.
-The additive reference is `exagrype.api.CCZ4WithEuler_AdditiveCoupling`, driven by `benchmarks/exagrype/gauge-wave-with-Euler`. The AI skill
+The additive reference is `exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling`, driven by `benchmarks/exagrype/gauge-wave-with-Euler`. The AI skill
 (see below) generates both flavours from the same recipe.
 
 ## Inner additive coupling

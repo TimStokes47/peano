@@ -17,7 +17,7 @@ class CCZ4WithEuler_MultiplicativeCoupling:
 
     First-order CCZ4 and an Euler fluid, run one after the other within each time step
 
-    The host is the sibling of exagrype.api.CCZ4WithEuler_AdditiveCoupling, and
+    The host is the sibling of exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling, and
     deliberately repeats what the two have in common (solvers, auxiliary
     variables, prep tasks, realisation of the solvers), so that each class can be
     read on its own. It only wires the task graphs differently

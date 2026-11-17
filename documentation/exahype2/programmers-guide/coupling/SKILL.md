@@ -27,7 +27,7 @@ Start by understanding the user's intent.
 
 Keep it simple. There is no generic framework class to derive from: write one plain
 Python class per coupling, with a few dozen lines of code, and copy the pattern from
-`exagrype.api.CCZ4WithEuler_AdditiveCoupling` (outer coupling) rather than inventing
+`exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling` (outer coupling) rather than inventing
 new machinery. Do not add base classes, registries or hooks. The class is what the user adds
 to the project (`project.add_solver(coupled)`). It offers
 
@@ -99,7 +99,7 @@ Ask the user which flavour they want (Capture Intent) and then follow Steps 1 to
 | Wiring of the graphs | in sequence: A, copy, B | in parallel: copy, A and B together |
 | What B sees of A | A's **updated** state | A's state at the **begin** of the time step |
 | Prep tasks | two, one in front of A and one between A and B | two, both in front of A and B, run in parallel |
-| Host in the repository | `exagrype.api.CCZ4WithEuler_MultiplicativeCoupling` | `exagrype.api.CCZ4WithEuler_AdditiveCoupling` |
+| Host in the repository | `exagrype.api.CCZ4WithEuler_MultiplicativeCoupling` | `exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling` |
 | Benchmark | none yet (same driver as the additive one, other host class) | `benchmarks/exagrype/gauge-wave-with-Euler` |
 
 For Euler + CCZ4, the driver of the benchmark is the template for both. The two host classes are independent of each other and differ in `_couple()` only; everything else
@@ -195,7 +195,7 @@ for first_task in first[A] + first[B]:
 The two prep tasks do not depend on each other and run in parallel. As both copies are complete when any solver starts,
 no solver writes a patch that a copy still reads: there is no data race, and no temporary copy is needed.
 The solvers only see the state of the other one at the begin of the time step.
-For the additive flavour, the end of `_couple()` is exactly `CCZ4WithEuler_AdditiveCoupling._couple()`.
+For the additive flavour, the end of `_couple()` is exactly `CCZ4WithEuler_OuterAdditiveCoupling._couple()`.
 
 Show the graph of each solver alone, the concatenation and the coupled graph to the user: run the driver with the visualised logger
 (`peano4.api.LoggerVerbosity.VISUALISATION`, `--mode debug` in the benchmark), which renders each graph. The coupled graph has to show

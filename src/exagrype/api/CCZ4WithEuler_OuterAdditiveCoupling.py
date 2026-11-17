@@ -12,7 +12,7 @@ from .FOCCZ4Solver import FOCCZ4Solver
 from .actionsets import CopyPatchWithLinearInterpolation, SynchroniseTimeStepSizes
 
 
-class CCZ4WithEuler_AdditiveCoupling:
+class CCZ4WithEuler_OuterAdditiveCoupling:
     """!
 
     First-order CCZ4 and an Euler fluid, coupled only at the begin and the end of each time step
@@ -24,7 +24,7 @@ class CCZ4WithEuler_AdditiveCoupling:
     own numerical scheme and the schemes can differ in their time stepping, patch
     size and halo. Assign them to the solvers as for any other solver:
 
-        coupled = exagrype.api.CCZ4WithEuler_AdditiveCoupling()
+        coupled = exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling()
         coupled.ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(coupled.ccz4, 8, rk_order=4)
         coupled.euler.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(coupled.euler, 17)
 
