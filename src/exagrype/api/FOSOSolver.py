@@ -56,7 +56,7 @@ class _HostedScheme(exahype2.api.Solver.NumericalScheme):
             )
             time_step.merge(graph)
             self.stage_graphs.append(graph)
-        title = f"Time stepping task graph for {solver.name}{solver.task_graph_title_suffix}"
+        title = f"Time stepping task graph for {solver.name}"
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(title=title)
         if peano4.api.Logger().is_text:

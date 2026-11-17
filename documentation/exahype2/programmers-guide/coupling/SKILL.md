@@ -272,7 +272,7 @@ If possible, display a rendering of the arising task graph to the user.
 Runge-Kutta stage with one numerical scheme in the host.
 
 The coupling's shared scheme asks each solver for its graph per Runge-Kutta
-stage (`Solver.create_task_graph()`), i.e. there is one instance of each graph per stage. In `couple()`,
+stage (a method of the hosted solver, as `FOSOReconstructionSolver.create_task_graph()`; `Solver` itself has no such hook), i.e. there is one instance of each graph per stage. In `couple()`,
 add a KickOff task (`GridEntity.GLOBAL_START_OF_STEP`) per stage which the first task of each solver's stage graph depends on. Make the 
 KickOff of stage `k+1` depend on the sinks of stage `k`.
 No worked example exists for this type at the moment: the former `CCZ4WithEuler` host with KickOff/WrapUp tasks per stage has been removed (see git history). Write the host from scratch.
@@ -302,7 +302,7 @@ in front of the first and behind the last task of the whole time step. The parag
 
 As we always want to support multi-step time stepping, too, we have to reread all
 of the descriptions above re time steps as "subgraph per time step". The host
-instantiates the subgraph of each hosted solver once per stage (`create_task_graph(..., stage, ...)`), 
+instantiates the subgraph of each hosted solver once per stage (through a method of the solver, not through a `Solver` hook), 
 so the same task chain exists several times, once per stage, and the multiplicative scheme ties each instance to the 
 matching stage of the consumer (`FOSOSolver.couple()`). For the additive scheme, WrapUp and KickOff 
 might have to be inserted multiple times at the corresponding markers. Tasks at the stages are 
