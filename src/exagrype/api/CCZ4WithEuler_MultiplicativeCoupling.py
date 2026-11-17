@@ -85,10 +85,10 @@ class CCZ4WithEuler_MultiplicativeCoupling(CCZ4WithEuler_AdditiveCoupling):
         ]
 
         prep_from_euler = self._create_prep_task(
-            time_step, self.euler, self.ccz4, self.euler_fields
+            time_step, self.euler, self.ccz4, self.euler_auxiliary_copies
         )
         prep_from_ccz4 = self._create_prep_task(
-            time_step, self.ccz4, self.euler, self.ccz4_fields
+            time_step, self.ccz4, self.euler, self.ccz4_auxiliary_copies
         )
         for task in first_of_ccz4:
             task.add_dependency(prep_from_euler)

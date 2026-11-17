@@ -144,17 +144,17 @@ Create **two prep tasks** (`GridEntity.CELL`, `"Prepare auxiliary variables from
 | data | access |
 |---|---|
 | `producer._patch` (persistent patch) | `READ_AND_WRITE` |
-| `fields.patch` (auxiliary set of the consumer) | `READ_AND_WRITE` |
-| `fields.patch_overlap_update` | `TEMPORARY` |
-| `fields.patch_overlap_current_time_step` | `READ_AND_WRITE` |
+| `auxiliary_copies.patch` (auxiliary set of the consumer) | `READ_AND_WRITE` |
+| `auxiliary_copies.patch_overlap_update` | `TEMPORARY` |
+| `auxiliary_copies.patch_overlap_current_time_step` | `READ_AND_WRITE` |
 
 Action sets in this order, **guarded by the consumer's** `grid_selector.createCellGuard()` (face sets: `createFaceGuard()`), with the consumer's
 `_get_default_includes()` + `user_solver_includes`:
 1. `exagrype.api.actionsets.CopyPatchWithLinearInterpolation(source_patch, target_patch, guard, additional_includes)`: copy, piecewise (tri)linear if the patch sizes differ. Ask the user if they want a different interpolation.
-2. `exahype2.api.rkfd4.actionsets.ProjectPatchOntoFaces(fields.patch, fields.patch_overlap_update, ...)`,
-3. `toolbox.blockstructured.api.RestrictHangingFaces(fields.patch_overlap_update, scheme=consumer.numerical_scheme.restriction, clear_guard=face guard, ...)`.
+2. `exahype2.api.rkfd4.actionsets.ProjectPatchOntoFaces(auxiliary_copies.patch, auxiliary_copies.patch_overlap_update, ...)`,
+3. `toolbox.blockstructured.api.RestrictHangingFaces(auxiliary_copies.patch_overlap_update, scheme=consumer.numerical_scheme.restriction, clear_guard=face guard, ...)`.
    Restriction belongs to the writer of face data, i.e. it sits here, even on a regular mesh.
-4. `exahype2.api.rkfd4.actionsets.RollOverUpdatedFace(fields.patch_overlap_current_time_step, fields.patch_overlap_update, ...)`.
+4. `exahype2.api.rkfd4.actionsets.RollOverUpdatedFace(auxiliary_copies.patch_overlap_current_time_step, auxiliary_copies.patch_overlap_update, ...)`.
 
 Interpolation onto hanging faces needs no task: it rides along with the solvers' reconstruction.
 

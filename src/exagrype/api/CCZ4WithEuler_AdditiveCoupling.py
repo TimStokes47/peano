@@ -108,9 +108,9 @@ class CCZ4WithEuler_AdditiveCoupling:
 
     """
 
-    EULER_FIELDS_NAME = "EulerFields"
+    EULER_AUXILIARY_COPIES_NAME = "EulerFields"
     """! Name of the auxiliary variables of CCZ4 which hold the Euler fields """
-    CCZ4_FIELDS_NAME = "CCZ4Fields"
+    CCZ4_AUXILIARY_COPIES_NAME = "CCZ4Fields"
     """! Name of the auxiliary variables of Euler which hold the CCZ4 fields """
     PREP_TASK_NAME = "Prepare auxiliary variables from {}"
     """! Name of the tasks that fill the auxiliary variables; the argument is the name of the solver that provides the data """
@@ -135,20 +135,20 @@ class CCZ4WithEuler_AdditiveCoupling:
         self.ccz4 = FOCCZ4Solver(ccz4_name)
         self.euler = Euler(euler_name)
         Mode = exahype2.api.AuxiliaryVariables.Mode
-        self.euler_fields = exahype2.api.AuxiliaryVariables(
-            self.EULER_FIELDS_NAME,
+        self.euler_auxiliary_copies = exahype2.api.AuxiliaryVariables(
+            self.EULER_AUXILIARY_COPIES_NAME,
             dict(Euler.Unknowns),
             mode=Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES,
             data_name="EulerFieldsForCCZ4",
         )
-        self.ccz4_fields = exahype2.api.AuxiliaryVariables(
-            self.CCZ4_FIELDS_NAME,
+        self.ccz4_auxiliary_copies = exahype2.api.AuxiliaryVariables(
+            self.CCZ4_AUXILIARY_COPIES_NAME,
             dict(FOCCZ4Solver.Unknowns),
             mode=Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES,
             data_name="CCZ4FieldsForEuler",
         )
-        self.ccz4.add_auxiliary_variables(self.euler_fields)
-        self.euler.add_auxiliary_variables(self.ccz4_fields)
+        self.ccz4.add_auxiliary_variables(self.euler_auxiliary_copies)
+        self.euler.add_auxiliary_variables(self.ccz4_auxiliary_copies)
         self._name = f"{ccz4_name}With{euler_name}"
 
     @property
@@ -246,8 +246,8 @@ class CCZ4WithEuler_AdditiveCoupling:
         ## projects them onto the faces, where the reconstruction of the halo
         ## finds them.
         preps = [
-            self._create_prep_task(time_step, self.ccz4, self.euler, self.ccz4_fields),
-            self._create_prep_task(time_step, self.euler, self.ccz4, self.euler_fields),
+            self._create_prep_task(time_step, self.ccz4, self.euler, self.ccz4_auxiliary_copies),
+            self._create_prep_task(time_step, self.euler, self.ccz4, self.euler_auxiliary_copies),
         ]
         ## The solvers start only once both prep tasks have finished
         for first_task in first_tasks:
@@ -264,13 +264,15 @@ class CCZ4WithEuler_AdditiveCoupling:
         time_step.add_task(synchronise)
 
 
-    def _create_prep_task(self, time_step, source_solver, target_solver, fields):
+    def _create_prep_task(
+        self, time_step, source_solver, target_solver, auxiliary_copies
+    ):
         """!
 
         Create the task that fills the auxiliary variables of one solver with the solution of the other one
 
-        The task reads the persistent patch of the source solver, writes the
-        auxiliary variables fields of the target solver (copy, with
+        auxiliary copies (auxiliary_copies) of the target solver (copy, with
+        auxiliary variables auxiliary_copies of the target solver (copy, with
         interpolation if the patches differ in size), projects them onto the
         faces, restricts them on hanging faces, and rolls the faces over. It is
         added to time_step, but no dependencies are set: the caller wires it.
@@ -286,7 +288,7 @@ class CCZ4WithEuler_AdditiveCoupling:
         @param target_solver: exahype2.api.Solver
           Holds the auxiliary variables.
 
-        @param fields: exahype2.api.AuxiliaryVariables
+        @param auxiliary_copies: exahype2.api.AuxiliaryVariables
           The auxiliary variables of the target solver.
 
         @return peano4.api.taskgraph.Task
@@ -304,28 +306,28 @@ class CCZ4WithEuler_AdditiveCoupling:
             entity=Entity.CELL,
         )
         prep.use_cell(source_solver._patch, Access.READ_AND_WRITE)
-        prep.use_cell(fields.patch, Access.READ_AND_WRITE)
-        prep.use_face(fields.patch_overlap_update, Access.TEMPORARY)
-        prep.use_face(fields.patch_overlap_current_time_step, Access.READ_AND_WRITE)
+        prep.use_cell(auxiliary_copies.patch, Access.READ_AND_WRITE)
+        prep.use_face(auxiliary_copies.patch_overlap_update, Access.TEMPORARY)
+        prep.use_face(auxiliary_copies.patch_overlap_current_time_step, Access.READ_AND_WRITE)
         prep.add_action_set(
             CopyPatchWithLinearInterpolation(
                 source_patch=source_solver._patch,
-                target_patch=fields.patch,
+                target_patch=auxiliary_copies.patch,
                 guard=target_solver.grid_selector.createCellGuard(),
                 additional_includes=includes,
             )
         )
         prep.add_action_set(
             actionsets.ProjectPatchOntoFaces(
-                fields.patch,
-                fields.patch_overlap_update,
+                auxiliary_copies.patch,
+                auxiliary_copies.patch_overlap_update,
                 guard=target_solver.grid_selector.createCellGuard(),
                 includes=includes,
             )
         )
         prep.add_action_set(
             toolbox.blockstructured.api.RestrictHangingFaces(
-                fields.patch_overlap_update,
+                auxiliary_copies.patch_overlap_update,
                 scheme=target_solver.numerical_scheme.restriction,
                 clear_guard=target_solver.grid_selector.createFaceGuard(),
                 additional_includes=includes,
@@ -333,8 +335,8 @@ class CCZ4WithEuler_AdditiveCoupling:
         )
         prep.add_action_set(
             actionsets.RollOverUpdatedFace(
-                fields.patch_overlap_current_time_step,
-                fields.patch_overlap_update,
+                auxiliary_copies.patch_overlap_current_time_step,
+                auxiliary_copies.patch_overlap_update,
                 guard=target_solver.grid_selector.createFaceGuard(),
                 includes=includes,
             )
