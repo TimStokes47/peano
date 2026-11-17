@@ -122,7 +122,7 @@ In an outer coupling, each solver has its numerical scheme of its own. The mappi
    sees what each solver contributes.
 2. The host concatenates the graphs (peano4.api.taskgraph.Graph.merge()). The result
    consists of the chains of the solvers next to each other.
-3. The host's couple() routine adds the tasks and dependencies that tie the chains together: 
+3. The host's _couple() routine adds the tasks and dependencies that tie the chains together: 
    an outer multiplicative coupling chains the graphs (one solver waits for the other one),
    an outer additive coupling lets them start together; both add tasks that copy data from one solver into the auxiliary
    variables of the other one, and a final task that synchronises the time step sizes. 
@@ -360,8 +360,8 @@ CCZ4 owns the global tasks (the load balancing switch and the dynamic mesh refin
 
 ### Outer multiplicative vs. outer additive in the source code
 
-Both outer couplings are realised by the same host pattern, and in practice they differ in the wiring inside `couple()` only.
-Everything else is identical: the host is a plain class that offers the solvers, generate_solver_realisation() and couple(), each solver receives a set of auxiliary variables that
+Both outer couplings are realised by the same host pattern, and in practice they differ in the wiring inside `_couple()` only.
+Everything else is identical: the host is a plain class that offers the solvers, generate_solver_realisation() and _couple(), each solver receives a set of auxiliary variables that
 holds the unknowns of the other solver, the numerical schemes are assigned to the solvers, and two "prepare auxiliary
 variables" tasks copy, project and restrict the data onto the faces. A final global task synchronises the time step sizes.
 

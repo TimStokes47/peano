@@ -52,7 +52,7 @@ class CCZ4WithEuler_MultiplicativeCoupling(CCZ4WithEuler_AdditiveCoupling):
             if not any(task in other.dependencies for other in tasks)
         ]
 
-    def couple(self, exahype2_project, peano_project, own_time_steps, time_step):
+    def _couple(self, exahype2_project, peano_project, own_time_steps, time_step):
         """!
 
         Chain the graph of CCZ4 and the graph of Euler through the prep tasks

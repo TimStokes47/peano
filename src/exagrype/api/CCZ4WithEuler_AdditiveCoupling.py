@@ -193,7 +193,7 @@ class CCZ4WithEuler_AdditiveCoupling:
                 add_global_tasks=False,
             )
             coupled_time_step.merge(own_time_steps[solver])
-        self.couple(exahype2_project, peano_project, own_time_steps, coupled_time_step)
+        self._couple(exahype2_project, peano_project, own_time_steps, coupled_time_step)
 
         self.ccz4.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks(
             coupled_time_step
@@ -210,7 +210,7 @@ class CCZ4WithEuler_AdditiveCoupling:
             coupled_time_step.log_as_text(title=title)
         time_step.merge(coupled_time_step)
 
-    def couple(self, exahype2_project, peano_project, own_time_steps, time_step):
+    def _couple(self, exahype2_project, peano_project, own_time_steps, time_step):
         """!
 
         Add the preamble and the final task around the concatenated graphs

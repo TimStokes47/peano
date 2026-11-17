@@ -80,7 +80,7 @@ def plot_host(host_class, file_name, title, single_solver_graphs):
         tempfile.gettempdir(), "coupling-illustrations-log.md"
     )
     coupled = create_host(host_class)
-    original = coupled.couple
+    original = coupled._couple
 
     def couple(exahype2_project, peano_project, own_time_steps, time_step):
         # Before the coupling adds its dependencies
@@ -100,7 +100,7 @@ def plot_host(host_class, file_name, title, single_solver_graphs):
         # wrap the graph, i.e. the picture shows the coupling itself
         plot_graph(time_step, title, file_name)
 
-    coupled.couple = couple
+    coupled._couple = couple
 
     with tempfile.TemporaryDirectory() as directory:
         project = exahype2.api.Project(

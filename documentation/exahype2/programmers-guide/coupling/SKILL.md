@@ -39,11 +39,11 @@ to the project (`project.add_solver(coupled)`). It offers
 - `generate_solver_realisation(exahype2_project, peano_project, setup_simulation, time_step, plot, mesh_adaptation)`,
   which is the same in every coupling (copy it from the additive coupling, ~25 lines): realise each solver with
   `add_global_tasks=False` into a time step graph of its own, `Graph.merge()` these into one coupled graph,
-  call `couple()`, wrap the coupled graph through the scheme of the solver which owns the global tasks
+  call `_couple()`, wrap the coupled graph through the scheme of the solver which owns the global tasks
   (`solver.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks()`), let this solver's
   `mesh_adaptation` fill the mesh adaptation graph, report the coupled graph (visualise/log), and merge it into
   the project's `time_step` graph, and
-- `couple(exahype2_project, peano_project, own_time_steps, time_step)`: the only part that differs between
+- `_couple(exahype2_project, peano_project, own_time_steps, time_step)`: the only part that differs between
   couplings. It adds tasks and dependencies to the coupled `time_step` graph.
 
 ### Numerical schemes
@@ -56,7 +56,7 @@ The mapping of each solver to C++ (`SolverToCPPFiles`, grid construction, plotte
 
 ### Where the task graphs are composed
 
-Composition happens in `couple()` through **dependencies**. It does not copy tasks. Use
+Composition happens in `_couple()` through **dependencies**. It does not copy tasks. Use
 `Graph.source_tasks()` / `Graph.sink_tasks()` to find where to hook in, `Graph.append()` to run a whole
 graph after another one, and `Graph.merge()` to put graphs next to each other.
 If possible, display a rendering of each of these graphs to the user.
@@ -100,7 +100,7 @@ Ask the user which flavour they want (Capture Intent) and then follow Steps 1 to
 | Benchmark | none yet (same driver as the additive one, other host class) | `benchmarks/exagrype/gauge-wave-with-Euler` |
 
 For Euler + CCZ4, the driver of the benchmark is the template for both. The multiplicative host is a subclass of the additive one and differs
-in `couple()` only; both create their prep tasks through `CCZ4WithEuler_AdditiveCoupling._create_prep_task()`. If the user wants exactly this pair,
+in `_couple()` only; both create their prep tasks through `CCZ4WithEuler_AdditiveCoupling._create_prep_task()`. If the user wants exactly this pair,
 use the host class from `exagrype.api` directly and do not copy it. For other solver pairs, write a host along the same lines.
 `coupling.dox` (running example: Euler with Finite Volumes and CCZ4 with Runge-Kutta 2) shows the graphs that each flavour produces;
 `documentation/exahype2/programmers-guide/coupling-illustrations.py` regenerates those pictures.
@@ -110,7 +110,7 @@ use the host class from `exagrype.api` directly and do not copy it. For other so
 Derive from nothing (or, for the multiplicative flavour, from the additive class). The constructor does this, **in this order**:
 
 1. Create the solvers (CCZ4 first, as it owns the global tasks (load balancing, AMR) and Euler depends on its data). The order of `solvers`
-   is the order of realisation; it does not fix the order of execution, which `couple()` does.
+   is the order of realisation; it does not fix the order of execution, which `_couple()` does.
 2. For each solver, create one `exahype2.api.AuxiliaryVariables` set that holds **all** unknowns of the other solver
    (`dict(OtherSolver.Unknowns)`), and add it with `add_auxiliary_variables()` to the solver that reads it
    (`EulerFieldsForCCZ4` into CCZ4, `CCZ4FieldsForEuler` into Euler; name the data explicitly through `data_name`).
@@ -118,11 +118,11 @@ Derive from nothing (or, for the multiplicative flavour, from the additive class
    solver, so a Runge-Kutta scheme reconstructs the halo once, in its first stage. Not `CHANGING_ON_FACES`
    (reconstructs the halo in every stage for nothing), not `STATIONARY_ON_FACES` (the faces would never see the exchange).
    The Euler solver checks at generation time that it holds a set with the 58 entries of CCZ4.
-3. Store the name (`f"{a}With{b}"`) and provide `solvers`, `name`, `generate_solver_realisation()` and `couple()` as described above.
+3. Store the name (`f"{a}With{b}"`) and provide `solvers`, `name`, `generate_solver_realisation()` and `_couple()` as described above.
 
-`couple()` receives `own_time_steps[solver]`, which shows where a solver's graph begins and ends; its tasks are the same objects as in the coupled `time_step`.
+`_couple()` receives `own_time_steps[solver]`, which shows where a solver's graph begins and ends; its tasks are the same objects as in the coupled `time_step`.
 
-#### Step 2: `couple()`
+#### Step 2: `_couple()`
 
 **Common to both flavours.** Before you add any task, collect
 
@@ -192,7 +192,7 @@ for first_task in first[A] + first[B]:
 The two prep tasks do not depend on each other and run in parallel. As both copies are complete when any solver starts,
 no solver writes a patch that a copy still reads: there is no data race, and no temporary copy is needed.
 The solvers only see the state of the other one at the begin of the time step.
-For the additive flavour, the end of `couple()` is exactly `CCZ4WithEuler_AdditiveCoupling.couple()`.
+For the additive flavour, the end of `_couple()` is exactly `CCZ4WithEuler_AdditiveCoupling._couple()`.
 
 Show the graph of each solver alone, the concatenation and the coupled graph to the user: run the driver with the visualised logger
 (`peano4.api.LoggerVerbosity.VISUALISATION`, `--mode debug` in the benchmark), which renders each graph. The coupled graph has to show
@@ -252,7 +252,7 @@ The notes below were written before the split into outer and inner.
 `exagrype.api.FOSOSolver` is a worked example of this type
 (the reconstruction tasks are inserted per Runge-Kutta stage in front of the CCZ4 stage which consumes them).
 
-`couple()` makes tasks of one solver wait for tasks of the other one. The graphs are already
+`_couple()` makes tasks of one solver wait for tasks of the other one. The graphs are already
 concatenated (or `Graph.append()` them yourself if a solver's stage graph simply follows the
 stage of another one), so there is nothing to copy: look up the tasks to be tied together (ideally 
 through tags that the solver's scheme puts on them - names only as a fallback, and then ask 
@@ -272,7 +272,7 @@ If possible, display a rendering of the arising task graph to the user.
 Runge-Kutta stage with one numerical scheme in the host.
 
 The coupling's shared scheme asks each solver for its graph per Runge-Kutta
-stage (a method of the hosted solver, as `FOSOReconstructionSolver.create_task_graph()`; `Solver` itself has no such hook), i.e. there is one instance of each graph per stage. In `couple()`,
+stage (a method of the hosted solver, as `FOSOReconstructionSolver.create_task_graph()`; `Solver` itself has no such hook), i.e. there is one instance of each graph per stage. In `_couple()`,
 add a KickOff task (`GridEntity.GLOBAL_START_OF_STEP`) per stage which the first task of each solver's stage graph depends on. Make the 
 KickOff of stage `k+1` depend on the sinks of stage `k`.
 No worked example exists for this type at the moment: the former `CCZ4WithEuler` host with KickOff/WrapUp tasks per stage has been removed (see git history). Write the host from scratch.
@@ -304,9 +304,9 @@ As we always want to support multi-step time stepping, too, we have to reread al
 of the descriptions above re time steps as "subgraph per time step". The host
 instantiates the subgraph of each hosted solver once per stage (through a method of the solver, not through a `Solver` hook), 
 so the same task chain exists several times, once per stage, and the multiplicative scheme ties each instance to the 
-matching stage of the consumer (`FOSOSolver.couple()`). For the additive scheme, WrapUp and KickOff 
+matching stage of the consumer (`FOSOSolver._couple()`). For the additive scheme, WrapUp and KickOff 
 might have to be inserted multiple times at the corresponding markers. Tasks at the stages are 
-looked up in the concatenated graph in `couple()`.
+looked up in the concatenated graph in `_couple()`.
 
 
 ## Optimise (outer additive coupling)

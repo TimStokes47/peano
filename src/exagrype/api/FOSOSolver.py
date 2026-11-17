@@ -24,7 +24,7 @@ class _HostedScheme(exahype2.api.Solver.NumericalScheme):
     per Runge-Kutta stage of CCZ4
     (@ref exahype2.api.Solver.Solver.create_task_graph()) and puts the graphs
     into the time stepping graph. The graphs are not connected: wiring them is
-    the job of FOSOSolver.couple(). The scheme remembers the graphs in
+    the job of FOSOSolver._couple(). The scheme remembers the graphs in
     stage_graphs.
 
     """
@@ -103,7 +103,7 @@ class FOSOSolver:
     once per stage (exagrype.api.FOSOReconstructionSolver.create_task_graph()). The reconstruction
     solver's graph is a chain per stage (see @ref exagrype.api.FOSOReconstructionSolver),
     and the chains of different stages are not connected.
-    The host concatenates the graphs and wires them (couple()): The first tasks of
+    The host concatenates the graphs and wires them (_couple()): The first tasks of
     each stage's chain take over the dependencies of the CCZ4 solver's reconstruction
     of this stage, and the latter depends on the last task of the chain. The host
     reports the outcome.
@@ -203,7 +203,7 @@ class FOSOSolver:
                 add_global_tasks=False,
             )
             coupled_time_step.merge(own_time_step)
-        self.couple(exahype2_project, peano_project, coupled_time_step)
+        self._couple(exahype2_project, peano_project, coupled_time_step)
 
         self.ccz4.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks(
             coupled_time_step
@@ -220,7 +220,7 @@ class FOSOSolver:
             coupled_time_step.log_as_text(title=title)
         time_step.merge(coupled_time_step)
 
-    def couple(self, exahype2_project, peano_project, time_step):
+    def _couple(self, exahype2_project, peano_project, time_step):
         """!
 
         Let each stage of the CCZ4 solver use the freshly reconstructed derivatives
