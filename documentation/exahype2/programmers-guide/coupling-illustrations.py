@@ -53,6 +53,7 @@ def plot_graph(graph, title, file_name):
 def create_host(host_class, ccz4_patch_size=8):
     coupled = host_class()
     ccz4, euler = coupled.ccz4, coupled.euler
+    ccz4.add_pde_term(exagrype.api.initialvalues.gauge_wave())
     ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
         ccz4, ccz4_patch_size, rk_order=2
     )

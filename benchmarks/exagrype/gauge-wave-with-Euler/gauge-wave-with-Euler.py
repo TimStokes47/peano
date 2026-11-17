@@ -107,6 +107,7 @@ project = exahype2.api.Project(
 coupled = exagrype.api.CCZ4WithEuler_AdditiveCoupling()
 ccz4 = coupled.ccz4
 euler = coupled.euler
+ccz4.add_pde_term(exagrype.api.initialvalues.gauge_wave())
 
 ## CCZ4: fourth-order Finite Differences with RK4
 Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel

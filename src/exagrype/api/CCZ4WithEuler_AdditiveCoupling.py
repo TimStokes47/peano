@@ -28,6 +28,12 @@ class CCZ4WithEuler_AdditiveCoupling:
         coupled.ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(coupled.ccz4, 8, rk_order=4)
         coupled.euler.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(coupled.euler, 17)
 
+    The host sets no initial conditions. Add them to the solvers as to any other solver:
+
+        coupled.ccz4.add_pde_term(exagrype.api.initialvalues.gauge_wave())
+
+    (Euler brings a smooth wave by default.)
+
     If you prefer one numerical scheme for the whole compound, use the
     coupling per stage instead (@ref page_exahype_programmers_guide_coupling).
 
@@ -126,9 +132,7 @@ class CCZ4WithEuler_AdditiveCoupling:
           Name of the Euler solver.
 
         """
-        self.ccz4 = FOCCZ4Solver(
-            ccz4_name, initial_condition=_gauge_wave_initial_condition()
-        )
+        self.ccz4 = FOCCZ4Solver(ccz4_name)
         self.euler = Euler(euler_name)
         Mode = exahype2.api.AuxiliaryVariables.Mode
         self.euler_fields = exahype2.api.AuxiliaryVariables(
@@ -337,9 +341,3 @@ class CCZ4WithEuler_AdditiveCoupling:
         )
         time_step.add_task(prep)
         return prep
-
-
-def _gauge_wave_initial_condition():
-    from . import initialvalues
-
-    return initialvalues.gauge_wave()
