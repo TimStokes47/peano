@@ -1,12 +1,15 @@
 # This file is part of the Peano project. For conditions of distribution and
 # use, please see the copyright notice at www.peano-framework.org
 
+import filecmp
 import gc
 import os
 import re
+import shutil
 import sys
 import subprocess
 import multiprocessing
+import tempfile
 
 import peano4.api.output
 import peano4.api.datamodel
@@ -52,9 +55,12 @@ class Project (object):
     self.namespace = namespace
     self.namespaces = []
     self.subdirectories = []
+    self.temporary_subdirectories = []
     self.project_name = project_name
     self.directory = directory
+    self.temporary_directory = tempfile.mkdtemp()
     self._subdirectory = subdirectory
+    self.temporary_subdirectory = tempfile.mkdtemp()
     if subdirectory:
       self.namespace += [ subdirectory ]
     if self.namespace:
@@ -62,6 +68,7 @@ class Project (object):
         self.namespaces.append(self.namespace)
       if not self.subdirectory in self.subdirectories:
         self.subdirectories.append(self.subdirectory)
+        self.temporary_subdirectories.append(tempfile.mkdtemp())
 
     #
     # Create default output model, i.e. those parts that have to be there
@@ -163,7 +170,39 @@ class Project (object):
     # "is ready" message (see peano4.api.output.Readme) is meant to be the
     # last thing this routine reports before Logger's own atexit-triggered
     # close() takes over.
-    self.output.generate(overwrite, self.directory, self.subdirectories)
+    self.output.generate(overwrite, self.temporary_directory, self.temporary_subdirectories)
+
+    # Check whether any of the code generated into a temporary directory is 
+    # different from the code that already exists in the corresponding subdirectory.
+    # If so, copy the generated code into the subdirectory. This is intended 
+    # to avoid unnecessary recompilation of unchanged code.
+    self.temporary_subdirectories.append(self.temporary_subdirectory)
+    self.subdirectories.append(self.subdirectory)
+    for temporary_subdirectory, subdirectory in zip(self.temporary_subdirectories, self.subdirectories):
+      for root, dirs, files in os.walk(temporary_subdirectory):
+        for file in files:
+          temporary_file_path = os.path.join(root, file)
+          relative_path = os.path.relpath(temporary_file_path, temporary_subdirectory)
+          target_file_path = os.path.join(self.directory, subdirectory, relative_path)
+          # Check if the target file exists and is different from the temporary file
+          if not os.path.exists(target_file_path) or not filecmp.cmp(temporary_file_path, target_file_path):
+            # Create the target directory if it doesn't exist
+            os.makedirs(os.path.dirname(target_file_path), exist_ok=True)
+            # Copy the temporary file to the target location
+            shutil.copy(temporary_file_path, target_file_path)
+            Logger().log(f"Updated {target_file_path} from {temporary_file_path}")
+    for root, dirs, files in os.walk(self.temporary_directory):
+      for file in files:
+        temporary_file_path = os.path.join(root, file)
+        relative_path = os.path.relpath(temporary_file_path, self.temporary_directory)
+        target_file_path = os.path.join(self.directory, self.directory, relative_path)
+        # Check if the target file exists and is different from the temporary file
+        if not os.path.exists(target_file_path) or not filecmp.cmp(temporary_file_path, target_file_path):
+          # Create the target directory if it doesn't exist
+          os.makedirs(os.path.dirname(target_file_path), exist_ok=True)
+          # Copy the temporary file to the target location
+          shutil.copy(temporary_file_path, target_file_path)
+          Logger().log(f"Updated {target_file_path} from {temporary_file_path}")
 
     if throw_away_data_after_generation:
       self.datamodel = None
@@ -349,6 +388,7 @@ class Project (object):
     self.datamodel._subdirectory = subproject.datamodel._subdirectory
     if not subproject.subdirectory in self.subdirectories:
       self.subdirectories.append(subproject.subdirectory)
+      self.temporary_subdirectories.append(tempfile.mkdtemp())
     if not self.datamodel.namespace in self.datamodel.namespaces:
       self.datamodel.namespaces.append(self.datamodel.namespace)
     if not self.datamodel.subdirectory in self.datamodel.subdirectories:
