@@ -79,7 +79,7 @@ class Project (object):
     #
     # Empty model by default
     #
-    self.datamodel    = peano4.api.datamodel.Model(self.namespace, self._subdirectory)
+    self.datamodel    = peano4.api.datamodel.Model(self.namespace, self, self.subdirectory)
 
     self.solversteps  = peano4.api.solversteps.Steps(self)
 
@@ -162,15 +162,16 @@ class Project (object):
     self.main.construct_output(self.output,self.project_name + "-main")
     if self.subconstants:
       for i in range(len(self.subconstants)):
-        self.subconstants[i].generate(overwrite, self.directory, self.subdirectories[i])
+        self.subconstants[i].generate(overwrite, self.temporary_directory, self.temporary_subdirectories[i])
     else:
-      self.constants.generate(overwrite, self.directory)
+      self.constants.generate(overwrite, self.temporary_directory)
 
     # Generate the README last, so it is genuinely the final artefact: its
     # "is ready" message (see peano4.api.output.Readme) is meant to be the
     # last thing this routine reports before Logger's own atexit-triggered
     # close() takes over.
     self.output.generate(overwrite, self.temporary_directory, self.temporary_subdirectories)
+    #self.output.generate(overwrite, self.directory, self.subdirectories)
 
     # Check whether any of the code generated into a temporary directory is 
     # different from the code that already exists in the corresponding subdirectory.
