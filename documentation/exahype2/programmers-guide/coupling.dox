@@ -98,7 +98,7 @@ and has the responsibility to inject the additional coupling logic and terms (re
 </div>
 
 
-A user adds one @ref exahype2.api.SolverHost "host", which then brings its embedded solvers along. 
+A user adds one coupling object (a "host", e.g. exagrype.api.CCZ4WithEuler_AdditiveCoupling), which then brings its embedded solvers along. 
 These aggregated solvers then later will create their task graphs how to realise a feature independently,
 and it is then the host who has to merge these subgraphs properly:
 
@@ -116,14 +116,9 @@ digraph host {
 }
 \enddot
 
-The host, not the solvers, own the generation of the numerical scheme 
-(exahype2.api.SolverHost.numerical_scheme).
-However, the mapping of the solvers to C++ remains solver-specific.
+In an outer coupling, each solver has its numerical scheme of its own. The mapping of the solvers to C++ remains solver-specific.
 
-1. Each solver builds the task graphs of the four phases (setup, time step, plot, mesh
-   adaptation) in graphs of its own and reports the time stepping graph. The host's scheme builds
-   the graph of the global-tasks solver, and asks every other solver for its graph once per 
-   Runge-Kutta stage (exahype2.api.Solver.Solver.create_task_graph()). The user thus
+1. Each solver builds its time stepping graph on its own and reports it. The user thus
    sees what each solver contributes.
 2. The host concatenates the graphs (peano4.api.taskgraph.Graph.merge()). The result
    consists of the chains of the solvers next to each other.
@@ -366,8 +361,8 @@ CCZ4 owns the global tasks (the load balancing switch and the dynamic mesh refin
 ### Outer multiplicative vs. outer additive in the source code
 
 Both outer couplings are realised by the same host pattern, and in practice they differ in the wiring inside `couple()` only.
-Everything else is identical: the host derives from @ref exahype2.api.SolverHost, each solver receives a set of auxiliary variables that
-holds the unknowns of the other solver, the numerical schemes are assigned to the solvers through the host, and two "prepare auxiliary
+Everything else is identical: the host is a plain class that offers the solvers, generate_solver_realisation() and couple(), each solver receives a set of auxiliary variables that
+holds the unknowns of the other solver, the numerical schemes are assigned to the solvers, and two "prepare auxiliary
 variables" tasks copy, project and restrict the data onto the faces. A final global task synchronises the time step sizes.
 
 The only difference is which tasks the prepare tasks are wired to:

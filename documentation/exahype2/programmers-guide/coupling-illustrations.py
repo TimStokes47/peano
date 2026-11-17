@@ -53,15 +53,11 @@ def plot_graph(graph, title, file_name):
 def create_host(host_class, ccz4_patch_size=8):
     coupled = host_class()
     ccz4, euler = coupled.ccz4, coupled.euler
-    coupled.set_numerical_scheme(
-        ccz4,
-        exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-            ccz4, ccz4_patch_size, rk_order=2
-        ),
+    ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+        ccz4, ccz4_patch_size, rk_order=2
     )
-    coupled.set_numerical_scheme(
-        euler,
-        exahype2.api.fv.RusanovWithExplicitEuler(euler, 2 * ccz4_patch_size + 1),
+    euler.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(
+        euler, 2 * ccz4_patch_size + 1
     )
     ccz4.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
         ccz4, volume_size=1.01 / 3 / ccz4_patch_size
@@ -85,23 +81,23 @@ def plot_host(host_class, file_name, title, single_solver_graphs):
     coupled = create_host(host_class)
     original = coupled.couple
 
-    def couple(exahype2_project, peano_project, own_graphs, host_graphs):
+    def couple(exahype2_project, peano_project, own_time_steps, time_step):
         # Before the coupling adds its dependencies
         if single_solver_graphs:
             plot_graph(
-                own_graphs[coupled.ccz4].time_step,
+                own_time_steps[coupled.ccz4],
                 "Time stepping task graph of CCZ4 (Runge-Kutta 2)",
                 "coupling-graph-ccz4.png",
             )
             plot_graph(
-                own_graphs[coupled.euler].time_step,
+                own_time_steps[coupled.euler],
                 "Time stepping task graph of Euler (Finite Volumes)",
                 "coupling-graph-euler.png",
             )
-        original(exahype2_project, peano_project, own_graphs, host_graphs)
+        original(exahype2_project, peano_project, own_time_steps, time_step)
         # The load balancing and AMR tasks are added after the coupling, but they
         # wrap the graph, i.e. the picture shows the coupling itself
-        plot_graph(host_graphs.time_step, title, file_name)
+        plot_graph(time_step, title, file_name)
 
     coupled.couple = couple
 

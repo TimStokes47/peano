@@ -68,7 +68,7 @@ class Graph:
         hold is added only once.
 
         This is how a host that couples several solvers
-        (@ref exahype2.api.SolverHost) puts the task graphs side by side which
+        (@ref page_exahype_programmers_guide_coupling) puts the task graphs side by side which
         the solvers have built independently, before it wires them. Use
         append() to run one graph after the other.
 

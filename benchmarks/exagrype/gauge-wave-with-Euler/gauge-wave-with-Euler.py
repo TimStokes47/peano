@@ -110,16 +110,13 @@ euler = coupled.euler
 
 ## CCZ4: fourth-order Finite Differences with RK4
 Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
-coupled.set_numerical_scheme(
+ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
     ccz4,
-    exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-        ccz4,
-        ccz4_patch_size,
-        rk_order=4,
-        right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
-        advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
-        advected_quantities=ccz4.lopsided_advection_quantities(),
-    ),
+    ccz4_patch_size,
+    rk_order=4,
+    right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
+    advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
+    advected_quantities=ccz4.lopsided_advection_quantities(),
 )
 ccz4.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
     ccz4, volume_size=ccz4_volume_size
@@ -129,9 +126,7 @@ ccz4.plotter = exahype2.api.rkfd4.PlotAsVTKFile(
 )
 
 ## Euler: Finite Volumes with a Rusanov flux and explicit Euler time stepping
-coupled.set_numerical_scheme(
-    euler, exahype2.api.fv.RusanovWithExplicitEuler(euler, euler_patch_size)
-)
+euler.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(euler, euler_patch_size)
 euler.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(
     euler, volume_size=euler_volume_size
 )

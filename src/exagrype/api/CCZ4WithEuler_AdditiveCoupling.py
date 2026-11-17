@@ -12,7 +12,7 @@ from .FOCCZ4Solver import FOCCZ4Solver
 from .actionsets import CopyPatchWithLinearInterpolation, SynchroniseTimeStepSizes
 
 
-class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
+class CCZ4WithEuler_AdditiveCoupling:
     """!
 
     First-order CCZ4 and an Euler fluid, coupled only at the begin and the end of each time step
@@ -22,12 +22,11 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
     The coupling is additive and affects the begin and the end of a time step
     only. In between, the solvers are independent, i.e. each solver brings its
     own numerical scheme and the schemes can differ in their time stepping, patch
-    size and halo. Assign them through the host (set_numerical_scheme(), or
-    the property numerical_scheme for CCZ4):
+    size and halo. Assign them to the solvers as for any other solver:
 
         coupled = exagrype.api.CCZ4WithEuler_AdditiveCoupling()
-        coupled.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(coupled.ccz4, 8, rk_order=4)
-        coupled.set_numerical_scheme(coupled.euler, exahype2.api.fv.RusanovWithExplicitEuler(coupled.euler, 17))
+        coupled.ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(coupled.ccz4, 8, rk_order=4)
+        coupled.euler.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(coupled.euler, 17)
 
     If you prefer one numerical scheme for the whole compound, use the
     coupling per stage instead (@ref page_exahype_programmers_guide_coupling).
@@ -146,9 +145,68 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
         )
         self.ccz4.add_auxiliary_variables(self.euler_fields)
         self.euler.add_auxiliary_variables(self.ccz4_fields)
-        super().__init__(f"{ccz4_name}With{euler_name}", [self.ccz4, self.euler])
+        self._name = f"{ccz4_name}With{euler_name}"
 
-    def couple(self, exahype2_project, peano_project, own_graphs, host_graphs):
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def solvers(self):
+        """ The solvers the project has to register; exahype2.api.Project.add_solver() asks for them """
+        return [self.ccz4, self.euler]
+
+    def generate_solver_realisation(
+        self,
+        exahype2_project,
+        peano_project,
+        setup_simulation,
+        time_step,
+        plot,
+        mesh_adaptation,
+    ):
+        """!
+
+        Realise both solvers, couple their time stepping graphs, and add the outcome to the project's graphs
+
+        The arguments are those of exahype2.api.Solver.generate_solver_realisation().
+        Both solvers are realised without global tasks. The load balancing and the dynamic
+        mesh refinement wrap the coupled time step graph afterwards, through the scheme of CCZ4.
+
+        """
+        peano4.api.Logger().new_section("Host " + self.name)
+        own_time_steps = {}
+        coupled_time_step = peano4.api.taskgraph.Graph()
+        for solver in self.solvers:
+            own_time_steps[solver] = peano4.api.taskgraph.Graph()
+            solver.generate_solver_realisation(
+                exahype2_project,
+                peano_project,
+                setup_simulation,
+                own_time_steps[solver],
+                plot,
+                mesh_adaptation,
+                add_global_tasks=False,
+            )
+            coupled_time_step.merge(own_time_steps[solver])
+        self.couple(exahype2_project, peano_project, own_time_steps, coupled_time_step)
+
+        self.ccz4.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks(
+            coupled_time_step
+        )
+        if self.ccz4.mesh_adaptation is not None:
+            self.ccz4.mesh_adaptation.construct_output(
+                exahype2_project, peano_project, mesh_adaptation
+            )
+
+        title = f"Time stepping task graph for host {self.name}"
+        if peano4.api.Logger().is_visualisation:
+            coupled_time_step.visualise(title=title)
+        if peano4.api.Logger().is_text:
+            coupled_time_step.log_as_text(title=title)
+        time_step.merge(coupled_time_step)
+
+    def couple(self, exahype2_project, peano_project, own_time_steps, time_step):
         """!
 
         Add the preamble and the final task around the concatenated graphs
@@ -159,22 +217,21 @@ class CCZ4WithEuler_AdditiveCoupling(exahype2.api.SolverHost):
         @param peano_project: peano4.api.Project
           The Peano project that the exahype2 project assembles.
 
-        @param own_graphs: Dict[exahype2.api.Solver, exahype2.api.PhaseGraphs]
-          The graphs of the two solvers.
+        @param own_time_steps: Dict[exahype2.api.Solver, peano4.api.taskgraph.Graph]
+          The time step graphs of the two solvers.
 
-        @param host_graphs: exahype2.api.PhaseGraphs
-          The concatenated graphs. The time step graph receives the new tasks.
+        @param time_step: peano4.api.taskgraph.Graph
+          The concatenation of both. It receives the new tasks.
 
         """
-        time_step = host_graphs.time_step
         peano4.api.Logger().new_section(
             "Coupling " + self.ccz4.name + " and " + self.euler.name
         )
         Entity = peano4.api.taskgraph.Task.GridEntity
 
         first_tasks = (
-            own_graphs[self.ccz4].time_step.source_tasks()
-            + own_graphs[self.euler].time_step.source_tasks()
+            own_time_steps[self.ccz4].source_tasks()
+            + own_time_steps[self.euler].source_tasks()
         )
         last_tasks = [
             task for task in time_step.sink_tasks() if task.entity != Entity.GLOBAL

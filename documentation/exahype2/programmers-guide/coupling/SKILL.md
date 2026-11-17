@@ -16,7 +16,7 @@ Start by understanding the user's intent.
    | | multiplicative (one after the other) | additive (in parallel) |
    |---|---|---|
    | **outer**: each solver brings its own numerical scheme, solvers exchange data once per time step | **outer multiplicative** (fully described below) | **outer additive** (fully described below; matches `benchmarks/exagrype/gauge-wave-with-Euler`) |
-   | **inner**: the host holds one scheme, solvers exchange data per (Runge-Kutta) stage | inner multiplicative (placeholder) | inner additive (placeholder) |
+   | **inner**: one scheme is shared, solvers exchange data per (Runge-Kutta) stage | inner multiplicative (placeholder) | inner additive (placeholder) |
 
    There is no preferred type. If the user wants a type that is only a draft or placeholder, say so,
    and offer an outer type or work from the existing text together with the user.
@@ -25,70 +25,50 @@ Start by understanding the user's intent.
 
 ## Preparatory steps
 
-Create a new host class which derives from `exahype2.api.SolverHost`. It is what the user
-adds to the project (`project.add_solver(host)`), and it brings its solvers along. 
-The constructor creates one solver instance per solver to be coupled, and hands them over
-to the superclass in the order in which they are realised. A solver can rely on the data
-of its predecessors. Do **not** let the solvers call each other's realisation, and do not
-add the individual solvers to the project yourself.
+Keep it simple. There is no generic framework class to derive from: write one plain
+Python class per coupling, with a few dozen lines of code, and copy the pattern from
+`exagrype.api.CCZ4WithEuler_AdditiveCoupling` (outer coupling) rather than inventing
+new machinery. Do not add base classes, registries or hooks. The class is what the user adds
+to the project (`project.add_solver(coupled)`). It offers
 
-### Who holds the numerical scheme?
+- `solvers`: the list of solvers, in the order in which they are realised (a solver can rely on the
+  data of its predecessors). `Project.add_solver()` recognises a coupling through this attribute,
+  registers the solvers, and lets the coupling realise them. Do **not** add the individual solvers
+  to the project yourself, and do not let the solvers call each other's realisation.
+- `name`,
+- `generate_solver_realisation(exahype2_project, peano_project, setup_simulation, time_step, plot, mesh_adaptation)`,
+  which is the same in every coupling (copy it from the additive coupling, ~25 lines): realise each solver with
+  `add_global_tasks=False` into a time step graph of its own, `Graph.merge()` these into one coupled graph,
+  call `couple()`, wrap the coupled graph through the scheme of the solver which owns the global tasks
+  (`solver.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks()`), let this solver's
+  `mesh_adaptation` fill the mesh adaptation graph, report the coupled graph (visualise/log), and merge it into
+  the project's `time_step` graph, and
+- `couple(exahype2_project, peano_project, own_time_steps, time_step)`: the only part that differs between
+  couplings. It adds tasks and dependencies to the coupled `time_step` graph.
 
-The host holds the generator of the numerical scheme (`host.numerical_scheme`, a 
-`Solver.NumericalScheme` built for `host.global_tasks_solver`). The hosted solvers have
-**none** of their own: `SolverHost` raises a `ValueError` in its constructor, when the scheme
-is assigned and when it realises the solvers, if a solver has a `numerical_scheme`. Users 
-therefore write `host.numerical_scheme = Scheme(host.solver, ...)`, never
-`host.solver.numerical_scheme = ...`. A solver that runs a complete scheme of its own next to the
-others (additive coupling of two full solvers) gets it via `host.set_numerical_scheme(solver, scheme)`;
-the host stays the one that holds and hands out every scheme. The mapping of each solver to C++ (`SolverToCPPFiles`,
-grid construction, plotters) remains solver-specific. Solvers query patch size and halo
-through `solver.numerical_scheme`, which the host fills with the scheme itself (for 
-`global_tasks_solver`) or with a `SolverHost.HostedScheme` that forwards to it (all others).
+### Numerical schemes
+
+In an **outer** coupling every solver has a complete numerical scheme of its own, assigned as for any
+other solver (`coupled.ccz4.numerical_scheme = ...`, `coupled.euler.numerical_scheme = ...`).
+Only an **inner** coupling (one scheme per Runge-Kutta stage) needs a scheme that is shared; see the
+placeholders below and `exagrype.api.FOSOSolver`, which hands the reconstruction solver a forwarding scheme.
+The mapping of each solver to C++ (`SolverToCPPFiles`, grid construction, plotters) remains solver-specific.
 
 ### Where the task graphs are composed
 
-Composition happens in the host, nowhere else:
-
-1. The host's scheme builds the task graph of `global_tasks_solver` as it would for a
-   non-hosted solver.
-2. Every other solver implements `Solver.create_task_graph(exahype2_project, peano_project,
-   stage, number_of_stages)` and returns a fresh `peano4.api.taskgraph.Graph` with the tasks of
-   one stage. It must not depend on the other solvers' tasks. `SolverHost.HostedScheme` calls it 
-   once per stage (`SolverHost.number_of_stages` is the Runge-Kutta order of the scheme, or one),
-   merges the graphs into the solver's own graph and keeps them in `stage_graphs`. If a solver's 
-   graph occurs in several stages, `create_task_graph()` is simply called several times; 
-   share data (scratch patches) between the calls through the solver, create tasks per call.
-3. The host's `couple()` composes the graphs through **dependencies**. It does not copy tasks.
-   Use `Graph.source_tasks()` / `Graph.sink_tasks()` of a stage graph to find where to hook in, 
-   `Graph.append()` to run a whole graph after another one, `Graph.merge()` to put graphs next to each other, and
-   `SolverHost.run_in_parallel()` for the additive scheme.
-4. The superclass wraps the outcome into load balancing and AMR tasks.
-
-The host does not override `generate_solver_realisation()`. The superclass does the following, 
-and the host only implements `couple()`:
-
-1. Each solver is realised into task graphs of its own (`exahype2.api.PhaseGraphs`), and 
-   each solver reports its own time stepping graph (text or visualisation, depending on the logger).
-2. The superclass concatenates the graphs of all solvers into graphs of the host 
-   (`peano4.api.taskgraph.Graph.merge()`).
-3. `couple()` adds tasks and dependencies between the chains of the solvers. 
-4. The superclass reports the concatenated, coupled time stepping graph once more and 
-   appends it to the graphs of the project.
-
+Composition happens in `couple()` through **dependencies**. It does not copy tasks. Use
+`Graph.source_tasks()` / `Graph.sink_tasks()` to find where to hook in, `Graph.append()` to run a whole
+graph after another one, and `Graph.merge()` to put graphs next to each other.
 If possible, display a rendering of each of these graphs to the user.
 
 ### Global tasks
 
 Some tasks belong to the mesh rather than to a solver: the task that switches the load balancing
 off, the last task which evaluates the adaptivity criterion and switches the load balancing on again,
-and the mesh adaptation phase. They must exist once. Each solver's 
-`generate_solver_realisation()` takes a flag `add_global_tasks`; the superclass passes True to
-the solver in `global_tasks_solver` (default: the first one) and False to all others. 
-If your host needs a different solver to own them, override the property. 
-Ask the user which solver's adaptivity criterion should drive the mesh.
-If a solver uses a custom numerical scheme, check that its `construct_output()` accepts and 
-honours the flag.
+and the mesh adaptation phase. They must exist once. Each solver's
+`generate_solver_realisation()` takes a flag `add_global_tasks`; the coupling passes False to all solvers
+and wraps the coupled graph itself (see above). Ask the user which solver's adaptivity criterion should drive the mesh
+(by default the first one).
 
 
 ## Volumetric coupling and data sets
@@ -125,11 +105,11 @@ use the host class from `exagrype.api` directly and do not copy it. For other so
 `coupling.dox` (running example: Euler with Finite Volumes and CCZ4 with Runge-Kutta 2) shows the graphs that each flavour produces;
 `documentation/exahype2/programmers-guide/coupling-illustrations.py` regenerates those pictures.
 
-#### Step 1: the host class (both flavours)
+#### Step 1: the coupling class (both flavours)
 
-Derive from `exahype2.api.SolverHost`. The constructor does this, **in this order**:
+Derive from nothing (or, for the multiplicative flavour, from the additive class). The constructor does this, **in this order**:
 
-1. Create the solvers (CCZ4 first, as it owns the global tasks (load balancing, AMR) and Euler depends on its data). The order of the list handed to the superclass
+1. Create the solvers (CCZ4 first, as it owns the global tasks (load balancing, AMR) and Euler depends on its data). The order of `solvers`
    is the order of realisation; it does not fix the order of execution, which `couple()` does.
 2. For each solver, create one `exahype2.api.AuxiliaryVariables` set that holds **all** unknowns of the other solver
    (`dict(OtherSolver.Unknowns)`), and add it with `add_auxiliary_variables()` to the solver that reads it
@@ -138,17 +118,15 @@ Derive from `exahype2.api.SolverHost`. The constructor does this, **in this orde
    solver, so a Runge-Kutta scheme reconstructs the halo once, in its first stage. Not `CHANGING_ON_FACES`
    (reconstructs the halo in every stage for nothing), not `STATIONARY_ON_FACES` (the faces would never see the exchange).
    The Euler solver checks at generation time that it holds a set with the 58 entries of CCZ4.
-3. `super().__init__(f"{a}With{b}", [first, second])`.
+3. Store the name (`f"{a}With{b}"`) and provide `solvers`, `name`, `generate_solver_realisation()` and `couple()` as described above.
 
-`generate_solver_realisation()` is not overridden. The superclass realises each solver into its own graphs, concatenates the
-time step graphs into `host_graphs.time_step`, and calls `couple()`. `own_graphs[solver].time_step` shows where
-a solver's graph begins and ends; its tasks are the same objects as in `host_graphs.time_step`.
+`couple()` receives `own_time_steps[solver]`, which shows where a solver's graph begins and ends; its tasks are the same objects as in the coupled `time_step`.
 
 #### Step 2: `couple()`
 
 **Common to both flavours.** Before you add any task, collect
 
-- `first[s] = own_graphs[s].time_step.source_tasks()`,
+- `first[s] = own_time_steps[s].source_tasks()`,
 - `end[s]`, the last cell/face tasks of solver `s`. Do **not** use `sink_tasks()` for this: each solver ends in a
   `GLOBAL_END_OF_STEP` task that computes the next time step size. It has to stay at the end of the time step, and no ordinary
   task may depend on it (the task graph compiler asserts). Drop the tasks with entity `GLOBAL` or `GLOBAL_END_OF_STEP` first, and then take those on which no remaining task depends:
@@ -226,8 +204,8 @@ Load balancing and AMR wrap the outcome. They come from the solver that owns the
 
 Take `benchmarks/exagrype/gauge-wave-with-Euler/gauge-wave-with-Euler.py`. Only the line that creates the host changes between the flavours.
 
-1. Only the host goes into `project.add_solver(coupled)`; never the individual solvers.
-2. Schemes through the host: `coupled.set_numerical_scheme(solver, scheme)` per solver, never `solver.numerical_scheme = ...`.
+1. Only the coupling goes into `project.add_solver(coupled)`; never the individual solvers.
+2. Schemes per solver: `ccz4.numerical_scheme = ...`, `euler.numerical_scheme = ...`.
    - CCZ4: `rkfd4.CentralDifferencesWithRungeKutta(ccz4, p, rk_order=4, right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection, advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY, advected_quantities=ccz4.lopsided_advection_quantities())`
    - Euler: `fv.RusanovWithExplicitEuler(euler, 2*p+1)`
 3. Grid construction and plotter per solver in the solver's flavour (`rkfd4.SetupSimulationOverRegularGrid` + `rkfd4.PlotAsVTKFile`,
@@ -293,10 +271,9 @@ If possible, display a rendering of the arising task graph to the user.
 @todo To be revised. The notes below predate the distinction between outer and inner. They describe a coupling per
 Runge-Kutta stage with one numerical scheme in the host.
 
-The host's scheme asks each solver for its graph per Runge-Kutta
-stage (`create_task_graph()`), i.e. there is one instance of each graph per stage. In `couple()`,
-call `SolverHost.run_in_parallel(host_graph, [graph_of_solver_a, graph_of_solver_b])` per stage: it
-adds a KickOff task which the first task of each solver's stage graph depends on. Make the 
+The coupling's shared scheme asks each solver for its graph per Runge-Kutta
+stage (`Solver.create_task_graph()`), i.e. there is one instance of each graph per stage. In `couple()`,
+add a KickOff task (`GridEntity.GLOBAL_START_OF_STEP`) per stage which the first task of each solver's stage graph depends on. Make the 
 KickOff of stage `k+1` depend on the sinks of stage `k`.
 No worked example exists for this type at the moment: the former `CCZ4WithEuler` host with KickOff/WrapUp tasks per stage has been removed (see git history). Write the host from scratch.
 

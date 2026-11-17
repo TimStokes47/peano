@@ -127,8 +127,8 @@ class Solver(abc.ABC):
             The tasks pick up whatever is in time_step when the routine is
             called. Consequently, construct_output() calls it last if its flag
             add_global_tasks is set, i.e. after all tasks of the scheme have
-            been added. A host that merges the graphs of several solvers
-            (@ref exahype2.api.SolverHost) calls it on the merged graph
+            been added. A coupling that merges the graphs of several solvers
+            (@ref page_exahype_programmers_guide_coupling) calls it on the merged graph
             instead.
 
             Schemes that do not own a mesh override the routine with an empty
@@ -660,8 +660,8 @@ class Solver(abc.ABC):
     def task_graph_title_suffix(self) -> str:
         """!
         Appended to the solver name in the title of the solver's task graphs.
-        Empty by default. Solvers which are one part of a host
-        (exahype2.api.SolverHost) use it to say which part they are.
+        Empty by default. Solvers which are one part of a coupling
+        (@ref page_exahype_programmers_guide_coupling) use it to say which part they are.
         """
         return ""
 
@@ -672,7 +672,7 @@ class Solver(abc.ABC):
 
         Return the tasks of this solver for one stage of its host's time stepping
 
-        A solver which is hosted (@ref exahype2.api.SolverHost) has no numerical
+        A solver which is hosted (@ref page_exahype_programmers_guide_coupling) has no numerical
         scheme of its own. Instead, the host's scheme asks it for its task graph
         once per stage of the Runge-Kutta scheme (once if there is no stage), and
         composes the graphs it receives: The graphs are returned as they are, i.e.

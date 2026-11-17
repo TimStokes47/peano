@@ -24,7 +24,7 @@ class CCZ4WithEuler_MultiplicativeCoupling(CCZ4WithEuler_AdditiveCoupling):
 
     i.e. CCZ4 sees the Euler fields of the begin of the time step, and Euler sees the CCZ4
     fields after CCZ4 has completed its step. Each solver brings its own numerical scheme,
-    set through the host (set_numerical_scheme()). They do not exchange data within
+    assigned to the solvers. They do not exchange data within
     their Runge-Kutta stages.
 
     The last tasks of each solver graph are not its sink tasks: each graph ends in a
@@ -52,7 +52,7 @@ class CCZ4WithEuler_MultiplicativeCoupling(CCZ4WithEuler_AdditiveCoupling):
             if not any(task in other.dependencies for other in tasks)
         ]
 
-    def couple(self, exahype2_project, peano_project, own_graphs, host_graphs):
+    def couple(self, exahype2_project, peano_project, own_time_steps, time_step):
         """!
 
         Chain the graph of CCZ4 and the graph of Euler through the prep tasks
@@ -63,21 +63,20 @@ class CCZ4WithEuler_MultiplicativeCoupling(CCZ4WithEuler_AdditiveCoupling):
         @param peano_project: peano4.api.Project
           The Peano project that the exahype2 project assembles.
 
-        @param own_graphs: Dict[exahype2.api.Solver, exahype2.api.PhaseGraphs]
-          The graphs of the two solvers.
+        @param own_time_steps: Dict[exahype2.api.Solver, peano4.api.taskgraph.Graph]
+          The time step graphs of the two solvers.
 
-        @param host_graphs: exahype2.api.PhaseGraphs
-          The concatenated graphs. The time step graph receives the new tasks.
+        @param time_step: peano4.api.taskgraph.Graph
+          The concatenation of both. It receives the new tasks.
 
         """
-        time_step = host_graphs.time_step
         peano4.api.Logger().new_section(
             "Coupling " + self.ccz4.name + " and " + self.euler.name
         )
         Entity = peano4.api.taskgraph.Task.GridEntity
 
-        ccz4_graph = own_graphs[self.ccz4].time_step
-        euler_graph = own_graphs[self.euler].time_step
+        ccz4_graph = own_time_steps[self.ccz4]
+        euler_graph = own_time_steps[self.euler]
         first_of_ccz4 = ccz4_graph.source_tasks()
         first_of_euler = euler_graph.source_tasks()
         last_of_ccz4 = self._last_cell_tasks(ccz4_graph)
