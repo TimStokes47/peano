@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include "../../initial-guess.h"
 
 #include <cassert>

@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include "../../ah-finder-result.h"
 #include "../../initial-guess.h"
 #include "../../iteration.h"

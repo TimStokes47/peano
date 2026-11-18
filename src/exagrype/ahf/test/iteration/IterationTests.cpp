@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include <iostream>
 
 #include "../..//apparent-horizon-finder.h"

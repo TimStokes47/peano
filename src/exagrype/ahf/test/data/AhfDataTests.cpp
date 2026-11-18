@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include <cassert>
 #include <iostream>
 #include <stdexcept>

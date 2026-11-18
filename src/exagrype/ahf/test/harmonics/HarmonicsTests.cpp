@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include <array>
 #include <cassert>
 #include <cmath>

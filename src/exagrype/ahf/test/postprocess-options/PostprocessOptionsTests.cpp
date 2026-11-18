@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include "../../ahf-postprocess-options.h"
 
 #include <cassert>

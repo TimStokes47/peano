@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include <algorithm>
 #include <cassert>
 #include <chrono>
