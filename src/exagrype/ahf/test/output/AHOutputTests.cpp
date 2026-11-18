@@ -1,4 +1,5 @@
 #include "../../apparent-horizon-finder.h"
+#include "../temporary-directory.h"
 
 #include <cassert>
 #include <array>
@@ -74,7 +75,8 @@ std::string ReadText(const std::filesystem::path& path) {
 }
 
 void TestSummary() {
-  const auto directory = std::filesystem::temp_directory_path();
+  const TemporaryDirectory temporary("ahf-output-tests");
+  const auto& directory = temporary.path();
   const auto first = directory / "ahf-output-summary-1.txt";
   const auto second = directory / "ahf-output-summary-2.txt";
   const AHFinderResult result = SphereResult(2.5);
@@ -150,7 +152,8 @@ void TestDenseSphereGeometry() {
 }
 
 void TestVTP() {
-  const auto path = std::filesystem::temp_directory_path() / "ahf-output-sphere.vtp";
+  const TemporaryDirectory temporary("ahf-output-tests");
+  const auto path = temporary.path() / "ahf-output-sphere.vtp";
   const AHFinderResult result = SphereResult(1.75);
   WriteAHSurfaceToVTP(result, path.string(), {10, 6});
   assert(std::filesystem::is_regular_file(path));
@@ -173,7 +176,8 @@ void TestVTP() {
 
 void TestFacade() {
   const GridData grid = MakeConstantHorizonGrid();
-  const auto directory = std::filesystem::temp_directory_path();
+  const TemporaryDirectory temporary("ahf-output-tests");
+  const auto& directory = temporary.path();
   const auto summary = directory / "ahf-facade-summary.txt";
   const auto surface = directory / "ahf-facade-surface.vtp";
   std::filesystem::remove(summary);
@@ -202,7 +206,8 @@ void TestFacade() {
 
 void TestFacadeNonConvergence() {
   const GridData grid = MakeConstantHorizonGrid();
-  const auto directory = std::filesystem::temp_directory_path();
+  const TemporaryDirectory temporary("ahf-output-tests");
+  const auto& directory = temporary.path();
   const auto summary = directory / "ahf-facade-failure.txt";
   const auto surface = directory / "ahf-facade-failure.vtp";
   std::filesystem::remove(summary);

@@ -1,4 +1,5 @@
 #include "../../apparent-horizon-finder.h"
+#include "../temporary-directory.h"
 
 #include <array>
 #include <cassert>
@@ -121,7 +122,8 @@ void TestExecutionAndOutput() {
   options.components[1].mass = 1.0;
   options.commonRadiusFactors = {1.0};
   options.solver.maxIterations = 0;
-  const auto directory = std::filesystem::temp_directory_path();
+  const TemporaryDirectory temporary("ahf-merger-orchestration-tests");
+  const auto& directory = temporary.path();
   const auto summary = directory / "ahf-merger-summary.txt";
   const auto prefix = directory / "ahf-merger";
   std::filesystem::remove(summary);
