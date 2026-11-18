@@ -9,6 +9,7 @@ The source split is:
 - `output.*`: shared output helpers for both on-the-fly and offline modes
 - `interpolation.*`, `assemble-matrix.*`, `iteration.*`: shared AHF numerical pipeline pieces
 - `ahf-postprocess.cpp`: local offline command-line frontend
+- `ahf-postprocess-options.*`: its argument parsing and search set-up, kept out of the executable so the tests can run them without VTK
 
 ## Cartesian interpolation modes
 
@@ -41,11 +42,13 @@ cmake --build build --target ahf-postprocess
 
 It can also be built as part of Peano's CMake build, by adding `-DENABLE_EXAGRYPE=ON -DENABLE_CCZ4_AHF_POSTPROCESSOR=ON` (and `-DENABLE_CCZ4_AHF_TESTS=ON` for the tests) to the usual ExaGRyPE configuration.
 
-Run the postprocessor:
+Run the postprocessor on a snapshot (see [Reading ExaGRyPE Snapshots](#reading-exagrype-snapshots) for converting a patch file):
 
 ```bash
-./build/ahf-postprocess --input snapshot.vtu --output horizon.vtp
+./build/ahf-postprocess --input snapshot.vtu --radius 1.0,0.7,0.5 --output horizon
 ```
+
+It starts from a sphere of each radius around the centre (`--centre x,y,z`, the origin by default) in turn, and stops at the first search that converges. It writes the summary `horizon.txt` and, if it found a horizon, the surface `horizon.vtp`. It selects the fields by component name unless `--mapping exagrype` or `--mapping legacy` is given, and interpolates with radius-weighted cubic polynomials within three times the finest cell spacing unless `--support-radius` is given. `--help` lists every option. The exit status is 0 if a horizon was found, 1 if not, and 2 on an error.
 
 The local postprocessing build uses `file-input.cpp`, so CMake has to find the C++ VTK package. Without VTK, the core and the tests that do not read `.vtu` files are still built, but `ahf-postprocess` and the `ahf-io`, `ahf-multi-horizon-dataset` and `ahf-sample-t0-user-workflow` tests are skipped. If VTK is installed but not found, pass either `VTK_DIR` or `CMAKE_PREFIX_PATH`:
 

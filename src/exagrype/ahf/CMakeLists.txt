@@ -24,6 +24,7 @@ set(AHF_CORE_SOURCES
   ah-finder-options.cpp
   ah-finder-result.cpp
   ah-search.cpp
+  ahf-postprocess-options.cpp
   merger-orchestration.cpp
   common-horizon-candidates.cpp
   common-horizon-search.cpp
@@ -46,6 +47,7 @@ set(AHF_CORE_HEADERS
   ah-finder-options.h
   ah-finder-result.h
   ah-search.h
+  ahf-postprocess-options.h
   merger-orchestration.h
   common-horizon-candidates.h
   common-horizon-search.h
@@ -144,6 +146,11 @@ if(ENABLE_CCZ4_AHF_TESTS)
   add_executable(ahf-options-tests test/options/AHFinderOptionsTests.cpp)
   target_link_libraries(ahf-options-tests PRIVATE ApparentHorizonFinderCore)
   add_test(NAME ahf-options-tests COMMAND ahf-options-tests)
+
+  add_executable(ahf-postprocess-options-tests
+    test/postprocess-options/PostprocessOptionsTests.cpp)
+  target_link_libraries(ahf-postprocess-options-tests PRIVATE ApparentHorizonFinderCore)
+  add_test(NAME ahf-postprocess-options-tests COMMAND ahf-postprocess-options-tests)
 
   add_executable(ahf-result-tests test/result/AHFinderResultTests.cpp)
   target_link_libraries(ahf-result-tests PRIVATE ApparentHorizonFinderCore)
