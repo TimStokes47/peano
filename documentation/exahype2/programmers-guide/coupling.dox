@@ -47,8 +47,8 @@ Instead, it breaks down the problem into
 
 @f[
 \begin{aligned}
-\frac{\partial Q^{(A)}}{\partial t} + \nabla . F^{(A)}_{{\color{blue}{M^{(B)}}}}(Q^{(A)}, \nabla Q^{(A)}) + \mathcal{B}^{(A)}_{{\color{blue}{M^{(B)}}}}(Q^{(A)}) . \nabla Q^{(A)} & = & S^{(A)}_{{\color{blue}{M^{(B)}}}}(Q^{(A)}) \\
-\frac{\partial Q^{(B)}}{\partial t} + \nabla . F^{(B)}_{{\color{blue}{M^{(A)}}}}(Q^{(B)}, \nabla Q^{(B)}) + \mathcal{B}^{(B)}_{{\color{blue}{M^{(A)}}}}(Q^{(B)}) . \nabla Q^{(B)} & = & S^{(B)}_{{\color{blue}{M^{(A)}}}}(Q^{(B)}) \\
+\frac{\partial Q^{(A)}}{\partial t} + \nabla . F^{(A)}_{{\color{blue}{M^{(A)}}}}(Q^{(A)}, \nabla Q^{(A)}) + \mathcal{B}^{(A)}_{{\color{blue}{M^{(A)}}}}(Q^{(A)}) . \nabla Q^{(A)} & = & S^{(A)}_{{\color{blue}{M^{(A)}}}}(Q^{(A)}) \\
+\frac{\partial Q^{(B)}}{\partial t} + \nabla . F^{(B)}_{{\color{blue}{M^{(B)}}}}(Q^{(B)}, \nabla Q^{(B)}) + \mathcal{B}^{(B)}_{{\color{blue}{M^{(B)}}}}(Q^{(B)}) . \nabla Q^{(B)} & = & S^{(B)}_{{\color{blue}{M^{(B)}}}}(Q^{(B)}) \\
 {\color{blue}{M^{(A)}}} & = & Q^{(B)} \\
 {\color{blue}{M^{(B)}}} & = & Q^{(A)}
 \end{aligned}
@@ -58,8 +58,8 @@ or even
 
 @f[
 \begin{aligned}
-\frac{\partial Q^{(A)}}{\partial t} + \nabla . F^{(A)}(Q^{(A)}, \nabla Q^{(A)}) + \nabla . {\color{red}{\tilde{F}^{(A)}_{{\color{blue} M^{(B)}}}(Q^{(A)}, \nabla Q^{(A)})}} + \mathcal{B}^{(A)}(Q^{(A)}) . \nabla Q^{(A)} + {\color{red}{\tilde{\mathcal{B}}^{(A)}_{{\color{blue} M^{(B)}}}(Q^{(A)})}} . \nabla Q^{(A)} & = & S^{(A)}(Q^{(A)}) + {\color{red}{\tilde{ S}^{(A)}_{{\color{blue} M^{(B)}}}(Q^{(A)})}} \\
-\frac{\partial Q^{(B)}}{\partial t} + \nabla . F^{(B)}(Q^{(B)}, \nabla Q^{(B)}) + \nabla . {\color{red}{\tilde{F}^{(B)}_{{\color{blue} M^{(A)}}}(Q^{(B)}, \nabla Q^{(B)})}} + \mathcal{B}^{(B)}(Q^{(B)}) . \nabla Q^{(B)} + {\color{red}{\tilde{\mathcal{B}}^{(B)}_{{\color{blue} M^{(A)}}}(Q^{(B)})}} . \nabla Q^{(B)} & = & S^{(B)}(Q^{(B)}) + {\color{red}{\tilde{ S}^{(B)}_{{\color{blue} M^{(A)}}}(Q^{(B)})}} \\
+\frac{\partial Q^{(A)}}{\partial t} + \nabla . F^{(A)}(Q^{(A)}, \nabla Q^{(A)}) + \nabla . {\color{red}{\tilde{F}^{(A)}_{{\color{blue} M^{(A)}}}(Q^{(A)}, \nabla Q^{(A)})}} + \mathcal{B}^{(A)}(Q^{(A)}) . \nabla Q^{(A)} + {\color{red}{\tilde{\mathcal{B}}^{(A)}_{{\color{blue} M^{(A)}}}(Q^{(A)})}} . \nabla Q^{(A)} & = & S^{(A)}(Q^{(A)}) + {\color{red}{\tilde{ S}^{(A)}_{{\color{blue} M^{(A)}}}(Q^{(A)})}} \\
+\frac{\partial Q^{(B)}}{\partial t} + \nabla . F^{(B)}(Q^{(B)}, \nabla Q^{(B)}) + \nabla . {\color{red}{\tilde{F}^{(B)}_{{\color{blue} M^{(B)}}}(Q^{(B)}, \nabla Q^{(B)})}} + \mathcal{B}^{(B)}(Q^{(B)}) . \nabla Q^{(B)} + {\color{red}{\tilde{\mathcal{B}}^{(B)}_{{\color{blue} M^{(B)}}}(Q^{(B)})}} . \nabla Q^{(B)} & = & S^{(B)}(Q^{(B)}) + {\color{red}{\tilde{ S}^{(B)}_{{\color{blue} M^{(B)}}}(Q^{(B)})}} \\
 {\color{blue}{M^{(A)}}} & = & Q^{(B)} \\
 {\color{blue}{M^{(B)}}} & = & Q^{(A)}
 \end{aligned}
