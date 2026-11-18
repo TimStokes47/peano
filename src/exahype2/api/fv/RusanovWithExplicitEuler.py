@@ -534,6 +534,11 @@ Patch overlap data
 
 class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGenerator):
     def construct_output(self, exahype2_project, peano_project, time_step, add_global_tasks=True):
+        # The kernels are stateless only if all PDE terms they call are. Otherwise
+        # they have to call the (virtual) member functions of the solver instance.
+        terms = [term for term in self._solver.pde_terms if term.NAME in ["flux", "nonconservativeProduct", "volumetricSource", "maxEigenvalue"]]
+        if terms and not all(term.stateless for term in terms):
+            self._configurations = [(target, False, language, layout) for (target, _, language, layout) in self._configurations]
         # Construct the call first, as it validates the PDE terms' variants
         # Although we may generate multiple definitions for the purpose of benchmarking, we
         # only need one kernel call
@@ -542,8 +547,9 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         self._solver.numerical_scheme.max_eigenvalue_kernel_call = self.__construct_kernel_call(
             Target.Serial,
             self._configurations[0][1],
-            self._solver.numerical_scheme.max_eigenvalue_kernel_function_name,
+            self._configurations[0][2],
             MemoryLayout.AoS_AllNested,
+            function_name=self._solver.numerical_scheme.max_eigenvalue_kernel_function_name,
         )
 
         self.__create_time_step_functions(exahype2_project, peano_project)
@@ -717,9 +723,9 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
             self._solver.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks(time_step)
 
         if peano4.api.Logger().is_visualisation:
-            time_step.visualise(title="Time stepping task graph for {}{}".format(self._solver.name, self._solver.task_graph_title_suffix))
+            time_step.visualise(title="Time stepping task graph for {}".format(self._solver.name))
         if peano4.api.Logger().is_text:
-            time_step.log_as_text(title="Time stepping task graph for {}{}".format(self._solver.name, self._solver.task_graph_title_suffix))
+            time_step.log_as_text(title="Time stepping task graph for {}".format(self._solver.name))
 
     def __create_time_step_functions(self, exahype2_project, peano4_project):
         """!
@@ -925,7 +931,8 @@ class RusanovWithExplicitEulerGenerator(Solver.NumericalScheme.NumericalSchemeGe
         """
         if function_name is None:
             function_name = self._solver.numerical_scheme.kernel_function_name
-        available_terms = ["flux", "nonconservativeProduct", "volumetricSource", "maxEigenvalue"]
+        # Same order as the functor parameters of the generated kernels (@see function_map)
+        available_terms = ["volumetricSource", "flux", "nonconservativeProduct", "maxEigenvalue"]
 
         if stateless:
             # Stateless kernels require stateless functions, which are defined in the abstract solver

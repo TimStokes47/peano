@@ -1454,13 +1454,9 @@ Patch overlap data
 
         if peano4.api.Logger().is_visualisation:
             time_step.visualise(
-                title="Time stepping task graph for {}{}".format(
-                    name, self._solver.task_graph_title_suffix
-                )
+                title="Time stepping task graph for {}".format(name)
             )
         if peano4.api.Logger().is_text:
             time_step.log_as_text(
-                title="Time stepping task graph for {}{}".format(
-                    name, self._solver.task_graph_title_suffix
-                )
+                title="Time stepping task graph for {}".format(name)
             )

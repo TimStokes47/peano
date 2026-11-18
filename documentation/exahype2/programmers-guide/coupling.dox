@@ -6,26 +6,81 @@
 
 A brief discussion of how to couple differerent solvers.
 
-ExaHyPE offers the opportunity to host multiple solver files within one mesh, and to run them in parallel.
-This is extremely useful for applications such as UQ, where you run multiple solves for various inputs.
-It makes sense to host them in one mesh, as you pay the cost for load balancing et al only once.
-You can even make these different solvers run on different mesh levels.
+ExaHyPE offers the opportunity to host multiple solver files within one mesh, to run them in parallel and to couple them as they run.
+This is useful for a variety of challenges:
 
-Obviously, this feature is also extremely interesting if we want to couple different solvers - for 
-example in a multiphysics sense or to extend a solver or to switch numerics.
-An all-time classic is the use of different numerics and PDEs in different areas of the domain.
-This page discusses various coupling aspects.
+- It pays off for applications such as UQ, where you run multiple solves for various inputs.
+  It makes sense to host them in one mesh, as you pay the cost for load balancing et al only once.
+  You can even make these different solvers run on different mesh levels and do a lot of the comparisons
+  on-the-fly eliminating I/O bottlenecks.
+- By construction, the feature is interesting if we want to couple different solvers - for 
+  example in a multiphysics sense or to have different numerics for the same PDE.
+  An all-time classic is the use of different numerics and PDEs in different areas of the domain
+  implementing limiting.
+- It can be used to extend PDEs, where different equations are coupled to each other. Rather than
+  rewriting compute for a coupled PDE system, we rely on existing building blocks and wire them 
+  together. These different building blocks can now even run on different meshes.
 
-## Auxiliary variables
+## Design decision: Coupling through auxiliary variables
 
-All volumetric coupling coupling is realised through auxiliary variables.
+
+<div style="background-color: #cff ; padding: 10px; border: 1px solid green;">
+All volumetric coupling, i.e. coupling realised by mapping cell data onto cell data, is realised through auxiliary variables.
 This is a fundamental design pattern. 
-So if a solver A wants to exchange information with B, then A's information ends up as auxiliar data in B.
+</div>
+
+
+If a solver A wants to exchange information with B, then A's information ends up as auxiliar data in B.
+Mathematically, this can be phrased as follows: 
+Assume we solve the coupled problem
+
+@f[
+\begin{aligned}
+\frac{\partial Q^{(A)}}{\partial t} + \nabla . F^{(A)}(Q^{(A)}, Q^{(B)}, \nabla Q^{(A)}, \nabla Q^{(B)}) + \mathcal{B}^{(A)}(Q^{(A)}, Q^{(B)}) . \nabla Q^{(A)} & = & S^{(A)}(Q^{(A)}, Q^{(B)}) \\
+\frac{\partial Q^{(B)}}{\partial t} + \nabla . F^{(B)}(Q^{(A)}, Q^{(B)}, \nabla Q^{(A)}, \nabla Q^{(B)}) + \mathcal{B}^{(B)}(Q^{(A)}, Q^{(B)}) . \nabla Q^{(B)} & = & S^{(B)}(Q^{(A)}, Q^{(B)})
+\end{aligned}
+@f]
+
+This is ***not*** how ExaHyPE tackles this problem straightaway, unless you want to write a 
+completely new code base from scratch, which basically solves one PDE over @f$ Q := ( Q^{(A)}, Q^{(B)} ) @f$.
+Instead, it breaks down the problem into 
+
+@f[
+\begin{aligned}
+\frac{\partial Q^{(A)}}{\partial t} + \nabla . F^{(A)}_{{\color{blue}{M^{(B)}}}}(Q^{(A)}, \nabla Q^{(A)}) + \mathcal{B}^{(A)}_{{\color{blue}{M^{(B)}}}}(Q^{(A)}) . \nabla Q^{(A)} & = & S^{(A)}_{{\color{blue}{M^{(B)}}}}(Q^{(A)}) \\
+\frac{\partial Q^{(B)}}{\partial t} + \nabla . F^{(B)}_{{\color{blue}{M^{(A)}}}}(Q^{(B)}, \nabla Q^{(B)}) + \mathcal{B}^{(B)}_{{\color{blue}{M^{(A)}}}}(Q^{(B)}) . \nabla Q^{(B)} & = & S^{(B)}_{{\color{blue}{M^{(A)}}}}(Q^{(B)}) \\
+{\color{blue}{M^{(A)}}} & = & Q^{(B)} \\
+{\color{blue}{M^{(B)}}} & = & Q^{(A)}
+\end{aligned}
+@f]
+
+or even
+
+@f[
+\begin{aligned}
+\frac{\partial Q^{(A)}}{\partial t} + \nabla . F^{(A)}(Q^{(A)}, \nabla Q^{(A)}) + \nabla . {\color{red}{\tilde{F}^{(A)}_{{\color{blue} M^{(B)}}}(Q^{(A)}, \nabla Q^{(A)})}} + \mathcal{B}^{(A)}(Q^{(A)}) . \nabla Q^{(A)} + {\color{red}{\tilde{\mathcal{B}}^{(A)}_{{\color{blue} M^{(B)}}}(Q^{(A)})}} . \nabla Q^{(A)} & = & S^{(A)}(Q^{(A)}) + {\color{red}{\tilde{ S}^{(A)}_{{\color{blue} M^{(B)}}}(Q^{(A)})}} \\
+\frac{\partial Q^{(B)}}{\partial t} + \nabla . F^{(B)}(Q^{(B)}, \nabla Q^{(B)}) + \nabla . {\color{red}{\tilde{F}^{(B)}_{{\color{blue} M^{(A)}}}(Q^{(B)}, \nabla Q^{(B)})}} + \mathcal{B}^{(B)}(Q^{(B)}) . \nabla Q^{(B)} + {\color{red}{\tilde{\mathcal{B}}^{(B)}_{{\color{blue} M^{(A)}}}(Q^{(B)})}} . \nabla Q^{(B)} & = & S^{(B)}(Q^{(B)}) + {\color{red}{\tilde{ S}^{(B)}_{{\color{blue} M^{(A)}}}(Q^{(B)})}} \\
+{\color{blue}{M^{(A)}}} & = & Q^{(B)} \\
+{\color{blue}{M^{(B)}}} & = & Q^{(A)}
+\end{aligned}
+@f]
+
+So here's what's happening here and what we try to express through these formulae:
+
+1. We keep two seperate PDEs. Each single one does not depend on two Q values, but each distinguishes explicitly between the parameter that it evolves (black) and an auxiliary parameter (blue) that it does not touch.
+2. We keep the PDEs without any coupling (if something like that exists) intact where possible. 
+   If the PDE terms require corrections, we model them as explicit additional terms (marked by a tilde and set in red). 
+   This might not always be practicable, i.e. some terms might degenerate to nop, but the intention is to reuse building blocks (term implementations) where possible.
+3. The terms are coupled through the new auxiliary variables. We write them
+   down as plain copies in the third and fourth row, but they don't have to be exact copies:
+   We assume that the auxiliary values live in the same function space as their Q counterparts, but the two PDEs can exist in completely different function spaces.  
+   The copy overhead can be eliminated explicitly.
+
 
 Historically, we used to name auxiliary data ***material parameters***. 
 We switched to auxiliary, as material suggests that data are invariant.
 They are not.
-In the example above, A might alter its unknowns, which implies that they are seen in B as changing auxiliary values. 
+
 
 As of the summer 2026, ExaHyPE allows users to attach an arbitrary number of auxiliary variables to each solver,
 and indeed an auxiliary variable of one solver can be the real variable of another one.
@@ -33,12 +88,19 @@ This is both to simplify coupling, but also to avoid that users have to copy aro
 
 
 
-## Hosts: how coupled solvers are realised
+## How coupled solvers are realised from a technical point of view
 
-Coupled solvers are not added to the project one by one. A user adds one 
-@ref exahype2.api.SolverHost "host" instead, which brings its solvers along, 
-and the host realises them. This is what happens when the project asks the host to generate the 
-task graphs:
+While we could add the two solvers from the equation above one by one, we typically don't do this in ExaHyPE:
+
+<div style="background-color: #cff ; padding: 10px; border: 1px solid green;">
+If two solvers are coupled, we typically introduce a third Host solver which aggregates the two existing solvers
+and has the responsibility to inject the additional coupling logic and terms (red).
+</div>
+
+
+A user adds one coupling object (a "host", e.g. exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling), which then brings its embedded solvers along. 
+These aggregated solvers then later will create their task graphs how to realise a feature independently,
+and it is then the host who has to merge these subgraphs properly:
 
 \dot
 digraph host {
@@ -54,57 +116,79 @@ digraph host {
 }
 \enddot
 
-The host, not the solvers, holds the generator of the numerical scheme 
-(exahype2.api.SolverHost.numerical_scheme): hosted solvers have no scheme of their own, and the 
-host raises an exception if they have. The mapping of the solvers to C++ remains solver-specific.
+In an outer coupling, each solver has its numerical scheme of its own. The mapping of the solvers to C++ remains solver-specific.
 
-1. Each solver builds the task graphs of the four phases (setup, time step, plot, mesh
-   adaptation) in graphs of its own and reports the time stepping graph. The host's scheme builds
-   the graph of the global-tasks solver, and asks every other solver for its graph once per 
-   Runge-Kutta stage (exahype2.api.Solver.Solver.create_task_graph()). The user thus
+1. Each solver builds its time stepping graph on its own and reports it. The user thus
    sees what each solver contributes.
-2. The host concatenates the graphs (peano4.api.taskgraph.Graph.merge()). The result
-   consists of the chains of the solvers next to each other.
-3. The host's couple() routine adds the tasks and dependencies that tie the chains together: 
-   a multiplicative coupling makes tasks of one solver wait for tasks of the other one, 
-   an additive coupling adds KickOff and WrapUp tasks. 
+2. The host puts the graphs together. An outer additive coupling concatenates them
+   (peano4.api.taskgraph.Graph.merge()), i.e. the chains of the solvers sit next to each other,
+   and then adds the tasks and dependencies that tie them together in its routine _couple().
+   An outer multiplicative coupling chains the graphs (one solver waits for the other one) with
+   peano4.api.taskgraph.Graph.append(), and has no _couple().
+   Both add tasks that copy data from one solver into the auxiliary
+   variables of the other one, and a final task that synchronises the time step sizes. 
 4. The host reports the coupled graph, and appends it to the project's graphs.
 
-### Global tasks
 
-Some tasks belong to the mesh rather than to a solver: the one that switches the load balancing 
-off at the begin of the time step, and the last one which evaluates the adaptivity criterion 
-and switches the load balancing on again (plus the mesh adaptation phase).
-If every solver added them, we would switch the load balancing off and on once per solver. 
-All routines which generate a solver realisation therefore accept a flag `add_global_tasks`
-(exahype2.api.Solver.generate_solver_realisation(), exahype2.api.Solver.NumericalScheme.construct_output()). 
-If set, the scheme embeds its task graph into the global tasks as its very last step, by calling
-exahype2.api.Solver.NumericalScheme.wrap_task_graph_in_load_balancing_and_amr_tasks(). 
-A host realises all solvers as intermediate steps, i.e. with False. After it has concatenated and coupled the graphs, 
-it calls the wrapping routine on the concatenated graph of its global_tasks_solver (see @ref exahype2.api.SolverHost, 
-by default the first), and lets the mesh adaptation of this solver fill the mesh adaptation phase. 
-Consequently, only the global tasks solver can refine the mesh. 
-If you write your own scheme and want it to be used within a host, make construct_output() 
-honour the flag, and let a scheme that owns no mesh override the wrapping routine with an empty one.
+## Running example: Euler and CCZ4
+
+All examples below couple the same two solvers, so you can compare the arising task graphs. The solvers are
+
+- an Euler solver (@ref exagrype.api.euler.Euler) with Finite Volumes (Rusanov flux, explicit Euler time stepping), and
+- the simplest first-order CCZ4 solver (@ref exagrype.api.FOCCZ4Solver) with fourth-order Finite Differences and Runge-Kutta of second order.
+  We use no additional step such as lopsided advection.
+
+Each solver alone yields the following time stepping task graph (each box is a task, the arrows are dependencies, and the tasks
+run top-down). Euler has one stage (reconstruct the halo, update, compute the eigenvalue for the next time step size, project onto the faces):
+
+@image html documentation/exahype2/programmers-guide/coupling-graph-euler.png
+
+CCZ4 runs two Runge-Kutta stages (reconstruct, evaluate the right-hand side, prepare, project, roll over, ...) and then wraps up:
+
+@image html documentation/exahype2/programmers-guide/coupling-graph-ccz4.png
+
+In both cases, the last task is a <i>global end-of-step</i> task which determines the next time step size. 
+The coupling does not touch the numerical schemes, it only adds tasks and dependencies.
+Each solver gets a set of auxiliary variables which holds the data of the other solver ("EulerFieldsForCCZ4",
+"CCZ4FieldsForEuler"): this is why CCZ4 contains a task "Reconstruct auxiliary variables EulerFields stage 0", while
+Euler contains "Reconstruct auxiliary variables CCZ4Fields". 
+The pictures are generated by `coupling-illustrations.py` in the directory of this page.
+
+In both outer couplings, the host adds the following building blocks:
+
+- Two <b>prepare tasks</b> ("Prepare auxiliary variables from CCZ4/Euler"). Each copies the persistent data of one solver into the 
+  auxiliary variables of the other one (with interpolation if the patch sizes differ), projects the copy onto the faces, 
+  restricts it on hanging faces and rolls the faces over. This is the one place where the solvers exchange data. 
+- One final task which synchronises the time step sizes: the global end-of-step task "Synchronise time step sizes" enforces the minimum of the
+  time step sizes on both solvers.
+
+The numerical scheme of each solver, i.e. the time stepping, patch size and halo, remain whatever the user picked. 
+Load balancing and dynamic mesh refinement (global tasks) exist once and wrap the whole graph, but they do not show up in the pictures. 
 
 
-## Multiplicative coupling
+## Outer multiplicative coupling
 
 Multiplicative coupling means that the state of the simulation evolves according to 
 
 @f$
-  Q(t+\delta t) = Q(t) + \left( \mathcal{U}_1 \circ \mathcal{U}_2 \right) Q(t).
+  Q(t+\delta t) = Q(t) + \left( \mathcal{U}^{(A)} \circ \mathcal{U}^{(B)} \right) Q(t).
 @f$
 
-In the context of a solver, this means that solver 2 updates some variables as well as some auxiliary data.
-Both these variables (and potentially auxiliary data) then feed into solver 1 (as auxiliary values) and then induce some updates.
-Overall, solver 2 feeds into 1.
+In the context of a solver, this means that solver B updates some variables as well as some auxiliary data.
+Both these variables (and potentially auxiliary data) then feed into solver A (as auxiliary values) and then induce some updates.
+Overall, solver B feeds into A.
 One comes after the other.
+
+We call this outer coupling as each solver above can have its own numerical scheme.
+Notably, if A and B each host a higher-order integrator, these integrators are still only coupled once.
+In many cases, this reduces the overall convergence order, but there are solvers which just work fine this way.
+
 
 ExaHyPE internally works with the notion of a task graph, which simplies the modelling of this type of coupling dramatically.
 We simply take the task graph of solver 1 and merge the one of solver 2 into it, and then wire them,
-(@ref exagrype.api.FOSOSolver is a worked example: the reconstruction tasks are inserted per
-Runge-Kutta stage in front of the CCZ4 stage which consumes them).
+(@ref exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling is the worked example for Euler and CCZ4;
+@ref exagrype.api.FOSOSolver is the example for the inner variant, where tasks are inserted per
+Runge-Kutta stage).
 All the remainder (notably finding the right number of required mesh sweeps) is done by ExaHyPE and Peano under the hood.
 
 <br /><br />
@@ -134,37 +218,70 @@ solver.
   We typically consider them two different things: Inserting additional stes modifies
   a solver. Here we discuss the coupling of different solvers. 
 </div>
+
+### Mathematical rewrite
+
+For an explicit Euler, it is very easy to rewrite this coupling scheme explicitly:
+
+@f[
+\begin{aligned}
+M^{(A)}& := & Q^{(B)}(t) \\
+Q^{(A)}(t+0.5\Delta t) & = & Q^{(A)}(t) + \Delta t \ \frac{ \partial Q^{(A)} }{\partial t}(t) \\
+M^{(B)}& := & Q^{(A)}(t+0.5\Delta t) \\
+Q^{(B)}(t+\Delta t) & = & Q^{(B)}(t) + \Delta t \ \frac{ \partial Q^{(B)} }{\partial t}(t) \\
+Q^{(A)}(t+\Delta t) & := & Q^{(A)}(t+0.5\Delta t)
+\end{aligned}
+@f]
+
+where the actual physics remains determined by 
+
+@f[
+\begin{aligned}
+\frac{\partial Q^{(A)}}{\partial t}(t) + \nabla . F^{(A)}(Q^{(A)}, \nabla Q^{(A)}) + \nabla . {\color{red}{\tilde{F}^{(A)}_{{\color{blue} M^{(B)}}}(Q^{(A)}, \nabla Q^{(A)})}} + \mathcal{B}^{(A)}(Q^{(A)}) . \nabla Q^{(A)} + {\color{red}{\tilde{\mathcal{B}}^{(A)}_{{\color{blue} M^{(B)}}}(Q^{(A)})}} . \nabla Q^{(A)} & = & S^{(A)}(Q^{(A)}) + {\color{red}{\tilde{ S}^{(A)}_{{\color{blue} M^{(B)}}}(Q^{(A)})}} \\
+\frac{\partial Q^{(B)}}{\partial t} + \nabla . F^{(B)}(Q^{(B)}, \nabla Q^{(B)}) + \nabla . {\color{red}{\tilde{F}^{(B)}_{{\color{blue} M^{(A)}}}(Q^{(B)}, \nabla Q^{(B)})}} + \mathcal{B}^{(B)}(Q^{(B)}) . \nabla Q^{(B)} + {\color{red}{\tilde{\mathcal{B}}^{(B)}_{{\color{blue} M^{(A)}}}(Q^{(B)})}} . \nabla Q^{(B)} & = & S^{(B)}(Q^{(B)}) + {\color{red}{\tilde{ S}^{(B)}_{{\color{blue} M^{(A)}}}(Q^{(B)})}} \\
+\end{aligned}
+@f]
+
  
-### Case study
+### Example: CCZ4 followed by Euler
 
-A prime case study for the coupling is the first-order second-order CCZ4 solver.
-We benchmark it in @ref benchmarks_exagrype_fo_vs_so and explain the details on 
-@ref page_exagrype_fo_so_ccz4.
-Here, two solvers, @ref exagrype.api.FOSOCCZ4Solver and @ref exagrype.api.FOSOReconstructionSolver (hosted by @ref exagrype.api.FOSOSolver)
-take turns.
-Each one takes the primary evoluation variables of the other one as auxiliary variables.
+The host @ref exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling chains the graphs of the running example:
 
-Below, we use the scheme FD4 from @ref benchmarks_exagrype_fo_vs_so and otherwise defaults only.
-The task graph of this setup looks like
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+prepare (from Euler) -> graph of CCZ4 -> prepare (from CCZ4) -> graph of Euler -> synchronise
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-@image html documentation/exahype2/programmers-guide/coupling-additive-task-graph.png
+@image html documentation/exahype2/programmers-guide/coupling-graph-outer-multiplicative.png
 
-and we see clearly the tasks starting with the "stage 1" label coming first, and then tasks with
-the "stage 2 label" follow. 
+Read the picture top-down:
 
+1. The first prepare task copies the Euler solution into the auxiliary variables of CCZ4. Both initial tasks of CCZ4 wait for it.
+2. CCZ4 runs both Runge-Kutta stages. It sees the Euler data of the begin of the time step. Within the two stages, it does not 
+   exchange any data with Euler: the coupling is outer.
+3. Once CCZ4 has projected and rolled over its new solution, the second prepare task copies the <b>updated</b> CCZ4 solution
+   into the auxiliary variables of Euler. This is the multiplicative bit: Euler works with the CCZ4 state of time @f$ t+\Delta t @f$.
+4. Both initial tasks of Euler wait for the second prepare task. Euler runs its single stage.
+5. The synchronisation task at the end waits for the time step size computations of both solvers.
 
-Peano's graph compiler will take this and depending on its realisation map this
-task graph onto different number of sweeps.
-Below is an example of a pure fusion:
+CCZ4's own end-of-step task "Compute time step size" does not sit in front of the second prepare task. 
+It stays at the end of the time step, as a global end-of-step task may not have ordinary tasks depend on it. That is why the second prepare 
+task waits for the last cell tasks of CCZ4 instead, and the host does not use the plain sink tasks of CCZ4's graph.
+The ordering is logical: the task graph compiler is free to fuse tasks into mesh sweeps and to overlap anything which the dependencies allow.
+Here, the dependencies leave little room, as everything of Euler waits for the end of CCZ4.
 
-@image html documentation/exahype2/programmers-guide/coupling-additive-mesh-sweeps.png
+## Inner multiplicative coupling
 
-The whole task graph is now mappped onto mesh sweeps and some of them host data from 
-stage/solver 1 and some host data from stage/solver 2. So overall, we have fewer mesh
-sweeps than tasks in the task graph sequence.
+Inner multiplicative coupling means that we have N different solvers and invoke them one after the other.
+They are still running in sequence.
+However, in this setup, the numerical scheme sits within the host.
+The host decides how time advances.
 
+Per internal step, it now calls the sequence of solvers.
+So if we have Runge-Kutta of fourth order with four shots, then each shot triggers two substeps if we wire together two steps.
 
-## Additive coupling
+@todo Continue write up
+
+## Outer additive coupling
 
 Additive coupling means that the state of the simulation evolved according to 
 
@@ -182,56 +299,118 @@ a task compiler.
 If A and B work on completely different data, this is kind of trivial. If they 
 share read-only data. If this is not the case, we have to copy data temporarily around.
 
+@image html documentation/exahype2/programmers-guide/additive-coupling.png
 
-@image html documentation/exahype2/programmers-guide/coupling-multiplicative-task-graph-coupled.png
 
 The image above illustrates the challenge: We want to evolve A and B at the same time.
 A's current solution fees as auxiliary variable into B. Therefore, we first explicitly
 copy A's data into a temporary field, and then we evolve the two systems in parallel.
 
 
-<br /><br />
 <div style="background-color: #fcc ; padding: 10px; border: 1px solid green;">
   For an additive coupling, it is a real option to write new compute kernels that
   work on both PDEs at the same time. We then need only one set of unknowns and
   one set of auxiliary variables (even though we can keep those separate - doesn't 
   hurt). The drawback is flexibility and composability. We also miss out on the 
   parallelism intrinsical to additive schemes. 
-  
+    
   Nevertheless, it has to be flagged that such an approach migth be able to save
   on a lot of temporary data copies at startup, which makes it a viable alternative
   to consider.
 </div>
 
-
-### Case study
-
-The CCZ4 solver in combination with Euler is an interesting case study. The CCZ4 
-solver itself yields a task graph similar to 
-
-@image html documentation/exahype2/programmers-guide/coupling-multiplicative-task-graph-CCZ4.png
-@image html documentation/exahype2/programmers-guide/coupling-multiplicative-task-graph-Euler.png
-
-which the host (CCZ4WithEuler.py) concatenates and couples, which then gives us a beast alike
-
-@image html documentation/exahype2/programmers-guide/coupling-additive-task-graph-coupled.png
-
-The two chains now run in parallel. In front of each Runge-Kutta stage, a "KickOff" task copies
-the lapse of CCZ4 into the auxiliary variables of Euler, so Euler never reads data that CCZ4
-writes at the same time. After each stage, a "WrapUp" task waits for the end of the stage of both
-solvers. The very last WrapUp is a global end-of-step task which runs after the time step sizes
-have been computed. Only CCZ4 adds the load balancing switch and the dynamic mesh refinement task.
-
-The picture is generated by coupling-illustrations.py in the same directory.
+The "outer" annotation to the term "additive coupling" again implies that the solvers
+each own their own numerical integration scheme. 
+We exchange the auxiliary variables initially, and then we let each solver march in time.
+Nothing stops us from letting once advance with Finite Volumes and the other one with 
+Runge-Kutta.
+However, if we have to 3rd order Runge-Kutta schemes, the clue is that the solvers do not exchange
+data after each intermediate step.
+Instead, they only exchange data at the very start (and potentially as a final wrap-up).
+They only are coupled in the outer time integration loop.
 
 
+### Example: CCZ4 and Euler in parallel
+
+The host @ref exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling (driven by `benchmarks/exagrype/gauge-wave-with-Euler`) puts the graphs of the 
+running example next to each other:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+prepare (from CCZ4) \             / graph of CCZ4 \
+                      >-- first --<                >-- synchronise
+prepare (from Euler) /             \ graph of Euler /
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+@image html documentation/exahype2/programmers-guide/coupling-graph-outer-additive.png
+
+Read the picture top-down:
+
+1. The two prepare tasks run in parallel. One copies CCZ4's solution into the auxiliary variables of Euler, the other one copies Euler's
+   solution into the auxiliary variables of CCZ4.
+2. All four initial tasks of the two solvers (the reconstructions of the solution and of the auxiliary variables of each solver) wait for 
+   <b>both</b> prepare tasks. This is crucial: when a solver starts to write its persistent data, no copy reads them anymore. Hence, 
+   the solvers can work on the same cells in parallel without a data race, and no temporary copy is needed.
+3. The two chains (CCZ4 with two Runge-Kutta stages, Euler with one) run independently. Whoever finishes first just waits. 
+   The solvers only see the state of the other one at the begin of the time step, and they do not exchange data in between their stages.
+4. The synchronisation task at the end waits for both end-of-step tasks (time step size of CCZ4, CFL condition of Euler) and enforces the
+   minimum of the two time step sizes on both solvers. It is a global end-of-step task as it has to run after the solvers have computed 
+   their next time step size.
+
+CCZ4 owns the global tasks (the load balancing switch and the dynamic mesh refinement), i.e. these exist once and wrap the whole graph.
+
+
+### Outer multiplicative vs. outer additive in the source code
+
+Both outer couplings are realised by the same host pattern, and in practice they differ in the wiring of the graphs only.
+Everything else is identical: the host is a plain class that offers the solvers and generate_solver_realisation(), each solver receives a set of auxiliary variables that
+holds the unknowns of the other solver, the numerical schemes are assigned to the solvers, and two "prepare auxiliary
+variables" tasks copy, project and restrict the data onto the faces. A final global task synchronises the time step sizes.
+
+The only difference is which tasks the prepare tasks are wired to:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# additive: both prep tasks precede the first tasks of both solvers, i.e. everything starts together
+for first_task in first[A] + first[B]:
+    for prep in preps:
+        first_task.add_dependency(prep)
+
+# multiplicative: a chain. B waits for A, and copies A after A has finished.
+# Graph.append() makes the sources of a graph wait for all sinks of the graph before.
+chain = Graph()
+chain.append(prep_from_B)
+chain.append(graph_of_A)
+chain.append(prep_from_A)
+chain.append(graph_of_B)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Consequently, an additive solver B sees the state of A at the begin of the time step, while a multiplicative B sees the updated state of A.
+The additive tasks of A and B can overlap, whereas multiplicative steps are logically sequential. The final synchronisation
+task depends on the end of the whole graph in both cases. Each solver's graph ends with a global end-of-step task, which
+computes the time step size. In the multiplicative coupling, the prep task of B waits for the one of A, too, and the task graph compiler does not
+fuse it into the mesh sweep of that task: it runs in a sweep of its own (one sweep more than if it only waited for the last cell tasks).
+The additive reference is `exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling`, driven by `benchmarks/exagrype/gauge-wave-with-Euler`. The AI skill
+(see below) generates both flavours from the same recipe.
+
+## Inner additive coupling
+
+Internal additive coupling follows the pattern we have seen when we distinguish outer and inner multiplicative coupling:
+Here, the time integrator sits in the host.
+Users are not allowed to attach a time integrator to the aggregated solvers.
+
+As the time integrator steps through time with potentially many Runge Kutta shots, 
+each intermediate step exchanges the auxiliary data and launches the solvers' fundamental steps in parallel.
+
+
+ 
 
 ## Synchronise solvers
 
 Often, solvers have to synchronise with each other. For most solvers, they might
 for example want to agree on a joint time step size. For this, we have to embed 
-the arising task graph into KickOff or WrapUp tasks which ensure that the solver
-attributes become consistent.
+the arising task graph into global tasks which ensure that the solver
+attributes become consistent. In the outer couplings above, this is the global end-of-step task which synchronises the time step sizes 
+(@ref exagrype.api.actionsets.SynchroniseTimeStepSizes). 
+In inner couplings, where the host steps through the stages of a Runge-Kutta scheme, such a task can sit behind each stage.
 
 
 ## AI Skills
