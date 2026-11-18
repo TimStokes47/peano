@@ -10,6 +10,7 @@
 #include <vtkXMLPUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
 
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -27,19 +28,56 @@ bool hasExtension(const std::string& path, const std::string& extension) {
 }
 
 /**
- * Collect the required source components in CompactField order.
+ * The component names of @p unknowns, with an empty string for each unnamed
+ * component.
  */
-std::vector<std::size_t> selectedComponents(const SourceVariableMapping& sourceMapping) {
-  const auto components = sourceMapping.componentsInCompactOrder();
+std::vector<std::string> componentNames(vtkDataArray* unknowns) {
+  std::vector<std::string> names(static_cast<std::size_t>(unknowns->GetNumberOfComponents()));
+  for (std::size_t component = 0; component < names.size(); ++component) {
+    const char* name = unknowns->GetComponentName(static_cast<vtkIdType>(component));
+    if (name != nullptr) {
+      names[component] = name;
+    }
+  }
+  return names;
+}
+
+/**
+ * Choose the source components to keep, in CompactField order. Without a
+ * mapping they are selected by name; a given mapping is checked against the
+ * names, when the data has them.
+ */
+std::vector<std::size_t> selectComponents(vtkDataArray* unknowns,
+                                          const std::optional<SourceVariableMapping>& sourceMapping,
+                                          const std::string& context) {
+  const auto names = componentNames(unknowns);
+  SourceVariableMapping mapping;
+  if (sourceMapping) {
+    ValidateSourceMappingAgainstComponentNames(*sourceMapping, names);
+    mapping = *sourceMapping;
+  } else {
+    const auto named = SourceVariableMappingFromComponentNames(names);
+    if (!named) {
+      throw std::runtime_error(
+        "ReadGridFromFile: the cell-data array in " + context
+        + " does not name the components G[0..5], K[0..5], traceK and phi, so they cannot"
+          " be selected by name; pass a SourceVariableMapping, such as"
+          " ExaGRyPESourceMapping() or LegacyCCZ4SourceMapping()");
+    }
+    mapping = *named;
+  }
+  const auto components = mapping.componentsInCompactOrder();
   return {components.begin(), components.end()};
 }
 
 /**
  * Append every cell of @p grid to @p gridData: the cell centre as a coordinate
- * and the selected source components as one fixed-size compact value row.
+ * and the selected source components as one fixed-size compact value row. The
+ * first grid with cells fills @p selected, and later pieces reuse it.
  */
 void appendGridCells(vtkUnstructuredGrid* grid,
-                     const std::vector<std::size_t>& selected,
+                     const std::optional<SourceVariableMapping>& sourceMapping,
+                     std::vector<std::size_t>& selected,
                      const std::string& context,
                      GridData& gridData) {
   const vtkIdType numberOfCells = (grid != nullptr) ? grid->GetNumberOfCells() : 0;
@@ -64,6 +102,9 @@ void appendGridCells(vtkUnstructuredGrid* grid,
     throw std::runtime_error(
       "ReadGridFromFile: cell-data tuple count does not match the number of cells in "
       + context);
+  }
+  if (selected.empty()) {
+    selected = selectComponents(unknowns, sourceMapping, context);
   }
   for (std::size_t compactColumn = 0; compactColumn < selected.size(); ++compactColumn) {
     const std::size_t sourceIndex = selected[compactColumn];
@@ -117,7 +158,7 @@ void appendGridCells(vtkUnstructuredGrid* grid,
  * Read a single-piece .vtu in one shot.
  */
 void readWholeVtu(const std::string& inputFile,
-                  const std::vector<std::size_t>& selected,
+                  const std::optional<SourceVariableMapping>& sourceMapping,
                   GridData& gridData) {
   vtkNew<vtkXMLUnstructuredGridReader> reader;
   reader->SetFileName(inputFile.c_str());
@@ -136,9 +177,11 @@ void readWholeVtu(const std::string& inputFile,
   gridData.values.clear();
   static_assert(GridData::numberOfVariables == NumberOfCompactFields);
   gridData.coordinates.reserve(static_cast<std::size_t>(grid->GetNumberOfCells()));
-  gridData.values.reserve(static_cast<std::size_t>(grid->GetNumberOfCells()) * selected.size());
+  gridData.values.reserve(
+    static_cast<std::size_t>(grid->GetNumberOfCells()) * GridData::numberOfVariables);
 
-  appendGridCells(grid, selected, inputFile, gridData);
+  std::vector<std::size_t> selected;
+  appendGridCells(grid, sourceMapping, selected, inputFile, gridData);
 }
 
 /**
@@ -147,7 +190,7 @@ void readWholeVtu(const std::string& inputFile,
  * one piece plus the accumulating (compact) GridData, not by the whole grid.
  */
 void readPvtuStreaming(const std::string& inputFile,
-                       const std::vector<std::size_t>& selected,
+                       const std::optional<SourceVariableMapping>& sourceMapping,
                        GridData& gridData) {
   int numberOfPieces = 0;
   {
@@ -166,6 +209,7 @@ void readPvtuStreaming(const std::string& inputFile,
   gridData.coordinates.clear();
   gridData.values.clear();
 
+  std::vector<std::size_t> selected;
   for (int piece = 0; piece < numberOfPieces; ++piece) {
     // Fresh reader per piece: reusing one reader across UpdatePiece() calls
     // caches internal buffers and climbs back to the whole-grid footprint.
@@ -185,11 +229,25 @@ void readPvtuStreaming(const std::string& inputFile,
       gridData.values.reserve(estimate * gridData.numberOfVariables);
     }
 
-    appendGridCells(grid, selected, inputFile, gridData);
+    appendGridCells(grid, sourceMapping, selected, inputFile, gridData);
   }
 
   if (gridData.coordinates.empty()) {
     throw std::runtime_error("ReadGridFromFile: no cells found across the pieces of " + inputFile);
+  }
+}
+
+/**
+ * Read a .vtu or a .pvtu series. Without @p sourceMapping, the components are
+ * selected by name.
+ */
+void readGrid(const std::string& inputFile,
+              GridData& gridData,
+              const std::optional<SourceVariableMapping>& sourceMapping) {
+  if (hasExtension(inputFile, ".pvtu")) {
+    readPvtuStreaming(inputFile, sourceMapping, gridData);
+  } else {
+    readWholeVtu(inputFile, sourceMapping, gridData);
   }
 }
 
@@ -199,13 +257,11 @@ void ReadGridFromFile(const std::string& inputFile,
                       GridData& gridData,
                       const SourceVariableMapping& sourceMapping) {
   sourceMapping.validateRequiredFields();
-  const auto selected = selectedComponents(sourceMapping);
+  readGrid(inputFile, gridData, sourceMapping);
+}
 
-  if (hasExtension(inputFile, ".pvtu")) {
-    readPvtuStreaming(inputFile, selected, gridData);
-  } else {
-    readWholeVtu(inputFile, selected, gridData);
-  }
+void ReadGridFromFile(const std::string& inputFile, GridData& gridData) {
+  readGrid(inputFile, gridData, std::nullopt);
 }
 
 }  // namespace exahype2::ccz4::ahf

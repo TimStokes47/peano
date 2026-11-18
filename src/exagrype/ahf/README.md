@@ -59,6 +59,23 @@ or:
 cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/vtk
 ```
 
+## Reading ExaGRyPE Snapshots
+
+`exagrype.api` runs write Peano patch files, not `.vtu`. Convert them with Peano's renderer from the repository root; it needs Python with the `vtk` module:
+
+```bash
+python3 src/tarch/plotter/api/render.py --filter-fine-grid --dir vtu solution-CCZ4.peano-patch-file
+```
+
+This writes one `.vtu` per snapshot into `vtu/`. Each cell holds all of the solver's unknowns in one cell-data array, and the renderer names each component after the solver's variables (`G[0]`, ..., `K[5]`, `traceK`, `phi`, ...). `ReadGridFromFile(file, grid)` finds the 14 fields the finder needs by these names, wherever they sit in the array.
+
+A file without component names needs an explicit `SourceVariableMapping` (`ahf-data.h`):
+
+- `ExaGRyPESourceMapping()` for `exagrype.api` output (`FOCCZ4Solver`, `FOSOCCZ4Solver`): the conformal metric `G` at 0-5, the conformal traceless extrinsic curvature `K` at 6-11, trace K at 23 and $\phi$ at 24.
+- `LegacyCCZ4SourceMapping()` for output of the legacy `applications/exahype2/ccz4/ccz4.py`, which stores trace K at 53 and $\phi$ at 54. The GitLab-era snapshots that the integration tests read have this layout.
+
+If the file does name its components, a mapping that contradicts the names is rejected rather than reading the wrong fields.
+
 ## Splitting a Large Snapshot (optional)
 
 A big `.vtu` snapshot is read in one go, which needs a lot of memory. To read it

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -228,6 +229,113 @@ struct SourceVariableMapping {
     return true;
   }
 };
+
+/**
+ * Mapping for output of the exagrype.api solvers, in the order of
+ * FOCCZ4Solver.Unknowns (src/exagrype/api/FOCCZ4Solver.py): G 0-5, K 6-11,
+ * traceK 23, phi 24. FOSOCCZ4Solver stores the same first 25 unknowns.
+ */
+inline SourceVariableMapping ExaGRyPESourceMapping() {
+  return {
+    .conformalMetric = {0, 1, 2, 3, 4, 5},
+    .conformalExtrinsicCurvature = {6, 7, 8, 9, 10, 11},
+    .traceK = 23,
+    .conformalFactor = 24
+  };
+}
+
+/**
+ * Mapping for output of the legacy applications/exahype2/ccz4/ccz4.py, which
+ * stores traceK at 53 and phi at 54. The GitLab-era snapshots used by the
+ * integration tests have this layout.
+ */
+inline SourceVariableMapping LegacyCCZ4SourceMapping() {
+  return {
+    .conformalMetric = {0, 1, 2, 3, 4, 5},
+    .conformalExtrinsicCurvature = {6, 7, 8, 9, 10, 11},
+    .traceK = 53,
+    .conformalFactor = 54
+  };
+}
+
+/**
+ * Names the CCZ4 solvers give the AHF fields, in CompactField order. Peano's
+ * patch-file converter (src/tarch/plotter/api/render.py) labels each component
+ * of the unknowns array with the solver's names, so a converted snapshot says
+ * where each field is, whatever the layout.
+ */
+inline constexpr std::array<const char*, NumberOfCompactFields> CCZ4SourceComponentNames{
+  "G[0]", "G[1]", "G[2]", "G[3]", "G[4]", "G[5]",
+  "K[0]", "K[1]", "K[2]", "K[3]", "K[4]", "K[5]",
+  "traceK", "phi"
+};
+
+/**
+ * Build the mapping from the component names of a source tuple. Returns
+ * nothing unless each name in CCZ4SourceComponentNames occurs exactly once.
+ */
+inline std::optional<SourceVariableMapping> SourceVariableMappingFromComponentNames(
+  std::span<const std::string> componentNames
+) {
+  std::array<SourceVariableMapping::Index, NumberOfCompactFields> components;
+  components.fill(SourceVariableMapping::NotStored);
+  for (std::size_t component = 0; component < componentNames.size(); ++component) {
+    for (std::size_t field = 0; field < NumberOfCompactFields; ++field) {
+      if (componentNames[component] == CCZ4SourceComponentNames[field]) {
+        if (components[field] != SourceVariableMapping::NotStored) {
+          return std::nullopt;
+        }
+        components[field] = component;
+      }
+    }
+  }
+  if (std::find(components.begin(), components.end(), SourceVariableMapping::NotStored)
+      != components.end()) {
+    return std::nullopt;
+  }
+
+  SourceVariableMapping mapping;
+  for (std::size_t i = 0; i < NumberOfSymmetricTensorComponents; ++i) {
+    mapping.conformalMetric[i] = components[i];
+    mapping.conformalExtrinsicCurvature[i] = components[NumberOfSymmetricTensorComponents + i];
+  }
+  mapping.traceK = components[static_cast<std::size_t>(CompactField::TraceK)];
+  mapping.conformalFactor = components[static_cast<std::size_t>(CompactField::Phi)];
+  return mapping;
+}
+
+/**
+ * Reject a mapping that contradicts the component names of the source tuple.
+ * Names that do not identify every field (see
+ * SourceVariableMappingFromComponentNames) are not checked, so data without
+ * names, or with names from another convention, is accepted as before.
+ */
+inline void ValidateSourceMappingAgainstComponentNames(
+  const SourceVariableMapping& sourceMapping,
+  std::span<const std::string> componentNames
+) {
+  const auto named = SourceVariableMappingFromComponentNames(componentNames);
+  if (!named) {
+    return;
+  }
+
+  const auto given = sourceMapping.componentsInCompactOrder();
+  const auto expected = named->componentsInCompactOrder();
+  for (std::size_t field = 0; field < given.size(); ++field) {
+    if (given[field] != expected[field]) {
+      const std::string givenComponent = given[field] < componentNames.size()
+        ? "which the data names " + componentNames[given[field]]
+        : std::string("which the data does not have");
+      throw std::invalid_argument(
+        "SourceVariableMapping: required field "
+        + std::string(CompactFieldNames[field]) + " selects source component "
+        + std::to_string(given[field]) + ", " + givenComponent + ", but "
+        + CCZ4SourceComponentNames[field] + " is component "
+        + std::to_string(expected[field])
+        + "; the mapping does not match this data's layout");
+    }
+  }
+}
 
 /**
  * Apply the sole source-index to compact-index transformation. Both symmetric

@@ -1,14 +1,19 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "../../ahf-data.h"
 #include "../../file-input.h"
 #include "../../output.h"
 #include "../../peano-input.h"
+#include "../ccz4-component-names.h"
+#include "../temporary-directory.h"
 
 namespace exahype2::ccz4::ahf::tests::io {
 
@@ -27,13 +32,9 @@ bool fileExists(const std::string& path) {
   return probe.good();
 }
 
+// The legacy ccz4.py layout of sample_data_S.vtu.
 SourceVariableMapping completeSourceMapping() {
-  return SourceVariableMapping{
-    .conformalMetric = {0, 1, 2, 3, 4, 5},
-    .conformalExtrinsicCurvature = {6, 7, 8, 9, 10, 11},
-    .traceK = 53,
-    .conformalFactor = 54
-  };
+  return LegacyCCZ4SourceMapping();
 }
 
 /**
@@ -258,6 +259,127 @@ void testReadGridFromFile() {
   }
 }
 
+/**
+ * Write two unit voxels side by side along x as an ASCII .vtu, with one
+ * cell-data component per entry of @p names, labelled with those names when
+ * @p withNames is set (as render.py does). Component c of cell i holds
+ * 100 i + c, so each value shows where it was read from.
+ */
+void writeTwoCellVtu(const std::filesystem::path& file,
+                     const std::vector<std::string>& names,
+                     bool withNames) {
+  std::ofstream out(file);
+  out << "<?xml version=\"1.0\"?>\n"
+      << "<VTKFile type=\"UnstructuredGrid\" version=\"1.0\" byte_order=\"LittleEndian\">\n"
+      << "<UnstructuredGrid>\n<Piece NumberOfPoints=\"12\" NumberOfCells=\"2\">\n"
+      << "<Points>\n<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+  for (int z = 0; z < 2; ++z) {
+    for (int y = 0; y < 2; ++y) {
+      for (int x = 0; x < 3; ++x) {
+        out << x << " " << y << " " << z << "\n";
+      }
+    }
+  }
+  out << "</DataArray>\n</Points>\n<Cells>\n"
+      << "<DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n";
+  for (int cell = 0; cell < 2; ++cell) {
+    // Voxel corner order: x fastest, then y, then z. Point (x, y, z) is x + 3 (y + 2 z).
+    for (int corner = 0; corner < 8; ++corner) {
+      const int x = cell + (corner & 1);
+      const int y = (corner >> 1) & 1;
+      const int z = (corner >> 2) & 1;
+      out << x + 3 * (y + 2 * z) << " ";
+    }
+    out << "\n";
+  }
+  out << "</DataArray>\n"
+      << "<DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">8 16</DataArray>\n"
+      << "<DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">11 11</DataArray>\n"
+      << "</Cells>\n<CellData Scalars=\"Unknowns\">\n"
+      << "<DataArray type=\"Float64\" Name=\"Unknowns\" NumberOfComponents=\"" << names.size() << "\"";
+  if (withNames) {
+    for (std::size_t component = 0; component < names.size(); ++component) {
+      out << " ComponentName" << component << "=\"" << names[component] << "\"";
+    }
+  }
+  out << " format=\"ascii\">\n";
+  for (int cell = 0; cell < 2; ++cell) {
+    for (std::size_t component = 0; component < names.size(); ++component) {
+      out << 100 * cell + static_cast<int>(component) << " ";
+    }
+    out << "\n";
+  }
+  out << "</DataArray>\n</CellData>\n</Piece>\n</UnstructuredGrid>\n</VTKFile>\n";
+  assert(out.good());
+}
+
+/** Both cells were read, and each compact column holds the component @p expectedMapping selects. */
+void checkTwoCellGrid(const GridData& gridData,
+                      const SourceVariableMapping& expectedMapping) {
+  assert(gridData.numberOfPoints() == 2);
+  assert(gridData.isConsistent());
+  assert(std::abs(gridData.coordinates[0].x - 0.5) < 1.0e-12);
+  assert(std::abs(gridData.coordinates[1].x - 1.5) < 1.0e-12);
+  assert(std::abs(gridData.coordinates[1].y - 0.5) < 1.0e-12);
+  assert(std::abs(gridData.coordinates[1].z - 0.5) < 1.0e-12);
+
+  const auto components = expectedMapping.componentsInCompactOrder();
+  for (std::size_t cell = 0; cell < 2; ++cell) {
+    for (std::size_t column = 0; column < GridData::numberOfVariables; ++column) {
+      const double expected = 100.0 * static_cast<double>(cell) + static_cast<double>(components[column]);
+      assert(gridData.values[cell * GridData::numberOfVariables + column] == expected);
+    }
+  }
+}
+
+void testReadGridSelectsComponentsByName() {
+  const TemporaryDirectory directory("ahf-io-tests");
+  const auto names = ExaGRyPEComponentNames();
+  const auto named = directory.path() / "named.vtu";
+  const auto unnamed = directory.path() / "unnamed.vtu";
+  writeTwoCellVtu(named, names, true);
+  writeTwoCellVtu(unnamed, names, false);
+
+  // Named components need no mapping, and a matching mapping is accepted.
+  GridData byName;
+  ReadGridFromFile(named.string(), byName);
+  checkTwoCellGrid(byName, ExaGRyPESourceMapping());
+
+  GridData byMapping;
+  ReadGridFromFile(named.string(), byMapping, ExaGRyPESourceMapping());
+  checkTwoCellGrid(byMapping, ExaGRyPESourceMapping());
+
+  // A mapping for another layout is rejected instead of reading the wrong fields.
+  bool contradictionRejected = false;
+  try {
+    GridData wrongLayout;
+    ReadGridFromFile(named.string(), wrongLayout, LegacyCCZ4SourceMapping());
+  } catch (const std::invalid_argument& error) {
+    contradictionRejected = true;
+    assert(std::string(error.what()).find("which the data names dzG[4], but traceK is component 23")
+           != std::string::npos);
+  }
+  assert(contradictionRejected);
+
+  // Without names, the reader needs a mapping and says so.
+  bool missingNamesRejected = false;
+  try {
+    GridData withoutNames;
+    ReadGridFromFile(unnamed.string(), withoutNames);
+  } catch (const std::runtime_error& error) {
+    missingNamesRejected = true;
+    assert(std::string(error.what()).find("does not name the components") != std::string::npos);
+  }
+  assert(missingNamesRejected);
+
+  GridData unnamedByMapping;
+  ReadGridFromFile(unnamed.string(), unnamedByMapping, ExaGRyPESourceMapping());
+  checkTwoCellGrid(unnamedByMapping, ExaGRyPESourceMapping());
+
+  std::cout << "ReadGridFromFile selects the fields by component name and rejects a contradicting mapping"
+            << std::endl;
+}
+
 void testReadGridFromPeano() {
   std::cout << "Placeholder test for peano-input ReadGridFromPeano()" << std::endl;
 }
@@ -280,6 +402,7 @@ int main() {
   testCompactSourceTuple();
   testRequiredMappingFieldsAreRejectedBeforeFileOpen();
   testReadGridFromFile();
+  testReadGridSelectsComponentsByName();
   testReadGridFromPeano();
   testWriteAHToFile();
   testWriteAHToVTK();

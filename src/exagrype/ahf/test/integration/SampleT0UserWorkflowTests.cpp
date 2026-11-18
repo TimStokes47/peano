@@ -25,13 +25,10 @@ std::string DatasetPath() {
   return directory + "/../../ccz4Results/sample_t=0.vtu";
 }
 
+// The GitLab-era snapshots in ccz4Results/ come from the legacy ccz4.py, which
+// stores traceK at 53 and phi at 54; current exagrype.api output does not.
 SourceVariableMapping SourceMapping() {
-  return {
-    .conformalMetric = {0, 1, 2, 3, 4, 5},
-    .conformalExtrinsicCurvature = {6, 7, 8, 9, 10, 11},
-    .traceK = 53,
-    .conformalFactor = 54
-  };
+  return LegacyCCZ4SourceMapping();
 }
 
 void TestSampleT0UserWorkflow() {
