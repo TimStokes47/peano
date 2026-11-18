@@ -10,12 +10,13 @@ discretised with fourth-order Finite Differences and classic Runge-Kutta 4
 (exahype2.api.rkfd4).
 
 Next to CCZ4, the compound hosts a massless scalar field with four unknowns
-(Pi and the three components of Psi, see ScalarFieldOnSpacetime in
-CCZ4WithScalarField.py). It uses the same fourth-order Finite Differences
-scheme and the same patch size as CCZ4, and runs on the same mesh with periodic
-boundary conditions. The coupling is the one of the Euler benchmark
-(benchmarks/exagrype/gauge-wave-with-scalar-field): The scalar field reads a snapshot
-of the lapse.
+(exagrype.api.scalarfield.ScalarField), discretised like CCZ4 with fourth-order
+Finite Differences and Runge-Kutta 4, and with the same patch size. Both solvers
+are configured right here, and both run on the same mesh with periodic boundary
+conditions. They are hosted by exagrype.api.CCZ4WithScalarField_OuterAdditiveCoupling,
+which copies the fields of each solver into auxiliary variables of the other
+one at the begin of each time step, and which synchronises the time step sizes
+at the end.
 
 The script requires a Peano build with
 
@@ -34,8 +35,6 @@ import os
 import peano4.api
 import exahype2.api
 import exagrype.api
-
-from CCZ4WithScalarField import CCZ4WithScalarField
 
 
 parser = argparse.ArgumentParser(description="ExaGRyPE gauge wave with a scalar field")
@@ -58,8 +57,7 @@ parser.add_argument(
     "--patch-size",
     type=int,
     default=8,
-    help="Number of grid cells per mesh cell and axis (default: 8), "
-    "for both solvers.",
+    help="Number of grid cells per mesh cell and axis (default: 8), for both solvers.",
 )
 args = parser.parse_args()
 
@@ -98,22 +96,20 @@ project = exahype2.api.Project(
 ## The compound hosts CCZ4 and the scalar field. Only the compound is added to the mesh.
 ## It couples the solvers at the begin and the end of each time step, i.e. each
 ## solver brings the numerical scheme of its choice.
-coupled = CCZ4WithScalarField()
+coupled = exagrype.api.CCZ4WithScalarField_OuterAdditiveCoupling()
 ccz4 = coupled.ccz4
 scalar_field = coupled.scalar_field
+ccz4.add_pde_term(exagrype.api.initialvalues.gauge_wave())
 
 ## CCZ4: fourth-order Finite Differences with RK4
 Kernel = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta.RightHandSideKernel
-coupled.set_numerical_scheme(
+ccz4.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
     ccz4,
-    exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-        ccz4,
-        ccz4_patch_size,
-        rk_order=4,
-        right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
-        advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
-        advected_quantities=ccz4.lopsided_advection_quantities(),
-    ),
+    ccz4_patch_size,
+    rk_order=4,
+    right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection,
+    advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY,
+    advected_quantities=ccz4.lopsided_advection_quantities(),
 )
 ccz4.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
     ccz4, volume_size=ccz4_volume_size
@@ -122,12 +118,9 @@ ccz4.plotter = exahype2.api.rkfd4.PlotAsVTKFile(
     ccz4, first_plot_time_stamp=0.0, time_in_between_plots=time_in_between_plots
 )
 
-## Scalar field: fourth-order Finite Differences with RK4 as CCZ4
-coupled.set_numerical_scheme(
-    scalar_field,
-    exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
-        scalar_field, ccz4_patch_size, rk_order=4
-    ),
+## Scalar field: fourth-order Finite Differences with RK4, as CCZ4
+scalar_field.numerical_scheme = exahype2.api.rkfd4.CentralDifferencesWithRungeKutta(
+    scalar_field, ccz4_patch_size, rk_order=4
 )
 scalar_field.grid_construction = exahype2.api.rkfd4.SetupSimulationOverRegularGrid(
     scalar_field, volume_size=ccz4_volume_size
