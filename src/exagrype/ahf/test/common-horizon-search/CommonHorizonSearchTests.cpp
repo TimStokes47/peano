@@ -3,12 +3,14 @@
 #include "../../apparent-horizon-finder.h"
 #include "../temporary-directory.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 namespace exahype2::ccz4::ahf::tests {
 namespace {
@@ -122,6 +124,78 @@ void TestProvisionalAndPhysicalEnclosure() {
   assert(validation.status == AHCommonHorizonValidationStatus::Rejected);
   assert(validation.physicalPositionEnclosure ==
          AHEnclosureValidationStatus::Failed);
+}
+
+// Enclosure off the x axis: member surfaces and physical positions are
+// measured in all three coordinates, and in the direction the common surface
+// actually has there.
+void TestOffAxisEnclosure() {
+  // Members on +y and -z; the one reaching 0.95 from the origin sets the
+  // minimum clearance, the other reaches 0.9. Each in turn is the limiting one.
+  const auto farY = Observation("A", 1, {0, 0.65, 0}, 0.3);
+  const auto nearZ = Observation("B", 1, {0, 0, -0.6}, 0.3);
+  const auto nearY = Observation("A", 1, {0, 0.6, 0}, 0.3);
+  const auto farZ = Observation("B", 1, {0, 0, -0.65}, 0.3);
+  auto validation = ValidateCommonHorizon(Sphere({0, 0, 0}, 1.0), {farY, nearZ});
+  assert(validation.memberHorizonEnclosure == AHEnclosureValidationStatus::Passed);
+  assert(std::abs(validation.minimumEnclosureClearance - 0.05) < 1.0e-12);
+  validation = ValidateCommonHorizon(Sphere({0, 0, 0}, 1.0), {nearY, farZ});
+  assert(validation.memberHorizonEnclosure == AHEnclosureValidationStatus::Passed);
+  assert(std::abs(validation.minimumEnclosureClearance - 0.05) < 1.0e-12);
+  validation = ValidateCommonHorizon(Sphere({0, 0, 0}, 0.9), {farY, nearZ});
+  assert(validation.memberHorizonEnclosure == AHEnclosureValidationStatus::Failed);
+  assert(std::abs(validation.minimumEnclosureClearance + 0.05) < 1.0e-12);
+
+  // A common surface stretched along y, r = 0.9 + 0.1 n_y: 1.0 towards +y,
+  // 0.9 towards -z.
+  const SpectralBasis basis = BuildSpectralBasis(2);
+  std::vector<double> radii(basis.nPoints);
+  for (std::size_t p = 0; p < radii.size(); ++p) {
+    radii[p] = 0.9 + 0.1 * std::cos(basis.sigma[p]) * std::sin(basis.rho[p]);
+  }
+  AHFinderResult stretched = Sphere({0, 0, 0}, 0.9);
+  stretched.solver.coefficients = MakeDistortedInitialCoefficients(basis, radii);
+  stretched.minRadius = 0.8;
+  stretched.maxRadius = 1.0;
+  // Each check pairs the position under test with one that has more room
+  // (clearance 0.4 or 0.5), so the minimum clearance is the tested one's.
+  validation = ValidateCommonHorizon(stretched, {}, {{0, 0.95, 0}, {0, 0, -0.5}}, 2);
+  assert(validation.physicalPositionEnclosure == AHEnclosureValidationStatus::Passed);
+  assert(std::abs(validation.minimumPhysicalPositionClearance - 0.05) < 1.0e-12);
+  validation = ValidateCommonHorizon(stretched, {}, {{0, 0, -0.8}, {0, 0.5, 0}}, 2);
+  assert(validation.physicalPositionEnclosure == AHEnclosureValidationStatus::Passed);
+  assert(std::abs(validation.minimumPhysicalPositionClearance - 0.1) < 1.0e-12);
+  validation = ValidateCommonHorizon(stretched, {}, {{0, -0.85, 0}, {0, 0, -0.5}}, 2);
+  assert(validation.physicalPositionEnclosure == AHEnclosureValidationStatus::Failed);
+  assert(std::abs(validation.minimumPhysicalPositionClearance + 0.05) < 1.0e-12);
+}
+
+// A fallback candidate built from physical positions off the x axis, with
+// unequal masses, is centred at the mass-weighted position.
+void TestOffAxisFallbackCandidate() {
+  const ReferencePoint failed{-0.1, 0.2, -0.15};
+  const ReferencePoint found{0.1, -0.05, 0.1};
+  AHCommonHorizonSearchOptions options;
+  options.blackHoles = {
+    {.id = "failed", .mass = 1, .attempts = {{{100, 0, 0}, 1.0}}, .physicalPosition = failed},
+    {.id = "found", .mass = 2, .attempts = {{found, 1.3}}, .physicalPosition = found}
+  };
+  options.candidates.requestedSubsets = {{"found", "failed"}};
+  options.commonTargets.retryRadiusMultipliers = {1};
+  options.lMax = 0;
+  options.interpolation = Interpolation();
+  const auto result = FindCommonApparentHorizons(MakeGrid(), options);
+  assert(result.candidatePlan.candidates.size() == 1);
+  const auto& candidate = result.candidatePlan.candidates[0];
+  const ReferencePoint centre{(failed.x + 2 * found.x) / 3, (failed.y + 2 * found.y) / 3,
+                              (failed.z + 2 * found.z) / 3};
+  assert(std::abs(candidate.referencePoint.x - centre.x) < 1.0e-14);
+  assert(std::abs(candidate.referencePoint.y - centre.y) < 1.0e-14);
+  assert(std::abs(candidate.referencePoint.z - centre.z) < 1.0e-14);
+  const double enclosing = std::max(
+    std::hypot(centre.x - failed.x, centre.y - failed.y, centre.z - failed.z) + 1.0,
+    std::hypot(centre.x - found.x, centre.y - found.y, centre.z - found.z) + 1.3);
+  assert(std::abs(candidate.enclosingInitialRadius - enclosing) < 1.0e-14);
 }
 
 AHCommonHorizonSearchOptions OneHoleOptions(ReferencePoint referencePoint) {
@@ -396,8 +470,10 @@ int main() {
   TestCandidateConversion();
   TestValidationAndEnclosure();
   TestProvisionalAndPhysicalEnclosure();
+  TestOffAxisEnclosure();
   TestZeroAndOneBlackHole();
   TestExplicitFallbackAfterIndividualFailure();
+  TestOffAxisFallbackCandidate();
   TestFallbackRequiresPhysicalPositions();
   TestTwoIndividualsProduceOneCommonSearch();
   TestThreeHoleDeterminismAndSummary();

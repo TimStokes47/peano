@@ -166,6 +166,18 @@ namespace exahype2::ccz4::ahf::tests::spacetimes {
     }
   }
 
+  // The centroid is mass weighted in all three coordinates; the binary and
+  // triangle tests only place punctures symmetrically about the origin.
+  void testBrillLindquistCentroidOffAxis() {
+    const BrillLindquist unequal{{{1.0, {0.3, -0.6, 0.9}}, {3.0, {-0.5, 0.4, -0.1}}}};
+    assert(approxEqual(unequal.admMass(), 4.0, 1.0e-15));
+    const FieldVector<double> centre = unequal.centroid();
+    assert(approxEqual(centre[0], -0.3, 1.0e-14));
+    assert(approxEqual(centre[1], 0.15, 1.0e-14));
+    assert(approxEqual(centre[2], 0.15, 1.0e-14));
+    std::cout << "Brill-Lindquist centroid is mass weighted off axis" << std::endl;
+  }
+
 } // namespace exahype2::ccz4::ahf::tests::spacetimes
 
 int main() {
@@ -177,6 +189,7 @@ int main() {
   testTimeSymmetricExtrinsicCurvatureVanishes();      // complext-step differentiation test
   testKerrSchildExtrinsicCurvatureFiniteSymmetric();
   testExpansionVanishesOnSphericalHorizon();
+  testBrillLindquistCentroidOffAxis();
 
   std::cout << "All spacetime tests completed." << std::endl;
   return 0;

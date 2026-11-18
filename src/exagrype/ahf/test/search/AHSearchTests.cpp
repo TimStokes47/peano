@@ -227,6 +227,24 @@ void TestPhysicalTargetPartialSuccess() {
   assert(result.targets[1].kind == AHHorizonKind::Common);
 }
 
+// A target's massScale reaches its solve: the effective tolerance becomes
+// tolerance / massScale for that target only.
+void TestTargetMassScaleReachesSolver() {
+  AHMultiHorizonOptions options = MultiOptions({
+    {.id = "shared", .attempts = {{{0.0, 0.0, 0.0}, 1.3}}},
+    {.id = "heavy", .attempts = {{{0.0, 0.0, 0.0}, 1.3}}, .massScale = 1.0e8}
+  });
+  options.solver.tolerance = 1.0e-2;
+  const AHMultiHorizonResult result = FindApparentHorizons(MakeGrid(), options);
+  assert(result.allTargetsFound);
+  const SpectralNewtonResult& shared = result.targets[0].horizon->solver;
+  const SpectralNewtonResult& heavy = result.targets[1].horizon->solver;
+  assert(shared.residualHistory.back() < 1.0e-2);
+  assert(shared.residualHistory.back() >= 1.0e-10);
+  assert(heavy.residualHistory.back() < 1.0e-10);
+  assert(heavy.iterations > shared.iterations);
+}
+
 void TestPhysicalTargetValidation() {
   bool threw = false;
   try { (void)FindApparentHorizons(MakeGrid(), MultiOptions({})); }
@@ -366,6 +384,7 @@ int main() {
   exahype2::ccz4::ahf::tests::TestSearchOutput();
   exahype2::ccz4::ahf::tests::TestPhysicalTargetGrouping();
   exahype2::ccz4::ahf::tests::TestPhysicalTargetPartialSuccess();
+  exahype2::ccz4::ahf::tests::TestTargetMassScaleReachesSolver();
   exahype2::ccz4::ahf::tests::TestPhysicalTargetValidation();
   exahype2::ccz4::ahf::tests::TestSpectralAndPreviousSurfaceAttempts();
   exahype2::ccz4::ahf::tests::TestPhysicalTargetOutput();
