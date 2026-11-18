@@ -1,27 +1,31 @@
 ---
 name: peano:couple-exahype-solvers
-description: Take several solvers from ExaHyPE and couple them together, so they work as a unit.
+description: Take two solvers from ExaHyPE and couple them together, so they work as a unit, with a minimalist plain-class coupling (outer additive or outer multiplicative).
 ---
 
 #Couple ExaHyPE solvers
 
 ## Capture Intent
 
-Start by understanding the user's intent.
+Couplings in ExaGRyPE are deliberately **minimalist**, and so are the ones you write. The two reference couplings,
+`exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling` and `exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling`, are plain classes:
+no base class, two named solvers, no loops, no generic helpers, and next to the docstrings only a few dozen lines of code. 
+Whatever the user does not ask for is not built. Ask **at most** the following questions, propose the default in brackets, and 
+move on as soon as the user accepts it:
 
-1. Which solvers should be coupled?
-2. Which of the four coupling types do they want? The names follow `coupling.dox`
-   (@ref page_exahype_programmers_guide_coupling):
+1. Which two solvers should be coupled? (Euler + CCZ4: use the existing classes in `exagrype.api` and stop here, unless the user wants a variation.)
+2. Do the solvers run **in parallel** (additive) or **one after the other** (multiplicative)? [additive, the benchmark]
+   Both are **outer** couplings: each solver keeps a complete numerical scheme of its own and the solvers exchange data once per time step. 
+   Inner couplings (one shared scheme, exchange per Runge-Kutta stage) are only placeholders below; if the user wants one, say so and offer an outer coupling.
+   If multiplicative: which solver runs first? [the one whose data the other one consumes]
+3. In which direction do data flow? [both directions: one prep task per direction. If only one solver consumes data of the other one, you need **one** prep task
+   and the coupling gets even smaller: see the minimal skeleton below.]
+4. What is the class called, and where do the files go? [`<A>With<B>_<Outer…>Coupling` in `src/exagrype/api`, i.e. next to its siblings]
 
-   | | multiplicative (one after the other) | additive (in parallel) |
-   |---|---|---|
-   | **outer**: each solver brings its own numerical scheme, solvers exchange data once per time step | **outer multiplicative** (fully described below) | **outer additive** (fully described below; matches `benchmarks/exagrype/gauge-wave-with-Euler`) |
-   | **inner**: one scheme is shared, solvers exchange data per (Runge-Kutta) stage | inner multiplicative (placeholder) | inner additive (placeholder) |
-
-   There is no preferred type. If the user wants a type that is only a draft or placeholder, say so,
-   and offer an outer type or work from the existing text together with the user.
-3. What will the solver be called and where to place the resulting files?
-4. Will the solvers exchange data only via volumetric coupling, or will they also globally synchronise with each other?
+Do **not** ask about, and do not build, the following unless the user brings it up: data-race analyses, restricting the copied unknowns,
+global user-defined synchronisation, bi-directional physics terms, Runge-Kutta stage coupling. They are listed as optional extras at the end.
+Defaults you do not ask about: copy **all** unknowns of the producer, interpolate piecewise linearly, enforce the **minimum** time step size, 
+the first solver owns load balancing and AMR.
 
 ## Preparatory steps
 
@@ -52,6 +56,60 @@ How the graphs are put together is the only part that differs between couplings.
 - **Additive:** `Graph.merge()` the solver graphs, then call a private routine `_couple(exahype2_project, peano_project, time_step)`
   which adds tasks and dependencies to the merged graph. `time_step.source_tasks()` and `time_step.sink_tasks()` of the merged graph are all
   it asks for. It does not need the graphs of the individual solvers.
+
+
+### The minimal skeleton
+
+This is the whole coupling of a one-directional multiplicative coupling (CCZ4 runs first, Euler sees its result). It generates a complete Peano project
+(checked for Euler + CCZ4 with text logging). Everything else in the reference couplings is a second direction, comments, or the second solver's copy of the same code:
+
+```python
+import exahype2.api, peano4.api, peano4.api.taskgraph
+from exagrype.api import FOCCZ4Solver
+from exagrype.api.euler import Euler
+from exagrype.api.actionsets import SynchroniseTimeStepSizes
+GridEntity = peano4.api.taskgraph.Task.GridEntity
+
+class CCZ4IntoEuler:
+    def __init__(self):
+        self.ccz4 = FOCCZ4Solver("CCZ4")
+        self.euler = Euler("Euler")
+        self.ccz4_copies = exahype2.api.AuxiliaryVariables(
+            "CCZ4Fields", dict(FOCCZ4Solver.Unknowns),
+            mode=exahype2.api.AuxiliaryVariables.Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES,
+            data_name="CCZ4FieldsForEuler")
+        self.euler.add_auxiliary_variables(self.ccz4_copies)
+        self.name = "CCZ4IntoEuler"
+        self.solvers = [self.ccz4, self.euler]          # CCZ4 first: it owns the global tasks
+
+    def generate_solver_realisation(self, exahype2_project, peano_project, setup_simulation, time_step, plot, mesh_adaptation):
+        graphs = []
+        for solver in self.solvers:                      # one graph per solver, without global tasks
+            graph = peano4.api.taskgraph.Graph()
+            solver.generate_solver_realisation(exahype2_project, peano_project, setup_simulation, graph, plot,
+                                               mesh_adaptation, add_global_tasks=False)
+            graphs.append(graph)
+        prep = peano4.api.taskgraph.Graph()
+        self._create_prep_task(prep, self.ccz4, self.euler, self.ccz4_copies)   # copied from the reference coupling
+        coupled = peano4.api.taskgraph.Graph()           # the coupling: a chain
+        coupled.append(graphs[0]); coupled.append(prep); coupled.append(graphs[1])
+        synchronise = peano4.api.taskgraph.Task(name="Synchronise time step sizes", entity=GridEntity.GLOBAL_END_OF_STEP)
+        for task in coupled.sink_tasks():
+            synchronise.add_dependency(task)
+        synchronise.add_action_set(SynchroniseTimeStepSizes(self.solvers))
+        coupled.add_task(synchronise)
+        self.ccz4.numerical_scheme.wrap_task_graph_in_load_balancing_and_amr_tasks(coupled)
+        if self.ccz4.mesh_adaptation is not None:
+            self.ccz4.mesh_adaptation.construct_output(exahype2_project, peano_project, mesh_adaptation)
+        if peano4.api.Logger().is_visualisation: coupled.visualise(title=self.name)
+        if peano4.api.Logger().is_text: coupled.log_as_text(title=self.name)
+        time_step.merge(coupled)
+```
+
+`_create_prep_task()` (~45 lines: one cell task with four action sets, see Step 2) is the only larger piece. Copy it **unchanged** from a reference coupling into the new class, 
+together with the constant `PREP_TASK_NAME`, rather than importing it or moving it into a shared base: each coupling stays readable on its own.
+For a second direction, add a second auxiliary set and a second prep task. For the additive flavour, replace the three `append()` lines by
+`Graph.merge()` of the solver graphs plus the dozen lines of `_couple()` from the reference.
 
 ### Numerical schemes
 
@@ -114,7 +172,7 @@ use the host class from `exagrype.api` directly and do not copy it. For other so
 
 #### Step 1: the coupling class (both flavours)
 
-Derive from nothing: one class per coupling, even if it repeats the constructor and the prep tasks of another one. The constructor does this, **in this order**:
+Derive from nothing: one class per coupling, even if it repeats the constructor and the prep tasks of another one. Name the two solvers explicitly (`self.ccz4`, `self.euler`), no loops or lists of solvers over which you iterate generically. The constructor does this, **in this order**:
 
 1. Create the solvers (CCZ4 first, as it owns the global tasks (load balancing, AMR) and Euler depends on its data). The order of `solvers`
    is the order of realisation; it does not fix the order of execution, which the wiring of the graphs does.
@@ -132,8 +190,8 @@ Derive from nothing: one class per coupling, even if it repeats the constructor 
 Each solver ends in a `GLOBAL_END_OF_STEP` task that computes the next time step size. Other tasks may depend on such a task, but the
 task graph compiler then does not fuse them into the mesh sweep of that task: they run in a sweep of their own.
 
-**Common to both flavours.** The final synchronisation depends on `final = [t for t in coupled.sink_tasks() if t.entity != Entity.GLOBAL]`,
-the sinks of the coupled graph.
+**Common to both flavours.** The final synchronisation depends on the sinks of the coupled graph (`coupled.sink_tasks()`; the additive reference filters out
+`GLOBAL` tasks, the multiplicative one need not).
 
 Create **two prep tasks** (`GridEntity.CELL`, `"Prepare auxiliary variables from <producer>"`), one per direction. A prep task is the one place that writes new face data:
 
@@ -207,7 +265,8 @@ Load balancing and AMR wrap the outcome. They come from the solver that owns the
 
 Take `benchmarks/exagrype/gauge-wave-with-Euler/gauge-wave-with-Euler.py`. Only the line that creates the host changes between the flavours.
 
-1. Only the coupling goes into `project.add_solver(coupled)`; never the individual solvers.
+1. Only the coupling goes into `project.add_solver(coupled)`; never the individual solvers. The coupling sets no initial conditions: add them to the solvers as to any other solver
+   (`ccz4.add_pde_term(exagrype.api.initialvalues.gauge_wave())`; Euler brings a smooth wave by default).
 2. Schemes per solver: `ccz4.numerical_scheme = ...`, `euler.numerical_scheme = ...`.
    - CCZ4: `rkfd4.CentralDifferencesWithRungeKutta(ccz4, p, rk_order=4, right_hand_side_kernel=Kernel.CentralDifferencesWithLopsidedAdvection, advection_velocity=exagrype.api.FOCCZ4Solver.ADVECTION_VELOCITY, advected_quantities=ccz4.lopsided_advection_quantities())`
    - Euler: `fv.RusanovWithExplicitEuler(euler, 2*p+1)`
@@ -220,7 +279,7 @@ Take `benchmarks/exagrype/gauge-wave-with-Euler/gauge-wave-with-Euler.py`. Only 
    (`--enable-exahype --enable-blockstructured --enable-loadbalancing --enable-exagrype`).
 5. The debug mode visualises the task graphs (windows the user has to close). The release mode logs them as text.
 
-#### Step 4: checks before you hand over (both flavours)
+#### Step 4: checks before you hand over (both flavours; the list is short on purpose)
 
 - The two prep tasks exist and are wired as in the diagram of the chosen flavour.
 - Each auxiliary set has `STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES`, and the prep task that fills it projects, restricts and rolls over.
@@ -241,7 +300,7 @@ Take `benchmarks/exagrype/gauge-wave-with-Euler/gauge-wave-with-Euler.py`. Only 
 - `Mode.STATIONARY_THROUGHOUT_TIME_STEPS_ON_FACES` and `Mode.CHANGING_ON_FACES` **have to be projected onto the faces right after
   each exchange**, before anybody reconstructs a halo from them (project -> restrict hanging faces -> roll over).
 
-#### Data races
+#### Optional: data races
 
 If both solvers read and write the same mesh data other than the exchanged sets, there might be a race. In the outer flavours, the persistent patches are only
 read by the prep tasks, which finish before the consumer starts, so the answer is usually no. Ask the user anyway. If yes, add a temporary copy to a prep task and redirect one solver's access to it.
@@ -282,7 +341,7 @@ No worked example exists for this type at the moment: the former `CCZ4WithEuler`
 
 If possible, display a rendering of the arising task graph to the user.
 
-### End of time step coupling (global coupling)
+### Optional: end of time step coupling (global coupling)
 
 For outer additive coupling, `SynchroniseTimeStepSizes` in the final `GLOBAL_END_OF_STEP` task already is this global
 coupling (see above). The generic recipe below is for further, user-defined exchange.
@@ -312,7 +371,11 @@ might have to be inserted multiple times at the corresponding markers. Tasks at 
 looked up in the concatenated graph in `_couple()`.
 
 
-## Optimise (outer additive coupling)
+## Optional extras (only on request)
+
+The sections below go beyond a minimal coupling. Do not start them on your own initiative.
+
+### Optimise (outer additive coupling)
 
 
 If we do temporary copies, do a C++ source code analysis and try to find out which 
@@ -321,7 +384,7 @@ narrow down the auxiliary variables. This required a code rewrite. It is easier 
 only copy those unknowns which are actually used. The analysis needs a confirmation 
 by the user if this is all correct. 
 
-## Wrap up question
+### Wrap up question
 
 Analyse if both solvers use some input data from the other solver. If not, we work
 with uni-directional coupling. Ask the user if they want to insert or append certain
