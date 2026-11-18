@@ -8,7 +8,7 @@ description: Take two solvers from ExaHyPE and couple them together, so they wor
 ## Capture Intent
 
 Couplings in ExaGRyPE are deliberately **minimalist**, and so are the ones you write. The two reference couplings,
-`exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling` and `exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling`, are plain classes:
+`exagrype.api.euler.CCZ4WithEuler_OuterAdditiveCoupling` and `exagrype.api.euler.CCZ4WithEuler_OuterMultiplicativeCoupling`, are plain classes:
 no base class, two named solvers, no loops, no generic helpers, and next to the docstrings only a few dozen lines of code. 
 Whatever the user does not ask for is not built. Ask **at most** the following questions, propose the default in brackets, and 
 move on as soon as the user accepts it:
@@ -31,7 +31,7 @@ the first solver owns load balancing and AMR.
 
 Keep it simple. There is no generic framework class to derive from: write one plain
 Python class per coupling, with a few dozen lines of code, and copy the pattern from
-`exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling` (outer coupling) rather than inventing
+`exagrype.api.euler.CCZ4WithEuler_OuterAdditiveCoupling` (outer coupling) rather than inventing
 new machinery. Do not add base classes, registries or hooks. The class is what the user adds
 to the project (`project.add_solver(coupled)`). It offers
 
@@ -161,7 +161,7 @@ Ask the user which flavour they want (Capture Intent) and then follow Steps 1 to
 | Wiring of the graphs | in sequence: A, copy, B | in parallel: copy, A and B together |
 | What B sees of A | A's **updated** state | A's state at the **begin** of the time step |
 | Prep tasks | two, one in front of A and one between A and B | two, both in front of A and B, run in parallel |
-| Host in the repository | `exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling` | `exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling` |
+| Host in the repository | `exagrype.api.euler.CCZ4WithEuler_OuterMultiplicativeCoupling` | `exagrype.api.euler.CCZ4WithEuler_OuterAdditiveCoupling` |
 | Benchmark | none yet (same driver as the additive one, other host class) | `benchmarks/exagrype/gauge-wave-with-Euler` |
 
 For Euler + CCZ4, the driver of the benchmark is the template for both. The two host classes are independent of each other and differ in how they wire the graphs only; everything else

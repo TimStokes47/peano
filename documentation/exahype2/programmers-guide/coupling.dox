@@ -98,7 +98,7 @@ and has the responsibility to inject the additional coupling logic and terms (re
 </div>
 
 
-A user adds one coupling object (a "host", e.g. exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling), which then brings its embedded solvers along. 
+A user adds one coupling object (a "host", e.g. exagrype.api.euler.CCZ4WithEuler_OuterAdditiveCoupling), which then brings its embedded solvers along. 
 These aggregated solvers then later will create their task graphs how to realise a feature independently,
 and it is then the host who has to merge these subgraphs properly:
 
@@ -186,7 +186,7 @@ In many cases, this reduces the overall convergence order, but there are solvers
 
 ExaHyPE internally works with the notion of a task graph, which simplies the modelling of this type of coupling dramatically.
 We simply take the task graph of solver 1 and merge the one of solver 2 into it, and then wire them,
-(@ref exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling is the worked example for Euler and CCZ4;
+(@ref exagrype.api.euler.CCZ4WithEuler_OuterMultiplicativeCoupling is the worked example for Euler and CCZ4;
 @ref exagrype.api.FOSOSolver is the example for the inner variant, where tasks are inserted per
 Runge-Kutta stage).
 All the remainder (notably finding the right number of required mesh sweeps) is done by ExaHyPE and Peano under the hood.
@@ -245,7 +245,7 @@ where the actual physics remains determined by
  
 ### Example: CCZ4 followed by Euler
 
-The host @ref exagrype.api.CCZ4WithEuler_OuterMultiplicativeCoupling chains the graphs of the running example:
+The host @ref exagrype.api.euler.CCZ4WithEuler_OuterMultiplicativeCoupling chains the graphs of the running example:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 prepare (from Euler) -> graph of CCZ4 -> prepare (from CCZ4) -> graph of Euler -> synchronise
@@ -332,7 +332,7 @@ They only are coupled in the outer time integration loop.
 
 ### Example: CCZ4 and Euler in parallel
 
-The host @ref exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling (driven by `benchmarks/exagrype/gauge-wave-with-Euler`) puts the graphs of the 
+The host @ref exagrype.api.euler.CCZ4WithEuler_OuterAdditiveCoupling (driven by `benchmarks/exagrype/gauge-wave-with-Euler`) puts the graphs of the 
 running example next to each other:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -388,7 +388,7 @@ The additive tasks of A and B can overlap, whereas multiplicative steps are logi
 task depends on the end of the whole graph in both cases. Each solver's graph ends with a global end-of-step task, which
 computes the time step size. In the multiplicative coupling, the prep task of B waits for the one of A, too, and the task graph compiler does not
 fuse it into the mesh sweep of that task: it runs in a sweep of its own (one sweep more than if it only waited for the last cell tasks).
-The additive reference is `exagrype.api.CCZ4WithEuler_OuterAdditiveCoupling`, driven by `benchmarks/exagrype/gauge-wave-with-Euler`. The AI skill
+The additive reference is `exagrype.api.euler.CCZ4WithEuler_OuterAdditiveCoupling`, driven by `benchmarks/exagrype/gauge-wave-with-Euler`. The AI skill
 (see below) generates both flavours from the same recipe.
 
 ## Inner additive coupling

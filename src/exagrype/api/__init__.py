@@ -12,6 +12,4 @@ from .FOSOCCZ4Solver import FOSOCCZ4Solver
 from .FOSOReconstructionSolver import FOSOReconstructionSolver
 from .FOSOSolver import FOSOSolver
 from .FD4WithKODissipation import FD4WithKODissipation
-from .CCZ4WithEuler_OuterAdditiveCoupling import CCZ4WithEuler_OuterAdditiveCoupling
-from .CCZ4WithEuler_OuterMultiplicativeCoupling import CCZ4WithEuler_OuterMultiplicativeCoupling
 from .CCZ4WithScalarField_OuterAdditiveCoupling import CCZ4WithScalarField_OuterAdditiveCoupling
