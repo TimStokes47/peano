@@ -134,4 +134,11 @@ Checks during implementation: (1) every coupling generates and compiles; (2) the
 
 ## Deviations and findings
 
-(Filled in while implementing.)
+- Generation, compilation and a run work for `rk4fd4` with the inner additive coupling (mesh of nine volumes per axis). All six combinations of scheme and coupling generate their task graphs.
+  The wiring of the multiplicative flavour was checked in the logged graph (the scalar field's stage 0 waits for CCZ4's roll over of stage 1).
+- The initial data are phase-shifted sine waves of one harmonic (see "Exact solution"): the first choice of four harmonics was not resolved on the coarsest mesh.
+- With that first choice, the run showed that the exact solution and the coupling are right: the first component (harmonic one) differs by about 5e-3 on nine volumes per axis.
+- **Not verified:** the convergence orders (outer ~1, inner ~4). The study was stopped by the system's memory guard before the 27-volume run, and has not been repeated.
+  Run `python3 convergence-study.py --work-directory <dir>` (needs the release libraries, see below) and check the table; adjust `ExpectedOrders` if the measured orders differ.
+- The study needs a configured Peano with `--enable-exahype --enable-blockstructured --enable-loadbalancing --enable-exagrype`; the release libraries are enough.
+- Neither the debug mode (visualised task graphs) nor the doxygen documentation was regenerated.
