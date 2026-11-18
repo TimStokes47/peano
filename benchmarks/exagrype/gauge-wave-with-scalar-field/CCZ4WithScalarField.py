@@ -40,88 +40,53 @@ import peano4.api.solversteps
 import toolbox.blockstructured.api
 
 
-class ScalarFieldOnSpacetime(exahype2.api.Solver):
+class ScalarFieldOnSpacetime(exagrype.api.scalarfield.ScalarField):
     """!
 
-    Massless scalar field on a spacetime which is given by a snapshot of the lapse
+    Scalar field on a spacetime which is given by a snapshot of the lapse
 
-    The solver has four unknowns: The time derivative Pi of the scalar field
-    and the three spatial derivatives Psi_i of the field. They obey the
-    first-order wave equation
-
-        d_t Pi  - d_i Psi_i = 0,    d_t Psi_i - d_i Pi = 0,
-
-    with wave speed one. The fluxes and the maximum eigenvalue are multiplied
-    by the lapse, i.e. the field propagates with a clock that runs with the
-    lapse. This is a toy coupling, not the Klein-Gordon equation on a curved
-    background. The lapse is the auxiliary variable "Spacetime" and starts with
-    the value 1 until the first KickOff task has overwritten it.
+    The fluxes and the maximum eigenvalue are multiplied by the lapse, i.e.
+    the field propagates with a clock that runs with the lapse. This is a toy
+    coupling, not the Klein-Gordon equation on a curved background. The
+    lapse is the auxiliary variable "Spacetime" and starts with the value 1
+    until the first KickOff task has overwritten it.
 
     """
 
-    Unknowns = {"Pi": 1, "Psi": 3}
-    """! The four unknowns of the scalar field """
-
-    def __init__(self, name: str, wave_number: int = 1, amplitude: float = 0.2):
+    def __init__(self, name: str):
         """!
 
         @param name: str
           Name of the solver, @ref exahype2.api.Solver.
 
-        @param wave_number: int
-          Number of periods of the initial wave over the unit cube.
-
-        @param amplitude: float
-          Amplitude of the initial wave.
-
         """
-        super().__init__(name, unknowns=self.Unknowns)
+        # Before the superclass, as its hooks refer to the set
         self.spacetime = exahype2.api.AuxiliaryVariables("Spacetime", {"lapse": 1})
-        self.ccz4_fields = exahype2.api.AuxiliaryVariables(
-            "CCZ4Fields",
-            dict(exagrype.api.FOCCZ4Solver.Unknowns),
-            mode=exahype2.api.AuxiliaryVariables.Mode.STATIONARY_ON_FACES,
+        initial_condition = exahype2.api.InitPointWisely(
+            implementation=exagrype.api.scalarfield.ScalarField.sine_wave()
+            + f"\n  {self._lapse()} = 1.0;\n"
         )
-        # The CCZ4 fields are not filled by this host, i.e. they are stationary and unused
+        super().__init__(name, initial_condition=initial_condition)
         self.add_auxiliary_variables(self.spacetime)
-        self.add_auxiliary_variables(self.ccz4_fields)
-        lapse = f"{self.spacetime.argument_name}[0]"
-        self.add_abstract_solver_attribute(
-            'static_assert(Dimensions == 3, "The scalar field solver is three-dimensional only");'
-        )
-        self.add_pde_term(
-            exahype2.api.Flux(
-                implementation=f"""
-  for (int i=0; i<4; i++) F[i] = 0.0;
-  // Q = (Pi, Psi_x, Psi_y, Psi_z)
-  F[0]            = -{lapse} * Q[1+normal];
-  F[1+normal]     = -{lapse} * Q[0];
-""",
-                stateless=True,
-            )
-        )
-        self.add_pde_term(
-            exahype2.api.VolumetricSource(
-                implementation="  for (int i=0; i<4; i++) S[i] = 0.0;\n",
-                stateless=True,
-            )
-        )
-        self.add_pde_term(
-            exahype2.api.MaxEigenvalue(
-                implementation=f"  *lambdaMax = {lapse};\n", stateless=True
-            )
-        )
-        self.add_pde_term(
-            exahype2.api.InitPointWisely(
-                implementation=f"""
-  const double phase = 2.0 * M_PI * {wave_number} * x(0);
-  Q[0] = 0.0;
-  Q[1] = {amplitude!r} * 2.0 * M_PI * {wave_number} * std::cos(phase);
-  Q[2] = 0.0;
-  Q[3] = 0.0;
-  {lapse} = 1.0;
+
+    def _lapse(self) -> str:
+        """! C++ expression of the lapse in a PDE term"""
+        return f"{self.spacetime.argument_name}[0]"
+
+    def _flux_implementation(self) -> str:
+        return (
+            super()._flux_implementation()
+            + f"""
+  for (int i=0; i<4; i++) F[i] *= {self._lapse()};
 """
-            )
+        )
+
+    def _max_eigenvalue_implementation(self) -> str:
+        return (
+            super()._max_eigenvalue_implementation()
+            + f"""
+  *lambdaMax *= {self._lapse()};
+"""
         )
 
 
