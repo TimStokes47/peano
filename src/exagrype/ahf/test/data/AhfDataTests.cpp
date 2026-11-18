@@ -1,9 +1,12 @@
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "../../ahf-data.h"
 #include "../../file-input.h"
+#include "../ccz4-component-names.h"
 
 namespace exahype2::ccz4::ahf::tests::data {
 
@@ -360,6 +363,104 @@ void testSourceVariableMappingStruct() {
   std::cout << "SourceVariableMapping stores validated source VTU component indices" << std::endl;
 }
 
+bool sameMapping(const SourceVariableMapping& first, const SourceVariableMapping& second) {
+  return first.componentsInCompactOrder() == second.componentsInCompactOrder();
+}
+
+void testSourceMappingPresets() {
+  const SourceVariableMapping exagrype = ExaGRyPESourceMapping();
+  const SourceVariableMapping legacy = LegacyCCZ4SourceMapping();
+  for (std::size_t i = 0; i < NumberOfSymmetricTensorComponents; ++i) {
+    assert(exagrype.conformalMetric[i] == i);
+    assert(exagrype.conformalExtrinsicCurvature[i] == 6 + i);
+    assert(legacy.conformalMetric[i] == i);
+    assert(legacy.conformalExtrinsicCurvature[i] == 6 + i);
+  }
+  assert(exagrype.traceK == 23);
+  assert(exagrype.conformalFactor == 24);
+  assert(legacy.traceK == 53);
+  assert(legacy.conformalFactor == 54);
+
+  // FOSOCCZ4Solver stores 25 unknowns, FOCCZ4Solver and ccz4.py 59.
+  assert(exagrype.isValid(25));
+  assert(exagrype.isValid(59));
+  assert(!legacy.isValid(25));
+  assert(legacy.isValid(59));
+
+  std::cout << "Source mapping presets select the exagrype.api and legacy ccz4.py layouts" << std::endl;
+}
+
+void testSourceMappingFromComponentNames() {
+  const auto exagrypeNames = ExaGRyPEComponentNames();
+  assert(exagrypeNames.size() == 60);
+  assert(exagrypeNames[23] == "traceK");
+  assert(exagrypeNames[24] == "phi");
+  const auto fromExagrype = SourceVariableMappingFromComponentNames(exagrypeNames);
+  assert(fromExagrype.has_value());
+  assert(sameMapping(*fromExagrype, ExaGRyPESourceMapping()));
+
+  const auto legacyNames = LegacyCCZ4ComponentNames();
+  assert(legacyNames[53] == "traceK");
+  assert(legacyNames[54] == "phi");
+  const auto fromLegacy = SourceVariableMappingFromComponentNames(legacyNames);
+  assert(fromLegacy.has_value());
+  assert(sameMapping(*fromLegacy, LegacyCCZ4SourceMapping()));
+
+  auto missing = exagrypeNames;
+  missing[24] = "chi";
+  assert(!SourceVariableMappingFromComponentNames(missing).has_value());
+
+  auto duplicated = exagrypeNames;
+  duplicated[58] = "phi";
+  assert(!SourceVariableMappingFromComponentNames(duplicated).has_value());
+
+  const std::vector<std::string> unnamed(60);
+  assert(!SourceVariableMappingFromComponentNames(unnamed).has_value());
+
+  std::cout << "Component names select the AHF fields only when each is named exactly once" << std::endl;
+}
+
+void expectMappingRejectedByNames(const SourceVariableMapping& sourceMapping,
+                                  const std::vector<std::string>& componentNames,
+                                  const std::string& expectedMessagePart) {
+  bool rejected = false;
+  try {
+    ValidateSourceMappingAgainstComponentNames(sourceMapping, componentNames);
+  } catch (const std::invalid_argument& error) {
+    rejected = true;
+    assert(std::string(error.what()).find(expectedMessagePart) != std::string::npos);
+  }
+  assert(rejected);
+}
+
+void testSourceMappingCheckedAgainstComponentNames() {
+  const auto exagrypeNames = ExaGRyPEComponentNames();
+  ValidateSourceMappingAgainstComponentNames(ExaGRyPESourceMapping(), exagrypeNames);
+  ValidateSourceMappingAgainstComponentNames(LegacyCCZ4SourceMapping(), LegacyCCZ4ComponentNames());
+
+  // Without names that identify every field there is nothing to check against.
+  ValidateSourceMappingAgainstComponentNames(
+    LegacyCCZ4SourceMapping(), std::vector<std::string>(60));
+
+  expectMappingRejectedByNames(
+    LegacyCCZ4SourceMapping(), exagrypeNames,
+    "K selects source component 53, which the data names dzG[4], but traceK is component 23");
+
+  SourceVariableMapping swappedMetric = ExaGRyPESourceMapping();
+  std::swap(swappedMetric.conformalMetric[1], swappedMetric.conformalMetric[3]);
+  expectMappingRejectedByNames(
+    swappedMetric, exagrypeNames,
+    "gammaTilde_xy selects source component 3, which the data names G[3], but G[1] is component 1");
+
+  SourceVariableMapping beyondNames = ExaGRyPESourceMapping();
+  beyondNames.conformalFactor = 70;
+  expectMappingRejectedByNames(
+    beyondNames, exagrypeNames,
+    "phi selects source component 70, which the data does not have, but phi is component 24");
+
+  std::cout << "A source mapping that contradicts the component names is rejected" << std::endl;
+}
+
 void testInterpolatedShellStruct() {
   InterpolatedShell shell{
     .innerRadius = 0.8,
@@ -484,6 +585,9 @@ int main() {
   testPhysicalSpatialMetricDerivativeConversion();
   testInvalidPhysicalPhiRejected();
   testSourceVariableMappingStruct();
+  testSourceMappingPresets();
+  testSourceMappingFromComponentNames();
+  testSourceMappingCheckedAgainstComponentNames();
   testInterpolatedShellStruct();
   testInterpolatedSurfaceStruct();
 

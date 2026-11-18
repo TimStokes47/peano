@@ -34,15 +34,32 @@ namespace exahype2::ccz4::ahf {
  * CompactField names these columns. SourceVariableMapping names components of
  * the input tuple only.
  *
+ * If the cell-data array names its components, as snapshots converted with
+ * src/tarch/plotter/api/render.py do, the mapping must agree with the names
+ * (see ValidateSourceMappingAgainstComponentNames).
+ *
  * @param inputFile       path to a .vtu file.
  * @param gridData        output; any previous content is overwritten.
- * @param sourceMapping identifies all fourteen source tuple components.
+ * @param sourceMapping identifies all fourteen source tuple components, for
+ *        example ExaGRyPESourceMapping() or LegacyCCZ4SourceMapping().
  * @throws std::runtime_error if the file cannot be read, holds no cell data,
- *         the mapping is incomplete, or a selected index is out of range.
+ *         or a selected index is out of range.
+ * @throws std::invalid_argument if the mapping is incomplete or contradicts
+ *         the component names.
  */
 void ReadGridFromFile(const std::string& inputFile,
                       GridData& gridData,
                       const SourceVariableMapping& sourceMapping);
+
+/**
+ * Load a grid dataset as above, selecting the fourteen AHF fields by the names
+ * of the cell-data components (CCZ4SourceComponentNames), so no mapping is
+ * needed.
+ *
+ * @throws std::runtime_error if the file cannot be read, holds no cell data,
+ *         or does not name each of the fourteen components exactly once.
+ */
+void ReadGridFromFile(const std::string& inputFile, GridData& gridData);
 
 }  // namespace exahype2::ccz4::ahf
 

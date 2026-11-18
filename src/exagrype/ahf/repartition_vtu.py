@@ -21,6 +21,7 @@ The K piece files are written next to output.pvtu as <output-stem>_<p>.vtu.
 import argparse
 import os
 import sys
+from xml.sax.saxutils import quoteattr
 
 import vtk
 
@@ -44,7 +45,20 @@ def _xml_type(data_array):
     return _VTK_TO_XML_TYPE.get(data_array.GetDataTypeAsString(), "Float64")
 
 
+def _component_names(array):
+    """ComponentName attributes, as VTK's writer emits them, for the named components."""
+    names = ""
+    for component in range(array.GetNumberOfComponents()):
+        name = array.GetComponentName(component)
+        if name:
+            names += f' ComponentName{component}={quoteattr(name)}'
+    return names
+
+
 def _parallel_arrays(field_data, indent="      "):
+    # The parallel reader builds its arrays from these declarations, so the
+    # component names have to be here as well as in the pieces: the finder
+    # selects its fields by them.
     lines = []
     for i in range(field_data.GetNumberOfArrays()):
         array = field_data.GetArray(i)
@@ -53,7 +67,8 @@ def _parallel_arrays(field_data, indent="      "):
         lines.append(
             f'{indent}<PDataArray type="{_xml_type(array)}" '
             f'Name="{array.GetName()}" '
-            f'NumberOfComponents="{array.GetNumberOfComponents()}"/>'
+            f'NumberOfComponents="{array.GetNumberOfComponents()}"'
+            f'{_component_names(array)}/>'
         )
     return "\n".join(lines)
 

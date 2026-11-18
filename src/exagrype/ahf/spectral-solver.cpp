@@ -111,7 +111,8 @@ SpectralNewtonResult SolveSpectralNewton(const SpectralBasis& basis,
   result.iterations   = 0;
   result.message
     = "initial guess produced a non-finite residual (surface not evaluable: "
-      "check the reference point, the initial radius, and the data domain)";
+      "check the reference point, the initial radius, the data domain, and the "
+      "variable mapping)";
   return result;
   }
 
