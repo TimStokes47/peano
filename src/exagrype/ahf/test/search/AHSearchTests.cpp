@@ -1,4 +1,5 @@
 #include "../../apparent-horizon-finder.h"
+#include "../temporary-directory.h"
 
 #include <array>
 #include <cassert>
@@ -114,7 +115,8 @@ void TestValidation() {
 
 void TestSearchOutput() {
   const GridData grid = MakeGrid();
-  const auto directory = std::filesystem::temp_directory_path();
+  const TemporaryDirectory temporary("ahf-search-tests");
+  const auto& directory = temporary.path();
   const auto summary = directory / "ahf-search-summary.txt";
   const auto surface = directory / "ahf-search-surface.vtp";
   std::filesystem::remove(summary);
@@ -289,7 +291,8 @@ void TestSpectralAndPreviousSurfaceAttempts() {
 
 void TestPhysicalTargetOutput() {
   const GridData grid = MakeGrid();
-  const auto directory = std::filesystem::temp_directory_path();
+  const TemporaryDirectory temporary("ahf-search-tests");
+  const auto& directory = temporary.path();
   const auto aggregate = directory / "ahf-multi-horizon-summary.txt";
   const auto prefix = directory / "ahf-multi-horizon";
   const auto missingSummary = directory / "ahf-multi-horizon-0-missing.txt";

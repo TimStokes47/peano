@@ -1,4 +1,5 @@
 #include "../../apparent-horizon-finder.h"
+#include "../temporary-directory.h"
 
 #include <array>
 #include <cassert>
@@ -161,7 +162,8 @@ void TestZeroAndOneBlackHole() {
   assert(failure.candidatePlan.candidates.empty());
   assert(failure.commonHorizons.empty());
 
-  const auto directory = std::filesystem::temp_directory_path();
+  const TemporaryDirectory temporary("ahf-common-horizon-search-tests");
+  const auto& directory = temporary.path();
   const std::string successPrefix =
     (directory / "ahf-single-success").string();
   const std::string successSummary = successPrefix + "-summary.txt";
@@ -240,7 +242,8 @@ void TestExplicitFallbackAfterIndividualFailure() {
   assert(std::abs(result.candidatePlan.candidates[0].referencePoint.x -
                   (0.1 / 3.0)) < 1.0e-14);
 
-  const auto directory = std::filesystem::temp_directory_path();
+  const TemporaryDirectory temporary("ahf-common-horizon-search-tests");
+  const auto& directory = temporary.path();
   const std::string prefix = (directory / "ahf-provisional").string();
   const std::string summary = prefix + "-summary.txt";
   (void)WriteAHToFile(
@@ -306,7 +309,8 @@ void TestTwoIndividualsProduceOneCommonSearch() {
   assert(result.commonHorizons[0].search.converged);
   assert(result.commonHorizons[0].validation.valid);
 
-  const auto directory = std::filesystem::temp_directory_path();
+  const TemporaryDirectory temporary("ahf-common-horizon-search-tests");
+  const auto& directory = temporary.path();
   const std::string prefix = (directory / "ahf-catalogue-horizon").string();
   const std::string summary = (directory / "ahf-catalogue-summary.txt").string();
   const auto written = WriteAHToFile(
@@ -370,7 +374,8 @@ void TestThreeHoleDeterminismAndSummary() {
   abc.memberIds = {"A", "B", "C"};
   abc.reason.connectedComponent = true;
   catalogue.commonHorizons = {ab, abc};
-  const auto path = std::filesystem::temp_directory_path() /
+  const TemporaryDirectory temporary("ahf-common-horizon-search-tests");
+  const auto path = temporary.path() /
     "ahf-common-catalogue-test.txt";
   WriteAHHorizonCatalogueSummary(catalogue, path.string());
   std::ifstream input(path);

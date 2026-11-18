@@ -4,6 +4,17 @@ project(CCZ4ApparentHorizonFinder LANGUAGES CXX)
 
 option(ENABLE_CCZ4_AHF_TESTS "Build CCZ4 apparent-horizon-finder test executables" OFF)
 
+# Debug test builds check every std::array and std::vector index, in the core
+# as well as the tests: _GLIBCXX_ASSERTIONS for libstdc++, the extensive
+# hardening mode for libc++. Each library ignores the other's macro, and
+# neither changes the ABI. Set before any target so that all of them get it.
+if(ENABLE_CCZ4_AHF_TESTS)
+  add_compile_definitions(
+    $<$<CONFIG:Debug>:_GLIBCXX_ASSERTIONS>
+    $<$<CONFIG:Debug>:_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE>
+  )
+endif()
+
 if(NOT TARGET PeanoOptions)
   add_library(PeanoOptions INTERFACE)
   target_compile_features(PeanoOptions INTERFACE cxx_std_20)
