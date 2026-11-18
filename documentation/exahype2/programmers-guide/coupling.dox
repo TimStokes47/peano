@@ -480,8 +480,9 @@ The advection velocity is the metric component @f$ g_{xx} = 1 - A \sin(2 \pi (x-
 @f$ \phi_m(x,t) = \sin(2 \theta_0 + m \pi/4), \quad \tan \theta_0 = e^{2 \pi A t} \tan (\pi (x-t)), @f$
 
 so that the error of the scalar field is measurable. The script `convergence-study.py` there runs the outer multiplicative coupling and both
-inner couplings with `rk4fd4` and with Finite Volumes. The outcome (see the benchmark's `example-output/convergence.md`)
-confirms what the data-flow argument predicts: the outer coupling is first order, and the inner couplings reach the order of the scheme.
+inner couplings with `rk4fd4` and with Finite Volumes, and checks the estimated orders. The data-flow argument above predicts a first-order outer coupling and
+inner couplings which reach the order of the scheme. At the time of writing, the benchmark generates and runs for all combinations tried, but the
+convergence study has not been completed (see `DESIGN.md`), i.e. these orders are expectations and not yet measurements.
 
 
 ## Synchronise solvers
