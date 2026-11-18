@@ -1,0 +1,64 @@
+name: AHF tests
+
+# Runs on a push to any branch, so a branch in a fork is checked before its PR
+# is opened, and on PRs into the shared ExaGRyPE branches.
+on:
+  push:
+    paths:
+      - src/exagrype/ahf/**
+      - .github/workflows/exagrype-ahf-tests.yml
+  pull_request:
+    branches:
+      - exagrype
+      - exagrype-*
+    paths:
+      - src/exagrype/ahf/**
+      - .github/workflows/exagrype-ahf-tests.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux, GCC 14
+            os: ubuntu-24.04
+            cxx: g++-14
+          - name: macOS arm64, Apple clang
+            os: macos-15
+            cxx: clang++
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: src/exagrype/ahf
+
+      # Debug, never Release: the tests check with assert, which NDEBUG
+      # removes, and Debug also turns on the std::array and std::vector bounds
+      # checks. VTK is left out: the runners do not have it, and two of the
+      # three suites that need it read snapshots that are not in the
+      # repository (ccz4Results/).
+      - name: Configure
+        run: >
+          cmake -S src/exagrype/ahf -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          -DENABLE_CCZ4_AHF_TESTS=ON
+          -DCMAKE_DISABLE_FIND_PACKAGE_VTK=ON
+
+      - name: Build
+        run: cmake --build build --parallel 4
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure --parallel 4 --timeout 1200
