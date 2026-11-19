@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -160,6 +161,13 @@ void TestSearchOutput() {
   assert(successText.find("attempts[0].succeeded = false") != std::string::npos);
   assert(successText.find("attempts[1].succeeded = true") != std::string::npos);
   assert(successText.find("horizon.meanRadius = ") != std::string::npos);
+  assert(successText.find("horizon.meanCoordinateRadius = ") != std::string::npos);
+  assert(successText.find("horizon.area = ") != std::string::npos);
+  assert(successText.find("horizon.arealRadius = ") != std::string::npos);
+  assert(successText.find("horizon.irreducibleMass = ") != std::string::npos);
+  // The grid is flat with K_ij = 2 delta_ij and K = 3, so Theta = 2/r - 1:
+  // the horizon is a sphere of radius 2, of mass 1.
+  assert(std::abs(success.horizon->irreducibleMass - 1.0) < 1.0e-6);
   assert(ReadText(surface).find("NumberOfPoints=\"38\"") != std::string::npos);
   std::filesystem::remove(summary);
   std::filesystem::remove(surface);
@@ -364,6 +372,14 @@ void TestPhysicalTargetOutput() {
   assert(aggregateText.find("targets[1].id = \"BH plus\"") !=
          std::string::npos);
   assert(aggregateText.find("targets[2].kind = common") != std::string::npos);
+  assert(aggregateText.find("targets[1].horizon.meanCoordinateRadius = ") !=
+         std::string::npos);
+  assert(aggregateText.find("targets[1].horizon.area = ") != std::string::npos);
+  assert(aggregateText.find("targets[1].horizon.arealRadius = ") !=
+         std::string::npos);
+  assert(aggregateText.find("targets[1].horizon.irreducibleMass = ") !=
+         std::string::npos);
+  assert(std::abs(result.targets[1].horizon->irreducibleMass - 1.0) < 1.0e-6);
   assert(ReadText(plusSurface).find("NumberOfPoints=\"38\"") !=
          std::string::npos);
 

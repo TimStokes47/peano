@@ -1,5 +1,6 @@
 #include "ah-finder-result.h"
 
+#include "diagnostics.h"
 #include "expansion.h"
 #include "interpolated-surface-residual.h"
 
@@ -55,12 +56,15 @@ AHFinderResult BuildAHFinderResult(
     if (surface.numberOfPoints() != basis.nPoints) return result;
 
     std::vector<double> expansion;
+    std::vector<Tensor3> spatialMetric;
     expansion.reserve(basis.nPoints);
+    spatialMetric.reserve(basis.nPoints);
     double maxAbsExpansion = 0.0;
     for (const InterpolatedSurfacePoint& point : surface.points) {
       const double theta = computeExpansion(point);
       if (!std::isfinite(theta)) return result;
       expansion.push_back(theta);
+      spatialMetric.push_back(point.geometry.spatialMetric);
       maxAbsExpansion = std::max(maxAbsExpansion, std::abs(theta));
     }
 
@@ -77,12 +81,23 @@ AHFinderResult BuildAHFinderResult(
     const auto [minimum, maximum] = std::minmax_element(
       field.h.begin(), field.h.end()
     );
+    // The surface points follow the basis' collocation order, as HorizonArea
+    // requires.
+    const double area = HorizonArea(
+      basis, solverResult.coefficients, spatialMetric
+    );
     result.horizon = std::move(horizon);
     result.minRadius = *minimum;
     result.meanRadius = std::accumulate(
       field.h.begin(), field.h.end(), 0.0
     ) / static_cast<double>(field.h.size());
     result.maxRadius = *maximum;
+    result.meanCoordinateRadius = MeanCoordinateRadius(
+      solverResult.coefficients
+    );
+    result.area = area;
+    result.arealRadius = ArealRadius(area);
+    result.irreducibleMass = IrreducibleMass(area);
     result.maxAbsExpansion = maxAbsExpansion;
     result.spectralResidualInfinityNorm = spectralResidualInfinityNorm;
     result.surfaceAvailable = true;

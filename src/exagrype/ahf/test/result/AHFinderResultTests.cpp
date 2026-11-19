@@ -4,16 +4,20 @@
 #include "../../initial-guess.h"
 #include "../../iteration.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <numbers>
+#include <utility>
 
 namespace exahype2::ccz4::ahf::tests::result {
 namespace {
 
-GridData MakeSphericalHorizonGrid() {
+// gammaTilde_ij = delta_ij, so the physical metric is delta_ij / phi^2.
+GridData MakeSphericalHorizonGrid(double phi = 1.0) {
   GridData grid;
   for (int x = -2; x <= 2; ++x) {
     for (int y = -2; y <= 2; ++y) {
@@ -26,7 +30,7 @@ GridData MakeSphericalHorizonGrid() {
         const std::array<double, NumberOfCompactFields> row{
           1.0, 0.0, 0.0, 1.0, 0.0, 1.0,
           1.0, 0.0, 0.0, 1.0, 0.0, 1.0,
-          3.0, 1.0
+          3.0, phi
         };
         grid.values.insert(grid.values.end(), row.begin(), row.end());
       }
@@ -79,6 +83,11 @@ void TestConvergedResultAndCanonicalSurface() {
   assert(result.minRadius == field.h.front());
   assert(result.meanRadius == field.h.front());
   assert(result.maxRadius == field.h.front());
+  const double radius = field.h.front();
+  assert(std::abs(result.meanCoordinateRadius - radius) < 1.0e-14);
+  assert(std::abs(result.area - 4.0 * std::numbers::pi * radius * radius) < 1.0e-12);
+  assert(std::abs(result.arealRadius - radius) < 1.0e-12);
+  assert(std::abs(result.irreducibleMass - 0.5 * radius) < 1.0e-12);
   assert(std::isfinite(result.maxAbsExpansion));
   assert(result.maxAbsExpansion < 1.0e-8);
   assert(std::isfinite(result.spectralResidualInfinityNorm));
@@ -145,6 +154,66 @@ void TestUnavailableSurfacePreservesSolverDiagnostics() {
   assert(std::isnan(result.maxRadius));
   assert(std::isnan(result.maxAbsExpansion));
   assert(std::isnan(result.spectralResidualInfinityNorm));
+  assert(std::isnan(result.meanCoordinateRadius));
+  assert(std::isnan(result.area));
+  assert(std::isnan(result.arealRadius));
+  assert(std::isnan(result.irreducibleMass));
+}
+
+// The area is measured with the physical metric interpolated from the grid,
+// not with the coordinate one: with phi = 0.5 every length doubles, so a
+// coordinate sphere of radius 1.2 has areal radius 2.4.
+void TestAreaUsesPhysicalMetric() {
+  const GridData grid = MakeSphericalHorizonGrid(0.5);
+  const CartesianPointInterpolator interpolator(grid, InterpolationOptions());
+  const SpectralBasis basis = BuildSpectralBasis(2);
+  const SpectralNewtonResult solver{
+    .coefficients = MakeSphericalInitialCoefficients(basis, 1.2),
+    .converged = false,
+    .iterations = 1,
+    .residualHistory = {1.0},
+    .message = "controlled test failure"
+  };
+
+  const AHFinderResult result = BuildAHFinderResult(
+    basis, interpolator, {0.25, -0.5, 0.75}, solver
+  );
+  assert(result.surfaceAvailable);
+  assert(std::abs(result.meanRadius - 1.2) < 1.0e-12);
+  assert(std::abs(result.area - 4.0 * std::numbers::pi * 2.4 * 2.4) < 1.0e-10);
+  assert(std::abs(result.arealRadius - 2.4) < 1.0e-12);
+  assert(std::abs(result.irreducibleMass - 1.2) < 1.0e-12);
+}
+
+// On a surface that is not a coordinate sphere the two mean radii differ:
+// meanRadius averages h over the collocation points, meanCoordinateRadius is
+// the solid-angle mean a_00 / sqrt(4 pi).
+void TestMeanRadiiOnDistortedSurface() {
+  const GridData grid = MakeSphericalHorizonGrid();
+  const CartesianPointInterpolator interpolator(grid, InterpolationOptions());
+  const SpectralBasis basis = BuildSpectralBasis(2);
+  std::vector<double> coefficients = MakeSphericalInitialCoefficients(basis, 1.0);
+  const auto mode = std::find(
+    basis.modes.begin(), basis.modes.end(), std::pair{2, 0}
+  );
+  assert(mode != basis.modes.end());
+  coefficients[static_cast<std::size_t>(mode - basis.modes.begin())] = 0.3;
+  const SpectralNewtonResult solver{
+    .coefficients = coefficients,
+    .converged = false,
+    .iterations = 1,
+    .residualHistory = {1.0},
+    .message = "controlled test failure"
+  };
+
+  const AHFinderResult result = BuildAHFinderResult(
+    basis, interpolator, {0.0, 0.0, 0.0}, solver
+  );
+  assert(result.surfaceAvailable);
+  assert(std::abs(result.meanCoordinateRadius - 1.0) < 1.0e-14);
+  assert(std::abs(result.meanRadius - result.meanCoordinateRadius) > 1.0e-3);
+  assert(result.minRadius < result.meanCoordinateRadius);
+  assert(result.meanCoordinateRadius < result.maxRadius);
 }
 
 }  // namespace
@@ -155,5 +224,7 @@ int main() {
   TestConvergedResultAndCanonicalSurface();
   TestNonConvergedButReconstructableResult();
   TestUnavailableSurfacePreservesSolverDiagnostics();
+  TestAreaUsesPhysicalMetric();
+  TestMeanRadiiOnDistortedSurface();
   std::cout << "All AHFinderResult tests completed.\n";
 }

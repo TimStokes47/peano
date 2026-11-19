@@ -16,6 +16,12 @@ namespace exahype2::ccz4::ahf {
  * horizon uses the numerical SpectralBasis collocation ordering. The retained
  * lMax and final coefficients are sufficient for a later writer to construct
  * a separate, denser visualisation grid without rerunning Newton.
+ *
+ * The radii are coordinate radii about referencePoint. meanRadius is the plain
+ * average of h over the collocation points, which do not sample the sphere
+ * evenly; meanCoordinateRadius is the solid-angle mean a_00 / sqrt(4 pi). They
+ * agree for a coordinate sphere. area, arealRadius and irreducibleMass use the
+ * physical metric interpolated from the grid onto the surface.
  */
 struct AHFinderResult {
   SpectralNewtonResult solver;
@@ -26,6 +32,10 @@ struct AHFinderResult {
   double minRadius = std::numeric_limits<double>::quiet_NaN();
   double meanRadius = std::numeric_limits<double>::quiet_NaN();
   double maxRadius = std::numeric_limits<double>::quiet_NaN();
+  double meanCoordinateRadius = std::numeric_limits<double>::quiet_NaN();
+  double area = std::numeric_limits<double>::quiet_NaN();
+  double arealRadius = std::numeric_limits<double>::quiet_NaN();
+  double irreducibleMass = std::numeric_limits<double>::quiet_NaN();
   double spectralResidualInfinityNorm =
     std::numeric_limits<double>::quiet_NaN();
   double maxAbsExpansion = std::numeric_limits<double>::quiet_NaN();

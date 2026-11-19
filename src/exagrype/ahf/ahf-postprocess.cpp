@@ -34,6 +34,10 @@ void PrintHorizon(const AHFinderResult& horizon) {
             << horizon.referencePoint.y << ", " << horizon.referencePoint.z << ")\n"
             << "  coordinate radius min/mean/max: " << horizon.minRadius << " / "
             << horizon.meanRadius << " / " << horizon.maxRadius << "\n"
+            << "  solid-angle mean radius:        " << horizon.meanCoordinateRadius << "\n"
+            << "  area:                           " << horizon.area << "\n"
+            << "  areal radius:                   " << horizon.arealRadius << "\n"
+            << "  irreducible mass:               " << horizon.irreducibleMass << "\n"
             << "  spectral residual (max norm):   " << horizon.spectralResidualInfinityNorm << "\n"
             << "  max |expansion| on the surface: " << horizon.maxAbsExpansion << "\n";
 }
