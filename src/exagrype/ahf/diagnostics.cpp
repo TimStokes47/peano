@@ -22,19 +22,39 @@ namespace exahype2::ccz4::ahf {
       return sum;
     }
 
+    /** The unit radial direction n^i at collocation point p. */
+    Vector3 radialDirection(const SpectralBasis& basis, std::size_t p) {
+      const double cosSigma = std::cos(basis.sigma[p]);
+      return {
+        cosSigma * std::cos(basis.rho[p]),
+        cosSigma * std::sin(basis.rho[p]),
+        std::sin(basis.sigma[p])};
+    }
+
+    SynthesizedField synthesizeOnBasisGrid(
+      const SpectralBasis&       basis,
+      const std::vector<double>& coefficients
+    ) {
+      SynthesizedField field = Synthesize(basis, coefficients);
+      if (field.h.size() != basis.nPoints) {
+        throw std::invalid_argument(
+          "HorizonArea: synthesized field does not match the basis grid"
+        );
+      }
+      return field;
+    }
+
   } // namespace
 
-  template <class Spacetime>
   double HorizonArea(
     const SpectralBasis&       basis,
     const std::vector<double>& coefficients,
-    const Spacetime&           spacetime,
-    const ReferencePoint&      referencePoint
+    std::span<const Tensor3>   spatialMetric
   ) {
-    const SynthesizedField field = Synthesize(basis, coefficients);
-    if (field.h.size() != basis.nPoints) {
+    const SynthesizedField field = synthesizeOnBasisGrid(basis, coefficients);
+    if (spatialMetric.size() != basis.nPoints) {
       throw std::invalid_argument(
-        "HorizonArea: synthesized field does not match the basis grid"
+        "HorizonArea: expected the metric at each of the basis' collocation points"
       );
     }
 
@@ -60,11 +80,7 @@ namespace exahype2::ccz4::ahf {
         dxSigma[i] = field.hSigma[p] * normal[i] + h * dNormalSigma[i];
       }
 
-      const Vector3 absolute{
-        referencePoint.x + h * normal[0],
-        referencePoint.y + h * normal[1],
-        referencePoint.z + h * normal[2]};
-      const Tensor3 gamma = MetricData(spacetime, absolute).spatialMetric;
+      const Tensor3& gamma = spatialMetric[p];
 
       const double qRhoRho     = contract(gamma, dxRho, dxRho);
       const double qSigmaSigma = contract(gamma, dxSigma, dxSigma);
@@ -75,6 +91,27 @@ namespace exahype2::ccz4::ahf {
       area += basis.weight[p] * jacobian * std::sqrt(std::max(detq, 0.0));
     }
     return area;
+  }
+
+  template <class Spacetime>
+  double HorizonArea(
+    const SpectralBasis&       basis,
+    const std::vector<double>& coefficients,
+    const Spacetime&           spacetime,
+    const ReferencePoint&      referencePoint
+  ) {
+    const SynthesizedField field = synthesizeOnBasisGrid(basis, coefficients);
+
+    std::vector<Tensor3> spatialMetric(basis.nPoints);
+    for (std::size_t p = 0; p < basis.nPoints; ++p) {
+      const Vector3 normal = radialDirection(basis, p);
+      const Vector3 absolute{
+        referencePoint.x + field.h[p] * normal[0],
+        referencePoint.y + field.h[p] * normal[1],
+        referencePoint.z + field.h[p] * normal[2]};
+      spatialMetric[p] = MetricData(spacetime, absolute).spatialMetric;
+    }
+    return HorizonArea(basis, coefficients, spatialMetric);
   }
 
   double ArealRadius(double area) { return std::sqrt(area / (4.0 * std::numbers::pi)); }

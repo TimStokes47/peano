@@ -4,6 +4,7 @@
 #include "ahf-data.h"
 #include "harmonics.h"
 
+#include <span>
 #include <vector>
 
 namespace exahype2::ccz4::ahf {
@@ -20,7 +21,18 @@ namespace exahype2::ccz4::ahf {
    *
    * The collocation weights integrate dmu drho (mu = sin sigma), 
    * so the sum carries an extra 1/cos(sigma) Jacobian to convert to dsigma drho.
+   *
+   * spatialMetric[p] is the physical metric gamma_ij at collocation point p of
+   * the surface, in basis order, wherever it came from (an analytic spacetime
+   * or the interpolated grid data).
    */
+  double HorizonArea(
+    const SpectralBasis&       basis,
+    const std::vector<double>& coefficients,
+    std::span<const Tensor3>   spatialMetric
+  );
+
+  /** The area on an analytic spacetime, whose metric is evaluated on the surface. */
   template <class Spacetime>
   double HorizonArea(
     const SpectralBasis&       basis,
