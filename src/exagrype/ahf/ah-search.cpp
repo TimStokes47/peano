@@ -56,7 +56,8 @@ AHSearchResult ExecuteAttempts(
         " between the collocation points (aliased surface)";
     }
     for (const ReferencePoint& point : excludedPoints) {
-      if (reconstructed && rejection.empty() && SurfaceEncloses(result, point)) {
+      if (reconstructed && rejection.empty() &&
+          SurfaceEncloses(result, point)) {
         rejection = "surface encloses the excluded point (" +
           std::to_string(point.x) + ", " + std::to_string(point.y) + ", " +
           std::to_string(point.z) + "), another black hole";

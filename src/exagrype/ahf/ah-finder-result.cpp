@@ -167,7 +167,10 @@ double SurfaceRadiusTowards(
   return SurfaceRadius(result, rho, sigma);
 }
 
-bool SurfaceEncloses(const AHFinderResult& result, const ReferencePoint& point) {
+bool SurfaceEncloses(
+  const AHFinderResult& result,
+  const ReferencePoint& point
+) {
   const double distance = std::hypot(
     point.x - result.referencePoint.x,
     point.y - result.referencePoint.y,

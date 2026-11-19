@@ -181,7 +181,8 @@ std::optional<AHCommonHorizonValidation> ValidateBinaryMergerCommonHorizon(
   std::vector<AHIndividualHorizonObservation> members;
   std::vector<ReferencePoint> physicalPositions;
   for (const AHBinaryComponent& component : options.components) {
-    physicalPositions.push_back(component.target.attempts.front().referencePoint);
+    physicalPositions.push_back(
+      component.target.attempts.front().referencePoint);
   }
   for (const AHHorizonTargetResult& target : horizons.targets) {
     if (target.id == options.commonHorizonId) {

@@ -52,7 +52,8 @@ void TestPhysicalConfigurationConversion() {
   assert(targets[0].kind == AHHorizonKind::Individual);
   assert(*targets[1].massScale == 2.0);
   // Without physical positions there is nothing to exclude.
-  assert(targets[0].excludedPoints.empty() && targets[1].excludedPoints.empty());
+  assert(targets[0].excludedPoints.empty());
+  assert(targets[1].excludedPoints.empty());
 
   // Each individual target excludes the other black holes' positions, unless
   // told not to.
@@ -65,7 +66,8 @@ void TestPhysicalConfigurationConversion() {
   assert(excluding[1].excludedPoints.size() == 1);
   assert(excluding[1].excludedPoints[0].x == 0.0);
   const auto including = MakeIndividualHorizonTargets(placed, false);
-  assert(including[0].excludedPoints.empty() && including[1].excludedPoints.empty());
+  assert(including[0].excludedPoints.empty());
+  assert(including[1].excludedPoints.empty());
 
   bool threw = false;
   auto invalid = blackHoles;
@@ -113,7 +115,8 @@ void TestMarginScalesWithMass() {
   assert(!light.pairGaps[0].proximityTriggered);
   assert(light.candidates.empty());
   // The absolute margin adds to the per-mass one.
-  const auto both = PlanCommonHorizonCandidates(pair(0.15), {.searchMargin = 0.06});
+  const auto both =
+    PlanCommonHorizonCandidates(pair(0.15), {.searchMargin = 0.06});
   assert(both.pairGaps[0].proximityTriggered);
 }
 
@@ -251,7 +254,8 @@ void TestInvalidObservationsAndRequests() {
   for (double margin : {-0.1, std::numeric_limits<double>::quiet_NaN()}) {
     threw = false;
     try {
-      (void)PlanCommonHorizonCandidates(observations, {.searchMarginPerMass = margin});
+      (void)PlanCommonHorizonCandidates(
+        observations, {.searchMarginPerMass = margin});
     } catch (const std::invalid_argument&) { threw = true; }
     assert(threw);
   }

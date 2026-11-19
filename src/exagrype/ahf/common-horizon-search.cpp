@@ -240,7 +240,8 @@ AHCommonHorizonValidation ValidateCommonHorizon(
           const double commonRho = std::atan2(dy, dx);
           const double commonSigma = radialDistance > 0.0
             ? std::asin(std::clamp(dz / radialDistance, -1.0, 1.0)) : 0.0;
-          const double clearance = SurfaceRadius(common, commonRho, commonSigma) - radialDistance;
+          const double clearance =
+            SurfaceRadius(common, commonRho, commonSigma) - radialDistance;
           v.minimumEnclosureClearance = std::min(v.minimumEnclosureClearance, clearance);
           if (!std::isfinite(clearance) || clearance < -options.enclosureTolerance) {
             availableMembersEnclosed = false;
@@ -279,7 +280,8 @@ AHCommonHorizonValidation ValidateCommonHorizon(
       const double rho = std::atan2(dy, dx);
       const double sigma = radialDistance > 0.0
         ? std::asin(std::clamp(dz / radialDistance, -1.0, 1.0)) : 0.0;
-      const double clearance = SurfaceRadius(common, rho, sigma) - radialDistance;
+      const double clearance =
+        SurfaceRadius(common, rho, sigma) - radialDistance;
       v.minimumPhysicalPositionClearance = std::min(
         v.minimumPhysicalPositionClearance, clearance);
       if (!std::isfinite(clearance) || clearance < -options.enclosureTolerance) {

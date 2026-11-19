@@ -262,7 +262,8 @@ void TestSurfaceRadiusAndEnclosure() {
     radii[p] = 0.8 + 0.1 * std::cos(basis.rho[p]) * std::cos(basis.sigma[p]);
   }
   AHFinderResult distorted = sphere;
-  distorted.solver.coefficients = MakeDistortedInitialCoefficients(basis, radii);
+  distorted.solver.coefficients =
+    MakeDistortedInitialCoefficients(basis, radii);
   assert(SurfaceRadiusTowards(distorted, {2.0, -1.0, 0.5}) > 0.89);
   assert(SurfaceRadiusTowards(distorted, {0.0, -1.0, 0.5}) < 0.71);
   assert(SurfaceEncloses(distorted, {1.85, -1.0, 0.5}));
