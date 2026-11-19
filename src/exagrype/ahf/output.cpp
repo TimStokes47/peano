@@ -578,6 +578,8 @@ AHBinaryMergerResult WriteAHToFile(
   AHBinaryMergerResult result;
   result.plan = BuildBinaryMergerPlan(mergerOptions);
   result.horizons = WriteAHToFile(gridData, result.plan.search, outputOptions);
+  result.commonValidation = ValidateBinaryMergerCommonHorizon(
+    mergerOptions, result.plan, result.horizons);
 
   std::ofstream output(outputOptions.summaryFilename, std::ios::app);
   if (!output) {
@@ -592,6 +594,7 @@ AHBinaryMergerResult WriteAHToFile(
          << "merger.separation = " << result.plan.separation << '\n'
          << "merger.facingRadius[0] = " << result.plan.facingRadii[0] << '\n'
          << "merger.facingRadius[1] = " << result.plan.facingRadii[1] << '\n'
+         << "merger.surfaceGap = " << result.plan.surfaceGap << '\n'
          << "merger.commonReferencePoint = "
          << result.plan.commonReferencePoint.x << ' '
          << result.plan.commonReferencePoint.y << ' '
@@ -599,6 +602,19 @@ AHBinaryMergerResult WriteAHToFile(
          << "merger.commonMass = " << result.plan.commonMass << '\n'
          << "merger.enclosingInitialRadius = "
          << result.plan.enclosingInitialRadius << '\n';
+  if (result.commonValidation.has_value()) {
+    const AHCommonHorizonValidation& validation = *result.commonValidation;
+    output << "merger.commonValidation.status = "
+           << CommonValidationStatusName(validation.status) << '\n'
+           << "merger.commonValidation.reasons.count = "
+           << validation.reasons.size() << '\n';
+    for (std::size_t i = 0; i < validation.reasons.size(); ++i) {
+      output << "merger.commonValidation.reasons[" << i << "] = "
+             << std::quoted(validation.reasons[i]) << '\n';
+    }
+  } else {
+    output << "merger.commonValidation.status = unavailable\n";
+  }
   if (!output) {
     throw std::runtime_error(
       "Failed while appending AH merger diagnostics: " +

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -50,6 +51,21 @@ void TestPhysicalConfigurationConversion() {
   assert(targets[0].id == "A" && targets[1].id == "B");
   assert(targets[0].kind == AHHorizonKind::Individual);
   assert(*targets[1].massScale == 2.0);
+  // Without physical positions there is nothing to exclude.
+  assert(targets[0].excludedPoints.empty() && targets[1].excludedPoints.empty());
+
+  // Each individual target excludes the other black holes' positions, unless
+  // told not to.
+  auto placed = blackHoles;
+  placed[0].physicalPosition = ReferencePoint{0.0, 0.0, 0.0};
+  placed[1].physicalPosition = ReferencePoint{2.0, 0.0, 0.0};
+  const auto excluding = MakeIndividualHorizonTargets(placed);
+  assert(excluding[0].excludedPoints.size() == 1);
+  assert(excluding[0].excludedPoints[0].x == 2.0);
+  assert(excluding[1].excludedPoints.size() == 1);
+  assert(excluding[1].excludedPoints[0].x == 0.0);
+  const auto including = MakeIndividualHorizonTargets(placed, false);
+  assert(including[0].excludedPoints.empty() && including[1].excludedPoints.empty());
 
   bool threw = false;
   auto invalid = blackHoles;
@@ -64,20 +80,41 @@ void TestMarginBeforeContact() {
     Sphere("A", 1.0, {0.0, 0.0, 0.0}, 1.0),
     Sphere("B", 1.0, {2.2, 0.0, 0.0}, 1.0)
   };
-  const auto withoutMargin = PlanCommonHorizonCandidates(observations);
+  const auto withoutMargin = PlanCommonHorizonCandidates(
+    observations, {.searchMarginPerMass = 0.0});
   assert(withoutMargin.pairGaps.size() == 1);
   assert(std::abs(withoutMargin.pairGaps[0].surfaceGap - 0.2) < 1.0e-12);
   assert(!withoutMargin.pairGaps[0].proximityTriggered);
   assert(withoutMargin.candidates.empty());
 
   const auto withMargin = PlanCommonHorizonCandidates(
-    observations, {.searchMargin = 0.25});
+    observations, {.searchMargin = 0.25, .searchMarginPerMass = 0.0});
   assert(withMargin.pairGaps[0].proximityTriggered);
   assert(withMargin.candidates.size() == 1); // pair == component, deduplicated
   assert(withMargin.candidates[0].memberIds ==
          std::vector<std::string>({"A", "B"}));
   assert(withMargin.candidates[0].reason.triggeredPair);
   assert(withMargin.candidates[0].reason.connectedComponent);
+}
+
+// By default a pair triggers when its gap is at most 0.5 (m_i + m_j): a
+// common horizon forms while the individual ones are still apart.
+void TestMarginScalesWithMass() {
+  const auto pair = [](double mass) {
+    return std::vector<AHIndividualHorizonObservation>{
+      Sphere("A", mass, {0.0, 0.0, 0.0}, 1.0),
+      Sphere("B", mass, {2.2, 0.0, 0.0}, 1.0)};
+  };
+  // Gap 0.2 in both cases; the default margin is 0.25 and 0.15.
+  const auto heavy = PlanCommonHorizonCandidates(pair(0.25));
+  assert(heavy.pairGaps[0].proximityTriggered);
+  assert(heavy.candidates.size() == 1);
+  const auto light = PlanCommonHorizonCandidates(pair(0.15));
+  assert(!light.pairGaps[0].proximityTriggered);
+  assert(light.candidates.empty());
+  // The absolute margin adds to the per-mass one.
+  const auto both = PlanCommonHorizonCandidates(pair(0.15), {.searchMargin = 0.06});
+  assert(both.pairGaps[0].proximityTriggered);
 }
 
 void TestSingleObservationNeverCreatesCommonCandidate() {
@@ -101,6 +138,7 @@ void TestPairsComponentsExplicitAndUnconditional() {
   const auto plan = PlanCommonHorizonCandidates(
     observations,
     {.searchMargin = 0.0,
+     .searchMarginPerMass = 0.0,
      .includeTriggeredPairs = true,
      .includeConnectedComponents = true,
      .unconditionalAllBlackHoles = true,
@@ -139,7 +177,7 @@ void TestDirectionalDistortedSurface() {
   first.horizon.maxRadius = *std::max_element(radii.begin(), radii.end());
   const auto plan = PlanCommonHorizonCandidates({
     first, Sphere("B", 1.0, {2.1, 0.0, 0.0}, 1.0)
-  });
+  }, {.searchMarginPerMass = 0.0});
   assert(plan.pairGaps[0].firstFacingRadius > 1.19);
   assert(plan.pairGaps[0].firstFacingRadius < 1.21);
   assert(plan.pairGaps[0].proximityTriggered);
@@ -169,7 +207,8 @@ void TestOffAxisUnequalMasses() {
   first.horizon.maxRadius = 0.35;
 
   const auto plan = PlanCommonHorizonCandidates(
-    {first, Sphere("B", 3.0, b, 0.3)}, {.searchMargin = 0.2});
+    {first, Sphere("B", 3.0, b, 0.3)},
+    {.searchMargin = 0.2, .searchMarginPerMass = 0.0});
   assert(plan.pairGaps.size() == 1);
   assert(std::abs(plan.pairGaps[0].centreDistance - distance) < 1.0e-14);
   assert(std::abs(plan.pairGaps[0].firstFacingRadius - 0.35) < 1.0e-12);
@@ -208,6 +247,14 @@ void TestInvalidObservationsAndRequests() {
       observations, {.requestedSubsets = {{"A", "unknown"}}});
   } catch (const std::invalid_argument&) { threw = true; }
   assert(threw);
+
+  for (double margin : {-0.1, std::numeric_limits<double>::quiet_NaN()}) {
+    threw = false;
+    try {
+      (void)PlanCommonHorizonCandidates(observations, {.searchMarginPerMass = margin});
+    } catch (const std::invalid_argument&) { threw = true; }
+    assert(threw);
+  }
 }
 
 }  // namespace
@@ -217,6 +264,7 @@ int main() {
   using namespace exahype2::ccz4::ahf::tests;
   TestPhysicalConfigurationConversion();
   TestMarginBeforeContact();
+  TestMarginScalesWithMass();
   TestSingleObservationNeverCreatesCommonCandidate();
   TestPairsComponentsExplicitAndUnconditional();
   TestDirectionalDistortedSurface();

@@ -29,7 +29,8 @@ AHSearchResult ExecuteAttempts(
   const SpectralBasis& basis,
   const CartesianPointInterpolator& interpolator,
   const std::vector<AHSearchAttempt>& attempts,
-  const SpectralNewtonOptions& solverOptions
+  const SpectralNewtonOptions& solverOptions,
+  const std::vector<ReferencePoint>& excludedPoints = {}
 ) {
   AHSearchResult search;
   search.attempts.reserve(attempts.size());
@@ -53,6 +54,13 @@ AHSearchResult ExecuteAttempts(
         std::to_string(result.relativeExpansionError) + " exceeds " +
         std::to_string(solverOptions.maxRelativeExpansionError) +
         " between the collocation points (aliased surface)";
+    }
+    for (const ReferencePoint& point : excludedPoints) {
+      if (reconstructed && rejection.empty() && SurfaceEncloses(result, point)) {
+        rejection = "surface encloses the excluded point (" +
+          std::to_string(point.x) + ", " + std::to_string(point.y) + ", " +
+          std::to_string(point.z) + "), another black hole";
+      }
     }
     const bool succeeded = reconstructed && rejection.empty();
     search.attempts.push_back({
@@ -152,6 +160,13 @@ void ValidateAHMultiHorizonOptions(const AHMultiHorizonOptions& options) {
       throw std::invalid_argument(
         "ValidateAHMultiHorizonOptions: target massScale must be finite and positive");
     }
+    for (const ReferencePoint& point : target.excludedPoints) {
+      if (!std::isfinite(point.x) || !std::isfinite(point.y) ||
+          !std::isfinite(point.z)) {
+        throw std::invalid_argument(
+          "ValidateAHMultiHorizonOptions: excluded points must be finite");
+      }
+    }
   }
 }
 
@@ -186,7 +201,8 @@ AHMultiHorizonResult FindApparentHorizons(
       targetSolver.massScale = *target.massScale;
     }
     AHSearchResult search = ExecuteAttempts(
-      basis, interpolator, target.attempts, targetSolver);
+      basis, interpolator, target.attempts, targetSolver,
+      target.excludedPoints);
     result.anyHorizonFound = result.anyHorizonFound || search.converged;
     result.allTargetsFound = result.allTargetsFound && search.converged;
     result.targets.push_back({

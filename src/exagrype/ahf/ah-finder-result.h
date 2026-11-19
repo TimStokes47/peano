@@ -64,6 +64,29 @@ AHFinderResult BuildAHFinderResult(
   const SpectralNewtonResult& solverResult
 );
 
+/**
+ * Coordinate radius of the surface in the direction (rho, sigma) about
+ * result.referencePoint, from the retained coefficients. Throws
+ * std::invalid_argument if their count does not match result.lMax.
+ */
+double SurfaceRadius(const AHFinderResult& result, double rho, double sigma);
+
+/**
+ * SurfaceRadius in the direction from result.referencePoint towards
+ * destination. Throws std::invalid_argument if the two points coincide.
+ */
+double SurfaceRadiusTowards(
+  const AHFinderResult& result,
+  const ReferencePoint& destination
+);
+
+/**
+ * True if the surface encloses point, i.e. point is closer to
+ * result.referencePoint than the surface is in that direction. The reference
+ * point itself is always enclosed.
+ */
+bool SurfaceEncloses(const AHFinderResult& result, const ReferencePoint& point);
+
 }  // namespace exahype2::ccz4::ahf
 
 #endif  // APPARENT_HORIZON_FINDER_AH_FINDER_RESULT_H_

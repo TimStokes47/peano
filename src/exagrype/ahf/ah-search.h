@@ -116,6 +116,14 @@ struct AHHorizonTarget {
   std::vector<AHSearchAttempt> attempts;
   /** Optional per-target override of SpectralNewtonOptions::massScale. */
   std::optional<double> massScale;
+  /**
+   * Points the surface must not enclose, typically the other black holes'
+   * positions. From a starting sphere that is too large, an individual search
+   * can converge to the common horizon, which is a genuine horizon and passes
+   * every other check; an attempt whose surface encloses one of these points
+   * is rejected and the next attempt runs.
+   */
+  std::vector<ReferencePoint> excludedPoints;
 };
 
 /** Shared numerical configuration for any number of physical targets. */

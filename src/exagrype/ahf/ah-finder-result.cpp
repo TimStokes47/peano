@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <cmath>
 #include <exception>
+#include <numbers>
 #include <numeric>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -131,6 +133,47 @@ AHFinderResult BuildAHFinderResult(
   }
 
   return result;
+}
+
+double SurfaceRadius(const AHFinderResult& result, double rho, double sigma) {
+  const auto modes = EnumerateModes(result.lMax);
+  if (modes.size() != result.solver.coefficients.size()) {
+    throw std::invalid_argument(
+      "SurfaceRadius: coefficient count does not match lMax");
+  }
+  double radius = 0.0;
+  for (std::size_t i = 0; i < modes.size(); ++i) {
+    radius += result.solver.coefficients[i] *
+      EvalModeValue(modes[i].first, modes[i].second, rho, sigma);
+  }
+  return radius;
+}
+
+double SurfaceRadiusTowards(
+  const AHFinderResult& result,
+  const ReferencePoint& destination
+) {
+  const double dx = destination.x - result.referencePoint.x;
+  const double dy = destination.y - result.referencePoint.y;
+  const double dz = destination.z - result.referencePoint.z;
+  const double distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+  if (!(distance > 0.0)) {
+    throw std::invalid_argument(
+      "SurfaceRadiusTowards: destination coincides with the reference point");
+  }
+  double rho = std::atan2(dy, dx);
+  if (rho < 0.0) rho += 2.0 * std::numbers::pi;
+  const double sigma = std::asin(std::clamp(dz / distance, -1.0, 1.0));
+  return SurfaceRadius(result, rho, sigma);
+}
+
+bool SurfaceEncloses(const AHFinderResult& result, const ReferencePoint& point) {
+  const double distance = std::hypot(
+    point.x - result.referencePoint.x,
+    point.y - result.referencePoint.y,
+    point.z - result.referencePoint.z);
+  if (!(distance > 0.0)) return true;
+  return distance < SurfaceRadiusTowards(result, point);
 }
 
 }  // namespace exahype2::ccz4::ahf
