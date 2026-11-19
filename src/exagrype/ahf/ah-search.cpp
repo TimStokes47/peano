@@ -44,13 +44,23 @@ AHSearchResult ExecuteAttempts(
           attempt.initialCoefficients, solverOptions);
     AHFinderResult result = BuildAHFinderResult(
       basis, interpolator, attempt.referencePoint, solver);
-    const bool succeeded = result.solver.converged && result.surfaceAvailable;
+    const bool reconstructed = result.solver.converged && result.surfaceAvailable;
+    std::string rejection;
+    if (reconstructed &&
+        !(result.relativeExpansionError <= solverOptions.maxRelativeExpansionError)) {
+      rejection = "relative expansion error " +
+        std::to_string(result.relativeExpansionError) + " exceeds " +
+        std::to_string(solverOptions.maxRelativeExpansionError) +
+        " between the collocation points (aliased surface)";
+    }
+    const bool succeeded = reconstructed && rejection.empty();
     search.attempts.push_back({
       .referencePoint = attempt.referencePoint,
       .initialRadius = attempt.initialRadius,
       .initialCoefficients = attempt.initialCoefficients,
       .result = result,
-      .succeeded = succeeded
+      .succeeded = succeeded,
+      .rejection = std::move(rejection)
     });
     if (succeeded) {
       search.converged = true;

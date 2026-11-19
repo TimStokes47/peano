@@ -28,6 +28,17 @@ struct SpectralNewtonOptions {
   int maxLineSearchSteps = 20;
   double maxRadiusFactor = 6.0;         ///< runaway cap on max(h) as a multiple of the initial mean radius
   bool recordIterationHistory = false;  ///< populate SpectralNewtonResult::iterationHistory
+  /**
+   * Not used by the Newton iteration: the horizon searches (AHSearch) reject a
+   * converged surface whose AHFinderResult::relativeExpansionError exceeds
+   * it, and try their next attempt. Newton only zeroes the projection of
+   * Theta at the collocation points, so it can also converge to a surface
+   * that aliasing makes look like a horizon; between the points such a
+   * surface has |Theta| comparable to that of a sphere. On analytic
+   * horizons with lMax >= 4 the error stayed below 0.13 on physical surfaces
+   * and above 0.55 on aliased ones. Infinity disables the check.
+   */
+  double maxRelativeExpansionError = 0.3;
 };
 
 /**

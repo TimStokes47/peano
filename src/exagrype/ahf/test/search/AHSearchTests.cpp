@@ -1,6 +1,7 @@
 #include "../require-asserts.h"
 
 #include "../../apparent-horizon-finder.h"
+#include "../brill-lindquist-grid.h"
 #include "../temporary-directory.h"
 
 #include <array>
@@ -102,6 +103,46 @@ void TestAllAttemptsFail() {
   }
 }
 
+// Newton zeroes only the projection of Theta at the collocation points. A
+// converged surface whose Theta in between exceeds maxRelativeExpansionError
+// is rejected with a reason, and the search moves on to the next attempt.
+// On a single puncture of mass 1 (horizon: the sphere of radius 1/2 about
+// it), lMax 2 represents the horizon exactly about the puncture but not about
+// an off-centre point, where the relative error is larger. A bound between
+// the two errors rejects the off-centre attempt.
+void TestConvergedSurfaceRejectedAboveExpansionBound() {
+  const GridData grid = MakeBrillLindquistGrid(BrillLindquist::single(1.0), 1.0, 20);
+  AHSearchOptions options;
+  options.lMax = 2;
+  options.interpolation = {.method = CartesianToSurfaceMethod::RadiusWeightedPolynomial,
+                           .polynomialDegree = 3,
+                           .supportRadius = 0.3};
+  const std::array<ReferencePoint, 2> centres{{{0.0, 0.0, 0.0}, {0.2, 0.0, 0.0}}};
+  std::array<double, 2> error{};
+  for (std::size_t i = 0; i < 2; ++i) {
+    options.attempts = {{centres[i], 0.7}};
+    const AHSearchResult alone = FindApparentHorizon(grid, options);
+    assert(alone.converged && alone.attempts[0].rejection.empty());
+    error[i] = alone.horizon->relativeExpansionError;
+    assert(error[i] < options.solver.maxRelativeExpansionError);
+  }
+  assert(error[1] > 2.0 * error[0]);
+
+  options.attempts = {{centres[1], 0.7}, {centres[0], 0.7}};
+  options.solver.maxRelativeExpansionError = 0.5 * (error[0] + error[1]);
+  const AHSearchResult result = FindApparentHorizon(grid, options);
+  assert(result.converged);
+  assert(result.successfulAttempt == 1);
+  assert(result.attempts.size() == 2);
+  const AHSearchAttemptResult& rejected = result.attempts[0];
+  assert(rejected.result.solver.converged && rejected.result.surfaceAvailable);
+  assert(!rejected.succeeded);
+  assert(rejected.result.relativeExpansionError == error[1]);
+  assert(rejected.rejection.find("relative expansion error") != std::string::npos);
+  assert(result.attempts[1].succeeded && result.attempts[1].rejection.empty());
+  assert(result.horizon->relativeExpansionError == error[0]);
+}
+
 void TestValidation() {
   bool threw = false;
   try { (void)FindApparentHorizon(MakeGrid(), SearchOptions({})); }
@@ -114,6 +155,15 @@ void TestValidation() {
       MakeGrid(), SearchOptions({{{0.0, 0.0, 0.0}, 0.0}}));
   } catch (const std::invalid_argument&) { threw = true; }
   assert(threw);
+
+  for (double bound : {0.0, -1.0, std::numeric_limits<double>::quiet_NaN()}) {
+    auto options = SearchOptions({{{0.0, 0.0, 0.0}, 1.3}});
+    options.solver.maxRelativeExpansionError = bound;
+    threw = false;
+    try { (void)FindApparentHorizon(MakeGrid(), options); }
+    catch (const std::invalid_argument&) { threw = true; }
+    assert(threw);
+  }
 }
 
 void TestSearchOutput() {
@@ -165,6 +215,8 @@ void TestSearchOutput() {
   assert(successText.find("horizon.area = ") != std::string::npos);
   assert(successText.find("horizon.arealRadius = ") != std::string::npos);
   assert(successText.find("horizon.irreducibleMass = ") != std::string::npos);
+  assert(successText.find("horizon.relativeExpansionError = ") != std::string::npos);
+  assert(successText.find("attempts[1].rejection = \"\"") != std::string::npos);
   // The grid is flat with K_ij = 2 delta_ij and K = 3, so Theta = 2/r - 1:
   // the horizon is a sphere of radius 2, of mass 1.
   assert(std::abs(success.horizon->irreducibleMass - 1.0) < 1.0e-6);
@@ -379,6 +431,10 @@ void TestPhysicalTargetOutput() {
          std::string::npos);
   assert(aggregateText.find("targets[1].horizon.irreducibleMass = ") !=
          std::string::npos);
+  assert(aggregateText.find("targets[1].horizon.relativeExpansionError = ") !=
+         std::string::npos);
+  assert(aggregateText.find("targets[1].attempts[0].rejection = ") !=
+         std::string::npos);
   assert(std::abs(result.targets[1].horizon->irreducibleMass - 1.0) < 1.0e-6);
   assert(ReadText(plusSurface).find("NumberOfPoints=\"38\"") !=
          std::string::npos);
@@ -396,6 +452,7 @@ int main() {
   exahype2::ccz4::ahf::tests::TestFirstAttemptStopsSearch();
   exahype2::ccz4::ahf::tests::TestRetryOrderingAndArbitraryCount();
   exahype2::ccz4::ahf::tests::TestAllAttemptsFail();
+  exahype2::ccz4::ahf::tests::TestConvergedSurfaceRejectedAboveExpansionBound();
   exahype2::ccz4::ahf::tests::TestValidation();
   exahype2::ccz4::ahf::tests::TestSearchOutput();
   exahype2::ccz4::ahf::tests::TestPhysicalTargetGrouping();

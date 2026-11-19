@@ -95,6 +95,12 @@ void ValidateAHFinderOptions(const AHFinderOptions& options) {
       "ValidateAHFinderOptions: lMax must be non-negative"
     );
   }
+  if (std::isnan(options.solver.maxRelativeExpansionError)
+      || options.solver.maxRelativeExpansionError <= 0.0) {
+    throw std::invalid_argument(
+      "ValidateAHFinderOptions: solver.maxRelativeExpansionError must be positive"
+    );
+  }
   ValidateInterpolationOptions(options.interpolation);
 }
 

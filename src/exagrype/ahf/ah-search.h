@@ -41,8 +41,13 @@ struct AHSearchAttemptResult {
   double initialRadius = 1.0;
   std::vector<double> initialCoefficients;
   AHFinderResult result;
-  /** True only when Newton converged and final reconstruction succeeded. */
+  /**
+   * True only when Newton converged, final reconstruction succeeded and the
+   * relative expansion error is within solver.maxRelativeExpansionError.
+   */
   bool succeeded = false;
+  /** Why a converged, reconstructed surface was not accepted; else empty. */
+  std::string rejection;
 };
 
 /** Aggregate ordered-search outcome. */

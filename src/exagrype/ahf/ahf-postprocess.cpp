@@ -22,7 +22,9 @@ void PrintAttempts(const AHSearchResult& search) {
     std::cout << "Attempt " << attempt << ": initial radius " << result.initialRadius << ", "
               << (result.succeeded ? "converged" : "failed") << " after "
               << result.result.solver.iterations << " iterations";
-    if (!result.succeeded && !result.result.solver.message.empty()) {
+    if (!result.rejection.empty()) {
+      std::cout << ", rejected: " << result.rejection;
+    } else if (!result.succeeded && !result.result.solver.message.empty()) {
       std::cout << " (" << result.result.solver.message << ")";
     }
     std::cout << "\n";
@@ -39,7 +41,8 @@ void PrintHorizon(const AHFinderResult& horizon) {
             << "  areal radius:                   " << horizon.arealRadius << "\n"
             << "  irreducible mass:               " << horizon.irreducibleMass << "\n"
             << "  spectral residual (max norm):   " << horizon.spectralResidualInfinityNorm << "\n"
-            << "  max |expansion| on the surface: " << horizon.maxAbsExpansion << "\n";
+            << "  max |expansion| on the surface: " << horizon.maxAbsExpansion << "\n"
+            << "  relative expansion error:       " << horizon.relativeExpansionError << "\n";
 }
 
 }  // namespace
