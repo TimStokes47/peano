@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include "../../ah-finder-options.h"
 
 #include <cassert>

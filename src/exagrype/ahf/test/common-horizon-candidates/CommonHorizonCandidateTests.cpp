@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include "../../apparent-horizon-finder.h"
 
 #include <algorithm>
@@ -143,6 +145,51 @@ void TestDirectionalDistortedSurface() {
   assert(plan.pairGaps[0].proximityTriggered);
 }
 
+double Length(double x, double y, double z) { return std::sqrt(x * x + y * y + z * z); }
+
+// Off-axis, unequal masses: distances, facing radii and the mass-weighted
+// centre use all three coordinates. The other tests place the holes on x.
+void TestOffAxisUnequalMasses() {
+  const ReferencePoint a{0.1, 0.3, -0.2};
+  const ReferencePoint b{-0.2, -0.2, 0.3};
+  const double dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
+  const double distance = Length(dx, dy, dz);
+
+  // A bulges towards B: r = 0.3 + 0.05 (n . d/|d|), so its radius facing B is 0.35.
+  const SpectralBasis basis = BuildSpectralBasis(2);
+  AHIndividualHorizonObservation first = Sphere("A", 1.0, a, 0.3);
+  std::vector<double> radii(basis.nPoints);
+  for (std::size_t p = 0; p < radii.size(); ++p) {
+    const double c = std::cos(basis.sigma[p]);
+    const double n[3] = {c * std::cos(basis.rho[p]), c * std::sin(basis.rho[p]),
+                         std::sin(basis.sigma[p])};
+    radii[p] = 0.3 + 0.05 * (n[0] * dx + n[1] * dy + n[2] * dz) / distance;
+  }
+  first.horizon.solver.coefficients = MakeDistortedInitialCoefficients(basis, radii);
+  first.horizon.maxRadius = 0.35;
+
+  const auto plan = PlanCommonHorizonCandidates(
+    {first, Sphere("B", 3.0, b, 0.3)}, {.searchMargin = 0.2});
+  assert(plan.pairGaps.size() == 1);
+  assert(std::abs(plan.pairGaps[0].centreDistance - distance) < 1.0e-14);
+  assert(std::abs(plan.pairGaps[0].firstFacingRadius - 0.35) < 1.0e-12);
+  assert(std::abs(plan.pairGaps[0].secondFacingRadius - 0.3) < 1.0e-12);
+  assert(std::abs(plan.pairGaps[0].surfaceGap - (distance - 0.65)) < 1.0e-12);
+  assert(plan.pairGaps[0].proximityTriggered);
+
+  const auto& candidate = FindCandidate(plan, {"A", "B"});
+  const ReferencePoint centre{(a.x + 3.0 * b.x) / 4.0, (a.y + 3.0 * b.y) / 4.0,
+                              (a.z + 3.0 * b.z) / 4.0};
+  assert(std::abs(candidate.totalMass - 4.0) < 1.0e-14);
+  assert(std::abs(candidate.referencePoint.x - centre.x) < 1.0e-14);
+  assert(std::abs(candidate.referencePoint.y - centre.y) < 1.0e-14);
+  assert(std::abs(candidate.referencePoint.z - centre.z) < 1.0e-14);
+  const double enclosing = std::max(
+    Length(centre.x - a.x, centre.y - a.y, centre.z - a.z) + 0.35,
+    Length(centre.x - b.x, centre.y - b.y, centre.z - b.z) + 0.3);
+  assert(std::abs(candidate.enclosingInitialRadius - enclosing) < 1.0e-14);
+}
+
 void TestInvalidObservationsAndRequests() {
   auto observations = std::vector<AHIndividualHorizonObservation>{
     Sphere("A", 1.0, {0.0, 0.0, 0.0}, 1.0),
@@ -173,5 +220,6 @@ int main() {
   TestSingleObservationNeverCreatesCommonCandidate();
   TestPairsComponentsExplicitAndUnconditional();
   TestDirectionalDistortedSurface();
+  TestOffAxisUnequalMasses();
   TestInvalidObservationsAndRequests();
 }

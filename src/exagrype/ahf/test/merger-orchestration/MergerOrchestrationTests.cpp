@@ -1,6 +1,9 @@
+#include "../require-asserts.h"
+
 #include "../../apparent-horizon-finder.h"
 #include "../temporary-directory.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -101,6 +104,50 @@ void TestDistortedFacingRadius() {
   assert(std::abs(plan.facingRadii[1] - 0.65) < 1.0e-14);
 }
 
+double Length(double x, double y, double z) { return std::sqrt(x * x + y * y + z * z); }
+
+// Off-axis, unequal masses: the separation, the facing radius of a distorted
+// surface and the mass-weighted centre use all three coordinates.
+void TestOffAxisPlan() {
+  const ReferencePoint a{0.1, 0.3, -0.2};
+  const ReferencePoint b{-0.2, -0.2, 0.3};
+  const double dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
+  const double distance = Length(dx, dy, dz);
+
+  AHBinaryMergerOptions options = Options(1.0);
+  options.components[0].target.attempts = {{a, 0.3}};
+  options.components[1].target.attempts = {{b, 0.3}};
+  // The first surface bulges towards the second: r = 0.3 + 0.05 (n . d/|d|).
+  const SpectralBasis basis = BuildSpectralBasis(options.lMax);
+  std::vector<double> radii(basis.nPoints);
+  for (std::size_t p = 0; p < radii.size(); ++p) {
+    const double c = std::cos(basis.sigma[p]);
+    const double n[3] = {c * std::cos(basis.rho[p]), c * std::sin(basis.rho[p]),
+                         std::sin(basis.sigma[p])};
+    radii[p] = 0.3 + 0.05 * (n[0] * dx + n[1] * dy + n[2] * dz) / distance;
+  }
+  options.components[0].target.attempts[0].initialCoefficients =
+    MakeDistortedInitialCoefficients(basis, radii);
+
+  const AHBinaryMergerPlan plan = BuildBinaryMergerPlan(options);
+  assert(std::abs(plan.separation - distance) < 1.0e-14);
+  assert(std::abs(plan.facingRadii[0] - 0.35) < 1.0e-12);
+  assert(std::abs(plan.facingRadii[1] - 0.3) < 1.0e-14);
+  assert(std::abs(plan.commonMass - 4.0) < 1.0e-14);
+  const ReferencePoint centre{(a.x + 3.0 * b.x) / 4.0, (a.y + 3.0 * b.y) / 4.0,
+                              (a.z + 3.0 * b.z) / 4.0};
+  assert(std::abs(plan.commonReferencePoint.x - centre.x) < 1.0e-14);
+  assert(std::abs(plan.commonReferencePoint.y - centre.y) < 1.0e-14);
+  assert(std::abs(plan.commonReferencePoint.z - centre.z) < 1.0e-14);
+  const SynthesizedField first =
+    Synthesize(basis, options.components[0].target.attempts[0].initialCoefficients);
+  const double firstMaximum = *std::max_element(first.h.begin(), first.h.end());
+  const double enclosing = std::max(
+    Length(centre.x - a.x, centre.y - a.y, centre.z - a.z) + firstMaximum,
+    Length(centre.x - b.x, centre.y - b.y, centre.z - b.z) + 0.3);
+  assert(std::abs(plan.enclosingInitialRadius - enclosing) < 1.0e-14);
+}
+
 void TestValidation() {
   AHBinaryMergerOptions invalid = Options(1.0);
   invalid.components[0].mass = 0.0;
@@ -155,6 +202,7 @@ int main() {
   TestSeparatedPlan();
   TestOverlappingPlan();
   TestDistortedFacingRadius();
+  TestOffAxisPlan();
   TestValidation();
   TestExecutionAndOutput();
 }

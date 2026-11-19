@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -1317,6 +1319,58 @@ void testInterpolateCartesianToSurfaceContextualFailures() {
   assert(invalidTargetHasContext);
 }
 
+// The domain test must hold on every face of the box and combine the axes:
+// before this test it was only exercised on one side of one axis.
+void testDomainCoverageOnEveryFace() {
+  GridData gridData;
+  gridData.resize(8);
+  const GridCoordinate low{0.0, 0.0, 0.0};
+  const GridCoordinate high{1.0, 2.0, 3.0};
+  for (std::size_t corner = 0; corner < 8; ++corner) {
+    gridData.coordinates[corner] = {
+      (corner & 1) ? high.x : low.x,
+      (corner & 2) ? high.y : low.y,
+      (corner & 4) ? high.z : low.z};
+    setCompactCell(gridData, corner, {1.0, 0.0, 0.0, 1.0, 0.0, 1.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 1.0});
+  }
+  const CartesianPointInterpolator interpolator(
+    gridData,
+    {.method = CartesianToSurfaceMethod::NearestNeighbour,
+     .numberOfNeighbours = 1,
+     .domainRelativeTolerance = 0.05});
+  assertCoordinate(interpolator.domainMinimum(), low.x, low.y, low.z);
+  assertCoordinate(interpolator.domainMaximum(), high.x, high.y, high.z);
+
+  // Allowed distance outside the box: 5% of the diagonal sqrt(14).
+  const double allowed = 0.05 * std::sqrt(14.0);
+  const GridCoordinate centre{0.5, 1.0, 1.5};
+  assert(interpolator.coversTarget(centre));
+  for (int axis = 0; axis < 3; ++axis) {
+    for (const bool upper : {false, true}) {
+      for (const double fraction : {0.5, 1.5}) {
+        GridCoordinate target = centre;
+        double& coordinate = axis == 0 ? target.x : axis == 1 ? target.y : target.z;
+        const double face = axis == 0 ? (upper ? high.x : low.x)
+                          : axis == 1 ? (upper ? high.y : low.y)
+                                      : (upper ? high.z : low.z);
+        coordinate = face + (upper ? 1.0 : -1.0) * fraction * allowed;
+        assert(interpolator.coversTarget(target) == (fraction < 1.0));
+      }
+    }
+  }
+
+  // Within the allowance on each axis separately, but not in combination.
+  const double offset = 0.8 * allowed;
+  assert(interpolator.coversTarget({high.x + offset, centre.y, centre.z}));
+  assert(!interpolator.coversTarget({high.x + offset, high.y + offset, centre.z}));
+  assert(!interpolator.coversTarget({centre.x, low.y - offset, low.z - offset}));
+  assert(!interpolator.coversTarget({low.x - offset, centre.y, high.z + offset}));
+
+  std::cout << "The sampled domain is checked on all six faces, axes combined" << std::endl;
+}
+
 GridData makeValidationGrid() {
   GridData gridData;
   gridData.resize(4);
@@ -1622,6 +1676,7 @@ int main() {
   testInterpolateCartesianToSurfaceDegree1();
   testReusableCartesianPointInterpolator();
   testInterpolateCartesianToSurfaceContextualFailures();
+  testDomainCoverageOnEveryFace();
   testInterpolationValidationAndDiagnostics();
   testRadiusWeightedPolynomialProductionPath();
   testInterpolateFromCartesianToShell();

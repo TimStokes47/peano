@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include "../../interpolated-surface-residual.h"
 
 #include <algorithm>

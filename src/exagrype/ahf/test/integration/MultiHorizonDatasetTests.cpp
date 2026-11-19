@@ -1,3 +1,5 @@
+#include "../require-asserts.h"
+
 #include "../../apparent-horizon-finder.h"
 #include "../../file-input.h"
 
