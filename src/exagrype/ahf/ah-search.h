@@ -65,8 +65,34 @@ struct AHSearchResult {
 void ValidateAHSearchOptions(const AHSearchOptions& options);
 
 /**
- * Try explicit attempt pairs in vector order and stop at the first converged,
- * reconstructable horizon. One persistent Cartesian interpolator is reused.
+ * Try explicit attempt pairs in vector order and stop at the first accepted
+ * horizon. One persistent Cartesian interpolator is reused.
+ *
+ * Newton zeroes only the projection of Theta at the collocation points, so a
+ * converged, reconstructable surface is accepted only if its
+ * AHFinderResult::relativeExpansionError (Theta on a grid twice as fine) is
+ * within SpectralNewtonOptions::maxRelativeExpansionError. From a starting
+ * sphere that is too large, Newton can converge to a surface that aliasing
+ * makes look like a horizon, and the next attempt may still find the real
+ * one, so a rejection does not end the search.
+ *
+ * \dot
+ * digraph search {
+ *   rankdir=LR;
+ *   node [shape=box];
+ *   attempt [label="next attempt"];
+ *   newton [label="Newton on the\ncollocation points"];
+ *   rebuild [label="reconstruct the surface,\nTheta on a finer grid"];
+ *   accepted [label="accepted", shape=ellipse];
+ *   none [label="no horizon", shape=ellipse];
+ *   attempt -> newton;
+ *   newton -> rebuild [label="converged"];
+ *   newton -> attempt [label="failed"];
+ *   rebuild -> accepted [label="error within bound"];
+ *   rebuild -> attempt [label="error above bound,\nor not reconstructable"];
+ *   attempt -> none [label="none left"];
+ * }
+ * \enddot
  */
 AHSearchResult FindApparentHorizon(
   const GridData& gridData,

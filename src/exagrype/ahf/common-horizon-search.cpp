@@ -109,8 +109,10 @@ void ValidateTargetOptions(const AHCommonHorizonTargetOptions& options) {
 
 void ValidateValidationOptions(const AHCommonHorizonValidationOptions& o) {
   if (!std::isfinite(o.spectralResidualTolerance) || o.spectralResidualTolerance < 0.0 ||
-      std::isnan(o.pointwiseExpansionTolerance) || o.pointwiseExpansionTolerance < 0.0 ||
-      std::isnan(o.relativeExpansionTolerance) || o.relativeExpansionTolerance <= 0.0 ||
+      std::isnan(o.pointwiseExpansionTolerance) ||
+      o.pointwiseExpansionTolerance < 0.0 ||
+      std::isnan(o.relativeExpansionTolerance) ||
+      o.relativeExpansionTolerance <= 0.0 ||
       !std::isfinite(o.enclosureTolerance) || o.enclosureTolerance < 0.0 ||
       o.enclosureRhoPoints < 3 || o.enclosureSigmaPoints < 3 ||
       !std::isfinite(o.maximumRadiusRatio) || o.maximumRadiusRatio < 1.0) {

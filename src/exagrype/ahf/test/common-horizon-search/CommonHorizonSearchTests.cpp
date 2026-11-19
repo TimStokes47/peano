@@ -476,7 +476,8 @@ void TestThreeHoleDeterminismAndSummary() {
     {.id = "A", .kind = AHHorizonKind::Individual, .converged = false},
     {.id = "B", .kind = AHHorizonKind::Individual, .converged = true}
   };
-  catalogue.individuals.targets[0].attempts = {{.rejection = "individual rejection"}};
+  catalogue.individuals.targets[0].attempts = {
+    {.rejection = "individual rejection"}};
   AHCommonHorizonCatalogueEntry ab;
   ab.id = "common[A+B]";
   ab.memberIds = {"A", "B"};
@@ -497,12 +498,12 @@ void TestThreeHoleDeterminismAndSummary() {
   text << input.rdbuf();
   assert(text.str().find("common[0].id = \"common[A+B]\"") != std::string::npos);
   assert(text.str().find("Newton did not converge") != std::string::npos);
-  assert(text.str().find("individuals[0].attempts[0].rejection = \"individual rejection\"") !=
-         std::string::npos);
-  assert(text.str().find("common[0].attempts[0].rejection = \"common rejection\"") !=
-         std::string::npos);
-  assert(text.str().find("common[0].validation.relativeExpansionValid = false") !=
-         std::string::npos);
+  assert(text.str().find("individuals[0].attempts[0].rejection = "
+                         "\"individual rejection\"") != std::string::npos);
+  assert(text.str().find("common[0].attempts[0].rejection = "
+                         "\"common rejection\"") != std::string::npos);
+  assert(text.str().find("common[0].validation.relativeExpansionValid = "
+                         "false") != std::string::npos);
   std::filesystem::remove(path);
 }
 
@@ -510,18 +511,22 @@ void TestThreeHoleDeterminismAndSummary() {
 // would (TwoPunctures without momentum or spin is Brill-Lindquist), and the
 // catalogue options for them: individual attempts from 0.35 m about each
 // puncture, the common search requested explicitly.
-AHCommonHorizonSearchOptions BinaryOptions(double mPlus, double mMinus, double separation, int lMax) {
+AHCommonHorizonSearchOptions BinaryOptions(
+  double mPlus, double mMinus, double separation, int lMax) {
   const ReferencePoint plus{separation / 2.0, 0.0, 0.0};
   const ReferencePoint minus{-separation / 2.0, 0.0, 0.0};
   AHCommonHorizonSearchOptions options;
   options.blackHoles = {
-    {.id = "plus", .mass = mPlus, .attempts = {{plus, 0.35 * mPlus}}, .physicalPosition = plus},
-    {.id = "minus", .mass = mMinus, .attempts = {{minus, 0.35 * mMinus}}, .physicalPosition = minus}};
+    {.id = "plus", .mass = mPlus, .attempts = {{plus, 0.35 * mPlus}},
+     .physicalPosition = plus},
+    {.id = "minus", .mass = mMinus, .attempts = {{minus, 0.35 * mMinus}},
+     .physicalPosition = minus}};
   options.candidates.unconditionalAllBlackHoles = true;
   options.lMax = lMax;
-  options.interpolation = {.method = CartesianToSurfaceMethod::RadiusWeightedPolynomial,
-                           .polynomialDegree = 3,
-                           .supportRadius = 0.15};
+  options.interpolation = {
+    .method = CartesianToSurfaceMethod::RadiusWeightedPolynomial,
+    .polynomialDegree = 3,
+    .supportRadius = 0.15};
   return options;
 }
 
@@ -529,9 +534,11 @@ AHCommonHorizonSearchOptions BinaryOptions(double mPlus, double mMinus, double s
 // common horizon found on grid data, and its irreducible mass matches the
 // analytic Brill-Lindquist value, 0.998248 (lMax 16).
 void TestBrillLindquistCommonHorizonValidates() {
-  const BrillLindquist binary{{{0.5, {0.25, 0.0, 0.0}}, {0.5, {-0.25, 0.0, 0.0}}}};
+  const BrillLindquist binary{
+    {{0.5, {0.25, 0.0, 0.0}}, {0.5, {-0.25, 0.0, 0.0}}}};
   const GridData grid = MakeBrillLindquistGrid(binary, 0.9, 36);
-  const auto catalogue = FindApparentHorizons(grid, BinaryOptions(0.5, 0.5, 0.5, 4));
+  const auto catalogue =
+    FindApparentHorizons(grid, BinaryOptions(0.5, 0.5, 0.5, 4));
   assert(catalogue.individuals.allTargetsFound);
   assert(catalogue.commonHorizons.size() == 1);
   const auto& common = catalogue.commonHorizons[0];
@@ -539,7 +546,8 @@ void TestBrillLindquistCommonHorizonValidates() {
   assert(common.validation.valid);
   assert(common.validation.relativeExpansionValid);
   assert(common.search.horizon->relativeExpansionError < 0.05);
-  assert(std::abs(common.search.horizon->irreducibleMass / 0.998248 - 1.0) < 2.0e-4);
+  assert(std::abs(common.search.horizon->irreducibleMass / 0.998248 - 1.0) <
+         2.0e-4);
 }
 
 // Masses 0.6 and 0.3 at separation 0.4. Started from a sphere of radius 0.36
@@ -548,9 +556,11 @@ void TestBrillLindquistCommonHorizonValidates() {
 // search rejects it on its expansion between the points, and the next
 // attempt finds the individual horizon (Mirr 0.824914 analytically).
 void TestAliasedSurfaceIsRejected() {
-  const BrillLindquist binary{{{0.6, {0.2, 0.0, 0.0}}, {0.3, {-0.2, 0.0, 0.0}}}};
+  const BrillLindquist binary{
+    {{0.6, {0.2, 0.0, 0.0}}, {0.3, {-0.2, 0.0, 0.0}}}};
   const GridData grid = MakeBrillLindquistGrid(binary, 0.9, 36);
-  const AHCommonHorizonSearchOptions binaryOptions = BinaryOptions(0.6, 0.3, 0.4, 4);
+  const AHCommonHorizonSearchOptions binaryOptions =
+    BinaryOptions(0.6, 0.3, 0.4, 4);
   AHSearchOptions options;
   options.attempts = {{{0.2, 0.0, 0.0}, 0.36}, {{0.2, 0.0, 0.0}, 0.21}};
   options.lMax = binaryOptions.lMax;

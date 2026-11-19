@@ -111,13 +111,16 @@ void TestAllAttemptsFail() {
 // an off-centre point, where the relative error is larger. A bound between
 // the two errors rejects the off-centre attempt.
 void TestConvergedSurfaceRejectedAboveExpansionBound() {
-  const GridData grid = MakeBrillLindquistGrid(BrillLindquist::single(1.0), 1.0, 20);
+  const GridData grid =
+    MakeBrillLindquistGrid(BrillLindquist::single(1.0), 1.0, 20);
   AHSearchOptions options;
   options.lMax = 2;
-  options.interpolation = {.method = CartesianToSurfaceMethod::RadiusWeightedPolynomial,
-                           .polynomialDegree = 3,
-                           .supportRadius = 0.3};
-  const std::array<ReferencePoint, 2> centres{{{0.0, 0.0, 0.0}, {0.2, 0.0, 0.0}}};
+  options.interpolation = {
+    .method = CartesianToSurfaceMethod::RadiusWeightedPolynomial,
+    .polynomialDegree = 3,
+    .supportRadius = 0.3};
+  const std::array<ReferencePoint, 2> centres{
+    {{0.0, 0.0, 0.0}, {0.2, 0.0, 0.0}}};
   std::array<double, 2> error{};
   for (std::size_t i = 0; i < 2; ++i) {
     options.attempts = {{centres[i], 0.7}};
@@ -138,7 +141,8 @@ void TestConvergedSurfaceRejectedAboveExpansionBound() {
   assert(rejected.result.solver.converged && rejected.result.surfaceAvailable);
   assert(!rejected.succeeded);
   assert(rejected.result.relativeExpansionError == error[1]);
-  assert(rejected.rejection.find("relative expansion error") != std::string::npos);
+  assert(rejected.rejection.find("relative expansion error") !=
+         std::string::npos);
   assert(result.attempts[1].succeeded && result.attempts[1].rejection.empty());
   assert(result.horizon->relativeExpansionError == error[0]);
 }
@@ -215,7 +219,8 @@ void TestSearchOutput() {
   assert(successText.find("horizon.area = ") != std::string::npos);
   assert(successText.find("horizon.arealRadius = ") != std::string::npos);
   assert(successText.find("horizon.irreducibleMass = ") != std::string::npos);
-  assert(successText.find("horizon.relativeExpansionError = ") != std::string::npos);
+  assert(successText.find("horizon.relativeExpansionError = ") !=
+         std::string::npos);
   assert(successText.find("attempts[1].rejection = \"\"") != std::string::npos);
   // The grid is flat with K_ij = 2 delta_ij and K = 3, so Theta = 2/r - 1:
   // the horizon is a sphere of radius 2, of mass 1.

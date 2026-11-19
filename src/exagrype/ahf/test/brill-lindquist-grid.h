@@ -27,14 +27,17 @@ inline GridData MakeBrillLindquistGrid(
   if (!(halfWidth > 0.0) || cellsPerAxis < 2) {
     throw std::invalid_argument("MakeBrillLindquistGrid: invalid grid");
   }
-  const double h = 2.0 * halfWidth / cellsPerAxis;
+  const double spacing = 2.0 * halfWidth / cellsPerAxis;
   GridData grid;
-  grid.coordinates.reserve(static_cast<std::size_t>(cellsPerAxis) * cellsPerAxis * cellsPerAxis);
+  const std::size_t cells = static_cast<std::size_t>(cellsPerAxis);
+  grid.coordinates.reserve(cells * cells * cells);
   for (int i = 0; i < cellsPerAxis; ++i) {
     for (int j = 0; j < cellsPerAxis; ++j) {
       for (int k = 0; k < cellsPerAxis; ++k) {
         const FieldVector<double> x{
-          -halfWidth + (i + 0.5) * h, -halfWidth + (j + 0.5) * h, -halfWidth + (k + 0.5) * h};
+          -halfWidth + (i + 0.5) * spacing,
+          -halfWidth + (j + 0.5) * spacing,
+          -halfWidth + (k + 0.5) * spacing};
         const double psi = spacetime.psi(x);
         grid.coordinates.push_back({x[0], x[1], x[2]});
         const std::array<double, NumberOfCompactFields> row{

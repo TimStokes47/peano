@@ -176,7 +176,8 @@ void WriteAHSummary(const AHFinderResult& result, const std::string& filename) {
            << "maxAbsExpansion = " << result.maxAbsExpansion << '\n'
            << "maxAbsExpansionOverResolved = "
            << result.maxAbsExpansionOverResolved << '\n'
-           << "relativeExpansionError = " << result.relativeExpansionError << '\n';
+           << "relativeExpansionError = "
+           << result.relativeExpansionError << '\n';
   } else {
     output << "minRadius = unavailable\n"
            << "meanRadius = unavailable\n"
@@ -344,7 +345,8 @@ void WriteAHMultiHorizonSummary(const AHMultiHorizonResult& result,
              << attempt.result.solver.iterations << '\n'
              << attemptPrefix << "solver.message = "
              << std::quoted(attempt.result.solver.message) << '\n'
-             << attemptPrefix << "rejection = " << std::quoted(attempt.rejection) << '\n'
+             << attemptPrefix << "rejection = "
+             << std::quoted(attempt.rejection) << '\n'
              << attemptPrefix << "residualHistory.count = "
              << attempt.result.solver.residualHistory.size() << '\n';
       output << attemptPrefix << "initialCoefficients.count = "

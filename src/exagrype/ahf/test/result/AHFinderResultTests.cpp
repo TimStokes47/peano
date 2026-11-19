@@ -235,7 +235,8 @@ void TestMeanRadiiOnDistortedSurface() {
     maxTheta = std::max(maxTheta, std::abs(computeExpansion(point)));
   }
   assert(std::abs(result.maxAbsExpansionOverResolved - maxTheta) < 1.0e-14);
-  assert(std::abs(result.maxAbsExpansionOverResolved - result.maxAbsExpansion) > 1.0e-3);
+  assert(std::abs(result.maxAbsExpansionOverResolved -
+                  result.maxAbsExpansion) > 1.0e-3);
   assert(std::abs(result.relativeExpansionError -
                   maxTheta * result.arealRadius / 2.0) < 1.0e-14);
 }

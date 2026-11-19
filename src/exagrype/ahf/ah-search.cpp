@@ -44,10 +44,11 @@ AHSearchResult ExecuteAttempts(
           attempt.initialCoefficients, solverOptions);
     AHFinderResult result = BuildAHFinderResult(
       basis, interpolator, attempt.referencePoint, solver);
-    const bool reconstructed = result.solver.converged && result.surfaceAvailable;
+    const bool reconstructed =
+      result.solver.converged && result.surfaceAvailable;
     std::string rejection;
-    if (reconstructed &&
-        !(result.relativeExpansionError <= solverOptions.maxRelativeExpansionError)) {
+    if (reconstructed && !(result.relativeExpansionError <=
+                           solverOptions.maxRelativeExpansionError)) {
       rejection = "relative expansion error " +
         std::to_string(result.relativeExpansionError) + " exceeds " +
         std::to_string(solverOptions.maxRelativeExpansionError) +
