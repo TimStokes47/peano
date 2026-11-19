@@ -173,7 +173,11 @@ void WriteAHSummary(const AHFinderResult& result, const std::string& filename) {
            << "irreducibleMass = " << result.irreducibleMass << '\n'
            << "spectralResidualInfinityNorm = "
            << result.spectralResidualInfinityNorm << '\n'
-           << "maxAbsExpansion = " << result.maxAbsExpansion << '\n';
+           << "maxAbsExpansion = " << result.maxAbsExpansion << '\n'
+           << "maxAbsExpansionOverResolved = "
+           << result.maxAbsExpansionOverResolved << '\n'
+           << "relativeExpansionError = "
+           << result.relativeExpansionError << '\n';
   } else {
     output << "minRadius = unavailable\n"
            << "meanRadius = unavailable\n"
@@ -183,7 +187,9 @@ void WriteAHSummary(const AHFinderResult& result, const std::string& filename) {
            << "arealRadius = unavailable\n"
            << "irreducibleMass = unavailable\n"
            << "spectralResidualInfinityNorm = unavailable\n"
-           << "maxAbsExpansion = unavailable\n";
+           << "maxAbsExpansion = unavailable\n"
+           << "maxAbsExpansionOverResolved = unavailable\n"
+           << "relativeExpansionError = unavailable\n";
   }
 
   output << "residualHistory.count = " << result.solver.residualHistory.size()
@@ -238,6 +244,7 @@ void WriteAHSearchSummary(const AHSearchResult& result,
            << attempt.result.solver.iterations << '\n'
            << prefix << "solver.message = "
            << std::quoted(attempt.result.solver.message) << '\n'
+           << prefix << "rejection = " << std::quoted(attempt.rejection) << '\n'
            << prefix << "residualHistory.count = "
            << attempt.result.solver.residualHistory.size() << '\n';
     output << prefix << "initialCoefficients.count = "
@@ -268,6 +275,10 @@ void WriteAHSearchSummary(const AHSearchResult& result,
            << "horizon.spectralResidualInfinityNorm = "
            << horizon.spectralResidualInfinityNorm << '\n'
            << "horizon.maxAbsExpansion = " << horizon.maxAbsExpansion << '\n'
+           << "horizon.maxAbsExpansionOverResolved = "
+           << horizon.maxAbsExpansionOverResolved << '\n'
+           << "horizon.relativeExpansionError = "
+           << horizon.relativeExpansionError << '\n'
            << "horizon.coefficients.count = "
            << horizon.solver.coefficients.size() << '\n';
     for (std::size_t i = 0; i < horizon.solver.coefficients.size(); ++i) {
@@ -334,6 +345,8 @@ void WriteAHMultiHorizonSummary(const AHMultiHorizonResult& result,
              << attempt.result.solver.iterations << '\n'
              << attemptPrefix << "solver.message = "
              << std::quoted(attempt.result.solver.message) << '\n'
+             << attemptPrefix << "rejection = "
+             << std::quoted(attempt.rejection) << '\n'
              << attemptPrefix << "residualHistory.count = "
              << attempt.result.solver.residualHistory.size() << '\n';
       output << attemptPrefix << "initialCoefficients.count = "
@@ -365,7 +378,11 @@ void WriteAHMultiHorizonSummary(const AHMultiHorizonResult& result,
              << prefix << "horizon.spectralResidualInfinityNorm = "
              << horizon.spectralResidualInfinityNorm << '\n'
              << prefix << "horizon.maxAbsExpansion = "
-             << horizon.maxAbsExpansion << '\n';
+             << horizon.maxAbsExpansion << '\n'
+             << prefix << "horizon.maxAbsExpansionOverResolved = "
+             << horizon.maxAbsExpansionOverResolved << '\n'
+             << prefix << "horizon.relativeExpansionError = "
+             << horizon.relativeExpansionError << '\n';
     }
   }
   if (!output) {
@@ -608,6 +625,8 @@ void WriteAHHorizonCatalogueSummary(const AHHorizonCatalogue& result,
       const auto& attempt = target.attempts[j];
       output << p << "attempts[" << j << "].message = "
              << std::quoted(attempt.result.solver.message) << '\n'
+             << p << "attempts[" << j << "].rejection = "
+             << std::quoted(attempt.rejection) << '\n'
              << p << "attempts[" << j << "].iterations = "
              << attempt.result.solver.iterations << '\n'
              << p << "attempts[" << j << "].residualHistory.count = "
@@ -638,6 +657,8 @@ void WriteAHHorizonCatalogueSummary(const AHHorizonCatalogue& result,
            << p << "validation.numericallyValid = "
            << entry.validation.numericallyValid << '\n'
            << p << "validation.valid = " << entry.validation.valid << '\n'
+           << p << "validation.relativeExpansionValid = "
+           << entry.validation.relativeExpansionValid << '\n'
            << p << "validation.memberHorizonEnclosure = "
            << EnclosureStatusName(entry.validation.memberHorizonEnclosure) << '\n'
            << p << "validation.physicalPositionEnclosure = "
@@ -651,6 +672,8 @@ void WriteAHHorizonCatalogueSummary(const AHHorizonCatalogue& result,
       const auto& attempt = entry.search.attempts[j];
       output << p << "attempts[" << j << "].message = "
              << std::quoted(attempt.result.solver.message) << '\n'
+             << p << "attempts[" << j << "].rejection = "
+             << std::quoted(attempt.rejection) << '\n'
              << p << "attempts[" << j << "].iterations = "
              << attempt.result.solver.iterations << '\n'
              << p << "attempts[" << j << "].residualHistory.count = "

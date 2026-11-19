@@ -1,6 +1,7 @@
 #include "../require-asserts.h"
 
 #include "../../apparent-horizon-finder.h"
+#include "../brill-lindquist-grid.h"
 #include "../temporary-directory.h"
 
 #include <algorithm>
@@ -10,6 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 namespace exahype2::ccz4::ahf::tests {
@@ -25,6 +27,8 @@ AHFinderResult Sphere(ReferencePoint centre, double radius) {
   result.minRadius = result.meanRadius = result.maxRadius = radius;
   result.spectralResidualInfinityNorm = 1.0e-12;
   result.maxAbsExpansion = 2.0e-12;
+  result.maxAbsExpansionOverResolved = 3.0e-12;
+  result.relativeExpansionError = 3.0e-12 * radius / 2.0;
   result.surfaceAvailable = true;
   return result;
 }
@@ -93,10 +97,42 @@ void TestValidationAndEnclosure() {
   assert(!validation.valid && !validation.enclosesMembers);
   assert(validation.status == AHCommonHorizonValidationStatus::Rejected);
 
+  // The absolute bound on Theta at the collocation points is off unless set;
+  // grid data reaches 1e-2 on correct horizons.
   common = Sphere({0, 0, 0}, 1.1);
   common.maxAbsExpansion = 1.0e-2;
   validation = ValidateCommonHorizon(common, {a, b});
+  assert(validation.valid && validation.pointwiseExpansionValid);
+  validation = ValidateCommonHorizon(
+    common, {a, b}, {.pointwiseExpansionTolerance = 1.0e-3});
   assert(!validation.valid && !validation.pointwiseExpansionValid);
+
+  // An aliased surface: Theta of order that of a sphere between the points.
+  common = Sphere({0, 0, 0}, 1.1);
+  common.relativeExpansionError = 0.55;
+  validation = ValidateCommonHorizon(common, {a, b});
+  assert(!validation.valid && !validation.relativeExpansionValid);
+  assert(std::find(validation.reasons.begin(), validation.reasons.end(),
+                   "relative expansion error exceeds tolerance") !=
+         validation.reasons.end());
+  common.relativeExpansionError = 0.25;
+  assert(ValidateCommonHorizon(common, {a, b}).valid);
+  common.relativeExpansionError = std::numeric_limits<double>::quiet_NaN();
+  assert(!ValidateCommonHorizon(common, {a, b}).relativeExpansionValid);
+
+  // The absolute bound may be infinite (off); neither bound may be NaN, and
+  // the relative one must be positive.
+  common = Sphere({0, 0, 0}, 1.1);
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  for (const AHCommonHorizonValidationOptions& invalid :
+       {AHCommonHorizonValidationOptions{.pointwiseExpansionTolerance = nan},
+        AHCommonHorizonValidationOptions{.relativeExpansionTolerance = 0.0},
+        AHCommonHorizonValidationOptions{.relativeExpansionTolerance = nan}}) {
+    bool threw = false;
+    try { (void)ValidateCommonHorizon(common, {a, b}, invalid); }
+    catch (const std::invalid_argument&) { threw = true; }
+    assert(threw);
+  }
 
   common = Sphere({0, 0, 0}, 1.1);
   common.solver.coefficients[0] = std::numeric_limits<double>::infinity();
@@ -440,11 +476,14 @@ void TestThreeHoleDeterminismAndSummary() {
     {.id = "A", .kind = AHHorizonKind::Individual, .converged = false},
     {.id = "B", .kind = AHHorizonKind::Individual, .converged = true}
   };
+  catalogue.individuals.targets[0].attempts = {
+    {.rejection = "individual rejection"}};
   AHCommonHorizonCatalogueEntry ab;
   ab.id = "common[A+B]";
   ab.memberIds = {"A", "B"};
   ab.reason.triggeredPair = true;
   ab.validation.reasons = {"Newton did not converge"};
+  ab.search.attempts = {{.rejection = "common rejection"}};
   AHCommonHorizonCatalogueEntry abc;
   abc.id = "common[A+B+C]";
   abc.memberIds = {"A", "B", "C"};
@@ -459,8 +498,86 @@ void TestThreeHoleDeterminismAndSummary() {
   text << input.rdbuf();
   assert(text.str().find("common[0].id = \"common[A+B]\"") != std::string::npos);
   assert(text.str().find("Newton did not converge") != std::string::npos);
+  assert(text.str().find("individuals[0].attempts[0].rejection = "
+                         "\"individual rejection\"") != std::string::npos);
+  assert(text.str().find("common[0].attempts[0].rejection = "
+                         "\"common rejection\"") != std::string::npos);
+  assert(text.str().find("common[0].validation.relativeExpansionValid = "
+                         "false") != std::string::npos);
   std::filesystem::remove(path);
 }
+
+// Two punctures on the x axis at +/- separation / 2, sampled as ExaGRyPE
+// would (TwoPunctures without momentum or spin is Brill-Lindquist), and the
+// catalogue options for them: individual attempts from 0.35 m about each
+// puncture, the common search requested explicitly.
+AHCommonHorizonSearchOptions BinaryOptions(
+  double mPlus, double mMinus, double separation, int lMax) {
+  const ReferencePoint plus{separation / 2.0, 0.0, 0.0};
+  const ReferencePoint minus{-separation / 2.0, 0.0, 0.0};
+  AHCommonHorizonSearchOptions options;
+  options.blackHoles = {
+    {.id = "plus", .mass = mPlus, .attempts = {{plus, 0.35 * mPlus}},
+     .physicalPosition = plus},
+    {.id = "minus", .mass = mMinus, .attempts = {{minus, 0.35 * mMinus}},
+     .physicalPosition = minus}};
+  options.candidates.unconditionalAllBlackHoles = true;
+  options.lMax = lMax;
+  options.interpolation = {
+    .method = CartesianToSurfaceMethod::RadiusWeightedPolynomial,
+    .polynomialDegree = 3,
+    .supportRadius = 0.15};
+  return options;
+}
+
+// Equal masses 1/2 at separation 1/2: the default validation accepts the
+// common horizon found on grid data, and its irreducible mass matches the
+// analytic Brill-Lindquist value, 0.998248 (lMax 16).
+void TestBrillLindquistCommonHorizonValidates() {
+  const BrillLindquist binary{
+    {{0.5, {0.25, 0.0, 0.0}}, {0.5, {-0.25, 0.0, 0.0}}}};
+  const GridData grid = MakeBrillLindquistGrid(binary, 0.9, 36);
+  const auto catalogue =
+    FindApparentHorizons(grid, BinaryOptions(0.5, 0.5, 0.5, 4));
+  assert(catalogue.individuals.allTargetsFound);
+  assert(catalogue.commonHorizons.size() == 1);
+  const auto& common = catalogue.commonHorizons[0];
+  assert(common.search.converged && common.search.horizon.has_value());
+  assert(common.validation.valid);
+  assert(common.validation.relativeExpansionValid);
+  assert(common.search.horizon->relativeExpansionError < 0.05);
+  assert(std::abs(common.search.horizon->irreducibleMass / 0.998248 - 1.0) <
+         2.0e-4);
+}
+
+// Masses 0.6 and 0.3 at separation 0.4. Started from a sphere of radius 0.36
+// about the heavier puncture, Newton converges at the collocation points to
+// a surface with Mirr above the ADM mass of 0.9, which is not a horizon. The
+// search rejects it on its expansion between the points, and the next
+// attempt finds the individual horizon (Mirr 0.824914 analytically).
+void TestAliasedSurfaceIsRejected() {
+  const BrillLindquist binary{
+    {{0.6, {0.2, 0.0, 0.0}}, {0.3, {-0.2, 0.0, 0.0}}}};
+  const GridData grid = MakeBrillLindquistGrid(binary, 0.9, 36);
+  const AHCommonHorizonSearchOptions binaryOptions =
+    BinaryOptions(0.6, 0.3, 0.4, 4);
+  AHSearchOptions options;
+  options.attempts = {{{0.2, 0.0, 0.0}, 0.36}, {{0.2, 0.0, 0.0}, 0.21}};
+  options.lMax = binaryOptions.lMax;
+  options.interpolation = binaryOptions.interpolation;
+  const AHSearchResult search = FindApparentHorizon(grid, options);
+  assert(search.attempts.size() == 2);
+  const auto& aliased = search.attempts[0];
+  assert(aliased.result.solver.converged && aliased.result.surfaceAvailable);
+  assert(!aliased.succeeded);
+  assert(aliased.result.relativeExpansionError > 0.5);
+  assert(aliased.result.irreducibleMass > 0.9);
+  assert(!aliased.rejection.empty());
+  assert(search.converged && search.successfulAttempt == 1);
+  assert(search.horizon->relativeExpansionError < 0.05);
+  assert(std::abs(search.horizon->irreducibleMass / 0.824914 - 1.0) < 1.0e-3);
+}
+
 
 }  // namespace
 }  // namespace exahype2::ccz4::ahf::tests
@@ -477,4 +594,6 @@ int main() {
   TestFallbackRequiresPhysicalPositions();
   TestTwoIndividualsProduceOneCommonSearch();
   TestThreeHoleDeterminismAndSummary();
+  TestBrillLindquistCommonHorizonValidates();
+  TestAliasedSurfaceIsRejected();
 }

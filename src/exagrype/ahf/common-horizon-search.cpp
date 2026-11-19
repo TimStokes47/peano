@@ -109,7 +109,10 @@ void ValidateTargetOptions(const AHCommonHorizonTargetOptions& options) {
 
 void ValidateValidationOptions(const AHCommonHorizonValidationOptions& o) {
   if (!std::isfinite(o.spectralResidualTolerance) || o.spectralResidualTolerance < 0.0 ||
-      !std::isfinite(o.pointwiseExpansionTolerance) || o.pointwiseExpansionTolerance < 0.0 ||
+      std::isnan(o.pointwiseExpansionTolerance) ||
+      o.pointwiseExpansionTolerance < 0.0 ||
+      std::isnan(o.relativeExpansionTolerance) ||
+      o.relativeExpansionTolerance <= 0.0 ||
       !std::isfinite(o.enclosureTolerance) || o.enclosureTolerance < 0.0 ||
       o.enclosureRhoPoints < 3 || o.enclosureSigmaPoints < 3 ||
       !std::isfinite(o.maximumRadiusRatio) || o.maximumRadiusRatio < 1.0) {
@@ -195,6 +198,11 @@ AHCommonHorizonValidation ValidateCommonHorizon(
   v.pointwiseExpansionValid = std::isfinite(common.maxAbsExpansion) &&
     common.maxAbsExpansion <= options.pointwiseExpansionTolerance;
   if (!v.pointwiseExpansionValid) v.reasons.push_back("pointwise expansion exceeds tolerance");
+  v.relativeExpansionValid = std::isfinite(common.relativeExpansionError) &&
+    common.relativeExpansionError <= options.relativeExpansionTolerance;
+  if (!v.relativeExpansionValid) {
+    v.reasons.push_back("relative expansion error exceeds tolerance");
+  }
   v.surfaceRegular = v.radiiValid && v.coefficientsFinite &&
     common.maxRadius / common.minRadius <= options.maximumRadiusRatio;
   if (v.surfaceRegular) {
@@ -213,7 +221,7 @@ AHCommonHorizonValidation ValidateCommonHorizon(
 
   v.numericallyValid = v.newtonConverged && v.surfaceAvailable &&
     v.radiiValid && v.coefficientsFinite && v.spectralResidualValid &&
-    v.pointwiseExpansionValid && v.surfaceRegular;
+    v.pointwiseExpansionValid && v.relativeExpansionValid && v.surfaceRegular;
 
   const bool canEvaluateEnclosure = v.radiiValid && v.coefficientsFinite;
   bool availableMembersEnclosed = true;

@@ -24,7 +24,19 @@ AHHorizonTarget MakeCommonHorizonTarget(
 
 struct AHCommonHorizonValidationOptions {
   double spectralResidualTolerance = 1.0e-8;
-  double pointwiseExpansionTolerance = 1.0e-8;
+  /**
+   * Absolute bound on AHFinderResult::maxAbsExpansion (collocation points).
+   * Off by default: Theta has units of inverse length, and on grid data it
+   * reaches 1e-4 to 1e-2 even on correct horizons.
+   */
+  double pointwiseExpansionTolerance = std::numeric_limits<double>::infinity();
+  /**
+   * Bound on AHFinderResult::relativeExpansionError (over-resolved, relative
+   * to a round sphere). Physical analytic horizons with lMax >= 4 stayed below
+   * 0.13, aliased surfaces above 0.55; see SpectralNewtonOptions::
+   * maxRelativeExpansionError, which the search applies first.
+   */
+  double relativeExpansionTolerance = 0.3;
   double enclosureTolerance = 1.0e-8;
   int enclosureRhoPoints = 32;
   int enclosureSigmaPoints = 17;
@@ -60,6 +72,7 @@ struct AHCommonHorizonValidation {
   bool coefficientsFinite = false;
   bool spectralResidualValid = false;
   bool pointwiseExpansionValid = false;
+  bool relativeExpansionValid = false;
   bool enclosesMembers = false;
   bool surfaceRegular = false;
   double minimumEnclosureClearance =

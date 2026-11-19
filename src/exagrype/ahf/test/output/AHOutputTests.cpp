@@ -37,6 +37,8 @@ AHFinderResult SphereResult(double radius, int lMax = 2, bool converged = true) 
   result.irreducibleMass = 0.5 * radius;
   result.spectralResidualInfinityNorm = 1.0e-12;
   result.maxAbsExpansion = 2.0e-12;
+  result.maxAbsExpansionOverResolved = 0.25;
+  result.relativeExpansionError = 0.25 * radius / 2.0;
   result.surfaceAvailable = true;
   return result;
 }
@@ -98,6 +100,8 @@ void TestSummary() {
   assert(text.find("\narea = 78.5") != std::string::npos);
   assert(text.find("\narealRadius = 2.5\n") != std::string::npos);
   assert(text.find("\nirreducibleMass = 1.25\n") != std::string::npos);
+  assert(text.find("\nmaxAbsExpansionOverResolved = 0.25\n") != std::string::npos);
+  assert(text.find("\nrelativeExpansionError = 0.3125\n") != std::string::npos);
   assert(text.find("residualHistory[2]") != std::string::npos);
   assert(text.find("coefficients[8]") != std::string::npos);
 
@@ -112,6 +116,8 @@ void TestSummary() {
   assert(failureText.find("minRadius = unavailable") != std::string::npos);
   assert(failureText.find("\narea = unavailable\n") != std::string::npos);
   assert(failureText.find("\nirreducibleMass = unavailable\n") != std::string::npos);
+  assert(failureText.find("\nmaxAbsExpansionOverResolved = unavailable\n") != std::string::npos);
+  assert(failureText.find("\nrelativeExpansionError = unavailable\n") != std::string::npos);
   assert(failureText.find("controlled failure") != std::string::npos);
   std::filesystem::remove(first);
   std::filesystem::remove(second);

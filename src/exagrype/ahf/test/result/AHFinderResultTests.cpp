@@ -1,7 +1,9 @@
 #include "../require-asserts.h"
 
 #include "../../ah-finder-result.h"
+#include "../../expansion.h"
 #include "../../initial-guess.h"
+#include "../../interpolated-surface-residual.h"
 #include "../../iteration.h"
 
 #include <algorithm>
@@ -90,6 +92,10 @@ void TestConvergedResultAndCanonicalSurface() {
   assert(std::abs(result.irreducibleMass - 0.5 * radius) < 1.0e-12);
   assert(std::isfinite(result.maxAbsExpansion));
   assert(result.maxAbsExpansion < 1.0e-8);
+  assert(std::isfinite(result.maxAbsExpansionOverResolved));
+  assert(result.maxAbsExpansionOverResolved < 1.0e-8);
+  assert(std::isfinite(result.relativeExpansionError));
+  assert(result.relativeExpansionError < 1.0e-8);
   assert(std::isfinite(result.spectralResidualInfinityNorm));
   assert(result.spectralResidualInfinityNorm < 1.0e-8);
 }
@@ -153,6 +159,8 @@ void TestUnavailableSurfacePreservesSolverDiagnostics() {
   assert(std::isnan(result.meanRadius));
   assert(std::isnan(result.maxRadius));
   assert(std::isnan(result.maxAbsExpansion));
+  assert(std::isnan(result.maxAbsExpansionOverResolved));
+  assert(std::isnan(result.relativeExpansionError));
   assert(std::isnan(result.spectralResidualInfinityNorm));
   assert(std::isnan(result.meanCoordinateRadius));
   assert(std::isnan(result.area));
@@ -214,6 +222,23 @@ void TestMeanRadiiOnDistortedSurface() {
   assert(std::abs(result.meanRadius - result.meanCoordinateRadius) > 1.0e-3);
   assert(result.minRadius < result.meanCoordinateRadius);
   assert(result.meanCoordinateRadius < result.maxRadius);
+
+  // Theta is also sampled on a grid twice as fine in each direction, and the
+  // relative error compares it with 2 / R of a sphere of the same area.
+  const SpectralBasis overResolved =
+    BuildSpectralBasis(2, 2 * basis.nSigma, 2 * basis.nRho);
+  const InterpolatedSurface surface = BuildInterpolatedSurface(
+    overResolved, coefficients, interpolator, {0.0, 0.0, 0.0}
+  );
+  double maxTheta = 0.0;
+  for (const InterpolatedSurfacePoint& point : surface.points) {
+    maxTheta = std::max(maxTheta, std::abs(computeExpansion(point)));
+  }
+  assert(std::abs(result.maxAbsExpansionOverResolved - maxTheta) < 1.0e-14);
+  assert(std::abs(result.maxAbsExpansionOverResolved -
+                  result.maxAbsExpansion) > 1.0e-3);
+  assert(std::abs(result.relativeExpansionError -
+                  maxTheta * result.arealRadius / 2.0) < 1.0e-14);
 }
 
 }  // namespace

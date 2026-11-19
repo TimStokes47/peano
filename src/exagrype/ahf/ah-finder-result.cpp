@@ -86,6 +86,26 @@ AHFinderResult BuildAHFinderResult(
     const double area = HorizonArea(
       basis, solverResult.coefficients, spatialMetric
     );
+
+    // The same surface sampled twice as densely in each direction, where
+    // Newton has not forced the projection of Theta to vanish.
+    const SpectralBasis overResolved = BuildSpectralBasis(
+      basis.lmax, 2 * basis.nSigma, 2 * basis.nRho
+    );
+    const InterpolatedSurface overResolvedSurface = BuildInterpolatedSurface(
+      overResolved, solverResult.coefficients, interpolator, referencePoint
+    );
+    if (overResolvedSurface.numberOfPoints() != overResolved.nPoints) {
+      return result;
+    }
+    double maxAbsExpansionOverResolved = 0.0;
+    for (const InterpolatedSurfacePoint& point : overResolvedSurface.points) {
+      const double theta = computeExpansion(point);
+      if (!std::isfinite(theta)) return result;
+      maxAbsExpansionOverResolved = std::max(
+        maxAbsExpansionOverResolved, std::abs(theta)
+      );
+    }
     result.horizon = std::move(horizon);
     result.minRadius = *minimum;
     result.meanRadius = std::accumulate(
@@ -99,6 +119,9 @@ AHFinderResult BuildAHFinderResult(
     result.arealRadius = ArealRadius(area);
     result.irreducibleMass = IrreducibleMass(area);
     result.maxAbsExpansion = maxAbsExpansion;
+    result.maxAbsExpansionOverResolved = maxAbsExpansionOverResolved;
+    result.relativeExpansionError =
+      maxAbsExpansionOverResolved * result.arealRadius / 2.0;
     result.spectralResidualInfinityNorm = spectralResidualInfinityNorm;
     result.surfaceAvailable = true;
   } catch (const std::exception&) {
