@@ -251,6 +251,10 @@ if(ENABLE_CCZ4_AHF_TESTS)
   target_link_libraries(ahf-analytic-horizon-tests PRIVATE ApparentHorizonFinderCore)
   add_test(NAME ahf-analytic-horizon-tests COMMAND ahf-analytic-horizon-tests)
 
+  add_executable(ahf-diagnostics-tests test/diagnostics/DiagnosticsTests.cpp)
+  target_link_libraries(ahf-diagnostics-tests PRIVATE ApparentHorizonFinderCore)
+  add_test(NAME ahf-diagnostics-tests COMMAND ahf-diagnostics-tests)
+
   add_executable(ahf-brill-lindquist-tests test/brill-lindquist/BrillLindquistTests.cpp)
   target_link_libraries(ahf-brill-lindquist-tests PRIVATE ApparentHorizonFinderCore)
   add_test(NAME ahf-brill-lindquist-tests COMMAND ahf-brill-lindquist-tests)

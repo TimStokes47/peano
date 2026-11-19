@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <numbers>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -30,6 +31,10 @@ AHFinderResult SphereResult(double radius, int lMax = 2, bool converged = true) 
   result.minRadius = radius;
   result.meanRadius = radius;
   result.maxRadius = radius;
+  result.meanCoordinateRadius = radius;
+  result.area = 4.0 * std::numbers::pi * radius * radius;
+  result.arealRadius = radius;
+  result.irreducibleMass = 0.5 * radius;
   result.spectralResidualInfinityNorm = 1.0e-12;
   result.maxAbsExpansion = 2.0e-12;
   result.surfaceAvailable = true;
@@ -89,6 +94,10 @@ void TestSummary() {
   assert(text.find("solver.converged = true") != std::string::npos);
   assert(text.find("referencePoint = 0.25 -0.5 0.75") != std::string::npos);
   assert(text.find("meanRadius = 2.5") != std::string::npos);
+  assert(text.find("\nmeanCoordinateRadius = 2.5\n") != std::string::npos);
+  assert(text.find("\narea = 78.5") != std::string::npos);
+  assert(text.find("\narealRadius = 2.5\n") != std::string::npos);
+  assert(text.find("\nirreducibleMass = 1.25\n") != std::string::npos);
   assert(text.find("residualHistory[2]") != std::string::npos);
   assert(text.find("coefficients[8]") != std::string::npos);
 
@@ -101,6 +110,8 @@ void TestSummary() {
   assert(failureText.find("solver.converged = false") != std::string::npos);
   assert(failureText.find("surfaceAvailable = false") != std::string::npos);
   assert(failureText.find("minRadius = unavailable") != std::string::npos);
+  assert(failureText.find("\narea = unavailable\n") != std::string::npos);
+  assert(failureText.find("\nirreducibleMass = unavailable\n") != std::string::npos);
   assert(failureText.find("controlled failure") != std::string::npos);
   std::filesystem::remove(first);
   std::filesystem::remove(second);
@@ -199,6 +210,11 @@ void TestFacade() {
   const std::string summaryText = ReadText(summary);
   const std::string surfaceText = ReadText(surface);
   assert(summaryText.find("solver.converged = true") != std::string::npos);
+  // The facade grid is flat (phi = 1) with K_ij = 2 delta_ij and K = 3, so
+  // Theta = 2/r - 1 and the horizon is the sphere of radius 2: mass 1.
+  assert(std::abs(result.arealRadius - 2.0) < 1.0e-6);
+  assert(std::abs(result.irreducibleMass - 1.0) < 1.0e-6);
+  assert(summaryText.find("\nirreducibleMass = ") != std::string::npos);
   // 2 poles + 6 rings * 11 rho points; 2 * 6 * 11 triangles.
   assert(surfaceText.find("NumberOfPoints=\"68\"") != std::string::npos);
   assert(surfaceText.find("NumberOfPolys=\"132\"") != std::string::npos);

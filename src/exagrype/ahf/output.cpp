@@ -167,6 +167,10 @@ void WriteAHSummary(const AHFinderResult& result, const std::string& filename) {
     output << "minRadius = " << result.minRadius << '\n'
            << "meanRadius = " << result.meanRadius << '\n'
            << "maxRadius = " << result.maxRadius << '\n'
+           << "meanCoordinateRadius = " << result.meanCoordinateRadius << '\n'
+           << "area = " << result.area << '\n'
+           << "arealRadius = " << result.arealRadius << '\n'
+           << "irreducibleMass = " << result.irreducibleMass << '\n'
            << "spectralResidualInfinityNorm = "
            << result.spectralResidualInfinityNorm << '\n'
            << "maxAbsExpansion = " << result.maxAbsExpansion << '\n';
@@ -174,6 +178,10 @@ void WriteAHSummary(const AHFinderResult& result, const std::string& filename) {
     output << "minRadius = unavailable\n"
            << "meanRadius = unavailable\n"
            << "maxRadius = unavailable\n"
+           << "meanCoordinateRadius = unavailable\n"
+           << "area = unavailable\n"
+           << "arealRadius = unavailable\n"
+           << "irreducibleMass = unavailable\n"
            << "spectralResidualInfinityNorm = unavailable\n"
            << "maxAbsExpansion = unavailable\n";
   }
@@ -252,6 +260,11 @@ void WriteAHSearchSummary(const AHSearchResult& result,
            << "horizon.minRadius = " << horizon.minRadius << '\n'
            << "horizon.meanRadius = " << horizon.meanRadius << '\n'
            << "horizon.maxRadius = " << horizon.maxRadius << '\n'
+           << "horizon.meanCoordinateRadius = "
+           << horizon.meanCoordinateRadius << '\n'
+           << "horizon.area = " << horizon.area << '\n'
+           << "horizon.arealRadius = " << horizon.arealRadius << '\n'
+           << "horizon.irreducibleMass = " << horizon.irreducibleMass << '\n'
            << "horizon.spectralResidualInfinityNorm = "
            << horizon.spectralResidualInfinityNorm << '\n'
            << "horizon.maxAbsExpansion = " << horizon.maxAbsExpansion << '\n'
@@ -343,6 +356,12 @@ void WriteAHMultiHorizonSummary(const AHMultiHorizonResult& result,
              << prefix << "horizon.minRadius = " << horizon.minRadius << '\n'
              << prefix << "horizon.meanRadius = " << horizon.meanRadius << '\n'
              << prefix << "horizon.maxRadius = " << horizon.maxRadius << '\n'
+             << prefix << "horizon.meanCoordinateRadius = "
+             << horizon.meanCoordinateRadius << '\n'
+             << prefix << "horizon.area = " << horizon.area << '\n'
+             << prefix << "horizon.arealRadius = " << horizon.arealRadius << '\n'
+             << prefix << "horizon.irreducibleMass = "
+             << horizon.irreducibleMass << '\n'
              << prefix << "horizon.spectralResidualInfinityNorm = "
              << horizon.spectralResidualInfinityNorm << '\n'
              << prefix << "horizon.maxAbsExpansion = "
