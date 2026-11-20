@@ -133,6 +133,7 @@ PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arg
     "--radius-per-mass", "--lmax", "--support-radius", "--tolerance"};
   bool centreGiven = false;
   bool radiiPerMassGiven = false;
+  bool lMaxGiven = false;
   for (std::size_t i = 0; i < arguments.size(); ++i) {
     const std::string& argument = arguments[i];
     if (argument == "--help" || argument == "-h") {
@@ -172,6 +173,7 @@ PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arg
       }
     } else if (argument == "--lmax") {
       options.lMax = parsePositiveInteger(argument, value);
+      lMaxGiven = true;
     } else if (argument == "--support-radius") {
       options.supportRadius = parsePositiveNumber(argument, value);
     } else if (argument == "--tolerance") {
@@ -193,6 +195,9 @@ PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arg
     if (centreGiven) {
       throw std::invalid_argument(
         "--centre is for a single search; --puncture gives the positions");
+    }
+    if (!lMaxGiven) {
+      options.lMax = PostprocessOptions::PunctureLMax;
     }
   } else if (radiiPerMassGiven) {
     throw std::invalid_argument("--radius-per-mass needs --puncture");
@@ -238,7 +243,8 @@ std::string PostprocessUsage(const std::string& executable) {
     "                    default apparent-horizon\n"
     "  --mapping         where the fields are: by component name (names, default),\n"
     "                    exagrype.api layout (exagrype), legacy ccz4.py (legacy)\n"
-    "  --lmax            highest spherical-harmonic degree; default 4\n"
+    "  --lmax            highest spherical-harmonic degree; default 4, or 8 with\n"
+    "                    --puncture\n"
     "  --support-radius  interpolation support; default three times the finest\n"
     "                    cell spacing\n"
     "  --tolerance       convergence threshold on the spectral residual; default 1e-8\n"

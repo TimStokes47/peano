@@ -54,7 +54,15 @@ struct PostprocessOptions {
    * separation m (the Brill-Lindquist case the defaults were tried on).
    */
   std::vector<double> radiiPerMass{0.35, 0.5, 0.25};
+  /**
+   * Highest spherical-harmonic degree; with punctures and no --lmax it is
+   * PunctureLMax instead. A common horizon near the separation where it
+   * disappears is strongly distorted: for equal masses at 0.7 M, lMax 4 left a
+   * relative expansion error of 0.126 and the irreducible mass 1e-4 low, lMax 8
+   * 0.014 and 1e-6, for four times the run time.
+   */
   int lMax = 4;
+  static constexpr int PunctureLMax = 8;
   /** Interpolation support radius; without one, three times the finest cell spacing. */
   std::optional<double> supportRadius;
   double tolerance = 1.0e-8;

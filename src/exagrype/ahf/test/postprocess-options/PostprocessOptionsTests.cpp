@@ -195,6 +195,7 @@ void TestPunctures() {
   assert(options.punctures[1].position.x == -0.2 && options.punctures[1].position.y == 0.1);
   assert(options.punctures[1].mass == 0.3);
   assert((options.radiiPerMass == std::vector<double>{0.35, 0.5, 0.25}));
+  assert(options.lMax == 8);
 
   // The first --radius-per-mass replaces the defaults, later ones add to it.
   assert((ParsePostprocessArguments({"--input", "a.vtu", "--puncture", "0,0,0:1",
@@ -269,12 +270,14 @@ void TestCatalogueOptions() {
 // horizons and the common horizon are found from the first attempt, and the
 // common horizon validates. Analytic irreducible masses (lMax 16): 0.749987
 // for each individual horizon, 0.998248 for the common one; this grid gives
-// them to 6e-4 and 1e-5.
+// them to 6e-4 and 1e-5. The test runs at lMax 4, not the program's default
+// of 8 with punctures, which takes about ten times longer in a debug build.
 void TestBrillLindquistPunctures() {
   const BrillLindquist binary{{{0.5, {0.25, 0.0, 0.0}}, {0.5, {-0.25, 0.0, 0.0}}}};
   const GridData grid = MakeBrillLindquistGrid(binary, 0.9, 36);
   const PostprocessOptions options = ParsePostprocessArguments({
-    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5", "--puncture", "-0.25,0,0:0.5"});
+    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5", "--puncture", "-0.25,0,0:0.5",
+    "--lmax", "4"});
   const double supportRadius = 3.0 * FinestGridSpacing(grid);
   const AHHorizonCatalogue catalogue =
     FindApparentHorizons(grid, MakePostprocessCatalogueOptions(options, supportRadius));
